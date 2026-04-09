@@ -88,18 +88,21 @@
   async function ensureSession() {
     if (state.sessionId) return state.sessionId;
     var sid = getSessionId();
-    if (sid) { state.sessionId = sid; return sid; }
+    if (sid) { state.sessionId = sid; state.fingerprint = getFingerprint(); return sid; }
     state.fingerprint = getFingerprint();
+    var identityKey = 'anon:' + state.fingerprint;
     var lang = document.documentElement.getAttribute('lang') || 'en';
+    var newSid = crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,function(c){return(c^(crypto.getRandomValues(new Uint8Array(1))[0]&(15>>c/4))).toString(16)});
     var rows = await sbFetch('trial_sessions', 'POST', {
-      fingerprint_hash: state.fingerprint,
-      language: lang,
-      user_agent: navigator.userAgent,
-      referrer: document.referrer || null,
-      metadata: {}
+      session_id: newSid,
+      identity_key: identityKey,
+      locale: lang,
+      user_agent_hash: navigator.userAgent.slice(0, 128),
+      source_page: location.href || null,
+      status: 'active'
     });
     if (rows && rows[0]) {
-      state.sessionId = rows[0].id;
+      state.sessionId = rows[0].session_id;
       storeSessionId(state.sessionId);
       trackEvent('session_start', {});
     }
@@ -109,71 +112,71 @@
   // ── Usage counters ──
   async function checkUsage() {
     state.fingerprint = state.fingerprint || getFingerprint();
-    var periodSession = 'session:' + state.sessionId;
+    var identityKey = 'anon:' + state.fingerprint;
+    var scopeSession = 'session:' + state.sessionId;
     var today = new Date().toISOString().slice(0, 10);
-    var periodDaily = 'daily:' + today;
+    var scopeDaily = 'daily:' + today + ':' + identityKey;
 
-    // Check session counter
-    var q = '?fingerprint_hash=eq.' + encodeURIComponent(state.fingerprint) +
-      '&period_key=in.(' + encodeURIComponent(periodSession) + ',' + encodeURIComponent(periodDaily) + ')';
+    // Check existing counters
+    var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
+      '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')';
     var counters = await sbFetch('trial_usage_counters', 'GET', null, q + '&select=*');
     if (!Array.isArray(counters)) counters = [];
 
-    var sessionCounter = counters.find(function (c) { return c.period_key === periodSession; });
-    var dailyCounter = counters.find(function (c) { return c.period_key === periodDaily; });
+    var sessionCounter = counters.find(function (c) { return c.counter_scope_key === scopeSession; });
+    var dailyCounter = counters.find(function (c) { return c.counter_scope_key === scopeDaily; });
 
     // Create session counter if missing
     if (!sessionCounter) {
       var res = await sbFetch('trial_usage_counters', 'POST', {
-        fingerprint_hash: state.fingerprint,
+        counter_scope_key: scopeSession,
         session_id: state.sessionId,
-        period_key: periodSession,
-        turns_used: 0,
-        max_turns: CONFIG.LIMITS.SESSION_ANON,
-        limit_type: 'session'
+        identity_key: identityKey,
+        window_type: 'session',
+        turns_used: 0
       });
-      sessionCounter = res && res[0] ? res[0] : { turns_used: 0, max_turns: CONFIG.LIMITS.SESSION_ANON };
+      sessionCounter = res && res[0] ? res[0] : { turns_used: 0 };
     }
 
     // Create daily counter if missing
     if (!dailyCounter) {
-      var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0, 0, 0, 0);
       var res2 = await sbFetch('trial_usage_counters', 'POST', {
-        fingerprint_hash: state.fingerprint,
+        counter_scope_key: scopeDaily,
         session_id: state.sessionId,
-        period_key: periodDaily,
-        turns_used: 0,
-        max_turns: CONFIG.LIMITS.DAILY_ANON,
-        limit_type: 'daily',
-        expires_at: tomorrow.toISOString()
+        identity_key: identityKey,
+        window_type: 'rolling_24h',
+        turns_used: 0
       });
-      dailyCounter = res2 && res2[0] ? res2[0] : { turns_used: 0, max_turns: CONFIG.LIMITS.DAILY_ANON };
+      dailyCounter = res2 && res2[0] ? res2[0] : { turns_used: 0 };
     }
 
+    var sessionMax = CONFIG.LIMITS.SESSION_ANON;
+    var dailyMax = CONFIG.LIMITS.DAILY_ANON;
+
     // Use the more restrictive counter
-    if (sessionCounter.turns_used >= sessionCounter.max_turns ||
-      dailyCounter.turns_used >= dailyCounter.max_turns) {
+    if (sessionCounter.turns_used >= sessionMax ||
+      dailyCounter.turns_used >= dailyMax) {
       state.turnsUsed = Math.max(sessionCounter.turns_used, dailyCounter.turns_used);
-      state.maxTurns = sessionCounter.turns_used >= sessionCounter.max_turns ? sessionCounter.max_turns : dailyCounter.max_turns;
-      state.limitType = sessionCounter.turns_used >= sessionCounter.max_turns ? 'session' : 'daily';
+      state.maxTurns = sessionCounter.turns_used >= sessionMax ? sessionMax : dailyMax;
+      state.limitType = sessionCounter.turns_used >= sessionMax ? 'session' : 'daily';
       return false;
     }
 
     state.turnsUsed = sessionCounter.turns_used;
-    state.maxTurns = sessionCounter.max_turns;
+    state.maxTurns = sessionMax;
     return true;
   }
 
   async function incrementUsage() {
-    var periodSession = 'session:' + state.sessionId;
+    var identityKey = 'anon:' + state.fingerprint;
+    var scopeSession = 'session:' + state.sessionId;
     var today = new Date().toISOString().slice(0, 10);
-    var periodDaily = 'daily:' + today;
+    var scopeDaily = 'daily:' + today + ':' + identityKey;
 
-    // Increment both via RPC-style PATCH
-    var base = '?fingerprint_hash=eq.' + encodeURIComponent(state.fingerprint);
-    // We need to use raw SQL or just read-modify-write
-    var counters = await sbFetch('trial_usage_counters', 'GET', null,
-      base + '&period_key=in.(' + encodeURIComponent(periodSession) + ',' + encodeURIComponent(periodDaily) + ')&select=*');
+    // Read-modify-write for both counters
+    var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
+      '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')&select=*';
+    var counters = await sbFetch('trial_usage_counters', 'GET', null, q);
     if (!Array.isArray(counters)) return;
 
     for (var i = 0; i < counters.length; i++) {
@@ -181,7 +184,7 @@
       await fetch(CONFIG.SUPABASE_URL + '/rest/v1/trial_usage_counters?id=eq.' + c.id, {
         method: 'PATCH',
         headers: sbHeaders(),
-        body: JSON.stringify({ turns_used: c.turns_used + 1 })
+        body: JSON.stringify({ turns_used: c.turns_used + 1, last_turn_at: new Date().toISOString() })
       });
     }
     state.turnsUsed++;
@@ -193,17 +196,20 @@
     sbFetch('trial_events', 'POST', {
       session_id: state.sessionId,
       event_type: type,
-      event_data: data || {}
+      severity: 'info',
+      payload_json: data || {}
     }).catch(function () { });
   }
 
-  function trackCTA(ctaType, action, context) {
+  function trackCTA(ctaType, action, ctaLocation) {
     if (!state.sessionId) return;
     sbFetch('trial_cta_events', 'POST', {
       session_id: state.sessionId,
       cta_type: ctaType,
-      action: action,
-      context: context || ''
+      event_action: action,
+      cta_location: ctaLocation || '',
+      source_page: location.href || null,
+      locale: document.documentElement.getAttribute('lang') || 'en'
     }).catch(function () { });
   }
 
@@ -478,10 +484,12 @@
     // Save to Supabase
     sbFetch('trial_messages', 'POST', {
       session_id: state.sessionId,
+      identity_key: 'anon:' + state.fingerprint,
       role: 'user',
-      content: text,
-      content_type: contentType || 'text',
-      audio_asset_id: audioAssetId || null
+      raw_text: text,
+      modality: (contentType === 'voice_transcript') ? 'voice' : 'text',
+      locale: document.documentElement.getAttribute('lang') || 'en',
+      source_page: location.href || null
     }).catch(function () { });
 
     showTyping();
@@ -499,7 +507,7 @@
           message: text,
           content_type: contentType || 'text',
           language: document.documentElement.getAttribute('lang') || 'en',
-          fingerprint_hash: state.fingerprint,
+          identity_key: 'anon:' + state.fingerprint,
           turn_number: state.turnsUsed + 1,
           history: history
         })
@@ -540,10 +548,13 @@
       // Save assistant message
       sbFetch('trial_messages', 'POST', {
         session_id: state.sessionId,
+        identity_key: 'anon:' + state.fingerprint,
         role: 'assistant',
-        content: reply,
-        content_type: 'text',
-        latency_ms: data.latency_ms || null
+        response_text: reply,
+        raw_text: text,
+        modality: 'text',
+        latency_ms: data.latency_ms || null,
+        locale: document.documentElement.getAttribute('lang') || 'en'
       }).catch(function () { });
 
       await incrementUsage();
@@ -638,10 +649,11 @@
     // Create audio asset record
     var assetRows = await sbFetch('trial_audio_assets', 'POST', {
       session_id: state.sessionId,
+      identity_key: 'anon:' + state.fingerprint,
       mime_type: blob.type,
       size_bytes: blob.size,
-      duration_ms: Math.floor((Date.now() - state.recordStart)),
-      transcription_status: 'pending'
+      duration_seconds: Math.floor((Date.now() - state.recordStart) / 1000),
+      status: 'pending'
     });
 
     if (!assetRows || !assetRows[0]) {
@@ -659,7 +671,7 @@
       await fetch(CONFIG.SUPABASE_URL + '/rest/v1/trial_audio_assets?id=eq.' + asset.id, {
         method: 'PATCH',
         headers: sbHeaders(),
-        body: JSON.stringify({ storage_path: storagePath, transcription_status: 'processing' })
+        body: JSON.stringify({ storage_path: storagePath, status: 'processing' })
       });
     } catch (err) {
       showError('Upload failed');
@@ -684,7 +696,7 @@
           audio_asset_id: asset.id,
           audio_storage_path: storagePath,
           language: document.documentElement.getAttribute('lang') || 'en',
-          fingerprint_hash: state.fingerprint,
+          identity_key: 'anon:' + state.fingerprint,
           turn_number: state.turnsUsed + 1,
           history: state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; })
         })
