@@ -115,94 +115,17 @@
     return state.sessionId;
   }
 
-  // ── Usage counters ──
+  // ── Usage (n8n is the single source of truth for quota enforcement) ──
+  // The n8n workflow counts turns from trial_messages and manages trial_usage_counters.
+  // The frontend should NOT independently create/query/increment usage counters.
   async function checkUsage() {
-    // Ensure we have a valid session before querying counters
-    if (!state.sessionId) await ensureSession();
-    if (!state.sessionId) return true; // Session creation failed — allow gracefully
-
-    state.fingerprint = state.fingerprint || getFingerprint();
-    var identityKey = 'anon:' + state.fingerprint;
-    var scopeSession = 'session:' + state.sessionId;
-    var today = new Date().toISOString().slice(0, 10);
-    var scopeDaily = 'daily:' + today + ':' + identityKey;
-
-    // IMPORTANT: Supabase in.() requires raw commas inside the parens, not %2C
-    var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
-      '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')';
-    // Fix: decode the comma between the two values so Supabase parses them correctly
-    q = q.replace('%2C' + encodeURIComponent(scopeDaily), ',' + encodeURIComponent(scopeDaily));
-    var counters = await sbFetch('trial_usage_counters', 'GET', null, q + '&select=*');
-    if (!Array.isArray(counters)) counters = [];
-
-    var sessionCounter = counters.find(function (c) { return c.counter_scope_key === scopeSession; });
-    var dailyCounter = counters.find(function (c) { return c.counter_scope_key === scopeDaily; });
-
-    // Create session counter if missing
-    if (!sessionCounter) {
-      var res = await sbFetch('trial_usage_counters', 'POST', {
-        counter_scope_key: scopeSession,
-        session_id: state.sessionId,
-        identity_key: identityKey,
-        window_type: 'session',
-        turns_used: 0
-      });
-      sessionCounter = (res && Array.isArray(res) && res[0]) ? res[0] : { turns_used: 0 };
-    }
-
-    // Create daily counter if missing
-    if (!dailyCounter) {
-      var res2 = await sbFetch('trial_usage_counters', 'POST', {
-        counter_scope_key: scopeDaily,
-        session_id: state.sessionId,
-        identity_key: identityKey,
-        window_type: 'rolling_24h',
-        turns_used: 0
-      });
-      dailyCounter = (res2 && Array.isArray(res2) && res2[0]) ? res2[0] : { turns_used: 0 };
-    }
-
-    var sessionMax = CONFIG.LIMITS.SESSION_ANON;
-    var dailyMax = CONFIG.LIMITS.DAILY_ANON;
-
-    // Use the more restrictive counter
-    if (sessionCounter.turns_used >= sessionMax ||
-      dailyCounter.turns_used >= dailyMax) {
-      state.turnsUsed = Math.max(sessionCounter.turns_used, dailyCounter.turns_used);
-      state.maxTurns = sessionCounter.turns_used >= sessionMax ? sessionMax : dailyMax;
-      state.limitType = sessionCounter.turns_used >= sessionMax ? 'session' : 'daily';
-      return false;
-    }
-
-    state.turnsUsed = sessionCounter.turns_used;
-    state.maxTurns = sessionMax;
+    // Lightweight client-side check only — n8n enforces real limits server-side
+    if (state.phase === 'limit') return false;
     return true;
   }
 
   async function incrementUsage() {
-    if (!state.sessionId) return;
-    var identityKey = 'anon:' + state.fingerprint;
-    var scopeSession = 'session:' + state.sessionId;
-    var today = new Date().toISOString().slice(0, 10);
-    var scopeDaily = 'daily:' + today + ':' + identityKey;
-
-    // Read-modify-write for both counters
-    // Fix: raw comma inside in.() — Supabase requires it unencoded between values
-    var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
-      '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')&select=*';
-    q = q.replace('%2C' + encodeURIComponent(scopeDaily), ',' + encodeURIComponent(scopeDaily));
-    var counters = await sbFetch('trial_usage_counters', 'GET', null, q);
-    if (!Array.isArray(counters)) return;
-
-    for (var i = 0; i < counters.length; i++) {
-      var c = counters[i];
-      await fetch(CONFIG.SUPABASE_URL + '/rest/v1/trial_usage_counters?id=eq.' + c.id, {
-        method: 'PATCH',
-        headers: sbHeaders(),
-        body: JSON.stringify({ turns_used: c.turns_used + 1, last_turn_at: new Date().toISOString() })
-      });
-    }
-    state.turnsUsed++;
+    // No-op: n8n upserts trial_usage_counters after each successful turn
   }
 
   // ── Analytics ──
@@ -425,38 +348,53 @@
     scrollToBottom();
   }
 
-  function showLimitCard() {
+  function showLimitCard(ctaPayload) {
     hideTyping();
     state.phase = 'limit';
     var inputArea = $('gc-input-area');
     if (inputArea) inputArea.classList.add('disabled');
+
+    // Use n8n's CTA payload if provided, otherwise fall back to local i18n
+    var cta = ctaPayload || {};
+    var title = cta.title || t('chat_limit_title');
+    var desc = cta.message || t('chat_limit_desc');
+    var primaryLabel = (cta.primary && cta.primary.label) || t('chat_limit_cta1');
+    var primaryHref = (cta.primary && cta.primary.href) || '#book';
+    var primaryType = (cta.primary && cta.primary.type) || 'book_call';
+    var secondaryLabel = (cta.secondary && cta.secondary.label) || t('chat_limit_cta2');
+    var secondaryHref = (cta.secondary && cta.secondary.href) || '#solutions';
+    var secondaryType = (cta.secondary && cta.secondary.type) || 'workflow_tour';
+    var tertiaryLabel = (cta.tertiary && cta.tertiary.label) || t('chat_limit_cta3');
+    var tertiaryHref = (cta.tertiary && cta.tertiary.href) || 'mailto:hello@grindctrl.com?subject=Tell%20Us%20About%20Our%20Business';
+    var tertiaryType = (cta.tertiary && cta.tertiary.type) || 'tell_us';
 
     var body = $('gc-chat-body');
     var card = document.createElement('div');
     card.className = 'gc-limit-card';
     card.innerHTML =
       '<div class="gc-limit-card-icon">✦</div>' +
-      '<h3>' + t('chat_limit_title') + '</h3>' +
-      '<p>' + t('chat_limit_desc') + '</p>' +
-      '<button class="gc-limit-cta-primary" data-cta="book_call">' + t('chat_limit_cta1') + '</button>' +
-      '<button class="gc-limit-cta-secondary" data-cta="workflow_tour">' + t('chat_limit_cta2') + '</button>' +
-      '<button class="gc-limit-cta-secondary" data-cta="tell_us">' + t('chat_limit_cta3') + '</button>' +
+      '<h3>' + escapeHTML(title) + '</h3>' +
+      '<p>' + escapeHTML(desc) + '</p>' +
+      '<button class="gc-limit-cta-primary" data-cta="' + primaryType + '" data-href="' + escapeHTML(primaryHref) + '">' + escapeHTML(primaryLabel) + '</button>' +
+      '<button class="gc-limit-cta-secondary" data-cta="' + secondaryType + '" data-href="' + escapeHTML(secondaryHref) + '">' + escapeHTML(secondaryLabel) + '</button>' +
+      '<button class="gc-limit-cta-secondary" data-cta="' + tertiaryType + '" data-href="' + escapeHTML(tertiaryHref) + '">' + escapeHTML(tertiaryLabel) + '</button>' +
       '<div class="gc-limit-fine">' + t('chat_limit_fine') + '</div>';
     body.appendChild(card);
     scrollToBottom();
 
-    trackCTA('book_call', 'impression', 'limit_card');
-    trackCTA('workflow_tour', 'impression', 'limit_card');
-    trackCTA('tell_us', 'impression', 'limit_card');
+    trackCTA(primaryType, 'impression', 'limit_card');
+    trackCTA(secondaryType, 'impression', 'limit_card');
+    trackCTA(tertiaryType, 'impression', 'limit_card');
 
     // Bind CTA clicks
     card.querySelectorAll('[data-cta]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var cta = btn.getAttribute('data-cta');
-        trackCTA(cta, 'click', 'limit_card');
-        if (cta === 'book_call') navigateHash('#book');
-        else if (cta === 'workflow_tour') navigateHash('#solutions');
-        else if (cta === 'tell_us') window.open('mailto:hello@grindctrl.com?subject=Tell%20Us%20About%20Our%20Business', '_blank');
+        var ctaType = btn.getAttribute('data-cta');
+        var href = btn.getAttribute('data-href') || '';
+        trackCTA(ctaType, 'click', 'limit_card');
+        if (href.startsWith('mailto:')) window.open(href, '_blank');
+        else if (href.startsWith('#')) navigateHash(href);
+        else if (href) window.location.href = href;
         closeChat();
       });
     });
@@ -486,32 +424,32 @@
   }
 
   // ── Send Message ──
+  // The n8n workflow is the single source of truth:
+  //   - It inserts user + assistant messages into trial_messages
+  //   - It upserts trial_usage_counters
+  //   - It enforces session/daily/burst quotas via Redis + trial_messages counts
+  //   - It returns structured JSON with status, limit_state, cta_payload, etc.
   async function sendMessage(text, contentType, audioAssetId) {
     if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'limit') return;
 
     await ensureSession();
+    if (!state.sessionId) { showError('Could not create session.'); return; }
+
     var canSend = await checkUsage();
     if (!canSend) { showLimitCard(); return; }
 
     state.phase = 'sending';
     addMessageToDOM('user', text, { voice: contentType === 'voice_transcript' });
 
-    // Save to Supabase
-    sbFetch('trial_messages', 'POST', {
-      session_id: state.sessionId,
-      identity_key: 'anon:' + state.fingerprint,
-      role: 'user',
-      raw_text: text,
-      modality: (contentType === 'voice_transcript') ? 'voice' : 'text',
-      locale: document.documentElement.getAttribute('lang') || 'en',
-      source_page: location.href || null
-    }).catch(function () { });
+    // NOTE: Do NOT insert into trial_messages here — n8n does this server-side
 
     showTyping();
     state.phase = 'responding';
 
     // Build history from last messages
     var history = state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; });
+    var lang = document.documentElement.getAttribute('lang') || 'en';
+    var dir = document.documentElement.getAttribute('dir') || (lang === 'ar' ? 'rtl' : 'ltr');
 
     try {
       var res = await fetch(CONFIG.N8N_WEBHOOK, {
@@ -521,63 +459,89 @@
           session_id: state.sessionId,
           message: text,
           content_type: contentType || 'text',
-          language: document.documentElement.getAttribute('lang') || 'en',
-          identity_key: 'anon:' + state.fingerprint,
+          modality: (contentType === 'voice_transcript') ? 'voice' : 'text',
+          language: lang,
+          locale: lang,
+          direction: dir,
+          fingerprint_hash: state.fingerprint,
+          source_page: location.href || 'landing',
           turn_number: state.turnsUsed + 1,
           history: history
         })
       });
 
+      var data;
+      try { data = await res.json(); } catch (e) { data = {}; }
+
+      // ── Handle non-200 responses using n8n's structured JSON ──
+
+      // 409 — Active session conflict (another anon tab open)
+      if (res.status === 409) {
+        hideTyping();
+        state.phase = 'open';
+        var retryMsg = data.message || 'Only one active conversation is allowed. Please wait a moment.';
+        showError(retryMsg);
+        return;
+      }
+
+      // 429 — Rate limited (in-flight lock, burst limit, or quota limit)
       if (res.status === 429) {
         hideTyping();
+
+        // Check if this is a quota limit (n8n returns status: 'limit_exceeded')
+        if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
+          // Update state from n8n response
+          if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
+            state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+          } else {
+            state.turnsUsed = state.maxTurns;
+          }
+          updateTurns();
+          showLimitCard(data.cta_payload);
+          return;
+        }
+
+        // Burst or in-flight rate limit
         state.phase = 'rate_limited';
-        var retryAfter = parseInt(res.headers.get('Retry-After') || '120');
-        showToast('Rate limited. Try again in ' + retryAfter + 's');
+        var retryAfter = data.retry_after_seconds || 30;
+        showToast((data.message || 'Too many requests.') + ' Try again in ' + retryAfter + 's');
         setTimeout(function () { state.phase = 'open'; }, retryAfter * 1000);
         return;
       }
 
-      var data = await res.json();
-
-      if (data.status === 'limit_exceeded') {
-        hideTyping();
-        state.turnsUsed = data.usage ? data.usage.turns_used : state.maxTurns;
-        updateTurns();
-        showLimitCard();
-        return;
-      }
-
-      if (data.status === 'error') {
+      // 400, 413, 502 — Various errors
+      if (!res.ok) {
         hideTyping();
         state.phase = 'open';
-        showError(data.message);
+        showError(data.message || 'Something went wrong. Please try again.');
         return;
       }
 
-      // Success
+      // ── 200 OK — Success ──
       hideTyping();
-      var reply = data.message || data.output || data.text || 'Thank you for your message.';
+      var reply = data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
       addMessageToDOM('assistant', reply);
       state.messages.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
 
-      // Save assistant message
-      sbFetch('trial_messages', 'POST', {
-        session_id: state.sessionId,
-        identity_key: 'anon:' + state.fingerprint,
-        role: 'assistant',
-        response_text: reply,
-        raw_text: text,
-        modality: 'text',
-        latency_ms: data.latency_ms || null,
-        locale: document.documentElement.getAttribute('lang') || 'en'
-      }).catch(function () { });
+      // NOTE: Do NOT insert assistant message here — n8n already did it
+      // NOTE: Do NOT call incrementUsage() — n8n already upserted usage counters
 
-      await incrementUsage();
+      // Update turns from n8n response (if available)
+      if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
+        state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+      } else {
+        state.turnsUsed++;
+      }
       updateTurns();
+
+      // Soft warning: near limit
+      if (data.cta_state === 'soft_warning' && data.cta_payload) {
+        // Could show a subtle hint — for now just update state
+      }
 
       // Check if this was the last turn
       if (state.turnsUsed >= state.maxTurns) {
-        setTimeout(showLimitCard, 800);
+        setTimeout(function() { showLimitCard(data.cta_payload); }, 800);
       }
 
       state.phase = 'open';
@@ -761,10 +725,9 @@
     if (pill) pill.style.display = 'none';
 
     ensureSession().then(function () {
-      checkUsage().then(function (canUse) {
-        updateTurns();
-        if (!canUse) showLimitCard();
-      });
+      // Don't pre-check usage counters — n8n enforces limits on each message.
+      // Just update the turns display from local state.
+      updateTurns();
     });
 
     trackCTA('open_chat', 'click', 'trigger');
