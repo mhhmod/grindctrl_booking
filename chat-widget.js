@@ -1,45 +1,147 @@
 /**
- * GRINDCTRL AI Agent Trial — Chat Widget Engine
- * Supabase-backed, RTL-ready, voice-enabled
+ * GRINDCTRL Trial Playground
+ * Premium, theme-aware, RTL-ready landing-page widget.
  */
 (function () {
   'use strict';
 
-  // ── Config ──
   var CONFIG = {
     SUPABASE_URL: 'https://qldgpkqpyfpqfdchozsp.supabase.co',
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZGdwa3FweWZwcWZkY2hvenNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzYwMDEsImV4cCI6MjA4OTY1MjAwMX0.BGqBYcjmuGbA787NFm45ndeFuXyro9zYR8NZX3Tib30',
-    N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent', // placeholder
+    N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent',
     LIMITS: { SESSION_ANON: 3, DAILY_ANON: 5, DAILY_AUTH: 10 },
     MAX_MSG_LEN: 500,
     MAX_AUDIO_SEC: 30,
     MAX_AUDIO_BYTES: 2 * 1024 * 1024,
-    AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a']
+    AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a', 'audio/aac', 'audio/flac'],
+    PROMPTS: {
+      en: [
+        'Where can AI save time in a service business?',
+        'Show me a lead follow-up workflow',
+        'What would an AI agent handle for a gym?',
+        'How would GRINDCTRL reduce admin work?'
+      ],
+      ar: [
+        'أين يمكن للذكاء الاصطناعي أن يوفّر الوقت في نشاط خدمي؟',
+        'اعرض لي سير عمل لمتابعة العملاء المحتملين',
+        'ما الذي يمكن لوكيل ذكي أن يديره لصالة رياضية؟',
+        'كيف يمكن لـ GRINDCTRL تقليل الأعمال الإدارية؟'
+      ]
+    }
   };
 
-  // ── State ──
   var state = {
-    phase: 'closed', // closed|open|sending|responding|recording|uploading|transcribing|limit|error|rate_limited
+    phase: 'closed',
     sessionId: null,
     fingerprint: null,
     messages: [],
     turnsUsed: 0,
     maxTurns: CONFIG.LIMITS.SESSION_ANON,
-    limitType: 'session',
     recorder: null,
     recordStart: 0,
     recordTimer: null,
-    retryAfter: 0,
-    pendingMsg: null
+    wantsVoiceReply: false,
+    preferredReplyLanguage: null,
+    quota: {
+      remainingTurnsSession: null,
+      remainingTurnsDay: null,
+      remainingTtsDay: null,
+      ttsAvailable: true,
+      limitState: 'ok',
+      softWarningState: 'none',
+      replyLanguage: 'en'
+    },
+    activeAudio: null,
+    activeAudioUrl: null,
+    activeAudioButton: null
   };
 
-  // ── Supabase REST helpers ──
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function currentLang() {
+    return normalizeLang(document.documentElement.getAttribute('lang') || 'en');
+  }
+
+  function currentDir() {
+    return (document.documentElement.getAttribute('dir') || (currentLang() === 'ar' ? 'rtl' : 'ltr')).toLowerCase() === 'rtl' ? 'rtl' : 'ltr';
+  }
+
+  function normalizeLang(value) {
+    return String(value || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en';
+  }
+
+  function t(key) {
+    var lang = currentLang();
+    var dict = window.__i18n || {};
+    if (dict[key] && dict[key][lang] != null) return dict[key][lang];
+
+    var fallback = {
+      chat_empty_title: { en: 'GRINDCTRL Trial Playground', ar: 'ساحة تجربة GRINDCTRL' },
+      chat_empty_desc: { en: 'Preview how AI can answer, listen, and speak back without leaving the page.', ar: 'جرّب كيف يمكن للذكاء الاصطناعي أن يجيب ويستمع ويرد صوتياً بدون مغادرة الصفحة.' },
+      chat_placeholder: { en: 'Ask about your workflow, follow-up, support, or operations...', ar: 'اسأل عن سير العمل أو المتابعة أو الدعم أو العمليات...' },
+      chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
+      chat_turns_left: { en: 'left', ar: 'متبقي' },
+      chat_today_left: { en: 'today', ar: 'اليوم' },
+      chat_limit_title: { en: "You've reached the free trial limit", ar: 'لقد وصلت إلى حد التجربة المجانية' },
+      chat_limit_desc: { en: 'You can keep testing, or jump to the 2-Min Workflow Tour.', ar: 'يمكنك متابعة الاستكشاف أو الانتقال إلى جولة سير العمل خلال دقيقتين.' },
+      chat_limit_cta1: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
+      chat_limit_cta2: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
+      chat_limit_cta3: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
+      chat_limit_fine: { en: 'Free 30-min session · No obligation · Confidential', ar: 'جلسة مجانية ٣٠ دقيقة · بدون التزام · سري' },
+      chat_error_msg: { en: 'Something went wrong. Please try again.', ar: 'حدث خطأ. يرجى المحاولة مرة أخرى.' },
+      chat_retry: { en: 'Retry', ar: 'إعادة المحاولة' },
+      chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
+      chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
+      chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
+      chat_open_label: { en: 'Open AI Agent Trial', ar: 'فتح تجربة الوكيل الذكي' },
+      chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
+      chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
+      chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
+      chat_attach_label: { en: 'Attach audio file', ar: 'إرفاق ملف صوتي' },
+      chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' },
+      chat_playground_subtitle: { en: 'Ask, speak, and hear how the system responds.', ar: 'اسأل وتحدث واستمع لكيفية استجابة النظام.' },
+      chat_prompt_label: { en: 'Suggested prompts', ar: 'اقتراحات سريعة' },
+      chat_cap_ask: { en: 'Ask', ar: 'اسأل' },
+      chat_cap_speak: { en: 'Speak', ar: 'تحدث' },
+      chat_cap_hear: { en: 'Hear', ar: 'استمع' },
+      chat_hear_next: { en: 'Hear next reply', ar: 'استمع للرد التالي' },
+      chat_hear_unavailable: { en: 'Voice preview unavailable', ar: 'المعاينة الصوتية غير متاحة' },
+      chat_audio_hint: { en: 'Voice input up to 30s', ar: 'إدخال صوتي حتى ٣٠ ثانية' },
+      chat_reply_language: { en: 'Reply language', ar: 'لغة الرد' },
+      chat_play_reply: { en: 'Play reply', ar: 'تشغيل الرد' },
+      chat_pause_reply: { en: 'Pause reply', ar: 'إيقاف الرد' },
+      chat_warning_turn_title: { en: '1 free turn left', ar: 'تبقّت محاولة مجانية واحدة' },
+      chat_warning_voice_title: { en: '1 voice preview left', ar: 'تبقّت معاينة صوتية واحدة' },
+      chat_warning_desc: { en: 'You can keep testing, or jump to the 2-Min Workflow Tour.', ar: 'يمكنك متابعة الاستكشاف أو الانتقال إلى جولة سير العمل خلال دقيقتين.' },
+      chat_warning_voice_desc: { en: 'Text replies continue, and you can still preview one more spoken answer.', ar: 'الردود النصية مستمرة، ولا يزال بإمكانك معاينة رد صوتي واحد إضافي.' },
+      chat_cta_continue: { en: 'Continue Trial', ar: 'تابع التجربة' },
+      chat_cta_final_turn: { en: 'Use Final Free Turn', ar: 'استخدم المحاولة المجانية الأخيرة' },
+      chat_cta_tour: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
+      chat_cta_book: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
+      chat_cta_tell: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
+      chat_rate_limited: { en: 'Please wait a moment and try again.', ar: 'يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.' },
+      chat_active_conflict: { en: 'Another conversation is already active for this browser.', ar: 'هناك محادثة أخرى نشطة بالفعل لهذا المتصفح.' },
+      chat_mic_denied: { en: 'Microphone access was denied.', ar: 'تم رفض الوصول إلى الميكروفون.' },
+      chat_audio_too_large: { en: 'Audio file is too large. Maximum is 2 MB.', ar: 'ملف الصوت كبير جداً. الحد الأقصى ٢ ميجابايت.' },
+      chat_audio_invalid: { en: 'Please select an audio file.', ar: 'يرجى اختيار ملف صوتي.' },
+      chat_recording_limit: { en: 'Maximum recording length reached.', ar: 'تم الوصول إلى الحد الأقصى لمدة التسجيل.' },
+      chat_transcribing_status: { en: 'Transcribing voice note...', ar: 'جارٍ نسخ الملاحظة الصوتية...' },
+      chat_generating_status: { en: 'Generating response...', ar: 'جارٍ توليد الرد...' },
+      chat_try_voice_preview: { en: 'Turn on Hear to get a voice preview with the next reply.', ar: 'فعّل الاستماع للحصول على معاينة صوتية مع الرد التالي.' }
+    };
+
+    if (fallback[key]) return fallback[key][lang] || fallback[key].en;
+    return key;
+  }
+
   function sbHeaders() {
     return {
-      'apikey': CONFIG.SUPABASE_ANON_KEY,
-      'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY,
+      apikey: CONFIG.SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + CONFIG.SUPABASE_ANON_KEY,
       'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
+      Prefer: 'return=representation'
     };
   }
 
@@ -49,86 +151,65 @@
       method: method,
       headers: sbHeaders(),
       body: body ? JSON.stringify(body) : undefined
-    }).then(function (r) {
-      return r.json().then(function (data) {
-        // Supabase returns {code, message, details} on error — treat as null
+    }).then(function (response) {
+      return response.json().then(function (data) {
         if (data && !Array.isArray(data) && data.code) return null;
         return data;
       });
-    }).catch(function () { return null; });
-  }
-
-  function sbUpload(path, blob) {
-    return fetch(CONFIG.SUPABASE_URL + '/storage/v1/object/trial-audio/' + path, {
-      method: 'PUT',
-      headers: {
-        'apikey': CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY,
-        'Content-Type': blob.type || 'audio/webm'
-      },
-      body: blob
+    }).catch(function () {
+      return null;
     });
   }
 
-  // ── Fingerprint ──
   function getFingerprint() {
-    var fp = null;
-    try { fp = localStorage.getItem('gc_fp'); } catch (e) { }
-    if (!fp) {
-      fp = crypto.randomUUID ? crypto.randomUUID() : 'fp-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-      try { localStorage.setItem('gc_fp', fp); } catch (e) { }
-    }
-    return fp;
+    var existing = null;
+    try { existing = localStorage.getItem('gc_fp'); } catch (error) {}
+    if (existing) return existing;
+    existing = crypto.randomUUID ? crypto.randomUUID() : 'fp-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    try { localStorage.setItem('gc_fp', existing); } catch (error2) {}
+    return existing;
   }
 
-  // ── Session ──
   function getSessionId() {
-    var sid = null;
-    try { sid = sessionStorage.getItem('gc_sid'); } catch (e) { }
-    return sid;
+    try { return sessionStorage.getItem('gc_sid'); } catch (error) { return null; }
   }
-  function storeSessionId(sid) {
-    try { sessionStorage.setItem('gc_sid', sid); } catch (e) { }
+
+  function storeSessionId(sessionId) {
+    try { sessionStorage.setItem('gc_sid', sessionId); } catch (error) {}
   }
 
   async function ensureSession() {
     if (state.sessionId) return state.sessionId;
-    var sid = getSessionId();
-    if (sid) { state.sessionId = sid; state.fingerprint = getFingerprint(); return sid; }
+
+    var existing = getSessionId();
+    if (existing) {
+      state.sessionId = existing;
+      state.fingerprint = getFingerprint();
+      return existing;
+    }
+
     state.fingerprint = getFingerprint();
     var identityKey = 'anon:' + state.fingerprint;
-    var lang = document.documentElement.getAttribute('lang') || 'en';
-    var newSid = crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,function(c){return(c^(crypto.getRandomValues(new Uint8Array(1))[0]&(15>>c/4))).toString(16)});
+    var lang = currentLang();
+    var nextSessionId = crypto.randomUUID ? crypto.randomUUID() : 'sid-' + Date.now() + '-' + Math.random().toString(36).slice(2);
     var rows = await sbFetch('trial_sessions', 'POST', {
-      session_id: newSid,
+      session_id: nextSessionId,
       identity_key: identityKey,
       locale: lang,
       user_agent_hash: navigator.userAgent.slice(0, 128),
       source_page: location.href || null,
       status: 'active'
     });
+
     if (rows && rows[0]) {
       state.sessionId = rows[0].session_id;
       storeSessionId(state.sessionId);
       trackEvent('session_start', {});
     }
+
     return state.sessionId;
   }
 
-  // ── Usage (n8n is the single source of truth for quota enforcement) ──
-  // The n8n workflow counts turns from trial_messages and manages trial_usage_counters.
-  // The frontend should NOT independently create/query/increment usage counters.
-  async function checkUsage() {
-    // Lightweight client-side check only — n8n enforces real limits server-side
-    if (state.phase === 'limit') return false;
-    return true;
-  }
-
-  async function incrementUsage() {
-    // No-op: n8n upserts trial_usage_counters after each successful turn
-  }
-
-  // ── Analytics ──
   function trackEvent(type, data) {
     if (!state.sessionId) return;
     sbFetch('trial_events', 'POST', {
@@ -136,7 +217,7 @@
       event_type: type,
       severity: 'info',
       payload_json: data || {}
-    }).catch(function () { });
+    }).catch(function () {});
   }
 
   function trackCTA(ctaType, action, ctaLocation) {
@@ -145,757 +226,1053 @@
       session_id: state.sessionId,
       cta_type: ctaType,
       event_action: action,
-      cta_location: ctaLocation || '',
+      cta_location: ctaLocation || 'chat',
       source_page: location.href || null,
-      locale: document.documentElement.getAttribute('lang') || 'en'
-    }).catch(function () { });
+      locale: currentLang()
+    }).catch(function () {});
   }
 
-  // ── i18n ──
-  function t(key) {
-    var lang = document.documentElement.getAttribute('lang') || 'en';
-    var T = window.__i18n;
-    if (T && T[key] && T[key][lang] != null) return T[key][lang];
-    // Fallback inline translations
-    var fallback = {
-      chat_empty_title: { en: 'Talk to the GrindCTRL Agent', ar: 'تحدث مع وكيل GrindCTRL' },
-      chat_empty_desc: { en: 'Ask about AI automation, workflows, or how we can help your business.', ar: 'اسأل عن الأتمتة الذكية أو سير العمل أو كيف يمكننا مساعدة أعمالك.' },
-      chat_placeholder: { en: 'Ask anything...', ar: 'اسأل أي شيء...' },
-      chat_prompt_1: { en: 'What can AI automate in my business?', ar: 'ما الذي يمكن للذكاء الاصطناعي أتمتته؟' },
-      chat_prompt_2: { en: 'How does GrindCTRL work?', ar: 'كيف يعمل GrindCTRL؟' },
-      chat_prompt_3: { en: 'What results do clients see?', ar: 'ما النتائج التي يحققها العملاء؟' },
-      chat_prompt_4: { en: 'Can you help with e-commerce?', ar: 'هل تساعدون في التجارة الإلكترونية؟' },
-      chat_turns_remaining: { en: ' turns remaining', ar: ' محاولات متبقية' },
-      chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
-      chat_limit_title: { en: "You've experienced the GrindCTRL Agent", ar: 'لقد جرّبت وكيل GrindCTRL' },
-      chat_limit_desc: { en: 'Ready to see what it can do for your business?', ar: 'مستعد لترى ما يمكنه فعله لأعمالك؟' },
-      chat_limit_cta1: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
-      chat_limit_cta2: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل' },
-      chat_limit_cta3: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
-      chat_limit_fine: { en: 'Free 30-min session · No obligation · Confidential', ar: 'جلسة مجانية ٣٠ دقيقة · بدون التزام · سري' },
-      chat_error_msg: { en: 'Something went wrong. Please try again.', ar: 'حدث خطأ. يرجى المحاولة مرة أخرى.' },
-      chat_retry: { en: 'Retry', ar: 'إعادة المحاولة' },
-      chat_recording: { en: 'Recording...', ar: 'جارٍ التسجيل...' },
-      chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
-      chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
-      chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-      nav_try_agent: { en: 'Try the Agent', ar: 'جرّب الوكيل' },
-      hero_cta_try: { en: 'Try the Agent', ar: 'جرّب الوكيل' },
-      chat_open_label: { en: 'Open AI Agent Trial', ar: 'فتح تجربة الوكيل الذكي' },
-      chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
-      chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
-      chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
-      chat_attach_label: { en: 'Attach audio file', ar: 'إرفاق ملف صوتي' },
-      chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' }
+  function escapeHTML(value) {
+    var div = document.createElement('div');
+    div.textContent = value == null ? '' : String(value);
+    return div.innerHTML;
+  }
+
+  function formatMessageHTML(value) {
+    return escapeHTML(String(value || '')).replace(/\n/g, '<br/>');
+  }
+
+  function escapeSelectorValue(value) {
+    var stringValue = String(value || '');
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(stringValue);
+    return stringValue.replace(/["\\]/g, '\\$&');
+  }
+
+  function getPromptList() {
+    return CONFIG.PROMPTS[currentLang()] || CONFIG.PROMPTS.en;
+  }
+
+  function getHistory() {
+    return state.messages
+      .filter(function (entry) { return entry.role === 'user' || entry.role === 'assistant'; })
+      .map(function (entry) { return { role: entry.role, content: entry.content }; })
+      .slice(-6);
+  }
+
+  function getReplyLanguage() {
+    return normalizeLang(state.preferredReplyLanguage || state.quota.replyLanguage || currentLang());
+  }
+
+  function remainingTurnsValue() {
+    if (state.quota.remainingTurnsSession !== null && state.quota.remainingTurnsSession !== undefined) {
+      return Math.max(Number(state.quota.remainingTurnsSession) || 0, 0);
+    }
+    if (state.quota.remainingTurnsDay !== null && state.quota.remainingTurnsDay !== undefined) {
+      return Math.max(Number(state.quota.remainingTurnsDay) || 0, 0);
+    }
+    return Math.max(state.maxTurns - state.turnsUsed, 0);
+  }
+
+  function remainingTurnsLabel() {
+    if (state.quota.remainingTurnsSession !== null && state.quota.remainingTurnsSession !== undefined) return t('chat_turns_left');
+    if (state.quota.remainingTurnsDay !== null && state.quota.remainingTurnsDay !== undefined) return t('chat_today_left');
+    return t('chat_turns_left');
+  }
+
+  function isNearTurnLimit() {
+    return remainingTurnsValue() <= 1;
+  }
+
+  function noTurnsRemaining() {
+    var remainingSession = state.quota.remainingTurnsSession;
+    var remainingDay = state.quota.remainingTurnsDay;
+    return (remainingSession !== null && remainingSession !== undefined && Number(remainingSession) <= 0) ||
+      (remainingDay !== null && remainingDay !== undefined && Number(remainingDay) <= 0);
+  }
+
+  function clearSystemMessages() {
+    state.messages = state.messages.filter(function (entry) {
+      return entry.role !== 'system';
+    });
+  }
+
+  function updateQuotaFromResponse(data) {
+    if (!data) return;
+
+    if (data.remaining_turns_session !== undefined) {
+      state.quota.remainingTurnsSession = data.remaining_turns_session;
+      if (data.remaining_turns_session !== null) {
+        state.turnsUsed = Math.max(state.maxTurns - Number(data.remaining_turns_session || 0), 0);
+      }
+    }
+    if (data.remaining_turns_day !== undefined) state.quota.remainingTurnsDay = data.remaining_turns_day;
+    if (data.remaining_tts_previews_day !== undefined) state.quota.remainingTtsDay = data.remaining_tts_previews_day;
+    if (data.tts_available !== undefined) state.quota.ttsAvailable = !!data.tts_available;
+    if (data.limit_state) state.quota.limitState = data.limit_state;
+    if (data.soft_warning_state) state.quota.softWarningState = data.soft_warning_state;
+    if (data.reply_language) state.quota.replyLanguage = normalizeLang(data.reply_language);
+  }
+
+  function localizeCtaPayload(kind, serverPayload, softWarningState) {
+    var source = serverPayload || {};
+    var fallbackByKind = {
+      limit: {
+        title: t('chat_limit_title'),
+        message: t('chat_limit_desc'),
+        primary: { type: 'workflow_tour', label: t('chat_limit_cta1'), href: '#solutions' },
+        secondary: { type: 'book_call', label: t('chat_limit_cta2'), href: '#book' },
+        tertiary: { type: 'tell_us', label: t('chat_limit_cta3'), href: 'mailto:hello@grindctrl.com?subject=Tell%20Us%20About%20Your%20Business' }
+      },
+      turns_near_limit: {
+        title: t('chat_warning_turn_title'),
+        message: t('chat_warning_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      turns_and_tts_near_limit: {
+        title: t('chat_warning_turn_title'),
+        message: t('chat_warning_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      tts_near_limit: {
+        title: t('chat_warning_voice_title'),
+        message: t('chat_warning_voice_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      }
     };
-    if (fallback[key]) return fallback[key][lang] || fallback[key].en;
-    return key;
+
+    var base = fallbackByKind[kind] || fallbackByKind[softWarningState] || fallbackByKind.limit;
+    return {
+      title: base.title,
+      subtitle: base.message,
+      message: base.message,
+      primary: {
+        type: (source.primary && source.primary.type) || base.primary.type,
+        label: base.primary.label,
+        href: (source.primary && source.primary.href) || base.primary.href
+      },
+      secondary: {
+        type: (source.secondary && source.secondary.type) || base.secondary.type,
+        label: base.secondary.label,
+        href: (source.secondary && source.secondary.href) || base.secondary.href
+      },
+      tertiary: {
+        type: (source.tertiary && source.tertiary.type) || base.tertiary.type,
+        label: base.tertiary.label,
+        href: (source.tertiary && source.tertiary.href) || base.tertiary.href
+      }
+    };
   }
 
-  // ── DOM Builder ──
+  function appendSystemCard(kind, payload, warningState) {
+    clearSystemMessages();
+    state.messages.push({
+      role: 'system',
+      kind: kind,
+      payload: payload,
+      warningState: warningState || 'none'
+    });
+
+    if (payload && payload.primary) trackCTA(payload.primary.type || 'primary', 'impression', kind + '_card');
+    if (payload && payload.secondary) trackCTA(payload.secondary.type || 'secondary', 'impression', kind + '_card');
+    if (payload && payload.tertiary) trackCTA(payload.tertiary.type || 'tertiary', 'impression', kind + '_card');
+  }
+
+  function removeSystemCards() {
+    clearSystemMessages();
+    renderAll();
+  }
+
+  function relocalizeSystemMessages() {
+    state.messages = state.messages.map(function (entry) {
+      if (entry.role !== 'system') return entry;
+
+      var cardKind = entry.kind === 'limit' ? 'limit' : (entry.warningState || 'turns_near_limit');
+      return {
+        role: 'system',
+        kind: entry.kind,
+        warningState: entry.warningState || 'none',
+        payload: localizeCtaPayload(cardKind, entry.payload, entry.warningState)
+      };
+    });
+  }
+
+  function stopActiveAudio() {
+    if (state.activeAudio) {
+      state.activeAudio.pause();
+      state.activeAudio = null;
+    }
+    if (state.activeAudioButton) {
+      state.activeAudioButton.textContent = t('chat_play_reply');
+      state.activeAudioButton.setAttribute('aria-pressed', 'false');
+      state.activeAudioButton = null;
+    }
+    state.activeAudioUrl = null;
+  }
+
+  function toggleAudio(url, button) {
+    if (!url) return;
+    if (state.activeAudio && state.activeAudioUrl === url) {
+      if (state.activeAudio.paused) {
+        state.activeAudio.play().catch(function () {});
+        button.textContent = t('chat_pause_reply');
+        button.setAttribute('aria-pressed', 'true');
+      } else {
+        stopActiveAudio();
+      }
+      return;
+    }
+
+    stopActiveAudio();
+    state.activeAudio = new Audio(url);
+    state.activeAudioUrl = url;
+    state.activeAudioButton = button;
+    button.textContent = t('chat_pause_reply');
+    button.setAttribute('aria-pressed', 'true');
+
+    state.activeAudio.addEventListener('ended', stopActiveAudio, { once: true });
+    state.activeAudio.play().catch(function () {
+      stopActiveAudio();
+      showToast(t('chat_error_msg'));
+    });
+  }
+
   function buildWidget() {
-    // Trigger button
     var trigger = document.createElement('button');
     trigger.id = 'gc-chat-trigger';
     trigger.className = 'gc-chat-trigger';
     trigger.setAttribute('aria-label', t('chat_open_label'));
-    trigger.innerHTML = '<span class="material-symbols-outlined">smart_toy</span><span class="gc-chat-trigger-badge"></span>';
+    trigger.innerHTML = [
+      '<span class="material-symbols-outlined">smart_toy</span>',
+      '<span class="gc-chat-trigger-badge"></span>'
+    ].join('');
     document.body.appendChild(trigger);
 
-    // Panel
+    var scrim = document.createElement('div');
+    scrim.id = 'gc-chat-scrim';
+    scrim.className = 'gc-chat-scrim';
+    document.body.appendChild(scrim);
+
     var panel = document.createElement('div');
     panel.id = 'gc-chat-panel';
     panel.className = 'gc-chat-panel';
     panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-label', 'AI Agent Trial Chat');
-    panel.innerHTML = buildPanelHTML();
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', 'GRINDCTRL Trial Playground');
+    panel.innerHTML = buildPanelShell();
     document.body.appendChild(panel);
 
-    // Toast
     var toast = document.createElement('div');
     toast.id = 'gc-toast';
     toast.className = 'gc-toast';
     document.body.appendChild(toast);
 
     bindEvents();
+    renderAll();
   }
 
-  function buildPanelHTML() {
-    var remaining = state.maxTurns - state.turnsUsed;
-    var isDark = document.documentElement.classList.contains('dark');
-    var logoSrc = isDark ? 'logo-dark.svg' : 'logo-light.svg';
+  function buildPanelShell() {
+    var logoSrc = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
 
-    return '' +
-      '<div class="gc-chat-header">' +
-      '  <div class="gc-chat-header-brand">' +
-      '    <div class="gc-chat-header-logo"><img id="gc-logo-img" src="' + logoSrc + '" alt="GRINDCTRL"/></div>' +
-      '    <span class="gc-chat-header-name">GRINDCTRL</span>' +
-      '  </div>' +
-      '  <span class="gc-chat-header-badge">' + t('chat_trial_agent') + '</span>' +
-      '  <span id="gc-turns" class="gc-chat-header-turns">' + remaining + t('chat_turns_remaining') + '</span>' +
-      '  <button id="gc-close" class="gc-chat-close" aria-label="' + t('chat_close_label') + '">' +
-      '    <span class="material-symbols-outlined" style="font-size:20px">close</span>' +
-      '  </button>' +
-      '</div>' +
-      '<div id="gc-chat-body" class="gc-chat-body">' +
-      '  <div id="gc-empty" class="gc-chat-empty">' +
-      '    <div class="gc-chat-empty-icon"><span class="material-symbols-outlined" style="font-size:24px">smart_toy</span></div>' +
-      '    <div class="gc-chat-empty-title">' + t('chat_empty_title') + '</div>' +
-      '    <div class="gc-chat-empty-desc">' + t('chat_empty_desc') + '</div>' +
-      '    <div class="gc-chat-prompts">' +
-      '      <button class="gc-chat-prompt-btn" data-prompt="1">' + t('chat_prompt_1') + '</button>' +
-      '      <button class="gc-chat-prompt-btn" data-prompt="2">' + t('chat_prompt_2') + '</button>' +
-      '      <button class="gc-chat-prompt-btn" data-prompt="3">' + t('chat_prompt_3') + '</button>' +
-      '      <button class="gc-chat-prompt-btn" data-prompt="4">' + t('chat_prompt_4') + '</button>' +
-      '    </div>' +
-      '  </div>' +
-      '</div>' +
-      '<div class="gc-drop-zone" id="gc-drop-zone">' +
-      '  <span class="material-symbols-outlined gc-drop-zone-icon">upload_file</span>' +
-      '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>' +
-      '</div>' +
-      '<div id="gc-input-area" class="gc-chat-input-area">' +
-      '  <div id="gc-recording-bar" class="gc-recording-bar">' +
-      '    <span class="gc-recording-dot"></span>' +
-      '    <span id="gc-rec-timer" class="gc-recording-timer">0:00</span>' +
-      '    <button id="gc-rec-cancel" class="gc-recording-cancel">' + t('chat_cancel') + '</button>' +
-      '  </div>' +
-      '  <div class="gc-chat-input-row">' +
-      '    <textarea id="gc-textarea" class="gc-chat-textarea" placeholder="' + t('chat_placeholder') + '" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>' +
-      '    <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>' +
-      '    <button id="gc-attach-btn" class="gc-input-btn" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '">' +
-      '      <span class="material-symbols-outlined" style="font-size:20px">attach_file</span>' +
-      '    </button>' +
-      '    <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '">' +
-      '      <span class="material-symbols-outlined" style="font-size:20px">mic</span>' +
-      '    </button>' +
-      '    <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '">' +
-      '      <span class="material-symbols-outlined" style="font-size:20px">send</span>' +
-      '    </button>' +
-      '  </div>' +
-      '</div>';
+    return [
+      '<div class="gc-chat-header">',
+      '  <div class="gc-chat-header-brand">',
+      '    <div class="gc-chat-header-logo"><img id="gc-logo-img" src="' + logoSrc + '" alt="GRINDCTRL"/></div>',
+      '    <div class="gc-chat-header-copy">',
+      '      <div class="gc-chat-header-name-row">',
+      '        <span class="gc-chat-header-name">GRINDCTRL</span>',
+      '        <span class="gc-chat-header-badge" id="gc-header-badge">' + t('chat_trial_agent') + '</span>',
+      '      </div>',
+      '      <div class="gc-chat-header-subtitle" id="gc-header-subtitle"></div>',
+      '    </div>',
+      '  </div>',
+      '  <div class="gc-chat-header-actions">',
+      '    <div id="gc-turns-pill" class="gc-turns-pill"></div>',
+      '    <button id="gc-close" class="gc-chat-close" aria-label="' + t('chat_close_label') + '"><span class="material-symbols-outlined">close</span></button>',
+      '  </div>',
+      '</div>',
+      '<div id="gc-chat-body" class="gc-chat-body">',
+      '  <section id="gc-chat-intro" class="gc-chat-intro"></section>',
+      '  <div id="gc-chat-list" class="gc-chat-list" aria-live="polite"></div>',
+      '</div>',
+      '<div class="gc-drop-zone" id="gc-drop-zone">',
+      '  <span class="material-symbols-outlined gc-drop-zone-icon">audio_file</span>',
+      '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>',
+      '</div>',
+      '<div id="gc-input-area" class="gc-chat-input-area">',
+      '  <div id="gc-composer-utility" class="gc-composer-utility"></div>',
+      '  <div id="gc-recording-bar" class="gc-recording-bar">',
+      '    <span class="gc-recording-dot"></span>',
+      '    <span class="gc-recording-label">' + t('chat_recording') + '</span>',
+      '    <span id="gc-rec-timer" class="gc-recording-timer">0:00</span>',
+      '    <button id="gc-rec-cancel" class="gc-recording-cancel" type="button">' + t('chat_cancel') + '</button>',
+      '  </div>',
+      '  <div class="gc-chat-input-row">',
+      '    <textarea id="gc-textarea" class="gc-chat-textarea" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>',
+      '    <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
+      '    <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span></button>',
+      '    <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span></button>',
+      '    <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span></button>',
+      '  </div>',
+      '</div>'
+    ].join('');
   }
 
-  // ── Render Helpers ──
-  function $(id) { return document.getElementById(id); }
+  function renderAll() {
+    relocalizeSystemMessages();
+    renderChrome();
+    renderHeader();
+    renderIntro();
+    renderMessages();
+    renderComposer();
+  }
+
+  function renderChrome() {
+    var trigger = $('gc-chat-trigger');
+    var panel = $('gc-chat-panel');
+    var closeButton = $('gc-close');
+    var recordingLabel = document.querySelector('.gc-recording-label');
+    var cancelButton = $('gc-rec-cancel');
+    var dropZoneText = document.querySelector('.gc-drop-zone-text');
+    var attachButton = $('gc-attach-btn');
+    var micButton = $('gc-mic-btn');
+    var sendButton = $('gc-send-btn');
+
+    if (trigger) trigger.setAttribute('aria-label', t('chat_open_label'));
+    if (panel) panel.setAttribute('aria-label', t('chat_empty_title'));
+    if (closeButton) closeButton.setAttribute('aria-label', t('chat_close_label'));
+    if (recordingLabel) recordingLabel.textContent = t('chat_recording');
+    if (cancelButton) cancelButton.textContent = t('chat_cancel');
+    if (dropZoneText) dropZoneText.textContent = t('chat_drop_audio');
+
+    if (attachButton) {
+      attachButton.setAttribute('aria-label', t('chat_attach_label'));
+      attachButton.setAttribute('title', t('chat_attach_label'));
+    }
+    if (micButton) {
+      micButton.setAttribute('aria-label', t('chat_mic_label'));
+      micButton.setAttribute('title', t('chat_mic_label'));
+    }
+    if (sendButton) {
+      sendButton.setAttribute('aria-label', t('chat_send_label'));
+      sendButton.setAttribute('title', t('chat_send_label'));
+    }
+  }
+
+  function renderHeader() {
+    var subtitle = $('gc-header-subtitle');
+    var turnsPill = $('gc-turns-pill');
+    var logo = $('gc-logo-img');
+    var badge = $('gc-header-badge');
+
+    if (subtitle) subtitle.textContent = t('chat_playground_subtitle');
+    if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
+    if (badge) badge.textContent = t('chat_trial_agent');
+    if (!turnsPill) return;
+
+    turnsPill.className = 'gc-turns-pill' + (isNearTurnLimit() ? ' warning' : '');
+    turnsPill.innerHTML = [
+      '<span class="gc-turns-pill-value">' + escapeHTML(String(remainingTurnsValue())) + '</span>',
+      '<span class="gc-turns-pill-label">' + escapeHTML(remainingTurnsLabel()) + '</span>'
+    ].join('');
+  }
+
+  function renderIntro() {
+    var intro = $('gc-chat-intro');
+    if (!intro) return;
+
+    var prompts = getPromptList();
+    var compact = state.messages.length > 0;
+    intro.className = 'gc-chat-intro' + (compact ? ' compact' : '');
+
+    intro.innerHTML = [
+      '<div class="gc-chat-intro-copy">',
+      '  <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
+      '  <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '</div>',
+      '<div class="gc-chat-intro-group">',
+      '  <div class="gc-chat-intro-label">' + escapeHTML(t('chat_prompt_label')) + '</div>',
+      '  <div class="gc-chat-prompts">',
+      prompts.map(function (prompt, index) {
+        return '<button class="gc-chat-prompt-btn" type="button" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
+      }).join(''),
+      '  </div>',
+      '</div>',
+      '<div class="gc-capability-chips">',
+      '  <button type="button" class="gc-capability-chip active" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
+      '  <button type="button" class="gc-capability-chip' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
+      '  <button type="button" class="gc-capability-chip' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderSystemCard(entry) {
+    var payload = entry.payload || {};
+    var cardKind = entry.kind === 'limit' ? ' limit' : ' soft';
+    return [
+      '<div class="gc-system-card' + cardKind + '">',
+      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">' + (entry.kind === 'limit' ? 'bolt' : 'flag') + '</span></div>',
+      '  <div class="gc-system-card-body">',
+      '    <div class="gc-system-card-title">' + escapeHTML(payload.title || '') + '</div>',
+      '    <div class="gc-system-card-desc">' + escapeHTML(payload.message || payload.subtitle || '') + '</div>',
+      '    <div class="gc-system-card-actions">',
+      payload.primary ? '<button type="button" class="gc-system-card-primary" data-action="cta" data-cta-type="' + escapeHTML(payload.primary.type || 'primary') + '" data-cta-href="' + escapeHTML(payload.primary.href || '') + '">' + escapeHTML(payload.primary.label || '') + '</button>' : '',
+      payload.secondary ? '<button type="button" class="gc-system-card-secondary" data-action="cta" data-cta-type="' + escapeHTML(payload.secondary.type || 'secondary') + '" data-cta-href="' + escapeHTML(payload.secondary.href || '') + '">' + escapeHTML(payload.secondary.label || '') + '</button>' : '',
+      payload.tertiary ? '<button type="button" class="gc-system-card-secondary tertiary" data-action="cta" data-cta-type="' + escapeHTML(payload.tertiary.type || 'tertiary') + '" data-cta-href="' + escapeHTML(payload.tertiary.href || '') + '">' + escapeHTML(payload.tertiary.label || '') + '</button>' : '',
+      '    </div>',
+      '    <div class="gc-system-card-fine">' + escapeHTML(t('chat_limit_fine')) + '</div>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderMessage(entry) {
+    if (entry.role === 'system') return renderSystemCard(entry);
+
+    var isUser = entry.role === 'user';
+    var actions = '';
+    var meta = '';
+
+    if (!isUser) {
+      var replyLang = normalizeLang(entry.replyLanguage || getReplyLanguage()).toUpperCase();
+      var actionBits = [
+        '<span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span>'
+      ];
+      if (entry.ttsAudioUrl) {
+        actionBits.push('<button type="button" class="gc-msg-action" data-action="play-reply" data-audio-url="' + escapeHTML(entry.ttsAudioUrl) + '" aria-pressed="false">' + escapeHTML(t('chat_play_reply')) + '</button>');
+      }
+      actions = '<div class="gc-msg-actions">' + actionBits.join('') + '</div>';
+      meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
+    }
+
+    if (entry.voice) {
+      actions += '<div class="gc-msg-voice-badge"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice')) + '</span></div>';
+    }
+
+    return [
+      '<div class="gc-msg gc-msg-' + (isUser ? 'user' : 'ai') + '">',
+      meta,
+      '  <div class="gc-msg-bubble" dir="auto">' + formatMessageHTML(entry.content) + '</div>',
+      actions,
+      '</div>'
+    ].join('');
+  }
+
+  function renderMessages() {
+    var list = $('gc-chat-list');
+    if (!list) return;
+
+    var html = state.messages.map(renderMessage).join('');
+
+    if (state.phase === 'responding') {
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
+    } else if (state.phase === 'transcribing') {
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_transcribing_status')) + '</span></div>';
+    }
+
+    list.innerHTML = html;
+
+    if (state.activeAudio && state.activeAudioUrl) {
+      var activeButton = list.querySelector('[data-action="play-reply"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
+      if (activeButton) {
+        activeButton.textContent = t('chat_pause_reply');
+        activeButton.setAttribute('aria-pressed', 'true');
+        state.activeAudioButton = activeButton;
+      }
+    }
+
+    scrollToBottom();
+  }
+
+  function renderComposer() {
+    var textarea = $('gc-textarea');
+    var sendBtn = $('gc-send-btn');
+    var micBtn = $('gc-mic-btn');
+    var attachBtn = $('gc-attach-btn');
+    var inputArea = $('gc-input-area');
+    var utility = $('gc-composer-utility');
+    var recordingBar = $('gc-recording-bar');
+    var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing';
+    var hearDisabled = !state.quota.ttsAvailable;
+    var replyLang = getReplyLanguage().toUpperCase();
+
+    if (textarea) {
+      textarea.placeholder = t('chat_placeholder');
+      textarea.disabled = state.phase === 'limit';
+    }
+
+    if (sendBtn && textarea) {
+      sendBtn.classList.toggle('gc-hidden', textarea.value.trim() === '' || disabled);
+      sendBtn.disabled = disabled;
+    }
+
+    if (micBtn) {
+      micBtn.disabled = disabled && state.phase !== 'recording';
+      micBtn.classList.toggle('recording', state.phase === 'recording');
+      micBtn.querySelector('.material-symbols-outlined').textContent = state.phase === 'recording' ? 'stop' : 'mic';
+    }
+
+    if (attachBtn) attachBtn.disabled = disabled;
+    if (inputArea) inputArea.classList.toggle('disabled', state.phase === 'limit');
+    if (recordingBar) recordingBar.classList.toggle('active', state.phase === 'recording');
+
+    if (utility) {
+      utility.innerHTML = [
+        '<button type="button" class="gc-mini-toggle' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear">',
+        '  <span class="material-symbols-outlined">volume_up</span>',
+        '  <span>' + escapeHTML(hearDisabled ? t('chat_hear_unavailable') : t('chat_hear_next')) + '</span>',
+        '</button>',
+        '<div class="gc-composer-meta">',
+        '  <button type="button" class="gc-lang-chip" data-action="toggle-reply-language" aria-label="' + escapeHTML(t('chat_reply_language')) + '">' + escapeHTML(replyLang) + '</button>',
+        '  <span class="gc-audio-hint">' + escapeHTML(t('chat_audio_hint')) + '</span>',
+        '</div>'
+      ].join('');
+    }
+  }
 
   function scrollToBottom() {
     var body = $('gc-chat-body');
-    if (body) requestAnimationFrame(function () { body.scrollTop = body.scrollHeight; });
-  }
-
-  function updateTurns() {
-    var el = $('gc-turns');
-    if (!el) return;
-    var r = state.maxTurns - state.turnsUsed;
-    el.textContent = r + t('chat_turns_remaining');
-    el.className = 'gc-chat-header-turns' + (r <= 1 ? ' warning' : '');
-  }
-
-  function hideEmpty() {
-    var el = $('gc-empty');
-    if (el) el.style.display = 'none';
-  }
-
-  function addMessageToDOM(role, content, extra) {
-    hideEmpty();
-    var body = $('gc-chat-body');
-    var wrapper = document.createElement('div');
-    wrapper.className = 'gc-msg gc-msg-' + (role === 'user' ? 'user' : 'ai');
-
-    var html = '';
-    if (role !== 'user') {
-      html += '<div class="gc-msg-ai-label">' +
-        '<div class="gc-msg-ai-avatar">AI</div>' +
-        '<span class="gc-msg-ai-name">GrindCTRL</span></div>';
-    }
-    html += '<div class="gc-msg-bubble">' + escapeHTML(content) + '</div>';
-    if (extra && extra.voice) {
-      html += '<div class="gc-msg-voice-badge"><span class="material-symbols-outlined">mic</span> ' + t('chat_voice') + '</div>';
-    }
-
-    wrapper.innerHTML = html;
-    body.appendChild(wrapper);
-    scrollToBottom();
-    return wrapper;
-  }
-
-  function showTyping() {
-    hideEmpty();
-    var body = $('gc-chat-body');
-    var d = document.createElement('div');
-    d.id = 'gc-typing';
-    d.className = 'gc-typing';
-    d.innerHTML = '<div class="gc-typing-dot"></div><div class="gc-typing-dot"></div><div class="gc-typing-dot"></div>';
-    body.appendChild(d);
-    scrollToBottom();
-  }
-
-  function hideTyping() {
-    var el = $('gc-typing');
-    if (el) el.remove();
-  }
-
-  function showError(msg) {
-    hideTyping();
-    var body = $('gc-chat-body');
-    var d = document.createElement('div');
-    d.className = 'gc-chat-error';
-    d.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">error</span>' +
-      '<span>' + (msg || t('chat_error_msg')) + '</span>' +
-      '<button onclick="this.parentElement.remove()">' + t('chat_retry') + '</button>';
-    body.appendChild(d);
-    scrollToBottom();
-  }
-
-  function showLimitCard(ctaPayload) {
-    hideTyping();
-    state.phase = 'limit';
-    var inputArea = $('gc-input-area');
-    if (inputArea) inputArea.classList.add('disabled');
-
-    // Use n8n's CTA payload if provided, otherwise fall back to local i18n
-    var cta = ctaPayload || {};
-    var title = cta.title || t('chat_limit_title');
-    var desc = cta.message || t('chat_limit_desc');
-    var primaryLabel = (cta.primary && cta.primary.label) || t('chat_limit_cta1');
-    var primaryHref = (cta.primary && cta.primary.href) || '#book';
-    var primaryType = (cta.primary && cta.primary.type) || 'book_call';
-    var secondaryLabel = (cta.secondary && cta.secondary.label) || t('chat_limit_cta2');
-    var secondaryHref = (cta.secondary && cta.secondary.href) || '#solutions';
-    var secondaryType = (cta.secondary && cta.secondary.type) || 'workflow_tour';
-    var tertiaryLabel = (cta.tertiary && cta.tertiary.label) || t('chat_limit_cta3');
-    var tertiaryHref = (cta.tertiary && cta.tertiary.href) || 'mailto:hello@grindctrl.com?subject=Tell%20Us%20About%20Our%20Business';
-    var tertiaryType = (cta.tertiary && cta.tertiary.type) || 'tell_us';
-
-    var body = $('gc-chat-body');
-    var card = document.createElement('div');
-    card.className = 'gc-limit-card';
-    card.innerHTML =
-      '<div class="gc-limit-card-icon">✦</div>' +
-      '<h3>' + escapeHTML(title) + '</h3>' +
-      '<p>' + escapeHTML(desc) + '</p>' +
-      '<button class="gc-limit-cta-primary" data-cta="' + primaryType + '" data-href="' + escapeHTML(primaryHref) + '">' + escapeHTML(primaryLabel) + '</button>' +
-      '<button class="gc-limit-cta-secondary" data-cta="' + secondaryType + '" data-href="' + escapeHTML(secondaryHref) + '">' + escapeHTML(secondaryLabel) + '</button>' +
-      '<button class="gc-limit-cta-secondary" data-cta="' + tertiaryType + '" data-href="' + escapeHTML(tertiaryHref) + '">' + escapeHTML(tertiaryLabel) + '</button>' +
-      '<div class="gc-limit-fine">' + t('chat_limit_fine') + '</div>';
-    body.appendChild(card);
-    scrollToBottom();
-
-    trackCTA(primaryType, 'impression', 'limit_card');
-    trackCTA(secondaryType, 'impression', 'limit_card');
-    trackCTA(tertiaryType, 'impression', 'limit_card');
-
-    // Bind CTA clicks
-    card.querySelectorAll('[data-cta]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var ctaType = btn.getAttribute('data-cta');
-        var href = btn.getAttribute('data-href') || '';
-        trackCTA(ctaType, 'click', 'limit_card');
-        if (href.startsWith('mailto:')) window.open(href, '_blank');
-        else if (href.startsWith('#')) navigateHash(href);
-        else if (href) window.location.href = href;
-        closeChat();
-      });
+    if (!body) return;
+    requestAnimationFrame(function () {
+      body.scrollTop = body.scrollHeight;
     });
   }
 
-  function navigateHash(hash) {
-    var link = document.createElement('a');
-    link.href = hash;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+  function showToast(message) {
+    var toast = $('gc-toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(showToast.timerId);
+    showToast.timerId = setTimeout(function () {
+      toast.classList.remove('show');
+    }, 3200);
   }
 
-  function showToast(msg) {
-    var el = $('gc-toast');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(function () { el.classList.remove('show'); }, 3000);
+  function showError(message) {
+    showToast(message || t('chat_error_msg'));
   }
 
-  function escapeHTML(s) {
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
+  function navigateCTA(type, href) {
+    if (type === 'continue_trial') {
+      removeSystemCards();
+      state.phase = 'open';
+      renderComposer();
+      if ($('gc-textarea')) $('gc-textarea').focus();
+      return;
+    }
+
+    if (href && href.indexOf('mailto:') === 0) {
+      window.open(href, '_blank');
+      closeChat();
+      return;
+    }
+
+    if (href && href.charAt(0) === '#') {
+      var link = document.createElement('a');
+      link.href = href;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      closeChat();
+      return;
+    }
+
+    if (href) {
+      window.location.href = href;
+      return;
+    }
   }
 
-  // ── Send Message ──
-  // The n8n workflow is the single source of truth:
-  //   - It inserts user + assistant messages into trial_messages
-  //   - It upserts trial_usage_counters
-  //   - It enforces session/daily/burst quotas via Redis + trial_messages counts
-  //   - It returns structured JSON with status, limit_state, cta_payload, etc.
-  async function sendMessage(text, contentType, audioAssetId) {
+  async function sendMessage(text, contentType) {
     if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'limit') return;
 
     await ensureSession();
-    if (!state.sessionId) { showError('Could not create session.'); return; }
+    if (!state.sessionId) {
+      showError('Could not create session.');
+      return;
+    }
 
-    var canSend = await checkUsage();
-    if (!canSend) { showLimitCard(); return; }
-
-    state.phase = 'sending';
-    addMessageToDOM('user', text, { voice: contentType === 'voice_transcript' });
-
-    // NOTE: Do NOT insert into trial_messages here — n8n does this server-side
-
-    showTyping();
+    clearSystemMessages();
+    state.messages.push({
+      role: 'user',
+      content: text,
+      voice: contentType === 'voice'
+    });
     state.phase = 'responding';
+    renderAll();
 
-    // Build history from last messages
-    var history = state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; });
-    var lang = document.documentElement.getAttribute('lang') || 'en';
-    var dir = document.documentElement.getAttribute('dir') || (lang === 'ar' ? 'rtl' : 'ltr');
+    var payload = {
+      session_id: state.sessionId,
+      message: text,
+      content_type: contentType || 'text',
+      modality: contentType === 'voice' ? 'voice' : 'text',
+      language: currentLang(),
+      locale: currentLang(),
+      direction: currentDir(),
+      fingerprint_hash: state.fingerprint,
+      source_page: location.href || 'landing',
+      turn_number: state.turnsUsed + 1,
+      history: getHistory().slice(0, -1),
+      wants_voice_reply: state.wantsVoiceReply,
+      reply_language: getReplyLanguage()
+    };
 
     try {
-      var res = await fetch(CONFIG.N8N_WEBHOOK, {
+      var response = await fetch(CONFIG.N8N_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: state.sessionId,
-          message: text,
-          content_type: contentType || 'text',
-          modality: (contentType === 'voice_transcript') ? 'voice' : 'text',
-          language: lang,
-          locale: lang,
-          direction: dir,
-          fingerprint_hash: state.fingerprint,
-          source_page: location.href || 'landing',
-          turn_number: state.turnsUsed + 1,
-          history: history
-        })
+        body: JSON.stringify(payload)
       });
+      var data = {};
+      try { data = await response.json(); } catch (error) {}
 
-      var data;
-      try { data = await res.json(); } catch (e) { data = {}; }
-
-      // ── Handle non-200 responses using n8n's structured JSON ──
-
-      // 409 — Active session conflict (another anon tab open)
-      if (res.status === 409) {
-        hideTyping();
+      if (response.status === 409) {
         state.phase = 'open';
-        var retryMsg = data.message || 'Only one active conversation is allowed. Please wait a moment.';
-        showError(retryMsg);
+        state.messages.pop();
+        renderAll();
+        showError(data.message || t('chat_active_conflict'));
         return;
       }
 
-      // 429 — Rate limited (in-flight lock, burst limit, or quota limit)
-      if (res.status === 429) {
-        hideTyping();
-
-        // Check if this is a quota limit (n8n returns status: 'limit_exceeded')
+      if (response.status === 429) {
+        updateQuotaFromResponse(data);
         if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
-          // Update state from n8n response
-          if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
-            state.turnsUsed = state.maxTurns - data.remaining_turns_session;
-          } else {
-            state.turnsUsed = state.maxTurns;
-          }
-          updateTurns();
-          showLimitCard(data.cta_payload);
+          state.phase = 'limit';
+          appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+          renderAll();
           return;
         }
 
-        // Burst or in-flight rate limit
-        state.phase = 'rate_limited';
-        var retryAfter = data.retry_after_seconds || 30;
-        showToast((data.message || 'Too many requests.') + ' Try again in ' + retryAfter + 's');
-        setTimeout(function () { state.phase = 'open'; }, retryAfter * 1000);
-        return;
-      }
-
-      // 400, 413, 502 — Various errors
-      if (!res.ok) {
-        hideTyping();
         state.phase = 'open';
-        showError(data.message || 'Something went wrong. Please try again.');
+        state.messages.pop();
+        renderAll();
+        showToast(data.message || t('chat_rate_limited'));
         return;
       }
 
-      // ── 200 OK — Success ──
-      hideTyping();
-      var reply = data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
-      addMessageToDOM('assistant', reply);
-      state.messages.push({ role: 'user', content: text }, { role: 'assistant', content: reply });
+      if (!response.ok) {
+        state.phase = 'open';
+        state.messages.pop();
+        renderAll();
+        showError(data.message || t('chat_error_msg'));
+        return;
+      }
 
-      // NOTE: Do NOT insert assistant message here — n8n already did it
-      // NOTE: Do NOT call incrementUsage() — n8n already upserted usage counters
+      updateQuotaFromResponse(data);
+      state.messages.push({
+        role: 'assistant',
+        content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
+        replyLanguage: data.reply_language || getReplyLanguage(),
+        ttsAudioUrl: data.tts_audio_url || null
+      });
 
-      // Update turns from n8n response (if available)
-      if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
-        state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+      if (noTurnsRemaining()) {
+        state.phase = 'limit';
+        appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
       } else {
-        state.turnsUsed++;
-      }
-      updateTurns();
-
-      // Soft warning: near limit
-      if (data.cta_state === 'soft_warning' && data.cta_payload) {
-        // Could show a subtle hint — for now just update state
-      }
-
-      // Check if this was the last turn
-      if (state.turnsUsed >= state.maxTurns) {
-        setTimeout(function() { showLimitCard(data.cta_payload); }, 800);
-      }
-
-      state.phase = 'open';
-
-    } catch (err) {
-      hideTyping();
-      state.phase = 'open';
-      showError();
-      trackEvent('error', { error: err.message || 'network_error' });
-    }
-  }
-
-  // ── Voice Recording ──
-  async function startRecording() {
-    try {
-      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      state.recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      var chunks = [];
-      state.recorder.ondataavailable = function (e) { if (e.data.size > 0) chunks.push(e.data); };
-      state.recorder.onstop = function () {
-        stream.getTracks().forEach(function (t) { t.stop(); });
-        clearInterval(state.recordTimer);
-        $('gc-recording-bar').classList.remove('active');
-        $('gc-mic-btn').classList.remove('recording');
-        $('gc-mic-btn').querySelector('.material-symbols-outlined').textContent = 'mic';
-        if (chunks.length === 0) { state.phase = 'open'; return; }
-        var blob = new Blob(chunks, { type: 'audio/webm' });
-        handleAudioBlob(blob);
-      };
-      state.recorder.start();
-      state.recordStart = Date.now();
-      state.phase = 'recording';
-      $('gc-recording-bar').classList.add('active');
-      $('gc-mic-btn').classList.add('recording');
-      $('gc-mic-btn').querySelector('.material-symbols-outlined').textContent = 'stop';
-
-      // Timer
-      state.recordTimer = setInterval(function () {
-        var elapsed = Math.floor((Date.now() - state.recordStart) / 1000);
-        $('gc-rec-timer').textContent = Math.floor(elapsed / 60) + ':' + String(elapsed % 60).padStart(2, '0');
-        if (elapsed >= CONFIG.MAX_AUDIO_SEC) {
-          state.recorder.stop();
-          showToast('Max recording time reached');
-        }
-      }, 500);
-
-    } catch (err) {
-      showToast('Microphone access denied');
-      state.phase = 'open';
-    }
-  }
-
-  function stopRecording() {
-    if (state.recorder && state.recorder.state === 'recording') {
-      state.recorder.stop();
-    }
-  }
-
-  function cancelRecording() {
-    if (state.recorder && state.recorder.state === 'recording') {
-      state.recorder.ondataavailable = null;
-      state.recorder.onstop = function () {
-        state.recorder.stream.getTracks().forEach(function (t) { t.stop(); });
-        clearInterval(state.recordTimer);
-        $('gc-recording-bar').classList.remove('active');
-        $('gc-mic-btn').classList.remove('recording');
-        $('gc-mic-btn').querySelector('.material-symbols-outlined').textContent = 'mic';
         state.phase = 'open';
-      };
-      state.recorder.stop();
+        if (data.soft_warning_state && data.soft_warning_state !== 'none') {
+          appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
+        }
+      }
+
+      renderAll();
+    } catch (networkError) {
+      state.phase = 'open';
+      state.messages.pop();
+      renderAll();
+      showError();
+      trackEvent('error', { error: networkError.message || 'network_error' });
     }
   }
 
   async function handleAudioBlob(blob) {
     if (blob.size > CONFIG.MAX_AUDIO_BYTES) {
-      showToast('Audio file too large (max 2MB)');
+      showToast(t('chat_audio_too_large'));
       state.phase = 'open';
+      renderComposer();
       return;
     }
 
     await ensureSession();
     if (!state.sessionId) {
       state.phase = 'open';
+      renderComposer();
       showError('Could not create session.');
       return;
     }
 
-    var history = state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; });
-    var lang = document.documentElement.getAttribute('lang') || 'en';
-    var dir = document.documentElement.getAttribute('dir') || (lang === 'ar' ? 'rtl' : 'ltr');
-    var durationSeconds = Math.floor((Date.now() - state.recordStart) / 1000);
-
     state.phase = 'transcribing';
-    addMessageToDOM('user', '🎤 ' + t('chat_transcribing'), { voice: true });
+    renderMessages();
+    renderComposer();
 
-    // Send the audio file directly to n8n so the workflow can validate,
-    // transcribe, store, and count usage server-side in one place.
+    var formData = new FormData();
+    formData.append('session_id', state.sessionId);
+    formData.append('message', '[voice_message]');
+    formData.append('content_type', 'voice');
+    formData.append('modality', 'voice');
+    formData.append('language', currentLang());
+    formData.append('locale', currentLang());
+    formData.append('direction', currentDir());
+    formData.append('fingerprint_hash', state.fingerprint || '');
+    formData.append('source_page', location.href || 'landing');
+    formData.append('turn_number', String(state.turnsUsed + 1));
+    formData.append('audio_duration_seconds', String(Math.floor((Date.now() - state.recordStart) / 1000) || 0));
+    formData.append('audio_size_bytes', String(blob.size));
+    formData.append('mime_type', blob.type || 'audio/webm');
+    formData.append('history', JSON.stringify(getHistory()));
+    formData.append('wants_voice_reply', String(!!state.wantsVoiceReply));
+    formData.append('reply_language', getReplyLanguage());
+    formData.append('file', blob, 'voice-message.webm');
+
     try {
-      var formData = new FormData();
-      formData.append('session_id', state.sessionId);
-      formData.append('message', '[voice_message]');
-      formData.append('content_type', 'voice');
-      formData.append('modality', 'voice');
-      formData.append('language', lang);
-      formData.append('locale', lang);
-      formData.append('direction', dir);
-      formData.append('fingerprint_hash', state.fingerprint || '');
-      formData.append('source_page', location.href || 'landing');
-      formData.append('turn_number', String(state.turnsUsed + 1));
-      formData.append('audio_duration_seconds', String(durationSeconds));
-      formData.append('audio_size_bytes', String(blob.size));
-      formData.append('mime_type', blob.type || 'audio/webm');
-      formData.append('history', JSON.stringify(history));
-      formData.append('file', blob, 'voice-message.webm');
-
-      var res = await fetch(CONFIG.N8N_WEBHOOK, {
+      var response = await fetch(CONFIG.N8N_WEBHOOK, {
         method: 'POST',
         body: formData
       });
+      var data = {};
+      try { data = await response.json(); } catch (error) {}
 
-      var data;
-      try { data = await res.json(); } catch (e) { data = {}; }
-
-      // Remove the "transcribing" placeholder
-      var body = $('gc-chat-body');
-      var lastMsg = body.querySelector('.gc-msg:last-child');
-      if (lastMsg) lastMsg.remove();
-
-      if (res.status === 409) {
+      if (response.status === 409) {
         state.phase = 'open';
-        showError(data.message || 'Only one active conversation is allowed. Please wait a moment.');
+        renderAll();
+        showError(data.message || t('chat_active_conflict'));
         return;
       }
 
-      if (res.status === 429) {
+      if (response.status === 429) {
+        updateQuotaFromResponse(data);
         if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
-          if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
-            state.turnsUsed = state.maxTurns - data.remaining_turns_session;
-          } else {
-            state.turnsUsed = state.maxTurns;
-          }
-          updateTurns();
-          showLimitCard(data.cta_payload);
+          state.phase = 'limit';
+          appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+          renderAll();
           return;
         }
 
-        state.phase = 'rate_limited';
-        var retryAfter = data.retry_after_seconds || 30;
-        showToast((data.message || 'Too many requests.') + ' Try again in ' + retryAfter + 's');
-        setTimeout(function () { state.phase = 'open'; }, retryAfter * 1000);
+        state.phase = 'open';
+        renderAll();
+        showToast(data.message || t('chat_rate_limited'));
         return;
       }
 
-      if (!res.ok) {
+      if (!response.ok) {
         state.phase = 'open';
-        showError(data.message || 'Something went wrong. Please try again.');
+        renderAll();
+        showError(data.message || t('chat_error_msg'));
         return;
       }
+
+      updateQuotaFromResponse(data);
 
       if (data.transcript) {
-        addMessageToDOM('user', data.transcript, { voice: true });
-        state.messages.push({ role: 'user', content: data.transcript });
+        state.messages.push({
+          role: 'user',
+          content: data.transcript,
+          voice: true
+        });
       }
 
-      var reply = data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
-      addMessageToDOM('assistant', reply);
-      state.messages.push({ role: 'assistant', content: reply });
+      state.messages.push({
+        role: 'assistant',
+        content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
+        replyLanguage: data.reply_language || getReplyLanguage(),
+        ttsAudioUrl: data.tts_audio_url || null
+      });
 
-      if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
-        state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+      if (noTurnsRemaining()) {
+        state.phase = 'limit';
+        appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
       } else {
-        state.turnsUsed++;
+        state.phase = 'open';
+        if (data.soft_warning_state && data.soft_warning_state !== 'none') {
+          appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
+        }
       }
-      updateTurns();
-      state.phase = 'open';
 
-      if (state.turnsUsed >= state.maxTurns) {
-        setTimeout(function () { showLimitCard(data.cta_payload); }, 800);
-      }
-    } catch (err) {
-      var body = $('gc-chat-body');
-      var lastMsg = body.querySelector('.gc-msg:last-child');
-      if (lastMsg) lastMsg.remove();
-      showError();
+      renderAll();
+    } catch (networkError) {
       state.phase = 'open';
+      renderAll();
+      showError();
+      trackEvent('error', { error: networkError.message || 'network_error' });
     }
   }
 
-  // ── Open / Close ──
+  async function startRecording() {
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      var chunks = [];
+
+      state.recorder.ondataavailable = function (event) {
+        if (event.data && event.data.size > 0) chunks.push(event.data);
+      };
+      state.recorder.onstop = function () {
+        stream.getTracks().forEach(function (track) { track.stop(); });
+        clearInterval(state.recordTimer);
+        if (!chunks.length) {
+          state.phase = 'open';
+          renderComposer();
+          return;
+        }
+        var blob = new Blob(chunks, { type: 'audio/webm' });
+        handleAudioBlob(blob);
+      };
+
+      state.recorder.start();
+      state.recordStart = Date.now();
+      state.phase = 'recording';
+      renderComposer();
+
+      state.recordTimer = setInterval(function () {
+        var elapsed = Math.floor((Date.now() - state.recordStart) / 1000);
+        var timer = $('gc-rec-timer');
+        if (timer) timer.textContent = Math.floor(elapsed / 60) + ':' + String(elapsed % 60).padStart(2, '0');
+        if (elapsed >= CONFIG.MAX_AUDIO_SEC) {
+          stopRecording();
+          showToast(t('chat_recording_limit'));
+        }
+      }, 500);
+    } catch (error) {
+      state.phase = 'open';
+      renderComposer();
+      showToast(t('chat_mic_denied'));
+    }
+  }
+
+  function stopRecording() {
+    if (state.recorder && state.recorder.state === 'recording') state.recorder.stop();
+  }
+
+  function cancelRecording(nextPhase) {
+    if (!state.recorder || state.recorder.state !== 'recording') return;
+    state.recorder.ondataavailable = null;
+    state.recorder.onstop = function () {
+      clearInterval(state.recordTimer);
+      state.recorder.stream.getTracks().forEach(function (track) { track.stop(); });
+      state.phase = nextPhase || 'open';
+      renderComposer();
+    };
+    state.recorder.stop();
+  }
+
+  function submitText() {
+    var textarea = $('gc-textarea');
+    if (!textarea) return;
+    var text = textarea.value.trim();
+    if (!text) return;
+    textarea.value = '';
+    textarea.style.height = 'auto';
+    renderComposer();
+    sendMessage(text, 'text');
+  }
+
   function openChat() {
     var panel = $('gc-chat-panel');
     var trigger = $('gc-chat-trigger');
-    if (!panel) return;
+    var scrim = $('gc-chat-scrim');
+    var pill = document.getElementById('floating-pill');
+
+    if (!panel || !trigger || !scrim) return;
+
     panel.classList.add('open');
     trigger.classList.add('open');
-    state.phase = 'open';
-    document.body.style.overflow = window.innerWidth < 640 ? 'hidden' : '';
-
-    // Hide floating pill when chat is open
-    var pill = document.getElementById('floating-pill');
+    scrim.classList.add('open');
+    state.phase = state.phase === 'limit' ? 'limit' : 'open';
+    document.body.style.overflow = 'hidden';
     if (pill) pill.style.display = 'none';
 
     ensureSession().then(function () {
-      // Don't pre-check usage counters — n8n enforces limits on each message.
-      // Just update the turns display from local state.
-      updateTurns();
+      renderHeader();
     });
 
     trackCTA('open_chat', 'click', 'trigger');
 
-    // Focus textarea
     setTimeout(function () {
-      var ta = $('gc-textarea');
-      if (ta && window.innerWidth >= 640) ta.focus();
-    }, 350);
+      var textarea = $('gc-textarea');
+      if (textarea && state.phase !== 'limit') textarea.focus();
+    }, 220);
   }
 
   function closeChat() {
     var panel = $('gc-chat-panel');
     var trigger = $('gc-chat-trigger');
-    if (!panel) return;
+    var scrim = $('gc-chat-scrim');
+    var pill = document.getElementById('floating-pill');
+
+    if (!panel || !trigger || !scrim) return;
+
     panel.classList.remove('open');
     trigger.classList.remove('open');
-    state.phase = 'closed';
+    scrim.classList.remove('open');
     document.body.style.overflow = '';
-
-    // Restore floating pill
-    var pill = document.getElementById('floating-pill');
     if (pill) pill.style.display = '';
+    stopActiveAudio();
 
-    if (state.recorder && state.recorder.state === 'recording') cancelRecording();
+    var nextPhase = state.messages.some(function (entry) { return entry.role === 'system' && entry.kind === 'limit'; }) ? 'limit' : 'closed';
+    if (state.recorder && state.recorder.state === 'recording') cancelRecording(nextPhase);
+    state.phase = nextPhase;
   }
 
-  // ── Event Binding ──
+  function handlePanelClick(event) {
+    var button = event.target.closest('[data-action]');
+    if (!button) return;
+
+    var action = button.getAttribute('data-action');
+    if (action === 'prompt') {
+      var prompts = getPromptList();
+      var prompt = prompts[Number(button.getAttribute('data-prompt-index'))] || '';
+      if (!prompt) return;
+      if ($('gc-textarea')) {
+        $('gc-textarea').value = prompt;
+        $('gc-textarea').dispatchEvent(new Event('input'));
+      }
+      submitText();
+      return;
+    }
+
+    if (action === 'focus-input') {
+      if ($('gc-textarea')) $('gc-textarea').focus();
+      return;
+    }
+
+    if (action === 'record') {
+      if (state.phase === 'recording') stopRecording();
+      else if (state.phase === 'open' || state.phase === 'closed') startRecording();
+      return;
+    }
+
+    if (action === 'toggle-hear') {
+      if (!state.quota.ttsAvailable) {
+        showToast(t('chat_hear_unavailable'));
+        return;
+      }
+      state.wantsVoiceReply = !state.wantsVoiceReply;
+      renderAll();
+      return;
+    }
+
+    if (action === 'toggle-reply-language') {
+      state.preferredReplyLanguage = getReplyLanguage() === 'en' ? 'ar' : 'en';
+      renderAll();
+      return;
+    }
+
+    if (action === 'play-reply') {
+      toggleAudio(button.getAttribute('data-audio-url'), button);
+      return;
+    }
+
+    if (action === 'cta') {
+      var ctaType = button.getAttribute('data-cta-type') || 'cta';
+      var href = button.getAttribute('data-cta-href') || '';
+      trackCTA(ctaType, 'click', 'system_card');
+      navigateCTA(ctaType, href);
+    }
+  }
+
   function bindEvents() {
-    // Trigger
     $('gc-chat-trigger').addEventListener('click', function () {
-      if (state.phase === 'closed') openChat();
-      else closeChat();
+      if ($('gc-chat-panel').classList.contains('open')) closeChat();
+      else openChat();
     });
 
-    // Close
+    $('gc-chat-scrim').addEventListener('click', closeChat);
     $('gc-close').addEventListener('click', closeChat);
+    $('gc-chat-panel').addEventListener('click', handlePanelClick);
 
-    // Escape key
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && state.phase !== 'closed') closeChat();
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && $('gc-chat-panel').classList.contains('open')) closeChat();
     });
 
-    // Textarea auto-resize + send
     var textarea = $('gc-textarea');
-    var sendBtn = $('gc-send-btn');
-
     textarea.addEventListener('input', function () {
       this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 96) + 'px';
-      sendBtn.classList.toggle('gc-hidden', this.value.trim() === '');
+      this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+      renderComposer();
     });
 
-    textarea.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 640) {
-        e.preventDefault();
+    textarea.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' && !event.shiftKey && window.innerWidth >= 640) {
+        event.preventDefault();
         submitText();
       }
     });
 
-    // Send button
-    sendBtn.addEventListener('click', submitText);
-
-    // Mic
+    $('gc-send-btn').addEventListener('click', submitText);
     $('gc-mic-btn').addEventListener('click', function () {
       if (state.phase === 'recording') stopRecording();
       else if (state.phase === 'open' || state.phase === 'closed') startRecording();
     });
-
-    // Cancel recording
     $('gc-rec-cancel').addEventListener('click', cancelRecording);
-
-    // File attach
     $('gc-attach-btn').addEventListener('click', function () { $('gc-file-input').click(); });
-    $('gc-file-input').addEventListener('change', function (e) {
-      var file = e.target.files[0];
+
+    $('gc-file-input').addEventListener('change', function (event) {
+      var file = event.target.files && event.target.files[0];
       if (!file) return;
-      if (!CONFIG.AUDIO_TYPES.some(function (t) { return file.type.startsWith(t.split('/')[0]); })) {
-        showToast('Please select an audio file');
+      if (!file.type || file.type.indexOf('audio/') !== 0) {
+        showToast(t('chat_audio_invalid'));
+        event.target.value = '';
         return;
       }
       state.recordStart = Date.now();
       handleAudioBlob(file);
-      e.target.value = '';
+      event.target.value = '';
     });
 
-    // Suggested prompts
-    $('gc-chat-body').addEventListener('click', function (e) {
-      var btn = e.target.closest('.gc-chat-prompt-btn');
-      if (!btn) return;
-      var text = btn.textContent.trim();
-      $('gc-textarea').value = text;
-      submitText();
-    });
-
-    // Drag and drop
     var panel = $('gc-chat-panel');
     var dropZone = $('gc-drop-zone');
     var dragCounter = 0;
 
-    panel.addEventListener('dragenter', function (e) {
-      e.preventDefault();
-      dragCounter++;
+    panel.addEventListener('dragenter', function (event) {
+      event.preventDefault();
+      dragCounter += 1;
       dropZone.classList.add('active');
     });
-    panel.addEventListener('dragleave', function (e) {
-      e.preventDefault();
-      dragCounter--;
-      if (dragCounter <= 0) { dropZone.classList.remove('active'); dragCounter = 0; }
+    panel.addEventListener('dragleave', function (event) {
+      event.preventDefault();
+      dragCounter -= 1;
+      if (dragCounter <= 0) {
+        dragCounter = 0;
+        dropZone.classList.remove('active');
+      }
     });
-    panel.addEventListener('dragover', function (e) { e.preventDefault(); });
-    panel.addEventListener('drop', function (e) {
-      e.preventDefault();
+    panel.addEventListener('dragover', function (event) {
+      event.preventDefault();
+    });
+    panel.addEventListener('drop', function (event) {
+      event.preventDefault();
       dragCounter = 0;
       dropZone.classList.remove('active');
-      var file = e.dataTransfer.files[0];
-      if (!file || !file.type.startsWith('audio/')) {
-        showToast('Please drop an audio file');
+
+      var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+      if (!file || !file.type || file.type.indexOf('audio/') !== 0) {
+        showToast(t('chat_audio_invalid'));
         return;
       }
+
       state.recordStart = Date.now();
       handleAudioBlob(file);
     });
 
-    // Theme observer — swap logo SVG on dark/light toggle
-    var observer = new MutationObserver(function () {
-      var logo = document.getElementById('gc-logo-img');
-      if (logo) {
-        logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
-      }
+    var rootObserver = new MutationObserver(function (mutations) {
+      var shouldRender = mutations.some(function (mutation) {
+        return mutation.attributeName === 'class' || mutation.attributeName === 'lang' || mutation.attributeName === 'dir';
+      });
+      if (shouldRender) renderAll();
     });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    rootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'lang', 'dir'] });
   }
 
-  function submitText() {
-    var textarea = $('gc-textarea');
-    var text = textarea.value.trim();
-    if (!text) return;
-    textarea.value = '';
-    textarea.style.height = 'auto';
-    $('gc-send-btn').classList.add('gc-hidden');
-    sendMessage(text, 'text');
-  }
-
-  // ── Expose for CTA buttons ──
   window.gcOpenChat = openChat;
 
-  // ── Init ──
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', buildWidget);
   } else {
