@@ -12,8 +12,8 @@
     N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent', // placeholder
     LIMITS: { SESSION_ANON: 3, DAILY_ANON: 5, DAILY_AUTH: 10 },
     MAX_MSG_LEN: 500,
-    MAX_AUDIO_SEC: 60,
-    MAX_AUDIO_BYTES: 10 * 1024 * 1024,
+    MAX_AUDIO_SEC: 30,
+    MAX_AUDIO_BYTES: 2 * 1024 * 1024,
     AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a']
   };
 
@@ -617,94 +617,114 @@
 
   async function handleAudioBlob(blob) {
     if (blob.size > CONFIG.MAX_AUDIO_BYTES) {
-      showToast('Audio file too large (max 10MB)');
+      showToast('Audio file too large (max 2MB)');
       state.phase = 'open';
       return;
     }
 
-    state.phase = 'uploading';
     await ensureSession();
-
-    // Create audio asset record
-    var assetRows = await sbFetch('trial_audio_assets', 'POST', {
-      session_id: state.sessionId,
-      identity_key: 'anon:' + state.fingerprint,
-      mime_type: blob.type,
-      size_bytes: blob.size,
-      duration_seconds: Math.floor((Date.now() - state.recordStart) / 1000),
-      status: 'pending'
-    });
-
-    if (!assetRows || !assetRows[0]) {
+    if (!state.sessionId) {
       state.phase = 'open';
-      showError('Failed to save audio');
+      showError('Could not create session.');
       return;
     }
 
-    var asset = assetRows[0];
-    var storagePath = state.sessionId + '/' + asset.id + '.webm';
+    var history = state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; });
+    var lang = document.documentElement.getAttribute('lang') || 'en';
+    var dir = document.documentElement.getAttribute('dir') || (lang === 'ar' ? 'rtl' : 'ltr');
+    var durationSeconds = Math.floor((Date.now() - state.recordStart) / 1000);
 
-    // Upload to storage
-    try {
-      await sbUpload(storagePath, blob);
-      await fetch(CONFIG.SUPABASE_URL + '/rest/v1/trial_audio_assets?id=eq.' + asset.id, {
-        method: 'PATCH',
-        headers: sbHeaders(),
-        body: JSON.stringify({ storage_path: storagePath, status: 'processing' })
-      });
-    } catch (err) {
-      showError('Upload failed');
-      state.phase = 'open';
-      return;
-    }
-
-    // For now, use a placeholder transcription message
-    // In production, n8n would handle transcription via Whisper
     state.phase = 'transcribing';
     addMessageToDOM('user', '🎤 ' + t('chat_transcribing'), { voice: true });
 
-    // Send to n8n with audio reference for transcription + response
+    // Send the audio file directly to n8n so the workflow can validate,
+    // transcribe, store, and count usage server-side in one place.
     try {
+      var formData = new FormData();
+      formData.append('session_id', state.sessionId);
+      formData.append('message', '[voice_message]');
+      formData.append('content_type', 'voice');
+      formData.append('modality', 'voice');
+      formData.append('language', lang);
+      formData.append('locale', lang);
+      formData.append('direction', dir);
+      formData.append('fingerprint_hash', state.fingerprint || '');
+      formData.append('source_page', location.href || 'landing');
+      formData.append('turn_number', String(state.turnsUsed + 1));
+      formData.append('audio_duration_seconds', String(durationSeconds));
+      formData.append('audio_size_bytes', String(blob.size));
+      formData.append('mime_type', blob.type || 'audio/webm');
+      formData.append('history', JSON.stringify(history));
+      formData.append('file', blob, 'voice-message.webm');
+
       var res = await fetch(CONFIG.N8N_WEBHOOK, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: state.sessionId,
-          message: '[voice_message]',
-          content_type: 'audio',
-          audio_asset_id: asset.id,
-          audio_storage_path: storagePath,
-          language: document.documentElement.getAttribute('lang') || 'en',
-          identity_key: 'anon:' + state.fingerprint,
-          turn_number: state.turnsUsed + 1,
-          history: state.messages.slice(-6).map(function (m) { return { role: m.role, content: m.content }; })
-        })
+        body: formData
       });
 
-      var data = await res.json();
+      var data;
+      try { data = await res.json(); } catch (e) { data = {}; }
+
       // Remove the "transcribing" placeholder
       var body = $('gc-chat-body');
       var lastMsg = body.querySelector('.gc-msg:last-child');
       if (lastMsg) lastMsg.remove();
 
+      if (res.status === 409) {
+        state.phase = 'open';
+        showError(data.message || 'Only one active conversation is allowed. Please wait a moment.');
+        return;
+      }
+
+      if (res.status === 429) {
+        if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
+          if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
+            state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+          } else {
+            state.turnsUsed = state.maxTurns;
+          }
+          updateTurns();
+          showLimitCard(data.cta_payload);
+          return;
+        }
+
+        state.phase = 'rate_limited';
+        var retryAfter = data.retry_after_seconds || 30;
+        showToast((data.message || 'Too many requests.') + ' Try again in ' + retryAfter + 's');
+        setTimeout(function () { state.phase = 'open'; }, retryAfter * 1000);
+        return;
+      }
+
+      if (!res.ok) {
+        state.phase = 'open';
+        showError(data.message || 'Something went wrong. Please try again.');
+        return;
+      }
+
       if (data.transcript) {
         addMessageToDOM('user', data.transcript, { voice: true });
         state.messages.push({ role: 'user', content: data.transcript });
       }
-      if (data.message || data.output) {
-        var reply = data.message || data.output;
-        addMessageToDOM('assistant', reply);
-        state.messages.push({ role: 'assistant', content: reply });
-      }
 
-      await incrementUsage();
+      var reply = data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
+      addMessageToDOM('assistant', reply);
+      state.messages.push({ role: 'assistant', content: reply });
+
+      if (data.remaining_turns_session !== undefined && data.remaining_turns_session !== null) {
+        state.turnsUsed = state.maxTurns - data.remaining_turns_session;
+      } else {
+        state.turnsUsed++;
+      }
       updateTurns();
       state.phase = 'open';
 
       if (state.turnsUsed >= state.maxTurns) {
-        setTimeout(showLimitCard, 800);
+        setTimeout(function () { showLimitCard(data.cta_payload); }, 800);
       }
     } catch (err) {
+      var body = $('gc-chat-body');
+      var lastMsg = body.querySelector('.gc-msg:last-child');
+      if (lastMsg) lastMsg.remove();
       showError();
       state.phase = 'open';
     }
