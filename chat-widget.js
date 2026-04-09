@@ -49,7 +49,13 @@
       method: method,
       headers: sbHeaders(),
       body: body ? JSON.stringify(body) : undefined
-    }).then(function (r) { return r.json(); });
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        // Supabase returns {code, message, details} on error — treat as null
+        if (data && !Array.isArray(data) && data.code) return null;
+        return data;
+      });
+    }).catch(function () { return null; });
   }
 
   function sbUpload(path, blob) {
@@ -111,15 +117,21 @@
 
   // ── Usage counters ──
   async function checkUsage() {
+    // Ensure we have a valid session before querying counters
+    if (!state.sessionId) await ensureSession();
+    if (!state.sessionId) return true; // Session creation failed — allow gracefully
+
     state.fingerprint = state.fingerprint || getFingerprint();
     var identityKey = 'anon:' + state.fingerprint;
     var scopeSession = 'session:' + state.sessionId;
     var today = new Date().toISOString().slice(0, 10);
     var scopeDaily = 'daily:' + today + ':' + identityKey;
 
-    // Check existing counters
+    // IMPORTANT: Supabase in.() requires raw commas inside the parens, not %2C
     var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
       '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')';
+    // Fix: decode the comma between the two values so Supabase parses them correctly
+    q = q.replace('%2C' + encodeURIComponent(scopeDaily), ',' + encodeURIComponent(scopeDaily));
     var counters = await sbFetch('trial_usage_counters', 'GET', null, q + '&select=*');
     if (!Array.isArray(counters)) counters = [];
 
@@ -135,7 +147,7 @@
         window_type: 'session',
         turns_used: 0
       });
-      sessionCounter = res && res[0] ? res[0] : { turns_used: 0 };
+      sessionCounter = (res && Array.isArray(res) && res[0]) ? res[0] : { turns_used: 0 };
     }
 
     // Create daily counter if missing
@@ -147,7 +159,7 @@
         window_type: 'rolling_24h',
         turns_used: 0
       });
-      dailyCounter = res2 && res2[0] ? res2[0] : { turns_used: 0 };
+      dailyCounter = (res2 && Array.isArray(res2) && res2[0]) ? res2[0] : { turns_used: 0 };
     }
 
     var sessionMax = CONFIG.LIMITS.SESSION_ANON;
@@ -168,14 +180,17 @@
   }
 
   async function incrementUsage() {
+    if (!state.sessionId) return;
     var identityKey = 'anon:' + state.fingerprint;
     var scopeSession = 'session:' + state.sessionId;
     var today = new Date().toISOString().slice(0, 10);
     var scopeDaily = 'daily:' + today + ':' + identityKey;
 
     // Read-modify-write for both counters
+    // Fix: raw comma inside in.() — Supabase requires it unencoded between values
     var q = '?identity_key=eq.' + encodeURIComponent(identityKey) +
       '&counter_scope_key=in.(' + encodeURIComponent(scopeSession) + ',' + encodeURIComponent(scopeDaily) + ')&select=*';
+    q = q.replace('%2C' + encodeURIComponent(scopeDaily), ',' + encodeURIComponent(scopeDaily));
     var counters = await sbFetch('trial_usage_counters', 'GET', null, q);
     if (!Array.isArray(counters)) return;
 
