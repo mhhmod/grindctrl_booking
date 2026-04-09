@@ -53,7 +53,9 @@
     },
     activeAudio: null,
     activeAudioUrl: null,
-    activeAudioButton: null
+    activeAudioButton: null,
+    activeAudioPlayer: null,
+    dismissedWarnings: {}
   };
 
   function $(id) {
@@ -84,8 +86,8 @@
       chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
       chat_turns_left: { en: 'left', ar: 'متبقي' },
       chat_today_left: { en: 'today', ar: 'اليوم' },
-      chat_limit_title: { en: "You've reached the free trial limit", ar: 'لقد وصلت إلى حد التجربة المجانية' },
-      chat_limit_desc: { en: 'You can keep testing, or jump to the 2-Min Workflow Tour.', ar: 'يمكنك متابعة الاستكشاف أو الانتقال إلى جولة سير العمل خلال دقيقتين.' },
+      chat_limit_title: { en: 'Great exploring! Here\'s what\'s next', ar: 'استكشاف رائع! إليك ما يمكنك فعله' },
+      chat_limit_desc: { en: 'You\'ve used all free turns. See the real thing in action.', ar: 'لقد استخدمت جميع المحاولات المجانية. شاهد النظام يعمل فعلياً.' },
       chat_limit_cta1: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
       chat_limit_cta2: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
       chat_limit_cta3: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
@@ -101,6 +103,9 @@
       chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
       chat_attach_label: { en: 'Attach audio file', ar: 'إرفاق ملف صوتي' },
       chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' },
+      chat_voice_reply: { en: 'Voice reply', ar: 'رد صوتي' },
+      chat_show_transcript: { en: 'Show text', ar: 'عرض النص' },
+      chat_hide_transcript: { en: 'Hide text', ar: 'إخفاء النص' },
       chat_playground_subtitle: { en: 'Ask, speak, and hear how the system responds.', ar: 'اسأل وتحدث واستمع لكيفية استجابة النظام.' },
       chat_prompt_label: { en: 'Suggested prompts', ar: 'اقتراحات سريعة' },
       chat_cap_ask: { en: 'Ask', ar: 'اسأل' },
@@ -112,15 +117,16 @@
       chat_reply_language: { en: 'Reply language', ar: 'لغة الرد' },
       chat_play_reply: { en: 'Play reply', ar: 'تشغيل الرد' },
       chat_pause_reply: { en: 'Pause reply', ar: 'إيقاف الرد' },
-      chat_warning_turn_title: { en: '1 free turn left', ar: 'تبقّت محاولة مجانية واحدة' },
-      chat_warning_voice_title: { en: '1 voice preview left', ar: 'تبقّت معاينة صوتية واحدة' },
-      chat_warning_desc: { en: 'You can keep testing, or jump to the 2-Min Workflow Tour.', ar: 'يمكنك متابعة الاستكشاف أو الانتقال إلى جولة سير العمل خلال دقيقتين.' },
-      chat_warning_voice_desc: { en: 'Text replies continue, and you can still preview one more spoken answer.', ar: 'الردود النصية مستمرة، ولا يزال بإمكانك معاينة رد صوتي واحد إضافي.' },
+      chat_warning_turn_title: { en: 'Almost there — 1 turn remaining', ar: 'أوشكت — تبقّت محاولة واحدة' },
+      chat_warning_voice_title: { en: '1 voice preview remaining', ar: 'تبقّت معاينة صوتية واحدة' },
+      chat_warning_desc: { en: 'Make it count, or explore more options below.', ar: 'استفد منها أو استكشف المزيد أدناه.' },
+      chat_warning_voice_desc: { en: 'Text replies continue — one more voice preview available.', ar: 'الردود النصية مستمرة — معاينة صوتية واحدة إضافية.' },
       chat_cta_continue: { en: 'Continue Trial', ar: 'تابع التجربة' },
-      chat_cta_final_turn: { en: 'Use Final Free Turn', ar: 'استخدم المحاولة المجانية الأخيرة' },
+      chat_cta_final_turn: { en: 'Got it', ar: 'فهمت' },
       chat_cta_tour: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
       chat_cta_book: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
       chat_cta_tell: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
+      chat_nudge_dismiss: { en: 'Got it', ar: 'فهمت' },
       chat_rate_limited: { en: 'Please wait a moment and try again.', ar: 'يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.' },
       chat_active_conflict: { en: 'Another conversation is already active for this browser.', ar: 'هناك محادثة أخرى نشطة بالفعل لهذا المتصفح.' },
       chat_mic_denied: { en: 'Microphone access was denied.', ar: 'تم رفض الوصول إلى الميكروفون.' },
@@ -408,20 +414,33 @@
       state.activeAudio = null;
     }
     if (state.activeAudioButton) {
-      state.activeAudioButton.textContent = t('chat_play_reply');
+      var icon = state.activeAudioButton.querySelector('.material-symbols-outlined');
+      if (icon) icon.textContent = 'play_arrow';
       state.activeAudioButton.setAttribute('aria-pressed', 'false');
       state.activeAudioButton = null;
     }
+    var prevPlayer = state.activeAudioPlayer;
+    if (prevPlayer) prevPlayer.classList.remove('playing');
+    state.activeAudioPlayer = null;
     state.activeAudioUrl = null;
   }
 
-  function toggleAudio(url, button) {
+  function formatDuration(seconds) {
+    if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '0:00';
+    var m = Math.floor(seconds / 60);
+    var s = Math.floor(seconds % 60);
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function toggleAudio(url, button, playerEl) {
     if (!url) return;
     if (state.activeAudio && state.activeAudioUrl === url) {
       if (state.activeAudio.paused) {
         state.activeAudio.play().catch(function () {});
-        button.textContent = t('chat_pause_reply');
+        var icon = button.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = 'pause';
         button.setAttribute('aria-pressed', 'true');
+        if (playerEl) playerEl.classList.add('playing');
       } else {
         stopActiveAudio();
       }
@@ -432,8 +451,21 @@
     state.activeAudio = new Audio(url);
     state.activeAudioUrl = url;
     state.activeAudioButton = button;
-    button.textContent = t('chat_pause_reply');
+    state.activeAudioPlayer = playerEl || null;
+    var icon2 = button.querySelector('.material-symbols-outlined');
+    if (icon2) icon2.textContent = 'pause';
     button.setAttribute('aria-pressed', 'true');
+    if (playerEl) playerEl.classList.add('playing');
+
+    var durationEl = playerEl ? playerEl.querySelector('.gc-audio-duration') : null;
+    state.activeAudio.addEventListener('loadedmetadata', function () {
+      if (durationEl) durationEl.textContent = formatDuration(state.activeAudio.duration);
+    });
+    state.activeAudio.addEventListener('timeupdate', function () {
+      if (durationEl && state.activeAudio) {
+        durationEl.textContent = formatDuration(state.activeAudio.currentTime);
+      }
+    });
 
     state.activeAudio.addEventListener('ended', stopActiveAudio, { once: true });
     state.activeAudio.play().catch(function () {
@@ -441,6 +473,7 @@
       showToast(t('chat_error_msg'));
     });
   }
+
 
   function buildWidget() {
     var trigger = document.createElement('button');
@@ -614,19 +647,49 @@
   function renderSystemCard(entry) {
     var payload = entry.payload || {};
     var cardKind = entry.kind === 'limit' ? ' limit' : ' soft';
+    var icon = entry.kind === 'limit' ? 'auto_awesome' : 'lightbulb';
+
+    var primaryAction = '';
+    if (payload.primary) {
+      if (entry.kind !== 'limit' && payload.primary.type === 'continue_trial') {
+        primaryAction = '<button type="button" class="gc-system-card-primary" data-action="dismiss-warning">' + escapeHTML(t('chat_nudge_dismiss')) + '</button>';
+      } else {
+        primaryAction = '<button type="button" class="gc-system-card-primary" data-action="cta" data-cta-type="' + escapeHTML(payload.primary.type || 'primary') + '" data-cta-href="' + escapeHTML(payload.primary.href || '') + '">' + escapeHTML(payload.primary.label || '') + '</button>';
+      }
+    }
+
     return [
       '<div class="gc-system-card' + cardKind + '">',
-      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">' + (entry.kind === 'limit' ? 'bolt' : 'flag') + '</span></div>',
+      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">' + icon + '</span></div>',
       '  <div class="gc-system-card-body">',
       '    <div class="gc-system-card-title">' + escapeHTML(payload.title || '') + '</div>',
       '    <div class="gc-system-card-desc">' + escapeHTML(payload.message || payload.subtitle || '') + '</div>',
       '    <div class="gc-system-card-actions">',
-      payload.primary ? '<button type="button" class="gc-system-card-primary" data-action="cta" data-cta-type="' + escapeHTML(payload.primary.type || 'primary') + '" data-cta-href="' + escapeHTML(payload.primary.href || '') + '">' + escapeHTML(payload.primary.label || '') + '</button>' : '',
+      primaryAction,
       payload.secondary ? '<button type="button" class="gc-system-card-secondary" data-action="cta" data-cta-type="' + escapeHTML(payload.secondary.type || 'secondary') + '" data-cta-href="' + escapeHTML(payload.secondary.href || '') + '">' + escapeHTML(payload.secondary.label || '') + '</button>' : '',
       payload.tertiary ? '<button type="button" class="gc-system-card-secondary tertiary" data-action="cta" data-cta-type="' + escapeHTML(payload.tertiary.type || 'tertiary') + '" data-cta-href="' + escapeHTML(payload.tertiary.href || '') + '">' + escapeHTML(payload.tertiary.label || '') + '</button>' : '',
       '    </div>',
       '    <div class="gc-system-card-fine">' + escapeHTML(t('chat_limit_fine')) + '</div>',
       '  </div>',
+      '</div>'
+    ].join('');
+  }
+
+  function buildAudioPlayerHTML(audioUrl) {
+    var bars = '';
+    var heights = [14, 20, 10, 24, 16, 22, 12, 18, 26, 14, 20, 8, 22, 16, 24, 12, 18, 28, 14, 20, 10, 22, 16, 24];
+    for (var i = 0; i < heights.length; i++) {
+      var delay = (i * 0.07).toFixed(2);
+      bars += '<span class="gc-audio-waveform-bar" style="height:' + heights[i] + 'px;animation-delay:' + delay + 's"></span>';
+    }
+
+    return [
+      '<div class="gc-audio-player" data-audio-url="' + escapeHTML(audioUrl) + '">',
+      '  <button type="button" class="gc-audio-player-btn" data-action="play-audio" data-audio-url="' + escapeHTML(audioUrl) + '" aria-label="' + escapeHTML(t('chat_play_reply')) + '" aria-pressed="false">',
+      '    <span class="material-symbols-outlined">play_arrow</span>',
+      '  </button>',
+      '  <div class="gc-audio-waveform">' + bars + '</div>',
+      '  <span class="gc-audio-duration">0:00</span>',
       '</div>'
     ].join('');
   }
@@ -640,18 +703,52 @@
 
     if (!isUser) {
       var replyLang = normalizeLang(entry.replyLanguage || getReplyLanguage()).toUpperCase();
+      meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
+
+      if (entry.voiceOnlyReply && entry.ttsAudioUrl) {
+        var msgId = 'gc-vo-' + (entry.ttsAudioUrl || '').slice(-8);
+        return [
+          '<div class="gc-msg gc-msg-ai">',
+          meta,
+          '  <div class="gc-msg-bubble gc-voice-only-bubble" dir="auto">',
+          '    <div class="gc-voice-label"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice_reply')) + '</span></div>',
+          '    ' + buildAudioPlayerHTML(entry.ttsAudioUrl),
+          '    <button type="button" class="gc-transcript-toggle" data-action="toggle-transcript" data-target="' + msgId + '">',
+          '      <span class="material-symbols-outlined">unfold_more</span><span>' + escapeHTML(t('chat_show_transcript')) + '</span>',
+          '    </button>',
+          '    <div id="' + msgId + '" class="gc-transcript-text" style="display:none" dir="auto">' + formatMessageHTML(entry.content) + '</div>',
+          '  </div>',
+          '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span></div>',
+          '</div>'
+        ].join('');
+      }
+
       var actionBits = [
         '<span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span>'
       ];
       if (entry.ttsAudioUrl) {
-        actionBits.push('<button type="button" class="gc-msg-action" data-action="play-reply" data-audio-url="' + escapeHTML(entry.ttsAudioUrl) + '" aria-pressed="false">' + escapeHTML(t('chat_play_reply')) + '</button>');
+        actionBits.push(buildAudioPlayerHTML(entry.ttsAudioUrl));
       }
       actions = '<div class="gc-msg-actions">' + actionBits.join('') + '</div>';
-      meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
     }
 
-    if (entry.voice) {
-      actions += '<div class="gc-msg-voice-badge"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice')) + '</span></div>';
+    if (isUser && entry.voice) {
+      var waveBars = '';
+      var userHeights = [6, 10, 5, 12, 8, 11, 6, 9, 12, 7, 10, 5, 11, 8, 12, 6];
+      for (var j = 0; j < userHeights.length; j++) {
+        waveBars += '<span class="gc-voice-note-wave-bar" style="height:' + userHeights[j] + 'px"></span>';
+      }
+      return [
+        '<div class="gc-msg gc-msg-user">',
+        '  <div class="gc-msg-bubble gc-voice-note-bubble" dir="auto">',
+        '    <div class="gc-voice-note-icon"><span class="material-symbols-outlined">mic</span></div>',
+        '    <div class="gc-voice-note-meta">',
+        '      <span class="gc-voice-note-label">' + escapeHTML(t('chat_voice')) + '</span>',
+        '      <div class="gc-voice-note-wave">' + waveBars + '</div>',
+        '    </div>',
+        '  </div>',
+        '</div>'
+      ].join('');
     }
 
     return [
@@ -678,11 +775,17 @@
     list.innerHTML = html;
 
     if (state.activeAudio && state.activeAudioUrl) {
-      var activeButton = list.querySelector('[data-action="play-reply"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
+      var activeButton = list.querySelector('[data-action="play-audio"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
       if (activeButton) {
-        activeButton.textContent = t('chat_pause_reply');
+        var activeIcon = activeButton.querySelector('.material-symbols-outlined');
+        if (activeIcon) activeIcon.textContent = 'pause';
         activeButton.setAttribute('aria-pressed', 'true');
         state.activeAudioButton = activeButton;
+        var playerContainer = activeButton.closest('.gc-audio-player');
+        if (playerContainer) {
+          playerContainer.classList.add('playing');
+          state.activeAudioPlayer = playerContainer;
+        }
       }
     }
 
@@ -866,11 +969,13 @@
       }
 
       updateQuotaFromResponse(data);
+      var assistantTtsUrl = data.tts_audio_url || null;
       state.messages.push({
         role: 'assistant',
         content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
         replyLanguage: data.reply_language || getReplyLanguage(),
-        ttsAudioUrl: data.tts_audio_url || null
+        ttsAudioUrl: assistantTtsUrl,
+        voiceOnlyReply: !!(state.wantsVoiceReply && assistantTtsUrl)
       });
 
       if (noTurnsRemaining()) {
@@ -878,7 +983,7 @@
         appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
       } else {
         state.phase = 'open';
-        if (data.soft_warning_state && data.soft_warning_state !== 'none') {
+        if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
           appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
         }
       }
@@ -979,11 +1084,13 @@
         });
       }
 
+      var blobTtsUrl = data.tts_audio_url || null;
       state.messages.push({
         role: 'assistant',
         content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
         replyLanguage: data.reply_language || getReplyLanguage(),
-        ttsAudioUrl: data.tts_audio_url || null
+        ttsAudioUrl: blobTtsUrl,
+        voiceOnlyReply: !!(state.wantsVoiceReply && blobTtsUrl)
       });
 
       if (noTurnsRemaining()) {
@@ -991,7 +1098,7 @@
         appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
       } else {
         state.phase = 'open';
-        if (data.soft_warning_state && data.soft_warning_state !== 'none') {
+        if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
           appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
         }
       }
@@ -1165,8 +1272,32 @@
       return;
     }
 
-    if (action === 'play-reply') {
-      toggleAudio(button.getAttribute('data-audio-url'), button);
+    if (action === 'play-audio') {
+      var playerEl = button.closest('.gc-audio-player');
+      toggleAudio(button.getAttribute('data-audio-url'), button, playerEl);
+      return;
+    }
+
+    if (action === 'toggle-transcript') {
+      var targetId = button.getAttribute('data-target');
+      var target = document.getElementById(targetId);
+      if (target) {
+        var hidden = target.style.display === 'none';
+        target.style.display = hidden ? '' : 'none';
+        var label = button.querySelector('span:last-child');
+        var icon = button.querySelector('.material-symbols-outlined');
+        if (label) label.textContent = hidden ? t('chat_hide_transcript') : t('chat_show_transcript');
+        if (icon) icon.textContent = hidden ? 'unfold_less' : 'unfold_more';
+      }
+      return;
+    }
+
+    if (action === 'dismiss-warning') {
+      state.dismissedWarnings[state.quota.softWarningState || 'generic'] = true;
+      removeSystemCards();
+      state.phase = 'open';
+      renderComposer();
+      if ($('gc-textarea')) $('gc-textarea').focus();
       return;
     }
 
