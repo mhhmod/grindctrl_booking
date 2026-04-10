@@ -852,7 +852,7 @@
       '  </div>',
       '  <div class="gc-chat-header-actions">',
       '    <div id="gc-turns-pill" class="gc-turns-pill"></div>',
-      '    <button id="gc-close" class="gc-chat-close" aria-label="' + t('chat_close_label') + '"><span class="material-symbols-outlined">close</span></button>',
+      '    <button id="gc-close" class="gc-chat-close" aria-label="' + t('chat_close_label') + '"><span class="material-symbols-outlined">close</span><span class="gc-btn-label">' + escapeHTML(t('chat_close_label')) + '</span></button>',
       '  </div>',
       '</div>',
       '<div id="gc-chat-body" class="gc-chat-body">',
@@ -881,9 +881,9 @@
       '  <div class="gc-chat-input-row">',
       '    <textarea id="gc-textarea" class="gc-chat-textarea" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>',
       '    <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
-      '    <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span></button>',
-      '    <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span></button>',
-      '    <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span></button>',
+      '    <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span><span class="gc-btn-label">' + escapeHTML(t('chat_attach_label')) + '</span></button>',
+      '    <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span><span class="gc-btn-label">' + escapeHTML(t('chat_mic_label')) + '</span></button>',
+      '    <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
       '  </div>',
       '</div>'
     ].join('');
@@ -912,7 +912,11 @@
 
     if (trigger) trigger.setAttribute('aria-label', t('chat_open_label'));
     if (panel) panel.setAttribute('aria-label', t('chat_empty_title'));
-    if (closeButton) closeButton.setAttribute('aria-label', t('chat_close_label'));
+    if (closeButton) {
+      closeButton.setAttribute('aria-label', t('chat_close_label'));
+      var closeBtnLabel = closeButton.querySelector('.gc-btn-label');
+      if (closeBtnLabel) closeBtnLabel.textContent = t('chat_close_label');
+    }
     if (recordingLabel) recordingLabel.textContent = t('chat_recording');
     if (cancelButton) cancelButton.textContent = t('chat_cancel');
     if (dropZoneText) dropZoneText.textContent = t('chat_drop_audio');
@@ -920,14 +924,20 @@
     if (attachButton) {
       attachButton.setAttribute('aria-label', t('chat_attach_label'));
       attachButton.setAttribute('title', t('chat_attach_label'));
+      var attachLabel = attachButton.querySelector('.gc-btn-label');
+      if (attachLabel) attachLabel.textContent = t('chat_attach_label');
     }
     if (micButton) {
       micButton.setAttribute('aria-label', t('chat_mic_label'));
       micButton.setAttribute('title', t('chat_mic_label'));
+      var micLabel = micButton.querySelector('.gc-btn-label');
+      if (micLabel) micLabel.textContent = t('chat_mic_label');
     }
     if (sendButton) {
       sendButton.setAttribute('aria-label', t('chat_send_label'));
       sendButton.setAttribute('title', t('chat_send_label'));
+      var sendLabel = sendButton.querySelector('.gc-btn-label');
+      if (sendLabel) sendLabel.textContent = t('chat_send_label');
     }
   }
 

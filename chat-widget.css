@@ -171,8 +171,8 @@ html:not(.dark) .gc-chat-panel {
     inset-block: auto 96px;
     inset-inline-end: 24px;
     inset-inline-start: auto;
-    width: min(520px, calc(100vw - 48px));
-    height: min(760px, calc(100dvh - 108px));
+    width: min(620px, calc(100vw - 48px));
+    height: min(780px, calc(100dvh - 108px));
     border-radius: 28px;
     border: 1px solid rgba(240, 237, 233, 0.06);
     box-shadow: 0 32px 90px rgba(0, 0, 0, 0.56), 0 0 0 1px rgba(240, 237, 233, 0.02);
@@ -355,17 +355,25 @@ html:not(.dark) .gc-turns-pill.warning .gc-turns-pill-value {
 }
 
 .gc-chat-close {
-  width: 36px;
-  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(240, 237, 233, 0.08);
   border-radius: 12px;
   background: transparent;
   color: #9b9793;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.gc-chat-close .material-symbols-outlined {
+  font-size: 16px;
 }
 
 .gc-chat-close:hover {
@@ -498,8 +506,14 @@ html:not(.dark) .gc-chat-intro-title {
 
 .gc-chat-intro-stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
+}
+
+@media (min-width: 480px) {
+  .gc-chat-intro-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .gc-intro-stat {
@@ -534,12 +548,18 @@ html:not(.dark) .gc-chat-intro-title {
   line-height: 1;
   letter-spacing: -0.04em;
   color: #f0ede9;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gc-intro-stat-value-text {
   font-size: 14px;
   line-height: 1.3;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gc-intro-stat-meta,
@@ -547,6 +567,10 @@ html:not(.dark) .gc-chat-intro-title {
   font-size: 11px;
   line-height: 1.45;
   color: #9b9793;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gc-chat-intro-group {
@@ -1667,14 +1691,28 @@ html:not(.dark) .gc-chat-input-area {
 
 .gc-toolbar-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+@media (min-width: 480px) {
+  .gc-toolbar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (min-width: 640px) {
+  .gc-toolbar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .gc-toolbar-card {
   display: grid;
   gap: 8px;
   min-width: 0;
+  overflow: hidden;
   padding: 12px;
   border-radius: 16px;
   border: 1px solid rgba(240, 237, 233, 0.06);
@@ -1685,8 +1723,9 @@ html:not(.dark) .gc-chat-input-area {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .gc-setting-label {
@@ -1714,6 +1753,10 @@ html:not(.dark) .gc-chat-input-area {
   font-size: 10px;
   font-weight: 700;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .gc-toolbar-value {
@@ -1869,13 +1912,20 @@ html:not(.dark) .gc-recording-bar {
 .gc-chat-input-row {
   display: flex;
   align-items: end;
-  gap: 10px;
-  padding: 9px 9px 9px 14px;
+  gap: 6px;
+  padding: 7px 7px 7px 14px;
   border-radius: 22px;
   border: 1px solid rgba(240, 237, 233, 0.08);
   background: rgba(240, 237, 233, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
   transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+@media (min-width: 480px) {
+  .gc-chat-input-row {
+    gap: 10px;
+    padding: 9px 9px 9px 14px;
+  }
 }
 
 .gc-chat-input-row:focus-within {
@@ -1925,18 +1975,36 @@ html:not(.dark) .gc-chat-textarea::placeholder {
 }
 
 .gc-input-btn {
-  width: 44px;
-  height: 44px;
+  min-height: 44px;
+  padding: 0 6px;
   border: 0;
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   background: transparent;
   color: #8b8681;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   flex: 0 0 auto;
+  font: inherit;
+  font-size: 0;
+  font-weight: 700;
+}
+
+.gc-input-btn .gc-btn-label {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .gc-input-btn {
+    font-size: 11px;
+    padding: 0 10px;
+  }
+  .gc-input-btn .gc-btn-label {
+    display: inline;
+  }
 }
 
 .gc-input-btn .material-symbols-outlined {
@@ -1963,6 +2031,17 @@ html:not(.dark) .gc-input-btn:hover {
 .gc-input-btn-send {
   background: #f0ede9;
   color: #181816;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 0;
+}
+
+@media (min-width: 480px) {
+  .gc-input-btn-send {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 14px;
+  }
 }
 
 .gc-input-btn-send:hover {
@@ -2089,22 +2168,37 @@ html:not(.dark) .gc-toast {
     grid-template-columns: 1fr;
   }
 
-  .gc-chat-intro-stats,
-  .gc-chat-tool-grid,
-  .gc-toolbar-grid {
+  .gc-chat-tool-grid {
     grid-template-columns: 1fr;
   }
 
   .gc-chat-header {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 12px 10px;
   }
 
   .gc-chat-header-actions {
-    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .gc-turns-pill {
     min-width: 0;
+    padding: 6px 8px;
+  }
+
+  .gc-turns-pill-value {
+    font-size: 14px;
+  }
+
+  .gc-turns-pill-label {
+    font-size: 9px;
+  }
+
+  .gc-chat-close {
+    padding: 0 8px;
   }
 
   .gc-system-card {
@@ -2124,19 +2218,65 @@ html:not(.dark) .gc-toast {
     max-width: 94%;
   }
 
+  .gc-msg-ai {
+    max-width: 96%;
+  }
+
   .gc-voice-note-bubble {
     min-width: 0;
   }
 
   .gc-chat-stage {
-    min-height: 240px;
+    min-height: 200px;
+  }
+
+  .gc-chat-body {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .gc-chat-input-area {
+    padding: 8px 12px calc(max(10px, env(safe-area-inset-bottom)));
+    gap: 8px;
+  }
+
+  .gc-chat-intro {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .gc-chat-intro-title {
+    font-size: 15px;
+  }
+
+  .gc-chat-intro-desc {
+    font-size: 12px;
+  }
+
+  .gc-intro-stat {
+    padding: 10px;
+    border-radius: 14px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .gc-chat-prompt-btn {
+    min-height: 52px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .gc-tool-card {
+    min-height: 62px;
+    padding: 10px;
+    border-radius: 14px;
   }
 }
 
 @media (min-width: 1024px) {
   .gc-chat-panel {
-    width: 620px;
-    height: min(820px, calc(100dvh - 120px));
+    width: 740px;
+    height: min(860px, calc(100dvh - 120px));
   }
 
   .gc-chat-body {
@@ -2453,6 +2593,13 @@ html:not(.dark) .gc-image-failed-card {
 /* ── Tool grid: 4 cards variant ── */
 .gc-chat-tool-grid.gc-tool-grid-4 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 479px) {
+  .gc-chat-tool-grid.gc-tool-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
 }
 
 @media (min-width: 1024px) {
