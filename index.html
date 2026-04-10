@@ -5,16 +5,25 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>GRINDCTRL | Precision in Automation</title>
 <meta name="description" content="GrindCTRL builds AI automations, AI agents, and modern business systems that help businesses operate with more clarity, speed, and control."/>
+<!-- Favicon -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.svg"/>
 <!-- Preconnect to font CDN for faster loading -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<!-- Fonts loaded separately so one timeout won't block others -->
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<!-- Fonts: loaded async with JS fallback so timeouts don't block rendering -->
 <link rel="stylesheet" href="chat-widget.css"/>
-<!-- Tailwind (CDN warning is expected in dev — harmless) -->
+<!-- Suppress Tailwind CDN production warning (must be before Tailwind loads) -->
+<script>
+if (typeof console !== 'undefined') {
+  const _origWarn = console.warn;
+  console.warn = function() {
+    if (arguments[0] && typeof arguments[0] === 'string' && arguments[0].includes('cdn.tailwindcss.com')) return;
+    _origWarn.apply(console, arguments);
+  };
+}
+</script>
+<!-- Tailwind (CDN — expected for static sites without a build step) -->
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
 tailwind.config = {
@@ -44,6 +53,97 @@ tailwind.config = {
     }
   }
 }
+</script>
+<script>
+/* ── Async Google Fonts Loader with Timeout + Retry ── */
+(function(){
+  var FONT_URLS = [
+    'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap',
+    'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap',
+    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
+  ];
+  var TIMEOUT = 5000; // 5s timeout per font
+  var MAX_RETRIES = 2;
+
+  function loadFont(url, attempt) {
+    attempt = attempt || 0;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    link.media = 'print'; // Non-blocking: load as print, then swap
+    link.onload = function() { link.media = 'all'; };
+    link.onerror = function() {
+      if (attempt < MAX_RETRIES) {
+        // Retry after a short delay
+        setTimeout(function() { loadFont(url, attempt + 1); }, 1500);
+      }
+      // Fail silently — system fonts will be used as fallback
+    };
+    document.head.appendChild(link);
+
+    // Timeout: if not loaded in 5s, stop waiting (system fonts are fine)
+    setTimeout(function() {
+      if (link.media === 'print') link.media = 'all';
+    }, TIMEOUT);
+  }
+
+  // Start loading all fonts asynchronously
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      FONT_URLS.forEach(function(u) { loadFont(u); });
+    });
+  } else {
+    FONT_URLS.forEach(function(u) { loadFont(u); });
+  }
+})();
+
+/* ── Resource Failure Recovery Handler ── */
+(function(){
+  var criticalFailed = false;
+  var bannerShown = false;
+
+  // Track any resource errors (stylesheets, scripts)
+  window.addEventListener('error', function(e) {
+    var el = e.target;
+    if (!el || !el.tagName) return;
+    var tag = el.tagName.toLowerCase();
+    // Only care about link[rel=stylesheet] and script failures
+    if (tag === 'link' || tag === 'script') {
+      var src = el.href || el.src || '';
+      // Ignore Google Fonts failures (handled by async loader with retry)
+      if (src.includes('fonts.googleapis.com') || src.includes('fonts.gstatic.com')) return;
+      criticalFailed = true;
+      showRecoveryBanner();
+    }
+  }, true); // capture phase to catch load errors
+
+  function showRecoveryBanner() {
+    if (bannerShown) return;
+    bannerShown = true;
+    // Wait a bit for page to settle
+    setTimeout(function() {
+      var banner = document.createElement('div');
+      banner.id = 'gc-recovery-banner';
+      banner.setAttribute('role', 'alert');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#2a2826;border-top:1px solid rgba(240,237,233,0.1);padding:12px 20px;display:flex;align-items:center;justify-content:center;gap:12px;font-family:system-ui,sans-serif;font-size:13px;color:#c8c4bf;animation:gcBannerSlide .3s ease';
+      banner.innerHTML = '<span style="flex-shrink:0">⚠️</span>' +
+        '<span>Some resources failed to load. The page may not display correctly.</span>' +
+        '<button onclick="location.reload()" style="background:#f0ede9;color:#181816;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Reload Page</button>' +
+        '<button onclick="this.parentElement.remove()" style="background:transparent;color:#9b9793;border:none;padding:4px 8px;cursor:pointer;font-size:16px;line-height:1" aria-label="Dismiss">✕</button>';
+      // Animation
+      var style = document.createElement('style');
+      style.textContent = '@keyframes gcBannerSlide{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}';
+      document.head.appendChild(style);
+      document.body.appendChild(banner);
+
+      // Auto-dismiss after 20s
+      setTimeout(function() {
+        if (banner.parentElement) banner.remove();
+      }, 20000);
+    }, 1000);
+  }
+})();
 </script>
 <style>
 *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
