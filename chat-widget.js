@@ -279,6 +279,19 @@
     return normalizeLang(state.preferredReplyLanguage || state.quota.replyLanguage || currentLang());
   }
 
+  function shouldUseVoiceOnlyReply(data, ttsUrl) {
+    if (!ttsUrl) return false;
+    if (typeof data.voice_only_reply === 'boolean') return data.voice_only_reply;
+    return !!(data.wants_voice_reply || state.wantsVoiceReply);
+  }
+
+  function resolveAssistantContent(data, voiceOnlyReply) {
+    if (voiceOnlyReply) {
+      return data.assistant_voice_message || data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
+    }
+    return data.assistant_message || data.assistant_full_message || data.message || data.output || data.text || 'Thank you for your message.';
+  }
+
   function nextMessageId() {
     state.messageSeq += 1;
     return 'gc-msg-' + state.messageSeq;
@@ -767,7 +780,6 @@
           '  <div class="gc-msg-bubble gc-voice-only-bubble" dir="auto">',
           '    <div class="gc-voice-label"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice_reply')) + '</span></div>',
           '    ' + buildAudioPlayerHTML(entry.ttsAudioUrl),
-          '    <div class="gc-transcript-text gc-transcript-text-inline" dir="auto"><span class="gc-transcript-label">' + escapeHTML(t('chat_transcript_label')) + '</span>' + formatMessageHTML(entry.content) + '</div>',
           '  </div>',
           '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span></div>',
           '</div>'
@@ -1037,12 +1049,13 @@
 
       updateQuotaFromResponse(data);
       var assistantTtsUrl = data.tts_audio_url || null;
+      var voiceOnlyReply = shouldUseVoiceOnlyReply(data, assistantTtsUrl);
       pushMessage({
         role: 'assistant',
-        content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
+        content: resolveAssistantContent(data, voiceOnlyReply),
         replyLanguage: data.reply_language || getReplyLanguage(),
         ttsAudioUrl: assistantTtsUrl,
-        voiceOnlyReply: !!(state.wantsVoiceReply && assistantTtsUrl)
+        voiceOnlyReply: voiceOnlyReply
       });
 
       if (noTurnsRemaining()) {
@@ -1159,12 +1172,13 @@
       pendingVoiceMessage.transcriptPending = false;
 
       var blobTtsUrl = data.tts_audio_url || null;
+      var blobVoiceOnlyReply = shouldUseVoiceOnlyReply(data, blobTtsUrl);
       pushMessage({
         role: 'assistant',
-        content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
+        content: resolveAssistantContent(data, blobVoiceOnlyReply),
         replyLanguage: data.reply_language || getReplyLanguage(),
         ttsAudioUrl: blobTtsUrl,
-        voiceOnlyReply: !!(state.wantsVoiceReply && blobTtsUrl)
+        voiceOnlyReply: blobVoiceOnlyReply
       });
 
       if (noTurnsRemaining()) {
