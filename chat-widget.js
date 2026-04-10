@@ -1004,20 +1004,46 @@
 
     var prompts = getPromptList();
     var compact = state.messages.length > 0;
-    var visiblePrompts = compact ? prompts.slice(0, 3) : prompts;
+    var visiblePrompts = compact ? prompts.slice(0, 2) : prompts;
     intro.className = 'gc-chat-intro' + (compact ? ' compact' : '');
+
+    if (compact) {
+      intro.innerHTML = [
+        '<div class="gc-chat-compact-bar">',
+        '  <div class="gc-chat-compact-meta">',
+        '    <div class="gc-compact-status-chip">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + ' · ' + escapeHTML(String(remainingTurnsValue())) + '</div>',
+        '    <div class="gc-compact-language-switch" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
+        '      <button type="button" class="gc-compact-language-btn' + (getReplyLanguage() === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(getReplyLanguage() === 'en')) + '">EN</button>',
+        '      <button type="button" class="gc-compact-language-btn' + (getReplyLanguage() === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(getReplyLanguage() === 'ar')) + '">AR</button>',
+        '    </div>',
+        '  </div>',
+        '  <div class="gc-chat-compact-actions">',
+        '    <button type="button" class="gc-quick-action gc-quick-action-primary" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
+        '    <button type="button" class="gc-quick-action' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
+        '    <button type="button" class="gc-quick-action' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
+        '    <button type="button" class="gc-quick-action' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_cap_create')) + '</span></button>',
+        '  </div>',
+        '  <div class="gc-chat-compact-prompts">',
+        visiblePrompts.map(function (prompt) {
+          return '<button class="gc-chat-prompt-btn gc-chat-prompt-btn-compact" type="button" data-action="prompt" data-prompt-index="' + prompts.indexOf(prompt) + '">' + escapeHTML(prompt) + '</button>';
+        }).join(''),
+        '  </div>',
+        '</div>'
+      ].join('');
+      return;
+    }
 
     intro.innerHTML = [
       '<div class="gc-chat-intro-hero">',
-      compact ? '' : '  <div class="gc-chat-intro-copy">',
-      compact ? '' : '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      compact ? '' : '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
-      compact ? '' : '  </div>',
+      '  <div class="gc-chat-intro-copy">',
+      '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
+      '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '  </div>',
       '  <div class="gc-chat-intro-toolbar">',
       renderToolbarControls(true),
       '  </div>',
       '</div>',
-      '<div class="gc-chat-tool-grid gc-tool-grid-4' + (compact ? ' compact' : '') + '">',
+      '<div class="gc-chat-tool-grid gc-tool-grid-4">',
       '  <button type="button" class="gc-tool-card gc-tool-card-primary" data-action="focus-input">',
       '    <span class="material-symbols-outlined">edit_square</span>',
       '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_ask')) + '</strong><span>' + escapeHTML(t('chat_stage_empty_desc')) + '</span></span>',

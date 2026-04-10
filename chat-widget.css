@@ -462,13 +462,13 @@ html:not(.dark) .gc-chat-intro {
 }
 
 .gc-chat-intro.compact {
-  padding: 10px;
-  gap: 10px;
+  padding: 8px;
+  gap: 0;
   border-color: rgba(240, 237, 233, 0.06);
   background:
-    linear-gradient(180deg, rgba(20, 19, 18, 0.96), rgba(20, 19, 18, 0.9)),
-    rgba(20, 19, 18, 0.92);
-  box-shadow: 0 18px 32px -28px rgba(0, 0, 0, 0.82);
+    linear-gradient(180deg, rgba(20, 19, 18, 0.98), rgba(20, 19, 18, 0.94)),
+    rgba(20, 19, 18, 0.96);
+  box-shadow: 0 16px 28px -24px rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -481,82 +481,159 @@ html:not(.dark) .gc-chat-intro.compact {
   box-shadow: 0 18px 32px -28px rgba(24, 24, 22, 0.18);
 }
 
-.gc-chat-intro.compact .gc-chat-intro-desc {
-  max-width: 60ch;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.gc-chat-intro.compact .gc-chat-intro-copy {
-  display: none;
-}
-
-.gc-chat-intro.compact .gc-chat-intro-hero {
-  gap: 10px;
-}
-
-.gc-chat-intro.compact .gc-chat-intro-group {
+.gc-chat-compact-bar {
+  display: grid;
   gap: 8px;
 }
 
-.gc-chat-intro.compact .gc-chat-intro-label {
-  font-size: 10px;
+.gc-chat-compact-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.gc-chat-intro.compact .gc-chat-prompts {
+.gc-compact-status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 237, 233, 0.06);
+  background: rgba(240, 237, 233, 0.045);
+  color: #c8c4bf;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.gc-compact-language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 237, 233, 0.06);
+  background: rgba(240, 237, 233, 0.03);
+}
+
+.gc-compact-language-btn {
+  min-height: 26px;
+  min-width: 42px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #8b8681;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gc-compact-language-btn.active {
+  background: #f0ede9;
+  color: #181816;
+}
+
+.gc-chat-compact-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.gc-quick-action {
+  min-width: 0;
+  min-height: 50px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(240, 237, 233, 0.05);
+  background: rgba(240, 237, 233, 0.03);
+  color: #c8c4bf;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+}
+
+.gc-quick-action .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.gc-quick-action.active,
+.gc-quick-action-primary {
+  background: #f0ede9;
+  color: #181816;
+  border-color: transparent;
+}
+
+.gc-quick-action.disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.gc-chat-compact-prompts {
+  display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(210px, 1fr);
-  grid-template-columns: none;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 6px;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 2px;
   scroll-snap-type: x proximity;
 }
 
-.gc-chat-intro.compact .gc-chat-prompts::-webkit-scrollbar {
+.gc-chat-compact-prompts::-webkit-scrollbar {
   height: 4px;
 }
 
-.gc-chat-intro.compact .gc-chat-prompts::-webkit-scrollbar-thumb {
+.gc-chat-compact-prompts::-webkit-scrollbar-thumb {
   background: rgba(240, 237, 233, 0.1);
   border-radius: 999px;
 }
 
-.gc-chat-intro.compact .gc-chat-prompt-btn {
-  min-height: 44px;
+.gc-chat-prompt-btn-compact {
+  min-height: 42px;
   padding: 10px 12px;
   border-radius: 14px;
   scroll-snap-align: start;
 }
 
-.gc-chat-intro.compact .gc-chat-tool-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+html:not(.dark) .gc-compact-status-chip {
+  border-color: rgba(24, 24, 22, 0.06);
+  background: rgba(24, 24, 22, 0.04);
+  color: #4f4a45;
 }
 
-.gc-chat-intro.compact .gc-tool-card {
-  min-height: 50px;
-  padding: 9px 10px;
-  border-radius: 14px;
-  gap: 6px;
+html:not(.dark) .gc-compact-language-switch {
+  border-color: rgba(24, 24, 22, 0.06);
+  background: rgba(24, 24, 22, 0.025);
 }
 
-.gc-chat-intro.compact .gc-tool-card .material-symbols-outlined {
-  font-size: 16px;
+html:not(.dark) .gc-compact-language-btn {
+  color: #6b6763;
 }
 
-.gc-chat-intro.compact .gc-tool-card-copy {
-  gap: 0;
+html:not(.dark) .gc-compact-language-btn.active {
+  background: #181816;
+  color: #f0ede9;
 }
 
-.gc-chat-intro.compact .gc-tool-card-copy strong {
-  font-size: 11px;
+html:not(.dark) .gc-quick-action {
+  border-color: rgba(24, 24, 22, 0.06);
+  background: rgba(24, 24, 22, 0.03);
+  color: #4f4a45;
 }
 
-.gc-chat-intro.compact .gc-tool-card-copy span {
-  display: none;
+html:not(.dark) .gc-quick-action.active,
+html:not(.dark) .gc-quick-action-primary {
+  background: #181816;
+  color: #f0ede9;
 }
 
 .gc-chat-intro-hero {
@@ -1894,30 +1971,6 @@ html:not(.dark) .gc-chat-input-area {
   line-height: 1.45;
 }
 
-.gc-chat-intro.compact .gc-toolbar-grid.compact .gc-toolbar-card {
-  padding: 8px 9px;
-  border-radius: 14px;
-}
-
-.gc-chat-intro.compact .gc-toolbar-chip {
-  min-height: 22px;
-  padding-inline: 7px;
-  font-size: 9px;
-}
-
-.gc-chat-intro.compact .gc-setting-label {
-  font-size: 9px;
-}
-
-.gc-chat-intro.compact .gc-mini-toggle,
-.gc-chat-intro.compact .gc-segmented-control {
-  min-height: 32px;
-}
-
-.gc-chat-intro.compact .gc-segmented-btn {
-  min-height: 28px;
-  padding-inline: 10px;
-}
 
 .gc-mini-toggle,
 .gc-lang-chip,
@@ -2406,12 +2459,22 @@ html:not(.dark) .gc-toast {
     gap: 10px;
   }
 
-  .gc-chat-intro.compact .gc-chat-tool-grid {
+  .gc-chat-compact-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .gc-chat-intro.compact .gc-chat-prompts {
+  .gc-chat-compact-prompts {
     grid-auto-columns: minmax(168px, 1fr);
+  }
+
+  .gc-chat-compact-meta {
+    align-items: stretch;
+  }
+
+  .gc-compact-status-chip,
+  .gc-compact-language-switch {
+    width: 100%;
+    justify-content: center;
   }
 
   .gc-chat-intro-title {
