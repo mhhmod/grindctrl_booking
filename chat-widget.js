@@ -1004,20 +1004,20 @@
 
     var prompts = getPromptList();
     var compact = state.messages.length > 0;
-    var visiblePrompts = compact ? prompts.slice(0, 2) : prompts;
+    var visiblePrompts = compact ? prompts.slice(0, 3) : prompts;
     intro.className = 'gc-chat-intro' + (compact ? ' compact' : '');
 
     intro.innerHTML = [
       '<div class="gc-chat-intro-hero">',
-      '  <div class="gc-chat-intro-copy">',
-      '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
-      '  </div>',
+      compact ? '' : '  <div class="gc-chat-intro-copy">',
+      compact ? '' : '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
+      compact ? '' : '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      compact ? '' : '  </div>',
       '  <div class="gc-chat-intro-toolbar">',
       renderToolbarControls(true),
       '  </div>',
       '</div>',
-      '<div class="gc-chat-tool-grid gc-tool-grid-4">',
+      '<div class="gc-chat-tool-grid gc-tool-grid-4' + (compact ? ' compact' : '') + '">',
       '  <button type="button" class="gc-tool-card gc-tool-card-primary" data-action="focus-input">',
       '    <span class="material-symbols-outlined">edit_square</span>',
       '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_ask')) + '</strong><span>' + escapeHTML(t('chat_stage_empty_desc')) + '</span></span>',
@@ -1041,7 +1041,6 @@
       visiblePrompts.map(function (prompt) {
         return '<button class="gc-chat-prompt-btn" type="button" data-action="prompt" data-prompt-index="' + prompts.indexOf(prompt) + '">' + escapeHTML(prompt) + '</button>';
       }).join(''),
-      compact ? '    <button class="gc-chat-prompt-btn gc-chat-prompt-btn-more" type="button" data-action="focus-input">' + escapeHTML(t('chat_cap_ask')) + ' · ' + escapeHTML(t('chat_cap_speak')) + '</button>' : '',
       '</div>'
     ].join('');
   }
