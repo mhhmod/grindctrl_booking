@@ -837,13 +837,19 @@
       '</div>',
       '<div id="gc-chat-body" class="gc-chat-body">',
       '  <section id="gc-chat-intro" class="gc-chat-intro"></section>',
-      '  <div id="gc-chat-list" class="gc-chat-list" aria-live="polite"></div>',
+      '  <section class="gc-chat-stage">',
+      '    <div class="gc-chat-stage-head">',
+      '      <div class="gc-chat-stage-title">' + escapeHTML(t('chat_stage_label')) + '</div>',
+      '      <div class="gc-chat-stage-hint" id="gc-stage-hint"></div>',
+      '    </div>',
+      '    <div id="gc-feedback-slot" class="gc-feedback-slot gc-hidden"></div>',
+      '    <div id="gc-chat-list" class="gc-chat-list" aria-live="polite"></div>',
+      '  </section>',
       '</div>',
       '<div class="gc-drop-zone" id="gc-drop-zone">',
       '  <span class="material-symbols-outlined gc-drop-zone-icon">audio_file</span>',
       '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>',
       '</div>',
-      '<div id="gc-feedback-slot" class="gc-feedback-slot gc-hidden"></div>',
       '<div id="gc-input-area" class="gc-chat-input-area">',
       '  <div id="gc-composer-utility" class="gc-composer-utility"></div>',
       '  <div id="gc-recording-bar" class="gc-recording-bar">',
@@ -910,6 +916,7 @@
     var turnsPill = $('gc-turns-pill');
     var logo = $('gc-logo-img');
     var badge = $('gc-header-badge');
+    var stageHint = $('gc-stage-hint');
 
     if (subtitle) {
       subtitle.textContent = isAuthenticated()
@@ -918,6 +925,9 @@
     }
     if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
     if (badge) badge.textContent = t('chat_trial_agent');
+    if (stageHint) {
+      stageHint.textContent = state.messages.length ? t('chat_stage_hint_active') : t('chat_stage_hint_idle');
+    }
     if (!turnsPill) return;
 
     turnsPill.className = 'gc-turns-pill' + (isNearTurnLimit() ? ' warning' : '');
@@ -933,12 +943,35 @@
 
     var prompts = getPromptList();
     var compact = state.messages.length > 0;
+    var replyLang = getReplyLanguage();
+    var voiceState = !state.quota.ttsAvailable
+      ? t('chat_hear_unavailable')
+      : (state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'));
     intro.className = 'gc-chat-intro' + (compact ? ' compact' : '');
 
     intro.innerHTML = [
-      '<div class="gc-chat-intro-copy">',
-      '  <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      '  <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '<div class="gc-chat-intro-hero">',
+      '  <div class="gc-chat-intro-copy">',
+      '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
+      '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '  </div>',
+      '  <div class="gc-chat-intro-stats">',
+      '    <div class="gc-intro-stat">',
+      '      <span class="gc-intro-stat-label">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + '</span>',
+      '      <strong class="gc-intro-stat-value">' + escapeHTML(String(remainingTurnsValue())) + '</strong>',
+      '      <span class="gc-intro-stat-meta">' + escapeHTML(remainingTurnsLabel()) + '</span>',
+      '    </div>',
+      '    <div class="gc-intro-stat">',
+      '      <span class="gc-intro-stat-label">' + escapeHTML(t('chat_voice_preview_setting')) + '</span>',
+      '      <strong class="gc-intro-stat-value gc-intro-stat-value-text">' + escapeHTML(voiceState) + '</strong>',
+      '      <span class="gc-intro-stat-meta">' + escapeHTML(t('chat_audio_hint')) + '</span>',
+      '    </div>',
+      '    <div class="gc-intro-stat">',
+      '      <span class="gc-intro-stat-label">' + escapeHTML(t('chat_reply_language')) + '</span>',
+      '      <strong class="gc-intro-stat-value gc-intro-stat-value-text">' + escapeHTML(replyLang === 'ar' ? t('chat_lang_ar') : t('chat_lang_en')) + '</strong>',
+      '      <span class="gc-intro-stat-meta">' + escapeHTML(t('chat_playground_subtitle')) + '</span>',
+      '    </div>',
+      '  </div>',
       '</div>',
       '<div class="gc-chat-intro-group">',
       '  <div class="gc-chat-intro-label">' + escapeHTML(t('chat_prompt_label')) + '</div>',
@@ -948,10 +981,19 @@
       }).join(''),
       '  </div>',
       '</div>',
-      '<div class="gc-capability-chips">',
-      '  <button type="button" class="gc-capability-chip active" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
-      '  <button type="button" class="gc-capability-chip' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
-      '  <button type="button" class="gc-capability-chip' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
+      '<div class="gc-chat-tool-grid">',
+      '  <button type="button" class="gc-tool-card gc-tool-card-primary" data-action="focus-input">',
+      '    <span class="material-symbols-outlined">edit_square</span>',
+      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_ask')) + '</strong><span>' + escapeHTML(t('chat_stage_empty_desc')) + '</span></span>',
+      '  </button>',
+      '  <button type="button" class="gc-tool-card' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record">',
+      '    <span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span>',
+      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_speak')) + '</strong><span>' + escapeHTML(t('chat_audio_hint')) + '</span></span>',
+      '  </button>',
+      '  <button type="button" class="gc-tool-card' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear">',
+      '    <span class="material-symbols-outlined">volume_up</span>',
+      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_hear')) + '</strong><span>' + escapeHTML(t('chat_try_voice_preview')) + '</span></span>',
+      '  </button>',
       '</div>'
     ].join('');
   }
@@ -1135,6 +1177,18 @@
 
     var html = state.messages.map(renderMessage).join('');
 
+    if (!state.messages.length && !state.historyLoading && state.phase !== 'responding' && state.phase !== 'transcribing') {
+      html += [
+        '<div class="gc-empty-stage">',
+        '  <div class="gc-empty-stage-icon"><span class="material-symbols-outlined">smart_toy</span></div>',
+        '  <div class="gc-empty-stage-copy">',
+        '    <div class="gc-empty-stage-title">' + escapeHTML(t('chat_stage_empty_title')) + '</div>',
+        '    <div class="gc-empty-stage-desc">' + escapeHTML(t('chat_stage_empty_desc')) + '</div>',
+        '  </div>',
+        '</div>'
+      ].join('');
+    }
+
     if (state.historyLoading) {
       html += '<div class="gc-status-row"><span class="material-symbols-outlined">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
     } else if (state.phase === 'responding') {
@@ -1207,24 +1261,25 @@
         utility.innerHTML = '';
       } else {
         utility.innerHTML = [
-          '<div class="gc-setting-group">',
-          '  <span class="gc-setting-label">' + escapeHTML(t('chat_voice_preview_setting')) + '</span>',
-          '  <button type="button" class="gc-mini-toggle' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '">',
+          '<div class="gc-toolbar-grid">',
+          '<div class="gc-toolbar-card">',
+          '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(t('chat_voice_preview_setting')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(t('chat_audio_hint')) + '</span></div>',
+          '  <button type="button" class="gc-mini-toggle gc-mini-toggle-block' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '">',
           '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
           '    <span>' + escapeHTML(hearDisabled ? t('chat_hear_unavailable') : (state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
           '  </button>',
-          '  <span class="gc-audio-hint">' + escapeHTML(t('chat_audio_hint')) + '</span>',
           '</div>',
-          '<div class="gc-setting-group gc-setting-group-status">',
-          '  <span class="gc-setting-label">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + '</span>',
-          '  <span class="gc-audio-hint">' + escapeHTML(state.auth.helper || (isAuthenticated() ? t('chat_auth_secure_note') : t('chat_limit_fine'))) + '</span>',
+          '<div class="gc-toolbar-card gc-toolbar-card-status">',
+          '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(String(remainingTurnsValue())) + '</span></div>',
+          '  <div class="gc-toolbar-value">' + escapeHTML(state.auth.helper || (isAuthenticated() ? t('chat_auth_secure_note') : t('chat_limit_fine'))) + '</div>',
           '</div>',
-          '<div class="gc-setting-group gc-setting-group-language">',
-          '  <span class="gc-setting-label">' + escapeHTML(t('chat_reply_language')) + '</span>',
-          '  <div class="gc-segmented-control" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
+          '<div class="gc-toolbar-card gc-toolbar-card-language">',
+          '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(t('chat_reply_language')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(replyLang === 'en' ? t('chat_lang_en') : t('chat_lang_ar')) + '</span></div>',
+          '  <div class="gc-segmented-control gc-segmented-control-block" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
           '    <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '">' + escapeHTML(t('chat_lang_en')) + '</button>',
           '    <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '">' + escapeHTML(t('chat_lang_ar')) + '</button>',
           '  </div>',
+          '</div>',
           '</div>'
         ].join('');
       }
