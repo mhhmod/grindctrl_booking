@@ -423,6 +423,21 @@
     chat_auth_send_failed: { en: 'Could not send the email right now. Please try again.', ar: 'تعذّر إرسال البريد الآن. حاول مرة أخرى.' },
     chat_auth_verify_failed: { en: 'That code did not work. Please try again.', ar: 'هذا الرمز غير صحيح. حاول مرة أخرى.' },
     chat_auth_email_invalid: { en: 'Enter a valid email address.', ar: 'أدخل بريداً إلكترونياً صالحاً.' },
+
+    /* ────────── IMAGE GENERATION ────────── */
+    chat_cap_create: { en: 'Create', ar: 'أنشئ' },
+    chat_create_desc: { en: 'Generate an image from a text prompt', ar: 'أنشئ صورة من وصف نصي' },
+    chat_create_placeholder: { en: 'Describe the image you want to create...', ar: 'صِف الصورة التي تريد إنشاءها...' },
+    chat_generating_image: { en: 'Creating your image…', ar: 'جارٍ إنشاء صورتك…' },
+    chat_image_ready: { en: 'Image ready', ar: 'الصورة جاهزة' },
+    chat_image_prompt_label: { en: 'Prompt', ar: 'الوصف' },
+    chat_image_open: { en: 'Open', ar: 'فتح' },
+    chat_image_save: { en: 'Save', ar: 'حفظ' },
+    chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
+    chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
+    chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
+    chat_create_mode: { en: 'Create mode', ar: 'وضع الإنشاء' },
+    chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' },
   };
 
   // ── Expose globally for optional external use ──

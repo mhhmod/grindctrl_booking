@@ -11,6 +11,8 @@
     N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent',
     N8N_SESSION_UPGRADE_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent-session-upgrade',
     LIMITS: { SESSION_ANON: 3, DAILY_ANON: 5, DAILY_AUTH: 10 },
+    IMAGE_GEN_MODEL: '@cf/black-forest-labs/flux-1-schnell',
+    IMAGE_GEN_LIMIT: 2,
     AUTH_REDIRECT_PARAM: 'gc_auth',
     MAX_MSG_LEN: 500,
     MAX_AUDIO_SEC: 30,
@@ -52,13 +54,16 @@
       ttsAvailable: true,
       limitState: 'ok',
       softWarningState: 'none',
-      replyLanguage: 'en'
+      replyLanguage: 'en',
+      remainingImageGen: null,
+      imageGenAvailable: true
     },
     activeAudio: null,
     activeAudioUrl: null,
     activeAudioButton: null,
     activeAudioPlayer: null,
     dismissedWarnings: {},
+    imageMode: false,
     notice: null,
     messageSeq: 0,
     historyLoaded: false,
@@ -165,7 +170,20 @@
       chat_recording_limit: { en: 'Maximum recording length reached.', ar: 'تم الوصول إلى الحد الأقصى لمدة التسجيل.' },
       chat_transcribing_status: { en: 'Transcribing voice note...', ar: 'جارٍ نسخ الملاحظة الصوتية...' },
       chat_generating_status: { en: 'Generating response...', ar: 'جارٍ توليد الرد...' },
-      chat_try_voice_preview: { en: 'Turn on Hear to get a voice preview with the next reply.', ar: 'فعّل الاستماع للحصول على معاينة صوتية مع الرد التالي.' }
+      chat_try_voice_preview: { en: 'Turn on Hear to get a voice preview with the next reply.', ar: 'فعّل الاستماع للحصول على معاينة صوتية مع الرد التالي.' },
+      chat_cap_create: { en: 'Create', ar: 'أنشئ' },
+      chat_create_desc: { en: 'Generate an image from a text prompt', ar: 'أنشئ صورة من وصف نصي' },
+      chat_create_placeholder: { en: 'Describe the image you want to create...', ar: 'صِف الصورة التي تريد إنشاءها...' },
+      chat_generating_image: { en: 'Creating your image…', ar: 'جارٍ إنشاء صورتك…' },
+      chat_image_ready: { en: 'Image ready', ar: 'الصورة جاهزة' },
+      chat_image_prompt_label: { en: 'Prompt', ar: 'الوصف' },
+      chat_image_open: { en: 'Open', ar: 'فتح' },
+      chat_image_save: { en: 'Save', ar: 'حفظ' },
+      chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
+      chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
+      chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
+      chat_create_mode: { en: 'Create mode', ar: 'وضع الإنشاء' },
+      chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' }
     };
 
     if (fallback[key]) return fallback[key][lang] || fallback[key].en;
@@ -579,6 +597,8 @@
     if (data.limit_state) state.quota.limitState = data.limit_state;
     if (data.soft_warning_state) state.quota.softWarningState = data.soft_warning_state;
     if (data.reply_language) state.quota.replyLanguage = normalizeLang(data.reply_language);
+    if (data.remaining_image_gen !== undefined) state.quota.remainingImageGen = data.remaining_image_gen;
+    if (data.image_gen_available !== undefined) state.quota.imageGenAvailable = !!data.image_gen_available;
   }
 
   function localizeCtaPayload(kind, serverPayload, softWarningState) {
@@ -981,7 +1001,7 @@
       }).join(''),
       '  </div>',
       '</div>',
-      '<div class="gc-chat-tool-grid">',
+      '<div class="gc-chat-tool-grid gc-tool-grid-4">',
       '  <button type="button" class="gc-tool-card gc-tool-card-primary" data-action="focus-input">',
       '    <span class="material-symbols-outlined">edit_square</span>',
       '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_ask')) + '</strong><span>' + escapeHTML(t('chat_stage_empty_desc')) + '</span></span>',
@@ -993,6 +1013,10 @@
       '  <button type="button" class="gc-tool-card' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear">',
       '    <span class="material-symbols-outlined">volume_up</span>',
       '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_hear')) + '</strong><span>' + escapeHTML(t('chat_try_voice_preview')) + '</span></span>',
+      '  </button>',
+      '  <button type="button" class="gc-tool-card' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode">',
+      '    <span class="material-symbols-outlined">auto_awesome</span>',
+      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_create')) + '</strong><span>' + escapeHTML(t('chat_create_desc')) + '</span></span>',
       '  </button>',
       '</div>'
     ].join('');
@@ -1112,8 +1136,46 @@
     return !!fileType && CONFIG.AUDIO_TYPES.indexOf(fileType) !== -1;
   }
 
+  function renderImageResultCard(entry) {
+    var result = entry.imageResult;
+    var dataUri = 'data:' + (result.mime || 'image/png') + ';base64,' + result.base64;
+    var failed = result.status === 'failed';
+
+    if (failed) {
+      return [
+        '<div class="gc-msg gc-msg-ai">',
+        '  <div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>',
+        '  <div class="gc-image-failed-card">',
+        '    <span class="material-symbols-outlined">broken_image</span>',
+        '    <div class="gc-image-failed-text">' + escapeHTML(t('chat_image_failed')) + '</div>',
+        '    <div class="gc-image-result-actions">',
+        '      <button type="button" class="gc-image-action-btn" data-action="image-retry" data-image-prompt="' + escapeHTML(result.prompt || '') + '"><span class="material-symbols-outlined">refresh</span>' + escapeHTML(t('chat_image_retry')) + '</button>',
+        '    </div>',
+        '  </div>',
+        '</div>'
+      ].join('');
+    }
+
+    return [
+      '<div class="gc-msg gc-msg-ai">',
+      '  <div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>',
+      '  <div class="gc-image-result-card">',
+      '    <div class="gc-image-result-header"><span class="material-symbols-outlined">auto_awesome</span><span class="gc-image-result-ready">' + escapeHTML(t('chat_image_ready')) + '</span></div>',
+      '    <div class="gc-image-result-img-wrap"><img class="gc-image-result-img" src="' + dataUri + '" alt="' + escapeHTML(result.prompt || 'Generated image') + '" loading="lazy"/></div>',
+      '    <div class="gc-image-result-prompt-echo"><span class="gc-image-result-prompt-label">' + escapeHTML(t('chat_image_prompt_label')) + '</span><span class="gc-image-result-prompt-text" dir="auto">' + escapeHTML(result.prompt || '') + '</span></div>',
+      '    <div class="gc-image-result-actions">',
+      '      <button type="button" class="gc-image-action-btn" data-action="image-open" data-image-uri="' + escapeHTML(dataUri) + '"><span class="material-symbols-outlined">open_in_new</span>' + escapeHTML(t('chat_image_open')) + '</button>',
+      '      <a class="gc-image-action-btn" href="' + dataUri + '" download="grindctrl-image.png"><span class="material-symbols-outlined">download</span>' + escapeHTML(t('chat_image_save')) + '</a>',
+      '      <button type="button" class="gc-image-action-btn" data-action="image-retry" data-image-prompt="' + escapeHTML(result.prompt || '') + '"><span class="material-symbols-outlined">refresh</span>' + escapeHTML(t('chat_image_retry')) + '</button>',
+      '    </div>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  }
+
   function renderMessage(entry) {
     if (entry.role === 'system') return renderSystemCard(entry);
+    if (entry.imageResult) return renderImageResultCard(entry);
 
     var isUser = entry.role === 'user';
     var actions = '';
@@ -1191,6 +1253,8 @@
 
     if (state.historyLoading) {
       html += '<div class="gc-status-row"><span class="material-symbols-outlined">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
+    } else if (state.phase === 'generating_image') {
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_image')) + '</span></div>';
     } else if (state.phase === 'responding') {
       html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
     } else if (state.phase === 'transcribing') {
@@ -1226,13 +1290,13 @@
     var inputRow = document.querySelector('.gc-chat-input-row');
     var utility = $('gc-composer-utility');
     var recordingBar = $('gc-recording-bar');
-    var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing';
+    var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing' || state.phase === 'generating_image';
     var hearDisabled = !state.quota.ttsAvailable;
     var replyLang = getReplyLanguage();
     var inLimitMode = state.phase === 'limit';
 
     if (textarea) {
-      textarea.placeholder = t('chat_placeholder');
+      textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder');
       textarea.disabled = inLimitMode;
     }
 
@@ -1259,6 +1323,20 @@
     if (utility) {
       if (inLimitMode) {
         utility.innerHTML = '';
+      } else if (state.imageMode) {
+        utility.innerHTML = [
+          '<div class="gc-create-mode-bar">',
+          '  <div class="gc-create-mode-info">',
+          '    <span class="material-symbols-outlined">auto_awesome</span>',
+          '    <span class="gc-create-mode-label">' + escapeHTML(t('chat_create_mode')) + '</span>',
+          '    <span class="gc-create-mode-hint">' + escapeHTML(t('chat_create_desc')) + '</span>',
+          '  </div>',
+          '  <button type="button" class="gc-create-mode-exit" data-action="exit-create-mode">',
+          '    <span class="material-symbols-outlined">arrow_back</span>',
+          '    <span>' + escapeHTML(t('chat_exit_create')) + '</span>',
+          '  </button>',
+          '</div>'
+        ].join('');
       } else {
         utility.innerHTML = [
           '<div class="gc-toolbar-grid">',
@@ -1420,8 +1498,94 @@
     }
   }
 
+  async function sendImagePrompt(prompt) {
+    if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'generating_image' || state.phase === 'limit') return;
+    if (!state.quota.imageGenAvailable) {
+      showToast(t('chat_image_quota_exhausted'));
+      return;
+    }
+
+    await ensureSession();
+    if (!state.sessionId) {
+      showError('Could not create session.');
+      return;
+    }
+
+    clearNotice();
+    pushMessage({
+      role: 'user',
+      content: prompt,
+      imagePrompt: true
+    });
+    state.phase = 'generating_image';
+    state.imageMode = false;
+    renderAll();
+
+    var payload = {
+      action: 'image_generate',
+      session_id: state.sessionId,
+      user_id: isAuthenticated() ? state.auth.user.id : null,
+      prompt: prompt,
+      model: CONFIG.IMAGE_GEN_MODEL,
+      language: currentLang(),
+      locale: currentLang(),
+      direction: currentDir(),
+      fingerprint_hash: state.fingerprint,
+      source_page: location.href || 'landing'
+    };
+
+    try {
+      var response = await fetch(CONFIG.N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      var data = {};
+      try { data = await response.json(); } catch (error) {}
+
+      if (response.status === 429) {
+        updateQuotaFromResponse(data);
+        state.quota.imageGenAvailable = false;
+        state.phase = 'open';
+        state.messages.pop();
+        renderAll();
+        showToast(data.message || t('chat_image_quota_exhausted'));
+        return;
+      }
+
+      if (!response.ok) {
+        state.phase = 'open';
+        state.messages.pop();
+        renderAll();
+        showError(data.message || t('chat_image_failed'));
+        return;
+      }
+
+      updateQuotaFromResponse(data);
+      pushMessage({
+        role: 'assistant',
+        imageResult: {
+          base64: data.image_base64 || '',
+          mime: data.image_mime || 'image/png',
+          prompt: data.prompt || prompt,
+          status: data.status === 'failed' ? 'failed' : 'completed'
+        }
+      });
+
+      state.phase = 'open';
+      trackEvent('image_gen_complete', { prompt: prompt });
+      renderAll();
+    } catch (networkError) {
+      state.phase = 'open';
+      state.messages.pop();
+      renderAll();
+      showError();
+      trackEvent('error', { error: networkError.message || 'image_gen_network_error' });
+    }
+  }
+
   async function sendMessage(text, contentType) {
-    if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'limit') return;
+    if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'generating_image' || state.phase === 'limit') return;
 
     await ensureSession();
     if (!state.sessionId) {
@@ -1717,7 +1881,11 @@
     textarea.value = '';
     textarea.style.height = 'auto';
     renderComposer();
-    sendMessage(text, 'text');
+    if (state.imageMode) {
+      sendImagePrompt(text);
+    } else {
+      sendMessage(text, 'text');
+    }
   }
 
   function openChat() {
@@ -1854,6 +2022,35 @@
       state.phase = 'open';
       renderAll();
       if ($('gc-textarea')) $('gc-textarea').focus();
+      return;
+    }
+
+    if (action === 'enter-create-mode') {
+      if (!state.quota.imageGenAvailable) {
+        showToast(t('chat_image_quota_exhausted'));
+        return;
+      }
+      state.imageMode = true;
+      renderAll();
+      if ($('gc-textarea')) $('gc-textarea').focus();
+      return;
+    }
+
+    if (action === 'exit-create-mode') {
+      state.imageMode = false;
+      renderAll();
+      return;
+    }
+
+    if (action === 'image-open') {
+      var imageUri = button.getAttribute('data-image-uri');
+      if (imageUri) window.open(imageUri, '_blank');
+      return;
+    }
+
+    if (action === 'image-retry') {
+      var imagePrompt = button.getAttribute('data-image-prompt');
+      if (imagePrompt) sendImagePrompt(imagePrompt);
       return;
     }
 
