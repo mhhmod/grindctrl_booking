@@ -5,13 +5,15 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>GRINDCTRL | Precision in Automation</title>
 <meta name="description" content="GrindCTRL builds AI automations, AI agents, and modern business systems that help businesses operate with more clarity, speed, and control."/>
-<!-- Favicon -->
-<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon.svg"/>
-<!-- Preconnect to font CDN for faster loading -->
+<!-- Favicon: uses existing logo SVGs. Dark logo for dark tabs, light for light tabs -->
+<link rel="icon" type="image/svg+xml" href="logo-dark.svg" media="(prefers-color-scheme: dark)"/>
+<link rel="icon" type="image/svg+xml" href="logo-light.svg" media="(prefers-color-scheme: light)"/>
+<link rel="icon" type="image/svg+xml" href="logo-dark.svg"/>
+<!-- Preconnect to both font CDNs (primary + fallback mirror) -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<!-- Fonts: loaded async with JS fallback so timeouts don't block rendering -->
+<link rel="preconnect" href="https://fonts.bunny.net"/>
+<!-- Fonts: loaded async via JS. Tries Google first → falls back to Bunny.net mirror -->
 <link rel="stylesheet" href="chat-widget.css"/>
 <!-- Suppress Tailwind CDN production warning (must be before Tailwind loads) -->
 <script>
@@ -55,73 +57,84 @@ tailwind.config = {
 }
 </script>
 <script>
-/* ── Async Google Fonts Loader with Timeout + Retry ── */
+/* ── Resilient Font Loader ── */
+/* Strategy: Try Google Fonts first. If it fails/times out within 3s,
+   fall back to fonts.bunny.net (a GDPR-compliant Google Fonts mirror).
+   No retries — one attempt per CDN, fail silently to system fonts. */
 (function(){
-  var FONT_URLS = [
-    'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap',
-    'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap',
-    'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
+  var GOOGLE_BASE = 'https://fonts.googleapis.com';
+  var BUNNY_BASE  = 'https://fonts.bunny.net';
+  var FONT_PATHS = [
+    '/css2?family=Manrope:wght@400;500;600;700;800&display=swap',
+    '/css2?family=Inter:wght@300;400;500;600&display=swap',
+    '/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap',
+    '/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
   ];
-  var TIMEOUT = 5000; // 5s timeout per font
-  var MAX_RETRIES = 2;
+  var TIMEOUT = 3000; // 3s per font before trying fallback
 
-  function loadFont(url, attempt) {
-    attempt = attempt || 0;
+  function loadFont(path) {
+    var loaded = false;
     var link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = url;
-    link.media = 'print'; // Non-blocking: load as print, then swap
-    link.onload = function() { link.media = 'all'; };
+    link.href = GOOGLE_BASE + path;
+    link.media = 'print'; // non-render-blocking
+
+    link.onload = function() {
+      loaded = true;
+      link.media = 'all';
+    };
     link.onerror = function() {
-      if (attempt < MAX_RETRIES) {
-        // Retry after a short delay
-        setTimeout(function() { loadFont(url, attempt + 1); }, 1500);
-      }
-      // Fail silently — system fonts will be used as fallback
+      if (!loaded) tryFallback(path, link);
     };
     document.head.appendChild(link);
 
-    // Timeout: if not loaded in 5s, stop waiting (system fonts are fine)
+    // Timeout → try fallback CDN
     setTimeout(function() {
-      if (link.media === 'print') link.media = 'all';
+      if (!loaded) tryFallback(path, link);
     }, TIMEOUT);
   }
 
-  // Start loading all fonts asynchronously
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      FONT_URLS.forEach(function(u) { loadFont(u); });
-    });
-  } else {
-    FONT_URLS.forEach(function(u) { loadFont(u); });
+  function tryFallback(path, primaryLink) {
+    // Remove the stuck primary link to stop it from logging more errors
+    if (primaryLink && primaryLink.parentNode) primaryLink.parentNode.removeChild(primaryLink);
+
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = BUNNY_BASE + path;
+    link.media = 'print';
+    link.onload = function() { link.media = 'all'; };
+    // If fallback also fails, just use system fonts — no more retries
+    link.onerror = function() { link.media = 'all'; };
+    document.head.appendChild(link);
+
+    // Safety: activate after 5s regardless
+    setTimeout(function() { if (link.media === 'print') link.media = 'all'; }, 5000);
   }
+
+  // Load all fonts async
+  FONT_PATHS.forEach(function(p) { loadFont(p); });
 })();
 
 /* ── Resource Failure Recovery Handler ── */
 (function(){
-  var criticalFailed = false;
   var bannerShown = false;
 
-  // Track any resource errors (stylesheets, scripts)
+  // Track resource load errors (stylesheets, scripts)
   window.addEventListener('error', function(e) {
     var el = e.target;
     if (!el || !el.tagName) return;
     var tag = el.tagName.toLowerCase();
-    // Only care about link[rel=stylesheet] and script failures
     if (tag === 'link' || tag === 'script') {
       var src = el.href || el.src || '';
-      // Ignore Google Fonts failures (handled by async loader with retry)
-      if (src.includes('fonts.googleapis.com') || src.includes('fonts.gstatic.com')) return;
-      criticalFailed = true;
+      // Ignore font CDN failures (handled by the font loader above)
+      if (src.includes('fonts.googleapis.com') || src.includes('fonts.gstatic.com') || src.includes('fonts.bunny.net')) return;
       showRecoveryBanner();
     }
-  }, true); // capture phase to catch load errors
+  }, true);
 
   function showRecoveryBanner() {
     if (bannerShown) return;
     bannerShown = true;
-    // Wait a bit for page to settle
     setTimeout(function() {
       var banner = document.createElement('div');
       banner.id = 'gc-recovery-banner';
@@ -131,16 +144,12 @@ tailwind.config = {
         '<span>Some resources failed to load. The page may not display correctly.</span>' +
         '<button onclick="location.reload()" style="background:#f0ede9;color:#181816;border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Reload Page</button>' +
         '<button onclick="this.parentElement.remove()" style="background:transparent;color:#9b9793;border:none;padding:4px 8px;cursor:pointer;font-size:16px;line-height:1" aria-label="Dismiss">✕</button>';
-      // Animation
       var style = document.createElement('style');
       style.textContent = '@keyframes gcBannerSlide{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}';
       document.head.appendChild(style);
       document.body.appendChild(banner);
-
       // Auto-dismiss after 20s
-      setTimeout(function() {
-        if (banner.parentElement) banner.remove();
-      }, 20000);
+      setTimeout(function() { if (banner.parentElement) banner.remove(); }, 20000);
     }, 1000);
   }
 })();
