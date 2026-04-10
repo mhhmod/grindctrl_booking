@@ -45,6 +45,7 @@
     quota: {
       remainingTurnsSession: null,
       remainingTurnsDay: null,
+      remainingTtsSession: null,
       remainingTtsDay: null,
       ttsAvailable: true,
       limitState: 'ok',
@@ -130,6 +131,9 @@
       chat_warning_voice_title: { en: '1 voice preview remaining', ar: 'تبقّت معاينة صوتية واحدة' },
       chat_warning_desc: { en: 'Make it count, or explore more options below.', ar: 'استفد منها أو استكشف المزيد أدناه.' },
       chat_warning_voice_desc: { en: 'Text replies continue — one more voice preview available.', ar: 'الردود النصية مستمرة — معاينة صوتية واحدة إضافية.' },
+      chat_warning_voice_unavailable_title: { en: 'Voice preview unavailable', ar: 'المعاينة الصوتية غير متاحة' },
+      chat_warning_voice_session_desc: { en: 'This session has used its voice preview. Text replies continue.', ar: 'استخدمت هذه الجلسة المعاينة الصوتية الخاصة بها. الردود النصية مستمرة.' },
+      chat_warning_voice_day_desc: { en: 'Today’s voice previews are used up. Text replies continue for now.', ar: 'تم استهلاك المعاينات الصوتية لليوم. الردود النصية مستمرة حالياً.' },
       chat_cta_continue: { en: 'Continue Trial', ar: 'تابع التجربة' },
       chat_cta_final_turn: { en: 'Got it', ar: 'فهمت' },
       chat_cta_tour: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
@@ -359,6 +363,7 @@
       }
     }
     if (data.remaining_turns_day !== undefined) state.quota.remainingTurnsDay = data.remaining_turns_day;
+    if (data.remaining_tts_previews_session !== undefined) state.quota.remainingTtsSession = data.remaining_tts_previews_session;
     if (data.remaining_tts_previews_day !== undefined) state.quota.remainingTtsDay = data.remaining_tts_previews_day;
     if (data.tts_available !== undefined) {
       state.quota.ttsAvailable = !!data.tts_available;
@@ -396,6 +401,34 @@
       tts_near_limit: {
         title: t('chat_warning_voice_title'),
         message: t('chat_warning_voice_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      tts_last_preview: {
+        title: t('chat_warning_voice_title'),
+        message: t('chat_warning_voice_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      tts_session_exhausted: {
+        title: t('chat_warning_voice_unavailable_title'),
+        message: t('chat_warning_voice_session_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      tts_day_exhausted: {
+        title: t('chat_warning_voice_unavailable_title'),
+        message: t('chat_warning_voice_day_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      },
+      tts_limit_reached: {
+        title: t('chat_warning_voice_unavailable_title'),
+        message: t('chat_warning_voice_session_desc'),
         primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
         secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
         tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
