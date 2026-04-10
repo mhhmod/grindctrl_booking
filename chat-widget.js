@@ -9,23 +9,25 @@
     SUPABASE_URL: 'https://qldgpkqpyfpqfdchozsp.supabase.co',
     SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZGdwa3FweWZwcWZkY2hvenNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzYwMDEsImV4cCI6MjA4OTY1MjAwMX0.BGqBYcjmuGbA787NFm45ndeFuXyro9zYR8NZX3Tib30',
     N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent',
+    N8N_SESSION_UPGRADE_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent-session-upgrade',
     LIMITS: { SESSION_ANON: 3, DAILY_ANON: 5, DAILY_AUTH: 10 },
+    AUTH_REDIRECT_PARAM: 'gc_auth',
     MAX_MSG_LEN: 500,
     MAX_AUDIO_SEC: 30,
     MAX_AUDIO_BYTES: 2 * 1024 * 1024,
     AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a'],
     PROMPTS: {
       en: [
-        'Where can AI save time in a service business?',
-        'Show me a lead follow-up workflow',
+        'Where can AI save the most time in my business?',
+        'Show me a better lead follow-up flow',
         'What would an AI agent handle for a gym?',
-        'How would GRINDCTRL reduce admin work?'
+        'How would GRINDCTRL reduce admin work here?'
       ],
       ar: [
-        'أين يمكن للذكاء الاصطناعي أن يوفّر الوقت في نشاط خدمي؟',
-        'اعرض لي سير عمل لمتابعة العملاء المحتملين',
+        'أين يمكن للذكاء الاصطناعي أن يوفر أكبر وقت في عملي؟',
+        'اعرض لي أسلوباً أفضل لمتابعة العملاء المحتملين',
         'ما الذي يمكن لوكيل ذكي أن يديره لصالة رياضية؟',
-        'كيف يمكن لـ GRINDCTRL تقليل الأعمال الإدارية؟'
+        'كيف يمكن لـ GRINDCTRL تقليل العمل الإداري هنا؟'
       ]
     }
   };
@@ -58,7 +60,21 @@
     activeAudioPlayer: null,
     dismissedWarnings: {},
     notice: null,
-    messageSeq: 0
+    messageSeq: 0,
+    historyLoaded: false,
+    historyLoading: false,
+    historyRequested: false,
+    auth: {
+      client: null,
+      session: null,
+      user: null,
+      email: '',
+      code: '',
+      status: 'idle',
+      helper: '',
+      upgradePending: false,
+      lastUpgradedUserId: null
+    }
   };
 
   function $(id) {
@@ -181,6 +197,28 @@
     });
   }
 
+  function initAuthClient() {
+    if (state.auth.client || !window.supabase || typeof window.supabase.createClient !== 'function') return state.auth.client;
+
+    state.auth.client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    state.auth.client.auth.getSession().then(function (result) {
+      applyAuthSession(result && result.data ? result.data.session : null, 'restore');
+    }).catch(function () {});
+
+    state.auth.client.auth.onAuthStateChange(function (event, session) {
+      applyAuthSession(session, event || 'auth_change');
+    });
+
+    return state.auth.client;
+  }
+
   function getFingerprint() {
     var existing = null;
     try { existing = localStorage.getItem('gc_fp'); } catch (error) {}
@@ -230,6 +268,134 @@
     return state.sessionId;
   }
 
+  function mapStoredMessage(row) {
+    if (!row || !row.role) return null;
+    if (row.role === 'user') {
+      return createMessage({
+        role: 'user',
+        content: row.transcript_text || row.raw_text || '',
+        voice: row.modality === 'voice',
+        transcriptPending: false
+      });
+    }
+    if (row.role === 'assistant') {
+      return createMessage({
+        role: 'assistant',
+        content: row.response_text || '',
+        replyLanguage: row.reply_language || getReplyLanguage()
+      });
+    }
+    return null;
+  }
+
+  async function hydrateMessagesFromSession(force) {
+    if (state.historyLoading) return;
+    if (state.historyLoaded && !force) return;
+
+    await ensureSession();
+    if (!state.sessionId) return;
+
+    state.historyLoading = true;
+    renderMessages();
+
+    var rows = await sbFetch(
+      'trial_messages',
+      'GET',
+      null,
+      '?select=role,modality,raw_text,transcript_text,response_text,reply_language,created_at&session_id=eq.' + encodeURIComponent(state.sessionId) + '&order=created_at.asc&limit=60'
+    );
+
+    if (Array.isArray(rows)) {
+      state.messages = rows.map(mapStoredMessage).filter(Boolean);
+      state.historyLoaded = true;
+    }
+
+    state.historyLoading = false;
+    renderAll();
+  }
+
+  function applyAuthSession(session, source) {
+    state.auth.session = session || null;
+    state.auth.user = session && session.user ? session.user : null;
+    if (state.auth.user && state.auth.user.email) state.auth.email = state.auth.user.email;
+
+    if (state.auth.user && state.auth.user.id) {
+      Promise.resolve().then(function () {
+        return upgradeTrialSession(source || 'auth');
+      }).catch(function () {});
+    } else {
+      renderAll();
+    }
+  }
+
+  async function upgradeTrialSession(source) {
+    if (!state.auth.user || !state.auth.user.id) return false;
+    await ensureSession();
+    if (!state.sessionId) return false;
+    if (state.auth.upgradePending) return false;
+    if (state.auth.lastUpgradedUserId === state.auth.user.id && state.historyLoaded) {
+      if (shouldResumeAuthPlayground()) {
+        openChat();
+        clearAuthRedirectParam();
+      }
+      return true;
+    }
+
+    state.auth.upgradePending = true;
+    setAuthHelper('loading', t('chat_loading_history'));
+    renderAll();
+
+    try {
+      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: state.sessionId,
+          user_id: state.auth.user.id,
+          email: state.auth.user.email || null,
+          provider: normalizeProviderName(state.auth.user),
+          guest_identity_key: state.fingerprint ? 'anon:' + state.fingerprint : null,
+          locale: currentLang(),
+          direction: currentDir(),
+          source_page: location.href || 'landing'
+        })
+      });
+      var data = {};
+      try { data = await response.json(); } catch (error) {}
+
+      if (!response.ok || !data.ok) {
+        setAuthHelper('error', t('chat_auth_upgrade_failed'));
+        renderAll();
+        return false;
+      }
+
+      state.auth.lastUpgradedUserId = state.auth.user.id;
+      updateQuotaFromResponse(data);
+      state.phase = 'open';
+      clearNotice();
+      setNotice('soft_warning', {
+        title: t('chat_auth_success_title'),
+        message: t('chat_auth_success_desc'),
+        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+      }, 'auth_success');
+      setAuthHelper('success', t('chat_auth_success_desc'));
+      await hydrateMessagesFromSession(true);
+      if (shouldResumeAuthPlayground()) {
+        openChat();
+        clearAuthRedirectParam();
+      }
+      return true;
+    } catch (error2) {
+      setAuthHelper('error', t('chat_auth_upgrade_failed'));
+      renderAll();
+      return false;
+    } finally {
+      state.auth.upgradePending = false;
+    }
+  }
+
   function trackEvent(type, data) {
     if (!state.sessionId) return;
     sbFetch('trial_events', 'POST', {
@@ -270,6 +436,47 @@
 
   function getPromptList() {
     return CONFIG.PROMPTS[currentLang()] || CONFIG.PROMPTS.en;
+  }
+
+  function isAuthenticated() {
+    return !!(state.auth && state.auth.user && state.auth.user.id);
+  }
+
+  function getAuthRedirectUrl() {
+    var url = new URL(window.location.href);
+    url.searchParams.set(CONFIG.AUTH_REDIRECT_PARAM, '1');
+    url.hash = '';
+    return url.toString();
+  }
+
+  function shouldResumeAuthPlayground() {
+    try {
+      return new URL(window.location.href).searchParams.get(CONFIG.AUTH_REDIRECT_PARAM) === '1';
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function clearAuthRedirectParam() {
+    try {
+      var url = new URL(window.location.href);
+      url.searchParams.delete(CONFIG.AUTH_REDIRECT_PARAM);
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (error) {}
+  }
+
+  function normalizeProviderName(user) {
+    var provider = user && user.app_metadata && user.app_metadata.provider;
+    if (!provider && user && user.identities && user.identities[0] && user.identities[0].provider) {
+      provider = user.identities[0].provider;
+    }
+    if (!provider) return 'email';
+    return String(provider);
+  }
+
+  function setAuthHelper(status, message) {
+    state.auth.status = status || 'idle';
+    state.auth.helper = message || '';
   }
 
   function getHistory() {
@@ -380,23 +587,37 @@
       limit: {
         title: t('chat_limit_title'),
         message: t('chat_limit_desc'),
-        primary: { type: 'workflow_tour', label: t('chat_limit_cta1'), href: '#solutions' },
-        secondary: { type: 'book_call', label: t('chat_limit_cta2'), href: '#book' },
-        tertiary: { type: 'tell_us', label: t('chat_limit_cta3'), href: 'mailto:hello@grindctrl.com?subject=Tell%20Us%20About%20Your%20Business' }
+        primary: { type: 'auth_google', label: t('chat_limit_cta1'), href: '' },
+        secondary: { type: 'auth_email', label: t('chat_limit_cta2'), href: '' },
+        tertiary: { type: 'workflow_tour', label: t('chat_limit_cta3'), href: '#solutions' }
+      },
+      auth_soft: {
+        title: t('chat_auth_title_soft'),
+        message: t('chat_auth_desc_soft'),
+        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
+        secondary: { type: 'auth_email', label: t('chat_auth_email'), href: '' },
+        tertiary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' }
+      },
+      auth_limit: {
+        title: t('chat_auth_title_limit'),
+        message: t('chat_auth_desc_limit'),
+        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
+        secondary: { type: 'auth_email', label: t('chat_auth_email'), href: '' },
+        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
       },
       turns_near_limit: {
         title: t('chat_warning_turn_title'),
         message: t('chat_warning_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
+        secondary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
+        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
       },
       turns_and_tts_near_limit: {
         title: t('chat_warning_turn_title'),
         message: t('chat_warning_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
+        secondary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
+        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
       },
       tts_near_limit: {
         title: t('chat_warning_voice_title'),
@@ -435,7 +656,11 @@
       }
     };
 
-    var base = fallbackByKind[kind] || fallbackByKind[softWarningState] || fallbackByKind.limit;
+    var resolvedKind = kind;
+    if ((kind === 'limit' || kind === 'turns_near_limit' || kind === 'turns_and_tts_near_limit') && !isAuthenticated()) {
+      resolvedKind = kind === 'limit' ? 'auth_limit' : 'auth_soft';
+    }
+    var base = fallbackByKind[resolvedKind] || fallbackByKind[softWarningState] || fallbackByKind.limit;
     return {
       title: base.title,
       subtitle: base.message,
@@ -475,7 +700,9 @@
 
   function relocalizeNotice() {
     if (!state.notice) return;
-    var cardKind = state.notice.kind === 'limit' ? 'limit' : (state.notice.warningState || 'turns_near_limit');
+    var cardKind = state.notice.kind === 'limit' || state.notice.kind === 'auth'
+      ? 'limit'
+      : (state.notice.warningState || 'turns_near_limit');
     state.notice = {
       kind: state.notice.kind,
       warningState: state.notice.warningState || 'none',
@@ -581,7 +808,11 @@
     document.body.appendChild(toast);
 
     bindEvents();
+    initAuthClient();
     renderAll();
+    if (shouldResumeAuthPlayground()) {
+      openChat();
+    }
   }
 
   function buildPanelShell() {
@@ -680,7 +911,11 @@
     var logo = $('gc-logo-img');
     var badge = $('gc-header-badge');
 
-    if (subtitle) subtitle.textContent = t('chat_playground_subtitle');
+    if (subtitle) {
+      subtitle.textContent = isAuthenticated()
+        ? t('chat_auth_member_mode') + ' · ' + t('chat_playground_subtitle')
+        : t('chat_auth_guest_mode') + ' · ' + t('chat_playground_subtitle');
+    }
     if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
     if (badge) badge.textContent = t('chat_trial_agent');
     if (!turnsPill) return;
@@ -721,8 +956,48 @@
     ].join('');
   }
 
+  function renderAuthCard(entry) {
+    var payload = entry.payload || {};
+    var showCodeField = state.auth.status === 'email_sent' || state.auth.code;
+    var helperText = state.auth.helper || t('chat_auth_secure_note');
+
+    return [
+      '<div class="gc-system-card limit gc-auth-card">',
+      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">lock_open</span></div>',
+      '  <div class="gc-system-card-body">',
+      '    <div class="gc-system-card-title">' + escapeHTML(payload.title || t('chat_auth_title_limit')) + '</div>',
+      '    <div class="gc-system-card-desc">' + escapeHTML(payload.message || t('chat_auth_desc_limit')) + '</div>',
+      '    <div class="gc-system-card-actions gc-auth-actions">',
+      '      <button type="button" class="gc-system-card-primary" data-action="auth-google">' + escapeHTML(t('chat_auth_google')) + '</button>',
+      '      <button type="button" class="gc-system-card-secondary" data-action="auth-email">' + escapeHTML(t('chat_auth_email')) + '</button>',
+      payload.tertiary ? '<button type="button" class="gc-system-card-secondary tertiary" data-action="cta" data-cta-type="' + escapeHTML(payload.tertiary.type || 'workflow_tour') + '" data-cta-href="' + escapeHTML(payload.tertiary.href || '#solutions') + '">' + escapeHTML(payload.tertiary.label || t('chat_cta_tour')) + '</button>' : '',
+      '    </div>',
+      '    <div class="gc-auth-form">',
+      '      <label class="gc-auth-label" for="gc-auth-email">' + escapeHTML(t('chat_auth_email_label')) + '</label>',
+      '      <div class="gc-auth-row">',
+      '        <input id="gc-auth-email" class="gc-auth-input" type="email" inputmode="email" autocomplete="email" value="' + escapeHTML(state.auth.email || '') + '" placeholder="' + escapeHTML(t('chat_auth_email_placeholder')) + '"/>',
+      '        <button type="button" class="gc-auth-inline-btn" data-action="auth-email-send">' + escapeHTML(t('chat_auth_send')) + '</button>',
+      '      </div>',
+      '      <div class="gc-auth-note">' + escapeHTML(t('chat_auth_magic_note')) + '</div>',
+      showCodeField ? (
+        '      <label class="gc-auth-label" for="gc-auth-code">' + escapeHTML(t('chat_auth_code_label')) + '</label>' +
+        '      <div class="gc-auth-row">' +
+        '        <input id="gc-auth-code" class="gc-auth-input gc-auth-code-input" type="text" inputmode="numeric" autocomplete="one-time-code" value="' + escapeHTML(state.auth.code || '') + '" placeholder="' + escapeHTML(t('chat_auth_code_placeholder')) + '"/>' +
+        '        <button type="button" class="gc-auth-inline-btn" data-action="auth-email-verify">' + escapeHTML(t('chat_auth_verify')) + '</button>' +
+        '      </div>'
+      ) : '',
+      '    </div>',
+      '    <div class="gc-system-card-fine">' + escapeHTML(helperText) + '</div>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  }
+
   function renderSystemCard(entry) {
     var payload = entry.payload || {};
+    var isAuthCard = !isAuthenticated() && (entry.kind === 'auth' || (payload.primary && payload.primary.type === 'auth_google'));
+    if (isAuthCard) return renderAuthCard(entry);
+
     var cardKind = entry.kind === 'limit' ? ' limit' : ' soft';
     var icon = entry.kind === 'limit' ? 'auto_awesome' : 'lightbulb';
 
@@ -860,7 +1135,9 @@
 
     var html = state.messages.map(renderMessage).join('');
 
-    if (state.phase === 'responding') {
+    if (state.historyLoading) {
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
+    } else if (state.phase === 'responding') {
       html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
     } else if (state.phase === 'transcribing') {
       html += '<div class="gc-status-row"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_transcribing_status')) + '</span></div>';
@@ -938,6 +1215,10 @@
           '  </button>',
           '  <span class="gc-audio-hint">' + escapeHTML(t('chat_audio_hint')) + '</span>',
           '</div>',
+          '<div class="gc-setting-group gc-setting-group-status">',
+          '  <span class="gc-setting-label">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + '</span>',
+          '  <span class="gc-audio-hint">' + escapeHTML(state.auth.helper || (isAuthenticated() ? t('chat_auth_secure_note') : t('chat_limit_fine'))) + '</span>',
+          '</div>',
           '<div class="gc-setting-group gc-setting-group-language">',
           '  <span class="gc-setting-label">' + escapeHTML(t('chat_reply_language')) + '</span>',
           '  <div class="gc-segmented-control" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
@@ -971,6 +1252,85 @@
 
   function showError(message) {
     showToast(message || t('chat_error_msg'));
+  }
+
+  function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  }
+
+  async function startGoogleAuth() {
+    var client = initAuthClient();
+    if (!client) {
+      showError();
+      return;
+    }
+    setAuthHelper('loading', t('chat_auth_connecting'));
+    renderAll();
+    var result = await client.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: getAuthRedirectUrl()
+      }
+    });
+    if (result && result.error) {
+      setAuthHelper('error', result.error.message || t('chat_error_msg'));
+      renderAll();
+    }
+  }
+
+  async function submitAuthEmail() {
+    var client = initAuthClient();
+    var email = String(state.auth.email || '').trim();
+    if (!client) {
+      showError();
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setAuthHelper('error', t('chat_auth_email_invalid'));
+      renderAll();
+      return;
+    }
+
+    setAuthHelper('loading', t('chat_auth_sending'));
+    renderAll();
+    var result = await client.auth.signInWithOtp({
+      email: email,
+      options: {
+        emailRedirectTo: getAuthRedirectUrl()
+      }
+    });
+    if (result && result.error) {
+      setAuthHelper('error', t('chat_auth_send_failed'));
+      renderAll();
+      return;
+    }
+
+    setAuthHelper('email_sent', t('chat_auth_check_email'));
+    renderAll();
+  }
+
+  async function verifyAuthEmailCode() {
+    var client = initAuthClient();
+    var email = String(state.auth.email || '').trim();
+    var code = String(state.auth.code || '').trim();
+    if (!client || !isValidEmail(email) || !code) {
+      setAuthHelper('error', !isValidEmail(email) ? t('chat_auth_email_invalid') : t('chat_auth_verify_failed'));
+      renderAll();
+      return;
+    }
+
+    setAuthHelper('loading', t('chat_auth_verifying'));
+    renderAll();
+    var result = await client.auth.verifyOtp({
+      email: email,
+      token: code,
+      type: 'email'
+    });
+    if (result && result.error) {
+      setAuthHelper('error', t('chat_auth_verify_failed'));
+      renderAll();
+      return;
+    }
   }
 
   function navigateCTA(type, href) {
@@ -1025,6 +1385,7 @@
 
     var payload = {
       session_id: state.sessionId,
+      user_id: isAuthenticated() ? state.auth.user.id : null,
       message: text,
       content_type: contentType || 'text',
       modality: contentType === 'voice' ? 'voice' : 'text',
@@ -1141,6 +1502,7 @@
 
     var formData = new FormData();
     formData.append('session_id', state.sessionId);
+    if (isAuthenticated()) formData.append('user_id', state.auth.user.id);
     formData.append('message', '[voice_message]');
     formData.append('content_type', 'voice');
     formData.append('modality', 'voice');
@@ -1320,6 +1682,7 @@
 
     ensureSession().then(function () {
       renderHeader();
+      hydrateMessagesFromSession();
     });
 
     trackCTA('open_chat', 'click', 'trigger');
@@ -1378,6 +1741,30 @@
       return;
     }
 
+    if (action === 'auth-google') {
+      trackCTA('auth_google', 'click', 'auth_card');
+      startGoogleAuth();
+      return;
+    }
+
+    if (action === 'auth-email') {
+      var emailInput = $('gc-auth-email');
+      if (emailInput) emailInput.focus();
+      return;
+    }
+
+    if (action === 'auth-email-send') {
+      trackCTA('auth_email', 'click', 'auth_card');
+      submitAuthEmail();
+      return;
+    }
+
+    if (action === 'auth-email-verify') {
+      trackCTA('auth_email_verify', 'click', 'auth_card');
+      verifyAuthEmailCode();
+      return;
+    }
+
     if (action === 'toggle-hear') {
       if (!state.quota.ttsAvailable) {
         showToast(t('chat_hear_unavailable'));
@@ -1423,6 +1810,34 @@
     }
   }
 
+  function handlePanelInput(event) {
+    if (event.target && event.target.id === 'gc-auth-email') {
+      state.auth.email = event.target.value;
+      if (state.auth.status === 'error') setAuthHelper('idle', '');
+      return;
+    }
+    if (event.target && event.target.id === 'gc-auth-code') {
+      state.auth.code = event.target.value.replace(/\s+/g, '').slice(0, 6);
+      event.target.value = state.auth.code;
+      if (state.auth.status === 'error') setAuthHelper('idle', '');
+    }
+  }
+
+  function handlePanelKeydown(event) {
+    if (!event.target) return;
+
+    if (event.key === 'Enter' && event.target.id === 'gc-auth-email') {
+      event.preventDefault();
+      submitAuthEmail();
+      return;
+    }
+
+    if (event.key === 'Enter' && event.target.id === 'gc-auth-code') {
+      event.preventDefault();
+      verifyAuthEmailCode();
+    }
+  }
+
   function bindEvents() {
     $('gc-chat-trigger').addEventListener('click', function () {
       if ($('gc-chat-panel').classList.contains('open')) closeChat();
@@ -1432,6 +1847,8 @@
     $('gc-chat-scrim').addEventListener('click', closeChat);
     $('gc-close').addEventListener('click', closeChat);
     $('gc-chat-panel').addEventListener('click', handlePanelClick);
+    $('gc-chat-panel').addEventListener('input', handlePanelInput);
+    $('gc-chat-panel').addEventListener('keydown', handlePanelKeydown);
 
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && $('gc-chat-panel').classList.contains('open')) closeChat();
