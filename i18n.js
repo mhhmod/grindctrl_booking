@@ -338,7 +338,7 @@
     chat_limit_cta1: { en: 'Continue with Google', ar: 'المتابعة عبر Google' },
     chat_limit_cta2: { en: 'Continue with Email', ar: 'المتابعة عبر البريد الإلكتروني' },
     chat_limit_cta3: { en: 'See the 2-Min Tour', ar: 'شاهد الجولة خلال دقيقتين' },
-    chat_limit_fine: { en: 'Same chat · More free turns · No reset', ar: 'نفس المحادثة · محاولات مجانية أكثر · بدون إعادة' },
+    chat_limit_fine: { en: 'Same chat · More free turns · No reset ✨', ar: 'نفس المحادثة · محاولات مجانية أكثر · بدون إعادة ✨' },
     chat_error_msg: { en: 'Something went wrong. Please try again.', ar: 'حدث خطأ. حاول مرة أخرى.' },
     chat_retry: { en: 'Retry', ar: 'إعادة المحاولة' },
     chat_recording: { en: 'Recording...', ar: 'جارٍ التسجيل...' },
