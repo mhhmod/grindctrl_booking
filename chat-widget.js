@@ -871,19 +871,21 @@
       '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>',
       '</div>',
       '<div id="gc-input-area" class="gc-chat-input-area">',
-      '  <div id="gc-composer-utility" class="gc-composer-utility"></div>',
-      '  <div id="gc-recording-bar" class="gc-recording-bar">',
-      '    <span class="gc-recording-dot"></span>',
-      '    <span class="gc-recording-label">' + t('chat_recording') + '</span>',
-      '    <span id="gc-rec-timer" class="gc-recording-timer">0:00</span>',
-      '    <button id="gc-rec-cancel" class="gc-recording-cancel" type="button">' + t('chat_cancel') + '</button>',
-      '  </div>',
-      '  <div class="gc-chat-input-row">',
-      '    <textarea id="gc-textarea" class="gc-chat-textarea" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>',
-      '    <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
-      '    <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span><span class="gc-btn-label">' + escapeHTML(t('chat_attach_label')) + '</span></button>',
-      '    <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span><span class="gc-btn-label">' + escapeHTML(t('chat_mic_label')) + '</span></button>',
-      '    <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
+      '  <div class="gc-chat-input-shell">',
+      '    <div id="gc-composer-utility" class="gc-composer-utility"></div>',
+      '    <div id="gc-recording-bar" class="gc-recording-bar">',
+      '      <span class="gc-recording-dot"></span>',
+      '      <span class="gc-recording-label">' + t('chat_recording') + '</span>',
+      '      <span id="gc-rec-timer" class="gc-recording-timer">0:00</span>',
+      '      <button id="gc-rec-cancel" class="gc-recording-cancel" type="button">' + t('chat_cancel') + '</button>',
+      '    </div>',
+      '    <div class="gc-chat-input-row">',
+      '      <textarea id="gc-textarea" class="gc-chat-textarea" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>',
+      '      <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
+      '      <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span><span class="gc-btn-label">' + escapeHTML(t('chat_attach_label')) + '</span></button>',
+      '      <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span><span class="gc-btn-label">' + escapeHTML(t('chat_mic_label')) + '</span></button>',
+      '      <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
+      '    </div>',
       '  </div>',
       '</div>'
     ].join('');
@@ -1002,71 +1004,50 @@
     var intro = $('gc-chat-intro');
     if (!intro) return;
 
-    var prompts = getPromptList();
     var compact = state.messages.length > 0;
-    var visiblePrompts = compact ? prompts.slice(0, 2) : prompts;
-    intro.className = 'gc-chat-intro' + (compact ? ' compact' : '');
+    intro.className = 'gc-chat-intro' + (compact ? ' gc-hidden' : '');
 
     if (compact) {
-      intro.innerHTML = [
-        '<div class="gc-chat-compact-bar">',
-        '  <div class="gc-chat-compact-meta">',
-        '    <div class="gc-compact-status-chip">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + ' · ' + escapeHTML(String(remainingTurnsValue())) + '</div>',
-        '    <div class="gc-compact-language-switch" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
-        '      <button type="button" class="gc-compact-language-btn' + (getReplyLanguage() === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(getReplyLanguage() === 'en')) + '">EN</button>',
-        '      <button type="button" class="gc-compact-language-btn' + (getReplyLanguage() === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(getReplyLanguage() === 'ar')) + '">AR</button>',
-        '    </div>',
-        '  </div>',
-        '  <div class="gc-chat-compact-actions">',
-        '    <button type="button" class="gc-quick-action gc-quick-action-primary" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
-        '    <button type="button" class="gc-quick-action' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
-        '    <button type="button" class="gc-quick-action' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
-        '    <button type="button" class="gc-quick-action' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_cap_create')) + '</span></button>',
-        '  </div>',
-        '  <div class="gc-chat-compact-prompts">',
-        visiblePrompts.map(function (prompt) {
-          return '<button class="gc-chat-prompt-btn gc-chat-prompt-btn-compact" type="button" data-action="prompt" data-prompt-index="' + prompts.indexOf(prompt) + '">' + escapeHTML(prompt) + '</button>';
-        }).join(''),
-        '  </div>',
-        '</div>'
-      ].join('');
+      intro.innerHTML = '';
       return;
     }
 
     intro.innerHTML = [
-      '<div class="gc-chat-intro-hero">',
-      '  <div class="gc-chat-intro-copy">',
-      '    <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      '    <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '<div class="gc-chat-intro-copy gc-chat-intro-copy-center">',
+      '  <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
+      '  <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderComposerUtility(emptyMode) {
+    var hearDisabled = !state.quota.ttsAvailable;
+    var replyLang = getReplyLanguage();
+    var statusText = (isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + ' · ' + remainingTurnsLabel();
+    var prompts = getPromptList().slice(0, 4);
+
+    return [
+      '<div class="gc-footer-command-bar' + (emptyMode ? ' hero' : '') + '">',
+      '  <div class="gc-footer-command-row">',
+      '    <button type="button" class="gc-footer-action gc-footer-action-primary" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
+      '    <button type="button" class="gc-footer-action' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
+      '    <button type="button" class="gc-footer-action' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
+      '    <button type="button" class="gc-footer-action' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_cap_create')) + '</span></button>',
       '  </div>',
-      '  <div class="gc-chat-intro-toolbar">',
-      renderToolbarControls(true),
+      emptyMode ? (
+      '  <div class="gc-footer-prompt-row">' +
+      prompts.map(function (prompt, index) {
+        return '<button class="gc-footer-prompt" type="button" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
+      }).join('') +
+      '  </div>'
+      ) : '',
+      '  <div class="gc-footer-meta-row">',
+      '    <div class="gc-footer-status-chip">' + escapeHTML(statusText) + '</div>',
+      '    <div class="gc-segmented-control gc-footer-lang" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
+      '      <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '">' + escapeHTML(t('chat_lang_en')) + '</button>',
+      '      <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '">' + escapeHTML(t('chat_lang_ar')) + '</button>',
+      '    </div>',
       '  </div>',
-      '</div>',
-      '<div class="gc-chat-tool-grid gc-tool-grid-4">',
-      '  <button type="button" class="gc-tool-card gc-tool-card-primary" data-action="focus-input">',
-      '    <span class="material-symbols-outlined">edit_square</span>',
-      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_ask')) + '</strong><span>' + escapeHTML(t('chat_stage_empty_desc')) + '</span></span>',
-      '  </button>',
-      '  <button type="button" class="gc-tool-card' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record">',
-      '    <span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span>',
-      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_speak')) + '</strong><span>' + escapeHTML(t('chat_audio_hint')) + '</span></span>',
-      '  </button>',
-      '  <button type="button" class="gc-tool-card' + (state.wantsVoiceReply ? ' active' : '') + (!state.quota.ttsAvailable ? ' disabled' : '') + '" data-action="toggle-hear">',
-      '    <span class="material-symbols-outlined">volume_up</span>',
-      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_hear')) + '</strong><span>' + escapeHTML(t('chat_try_voice_preview')) + '</span></span>',
-      '  </button>',
-      '  <button type="button" class="gc-tool-card' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode">',
-      '    <span class="material-symbols-outlined">auto_awesome</span>',
-      '    <span class="gc-tool-card-copy"><strong>' + escapeHTML(t('chat_cap_create')) + '</strong><span>' + escapeHTML(t('chat_create_desc')) + '</span></span>',
-      '  </button>',
-      '</div>',
-      '<div class="gc-chat-intro-group">',
-      '  <div class="gc-chat-intro-label">' + escapeHTML(t('chat_prompt_label')) + '</div>',
-      '  <div class="gc-chat-prompts">',
-      visiblePrompts.map(function (prompt) {
-        return '<button class="gc-chat-prompt-btn" type="button" data-action="prompt" data-prompt-index="' + prompts.indexOf(prompt) + '">' + escapeHTML(prompt) + '</button>';
-      }).join(''),
       '</div>'
     ].join('');
   }
@@ -1336,11 +1317,13 @@
     var micBtn = $('gc-mic-btn');
     var attachBtn = $('gc-attach-btn');
     var inputArea = $('gc-input-area');
+    var panel = $('gc-chat-panel');
     var inputRow = document.querySelector('.gc-chat-input-row');
     var utility = $('gc-composer-utility');
     var recordingBar = $('gc-recording-bar');
     var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing' || state.phase === 'generating_image';
     var inLimitMode = state.phase === 'limit';
+    var emptyMode = !state.messages.length && !state.historyLoading && !inLimitMode && !state.imageMode && state.phase !== 'responding' && state.phase !== 'transcribing' && state.phase !== 'generating_image';
 
     if (textarea) {
       textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder');
@@ -1361,6 +1344,8 @@
     if (attachBtn) attachBtn.disabled = disabled;
     if (inputArea) inputArea.classList.toggle('disabled', false);
     if (inputArea) inputArea.classList.toggle('gc-hidden', inLimitMode);
+    if (inputArea) inputArea.classList.toggle('gc-chat-input-area-empty', emptyMode);
+    if (panel) panel.classList.toggle('gc-chat-panel-empty', emptyMode);
     if (inputRow) inputRow.classList.toggle('gc-hidden', inLimitMode);
     if (recordingBar) {
       recordingBar.classList.toggle('active', state.phase === 'recording' && !inLimitMode);
@@ -1385,7 +1370,7 @@
           '</div>'
         ].join('');
       } else {
-        utility.innerHTML = '';
+        utility.innerHTML = renderComposerUtility(emptyMode);
       }
     }
   }
