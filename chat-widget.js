@@ -13,7 +13,7 @@
     MAX_MSG_LEN: 500,
     MAX_AUDIO_SEC: 30,
     MAX_AUDIO_BYTES: 2 * 1024 * 1024,
-    AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a', 'audio/aac', 'audio/flac'],
+    AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a'],
     PROMPTS: {
       en: [
         'Where can AI save time in a service business?',
@@ -55,7 +55,9 @@
     activeAudioUrl: null,
     activeAudioButton: null,
     activeAudioPlayer: null,
-    dismissedWarnings: {}
+    dismissedWarnings: {},
+    notice: null,
+    messageSeq: 0
   };
 
   function $(id) {
@@ -106,6 +108,13 @@
       chat_voice_reply: { en: 'Voice reply', ar: 'رد صوتي' },
       chat_show_transcript: { en: 'Show text', ar: 'عرض النص' },
       chat_hide_transcript: { en: 'Hide text', ar: 'إخفاء النص' },
+      chat_voice_preview_setting: { en: 'Voice preview', ar: 'المعاينة الصوتية' },
+      chat_hear_on: { en: 'On for next reply', ar: 'مفعّلة للرد التالي' },
+      chat_hear_off: { en: 'Text only', ar: 'نص فقط' },
+      chat_lang_en: { en: 'English', ar: 'English' },
+      chat_lang_ar: { en: 'العربية', ar: 'العربية' },
+      chat_transcript_label: { en: 'Transcript', ar: 'النص' },
+      chat_transcript_pending: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
       chat_playground_subtitle: { en: 'Ask, speak, and hear how the system responds.', ar: 'اسأل وتحدث واستمع لكيفية استجابة النظام.' },
       chat_prompt_label: { en: 'Suggested prompts', ar: 'اقتراحات سريعة' },
       chat_cap_ask: { en: 'Ask', ar: 'اسأل' },
@@ -132,6 +141,7 @@
       chat_mic_denied: { en: 'Microphone access was denied.', ar: 'تم رفض الوصول إلى الميكروفون.' },
       chat_audio_too_large: { en: 'Audio file is too large. Maximum is 2 MB.', ar: 'ملف الصوت كبير جداً. الحد الأقصى ٢ ميجابايت.' },
       chat_audio_invalid: { en: 'Please select an audio file.', ar: 'يرجى اختيار ملف صوتي.' },
+      chat_recording: { en: 'Recording...', ar: 'جارٍ التسجيل...' },
       chat_recording_limit: { en: 'Maximum recording length reached.', ar: 'تم الوصول إلى الحد الأقصى لمدة التسجيل.' },
       chat_transcribing_status: { en: 'Transcribing voice note...', ar: 'جارٍ نسخ الملاحظة الصوتية...' },
       chat_generating_status: { en: 'Generating response...', ar: 'جارٍ توليد الرد...' },
@@ -269,6 +279,36 @@
     return normalizeLang(state.preferredReplyLanguage || state.quota.replyLanguage || currentLang());
   }
 
+  function nextMessageId() {
+    state.messageSeq += 1;
+    return 'gc-msg-' + state.messageSeq;
+  }
+
+  function createMessage(entry) {
+    return Object.assign({
+      id: nextMessageId(),
+      transcriptExpanded: false,
+      transcriptPending: false
+    }, entry);
+  }
+
+  function pushMessage(entry) {
+    var message = createMessage(entry);
+    state.messages.push(message);
+    return message;
+  }
+
+  function removeMessageById(messageId) {
+    state.messages.forEach(function (entry) {
+      if (entry.id === messageId && entry.audioUrl && entry.audioUrl.indexOf('blob:') === 0 && window.URL && typeof window.URL.revokeObjectURL === 'function') {
+        window.URL.revokeObjectURL(entry.audioUrl);
+      }
+    });
+    state.messages = state.messages.filter(function (entry) {
+      return entry.id !== messageId;
+    });
+  }
+
   function remainingTurnsValue() {
     if (state.quota.remainingTurnsSession !== null && state.quota.remainingTurnsSession !== undefined) {
       return Math.max(Number(state.quota.remainingTurnsSession) || 0, 0);
@@ -296,12 +336,6 @@
       (remainingDay !== null && remainingDay !== undefined && Number(remainingDay) <= 0);
   }
 
-  function clearSystemMessages() {
-    state.messages = state.messages.filter(function (entry) {
-      return entry.role !== 'system';
-    });
-  }
-
   function updateQuotaFromResponse(data) {
     if (!data) return;
 
@@ -313,7 +347,10 @@
     }
     if (data.remaining_turns_day !== undefined) state.quota.remainingTurnsDay = data.remaining_turns_day;
     if (data.remaining_tts_previews_day !== undefined) state.quota.remainingTtsDay = data.remaining_tts_previews_day;
-    if (data.tts_available !== undefined) state.quota.ttsAvailable = !!data.tts_available;
+    if (data.tts_available !== undefined) {
+      state.quota.ttsAvailable = !!data.tts_available;
+      if (!state.quota.ttsAvailable) state.wantsVoiceReply = false;
+    }
     if (data.limit_state) state.quota.limitState = data.limit_state;
     if (data.soft_warning_state) state.quota.softWarningState = data.soft_warning_state;
     if (data.reply_language) state.quota.replyLanguage = normalizeLang(data.reply_language);
@@ -375,37 +412,29 @@
     };
   }
 
-  function appendSystemCard(kind, payload, warningState) {
-    clearSystemMessages();
-    state.messages.push({
-      role: 'system',
+  function setNotice(kind, payload, warningState) {
+    state.notice = {
       kind: kind,
       payload: payload,
       warningState: warningState || 'none'
-    });
-
+    };
     if (payload && payload.primary) trackCTA(payload.primary.type || 'primary', 'impression', kind + '_card');
     if (payload && payload.secondary) trackCTA(payload.secondary.type || 'secondary', 'impression', kind + '_card');
     if (payload && payload.tertiary) trackCTA(payload.tertiary.type || 'tertiary', 'impression', kind + '_card');
   }
 
-  function removeSystemCards() {
-    clearSystemMessages();
-    renderAll();
+  function clearNotice() {
+    state.notice = null;
   }
 
-  function relocalizeSystemMessages() {
-    state.messages = state.messages.map(function (entry) {
-      if (entry.role !== 'system') return entry;
-
-      var cardKind = entry.kind === 'limit' ? 'limit' : (entry.warningState || 'turns_near_limit');
-      return {
-        role: 'system',
-        kind: entry.kind,
-        warningState: entry.warningState || 'none',
-        payload: localizeCtaPayload(cardKind, entry.payload, entry.warningState)
-      };
-    });
+  function relocalizeNotice() {
+    if (!state.notice) return;
+    var cardKind = state.notice.kind === 'limit' ? 'limit' : (state.notice.warningState || 'turns_near_limit');
+    state.notice = {
+      kind: state.notice.kind,
+      warningState: state.notice.warningState || 'none',
+      payload: localizeCtaPayload(cardKind, state.notice.payload, state.notice.warningState)
+    };
   }
 
   function stopActiveAudio() {
@@ -537,6 +566,7 @@
       '  <span class="material-symbols-outlined gc-drop-zone-icon">audio_file</span>',
       '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>',
       '</div>',
+      '<div id="gc-feedback-slot" class="gc-feedback-slot gc-hidden"></div>',
       '<div id="gc-input-area" class="gc-chat-input-area">',
       '  <div id="gc-composer-utility" class="gc-composer-utility"></div>',
       '  <div id="gc-recording-bar" class="gc-recording-bar">',
@@ -557,11 +587,12 @@
   }
 
   function renderAll() {
-    relocalizeSystemMessages();
+    relocalizeNotice();
     renderChrome();
     renderHeader();
     renderIntro();
     renderMessages();
+    renderNotice();
     renderComposer();
   }
 
@@ -694,6 +725,30 @@
     ].join('');
   }
 
+  function renderNotice() {
+    var slot = $('gc-feedback-slot');
+    if (!slot) return;
+
+    if (!state.notice) {
+      slot.className = 'gc-feedback-slot gc-hidden';
+      slot.innerHTML = '';
+      return;
+    }
+
+    slot.className = 'gc-feedback-slot';
+    slot.innerHTML = renderSystemCard({
+      role: 'system',
+      kind: state.notice.kind,
+      payload: state.notice.payload,
+      warningState: state.notice.warningState
+    });
+  }
+
+  function isAllowedAudioFile(file) {
+    var fileType = String(file && file.type || '').toLowerCase();
+    return !!fileType && CONFIG.AUDIO_TYPES.indexOf(fileType) !== -1;
+  }
+
   function renderMessage(entry) {
     if (entry.role === 'system') return renderSystemCard(entry);
 
@@ -706,17 +761,13 @@
       meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
 
       if (entry.voiceOnlyReply && entry.ttsAudioUrl) {
-        var msgId = 'gc-vo-' + (entry.ttsAudioUrl || '').slice(-8);
         return [
           '<div class="gc-msg gc-msg-ai">',
           meta,
           '  <div class="gc-msg-bubble gc-voice-only-bubble" dir="auto">',
           '    <div class="gc-voice-label"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice_reply')) + '</span></div>',
           '    ' + buildAudioPlayerHTML(entry.ttsAudioUrl),
-          '    <button type="button" class="gc-transcript-toggle" data-action="toggle-transcript" data-target="' + msgId + '">',
-          '      <span class="material-symbols-outlined">unfold_more</span><span>' + escapeHTML(t('chat_show_transcript')) + '</span>',
-          '    </button>',
-          '    <div id="' + msgId + '" class="gc-transcript-text" style="display:none" dir="auto">' + formatMessageHTML(entry.content) + '</div>',
+          '    <div class="gc-transcript-text gc-transcript-text-inline" dir="auto"><span class="gc-transcript-label">' + escapeHTML(t('chat_transcript_label')) + '</span>' + formatMessageHTML(entry.content) + '</div>',
           '  </div>',
           '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span></div>',
           '</div>'
@@ -733,19 +784,17 @@
     }
 
     if (isUser && entry.voice) {
-      var waveBars = '';
-      var userHeights = [6, 10, 5, 12, 8, 11, 6, 9, 12, 7, 10, 5, 11, 8, 12, 6];
-      for (var j = 0; j < userHeights.length; j++) {
-        waveBars += '<span class="gc-voice-note-wave-bar" style="height:' + userHeights[j] + 'px"></span>';
-      }
+      var transcriptBody = entry.transcriptPending ? escapeHTML(t('chat_transcript_pending')) : formatMessageHTML(entry.content || '');
+      var transcriptClass = 'gc-transcript-text gc-transcript-text-inline gc-user-transcript' + (entry.transcriptPending ? ' pending' : '');
+      var audioPlayer = entry.audioUrl ? buildAudioPlayerHTML(entry.audioUrl) : '';
       return [
         '<div class="gc-msg gc-msg-user">',
         '  <div class="gc-msg-bubble gc-voice-note-bubble" dir="auto">',
-        '    <div class="gc-voice-note-icon"><span class="material-symbols-outlined">mic</span></div>',
-        '    <div class="gc-voice-note-meta">',
-        '      <span class="gc-voice-note-label">' + escapeHTML(t('chat_voice')) + '</span>',
-        '      <div class="gc-voice-note-wave">' + waveBars + '</div>',
+        '    <div class="gc-voice-note-header">',
+        '      <div class="gc-voice-label"><span class="material-symbols-outlined">mic</span><span>' + escapeHTML(t('chat_voice')) + '</span></div>',
         '    </div>',
+        audioPlayer ? '    ' + audioPlayer : '',
+        (entry.transcriptPending || entry.content) ? '    <div class="' + transcriptClass + '" dir="auto"><span class="gc-transcript-label">' + escapeHTML(t('chat_transcript_label')) + '</span>' + transcriptBody + '</div>' : '',
         '  </div>',
         '</div>'
       ].join('');
@@ -798,15 +847,17 @@
     var micBtn = $('gc-mic-btn');
     var attachBtn = $('gc-attach-btn');
     var inputArea = $('gc-input-area');
+    var inputRow = document.querySelector('.gc-chat-input-row');
     var utility = $('gc-composer-utility');
     var recordingBar = $('gc-recording-bar');
     var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing';
     var hearDisabled = !state.quota.ttsAvailable;
-    var replyLang = getReplyLanguage().toUpperCase();
+    var replyLang = getReplyLanguage();
+    var inLimitMode = state.phase === 'limit';
 
     if (textarea) {
       textarea.placeholder = t('chat_placeholder');
-      textarea.disabled = state.phase === 'limit';
+      textarea.disabled = inLimitMode;
     }
 
     if (sendBtn && textarea) {
@@ -821,20 +872,36 @@
     }
 
     if (attachBtn) attachBtn.disabled = disabled;
-    if (inputArea) inputArea.classList.toggle('disabled', state.phase === 'limit');
-    if (recordingBar) recordingBar.classList.toggle('active', state.phase === 'recording');
+    if (inputArea) inputArea.classList.toggle('disabled', false);
+    if (inputArea) inputArea.classList.toggle('gc-hidden', inLimitMode);
+    if (inputRow) inputRow.classList.toggle('gc-hidden', inLimitMode);
+    if (recordingBar) {
+      recordingBar.classList.toggle('active', state.phase === 'recording' && !inLimitMode);
+      recordingBar.classList.toggle('gc-hidden', inLimitMode);
+    }
 
     if (utility) {
-      utility.innerHTML = [
-        '<button type="button" class="gc-mini-toggle' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear">',
-        '  <span class="material-symbols-outlined">volume_up</span>',
-        '  <span>' + escapeHTML(hearDisabled ? t('chat_hear_unavailable') : t('chat_hear_next')) + '</span>',
-        '</button>',
-        '<div class="gc-composer-meta">',
-        '  <button type="button" class="gc-lang-chip" data-action="toggle-reply-language" aria-label="' + escapeHTML(t('chat_reply_language')) + '">' + escapeHTML(replyLang) + '</button>',
-        '  <span class="gc-audio-hint">' + escapeHTML(t('chat_audio_hint')) + '</span>',
-        '</div>'
-      ].join('');
+      if (inLimitMode) {
+        utility.innerHTML = '';
+      } else {
+        utility.innerHTML = [
+          '<div class="gc-setting-group">',
+          '  <span class="gc-setting-label">' + escapeHTML(t('chat_voice_preview_setting')) + '</span>',
+          '  <button type="button" class="gc-mini-toggle' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '">',
+          '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
+          '    <span>' + escapeHTML(hearDisabled ? t('chat_hear_unavailable') : (state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
+          '  </button>',
+          '  <span class="gc-audio-hint">' + escapeHTML(t('chat_audio_hint')) + '</span>',
+          '</div>',
+          '<div class="gc-setting-group gc-setting-group-language">',
+          '  <span class="gc-setting-label">' + escapeHTML(t('chat_reply_language')) + '</span>',
+          '  <div class="gc-segmented-control" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
+          '    <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '">' + escapeHTML(t('chat_lang_en')) + '</button>',
+          '    <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '">' + escapeHTML(t('chat_lang_ar')) + '</button>',
+          '  </div>',
+          '</div>'
+        ].join('');
+      }
     }
   }
 
@@ -863,9 +930,9 @@
 
   function navigateCTA(type, href) {
     if (type === 'continue_trial') {
-      removeSystemCards();
+      clearNotice();
       state.phase = 'open';
-      renderComposer();
+      renderAll();
       if ($('gc-textarea')) $('gc-textarea').focus();
       return;
     }
@@ -902,8 +969,8 @@
       return;
     }
 
-    clearSystemMessages();
-    state.messages.push({
+    clearNotice();
+    pushMessage({
       role: 'user',
       content: text,
       voice: contentType === 'voice'
@@ -948,7 +1015,7 @@
         updateQuotaFromResponse(data);
         if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
           state.phase = 'limit';
-          appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+          setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
           renderAll();
           return;
         }
@@ -970,7 +1037,7 @@
 
       updateQuotaFromResponse(data);
       var assistantTtsUrl = data.tts_audio_url || null;
-      state.messages.push({
+      pushMessage({
         role: 'assistant',
         content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
         replyLanguage: data.reply_language || getReplyLanguage(),
@@ -980,11 +1047,11 @@
 
       if (noTurnsRemaining()) {
         state.phase = 'limit';
-        appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+        setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
       } else {
         state.phase = 'open';
         if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
-          appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
+          setNotice('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
         }
       }
 
@@ -1014,9 +1081,17 @@
       return;
     }
 
+    clearNotice();
+    var pendingVoiceMessage = pushMessage({
+      role: 'user',
+      content: '',
+      voice: true,
+      audioUrl: window.URL && typeof window.URL.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : null,
+      transcriptPending: true
+    });
+
     state.phase = 'transcribing';
-    renderMessages();
-    renderComposer();
+    renderAll();
 
     var formData = new FormData();
     formData.append('session_id', state.sessionId);
@@ -1046,6 +1121,7 @@
       try { data = await response.json(); } catch (error) {}
 
       if (response.status === 409) {
+        removeMessageById(pendingVoiceMessage.id);
         state.phase = 'open';
         renderAll();
         showError(data.message || t('chat_active_conflict'));
@@ -1055,12 +1131,14 @@
       if (response.status === 429) {
         updateQuotaFromResponse(data);
         if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
+          removeMessageById(pendingVoiceMessage.id);
           state.phase = 'limit';
-          appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+          setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
           renderAll();
           return;
         }
 
+        removeMessageById(pendingVoiceMessage.id);
         state.phase = 'open';
         renderAll();
         showToast(data.message || t('chat_rate_limited'));
@@ -1068,6 +1146,7 @@
       }
 
       if (!response.ok) {
+        removeMessageById(pendingVoiceMessage.id);
         state.phase = 'open';
         renderAll();
         showError(data.message || t('chat_error_msg'));
@@ -1076,16 +1155,11 @@
 
       updateQuotaFromResponse(data);
 
-      if (data.transcript) {
-        state.messages.push({
-          role: 'user',
-          content: data.transcript,
-          voice: true
-        });
-      }
+      pendingVoiceMessage.content = data.transcript || '';
+      pendingVoiceMessage.transcriptPending = false;
 
       var blobTtsUrl = data.tts_audio_url || null;
-      state.messages.push({
+      pushMessage({
         role: 'assistant',
         content: data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.',
         replyLanguage: data.reply_language || getReplyLanguage(),
@@ -1095,16 +1169,17 @@
 
       if (noTurnsRemaining()) {
         state.phase = 'limit';
-        appendSystemCard('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state));
+        setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
       } else {
         state.phase = 'open';
         if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
-          appendSystemCard('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
+          setNotice('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
         }
       }
 
       renderAll();
     } catch (networkError) {
+      removeMessageById(pendingVoiceMessage.id);
       state.phase = 'open';
       renderAll();
       showError();
@@ -1223,7 +1298,7 @@
     if (pill) pill.style.display = '';
     stopActiveAudio();
 
-    var nextPhase = state.messages.some(function (entry) { return entry.role === 'system' && entry.kind === 'limit'; }) ? 'limit' : 'closed';
+    var nextPhase = state.notice && state.notice.kind === 'limit' ? 'limit' : 'closed';
     if (state.recorder && state.recorder.state === 'recording') cancelRecording(nextPhase);
     state.phase = nextPhase;
   }
@@ -1272,31 +1347,23 @@
       return;
     }
 
+    if (action === 'set-reply-language') {
+      state.preferredReplyLanguage = normalizeLang(button.getAttribute('data-language'));
+      renderComposer();
+      return;
+    }
+
     if (action === 'play-audio') {
       var playerEl = button.closest('.gc-audio-player');
       toggleAudio(button.getAttribute('data-audio-url'), button, playerEl);
       return;
     }
 
-    if (action === 'toggle-transcript') {
-      var targetId = button.getAttribute('data-target');
-      var target = document.getElementById(targetId);
-      if (target) {
-        var hidden = target.style.display === 'none';
-        target.style.display = hidden ? '' : 'none';
-        var label = button.querySelector('span:last-child');
-        var icon = button.querySelector('.material-symbols-outlined');
-        if (label) label.textContent = hidden ? t('chat_hide_transcript') : t('chat_show_transcript');
-        if (icon) icon.textContent = hidden ? 'unfold_less' : 'unfold_more';
-      }
-      return;
-    }
-
     if (action === 'dismiss-warning') {
-      state.dismissedWarnings[state.quota.softWarningState || 'generic'] = true;
-      removeSystemCards();
+      state.dismissedWarnings[(state.notice && state.notice.warningState) || state.quota.softWarningState || 'generic'] = true;
+      clearNotice();
       state.phase = 'open';
-      renderComposer();
+      renderAll();
       if ($('gc-textarea')) $('gc-textarea').focus();
       return;
     }
@@ -1348,7 +1415,7 @@
     $('gc-file-input').addEventListener('change', function (event) {
       var file = event.target.files && event.target.files[0];
       if (!file) return;
-      if (!file.type || file.type.indexOf('audio/') !== 0) {
+      if (!isAllowedAudioFile(file)) {
         showToast(t('chat_audio_invalid'));
         event.target.value = '';
         return;
@@ -1384,7 +1451,7 @@
       dropZone.classList.remove('active');
 
       var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      if (!file || !file.type || file.type.indexOf('audio/') !== 0) {
+      if (!file || !isAllowedAudioFile(file)) {
         showToast(t('chat_audio_invalid'));
         return;
       }
