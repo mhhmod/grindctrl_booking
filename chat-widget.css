@@ -192,9 +192,11 @@ html:not(.dark) {
   z-index: 50;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  inline-size: 100vw;
+  inline-size: auto;
+  max-inline-size: 100%;
   block-size: 100dvh;
   overflow: hidden;
+  overflow-x: clip;
   border: 0;
   border-radius: 0;
   background:
@@ -224,6 +226,7 @@ html:not(.dark) .gc-chat-panel {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 12px;
+  min-inline-size: 0;
   padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
   background:
     linear-gradient(180deg, rgba(15, 15, 13, 0.88), rgba(15, 15, 13, 0.7));
@@ -316,6 +319,7 @@ html:not(.dark) .gc-chat-header {
   align-items: center;
   gap: 8px;
   justify-self: end;
+  min-inline-size: 0;
 }
 
 .gc-turns-pill {
@@ -394,6 +398,7 @@ html:not(.dark) .gc-chat-header {
 
 .gc-chat-body {
   min-block-size: 0;
+  min-inline-size: 0;
   overflow: auto;
   padding: 20px 16px 24px;
   display: flex;
@@ -915,6 +920,7 @@ html:not(.dark) .gc-msg-user .gc-msg-bubble {
   position: relative;
   display: grid;
   gap: 12px;
+  min-inline-size: 0;
   padding: 10px 14px calc(max(14px, env(safe-area-inset-bottom)));
   background:
     linear-gradient(180deg, rgba(10, 10, 9, 0.3), rgba(10, 10, 9, 0.78)),
@@ -928,6 +934,8 @@ html:not(.dark) .gc-msg-user .gc-msg-bubble {
 
 .gc-chat-input-shell {
   inline-size: min(100%, 760px);
+  max-inline-size: 100%;
+  min-inline-size: 0;
   margin-inline: auto;
   display: grid;
   gap: 10px;
@@ -1116,6 +1124,7 @@ html:not(.dark) .gc-msg-user .gc-msg-bubble {
   display: flex;
   align-items: end;
   gap: 8px;
+  min-inline-size: 0;
   min-block-size: 64px;
   padding: 10px 10px 10px 14px;
   border-radius: 28px;
@@ -1155,7 +1164,8 @@ html:not(.dark) .gc-chat-input-row:focus-within {
 }
 
 .gc-chat-textarea {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
+  inline-size: 0;
   min-inline-size: 0;
   min-block-size: 38px;
   max-block-size: 160px;
@@ -1607,18 +1617,28 @@ html:not(.dark) .gc-toast {
 
   .gc-chat-header-name-row,
   .gc-chat-header-actions {
-    gap: 6px;
+    gap: 4px;
   }
 
   .gc-chat-header-badge {
     min-block-size: 22px;
-    padding-inline: 8px;
+    padding-inline: 7px;
     font-size: 9px;
   }
 
   .gc-turns-pill {
-    min-inline-size: 66px;
-    padding: 7px 8px;
+    min-inline-size: 0;
+    padding: 7px 7px;
+  }
+
+  .gc-turns-pill-label {
+    display: none;
+  }
+
+  .gc-chat-close {
+    min-inline-size: 36px;
+    min-block-size: 36px;
+    padding-inline: 0;
   }
 
   .gc-chat-body {
