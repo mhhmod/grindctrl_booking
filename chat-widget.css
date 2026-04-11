@@ -1584,6 +1584,43 @@ html:not(.dark) .gc-toast {
 }
 
 @media (max-width: 639px) {
+  .gc-chat-header {
+    gap: 10px;
+    padding-inline: 12px;
+    padding-block-end: 8px;
+  }
+
+  .gc-chat-header-brand {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .gc-chat-header-logo {
+    inline-size: 32px;
+    block-size: 32px;
+    padding: 6px;
+  }
+
+  .gc-chat-header-subtitle {
+    display: none;
+  }
+
+  .gc-chat-header-name-row,
+  .gc-chat-header-actions {
+    gap: 6px;
+  }
+
+  .gc-chat-header-badge {
+    min-block-size: 22px;
+    padding-inline: 8px;
+    font-size: 9px;
+  }
+
+  .gc-turns-pill {
+    min-inline-size: 66px;
+    padding: 7px 8px;
+  }
+
   .gc-chat-body {
     gap: 18px;
   }
@@ -1609,13 +1646,29 @@ html:not(.dark) .gc-toast {
   .gc-image-result-actions {
     gap: 6px;
   }
+
+  .gc-create-mode-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gc-create-mode-info {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .gc-create-mode-hint {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .gc-create-mode-exit {
+    align-self: flex-start;
+  }
 }
 
 @media (min-width: 430px) {
-  .gc-utility-chip-upload {
-    display: none;
-  }
-
   .gc-input-btn {
     font-size: 11px;
     padding-inline: 12px;

@@ -1014,37 +1014,6 @@
     ].join('');
   }
 
-  function renderToolbarControls(compact) {
-    var hearDisabled = !state.quota.ttsAvailable;
-    var replyLang = getReplyLanguage();
-    var statusValue = state.auth.helper || (compact
-      ? remainingTurnsLabel()
-      : (isAuthenticated() ? t('chat_auth_secure_note') : t('chat_limit_fine')));
-
-    return [
-      '<div class="gc-toolbar-grid' + (compact ? ' compact' : '') + '">',
-      '<div class="gc-toolbar-card gc-toolbar-card-voice">',
-      '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(t('chat_voice_preview_setting')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(t('chat_audio_hint')) + '</span></div>',
-      '  <button type="button" class="gc-mini-toggle gc-mini-toggle-block' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '">',
-      '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
-      '    <span>' + escapeHTML(hearDisabled ? t('chat_hear_unavailable') : (state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
-      '  </button>',
-      '</div>',
-      '<div class="gc-toolbar-card gc-toolbar-card-status">',
-      '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(String(remainingTurnsValue())) + '</span></div>',
-      '  <div class="gc-toolbar-value">' + escapeHTML(statusValue) + '</div>',
-      '</div>',
-      '<div class="gc-toolbar-card gc-toolbar-card-language">',
-      '  <div class="gc-toolbar-card-head"><span class="gc-setting-label">' + escapeHTML(t('chat_reply_language')) + '</span><span class="gc-toolbar-chip">' + escapeHTML(replyLang === 'en' ? t('chat_lang_en') : t('chat_lang_ar')) + '</span></div>',
-      '  <div class="gc-segmented-control gc-segmented-control-block" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
-      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '">' + escapeHTML(t('chat_lang_en')) + '</button>',
-      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '">' + escapeHTML(t('chat_lang_ar')) + '</button>',
-      '  </div>',
-      '</div>',
-      '</div>'
-    ].join('');
-  }
-
   function renderIntro() {
     var intro = $('gc-chat-intro');
     if (!intro) return;
@@ -1078,10 +1047,6 @@
       '  <button type="button" class="gc-utility-chip gc-utility-chip-toggle' + (state.wantsVoiceReply ? ' active' : '') + (voiceReplyDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '"' + (voiceReplyDisabled ? ' disabled aria-disabled="true"' : '') + '>',
       '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
       '    <span>' + escapeHTML(t('chat_voice_preview_setting')) + ' · ' + (hearDisabled ? escapeHTML(t('chat_hear_unavailable')) : escapeHTML(state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
-      '  </button>',
-      '  <button type="button" class="gc-utility-chip gc-utility-chip-upload" data-action="attach-audio"' + disabledAttr + '>',
-      '    <span class="material-symbols-outlined">upload_file</span>',
-      '    <span>' + escapeHTML(t('chat_attach_label')) + '</span>',
       '  </button>',
       '  <button type="button" class="gc-utility-chip' + (state.imageMode ? ' active' : '') + (createDisabled ? ' disabled' : '') + '" data-action="enter-create-mode" aria-pressed="' + escapeHTML(String(!!state.imageMode)) + '"' + (createDisabled ? ' disabled aria-disabled="true"' : '') + '>',
       '    <span class="material-symbols-outlined">auto_awesome</span>',
@@ -2066,11 +2031,6 @@
     if (action === 'set-reply-language') {
       state.preferredReplyLanguage = normalizeLang(button.getAttribute('data-language'));
       renderAll();
-      return;
-    }
-
-    if (action === 'attach-audio') {
-      if ($('gc-file-input') && (!$('gc-attach-btn') || !$('gc-attach-btn').disabled)) $('gc-file-input').click();
       return;
     }
 
