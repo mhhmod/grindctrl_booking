@@ -322,8 +322,8 @@
     hero_cta_try: { en: 'Try the Agent', ar: 'جرّب الوكيل' },
 
     /* ────────── AI AGENT TRIAL: CHAT WIDGET ────────── */
-    chat_empty_title: { en: 'GRINDCTRL Trial Playground', ar: 'ساحة تجربة GRINDCTRL' },
-    chat_empty_desc: { en: 'Ask a real operations question. Type, speak, or hear the reply without leaving the page.', ar: 'اسأل سؤالاً حقيقياً عن عملياتك. اكتب أو تحدّث أو استمع للرد من داخل الصفحة.' },
+    chat_empty_title: { en: 'Ask about your operations', ar: 'اسأل عن عملياتك' },
+    chat_empty_desc: { en: 'Type, record, or upload audio. Switch to image creation when you need a visual.', ar: 'اكتب أو سجّل أو ارفع ملفاً صوتياً. ويمكنك التبديل إلى إنشاء صورة عند الحاجة.' },
     chat_placeholder: { en: 'Ask about leads, follow-up, support, or operations…', ar: 'اسأل عن العملاء أو المتابعة أو الدعم أو العمليات…' },
     chat_prompt_1: { en: 'Where can AI save the most time in my business?', ar: 'أين يمكن للذكاء الاصطناعي أن يوفر أكبر وقت في عملي؟' },
     chat_prompt_2: { en: 'Show me a better lead follow-up flow', ar: 'اعرض لي أسلوباً أفضل لمتابعة العملاء المحتملين' },
@@ -333,6 +333,7 @@
     chat_turns_left: { en: 'left', ar: 'متبقي' },
     chat_today_left: { en: 'today', ar: 'اليوم' },
     chat_trial_agent: { en: 'Trial Playground', ar: 'ساحة التجربة' },
+    chat_mode_chat: { en: 'Chat', ar: 'محادثة' },
     chat_limit_title: { en: 'Keep going with a free account', ar: 'تابع مع حساب مجاني' },
     chat_limit_desc: { en: 'Your guest turns are used up. Sign in to keep this same chat going with a bigger free quota.', ar: 'انتهت محاولات الضيف. سجّل الدخول لتكمل نفس المحادثة مع رصيد مجاني أكبر.' },
     chat_limit_cta1: { en: 'Continue with Google', ar: 'المتابعة عبر Google' },
@@ -345,14 +346,15 @@
     chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
     chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
     chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-    chat_open_label: { en: 'Open Trial Playground', ar: 'فتح ساحة التجربة' },
+    chat_open_label: { en: 'Open GRINDCTRL assistant', ar: 'فتح مساعد GRINDCTRL' },
+    chat_trigger_label: { en: 'Ask GRINDCTRL', ar: 'اسأل GRINDCTRL' },
     chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
     chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
     chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
-    chat_attach_label: { en: 'Attach audio file', ar: 'إرفاق ملف صوتي' },
+    chat_attach_label: { en: 'Upload audio', ar: 'رفع ملف صوتي' },
     chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' },
     chat_voice_reply: { en: 'Voice reply', ar: 'رد صوتي' },
-    chat_voice_preview_setting: { en: 'Voice preview', ar: 'المعاينة الصوتية' },
+    chat_voice_preview_setting: { en: 'Reply with voice', ar: 'الرد بالصوت' },
     chat_playground_subtitle: { en: 'Ask a workflow question. Type, speak, or hear the reply.', ar: 'اسأل عن سير عملك. اكتب أو تحدّث أو استمع للرد.' },
     chat_prompt_label: { en: 'Try one of these', ar: 'جرّب أحد هذه الأسئلة' },
     chat_stage_label: { en: 'Live Playground', ar: 'ساحة التجربة المباشرة' },
@@ -425,8 +427,8 @@
     chat_auth_email_invalid: { en: 'Enter a valid email address.', ar: 'أدخل بريداً إلكترونياً صالحاً.' },
 
     /* ────────── IMAGE GENERATION ────────── */
-    chat_cap_create: { en: 'Create', ar: 'أنشئ' },
-    chat_create_desc: { en: 'Generate an image from a text prompt', ar: 'أنشئ صورة من وصف نصي' },
+    chat_cap_create: { en: 'Create image', ar: 'إنشاء صورة' },
+    chat_create_desc: { en: 'Your next prompt will generate an image', ar: 'سيتم استخدام الوصف التالي لإنشاء صورة' },
     chat_create_placeholder: { en: 'Describe the image you want to create...', ar: 'صِف الصورة التي تريد إنشاءها...' },
     chat_generating_image: { en: 'Creating your image…', ar: 'جارٍ إنشاء صورتك…' },
     chat_image_ready: { en: 'Image ready', ar: 'الصورة جاهزة' },
@@ -436,7 +438,7 @@
     chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
     chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
     chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
-    chat_create_mode: { en: 'Create mode', ar: 'وضع الإنشاء' },
+    chat_create_mode: { en: 'Create image', ar: 'إنشاء صورة' },
     chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' },
   };
 

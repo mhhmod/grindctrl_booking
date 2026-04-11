@@ -66,6 +66,7 @@
     imageMode: false,
     notice: null,
     messageSeq: 0,
+    lastFocusedElement: null,
     historyLoaded: false,
     historyLoading: false,
     historyRequested: false,
@@ -98,16 +99,61 @@
     return String(value || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en';
   }
 
+  function getPanelFocusableElements() {
+    var panel = $('gc-chat-panel');
+    if (!panel) return [];
+    return Array.prototype.slice.call(panel.querySelectorAll(
+      'button:not([disabled]), [href]:not([tabindex="-1"]), input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(function (element) {
+      return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+    });
+  }
+
+  function trapPanelFocus(event) {
+    if (event.key !== 'Tab') return;
+    var panel = $('gc-chat-panel');
+    if (!panel || !panel.classList.contains('open')) return;
+
+    var focusable = getPanelFocusableElements();
+    if (!focusable.length) {
+      event.preventDefault();
+      panel.focus();
+      return;
+    }
+
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    var active = document.activeElement;
+
+    if (!panel.contains(active)) {
+      event.preventDefault();
+      first.focus();
+      return;
+    }
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+      return;
+    }
+
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function t(key) {
     var lang = currentLang();
     var dict = window.__i18n || {};
     if (dict[key] && dict[key][lang] != null) return dict[key][lang];
 
     var fallback = {
-      chat_empty_title: { en: 'GRINDCTRL Trial Playground', ar: 'ساحة تجربة GRINDCTRL' },
-      chat_empty_desc: { en: 'Preview how AI can answer, listen, and speak back without leaving the page.', ar: 'جرّب كيف يمكن للذكاء الاصطناعي أن يجيب ويستمع ويرد صوتياً بدون مغادرة الصفحة.' },
-      chat_placeholder: { en: 'Ask about your workflow, follow-up, support, or operations...', ar: 'اسأل عن سير العمل أو المتابعة أو الدعم أو العمليات...' },
+      chat_empty_title: { en: 'Ask about your operations', ar: 'اسأل عن عملياتك' },
+      chat_empty_desc: { en: 'Type, record, or upload audio. Switch to image creation when you need a visual.', ar: 'اكتب أو سجّل أو ارفع ملفاً صوتياً. ويمكنك التبديل إلى إنشاء صورة عند الحاجة.' },
+      chat_placeholder: { en: 'Ask about leads, follow-up, support, or operations…', ar: 'اسأل عن العملاء أو المتابعة أو الدعم أو العمليات…' },
       chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
+      chat_mode_chat: { en: 'Chat', ar: 'محادثة' },
       chat_turns_left: { en: 'left', ar: 'متبقي' },
       chat_today_left: { en: 'today', ar: 'اليوم' },
       chat_limit_title: { en: 'Great exploring! Here\'s what\'s next', ar: 'استكشاف رائع! إليك ما يمكنك فعله' },
@@ -121,16 +167,17 @@
       chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
       chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
       chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-      chat_open_label: { en: 'Open AI Agent Trial', ar: 'فتح تجربة الوكيل الذكي' },
+      chat_open_label: { en: 'Open GRINDCTRL assistant', ar: 'فتح مساعد GRINDCTRL' },
+      chat_trigger_label: { en: 'Ask GRINDCTRL', ar: 'اسأل GRINDCTRL' },
       chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
       chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
       chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
-      chat_attach_label: { en: 'Attach audio file', ar: 'إرفاق ملف صوتي' },
+      chat_attach_label: { en: 'Upload audio', ar: 'رفع ملف صوتي' },
       chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' },
       chat_voice_reply: { en: 'Voice reply', ar: 'رد صوتي' },
       chat_show_transcript: { en: 'Show text', ar: 'عرض النص' },
       chat_hide_transcript: { en: 'Hide text', ar: 'إخفاء النص' },
-      chat_voice_preview_setting: { en: 'Voice preview', ar: 'المعاينة الصوتية' },
+      chat_voice_preview_setting: { en: 'Reply with voice', ar: 'الرد بالصوت' },
       chat_hear_on: { en: 'On for next reply', ar: 'مفعّلة للرد التالي' },
       chat_hear_off: { en: 'Text only', ar: 'نص فقط' },
       chat_lang_en: { en: 'English', ar: 'English' },
@@ -171,8 +218,8 @@
       chat_transcribing_status: { en: 'Transcribing voice note...', ar: 'جارٍ نسخ الملاحظة الصوتية...' },
       chat_generating_status: { en: 'Generating response...', ar: 'جارٍ توليد الرد...' },
       chat_try_voice_preview: { en: 'Turn on Hear to get a voice preview with the next reply.', ar: 'فعّل الاستماع للحصول على معاينة صوتية مع الرد التالي.' },
-      chat_cap_create: { en: 'Create', ar: 'أنشئ' },
-      chat_create_desc: { en: 'Generate an image from a text prompt', ar: 'أنشئ صورة من وصف نصي' },
+      chat_cap_create: { en: 'Create image', ar: 'إنشاء صورة' },
+      chat_create_desc: { en: 'Your next prompt will generate an image', ar: 'سيتم استخدام الوصف التالي لإنشاء صورة' },
       chat_create_placeholder: { en: 'Describe the image you want to create...', ar: 'صِف الصورة التي تريد إنشاءها...' },
       chat_generating_image: { en: 'Creating your image…', ar: 'جارٍ إنشاء صورتك…' },
       chat_image_ready: { en: 'Image ready', ar: 'الصورة جاهزة' },
@@ -182,7 +229,7 @@
       chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
       chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
       chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
-      chat_create_mode: { en: 'Create mode', ar: 'وضع الإنشاء' },
+      chat_create_mode: { en: 'Create image', ar: 'إنشاء صورة' },
       chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' }
     };
 
@@ -804,6 +851,7 @@
     trigger.setAttribute('aria-label', t('chat_open_label'));
     trigger.innerHTML = [
       '<span class="material-symbols-outlined">smart_toy</span>',
+      '<span class="gc-chat-trigger-label" id="gc-chat-trigger-label">' + escapeHTML(t('chat_trigger_label')) + '</span>',
       '<span class="gc-chat-trigger-badge"></span>'
     ].join('');
     document.body.appendChild(trigger);
@@ -819,12 +867,16 @@
     panel.setAttribute('role', 'dialog');
     panel.setAttribute('aria-modal', 'true');
     panel.setAttribute('aria-label', 'GRINDCTRL Trial Playground');
+    panel.setAttribute('tabindex', '-1');
     panel.innerHTML = buildPanelShell();
     document.body.appendChild(panel);
 
     var toast = document.createElement('div');
     toast.id = 'gc-toast';
     toast.className = 'gc-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.setAttribute('aria-atomic', 'true');
     document.body.appendChild(toast);
 
     bindEvents();
@@ -858,11 +910,6 @@
       '<div id="gc-chat-body" class="gc-chat-body">',
       '  <section id="gc-chat-intro" class="gc-chat-intro"></section>',
       '  <section class="gc-chat-stage">',
-      '    <div class="gc-chat-stage-head">',
-      '      <div class="gc-chat-stage-title">' + escapeHTML(t('chat_stage_label')) + '</div>',
-      '      <div class="gc-chat-stage-hint" id="gc-stage-hint"></div>',
-      '    </div>',
-      '    <div id="gc-feedback-slot" class="gc-feedback-slot gc-hidden"></div>',
       '    <div id="gc-chat-list" class="gc-chat-list" aria-live="polite"></div>',
       '  </section>',
       '</div>',
@@ -884,7 +931,7 @@
       '      <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
       '      <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span><span class="gc-btn-label">' + escapeHTML(t('chat_attach_label')) + '</span></button>',
       '      <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span><span class="gc-btn-label">' + escapeHTML(t('chat_mic_label')) + '</span></button>',
-      '      <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send gc-hidden" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">north_east</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
+      '      <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">arrow_upward</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
       '    </div>',
       '  </div>',
       '</div>'
@@ -905,6 +952,7 @@
     var trigger = $('gc-chat-trigger');
     var panel = $('gc-chat-panel');
     var closeButton = $('gc-close');
+    var triggerLabel = $('gc-chat-trigger-label');
     var recordingLabel = document.querySelector('.gc-recording-label');
     var cancelButton = $('gc-rec-cancel');
     var dropZoneText = document.querySelector('.gc-drop-zone-text');
@@ -913,6 +961,7 @@
     var sendButton = $('gc-send-btn');
 
     if (trigger) trigger.setAttribute('aria-label', t('chat_open_label'));
+    if (triggerLabel) triggerLabel.textContent = t('chat_trigger_label');
     if (panel) panel.setAttribute('aria-label', t('chat_empty_title'));
     if (closeButton) {
       closeButton.setAttribute('aria-label', t('chat_close_label'));
@@ -948,18 +997,14 @@
     var turnsPill = $('gc-turns-pill');
     var logo = $('gc-logo-img');
     var badge = $('gc-header-badge');
-    var stageHint = $('gc-stage-hint');
+    var authLabel = isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode');
+    var replyLanguageLabel = getReplyLanguage() === 'ar' ? t('chat_lang_ar') : t('chat_lang_en');
 
     if (subtitle) {
-      subtitle.textContent = isAuthenticated()
-        ? t('chat_auth_member_mode') + ' · ' + t('chat_playground_subtitle')
-        : t('chat_auth_guest_mode') + ' · ' + t('chat_playground_subtitle');
+      subtitle.textContent = authLabel + ' · ' + t('chat_reply_language') + ': ' + replyLanguageLabel;
     }
     if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
-    if (badge) badge.textContent = t('chat_trial_agent');
-    if (stageHint) {
-      stageHint.textContent = state.messages.length ? t('chat_stage_hint_active') : t('chat_stage_hint_idle');
-    }
+    if (badge) badge.textContent = state.imageMode ? t('chat_create_mode') : t('chat_mode_chat');
     if (!turnsPill) return;
 
     turnsPill.className = 'gc-turns-pill' + (isNearTurnLimit() ? ' warning' : '');
@@ -1020,35 +1065,44 @@
     ].join('');
   }
 
-  function renderComposerUtility(emptyMode) {
+  function renderComposerUtility(emptyMode, disabled) {
     var hearDisabled = !state.quota.ttsAvailable;
     var replyLang = getReplyLanguage();
-    var statusText = (isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode')) + ' · ' + remainingTurnsLabel();
     var prompts = getPromptList().slice(0, 4);
-
-    return [
-      '<div class="gc-footer-command-bar' + (emptyMode ? ' hero' : '') + '">',
-      '  <div class="gc-footer-command-row">',
-      '    <button type="button" class="gc-footer-action gc-footer-action-primary" data-action="focus-input"><span class="material-symbols-outlined">edit_square</span><span>' + escapeHTML(t('chat_cap_ask')) + '</span></button>',
-      '    <button type="button" class="gc-footer-action' + (state.phase === 'recording' ? ' active' : '') + '" data-action="record"><span class="material-symbols-outlined">' + (state.phase === 'recording' ? 'stop_circle' : 'mic') + '</span><span>' + escapeHTML(t('chat_cap_speak')) + '</span></button>',
-      '    <button type="button" class="gc-footer-action' + (state.wantsVoiceReply ? ' active' : '') + (hearDisabled ? ' disabled' : '') + '" data-action="toggle-hear"><span class="material-symbols-outlined">volume_up</span><span>' + escapeHTML(t('chat_cap_hear')) + '</span></button>',
-      '    <button type="button" class="gc-footer-action' + (state.imageMode ? ' active' : '') + (!state.quota.imageGenAvailable ? ' disabled' : '') + '" data-action="enter-create-mode"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_cap_create')) + '</span></button>',
-      '  </div>',
-      emptyMode ? (
-      '  <div class="gc-footer-prompt-row">' +
-      prompts.map(function (prompt, index) {
-        return '<button class="gc-footer-prompt" type="button" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
-      }).join('') +
-      '  </div>'
-      ) : '',
-      '  <div class="gc-footer-meta-row">',
-      '    <div class="gc-footer-status-chip">' + escapeHTML(statusText) + '</div>',
-      '    <div class="gc-segmented-control gc-footer-lang" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
-      '      <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '">' + escapeHTML(t('chat_lang_en')) + '</button>',
-      '      <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '">' + escapeHTML(t('chat_lang_ar')) + '</button>',
-      '    </div>',
+    var busyClass = disabled ? ' gc-utility-row-disabled' : '';
+    var voiceReplyDisabled = hearDisabled || disabled;
+    var createDisabled = !state.quota.imageGenAvailable || disabled;
+    var disabledAttr = disabled ? ' disabled aria-disabled="true"' : '';
+    var utilityRow = [
+      '<div class="gc-utility-row' + busyClass + '">',
+      '  <button type="button" class="gc-utility-chip gc-utility-chip-toggle' + (state.wantsVoiceReply ? ' active' : '') + (voiceReplyDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '"' + (voiceReplyDisabled ? ' disabled aria-disabled="true"' : '') + '>',
+      '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
+      '    <span>' + escapeHTML(t('chat_voice_preview_setting')) + ' · ' + (hearDisabled ? escapeHTML(t('chat_hear_unavailable')) : escapeHTML(state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
+      '  </button>',
+      '  <button type="button" class="gc-utility-chip gc-utility-chip-upload" data-action="attach-audio"' + disabledAttr + '>',
+      '    <span class="material-symbols-outlined">upload_file</span>',
+      '    <span>' + escapeHTML(t('chat_attach_label')) + '</span>',
+      '  </button>',
+      '  <button type="button" class="gc-utility-chip' + (state.imageMode ? ' active' : '') + (createDisabled ? ' disabled' : '') + '" data-action="enter-create-mode" aria-pressed="' + escapeHTML(String(!!state.imageMode)) + '"' + (createDisabled ? ' disabled aria-disabled="true"' : '') + '>',
+      '    <span class="material-symbols-outlined">auto_awesome</span>',
+      '    <span>' + escapeHTML(t('chat_cap_create')) + '</span>',
+      '  </button>',
+      '  <div class="gc-segmented-control gc-composer-language" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
+      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '"' + disabledAttr + '>' + escapeHTML(t('chat_lang_en')) + '</button>',
+      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '"' + disabledAttr + '>' + escapeHTML(t('chat_lang_ar')) + '</button>',
       '  </div>',
       '</div>'
+    ].join('');
+
+    if (!emptyMode) return utilityRow;
+
+    return [
+      '<div class="gc-prompt-row" role="list">',
+      prompts.map(function (prompt, index) {
+        return '<button class="gc-prompt-chip" type="button" role="listitem" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
+      }).join(''),
+      '</div>',
+      utilityRow
     ].join('');
   }
 
@@ -1143,22 +1197,7 @@
   }
 
   function renderNotice() {
-    var slot = $('gc-feedback-slot');
-    if (!slot) return;
-
-    if (!state.notice) {
-      slot.className = 'gc-feedback-slot gc-hidden';
-      slot.innerHTML = '';
-      return;
-    }
-
-    slot.className = 'gc-feedback-slot';
-    slot.innerHTML = renderSystemCard({
-      role: 'system',
-      kind: state.notice.kind,
-      payload: state.notice.payload,
-      warningState: state.notice.warningState
-    });
+    return;
   }
 
   function isAllowedAudioFile(file) {
@@ -1212,7 +1251,8 @@
     var meta = '';
 
     if (!isUser) {
-      var replyLang = normalizeLang(entry.replyLanguage || getReplyLanguage()).toUpperCase();
+      var replyLang = normalizeLang(entry.replyLanguage || getReplyLanguage());
+      var replyLangLabel = replyLang === 'ar' ? t('chat_lang_ar') : t('chat_lang_en');
       meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
 
       if (entry.voiceOnlyReply && entry.ttsAudioUrl) {
@@ -1223,13 +1263,13 @@
           '    <div class="gc-voice-label"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice_reply')) + '</span></div>',
           '    ' + buildAudioPlayerHTML(entry.ttsAudioUrl),
           '  </div>',
-          '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span></div>',
+          '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(t('chat_reply_language')) + ': ' + escapeHTML(replyLangLabel) + '</span></div>',
           '</div>'
         ].join('');
       }
 
       var actionBits = [
-        '<span class="gc-msg-meta-chip">' + escapeHTML(replyLang) + '</span>'
+        '<span class="gc-msg-meta-chip">' + escapeHTML(t('chat_reply_language')) + ': ' + escapeHTML(replyLangLabel) + '</span>'
       ];
       if (entry.ttsAudioUrl) {
         actionBits.push(buildAudioPlayerHTML(entry.ttsAudioUrl));
@@ -1269,16 +1309,13 @@
 
     var html = state.messages.map(renderMessage).join('');
 
-    if (!state.messages.length && !state.historyLoading && state.phase !== 'responding' && state.phase !== 'transcribing') {
-      html += [
-        '<div class="gc-empty-stage">',
-        '  <div class="gc-empty-stage-icon"><span class="material-symbols-outlined">smart_toy</span></div>',
-        '  <div class="gc-empty-stage-copy">',
-        '    <div class="gc-empty-stage-title">' + escapeHTML(t('chat_stage_empty_title')) + '</div>',
-        '    <div class="gc-empty-stage-desc">' + escapeHTML(t('chat_stage_empty_desc')) + '</div>',
-        '  </div>',
-        '</div>'
-      ].join('');
+    if (state.notice) {
+      html += renderSystemCard({
+        role: 'system',
+        kind: state.notice.kind,
+        payload: state.notice.payload,
+        warningState: state.notice.warningState
+      });
     }
 
     if (state.historyLoading) {
@@ -1328,11 +1365,11 @@
     if (textarea) {
       textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder');
       textarea.disabled = inLimitMode;
+      textarea.setAttribute('aria-label', state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder'));
     }
 
     if (sendBtn && textarea) {
-      sendBtn.classList.toggle('gc-hidden', textarea.value.trim() === '' || disabled);
-      sendBtn.disabled = disabled;
+      sendBtn.disabled = disabled || textarea.value.trim() === '';
     }
 
     if (micBtn) {
@@ -1364,13 +1401,13 @@
           '    <span class="gc-create-mode-hint">' + escapeHTML(t('chat_create_desc')) + '</span>',
           '  </div>',
           '  <button type="button" class="gc-create-mode-exit" data-action="exit-create-mode">',
-          '    <span class="material-symbols-outlined">arrow_back</span>',
+            '    <span class="material-symbols-outlined">arrow_back</span>',
           '    <span>' + escapeHTML(t('chat_exit_create')) + '</span>',
           '  </button>',
           '</div>'
         ].join('');
       } else {
-        utility.innerHTML = renderComposerUtility(emptyMode);
+        utility.innerHTML = renderComposerUtility(emptyMode, disabled);
       }
     }
   }
@@ -1910,6 +1947,9 @@
     panel.classList.add('open');
     trigger.classList.add('open');
     scrim.classList.add('open');
+    state.lastFocusedElement = document.activeElement && typeof document.activeElement.focus === 'function'
+      ? document.activeElement
+      : trigger;
     state.phase = state.phase === 'limit' ? 'limit' : 'open';
     document.body.style.overflow = 'hidden';
     if (pill) pill.style.display = 'none';
@@ -1945,6 +1985,14 @@
     var nextPhase = state.notice && state.notice.kind === 'limit' ? 'limit' : 'closed';
     if (state.recorder && state.recorder.state === 'recording') cancelRecording(nextPhase);
     state.phase = nextPhase;
+
+    var restoreTarget = state.lastFocusedElement && typeof state.lastFocusedElement.focus === 'function'
+      ? state.lastFocusedElement
+      : trigger;
+    state.lastFocusedElement = null;
+    setTimeout(function () {
+      if (restoreTarget && typeof restoreTarget.focus === 'function') restoreTarget.focus();
+    }, 0);
   }
 
   function handlePanelClick(event) {
@@ -2017,7 +2065,12 @@
 
     if (action === 'set-reply-language') {
       state.preferredReplyLanguage = normalizeLang(button.getAttribute('data-language'));
-      renderComposer();
+      renderAll();
+      return;
+    }
+
+    if (action === 'attach-audio') {
+      if ($('gc-file-input') && (!$('gc-attach-btn') || !$('gc-attach-btn').disabled)) $('gc-file-input').click();
       return;
     }
 
@@ -2114,6 +2167,7 @@
     $('gc-chat-panel').addEventListener('keydown', handlePanelKeydown);
 
     document.addEventListener('keydown', function (event) {
+      trapPanelFocus(event);
       if (event.key === 'Escape' && $('gc-chat-panel').classList.contains('open')) closeChat();
     });
 
