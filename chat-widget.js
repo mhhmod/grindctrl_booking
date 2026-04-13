@@ -1,2220 +1,1116 @@
-/**
- * GRINDCTRL Trial Playground
- * Premium, theme-aware, RTL-ready landing-page widget.
- */
 (function () {
   'use strict';
 
-  var CONFIG = {
-    SUPABASE_URL: 'https://qldgpkqpyfpqfdchozsp.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZGdwa3FweWZwcWZkY2hvenNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNzYwMDEsImV4cCI6MjA4OTY1MjAwMX0.BGqBYcjmuGbA787NFm45ndeFuXyro9zYR8NZX3Tib30',
-    N8N_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent',
-    N8N_SESSION_UPGRADE_WEBHOOK: 'https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent-session-upgrade',
-    LIMITS: { SESSION_ANON: 3, DAILY_ANON: 5, DAILY_AUTH: 10 },
-    IMAGE_GEN_MODEL: '@cf/black-forest-labs/flux-1-schnell',
-    IMAGE_GEN_LIMIT: 2,
-    AUTH_REDIRECT_PARAM: 'gc_auth',
-    MAX_MSG_LEN: 500,
-    MAX_AUDIO_SEC: 30,
-    MAX_AUDIO_BYTES: 2 * 1024 * 1024,
-    AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a'],
-    PROMPTS: {
-      en: [
-        'Where can AI save the most time in my business?',
-        'Show me a better lead follow-up flow',
-        'What would an AI agent handle for a gym?',
-        'How would GRINDCTRL reduce admin work here?'
-      ],
-      ar: [
-        'أين يمكن للذكاء الاصطناعي أن يوفر أكبر وقت في عملي؟',
-        'اعرض لي أسلوباً أفضل لمتابعة العملاء المحتملين',
-        'ما الذي يمكن لوكيل ذكي أن يديره لصالة رياضية؟',
-        'كيف يمكن لـ GRINDCTRL تقليل العمل الإداري هنا؟'
-      ]
+  var CONFIG = Object.assign({
+    textWebhookUrl: '',
+    voiceWebhookUrl: '',
+    requestTimeoutMs: 30000,
+    maxRetries: 2,
+    maxQueueDelayMs: 12000,
+    autoGenerateFromVoice: true,
+    recordingLimitMs: 45000
+  }, window.GRINDCTRL_CONFIG || {});
+
+  var COPY = {
+    en: {
+      ready: 'Ready',
+      readyStatus: 'Ready for first task.',
+      welcome: 'Tell me one business task. I will turn it into AI agent blueprint you can use, review, and download.',
+      welcomeNote: 'Use preset for low-friction start, or type custom business task below.',
+      thinking: ['Thinking', 'Generating your blueprint', 'Designing workflow steps'],
+      queued: 'Current request running. Next prompt queued for this session.',
+      cooldown: 'System pacing requests. Waiting %s seconds before next attempt.',
+      rateLimited: 'Model busy. Retrying with backoff instead of failing hard.',
+      timeout: 'Request timed out. Building fallback blueprint so UX stays smooth.',
+      unavailable: 'Service still busy. Returning lightweight fallback blueprint.',
+      error: 'Request failed. Showing fallback blueprint instead of error wall.',
+      demoFallback: 'Webhook not configured yet. Showing local demo blueprint.',
+      voiceReady: 'Voice ready',
+      voiceListening: 'Listening…',
+      voiceUploading: 'Uploading audio…',
+      voiceTranscribing: 'Transcribing…',
+      voiceDone: 'Transcript ready',
+      voiceUnsupported: 'Voice capture not supported in this browser.',
+      voiceNotConfigured: 'Voice webhook not configured yet. Set `voiceWebhookUrl` to enable Groq transcription.',
+      noBlueprint: 'Generate blueprint first.',
+      presetPrefix: 'Preset selected',
+      you: 'You',
+      assistant: 'AI Blueprint',
+      transcriptMeta: 'Voice transcript',
+      fallback: 'Fallback blueprint',
+      download: 'Download AI Agent Blueprint',
+      refine: 'Refine blueprint',
+      businessGoal: 'Business goal',
+      workflow: 'Workflow steps',
+      exampleOutput: 'Example output',
+      roi: 'ROI',
+      stack: 'Suggested stack',
+      nextStep: 'Next step',
+      busyPill: 'Generating',
+      voicePill: 'Transcribing',
+      fallbackPill: 'Fallback',
+      followUps: {
+        qualify_leads: 'What makes lead worth pursuing right now: source, budget, location, or service interest?',
+        customer_support: 'What support volume and channels matter most: WhatsApp, email, chat, or calls?',
+        generate_reports: 'What report should appear automatically each day or week, and from which tools?',
+        book_meetings: 'What type of meeting should agent book, and what qualification rules should it enforce?',
+        follow_up: 'When should follow-up trigger, and what action should count as success?',
+        custom: 'What business task should this agent own first?'
+      },
+      placeholders: {
+        qualify_leads: 'Example: We get Meta ads and website leads. Need instant scoring and CRM routing.',
+        customer_support: 'Example: Handle shipping questions from Shopify and WhatsApp before human handoff.',
+        generate_reports: 'Example: Build weekly ops report from HubSpot, Stripe, and support inbox.',
+        book_meetings: 'Example: Book discovery calls only for qualified B2B leads in UAE timezone.',
+        follow_up: 'Example: Follow up with leads who asked for pricing but never booked.',
+        custom: 'Describe custom business task.'
+      },
+      starterExample: 'Example blueprint ready in one response, no long setup.',
+      retryQueued: 'Queued prompt started.',
+      downloaded: 'Blueprint HTML downloaded.',
+      refinePrompt: 'Tighten this blueprint for implementation with clearer steps, dependencies, and launch risks.'
+    },
+    ar: {
+      ready: 'جاهز',
+      readyStatus: 'جاهز لأول مهمة.',
+      welcome: 'اكتب مهمة عمل واحدة. سأحوّلها إلى مخطط وكيل ذكي يمكنك مراجعته وتنزيله.',
+      welcomeNote: 'اختر قالباً سريعاً أو اكتب طلباً مخصصاً في الأسفل.',
+      thinking: ['يفكر', 'ينشئ المخطط', 'يرتب خطوات سير العمل'],
+      queued: 'هناك طلب جارٍ الآن. تم وضع الطلب التالي في الانتظار.',
+      cooldown: 'النظام يهدئ الإرسال. الانتظار %s ثانية قبل المحاولة التالية.',
+      rateLimited: 'النموذج مشغول. تتم إعادة المحاولة تدريجياً بدلاً من الفشل المباشر.',
+      timeout: 'انتهت مهلة الطلب. سيتم إنشاء مخطط بديل حتى تبقى التجربة سلسة.',
+      unavailable: 'الخدمة ما زالت مشغولة. سيتم إرجاع مخطط بديل خفيف.',
+      error: 'فشل الطلب. سيتم عرض مخطط بديل بدلاً من شاشة خطأ.',
+      demoFallback: 'رابط Webhook غير مضبوط بعد. يتم عرض مخطط تجريبي محلي.',
+      voiceReady: 'الصوت جاهز',
+      voiceListening: 'جارٍ الاستماع…',
+      voiceUploading: 'جارٍ رفع الصوت…',
+      voiceTranscribing: 'جارٍ التفريغ…',
+      voiceDone: 'النص جاهز',
+      voiceUnsupported: 'تسجيل الصوت غير مدعوم في هذا المتصفح.',
+      voiceNotConfigured: 'رابط Webhook للصوت غير مضبوط بعد. اضبط `voiceWebhookUrl` لتفعيل التفريغ عبر Groq.',
+      noBlueprint: 'أنشئ مخططاً أولاً.',
+      presetPrefix: 'تم اختيار القالب',
+      you: 'أنت',
+      assistant: 'مخطط الذكاء',
+      transcriptMeta: 'تفريغ صوتي',
+      fallback: 'مخطط بديل',
+      download: 'تنزيل مخطط الوكيل الذكي',
+      refine: 'تحسين المخطط',
+      businessGoal: 'هدف العمل',
+      workflow: 'خطوات سير العمل',
+      exampleOutput: 'مثال على المخرجات',
+      roi: 'العائد',
+      stack: 'المنظومة المقترحة',
+      nextStep: 'الخطوة التالية',
+      busyPill: 'جارٍ الإنشاء',
+      voicePill: 'جارٍ التفريغ',
+      fallbackPill: 'بديل',
+      followUps: {
+        qualify_leads: 'ما الذي يجعل العميل المحتمل مهماً الآن: المصدر، الميزانية، الموقع، أم نوع الخدمة؟',
+        customer_support: 'ما حجم الدعم والقنوات الأهم لديك: واتساب، بريد، دردشة، أم مكالمات؟',
+        generate_reports: 'ما التقرير الذي يجب أن يصل تلقائياً يومياً أو أسبوعياً، ومن أي أدوات؟',
+        book_meetings: 'ما نوع الاجتماع المطلوب، وما شروط التأهيل قبل الحجز؟',
+        follow_up: 'متى يجب أن تبدأ المتابعة، وما الإجراء الذي يُعتبر نجاحاً؟',
+        custom: 'ما مهمة العمل التي يجب أن يمتلكها هذا الوكيل أولاً؟'
+      },
+      placeholders: {
+        qualify_leads: 'مثال: لدينا عملاء من الإعلانات والموقع ونحتاج تقييمهم وتحويلهم فوراً إلى CRM.',
+        customer_support: 'مثال: نريد الرد على أسئلة الشحن من Shopify وواتساب قبل التحويل للبشر.',
+        generate_reports: 'مثال: أنشئ تقرير عمليات أسبوعي من HubSpot وStripe والدعم.',
+        book_meetings: 'مثال: احجز مكالمات اكتشاف فقط للعملاء B2B المؤهلين في توقيت الخليج.',
+        follow_up: 'مثال: تابع تلقائياً مع من طلب التسعير ولم يحجز.',
+        custom: 'اكتب مهمة العمل المخصصة.'
+      },
+      starterExample: 'مثال جاهز في رد واحد بدون إعداد طويل.',
+      retryQueued: 'تم بدء الطلب المؤجل.',
+      downloaded: 'تم تنزيل ملف المخطط.',
+      refinePrompt: 'حسّن هذا المخطط للتنفيذ مع خطوات أوضح واعتماديات ومخاطر الإطلاق.'
     }
+  };
+
+  var PRESETS = {
+    qualify_leads: { keyword: 'Lead qualification', icon: 'LQ' },
+    customer_support: { keyword: 'Customer support', icon: 'CS' },
+    generate_reports: { keyword: 'Reporting', icon: 'RP' },
+    book_meetings: { keyword: 'Meeting booking', icon: 'BM' },
+    follow_up: { keyword: 'Lead follow-up', icon: 'FU' },
+    custom: { keyword: 'Custom workflow', icon: 'AI' }
   };
 
   var state = {
-    phase: 'closed',
-    sessionId: null,
-    fingerprint: null,
-    messages: [],
-    turnsUsed: 0,
-    maxTurns: CONFIG.LIMITS.SESSION_ANON,
-    recorder: null,
-    recordStart: 0,
-    recordTimer: null,
-    wantsVoiceReply: false,
-    preferredReplyLanguage: null,
-    quota: {
-      remainingTurnsSession: null,
-      remainingTurnsDay: null,
-      remainingTtsSession: null,
-      remainingTtsDay: null,
-      ttsAvailable: true,
-      limitState: 'ok',
-      softWarningState: 'none',
-      replyLanguage: 'en',
-      remainingImageGen: null,
-      imageGenAvailable: true
-    },
-    activeAudio: null,
-    activeAudioUrl: null,
-    activeAudioButton: null,
-    activeAudioPlayer: null,
-    dismissedWarnings: {},
-    imageMode: false,
-    notice: null,
-    messageSeq: 0,
-    lastFocusedElement: null,
-    historyLoaded: false,
-    historyLoading: false,
-    historyRequested: false,
-    auth: {
-      client: null,
-      session: null,
-      user: null,
-      email: '',
-      code: '',
-      status: 'idle',
-      helper: '',
-      upgradePending: false,
-      lastUpgradedUserId: null
-    }
+    locale: detectLocale(),
+    sessionId: loadSessionId(),
+    activePreset: null,
+    busy: false,
+    voiceBusy: false,
+    currentBlueprint: null,
+    typingNode: null,
+    queuedPrompt: null,
+    nextAllowedAt: 0,
+    mediaRecorder: null,
+    recordingStream: null,
+    recordingChunks: [],
+    recordingTimer: null,
+    conversation: [],
+    thinkingIndex: 0,
+    thinkingTimer: null
   };
 
-  function $(id) {
-    return document.getElementById(id);
+  var dom = {
+    feed: document.getElementById('chat-feed'),
+    taskInput: document.getElementById('task-input'),
+    form: document.getElementById('composer-form'),
+    sendButton: document.getElementById('send-button'),
+    micButton: document.getElementById('mic-button'),
+    presetButtons: Array.prototype.slice.call(document.querySelectorAll('.preset-chip')),
+    requestStatus: document.getElementById('request-status'),
+    voiceStatus: document.getElementById('voice-status'),
+    statePill: document.getElementById('chat-state-pill'),
+    statusDot: document.getElementById('status-dot'),
+    liveRegion: document.getElementById('live-region'),
+    downloadHeader: document.getElementById('download-header'),
+    messageTemplate: document.getElementById('message-template'),
+    typingTemplate: document.getElementById('typing-template')
+  };
+
+  init();
+
+  function init() {
+    document.documentElement.lang = state.locale;
+    document.documentElement.dir = state.locale === 'ar' ? 'rtl' : 'ltr';
+    dom.taskInput.placeholder = t('placeholders.custom');
+    dom.downloadHeader.textContent = t('download');
+
+    bindEvents();
+    autoResize();
+    appendTextMessage('assistant', t('welcome'), t('assistant'));
+    appendSystemNote(t('welcomeNote'));
+    updateStatus(t('readyStatus'), 'ready');
+    updateVoiceStatus(t('voiceReady'));
+    renderStarterHint();
   }
 
-  function currentLang() {
-    return normalizeLang(document.documentElement.getAttribute('lang') || 'en');
-  }
+  function bindEvents() {
+    dom.form.addEventListener('submit', handleSubmit);
+    dom.taskInput.addEventListener('input', autoResize);
+    dom.taskInput.addEventListener('keydown', handleInputKeydown);
+    dom.micButton.addEventListener('click', handleMicClick);
+    dom.downloadHeader.addEventListener('click', downloadBlueprint);
 
-  function currentDir() {
-    return (document.documentElement.getAttribute('dir') || (currentLang() === 'ar' ? 'rtl' : 'ltr')).toLowerCase() === 'rtl' ? 'rtl' : 'ltr';
-  }
+    dom.presetButtons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        activatePreset(button.getAttribute('data-preset'));
+      });
+    });
 
-  function normalizeLang(value) {
-    return String(value || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en';
-  }
-
-  function getPanelFocusableElements() {
-    var panel = $('gc-chat-panel');
-    if (!panel) return [];
-    return Array.prototype.slice.call(panel.querySelectorAll(
-      'button:not([disabled]), [href]:not([tabindex="-1"]), input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )).filter(function (element) {
-      return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+    dom.feed.addEventListener('click', function (event) {
+      var action = event.target.closest('[data-action]');
+      if (!action) return;
+      var type = action.getAttribute('data-action');
+      if (type === 'download-blueprint') {
+        downloadBlueprint();
+      }
+      if (type === 'refine-blueprint') {
+        queueOrSubmit(t('refinePrompt'));
+      }
+      if (type === 'reselect-preset') {
+        activatePreset(action.getAttribute('data-preset'));
+      }
     });
   }
 
-  function trapPanelFocus(event) {
-    if (event.key !== 'Tab') return;
-    var panel = $('gc-chat-panel');
-    if (!panel || !panel.classList.contains('open')) return;
+  function detectLocale() {
+    var rootLang = String(document.documentElement.lang || '').toLowerCase();
+    var browserLang = String(navigator.language || navigator.userLanguage || 'en').toLowerCase();
+    var lang = rootLang || browserLang;
+    return lang.indexOf('ar') === 0 ? 'ar' : 'en';
+  }
 
-    var focusable = getPanelFocusableElements();
-    if (!focusable.length) {
-      event.preventDefault();
-      panel.focus();
-      return;
-    }
-
-    var first = focusable[0];
-    var last = focusable[focusable.length - 1];
-    var active = document.activeElement;
-
-    if (!panel.contains(active)) {
-      event.preventDefault();
-      first.focus();
-      return;
-    }
-
-    if (event.shiftKey && active === first) {
-      event.preventDefault();
-      last.focus();
-      return;
-    }
-
-    if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
+  function loadSessionId() {
+    var key = 'grindctrl-ai-blueprint-session';
+    try {
+      var existing = window.localStorage.getItem(key);
+      if (existing) return existing;
+      var created = 'gc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+      window.localStorage.setItem(key, created);
+      return created;
+    } catch (error) {
+      return 'gc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
     }
   }
 
   function t(key) {
-    var lang = currentLang();
-    var dict = window.__i18n || {};
-    if (dict[key] && dict[key][lang] != null) return dict[key][lang];
-
-    var fallback = {
-      chat_empty_title: { en: 'Ask about your operations', ar: 'اسأل عن عملياتك' },
-      chat_empty_desc: { en: 'Type, record, or upload audio. Switch to image creation when you need a visual.', ar: 'اكتب أو سجّل أو ارفع ملفاً صوتياً. ويمكنك التبديل إلى إنشاء صورة عند الحاجة.' },
-      chat_placeholder: { en: 'Ask about leads, follow-up, support, or operations…', ar: 'اسأل عن العملاء أو المتابعة أو الدعم أو العمليات…' },
-      chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
-      chat_mode_chat: { en: 'Chat', ar: 'محادثة' },
-      chat_turns_left: { en: 'left', ar: 'متبقي' },
-      chat_today_left: { en: 'today', ar: 'اليوم' },
-      chat_limit_title: { en: 'Great exploring! Here\'s what\'s next', ar: 'استكشاف رائع! إليك ما يمكنك فعله' },
-      chat_limit_desc: { en: 'You\'ve used all free turns. See the real thing in action.', ar: 'لقد استخدمت جميع المحاولات المجانية. شاهد النظام يعمل فعلياً.' },
-      chat_limit_cta1: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
-      chat_limit_cta2: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
-      chat_limit_cta3: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
-      chat_limit_fine: { en: 'Free 30-min session · No obligation · Confidential', ar: 'جلسة مجانية ٣٠ دقيقة · بدون التزام · سري' },
-      chat_error_msg: { en: 'Something went wrong. Please try again.', ar: 'حدث خطأ. يرجى المحاولة مرة أخرى.' },
-      chat_retry: { en: 'Retry', ar: 'إعادة المحاولة' },
-      chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
-      chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
-      chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-      chat_open_label: { en: 'Open GRINDCTRL assistant', ar: 'فتح مساعد GRINDCTRL' },
-      chat_trigger_label: { en: 'Ask GRINDCTRL', ar: 'اسأل GRINDCTRL' },
-      chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
-      chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
-      chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
-      chat_attach_label: { en: 'Upload audio', ar: 'رفع ملف صوتي' },
-      chat_voice: { en: 'Voice message', ar: 'رسالة صوتية' },
-      chat_voice_reply: { en: 'Voice reply', ar: 'رد صوتي' },
-      chat_show_transcript: { en: 'Show text', ar: 'عرض النص' },
-      chat_hide_transcript: { en: 'Hide text', ar: 'إخفاء النص' },
-      chat_voice_preview_setting: { en: 'Reply with voice', ar: 'الرد بالصوت' },
-      chat_hear_on: { en: 'On for next reply', ar: 'مفعّلة للرد التالي' },
-      chat_hear_off: { en: 'Text only', ar: 'نص فقط' },
-      chat_lang_en: { en: 'English', ar: 'English' },
-      chat_lang_ar: { en: 'العربية', ar: 'العربية' },
-      chat_transcript_label: { en: 'Transcript', ar: 'النص' },
-      chat_transcript_pending: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
-      chat_playground_subtitle: { en: 'Ask, speak, and hear how the system responds.', ar: 'اسأل وتحدث واستمع لكيفية استجابة النظام.' },
-      chat_prompt_label: { en: 'Suggested prompts', ar: 'اقتراحات سريعة' },
-      chat_cap_ask: { en: 'Ask', ar: 'اسأل' },
-      chat_cap_speak: { en: 'Speak', ar: 'تحدث' },
-      chat_cap_hear: { en: 'Hear', ar: 'استمع' },
-      chat_hear_next: { en: 'Hear next reply', ar: 'استمع للرد التالي' },
-      chat_hear_unavailable: { en: 'Voice preview unavailable', ar: 'المعاينة الصوتية غير متاحة' },
-      chat_audio_hint: { en: 'Voice input up to 30s', ar: 'إدخال صوتي حتى ٣٠ ثانية' },
-      chat_reply_language: { en: 'Reply language', ar: 'لغة الرد' },
-      chat_play_reply: { en: 'Play reply', ar: 'تشغيل الرد' },
-      chat_pause_reply: { en: 'Pause reply', ar: 'إيقاف الرد' },
-      chat_warning_turn_title: { en: 'Almost there — 1 turn remaining', ar: 'أوشكت — تبقّت محاولة واحدة' },
-      chat_warning_voice_title: { en: '1 voice preview remaining', ar: 'تبقّت معاينة صوتية واحدة' },
-      chat_warning_desc: { en: 'Make it count, or explore more options below.', ar: 'استفد منها أو استكشف المزيد أدناه.' },
-      chat_warning_voice_desc: { en: 'Text replies continue — one more voice preview available.', ar: 'الردود النصية مستمرة — معاينة صوتية واحدة إضافية.' },
-      chat_warning_voice_unavailable_title: { en: 'Voice preview unavailable', ar: 'المعاينة الصوتية غير متاحة' },
-      chat_warning_voice_session_desc: { en: 'This session has used its voice preview. Text replies continue.', ar: 'استخدمت هذه الجلسة المعاينة الصوتية الخاصة بها. الردود النصية مستمرة.' },
-      chat_warning_voice_day_desc: { en: 'Today’s voice previews are used up. Text replies continue for now.', ar: 'تم استهلاك المعاينات الصوتية لليوم. الردود النصية مستمرة حالياً.' },
-      chat_cta_continue: { en: 'Continue Trial', ar: 'تابع التجربة' },
-      chat_cta_final_turn: { en: 'Got it', ar: 'فهمت' },
-      chat_cta_tour: { en: 'See the 2-Min Workflow Tour', ar: 'شاهد جولة سير العمل خلال دقيقتين' },
-      chat_cta_book: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
-      chat_cta_tell: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
-      chat_nudge_dismiss: { en: 'Got it', ar: 'فهمت' },
-      chat_rate_limited: { en: 'Please wait a moment and try again.', ar: 'يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.' },
-      chat_active_conflict: { en: 'Another conversation is already active for this browser.', ar: 'هناك محادثة أخرى نشطة بالفعل لهذا المتصفح.' },
-      chat_mic_denied: { en: 'Microphone access was denied.', ar: 'تم رفض الوصول إلى الميكروفون.' },
-      chat_audio_too_large: { en: 'Audio file is too large. Maximum is 2 MB.', ar: 'ملف الصوت كبير جداً. الحد الأقصى ٢ ميجابايت.' },
-      chat_audio_invalid: { en: 'Please select an audio file.', ar: 'يرجى اختيار ملف صوتي.' },
-      chat_recording: { en: 'Recording...', ar: 'جارٍ التسجيل...' },
-      chat_recording_limit: { en: 'Maximum recording length reached.', ar: 'تم الوصول إلى الحد الأقصى لمدة التسجيل.' },
-      chat_transcribing_status: { en: 'Transcribing voice note...', ar: 'جارٍ نسخ الملاحظة الصوتية...' },
-      chat_generating_status: { en: 'Generating response...', ar: 'جارٍ توليد الرد...' },
-      chat_try_voice_preview: { en: 'Turn on Hear to get a voice preview with the next reply.', ar: 'فعّل الاستماع للحصول على معاينة صوتية مع الرد التالي.' },
-      chat_cap_create: { en: 'Create image', ar: 'إنشاء صورة' },
-      chat_create_desc: { en: 'Your next prompt will generate an image', ar: 'سيتم استخدام الوصف التالي لإنشاء صورة' },
-      chat_create_placeholder: { en: 'Describe the image you want to create...', ar: 'صِف الصورة التي تريد إنشاءها...' },
-      chat_generating_image: { en: 'Creating your image…', ar: 'جارٍ إنشاء صورتك…' },
-      chat_image_ready: { en: 'Image ready', ar: 'الصورة جاهزة' },
-      chat_image_prompt_label: { en: 'Prompt', ar: 'الوصف' },
-      chat_image_open: { en: 'Open', ar: 'فتح' },
-      chat_image_save: { en: 'Save', ar: 'حفظ' },
-      chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
-      chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
-      chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
-      chat_create_mode: { en: 'Create image', ar: 'إنشاء صورة' },
-      chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' }
-    };
-
-    if (fallback[key]) return fallback[key][lang] || fallback[key].en;
-    return key;
+    var parts = key.split('.');
+    var value = COPY[state.locale];
+    for (var i = 0; i < parts.length; i += 1) {
+      value = value && value[parts[i]];
+    }
+    return value || COPY.en[key] || key;
   }
 
-  function sbHeaders() {
-    return {
-      apikey: CONFIG.SUPABASE_ANON_KEY,
-      Authorization: 'Bearer ' + CONFIG.SUPABASE_ANON_KEY,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation'
-    };
-  }
-
-  function sbFetch(table, method, body, query) {
-    var url = CONFIG.SUPABASE_URL + '/rest/v1/' + table + (query || '');
-    return fetch(url, {
-      method: method,
-      headers: sbHeaders(),
-      body: body ? JSON.stringify(body) : undefined
-    }).then(function (response) {
-      return response.json().then(function (data) {
-        if (data && !Array.isArray(data) && data.code) return null;
-        return data;
-      });
-    }).catch(function () {
-      return null;
+  function bindPresetState() {
+    dom.presetButtons.forEach(function (button) {
+      button.classList.toggle('is-active', button.getAttribute('data-preset') === state.activePreset);
     });
   }
 
-  function initAuthClient() {
-    if (state.auth.client || !window.supabase || typeof window.supabase.createClient !== 'function') return state.auth.client;
+  function activatePreset(presetKey) {
+    if (!PRESETS[presetKey]) return;
+    state.activePreset = presetKey;
+    bindPresetState();
+    dom.taskInput.placeholder = t('placeholders.' + presetKey);
+    appendTextMessage('assistant', t('followUps.' + presetKey), t('assistant'));
+    updateStatus(t('presetPrefix') + ': ' + buttonLabel(presetKey), 'ready');
+    dom.taskInput.focus();
+  }
 
-    state.auth.client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
+  function buttonLabel(presetKey) {
+    var button = dom.presetButtons.find(function (item) {
+      return item.getAttribute('data-preset') === presetKey;
     });
-
-    state.auth.client.auth.getSession().then(function (result) {
-      applyAuthSession(result && result.data ? result.data.session : null, 'restore');
-    }).catch(function () {});
-
-    state.auth.client.auth.onAuthStateChange(function (event, session) {
-      applyAuthSession(session, event || 'auth_change');
-    });
-
-    return state.auth.client;
+    return button ? button.textContent.trim() : presetKey;
   }
 
-  function getFingerprint() {
-    var existing = null;
-    try { existing = localStorage.getItem('gc_fp'); } catch (error) {}
-    if (existing) return existing;
-    existing = crypto.randomUUID ? crypto.randomUUID() : 'fp-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-    try { localStorage.setItem('gc_fp', existing); } catch (error2) {}
-    return existing;
-  }
-
-  function getSessionId() {
-    try { return sessionStorage.getItem('gc_sid'); } catch (error) { return null; }
-  }
-
-  function storeSessionId(sessionId) {
-    try { sessionStorage.setItem('gc_sid', sessionId); } catch (error) {}
-  }
-
-  async function ensureSession() {
-    if (state.sessionId) return state.sessionId;
-
-    var existing = getSessionId();
-    if (existing) {
-      state.sessionId = existing;
-      state.fingerprint = getFingerprint();
-      return existing;
-    }
-
-    state.fingerprint = getFingerprint();
-    var identityKey = 'anon:' + state.fingerprint;
-    var lang = currentLang();
-    var nextSessionId = crypto.randomUUID ? crypto.randomUUID() : 'sid-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-    var rows = await sbFetch('trial_sessions', 'POST', {
-      session_id: nextSessionId,
-      identity_key: identityKey,
-      locale: lang,
-      user_agent_hash: navigator.userAgent.slice(0, 128),
-      source_page: location.href || null,
-      status: 'active'
-    });
-
-    if (rows && rows[0]) {
-      state.sessionId = rows[0].session_id;
-      storeSessionId(state.sessionId);
-      trackEvent('session_start', {});
-    }
-
-    return state.sessionId;
-  }
-
-  function mapStoredMessage(row) {
-    if (!row || !row.role) return null;
-    if (row.role === 'user') {
-      return createMessage({
-        role: 'user',
-        content: row.transcript_text || row.raw_text || '',
-        voice: row.modality === 'voice',
-        transcriptPending: false
-      });
-    }
-    if (row.role === 'assistant') {
-      return createMessage({
-        role: 'assistant',
-        content: row.response_text || '',
-        replyLanguage: row.reply_language || getReplyLanguage()
-      });
-    }
-    return null;
-  }
-
-  async function hydrateMessagesFromSession(force) {
-    if (state.historyLoading) return;
-    if (state.historyLoaded && !force) return;
-
-    await ensureSession();
-    if (!state.sessionId) return;
-
-    state.historyLoading = true;
-    renderMessages();
-
-    var rows = await sbFetch(
-      'trial_messages',
-      'GET',
-      null,
-      '?select=role,modality,raw_text,transcript_text,response_text,reply_language,created_at&session_id=eq.' + encodeURIComponent(state.sessionId) + '&order=created_at.asc&limit=60'
-    );
-
-    if (Array.isArray(rows)) {
-      state.messages = rows.map(mapStoredMessage).filter(Boolean);
-      state.historyLoaded = true;
-    }
-
-    state.historyLoading = false;
-    renderAll();
-  }
-
-  function applyAuthSession(session, source) {
-    state.auth.session = session || null;
-    state.auth.user = session && session.user ? session.user : null;
-    if (state.auth.user && state.auth.user.email) state.auth.email = state.auth.user.email;
-
-    if (state.auth.user && state.auth.user.id) {
-      Promise.resolve().then(function () {
-        return upgradeTrialSession(source || 'auth');
-      }).catch(function () {});
-    } else {
-      renderAll();
-    }
-  }
-
-  async function upgradeTrialSession(source) {
-    if (!state.auth.user || !state.auth.user.id) return false;
-    await ensureSession();
-    if (!state.sessionId) return false;
-    if (state.auth.upgradePending) return false;
-    if (state.auth.lastUpgradedUserId === state.auth.user.id && state.historyLoaded) {
-      if (shouldResumeAuthPlayground()) {
-        openChat();
-        clearAuthRedirectParam();
-      }
-      return true;
-    }
-
-    state.auth.upgradePending = true;
-    setAuthHelper('loading', t('chat_loading_history'));
-    renderAll();
-
-    try {
-      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: state.sessionId,
-          user_id: state.auth.user.id,
-          email: state.auth.user.email || null,
-          provider: normalizeProviderName(state.auth.user),
-          guest_identity_key: state.fingerprint ? 'anon:' + state.fingerprint : null,
-          locale: currentLang(),
-          direction: currentDir(),
-          source_page: location.href || 'landing'
-        })
-      });
-      var data = {};
-      try { data = await response.json(); } catch (error) {}
-
-      if (!response.ok || !data.ok) {
-        setAuthHelper('error', t('chat_auth_upgrade_failed'));
-        renderAll();
-        return false;
-      }
-
-      state.auth.lastUpgradedUserId = state.auth.user.id;
-      updateQuotaFromResponse(data);
-      state.phase = 'open';
-      clearNotice();
-      setNotice('soft_warning', {
-        title: t('chat_auth_success_title'),
-        message: t('chat_auth_success_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      }, 'auth_success');
-      setAuthHelper('success', t('chat_auth_success_desc'));
-      await hydrateMessagesFromSession(true);
-      if (shouldResumeAuthPlayground()) {
-        openChat();
-        clearAuthRedirectParam();
-      }
-      return true;
-    } catch (error2) {
-      setAuthHelper('error', t('chat_auth_upgrade_failed'));
-      renderAll();
-      return false;
-    } finally {
-      state.auth.upgradePending = false;
-    }
-  }
-
-  function trackEvent(type, data) {
-    if (!state.sessionId) return;
-    sbFetch('trial_events', 'POST', {
-      session_id: state.sessionId,
-      event_type: type,
-      severity: 'info',
-      payload_json: data || {}
-    }).catch(function () {});
-  }
-
-  function trackCTA(ctaType, action, ctaLocation) {
-    if (!state.sessionId) return;
-    sbFetch('trial_cta_events', 'POST', {
-      session_id: state.sessionId,
-      cta_type: ctaType,
-      event_action: action,
-      cta_location: ctaLocation || 'chat',
-      source_page: location.href || null,
-      locale: currentLang()
-    }).catch(function () {});
-  }
-
-  function escapeHTML(value) {
-    var div = document.createElement('div');
-    div.textContent = value == null ? '' : String(value);
-    return div.innerHTML;
-  }
-
-  function formatMessageHTML(value) {
-    return escapeHTML(String(value || '')).replace(/\n/g, '<br/>');
-  }
-
-  function escapeSelectorValue(value) {
-    var stringValue = String(value || '');
-    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(stringValue);
-    return stringValue.replace(/["\\]/g, '\\$&');
-  }
-
-  function getPromptList() {
-    return CONFIG.PROMPTS[currentLang()] || CONFIG.PROMPTS.en;
-  }
-
-  function isAuthenticated() {
-    return !!(state.auth && state.auth.user && state.auth.user.id);
-  }
-
-  function getAuthRedirectUrl() {
-    var url = new URL(window.location.href);
-    url.searchParams.set(CONFIG.AUTH_REDIRECT_PARAM, '1');
-    url.hash = '';
-    return url.toString();
-  }
-
-  function shouldResumeAuthPlayground() {
-    try {
-      return new URL(window.location.href).searchParams.get(CONFIG.AUTH_REDIRECT_PARAM) === '1';
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function clearAuthRedirectParam() {
-    try {
-      var url = new URL(window.location.href);
-      url.searchParams.delete(CONFIG.AUTH_REDIRECT_PARAM);
-      window.history.replaceState({}, document.title, url.toString());
-    } catch (error) {}
-  }
-
-  function normalizeProviderName(user) {
-    var provider = user && user.app_metadata && user.app_metadata.provider;
-    if (!provider && user && user.identities && user.identities[0] && user.identities[0].provider) {
-      provider = user.identities[0].provider;
-    }
-    if (!provider) return 'email';
-    return String(provider);
-  }
-
-  function setAuthHelper(status, message) {
-    state.auth.status = status || 'idle';
-    state.auth.helper = message || '';
-  }
-
-  function getHistory() {
-    return state.messages
-      .filter(function (entry) { return entry.role === 'user' || entry.role === 'assistant'; })
-      .map(function (entry) { return { role: entry.role, content: entry.content }; })
-      .slice(-6);
-  }
-
-  function getReplyLanguage() {
-    return normalizeLang(state.preferredReplyLanguage || state.quota.replyLanguage || currentLang());
-  }
-
-  function shouldUseVoiceOnlyReply(data, ttsUrl) {
-    if (!ttsUrl) return false;
-    if (typeof data.voice_only_reply === 'boolean') return data.voice_only_reply;
-    return !!(data.wants_voice_reply || state.wantsVoiceReply);
-  }
-
-  function resolveAssistantContent(data, voiceOnlyReply) {
-    if (voiceOnlyReply) {
-      return data.assistant_voice_message || data.assistant_message || data.message || data.output || data.text || 'Thank you for your message.';
-    }
-    return data.assistant_message || data.assistant_full_message || data.message || data.output || data.text || 'Thank you for your message.';
-  }
-
-  function nextMessageId() {
-    state.messageSeq += 1;
-    return 'gc-msg-' + state.messageSeq;
-  }
-
-  function createMessage(entry) {
-    return Object.assign({
-      id: nextMessageId(),
-      transcriptExpanded: false,
-      transcriptPending: false
-    }, entry);
-  }
-
-  function pushMessage(entry) {
-    var message = createMessage(entry);
-    state.messages.push(message);
-    return message;
-  }
-
-  function removeMessageById(messageId) {
-    state.messages.forEach(function (entry) {
-      if (entry.id === messageId && entry.audioUrl && entry.audioUrl.indexOf('blob:') === 0 && window.URL && typeof window.URL.revokeObjectURL === 'function') {
-        window.URL.revokeObjectURL(entry.audioUrl);
-      }
-    });
-    state.messages = state.messages.filter(function (entry) {
-      return entry.id !== messageId;
-    });
-  }
-
-  function remainingTurnsValue() {
-    if (state.quota.remainingTurnsSession !== null && state.quota.remainingTurnsSession !== undefined) {
-      return Math.max(Number(state.quota.remainingTurnsSession) || 0, 0);
-    }
-    if (state.quota.remainingTurnsDay !== null && state.quota.remainingTurnsDay !== undefined) {
-      return Math.max(Number(state.quota.remainingTurnsDay) || 0, 0);
-    }
-    return Math.max(state.maxTurns - state.turnsUsed, 0);
-  }
-
-  function remainingTurnsLabel() {
-    if (state.quota.remainingTurnsSession !== null && state.quota.remainingTurnsSession !== undefined) return t('chat_turns_left');
-    if (state.quota.remainingTurnsDay !== null && state.quota.remainingTurnsDay !== undefined) return t('chat_today_left');
-    return t('chat_turns_left');
-  }
-
-  function isNearTurnLimit() {
-    return remainingTurnsValue() <= 1;
-  }
-
-  function noTurnsRemaining() {
-    var remainingSession = state.quota.remainingTurnsSession;
-    var remainingDay = state.quota.remainingTurnsDay;
-    return (remainingSession !== null && remainingSession !== undefined && Number(remainingSession) <= 0) ||
-      (remainingDay !== null && remainingDay !== undefined && Number(remainingDay) <= 0);
-  }
-
-  function updateQuotaFromResponse(data) {
-    if (!data) return;
-
-    if (data.remaining_turns_session !== undefined) {
-      state.quota.remainingTurnsSession = data.remaining_turns_session;
-      if (data.remaining_turns_session !== null) {
-        state.turnsUsed = Math.max(state.maxTurns - Number(data.remaining_turns_session || 0), 0);
-      }
-    }
-    if (data.remaining_turns_day !== undefined) state.quota.remainingTurnsDay = data.remaining_turns_day;
-    if (data.remaining_tts_previews_session !== undefined) state.quota.remainingTtsSession = data.remaining_tts_previews_session;
-    if (data.remaining_tts_previews_day !== undefined) state.quota.remainingTtsDay = data.remaining_tts_previews_day;
-    if (data.tts_available !== undefined) {
-      state.quota.ttsAvailable = !!data.tts_available;
-      if (!state.quota.ttsAvailable) state.wantsVoiceReply = false;
-    }
-    if (data.limit_state) state.quota.limitState = data.limit_state;
-    if (data.soft_warning_state) state.quota.softWarningState = data.soft_warning_state;
-    if (data.reply_language) state.quota.replyLanguage = normalizeLang(data.reply_language);
-    if (data.remaining_image_gen !== undefined) state.quota.remainingImageGen = data.remaining_image_gen;
-    if (data.image_gen_available !== undefined) state.quota.imageGenAvailable = !!data.image_gen_available;
-  }
-
-  function localizeCtaPayload(kind, serverPayload, softWarningState) {
-    var source = serverPayload || {};
-    var fallbackByKind = {
-      limit: {
-        title: t('chat_limit_title'),
-        message: t('chat_limit_desc'),
-        primary: { type: 'auth_google', label: t('chat_limit_cta1'), href: '' },
-        secondary: { type: 'auth_email', label: t('chat_limit_cta2'), href: '' },
-        tertiary: { type: 'workflow_tour', label: t('chat_limit_cta3'), href: '#solutions' }
-      },
-      auth_soft: {
-        title: t('chat_auth_title_soft'),
-        message: t('chat_auth_desc_soft'),
-        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
-        secondary: { type: 'auth_email', label: t('chat_auth_email'), href: '' },
-        tertiary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' }
-      },
-      auth_limit: {
-        title: t('chat_auth_title_limit'),
-        message: t('chat_auth_desc_limit'),
-        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
-        secondary: { type: 'auth_email', label: t('chat_auth_email'), href: '' },
-        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
-      },
-      turns_near_limit: {
-        title: t('chat_warning_turn_title'),
-        message: t('chat_warning_desc'),
-        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
-        secondary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
-        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
-      },
-      turns_and_tts_near_limit: {
-        title: t('chat_warning_turn_title'),
-        message: t('chat_warning_desc'),
-        primary: { type: 'auth_google', label: t('chat_auth_google'), href: '' },
-        secondary: { type: 'continue_trial', label: t('chat_cta_final_turn'), href: '' },
-        tertiary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' }
-      },
-      tts_near_limit: {
-        title: t('chat_warning_voice_title'),
-        message: t('chat_warning_voice_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      },
-      tts_last_preview: {
-        title: t('chat_warning_voice_title'),
-        message: t('chat_warning_voice_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      },
-      tts_session_exhausted: {
-        title: t('chat_warning_voice_unavailable_title'),
-        message: t('chat_warning_voice_session_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      },
-      tts_day_exhausted: {
-        title: t('chat_warning_voice_unavailable_title'),
-        message: t('chat_warning_voice_day_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      },
-      tts_limit_reached: {
-        title: t('chat_warning_voice_unavailable_title'),
-        message: t('chat_warning_voice_session_desc'),
-        primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
-        secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
-        tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
-      }
-    };
-
-    var resolvedKind = kind;
-    if ((kind === 'limit' || kind === 'turns_near_limit' || kind === 'turns_and_tts_near_limit') && !isAuthenticated()) {
-      resolvedKind = kind === 'limit' ? 'auth_limit' : 'auth_soft';
-    }
-    var base = fallbackByKind[resolvedKind] || fallbackByKind[softWarningState] || fallbackByKind.limit;
-    return {
-      title: base.title,
-      subtitle: base.message,
-      message: base.message,
-      primary: {
-        type: (source.primary && source.primary.type) || base.primary.type,
-        label: base.primary.label,
-        href: (source.primary && source.primary.href) || base.primary.href
-      },
-      secondary: {
-        type: (source.secondary && source.secondary.type) || base.secondary.type,
-        label: base.secondary.label,
-        href: (source.secondary && source.secondary.href) || base.secondary.href
-      },
-      tertiary: {
-        type: (source.tertiary && source.tertiary.type) || base.tertiary.type,
-        label: base.tertiary.label,
-        href: (source.tertiary && source.tertiary.href) || base.tertiary.href
-      }
-    };
-  }
-
-  function setNotice(kind, payload, warningState) {
-    state.notice = {
-      kind: kind,
-      payload: payload,
-      warningState: warningState || 'none'
-    };
-    if (payload && payload.primary) trackCTA(payload.primary.type || 'primary', 'impression', kind + '_card');
-    if (payload && payload.secondary) trackCTA(payload.secondary.type || 'secondary', 'impression', kind + '_card');
-    if (payload && payload.tertiary) trackCTA(payload.tertiary.type || 'tertiary', 'impression', kind + '_card');
-  }
-
-  function clearNotice() {
-    state.notice = null;
-  }
-
-  function relocalizeNotice() {
-    if (!state.notice) return;
-    var cardKind = state.notice.kind === 'limit' || state.notice.kind === 'auth'
-      ? 'limit'
-      : (state.notice.warningState || 'turns_near_limit');
-    state.notice = {
-      kind: state.notice.kind,
-      warningState: state.notice.warningState || 'none',
-      payload: localizeCtaPayload(cardKind, state.notice.payload, state.notice.warningState)
-    };
-  }
-
-  function stopActiveAudio() {
-    if (state.activeAudio) {
-      state.activeAudio.pause();
-      state.activeAudio = null;
-    }
-    if (state.activeAudioButton) {
-      var icon = state.activeAudioButton.querySelector('.material-symbols-outlined');
-      if (icon) icon.textContent = 'play_arrow';
-      state.activeAudioButton.setAttribute('aria-pressed', 'false');
-      state.activeAudioButton = null;
-    }
-    var prevPlayer = state.activeAudioPlayer;
-    if (prevPlayer) prevPlayer.classList.remove('playing');
-    state.activeAudioPlayer = null;
-    state.activeAudioUrl = null;
-  }
-
-  function formatDuration(seconds) {
-    if (!seconds || isNaN(seconds) || !isFinite(seconds)) return '0:00';
-    var m = Math.floor(seconds / 60);
-    var s = Math.floor(seconds % 60);
-    return m + ':' + String(s).padStart(2, '0');
-  }
-
-  function toggleAudio(url, button, playerEl) {
-    if (!url) return;
-    if (state.activeAudio && state.activeAudioUrl === url) {
-      if (state.activeAudio.paused) {
-        state.activeAudio.play().catch(function () {});
-        var icon = button.querySelector('.material-symbols-outlined');
-        if (icon) icon.textContent = 'pause';
-        button.setAttribute('aria-pressed', 'true');
-        if (playerEl) playerEl.classList.add('playing');
-      } else {
-        stopActiveAudio();
-      }
-      return;
-    }
-
-    stopActiveAudio();
-    state.activeAudio = new Audio(url);
-    state.activeAudioUrl = url;
-    state.activeAudioButton = button;
-    state.activeAudioPlayer = playerEl || null;
-    var icon2 = button.querySelector('.material-symbols-outlined');
-    if (icon2) icon2.textContent = 'pause';
-    button.setAttribute('aria-pressed', 'true');
-    if (playerEl) playerEl.classList.add('playing');
-
-    var durationEl = playerEl ? playerEl.querySelector('.gc-audio-duration') : null;
-    state.activeAudio.addEventListener('loadedmetadata', function () {
-      if (durationEl) durationEl.textContent = formatDuration(state.activeAudio.duration);
-    });
-    state.activeAudio.addEventListener('timeupdate', function () {
-      if (durationEl && state.activeAudio) {
-        durationEl.textContent = formatDuration(state.activeAudio.currentTime);
-      }
-    });
-
-    state.activeAudio.addEventListener('ended', stopActiveAudio, { once: true });
-    state.activeAudio.play().catch(function () {
-      stopActiveAudio();
-      showToast(t('chat_error_msg'));
-    });
-  }
-
-
-  function buildWidget() {
-    var trigger = document.createElement('button');
-    trigger.id = 'gc-chat-trigger';
-    trigger.className = 'gc-chat-trigger';
-    trigger.setAttribute('aria-label', t('chat_open_label'));
-    trigger.innerHTML = [
-      '<span class="material-symbols-outlined">smart_toy</span>',
-      '<span class="gc-chat-trigger-label" id="gc-chat-trigger-label">' + escapeHTML(t('chat_trigger_label')) + '</span>',
-      '<span class="gc-chat-trigger-badge"></span>'
-    ].join('');
-    document.body.appendChild(trigger);
-
-    var scrim = document.createElement('div');
-    scrim.id = 'gc-chat-scrim';
-    scrim.className = 'gc-chat-scrim';
-    document.body.appendChild(scrim);
-
-    var panel = document.createElement('div');
-    panel.id = 'gc-chat-panel';
-    panel.className = 'gc-chat-panel';
-    panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-modal', 'true');
-    panel.setAttribute('aria-label', 'GRINDCTRL Trial Playground');
-    panel.setAttribute('tabindex', '-1');
-    panel.innerHTML = buildPanelShell();
-    document.body.appendChild(panel);
-
-    var toast = document.createElement('div');
-    toast.id = 'gc-toast';
-    toast.className = 'gc-toast';
-    toast.setAttribute('role', 'status');
-    toast.setAttribute('aria-live', 'polite');
-    toast.setAttribute('aria-atomic', 'true');
-    document.body.appendChild(toast);
-
-    bindEvents();
-    initAuthClient();
-    renderAll();
-    if (shouldResumeAuthPlayground()) {
-      openChat();
-    }
-  }
-
-  function buildPanelShell() {
-    var logoSrc = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
-
-    return [
-      '<div class="gc-chat-header">',
-      '  <div class="gc-chat-header-brand">',
-      '    <div class="gc-chat-header-logo"><img id="gc-logo-img" src="' + logoSrc + '" alt="GRINDCTRL"/></div>',
-      '    <div class="gc-chat-header-copy">',
-      '      <div class="gc-chat-header-name-row">',
-      '        <span class="gc-chat-header-name">GRINDCTRL</span>',
-      '        <span class="gc-chat-header-badge" id="gc-header-badge">' + t('chat_trial_agent') + '</span>',
-      '      </div>',
-      '      <div class="gc-chat-header-subtitle" id="gc-header-subtitle"></div>',
-      '    </div>',
-      '  </div>',
-      '  <div class="gc-chat-header-actions">',
-      '    <div id="gc-turns-pill" class="gc-turns-pill"></div>',
-      '    <button id="gc-close" class="gc-chat-close" aria-label="' + t('chat_close_label') + '"><span class="material-symbols-outlined">close</span><span class="gc-btn-label">' + escapeHTML(t('chat_close_label')) + '</span></button>',
-      '  </div>',
-      '</div>',
-      '<div id="gc-chat-body" class="gc-chat-body">',
-      '  <section id="gc-chat-intro" class="gc-chat-intro"></section>',
-      '  <section class="gc-chat-stage">',
-      '    <div id="gc-chat-list" class="gc-chat-list" aria-live="polite"></div>',
-      '  </section>',
-      '</div>',
-      '<div class="gc-drop-zone" id="gc-drop-zone">',
-      '  <span class="material-symbols-outlined gc-drop-zone-icon">audio_file</span>',
-      '  <span class="gc-drop-zone-text">' + t('chat_drop_audio') + '</span>',
-      '</div>',
-      '<div id="gc-input-area" class="gc-chat-input-area">',
-      '  <div class="gc-chat-input-shell">',
-      '    <div id="gc-composer-utility" class="gc-composer-utility"></div>',
-      '    <div id="gc-recording-bar" class="gc-recording-bar">',
-      '      <span class="gc-recording-dot"></span>',
-      '      <span class="gc-recording-label">' + t('chat_recording') + '</span>',
-      '      <span id="gc-rec-timer" class="gc-recording-timer">0:00</span>',
-      '      <button id="gc-rec-cancel" class="gc-recording-cancel" type="button">' + t('chat_cancel') + '</button>',
-      '    </div>',
-      '    <div class="gc-chat-input-row">',
-      '      <textarea id="gc-textarea" class="gc-chat-textarea" rows="1" maxlength="' + CONFIG.MAX_MSG_LEN + '" dir="auto"></textarea>',
-      '      <input type="file" id="gc-file-input" accept="audio/*" class="gc-hidden" aria-hidden="true"/>',
-      '      <button id="gc-attach-btn" class="gc-input-btn" type="button" aria-label="' + t('chat_attach_label') + '" title="' + t('chat_attach_label') + '"><span class="material-symbols-outlined">attach_file</span><span class="gc-btn-label">' + escapeHTML(t('chat_attach_label')) + '</span></button>',
-      '      <button id="gc-mic-btn" class="gc-input-btn gc-input-btn-mic" type="button" aria-label="' + t('chat_mic_label') + '" title="' + t('chat_mic_label') + '"><span class="material-symbols-outlined">mic</span><span class="gc-btn-label">' + escapeHTML(t('chat_mic_label')) + '</span></button>',
-      '      <button id="gc-send-btn" class="gc-input-btn gc-input-btn-send" type="button" aria-label="' + t('chat_send_label') + '" title="' + t('chat_send_label') + '"><span class="material-symbols-outlined">arrow_upward</span><span class="gc-btn-label">' + escapeHTML(t('chat_send_label')) + '</span></button>',
-      '    </div>',
-      '  </div>',
-      '</div>'
-    ].join('');
-  }
-
-  function renderAll() {
-    relocalizeNotice();
-    renderChrome();
-    renderHeader();
-    renderIntro();
-    renderMessages();
-    renderNotice();
-    renderComposer();
-  }
-
-  function renderChrome() {
-    var trigger = $('gc-chat-trigger');
-    var panel = $('gc-chat-panel');
-    var closeButton = $('gc-close');
-    var triggerLabel = $('gc-chat-trigger-label');
-    var recordingLabel = document.querySelector('.gc-recording-label');
-    var cancelButton = $('gc-rec-cancel');
-    var dropZoneText = document.querySelector('.gc-drop-zone-text');
-    var attachButton = $('gc-attach-btn');
-    var micButton = $('gc-mic-btn');
-    var sendButton = $('gc-send-btn');
-
-    if (trigger) trigger.setAttribute('aria-label', t('chat_open_label'));
-    if (triggerLabel) triggerLabel.textContent = t('chat_trigger_label');
-    if (panel) panel.setAttribute('aria-label', t('chat_empty_title'));
-    if (closeButton) {
-      closeButton.setAttribute('aria-label', t('chat_close_label'));
-      var closeBtnLabel = closeButton.querySelector('.gc-btn-label');
-      if (closeBtnLabel) closeBtnLabel.textContent = t('chat_close_label');
-    }
-    if (recordingLabel) recordingLabel.textContent = t('chat_recording');
-    if (cancelButton) cancelButton.textContent = t('chat_cancel');
-    if (dropZoneText) dropZoneText.textContent = t('chat_drop_audio');
-
-    if (attachButton) {
-      attachButton.setAttribute('aria-label', t('chat_attach_label'));
-      attachButton.setAttribute('title', t('chat_attach_label'));
-      var attachLabel = attachButton.querySelector('.gc-btn-label');
-      if (attachLabel) attachLabel.textContent = t('chat_attach_label');
-    }
-    if (micButton) {
-      micButton.setAttribute('aria-label', t('chat_mic_label'));
-      micButton.setAttribute('title', t('chat_mic_label'));
-      var micLabel = micButton.querySelector('.gc-btn-label');
-      if (micLabel) micLabel.textContent = t('chat_mic_label');
-    }
-    if (sendButton) {
-      sendButton.setAttribute('aria-label', t('chat_send_label'));
-      sendButton.setAttribute('title', t('chat_send_label'));
-      var sendLabel = sendButton.querySelector('.gc-btn-label');
-      if (sendLabel) sendLabel.textContent = t('chat_send_label');
-    }
-  }
-
-  function renderHeader() {
-    var subtitle = $('gc-header-subtitle');
-    var turnsPill = $('gc-turns-pill');
-    var logo = $('gc-logo-img');
-    var badge = $('gc-header-badge');
-    var authLabel = isAuthenticated() ? t('chat_auth_member_mode') : t('chat_auth_guest_mode');
-    var replyLanguageLabel = getReplyLanguage() === 'ar' ? t('chat_lang_ar') : t('chat_lang_en');
-
-    if (subtitle) {
-      subtitle.textContent = authLabel + ' · ' + t('chat_reply_language') + ': ' + replyLanguageLabel;
-    }
-    if (logo) logo.src = document.documentElement.classList.contains('dark') ? 'logo-dark.svg' : 'logo-light.svg';
-    if (badge) badge.textContent = state.imageMode ? t('chat_create_mode') : t('chat_mode_chat');
-    if (!turnsPill) return;
-
-    turnsPill.className = 'gc-turns-pill' + (isNearTurnLimit() ? ' warning' : '');
-    turnsPill.innerHTML = [
-      '<span class="gc-turns-pill-value">' + escapeHTML(String(remainingTurnsValue())) + '</span>',
-      '<span class="gc-turns-pill-label">' + escapeHTML(remainingTurnsLabel()) + '</span>'
-    ].join('');
-  }
-
-  function renderIntro() {
-    var intro = $('gc-chat-intro');
-    if (!intro) return;
-
-    var compact = state.messages.length > 0;
-    intro.className = 'gc-chat-intro' + (compact ? ' gc-hidden' : '');
-
-    if (compact) {
-      intro.innerHTML = '';
-      return;
-    }
-
-    intro.innerHTML = [
-      '<div class="gc-chat-intro-copy gc-chat-intro-copy-center">',
-      '  <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      '  <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
-      '</div>'
-    ].join('');
-  }
-
-  function renderComposerUtility(emptyMode, disabled) {
-    var hearDisabled = !state.quota.ttsAvailable;
-    var replyLang = getReplyLanguage();
-    var prompts = getPromptList().slice(0, 4);
-    var busyClass = disabled ? ' gc-utility-row-disabled' : '';
-    var voiceReplyDisabled = hearDisabled || disabled;
-    var createDisabled = !state.quota.imageGenAvailable || disabled;
-    var disabledAttr = disabled ? ' disabled aria-disabled="true"' : '';
-    var utilityRow = [
-      '<div class="gc-utility-row' + busyClass + '">',
-      '  <button type="button" class="gc-utility-chip gc-utility-chip-toggle' + (state.wantsVoiceReply ? ' active' : '') + (voiceReplyDisabled ? ' disabled' : '') + '" data-action="toggle-hear" aria-pressed="' + escapeHTML(String(!!state.wantsVoiceReply)) + '"' + (voiceReplyDisabled ? ' disabled aria-disabled="true"' : '') + '>',
-      '    <span class="material-symbols-outlined">' + (state.wantsVoiceReply ? 'volume_up' : 'volume_off') + '</span>',
-      '    <span>' + escapeHTML(t('chat_voice_preview_setting')) + ' · ' + (hearDisabled ? escapeHTML(t('chat_hear_unavailable')) : escapeHTML(state.wantsVoiceReply ? t('chat_hear_on') : t('chat_hear_off'))) + '</span>',
-      '  </button>',
-      '  <button type="button" class="gc-utility-chip' + (state.imageMode ? ' active' : '') + (createDisabled ? ' disabled' : '') + '" data-action="enter-create-mode" aria-pressed="' + escapeHTML(String(!!state.imageMode)) + '"' + (createDisabled ? ' disabled aria-disabled="true"' : '') + '>',
-      '    <span class="material-symbols-outlined">auto_awesome</span>',
-      '    <span>' + escapeHTML(t('chat_cap_create')) + '</span>',
-      '  </button>',
-      '  <div class="gc-segmented-control gc-composer-language" role="group" aria-label="' + escapeHTML(t('chat_reply_language')) + '">',
-      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'en' ? ' active' : '') + '" data-action="set-reply-language" data-language="en" aria-pressed="' + escapeHTML(String(replyLang === 'en')) + '"' + disabledAttr + '>' + escapeHTML(t('chat_lang_en')) + '</button>',
-      '    <button type="button" class="gc-segmented-btn' + (replyLang === 'ar' ? ' active' : '') + '" data-action="set-reply-language" data-language="ar" aria-pressed="' + escapeHTML(String(replyLang === 'ar')) + '"' + disabledAttr + '>' + escapeHTML(t('chat_lang_ar')) + '</button>',
-      '  </div>',
-      '</div>'
-    ].join('');
-
-    if (!emptyMode) return utilityRow;
-
-    return [
-      '<div class="gc-prompt-row" role="list">',
-      prompts.map(function (prompt, index) {
-        return '<button class="gc-prompt-chip" type="button" role="listitem" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
+  function renderStarterHint() {
+    var wrapper = document.createElement('article');
+    wrapper.className = 'message message-assistant';
+    wrapper.innerHTML = [
+      '<div class="message-avatar">AI</div>',
+      '<div class="message-body">',
+      '<div class="message-meta">Preset shortcuts</div>',
+      '<div class="message-card">',
+      '<p>' + escapeHtml(t('starterExample')) + '</p>',
+      '<div class="quick-actions">',
+      dom.presetButtons.map(function (button) {
+        return '<button class="quick-action" type="button" data-action="reselect-preset" data-preset="' + escapeHtml(button.getAttribute('data-preset')) + '">' + escapeHtml(button.textContent.trim()) + '</button>';
       }).join(''),
       '</div>',
-      utilityRow
-    ].join('');
-  }
-
-  function renderAuthCard(entry) {
-    var payload = entry.payload || {};
-    var showCodeField = state.auth.status === 'email_sent' || state.auth.code;
-    var helperText = state.auth.helper || t('chat_auth_secure_note');
-
-    return [
-      '<div class="gc-system-card limit gc-auth-card">',
-      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">lock_open</span></div>',
-      '  <div class="gc-system-card-body">',
-      '    <div class="gc-system-card-title">' + escapeHTML(payload.title || t('chat_auth_title_limit')) + '</div>',
-      '    <div class="gc-system-card-desc">' + escapeHTML(payload.message || t('chat_auth_desc_limit')) + '</div>',
-      '    <div class="gc-system-card-actions gc-auth-actions">',
-      '      <button type="button" class="gc-system-card-primary" data-action="auth-google">' + escapeHTML(t('chat_auth_google')) + '</button>',
-      '      <button type="button" class="gc-system-card-secondary" data-action="auth-email">' + escapeHTML(t('chat_auth_email')) + '</button>',
-      payload.tertiary ? '<button type="button" class="gc-system-card-secondary tertiary" data-action="cta" data-cta-type="' + escapeHTML(payload.tertiary.type || 'workflow_tour') + '" data-cta-href="' + escapeHTML(payload.tertiary.href || '#solutions') + '">' + escapeHTML(payload.tertiary.label || t('chat_cta_tour')) + '</button>' : '',
-      '    </div>',
-      '    <div class="gc-auth-form">',
-      '      <label class="gc-auth-label" for="gc-auth-email">' + escapeHTML(t('chat_auth_email_label')) + '</label>',
-      '      <div class="gc-auth-row">',
-      '        <input id="gc-auth-email" class="gc-auth-input" type="email" inputmode="email" autocomplete="email" value="' + escapeHTML(state.auth.email || '') + '" placeholder="' + escapeHTML(t('chat_auth_email_placeholder')) + '"/>',
-      '        <button type="button" class="gc-auth-inline-btn" data-action="auth-email-send">' + escapeHTML(t('chat_auth_send')) + '</button>',
-      '      </div>',
-      '      <div class="gc-auth-note">' + escapeHTML(t('chat_auth_magic_note')) + '</div>',
-      showCodeField ? (
-        '      <label class="gc-auth-label" for="gc-auth-code">' + escapeHTML(t('chat_auth_code_label')) + '</label>' +
-        '      <div class="gc-auth-row">' +
-        '        <input id="gc-auth-code" class="gc-auth-input gc-auth-code-input" type="text" inputmode="numeric" autocomplete="one-time-code" value="' + escapeHTML(state.auth.code || '') + '" placeholder="' + escapeHTML(t('chat_auth_code_placeholder')) + '"/>' +
-        '        <button type="button" class="gc-auth-inline-btn" data-action="auth-email-verify">' + escapeHTML(t('chat_auth_verify')) + '</button>' +
-        '      </div>'
-      ) : '',
-      '    </div>',
-      '    <div class="gc-system-card-fine">' + escapeHTML(helperText) + '</div>',
-      '  </div>',
+      '</div>',
       '</div>'
     ].join('');
+    dom.feed.appendChild(wrapper);
+    scrollFeed();
   }
 
-  function renderSystemCard(entry) {
-    var payload = entry.payload || {};
-    var isAuthCard = !isAuthenticated() && (entry.kind === 'auth' || (payload.primary && payload.primary.type === 'auth_google'));
-    if (isAuthCard) return renderAuthCard(entry);
+  function handleInputKeydown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (dom.taskInput.value.trim()) {
+        handleSubmit(event);
+      }
+    }
+  }
 
-    var cardKind = entry.kind === 'limit' ? ' limit' : ' soft';
-    var icon = entry.kind === 'limit' ? 'auto_awesome' : 'lightbulb';
+  function handleSubmit(event) {
+    if (event) event.preventDefault();
+    var raw = dom.taskInput.value.trim();
+    if (!raw) return;
+    queueOrSubmit(raw);
+  }
 
-    var primaryAction = '';
-    if (payload.primary) {
-      if (entry.kind !== 'limit' && payload.primary.type === 'continue_trial') {
-        primaryAction = '<button type="button" class="gc-system-card-primary" data-action="dismiss-warning">' + escapeHTML(t('chat_nudge_dismiss')) + '</button>';
+  function queueOrSubmit(raw) {
+    if (Date.now() < state.nextAllowedAt) {
+      updateStatus(format(t('cooldown'), secondsUntil(state.nextAllowedAt)), 'busy');
+      return;
+    }
+
+    if (state.busy || state.voiceBusy) {
+      state.queuedPrompt = {
+        text: raw,
+        preset: state.activePreset,
+        queuedAt: Date.now()
+      };
+      dom.taskInput.value = '';
+      autoResize();
+      updateStatus(t('queued'), 'busy');
+      announce(t('queued'));
+      return;
+    }
+
+    dom.taskInput.value = '';
+    autoResize();
+    requestBlueprint({
+      userText: raw,
+      prompt: buildPrompt(raw),
+      source: 'text',
+      preset: state.activePreset
+    });
+    state.activePreset = null;
+    bindPresetState();
+    dom.taskInput.placeholder = t('placeholders.custom');
+  }
+
+  async function requestBlueprint(payload) {
+    state.busy = true;
+    setInteractiveState();
+    if (!payload.skipUserEcho) {
+      appendTextMessage('user', payload.userText, t('you'));
+    }
+    startThinking();
+    updateStatus(t('thinking')[0], 'busy');
+
+    try {
+      var result;
+      if (isWebhookConfigured(CONFIG.textWebhookUrl)) {
+        result = await postJsonWithRetry(CONFIG.textWebhookUrl, {
+          session_id: state.sessionId,
+          locale: state.locale,
+          source: payload.source,
+          preset: payload.preset,
+          prompt: payload.prompt,
+          history: compactHistory()
+        });
       } else {
-        primaryAction = '<button type="button" class="gc-system-card-primary" data-action="cta" data-cta-type="' + escapeHTML(payload.primary.type || 'primary') + '" data-cta-href="' + escapeHTML(payload.primary.href || '') + '">' + escapeHTML(payload.primary.label || '') + '</button>';
+        await sleep(850);
+        result = {
+          fallback: true,
+          localDemo: true,
+          blueprint: buildFallbackBlueprint(payload.prompt, payload.preset, 'unconfigured_webhook')
+        };
+      }
+
+      var blueprint = normalizeBlueprint(result, payload.prompt, payload.preset);
+      renderBlueprint(blueprint, result.fallback || blueprint.fallback);
+      if (result.localDemo) {
+        updateStatus(t('demoFallback'), 'fallback');
+      } else {
+        updateStatus(result.fallback || blueprint.fallback ? t('unavailable') : t('readyStatus'), result.fallback || blueprint.fallback ? 'fallback' : 'ready');
+      }
+    } catch (error) {
+      var fallbackBlueprint = buildFallbackBlueprint(payload.prompt, payload.preset, error && error.code ? error.code : 'request_failure');
+      renderBlueprint(fallbackBlueprint, true, error);
+      if (error && error.code === 'timeout') {
+        updateStatus(t('timeout'), 'fallback');
+      } else if (error && error.code === 'temporary_unavailable') {
+        updateStatus(t('unavailable'), 'fallback');
+      } else {
+        updateStatus(t('error'), 'fallback');
+      }
+    } finally {
+      stopThinking();
+      state.busy = false;
+      setInteractiveState();
+      flushQueuedPrompt();
+    }
+  }
+
+  async function postJsonWithRetry(url, body) {
+    return requestWithRetry(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    }, 'generation');
+  }
+
+  async function postAudioWithRetry(url, formData) {
+    return requestWithRetry(url, {
+      method: 'POST',
+      body: formData
+    }, 'voice');
+  }
+
+  async function requestWithRetry(url, init, mode) {
+    var attempts = Number(CONFIG.maxRetries) + 1;
+    var lastError = null;
+
+    for (var attempt = 0; attempt < attempts; attempt += 1) {
+      var controller = new AbortController();
+      var timeoutId = window.setTimeout(function () {
+        controller.abort();
+      }, Number(CONFIG.requestTimeoutMs) || 30000);
+
+      try {
+        var response = await fetch(url, Object.assign({}, init, { signal: controller.signal }));
+        clearTimeout(timeoutId);
+        var contentType = response.headers.get('content-type') || '';
+        var parsed = contentType.indexOf('application/json') >= 0 ? await response.json() : { message: await response.text() };
+
+        if (response.ok) {
+          applyRetryAfter(parsed.retry_after_seconds || parseRetryAfter(response.headers.get('retry-after')));
+          return parsed;
+        }
+
+        if (isTemporaryStatus(response.status)) {
+          var retryAfterSeconds = parsed.retry_after_seconds || parseRetryAfter(response.headers.get('retry-after')) || Math.min(2 + attempt * 2, 8);
+          applyRetryAfter(retryAfterSeconds);
+          lastError = createError('temporary_unavailable', parsed.message || 'Temporary failure', response.status);
+          if (attempt < attempts - 1) {
+            updateStatus(t('rateLimited'), 'busy');
+            await sleep(retryAfterSeconds * 1000);
+            continue;
+          }
+        } else {
+          throw createError('request_failed', parsed.message || 'Request failed', response.status);
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error && error.name === 'AbortError') {
+          lastError = createError('timeout', 'Request timed out', 408);
+          if (attempt < attempts - 1) {
+            updateStatus(t('rateLimited'), 'busy');
+            await sleep(1200 * (attempt + 1));
+            continue;
+          }
+        } else if (error && error.code) {
+          throw error;
+        } else {
+          lastError = createError('network_failure', error && error.message ? error.message : 'Network error', 0);
+          if (attempt < attempts - 1) {
+            await sleep(1000 * (attempt + 1));
+            continue;
+          }
+        }
       }
     }
 
-    return [
-      '<div class="gc-system-card' + cardKind + '">',
-      '  <div class="gc-system-card-icon"><span class="material-symbols-outlined">' + icon + '</span></div>',
-      '  <div class="gc-system-card-body">',
-      '    <div class="gc-system-card-title">' + escapeHTML(payload.title || '') + '</div>',
-      '    <div class="gc-system-card-desc">' + escapeHTML(payload.message || payload.subtitle || '') + '</div>',
-      '    <div class="gc-system-card-actions">',
-      primaryAction,
-      payload.secondary ? '<button type="button" class="gc-system-card-secondary" data-action="cta" data-cta-type="' + escapeHTML(payload.secondary.type || 'secondary') + '" data-cta-href="' + escapeHTML(payload.secondary.href || '') + '">' + escapeHTML(payload.secondary.label || '') + '</button>' : '',
-      payload.tertiary ? '<button type="button" class="gc-system-card-secondary tertiary" data-action="cta" data-cta-type="' + escapeHTML(payload.tertiary.type || 'tertiary') + '" data-cta-href="' + escapeHTML(payload.tertiary.href || '') + '">' + escapeHTML(payload.tertiary.label || '') + '</button>' : '',
-      '    </div>',
-      '    <div class="gc-system-card-fine">' + escapeHTML(t('chat_limit_fine')) + '</div>',
-      '  </div>',
-      '</div>'
-    ].join('');
+    throw lastError || createError('temporary_unavailable', 'Service unavailable', 503);
   }
 
-  function buildAudioPlayerHTML(audioUrl) {
-    var bars = '';
-    var heights = [14, 20, 10, 24, 16, 22, 12, 18, 26, 14, 20, 8, 22, 16, 24, 12, 18, 28, 14, 20, 10, 22, 16, 24];
-    for (var i = 0; i < heights.length; i++) {
-      var delay = (i * 0.07).toFixed(2);
-      bars += '<span class="gc-audio-waveform-bar" style="height:' + heights[i] + 'px;animation-delay:' + delay + 's"></span>';
+  function applyRetryAfter(retryAfterSeconds) {
+    if (!retryAfterSeconds) return;
+    state.nextAllowedAt = Date.now() + Number(retryAfterSeconds) * 1000;
+  }
+
+  function parseRetryAfter(value) {
+    if (!value) return 0;
+    var numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return numeric;
+    var dateValue = Date.parse(value);
+    if (Number.isFinite(dateValue)) {
+      return Math.max(0, Math.ceil((dateValue - Date.now()) / 1000));
+    }
+    return 0;
+  }
+
+  function isTemporaryStatus(status) {
+    return [408, 409, 425, 429, 498, 500, 502, 503, 504].indexOf(status) >= 0;
+  }
+
+  function createError(code, message, status) {
+    var error = new Error(message);
+    error.code = code;
+    error.status = status;
+    return error;
+  }
+
+  function buildPrompt(raw) {
+    if (!state.activePreset || state.activePreset === 'custom') {
+      return raw;
     }
 
     return [
-      '<div class="gc-audio-player" data-audio-url="' + escapeHTML(audioUrl) + '">',
-      '  <button type="button" class="gc-audio-player-btn" data-action="play-audio" data-audio-url="' + escapeHTML(audioUrl) + '" aria-label="' + escapeHTML(t('chat_play_reply')) + '" aria-pressed="false">',
-      '    <span class="material-symbols-outlined">play_arrow</span>',
-      '  </button>',
-      '  <div class="gc-audio-waveform">' + bars + '</div>',
-      '  <span class="gc-audio-duration">0:00</span>',
-      '</div>'
-    ].join('');
+      'Preset: ' + buttonLabel(state.activePreset),
+      'Context: ' + raw,
+      'Need one concise AI agent blueprint with business goal, workflow, example output, ROI, suggested stack, next step.'
+    ].join('\n');
   }
 
-  function renderNotice() {
-    return;
+  function compactHistory() {
+    return state.conversation.slice(-6).map(function (entry) {
+      return {
+        role: entry.role,
+        content: entry.content
+      };
+    });
   }
 
-  function isAllowedAudioFile(file) {
-    var fileType = String(file && file.type || '').toLowerCase();
-    return !!fileType && CONFIG.AUDIO_TYPES.indexOf(fileType) !== -1;
+  function normalizeBlueprint(result, prompt, preset) {
+    var candidate = result && (result.blueprint || result.result || result.data || result);
+    if (!candidate || typeof candidate !== 'object' || !hasBlueprintShape(candidate)) {
+      return buildFallbackBlueprint(prompt, preset, 'shape_mismatch');
+    }
+
+    return {
+      agent_name: safeText(candidate.agent_name, 'Revenue Workflow Agent'),
+      business_goal: safeText(candidate.business_goal, prompt),
+      workflow: normalizeWorkflow(candidate.workflow),
+      example_output: safeText(candidate.example_output, 'Lead scored, enriched, routed, and booked without manual triage.'),
+      roi: safeText(candidate.roi, 'Save team hours and shorten response time with one automated flow.'),
+      suggested_stack: normalizeStack(candidate.suggested_stack),
+      next_step: safeText(candidate.next_step, 'Deploy webhook, test with 10 real requests, then refine routing rules.'),
+      fallback: Boolean(result && result.fallback)
+    };
   }
 
-  function renderImageResultCard(entry) {
-    var result = entry.imageResult;
-    var dataUri = 'data:' + (result.mime || 'image/png') + ';base64,' + result.base64;
-    var failed = result.status === 'failed';
+  function hasBlueprintShape(candidate) {
+    return candidate && typeof candidate.agent_name === 'string' && typeof candidate.business_goal === 'string' && Array.isArray(candidate.workflow);
+  }
 
-    if (failed) {
+  function normalizeWorkflow(value) {
+    if (!Array.isArray(value) || !value.length) {
       return [
-        '<div class="gc-msg gc-msg-ai">',
-        '  <div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>',
-        '  <div class="gc-image-failed-card">',
-        '    <span class="material-symbols-outlined">broken_image</span>',
-        '    <div class="gc-image-failed-text">' + escapeHTML(t('chat_image_failed')) + '</div>',
-        '    <div class="gc-image-result-actions">',
-        '      <button type="button" class="gc-image-action-btn" data-action="image-retry" data-image-prompt="' + escapeHTML(result.prompt || '') + '"><span class="material-symbols-outlined">refresh</span>' + escapeHTML(t('chat_image_retry')) + '</button>',
-        '    </div>',
-        '  </div>',
-        '</div>'
-      ].join('');
-    }
-
-    return [
-      '<div class="gc-msg gc-msg-ai">',
-      '  <div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>',
-      '  <div class="gc-image-result-card">',
-      '    <div class="gc-image-result-header"><span class="material-symbols-outlined">auto_awesome</span><span class="gc-image-result-ready">' + escapeHTML(t('chat_image_ready')) + '</span></div>',
-      '    <div class="gc-image-result-img-wrap"><img class="gc-image-result-img" src="' + dataUri + '" alt="' + escapeHTML(result.prompt || 'Generated image') + '" loading="lazy"/></div>',
-      '    <div class="gc-image-result-prompt-echo"><span class="gc-image-result-prompt-label">' + escapeHTML(t('chat_image_prompt_label')) + '</span><span class="gc-image-result-prompt-text" dir="auto">' + escapeHTML(result.prompt || '') + '</span></div>',
-      '    <div class="gc-image-result-actions">',
-      '      <button type="button" class="gc-image-action-btn" data-action="image-open" data-image-uri="' + escapeHTML(dataUri) + '"><span class="material-symbols-outlined">open_in_new</span>' + escapeHTML(t('chat_image_open')) + '</button>',
-      '      <a class="gc-image-action-btn" href="' + dataUri + '" download="grindctrl-image.png"><span class="material-symbols-outlined">download</span>' + escapeHTML(t('chat_image_save')) + '</a>',
-      '      <button type="button" class="gc-image-action-btn" data-action="image-retry" data-image-prompt="' + escapeHTML(result.prompt || '') + '"><span class="material-symbols-outlined">refresh</span>' + escapeHTML(t('chat_image_retry')) + '</button>',
-      '    </div>',
-      '  </div>',
-      '</div>'
-    ].join('');
-  }
-
-  function renderMessage(entry) {
-    if (entry.role === 'system') return renderSystemCard(entry);
-    if (entry.imageResult) return renderImageResultCard(entry);
-
-    var isUser = entry.role === 'user';
-    var actions = '';
-    var meta = '';
-
-    if (!isUser) {
-      var replyLang = normalizeLang(entry.replyLanguage || getReplyLanguage());
-      var replyLangLabel = replyLang === 'ar' ? t('chat_lang_ar') : t('chat_lang_en');
-      meta = '<div class="gc-msg-ai-label"><div class="gc-msg-ai-avatar">AI</div><span class="gc-msg-ai-name">GRINDCTRL</span></div>';
-
-      if (entry.voiceOnlyReply && entry.ttsAudioUrl) {
-        return [
-          '<div class="gc-msg gc-msg-ai">',
-          meta,
-          '  <div class="gc-msg-bubble gc-voice-only-bubble" dir="auto">',
-          '    <div class="gc-voice-label"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_voice_reply')) + '</span></div>',
-          '    ' + buildAudioPlayerHTML(entry.ttsAudioUrl),
-          '  </div>',
-          '  <div class="gc-msg-actions"><span class="gc-msg-meta-chip">' + escapeHTML(t('chat_reply_language')) + ': ' + escapeHTML(replyLangLabel) + '</span></div>',
-          '</div>'
-        ].join('');
-      }
-
-      var actionBits = [
-        '<span class="gc-msg-meta-chip">' + escapeHTML(t('chat_reply_language')) + ': ' + escapeHTML(replyLangLabel) + '</span>'
+        'Capture input from user or source system.',
+        'Classify request and enrich with business context.',
+        'Take next action or route to human when needed.'
       ];
-      if (entry.ttsAudioUrl) {
-        actionBits.push(buildAudioPlayerHTML(entry.ttsAudioUrl));
-      }
-      actions = '<div class="gc-msg-actions">' + actionBits.join('') + '</div>';
     }
 
-    if (isUser && entry.voice) {
-      var transcriptBody = entry.transcriptPending ? escapeHTML(t('chat_transcript_pending')) : formatMessageHTML(entry.content || '');
-      var transcriptClass = 'gc-transcript-text gc-transcript-text-inline gc-user-transcript' + (entry.transcriptPending ? ' pending' : '');
-      var audioPlayer = entry.audioUrl ? buildAudioPlayerHTML(entry.audioUrl) : '';
+    return value.slice(0, 6).map(function (item) {
+      return safeText(item, 'Workflow step');
+    });
+  }
+
+  function normalizeStack(value) {
+    if (!Array.isArray(value) || !value.length) {
+      return ['n8n', 'Groq', 'CRM', 'Slack or Email'];
+    }
+
+    return value.slice(0, 6).map(function (item) {
+      return safeText(item, 'Tool');
+    });
+  }
+
+  function safeText(value, fallback) {
+    var text = typeof value === 'string' ? value.trim() : '';
+    return text || fallback;
+  }
+
+  function renderBlueprint(blueprint, isFallback, error) {
+    state.currentBlueprint = blueprint;
+    dom.downloadHeader.disabled = false;
+
+    var wrapper = document.createElement('article');
+    wrapper.className = 'message message-assistant';
+
+    var workflowHtml = blueprint.workflow.map(function (step, index) {
       return [
-        '<div class="gc-msg gc-msg-user">',
-        '  <div class="gc-msg-bubble gc-voice-note-bubble" dir="auto">',
-        '    <div class="gc-voice-note-header">',
-        '      <div class="gc-voice-label"><span class="material-symbols-outlined">mic</span><span>' + escapeHTML(t('chat_voice')) + '</span></div>',
-        '    </div>',
-        audioPlayer ? '    ' + audioPlayer : '',
-        (entry.transcriptPending || entry.content) ? '    <div class="' + transcriptClass + '" dir="auto"><span class="gc-transcript-label">' + escapeHTML(t('chat_transcript_label')) + '</span>' + transcriptBody + '</div>' : '',
-        '  </div>',
-        '</div>'
+        '<li>',
+        '<span class="workflow-index">' + (index + 1) + '</span>',
+        '<span dir="auto">' + escapeHtml(step) + '</span>',
+        '</li>'
       ].join('');
-    }
+    }).join('');
 
-    return [
-      '<div class="gc-msg gc-msg-' + (isUser ? 'user' : 'ai') + '">',
-      meta,
-      '  <div class="gc-msg-bubble" dir="auto">' + formatMessageHTML(entry.content) + '</div>',
-      actions,
+    var stackHtml = blueprint.suggested_stack.map(function (item) {
+      return '<li dir="auto">' + escapeHtml(item) + '</li>';
+    }).join('');
+
+    wrapper.innerHTML = [
+      '<div class="message-avatar">AI</div>',
+      '<div class="message-body">',
+      '<div class="message-meta">' + escapeHtml(isFallback ? t('fallback') : t('assistant')) + '</div>',
+      '<section class="blueprint-card">',
+      '<div class="blueprint-head">',
+      '<div>',
+      '<p class="blueprint-label">Agent</p>',
+      '<h3 dir="auto">' + escapeHtml(blueprint.agent_name) + '</h3>',
+      '</div>',
+      isFallback ? '<span class="fallback-badge">' + escapeHtml(t('fallbackPill')) + '</span>' : '',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('businessGoal')) + '</p>',
+      '<p class="blueprint-value" dir="auto">' + escapeHtml(blueprint.business_goal) + '</p>',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('workflow')) + '</p>',
+      '<ol class="blueprint-workflow">' + workflowHtml + '</ol>',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('exampleOutput')) + '</p>',
+      '<p class="blueprint-example" dir="auto">' + escapeHtml(blueprint.example_output) + '</p>',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('roi')) + '</p>',
+      '<p class="blueprint-value" dir="auto">' + escapeHtml(blueprint.roi) + '</p>',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('stack')) + '</p>',
+      '<ul class="blueprint-stack">' + stackHtml + '</ul>',
+      '</div>',
+      '<div class="blueprint-section">',
+      '<p class="blueprint-label">' + escapeHtml(t('nextStep')) + '</p>',
+      '<p class="blueprint-next-step" dir="auto">' + escapeHtml(blueprint.next_step) + '</p>',
+      '</div>',
+      '<div class="blueprint-actions">',
+      '<button class="download-action" type="button" data-action="download-blueprint">' + escapeHtml(t('download')) + '</button>',
+      '<button type="button" data-action="refine-blueprint">' + escapeHtml(t('refine')) + '</button>',
+      '</div>',
+      error ? '<p class="message-note" dir="auto">' + escapeHtml(error.message || '') + '</p>' : '',
+      '</section>',
       '</div>'
     ].join('');
+
+    stopThinking();
+    dom.feed.appendChild(wrapper);
+    scrollFeed();
+    state.conversation.push({ role: 'assistant', content: blueprint.agent_name + ': ' + blueprint.business_goal });
   }
 
-  function renderMessages() {
-    var list = $('gc-chat-list');
-    if (!list) return;
+  function appendTextMessage(role, text, meta) {
+    var clone = dom.messageTemplate.content.firstElementChild.cloneNode(true);
+    clone.classList.add(role === 'user' ? 'message-user' : 'message-assistant');
+    clone.querySelector('.message-avatar').textContent = role === 'user' ? 'YOU' : 'AI';
+    clone.querySelector('.message-meta').textContent = meta || (role === 'user' ? t('you') : t('assistant'));
+    clone.querySelector('.message-card').textContent = text;
+    dom.feed.appendChild(clone);
+    scrollFeed();
+    state.conversation.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
+  }
 
-    var html = state.messages.map(renderMessage).join('');
+  function appendSystemNote(text) {
+    var note = document.createElement('div');
+    note.className = 'message-note';
+    note.textContent = text;
+    dom.feed.appendChild(note);
+    scrollFeed();
+  }
 
-    if (state.notice) {
-      html += renderSystemCard({
-        role: 'system',
-        kind: state.notice.kind,
-        payload: state.notice.payload,
-        warningState: state.notice.warningState
+  function startThinking() {
+    stopThinking();
+    state.thinkingIndex = 0;
+    state.typingNode = dom.typingTemplate.content.firstElementChild.cloneNode(true);
+    dom.feed.appendChild(state.typingNode);
+    scrollFeed();
+    dom.statePill.textContent = t('busyPill');
+    state.thinkingTimer = window.setInterval(function () {
+      state.thinkingIndex = (state.thinkingIndex + 1) % t('thinking').length;
+      updateStatus(t('thinking')[state.thinkingIndex], 'busy');
+    }, 1500);
+  }
+
+  function stopThinking() {
+    if (state.typingNode && state.typingNode.parentNode) {
+      state.typingNode.parentNode.removeChild(state.typingNode);
+    }
+    state.typingNode = null;
+    if (state.thinkingTimer) {
+      window.clearInterval(state.thinkingTimer);
+      state.thinkingTimer = null;
+    }
+    if (!state.voiceBusy) {
+      dom.statePill.textContent = t('ready');
+    }
+  }
+
+  function updateStatus(message, tone) {
+    dom.requestStatus.textContent = message;
+    dom.statePill.textContent = tone === 'busy' ? t('busyPill') : tone === 'fallback' ? t('fallbackPill') : t('ready');
+    dom.statusDot.classList.toggle('is-busy', tone === 'busy');
+    dom.statusDot.classList.toggle('is-error', tone === 'fallback');
+    announce(message);
+  }
+
+  function updateVoiceStatus(message) {
+    dom.voiceStatus.textContent = message;
+    if (state.voiceBusy) {
+      dom.statePill.textContent = t('voicePill');
+    }
+    announce(message);
+  }
+
+  function announce(message) {
+    dom.liveRegion.textContent = message;
+  }
+
+  function setInteractiveState() {
+    var disabled = state.busy || state.voiceBusy;
+    dom.sendButton.disabled = disabled;
+    dom.micButton.disabled = state.busy;
+    dom.downloadHeader.disabled = !state.currentBlueprint;
+    dom.presetButtons.forEach(function (button) {
+      button.disabled = disabled;
+    });
+  }
+
+  function flushQueuedPrompt() {
+    if (!state.queuedPrompt) return;
+    if (Date.now() - state.queuedPrompt.queuedAt > Number(CONFIG.maxQueueDelayMs || 12000)) {
+      state.queuedPrompt = null;
+      return;
+    }
+
+    var queued = state.queuedPrompt;
+    state.queuedPrompt = null;
+    var launchQueuedRequest = function () {
+      updateStatus(t('retryQueued'), 'busy');
+      requestBlueprint({
+        userText: queued.text,
+        prompt: queued.preset ? [
+          'Preset: ' + buttonLabel(queued.preset),
+          'Context: ' + queued.text,
+          'Need one concise AI agent blueprint with business goal, workflow, example output, ROI, suggested stack, next step.'
+        ].join('\n') : queued.text,
+        source: 'queued',
+        preset: queued.preset
       });
-    }
-
-    if (state.historyLoading) {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
-    } else if (state.phase === 'generating_image') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_image')) + '</span></div>';
-    } else if (state.phase === 'responding') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
-    } else if (state.phase === 'transcribing') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_transcribing_status')) + '</span></div>';
-    }
-
-    list.innerHTML = html;
-
-    if (state.activeAudio && state.activeAudioUrl) {
-      var activeButton = list.querySelector('[data-action="play-audio"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
-      if (activeButton) {
-        var activeIcon = activeButton.querySelector('.material-symbols-outlined');
-        if (activeIcon) activeIcon.textContent = 'pause';
-        activeButton.setAttribute('aria-pressed', 'true');
-        state.activeAudioButton = activeButton;
-        var playerContainer = activeButton.closest('.gc-audio-player');
-        if (playerContainer) {
-          playerContainer.classList.add('playing');
-          state.activeAudioPlayer = playerContainer;
-        }
-      }
-    }
-
-    scrollToBottom();
-  }
-
-  function renderComposer() {
-    var textarea = $('gc-textarea');
-    var sendBtn = $('gc-send-btn');
-    var micBtn = $('gc-mic-btn');
-    var attachBtn = $('gc-attach-btn');
-    var inputArea = $('gc-input-area');
-    var panel = $('gc-chat-panel');
-    var inputRow = document.querySelector('.gc-chat-input-row');
-    var utility = $('gc-composer-utility');
-    var recordingBar = $('gc-recording-bar');
-    var disabled = state.phase === 'limit' || state.phase === 'sending' || state.phase === 'responding' || state.phase === 'transcribing' || state.phase === 'generating_image';
-    var inLimitMode = state.phase === 'limit';
-    var emptyMode = !state.messages.length && !state.historyLoading && !inLimitMode && !state.imageMode && state.phase !== 'responding' && state.phase !== 'transcribing' && state.phase !== 'generating_image';
-
-    if (textarea) {
-      textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder');
-      textarea.disabled = inLimitMode;
-      textarea.setAttribute('aria-label', state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder'));
-    }
-
-    if (sendBtn && textarea) {
-      sendBtn.disabled = disabled || textarea.value.trim() === '';
-    }
-
-    if (micBtn) {
-      micBtn.disabled = disabled && state.phase !== 'recording';
-      micBtn.classList.toggle('recording', state.phase === 'recording');
-      micBtn.querySelector('.material-symbols-outlined').textContent = state.phase === 'recording' ? 'stop' : 'mic';
-    }
-
-    if (attachBtn) attachBtn.disabled = disabled;
-    if (inputArea) inputArea.classList.toggle('disabled', false);
-    if (inputArea) inputArea.classList.toggle('gc-hidden', inLimitMode);
-    if (inputArea) inputArea.classList.toggle('gc-chat-input-area-empty', emptyMode);
-    if (panel) panel.classList.toggle('gc-chat-panel-empty', emptyMode);
-    if (inputRow) inputRow.classList.toggle('gc-hidden', inLimitMode);
-    if (recordingBar) {
-      recordingBar.classList.toggle('active', state.phase === 'recording' && !inLimitMode);
-      recordingBar.classList.toggle('gc-hidden', inLimitMode);
-    }
-
-    if (utility) {
-      if (inLimitMode) {
-        utility.innerHTML = '';
-      } else if (state.imageMode) {
-        utility.innerHTML = [
-          '<div class="gc-create-mode-bar">',
-          '  <div class="gc-create-mode-info">',
-          '    <span class="material-symbols-outlined">auto_awesome</span>',
-          '    <span class="gc-create-mode-label">' + escapeHTML(t('chat_create_mode')) + '</span>',
-          '    <span class="gc-create-mode-hint">' + escapeHTML(t('chat_create_desc')) + '</span>',
-          '  </div>',
-          '  <button type="button" class="gc-create-mode-exit" data-action="exit-create-mode">',
-            '    <span class="material-symbols-outlined">arrow_back</span>',
-          '    <span>' + escapeHTML(t('chat_exit_create')) + '</span>',
-          '  </button>',
-          '</div>'
-        ].join('');
-      } else {
-        utility.innerHTML = renderComposerUtility(emptyMode, disabled);
-      }
-    }
-  }
-
-  function scrollToBottom() {
-    var body = $('gc-chat-body');
-    if (!body) return;
-    requestAnimationFrame(function () {
-      body.scrollTop = body.scrollHeight;
-    });
-  }
-
-  function showToast(message) {
-    var toast = $('gc-toast');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(showToast.timerId);
-    showToast.timerId = setTimeout(function () {
-      toast.classList.remove('show');
-    }, 3200);
-  }
-
-  function showError(message) {
-    showToast(message || t('chat_error_msg'));
-  }
-
-  function isValidEmail(value) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
-  }
-
-  async function startGoogleAuth() {
-    var client = initAuthClient();
-    if (!client) {
-      showError();
-      return;
-    }
-    setAuthHelper('loading', t('chat_auth_connecting'));
-    renderAll();
-    var result = await client.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: getAuthRedirectUrl()
-      }
-    });
-    if (result && result.error) {
-      setAuthHelper('error', result.error.message || t('chat_error_msg'));
-      renderAll();
-    }
-  }
-
-  async function submitAuthEmail() {
-    var client = initAuthClient();
-    var email = String(state.auth.email || '').trim();
-    if (!client) {
-      showError();
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setAuthHelper('error', t('chat_auth_email_invalid'));
-      renderAll();
-      return;
-    }
-
-    setAuthHelper('loading', t('chat_auth_sending'));
-    renderAll();
-    var result = await client.auth.signInWithOtp({
-      email: email,
-      options: {
-        emailRedirectTo: getAuthRedirectUrl()
-      }
-    });
-    if (result && result.error) {
-      setAuthHelper('error', t('chat_auth_send_failed'));
-      renderAll();
-      return;
-    }
-
-    setAuthHelper('email_sent', t('chat_auth_check_email'));
-    renderAll();
-  }
-
-  async function verifyAuthEmailCode() {
-    var client = initAuthClient();
-    var email = String(state.auth.email || '').trim();
-    var code = String(state.auth.code || '').trim();
-    if (!client || !isValidEmail(email) || !code) {
-      setAuthHelper('error', !isValidEmail(email) ? t('chat_auth_email_invalid') : t('chat_auth_verify_failed'));
-      renderAll();
-      return;
-    }
-
-    setAuthHelper('loading', t('chat_auth_verifying'));
-    renderAll();
-    var result = await client.auth.verifyOtp({
-      email: email,
-      token: code,
-      type: 'email'
-    });
-    if (result && result.error) {
-      setAuthHelper('error', t('chat_auth_verify_failed'));
-      renderAll();
-      return;
-    }
-  }
-
-  function navigateCTA(type, href) {
-    if (type === 'continue_trial') {
-      clearNotice();
-      state.phase = 'open';
-      renderAll();
-      if ($('gc-textarea')) $('gc-textarea').focus();
-      return;
-    }
-
-    if (href && href.indexOf('mailto:') === 0) {
-      window.open(href, '_blank');
-      closeChat();
-      return;
-    }
-
-    if (href && href.charAt(0) === '#') {
-      var link = document.createElement('a');
-      link.href = href;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      closeChat();
-      return;
-    }
-
-    if (href) {
-      window.location.href = href;
-      return;
-    }
-  }
-
-  async function sendImagePrompt(prompt) {
-    if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'generating_image' || state.phase === 'limit') return;
-    if (!state.quota.imageGenAvailable) {
-      showToast(t('chat_image_quota_exhausted'));
-      return;
-    }
-
-    await ensureSession();
-    if (!state.sessionId) {
-      showError('Could not create session.');
-      return;
-    }
-
-    clearNotice();
-    pushMessage({
-      role: 'user',
-      content: prompt,
-      imagePrompt: true
-    });
-    state.phase = 'generating_image';
-    state.imageMode = false;
-    renderAll();
-
-    var payload = {
-      action: 'image_generate',
-      session_id: state.sessionId,
-      user_id: isAuthenticated() ? state.auth.user.id : null,
-      prompt: prompt,
-      model: CONFIG.IMAGE_GEN_MODEL,
-      language: currentLang(),
-      locale: currentLang(),
-      direction: currentDir(),
-      fingerprint_hash: state.fingerprint,
-      source_page: location.href || 'landing'
     };
 
-    try {
-      var response = await fetch(CONFIG.N8N_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      var data = {};
-      try { data = await response.json(); } catch (error) {}
-
-      if (response.status === 429) {
-        updateQuotaFromResponse(data);
-        state.quota.imageGenAvailable = false;
-        state.phase = 'open';
-        state.messages.pop();
-        renderAll();
-        showToast(data.message || t('chat_image_quota_exhausted'));
-        return;
-      }
-
-      if (!response.ok) {
-        state.phase = 'open';
-        state.messages.pop();
-        renderAll();
-        showError(data.message || t('chat_image_failed'));
-        return;
-      }
-
-      updateQuotaFromResponse(data);
-      pushMessage({
-        role: 'assistant',
-        imageResult: {
-          base64: data.image_base64 || '',
-          mime: data.image_mime || 'image/png',
-          prompt: data.prompt || prompt,
-          status: data.status === 'failed' ? 'failed' : 'completed'
-        }
-      });
-
-      state.phase = 'open';
-      trackEvent('image_gen_complete', { prompt: prompt });
-      renderAll();
-    } catch (networkError) {
-      state.phase = 'open';
-      state.messages.pop();
-      renderAll();
-      showError();
-      trackEvent('error', { error: networkError.message || 'image_gen_network_error' });
+    if (Date.now() < state.nextAllowedAt) {
+      updateStatus(format(t('cooldown'), secondsUntil(state.nextAllowedAt)), 'busy');
+      window.setTimeout(launchQueuedRequest, Math.max(250, state.nextAllowedAt - Date.now()));
+      return;
     }
+
+    launchQueuedRequest();
   }
 
-  async function sendMessage(text, contentType) {
-    if (state.phase === 'sending' || state.phase === 'responding' || state.phase === 'generating_image' || state.phase === 'limit') return;
-
-    await ensureSession();
-    if (!state.sessionId) {
-      showError('Could not create session.');
+  function handleMicClick() {
+    if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
+      stopRecording();
       return;
     }
 
-    clearNotice();
-    pushMessage({
-      role: 'user',
-      content: text,
-      voice: contentType === 'voice'
-    });
-    state.phase = 'responding';
-    renderAll();
-
-    var payload = {
-      session_id: state.sessionId,
-      user_id: isAuthenticated() ? state.auth.user.id : null,
-      message: text,
-      content_type: contentType || 'text',
-      modality: contentType === 'voice' ? 'voice' : 'text',
-      language: currentLang(),
-      locale: currentLang(),
-      direction: currentDir(),
-      fingerprint_hash: state.fingerprint,
-      source_page: location.href || 'landing',
-      turn_number: state.turnsUsed + 1,
-      history: getHistory().slice(0, -1),
-      wants_voice_reply: state.wantsVoiceReply,
-      reply_language: getReplyLanguage()
-    };
-
-    try {
-      var response = await fetch(CONFIG.N8N_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      var data = {};
-      try { data = await response.json(); } catch (error) {}
-
-      if (response.status === 409) {
-        state.phase = 'open';
-        state.messages.pop();
-        renderAll();
-        showError(data.message || t('chat_active_conflict'));
-        return;
-      }
-
-      if (response.status === 429) {
-        updateQuotaFromResponse(data);
-        if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
-          state.phase = 'limit';
-          setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-          renderAll();
-          return;
-        }
-
-        state.phase = 'open';
-        state.messages.pop();
-        renderAll();
-        showToast(data.message || t('chat_rate_limited'));
-        return;
-      }
-
-      if (!response.ok) {
-        state.phase = 'open';
-        state.messages.pop();
-        renderAll();
-        showError(data.message || t('chat_error_msg'));
-        return;
-      }
-
-      updateQuotaFromResponse(data);
-      var assistantTtsUrl = data.tts_audio_url || null;
-      var voiceOnlyReply = shouldUseVoiceOnlyReply(data, assistantTtsUrl);
-      pushMessage({
-        role: 'assistant',
-        content: resolveAssistantContent(data, voiceOnlyReply),
-        replyLanguage: data.reply_language || getReplyLanguage(),
-        ttsAudioUrl: assistantTtsUrl,
-        voiceOnlyReply: voiceOnlyReply
-      });
-
-      if (noTurnsRemaining()) {
-        state.phase = 'limit';
-        setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-      } else {
-        state.phase = 'open';
-        if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
-          setNotice('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-        }
-      }
-
-      renderAll();
-    } catch (networkError) {
-      state.phase = 'open';
-      state.messages.pop();
-      renderAll();
-      showError();
-      trackEvent('error', { error: networkError.message || 'network_error' });
-    }
-  }
-
-  async function handleAudioBlob(blob) {
-    if (blob.size > CONFIG.MAX_AUDIO_BYTES) {
-      showToast(t('chat_audio_too_large'));
-      state.phase = 'open';
-      renderComposer();
-      return;
-    }
-
-    await ensureSession();
-    if (!state.sessionId) {
-      state.phase = 'open';
-      renderComposer();
-      showError('Could not create session.');
-      return;
-    }
-
-    clearNotice();
-    var pendingVoiceMessage = pushMessage({
-      role: 'user',
-      content: '',
-      voice: true,
-      audioUrl: window.URL && typeof window.URL.createObjectURL === 'function' ? window.URL.createObjectURL(blob) : null,
-      transcriptPending: true
-    });
-
-    state.phase = 'transcribing';
-    renderAll();
-
-    var formData = new FormData();
-    formData.append('session_id', state.sessionId);
-    if (isAuthenticated()) formData.append('user_id', state.auth.user.id);
-    formData.append('message', '[voice_message]');
-    formData.append('content_type', 'voice');
-    formData.append('modality', 'voice');
-    formData.append('language', currentLang());
-    formData.append('locale', currentLang());
-    formData.append('direction', currentDir());
-    formData.append('fingerprint_hash', state.fingerprint || '');
-    formData.append('source_page', location.href || 'landing');
-    formData.append('turn_number', String(state.turnsUsed + 1));
-    formData.append('audio_duration_seconds', String(Math.floor((Date.now() - state.recordStart) / 1000) || 0));
-    formData.append('audio_size_bytes', String(blob.size));
-    formData.append('mime_type', blob.type || 'audio/webm');
-    formData.append('history', JSON.stringify(getHistory()));
-    formData.append('wants_voice_reply', String(!!state.wantsVoiceReply));
-    formData.append('reply_language', getReplyLanguage());
-    formData.append('file', blob, 'voice-message.webm');
-
-    try {
-      var response = await fetch(CONFIG.N8N_WEBHOOK, {
-        method: 'POST',
-        body: formData
-      });
-      var data = {};
-      try { data = await response.json(); } catch (error) {}
-
-      if (response.status === 409) {
-        removeMessageById(pendingVoiceMessage.id);
-        state.phase = 'open';
-        renderAll();
-        showError(data.message || t('chat_active_conflict'));
-        return;
-      }
-
-      if (response.status === 429) {
-        updateQuotaFromResponse(data);
-        if (data.status === 'limit_exceeded' || data.limit_state === 'session_limit' || data.limit_state === 'rolling_24h_limit') {
-          removeMessageById(pendingVoiceMessage.id);
-          state.phase = 'limit';
-          setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-          renderAll();
-          return;
-        }
-
-        removeMessageById(pendingVoiceMessage.id);
-        state.phase = 'open';
-        renderAll();
-        showToast(data.message || t('chat_rate_limited'));
-        return;
-      }
-
-      if (!response.ok) {
-        removeMessageById(pendingVoiceMessage.id);
-        state.phase = 'open';
-        renderAll();
-        showError(data.message || t('chat_error_msg'));
-        return;
-      }
-
-      updateQuotaFromResponse(data);
-
-      pendingVoiceMessage.content = data.transcript || '';
-      pendingVoiceMessage.transcriptPending = false;
-
-      var blobTtsUrl = data.tts_audio_url || null;
-      var blobVoiceOnlyReply = shouldUseVoiceOnlyReply(data, blobTtsUrl);
-      pushMessage({
-        role: 'assistant',
-        content: resolveAssistantContent(data, blobVoiceOnlyReply),
-        replyLanguage: data.reply_language || getReplyLanguage(),
-        ttsAudioUrl: blobTtsUrl,
-        voiceOnlyReply: blobVoiceOnlyReply
-      });
-
-      if (noTurnsRemaining()) {
-        state.phase = 'limit';
-        setNotice('limit', localizeCtaPayload('limit', data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-      } else {
-        state.phase = 'open';
-        if (data.soft_warning_state && data.soft_warning_state !== 'none' && !state.dismissedWarnings[data.soft_warning_state]) {
-          setNotice('soft_warning', localizeCtaPayload(data.soft_warning_state, data.cta_payload, data.soft_warning_state), data.soft_warning_state);
-        }
-      }
-
-      renderAll();
-    } catch (networkError) {
-      removeMessageById(pendingVoiceMessage.id);
-      state.phase = 'open';
-      renderAll();
-      showError();
-      trackEvent('error', { error: networkError.message || 'network_error' });
-    }
+    startRecording();
   }
 
   async function startRecording() {
+    if (!navigator.mediaDevices || typeof window.MediaRecorder === 'undefined') {
+      updateVoiceStatus(t('voiceUnsupported'));
+      updateStatus(t('voiceUnsupported'), 'fallback');
+      return;
+    }
+
     try {
-      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      state.recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      var chunks = [];
-
-      state.recorder.ondataavailable = function (event) {
-        if (event.data && event.data.size > 0) chunks.push(event.data);
-      };
-      state.recorder.onstop = function () {
-        stream.getTracks().forEach(function (track) { track.stop(); });
-        clearInterval(state.recordTimer);
-        if (!chunks.length) {
-          state.phase = 'open';
-          renderComposer();
-          return;
+      state.recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.recordingChunks = [];
+      var options = {};
+      if (window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported('audio/webm')) {
+        options.mimeType = 'audio/webm';
+      }
+      state.mediaRecorder = new MediaRecorder(state.recordingStream, options);
+      state.mediaRecorder.addEventListener('dataavailable', function (event) {
+        if (event.data && event.data.size) {
+          state.recordingChunks.push(event.data);
         }
-        var blob = new Blob(chunks, { type: 'audio/webm' });
-        handleAudioBlob(blob);
-      };
-
-      state.recorder.start();
-      state.recordStart = Date.now();
-      state.phase = 'recording';
-      renderComposer();
-
-      state.recordTimer = setInterval(function () {
-        var elapsed = Math.floor((Date.now() - state.recordStart) / 1000);
-        var timer = $('gc-rec-timer');
-        if (timer) timer.textContent = Math.floor(elapsed / 60) + ':' + String(elapsed % 60).padStart(2, '0');
-        if (elapsed >= CONFIG.MAX_AUDIO_SEC) {
-          stopRecording();
-          showToast(t('chat_recording_limit'));
-        }
-      }, 500);
+      });
+      state.mediaRecorder.addEventListener('stop', handleRecordingStop);
+      state.mediaRecorder.start();
+      dom.micButton.classList.add('is-recording');
+      updateVoiceStatus(t('voiceListening'));
+      updateStatus(t('voiceListening'), 'busy');
+      state.recordingTimer = window.setTimeout(function () {
+        stopRecording();
+      }, Number(CONFIG.recordingLimitMs) || 45000);
     } catch (error) {
-      state.phase = 'open';
-      renderComposer();
-      showToast(t('chat_mic_denied'));
+      updateVoiceStatus(error && error.message ? error.message : t('voiceUnsupported'));
+      updateStatus(t('voiceUnsupported'), 'fallback');
     }
   }
 
   function stopRecording() {
-    if (state.recorder && state.recorder.state === 'recording') state.recorder.stop();
+    if (!state.mediaRecorder) return;
+    if (state.recordingTimer) {
+      window.clearTimeout(state.recordingTimer);
+      state.recordingTimer = null;
+    }
+    if (state.mediaRecorder.state === 'recording') {
+      state.mediaRecorder.stop();
+    }
+    dom.micButton.classList.remove('is-recording');
   }
 
-  function cancelRecording(nextPhase) {
-    if (!state.recorder || state.recorder.state !== 'recording') return;
-    state.recorder.ondataavailable = null;
-    state.recorder.onstop = function () {
-      clearInterval(state.recordTimer);
-      state.recorder.stream.getTracks().forEach(function (track) { track.stop(); });
-      state.phase = nextPhase || 'open';
-      renderComposer();
-    };
-    state.recorder.stop();
-  }
-
-  function submitText() {
-    var textarea = $('gc-textarea');
-    if (!textarea) return;
-    var text = textarea.value.trim();
-    if (!text) return;
-    textarea.value = '';
-    textarea.style.height = 'auto';
-    renderComposer();
-    if (state.imageMode) {
-      sendImagePrompt(text);
-    } else {
-      sendMessage(text, 'text');
-    }
-  }
-
-  function openChat() {
-    var panel = $('gc-chat-panel');
-    var trigger = $('gc-chat-trigger');
-    var scrim = $('gc-chat-scrim');
-    var pill = document.getElementById('floating-pill');
-
-    if (!panel || !trigger || !scrim) return;
-
-    panel.classList.add('open');
-    trigger.classList.add('open');
-    scrim.classList.add('open');
-    state.lastFocusedElement = document.activeElement && typeof document.activeElement.focus === 'function'
-      ? document.activeElement
-      : trigger;
-    state.phase = state.phase === 'limit' ? 'limit' : 'open';
-    document.body.style.overflow = 'hidden';
-    if (pill) pill.style.display = 'none';
-
-    ensureSession().then(function () {
-      renderHeader();
-      hydrateMessagesFromSession();
-    });
-
-    trackCTA('open_chat', 'click', 'trigger');
-
-    setTimeout(function () {
-      var textarea = $('gc-textarea');
-      if (textarea && state.phase !== 'limit') textarea.focus();
-    }, 220);
-  }
-
-  function closeChat() {
-    var panel = $('gc-chat-panel');
-    var trigger = $('gc-chat-trigger');
-    var scrim = $('gc-chat-scrim');
-    var pill = document.getElementById('floating-pill');
-
-    if (!panel || !trigger || !scrim) return;
-
-    panel.classList.remove('open');
-    trigger.classList.remove('open');
-    scrim.classList.remove('open');
-    document.body.style.overflow = '';
-    if (pill) pill.style.display = '';
-    stopActiveAudio();
-
-    var nextPhase = state.notice && state.notice.kind === 'limit' ? 'limit' : 'closed';
-    if (state.recorder && state.recorder.state === 'recording') cancelRecording(nextPhase);
-    state.phase = nextPhase;
-
-    var restoreTarget = state.lastFocusedElement && typeof state.lastFocusedElement.focus === 'function'
-      ? state.lastFocusedElement
-      : trigger;
-    state.lastFocusedElement = null;
-    setTimeout(function () {
-      if (restoreTarget && typeof restoreTarget.focus === 'function') restoreTarget.focus();
-    }, 0);
-  }
-
-  function handlePanelClick(event) {
-    var button = event.target.closest('[data-action]');
-    if (!button) return;
-
-    var action = button.getAttribute('data-action');
-    if (action === 'prompt') {
-      var prompts = getPromptList();
-      var prompt = prompts[Number(button.getAttribute('data-prompt-index'))] || '';
-      if (!prompt) return;
-      if ($('gc-textarea')) {
-        $('gc-textarea').value = prompt;
-        $('gc-textarea').dispatchEvent(new Event('input'));
-      }
-      submitText();
+  async function handleRecordingStop() {
+    cleanupRecordingStream();
+    if (!state.recordingChunks.length) {
+      state.mediaRecorder = null;
+      updateVoiceStatus(t('voiceReady'));
+      updateStatus(t('readyStatus'), 'ready');
       return;
     }
 
-    if (action === 'focus-input') {
-      if ($('gc-textarea')) $('gc-textarea').focus();
-      return;
-    }
+    var blob = new Blob(state.recordingChunks, { type: state.recordingChunks[0].type || 'audio/webm' });
+    state.mediaRecorder = null;
+    state.voiceBusy = true;
+    setInteractiveState();
 
-    if (action === 'record') {
-      if (state.phase === 'recording') stopRecording();
-      else if (state.phase === 'open' || state.phase === 'closed') startRecording();
-      return;
-    }
-
-    if (action === 'auth-google') {
-      trackCTA('auth_google', 'click', 'auth_card');
-      startGoogleAuth();
-      return;
-    }
-
-    if (action === 'auth-email') {
-      var emailInput = $('gc-auth-email');
-      if (emailInput) emailInput.focus();
-      return;
-    }
-
-    if (action === 'auth-email-send') {
-      trackCTA('auth_email', 'click', 'auth_card');
-      submitAuthEmail();
-      return;
-    }
-
-    if (action === 'auth-email-verify') {
-      trackCTA('auth_email_verify', 'click', 'auth_card');
-      verifyAuthEmailCode();
-      return;
-    }
-
-    if (action === 'toggle-hear') {
-      if (!state.quota.ttsAvailable) {
-        showToast(t('chat_hear_unavailable'));
-        return;
-      }
-      state.wantsVoiceReply = !state.wantsVoiceReply;
-      renderAll();
-      return;
-    }
-
-    if (action === 'toggle-reply-language') {
-      state.preferredReplyLanguage = getReplyLanguage() === 'en' ? 'ar' : 'en';
-      renderAll();
-      return;
-    }
-
-    if (action === 'set-reply-language') {
-      state.preferredReplyLanguage = normalizeLang(button.getAttribute('data-language'));
-      renderAll();
-      return;
-    }
-
-    if (action === 'play-audio') {
-      var playerEl = button.closest('.gc-audio-player');
-      toggleAudio(button.getAttribute('data-audio-url'), button, playerEl);
-      return;
-    }
-
-    if (action === 'dismiss-warning') {
-      state.dismissedWarnings[(state.notice && state.notice.warningState) || state.quota.softWarningState || 'generic'] = true;
-      clearNotice();
-      state.phase = 'open';
-      renderAll();
-      if ($('gc-textarea')) $('gc-textarea').focus();
-      return;
-    }
-
-    if (action === 'enter-create-mode') {
-      if (!state.quota.imageGenAvailable) {
-        showToast(t('chat_image_quota_exhausted'));
-        return;
-      }
-      state.imageMode = true;
-      renderAll();
-      if ($('gc-textarea')) $('gc-textarea').focus();
-      return;
-    }
-
-    if (action === 'exit-create-mode') {
-      state.imageMode = false;
-      renderAll();
-      return;
-    }
-
-    if (action === 'image-open') {
-      var imageUri = button.getAttribute('data-image-uri');
-      if (imageUri) window.open(imageUri, '_blank');
-      return;
-    }
-
-    if (action === 'image-retry') {
-      var imagePrompt = button.getAttribute('data-image-prompt');
-      if (imagePrompt) sendImagePrompt(imagePrompt);
-      return;
-    }
-
-    if (action === 'cta') {
-      var ctaType = button.getAttribute('data-cta-type') || 'cta';
-      var href = button.getAttribute('data-cta-href') || '';
-      trackCTA(ctaType, 'click', 'system_card');
-      navigateCTA(ctaType, href);
-    }
-  }
-
-  function handlePanelInput(event) {
-    if (event.target && event.target.id === 'gc-auth-email') {
-      state.auth.email = event.target.value;
-      if (state.auth.status === 'error') setAuthHelper('idle', '');
-      return;
-    }
-    if (event.target && event.target.id === 'gc-auth-code') {
-      state.auth.code = event.target.value.replace(/\s+/g, '').slice(0, 6);
-      event.target.value = state.auth.code;
-      if (state.auth.status === 'error') setAuthHelper('idle', '');
-    }
-  }
-
-  function handlePanelKeydown(event) {
-    if (!event.target) return;
-
-    if (event.key === 'Enter' && event.target.id === 'gc-auth-email') {
-      event.preventDefault();
-      submitAuthEmail();
-      return;
-    }
-
-    if (event.key === 'Enter' && event.target.id === 'gc-auth-code') {
-      event.preventDefault();
-      verifyAuthEmailCode();
-    }
-  }
-
-  function bindEvents() {
-    $('gc-chat-trigger').addEventListener('click', function () {
-      if ($('gc-chat-panel').classList.contains('open')) closeChat();
-      else openChat();
-    });
-
-    $('gc-chat-scrim').addEventListener('click', closeChat);
-    $('gc-close').addEventListener('click', closeChat);
-    $('gc-chat-panel').addEventListener('click', handlePanelClick);
-    $('gc-chat-panel').addEventListener('input', handlePanelInput);
-    $('gc-chat-panel').addEventListener('keydown', handlePanelKeydown);
-
-    document.addEventListener('keydown', function (event) {
-      trapPanelFocus(event);
-      if (event.key === 'Escape' && $('gc-chat-panel').classList.contains('open')) closeChat();
-    });
-
-    var textarea = $('gc-textarea');
-    textarea.addEventListener('input', function () {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 110) + 'px';
-      renderComposer();
-    });
-
-    textarea.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter' && !event.shiftKey && window.innerWidth >= 640) {
-        event.preventDefault();
-        submitText();
-      }
-    });
-
-    $('gc-send-btn').addEventListener('click', submitText);
-    $('gc-mic-btn').addEventListener('click', function () {
-      if (state.phase === 'recording') stopRecording();
-      else if (state.phase === 'open' || state.phase === 'closed') startRecording();
-    });
-    $('gc-rec-cancel').addEventListener('click', cancelRecording);
-    $('gc-attach-btn').addEventListener('click', function () { $('gc-file-input').click(); });
-
-    $('gc-file-input').addEventListener('change', function (event) {
-      var file = event.target.files && event.target.files[0];
-      if (!file) return;
-      if (!isAllowedAudioFile(file)) {
-        showToast(t('chat_audio_invalid'));
-        event.target.value = '';
-        return;
-      }
-      state.recordStart = Date.now();
-      handleAudioBlob(file);
-      event.target.value = '';
-    });
-
-    var panel = $('gc-chat-panel');
-    var dropZone = $('gc-drop-zone');
-    var dragCounter = 0;
-
-    panel.addEventListener('dragenter', function (event) {
-      event.preventDefault();
-      dragCounter += 1;
-      dropZone.classList.add('active');
-    });
-    panel.addEventListener('dragleave', function (event) {
-      event.preventDefault();
-      dragCounter -= 1;
-      if (dragCounter <= 0) {
-        dragCounter = 0;
-        dropZone.classList.remove('active');
-      }
-    });
-    panel.addEventListener('dragover', function (event) {
-      event.preventDefault();
-    });
-    panel.addEventListener('drop', function (event) {
-      event.preventDefault();
-      dragCounter = 0;
-      dropZone.classList.remove('active');
-
-      var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
-      if (!file || !isAllowedAudioFile(file)) {
-        showToast(t('chat_audio_invalid'));
-        return;
+    try {
+      if (!isWebhookConfigured(CONFIG.voiceWebhookUrl)) {
+        throw createError('voice_not_configured', t('voiceNotConfigured'), 0);
       }
 
-      state.recordStart = Date.now();
-      handleAudioBlob(file);
-    });
+      updateVoiceStatus(t('voiceUploading'));
+      updateStatus(t('voiceUploading'), 'busy');
 
-    var rootObserver = new MutationObserver(function (mutations) {
-      var shouldRender = mutations.some(function (mutation) {
-        return mutation.attributeName === 'class' || mutation.attributeName === 'lang' || mutation.attributeName === 'dir';
+      var formData = new FormData();
+      formData.append('session_id', state.sessionId);
+      formData.append('locale', state.locale);
+      formData.append('continue_generation', CONFIG.autoGenerateFromVoice ? 'true' : 'false');
+      formData.append('file', blob, 'voice-input.webm');
+
+      window.setTimeout(function () {
+        if (state.voiceBusy) {
+          updateVoiceStatus(t('voiceTranscribing'));
+          updateStatus(t('voiceTranscribing'), 'busy');
+        }
+      }, 500);
+
+      var response = await postAudioWithRetry(CONFIG.voiceWebhookUrl, formData);
+      var transcript = safeText(response.transcript, '');
+
+      if (transcript) {
+        appendTextMessage('user', transcript, t('transcriptMeta'));
+        updateVoiceStatus(t('voiceDone'));
+      }
+
+      if (hasBlueprintShape(response) || hasBlueprintShape(response.blueprint || {})) {
+        var blueprint = normalizeBlueprint(response, transcript || 'Voice request', state.activePreset);
+        renderBlueprint(blueprint, Boolean(response.fallback || blueprint.fallback));
+        updateStatus(t('readyStatus'), 'ready');
+      } else if (transcript && CONFIG.autoGenerateFromVoice) {
+        updateVoiceStatus(t('voiceDone'));
+        requestBlueprint({
+          userText: transcript,
+          prompt: transcript,
+          source: 'voice',
+          preset: state.activePreset,
+          skipUserEcho: true
+        });
+        state.activePreset = null;
+        bindPresetState();
+        dom.taskInput.placeholder = t('placeholders.custom');
+      } else if (transcript) {
+        dom.taskInput.value = transcript;
+        autoResize();
+        updateStatus(t('voiceDone'), 'ready');
+      } else {
+        throw createError('voice_transcript_missing', 'Transcript missing in response', 502);
+      }
+    } catch (error) {
+      updateVoiceStatus(error.message || t('voiceNotConfigured'));
+      updateStatus(error.message || t('voiceNotConfigured'), 'fallback');
+    } finally {
+      state.voiceBusy = false;
+      setInteractiveState();
+      if (!state.busy) {
+        dom.statePill.textContent = t('ready');
+      }
+      if (!state.mediaRecorder) {
+        dom.micButton.classList.remove('is-recording');
+      }
+    }
+  }
+
+  function cleanupRecordingStream() {
+    if (state.recordingStream) {
+      state.recordingStream.getTracks().forEach(function (track) {
+        track.stop();
       });
-      if (shouldRender) renderAll();
-    });
-    rootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'lang', 'dir'] });
+    }
+    state.recordingStream = null;
   }
 
-  window.gcOpenChat = openChat;
+  function buildFallbackBlueprint(prompt, preset, reason) {
+    var input = String(prompt || '').trim();
+    var lowered = input.toLowerCase();
+    var mode = preset || detectPresetFromText(lowered);
+    var templates = {
+      qualify_leads: {
+        agent_name: 'Lead Qualification Agent',
+        business_goal: 'Score inbound leads fast, route high-intent prospects, and stop manual triage delay.',
+        workflow: [
+          'Capture new lead from form, ads, or inbound chat into n8n webhook.',
+          'Enrich lead with source, service interest, location, and budget signals.',
+          'Score lead against business rules and push qualified records into CRM.',
+          'Trigger instant follow-up by email or WhatsApp and offer booking link.',
+          'Escalate edge cases to sales with summary and confidence note.'
+        ],
+        example_output: 'Lead: Ahmed from Meta ads. Score: 87/100. Intent: high. Next action: send booking link and create CRM task.',
+        roi: 'Cuts first-response time from hours to minutes and reduces wasted sales follow-up on low-fit leads.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'HubSpot or Pipedrive', 'Calendly', 'WhatsApp or email'],
+        next_step: 'Define scoring criteria, connect CRM fields, and test with last 20 inbound leads.'
+      },
+      customer_support: {
+        agent_name: 'Support Resolution Agent',
+        business_goal: 'Resolve repetitive support tickets automatically while routing risky or sensitive cases to humans.',
+        workflow: [
+          'Receive message from chat, email, or WhatsApp into n8n.',
+          'Classify issue type, urgency, order context, and account status.',
+          'Fetch order or account data from commerce or CRM systems.',
+          'Draft precise reply, send self-serve answer, or escalate with human-ready summary.',
+          'Log resolution, reason code, and unresolved patterns for ops review.'
+        ],
+        example_output: 'Ticket #2041: delayed shipment. Agent fetched tracking, answered customer, and flagged refund risk for human review.',
+        roi: 'Handles high-volume repetitive tickets and improves customer response consistency without growing support headcount.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'Shopify or CRM', 'Helpdesk', 'Slack escalation'],
+        next_step: 'List top 10 repetitive support intents and define escalation boundaries.'
+      },
+      generate_reports: {
+        agent_name: 'Operations Reporting Agent',
+        business_goal: 'Assemble cross-tool business updates automatically and deliver clean reports to decision-makers.',
+        workflow: [
+          'Pull metrics from source systems on schedule or manual trigger.',
+          'Normalize KPIs across sales, support, finance, and ops datasets.',
+          'Generate concise narrative summary with wins, risks, and anomalies.',
+          'Deliver report to Slack, email, or dashboard with links to raw data.',
+          'Archive report and compare against previous period for trend tracking.'
+        ],
+        example_output: 'Weekly report: pipeline up 14%, ticket backlog down 9%, revenue risk from overdue invoices equals $18k.',
+        roi: 'Removes manual report assembly and gives leadership faster decisions with consistent KPI definitions.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'Google Sheets or warehouse', 'Slack', 'Email'],
+        next_step: 'Lock KPI list, data owners, and report cadence before production rollout.'
+      },
+      book_meetings: {
+        agent_name: 'Meeting Booking Agent',
+        business_goal: 'Qualify prospects before calendar access and fill sales calendar with better-fit calls.',
+        workflow: [
+          'Collect inbound request from landing page, chat, or form.',
+          'Ask short qualification questions and validate fit rules.',
+          'Check rep availability and timezone constraints.',
+          'Offer best available slot and push booking into calendar + CRM.',
+          'Send reminder, prep summary, and no-show recovery follow-up.'
+        ],
+        example_output: 'Prospect passed ICP check, booked 3:30 PM GST slot, CRM deal created, reminder sequence armed.',
+        roi: 'Improves booking conversion and protects team time by blocking poor-fit calls before scheduling.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'Calendly or Google Calendar', 'CRM', 'Email or WhatsApp'],
+        next_step: 'Set qualification gates and connect calendar + CRM webhook actions.'
+      },
+      follow_up: {
+        agent_name: 'Lead Follow-up Agent',
+        business_goal: 'Revive warm leads automatically with timely, context-aware follow-up across channels.',
+        workflow: [
+          'Detect stalled lead based on inactivity, unanswered quote, or missed booking.',
+          'Pull prior conversation context, source, and offer details.',
+          'Generate short follow-up message matched to stage and channel.',
+          'Send sequence with delay rules, stop conditions, and reply detection.',
+          'Escalate engaged replies to sales with summary and recommended next move.'
+        ],
+        example_output: 'Lead asked for pricing 5 days ago. Agent sent reminder with case study and booking link. Reply received in 12 minutes.',
+        roi: 'Recovers pipeline value from forgotten leads and keeps follow-up consistent without manual chasing.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'CRM', 'Email/WhatsApp', 'Slack alerts'],
+        next_step: 'Define inactivity triggers, approved sequences, and opt-out handling.'
+      },
+      custom: {
+        agent_name: 'Custom Workflow Agent',
+        business_goal: trimToSentence(input) || 'Automate repetitive business task with one clear input-to-output workflow.',
+        workflow: [
+          'Capture task request and normalize business context.',
+          'Apply routing, enrichment, and guardrails inside n8n workflow.',
+          'Generate output or take action using Groq for reasoning and formatting.',
+          'Return polished result to user and escalate exceptions when confidence is low.',
+          'Track outcomes, bottlenecks, and next iteration opportunities.'
+        ],
+        example_output: 'Agent receives request, enriches context, produces structured result, and logs next action for team.',
+        roi: 'Saves repetitive operator time and creates consistent execution path for high-frequency work.',
+        suggested_stack: ['n8n', 'Groq gpt-oss-20b', 'Primary business app', 'Slack or email'],
+        next_step: 'Document one happy path, one exception path, and target KPI before launch.'
+      }
+    };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', buildWidget);
-  } else {
-    buildWidget();
+    var blueprint = templates[mode] || templates.custom;
+    return Object.assign({}, blueprint, {
+      business_goal: mode === 'custom' ? blueprint.business_goal : injectContext(blueprint.business_goal, input),
+      next_step: blueprint.next_step + (reason ? ' Fallback reason: ' + reason.replace(/_/g, ' ') + '.' : ''),
+      fallback: true
+    });
+  }
+
+  function detectPresetFromText(lowered) {
+    if (/lead|crm|qualif|sales/.test(lowered)) return 'qualify_leads';
+    if (/support|ticket|order|refund|shipping/.test(lowered)) return 'customer_support';
+    if (/report|dashboard|summary|kpi/.test(lowered)) return 'generate_reports';
+    if (/meeting|book|calendar|schedule/.test(lowered)) return 'book_meetings';
+    if (/follow.?up|nurture|remind/.test(lowered)) return 'follow_up';
+    return 'custom';
+  }
+
+  function injectContext(base, input) {
+    if (!input) return base;
+    return base + ' Context: ' + trimToSentence(input);
+  }
+
+  function trimToSentence(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+  }
+
+  function downloadBlueprint() {
+    if (!state.currentBlueprint) {
+      updateStatus(t('noBlueprint'), 'fallback');
+      return;
+    }
+
+    var html = buildBlueprintDocument(state.currentBlueprint);
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = slugify(state.currentBlueprint.agent_name || 'ai-agent-blueprint') + '.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    updateStatus(t('downloaded'), 'ready');
+  }
+
+  function buildBlueprintDocument(blueprint) {
+    var workflow = blueprint.workflow.map(function (step) {
+      return '<li>' + escapeHtml(step) + '</li>';
+    }).join('');
+
+    var stack = blueprint.suggested_stack.map(function (item) {
+      return '<li>' + escapeHtml(item) + '</li>';
+    }).join('');
+
+    return [
+      '<!DOCTYPE html>',
+      '<html lang="' + state.locale + '" dir="' + (state.locale === 'ar' ? 'rtl' : 'ltr') + '">',
+      '<head>',
+      '<meta charset="utf-8">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1">',
+      '<title>' + escapeHtml(blueprint.agent_name) + '</title>',
+      '<style>',
+      'body{font-family:Manrope,Arial,sans-serif;background:#f5f7fb;color:#111827;margin:0;padding:40px;}main{max-width:860px;margin:0 auto;background:#fff;border:1px solid #dbe4f0;border-radius:24px;padding:36px;box-shadow:0 20px 50px rgba(15,23,42,.08);}h1{margin:0 0 10px;font-size:34px;}h2{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#64748b;}section{padding:18px 0;border-top:1px solid #e2e8f0;}section:first-of-type{border-top:0;padding-top:8px;}p,li{line-height:1.75;}ul,ol{margin:0;padding-inline-start:20px;}ul.tags{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px;}ul.tags li{background:#eef2ff;border-radius:999px;padding:8px 14px;}@media print{body{background:#fff;padding:0;}main{box-shadow:none;border:0;border-radius:0;max-width:none;padding:24px;}}',
+      '</style>',
+      '</head>',
+      '<body>',
+      '<main>',
+      '<h2>AI Agent Blueprint</h2>',
+      '<h1>' + escapeHtml(blueprint.agent_name) + '</h1>',
+      '<section><h2>' + escapeHtml(t('businessGoal')) + '</h2><p>' + escapeHtml(blueprint.business_goal) + '</p></section>',
+      '<section><h2>' + escapeHtml(t('workflow')) + '</h2><ol>' + workflow + '</ol></section>',
+      '<section><h2>' + escapeHtml(t('exampleOutput')) + '</h2><p>' + escapeHtml(blueprint.example_output) + '</p></section>',
+      '<section><h2>' + escapeHtml(t('roi')) + '</h2><p>' + escapeHtml(blueprint.roi) + '</p></section>',
+      '<section><h2>' + escapeHtml(t('stack')) + '</h2><ul class="tags">' + stack + '</ul></section>',
+      '<section><h2>' + escapeHtml(t('nextStep')) + '</h2><p>' + escapeHtml(blueprint.next_step) + '</p></section>',
+      '</main>',
+      '</body>',
+      '</html>'
+    ].join('');
+  }
+
+  function slugify(value) {
+    return String(value || 'ai-agent-blueprint')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'ai-agent-blueprint';
+  }
+
+  function autoResize() {
+    dom.taskInput.style.blockSize = 'auto';
+    dom.taskInput.style.blockSize = Math.min(dom.taskInput.scrollHeight, 180) + 'px';
+  }
+
+  function scrollFeed() {
+    dom.feed.scrollTop = dom.feed.scrollHeight;
+  }
+
+  function format(template, value) {
+    return template.replace('%s', value);
+  }
+
+  function secondsUntil(timestamp) {
+    return Math.max(1, Math.ceil((timestamp - Date.now()) / 1000));
+  }
+
+  function sleep(ms) {
+    return new Promise(function (resolve) {
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function isWebhookConfigured(url) {
+    return /^https?:\/\//.test(String(url || '')) && String(url).indexOf('your-n8n-domain') === -1;
   }
 })();
