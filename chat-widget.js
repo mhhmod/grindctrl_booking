@@ -413,7 +413,7 @@
     try {
       var fetchOptions = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         body: JSON.stringify({
           session_id: state.sessionId,
           user_id: state.auth.user.id,
@@ -1645,7 +1645,7 @@
     try {
       var response = await fetch(CONFIG.N8N_WEBHOOK, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         body: JSON.stringify(payload)
       }).catch(function(err) {
         console.warn('CORS or Network error during sendMessage:', err);
