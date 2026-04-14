@@ -411,7 +411,7 @@
     renderAll();
 
     try {
-      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, {
+      var fetchOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -424,11 +424,21 @@
           direction: currentDir(),
           source_page: location.href || 'landing'
         })
-      });
-      var data = {};
-      try { data = await response.json(); } catch (error) {}
+      };
 
-      if (!response.ok || !data.ok) {
+      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, fetchOptions).catch(function(err) {
+        console.warn('CORS or Network error during session upgrade:', err);
+        return { ok: false, status: 'cors_or_network_error' };
+      });
+
+      var data = {};
+      if (response && response.ok) {
+        try { data = await response.json(); } catch (error) {}
+      }
+
+      if (!response || !response.ok || !data.ok) {
+        // Log technical details but show a standard message to user
+        console.error('Session upgrade failed:', response ? response.status : 'no_response');
         setAuthHelper('error', t('chat_auth_upgrade_failed'));
         renderAll();
         return false;
@@ -1637,9 +1647,22 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
+      }).catch(function(err) {
+        console.warn('CORS or Network error during sendMessage:', err);
+        return { ok: false, status: 'cors_or_network_error' };
       });
+
       var data = {};
-      try { data = await response.json(); } catch (error) {}
+      if (response && response.status !== 'cors_or_network_error') {
+        try { data = await response.json(); } catch (error) {}
+      }
+
+      if (!response || response.status === 'cors_or_network_error') {
+        state.phase = 'open';
+        renderAll();
+        showError(t('chat_error_msg'));
+        return;
+      }
 
       if (response.status === 409) {
         state.phase = 'open';
