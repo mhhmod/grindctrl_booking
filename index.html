@@ -16,6 +16,7 @@
 <!-- Fonts: loaded async via JS. Tries Google first → falls back to Bunny.net mirror -->
 <link rel="stylesheet" href="chat-widget.css"/>
 <link rel="stylesheet" href="blueprint-studio.css"/>
+<link rel="stylesheet" href="voice-to-value.css"/>
 <!-- Suppress Tailwind CDN production warning (must be before Tailwind loads) -->
 <script>
 if (typeof console !== 'undefined') {
@@ -658,94 +659,57 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 </div>
 </header>
 
-<!-- Blueprint Studio -->
-<section id="blueprint-studio" class="bp-studio-section px-4 sm:px-8 pb-16 sm:pb-24 reveal">
+<!-- Voice-to-Value Studio -->
+<section id="v2v-studio" class="v2v-section px-4 sm:px-8 pb-16 sm:pb-24 reveal">
 <div class="max-w-screen-2xl mx-auto">
-  <div class="bp-studio-shell">
-    <div class="bp-studio-panel bp-studio-panel-input">
-      <div class="bp-studio-panel-glow" aria-hidden="true"></div>
-      <div class="bp-studio-copy">
-        <div class="bp-studio-kicker" data-i18n="bp_studio_kicker">Blueprint Studio</div>
-        <h2 class="bp-studio-title" data-i18n="bp_studio_title">Turn one use case into a ready-to-show AI agent blueprint.</h2>
-        <p class="bp-studio-subtitle" data-i18n="bp_studio_subtitle">Pick a preset, answer one focused follow-up, or speak your request. The section stays light, bilingual, and built for quick demos.</p>
+  <div class="v2v-shell">
+    
+    <!-- Interaction Panel -->
+    <div class="ui-card v2v-panel relative overflow-hidden group">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none"></div>
+      
+      <div class="relative z-10 mb-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          Voice Lead Capture
+        </div>
+        <h2 class="h2-fluid font-headline text-on-surface mb-6 tracking-tight">Voice to Value.</h2>
+        <p class="text-secondary text-[16px] leading-relaxed max-w-sm mb-8 font-medium">Record a 30s voice note about a project or lead. Our AI structures it into a qualified business record immediately.</p>
       </div>
 
-      <div class="bp-studio-preset-block">
-        <div class="bp-studio-label-row">
-          <span class="bp-studio-label" data-i18n="bp_studio_presets_label">Choose a use case</span>
-          <span class="bp-studio-inline-note" data-i18n="bp_studio_presets_note">One click sets the flow direction.</span>
+      <div class="v2v-mic-area relative z-10">
+        <div id="v2v-mic-btn" class="v2v-mic-btn group" role="button" aria-label="Start recording voice note">
+          <span class="material-symbols-outlined">mic</span>
         </div>
-        <div class="bp-studio-presets" role="list" aria-label="Blueprint presets">
-          <button type="button" class="bp-studio-chip" data-preset="qualify_leads" data-i18n="bp_studio_preset_qualify">Qualify leads</button>
-          <button type="button" class="bp-studio-chip" data-preset="customer_support" data-i18n="bp_studio_preset_support">Customer support</button>
-          <button type="button" class="bp-studio-chip" data-preset="generate_reports" data-i18n="bp_studio_preset_reports">Generate reports</button>
-          <button type="button" class="bp-studio-chip" data-preset="book_meetings" data-i18n="bp_studio_preset_meetings">Book meetings</button>
-          <button type="button" class="bp-studio-chip" data-preset="follow_up" data-i18n="bp_studio_preset_follow_up">Follow up with leads</button>
-          <button type="button" class="bp-studio-chip" data-preset="custom" data-i18n="bp_studio_preset_custom">Custom</button>
+        
+        <div id="v2v-status-container" class="v2v-status-indicator">
+          <span class="v2v-status-dot"></span>
+          <span id="v2v-status-text">Ready for your voice note</span>
+          <span id="v2v-timer" class="font-mono text-xs opacity-50 ml-2">0.0s</span>
         </div>
       </div>
 
-      <div class="bp-studio-chat-card">
-        <div class="bp-studio-chat-head">
-          <div>
-            <div class="bp-studio-chat-title" data-i18n="bp_studio_chat_title">Prompt builder</div>
-            <div class="bp-studio-chat-subtitle" data-i18n="bp_studio_chat_subtitle">Short chat-style flow. No page reload.</div>
-          </div>
-          <button type="button" id="bp-studio-reset" class="bp-studio-utility" data-i18n="bp_studio_reset">Reset</button>
-        </div>
-
-        <div id="bp-studio-chat" class="bp-studio-chat-log" aria-live="polite"></div>
-
-        <div id="bp-studio-followup" class="bp-studio-followup" aria-live="polite">
-          <span class="material-symbols-outlined">smart_toy</span>
-          <p id="bp-studio-followup-text" data-i18n="bp_studio_default_followup">Pick one preset or type your use case. I will turn it into a concise AI agent blueprint.</p>
-        </div>
-
-        <label class="bp-studio-sr-only" for="bp-studio-input" data-i18n="bp_studio_input_label">Describe your workflow need</label>
-        <div class="bp-studio-composer">
-          <textarea id="bp-studio-input" class="bp-studio-textarea" rows="4" maxlength="700" data-i18n-placeholder="bp_studio_input_placeholder" placeholder="Describe business goal, tool stack, and what should happen next."></textarea>
-          <div class="bp-studio-actions">
-            <button type="button" id="bp-studio-mic" class="bp-studio-action bp-studio-action-secondary" data-i18n-aria="bp_studio_mic_aria" aria-label="Record voice blueprint request">
-              <span class="material-symbols-outlined">mic</span>
-              <span data-i18n="bp_studio_mic">Voice</span>
-            </button>
-            <button type="button" id="bp-studio-send" class="bp-studio-action bp-studio-action-primary" data-i18n-aria="bp_studio_send_aria" aria-label="Generate blueprint">
-              <span class="material-symbols-outlined">auto_awesome</span>
-              <span data-i18n="bp_studio_send">Generate Blueprint</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="bp-studio-status-row">
-          <div id="bp-studio-status" class="bp-studio-status" data-i18n="bp_studio_status_idle">Ready for text or voice input.</div>
-          <div class="bp-studio-status-note" data-i18n="bp_studio_status_note">Mic flow: Listening, Uploading, Transcribing.</div>
+      <div class="mt-auto pt-8 border-t border-softer relative z-10">
+        <div class="text-[10px] text-secondary font-black uppercase tracking-[0.2em] mb-4">Or use text</div>
+        <div class="flex gap-2">
+           <input type="text" class="flex-1 bg-surface-container-low/50 border border-softer rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-secondary/40 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Type lead summary instead..."/>
+           <button class="w-11 h-11 bg-surface-container-high rounded-xl border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors">
+             <span class="material-symbols-outlined text-xl">send</span>
+           </button>
         </div>
       </div>
     </div>
 
-    <div class="bp-studio-panel bp-studio-panel-output">
-      <div class="bp-studio-output-head">
-        <div>
-          <div class="bp-studio-kicker bp-studio-kicker-output" data-i18n="bp_studio_preview_kicker">Live blueprint preview</div>
-          <h3 class="bp-studio-output-title" data-i18n="bp_studio_preview_title">Result stays inside this section.</h3>
-        </div>
-        <div class="bp-studio-export-actions">
-          <button type="button" id="bp-studio-download-html" class="bp-studio-export-btn" disabled data-i18n="bp_studio_download_html">Download HTML</button>
-          <button type="button" id="bp-studio-download-pdf" class="bp-studio-export-btn" disabled data-i18n="bp_studio_download_pdf">Download PDF</button>
-        </div>
+    <!-- Result Area -->
+    <div id="v2v-result-area" class="v2v-result-container">
+      <div id="v2v-empty-hint" class="h-full flex flex-col items-center justify-center text-center p-12 ui-card bg-surface-container-low/30 border-dashed border-2 border-softer">
+        <span class="material-symbols-outlined text-4xl text-outline-variant mb-4">insights</span>
+        <h3 class="text-xl font-headline font-bold text-secondary mb-2">Awaiting Intelligence</h3>
+        <p class="text-sm text-ink-muted max-w-xs leading-relaxed">Your structured lead summary and follow-up draft will appear here after recording.</p>
       </div>
-
-      <div id="bp-studio-result-shell" class="bp-studio-result-shell bp-studio-empty">
-        <div id="bp-studio-empty" class="bp-studio-empty-state">
-          <span class="material-symbols-outlined">description</span>
-          <h4 data-i18n="bp_studio_empty_title">Blueprint appears here after first request.</h4>
-          <p data-i18n="bp_studio_empty_desc">You will see agent name, business goal, workflow steps, output example, ROI, stack, and export preview.</p>
-        </div>
-
-        <div id="bp-studio-result" class="bp-studio-result" hidden></div>
-        <article id="bp-studio-export-preview" class="bp-studio-export-preview" hidden></article>
-      </div>
+      <!-- Result Card will be injected here by JS -->
     </div>
+
   </div>
 </div>
 </section>
@@ -2012,9 +1976,8 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 })();
 </script>
 <script src="i18n.js"></script>
-<script src="blueprint-studio.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="chat-widget.js"></script>
-
+<script src="voice-to-value.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
