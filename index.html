@@ -164,6 +164,116 @@ html:not(.dark) body{background:#f5f2ef;color:#2a2826}
 .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}
 .glass-panel{background:rgba(24,24,22,0.88);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px)}
 
+/* ── B2B ENTERPRISE OVERLAY DESIGN SYSTEM ──
+   Mobile-first, Layout-resilient, Constraint-based */
+
+/* Layout Patterns */
+.ui-shell {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.ui-container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    /* Mobile-first fluid padding */
+    padding-left: clamp(1rem, 5vw, 2rem);
+    padding-right: clamp(1rem, 5vw, 2rem);
+    max-width: 1536px; /* max-w-screen-2xl */
+}
+
+.ui-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+@media (min-width: 640px) {
+    .ui-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+}
+@media (min-width: 1024px) {
+    .ui-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+}
+
+/* Constraint-driven Components */
+.ui-card {
+    background-color: #1e1d1b;
+    border: 1px solid rgba(240,237,233,0.05); /* Soft border */
+    border-radius: 0.75rem;
+    padding: clamp(1rem, 5vw, 1.5rem);
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+}
+.ui-card:hover {
+    background-color: rgba(42, 40, 38, 0.5); /* Surface Variant / Container transition */
+}
+html:not(.dark) .ui-card {
+    background-color: #ffffff;
+    border-color: rgba(24,24,22,0.06);
+}
+html:not(.dark) .ui-card:hover {
+    background-color: rgba(240, 237, 233, 0.4);
+}
+
+.ui-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px; /* Accessible Touch Target */
+    padding: 0 16px;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.ui-btn-primary {
+    background: linear-gradient(135deg, #f0ede9 0%, #dcd8d3 100%);
+    color: #181816;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.ui-btn-primary:hover {
+    background: linear-gradient(135deg, #fff 0%, #e8e5e1 100%);
+    transform: translateY(-1px);
+}
+html:not(.dark) .ui-btn-primary {
+    background: #181816;
+    color: #f0ede9;
+}
+html:not(.dark) .ui-btn-primary:hover {
+    background: #2a2826;
+    box-shadow: 0 4px 24px rgba(24,24,22,0.1);
+}
+
+.ui-btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(240,237,233,0.15); /* Outline variant */
+    color: #9b9793;
+}
+.ui-btn-secondary:hover {
+    background: rgba(240,237,233,0.05);
+    color: #f0ede9;
+}
+html:not(.dark) .ui-btn-secondary {
+    border-color: rgba(24,24,22,0.1);
+    color: #6b6763;
+}
+html:not(.dark) .ui-btn-secondary:hover {
+    background: rgba(24,24,22,0.05);
+    color: #181816;
+}
+
+.ui-truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
 /* ── Fluid Typography ── */
 .h1-fluid { font-size: clamp(2.5rem, 1.5rem + 4vw, 5.5rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; }
 .h2-fluid { font-size: clamp(2rem, 1.5rem + 2vw, 4rem); line-height: 1.1; letter-spacing: -0.03em; font-weight: 800; }
@@ -285,11 +395,11 @@ html:not(.dark) footer{background-color:#e8e5e1!important}
 html:not(.dark) input.bg-surface-container{background-color:#fff!important;border-color:rgba(24,24,22,0.1)!important;color:#2a2826!important}
 </style>
 </head>
-<body class="selection:bg-primary/20 selection:text-on-surface">
+<body class="ui-shell selection:bg-primary/20 selection:text-on-surface">
 
 <!-- ===== NAV ===== -->
 <nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 bg-canvas/90 backdrop-blur-2xl border-b border-softer">
-<div class="flex justify-between items-center w-full px-4 sm:px-8 py-3 max-w-screen-2xl mx-auto font-headline tracking-tight">
+<div class="ui-container flex justify-between items-center py-3 font-headline tracking-tight">
   <a href="#home" class="flex items-center gap-2.5">
     <img src="logo-dark.svg" alt="GRINDCTRL Symbol" class="logo-dark h-7 w-auto"/>
     <img src="logo-light.svg" alt="GRINDCTRL Symbol" class="logo-light h-7 w-auto"/>
@@ -367,7 +477,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Hero -->
 <header class="relative pt-28 pb-16 sm:pt-36 sm:pb-20 md:pt-48 md:pb-36 overflow-hidden">
-<div class="max-w-screen-2xl mx-auto px-4 sm:px-8 relative z-10">
+<div class="ui-container relative z-10">
 <div class="max-w-4xl">
   <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-softer text-[11px] font-medium tracking-[0.15em] text-ink-dim mb-8 uppercase" data-i18n="hero_badge">
     Systems for the Intelligent Enterprise
@@ -379,10 +489,10 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     We build AI automations, AI agents, and modern business systems that help you operate with more clarity, speed, and control.
   </p>
   <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-    <button onclick="gcOpenChat()" class="cta-primary px-8 sm:px-10 py-4 text-[15px] flex items-center justify-center gap-2">
+    <button onclick="gcOpenChat()" class="ui-btn ui-btn-primary px-8 sm:px-10 text-[15px] gap-2">
       <span class="material-symbols-outlined text-base">smart_toy</span> <span data-i18n="hero_cta_try">Try the Agent</span>
     </button>
-    <a href="#solutions" class="cta-secondary px-8 sm:px-10 py-4 text-[15px] flex items-center justify-center border border-outline-variant/15 rounded-lg hover:bg-surface-container transition-all">
+    <a href="#solutions" class="ui-btn ui-btn-secondary px-8 sm:px-10 text-[15px] gap-2">
       <span class="material-symbols-outlined text-base">play_circle</span> <span data-i18n="hero_cta_primary">See the 2-Min Workflow Tour</span>
     </a>
   </div>
@@ -494,7 +604,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Integration Ecosystem Strip -->
 <section class="py-8 sm:py-12 bg-surface-container-low border-y border-softer reveal">
-<div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
+<div class="ui-container">
   <div class="text-[10px] text-secondary uppercase tracking-[0.2em] font-semibold text-center mb-5" data-i18n="integ_label">Connects with your stack</div>
   <div class="flex flex-wrap justify-center items-center gap-x-8 gap-y-3 sm:gap-x-12 opacity-40">
     <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">n8n</div>
@@ -511,14 +621,14 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </section>
 
 <!-- Core Solutions -->
-<section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
+<section class="py-20 sm:py-32 ui-container">
 <div class="mb-14 sm:mb-20 reveal">
   <h2 class="h2-fluid font-headline text-on-surface mb-3" data-i18n="core_title">Core Solutions</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
   <!-- AI Automation — with workflow preview -->
-  <div class="md:col-span-8 preview-card p-7 sm:p-10 flex flex-col justify-between group cursor-pointer hover:bg-surface-container transition-all reveal">
+  <div class="md:col-span-8 ui-card justify-between group cursor-pointer reveal">
     <div>
       <span class="material-symbols-outlined text-primary text-2xl mb-5 block">memory</span>
       <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_auto_title">AI Automation</h3>
@@ -549,7 +659,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </a>
   </div>
   <!-- AI Agents — with agent console preview -->
-  <div class="md:col-span-4 preview-card p-7 sm:p-8 hover:bg-surface-container transition-all reveal reveal-delay-1">
+  <div class="md:col-span-4 ui-card reveal reveal-delay-1">
     <span class="material-symbols-outlined text-primary text-2xl mb-5 block">smart_toy</span>
     <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_agent_title">AI Agents</h3>
     <p class="text-secondary text-sm leading-relaxed mb-5" data-i18n="core_agent_desc">Custom-trained digital employees focused on specific roles from sales to support.</p>
@@ -563,7 +673,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">Configure Agent →</a>
   </div>
   <!-- Business Systems — with CRM preview -->
-  <div class="md:col-span-4 preview-card p-7 sm:p-8 hover:bg-surface-container transition-all reveal">
+  <div class="md:col-span-4 ui-card reveal">
     <span class="material-symbols-outlined text-primary text-2xl mb-5 block">hub</span>
     <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_biz_title">Business Systems</h3>
     <p class="text-secondary text-sm leading-relaxed mb-5" data-i18n="core_biz_desc">Foundational architectures that scale with your growth, designed for clarity.</p>
@@ -583,7 +693,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">System Audit →</a>
   </div>
   <!-- AI Trainer — with client dashboard preview -->
-  <div class="md:col-span-8 preview-card p-7 sm:p-10 flex flex-col justify-between group cursor-pointer hover:bg-surface-container transition-all reveal reveal-delay-1">
+  <div class="md:col-span-8 ui-card justify-between group cursor-pointer reveal reveal-delay-1">
     <div class="flex flex-col md:flex-row gap-6 sm:gap-10 items-start">
       <div class="flex-1">
         <span class="material-symbols-outlined text-primary text-2xl mb-5 block">fitness_center</span>
@@ -621,14 +731,14 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Product Proof — See It In Action -->
 <section class="py-20 sm:py-28 bg-surface-container-low overflow-hidden">
-<div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
+<div class="ui-container">
 <div class="mb-12 sm:mb-16 reveal">
   <h2 class="h2-fluid font-headline text-on-surface mb-3" data-i18n="proof_title">See It In Action</h2>
   <p class="text-fluid text-secondary max-w-lg" data-i18n="proof_subtitle">Not mockups — real interfaces from production systems we've built for clients.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
   <!-- Card 1: AI Agent in Slack -->
-  <div class="preview-card p-5 sm:p-7 reveal">
+  <div class="ui-card reveal">
     <div class="flex items-center gap-2 mb-4 text-[10px] text-secondary uppercase tracking-widest font-semibold">
       <span class="material-symbols-outlined text-xs text-primary">forum</span> <span data-i18n="proof_slack_label">AI Agent · Slack Integration</span>
     </div>
@@ -652,7 +762,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- Card 2: Workflow Builder -->
-  <div class="preview-card p-5 sm:p-7 reveal reveal-delay-1">
+  <div class="ui-card reveal reveal-delay-1">
     <div class="flex items-center gap-2 mb-4 text-[10px] text-secondary uppercase tracking-widest font-semibold">
       <span class="material-symbols-outlined text-xs text-primary">account_tree</span> <span data-i18n="proof_wf_label">Workflow Builder · Lead Processing</span>
     </div>
@@ -683,7 +793,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- Card 3: Hours-Saved KPI Panel -->
-  <div class="preview-card p-5 sm:p-7 reveal">
+  <div class="ui-card reveal">
     <div class="flex items-center gap-2 mb-4 text-[10px] text-secondary uppercase tracking-widest font-semibold">
       <span class="material-symbols-outlined text-xs text-primary">speed</span> <span data-i18n="proof_kpi_label">Impact Dashboard · Monthly Summary</span>
     </div>
@@ -714,7 +824,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- Card 4: Human Approval Interface -->
-  <div class="preview-card p-5 sm:p-7 reveal reveal-delay-1">
+  <div class="ui-card reveal reveal-delay-1">
     <div class="flex items-center gap-2 mb-4 text-[10px] text-secondary uppercase tracking-widest font-semibold">
       <span class="material-symbols-outlined text-xs text-primary">supervisor_account</span> <span data-i18n="proof_hitl_label">Human-in-the-Loop · Pending Actions</span>
     </div>
@@ -764,7 +874,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </div>
 </section>
 <!-- Quantified ROI — What Changes After Week 1 -->
-<section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
+<section class="py-20 sm:py-32 ui-container">
 <div class="mb-14 sm:mb-20 reveal">
   <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="roi_title">What Changes After Week 1</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
@@ -786,7 +896,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <p class="text-secondary text-[13px] leading-relaxed" data-i18n="roi_live_desc">From kickoff call to production automation.</p>
   </div>
 </div>
-<div class="preview-card p-5 sm:p-6 flex items-center gap-3 reveal">
+<div class="ui-card flex-row items-center gap-3 reveal">
   <span class="material-symbols-outlined text-primary text-xl shrink-0">trending_up</span>
   <p class="text-[14px] sm:text-[15px] text-on-surface-variant leading-relaxed" data-i18n-html="roi_callout">Our average client reclaims the equivalent of <strong class="text-on-surface">a full-time hire within 90 days</strong>.</p>
 </div>
@@ -794,28 +904,28 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Trust Center — Built for Business-Critical Operations -->
 <section class="py-20 sm:py-32 bg-surface-container-low border-y border-softer">
-<div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
+<div class="ui-container">
 <div class="mb-14 sm:mb-20 reveal">
   <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="trust_title">Built for Business-Critical Operations</h2>
   <p class="text-fluid text-secondary max-w-lg" data-i18n="trust_subtitle">Enterprise-grade security and transparency. No black boxes.</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-  <div class="preview-card p-6 sm:p-7 reveal">
+  <div class="ui-card reveal">
     <span class="material-symbols-outlined text-primary text-2xl mb-4 block">shield</span>
     <h3 class="font-headline text-base font-bold text-on-surface mb-2" data-i18n="trust_iso_title">Data Isolation</h3>
     <p class="text-secondary text-[13px] leading-relaxed" data-i18n="trust_iso_desc">Each client runs on isolated infrastructure. Your data never touches another account.</p>
   </div>
-  <div class="preview-card p-6 sm:p-7 reveal reveal-delay-1">
+  <div class="ui-card reveal reveal-delay-1">
     <span class="material-symbols-outlined text-primary text-2xl mb-4 block">supervisor_account</span>
     <h3 class="font-headline text-base font-bold text-on-surface mb-2" data-i18n="trust_hitl_title">Human-in-the-Loop</h3>
     <p class="text-secondary text-[13px] leading-relaxed" data-i18n="trust_hitl_desc">Every AI action can require human approval before execution. You stay in control.</p>
   </div>
-  <div class="preview-card p-6 sm:p-7 reveal reveal-delay-1">
+  <div class="ui-card reveal reveal-delay-1">
     <span class="material-symbols-outlined text-primary text-2xl mb-4 block">lock</span>
     <h3 class="font-headline text-base font-bold text-on-surface mb-2" data-i18n="trust_sec_title">Enterprise Security</h3>
     <p class="text-secondary text-[13px] leading-relaxed" data-i18n="trust_sec_desc">AES-256 encryption at rest, TLS 1.3 in transit. SOC 2 readiness roadmap in progress.</p>
   </div>
-  <div class="preview-card p-6 sm:p-7 reveal reveal-delay-2">
+  <div class="ui-card reveal reveal-delay-2">
     <span class="material-symbols-outlined text-primary text-2xl mb-4 block">receipt_long</span>
     <h3 class="font-headline text-base font-bold text-on-surface mb-2" data-i18n="trust_price_title">Transparent Pricing</h3>
     <p class="text-secondary text-[13px] leading-relaxed" data-i18n="trust_price_desc">No per-seat fees. No surprise overages. Flat monthly retainer with clear scope.</p>
@@ -825,13 +935,13 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </section>
 
 <!-- Wall of Love — From Our Clients -->
-<section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
+<section class="py-20 sm:py-32 ui-container">
 <div class="mb-14 sm:mb-20 reveal">
   <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="wol_title">From Our Clients</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-  <div class="preview-card p-6 sm:p-8 flex flex-col reveal">
+  <div class="ui-card reveal">
     <div class="flex-1">
       <span class="material-symbols-outlined text-primary text-lg mb-4 block">format_quote</span>
       <p class="text-[14px] sm:text-[15px] text-on-surface leading-relaxed mb-5" data-i18n="wol_q1">"We cut our order processing time from 4 hours to 12 minutes. The ROI was visible in week one."</p>
@@ -842,7 +952,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
       <div class="text-[10px] text-primary font-medium mt-1 uppercase tracking-wider" data-i18n="wol_a1_ind">Retail</div>
     </div>
   </div>
-  <div class="preview-card p-6 sm:p-8 flex flex-col reveal reveal-delay-1">
+  <div class="ui-card reveal reveal-delay-1">
     <div class="flex-1">
       <span class="material-symbols-outlined text-primary text-lg mb-4 block">format_quote</span>
       <p class="text-[14px] sm:text-[15px] text-on-surface leading-relaxed mb-5" data-i18n="wol_q2">"GrindCTRL built us an AI agent that handles 80% of our WhatsApp inquiries without human intervention."</p>
@@ -853,7 +963,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
       <div class="text-[10px] text-primary font-medium mt-1 uppercase tracking-wider" data-i18n="wol_a2_ind">Health & Wellness</div>
     </div>
   </div>
-  <div class="preview-card p-6 sm:p-8 flex flex-col reveal reveal-delay-2">
+  <div class="ui-card reveal reveal-delay-2">
     <div class="flex-1">
       <span class="material-symbols-outlined text-primary text-lg mb-4 block">format_quote</span>
       <p class="text-[14px] sm:text-[15px] text-on-surface leading-relaxed mb-5" data-i18n="wol_q3">"What sold us was the human approval layer. We see exactly what the AI wants to do before it does it."</p>
@@ -869,22 +979,22 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Packages -->
 <section id="packages-section" class="py-20 sm:py-32 bg-surface">
-<div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
+<div class="ui-container">
 <div class="mb-14 sm:mb-20 reveal">
   <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="pkg_title">Structured for Scale</h2>
   <p class="text-fluid text-secondary max-w-lg" data-i18n="pkg_subtitle">Choose the level of control your business requires. No hidden fees, just precision engineering.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-  <div class="preview-card p-8 sm:p-9 flex flex-col h-full hover:bg-surface-container transition-all reveal">
+  <div class="ui-card flex-col h-full reveal">
     <div class="mb-6"><span class="text-[10px] font-semibold text-secondary uppercase tracking-[0.2em] block mb-2">Phase 01</span><h4 class="font-headline text-xl font-bold text-on-surface">Starter</h4></div>
     <ul class="space-y-4 text-secondary text-[14px] mb-10 flex-grow">
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Core CRM Automation</li>
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> System Health Audit</li>
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> 1x Custom AI Agent</li>
     </ul>
-    <a href="#book" class="block w-full py-3.5 text-center text-[13px] font-medium text-on-surface-variant border border-outline-variant/15 rounded-lg hover:bg-surface-container-high hover:text-on-surface transition-all">Start Building</a>
+    <a href="#book" class="ui-btn ui-btn-secondary block w-full py-3.5 text-center text-[13px] font-medium">Start Building</a>
   </div>
-  <div class="preview-card p-8 sm:p-9 flex flex-col h-full relative overflow-hidden hover:bg-surface-container transition-all reveal reveal-delay-1" style="border-color:rgba(240,237,233,0.1)">
+  <div class="ui-card flex-col h-full relative reveal reveal-delay-1" style="border-color:rgba(240,237,233,0.1)">
     <div class="absolute top-0 right-0 bg-ink text-canvas px-3 py-1 text-[9px] font-bold uppercase tracking-widest rounded-bl-lg">Popular</div>
     <div class="mb-6"><span class="text-[10px] font-semibold text-ink-dim uppercase tracking-[0.2em] block mb-2">Phase 02</span><h4 class="font-headline text-xl font-bold text-on-surface">Growth</h4></div>
     <ul class="space-y-4 text-on-surface text-[14px] mb-10 flex-grow">
@@ -893,9 +1003,9 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Custom Client Dashboard</li>
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Bi-Weekly Syncs</li>
     </ul>
-    <a href="#book" class="block w-full py-3.5 text-center cta-primary text-[13px]">Select Growth</a>
+    <a href="#book" class="ui-btn ui-btn-primary block w-full py-3.5 text-center text-[13px]">Select Growth</a>
   </div>
-  <div class="preview-card p-8 sm:p-9 flex flex-col h-full hover:bg-surface-container transition-all reveal reveal-delay-2">
+  <div class="ui-card flex-col h-full reveal reveal-delay-2">
     <div class="mb-6"><span class="text-[10px] font-semibold text-secondary uppercase tracking-[0.2em] block mb-2">Phase 03</span><h4 class="font-headline text-xl font-bold text-on-surface">Control</h4></div>
     <ul class="space-y-4 text-secondary text-[14px] mb-10 flex-grow">
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Enterprise OS Build</li>
@@ -903,7 +1013,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Dedicated Systems Lead</li>
       <li class="flex items-center gap-3"><span class="material-symbols-outlined text-primary text-sm">check</span> Priority 24/7 Support</li>
     </ul>
-    <a href="#book" class="block w-full py-3.5 text-center text-[13px] font-medium text-on-surface-variant border border-outline-variant/15 rounded-lg hover:bg-surface-container-high hover:text-on-surface transition-all">Inquire for Enterprise</a>
+    <a href="#book" class="ui-btn ui-btn-secondary block w-full py-3.5 text-center text-[13px] font-medium">Inquire for Enterprise</a>
   </div>
 </div>
 <!-- Trust proof strip -->
@@ -921,9 +1031,9 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Final CTA -->
 <section class="py-28 sm:py-40 relative overflow-hidden">
-<div class="max-w-3xl mx-auto px-4 sm:px-8 text-center relative z-10 reveal">
+<div class="ui-container max-w-3xl text-center relative z-10 reveal">
   <!-- Testimonial above CTA -->
-  <div class="preview-card p-5 sm:p-6 mb-10 sm:mb-12 text-left max-w-xl mx-auto">
+  <div class="ui-card mb-10 sm:mb-12 text-left max-w-xl mx-auto">
     <span class="material-symbols-outlined text-primary text-lg mb-2 block">format_quote</span>
     <p class="text-[14px] text-on-surface leading-relaxed mb-3" data-i18n="cta_testimonial">"The strategy call alone gave us a 3-month automation roadmap. We started saving 18 hours/week within 2 weeks."</p>
     <p class="text-[12px] font-semibold text-primary" data-i18n="cta_testimonial_author">— CEO, Nexus Logistics</p>
@@ -932,7 +1042,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <p class="text-fluid text-secondary mb-10 sm:mb-12 max-w-xl mx-auto" data-i18n="cta_subtitle">
     Schedule your free strategy call and discover how our AI systems can transform your operations.
   </p>
-  <a href="#book" class="inline-flex items-center gap-2 cta-primary px-10 sm:px-12 py-4 sm:py-5 text-base sm:text-lg">
+  <a href="#book" class="ui-btn ui-btn-primary px-10 sm:px-12 py-4 sm:py-5 text-base sm:text-lg gap-2">
     <span data-i18n="cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined" data-i18n-icon>arrow_forward</span>
   </a>
   <p class="text-secondary text-xs mt-6" data-i18n="cta_fine_print">Free 30-minute session · No obligation · Confidential</p>
@@ -948,7 +1058,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- =========================================================== -->
 <div id="page-solutions" class="page-section" data-page="solutions">
 
-<section class="pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 max-w-screen-2xl mx-auto">
+<section class="pt-28 sm:pt-36 pb-16 sm:pb-24 ui-container">
 <header class="mb-16 sm:mb-24 max-w-3xl reveal">
   <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="sol_hero_title">
     Architecture for the <span class="text-ink-dim italic font-bold">Automated</span> Enterprise.
@@ -960,7 +1070,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
   <!-- AI Automation — Workflow Builder Preview -->
-  <div class="md:col-span-8 preview-card p-7 sm:p-9 group hover:bg-surface-container transition-all reveal">
+  <div class="md:col-span-8 ui-card group reveal">
     <div class="flex flex-col md:flex-row justify-between h-full gap-6 sm:gap-8">
       <div class="flex-1 space-y-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/20 text-primary-dim text-[10px] uppercase tracking-widest font-semibold">
@@ -998,7 +1108,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- AI Agents — Agent Console Preview -->
-  <div class="md:col-span-4 preview-card p-7 sm:p-8 group hover:bg-surface-container transition-all reveal reveal-delay-1">
+  <div class="md:col-span-4 ui-card group reveal reveal-delay-1">
     <div class="space-y-4 mb-5">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-secondary text-[10px] uppercase tracking-widest font-semibold">
         <span class="material-symbols-outlined text-xs">smart_toy</span> Frontline
@@ -1021,7 +1131,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- Business Systems — Lead Pipeline Preview -->
-  <div class="md:col-span-4 preview-card p-7 sm:p-8 group hover:bg-surface-container transition-all reveal">
+  <div class="md:col-span-4 ui-card group reveal">
     <div class="space-y-4 mb-5">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-secondary text-[10px] uppercase tracking-widest font-semibold">
         <span class="material-symbols-outlined text-xs">settings_input_component</span> Infrastructure
@@ -1040,7 +1150,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
   </div>
   <!-- AI Trainer -->
-  <div class="md:col-span-8 preview-card p-7 sm:p-9 group hover:bg-surface-container transition-all reveal reveal-delay-1">
+  <div class="md:col-span-8 ui-card group reveal reveal-delay-1">
     <div class="flex flex-col md:flex-row justify-between h-full gap-6 sm:gap-8">
       <!-- Client mobile preview -->
       <div class="w-full md:w-2/5 order-2 md:order-1 bg-surface-container-lowest rounded-lg p-4 border border-softer">
@@ -1087,12 +1197,14 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </div>
 
 <!-- Solutions CTA -->
-<section class="mt-20 sm:mt-28 p-8 sm:p-14 bg-surface-container border border-softer rounded-2xl text-center relative overflow-hidden reveal">
+<section class="mt-20 sm:mt-28 relative overflow-hidden reveal">
+  <div class="ui-card bg-surface-container text-center">
   <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4" data-i18n="sol_cta_title">Ready to automate the grind?</h3>
   <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]" data-i18n="sol_cta_desc">Let's audit your current systems and find where AI can deliver 10x ROI within 30 days.</p>
-  <a href="#book" class="inline-flex items-center gap-2 cta-primary px-8 py-4 text-[15px]"><span data-i18n="sol_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
+  <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span data-i18n="sol_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
   <p class="text-secondary text-xs mt-4" data-i18n="sol_cta_fine">Free · 30 minutes · No obligation</p>
 </section>
+  </div>
 </section>
 
 </div>
@@ -1102,7 +1214,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- =========================================================== -->
 <div id="page-ai-trainer" class="page-section" data-page="ai-trainer">
 
-<section class="max-w-screen-2xl mx-auto px-4 sm:px-8 pt-28 sm:pt-36 pb-16 sm:py-24 md:py-40">
+<section class="ui-container pt-28 sm:pt-36 pb-16 sm:py-24 md:py-40">
 <div class="max-w-4xl reveal">
   <span class="text-[11px] font-semibold tracking-[0.2em] text-primary uppercase mb-6 block" data-i18n="ait_badge">Precision Intelligence</span>
   <h1 class="font-headline text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-[-0.035em] leading-[0.95] text-on-surface mb-6 sm:mb-8" data-i18n-html="ait_hero_title">
@@ -1112,22 +1224,22 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     Automate the administrative friction of coaching. Scale your methodology with high-fidelity tracking and AI-driven insights designed for serious practitioners.
   </p>
   <div class="flex flex-wrap gap-3">
-    <a href="#book" class="cta-primary px-7 sm:px-8 py-3.5 sm:py-4 text-[15px] flex items-center gap-2">
+    <a href="#book" class="ui-btn ui-btn-primary px-7 sm:px-8 py-3.5 sm:py-4 text-[15px] gap-2">
       <span data-i18n="ait_get_started">Get Started</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span>
     </a>
-    <a href="#packages" class="cta-secondary px-7 sm:px-8 py-3.5 sm:py-4 text-[15px] border border-outline-variant/15 rounded-lg hover:bg-surface-container transition-all" data-i18n="ait_view_plans">View Plans</a>
+    <a href="#packages" class="ui-btn ui-btn-secondary px-7 sm:px-8 py-3.5 sm:py-4 text-[15px]" data-i18n="ait_view_plans">View Plans</a>
   </div>
 </div>
 </section>
 
 <!-- Trainer Command Center — Realistic Dashboard -->
-<section class="bg-surface-container-low py-20 sm:py-32 px-4 sm:px-8">
-<div class="max-w-screen-2xl mx-auto">
+<section class="bg-surface-container-low py-20 sm:py-32">
+<div class="ui-container">
 <div class="mb-10 sm:mb-14 reveal">
   <h2 class="font-headline text-2xl sm:text-3xl font-bold mb-3" data-i18n="ait_cmd_title">The Command Center</h2>
   <p class="text-secondary max-w-lg text-[14px] sm:text-[15px]" data-i18n="ait_cmd_desc">A high-density overview of your client roster, active protocols, and automated progress loops.</p>
 </div>
-<div class="preview-card shadow-[0_30px_80px_rgba(0,0,0,0.5)] reveal">
+<div class="ui-card p-0 shadow-[0_30px_80px_rgba(0,0,0,0.5)] reveal">
   <div class="flex flex-col lg:flex-row min-h-[420px] lg:min-h-[550px]">
     <!-- Sidebar -->
     <div class="w-full lg:w-56 border-b lg:border-b-0 lg:border-r border-softer p-4 sm:p-5">
@@ -1197,9 +1309,9 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </section>
 
 <!-- Features -->
-<section class="max-w-screen-2xl mx-auto px-4 sm:px-8 py-20 sm:py-32">
+<section class="ui-container py-20 sm:py-32">
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-  <div class="md:col-span-2 preview-card p-8 sm:p-10 flex flex-col justify-between min-h-[280px] sm:min-h-[340px] reveal">
+  <div class="md:col-span-2 ui-card flex-col justify-between min-h-[280px] sm:min-h-[340px] reveal">
     <div>
       <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">auto_awesome</span></div>
       <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3" data-i18n="ait_auto_plan">Autonomous Plan Generation</h3>
@@ -1207,17 +1319,17 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     </div>
     <div class="mt-6 flex gap-4 text-[10px] font-semibold tracking-widest text-primary uppercase"><span data-i18n="ait_adaptive">Adaptive Loads</span><span data-i18n="ait_periodization">Periodization Engine</span></div>
   </div>
-  <div class="preview-card p-8 sm:p-10 flex flex-col reveal reveal-delay-1">
+  <div class="ui-card flex-col reveal reveal-delay-1">
     <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">notifications_active</span></div>
     <h3 class="font-headline text-lg sm:text-xl font-bold mb-3" data-i18n="ait_checkins_title">Automated Check-ins</h3>
     <p class="text-secondary text-[14px] leading-relaxed" data-i18n="ait_checkins_desc">No more chasing messages. GrindCTRL handles status updates and data collection on a schedule.</p>
   </div>
-  <div class="preview-card p-8 sm:p-10 flex flex-col reveal">
+  <div class="ui-card flex-col reveal">
     <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">trending_up</span></div>
     <h3 class="font-headline text-lg sm:text-xl font-bold mb-3" data-i18n="ait_tracking_title">Granular Tracking</h3>
     <p class="text-secondary text-[14px] leading-relaxed" data-i18n="ait_tracking_desc">From RPE to resting heart rate, visualize every metric that matters for your client's success.</p>
   </div>
-  <div class="md:col-span-2 preview-card p-8 sm:p-10 flex flex-col md:flex-row items-start gap-8 reveal reveal-delay-1">
+  <div class="md:col-span-2 ui-card flex-col md:flex-row items-start gap-8 reveal reveal-delay-1">
     <div class="flex-1">
       <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3" data-i18n="ait_comm_title">Seamless Communication</h3>
       <p class="text-secondary text-[14px] sm:text-[15px] leading-relaxed" data-i18n="ait_comm_desc">Centralized feedback loops. Annotate workouts, record video critiques, and keep your business conversations separate.</p>
@@ -1245,8 +1357,8 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <h2 class="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-5 sm:mb-6" data-i18n="ait_cta_title">Ready to Scale Your Methodology?</h2>
   <p class="text-secondary text-[15px] sm:text-base mb-10 sm:mb-12" data-i18n="ait_cta_desc">Join the elite network of trainers using GrindCTRL to deliver professional results without the administrative burnout.</p>
   <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-    <a href="#book" class="cta-primary px-8 sm:px-10 py-4 text-[15px] inline-flex items-center justify-center gap-2"><span data-i18n="ait_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
-    <a href="#packages" class="cta-secondary px-8 sm:px-10 py-4 text-[15px]" data-i18n="ait_cta_plans">View Pricing Plans</a>
+    <a href="#book" class="ui-btn ui-btn-primary px-8 sm:px-10 py-4 text-[15px] gap-2"><span data-i18n="ait_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
+    <a href="#packages" class="ui-btn ui-btn-secondary px-8 sm:px-10 py-4 text-[15px]" data-i18n="ait_cta_plans">View Pricing Plans</a>
   </div>
 </div>
 </section>
@@ -1258,7 +1370,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- =========================================================== -->
 <div id="page-book" class="page-section" data-page="book">
 
-<section class="max-w-screen-xl mx-auto px-4 sm:px-8 pt-28 sm:pt-36 pb-10 sm:pb-14 flex flex-col items-center text-center">
+<section class="ui-container max-w-screen-xl pt-28 sm:pt-36 pb-10 sm:pb-14 flex flex-col items-center text-center">
 <div class="mb-5"><span class="text-[10px] font-semibold tracking-[0.2em] uppercase text-primary border border-primary/15 px-3 py-1 rounded-full" data-i18n="book_badge">Strategic Access</span></div>
 <h1 class="font-headline text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-on-surface mb-5 sm:mb-6 leading-[1.1]" data-i18n-html="book_title">
   Book Your AI<br/><span class="text-primary-dim">Strategy Call</span>
@@ -1269,10 +1381,10 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 </section>
 
 <!-- Scheduling Layout -->
-<section class="max-w-screen-2xl mx-auto px-4 sm:px-8 py-8 sm:py-12 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+<section class="ui-container py-8 sm:py-12 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
 <!-- Preparation Card -->
 <div class="lg:col-span-4 reveal">
-<div class="preview-card p-7 sm:p-9 flex flex-col h-full">
+<div class="ui-card flex-col h-full">
   <h2 class="font-headline text-xl font-bold text-on-surface mb-6 sm:mb-8" data-i18n="book_prepare">What to prepare</h2>
   <div class="space-y-7 sm:space-y-8">
     <div class="flex gap-3.5">
@@ -1299,7 +1411,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Scheduling Card — Realistic Calendar -->
 <div class="lg:col-span-8 reveal">
-<div class="preview-card overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[560px]">
+<div class="ui-card p-0 overflow-hidden flex-col md:flex-row min-h-[500px] sm:min-h-[560px]">
   <!-- Social proof column -->
   <div class="w-full md:w-2/5 relative bg-surface-container-low p-6 sm:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-softer">
     <div>
@@ -1374,7 +1486,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
         <div class="text-center py-2 bg-surface-container rounded text-[12px] text-on-surface-variant cursor-pointer hover:bg-surface-container-high hover:text-on-surface transition-colors">14:00</div>
       </div>
     </div>
-    <button class="w-full cta-primary py-4 text-[15px]" data-i18n="book_confirm">Confirm Appointment</button>
+    <button class="ui-btn ui-btn-primary w-full py-4 text-[15px]" data-i18n="book_confirm">Confirm Appointment</button>
   </div>
 </div>
 </div>
@@ -1382,7 +1494,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <!-- Reassurance -->
 <section class="bg-surface-container-low py-16 sm:py-20 mt-6 sm:mt-10">
-<div class="max-w-screen-xl mx-auto px-4 sm:px-8">
+<div class="ui-container max-w-screen-xl">
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-12 text-center">
   <div class="reveal">
     <span class="material-symbols-outlined text-primary text-2xl mb-3 block">verified_user</span>
@@ -1441,7 +1553,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <p class="text-secondary mb-3 text-[13px]" data-i18n="footer_newsletter_desc">Get automation insights weekly.</p>
     <div class="flex gap-2">
       <input class="bg-surface-container border border-softer text-[12px] rounded-lg focus:ring-1 focus:ring-primary focus:border-primary w-full px-3 py-2 text-on-surface placeholder:text-secondary/50" placeholder="Email address" type="email" data-i18n-placeholder="footer_email_placeholder"/>
-      <button class="cta-primary px-4 py-2 text-[11px] uppercase tracking-wider shrink-0 rounded-lg" data-i18n="footer_join">Join</button>
+      <button class="ui-btn ui-btn-primary px-4 py-2 text-[11px] uppercase tracking-wider shrink-0 rounded-lg" data-i18n="footer_join">Join</button>
     </div>
   </div>
 </div>
