@@ -164,11 +164,17 @@ html:not(.dark) body{background:#f5f2ef;color:#2a2826}
 .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}
 .glass-panel{background:rgba(24,24,22,0.88);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px)}
 
+/* ── Fluid Typography ── */
+.h1-fluid { font-size: clamp(2.5rem, 1.5rem + 4vw, 5.5rem); line-height: 1.05; letter-spacing: -0.035em; font-weight: 800; }
+.h2-fluid { font-size: clamp(2rem, 1.5rem + 2vw, 4rem); line-height: 1.1; letter-spacing: -0.03em; font-weight: 800; }
+.h3-fluid { font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem); line-height: 1.2; letter-spacing: -0.02em; font-weight: 700; }
+.text-fluid { font-size: clamp(1rem, 0.9rem + 0.3vw, 1.125rem); line-height: 1.7; }
+
 /* ── CTA: ivory on charcoal — elegant, not flashy ── */
-.cta-primary{background:#f0ede9;color:#181816;font-weight:600;border-radius:0.5rem;transition:all .25s ease;letter-spacing:0.01em}
-.cta-primary:hover{background:#fff;box-shadow:0 4px 24px rgba(240,237,233,0.08)}
-.cta-secondary{color:#9b9793;font-weight:500;transition:color .2s ease}
-.cta-secondary:hover{color:#f0ede9}
+.cta-primary{background:linear-gradient(135deg, #f0ede9 0%, #dcd8d3 100%);color:#181816;font-weight:600;border-radius:0.5rem;transition:all .25s ease;letter-spacing:0.01em;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.cta-primary:hover{background:linear-gradient(135deg, #fff 0%, #e8e5e1 100%);box-shadow:0 6px 24px rgba(240,237,233,0.15);transform:translateY(-1px)}
+.cta-secondary{color:#9b9793;font-weight:500;transition:color .2s ease, transform .2s ease}
+.cta-secondary:hover{color:#f0ede9;transform:translateY(-1px)}
 
 /* ── Borders ── */
 .border-soft{border-color:rgba(240,237,233,0.08)}
@@ -366,10 +372,10 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-softer text-[11px] font-medium tracking-[0.15em] text-ink-dim mb-8 uppercase" data-i18n="hero_badge">
     Systems for the Intelligent Enterprise
   </div>
-  <h1 class="font-headline text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-[-0.035em] leading-[1.05] text-on-surface mb-6 sm:mb-8" data-i18n-html="hero_title">
+  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="hero_title">
     Take Control of<br class="hidden sm:block"/> Business Operations<br class="hidden md:block"/> with AI
   </h1>
-  <p class="font-body text-base sm:text-lg text-secondary leading-[1.7] max-w-xl mb-10 sm:mb-14" data-i18n="hero_subtitle">
+  <p class="text-fluid font-body text-secondary max-w-xl mb-10 sm:mb-14" data-i18n="hero_subtitle">
     We build AI automations, AI agents, and modern business systems that help you operate with more clarity, speed, and control.
   </p>
   <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -507,7 +513,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- Core Solutions -->
 <section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
 <div class="mb-14 sm:mb-20 reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl font-bold tracking-tight text-on-surface mb-3" data-i18n="core_title">Core Solutions</h2>
+  <h2 class="h2-fluid font-headline text-on-surface mb-3" data-i18n="core_title">Core Solutions</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
@@ -515,7 +521,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <div class="md:col-span-8 preview-card p-7 sm:p-10 flex flex-col justify-between group cursor-pointer hover:bg-surface-container transition-all reveal">
     <div>
       <span class="material-symbols-outlined text-primary text-2xl mb-5 block">memory</span>
-      <h3 class="font-headline text-2xl sm:text-3xl font-bold mb-3 text-on-surface" data-i18n="core_auto_title">AI Automation</h3>
+      <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_auto_title">AI Automation</h3>
       <p class="text-secondary text-[15px] leading-relaxed max-w-md mb-6" data-i18n="core_auto_desc">Replace repetitive workflows with autonomous systems that work 24/7 without fatigue or error.</p>
     </div>
     <!-- Realistic workflow preview -->
@@ -545,7 +551,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <!-- AI Agents — with agent console preview -->
   <div class="md:col-span-4 preview-card p-7 sm:p-8 hover:bg-surface-container transition-all reveal reveal-delay-1">
     <span class="material-symbols-outlined text-primary text-2xl mb-5 block">smart_toy</span>
-    <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3 text-on-surface" data-i18n="core_agent_title">AI Agents</h3>
+    <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_agent_title">AI Agents</h3>
     <p class="text-secondary text-sm leading-relaxed mb-5" data-i18n="core_agent_desc">Custom-trained digital employees focused on specific roles from sales to support.</p>
     <!-- Agent mini-preview -->
     <div class="bg-surface-container-lowest rounded-lg p-3 border border-softer text-[11px] space-y-2">
@@ -559,7 +565,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
   <!-- Business Systems — with CRM preview -->
   <div class="md:col-span-4 preview-card p-7 sm:p-8 hover:bg-surface-container transition-all reveal">
     <span class="material-symbols-outlined text-primary text-2xl mb-5 block">hub</span>
-    <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3 text-on-surface" data-i18n="core_biz_title">Business Systems</h3>
+    <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_biz_title">Business Systems</h3>
     <p class="text-secondary text-sm leading-relaxed mb-5" data-i18n="core_biz_desc">Foundational architectures that scale with your growth, designed for clarity.</p>
     <!-- CRM pipeline mini-preview -->
     <div class="bg-surface-container-lowest rounded-lg p-3 border border-softer text-[11px]">
@@ -581,7 +587,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <div class="flex flex-col md:flex-row gap-6 sm:gap-10 items-start">
       <div class="flex-1">
         <span class="material-symbols-outlined text-primary text-2xl mb-5 block">fitness_center</span>
-        <h3 class="font-headline text-2xl sm:text-3xl font-bold mb-3 text-on-surface" data-i18n="core_trainer_title">AI Trainer</h3>
+        <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_trainer_title">AI Trainer</h3>
         <p class="text-secondary text-[15px] leading-relaxed mb-5" data-i18n="core_trainer_desc">Vertical-specific AI tools designed for gym owners and performance coaches to automate member retention.</p>
         <a href="#ai-trainer" class="flex items-center text-primary text-[13px] font-medium group-hover:translate-x-1 transition-transform">
           Explore Coaching AI <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
@@ -617,8 +623,8 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <section class="py-20 sm:py-28 bg-surface-container-low overflow-hidden">
 <div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
 <div class="mb-12 sm:mb-16 reveal">
-  <h2 class="font-headline text-2xl sm:text-3xl font-bold mb-3" data-i18n="proof_title">See It In Action</h2>
-  <p class="text-secondary max-w-lg text-sm sm:text-[15px]" data-i18n="proof_subtitle">Not mockups — real interfaces from production systems we've built for clients.</p>
+  <h2 class="h2-fluid font-headline text-on-surface mb-3" data-i18n="proof_title">See It In Action</h2>
+  <p class="text-fluid text-secondary max-w-lg" data-i18n="proof_subtitle">Not mockups — real interfaces from production systems we've built for clients.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
   <!-- Card 1: AI Agent in Slack -->
@@ -760,7 +766,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- Quantified ROI — What Changes After Week 1 -->
 <section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
 <div class="mb-14 sm:mb-20 reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl font-bold mb-3 tracking-tight" data-i18n="roi_title">What Changes After Week 1</h2>
+  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="roi_title">What Changes After Week 1</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
@@ -790,8 +796,8 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <section class="py-20 sm:py-32 bg-surface-container-low border-y border-softer">
 <div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
 <div class="mb-14 sm:mb-20 reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl font-bold mb-3 tracking-tight" data-i18n="trust_title">Built for Business-Critical Operations</h2>
-  <p class="text-secondary text-[15px] sm:text-base max-w-lg" data-i18n="trust_subtitle">Enterprise-grade security and transparency. No black boxes.</p>
+  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="trust_title">Built for Business-Critical Operations</h2>
+  <p class="text-fluid text-secondary max-w-lg" data-i18n="trust_subtitle">Enterprise-grade security and transparency. No black boxes.</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
   <div class="preview-card p-6 sm:p-7 reveal">
@@ -821,7 +827,7 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <!-- Wall of Love — From Our Clients -->
 <section class="py-20 sm:py-32 px-4 sm:px-8 max-w-screen-2xl mx-auto">
 <div class="mb-14 sm:mb-20 reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl font-bold mb-3 tracking-tight" data-i18n="wol_title">From Our Clients</h2>
+  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="wol_title">From Our Clients</h2>
   <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
@@ -865,8 +871,8 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 <section id="packages-section" class="py-20 sm:py-32 bg-surface">
 <div class="max-w-screen-2xl mx-auto px-4 sm:px-8">
 <div class="mb-14 sm:mb-20 reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl font-bold mb-3 tracking-tight" data-i18n="pkg_title">Structured for Scale</h2>
-  <p class="text-secondary text-[15px] sm:text-base max-w-lg" data-i18n="pkg_subtitle">Choose the level of control your business requires. No hidden fees, just precision engineering.</p>
+  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="pkg_title">Structured for Scale</h2>
+  <p class="text-fluid text-secondary max-w-lg" data-i18n="pkg_subtitle">Choose the level of control your business requires. No hidden fees, just precision engineering.</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
   <div class="preview-card p-8 sm:p-9 flex flex-col h-full hover:bg-surface-container transition-all reveal">
@@ -922,8 +928,8 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
     <p class="text-[14px] text-on-surface leading-relaxed mb-3" data-i18n="cta_testimonial">"The strategy call alone gave us a 3-month automation roadmap. We started saving 18 hours/week within 2 weeks."</p>
     <p class="text-[12px] font-semibold text-primary" data-i18n="cta_testimonial_author">— CEO, Nexus Logistics</p>
   </div>
-  <h2 class="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-on-surface mb-5 sm:mb-6" data-i18n="cta_title">Ready to Reclaim 22+ Hours Every Week?</h2>
-  <p class="text-secondary text-[15px] sm:text-base mb-10 sm:mb-12 max-w-xl mx-auto leading-relaxed" data-i18n="cta_subtitle">
+  <h2 class="h2-fluid font-headline text-on-surface mb-5 sm:mb-6" data-i18n="cta_title">Ready to Reclaim 22+ Hours Every Week?</h2>
+  <p class="text-fluid text-secondary mb-10 sm:mb-12 max-w-xl mx-auto" data-i18n="cta_subtitle">
     Schedule your free strategy call and discover how our AI systems can transform your operations.
   </p>
   <a href="#book" class="inline-flex items-center gap-2 cta-primary px-10 sm:px-12 py-4 sm:py-5 text-base sm:text-lg">
@@ -944,10 +950,10 @@ html:not(.dark) input.bg-surface-container{background-color:#fff!important;borde
 
 <section class="pt-28 sm:pt-36 pb-16 sm:pb-24 px-4 sm:px-8 max-w-screen-2xl mx-auto">
 <header class="mb-16 sm:mb-24 max-w-3xl reveal">
-  <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold font-headline tracking-[-0.035em] text-on-surface mb-6 sm:mb-8 leading-[1.05]" data-i18n-html="sol_hero_title">
+  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="sol_hero_title">
     Architecture for the <span class="text-ink-dim italic font-bold">Automated</span> Enterprise.
   </h1>
-  <p class="text-base sm:text-lg text-secondary leading-relaxed max-w-xl" data-i18n="sol_hero_desc">
+  <p class="text-fluid text-secondary max-w-xl" data-i18n="sol_hero_desc">
     We design and implement autonomous systems that eliminate operational friction. Our core pillars represent the modular building blocks of a self-sustaining business.
   </p>
 </header>
