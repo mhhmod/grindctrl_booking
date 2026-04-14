@@ -70,6 +70,7 @@
     historyLoaded: false,
     historyLoading: false,
     historyRequested: false,
+    renderedCount: 0,
     auth: {
       client: null,
       session: null,
@@ -373,6 +374,7 @@
     if (Array.isArray(rows)) {
       state.messages = rows.map(mapStoredMessage).filter(Boolean);
       state.historyLoaded = true;
+      state.renderedCount = 0; // Reset to force full re-render
     }
 
     state.historyLoading = false;
@@ -606,6 +608,7 @@
     state.messages = state.messages.filter(function (entry) {
       return entry.id !== messageId;
     });
+    state.renderedCount = 0; // Force re-render of the list
   }
 
   function remainingTurnsValue() {
@@ -1282,8 +1285,54 @@
     var list = $('gc-chat-list');
     if (!list) return;
 
-    var html = state.messages.map(renderMessage).join('');
+    // Reset list if needed
+    if (state.renderedCount === 0) {
+      list.innerHTML = '';
+    }
 
+    // Incremental append
+    if (state.messages.length > state.renderedCount) {
+      var newMsgs = state.messages.slice(state.renderedCount);
+      var tmp = document.createElement('div');
+      tmp.innerHTML = newMsgs.map(renderMessage).join('');
+      while (tmp.firstChild) {
+        list.appendChild(tmp.firstChild);
+      }
+      state.renderedCount = state.messages.length;
+      scrollToBottom();
+    }
+
+    updateStatusArea();
+
+    // Sync audio button states
+    if (state.activeAudio && state.activeAudioUrl) {
+      var btn = list.querySelector('[data-action="play-audio"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
+      if (btn) {
+        var icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) icon.textContent = 'pause';
+        btn.setAttribute('aria-pressed', 'true');
+        state.activeAudioButton = btn;
+        var player = btn.closest('.gc-audio-player');
+        if (player) {
+          player.classList.add('playing');
+          state.activeAudioPlayer = player;
+        }
+      }
+    }
+  }
+
+  function updateStatusArea() {
+    var list = $('gc-chat-list');
+    if (!list) return;
+    
+    var wrap = $('gc-status-wrap');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'gc-status-wrap';
+      list.after(wrap);
+    }
+
+    var html = '';
     if (state.notice) {
       html += renderSystemCard({
         role: 'system',
@@ -1294,33 +1343,17 @@
     }
 
     if (state.historyLoading) {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined gc-spin">history</span><span>' + escapeHTML(t('chat_loading_history')) + '</span></div>';
     } else if (state.phase === 'generating_image') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_image')) + '</span></div>';
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined gc-anim-float">auto_awesome</span><span>' + escapeHTML(t('chat_generating_image')) + '</span></div>';
     } else if (state.phase === 'responding') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined gc-anim-pulse">auto_awesome</span><span>' + escapeHTML(t('chat_generating_status')) + '</span></div>';
     } else if (state.phase === 'transcribing') {
-      html += '<div class="gc-status-row"><span class="material-symbols-outlined">graphic_eq</span><span>' + escapeHTML(t('chat_transcribing_status')) + '</span></div>';
+      html += '<div class="gc-status-row"><span class="material-symbols-outlined gc-anim-wave">graphic_eq</span><span>' + escapeHTML(t('chat_transcribing_status')) + '</span></div>';
     }
 
-    list.innerHTML = html;
-
-    if (state.activeAudio && state.activeAudioUrl) {
-      var activeButton = list.querySelector('[data-action="play-audio"][data-audio-url="' + escapeSelectorValue(state.activeAudioUrl) + '"]');
-      if (activeButton) {
-        var activeIcon = activeButton.querySelector('.material-symbols-outlined');
-        if (activeIcon) activeIcon.textContent = 'pause';
-        activeButton.setAttribute('aria-pressed', 'true');
-        state.activeAudioButton = activeButton;
-        var playerContainer = activeButton.closest('.gc-audio-player');
-        if (playerContainer) {
-          playerContainer.classList.add('playing');
-          state.activeAudioPlayer = playerContainer;
-        }
-      }
-    }
-
-    scrollToBottom();
+    wrap.innerHTML = html;
+    if (html !== '') scrollToBottom();
   }
 
   function renderComposer() {
@@ -1391,7 +1424,10 @@
     var body = $('gc-chat-body');
     if (!body) return;
     requestAnimationFrame(function () {
-      body.scrollTop = body.scrollHeight;
+      body.scrollTo({
+        top: body.scrollHeight,
+        behavior: 'smooth'
+      });
     });
   }
 
@@ -1933,8 +1969,14 @@
     if (!panel || !trigger || !scrim) return;
 
     panel.classList.add('open');
+    panel.classList.add('state-opening');
     trigger.classList.add('open');
     scrim.classList.add('open');
+    
+    setTimeout(function() {
+      panel.classList.remove('state-opening');
+    }, 600);
+
     state.lastFocusedElement = document.activeElement && typeof document.activeElement.focus === 'function'
       ? document.activeElement
       : trigger;
@@ -1963,11 +2005,17 @@
 
     if (!panel || !trigger || !scrim) return;
 
+    panel.classList.add('state-closing');
     panel.classList.remove('open');
     trigger.classList.remove('open');
     scrim.classList.remove('open');
+    
+    setTimeout(function() {
+      panel.classList.remove('state-closing');
+      if (pill) pill.style.display = '';
+    }, 400);
+
     document.body.style.overflow = '';
-    if (pill) pill.style.display = '';
     stopActiveAudio();
 
     var nextPhase = state.notice && state.notice.kind === 'limit' ? 'limit' : 'closed';
