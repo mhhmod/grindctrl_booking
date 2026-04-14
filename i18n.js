@@ -541,6 +541,16 @@
     v2v_quality_high: { en: 'Platinum', ar: 'بلاتيني' },
     v2v_quality_mid: { en: 'Gold', ar: 'ذهبي' },
     v2v_quality_low: { en: 'Standard', ar: 'قياسي' },
+
+    /* --- Trust & Credibility Additions --- */
+    v2v_integrations_title: { en: 'Architected for your stack', ar: 'مصمم لمجموعة أدواتك' },
+    v2v_preview_label: { en: 'Destination Preview', ar: 'معاينة الوجهة' },
+    v2v_dest_gmail: { en: 'Gmail Draft', ar: 'مسودة Gmail' },
+    v2v_dest_sheets: { en: 'Google Sheets Row', ar: 'صف جداول بيانات Google' },
+    v2v_dest_slack: { en: 'Slack Notification', ar: 'تنبيه Slack' },
+    v2v_dest_crm: { en: 'CRM Lead Card', ar: 'بطاقة عميل CRM' },
+    v2v_sync_active: { en: 'Live Sync Enabled', ar: 'المزامنة المباشرة مفعلة' },
+    v2v_verified_source: { en: 'AI Verified Lead', ar: 'عميل موثق بالذكاء الاصطناعي' },
   };
 
   // ── Expose globally for optional external use ──

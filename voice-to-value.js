@@ -1,12 +1,18 @@
-/* ── Voice-to-Value Studio: Interaction Engine ── */
+/* ── Voice-to-Value Studio: Production Interaction Engine ── */
 
 (function() {
     'use strict';
 
     const CONFIG = {
         V2V_ENDPOINT: 'https://n8n.srv1141109.hstgr.cloud/webhook/voice-to-value-lead',
-        MAX_RECORD_SEC: 30,
-        TIMEOUT_MS: 40000
+        MAX_RECORD_SEC: 60,
+        PROCESSING_STEPS: [
+            { id: 'uploading', label: 'v2v_status_uploading', progress: 25 },
+            { id: 'transcribing', label: 'v2v_status_transcribing', progress: 50 },
+            { id: 'structuring', label: 'v2v_status_structuring', progress: 75 },
+            { id: 'saving', label: 'v2v_status_saving', progress: 90 },
+            { id: 'ready', label: 'v2v_status_ready', progress: 100 }
+        ]
     };
 
     const state = {
@@ -15,7 +21,8 @@
         recording: false,
         processing: false,
         timer: null,
-        startMs: 0
+        startMs: 0,
+        stream: null
     };
 
     const $ = (id) => document.getElementById(id);
@@ -34,52 +41,22 @@
     // Initial State Check
     function init() {
         const micBtn = $('v2v-mic-btn');
-        if (!micBtn) return;
+        const stopBtn = $('v2v-stop');
+        const cancelBtn = $('v2v-cancel');
+        const sendTextBtn = $('v2v-send-text');
 
-        micBtn.addEventListener('click', toggleRecording);
-        
-        // Integration simulation
-        document.body.addEventListener('click', (e) => {
-            if (e.target.closest('.v2v-action-btn')) {
-                const btn = e.target.closest('.v2v-action-btn');
-                const originalContent = btn.innerHTML;
-                
-                // Get the base icon (Gmail/Sheets/CRM)
-                const icon = btn.querySelector('.material-symbols-outlined').textContent;
-                
-                btn.innerHTML = `<span class="material-symbols-outlined animate-spin text-sm">sync</span> ${t('v2v_syncing')}`;
-                btn.style.opacity = '0.7';
-                
-                setTimeout(() => {
-                    btn.innerHTML = `<span class="material-symbols-outlined text-sm">check_circle</span> ${t('v2v_sent')}`;
-                    btn.style.background = 'var(--gc-primary)';
-                    btn.style.color = 'var(--gc-on-primary)';
-                    btn.style.opacity = '1';
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalContent;
-                        btn.style.background = '';
-                        btn.style.color = '';
-                    }, 3000);
-                }, 1500);
-            }
-        });
-    }
-
-    async function toggleRecording() {
-        if (state.processing) return;
-
-        if (state.recording) {
-            stopRecording();
-        } else {
-            await startRecording();
-        }
+        if (micBtn) micBtn.addEventListener('click', startRecording);
+        if (stopBtn) stopBtn.addEventListener('click', finishRecording);
+        if (cancelBtn) cancelBtn.addEventListener('click', cancelRecording);
+        if (sendTextBtn) sendTextBtn.addEventListener('click', handleTextSubmit);
     }
 
     async function startRecording() {
+        if (state.processing || state.recording) return;
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            state.recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            state.recorder = new MediaRecorder(state.stream, { mimeType: 'audio/webm' });
             state.chunks = [];
 
             state.recorder.ondataavailable = (e) => {
@@ -87,8 +64,7 @@
             };
 
             state.recorder.onstop = () => {
-                stream.getTracks().forEach(t => t.stop());
-                processAudio();
+                if (state.recording) processAudio(); // Only process if not cancelled
             };
 
             state.recorder.start();
@@ -99,7 +75,7 @@
 
             state.timer = setInterval(() => {
                 const elapsed = (Date.now() - state.startMs) / 1000;
-                if (elapsed >= CONFIG.MAX_RECORD_SEC) stopRecording();
+                if (elapsed >= CONFIG.MAX_RECORD_SEC) finishRecording();
                 updateTimerDisplay(elapsed);
             }, 100);
 
@@ -109,163 +85,262 @@
         }
     }
 
-    function stopRecording() {
+    function finishRecording() {
         if (!state.recorder || state.recorder.state !== 'recording') return;
         state.recorder.stop();
         state.recording = false;
         if (state.timer) clearInterval(state.timer);
+        if (state.stream) state.stream.getTracks().forEach(track => track.stop());
+    }
+
+    function cancelRecording() {
+        state.recording = false; 
+        if (state.recorder && state.recorder.state === 'recording') {
+            state.recorder.stop();
+        }
+        if (state.timer) clearInterval(state.timer);
+        if (state.stream) state.stream.getTracks().forEach(track => track.stop());
+        
+        state.chunks = [];
+        updateUIState('idle');
     }
 
     async function processAudio() {
         state.processing = true;
-        updateUIState('uploading');
 
         const blob = new Blob(state.chunks, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('file', blob, 'lead-note.webm');
-        formData.append('locale', currentLang());
+        const sessionId = 'v2v-' + Math.random().toString(36).substr(2, 9);
+        const submittedAt = new Date().toISOString();
 
-        try {
+        const formData = new FormData();
+        formData.append('audio', blob, 'lead-note.webm'); // Spec binary field: audio
+        formData.append('source', 'Grindctrl_V2V_Studio');
+        formData.append('session_id', sessionId);
+        formData.append('submitted_at', submittedAt);
+
+        // UI sequence
+        await runProcessingSequence(async () => {
             const response = await fetch(CONFIG.V2V_ENDPOINT, {
                 method: 'POST',
                 body: formData
             });
 
             if (!response.ok) throw new Error('Network error');
-            const result = await response.json();
+            return await response.json();
+        });
+    }
 
-            renderResult(result);
+    async function handleTextSubmit() {
+        const input = $('v2v-text-input');
+        if (!input || !input.value.trim() || state.processing) return;
+
+        state.processing = true;
+        const text = input.value.trim();
+        input.value = '';
+
+        const formData = new FormData();
+        formData.append('text_input', text);
+        formData.append('source', 'V2V_Manual_Entry');
+        formData.append('submitted_at', new Date().toISOString());
+
+        await runProcessingSequence(async () => {
+            const response = await fetch(CONFIG.V2V_ENDPOINT, {
+                method: 'POST',
+                body: formData
+            });
+            if (!response.ok) throw new Error('Network error');
+            return await response.json();
+        });
+    }
+
+    async function runProcessingSequence(fetchJob) {
+        try {
+            // Show steps sequence for premium feel
+            for (const step of CONFIG.PROCESSING_STEPS) {
+                if (step.id === 'ready') break; 
+                updateUIState(step.id);
+                await new Promise(r => setTimeout(r, 600)); // Visible transitions
+            }
+
+            const result = await fetchJob();
+
             updateUIState('ready');
+            renderResult(result);
 
         } catch (err) {
             console.error('Processing failed:', err);
-            updateUIState('error', t('v2v_status_error') || 'Processing failed.');
+            updateUIState('error');
         } finally {
             state.processing = false;
         }
     }
 
-    function updateUIState(status, message) {
+    function updateUIState(status) {
         const micBtn = $('v2v-mic-btn');
+        const controls = $('v2v-controls');
         const statusText = $('v2v-status-text');
-        const statusDot = $('v2v-status-container');
-        const micIcon = micBtn.querySelector('.material-symbols-outlined');
+        const dot = document.querySelector('.v2v-status-dot');
+        const progressShell = $('v2v-progress-steps');
+        const progressBar = $('v2v-progress-bar');
 
-        if (status === 'listening') {
-            micBtn.classList.add('is-recording');
-            micIcon.textContent = 'stop';
-            statusText.textContent = t('v2v_status_listening');
-            statusDot.classList.add('is-active');
-        } else if (status === 'uploading') {
-            micBtn.classList.remove('is-recording');
-            micIcon.textContent = 'cloud_upload';
-            statusText.textContent = t('v2v_status_uploading');
-        } else if (status === 'ready') {
-            micIcon.textContent = 'check';
-            statusText.textContent = t('v2v_status_ready');
-            statusDot.classList.remove('is-active');
-            
-            // Interaction: Smooth swap
-            $('v2v-result-area').classList.add('is-ready');
-            $('v2v-empty-hint').style.display = 'none';
-        } else if (status === 'error') {
-            micIcon.textContent = 'mic';
-            statusText.textContent = message || t('v2v_status_error');
-            statusText.style.color = 'var(--gc-error)';
-            statusDot.classList.remove('is-active');
+        // Reset
+        micBtn.classList.remove('animate-pulse', 'opacity-20');
+        controls.classList.add('hidden');
+        progressShell.classList.add('hidden');
+        if (dot) dot.style.background = '';
+
+        switch(status) {
+            case 'idle':
+                statusText.innerText = t('v2v_status_idle');
+                micBtn.style.display = 'flex';
+                break;
+            case 'listening':
+                statusText.innerText = t('v2v_status_listening');
+                micBtn.classList.add('animate-pulse');
+                controls.classList.remove('hidden');
+                micBtn.style.display = 'none';
+                if (dot) dot.style.background = '#ef4444';
+                break;
+            case 'error':
+                statusText.innerText = t('v2v_status_error');
+                micBtn.style.display = 'flex';
+                if (dot) dot.style.background = '#ef4444';
+                break;
+            default:
+                // Step-based statuses (uploading, transcribing, etc)
+                const step = CONFIG.PROCESSING_STEPS.find(s => s.id === status);
+                if (step) {
+                    statusText.innerText = t(step.label);
+                    progressShell.classList.remove('hidden');
+                    progressBar.style.width = `${step.progress}%`;
+                    micBtn.style.display = 'none';
+                    if (dot) dot.style.background = 'var(--gc-primary)';
+                }
         }
     }
 
-    function updateTimerDisplay(elapsed) {
-        const sec = Math.floor(elapsed);
-        const ms = Math.floor((elapsed % 1) * 10);
-        $('v2v-timer').textContent = `${sec}.${ms}s`;
+    function updateTimerDisplay(sec) {
+        const timer = $('v2v-timer');
+        if (timer) timer.innerText = sec.toFixed(1) + 's';
     }
 
-    async function renderResult(data) {
+    function renderResult(response) {
         const resultArea = $('v2v-result-area');
-        
-        // Product Logic: Quality Mapping
-        const lead = data || {
-            transcript: "...",
-            summary: "...",
-            details: { name: "..." },
-            qualification: "High",
-            urgency: "Immediate",
-            follow_up: "...",
-            next_action: "..."
-        };
+        if (!resultArea) return;
 
-        const qualityTagClass = lead.qualification === 'High' ? 'v2v-tag-platinum' : 'v2v-tag-gold';
-        const qualityLabel = lead.qualification === 'High' ? t('v2v_quality_high') : t('v2v_quality_mid');
+        // Base result fallback for error handling
+        const isOk = response.ok !== false;
+        const lead = response.lead || {};
+        const sheet = response.sheet || {};
 
-        // Pre-build the card structure with invisible items for staggering
+        let warningHtml = '';
+        if (!isOk) {
+            warningHtml = `
+                <div class="v2v-soft-warning reveal active">
+                    <span class="material-symbols-outlined">warning</span>
+                    <div>Partial Success: ${response.message || 'System encountered an issue, but some data was recovered.'}</div>
+                </div>
+            `;
+        }
+
         resultArea.innerHTML = `
-            <div class="v2v-card-premium reveal active overflow-hidden">
-                <!-- Header Component -->
-                <div class="v2v-stagger-item flex justify-between items-start mb-8">
-                    <div class="text-start">
-                        <span class="v2v-tag ${qualityTagClass} mb-4">${qualityLabel}</span>
-                        <h4 class="text-3xl font-bold font-headline tracking-tight text-on-surface">${lead.details.name || t('v2v_extracted_label')}</h4>
+            <div class="v2v-result-card reveal active">
+                ${warningHtml}
+
+                <!-- Lead Details Grid -->
+                <div class="v2v-detail-grid">
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_name')}</span>
+                        <span class="v2v-detail-value">${lead.lead_name || '—'}</span>
                     </div>
-                    <div class="text-end">
-                        <div class="v2v-field-label opacity-60">${t('v2v_urgency_label')}</div>
-                        <div class="text-[16px] font-black text-primary">${lead.urgency}</div>
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_company')}</span>
+                        <span class="v2v-detail-value">${lead.company_name || '—'}</span>
+                    </div>
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_contact')}</span>
+                        <span class="v2v-detail-value">${lead.phone_or_contact || '—'}</span>
+                    </div>
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_need')}</span>
+                        <span class="v2v-detail-value">${lead.need_or_request || '—'}</span>
+                    </div>
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_urgency')}</span>
+                        <span class="v2v-detail-value">${lead.urgency || '—'}</span>
+                    </div>
+                    <div class="v2v-detail-item">
+                        <span class="v2v-detail-label">${t('v2v_field_next')}</span>
+                        <span class="v2v-detail-value">${lead.next_step || '—'}</span>
                     </div>
                 </div>
 
-                <!-- Insights Layer -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-8">
-                    <div class="v2v-stagger-item text-start">
-                        <div class="v2v-field-label">${t('v2v_transcript_label')}</div>
-                        <div class="text-[14px] text-secondary leading-relaxed italic border-s-2 border-primary/20 ps-5 py-1">"${lead.transcript}"</div>
-                    </div>
-                    <div class="v2v-stagger-item text-start">
-                        <div class="v2v-field-label">${t('v2v_summary_label')}</div>
-                        <div class="text-[15px] text-on-surface font-semibold leading-relaxed">${lead.summary}</div>
-                    </div>
+                <!-- Summary Section -->
+                <div class="v2v-section-box">
+                    <div class="v2v-detail-label mb-3">${t('v2v_summary_label')}</div>
+                    <div class="text-[15px] font-medium leading-relaxed">${lead.summary || '—'}</div>
                 </div>
 
-                <div class="v2v-section-divider"></div>
-
-                <!-- Proposal Layer -->
-                <div class="v2v-stagger-item p-8 bg-surface-container/30 rounded-[1.5rem] border border-softer mb-8 text-start">
-                    <div class="v2v-field-label opacity-50">${t('v2v_followup_label')}</div>
-                    <div class="text-[15px] text-on-surface leading-relaxed font-medium">${lead.follow_up}</div>
+                <!-- Follow-up Draft -->
+                <div class="v2v-section-box">
+                    <div class="v2v-detail-label mb-3">${t('v2v_followup_label')}</div>
+                    <div class="text-[14px] leading-relaxed italic text-secondary border-s-2 border-primary/20 ps-5">${lead.followup_draft || '—'}</div>
                 </div>
 
-                <!-- Action Center -->
-                <div class="v2v-stagger-item flex flex-wrap items-center justify-between gap-8 pt-8 border-t border-softer">
-                    <div class="text-start">
-                        <div class="v2v-field-label">${t('v2v_next_action_label')}</div>
-                        <div class="text-[14px] font-black text-primary tracking-wide uppercase">${lead.next_action || '...'}</div>
-                    </div>
-                    <div class="flex gap-4">
-                        <button class="v2v-action-btn h-12 px-6">
-                            <span class="material-symbols-outlined text-sm">mail</span> 
-                            ${t('v2v_btn_gmail')}
-                        </button>
-                        <button class="v2v-action-btn h-12 px-6">
-                            <span class="material-symbols-outlined text-sm">hub</span> 
-                            ${t('v2v_btn_crm')}
-                        </button>
-                    </div>
+                <!-- Transcript Section -->
+                <div class="mt-8">
+                     <div class="v2v-detail-label mb-3">${t('v2v_transcript_label')}</div>
+                     <p class="v2v-transcript-text">"${response.transcript || '—'}"</p>
+                </div>
+
+                <!-- Sheet Actions -->
+                <div class="v2v-sheet-actions">
+                    ${sheet.saved ? `
+                        <a href="${sheet.sheet_view_url}" target="_blank" class="v2v-btn-primary">
+                            <span class="material-symbols-outlined">table_chart</span>
+                            ${t('v2v_btn_open_sheet')}
+                        </a>
+                    ` : `
+                        <div class="text-error font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                             <span class="material-symbols-outlined text-sm">error</span>
+                             Sheet Sync Failed
+                        </div>
+                    `}
+
+                    ${sheet.sheet_download_url ? `
+                        <a href="${sheet.sheet_download_url}" download class="v2v-btn-secondary">
+                            <span class="material-symbols-outlined">download</span>
+                            ${t('v2v_btn_download_csv')}
+                        </a>
+                    ` : ''}
+
+                    <button onclick="window.location.reload()" class="v2v-btn-secondary ms-auto">
+                        <span class="material-symbols-outlined">refresh</span>
+                        ${t('v2v_btn_try_again')}
+                    </button>
                 </div>
             </div>
         `;
 
-        // Orchestrate Staggered Reveal
-        const items = resultArea.querySelectorAll('.v2v-stagger-item');
-        for (let i = 0; i < items.length; i++) {
-            await new Promise(r => setTimeout(r, 150 * i)); // Premium delay
-            items[i].classList.add('is-visible');
-        }
+        // Smooth reveal of card
+        const card = resultArea.querySelector('.v2v-result-card');
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100);
     }
 
-    // Export to global scope if needed
+    // Export to global scope
     window.v2vInit = init;
 
     // Auto-init 
-    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
 })();

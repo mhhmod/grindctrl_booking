@@ -666,34 +666,73 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     
     <!-- Interaction Panel -->
     <div class="ui-card v2v-panel relative overflow-hidden group">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none"></div>
+      <!-- Premium Grain & Glow Overlay -->
+      <div class="absolute inset-x-0 inset-y-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style="background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');"></div>
+      <div class="v2v-empty-glow top-0 right-0"></div>
       
       <div class="relative z-10 mb-auto">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-6">
           <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          Voice Lead Capture
+          <span data-i18n="v2v_kicker">Voice Lead Engine</span>
         </div>
-        <h2 class="h2-fluid font-headline text-on-surface mb-6 tracking-tight">Voice to Value.</h2>
-        <p class="text-secondary text-[16px] leading-relaxed max-w-sm mb-8 font-medium">Record a 30s voice note about a project or lead. Our AI structures it into a qualified business record immediately.</p>
+        <h2 class="h2-fluid font-headline text-on-surface mb-6 tracking-tight" data-i18n="v2v_title">Voice to Value.</h2>
+        <p class="text-secondary text-[16px] leading-relaxed max-w-sm mb-6 font-medium" data-i18n="v2v_subtitle">Record a brief voice note about a project. Our AI immediately architects a structured business record.</p>
+        
+        <!-- Trust Row: Supported Integrations -->
+        <div class="pt-2 pb-8">
+            <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.15em] mb-4" data-i18n="v2v_integrations_title">Architected for your stack</div>
+            <div class="flex flex-wrap gap-6 items-center opacity-40 hover:opacity-100 transition-opacity duration-500">
+                <div class="v2v-trust-logo w-6 h-6" title="Gmail">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.573l8.073-6.08c1.618-1.214 3.927-.059 3.927 1.964z" fill="currentColor"/></svg>
+                </div>
+                <div class="v2v-trust-logo w-6 h-6" title="Slack">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523 2.527 2.527 0 01-2.522-2.523 2.527 2.527 0 012.522-2.52h2.52v2.52zm1.263 0a2.527 2.527 0 012.522-2.52 2.527 2.527 0 012.522 2.52v6.313a2.528 2.528 0 01-2.522 2.522 2.526 2.526 0 01-2.522-2.522v-6.313zM8.826 5.042a2.528 2.528 0 012.522-2.52 2.527 2.527 0 012.523 2.52v2.52h-2.523a2.528 2.528 0 01-2.522-2.52zM8.826 6.304a2.527 2.527 0 012.522 2.522 2.527 2.527 0 01-2.522 2.522H2.511a2.528 2.528 0 01-2.522-2.522 2.527 2.527 0 012.522-2.522h6.315zM18.835 8.826a2.528 2.528 0 012.522-2.522 2.527 2.527 0 012.522 2.522 2.527 2.527 0 01-2.522 2.523h-2.522V8.826zm-1.263 0a2.527 2.527 0 01-2.522 2.523 2.527 2.527 0 01-2.522-2.523V2.513a2.528 2.528 0 012.522-2.522 2.526 2.526 0 012.522 2.522v6.313zM15.051 18.835a2.528 2.528 0 01-2.522 2.522 2.527 2.527 0 01-2.523-2.522v-2.522h2.523a2.528 2.528 0 012.522 2.522zM15.051 17.574a2.527 2.527 0 01-2.522-2.522 2.527 2.527 0 012.522-2.522h6.315a2.528 2.528 0 012.522 2.522 2.527 2.527 0 01-2.522 2.522h-6.315z" fill="currentColor"/></svg>
+                </div>
+                <div class="v2v-trust-logo w-6 h-6" title="HubSpot">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.9 10.9c-.2 0-.4.1-.6.2-1.1-1.3-2.7-2.1-4.5-2.1-.8 0-1.6.2-2.3.5V6.7c.6-.3 1-.9 1-1.6 0-1-.8-1.8-1.8-1.8S9 4.1 9 5.1c0 .7.4 1.3 1 1.6v2.8c-.7-.3-1.5-.5-2.3-.5-1.8 0-3.4.8-4.5 2.1-.2-.1-.4-.2-.6-.2-1 0-1.8.8-1.8 1.8s.8 1.8 1.8 1.8c.2 0 .4-.1.6-.2 1.1 1.3 2.7 2.1 4.5 2.1 1.2 0 2.4-.4 3.3-1.2l2.3 2.3c-.1.2-.2.4-.2.6 0 1 .8 1.8 1.8 1.8s1.8-.8 1.8-1.8-.8-1.8-1.8-1.8c-.2 0-.4.1-.6.2l-2.3-2.3c.8-.9 1.2-2.1 1.2-3.3 0-1.8-.8-3.4-2.1-4.5.1-.2.2-.4.2-.6 0-1-.8-1.8-1.8-1.8z" fill="currentColor"/></svg>
+                </div>
+                <div class="v2v-trust-logo w-6 h-6" title="Google Sheets">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="currentColor"/><path d="M14 2v6h6l-6-6z" fill="var(--gc-surface-container-high)"/><path d="M8 12h8v2H8v-2zm0 4h8v2H8v-2z" fill="#fff"/></svg>
+                </div>
+                <div class="v2v-trust-logo w-6 h-6" title="WhatsApp">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.031 2c-5.511 0-9.993 4.481-9.993 9.993 0 1.763.459 3.42 1.261 4.865l-1.339 4.89 5.004-1.314c1.402.764 2.997 1.2 4.693 1.2a10.005 10.005 0 009.993-9.993C22.024 6.481 17.542 2 12.031 2zm6.304 14.188c-.27.761-1.572 1.378-2.145 1.468-.521.081-1.2.148-3.526-.803-2.812-1.15-4.634-4.018-4.774-4.204-.14-.186-1.144-1.522-1.144-2.9 0-1.378.721-2.057 1.057-2.385.27-.261.73-.429.982-.429.252 0 .504.004.721.017.221.013.439-.026.685.568.27.653.921 2.251 1 2.414.079.163.131.353.023.568-.108.216-.162.353-.325.541-.162.188-.34.423-.487.568-.162.163-.332.34-.143.666.19.324.843 1.391 1.812 2.251.969.86 1.787 1.127 2.112 1.29.324.162.513.135.703-.081.189-.216.812-.946 1.028-1.27.216-.324.433-.27.73-.162.297.108 1.892.892 2.217 1.055.324.162.541.243.621.378.081.135.081.784-.189 1.545z" fill="currentColor"/></svg>
+                </div>
+            </div>
+        </div>
       </div>
 
       <div class="v2v-mic-area relative z-10">
-        <div id="v2v-mic-btn" class="v2v-mic-btn group" role="button" aria-label="Start recording voice note">
+        <!-- ... existing mic button ... -->
+        <div id="v2v-mic-btn" class="v2v-mic-btn group" role="button" data-i18n-aria="v2v_mic_aria" aria-label="Start architecture process">
+        <!-- Main Mic Action -->
+        <div id="v2v-mic-btn" class="v2v-mic-btn group" role="button" data-i18n-aria="v2v_mic_aria" aria-label="Start audio capture">
           <span class="material-symbols-outlined">mic</span>
         </div>
         
-        <div id="v2v-status-container" class="v2v-status-indicator">
-          <span class="v2v-status-dot"></span>
-          <span id="v2v-status-text">Ready for your voice note</span>
-          <span id="v2v-timer" class="font-mono text-xs opacity-50 ml-2">0.0s</span>
+        <!-- Recording Controls (Hidden by default) -->
+        <div id="v2v-controls" class="hidden flex items-center gap-6 mt-4">
+            <button id="v2v-cancel" class="h-10 px-4 rounded-full border border-outline text-[11px] font-black uppercase tracking-widest hover:bg-error/10 hover:text-error transition-all">Cancel</button>
+            <button id="v2v-stop" class="h-10 px-6 rounded-full bg-primary text-on-primary text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-all">Finish Recording</button>
+        </div>
+
+        <div id="v2v-status-container" class="v2v-status-indicator flex flex-col items-center gap-3">
+          <div class="flex items-center gap-3">
+              <span class="v2v-status-dot"></span>
+              <span id="v2v-status-text" data-i18n="v2v_status_idle">Speak your lead</span>
+              <span id="v2v-timer" class="font-mono text-xs opacity-50 ms-2">0.0s</span>
+          </div>
+          <!-- Step-based progress indicator (Hidden by default) -->
+          <div id="v2v-progress-steps" class="hidden w-48 h-1 bg-surface-container rounded-full overflow-hidden">
+              <div id="v2v-progress-bar" class="h-full bg-primary w-0 transition-all duration-700"></div>
+          </div>
         </div>
       </div>
 
       <div class="mt-auto pt-8 border-t border-softer relative z-10">
-        <div class="text-[10px] text-secondary font-black uppercase tracking-[0.2em] mb-4">Or use text</div>
+        <div class="text-[10px] text-secondary font-black uppercase tracking-[0.2em] mb-4" data-i18n="v2v_or_text">Prefer typing?</div>
         <div class="flex gap-2">
-           <input type="text" class="flex-1 bg-surface-container-low/50 border border-softer rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-secondary/40 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Type lead summary instead..."/>
-           <button class="w-11 h-11 bg-surface-container-high rounded-xl border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors">
+           <input id="v2v-text-input" type="text" class="flex-1 bg-surface-container-low/50 border border-softer rounded-xl px-4 py-2.5 text-[13px] text-on-surface placeholder:text-secondary/40 font-medium focus:ring-1 focus:ring-primary focus:border-primary" data-i18n-placeholder="v2v_input_placeholder" placeholder="Summarize the lead manually..."/>
+           <button id="v2v-send-text" class="w-11 h-11 bg-surface-container-high rounded-xl border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors">
              <span class="material-symbols-outlined text-xl">send</span>
            </button>
         </div>
@@ -701,14 +740,19 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     </div>
 
     <!-- Result Area -->
-    <div id="v2v-result-area" class="v2v-result-container">
-      <div id="v2v-empty-hint" class="h-full flex flex-col items-center justify-center text-center p-12 ui-card bg-surface-container-low/30 border-dashed border-2 border-softer">
-        <span class="material-symbols-outlined text-4xl text-outline-variant mb-4">insights</span>
-        <h3 class="text-xl font-headline font-bold text-secondary mb-2">Awaiting Intelligence</h3>
-        <p class="text-sm text-ink-muted max-w-xs leading-relaxed">Your structured lead summary and follow-up draft will appear here after recording.</p>
+    <div id="v2v-result-area" class="v2v-result-container relative">
+      <div id="v2v-empty-hint" class="h-full min-h-[520px] flex flex-col items-center justify-center text-center p-12 ui-card bg-surface-container-low/20 border-dashed border-2 border-softer relative overflow-hidden">
+        <div class="v2v-empty-glow opacity-[0.05] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[2]"></div>
+        <span class="material-symbols-outlined text-4x text-outline-variant mb-4 opacity-40">insights</span>
+        <h3 class="text-xl font-headline font-bold text-secondary mb-2" data-i18n="v2v_empty_title">Intelligence Awaiting</h3>
+        <p class="text-sm text-ink-muted max-w-xs leading-relaxed" data-i18n="v2v_empty_desc">Your structured lead summary and follow-up draft will appear here after recording.</p>
       </div>
-      <!-- Result Card will be injected here by JS -->
+      <!-- Field-perfect result cards will be injected here by JS -->
     </div>
+
+  </div>
+</div>
+</section>
 
   </div>
 </div>
