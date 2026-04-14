@@ -221,10 +221,10 @@ tailwind.config = {
   --gc-on-error-container: #410e0b;
   --gc-inverse-surface: #1a1917;
   --gc-inverse-on-surface: #fcfbf9;
-  --gc-glass-bg: rgba(255, 255, 255, 0.75);
-  --gc-glow-color: rgba(26,25,23,0.03);
-  --gc-card-shadow: 0 10px 20px -10px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02);
-  --gc-card-shadow-hover: 0 25px 40px -15px rgba(0,0,0,0.08);
+  --gc-glass-bg: rgba(255, 255, 255, 0.65);
+  --gc-glow-color: rgba(26,25,23,0.02);
+  --gc-card-shadow: 0 8px 32px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02);
+  --gc-card-shadow-hover: 0 40px 80px -20px rgba(0,0,0,0.08), 0 0 0 1px var(--gc-outline);
 }
 
 .dark {
@@ -268,10 +268,10 @@ tailwind.config = {
   --gc-on-error-container: #f09590;
   --gc-inverse-surface: #f8f7f4;
   --gc-inverse-on-surface: #1c1b1a;
-  --gc-glass-bg: rgba(10, 10, 9, 0.85);
-  --gc-glow-color: rgba(248,247,244,0.08);
-  --gc-card-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
-  --gc-card-shadow-hover: 0 25px 50px -20px rgba(0,0,0,0.5);
+  --gc-glass-bg: rgba(10, 10, 9, 0.7);
+  --gc-glow-color: rgba(248,247,244,0.05);
+  --gc-card-shadow: 0 20px 60px -12px rgba(0,0,0,0.4);
+  --gc-card-shadow-hover: 0 40px 100px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
 }
 
 *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -321,20 +321,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 .ui-card {
     background: var(--gc-surface-container-low);
     border: 1px solid var(--gc-outline);
-    border-radius: 1.25rem;
-    padding: clamp(1.5rem, 5vw, 2.25rem);
+    border-radius: 1.5rem;
+    padding: clamp(1.5rem, 5vw, 2.5rem);
     min-width: 0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(20px);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(var(--gc-glass-blur, 40px));
+    -webkit-backdrop-filter: blur(var(--gc-glass-blur, 40px));
     box-shadow: var(--gc-card-shadow);
+    position: relative;
+}
+.ui-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 40%);
+    pointer-events: none;
+    opacity: 0.5;
 }
 .ui-card:hover {
     background: var(--gc-surface-container);
-    border-color: var(--gc-outline-variant);
-    transform: translateY(-4px);
+    border-color: var(--gc-primary);
+    transform: translateY(-6px) scale(1.01);
     box-shadow: var(--gc-card-shadow-hover);
 }
 
@@ -355,16 +365,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 .ui-btn-primary {
     background: var(--gc-primary);
     color: var(--gc-on-primary);
-    box-shadow: 0 4px 0 var(--gc-outline);
+    box-shadow: 0 12px 24px -8px rgba(0,0,0,0.3);
 }
 .ui-btn-primary:hover {
     background: var(--gc-primary-dim);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 0 var(--gc-outline);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 20px 40px -12px rgba(0,0,0,0.4);
 }
 .ui-btn-primary:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--gc-outline);
+    transform: translateY(0) scale(0.98);
 }
 
 .ui-btn-secondary {
@@ -413,21 +422,26 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 .reveal-delay-1{transition-delay:.15s}
 .reveal-delay-2{transition-delay:.3s}
 
-.premium-glow {
-    position: relative;
-    overflow: hidden;
-}
-.premium-glow::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), var(--gc-glow-color) 0%, transparent 60%);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
 .premium-glow:hover::after {
     opacity: 1;
+}
+
+/* ── Mobile-First Refinements ── */
+.scroll-fade {
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+[dir="rtl"] .scroll-fade {
+    mask-image: linear-gradient(to left, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, black 85%, transparent 100%);
+}
+
+@media (max-width: 480px) {
+    .ui-card {
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+    }
+    .h1-fluid { font-size: 2.25rem; }
 }
 
 /* Mobile drawer */
@@ -466,7 +480,43 @@ html{scroll-behavior:smooth}
 
 /* ── Brand motif ── */
 .brand-glow{position:relative}
-.brand-glow::before{content:'';position:absolute;top:-120px;right:-80px;width:500px;height:500px;background:radial-gradient(ellipse,var(--gc-glow-color) 0%,transparent 70%);pointer-events:none}
+.brand-glow::before{
+    content:'';
+    position:absolute;
+    top:-20%;
+    right:-10%;
+    width:80%;
+    height:80%;
+    background:radial-gradient(circle at center, color-mix(in srgb, var(--gc-primary) 8%, transparent), transparent 70%);
+    pointer-events:none;
+    filter: blur(80px);
+    z-index: -1;
+}
+
+.hero-mesh {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--gc-canvas);
+}
+.hero-mesh::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 140%;
+    height: 140%;
+    background: 
+        radial-gradient(circle at 70% 20%, color-mix(in srgb, var(--gc-primary) 5%, transparent) 0%, transparent 40%),
+        radial-gradient(circle at 10% 80%, color-mix(in srgb, var(--gc-primary) 3%, transparent) 0%, transparent 30%);
+    filter: blur(100px);
+    animation: meshFlow 20s ease-in-out infinite alternate;
+}
+@keyframes meshFlow {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(5deg) scale(1.1); }
+}
 
 /* ── Adaptive logo: show/hide per theme ── */
 .logo-dark{display:block}
@@ -494,7 +544,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <body class="ui-shell selection:bg-primary/20 selection:text-on-surface">
 
 <!-- ===== NAV ===== -->
-<nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 bg-canvas/90 backdrop-blur-2xl border-b border-softer">
+<nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 bg-canvas/60 backdrop-blur-3xl border-b border-softer shadow-sm shadow-ink/5">
 <div class="ui-container flex justify-between items-center py-3 font-headline tracking-tight">
   <a href="#home" class="flex items-center gap-2.5">
     <img src="logo-dark.svg" alt="GRINDCTRL Symbol" class="logo-dark h-7 w-auto"/>
@@ -573,9 +623,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 
 <!-- Hero -->
 <header class="relative pt-28 pb-16 sm:pt-36 sm:pb-20 md:pt-48 md:pb-36 overflow-hidden">
+<div class="hero-mesh"></div>
 <div class="ui-container relative z-10">
 <div class="max-w-4xl">
-  <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container border border-softer text-[11px] font-medium tracking-[0.15em] text-ink-dim mb-8 uppercase" data-i18n="hero_badge">
+  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low/40 backdrop-blur-xl border border-primary/10 text-[10px] font-bold tracking-[0.2em] text-primary/80 mb-10 uppercase shadow-inner" data-i18n="hero_badge">
+    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
     Systems for the Intelligent Enterprise
   </div>
   <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="hero_title">
@@ -731,23 +783,24 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <p class="text-secondary text-[16px] leading-relaxed max-w-lg mb-8" data-i18n="core_auto_desc">Replace repetitive workflows with autonomous systems that work 24/7 without fatigue or error.</p>
     </div>
     <!-- Realistic workflow preview -->
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer shadow-inner">
-      <div class="flex items-center gap-2 mb-4 text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">
-        <span class="material-symbols-outlined text-xs">play_circle</span> Live Workflow · Order Processing
+    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-6 border border-primary/10 shadow-inner group-hover:bg-surface-container-lowest/60 transition-colors">
+      <div class="flex items-center gap-2 mb-5 text-[10px] text-primary font-bold uppercase tracking-[0.2em]">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+        Live Workflow · Order Processing
       </div>
-      <div class="flex items-center gap-2 overflow-x-auto pb-1">
-        <div class="shrink-0 px-3 py-2 bg-primary-container/30 rounded text-[11px] text-primary font-medium border border-primary/15">Webhook<br/><span class="text-[9px] text-secondary">Shopify Order</span></div>
-        <span class="text-outline-variant text-xs shrink-0">→</span>
-        <div class="shrink-0 px-3 py-2 bg-surface-container rounded text-[11px] text-on-surface-variant border border-softer">AI Classify<br/><span class="text-[9px] text-secondary">GPT-4o</span></div>
-        <span class="text-outline-variant text-xs shrink-0">→</span>
-        <div class="shrink-0 px-3 py-2 bg-surface-container rounded text-[11px] text-on-surface-variant border border-softer">Route<br/><span class="text-[9px] text-secondary">3 Branches</span></div>
-        <span class="text-outline-variant text-xs shrink-0">→</span>
-        <div class="shrink-0 px-3 py-2 bg-surface-container rounded text-[11px] text-on-surface-variant border border-softer">CRM Update<br/><span class="text-[9px] text-secondary">HubSpot</span></div>
+      <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none scroll-fade">
+        <div class="shrink-0 px-4 py-3 bg-primary/5 rounded-xl text-[11px] text-primary font-bold border border-primary/10 shadow-sm">Webhook<br/><span class="text-[9px] opacity-70 font-medium">Shopify Order</span></div>
+        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
+        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">AI Classify<br/><span class="text-[9px] text-secondary font-medium">GPT-4o</span></div>
+        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
+        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">Route<br/><span class="text-[9px] text-secondary font-medium">3 Branches</span></div>
+        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
+        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">CRM Sync<br/><span class="text-[9px] text-secondary font-medium">HubSpot</span></div>
       </div>
-      <div class="mt-3 flex items-center gap-4 text-[10px] text-secondary">
-        <span class="flex items-center gap-1"><span class="status-dot status-active"></span> 2,847 runs today</span>
-        <span>99.7% success</span>
-        <span>Avg 1.2s</span>
+      <div class="mt-4 flex items-center gap-5 text-[10px] text-secondary font-bold">
+        <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary-dim"></span> 2.8k runs today</span>
+        <span>99.7% Success Rate</span>
+        <span>Latency 1.2s</span>
       </div>
     </div>
     <a href="#solutions" class="flex items-center text-primary text-[13px] font-medium mt-5 group-hover:translate-x-1 transition-transform">
@@ -760,11 +813,19 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_agent_title">AI Agents</h3>
     <p class="text-secondary text-[15px] leading-relaxed mb-6" data-i18n="core_agent_desc">Custom-trained digital employees focused on specific roles from sales to support.</p>
     <!-- Agent mini-preview -->
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-4 border border-softer space-y-3 text-[12px] shadow-sm">
-      <div class="flex items-center justify-between"><span class="text-on-surface-variant font-bold tracking-tight">Sales Agent</span><span class="flex items-center gap-1.5 text-primary font-bold"><span class="status-dot status-active"></span> Active</span></div>
-      <div class="flex items-center justify-between text-secondary"><span>Leads handled today</span><span class="text-on-surface preview-stat">47</span></div>
-      <div class="flex items-center justify-between text-secondary"><span>Response time</span><span class="text-on-surface preview-stat">&lt;30s</span></div>
-      <div class="flex items-center justify-between text-secondary"><span>Conversion rate</span><span class="text-primary preview-stat">23.4%</span></div>
+    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-5 border border-softer space-y-4 text-[12px] shadow-sm">
+      <div class="flex items-center justify-between font-bold">
+        <span class="text-on-surface tracking-tight">Sales Agent</span>
+        <span class="flex items-center gap-1.5 text-primary">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+          Active
+        </span>
+      </div>
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-secondary"><span>Leads handled today</span><span class="text-on-surface font-bold preview-stat">47</span></div>
+        <div class="flex items-center justify-between text-secondary"><span>Response time</span><span class="text-on-surface font-bold preview-stat">&lt;30s</span></div>
+        <div class="flex items-center justify-between text-secondary"><span>Conversion rate</span><span class="text-primary font-bold preview-stat">23.4%</span></div>
+      </div>
     </div>
     <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">Configure Agent →</a>
   </div>
@@ -774,16 +835,16 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_biz_title">Business Systems</h3>
     <p class="text-secondary text-[15px] leading-relaxed mb-6" data-i18n="core_biz_desc">Foundational architectures that scale with your growth, designed for clarity.</p>
     <!-- CRM pipeline mini-preview -->
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-4 border border-softer text-[12px] shadow-sm">
-      <div class="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold mb-3">Pipeline · Q2</div>
-      <div class="grid grid-cols-4 gap-2 mb-4">
-        <div class="text-center"><div class="text-on-surface font-bold preview-stat">24</div><div class="text-[9px] text-secondary font-medium">New</div></div>
-        <div class="text-center"><div class="text-on-surface font-bold preview-stat">18</div><div class="text-[9px] text-secondary font-medium">Qual.</div></div>
-        <div class="text-center"><div class="text-on-surface font-bold preview-stat">9</div><div class="text-[9px] text-secondary font-medium">Prop.</div></div>
-        <div class="text-center"><div class="text-primary font-bold preview-stat">6</div><div class="text-[9px] text-secondary font-medium">Won</div></div>
+    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-5 border border-softer text-[12px] shadow-sm">
+      <div class="text-[10px] text-primary font-bold uppercase tracking-[0.2em] mb-4">Pipeline · Q2 Performance</div>
+      <div class="grid grid-cols-4 gap-2 mb-5">
+        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">24</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">New</div></div>
+        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">18</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">Qual.</div></div>
+        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">9</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">Prop.</div></div>
+        <div class="text-center p-2 rounded-lg bg-primary/10 border border-primary/20"><div class="text-primary font-bold preview-stat">6</div><div class="text-[9px] text-primary font-bold uppercase tracking-tight">Won</div></div>
       </div>
-      <div class="h-2 bg-surface-container rounded-full flex overflow-hidden p-[1px]">
-        <div class="bg-outline-variant/30 w-[40%] rounded-l-full"></div><div class="bg-outline-variant/50 w-[30%]"></div><div class="bg-primary/40 w-[15%]"></div><div class="bg-primary w-[15%] rounded-r-full"></div>
+      <div class="h-2.5 bg-surface-container rounded-full flex overflow-hidden p-[1px] shadow-inner">
+        <div class="bg-on-surface/10 w-[40%] rounded-l-full"></div><div class="bg-on-surface/20 w-[30%]"></div><div class="bg-primary/40 w-[15%]"></div><div class="bg-primary w-[15%] rounded-r-full shadow-[0_0_10px_rgba(var(--gc-primary),0.3)]"></div>
       </div>
     </div>
     <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">System Audit →</a>
@@ -800,23 +861,26 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         </a>
       </div>
       <!-- Trainer preview -->
-      <div class="flex-1 bg-surface-container-lowest rounded-lg p-4 border border-softer w-full">
-        <div class="text-[10px] text-secondary uppercase tracking-widest font-semibold mb-3">Active Clients · This Week</div>
-        <div class="space-y-2.5">
-          <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-full bg-primary-container/30 flex items-center justify-center text-[9px] font-bold text-primary shrink-0">MC</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-medium text-on-surface truncate">Marcus C.</div><div class="text-[9px] text-secondary">Hypertrophy · Wk 6</div></div>
-            <div class="h-1 w-16 bg-surface-container rounded-full shrink-0"><div class="h-1 w-3/4 bg-primary rounded-full"></div></div>
+      <div class="flex-1 bg-surface-container-lowest/60 backdrop-blur-xl rounded-2xl p-5 border border-primary/10 w-full shadow-inner">
+        <div class="text-[10px] text-secondary uppercase tracking-[0.25em] font-bold mb-5 flex items-center justify-between">
+          <span>Active Roster</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center gap-4 group/item">
+            <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary shrink-0 border border-primary/10 shadow-sm">MC</div>
+            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">Marcus Crawford</div><div class="text-[9px] text-secondary font-medium">Hypertrophy · Week 6</div></div>
+            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-3/4 bg-primary rounded-full"></div></div>
           </div>
-          <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-[9px] font-bold text-on-surface-variant shrink-0">SJ</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-medium text-on-surface truncate">Sarah J.</div><div class="text-[9px] text-secondary">Conditioning · Wk 2</div></div>
-            <div class="h-1 w-16 bg-surface-container rounded-full shrink-0"><div class="h-1 w-1/4 bg-primary/60 rounded-full"></div></div>
+          <div class="flex items-center gap-4 group/item">
+            <div class="w-9 h-9 rounded-full bg-surface-container-high/50 flex items-center justify-center text-[10px] font-black text-secondary shrink-0 border border-softer shadow-sm">SJ</div>
+            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">Sarah Jenkins</div><div class="text-[9px] text-secondary font-medium">Conditioning · Week 2</div></div>
+            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-1/4 bg-primary/60 rounded-full"></div></div>
           </div>
-          <div class="flex items-center gap-3">
-            <div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-[9px] font-bold text-on-surface-variant shrink-0">DT</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-medium text-on-surface truncate">David T.</div><div class="text-[9px] text-secondary">Strength · Peak</div></div>
-            <div class="h-1 w-16 bg-surface-container rounded-full shrink-0"><div class="h-1 w-full bg-primary rounded-full"></div></div>
+          <div class="flex items-center gap-4 group/item">
+            <div class="w-9 h-9 rounded-full bg-surface-container-high/50 flex items-center justify-center text-[10px] font-black text-secondary shrink-0 border border-softer shadow-sm">DT</div>
+            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">David Thompson</div><div class="text-[9px] text-secondary font-medium">Strength · Peak Phase</div></div>
+            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--gc-primary),0.3)]"></div></div>
           </div>
         </div>
       </div>
@@ -1352,27 +1416,30 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   <h2 class="font-headline text-2xl sm:text-3xl font-bold mb-3" data-i18n="ait_cmd_title">The Command Center</h2>
   <p class="text-secondary max-w-lg text-[14px] sm:text-[15px]" data-i18n="ait_cmd_desc">A high-density overview of your client roster, active protocols, and automated progress loops.</p>
 </div>
-<div class="ui-card p-0 shadow-[0_40px_100px_rgba(0,0,0,0.6)] reveal premium-glow border border-softer bg-surface-container-lowest/40 backdrop-blur-3xl overflow-hidden">
+<div class="ui-card p-0 shadow-[0_48px_120px_-20px_rgba(0,0,0,0.5)] reveal premium-glow border border-primary/10 bg-surface-container-lowest/30 backdrop-blur-3xl overflow-hidden ring-1 ring-white/5">
   <div class="flex flex-col lg:flex-row min-h-[420px] lg:min-h-[600px]">
     <!-- Sidebar -->
-    <div class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-softer p-6 flex flex-col">
-      <div class="flex lg:flex-col gap-4 lg:gap-8 overflow-x-auto lg:overflow-visible">
-        <div class="bg-surface-container/50 p-3 rounded-xl flex items-center gap-3 shrink-0 shadow-sm border border-softer max-w-[140px] lg:max-w-none">
-          <div class="w-8 h-8 rounded-lg bg-primary-container/25 flex items-center justify-center text-primary text-[10px] font-black shadow-inner">GT</div>
-          <div class="text-[13px] font-bold text-on-surface truncate">GrindCTRL OS</div>
+    <div class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-primary/5 p-8 flex flex-col bg-surface-container-low/20">
+      <div class="flex lg:flex-col gap-5 lg:gap-10 overflow-x-auto lg:overflow-visible">
+        <div class="bg-primary/5 p-4 rounded-2xl flex items-center gap-4 shrink-0 border border-primary/10 shadow-inner">
+          <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary text-[11px] font-black shadow-lg">GC</div>
+          <div class="min-w-0">
+            <div class="text-[13px] font-bold text-on-surface truncate">GrindCTRL OS</div>
+            <div class="text-[10px] text-primary/60 font-bold uppercase tracking-wider">v4.2.0-Alpha</div>
+          </div>
         </div>
-        <div class="flex lg:flex-col gap-2 shrink-0">
-          <div class="flex items-center gap-3 text-[13px] text-primary font-bold p-3 bg-primary/10 rounded-xl whitespace-nowrap shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">dashboard</span> Command Center
+        <div class="flex lg:flex-col gap-3 shrink-0">
+          <div class="flex items-center gap-4 text-[13px] text-primary font-bold p-4 bg-primary/10 rounded-2xl whitespace-nowrap shadow-sm border border-primary/10">
+            <span class="material-symbols-outlined text-[22px]">dashboard</span> Command Center
           </div>
-          <div class="flex items-center gap-3 text-[13px] text-secondary font-bold p-3 hover:bg-surface-container/40 rounded-xl cursor-pointer whitespace-nowrap transition-all">
-            <span class="material-symbols-outlined text-[20px]">group</span> Elite Roster
+          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
+            <span class="material-symbols-outlined text-[22px]">group</span> Elite Roster
           </div>
-          <div class="flex items-center gap-3 text-[13px] text-secondary font-bold p-3 hover:bg-surface-container/40 rounded-xl cursor-pointer whitespace-nowrap transition-all">
-            <span class="material-symbols-outlined text-[20px]">analytics</span> Macro Engine
+          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
+            <span class="material-symbols-outlined text-[22px]">analytics</span> Macro Engine
           </div>
-          <div class="flex items-center gap-3 text-[13px] text-secondary font-bold p-3 hover:bg-surface-container/40 rounded-xl cursor-pointer whitespace-nowrap transition-all">
-            <span class="material-symbols-outlined text-[20px]">verified_user</span> System Audit
+          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
+            <span class="material-symbols-outlined text-[22px]">verified_user</span> Security Audit
           </div>
         </div>
       </div>
@@ -1387,17 +1454,89 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       </div>
     </div>
     <!-- Content -->
-    <div class="flex-1 p-6 sm:p-10 overflow-hidden bg-surface-container-lowest/20">
-      <!-- Header -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-4">
+    <div class="flex-1 p-6 sm:p-12 overflow-hidden bg-surface-container-low/10">
+      <!-- Dashboard Header -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 sm:mb-12 gap-6">
         <div>
-          <div class="flex items-center gap-2 mb-1">
-             <h3 class="text-xl sm:text-2xl font-black font-headline tracking-tighter text-on-surface">Active Protocols</h3>
-             <span class="status-dot status-active animate-pulse"></span>
+          <div class="flex items-center gap-3 mb-2">
+             <h3 class="text-2xl sm:text-3xl font-black font-headline tracking-tight text-on-surface">System Overview</h3>
+             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest shadow-sm border border-primary/20">Live</span>
           </div>
-          <p class="text-[12px] text-secondary font-bold uppercase tracking-widest">12 High-Performance Entities · Build v4.2</p>
+          <p class="text-[12px] text-secondary font-bold uppercase tracking-[0.2em] opacity-80">12 High-Performance Entities</p>
         </div>
-        <div class="flex gap-3">
+        <div class="grid grid-cols-2 sm:flex gap-3 sm:gap-4 w-full sm:w-auto">
+           <button class="px-4 py-2.5 bg-surface-container-highest/60 rounded-xl text-[11px] font-bold text-on-surface border border-softer shadow-sm hover:bg-surface-container-highest transition-colors">Export Logs</button>
+           <button class="px-4 py-2.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold shadow-xl hover:scale-105 transition-all">Configure AI</button>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
+          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">Avg Response</div>
+          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">1.2s</div>
+          <div class="text-[10px] text-primary font-bold mt-1">↑ 12% Optimization</div>
+        </div>
+        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
+          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">Accuracy Index</div>
+          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">98.4%</div>
+          <div class="text-[10px] text-secondary font-bold mt-1 tracking-tight">RLHF Calibrated</div>
+        </div>
+        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
+          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">System Load</div>
+          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">24%</div>
+          <div class="text-[10px] text-secondary font-bold mt-1 tracking-tight">Optimal Performance</div>
+        </div>
+      </div>
+
+      <!-- Client Monitoring -->
+      <div class="bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-primary/10 shadow-inner overflow-hidden">
+        <div class="p-5 border-b border-softer bg-surface-container-low/20 flex justify-between items-center">
+          <span class="text-[11px] font-black text-on-surface uppercase tracking-widest">Active Client Monitoring</span>
+          <span class="material-symbols-outlined text-secondary text-base cursor-pointer hover:text-primary">more_horiz</span>
+        </div>
+        <div class="divide-y divide-softer">
+          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer hover:bg-surface-container-low/30 transition-colors gap-5">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-surface-container-highest/60 flex items-center justify-center text-[10px] font-black text-on-surface border border-softer">MC</div>
+              <div>
+                <div class="text-[13px] font-bold text-on-surface">Marcus Crawford</div>
+                <div class="text-[10px] text-secondary font-bold uppercase tracking-wide">Elite Performance · Wk 6</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+               <div class="text-left sm:text-right">
+                 <div class="text-[12px] font-black text-on-surface tracking-tighter">3,842kcal</div>
+                 <div class="text-[9px] text-secondary font-bold uppercase opacity-60">Macro Target</div>
+               </div>
+               <div class="flex items-center gap-3">
+                 <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20">COMPLIANT</span>
+                 <span class="material-symbols-outlined text-outline text-lg">chevron_right</span>
+               </div>
+            </div>
+          </div>
+          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer hover:bg-surface-container-low/30 transition-colors gap-5">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-xl bg-surface-container-highest/60 flex items-center justify-center text-[10px] font-black text-on-surface border border-softer">SJ</div>
+              <div>
+                <div class="text-[13px] font-bold text-on-surface">Sarah Jenkins</div>
+                <div class="text-[10px] text-secondary font-bold uppercase tracking-wide">Hypertrophy B · Wk 2</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+               <div class="text-left sm:text-right">
+                 <div class="text-[12px] font-black text-on-surface tracking-tighter">2,140kcal</div>
+                 <div class="text-[9px] text-secondary font-bold uppercase opacity-60">Macro Target</div>
+               </div>
+               <div class="flex items-center gap-3">
+                 <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20">COMPLIANT</span>
+                 <span class="material-symbols-outlined text-outline text-lg">chevron_right</span>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
           <span class="px-5 py-2.5 bg-surface-container-high rounded-xl text-[11px] font-bold text-secondary cursor-pointer hover:bg-surface-container transition-all border border-softer shadow-sm">Reporting</span>
           <span class="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-[11px] font-black shadow-lg shadow-primary/25 hover:scale-105 transition-all">+ New Block</span>
         </div>

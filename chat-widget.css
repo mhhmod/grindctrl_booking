@@ -232,6 +232,14 @@ html:not(.dark) .gc-chat-panel {
   transform: translateY(0) scale(1);
 }
 
+[dir="rtl"] .gc-chat-panel {
+  transform: translateY(32px) scale(0.96);
+}
+
+[dir="rtl"] .gc-chat-panel.open {
+  transform: translateY(0) scale(1);
+}
+
 .gc-chat-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1834,6 +1842,14 @@ display: block;
 
   .gc-chat-panel.open {
     transform: translate(-50%, 0) scale(1);
+  }
+
+  [dir="rtl"] .gc-chat-panel {
+    transform: translate(50%, 18px) scale(0.99);
+  }
+
+  [dir="rtl"] .gc-chat-panel.open {
+    transform: translate(50%, 0) scale(1);
   }
 
   .gc-chat-header {
