@@ -562,6 +562,31 @@
     v2v_dest_crm: { en: 'CRM Lead Card', ar: 'بطاقة عميل CRM' },
     v2v_sync_active: { en: 'Live Sync Enabled', ar: 'المزامنة المباشرة مفعلة' },
     v2v_verified_source: { en: 'AI Verified Lead', ar: 'عميل موثق بالذكاء الاصطناعي' },
+    
+    /* Input Mode Labels */
+    v2v_mode_voice: { en: 'Voice', ar: 'صوت' },
+    v2v_mode_link: { en: 'Paste Link', ar: 'لصق رابط' },
+    v2v_mode_file: { en: 'Upload File', ar: 'رفع ملف' },
+    v2v_mode_text: { en: 'Manual Text', ar: 'نص يدوي' },
+    
+    /* Outcome Labels */
+    v2v_outcome_label: { en: 'Set Business Outcome', ar: 'حدد نتيجة العمل' },
+    v2v_outcome_lead: { en: 'Lead', ar: 'عميل محتمل' },
+    v2v_outcome_ticket: { en: 'Ticket', ar: 'تذكرة' },
+    v2v_outcome_task: { en: 'Task', ar: 'مهمة' },
+    v2v_outcome_brief: { en: 'Brief', ar: 'ملخص عمل' },
+
+    /* Smart Processing Status */
+    v2v_status_reading: { en: 'Reading source...', ar: 'قراءة المصدر...' },
+    v2v_status_extracting: { en: 'Extracting patterns...', ar: 'استخراج الأنماط...' },
+    v2v_status_analyzing: { en: 'Analyzing intent...', ar: 'تحليل النية...' },
+
+    /* Action Labels */
+    v2v_action_slack: { en: 'Notify Slack', ar: 'تنبيه Slack' },
+    v2v_action_sheets: { en: 'Save to Sheets', ar: 'حفظ في الجداول' },
+    v2v_action_gmail: { en: 'Draft in Gmail', ar: 'مسودة في Gmail' },
+    v2v_action_crm: { en: 'Push to CRM', ar: 'إرسال لـ CRM' },
+    v2v_action_export: { en: 'Export Data', ar: 'تصدير البيانات' },
   };
 
   // ── Expose globally for optional external use ──
