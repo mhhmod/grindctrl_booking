@@ -1,4 +1,18 @@
 /* --- Atmosphere & Polish --- */
+.v2v-shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (min-width: 1024px) {
+    .v2v-shell {
+        grid-template-columns: 1fr 1.5fr;
+        gap: 2rem;
+    }
+}
+
 .v2v-panel {
     min-height: 520px;
     display: flex;
@@ -18,8 +32,8 @@
 
 /* --- Mic Button Refinement --- */
 .v2v-mic-btn {
-    width: 100px;
-    height: 100px;
+    width: clamp(72px, 15vw, 100px);
+    height: clamp(72px, 15vw, 100px);
     border-radius: 50%;
     background: var(--gc-primary);
     color: var(--gc-on-primary);
@@ -93,7 +107,7 @@
     background: var(--gc-surface-container-low);
     border: 1px solid var(--gc-outline);
     border-radius: 2rem;
-    padding: 2.5rem;
+    padding: clamp(1.25rem, 5vw, 2.5rem);
     box-shadow: 
         0 30px 60px -20px rgba(0,0,0,0.1),
         var(--gc-card-shadow);
@@ -164,15 +178,15 @@
     background: var(--gc-surface-container-low);
     border: 1px solid var(--gc-outline);
     border-radius: 2rem;
-    padding: 3rem;
+    padding: clamp(1.25rem, 5vw, 3rem);
     text-align: start;
 }
 
 .v2v-detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2.5rem;
-    margin-bottom: 3rem;
+    gap: clamp(1.25rem, 4vw, 2.5rem);
+    margin-bottom: clamp(1.5rem, 5vw, 3rem);
 }
 
 .v2v-detail-item {
@@ -194,14 +208,15 @@
     font-weight: 700;
     color: var(--gc-on-surface);
     line-height: 1.4;
+    word-break: break-word;
 }
 
 .v2v-section-box {
     background: rgba(var(--gc-primary-rgb), 0.03);
     border: 1px solid var(--gc-outline);
     border-radius: 1.5rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
+    padding: clamp(1.25rem, 4vw, 2rem);
+    margin-bottom: clamp(1.25rem, 4vw, 2rem);
 }
 
 .v2v-transcript-text {
@@ -218,9 +233,16 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-top: 2rem;
-    padding-top: 2rem;
+    margin-top: clamp(1.5rem, 5vw, 2rem);
+    padding-top: clamp(1.5rem, 5vw, 2rem);
     border-top: 1px solid var(--gc-outline);
+    flex-direction: column;
+}
+@media (min-width: 640px) {
+    .v2v-sheet-actions {
+        flex-direction: row;
+        align-items: center;
+    }
 }
 
 .v2v-btn-primary {
@@ -234,8 +256,15 @@
     letter-spacing: 0.1em;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.75rem;
     transition: all 0.3s;
+    width: 100%;
+}
+@media (min-width: 640px) {
+    .v2v-btn-primary {
+        width: auto;
+    }
 }
 
 .v2v-btn-primary:hover {
@@ -252,8 +281,15 @@
     font-weight: 700;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     transition: all 0.2s;
+    width: 100%;
+}
+@media (min-width: 640px) {
+    .v2v-btn-secondary {
+        width: auto;
+    }
 }
 
 .v2v-btn-secondary:hover {
