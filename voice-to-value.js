@@ -56,7 +56,15 @@
 
         try {
             state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            state.recorder = new MediaRecorder(state.stream, { mimeType: 'audio/webm' });
+            
+            // Cross-browser mimeType sensing
+            const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav'];
+            const supportedType = types.find(t => MediaRecorder.isTypeSupported(t));
+            
+            state.recorder = new MediaRecorder(state.stream, { 
+                mimeType: supportedType || 'audio/webm' 
+            });
+            
             state.chunks = [];
 
             state.recorder.ondataavailable = (e) => {
@@ -64,7 +72,7 @@
             };
 
             state.recorder.onstop = () => {
-                if (state.recording) processAudio(); // Only process if not cancelled
+                if (state.recording) processAudio(); 
             };
 
             state.recorder.start();
@@ -80,8 +88,10 @@
             }, 100);
 
         } catch (err) {
-            console.error('Mic access denied:', err);
-            updateUIState('error', t('v2v_status_mic_denied') || 'Microphone access denied.');
+            console.error('Mic access denied or error:', err);
+            const statusText = $('v2v-status-text');
+            if (statusText) statusText.innerText = 'Microphone blocked or not found.';
+            updateUIState('error');
         }
     }
 
