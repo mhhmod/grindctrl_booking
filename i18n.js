@@ -520,29 +520,40 @@
     v2v_status_idle: { en: 'Speak your lead', ar: 'تحدث عن عميلك' },
     v2v_status_listening: { en: 'Capturing insight...', ar: 'جاري التقاط الفكرة...' },
     v2v_status_uploading: { en: 'Syncing voice data...', ar: 'مزامنة البيانات الصوتية...' },
-    v2v_status_processing: { en: 'Structuring business value...', ar: 'تنسيق قيمة الأعمال...' },
+    v2v_status_transcribing: { en: 'Transcribing...', ar: 'جارِ النسخ...' },
+    v2v_status_structuring: { en: 'Structuring business value...', ar: 'تنسيق قيمة الأعمال...' },
+    v2v_status_saving: { en: 'Saving to record...', ar: 'جاري حفظ السجل...' },
     v2v_status_ready: { en: 'Analysis Complete', ar: 'اكتمل التحليل' },
     v2v_or_text: { en: 'Prefer typing?', ar: 'تفضل الكتابة؟' },
     v2v_input_placeholder: { en: 'Summarize the lead manually...', ar: 'لخص العميل يدوياً...' },
     v2v_empty_title: { en: 'Intelligence Awaiting', ar: 'بانتظار التحليل الذكي' },
     v2v_empty_desc: { en: 'Your structured lead insights and drafted follow-ups will materialize here after recording.', ar: 'ستظهر رؤى العميل المنسقة ومسودات المتابعة هنا بعد التسجيل.' },
-    v2v_qualified_label: { en: 'Priority', ar: 'الأولوية' },
-    v2v_extracted_label: { en: 'Lead Identity', ar: 'هوية العميل' },
-    v2v_urgency_label: { en: 'Urgency', ar: 'الأهمية' },
+    
+    /* Result Field Labels */
+    v2v_field_name: { en: 'Lead Name', ar: 'اسم العميل' },
+    v2v_field_company: { en: 'Company', ar: 'الشركة' },
+    v2v_field_contact: { en: 'Contact Info', ar: 'بيانات التواصل' },
+    v2v_field_need: { en: 'Operational Need', ar: 'الاحتياج التشغيلي' },
+    v2v_field_urgency: { en: 'Urgency', ar: 'الأهمية' },
+    v2v_field_next: { en: 'Next Step', ar: 'الخطوة التالية' },
+    v2v_summary_label: { en: 'Business Summary', ar: 'ملخص للأعمال' },
+    v2v_followup_label: { en: 'Proposed Follow-up', ar: 'المتابعة المقترحة' },
     v2v_transcript_label: { en: 'Voice Record', ar: 'السجل الصوتي' },
-    v2v_summary_label: { en: 'Business Insight', ar: 'رؤية الأعمال' },
-    v2v_followup_label: { en: 'Drafted Response Proposal', ar: 'مقترح الرد المجهز' },
-    v2v_next_action_label: { en: 'Strategic Next Step', ar: 'الخطوة الاستراتيجية التالية' },
+    
+    /* Result Action Buttons */
+    v2v_btn_open_sheet: { en: 'Open Sheet', ar: 'فتح الجدول' },
+    v2v_btn_download_csv: { en: 'Download CSV', ar: 'تنزيل CSV' },
+    v2v_btn_try_again: { en: 'Try Again', ar: 'حاول مرة أخرى' },
     v2v_btn_gmail: { en: 'Launch Gmail', ar: 'فتح Gmail' },
     v2v_btn_sheets: { en: 'Write to Sheets', ar: 'كتابة للجداول' },
     v2v_btn_crm: { en: 'Push to CRM', ar: 'إرسال لـ CRM' },
-    v2v_syncing: { en: 'Syncing...', ar: 'جاري المزامنة...' },
-    v2v_sent: { en: 'Success', ar: 'تم بنجاح' },
+
+    /* Quality Badges */
     v2v_quality_high: { en: 'Platinum', ar: 'بلاتيني' },
     v2v_quality_mid: { en: 'Gold', ar: 'ذهبي' },
     v2v_quality_low: { en: 'Standard', ar: 'قياسي' },
 
-    /* --- Trust & Credibility Additions --- */
+    /* Integration & Trust */
     v2v_integrations_title: { en: 'Architected for your stack', ar: 'مصمم لمجموعة أدواتك' },
     v2v_preview_label: { en: 'Destination Preview', ar: 'معاينة الوجهة' },
     v2v_dest_gmail: { en: 'Gmail Draft', ar: 'مسودة Gmail' },

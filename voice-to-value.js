@@ -72,7 +72,14 @@
             };
 
             state.recorder.onstop = () => {
-                if (state.recording) processAudio(); 
+                const wasRecording = state.recording;
+                state.recording = false;
+                if (wasRecording) {
+                    console.log('Voice-to-Value: Recording finished, starting processing...');
+                    processAudio(); 
+                } else {
+                    console.log('Voice-to-Value: Recording cancelled.');
+                }
             };
 
             state.recorder.start();
@@ -83,7 +90,10 @@
 
             state.timer = setInterval(() => {
                 const elapsed = (Date.now() - state.startMs) / 1000;
-                if (elapsed >= CONFIG.MAX_RECORD_SEC) finishRecording();
+                if (elapsed >= CONFIG.MAX_RECORD_SEC) {
+                    console.log('Voice-to-Value: Max record time reached.');
+                    finishRecording();
+                }
                 updateTimerDisplay(elapsed);
             }, 100);
 
@@ -97,8 +107,9 @@
 
     function finishRecording() {
         if (!state.recorder || state.recorder.state !== 'recording') return;
+        console.log('Voice-to-Value: Finishing recording manually...');
         state.recorder.stop();
-        state.recording = false;
+        // Note: state.recording is set to false in onstop handler to avoid race condition
         if (state.timer) clearInterval(state.timer);
         if (state.stream) state.stream.getTracks().forEach(track => track.stop());
     }
