@@ -664,156 +664,219 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <div class="max-w-screen-2xl mx-auto">
   <div class="v2v-shell" id="input-hub-container">
     
-    <!-- Interaction Panel: Input Hub -->
-    <div class="ui-card v2v-panel relative overflow-hidden group">
-      <!-- Premium Grain & Glow Overlay -->
-      <div class="absolute inset-x-0 inset-y-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style="background-image: url('https://www.transparenttextures.com/patterns/asfalt-dark.png');"></div>
-      <div class="v2v-empty-glow top-0 right-0"></div>
+    <!-- ═══ COMMAND PANEL ═══ -->
+    <div class="v2v-panel v2v-command relative overflow-hidden">
+      <!-- Grain & ambient glow -->
+      <div class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style="background-image:url('https://www.transparenttextures.com/patterns/asfalt-dark.png')"></div>
+      <div class="v2v-ambient-glow"></div>
       
-      <div class="relative z-10 mb-8">
-        <div class="flex items-center justify-between mb-8">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
+      <div class="relative z-10 flex flex-col h-full">
+        
+        <!-- Header Row -->
+        <div class="flex items-center justify-between mb-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 text-primary text-[9px] font-black uppercase tracking-[0.2em]">
             <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span data-i18n="v2v_kicker">Precision Input Hub</span>
+            <span data-i18n="v2v_kicker">Input Hub</span>
           </div>
           
-          <!-- Mode Switcher -->
-          <div class="flex items-center gap-1 bg-surface-container-high/50 p-1 rounded-xl border border-softer">
-            <button class="v2v-mode-tab active" data-mode="voice" title="Voice Input">
-              <span class="material-symbols-outlined text-sm">mic</span>
+          <!-- Mode Tabs -->
+          <div class="v2v-mode-switcher">
+            <button class="v2v-mode-tab active" data-mode="voice" title="Voice">
+              <span class="material-symbols-outlined">mic</span>
             </button>
-            <button class="v2v-mode-tab" data-mode="link" title="Link Input">
-              <span class="material-symbols-outlined text-sm">link</span>
+            <button class="v2v-mode-tab" data-mode="link" title="Link">
+              <span class="material-symbols-outlined">link</span>
             </button>
-            <button class="v2v-mode-tab" data-mode="file" title="File Upload">
-              <span class="material-symbols-outlined text-sm">upload_file</span>
+            <button class="v2v-mode-tab" data-mode="file" title="File">
+              <span class="material-symbols-outlined">upload_file</span>
             </button>
-            <button class="v2v-mode-tab" data-mode="text" title="Manual Text">
-              <span class="material-symbols-outlined text-sm">edit_note</span>
+            <button class="v2v-mode-tab" data-mode="text" title="Text">
+              <span class="material-symbols-outlined">edit_note</span>
             </button>
           </div>
         </div>
 
-        <h2 class="h3-fluid font-headline text-on-surface mb-3 tracking-tight" data-i18n="v2v_title">Any Input → Action.</h2>
-        <p class="text-secondary text-[14px] leading-relaxed max-w-sm mb-8 font-medium" data-i18n="v2v_subtitle">Add anything—a voice note, a URL, or a file. Our AI instantly converts it into a structured business result.</p>
+        <!-- Headline: Strong hierarchy -->
+        <h2 class="text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] font-headline font-extrabold text-on-surface tracking-tight leading-[1.1] mb-2">
+          <span data-i18n="v2v_title">Messy Input.</span><br/>
+          <span class="text-secondary" data-i18n="v2v_title_line2">Business-Ready Output.</span>
+        </h2>
+        <p class="text-secondary text-[13px] leading-relaxed max-w-[28ch] mb-6 font-medium" data-i18n="v2v_subtitle">Voice, link, or file—AI structures it into leads, tickets, briefs in seconds.</p>
         
-        <!-- Outcome Selection -->
-        <div class="mb-8">
-          <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.15em] mb-4" data-i18n="v2v_outcome_label">Set Desired Outcome</div>
+        <!-- Outcome Chips -->
+        <div class="mb-auto">
+          <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_outcome_label">Output as</div>
           <div class="flex flex-wrap gap-2">
             <button class="v2v-outcome-chip active" data-outcome="lead">
-              <span class="material-symbols-outlined text-xs">person_add</span>
+              <span class="material-symbols-outlined">person_add</span>
               <span data-i18n="v2v_outcome_lead">Lead</span>
             </button>
             <button class="v2v-outcome-chip" data-outcome="ticket">
-              <span class="material-symbols-outlined text-xs">confirmation_number</span>
+              <span class="material-symbols-outlined">confirmation_number</span>
               <span data-i18n="v2v_outcome_ticket">Ticket</span>
             </button>
             <button class="v2v-outcome-chip" data-outcome="task">
-              <span class="material-symbols-outlined text-xs">task_alt</span>
+              <span class="material-symbols-outlined">task_alt</span>
               <span data-i18n="v2v_outcome_task">Task</span>
             </button>
             <button class="v2v-outcome-chip" data-outcome="brief">
-              <span class="material-symbols-outlined text-xs">description</span>
+              <span class="material-symbols-outlined">description</span>
               <span data-i18n="v2v_outcome_brief">Brief</span>
             </button>
           </div>
         </div>
 
-        <!-- Trust Row: Supported Integrations (Minimalist) -->
-        <div class="pt-6 border-t border-softer">
-            <div class="flex gap-4 items-center opacity-30">
-                <div class="v2v-trust-logo w-5 h-5" title="Gmail">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.573l8.073-6.08c1.618-1.214 3.927-.059 3.927 1.964z" fill="currentColor"/></svg>
-                </div>
-                <div class="v2v-trust-logo w-5 h-5" title="Slack">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523 2.527 2.527 0 01-2.522-2.523 2.527 2.527 0 012.522-2.52h2.52v2.52zm1.263 0a2.527 2.527 0 012.522-2.52 2.527 2.527 0 012.522 2.52v6.313a2.528 2.528 0 01-2.522 2.522 2.526 2.526 0 01-2.522-2.522v-6.313zM8.826 5.042a2.528 2.528 0 012.522-2.52 2.527 2.527 0 012.523 2.52v2.52h-2.523a2.528 2.528 0 01-2.522-2.52zM8.826 6.304a2.527 2.527 0 012.522 2.522 2.527 2.527 0 01-2.522 2.522H2.511a2.528 2.528 0 01-2.522-2.522 2.527 2.527 0 012.522-2.522h6.315zM18.835 8.826a2.528 2.528 0 012.522-2.522 2.527 2.527 0 012.522 2.522 2.527 2.527 0 01-2.522 2.523h-2.522V8.826zm-1.263 0a2.527 2.527 0 01-2.522 2.523 2.527 2.527 0 01-2.522-2.523V2.513a2.528 2.528 0 012.522-2.522 2.526 2.526 0 012.522 2.522v6.313zM15.051 18.835a2.528 2.528 0 01-2.522 2.522 2.527 2.527 0 01-2.523-2.522v-2.522h2.523a2.528 2.528 0 012.522 2.522zM15.051 17.574a2.527 2.527 0 01-2.522-2.522 2.527 2.527 0 012.522-2.522h6.315a2.528 2.528 0 012.522 2.522 2.527 2.527 0 01-2.522 2.522h-6.315z" fill="currentColor"/></svg>
-                </div>
-                <div class="v2v-trust-logo w-5 h-5" title="HubSpot">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18.9 10.9c-.2 0-.4.1-.6.2-1.1-1.3-2.7-2.1-4.5-2.1-.8 0-1.6.2-2.3.5V6.7c.6-.3 1-.9 1-1.6 0-1-.8-1.8-1.8-1.8S9 4.1 9 5.1c0 .7.4 1.3 1 1.6v2.8c-.7-.3-1.5-.5-2.3-.5-1.8 0-3.4.8-4.5 2.1-.2-.1-.4-.2-.6-.2-1 0-1.8.8-1.8 1.8s.8 1.8 1.8 1.8c.2 0 .4-.1.6-.2 1.1 1.3 2.7 2.1 4.5 2.1 1.2 0 2.4-.4 3.3-1.2l2.3 2.3c-.1.2-.2.4-.2.6 0 1 .8 1.8 1.8 1.8s1.8-.8 1.8-1.8-.8-1.8-1.8-1.8c-.2 0-.4.1-.6.2l-2.3-2.3c.8-.9 1.2-2.1 1.2-3.3 0-1.8-.8-3.4-2.1-4.5.1-.2.2-.4.2-.6 0-1-.8-1.8-1.8-1.8z" fill="currentColor"/></svg>
-                </div>
-                <div class="v2v-trust-logo w-5 h-5" title="Google Sheets">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="currentColor"/><path d="M14 2v6h6l-6-6z" fill="var(--gc-surface-container-high)"/><path d="M8 12h8v2H8v-2zm0 4h8v2H8v-2z" fill="#fff"/></svg>
-                </div>
-            </div>
-        </div>
-      </div>
-
-      <!-- Interaction Zone (Dynamic) -->
-      <div class="v2v-interaction-zone mt-auto">
-        
-        <!-- Voice Mode View -->
-        <div id="v2v-view-voice" class="v2v-mode-view active">
-          <div class="flex flex-col items-center">
-            <div id="v2v-mic-btn" class="v2v-mic-btn mb-6" role="button" data-i18n-aria="v2v_mic_aria" aria-label="Start capture">
-              <span class="material-symbols-outlined text-3xl">mic</span>
-            </div>
-            
-            <div id="v2v-status-container" class="v2v-status-indicator flex flex-col items-center gap-3">
-              <div class="flex items-center gap-3">
-                  <span class="v2v-status-dot"></span>
-                  <span id="v2v-status-text" class="text-xs font-bold uppercase tracking-widest text-secondary" data-i18n="v2v_status_idle">Speak now</span>
-                  <span id="v2v-timer" class="font-mono text-[10px] opacity-40 ms-2">0.0s</span>
+        <!-- ── INTERACTION ZONE ── -->
+        <div class="v2v-interaction-zone">
+          
+          <!-- Voice Mode -->
+          <div id="v2v-view-voice" class="v2v-mode-view active">
+            <div class="v2v-voice-stage">
+              <div id="v2v-mic-btn" class="v2v-mic-btn" role="button" data-i18n-aria="v2v_mic_aria" aria-label="Start capture">
+                <span class="material-symbols-outlined text-[28px]">mic</span>
               </div>
-              <div id="v2v-progress-steps" class="hidden w-40 h-1 bg-surface-container rounded-full overflow-hidden">
-                  <div id="v2v-progress-bar" class="h-full bg-primary w-0 transition-all duration-700"></div>
+              
+              <div id="v2v-status-container" class="v2v-status-indicator">
+                <div class="flex items-center gap-2.5">
+                    <span class="v2v-status-dot"></span>
+                    <span id="v2v-status-text" class="text-[10px] font-bold uppercase tracking-[0.15em] text-secondary" data-i18n="v2v_status_idle">Ready</span>
+                    <span id="v2v-timer" class="font-mono text-[10px] opacity-30 ms-1">0.0s</span>
+                </div>
+                <div id="v2v-progress-steps" class="hidden w-full h-[3px] bg-surface-container rounded-full overflow-hidden mt-3">
+                    <div id="v2v-progress-bar" class="h-full bg-primary w-0 transition-all duration-700 rounded-full"></div>
+                </div>
               </div>
-            </div>
 
-            <div id="v2v-controls" class="hidden flex items-center gap-4 mt-8">
-                <button id="v2v-cancel" class="h-10 px-6 rounded-xl border border-softer text-[11px] font-bold uppercase tracking-widest hover:bg-error/5 hover:text-error transition-all">Cancel</button>
-                <button id="v2v-stop" class="h-10 px-8 rounded-xl bg-primary text-on-primary text-[11px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg">Finish</button>
+              <div id="v2v-controls" class="hidden flex items-center gap-3 mt-5">
+                  <button id="v2v-cancel" class="h-9 px-5 rounded-lg border border-softer text-[10px] font-bold uppercase tracking-widest hover:bg-error/5 hover:text-error hover:border-error/20 transition-all">Cancel</button>
+                  <button id="v2v-stop" class="h-9 px-6 rounded-lg bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">Finish</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Link Mode View -->
-        <div id="v2v-view-link" class="v2v-mode-view hidden">
-          <div class="v2v-input-surface px-1">
-            <div class="text-[10px] text-ink-muted font-black uppercase tracking-[0.2em] mb-4" data-i18n="v2v_mode_link">Paste Link</div>
+          <!-- Link Mode -->
+          <div id="v2v-view-link" class="v2v-mode-view hidden">
+            <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_mode_link">Paste Link</div>
             <div class="flex gap-2">
-               <input id="v2v-link-input" type="url" class="flex-1 bg-surface-container-low/50 border border-softer rounded-xl px-4 py-3.5 text-[14px] font-medium" placeholder="https://..." data-i18n-placeholder="v2v_link_placeholder"/>
-               <button id="v2v-send-link" class="w-12 h-12 bg-primary text-on-primary rounded-xl flex items-center justify-center shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
-                 <span class="material-symbols-outlined text-xl">east</span>
+               <input id="v2v-link-input" type="url" class="v2v-field flex-1" placeholder="https://..." data-i18n-placeholder="v2v_link_placeholder"/>
+               <button id="v2v-send-link" class="v2v-submit-btn">
+                 <span class="material-symbols-outlined text-lg">east</span>
                </button>
             </div>
           </div>
-        </div>
 
-        <!-- File Mode View -->
-        <div id="v2v-view-file" class="v2v-mode-view hidden">
-          <div class="v2v-upload-zone" id="v2v-upload-zone">
+          <!-- File Mode -->
+          <div id="v2v-view-file" class="v2v-mode-view hidden">
             <input type="file" id="v2v-file-input" class="hidden" accept=".pdf,.doc,.docx,.txt,.mp3,.wav,.webm"/>
-            <div class="flex flex-col items-center py-8 border-2 border-dashed border-softer rounded-2xl hover:border-primary/30 transition-colors cursor-pointer" onclick="document.getElementById('v2v-file-input').click()">
-              <span class="material-symbols-outlined text-3xl text-ink-muted mb-3">cloud_upload</span>
-              <div class="text-[11px] font-bold uppercase tracking-widest text-secondary" data-i18n="v2v_mode_file">Upload File</div>
-              <div class="text-[9px] text-ink-muted mt-1">PDF, DOC, TXT (Max 10MB)</div>
+            <div class="v2v-dropzone" onclick="document.getElementById('v2v-file-input').click()">
+              <span class="material-symbols-outlined text-2xl text-ink-muted mb-2">cloud_upload</span>
+              <div class="text-[10px] font-bold uppercase tracking-widest text-secondary" data-i18n="v2v_mode_file">Upload File</div>
+              <div class="text-[8px] text-ink-muted mt-1 opacity-60">PDF · DOC · TXT · Audio</div>
             </div>
           </div>
-        </div>
 
-        <!-- Text Mode View -->
-        <div id="v2v-view-text" class="v2v-mode-view hidden">
-          <div class="v2v-input-surface px-1">
-            <div class="text-[10px] text-ink-muted font-black uppercase tracking-[0.2em] mb-4" data-i18n="v2v_mode_text">Manual Text</div>
+          <!-- Text Mode -->
+          <div id="v2v-view-text" class="v2v-mode-view hidden">
+            <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_mode_text">Manual Text</div>
             <div class="relative">
-              <textarea id="v2v-text-input" rows="4" class="w-full bg-surface-container-low/50 border border-softer rounded-xl px-4 py-3.5 text-[14px] font-medium resize-none focus:ring-1 focus:ring-primary" placeholder="..." data-i18n-placeholder="v2v_input_placeholder"></textarea>
-              <button id="v2v-send-text" class="absolute bottom-3 right-3 w-10 h-10 bg-primary text-on-primary rounded-lg flex items-center justify-center shadow-md hover:scale-[1.05] transition-all">
-                <span class="material-symbols-outlined text-lg">send</span>
+              <textarea id="v2v-text-input" rows="3" class="v2v-field w-full resize-none" placeholder="Describe the lead, task, or context..." data-i18n-placeholder="v2v_input_placeholder"></textarea>
+              <button id="v2v-send-text" class="absolute bottom-2.5 end-2.5 v2v-submit-btn w-9 h-9">
+                <span class="material-symbols-outlined text-base">send</span>
               </button>
             </div>
           </div>
         </div>
+
+        <!-- Micro Trust -->
+        <div class="flex items-center gap-3 mt-5 pt-4 border-t border-softer">
+            <div class="flex items-center -space-x-1">
+                <div class="v2v-trust-dot" title="Gmail"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.573l8.073-6.08c1.618-1.214 3.927-.059 3.927 1.964z" fill="currentColor"/></svg></div>
+                <div class="v2v-trust-dot" title="Sheets"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="currentColor"/><path d="M14 2v6h6" fill="currentColor" opacity=".4"/></svg></div>
+                <div class="v2v-trust-dot" title="Slack"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.527 2.527 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52z" fill="currentColor"/></svg></div>
+                <div class="v2v-trust-dot" title="CRM"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z" fill="currentColor"/></svg></div>
+            </div>
+            <span class="text-[8px] text-ink-muted font-bold uppercase tracking-[0.1em]" data-i18n="v2v_integrations_title">Syncs to your stack</span>
+        </div>
       </div>
     </div>
 
-    <!-- Result Area -->
+    <!-- ═══ RESULT CANVAS ═══ -->
     <div id="v2v-result-area" class="v2v-result-container relative">
-      <div id="v2v-empty-hint" class="h-full min-h-[560px] flex flex-col items-center justify-center text-center p-12 ui-card bg-surface-container-low/20 border-dashed border-2 border-softer relative overflow-hidden">
-        <div class="v2v-empty-glow opacity-[0.05] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[2]"></div>
-        <span class="material-symbols-outlined text-4x text-outline-variant mb-4 opacity-40">insights</span>
-        <h3 class="text-xl font-headline font-bold text-secondary mb-2" data-i18n="v2v_empty_title">Intelligence Awaiting</h3>
-        <p class="text-sm text-ink-muted max-w-xs leading-relaxed" data-i18n="v2v_empty_desc">Your structured business outcome and integration actions will appear here after processing.</p>
+      
+      <!-- Premium Empty State: Live Preview -->
+      <div id="v2v-empty-hint" class="v2v-preview-card">
+        <div class="v2v-ambient-glow"></div>
+        
+        <!-- Preview Header -->
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+              <div class="v2v-badge-premium">Lead</div>
+              <div class="text-[9px] text-ink-muted font-bold uppercase tracking-widest">Preview</div>
+            </div>
+            <div class="flex items-center gap-1.5 text-[9px] text-ink-muted font-bold uppercase tracking-widest">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary/30"></span>
+              Awaiting input
+            </div>
+          </div>
+          
+          <!-- Ghosted Title -->
+          <div class="mb-8">
+            <div class="v2v-ghost-line w-3/4 h-7 mb-3 rounded-lg"></div>
+            <div class="v2v-ghost-line w-1/2 h-4 rounded-md"></div>
+          </div>
+
+          <!-- Ghosted Detail Grid -->
+          <div class="grid grid-cols-2 gap-x-6 gap-y-5 mb-8">
+            <div>
+              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Contact Name</div>
+              <div class="v2v-ghost-line w-4/5 h-4 rounded-md"></div>
+            </div>
+            <div>
+              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Company</div>
+              <div class="v2v-ghost-line w-3/5 h-4 rounded-md"></div>
+            </div>
+            <div>
+              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Need</div>
+              <div class="v2v-ghost-line w-full h-4 rounded-md"></div>
+            </div>
+            <div>
+              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Urgency</div>
+              <div class="v2v-ghost-line w-2/5 h-4 rounded-md"></div>
+            </div>
+          </div>
+
+          <!-- Ghosted Summary -->
+          <div class="v2v-ghost-box mb-6">
+            <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-3">AI Summary</div>
+            <div class="space-y-2">
+              <div class="v2v-ghost-line w-full h-3 rounded"></div>
+              <div class="v2v-ghost-line w-5/6 h-3 rounded"></div>
+              <div class="v2v-ghost-line w-3/4 h-3 rounded"></div>
+            </div>
+          </div>
+
+          <!-- Ghosted Actions -->
+          <div class="flex flex-wrap gap-2 pt-6 border-t border-softer">
+            <div class="v2v-ghost-action">
+              <span class="material-symbols-outlined text-[14px] opacity-20">table_chart</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">Sheets</span>
+            </div>
+            <div class="v2v-ghost-action">
+              <span class="material-symbols-outlined text-[14px] opacity-20">mail</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">Gmail</span>
+            </div>
+            <div class="v2v-ghost-action">
+              <span class="material-symbols-outlined text-[14px] opacity-20">hub</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">CRM</span>
+            </div>
+          </div>
+
+          <!-- Value Proposition -->
+          <div class="mt-8 pt-6 border-t border-softer text-center">
+            <p class="text-[11px] text-secondary font-semibold leading-relaxed max-w-[32ch] mx-auto" data-i18n="v2v_empty_value">Your raw input becomes a structured, actionable business record—ready to route, review, and execute.</p>
+          </div>
+        </div>
       </div>
     </div>
 

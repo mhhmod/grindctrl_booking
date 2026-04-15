@@ -1,4 +1,6 @@
-/* ── Unified Input Hub: Production Interaction Engine ── */
+/* ═══════════════════════════════════════════════════════════
+   INPUT HUB: Production Interaction Engine
+   ═══════════════════════════════════════════════════════════ */
 
 (function() {
     'use strict';
@@ -48,19 +50,19 @@
         return key;
     }
 
-    // Initial State Check
+    /* ── Init ── */
     function init() {
-        // Mode Management
+        // Mode tabs
         $$('.v2v-mode-tab').forEach(btn => {
             btn.addEventListener('click', () => switchMode(btn.dataset.mode));
         });
 
-        // Outcome Management
+        // Outcome chips
         $$('.v2v-outcome-chip').forEach(btn => {
             btn.addEventListener('click', () => switchOutcome(btn.dataset.outcome));
         });
 
-        // Voice Controls
+        // Voice
         const micBtn = $('v2v-mic-btn');
         const stopBtn = $('v2v-stop');
         const cancelBtn = $('v2v-cancel');
@@ -68,48 +70,71 @@
         if (stopBtn) stopBtn.addEventListener('click', finishRecording);
         if (cancelBtn) cancelBtn.addEventListener('click', cancelRecording);
 
-        // Text & Link Controls
+        // Text & Link
         const sendTextBtn = $('v2v-send-text');
         const sendLinkBtn = $('v2v-send-link');
         if (sendTextBtn) sendTextBtn.addEventListener('click', handleTextSubmit);
         if (sendLinkBtn) sendLinkBtn.addEventListener('click', handleLinkSubmit);
 
-        // File Controls
+        // File
         const fileInput = $('v2v-file-input');
         if (fileInput) fileInput.addEventListener('change', (e) => {
             if (e.target.files.length) handleFileSubmit(e.target.files[0]);
         });
+
+        // Enter key for text/link
+        const linkInput = $('v2v-link-input');
+        const textInput = $('v2v-text-input');
+        if (linkInput) linkInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLinkSubmit(); });
+        if (textInput) textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } });
+
+        // Update preview when outcome changes
+        updatePreviewOutcome();
     }
 
     function switchMode(newMode) {
         if (state.processing || state.recording) return;
         state.mode = newMode;
 
-        // Update Tabs
         $$('.v2v-mode-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === newMode);
         });
 
-        // Update Views
         $$('.v2v-mode-view').forEach(view => {
             const modeId = view.id.replace('v2v-view-', '');
-            view.classList.toggle('hidden', modeId !== newMode);
-            view.classList.toggle('active', modeId === newMode);
+            if (modeId === newMode) {
+                view.classList.remove('hidden');
+                view.classList.add('active');
+                // Re-trigger animation
+                view.style.animation = 'none';
+                view.offsetHeight;
+                view.style.animation = '';
+            } else {
+                view.classList.add('hidden');
+                view.classList.remove('active');
+            }
         });
-
-        console.log(`Input Hub: Mode switched to ${newMode}`);
     }
 
     function switchOutcome(newOutcome) {
         if (state.processing) return;
         state.outcome = newOutcome;
 
-        // Update Chips
         $$('.v2v-outcome-chip').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.outcome === newOutcome);
         });
 
-        console.log(`Input Hub: Outcome set to ${newOutcome}`);
+        updatePreviewOutcome();
+    }
+
+    function updatePreviewOutcome() {
+        const badge = document.querySelector('#v2v-empty-hint .v2v-badge-premium');
+        if (badge) {
+            badge.textContent = t('v2v_outcome_' + state.outcome);
+            badge.style.transition = 'transform 0.3s ease';
+            badge.style.transform = 'scale(1.1)';
+            setTimeout(() => { badge.style.transform = 'scale(1)'; }, 200);
+        }
     }
 
     /* ── Voice Engine ── */
@@ -154,6 +179,8 @@
 
         } catch (err) {
             console.error('Mic error:', err);
+            const statusText = $('v2v-status-text');
+            if (statusText) statusText.innerText = 'Microphone blocked';
             updateUIState('error');
         }
     }
@@ -189,7 +216,8 @@
         if (!input || !input.value.trim() || state.processing) return;
         const link = input.value.trim();
         if (!link.startsWith('http')) {
-            alert('Please enter a valid URL');
+            input.style.borderColor = 'var(--gc-error)';
+            setTimeout(() => { input.style.borderColor = ''; }, 1500);
             return;
         }
         input.value = '';
@@ -205,7 +233,7 @@
         await processInput('file', file);
     }
 
-    /* ── Processing Logic ── */
+    /* ── Processing ── */
 
     async function processInput(type, data) {
         state.processing = true;
@@ -223,6 +251,14 @@
         else if (type === 'file') formData.append('file', data, data.name);
         else if (type === 'link') formData.append('link_input', data);
         else formData.append('text_input', data);
+
+        // Hide the preview card
+        const emptyHint = $('v2v-empty-hint');
+        if (emptyHint) {
+            emptyHint.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            emptyHint.style.opacity = '0';
+            emptyHint.style.transform = 'scale(0.97)';
+        }
 
         await runProcessingSequence(type, async () => {
             const response = await fetch(CONFIG.V2V_ENDPOINT, {
@@ -249,14 +285,20 @@
             renderResult(result);
 
         } catch (err) {
-            console.error('Core Logic: Processing failed.', err);
+            console.error('Processing failed:', err);
             updateUIState('error');
+            // Restore preview
+            const emptyHint = $('v2v-empty-hint');
+            if (emptyHint) {
+                emptyHint.style.opacity = '1';
+                emptyHint.style.transform = 'scale(1)';
+            }
         } finally {
             state.processing = false;
         }
     }
 
-    /* ── UI Rendering ── */
+    /* ── UI State ── */
 
     function updateUIState(status) {
         const micBtn = $('v2v-mic-btn');
@@ -266,7 +308,7 @@
         const progressShell = $('v2v-progress-steps');
         const progressBar = $('v2v-progress-bar');
 
-        if (micBtn) micBtn.classList.remove('animate-pulse');
+        if (micBtn) micBtn.classList.remove('is-recording');
         if (controls) controls.classList.add('hidden');
         if (progressShell) progressShell.classList.add('hidden');
         if (dot) dot.style.background = '';
@@ -276,10 +318,11 @@
         switch(status) {
             case 'idle':
                 if (statusText) statusText.innerText = t('v2v_status_idle');
+                if (micBtn) micBtn.style.display = '';
                 break;
             case 'listening':
                 if (statusText) statusText.innerText = t('v2v_status_listening');
-                if (micBtn) micBtn.classList.add('animate-pulse');
+                if (micBtn) micBtn.classList.add('is-recording');
                 if (controls) controls.classList.remove('hidden');
                 if (dot) dot.style.background = '#ef4444';
                 break;
@@ -303,6 +346,8 @@
         if (timer) timer.innerText = sec.toFixed(1) + 's';
     }
 
+    /* ── Result Rendering ── */
+
     function renderResult(response) {
         const resultArea = $('v2v-result-area');
         if (!resultArea) return;
@@ -313,83 +358,83 @@
 
         let warningHtml = '';
         if (!isOk) {
-            warningHtml = `<div class="v2v-soft-warning active"><span class="material-symbols-outlined">warning</span><div>${response.message || 'Partial Success'}</div></div>`;
+            warningHtml = `<div class="v2v-soft-warning"><span class="material-symbols-outlined">warning</span><div>${response.message || 'Partial extraction—some fields may need review.'}</div></div>`;
         }
 
-        // Logic to determine if it's a Lead, Ticket, Task, or Brief based on outcome state
         const outcomeTag = t('v2v_outcome_' + state.outcome);
+        const title = data.title || data.lead_name || data.company_name || 'Structured Record';
+
+        // Build field grid — skip narrative fields
+        const skipKeys = ['summary', 'followup_draft', 'transcript', 'title', 'lead_name'];
+        const fields = Object.entries(data).filter(([key]) => !skipKeys.includes(key)).slice(0, 6);
 
         resultArea.innerHTML = `
-            <div class="v2v-result-card relative">
+            <div class="v2v-result-card" style="opacity:0;transform:translateY(16px)">
                 ${warningHtml}
 
                 <div class="v2v-result-header">
-                    <div>
-                        <div class="v2v-badge-premium mb-2">${outcomeTag}</div>
-                        <h3 class="text-xl font-headline font-bold text-on-surface">${data.title || data.lead_name || 'Processed Logic'}</h3>
+                    <div class="min-w-0">
+                        <div class="v2v-badge-premium mb-3">${outcomeTag}</div>
+                        <h3 class="text-[clamp(1.1rem,1rem+0.5vw,1.5rem)] font-headline font-extrabold text-on-surface tracking-tight leading-tight truncate">${title}</h3>
                     </div>
-                    <div class="text-[10px] text-ink-muted font-bold uppercase tracking-widest">${new Date().toLocaleDateString()}</div>
+                    <div class="text-[9px] text-ink-muted font-bold uppercase tracking-widest shrink-0">${new Date().toLocaleDateString()}</div>
                 </div>
 
+                ${fields.length ? `
                 <div class="v2v-detail-grid">
-                    ${Object.entries(data).slice(0, 6).map(([key, val]) => {
-                        if (['summary', 'followup_draft', 'transcript', 'title'].includes(key)) return '';
-                        return `
-                            <div class="v2v-detail-item">
-                                <span class="v2v-detail-label">${key.replace(/_/g, ' ')}</span>
-                                <span class="v2v-detail-value">${val || '—'}</span>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
+                    ${fields.map(([key, val]) => `
+                        <div class="v2v-detail-item">
+                            <span class="v2v-detail-label">${key.replace(/_/g, ' ')}</span>
+                            <span class="v2v-detail-value">${val || '—'}</span>
+                        </div>
+                    `).join('')}
+                </div>` : ''}
 
                 ${data.summary ? `
                 <div class="v2v-section-box">
-                    <div class="v2v-detail-label mb-3">${t('v2v_summary_label')}</div>
-                    <div class="text-[14px] font-medium leading-relaxed">${data.summary}</div>
+                    <div class="v2v-detail-label mb-2">${t('v2v_summary_label')}</div>
+                    <div class="text-[13px] font-medium leading-relaxed text-on-surface">${data.summary}</div>
                 </div>` : ''}
 
                 ${data.followup_draft ? `
                 <div class="v2v-section-box">
-                    <div class="v2v-detail-label mb-3">${t('v2v_followup_label')}</div>
-                    <div class="text-[13px] leading-relaxed italic text-secondary border-s-2 border-primary/20 ps-5">${data.followup_draft}</div>
+                    <div class="v2v-detail-label mb-2">${t('v2v_followup_label')}</div>
+                    <div class="v2v-transcript-text">${data.followup_draft}</div>
                 </div>` : ''}
 
-                <!-- Action Layer -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-10 pt-8 border-t border-softer">
-                    <button class="v2v-action-btn" onclick="alert('Syncing to Google Sheets...')">
-                        <span class="material-symbols-outlined text-lg">table_chart</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-8 pt-6 border-t border-softer">
+                    <button class="v2v-action-btn" onclick="alert('Syncing...')">
+                        <span class="material-symbols-outlined text-base">table_chart</span>
                         ${t('v2v_action_sheets')}
                     </button>
-                    <button class="v2v-action-btn" onclick="alert('Drafting in Gmail...')">
-                        <span class="material-symbols-outlined text-lg">mail</span>
+                    <button class="v2v-action-btn" onclick="alert('Drafting...')">
+                        <span class="material-symbols-outlined text-base">mail</span>
                         ${t('v2v_action_gmail')}
                     </button>
                     ${state.outcome === 'ticket' || state.outcome === 'task' ? `
-                    <button class="v2v-action-btn" onclick="alert('Syncing to Slack...')">
-                        <span class="material-symbols-outlined text-lg">message</span>
+                    <button class="v2v-action-btn" onclick="alert('Notifying...')">
+                        <span class="material-symbols-outlined text-base">chat</span>
                         ${t('v2v_action_slack')}
                     </button>` : `
-                    <button class="v2v-action-btn" onclick="alert('Pushing to CRM...')">
-                        <span class="material-symbols-outlined text-lg">hub</span>
+                    <button class="v2v-action-btn" onclick="alert('Pushing...')">
+                        <span class="material-symbols-outlined text-base">hub</span>
                         ${t('v2v_action_crm')}
                     </button>`}
                     <button class="v2v-action-btn" onclick="window.location.reload()">
-                        <span class="material-symbols-outlined text-lg">refresh</span>
+                        <span class="material-symbols-outlined text-base">refresh</span>
                         ${t('v2v_btn_try_again')}
                     </button>
                 </div>
             </div>
         `;
 
+        // Animate in
         const card = resultArea.querySelector('.v2v-result-card');
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
-        }, 100);
+        });
     }
 
     window.v2vInit = init;

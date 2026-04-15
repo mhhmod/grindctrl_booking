@@ -587,6 +587,8 @@
     v2v_action_gmail: { en: 'Draft in Gmail', ar: 'مسودة في Gmail' },
     v2v_action_crm: { en: 'Push to CRM', ar: 'إرسال لـ CRM' },
     v2v_action_export: { en: 'Export Data', ar: 'تصدير البيانات' },
+    v2v_title_line2: { en: 'Business-Ready Output.', ar: 'مخرجات جاهزة للعمل.' },
+    v2v_empty_value: { en: 'Your raw input becomes a structured, actionable business record—ready to route, review, and execute.', ar: 'مدخلاتك الخام تتحول إلى سجل أعمال منظم وقابل للتنفيذ—جاهز للتوجيه والمراجعة والتنفيذ.' },
   };
 
   // ── Expose globally for optional external use ──
