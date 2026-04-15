@@ -4,7 +4,7 @@
     'use strict';
 
     const CONFIG = {
-        V2V_ENDPOINT: 'https://n8n.srv1141109.hstgr.cloud/webhook/voice-to-value-lead',
+        V2V_ENDPOINT: 'https://n8n.srv1141109.hstgr.cloud/webhook/voice-lead-capture',
         MAX_RECORD_SEC: 60,
         PROCESSING_STEPS: [
             { id: 'uploading', label: 'v2v_status_uploading', progress: 25 },
