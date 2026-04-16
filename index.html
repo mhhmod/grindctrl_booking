@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="dark" lang="en" dir="ltr">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>GRINDCTRL | Precision in Automation</title>
-<meta name="description" content="GrindCTRL builds AI automations, AI agents, and modern business systems that help businesses operate with more clarity, speed, and control."/>
+<title>GRINDCTRL | Autonomous Exception Desk</title>
+<meta name="description" content="Autonomous Exception Desk for B2B operations. Drop any messy exception — AI extracts fields, detects anomalies, and prepares approval-ready actions."/>
 <!-- Favicon: uses existing logo SVGs. Dark logo for dark tabs, light for light tabs -->
 <link rel="icon" type="image/svg+xml" href="logo-dark.svg" media="(prefers-color-scheme: dark)"/>
 <link rel="icon" type="image/svg+xml" href="logo-light.svg" media="(prefers-color-scheme: light)"/>
@@ -546,17 +546,18 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 
 <!-- ===== NAV ===== -->
 <nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 bg-canvas/60 backdrop-blur-3xl border-b border-softer shadow-sm shadow-ink/5">
-<div class="ui-container flex justify-between items-center py-3 font-headline tracking-tight">
+<div class="ui-container flex justify-between items-center py-2.5 font-headline tracking-tight">
   <a href="#home" class="flex items-center gap-2.5">
-    <img src="logo-dark.svg" alt="GRINDCTRL Symbol" class="logo-dark h-7 w-auto"/>
-    <img src="logo-light.svg" alt="GRINDCTRL Symbol" class="logo-light h-7 w-auto"/>
-    <span class="text-base font-bold tracking-[-0.03em] text-ink dark:text-ink">GRINDCTRL</span>
+    <img src="logo-dark.svg" alt="GRINDCTRL Symbol" class="logo-dark h-6 w-auto"/>
+    <img src="logo-light.svg" alt="GRINDCTRL Symbol" class="logo-light h-6 w-auto"/>
+    <span class="text-sm font-bold tracking-[-0.03em] text-ink dark:text-ink">GRINDCTRL</span>
+    <span class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-[0.12em] text-ink-muted px-1.5 py-0.5 border border-outline rounded" style="letter-spacing:0.1em">Exception Desk</span>
   </a>
-  <div class="hidden md:flex items-center gap-9">
-    <a class="nav-link text-secondary hover:text-ink text-[13px] active" href="#home" data-nav="home" data-i18n="nav_home">Home</a>
-    <a class="nav-link text-secondary hover:text-ink text-[13px]" href="#solutions" data-nav="solutions" data-i18n="nav_solutions">Solutions</a>
-    <a class="nav-link text-secondary hover:text-ink text-[13px]" href="#ai-trainer" data-nav="ai-trainer" data-i18n="nav_ai_trainer">AI Trainer</a>
-    <a class="nav-link text-secondary hover:text-ink text-[13px]" href="#packages" data-nav="packages" data-i18n="nav_packages">Packages</a>
+  <div class="hidden md:flex items-center gap-7" id="nav-marketing-links">
+    <a class="nav-link text-secondary hover:text-ink text-[12px] active" href="#home" data-nav="home">Workspace</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions" data-i18n="nav_solutions">Solutions</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#ai-trainer" data-nav="ai-trainer" data-i18n="nav_ai_trainer">AI Trainer</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book">Book a Call</a>
   </div>
   <div class="flex items-center gap-2">
     <button id="lang-toggle" class="theme-btn" aria-label="Switch language">
@@ -565,9 +566,6 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
       <span class="material-symbols-outlined text-lg theme-icon-dark">light_mode</span>
       <span class="material-symbols-outlined text-lg theme-icon-light" style="display:none">dark_mode</span>
-    </button>
-    <button onclick="gcOpenChat()" class="cta-primary px-5 py-2 text-[13px] hidden sm:inline-flex items-center gap-1.5">
-      <span class="material-symbols-outlined text-sm">smart_toy</span> <span data-i18n="nav_try_agent">Try the Agent</span>
     </button>
     <button id="hamburger-btn" class="md:hidden p-2 text-ink-muted hover:text-ink transition-colors" aria-label="Open menu">
       <span class="material-symbols-outlined text-xl">menu</span>
@@ -592,7 +590,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   </div>
   <nav class="flex flex-col gap-1">
     <a href="#home" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-ink font-medium hover:bg-surface-container-high transition-colors" data-nav="home">
-      <span class="material-symbols-outlined text-ink-dim text-xl">home</span> <span data-i18n="nav_home">Home</span>
+      <span class="material-symbols-outlined text-ink-dim text-xl">inbox_customize</span> <span>Workspace</span>
     </a>
     <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions">
       <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span data-i18n="nav_solutions">Solutions</span>
@@ -600,761 +598,165 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <a href="#ai-trainer" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="ai-trainer">
       <span class="material-symbols-outlined text-ink-dim text-xl">fitness_center</span> <span data-i18n="nav_ai_trainer">AI Trainer</span>
     </a>
-    <a href="#packages" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="packages">
-      <span class="material-symbols-outlined text-ink-dim text-xl">inventory_2</span> <span data-i18n="nav_packages">Packages</span>
+    <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book">
+      <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
     </a>
   </nav>
   <div class="mt-auto pt-8">
-    <button onclick="gcOpenChat(); document.getElementById('drawer-overlay').classList.remove('open'); document.getElementById('drawer-panel').classList.remove('open'); document.body.style.overflow='';" class="drawer-link block w-full text-center cta-primary py-4 text-base" data-i18n="nav_try_agent">
-      Try the Agent
-    </button>
+    <a href="#book" onclick="document.getElementById('drawer-overlay').classList.remove('open'); document.getElementById('drawer-panel').classList.remove('open'); document.body.style.overflow='';" class="drawer-link block w-full text-center cta-primary py-4 text-base">
+      Book a Strategy Call
+    </a>
   </div>
 </div>
 </div>
 
-<!-- ===== FLOATING PILL ===== -->
-<button id="floating-pill" onclick="gcOpenChat()" class="floating-pill md:hidden cta-primary px-5 py-3 rounded-full text-sm shadow-lg flex items-center gap-2">
-<span class="material-symbols-outlined text-base">smart_toy</span> <span data-i18n="nav_try_agent">Try the Agent</span>
-</button>
+<!-- Floating pill removed — workspace-first UI -->
 
 <!-- =========================================================== -->
 <!-- PAGE: HOME -->
 <!-- =========================================================== -->
 <div id="page-home" class="page-section active" data-page="home">
 
-<!-- Hero -->
-<header class="relative pt-28 pb-16 sm:pt-36 sm:pb-20 md:pt-48 md:pb-36 overflow-hidden">
-<div class="hero-mesh"></div>
-<div class="ui-container relative z-10">
-<div class="max-w-4xl">
-  <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low/40 backdrop-blur-xl border border-primary/10 text-[10px] font-bold tracking-[0.2em] text-primary/80 mb-10 uppercase shadow-inner" data-i18n="hero_badge">
-    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-    Systems for the Intelligent Enterprise
-  </div>
-  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="hero_title">
-    Take Control of<br class="hidden sm:block"/> Business Operations<br class="hidden md:block"/> with AI
-  </h1>
-  <p class="text-fluid font-body text-secondary max-w-xl mb-10 sm:mb-14" data-i18n="hero_subtitle">
-    We build AI automations, AI agents, and modern business systems that help you operate with more clarity, speed, and control.
-  </p>
-  <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-    <button onclick="gcOpenChat()" class="ui-btn ui-btn-primary px-8 sm:px-10 text-[15px] gap-2">
-      <span class="material-symbols-outlined text-base">smart_toy</span> <span data-i18n="hero_cta_try">Try the Agent</span>
-    </button>
-    <a href="#solutions" class="ui-btn ui-btn-secondary px-8 sm:px-10 text-[15px] gap-2">
-      <span class="material-symbols-outlined text-base">play_circle</span> <span data-i18n="hero_cta_primary">See the 2-Min Workflow Tour</span>
-    </a>
-  </div>
-  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-6 text-[12px] text-secondary">
-    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> <span data-i18n="hero_proof_1">Trusted by 40+ operators</span></span>
-    <span class="hidden sm:inline text-outline-variant">·</span>
-    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> <span data-i18n="hero_proof_2">Avg 22 hrs/week saved</span></span>
-    <span class="hidden sm:inline text-outline-variant">·</span>
-    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">check_circle</span> <span data-i18n="hero_proof_3">Go live in under 14 days</span></span>
-  </div>
-</div>
-</div>
-<div class="absolute top-0 right-0 -z-10 w-1/2 h-full opacity-10">
-  <div class="absolute inset-0 bg-gradient-to-l from-ink/5 to-transparent blur-[120px]"></div>
-</div>
-</header>
+<!-- ===== EXCEPTION DESK WORKSPACE ===== -->
+<section id="exception-desk" class="ed-workspace-section">
+<div class="ed-workspace-container">
 
-<!-- Voice-to-Value Studio -->
-<section id="v2v-studio" class="v2v-section px-4 sm:px-8 pb-16 sm:pb-24 reveal">
-<div class="max-w-screen-2xl mx-auto">
-  <div class="v2v-shell" id="input-hub-container">
-    
-    <!-- ═══ COMMAND PANEL ═══ -->
-    <div class="v2v-panel v2v-command relative overflow-hidden">
-      <!-- Grain & ambient glow -->
-      <div class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style="background-image:url('https://www.transparenttextures.com/patterns/asfalt-dark.png')"></div>
-      <div class="v2v-ambient-glow"></div>
-      
-      <div class="relative z-10 flex flex-col h-full">
-        
-        <!-- Header Row -->
-        <div class="flex items-center justify-between mb-6">
-          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 text-primary text-[9px] font-black uppercase tracking-[0.2em]">
-            <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span data-i18n="v2v_kicker">Input Hub</span>
-          </div>
-          
-          <!-- Mode Tabs -->
-          <div class="v2v-mode-switcher">
-            <button class="v2v-mode-tab active" data-mode="voice" title="Voice">
-              <span class="material-symbols-outlined">mic</span>
+  <!-- Workspace Header -->
+  <div class="ed-workspace-header">
+    <div class="ed-header-left">
+      <h1 class="ed-workspace-title">Exception Desk</h1>
+      <div class="ed-status-badge">
+        <span class="ed-status-dot"></span>
+        Sandbox
+      </div>
+      <button class="ed-new-exception-btn" id="ed-new-btn" onclick="edReset()" title="Clear and start a new exception">
+        <span class="material-symbols-outlined" style="font-size:14px">add</span> New
+      </button>
+    </div>
+    <div class="ed-trust-legend">
+      <span class="ed-trust-legend-item" data-trust="safe"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-safe)"></span>Safe to automate</span>
+      <span class="ed-trust-legend-item" data-trust="review"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-review)"></span>Needs review</span>
+      <span class="ed-trust-legend-item" data-trust="override"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-override)"></span>Human override required</span>
+    </div>
+    <div class="ed-kbd-hints">
+      <span><span class="ed-kbd">⌘↵</span> Approve</span>
+      <span><span class="ed-kbd">E</span> Edit</span>
+      <span><span class="ed-kbd">⇧⌘E</span> Escalate</span>
+      <span><span class="ed-kbd">R</span> Reset</span>
+    </div>
+  </div>
+
+  <!-- Split View -->
+  <div class="ed-split-view">
+
+    <!-- LEFT: Source Evidence -->
+    <div class="ed-panel ed-source-panel" id="ed-source-panel">
+      <div class="ed-panel-header">
+        <span class="ed-panel-label">Source Evidence</span>
+        <span class="ed-panel-meta">Awaiting input</span>
+      </div>
+
+      <!-- Drop Zone -->
+      <div class="ed-drop-zone" id="ed-drop-zone">
+        <div class="ed-drop-content">
+          <span class="material-symbols-outlined ed-drop-icon">inbox_customize</span>
+          <div class="ed-drop-title">Drag and drop your mess</div>
+          <div class="ed-drop-subtitle">Email · PDF · Screenshot · Copied text · Messy order note</div>
+          <div class="ed-drop-or">or</div>
+          <div class="ed-drop-actions">
+            <button class="ed-drop-btn" id="ed-paste-btn">
+              <span class="material-symbols-outlined">content_paste</span> Paste
             </button>
-            <button class="v2v-mode-tab" data-mode="link" title="Link">
-              <span class="material-symbols-outlined">link</span>
+            <button class="ed-drop-btn" id="ed-upload-btn">
+              <span class="material-symbols-outlined">upload_file</span> Upload
             </button>
-            <button class="v2v-mode-tab" data-mode="file" title="File">
-              <span class="material-symbols-outlined">upload_file</span>
-            </button>
-            <button class="v2v-mode-tab" data-mode="text" title="Text">
-              <span class="material-symbols-outlined">edit_note</span>
+            <button class="ed-drop-btn ed-drop-btn-demo" id="ed-demo-btn">
+              <span class="material-symbols-outlined">science</span> Try Demo
             </button>
           </div>
         </div>
+        <input type="file" id="ed-file-input" class="hidden" accept=".pdf,.eml,.txt,.csv,.xlsx,.png,.jpg,.jpeg,.doc,.docx"/>
+      </div>
 
-        <!-- Headline: Strong hierarchy -->
-        <h2 class="text-[clamp(1.6rem,1.2rem+1.8vw,2.4rem)] font-headline font-extrabold text-on-surface tracking-tight leading-[1.1] mb-2">
-          <span data-i18n="v2v_title">Messy Input.</span><br/>
-          <span class="text-secondary" data-i18n="v2v_title_line2">Business-Ready Output.</span>
-        </h2>
-        <p class="text-secondary text-[13px] leading-relaxed max-w-[28ch] mb-6 font-medium" data-i18n="v2v_subtitle">Voice, link, or file—AI structures it into leads, tickets, briefs in seconds.</p>
-        
-        <!-- Outcome Chips -->
-        <div class="mb-auto">
-          <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_outcome_label">Output as</div>
-          <div class="flex flex-wrap gap-2">
-            <button class="v2v-outcome-chip active" data-outcome="lead">
-              <span class="material-symbols-outlined">person_add</span>
-              <span data-i18n="v2v_outcome_lead">Lead</span>
-            </button>
-            <button class="v2v-outcome-chip" data-outcome="ticket">
-              <span class="material-symbols-outlined">confirmation_number</span>
-              <span data-i18n="v2v_outcome_ticket">Ticket</span>
-            </button>
-            <button class="v2v-outcome-chip" data-outcome="task">
-              <span class="material-symbols-outlined">task_alt</span>
-              <span data-i18n="v2v_outcome_task">Task</span>
-            </button>
-            <button class="v2v-outcome-chip" data-outcome="brief">
-              <span class="material-symbols-outlined">description</span>
-              <span data-i18n="v2v_outcome_brief">Brief</span>
-            </button>
-          </div>
-        </div>
+      <!-- Source Content (hidden until input) -->
+      <div class="ed-source-content" id="ed-source-content" style="display:none">
+        <div class="ed-source-meta" id="ed-source-meta"></div>
+        <div class="ed-source-body" id="ed-source-body"></div>
+      </div>
+    </div>
 
-        <!-- ── INTERACTION ZONE ── -->
-        <div class="v2v-interaction-zone">
-          
-          <!-- Voice Mode -->
-          <div id="v2v-view-voice" class="v2v-mode-view active">
-            <div class="v2v-voice-stage">
-              <div id="v2v-mic-btn" class="v2v-mic-btn" role="button" data-i18n-aria="v2v_mic_aria" aria-label="Start capture">
-                <span class="material-symbols-outlined text-[28px]">mic</span>
-              </div>
-              
-              <div id="v2v-status-container" class="v2v-status-indicator">
-                <div class="flex items-center gap-2.5">
-                    <span class="v2v-status-dot"></span>
-                    <span id="v2v-status-text" class="text-[10px] font-bold uppercase tracking-[0.15em] text-secondary" data-i18n="v2v_status_idle">Ready</span>
-                    <span id="v2v-timer" class="font-mono text-[10px] opacity-30 ms-1">0.0s</span>
-                </div>
-                <div id="v2v-progress-steps" class="hidden w-full h-[3px] bg-surface-container rounded-full overflow-hidden mt-3">
-                    <div id="v2v-progress-bar" class="h-full bg-primary w-0 transition-all duration-700 rounded-full"></div>
-                </div>
-              </div>
-
-              <div id="v2v-controls" class="hidden flex items-center gap-3 mt-5">
-                  <button id="v2v-cancel" class="h-9 px-5 rounded-lg border border-softer text-[10px] font-bold uppercase tracking-widest hover:bg-error/5 hover:text-error hover:border-error/20 transition-all">Cancel</button>
-                  <button id="v2v-stop" class="h-9 px-6 rounded-lg bg-primary text-on-primary text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20">Finish</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Link Mode -->
-          <div id="v2v-view-link" class="v2v-mode-view hidden">
-            <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_mode_link">Paste Link</div>
-            <div class="flex gap-2">
-               <input id="v2v-link-input" type="url" class="v2v-field flex-1" placeholder="https://..." data-i18n-placeholder="v2v_link_placeholder"/>
-               <button id="v2v-send-link" class="v2v-submit-btn">
-                 <span class="material-symbols-outlined text-lg">east</span>
-               </button>
-            </div>
-          </div>
-
-          <!-- File Mode -->
-          <div id="v2v-view-file" class="v2v-mode-view hidden">
-            <input type="file" id="v2v-file-input" class="hidden" accept=".pdf,.doc,.docx,.txt,.mp3,.wav,.webm"/>
-            <div class="v2v-dropzone" onclick="document.getElementById('v2v-file-input').click()">
-              <span class="material-symbols-outlined text-2xl text-ink-muted mb-2">cloud_upload</span>
-              <div class="text-[10px] font-bold uppercase tracking-widest text-secondary" data-i18n="v2v_mode_file">Upload File</div>
-              <div class="text-[8px] text-ink-muted mt-1 opacity-60">PDF · DOC · TXT · Audio</div>
-            </div>
-          </div>
-
-          <!-- Text Mode -->
-          <div id="v2v-view-text" class="v2v-mode-view hidden">
-            <div class="text-[9px] text-ink-muted font-black uppercase tracking-[0.2em] mb-3" data-i18n="v2v_mode_text">Manual Text</div>
-            <div class="relative">
-              <textarea id="v2v-text-input" rows="3" class="v2v-field w-full resize-none" placeholder="Describe the lead, task, or context..." data-i18n-placeholder="v2v_input_placeholder"></textarea>
-              <button id="v2v-send-text" class="absolute bottom-2.5 end-2.5 v2v-submit-btn w-9 h-9">
-                <span class="material-symbols-outlined text-base">send</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Micro Trust -->
-        <div class="flex items-center gap-3 mt-5 pt-4 border-t border-softer">
-            <div class="flex items-center -space-x-1">
-                <div class="v2v-trust-dot" title="Gmail"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.573l8.073-6.08c1.618-1.214 3.927-.059 3.927 1.964z" fill="currentColor"/></svg></div>
-                <div class="v2v-trust-dot" title="Sheets"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" fill="currentColor"/><path d="M14 2v6h6" fill="currentColor" opacity=".4"/></svg></div>
-                <div class="v2v-trust-dot" title="Slack"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M5.042 15.165a2.528 2.528 0 01-2.52 2.523A2.527 2.527 0 010 15.165a2.527 2.527 0 012.522-2.52h2.52v2.52z" fill="currentColor"/></svg></div>
-                <div class="v2v-trust-dot" title="CRM"><svg viewBox="0 0 24 24" class="w-3.5 h-3.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z" fill="currentColor"/></svg></div>
-            </div>
-            <span class="text-[8px] text-ink-muted font-bold uppercase tracking-[0.1em]" data-i18n="v2v_integrations_title">Syncs to your stack</span>
+    <!-- RIGHT: Structured Resolution -->
+    <div class="ed-panel ed-resolution-panel" id="ed-resolution-panel">
+      <div class="ed-panel-header">
+        <span class="ed-panel-label">Structured Resolution</span>
+        <div class="ed-resolution-status-wrap">
+          <span class="ed-trust-badge" id="ed-resolution-badge" style="display:none"></span>
+          <span class="ed-panel-meta" id="ed-resolution-status">Awaiting input</span>
         </div>
       </div>
-    </div>
 
-    <!-- ═══ RESULT CANVAS ═══ -->
-    <div id="v2v-result-area" class="v2v-result-container relative">
-      
-      <!-- Premium Empty State: Live Preview -->
-      <div id="v2v-empty-hint" class="v2v-preview-card">
-        <div class="v2v-ambient-glow"></div>
-        
-        <!-- Preview Header -->
-        <div class="relative z-10">
-          <div class="flex items-center justify-between mb-8">
-            <div class="flex items-center gap-3">
-              <div class="v2v-badge-premium">Lead</div>
-              <div class="text-[9px] text-ink-muted font-bold uppercase tracking-widest">Preview</div>
-            </div>
-            <div class="flex items-center gap-1.5 text-[9px] text-ink-muted font-bold uppercase tracking-widest">
-              <span class="w-1.5 h-1.5 rounded-full bg-primary/30"></span>
-              Awaiting input
+      <!-- Ghost/Empty State -->
+      <div class="ed-resolution-empty" id="ed-resolution-empty">
+        <div style="padding:4px 0">
+          <!-- Ghost anomalies -->
+          <div style="margin-bottom:14px">
+            <div class="ed-ghost-label" style="margin-bottom:6px">Anomalies</div>
+            <div class="ed-ghost-line" style="width:100%;height:32px;margin-bottom:5px;border-radius:7px"></div>
+            <div class="ed-ghost-line" style="width:80%;height:32px;border-radius:7px"></div>
+          </div>
+          <!-- Ghost fields -->
+          <div style="margin-bottom:14px">
+            <div class="ed-ghost-label" style="margin-bottom:6px">Extracted Fields</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div><div class="ed-ghost-label">PO Number</div><div class="ed-ghost-line" style="width:65%;height:16px;margin-top:3px"></div></div>
+              <div><div class="ed-ghost-label">SKU</div><div class="ed-ghost-line" style="width:55%;height:16px;margin-top:3px"></div></div>
+              <div><div class="ed-ghost-label">Quantity</div><div class="ed-ghost-line" style="width:35%;height:16px;margin-top:3px"></div></div>
+              <div><div class="ed-ghost-label">Price</div><div class="ed-ghost-line" style="width:50%;height:16px;margin-top:3px"></div></div>
+              <div><div class="ed-ghost-label">Ship To</div><div class="ed-ghost-line" style="width:85%;height:16px;margin-top:3px"></div></div>
+              <div><div class="ed-ghost-label">Deadline</div><div class="ed-ghost-line" style="width:60%;height:16px;margin-top:3px"></div></div>
             </div>
           </div>
-          
-          <!-- Ghosted Title -->
-          <div class="mb-8">
-            <div class="v2v-ghost-line w-3/4 h-7 mb-3 rounded-lg"></div>
-            <div class="v2v-ghost-line w-1/2 h-4 rounded-md"></div>
-          </div>
-
-          <!-- Ghosted Detail Grid -->
-          <div class="grid grid-cols-2 gap-x-6 gap-y-5 mb-8">
-            <div>
-              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Contact Name</div>
-              <div class="v2v-ghost-line w-4/5 h-4 rounded-md"></div>
-            </div>
-            <div>
-              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Company</div>
-              <div class="v2v-ghost-line w-3/5 h-4 rounded-md"></div>
-            </div>
-            <div>
-              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Need</div>
-              <div class="v2v-ghost-line w-full h-4 rounded-md"></div>
-            </div>
-            <div>
-              <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-2">Urgency</div>
-              <div class="v2v-ghost-line w-2/5 h-4 rounded-md"></div>
-            </div>
-          </div>
-
-          <!-- Ghosted Summary -->
-          <div class="v2v-ghost-box mb-6">
-            <div class="text-[8px] text-ink-muted font-black uppercase tracking-[0.15em] mb-3">AI Summary</div>
-            <div class="space-y-2">
-              <div class="v2v-ghost-line w-full h-3 rounded"></div>
-              <div class="v2v-ghost-line w-5/6 h-3 rounded"></div>
-              <div class="v2v-ghost-line w-3/4 h-3 rounded"></div>
-            </div>
-          </div>
-
-          <!-- Ghosted Actions -->
-          <div class="flex flex-wrap gap-2 pt-6 border-t border-softer">
-            <div class="v2v-ghost-action">
-              <span class="material-symbols-outlined text-[14px] opacity-20">table_chart</span>
-              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">Sheets</span>
-            </div>
-            <div class="v2v-ghost-action">
-              <span class="material-symbols-outlined text-[14px] opacity-20">mail</span>
-              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">Gmail</span>
-            </div>
-            <div class="v2v-ghost-action">
-              <span class="material-symbols-outlined text-[14px] opacity-20">hub</span>
-              <span class="text-[9px] font-bold uppercase tracking-wider opacity-30">CRM</span>
-            </div>
-          </div>
-
-          <!-- Value Proposition -->
-          <div class="mt-8 pt-6 border-t border-softer text-center">
-            <p class="text-[11px] text-secondary font-semibold leading-relaxed max-w-[32ch] mx-auto" data-i18n="v2v_empty_value">Your raw input becomes a structured, actionable business record—ready to route, review, and execute.</p>
+          <!-- Ghost action -->
+          <div>
+            <div class="ed-ghost-label" style="margin-bottom:6px">Recommended Action</div>
+            <div class="ed-ghost-line" style="width:100%;height:44px;border-radius:7px"></div>
           </div>
         </div>
+        <div style="margin-top:auto;padding:14px 0 0;border-top:1px solid var(--gc-outline-variant);text-align:center">
+          <p style="font-size:11px;color:var(--gc-secondary);font-weight:600;max-width:34ch;margin:0 auto;line-height:1.5">
+            Drop any messy exception. AI extracts fields, detects anomalies, and prepares an approval-ready action.
+          </p>
+        </div>
       </div>
-    </div>
 
-  </div>
-</div>
-</section>
+      <!-- Resolution Content (populated by JS) -->
+      <div class="ed-resolution-content" id="ed-resolution-content" style="display:none"></div>
 
-  </div>
-</div>
-</section>
-
-<!-- Integration Ecosystem Strip -->
-<section class="py-8 sm:py-12 bg-surface-container-low border-y border-softer reveal">
-<div class="ui-container">
-  <div class="text-[10px] text-secondary uppercase tracking-[0.2em] font-semibold text-center mb-5" data-i18n="integ_label">Connects with your stack</div>
-  <div class="flex flex-wrap justify-center items-center gap-x-8 gap-y-3 sm:gap-x-12 opacity-40">
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">n8n</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">Make</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">Zapier</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">Slack</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">HubSpot</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em] hidden sm:block">Shopify</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em] hidden sm:block">WhatsApp</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em] hidden sm:block">Google Sheets</div>
-    <div class="text-sm sm:text-base font-semibold font-headline tracking-[0.15em]">OpenAI</div>
-  </div>
-</div>
-</section>
-
-<!-- Core Solutions -->
-<section class="py-24 sm:py-36 ui-container">
-<div class="mb-16 sm:mb-24 reveal">
-  <h2 class="h2-fluid font-headline text-on-surface mb-4" data-i18n="core_title">Core Solutions</h2>
-  <div class="h-[2px] w-12 bg-primary/40 rounded-full"></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
-  <!-- AI Automation — with workflow preview -->
-  <div class="md:col-span-8 ui-card premium-glow justify-between group cursor-pointer reveal">
-    <div>
-      <span class="material-symbols-outlined text-primary text-3xl mb-6 block">memory</span>
-      <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_auto_title">AI Automation</h3>
-      <p class="text-secondary text-[16px] leading-relaxed max-w-lg mb-8" data-i18n="core_auto_desc">Replace repetitive workflows with autonomous systems that work 24/7 without fatigue or error.</p>
-    </div>
-    <!-- Realistic workflow preview -->
-    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-6 border border-primary/10 shadow-inner group-hover:bg-surface-container-lowest/60 transition-colors">
-      <div class="flex items-center gap-2 mb-5 text-[10px] text-primary font-bold uppercase tracking-[0.2em]">
-        <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-        Live Workflow · Order Processing
-      </div>
-      <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none scroll-fade">
-        <div class="shrink-0 px-4 py-3 bg-primary/5 rounded-xl text-[11px] text-primary font-bold border border-primary/10 shadow-sm">Webhook<br/><span class="text-[9px] opacity-70 font-medium">Shopify Order</span></div>
-        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
-        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">AI Classify<br/><span class="text-[9px] text-secondary font-medium">GPT-4o</span></div>
-        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
-        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">Route<br/><span class="text-[9px] text-secondary font-medium">3 Branches</span></div>
-        <span class="material-symbols-outlined text-outline text-xs shrink-0 font-light">east</span>
-        <div class="shrink-0 px-4 py-3 bg-surface-container-high/40 rounded-xl text-[11px] text-on-surface font-bold border border-softer shadow-sm">CRM Sync<br/><span class="text-[9px] text-secondary font-medium">HubSpot</span></div>
-      </div>
-      <div class="mt-4 flex items-center gap-5 text-[10px] text-secondary font-bold">
-        <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-secondary-dim"></span> 2.8k runs today</span>
-        <span>99.7% Success Rate</span>
-        <span>Latency 1.2s</span>
-      </div>
-    </div>
-    <a href="#solutions" class="flex items-center text-primary text-[13px] font-medium mt-5 group-hover:translate-x-1 transition-transform">
-      View Frameworks <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
-    </a>
-  </div>
-  <!-- AI Agents — with agent console preview -->
-  <div class="md:col-span-4 ui-card premium-glow reveal reveal-delay-1">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">smart_toy</span>
-    <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_agent_title">AI Agents</h3>
-    <p class="text-secondary text-[15px] leading-relaxed mb-6" data-i18n="core_agent_desc">Custom-trained digital employees focused on specific roles from sales to support.</p>
-    <!-- Agent mini-preview -->
-    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-5 border border-softer space-y-4 text-[12px] shadow-sm">
-      <div class="flex items-center justify-between font-bold">
-        <span class="text-on-surface tracking-tight">Sales Agent</span>
-        <span class="flex items-center gap-1.5 text-primary">
-          <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          Active
-        </span>
-      </div>
-      <div class="space-y-2">
-        <div class="flex items-center justify-between text-secondary"><span>Leads handled today</span><span class="text-on-surface font-bold preview-stat">47</span></div>
-        <div class="flex items-center justify-between text-secondary"><span>Response time</span><span class="text-on-surface font-bold preview-stat">&lt;30s</span></div>
-        <div class="flex items-center justify-between text-secondary"><span>Conversion rate</span><span class="text-primary font-bold preview-stat">23.4%</span></div>
-      </div>
-    </div>
-    <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">Configure Agent →</a>
-  </div>
-  <!-- Business Systems — with CRM preview -->
-  <div class="md:col-span-4 ui-card premium-glow reveal">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">hub</span>
-    <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_biz_title">Business Systems</h3>
-    <p class="text-secondary text-[15px] leading-relaxed mb-6" data-i18n="core_biz_desc">Foundational architectures that scale with your growth, designed for clarity.</p>
-    <!-- CRM pipeline mini-preview -->
-    <div class="bg-surface-container-lowest/40 backdrop-blur-2xl rounded-2xl p-5 border border-softer text-[12px] shadow-sm">
-      <div class="text-[10px] text-primary font-bold uppercase tracking-[0.2em] mb-4">Pipeline · Q2 Performance</div>
-      <div class="grid grid-cols-4 gap-2 mb-5">
-        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">24</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">New</div></div>
-        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">18</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">Qual.</div></div>
-        <div class="text-center p-2 rounded-lg bg-surface-container/30 border border-softer"><div class="text-on-surface font-bold preview-stat">9</div><div class="text-[9px] text-secondary font-bold uppercase tracking-tight">Prop.</div></div>
-        <div class="text-center p-2 rounded-lg bg-primary/10 border border-primary/20"><div class="text-primary font-bold preview-stat">6</div><div class="text-[9px] text-primary font-bold uppercase tracking-tight">Won</div></div>
-      </div>
-      <div class="h-2.5 bg-surface-container rounded-full flex overflow-hidden p-[1px] shadow-inner">
-        <div class="bg-on-surface/10 w-[40%] rounded-l-full"></div><div class="bg-on-surface/20 w-[30%]"></div><div class="bg-primary/40 w-[15%]"></div><div class="bg-primary w-[15%] rounded-r-full shadow-[0_0_10px_rgba(var(--gc-primary),0.3)]"></div>
-      </div>
-    </div>
-    <a class="text-[13px] font-medium text-on-surface-variant hover:text-primary mt-4 inline-block" href="#solutions">System Audit →</a>
-  </div>
-  <!-- AI Trainer — with client dashboard preview -->
-  <div class="md:col-span-8 ui-card premium-glow justify-between group cursor-pointer reveal reveal-delay-1">
-    <div class="flex flex-col md:flex-row gap-8 sm:gap-12 items-start">
-      <div class="flex-1">
-        <span class="material-symbols-outlined text-primary text-3xl mb-6 block">fitness_center</span>
-        <h3 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="core_trainer_title">AI Trainer</h3>
-        <p class="text-secondary text-[16px] leading-relaxed mb-8" data-i18n="core_trainer_desc">Vertical-specific AI tools designed for gym owners and performance coaches to automate member retention.</p>
-        <a href="#ai-trainer" class="flex items-center text-primary text-[13px] font-medium group-hover:translate-x-1 transition-transform">
-          Explore Coaching AI <span class="material-symbols-outlined text-sm ml-1">arrow_forward</span>
-        </a>
-      </div>
-      <!-- Trainer preview -->
-      <div class="flex-1 bg-surface-container-lowest/60 backdrop-blur-xl rounded-2xl p-5 border border-primary/10 w-full shadow-inner">
-        <div class="text-[10px] text-secondary uppercase tracking-[0.25em] font-bold mb-5 flex items-center justify-between">
-          <span>Active Roster</span>
-          <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
-        </div>
-        <div class="space-y-4">
-          <div class="flex items-center gap-4 group/item">
-            <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary shrink-0 border border-primary/10 shadow-sm">MC</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">Marcus Crawford</div><div class="text-[9px] text-secondary font-medium">Hypertrophy · Week 6</div></div>
-            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-3/4 bg-primary rounded-full"></div></div>
-          </div>
-          <div class="flex items-center gap-4 group/item">
-            <div class="w-9 h-9 rounded-full bg-surface-container-high/50 flex items-center justify-center text-[10px] font-black text-secondary shrink-0 border border-softer shadow-sm">SJ</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">Sarah Jenkins</div><div class="text-[9px] text-secondary font-medium">Conditioning · Week 2</div></div>
-            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-1/4 bg-primary/60 rounded-full"></div></div>
-          </div>
-          <div class="flex items-center gap-4 group/item">
-            <div class="w-9 h-9 rounded-full bg-surface-container-high/50 flex items-center justify-center text-[10px] font-black text-secondary shrink-0 border border-softer shadow-sm">DT</div>
-            <div class="flex-1 min-w-0"><div class="text-[11px] font-bold text-on-surface truncate">David Thompson</div><div class="text-[9px] text-secondary font-medium">Strength · Peak Phase</div></div>
-            <div class="h-1.5 w-20 bg-surface-container rounded-full shrink-0 overflow-hidden"><div class="h-full w-full bg-primary rounded-full shadow-[0_0_8px_rgba(var(--gc-primary),0.3)]"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- Product Proof — See It In Action -->
-<section class="py-20 sm:py-28 bg-surface-container-low overflow-hidden">
-<div class="ui-container">
-<div class="mb-12 sm:mb-16 reveal">
-  <h2 class="h2-fluid font-headline text-on-surface mb-3" data-i18n="proof_title">See It In Action</h2>
-  <p class="text-fluid text-secondary max-w-lg" data-i18n="proof_subtitle">Not mockups — real interfaces from production systems we've built for clients.</p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-  <!-- Card 1: AI Agent in Slack -->
-  <div class="ui-card premium-glow reveal">
-    <div class="flex items-center gap-2 mb-5 text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">
-      <span class="material-symbols-outlined text-xs">forum</span> <span data-i18n="proof_slack_label">AI Agent · Slack Integration</span>
-    </div>
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer space-y-4 text-[13px] shadow-sm">
-      <!-- Customer message -->
-      <div class="flex gap-3">
-        <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant shrink-0 shadow-sm">KH</div>
-        <div class="min-w-0 flex-1"><div class="text-[10px] text-secondary mb-1 font-medium" data-i18n="proof_slack_user">Khalid H. · 2:14 PM</div><div class="bg-surface-container/60 rounded-xl rounded-tl-none p-3 text-on-surface-variant border border-softer" data-i18n="proof_slack_q">Where's my order #4821? It was supposed to arrive yesterday.</div></div>
-      </div>
-      <!-- AI response -->
-      <div class="flex gap-3">
-        <div class="w-8 h-8 rounded-lg bg-primary-container/30 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 shadow-sm">AI</div>
-        <div class="min-w-0 flex-1"><div class="text-[10px] text-primary mb-1 font-bold" data-i18n="proof_slack_agent">GrindCTRL Agent · 2:14 PM</div><div class="bg-primary/5 rounded-xl rounded-tl-none p-3 text-on-surface border border-primary/10 shadow-sm" data-i18n-html="proof_slack_a">Order #4821 shipped via Aramex — tracking: <strong>ARX-7829341</strong>. Current status: <span class="text-primary font-bold">Out for Delivery</span>. Expected by 5 PM today. Want me to request priority?</div></div>
-      </div>
-      <!-- Approval bar -->
-      <div class="flex items-center gap-2 p-2 bg-surface-container rounded-lg border border-softer">
-        <span class="material-symbols-outlined text-xs text-on-surface-variant">supervisor_account</span>
-        <span class="text-[10px] text-secondary flex-1" data-i18n="proof_slack_approval">Human approval: Send priority request?</span>
-        <span class="px-2 py-0.5 bg-primary-container/20 text-primary text-[9px] font-semibold rounded" data-i18n="proof_slack_approved">Approved ✓</span>
-      </div>
-    </div>
-  </div>
-  <!-- Card 2: Workflow Builder -->
-  <div class="ui-card premium-glow reveal reveal-delay-1">
-    <div class="flex items-center gap-2 mb-5 text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">
-      <span class="material-symbols-outlined text-xs">account_tree</span> <span data-i18n="proof_wf_label">Workflow Builder · Lead Processing</span>
-    </div>
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer shadow-sm">
-      <div class="space-y-3">
-        <div class="flex items-center gap-3 p-3 bg-primary/5 rounded-xl border border-primary/10 transition-colors hover:bg-primary/10">
-          <span class="material-symbols-outlined text-primary text-sm">bolt</span>
-          <div class="text-[12px] min-w-0 flex-1"><div class="text-on-surface font-bold" data-i18n="proof_wf_trigger">Trigger: New Lead</div><div class="text-[10px] text-secondary font-medium" data-i18n="proof_wf_trigger_sub">Shopify Webhook · Real-time</div></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 bg-surface-container/40 rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-          <span class="material-symbols-outlined text-sm text-on-surface-variant">auto_awesome</span>
-          <div class="text-[12px] min-w-0 flex-1"><div class="text-on-surface font-bold" data-i18n="proof_wf_ai">AI: Score & Qualify</div><div class="text-[10px] text-secondary font-medium" data-i18n="proof_wf_ai_sub">GPT-4o · Confidence 94%</div></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 bg-surface-container/40 rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-          <span class="material-symbols-outlined text-sm text-on-surface-variant">call_split</span>
-          <div class="text-[12px] min-w-0 flex-1"><div class="text-on-surface font-bold" data-i18n="proof_wf_route">Route: Priority / Standard</div><div class="text-[10px] text-secondary font-medium" data-i18n="proof_wf_route_sub">3 conditional branches</div></div>
-        </div>
-        <div class="flex items-center gap-3 p-3 bg-surface-container/40 rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-          <span class="material-symbols-outlined text-sm text-on-surface-variant">send</span>
-          <div class="text-[12px] min-w-0 flex-1"><div class="text-on-surface font-bold" data-i18n="proof_wf_notify">Notify: Sales via Slack</div><div class="text-[10px] text-secondary font-medium" data-i18n="proof_wf_notify_sub">HubSpot deal created</div></div>
-        </div>
-      </div>
-      <div class="mt-3 flex items-center gap-4 text-[10px] text-secondary">
-        <span class="flex items-center gap-1"><span class="status-dot status-active"></span> 2,847 runs today</span>
-        <span>99.7% success</span>
-        <span>Avg 1.2s</span>
-      </div>
-    </div>
-  </div>
-  <!-- Card 3: Hours-Saved KPI Panel -->
-  <div class="ui-card premium-glow reveal">
-    <div class="flex items-center gap-2 mb-5 text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">
-      <span class="material-symbols-outlined text-xs">speed</span> <span data-i18n="proof_kpi_label">Impact Dashboard · Monthly Summary</span>
-    </div>
-    <div class="grid grid-cols-3 gap-3">
-      <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer text-center shadow-sm">
-        <div class="text-3xl sm:text-4xl font-bold text-on-surface font-headline preview-stat tracking-tighter">22</div>
-        <div class="text-[10px] text-secondary mt-2 font-bold uppercase tracking-wider" data-i18n="proof_kpi_hrs">hrs/week saved</div>
-        <div class="text-[9px] text-primary font-bold mt-1" data-i18n="proof_kpi_hrs_sub">↑ vs 6 hrs manual</div>
-      </div>
-      <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer text-center shadow-sm">
-        <div class="text-3xl sm:text-4xl font-bold text-on-surface font-headline preview-stat tracking-tighter">94%</div>
-        <div class="text-[10px] text-secondary mt-2 font-bold uppercase tracking-wider" data-i18n="proof_kpi_resolved">auto-resolved</div>
-        <div class="text-[9px] text-primary font-bold mt-1" data-i18n="proof_kpi_resolved_sub">tickets & inquiries</div>
-      </div>
-      <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer text-center shadow-sm">
-        <div class="text-3xl sm:text-4xl font-bold text-on-surface font-headline preview-stat tracking-tighter">$4.2k</div>
-        <div class="text-[10px] text-secondary mt-2 font-bold uppercase tracking-wider" data-i18n="proof_kpi_labor">labor saved/mo</div>
-        <div class="text-[9px] text-primary font-bold mt-1" data-i18n="proof_kpi_labor_sub">equiv. headcount</div>
-      </div>
-    </div>
-    <div class="mt-4 p-3 bg-surface-container-lowest rounded-lg border border-softer">
-      <div class="text-[10px] text-secondary uppercase tracking-widest font-semibold mb-2" data-i18n="proof_log_label">Automation Log · Today</div>
-      <div class="space-y-1.5">
-        <div class="flex items-center gap-2 text-[11px]"><span class="status-dot status-active"></span><span class="text-on-surface-variant" data-i18n="proof_log_1">Invoice #4821 auto-generated</span><span class="text-secondary ml-auto preview-stat" data-i18n="proof_log_1t">8m ago</span></div>
-        <div class="flex items-center gap-2 text-[11px]"><span class="status-dot status-active"></span><span class="text-on-surface-variant" data-i18n="proof_log_2">Lead scored & routed to sales</span><span class="text-secondary ml-auto preview-stat" data-i18n="proof_log_2t">14m ago</span></div>
-        <div class="flex items-center gap-2 text-[11px]"><span class="status-dot status-active"></span><span class="text-on-surface-variant" data-i18n="proof_log_3">CRM sync: 23 contacts updated</span><span class="text-secondary ml-auto preview-stat" data-i18n="proof_log_3t">21m ago</span></div>
-      </div>
-    </div>
-  </div>
-  <!-- Card 4: Human Approval Interface -->
-  <div class="ui-card premium-glow reveal reveal-delay-1">
-    <div class="flex items-center gap-2 mb-5 text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">
-      <span class="material-symbols-outlined text-xs">supervisor_account</span> <span data-i18n="proof_hitl_label">Human-in-the-Loop · Pending Actions</span>
-    </div>
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl border border-softer overflow-hidden shadow-sm">
-      <!-- Pending action -->
-      <div class="p-5 border-b border-softer">
-        <div class="flex items-center justify-between mb-4">
-          <span class="flex items-center gap-2 text-[10px] font-bold text-on-surface uppercase tracking-wider"><span class="status-dot status-warning"></span> <span data-i18n="proof_hitl_awaiting">Awaiting Approval</span></span>
-          <span class="text-[10px] text-secondary font-medium" data-i18n="proof_hitl_time">2 min ago</span>
-        </div>
-        <div class="text-[14px] text-on-surface font-bold mb-1.5" data-i18n="proof_hitl_action">AI wants to send discount offer</div>
-        <div class="text-[12px] text-secondary leading-relaxed mb-4 font-medium" data-i18n="proof_hitl_desc">Customer hasn't purchased in 45 days. AI recommends 15% re-engagement offer via WhatsApp. Estimated recovery value: $320.</div>
-        <div class="flex items-center gap-3 text-[12px]">
-          <span class="text-secondary font-bold uppercase text-[9px] tracking-widest" data-i18n="proof_hitl_confidence">Confidence score:</span>
-          <div class="flex-1 h-2 bg-surface-container rounded-full p-[1px]"><div class="h-1.5 bg-primary rounded-full shadow-[0_0_10px_rgba(24,24,22,0.3)]" style="width:87%"></div></div>
-          <span class="text-primary font-bold preview-stat">87%</span>
-        </div>
-      </div>
-      <!-- Action buttons -->
-      <div class="p-5 flex gap-2.5">
-        <button class="flex-1 py-3 bg-primary text-on-primary text-[11px] font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg hover:brightness-110 active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-base">check</span> Approve
+      <!-- Approval Bar -->
+      <div class="ed-approval-bar" id="ed-approval-bar" style="display:none">
+        <button class="ed-btn ed-btn-approve" onclick="edApprove()">
+          <span class="material-symbols-outlined">check</span> Approve
         </button>
-        <button class="flex-1 py-3 bg-surface-container/60 text-on-surface-variant text-[11px] font-bold rounded-xl flex items-center justify-center gap-2 border border-softer hover:bg-surface-container/80 transition-all">
-          <span class="material-symbols-outlined text-base">edit</span> Edit
+        <button class="ed-btn ed-btn-edit" onclick="edEdit()">
+          <span class="material-symbols-outlined">edit</span> Edit
+        </button>
+        <button class="ed-btn ed-btn-escalate" onclick="edEscalate()">
+          <span class="material-symbols-outlined">flag</span> Escalate
         </button>
       </div>
     </div>
-    <!-- Approved history -->
-    <div class="mt-3 space-y-2">
-      <div class="flex items-center gap-2 p-2.5 bg-surface-container-lowest rounded-lg border border-softer text-[11px]">
-        <span class="material-symbols-outlined text-primary text-sm">check_circle</span>
-        <span class="text-on-surface-variant flex-1 min-w-0 truncate" data-i18n="proof_hitl_hist1">Refund $45 for order #4799</span>
-        <span class="text-[9px] text-secondary shrink-0" data-i18n="proof_hitl_hist1t">Approved 14m ago</span>
-      </div>
-      <div class="flex items-center gap-2 p-2.5 bg-surface-container-lowest rounded-lg border border-softer text-[11px]">
-        <span class="material-symbols-outlined text-primary text-sm">check_circle</span>
-        <span class="text-on-surface-variant flex-1 min-w-0 truncate" data-i18n="proof_hitl_hist2">Escalate support ticket #392 to Tier 2</span>
-        <span class="text-[9px] text-secondary shrink-0" data-i18n="proof_hitl_hist2t">Approved 28m ago</span>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-</section>
-<!-- Quantified ROI — What Changes After Week 1 -->
-<section class="py-20 sm:py-32 ui-container">
-<div class="mb-14 sm:mb-20 reveal">
-  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="roi_title">What Changes After Week 1</h2>
-  <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 mb-16 sm:mb-20">
-  <div class="reveal">
-    <div class="text-6xl sm:text-7xl font-extrabold font-headline text-on-surface tracking-tighter preview-stat">22+</div>
-    <div class="text-[14px] font-bold text-on-surface uppercase tracking-widest mt-4 mb-2" data-i18n="roi_hrs_label">Hours saved / Week</div>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="roi_hrs_desc">Manual data entry, follow-ups, and reporting — automated at the core.</p>
-  </div>
-  <div class="reveal reveal-delay-1">
-    <div class="text-6xl sm:text-7xl font-extrabold font-headline text-on-surface tracking-tighter preview-stat">&lt;30s</div>
-    <div class="text-[14px] font-bold text-on-surface uppercase tracking-widest mt-4 mb-2" data-i18n="roi_response_label">Avg Response Time</div>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="roi_response_desc">Your AI agent handles leads 24/7 — instantly capturing every opportunity.</p>
-  </div>
-  <div class="reveal reveal-delay-2">
-    <div class="text-6xl sm:text-7xl font-extrabold font-headline text-on-surface tracking-tighter preview-stat">&lt;14d</div>
-    <div class="text-[14px] font-bold text-on-surface uppercase tracking-widest mt-4 mb-2" data-i18n="roi_live_label">Time to Production</div>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="roi_live_desc">From first kickoff call to your first mission-critical workflow live.</p>
-  </div>
-</div>
-<div class="ui-card flex-row items-center gap-3 reveal">
-  <span class="material-symbols-outlined text-primary text-xl shrink-0">trending_up</span>
-  <p class="text-[14px] sm:text-[15px] text-on-surface-variant leading-relaxed" data-i18n-html="roi_callout">Our average client reclaims the equivalent of <strong class="text-on-surface">a full-time hire within 90 days</strong>.</p>
-</div>
-</section>
 
-<!-- Trust Center — Built for Business-Critical Operations -->
-<section class="py-20 sm:py-32 bg-surface-container-low border-y border-softer">
-<div class="ui-container">
-<div class="mb-14 sm:mb-20 reveal">
-  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="trust_title">Built for Business-Critical Operations</h2>
-  <p class="text-fluid text-secondary max-w-lg" data-i18n="trust_subtitle">Enterprise-grade security and transparency. No black boxes.</p>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-  <div class="ui-card premium-glow reveal">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">shield</span>
-    <h3 class="font-headline text-lg font-bold text-on-surface mb-3" data-i18n="trust_iso_title">Data Isolation</h3>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="trust_iso_desc">Each client runs on isolated infrastructure. Your proprietary data never touches another account.</p>
   </div>
-  <div class="ui-card premium-glow reveal reveal-delay-1">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">supervisor_account</span>
-    <h3 class="font-headline text-lg font-bold text-on-surface mb-3" data-i18n="trust_hitl_title">Human-in-the-Loop</h3>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="trust_hitl_desc">Every mission-critical AI action requires human approval before execution. You stay in the pilot seat.</p>
-  </div>
-  <div class="ui-card premium-glow reveal reveal-delay-1">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">lock</span>
-    <h3 class="font-headline text-lg font-bold text-on-surface mb-3" data-i18n="trust_sec_title">Enterprise Security</h3>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="trust_sec_desc">AES-256 encryption at rest, TLS 1.3 in transit. SOC 2 compliant infrastructure roadmap.</p>
-  </div>
-  <div class="ui-card premium-glow reveal reveal-delay-2">
-    <span class="material-symbols-outlined text-primary text-3xl mb-6 block">receipt_long</span>
-    <h3 class="font-headline text-lg font-bold text-on-surface mb-3" data-i18n="trust_price_title">Transparent Pricing</h3>
-    <p class="text-secondary text-[14px] leading-relaxed font-medium" data-i18n="trust_price_desc">No per-seat tax. No hidden overages. A flat monthly retainer with a clearly defined delivery scope.</p>
-  </div>
-</div>
-</div>
-</section>
 
-<!-- Wall of Love — From Our Clients -->
-<section class="py-20 sm:py-32 ui-container">
-<div class="mb-14 sm:mb-20 reveal">
-  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="wol_title">From Our Clients</h2>
-  <div class="h-[2px] w-16 bg-ink-dim/30 rounded-full"></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-  <div class="ui-card premium-glow reveal">
-    <div class="flex-1">
-      <span class="material-symbols-outlined text-primary text-2xl mb-6 block">format_quote</span>
-      <p class="text-[16px] sm:text-[18px] text-on-surface leading-relaxed font-medium mb-8 italic" data-i18n="wol_q1">"We cut our order processing time from 4 hours to 12 minutes. The ROI was visible in week one."</p>
-    </div>
-    <div class="border-t border-softer pt-6">
-      <div class="text-[14px] font-bold text-on-surface" data-i18n="wol_a1_role">Operations Lead</div>
-      <div class="text-[13px] text-secondary font-medium" data-i18n="wol_a1_co">E-Commerce Leader · UAE</div>
-      <div class="inline-block bg-primary/10 text-primary text-[9px] font-bold mt-2 px-2 py-1 rounded uppercase tracking-widest" data-i18n="wol_a1_ind">Retail</div>
-    </div>
+  <!-- Onboarding Progression -->
+  <div class="ed-progression-bar">
+    <div class="ed-prog-step active"><span class="ed-prog-dot"></span> Sandbox</div>
+    <div class="ed-prog-step"><span class="ed-prog-dot"></span> Shadow Mode</div>
+    <div class="ed-prog-step"><span class="ed-prog-dot"></span> Connect Systems</div>
+    <div class="ed-prog-step"><span class="ed-prog-dot"></span> Automate</div>
   </div>
-  <div class="ui-card premium-glow reveal reveal-delay-1">
-    <div class="flex-1">
-      <span class="material-symbols-outlined text-primary text-2xl mb-6 block">format_quote</span>
-      <p class="text-[16px] sm:text-[18px] text-on-surface leading-relaxed font-medium mb-8 italic" data-i18n="wol_q2">"GrindCTRL built us an AI agent that handles 80% of our WhatsApp inquiries without human intervention."</p>
-    </div>
-    <div class="border-t border-softer pt-6">
-      <div class="text-[14px] font-bold text-on-surface" data-i18n="wol_a2_role">Founder</div>
-      <div class="text-[13px] text-secondary font-medium" data-i18n="wol_a2_co">Global Fitness Studio · KSA</div>
-      <div class="inline-block bg-primary/10 text-primary text-[9px] font-bold mt-2 px-2 py-1 rounded uppercase tracking-widest" data-i18n="wol_a2_ind">Health & Wellness</div>
-    </div>
-  </div>
-  <div class="ui-card premium-glow reveal reveal-delay-2">
-    <div class="flex-1">
-      <span class="material-symbols-outlined text-primary text-2xl mb-6 block">format_quote</span>
-      <p class="text-[16px] sm:text-[18px] text-on-surface leading-relaxed font-medium mb-8 italic" data-i18n="wol_q3">"What sold us was the human approval layer. We see exactly what the AI wants to do before it does it."</p>
-    </div>
-    <div class="border-t border-softer pt-6">
-      <div class="text-[14px] font-bold text-on-surface" data-i18n="wol_a3_role">CTO</div>
-      <div class="text-[13px] text-secondary font-medium" data-i18n="wol_a3_co">Nexus Logistics · UAE</div>
-      <div class="inline-block bg-primary/10 text-primary text-[9px] font-bold mt-2 px-2 py-1 rounded uppercase tracking-widest" data-i18n="wol_a3_ind">Supply Chain</div>
-    </div>
-  </div>
-</div>
-</section>
 
-<!-- Packages -->
-<section id="packages-section" class="py-20 sm:py-32 bg-surface">
-<div class="ui-container">
-<div class="mb-14 sm:mb-20 reveal">
-  <h2 class="h2-fluid font-headline mb-3 text-on-surface" data-i18n="pkg_title">Structured for Scale</h2>
-  <p class="text-fluid text-secondary max-w-lg" data-i18n="pkg_subtitle">Choose the level of control your business requires. No hidden fees, just precision engineering.</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-  <div class="ui-card flex-col h-full reveal border border-softer bg-surface-container-lowest/30">
-    <div class="mb-8"><span class="text-[11px] font-bold text-secondary uppercase tracking-[0.2em] block mb-3">Scale Phase 01</span><h4 class="font-headline text-2xl font-bold text-on-surface">Starter</h4></div>
-    <ul class="space-y-5 text-secondary text-[14px] mb-12 flex-grow font-medium leading-relaxed">
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Core CRM Automation & Sync</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Operational Systems Audit</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>1x Bespoke AI Agent Deployment</span></li>
-    </ul>
-    <a href="#book" class="ui-btn ui-btn-secondary block w-full py-4 text-center text-[14px] font-bold tracking-wide">Start Building</a>
-  </div>
-  <div class="ui-card flex-col h-full relative reveal reveal-delay-1 premium-glow border border-primary/20 bg-surface-container-lowest/50 backdrop-blur-xl">
-    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-4 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg">Most Scalable</div>
-    <div class="mb-8 mt-2"><span class="text-[11px] font-bold text-primary uppercase tracking-[0.2em] block mb-3">Scale Phase 02</span><h4 class="font-headline text-2xl font-bold text-on-surface">Growth</h4></div>
-    <ul class="space-y-5 text-on-surface text-[14px] mb-12 flex-grow font-bold leading-relaxed">
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Multi-Channel Workflow Automation</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>3x Specialized AI Role Agents</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Custom Client Performance Dashboard</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Bi-Weekly Strategic Systems Review</span></li>
-    </ul>
-    <a href="#book" class="ui-btn ui-btn-primary block w-full py-4 text-center text-[14px] font-bold tracking-wide shadow-xl">Select Growth</a>
-  </div>
-  <div class="ui-card flex-col h-full reveal reveal-delay-2 border border-softer bg-surface-container-lowest/30">
-    <div class="mb-8"><span class="text-[11px] font-bold text-secondary uppercase tracking-[0.2em] block mb-3">Scale Phase 03</span><h4 class="font-headline text-2xl font-bold text-on-surface">Control</h4></div>
-    <ul class="space-y-5 text-secondary text-[14px] mb-12 flex-grow font-medium leading-relaxed">
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Enterprise AI-OS Integration</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Unlimited AI Agent Architecture</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Dedicated Fractional Systems Lead</span></li>
-      <li class="flex items-start gap-3"><span class="material-symbols-outlined text-primary text-[18px] shrink-0">check_circle</span> <span>Mission-Critical Priority Support</span></li>
-    </ul>
-    <a href="#book" class="ui-btn ui-btn-secondary block w-full py-4 text-center text-[14px] font-bold tracking-wide">Inquire for Enterprise</a>
-  </div>
-</div>
-<!-- Trust proof strip -->
-<div class="mt-8 flex flex-wrap justify-center items-center gap-x-5 gap-y-2 text-[11px] sm:text-[12px] text-secondary reveal">
-  <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">lock</span> <span data-i18n="pkg_trust_1">No lock-in contracts</span></span>
-  <span class="text-outline-variant hidden sm:inline">·</span>
-  <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">shield</span> <span data-i18n="pkg_trust_2">Data isolation included</span></span>
-  <span class="text-outline-variant hidden sm:inline">·</span>
-  <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">supervisor_account</span> <span data-i18n="pkg_trust_3">Human approval on every AI action</span></span>
-  <span class="text-outline-variant hidden sm:inline">·</span>
-  <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-sm">cancel</span> <span data-i18n="pkg_trust_4">Cancel anytime</span></span>
-</div>
-</div>
-</section>
-
-<!-- Final CTA -->
-<section class="py-28 sm:py-40 relative overflow-hidden">
-<div class="ui-container max-w-4xl text-center relative z-10 reveal">
-  <!-- Testimonial above CTA -->
-  <div class="ui-card premium-glow mb-14 sm:mb-20 text-left max-w-2xl mx-auto bg-surface-container-lowest/40 backdrop-blur-xl border border-softer shadow-2xl">
-    <span class="material-symbols-outlined text-primary text-3xl mb-4 block">format_quote</span>
-    <p class="text-[16px] sm:text-[18px] text-on-surface leading-relaxed mb-6 font-bold italic" data-i18n="cta_testimonial">"The strategy call alone gave us a 3-month automation roadmap. We started saving 18 hours/week within 14 days of kicking off."</p>
-    <div class="flex items-center gap-4">
-      <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shadow-inner">NL</div>
-      <div>
-        <p class="text-[14px] font-bold text-on-surface" data-i18n="cta_testimonial_author">CEO, Nexus Logistics</p>
-        <p class="text-[11px] text-secondary font-bold uppercase tracking-widest">Client Success</p>
-      </div>
-    </div>
-  </div>
-  <h2 class="h2-fluid font-headline text-on-surface mb-6 sm:mb-8 tracking-tighter" data-i18n="cta_title">Ready to Reclaim 22+ Hours Every Week?</h2>
-  <p class="text-fluid text-secondary mb-12 sm:mb-16 max-w-2xl mx-auto font-medium" data-i18n="cta_subtitle">
-    Schedule your high-impact strategy call and discover how our autonomous systems can scale your operations while you focus on high-leverage growth.
-  </p>
-  <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-    <a href="#book" class="ui-btn ui-btn-primary px-12 sm:px-16 py-5 sm:py-6 text-base sm:text-lg font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all outline outline-offset-4 outline-transparent hover:outline-primary/20">
-      <span data-i18n="cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined ml-2 scale-125" data-i18n-icon>arrow_forward</span>
-    </a>
-  </div>
-  <div class="mt-12 flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-[11px] sm:text-[12px] text-secondary font-bold uppercase tracking-widest">
-    <span class="flex items-center gap-2"><span class="status-dot status-active"></span> Free 30-min Session</span>
-    <span class="flex items-center gap-2"><span class="status-dot status-active"></span> No Long-term Obligation</span>
-    <span class="flex items-center gap-2"><span class="status-dot status-active"></span> Under NDA by Default</span>
-  </div>
-</div>
-<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] bg-ink/[0.02] rounded-full blur-[120px]"></div>
 </section>
 
 </div>

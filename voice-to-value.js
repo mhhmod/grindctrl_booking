@@ -1,448 +1,508 @@
 /* ═══════════════════════════════════════════════════════════
-   INPUT HUB: Production Interaction Engine
+   EXCEPTION DESK — Autonomous Triage Workspace Engine
    ═══════════════════════════════════════════════════════════ */
-
-(function() {
+(function () {
     'use strict';
 
-    const CONFIG = {
-        V2V_ENDPOINT: 'https://n8n.srv1141109.hstgr.cloud/webhook/voice-lead-capture',
-        MAX_RECORD_SEC: 60,
-        MAX_FILE_SIZE_MB: 10,
-        PROCESSING_STEPS: [
-            { id: 'reading', label: 'v2v_status_reading', progress: 20 },
-            { id: 'extracting', label: 'v2v_status_extracting', progress: 45 },
-            { id: 'analyzing', label: 'v2v_status_analyzing', progress: 70 },
-            { id: 'structuring', label: 'v2v_status_structuring', progress: 85 },
-            { id: 'ready', label: 'v2v_status_ready', progress: 100 }
+    /* ── Demo Exception: Garbled Purchase Order ── */
+    const DEMO = {
+        type: 'email',
+        meta: {
+            from: 'sarah.mitchell@acmecorp.com',
+            to: 'orders@supplierco.com',
+            date: 'Apr 15, 2026 · 09:47 AM',
+            subject: 'RE: PO-2024-4821 URGENT — need confirmation on 500 units'
+        },
+        body:
+            'Hi team,\n\n' +
+            'Following up on our order PO-2024-4821. We originally discussed 500 units of ' +
+            'SKU-AR2040 at $12.50/unit but I see the invoice shows 5,000 units at $125.00/unit ' +
+            '— that\'s clearly wrong.\n\n' +
+            'Also the shipping address on the invoice still shows our OLD warehouse:\n' +
+            '  1247 Industrial Blvd, Suite 4B, Houston TX 77001\n\n' +
+            'It should be going to our new facility:\n' +
+            '  8901 Commerce Park Dr, Building C, Austin TX 78744\n\n' +
+            'We need delivery before March 15th without fail. This order is for a client launch.\n\n' +
+            'Can someone confirm the corrected quantities and pricing ASAP? ' +
+            'I\'ve CC\'d our finance team.\n\n' +
+            'Best,\n' +
+            'Sarah Mitchell\n' +
+            'Procurement Manager, Acme Corp\n' +
+            'Direct: +1 (555) 014-2387\n' +
+            'sarah.mitchell@acmecorp.com',
+
+        fields: [
+            { id: 'po', label: 'PO Number', value: 'PO-2024-4821', trust: 'safe', match: 'PO-2024-4821', mono: true },
+            { id: 'sku', label: 'SKU', value: 'SKU-AR2040', trust: 'safe', match: 'SKU-AR2040', mono: true },
+            { id: 'qty_intended', label: 'Intended Qty', value: '500 units', trust: 'review', match: '500 units', mono: true },
+            { id: 'qty_invoiced', label: 'Invoiced Qty', value: '5,000 units', trust: 'override', match: '5,000 units', mono: true },
+            { id: 'price_intended', label: 'Agreed Price', value: '$12.50/unit', trust: 'review', match: '$12.50/unit', mono: true },
+            { id: 'price_invoiced', label: 'Invoiced Price', value: '$125.00/unit', trust: 'override', match: '$125.00/unit', mono: true },
+            { id: 'ship_to', label: 'Ship To (Correct)', value: '8901 Commerce Park Dr, Bldg C, Austin TX 78744', trust: 'safe', match: '8901 Commerce Park Dr, Building C, Austin TX 78744' },
+            { id: 'deadline', label: 'Delivery Deadline', value: 'Before March 15th', trust: 'safe', match: 'before March 15th' },
+            { id: 'contact', label: 'Contact', value: 'Sarah Mitchell', trust: 'safe', match: 'Sarah Mitchell' },
+            { id: 'phone', label: 'Phone', value: '+1 (555) 014-2387', trust: 'safe', match: '+1 (555) 014-2387', mono: true }
         ],
-        VOICE_STEPS: [
-            { id: 'uploading', label: 'v2v_status_uploading', progress: 25 },
-            { id: 'transcribing', label: 'v2v_status_transcribing', progress: 50 },
-            { id: 'structuring', label: 'v2v_status_structuring', progress: 75 },
-            { id: 'ready', label: 'v2v_status_ready', progress: 100 }
-        ]
+
+        anomalies: [
+            { severity: 'override', title: 'Quantity Mismatch — 10× Discrepancy', desc: 'PO states 500 units but invoice shows 5,000. Likely data entry error at supplier.' },
+            { severity: 'override', title: 'Unit Price Mismatch — 10× Discrepancy', desc: 'Agreed $12.50/unit vs invoiced $125.00/unit. Total discrepancy: $562,500.' },
+            { severity: 'review', title: 'Shipping Address Needs Update', desc: 'Invoice references old Houston warehouse. Correct Austin address provided.' }
+        ],
+
+        action: {
+            title: 'Send Correction Request',
+            desc: 'Generate purchase order amendment with corrected quantities (500), pricing ($12.50/unit), and updated shipping address. Route for manager sign-off before sending.',
+            trust: 'review'
+        }
     };
 
-    const state = {
-        recorder: null,
-        chunks: [],
-        recording: false,
-        processing: false,
-        timer: null,
-        startMs: 0,
-        stream: null,
-        mode: 'voice',
-        outcome: 'lead'
-    };
+    /* ── State ── */
+    const state = { hasContent: false, isProcessing: false, isEditing: false, data: null };
 
     const $ = (id) => document.getElementById(id);
     const $$ = (sel) => document.querySelectorAll(sel);
 
-    function currentLang() {
-        return document.documentElement.lang || 'en';
+    /* ── Helpers ── */
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
     }
 
-    function t(key) {
-        const dict = window.__i18n || {};
-        const lang = currentLang();
-        if (dict[key] && dict[key][lang] != null) return dict[key][lang];
-        return key;
+    function findMatchRange(body, match) {
+        const idx = body.indexOf(match);
+        return idx >= 0 ? [idx, idx + match.length] : null;
+    }
+
+    function resolveFieldRanges(body, fields) {
+        return fields.map(f => {
+            const range = f.match ? findMatchRange(body, f.match) : null;
+            return { ...f, range };
+        });
+    }
+
+    function buildMarkedBody(text, fields) {
+        const ranges = fields
+            .filter(f => f.range)
+            .map(f => ({ id: f.id, start: f.range[0], end: f.range[1], trust: f.trust }))
+            .sort((a, b) => a.start - b.start);
+
+        let html = '', cursor = 0;
+        for (const r of ranges) {
+            if (r.start < cursor) continue; // skip overlaps
+            html += esc(text.substring(cursor, r.start));
+            html += '<mark data-field-id="' + r.id + '" data-trust="' + r.trust + '">' + esc(text.substring(r.start, r.end)) + '</mark>';
+            cursor = r.end;
+        }
+        html += esc(text.substring(cursor));
+        return html;
     }
 
     /* ── Init ── */
     function init() {
-        // Mode tabs
-        $$('.v2v-mode-tab').forEach(btn => {
-            btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        const dropZone = $('ed-drop-zone');
+        if (!dropZone) return;
+
+        // Drag-and-drop
+        ['dragenter', 'dragover'].forEach(evt =>
+            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('ed-drag-over'); })
+        );
+        ['dragleave', 'drop'].forEach(evt =>
+            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('ed-drag-over'); })
+        );
+        dropZone.addEventListener('drop', handleDrop);
+
+        // Paste button
+        const pasteBtn = $('ed-paste-btn');
+        if (pasteBtn) pasteBtn.addEventListener('click', async () => {
+            try {
+                const t = await navigator.clipboard.readText();
+                if (t && t.trim()) processText(t.trim());
+            } catch {
+                const t = prompt('Paste your messy exception here:');
+                if (t && t.trim()) processText(t.trim());
+            }
         });
 
-        // Outcome chips
-        $$('.v2v-outcome-chip').forEach(btn => {
-            btn.addEventListener('click', () => switchOutcome(btn.dataset.outcome));
+        // Upload button
+        const uploadBtn = $('ed-upload-btn');
+        const fileInput = $('ed-file-input');
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+        }
+
+        // Demo button
+        const demoBtn = $('ed-demo-btn');
+        if (demoBtn) demoBtn.addEventListener('click', loadDemo);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', handleKeyboard);
+
+        // Global paste listener
+        document.addEventListener('paste', e => {
+            if (state.hasContent || state.isProcessing) return;
+            const el = document.activeElement;
+            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+            const t = e.clipboardData.getData('text/plain');
+            if (t && t.trim().length > 10) { e.preventDefault(); processText(t.trim()); }
         });
 
-        // Voice
-        const micBtn = $('v2v-mic-btn');
-        const stopBtn = $('v2v-stop');
-        const cancelBtn = $('v2v-cancel');
-        if (micBtn) micBtn.addEventListener('click', startRecording);
-        if (stopBtn) stopBtn.addEventListener('click', finishRecording);
-        if (cancelBtn) cancelBtn.addEventListener('click', cancelRecording);
-
-        // Text & Link
-        const sendTextBtn = $('v2v-send-text');
-        const sendLinkBtn = $('v2v-send-link');
-        if (sendTextBtn) sendTextBtn.addEventListener('click', handleTextSubmit);
-        if (sendLinkBtn) sendLinkBtn.addEventListener('click', handleLinkSubmit);
-
-        // File
-        const fileInput = $('v2v-file-input');
-        if (fileInput) fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFileSubmit(e.target.files[0]);
-        });
-
-        // Enter key for text/link
-        const linkInput = $('v2v-link-input');
-        const textInput = $('v2v-text-input');
-        if (linkInput) linkInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLinkSubmit(); });
-        if (textInput) textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTextSubmit(); } });
-
-        // Update preview when outcome changes
-        updatePreviewOutcome();
+        // No auto-demo — user triggers Demo explicitly via button
     }
 
-    function switchMode(newMode) {
-        if (state.processing || state.recording) return;
-        state.mode = newMode;
+    /* ── Drop & File Handlers ── */
+    function handleDrop(e) {
+        const files = e.dataTransfer.files;
+        const text = e.dataTransfer.getData('text/plain');
+        if (files.length > 0) handleFile(files[0]);
+        else if (text) processText(text);
+    }
 
-        $$('.v2v-mode-tab').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === newMode);
+    function handleFile(file) {
+        if (file.type.startsWith('text/') || /\.(txt|csv|eml|json|xml|md)$/i.test(file.name)) {
+            const reader = new FileReader();
+            reader.onload = e => processText(e.target.result, file.name);
+            reader.readAsText(file);
+        } else {
+            processText('[Uploaded: ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)]' +
+                '\n\nBinary file content would be extracted by AI backend.', file.name);
+        }
+    }
+
+    /* ── Load Demo ── */
+    function loadDemo() {
+        if (state.isProcessing || state.hasContent) return;
+        state.isProcessing = true;
+        state.hasContent = true;
+
+        // Resolve ranges from match strings
+        const demoData = {
+            ...DEMO,
+            fields: resolveFieldRanges(DEMO.body, DEMO.fields)
+        };
+
+        showSource(demoData);
+        showProcessing();
+
+        const steps = [
+            { label: 'Reading source…', ms: 500 },
+            { label: 'Extracting fields…', ms: 700 },
+            { label: 'Detecting anomalies…', ms: 600 },
+            { label: 'Generating resolution…', ms: 400 }
+        ];
+
+        let t = 0;
+        steps.forEach(s => {
+            t += s.ms;
+            setTimeout(() => {
+                const lbl = document.querySelector('#ed-processing-overlay .ed-processing-label');
+                if (lbl) lbl.textContent = s.label;
+            }, t);
         });
 
-        $$('.v2v-mode-view').forEach(view => {
-            const modeId = view.id.replace('v2v-view-', '');
-            if (modeId === newMode) {
-                view.classList.remove('hidden');
-                view.classList.add('active');
-                // Re-trigger animation
-                view.style.animation = 'none';
-                view.offsetHeight;
-                view.style.animation = '';
+        t += 300;
+        setTimeout(() => {
+            renderResolution(demoData);
+            state.isProcessing = false;
+            updateStatus('review', 'Needs review');
+        }, t);
+    }
+
+    /* ── Process Arbitrary Text ── */
+    function processText(text, filename) {
+        if (state.isProcessing) return;
+        state.isProcessing = true;
+        state.hasContent = true;
+
+        const sourceData = {
+            type: filename ? 'file' : 'paste',
+            meta: {
+                from: filename || 'Pasted content',
+                date: new Date().toLocaleString(),
+                subject: text.substring(0, 60) + (text.length > 60 ? '…' : '')
+            },
+            body: text,
+            fields: [],
+            anomalies: [],
+            action: { title: 'Manual Review Required', desc: 'Connect your AI backend for automatic extraction. In sandbox mode, basic regex extraction is applied.', trust: 'review' }
+        };
+
+        showSource(sourceData);
+        showProcessing();
+
+        setTimeout(() => {
+            sourceData.fields = extractBasicFields(text);
+            sourceData.fields = resolveFieldRanges(text, sourceData.fields);
+            // Re-render source with marks
+            showSource(sourceData);
+            renderResolution(sourceData);
+            state.isProcessing = false;
+            updateStatus('review', 'Extracted');
+        }, 1600);
+    }
+
+    function extractBasicFields(text) {
+        const fields = [];
+        const email = text.match(/[\w.+-]+@[\w.-]+\.\w+/);
+        if (email) fields.push({ id: 'email', label: 'Email', value: email[0], trust: 'safe', match: email[0], mono: true });
+
+        const phone = text.match(/\+?[\d\s()-]{10,}/);
+        if (phone) fields.push({ id: 'phone', label: 'Phone', value: phone[0].trim(), trust: 'safe', match: phone[0].trim(), mono: true });
+
+        const ref = text.match(/(?:PO|order|#|ref|invoice|ticket)\s*[-:#]?\s*([\w-]{4,})/i);
+        if (ref) fields.push({ id: 'ref', label: 'Reference', value: ref[1], trust: 'review', match: ref[1], mono: true });
+
+        const date = text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{0,4}/i);
+        if (date) fields.push({ id: 'date', label: 'Date Found', value: date[0], trust: 'review', match: date[0] });
+
+        const money = text.match(/\$[\d,]+(?:\.\d{2})?/);
+        if (money) fields.push({ id: 'amount', label: 'Amount', value: money[0], trust: 'review', match: money[0], mono: true });
+
+        return fields;
+    }
+
+    /* ── Show Source Panel ── */
+    function showSource(data) {
+        const dropZone = $('ed-drop-zone');
+        const srcContent = $('ed-source-content');
+        const srcMeta = $('ed-source-meta');
+        const srcBody = $('ed-source-body');
+        const panelMeta = document.querySelector('.ed-source-panel .ed-panel-meta');
+
+        if (dropZone) dropZone.style.display = 'none';
+        if (srcContent) {
+            srcContent.style.display = 'flex';
+            srcContent.style.flexDirection = 'column';
+            srcContent.style.flex = '1';
+        }
+
+        if (srcMeta && data.meta) {
+            let h = '';
+            if (data.meta.from) h += '<div class="ed-source-meta-row"><span class="ed-source-meta-label">From</span><span class="ed-source-meta-value">' + esc(data.meta.from) + '</span></div>';
+            if (data.meta.to) h += '<div class="ed-source-meta-row"><span class="ed-source-meta-label">To</span><span class="ed-source-meta-value">' + esc(data.meta.to) + '</span></div>';
+            if (data.meta.date) h += '<div class="ed-source-meta-row"><span class="ed-source-meta-label">Date</span><span class="ed-source-meta-value">' + esc(data.meta.date) + '</span></div>';
+            if (data.meta.subject) h += '<div class="ed-source-meta-row"><span class="ed-source-meta-label">Subj</span><span class="ed-source-meta-value">' + esc(data.meta.subject) + '</span></div>';
+            srcMeta.innerHTML = h;
+        }
+
+        if (srcBody) {
+            if (data.fields && data.fields.length && data.fields.some(f => f.range)) {
+                srcBody.innerHTML = buildMarkedBody(data.body, data.fields);
             } else {
-                view.classList.add('hidden');
-                view.classList.remove('active');
+                srcBody.textContent = data.body;
             }
-        });
-    }
-
-    function switchOutcome(newOutcome) {
-        if (state.processing) return;
-        state.outcome = newOutcome;
-
-        $$('.v2v-outcome-chip').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.outcome === newOutcome);
-        });
-
-        updatePreviewOutcome();
-    }
-
-    function updatePreviewOutcome() {
-        const badge = document.querySelector('#v2v-empty-hint .v2v-badge-premium');
-        if (badge) {
-            badge.textContent = t('v2v_outcome_' + state.outcome);
-            badge.style.transition = 'transform 0.3s ease';
-            badge.style.transform = 'scale(1.1)';
-            setTimeout(() => { badge.style.transform = 'scale(1)'; }, 200);
-        }
-    }
-
-    /* ── Voice Engine ── */
-
-    async function startRecording() {
-        if (state.processing || state.recording) return;
-
-        try {
-            state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            const types = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav'];
-            const supportedType = types.find(t => MediaRecorder.isTypeSupported(t));
-            
-            state.recorder = new MediaRecorder(state.stream, { 
-                mimeType: supportedType || 'audio/webm' 
-            });
-            
-            state.chunks = [];
-            state.recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) state.chunks.push(e.data);
-            };
-
-            state.recorder.onstop = () => {
-                const wasRecording = state.recording;
-                state.recording = false;
-                if (wasRecording) {
-                    processInput('voice', new Blob(state.chunks, { type: state.recorder.mimeType }));
-                }
-            };
-
-            state.recorder.start();
-            state.recording = true;
-            state.startMs = Date.now();
-            
-            updateUIState('listening');
-
-            state.timer = setInterval(() => {
-                const elapsed = (Date.now() - state.startMs) / 1000;
-                if (elapsed >= CONFIG.MAX_RECORD_SEC) finishRecording();
-                updateTimerDisplay(elapsed);
-            }, 100);
-
-        } catch (err) {
-            console.error('Mic error:', err);
-            const statusText = $('v2v-status-text');
-            if (statusText) statusText.innerText = 'Microphone blocked';
-            updateUIState('error');
-        }
-    }
-
-    function finishRecording() {
-        if (!state.recorder || state.recorder.state !== 'recording') return;
-        state.recorder.stop();
-        if (state.timer) clearInterval(state.timer);
-        if (state.stream) state.stream.getTracks().forEach(track => track.stop());
-    }
-
-    function cancelRecording() {
-        state.recording = false; 
-        if (state.recorder && state.recorder.state === 'recording') state.recorder.stop();
-        if (state.timer) clearInterval(state.timer);
-        if (state.stream) state.stream.getTracks().forEach(track => track.stop());
-        state.chunks = [];
-        updateUIState('idle');
-    }
-
-    /* ── Input Handlers ── */
-
-    async function handleTextSubmit() {
-        const input = $('v2v-text-input');
-        if (!input || !input.value.trim() || state.processing) return;
-        const text = input.value.trim();
-        input.value = '';
-        await processInput('text', text);
-    }
-
-    async function handleLinkSubmit() {
-        const input = $('v2v-link-input');
-        if (!input || !input.value.trim() || state.processing) return;
-        const link = input.value.trim();
-        if (!link.startsWith('http')) {
-            input.style.borderColor = 'var(--gc-error)';
-            setTimeout(() => { input.style.borderColor = ''; }, 1500);
-            return;
-        }
-        input.value = '';
-        await processInput('link', link);
-    }
-
-    async function handleFileSubmit(file) {
-        if (state.processing) return;
-        if (file.size > CONFIG.MAX_FILE_SIZE_MB * 1024 * 1024) {
-            alert(`File too large. Max ${CONFIG.MAX_FILE_SIZE_MB}MB.`);
-            return;
-        }
-        await processInput('file', file);
-    }
-
-    /* ── Processing ── */
-
-    async function processInput(type, data) {
-        state.processing = true;
-        const sessionId = 'hub-' + Math.random().toString(36).substr(2, 9);
-        const submittedAt = new Date().toISOString();
-
-        const formData = new FormData();
-        formData.append('input_type', type);
-        formData.append('outcome_type', state.outcome);
-        formData.append('source', 'Grindctrl_Input_Hub');
-        formData.append('session_id', sessionId);
-        formData.append('submitted_at', submittedAt);
-
-        if (type === 'voice') formData.append('audio', data, 'capture.webm');
-        else if (type === 'file') formData.append('file', data, data.name);
-        else if (type === 'link') formData.append('link_input', data);
-        else formData.append('text_input', data);
-
-        // Hide the preview card
-        const emptyHint = $('v2v-empty-hint');
-        if (emptyHint) {
-            emptyHint.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-            emptyHint.style.opacity = '0';
-            emptyHint.style.transform = 'scale(0.97)';
         }
 
-        await runProcessingSequence(type, async () => {
-            const response = await fetch(CONFIG.V2V_ENDPOINT, {
-                method: 'POST',
-                body: formData
-            });
-            if (!response.ok) throw new Error('Network error');
-            return await response.json();
-        });
+        const types = { email: 'Email', file: 'File', paste: 'Pasted Text' };
+        if (panelMeta) panelMeta.textContent = types[data.type] || 'Input';
     }
 
-    async function runProcessingSequence(type, fetchJob) {
-        try {
-            const steps = (type === 'voice') ? CONFIG.VOICE_STEPS : CONFIG.PROCESSING_STEPS;
-            
-            for (const step of steps) {
-                if (step.id === 'ready') break; 
-                updateUIState(step.id);
-                await new Promise(r => setTimeout(r, 700));
+    /* ── Show Processing State ── */
+    function showProcessing() {
+        const empty = $('ed-resolution-empty');
+        const content = $('ed-resolution-content');
+        const approvalBar = $('ed-approval-bar');
+
+        if (empty) empty.style.display = 'none';
+        if (approvalBar) approvalBar.style.display = 'none';
+        if (content) {
+            content.style.display = 'flex';
+            content.style.flexDirection = 'column';
+            content.style.flex = '1';
+            content.innerHTML =
+                '<div class="ed-processing-overlay" id="ed-processing-overlay">' +
+                '  <div class="ed-processing-spinner"></div>' +
+                '  <div class="ed-processing-label">Initializing…</div>' +
+                '</div>';
+        }
+        updateStatus('review', 'Processing');
+    }
+
+    /* ── Render Resolution Panel ── */
+    function renderResolution(data) {
+        const content = $('ed-resolution-content');
+        const approvalBar = $('ed-approval-bar');
+        if (!content) return;
+        state.data = data;
+
+        let html = '';
+
+        // Anomalies
+        if (data.anomalies && data.anomalies.length) {
+            html += '<div class="ed-anomaly-section">';
+            html += '<div class="ed-section-label">' + data.anomalies.length + ' Anomal' + (data.anomalies.length > 1 ? 'ies' : 'y') + ' Detected</div>';
+            for (const a of data.anomalies) {
+                html += '<div class="ed-anomaly-alert" data-severity="' + a.severity + '">' +
+                    '<div class="ed-anomaly-dot" data-severity="' + a.severity + '"></div>' +
+                    '<div><div class="ed-anomaly-title">' + esc(a.title) + '</div>' +
+                    '<div class="ed-anomaly-desc">' + esc(a.desc) + '</div></div></div>';
             }
+            html += '</div>';
+        }
 
-            const result = await fetchJob();
-            updateUIState('ready');
-            renderResult(result);
-
-        } catch (err) {
-            console.error('Processing failed:', err);
-            updateUIState('error');
-            // Restore preview
-            const emptyHint = $('v2v-empty-hint');
-            if (emptyHint) {
-                emptyHint.style.opacity = '1';
-                emptyHint.style.transform = 'scale(1)';
+        // Fields
+        if (data.fields && data.fields.length) {
+            html += '<div class="ed-fields-section">';
+            html += '<div class="ed-section-label">Extracted Fields</div>';
+            html += '<div class="ed-fields-grid">';
+            for (const f of data.fields) {
+                html += '<div class="ed-field-item" data-field-id="' + f.id + '" tabindex="0">' +
+                    '<div class="ed-field-label"><span class="ed-trust-dot" data-trust="' + f.trust + '"></span>' + esc(f.label) + '</div>' +
+                    '<div class="ed-field-value' + (f.mono ? ' ed-mono' : '') + '">' + esc(f.value) + '</div></div>';
             }
-        } finally {
-            state.processing = false;
-        }
-    }
-
-    /* ── UI State ── */
-
-    function updateUIState(status) {
-        const micBtn = $('v2v-mic-btn');
-        const controls = $('v2v-controls');
-        const statusText = $('v2v-status-text');
-        const dot = document.querySelector('.v2v-status-dot');
-        const progressShell = $('v2v-progress-steps');
-        const progressBar = $('v2v-progress-bar');
-
-        if (micBtn) micBtn.classList.remove('is-recording');
-        if (controls) controls.classList.add('hidden');
-        if (progressShell) progressShell.classList.add('hidden');
-        if (dot) dot.style.background = '';
-
-        const steps = (state.mode === 'voice') ? CONFIG.VOICE_STEPS : CONFIG.PROCESSING_STEPS;
-
-        switch(status) {
-            case 'idle':
-                if (statusText) statusText.innerText = t('v2v_status_idle');
-                if (micBtn) micBtn.style.display = '';
-                break;
-            case 'listening':
-                if (statusText) statusText.innerText = t('v2v_status_listening');
-                if (micBtn) micBtn.classList.add('is-recording');
-                if (controls) controls.classList.remove('hidden');
-                if (dot) dot.style.background = '#ef4444';
-                break;
-            case 'error':
-                if (statusText) statusText.innerText = t('v2v_status_error');
-                if (dot) dot.style.background = '#ef4444';
-                break;
-            default:
-                const step = steps.find(s => s.id === status);
-                if (step) {
-                    if (statusText) statusText.innerText = t(step.label);
-                    if (progressShell) progressShell.classList.remove('hidden');
-                    if (progressBar) progressBar.style.width = `${step.progress}%`;
-                    if (dot) dot.style.background = 'var(--gc-primary)';
-                }
-        }
-    }
-
-    function updateTimerDisplay(sec) {
-        const timer = $('v2v-timer');
-        if (timer) timer.innerText = sec.toFixed(1) + 's';
-    }
-
-    /* ── Result Rendering ── */
-
-    function renderResult(response) {
-        const resultArea = $('v2v-result-area');
-        if (!resultArea) return;
-
-        const isOk = response.ok !== false;
-        const data = response.lead || response.data || {};
-        const sheet = response.sheet || {};
-
-        let warningHtml = '';
-        if (!isOk) {
-            warningHtml = `<div class="v2v-soft-warning"><span class="material-symbols-outlined">warning</span><div>${response.message || 'Partial extraction—some fields may need review.'}</div></div>`;
+            html += '</div></div>';
         }
 
-        const outcomeTag = t('v2v_outcome_' + state.outcome);
-        const title = data.title || data.lead_name || data.company_name || 'Structured Record';
+        // Action
+        if (data.action) {
+            html += '<div class="ed-action-section">' +
+                '<div class="ed-action-card">' +
+                '<div class="ed-action-card-header"><span class="ed-trust-dot" data-trust="' + data.action.trust + '"></span>' +
+                '<span class="ed-action-card-label">Recommended Action</span></div>' +
+                '<div class="ed-action-card-title">' + esc(data.action.title) + '</div>' +
+                '<div class="ed-action-card-desc">' + esc(data.action.desc) + '</div>' +
+                '</div></div>';
+        }
 
-        // Build field grid — skip narrative fields
-        const skipKeys = ['summary', 'followup_draft', 'transcript', 'title', 'lead_name'];
-        const fields = Object.entries(data).filter(([key]) => !skipKeys.includes(key)).slice(0, 6);
+        content.innerHTML = html;
+        if (approvalBar) approvalBar.style.display = '';
 
-        resultArea.innerHTML = `
-            <div class="v2v-result-card" style="opacity:0;transform:translateY(16px)">
-                ${warningHtml}
-
-                <div class="v2v-result-header">
-                    <div class="min-w-0">
-                        <div class="v2v-badge-premium mb-3">${outcomeTag}</div>
-                        <h3 class="text-[clamp(1.1rem,1rem+0.5vw,1.5rem)] font-headline font-extrabold text-on-surface tracking-tight leading-tight truncate">${title}</h3>
-                    </div>
-                    <div class="text-[9px] text-ink-muted font-bold uppercase tracking-widest shrink-0">${new Date().toLocaleDateString()}</div>
-                </div>
-
-                ${fields.length ? `
-                <div class="v2v-detail-grid">
-                    ${fields.map(([key, val]) => `
-                        <div class="v2v-detail-item">
-                            <span class="v2v-detail-label">${key.replace(/_/g, ' ')}</span>
-                            <span class="v2v-detail-value">${val || '—'}</span>
-                        </div>
-                    `).join('')}
-                </div>` : ''}
-
-                ${data.summary ? `
-                <div class="v2v-section-box">
-                    <div class="v2v-detail-label mb-2">${t('v2v_summary_label')}</div>
-                    <div class="text-[13px] font-medium leading-relaxed text-on-surface">${data.summary}</div>
-                </div>` : ''}
-
-                ${data.followup_draft ? `
-                <div class="v2v-section-box">
-                    <div class="v2v-detail-label mb-2">${t('v2v_followup_label')}</div>
-                    <div class="v2v-transcript-text">${data.followup_draft}</div>
-                </div>` : ''}
-
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-8 pt-6 border-t border-softer">
-                    <button class="v2v-action-btn" onclick="alert('Syncing...')">
-                        <span class="material-symbols-outlined text-base">table_chart</span>
-                        ${t('v2v_action_sheets')}
-                    </button>
-                    <button class="v2v-action-btn" onclick="alert('Drafting...')">
-                        <span class="material-symbols-outlined text-base">mail</span>
-                        ${t('v2v_action_gmail')}
-                    </button>
-                    ${state.outcome === 'ticket' || state.outcome === 'task' ? `
-                    <button class="v2v-action-btn" onclick="alert('Notifying...')">
-                        <span class="material-symbols-outlined text-base">chat</span>
-                        ${t('v2v_action_slack')}
-                    </button>` : `
-                    <button class="v2v-action-btn" onclick="alert('Pushing...')">
-                        <span class="material-symbols-outlined text-base">hub</span>
-                        ${t('v2v_action_crm')}
-                    </button>`}
-                    <button class="v2v-action-btn" onclick="window.location.reload()">
-                        <span class="material-symbols-outlined text-base">refresh</span>
-                        ${t('v2v_btn_try_again')}
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Animate in
-        const card = resultArea.querySelector('.v2v-result-card');
+        // Animate
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(6px)';
         requestAnimationFrame(() => {
-            card.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
+            content.style.transition = 'all 0.45s cubic-bezier(0.16,1,0.3,1)';
+            content.style.opacity = '1';
+            content.style.transform = 'translateY(0)';
+        });
+
+        wireHighlighting();
+    }
+
+    /* ── Field ↔ Source Highlighting ── */
+    function wireHighlighting() {
+        $$('.ed-field-item').forEach(field => {
+            const fid = field.dataset.fieldId;
+            const activate = () => {
+                $$('mark[data-field-id="' + fid + '"]').forEach(m => m.classList.add('ed-hl-active'));
+                field.classList.add('ed-field-focused');
+                const mk = document.querySelector('mark[data-field-id="' + fid + '"]');
+                if (mk) mk.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            };
+            const deactivate = () => {
+                $$('mark.ed-hl-active').forEach(m => m.classList.remove('ed-hl-active'));
+                field.classList.remove('ed-field-focused');
+            };
+            field.addEventListener('mouseenter', activate);
+            field.addEventListener('mouseleave', deactivate);
+            field.addEventListener('focus', activate);
+            field.addEventListener('blur', deactivate);
         });
     }
 
-    window.v2vInit = init;
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    /* ── Status Helper ── */
+    function updateStatus(trust, label) {
+        const el = $('ed-resolution-status');
+        if (!el) return;
+        const colors = { safe: 'var(--ed-trust-safe)', review: 'var(--ed-trust-review)', override: 'var(--ed-trust-override)' };
+        el.innerHTML = '<span class="ed-status-dot" style="color:' + (colors[trust] || colors.review) + '"></span> ' + esc(label);
     }
 
+    /* ── Action Handlers ── */
+    function handleApprove() {
+        if (!state.data || state.isProcessing) return;
+        const panel = $('ed-resolution-panel');
+        if (panel) panel.classList.add('ed-success-flash');
+        updateStatus('safe', 'Approved & Routed');
+        // Disable approval buttons
+        $$('.ed-approval-bar .ed-btn').forEach(b => { b.style.opacity = '0.4'; b.style.pointerEvents = 'none'; });
+        // Show confirmation in action section
+        const actionSection = document.querySelector('.ed-action-section');
+        if (actionSection) {
+            actionSection.innerHTML =
+                '<div class="ed-action-confirmed" style="color: var(--ed-trust-safe)">' +
+                '  <span class="material-symbols-outlined ed-action-confirmed-icon">check_circle</span>' +
+                '  <div class="ed-action-confirmed-label">Approved & Routed for Execution</div>' +
+                '</div>';
+        }
+        setTimeout(() => { if (panel) panel.classList.remove('ed-success-flash'); }, 800);
+    }
+
+    function handleEdit() {
+        if (!state.data) return;
+        state.isEditing = !state.isEditing;
+        $$('.ed-field-value').forEach(el => { el.contentEditable = state.isEditing; });
+        const btn = document.querySelector('.ed-btn-edit');
+        if (btn) btn.innerHTML = state.isEditing
+            ? '<span class="material-symbols-outlined">check</span> Done'
+            : '<span class="material-symbols-outlined">edit</span> Edit';
+        if (state.isEditing) updateStatus('review', 'Editing');
+        else updateStatus('review', 'Edited');
+    }
+
+    function handleEscalate() {
+        if (!state.data || state.isProcessing) return;
+        updateStatus('override', 'Escalated to Manager');
+        $$('.ed-approval-bar .ed-btn').forEach(b => { b.style.opacity = '0.4'; b.style.pointerEvents = 'none'; });
+        // Show escalation confirmation
+        const actionSection = document.querySelector('.ed-action-section');
+        if (actionSection) {
+            actionSection.innerHTML =
+                '<div class="ed-action-confirmed" style="color: var(--ed-trust-override)">' +
+                '  <span class="material-symbols-outlined ed-action-confirmed-icon">priority_high</span>' +
+                '  <div class="ed-action-confirmed-label">Escalated — Awaiting Manager Review</div>' +
+                '</div>';
+        }
+    }
+
+    function handleReset() {
+        state.hasContent = false;
+        state.isProcessing = false;
+        state.isEditing = false;
+        state.data = null;
+
+        const dropZone = $('ed-drop-zone');
+        const srcContent = $('ed-source-content');
+        const empty = $('ed-resolution-empty');
+        const content = $('ed-resolution-content');
+        const approvalBar = $('ed-approval-bar');
+
+        if (dropZone) dropZone.style.display = '';
+        if (srcContent) srcContent.style.display = 'none';
+        if (empty) empty.style.display = '';
+        if (content) { content.style.display = 'none'; content.innerHTML = ''; }
+        if (approvalBar) approvalBar.style.display = 'none';
+        updateStatus('review', 'Awaiting input');
+
+        const srcMeta = document.querySelector('.ed-source-panel .ed-panel-meta');
+        if (srcMeta) srcMeta.textContent = 'Awaiting input';
+
+        // Re-enable buttons
+        $$('.ed-approval-bar .ed-btn').forEach(b => { b.style.opacity = ''; b.style.pointerEvents = ''; });
+    }
+
+    /* ── Keyboard Shortcuts ── */
+    function handleKeyboard(e) {
+        const inInput = () => {
+            const el = document.activeElement;
+            return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+        };
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleApprove(); }
+        if (e.key === 'e' && !e.metaKey && !e.ctrlKey && !inInput()) handleEdit();
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) { e.preventDefault(); handleEscalate(); }
+        if (e.key === 'r' && !e.metaKey && !e.ctrlKey && !inInput()) handleReset();
+    }
+
+    /* ── Public API ── */
+    window.edApprove = handleApprove;
+    window.edEdit = handleEdit;
+    window.edEscalate = handleEscalate;
+    window.edReset = handleReset;
+    window.edLoadDemo = loadDemo;
+
+    /* ── Boot ── */
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 })();
