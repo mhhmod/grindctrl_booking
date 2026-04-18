@@ -1704,7 +1704,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       var launcherIcon = document.getElementById('mockup-launcher-icon');
       var launcherText = document.getElementById('mockup-launcher-text');
       var phoneFrame = document.getElementById('mockup-container');
-      var phoneInner = phoneFrame ? phoneFrame.querySelector('.rounded-\[2\.5rem\]') : null;
+      var phoneInner = document.getElementById('mockup-phone-frame');
       
       isOpen = !isOpen;
       
