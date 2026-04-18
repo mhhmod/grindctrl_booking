@@ -586,6 +586,146 @@
     v2v_action_export: { en: 'Export Data', ar: 'تصدير البيانات' },
     v2v_title_line2: { en: 'Business-Ready Output.', ar: 'مخرجات جاهزة للعمل.' },
     v2v_empty_value: { en: 'Your raw input becomes a structured, actionable business record—ready to route, review, and execute.', ar: 'مدخلاتك الخام تتحول إلى سجل أعمال منظم وقابل للتنفيذ—جاهز للتوجيه والمراجعة والتنفيذ.' },
+
+    /* ────────── NAV (UPDATED) ────────── */
+    nav_home: { en: 'Live Demo', ar: 'العرض المباشر' },
+    nav_solutions: { en: 'How It Works', ar: 'كيف يعمل' },
+    nav_install: { en: 'Install Widget', ar: 'تثبيت الأداة' },
+    nav_book_cta: { en: 'Book a Call', ar: 'احجز مكالمة' },
+
+    /* ────────── DRAWER (UPDATED) ────────── */
+    drawer_home: { en: ' Live Demo', ar: ' العرض المباشر' },
+    drawer_solutions: { en: ' How It Works', ar: ' كيف يعمل' },
+    drawer_install: { en: ' Install Widget', ar: ' تثبيت الأداة' },
+    drawer_book_cta: { en: 'Book a Call', ar: 'احجز مكالمة' },
+    drawer_start_trial: { en: 'Start Free Trial', ar: 'ابدأ النسخة المجانية' },
+
+    /* ────────── INSTALL: HERO ────────── */
+    install_hero_badge: { en: 'Install', ar: 'تثبيت' },
+    install_hero_title_html: { en: 'One Script Tag.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>', ar: 'سطر كود واحد.<br/><span class="text-ink-dim italic font-bold">أي موقع.</span>' },
+    install_hero_subtitle: { en: 'Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML. One script. Zero dependencies. Full AI support on every page.', ar: 'ثبّت أداة GRINDCTRL على شوبيفاي، ووردبريس، ورياكت، وفوي، أو HTML عادي. سطر كود واحد بدون تبعيات. دعم ذكي كامل على كل صفحة.' },
+
+    /* ────────── INSTALL: SNIPPET ────────── */
+    install_snippet_label: { en: 'Your Embed Snippet', ar: 'كود التضمين الخاص بك' },
+    install_snippet_copy: { en: 'Copy', ar: 'نسخ' },
+
+    /* ────────── INSTALL: INTERACTIVE PREVIEW ────────── */
+    install_preview_badge: { en: 'Try It Now', ar: 'جرّبه الآن' },
+    install_preview_title: { en: 'Experience the Widget Live', ar: 'جرّب الأداة مباشرة' },
+    install_preview_subtitle: { en: 'Click the launcher below to open the widget. Select an intent or type a message to see how AI responds to your visitors.', ar: 'اضغط على زر التشغيل لفتح الأداة. اختر نوع المساعدة أو اكتب رسالة لتشوف كيف يرد الذكاء الاصطناعي على زوارك.' },
+    install_preview_hint: { en: 'Click to try!', ar: 'اضغط للتجربة!' },
+
+    /* ────────── INSTALL: MOCKUP MESSAGES ────────── */
+    mockup_greeting: { en: 'Hello! How can we help you today?', ar: 'مرحباً! كيف نقدر نساعدك اليوم؟' },
+    mockup_intent_sales: { en: 'Talk to Sales', ar: 'تحدث مع المبيعات' },
+    mockup_intent_help: { en: 'Get Help', ar: 'احصل على مساعدة' },
+    mockup_intent_meeting: { en: 'Book a Meeting', ar: 'احجز اجتماع' },
+    mockup_intent_label: { en: 'Quick options:', ar: 'خيارات سريعة:' },
+    mockup_input_placeholder: { en: 'Type a message...', ar: 'اكتب رسالة...' },
+    mockup_sales_response: { en: "Hi! I'd love to help you find the right plan. What's your team size and expected support volume?", ar: 'مرحباً! أحب أساعدك تلاقي الخطة المناسبة. كم حجم الفريق وكم متوقع حجم الدعم؟' },
+    mockup_help_response: { en: "I'm here to help! What would you like to accomplish? I can guide you through setup or troubleshooting.", ar: 'أنا هنا للمساعدة! وش تبي تحقق؟ أقدر أرشدك خلال الإعداد أو حل المشاكل.' },
+    mockup_meeting_response: { en: "I'd be happy to schedule a demo! What's your email and what time works best this week?", ar: 'يسعدني أحجز لك عرض توضيحي! وش إيميلك وأي وقت يناسبك هالأسبوع؟' },
+    mockup_generic_1: { en: "That's a great question! Our widget supports unlimited sites on Growth and Premium plans. Want to see pricing?", ar: 'سؤال ممتاز! الأداة تدعم مواقع غير محدودة على خطط النمو والاحترافية. تبي تشوف الأسعار؟' },
+    mockup_generic_2: { en: 'I can definitely help with that! Setup takes about 2 minutes — just add one script tag to your site.', ar: 'أكيد أقدر أساعدك! الإعداد ياخذ حوالي دقيقتين — فقط أضف سطر كود واحد لموقعك.' },
+    mockup_generic_3: { en: 'Thanks for reaching out! Let me connect you with our team for a personalized walkthrough.', ar: 'شكراً لتواصلك! خلني أوصّلك مع فريقنا لجولة شخصية.' },
+    mockup_generic_4: { en: 'Absolutely! We offer a 15-day free trial with full access. No credit card required!', ar: 'بالتأكيد! نقدم نسخة مجانية ١٥ يوم بوصول كامل. بدون بطاقة ائتمان!' },
+    mockup_generic_5: { en: 'The widget works with Shopify, WordPress, React, Vue, or any HTML site. Which platform are you using?', ar: 'الأداة تشتغل مع شوبيفاي، ووردبريس، ورياكت، وفوي، أو أي موقع HTML. وش المنصة اللي تستخدمها؟' },
+
+    /* ────────── INSTALL: FEATURE BULLETS ────────── */
+    install_feat_1_title: { en: 'Click the launcher', ar: 'اضغط على زر التشغيل' },
+    install_feat_1_desc: { en: 'The floating button appears on every page. One tap opens the conversation panel.', ar: 'الزر العائم يظهر على كل صفحة. ضغطة واحدة تفتح لوحة المحادثة.' },
+    install_feat_2_title: { en: 'Tap an intent', ar: 'اختر نوع المساعدة' },
+    install_feat_2_desc: { en: 'Sales, Help, or Meeting — each intent routes to the right AI persona with instant contextual responses.', ar: 'مبيعات، مساعدة، أو اجتماع — كل خيار يوجّه لشخصية ذكية مناسبة مع ردود فورية.' },
+    install_feat_3_title: { en: 'Natural conversation', ar: 'محادثة طبيعية' },
+    install_feat_3_desc: { en: 'Type freely or choose suggested replies. The AI understands context and escalates to humans when needed.', ar: 'اكتب بحرية أو اختر من الاقتراحات. الذكاء الاصطناعي يفهم السياق ويحوّل للبشر عند الحاجة.' },
+    install_feat_4_title: { en: 'Fully customizable', ar: 'قابل للتخصيص بالكامل' },
+    install_feat_4_desc: { en: 'Colors, logo, launcher text, and domain. On Growth and Premium, remove all GRINDCTRL branding.', ar: 'ألوان، شعار، نص الزر، ونطاق. على خطط النمو والاحترافية، تقدر تزيل شعار GRINDCTRL بالكامل.' },
+
+    /* ────────── INSTALL: PLATFORMS ────────── */
+    install_platforms_badge: { en: 'Platforms', ar: 'المنصات' },
+    install_platforms_title: { en: 'Works on Any Website', ar: 'يعمل على أي موقع' },
+    install_platforms_subtitle: { en: 'From solo Shopify stores to enterprise React apps. The widget adapts to your stack — no framework required.', ar: 'من متاجر شوبيفاي إلى تطبيقات ريآكت المؤسسية. الأداة تناسب مجموعة أدواتك — بدون إطار عمل محدد.' },
+    platform_shopify_title: { en: 'Shopify', ar: 'شوبيفاي' },
+    platform_shopify_desc: { en: 'Add to store settings → custom code → done. Works with Debut, Dawn, and all Shopify 2.0 themes.', ar: 'أضف في إعدادات المتجر → كود مخصص → تم. يشتغل مع كل قوالب شوبيفاي.' },
+    platform_wordpress_title: { en: 'WordPress', ar: 'ووردبريس' },
+    platform_wordpress_desc: { en: "Add to your theme's footer.php or via any plugin that supports custom HTML blocks.", ar: 'أضف في ملف footer.php للقالب أو عبر أي إضافة تدعم كتل HTML.' },
+    platform_react_title: { en: 'React / Next.js', ar: 'رياكت / نكست' },
+    platform_react_desc: { en: 'Import the widget as a React component or embed via plain script — your choice.', ar: 'استورد الأداة كعنصر ريآكت أو أدرجها عبر سكريبت عادي — الخيار لك.' },
+    platform_vue_title: { en: 'Vue / Nuxt', ar: 'فوي / نكست' },
+    platform_vue_desc: { en: 'Drop in a Vue component or embed globally. Tested with Vue 3 and Nuxt 2/3.', ar: 'أضف كعنصر فوي أو أدرجها عالمياً. مختبرة مع فوي ٣ ونكست ٢/٣.' },
+    platform_html_title: { en: 'HTML / Static', ar: 'HTML عادي' },
+    platform_html_desc: { en: 'Plain HTML sites, Webflow, Carrd — any page that can load a JavaScript file.', ar: 'مواقع HTML عادية، ويب فلو، كارد — أي صفحة تحمل ملف جافاسكريبت.' },
+    platform_custom_title: { en: 'Custom / Headless', ar: 'مخصص / بدون رأس' },
+    platform_custom_desc: { en: 'Any headless setup. API-first design means you control the data layer entirely.', ar: 'أي إعداد بدون رأس. التصميم القائم على API يعني أنك تتحكم في طبقة البيانات بالكامل.' },
+
+    /* ────────── INSTALL: WHITE-LABEL ────────── */
+    install_wl_badge: { en: 'White-Label', ar: 'العلامة التجارية الخاصة' },
+    install_wl_title: { en: 'Full Control, Zero Compromise', ar: 'تحكم كامل بدون تنازلات' },
+    install_wl_subtitle: { en: 'Growth and Premium plans unlock full white-label mode. Your logo, your brand colors, your domain. Your customers never see GRINDCTRL.', ar: 'خطط النمو والاحترافية تفتح وضع العلامة التجارية الكامل. شعارك، ألوانك، نطاقك. عملاءك ما يشوفون GRINDCTRL.' },
+    install_wl_feat_1: { en: 'Replace the widget launcher icon with your own', ar: 'استبدل أيقونة الأداة بأيقونتك' },
+    install_wl_feat_2: { en: 'Use your brand colors — dark, light, or custom palette', ar: 'استخدم ألوان علامتك التجارية — داكنة، فاتحة، أو لوحة ألوان مخصصة' },
+    install_wl_feat_3: { en: 'Host on your own domain — custom widget endpoint', ar: 'على نطاقك الخاص — نقطة نهاية مخصصة للأداة' },
+    install_wl_feat_4: { en: 'Locked attribution — GRINDCTRL attribution removed permanently', ar: 'إزالة شعار GRINDCTRL نهائياً' },
+    install_wl_info: { en: 'Starter plan shows "Powered by GRINDCTRL" attribution. Growth and Premium plans remove it.', ar: 'خطة Starter تظهر شعار "بدعم من GRINDCTRL". خطط النمو والاحترافية تزيله.' },
+    wl_badge_label: { en: 'Your Brand', ar: 'علامتك التجارية' },
+
+    /* ────────── INSTALL: PRICING ────────── */
+    install_pricing_badge: { en: 'Pricing', ar: 'الأسعار' },
+    install_pricing_title: { en: 'Simple, Scalable Plans', ar: 'أسعار بسيطة وقابلة للتوسع' },
+    plan_trial: { en: 'Trial', ar: 'تجريبي' },
+    plan_starter: { en: 'Starter', ar: 'البداية' },
+    plan_growth: { en: 'Growth', ar: 'النمو' },
+    plan_premium: { en: 'Premium', ar: 'الاحترافية' },
+    plan_free: { en: 'Free', ar: 'مجاني' },
+    plan_billed_monthly: { en: 'Billed monthly', ar: 'تدفع شهرياً' },
+    plan_15_days: { en: '15 days', ar: '١٥ يوم' },
+    plan_feature_full_access: { en: 'Full widget access', ar: 'وصول كامل للأداة' },
+    plan_feature_50_msgs: { en: '50 messages/mo', ar: '٥٠ رسالة/شهر' },
+    plan_feature_basic_analytics: { en: 'Basic analytics', ar: 'تحليلات أساسية' },
+    plan_feature_no_white_label: { en: 'White-label', ar: 'العلامة التجارية' },
+    plan_feature_500_msgs: { en: '500 messages/mo', ar: '٥٠٠ رسالة/شهر' },
+    plan_feature_analytics: { en: 'Full analytics', ar: 'تحليلات كاملة' },
+    plan_feature_email_support: { en: 'Email support', ar: 'دعم بالبريد الإلكتروني' },
+    plan_feature_2000_msgs: { en: '2,000 messages/mo', ar: '٢٠٠٠ رسالة/شهر' },
+    plan_feature_white_label: { en: 'White-label mode', ar: 'وضع العلامة التجارية' },
+    plan_feature_priority: { en: 'Priority support', ar: 'دعم ذو أولوية' },
+    plan_feature_custom_domain: { en: 'Custom domain', ar: 'نطاق مخصص' },
+    plan_feature_unlimited: { en: 'Unlimited messages', ar: 'رسائل غير محدودة' },
+    plan_feature_full_wl: { en: 'Full white-label + locked', ar: 'علامة تجارية كاملة + مقفلة' },
+    plan_feature_dedicated: { en: 'Dedicated Slack line', ar: 'خط Slack مخصص' },
+    plan_feature_sla: { en: 'SLA guarantee', ar: 'ضمان SLA' },
+    popular_badge: { en: 'Popular', ar: 'الأكثر طلباً' },
+    cta_get_started: { en: 'Get Started', ar: 'ابدأ الآن' },
+    cta_contact_sales: { en: 'Contact Sales', ar: 'تواصل مع المبيعات' },
+    cta_start_trial: { en: 'Start Free Trial', ar: 'ابدأ النسخة المجانية' },
+
+    /* ────────── INSTALL: CTA SECTION ────────── */
+    install_cta_title: { en: 'Ready to embed AI support on your site?', ar: 'جاهز لتضمين دعم ذكي في موقعك؟' },
+    install_cta_subtitle: { en: 'Start your 15-day free trial. No credit card required. Cancel anytime.', ar: 'ابدأ نسختك المجانية ١٥ يوم. بدون بطاقة ائتمان. إلغاء في أي وقت.' },
+
+    /* ────────── FOOTER (UPDATED) ────────── */
+    footer_desc: { en: 'AI-powered embeddable support widget. Drop on any website. White-label ready. 15-day free trial.', ar: 'أداة دعم ذكية قابلة للتضمين. ثبّتها على أي موقع. جاهزة للعلامة التجارية الخاصة. نسخة مجانية ١٥ يوم.' },
+    footer_product_label: { en: 'Product', ar: 'المنتج' },
+    footer_live_demo: { en: 'Live Demo', ar: 'العرض المباشر' },
+    footer_how_it_works: { en: 'How It Works', ar: 'كيف يعمل' },
+    footer_install_widget: { en: 'Install Widget', ar: 'تثبيت الأداة' },
+    footer_book_demo: { en: 'Book a Demo', ar: 'احجز عرض' },
+    footer_company_label: { en: 'Company', ar: 'الشركة' },
+    footer_privacy: { en: 'Privacy Policy', ar: 'سياسة الخصوصية' },
+    footer_terms: { en: 'Terms of Service', ar: 'شروط الخدمة' },
+    footer_contact: { en: 'Contact Us', ar: 'تواصل معنا' },
+    footer_support: { en: 'Support', ar: 'الدعم' },
+    footer_copyright: { en: '2025 GRINDCTRL. All rights reserved.', ar: '٢٠٢٥ GRINDCTRL. جميع الحقوق محفوظة.' },
+
+    /* ────────── SOLUTIONS PAGE (UPDATED) ────────── */
+    sol_hero_title_html: { en: 'From <span class="text-ink-dim italic font-bold">Visitor Question</span> to Resolved Issue.', ar: 'من <span class="text-ink-dim italic font-bold">سؤال الزائر</span> إلى مشكلة مُحلّة.' },
+    sol_hero_desc: { en: 'GRINDCTRL embeds AI support on every page of your site. Visitors get instant answers, escalation paths, and a full audit trail — without touching your code.', ar: 'GRINDCTRL يُضمّن دعم ذكي على كل صفحة في موقعك. الزوار يحصلون على ردود فورية ومسارات تصعيد وسجل كامل — بدون ما تلمس الكود.' },
+    sol_step_1_title: { en: 'Drop one script tag', ar: 'ضع سطر كود واحد' },
+    sol_step_1_desc: { en: 'Add one JavaScript snippet to your site. Works on any HTML, Shopify, WordPress, React, or Vue. No framework required.', ar: 'أضف برمجة جافاسكريبت واحدة لموقعك. تشتغل على أي HTML أو شوبيفاي أو ووردبريس أو رياكت أو فوي.' },
+    sol_step_2_title: { en: 'Set your brand & intents', ar: 'اضبط علامتك التجارية وخيارات المساعدة' },
+    sol_step_2_desc: { en: 'Define your brand colors, logo, and the help intents the widget handles. Route specific topics to human agents automatically.', ar: 'حدد ألوان علامتك التجارية والشعار وخيارات المساعدة التي تتعامل معها الأداة. وفّع التوجيه التلقائي لموضوعات معينة للبشر.' },
+    sol_step_3_title: { en: 'AI handles the conversations', ar: 'الذكاء الاصطناعي يدير المحادثات' },
+    sol_step_3_desc: { en: 'Every visitor question is answered instantly. Complex issues escalate to your team with full context. Usage tracked per site.', ar: 'كل سؤال من الزوار يُجاب فورياً. المشاكل المعقدة تتصعد لفريقك مع السياق الكامل. الاستخدام يُتتبع لكل موقع.' },
   };
 
   // ── Expose globally for optional external use ──

@@ -554,10 +554,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <span class="text-sm font-bold tracking-[-0.03em] text-ink dark:text-ink">GRINDCTRL</span>
   </a>
   <div class="hidden md:flex items-center gap-7" id="nav-marketing-links">
-    <a class="nav-link text-secondary hover:text-ink text-[12px] active" href="#home" data-nav="home">Live Demo</a>
-    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions">How It Works</a>
-    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#install" data-nav="install">Install Widget</a>
-    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book">Book a Call</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#home" data-nav="home" data-i18n="nav_home">Live Demo</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions" data-i18n="nav_solutions">How It Works</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#install" data-nav="install" data-i18n="nav_install">Install Widget</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book" data-i18n="nav_book_cta">Book a Call</a>
   </div>
   <div class="flex items-center gap-2">
     <button id="lang-toggle" class="theme-btn" aria-label="Switch language">
@@ -589,28 +589,24 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     </button>
   </div>
   <nav class="flex flex-col gap-1">
-    <a href="#home" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-on-surface font-medium bg-surface-container-high transition-colors" data-nav="home">
-      <span class="material-symbols-outlined text-ink-dim text-xl">inbox_customize</span> <span>Live Demo</span>
+    <a href="#home" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-on-surface font-medium bg-surface-container-high transition-colors" data-nav="home" data-i18n="drawer_home">
+      <span class="material-symbols-outlined text-ink-dim text-xl">inbox_customize</span> <span> Live Demo</span>
     </a>
-    <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions">
-      <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span>How It Works</span>
+    <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions" data-i18n="drawer_solutions">
+      <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span> How It Works</span>
     </a>
-    <a href="#install" class="drawer-link group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high border-2 border-primary/30 overflow-hidden transition-all hover:border-primary/60" data-nav="install">
+    <a href="#install" class="drawer-link group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high border-2 border-primary/30 overflow-hidden transition-all hover:border-primary/60" data-nav="install" data-i18n="drawer_install">
       <span class="absolute inset-0 -translate-x-full group-hover:animate-shimmer" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)"></span>
       <span class="material-symbols-outlined text-primary text-xl relative z-10 group-hover:scale-110 transition-transform">rocket_launch</span>
-      <span class="relative z-10">Install Widget</span>
-      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 shadow-lg">New</span>
+      <span class="relative z-10"> Install Widget</span>
+      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 shadow-lg" data-i18n="popular_badge">New</span>
     </a>
-    <style>
-      @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-      .group:hover .group-hover\:animate-shimmer{animation:shimmer 1.5s ease-in-out}
-    </style>
-    <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book">
+    <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book" data-i18n="drawer_book_cta">
       <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
     </a>
   </nav>
   <div class="mt-auto pt-8">
-    <a href="#book" onclick="document.getElementById('drawer-overlay').classList.remove('open'); document.getElementById('drawer-panel').classList.remove('open'); document.body.style.overflow='';" class="drawer-link block w-full text-center cta-primary py-4 text-base">
+    <a href="#book" onclick="document.getElementById('drawer-overlay').classList.remove('open'); document.getElementById('drawer-panel').classList.remove('open'); document.body.style.overflow='';" class="drawer-link block w-full text-center cta-primary py-4 text-base" data-i18n="drawer_start_trial">
       Start Free Trial
     </a>
   </div>
@@ -1154,11 +1150,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <!-- Hero -->
 <section class="pt-28 sm:pt-36 pb-16 sm:pb-24 ui-container">
 <header class="mb-16 sm:mb-20 max-w-3xl reveal">
-  <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-6 block">Install</span>
-  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8">
+  <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-6 block" data-i18n="install_hero_badge">Install</span>
+  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="install_hero_title_html">
     One Script Tag.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>
   </h1>
-  <p class="text-fluid text-secondary max-w-xl">
+  <p class="text-fluid text-secondary max-w-xl" data-i18n="install_hero_subtitle">
     Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML. One script. Zero dependencies. Full AI support on every page.
   </p>
 </header>
@@ -1169,10 +1165,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <div class="bg-surface-container-high px-6 py-4 flex items-center justify-between border-b border-softer">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined text-primary text-xl">code</span>
-        <span class="font-headline font-bold text-[13px] text-on-surface">Your Embed Snippet</span>
+        <span class="font-headline font-bold text-[13px] text-on-surface" data-i18n="install_snippet_label">Your Embed Snippet</span>
       </div>
       <button onclick="copyInstallSnippet()" class="flex items-center gap-2 text-[11px] font-bold text-primary border border-primary/20 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-all">
-        <span class="material-symbols-outlined text-sm">content_copy</span> Copy
+        <span class="material-symbols-outlined text-sm">content_copy</span> <span data-i18n="install_snippet_copy">Copy</span>
       </button>
     </div>
     <div class="p-6 sm:p-8 bg-surface-container-lowest/50 overflow-x-auto">
@@ -1191,13 +1187,13 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <!-- ── Interactive Live Preview ── -->
 <div class="mb-20 sm:mb-28 reveal">
   <div class="mb-10">
-    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Try It Now</span>
-    <h2 class="h3-fluid font-headline text-on-surface mb-3">Experience the Widget Live</h2>
-    <p class="text-secondary text-[15px] max-w-xl font-medium">Click the launcher below to open the widget. Select an intent or type a message to see how AI responds to your visitors.</p>
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block" data-i18n="install_preview_badge">Try It Now</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="install_preview_title">Experience the Widget Live</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium" data-i18n="install_preview_subtitle">Click the launcher below to open the widget. Select an intent or type a message to see how AI responds to your visitors.</p>
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
     <!-- Interactive Phone Mockup -->
-    <div class="flex justify-center">
+    <div class="flex justify-center" id="mockup-container">
       <div class="relative w-full max-w-[360px]">
         <!-- Phone frame -->
         <div class="rounded-[2.5rem] border-[4px] border-outline-variant bg-canvas overflow-hidden shadow-2xl" style="height:640px">
@@ -1241,29 +1237,29 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
               <div id="mockup-messages" class="px-4 py-4 space-y-3 overflow-y-auto" style="max-height:280px;background:var(--gc-surface-container-lowest)">
                 <div id="mockup-greeting" class="flex justify-start animate-[fadeIn_0.4s_ease]">
                   <div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-md text-[13px] leading-relaxed" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
-                    Hello! How can we help you today?
+                    <span data-i18n="mockup_greeting">Hello! How can we help you today?</span>
                   </div>
                 </div>
               </div>
               <!-- Intents -->
               <div id="mockup-intents" class="px-4 pb-3">
-                <div class="text-[11px] font-medium mb-2" style="color:var(--gc-secondary)">Quick options:</div>
+                <div class="text-[11px] font-medium mb-2" style="color:var(--gc-secondary)" data-i18n="mockup_intent_label">Quick options:</div>
                 <div class="flex flex-wrap gap-2">
                   <button onclick="mockupIntent('sales')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
-                    <span class="material-symbols-outlined text-[14px]">headset</span>Talk to Sales
+                    <span class="material-symbols-outlined text-[14px]">headset</span><span data-i18n="mockup_intent_sales">Talk to Sales</span>
                   </button>
                   <button onclick="mockupIntent('help')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
-                    <span class="material-symbols-outlined text-[14px]">help</span>Get Help
+                    <span class="material-symbols-outlined text-[14px]">help</span><span data-i18n="mockup_intent_help">Get Help</span>
                   </button>
                   <button onclick="mockupIntent('meeting')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
-                    <span class="material-symbols-outlined text-[14px]">event</span>Book a Meeting
+                    <span class="material-symbols-outlined text-[14px]">event</span><span data-i18n="mockup_intent_meeting">Book a Meeting</span>
                   </button>
                 </div>
               </div>
               <!-- Input -->
               <div class="px-4 py-3 border-t" style="border-color:var(--gc-outline-variant)">
                 <div class="flex items-center gap-2">
-                  <input id="mockup-input" type="text" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="flex-1 rounded-xl px-4 py-3 text-[12px] outline-none transition-all" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
+                  <input id="mockup-input" type="text" data-i18n-placeholder="mockup_input_placeholder" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="flex-1 rounded-xl px-4 py-3 text-[12px] outline-none transition-all" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
                   <button onclick="mockupSend()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95" style="background:var(--gc-primary);color:var(--gc-on-primary)">
                     <span class="material-symbols-outlined text-[18px]">send</span>
                   </button>
@@ -1274,7 +1270,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
             <!-- Launcher -->
             <button id="mockup-launcher" onclick="mockupToggle()" class="absolute bottom-5 right-5 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-[14px] font-bold shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">
               <span id="mockup-launcher-icon" class="material-symbols-outlined text-[22px]">chat</span>
-              <span id="mockup-launcher-text">Support</span>
+              <span id="mockup-launcher-text" data-i18n="nav_install">Support</span>
             </button>
           </div>
         </div>
@@ -1282,7 +1278,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         <div class="absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full hidden lg:block">
           <div class="bg-primary text-on-primary px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-xl whitespace-nowrap animate-pulse">
             <span class="material-symbols-outlined text-[16px] inline-block mr-1">touch_app</span>
-            Click to try!
+            <span data-i18n="install_preview_hint">Click to try!</span>
             <div class="absolute left-0 top-1/2 -translate-x-1.5 -translate-y-1/2 w-3 h-3 bg-primary rotate-45"></div>
           </div>
         </div>
@@ -1293,8 +1289,149 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <ul class="space-y-5">
         <li class="flex items-start gap-4">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--gc-surface-container)">
-            <span class="material-symbols-outlined text-primary text-xl">bolt</span>
+            <span class="material-symbols-outlined text-primary text-xl">touch_app</span>
           </div>
+          <div>
+            <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="install_feat_1_title">Click the launcher</h4>
+            <p class="text-[13px] text-secondary font-medium leading-relaxed" data-i18n="install_feat_1_desc">The floating button appears on every page. One tap opens the conversation panel.</p>
+          </div>
+        </li>
+        <li class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--gc-surface-container)">
+            <span class="material-symbols-outlined text-primary text-xl">psychology</span>
+          </div>
+          <div>
+            <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="install_feat_2_title">Tap an intent</h4>
+            <p class="text-[13px] text-secondary font-medium leading-relaxed" data-i18n="install_feat_2_desc">Sales, Help, or Meeting — each intent routes to the right AI persona with instant contextual responses.</p>
+          </div>
+        </li>
+        <li class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--gc-surface-container)">
+            <span class="material-symbols-outlined text-primary text-xl">chat</span>
+          </div>
+          <div>
+            <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="install_feat_3_title">Natural conversation</h4>
+            <p class="text-[13px] text-secondary font-medium leading-relaxed" data-i18n="install_feat_3_desc">Type freely or choose suggested replies. The AI understands context and escalates to humans when needed.</p>
+          </div>
+        </li>
+        <li class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background:var(--gc-surface-container)">
+            <span class="material-symbols-outlined text-primary text-xl">palette</span>
+          </div>
+          <div>
+            <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="install_feat_4_title">Fully customizable</h4>
+            <p class="text-[13px] text-secondary font-medium leading-relaxed" data-i18n="install_feat_4_desc">Colors, logo, launcher text, and domain. On Growth and Premium, remove all GRINDCTRL branding.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── Works on Any Website ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="mb-10">
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block" data-i18n="install_platforms_badge">Platforms</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="install_platforms_title">Works on Any Website</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium" data-i18n="install_platforms_subtitle">From solo Shopify stores to enterprise React apps. The widget adapts to your stack — no framework required.</p>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">shopping_cart</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_shopify_title">Shopify</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_shopify_desc">Add to store settings → custom code → done. Works with Debut, Dawn, and all Shopify 2.0 themes.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">language</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_wordpress_title">WordPress</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_wordpress_desc">Add to your theme's footer.php or via any plugin that supports custom HTML blocks.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">code</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_react_title">React / Next.js</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_react_desc">Import the widget as a React component or embed via plain script — your choice.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">view_agenda</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_vue_title">Vue / Nuxt</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_vue_desc">Drop in a Vue component or embed globally. Tested with Vue 3 and Nuxt 2/3.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">html</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_html_title">HTML / Static</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_html_desc">Plain HTML sites, Webflow, Carrd — any page that can load a JavaScript file.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low hover:border-primary/20 transition-all group">
+      <span class="material-symbols-outlined text-primary text-2xl mb-3 block">settings</span>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1" data-i18n="platform_custom_title">Custom / Headless</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="platform_custom_desc">Any headless setup. API-first design means you control the data layer entirely.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── White-Label / Full Control ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="ui-card bg-surface-container">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+      <div class="order-2 lg:order-1">
+        <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block" data-i18n="install_wl_badge">White-Label</span>
+        <h2 class="h3-fluid font-headline text-on-surface mb-4" data-i18n="install_wl_title">Full Control, Zero Compromise</h2>
+        <p class="text-secondary text-[15px] leading-relaxed font-medium mb-6" data-i18n="install_wl_subtitle">
+          Growth and Premium plans unlock full white-label mode. Your logo, your brand colors, your domain. Your customers never see GRINDCTRL.
+        </p>
+        <ul class="space-y-3">
+          <li class="flex items-start gap-3 text-[13px] font-medium text-on-surface">
+            <span class="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check</span>
+            <span data-i18n="install_wl_feat_1">Replace the widget launcher icon with your own</span>
+          </li>
+          <li class="flex items-start gap-3 text-[13px] font-medium text-on-surface">
+            <span class="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check</span>
+            <span data-i18n="install_wl_feat_2">Use your brand colors — dark, light, or custom palette</span>
+          </li>
+          <li class="flex items-start gap-3 text-[13px] font-medium text-on-surface">
+            <span class="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check</span>
+            <span data-i18n="install_wl_feat_3">Host on your own domain — custom widget endpoint</span>
+          </li>
+          <li class="flex items-start gap-3 text-[13px] font-medium text-on-surface">
+            <span class="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">check</span>
+            <span data-i18n="install_wl_feat_4">Locked attribution — GRINDCTRL attribution removed permanently</span>
+          </li>
+        </ul>
+        <div class="mt-8 flex items-start gap-3 p-4 bg-surface-container-high/50 border border-softer rounded-xl">
+          <span class="material-symbols-outlined text-accent text-xl shrink-0 mt-0.5">info</span>
+          <p class="text-[12px] text-secondary font-medium leading-relaxed" data-i18n="install_wl_info">Starter plan shows "Powered by GRINDCTRL" attribution. Growth and Premium plans remove it.</p>
+        </div>
+      </div>
+      <div class="order-1 lg:order-2 relative">
+        <div class="rounded-2xl border border-softer bg-surface-container-lowest/50 p-6 shadow-xl max-w-sm mx-auto overflow-hidden">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary text-[11px] font-black shrink-0">G</div>
+            <div class="min-w-0">
+              <div class="text-[13px] font-bold text-on-surface truncate">Acme Support</div>
+              <div class="text-[11px] text-secondary truncate">help.acme.com</div>
+            </div>
+          </div>
+          <div class="space-y-2 mb-4">
+            <div class="h-3 rounded bg-surface-container-high w-full"></div>
+            <div class="h-3 rounded bg-surface-container-high w-4/5"></div>
+            <div class="h-3 rounded bg-surface-container-high w-3/5"></div>
+          </div>
+          <div class="p-4 rounded-xl bg-surface-container border border-softer">
+            <p class="text-[12px] text-on-surface font-medium">Hi! How can I help you today?</p>
+          </div>
+        </div>
+        <div class="absolute -top-3 -right-3 px-3 py-1.5 bg-accent text-on-primary rounded-full text-[10px] font-black uppercase tracking-widest" data-i18n="wl_badge_label">Your Brand</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Plan Tiers ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="mb-10">
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block" data-i18n="install_pricing_badge">Pricing</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="install_pricing_title">Simple, Scalable Plans</h2>
+  </div>
           <div>
             <h4 class="text-[14px] font-bold text-on-surface mb-1">Loads instantly</h4>
             <p class="text-[13px] text-secondary font-medium leading-relaxed">Shadow DOM isolation means zero CSS conflicts with your site. Renders in under 200ms.</p>
@@ -1437,56 +1574,60 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <h2 class="h3-fluid font-headline text-on-surface mb-3">Simple, Scalable Plans</h2>
   </div>
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-    <div class="ui-card min-w-0">
+    <!-- Trial -->
+    <div class="ui-card min-w-0 flex flex-col">
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Trial</div>
-      <div class="text-3xl font-black font-headline text-on-surface mb-1">Free</div>
-      <div class="text-[12px] text-secondary font-medium mb-6">15 days</div>
-      <ul class="space-y-2 mb-8">
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Full widget access</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> 50 messages/mo</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Basic analytics</li>
-        <li class="flex items-start gap-2 text-[12px] text-secondary font-medium"><span class="material-symbols-outlined text-secondary text-sm shrink-0">close</span> White-label</li>
+      <div class="text-3xl font-black font-headline text-on-surface mb-1" data-i18n="plan_free">Free</div>
+      <div class="text-[12px] text-secondary font-medium mb-6" data-i18n="plan_15_days">15 days</div>
+      <ul class="space-y-2 mb-8 flex-1">
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_full_access">Full widget access</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_50_msgs">50 messages/mo</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_basic_analytics">Basic analytics</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-secondary font-medium"><span class="material-symbols-outlined text-secondary text-sm shrink-0">close</span> <span data-i18n="plan_feature_no_white_label">White-label</span></li>
       </ul>
-      <button onclick="window.gcOpenChat()" class="ui-btn ui-btn-secondary w-full text-[12px]">Start Free Trial</button>
+      <button onclick="window.gcOpenChat()" class="inline-flex items-center justify-center w-full py-3.5 px-5 rounded-xl text-[13px] font-bold border border-outline text-on-surface hover:bg-surface-container-high transition-all active:scale-[0.98]" data-i18n="cta_start_trial">Start Free Trial</button>
     </div>
-    <div class="ui-card">
+    <!-- Starter -->
+    <div class="ui-card min-w-0 flex flex-col">
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Starter</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">$49<span class="text-[16px] font-medium text-secondary">/mo</span></div>
-      <div class="text-[12px] text-secondary font-medium mb-6">Billed monthly</div>
-      <ul class="space-y-2 mb-8">
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> 500 messages/mo</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Full analytics</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Email support</li>
-        <li class="flex items-start gap-2 text-[12px] text-secondary font-medium"><span class="material-symbols-outlined text-secondary text-sm shrink-0">close</span> White-label</li>
+      <div class="text-[12px] text-secondary font-medium mb-6" data-i18n="plan_billed_monthly">Billed monthly</div>
+      <ul class="space-y-2 mb-8 flex-1">
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_500_msgs">500 messages/mo</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_analytics">Full analytics</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_email_support">Email support</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-secondary font-medium"><span class="material-symbols-outlined text-secondary text-sm shrink-0">close</span> <span data-i18n="plan_feature_no_white_label">White-label</span></li>
       </ul>
-      <a href="#book" class="ui-btn ui-btn-secondary w-full text-[12px] text-center block">Get Started</a>
+      <a href="#book" class="inline-flex items-center justify-center w-full py-3.5 px-5 rounded-xl text-[13px] font-bold border border-outline text-on-surface hover:bg-surface-container-high transition-all active:scale-[0.98]" data-i18n="cta_get_started">Get Started</a>
     </div>
-    <div class="ui-card relative min-w-0 border-2 border-primary/40 overflow-visible">
-      <div class="flex justify-center -mt-6 mb-2">
-        <span class="inline-block px-4 py-1.5 bg-primary text-on-primary rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg">Popular</span>
+    <!-- Growth (Featured) -->
+    <div class="ui-card relative min-w-0 flex flex-col border-2 border-primary/40 overflow-visible pt-6">
+      <div class="flex justify-center mb-2">
+        <span class="inline-block px-4 py-1.5 bg-primary text-on-primary rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg" data-i18n="popular_badge">Popular</span>
       </div>
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Growth</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">$149<span class="text-[16px] font-medium text-secondary">/mo</span></div>
-      <div class="text-[12px] text-secondary font-medium mb-6">Billed monthly</div>
-      <ul class="space-y-2 mb-8">
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> 2,000 messages/mo</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> White-label mode</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Priority support</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Custom domain</li>
+      <div class="text-[12px] text-secondary font-medium mb-6" data-i18n="plan_billed_monthly">Billed monthly</div>
+      <ul class="space-y-2 mb-8 flex-1">
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_2000_msgs">2,000 messages/mo</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_white_label">White-label mode</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_priority">Priority support</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_custom_domain">Custom domain</span></li>
       </ul>
-      <a href="#book" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl text-[12px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98]" style="background:var(--gc-primary);color:var(--gc-on-primary)">Get Started</a>
+      <a href="#book" class="inline-flex items-center justify-center w-full py-3.5 px-5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98] hover:opacity-90" style="background:var(--gc-primary);color:var(--gc-on-primary)" data-i18n="cta_get_started">Get Started</a>
     </div>
-    <div class="ui-card">
+    <!-- Premium -->
+    <div class="ui-card min-w-0 flex flex-col">
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Premium</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">$499<span class="text-[16px] font-medium text-secondary">/mo</span></div>
-      <div class="text-[12px] text-secondary font-medium mb-6">Billed monthly</div>
-      <ul class="space-y-2 mb-8">
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Unlimited messages</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Full white-label + locked</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Dedicated Slack line</li>
-        <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> SLA guarantee</li>
+      <div class="text-[12px] text-secondary font-medium mb-6" data-i18n="plan_billed_monthly">Billed monthly</div>
+      <ul class="space-y-2 mb-8 flex-1">
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_unlimited">Unlimited messages</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_full_wl">Full white-label + locked</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_dedicated">Dedicated Slack line</span></li>
+        <li class="flex items-start gap-2 text-[13px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> <span data-i18n="plan_feature_sla">SLA guarantee</span></li>
       </ul>
-      <a href="#book" class="ui-btn ui-btn-secondary w-full text-[12px] text-center block">Contact Sales</a>
+      <a href="#book" class="inline-flex items-center justify-center w-full py-3.5 px-5 rounded-xl text-[13px] font-bold border border-outline text-on-surface hover:bg-surface-container-high transition-all active:scale-[0.98]" data-i18n="cta_contact_sales">Contact Sales</a>
     </div>
   </div>
 </div>
@@ -1494,11 +1635,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <!-- ── CTA ── -->
 <section class="relative overflow-hidden reveal">
   <div class="ui-card bg-surface-container text-center">
-    <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4">Ready to embed AI support on your site?</h3>
-    <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]">Start your 15-day free trial. No credit card required. Cancel anytime.</p>
+    <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4" data-i18n="install_cta_title">Ready to embed AI support on your site?</h3>
+    <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]" data-i18n="install_cta_subtitle">Start your 15-day free trial. No credit card required. Cancel anytime.</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-      <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span>Start Free Trial</span> <span class="material-symbols-outlined text-base">arrow_forward</span></a>
-      <button onclick="window.gcOpenChat()" class="ui-btn ui-btn-secondary px-6 py-4 text-[13px] gap-2"><span class="material-symbols-outlined text-sm">chat</span> <span>Ask a Question</span></button>
+      <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span data-i18n="cta_start_trial">Start Free Trial</span> <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+      <button onclick="window.gcOpenChat()" class="ui-btn ui-btn-secondary px-6 py-4 text-[13px] gap-2"><span class="material-symbols-outlined text-sm">chat</span> <span data-i18n="cta_ask_question">Ask a Question</span></button>
     </div>
   </div>
 </section>
@@ -1517,19 +1658,19 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <img src="logo-light.svg" alt="GRINDCTRL" class="logo-light h-6 w-auto"/>
       <span class="text-xl font-black font-headline tracking-[-0.04em]">GRINDCTRL</span>
     </div>
-    <p class="text-secondary max-w-xs text-[14px] font-medium">AI-powered embeddable support widget. Drop on any website. White-label ready. 15-day free trial.</p>
+    <p class="text-secondary max-w-xs text-[14px] font-medium" data-i18n="footer_desc">AI-powered embeddable support widget. Drop on any website. White-label ready. 15-day free trial.</p>
     <div class="flex gap-4 mt-8">
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">public</span></span>
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">hub</span></span>
     </div>
   </div>
   <div>
-    <h5 class="text-on-surface font-black uppercase tracking-[0.2em] mb-7 text-[11px]">Product</h5>
+    <h5 class="text-on-surface font-black uppercase tracking-[0.2em] mb-7 text-[11px]" data-i18n="footer_product_label">Product</h5>
     <ul class="space-y-4 font-bold">
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#home"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Live Demo</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>How It Works</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#install"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Install Widget</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#book"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Book a Demo</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#home"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_live_demo">Live Demo</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_how_it_works">How It Works</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#install"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_install_widget">Install Widget</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#book"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_book_demo">Book a Demo</span></a></li>
     </ul>
   </div>
   <div>
@@ -1731,19 +1872,43 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     var isOpen = false;
     var hasStarted = false;
     
+    function getLang() {
+      return document.documentElement.getAttribute('dir') === 'rtl' ? 'ar' : 'en';
+    }
+    
+    function t(key) {
+      var el = document.querySelector('[data-i18n="' + key + '"]');
+      return el ? el.textContent : key;
+    }
+    
     window.mockupToggle = function() {
       var panel = document.getElementById('mockup-panel');
       var launcherIcon = document.getElementById('mockup-launcher-icon');
       var launcherText = document.getElementById('mockup-launcher-text');
+      var phoneFrame = document.getElementById('mockup-container');
       
       isOpen = !isOpen;
+      
+      // Mirror phone frame for RTL
+      if (phoneFrame) {
+        if (getLang() === 'ar') {
+          phoneFrame.style.transform = 'scaleX(-1)';
+          // Re-mirror inner content
+          var inner = phoneFrame.querySelector('.rounded-\\[2\\.5rem\\]');
+          if (inner) inner.style.transform = 'scaleX(-1)';
+        } else {
+          phoneFrame.style.transform = '';
+          var inner = phoneFrame.querySelector('.rounded-\\[2\\.5rem\\]');
+          if (inner) inner.style.transform = '';
+        }
+      }
       
       if (isOpen) {
         panel.style.maxHeight = '420px';
         panel.style.opacity = '1';
         panel.style.transform = 'translateY(0)';
         launcherIcon.textContent = 'close';
-        launcherText.textContent = 'Close';
+        launcherText.textContent = getLang() === 'ar' ? 'إغلاق' : 'Close';
         if (!hasStarted) {
           hasStarted = true;
         }
@@ -1752,12 +1917,17 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         panel.style.opacity = '0';
         panel.style.transform = 'translateY(20px)';
         launcherIcon.textContent = 'chat';
-        launcherText.textContent = 'Support';
+        launcherText.textContent = getLang() === 'ar' ? 'الدعم' : 'Support';
       }
     };
     
     window.mockupIntent = function(intent) {
-      var intents = { sales: 'Talk to Sales', help: 'Get Help', meeting: 'Book a Meeting' };
+      var lang = getLang();
+      var intents = { 
+        sales: t('mockup_intent_sales'),
+        help: t('mockup_intent_help'),
+        meeting: t('mockup_intent_meeting')
+      };
       var userMsg = intents[intent];
       mockupAddMessage(userMsg, 'user');
       mockupHideIntents();
@@ -1766,11 +1936,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       setTimeout(function() {
         mockupRemoveTyping();
         var responses = {
-          sales: "Hi! I'd love to help you find the right plan. What's your team size and expected support volume?",
-          help: "I'm here to help! What would you like to accomplish? I can guide you through setup or troubleshooting.",
-          meeting: "I'd be happy to schedule a demo! What's your email and what time works best this week?"
+          sales: t('mockup_sales_response'),
+          help: t('mockup_help_response'),
+          meeting: t('mockup_meeting_response')
         };
-        mockupAddMessage(responses[intent] || "How can I assist you today?", 'assistant');
+        mockupAddMessage(responses[intent] || (lang === 'ar' ? 'كيف أقدر أساعدك؟' : 'How can I assist you today?'), 'assistant');
       }, 1200);
     };
     
@@ -1784,9 +1954,16 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       mockupHideIntents();
       mockupAddTyping();
       
+      var lang = getLang();
       setTimeout(function() {
         mockupRemoveTyping();
-        var responses = [
+        var responses = lang === 'ar' ? [
+          t('mockup_generic_1'),
+          t('mockup_generic_2'),
+          t('mockup_generic_3'),
+          t('mockup_generic_4'),
+          t('mockup_generic_5')
+        ] : [
           "That's a great question! Our widget supports unlimited sites on Growth and Premium plans. Want to see pricing?",
           "I can definitely help with that! Setup takes about 2 minutes — just add one script tag to your site.",
           "Thanks for reaching out! Let me connect you with our team for a personalized walkthrough.",
@@ -1800,12 +1977,15 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     function mockupAddMessage(text, role) {
       var container = document.getElementById('mockup-messages');
       var div = document.createElement('div');
+      var isRtl = getLang() === 'ar';
       div.className = 'flex ' + (role === 'user' ? 'justify-end' : 'justify-start') + ' animate-[fadeIn_0.3s_ease]';
       
+      var borderRadius = isRtl ? (role === 'assistant' ? 'rounded-br-md' : 'rounded-bl-md') : (role === 'assistant' ? 'rounded-bl-md' : 'rounded-tr-md');
+      
       if (role === 'assistant') {
-        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-md text-[13px] leading-relaxed" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">' + escapeHtml(text) + '</div>';
+        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl ' + borderRadius + ' text-[13px] leading-relaxed" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">' + escapeHtml(text) + '</div>';
       } else {
-        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-tr-md text-[13px] leading-relaxed" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">' + escapeHtml(text) + '</div>';
+        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl ' + borderRadius + ' text-[13px] leading-relaxed" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">' + escapeHtml(text) + '</div>';
       }
       
       container.appendChild(div);
@@ -1815,9 +1995,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     function mockupAddTyping() {
       var container = document.getElementById('mockup-messages');
       var div = document.createElement('div');
+      var isRtl = getLang() === 'ar';
       div.id = 'mockup-typing';
       div.className = 'flex justify-start';
-      div.innerHTML = '<div class="px-4 py-3 rounded-2xl rounded-tl-md" style="background:var(--gc-surface-container);border:1px solid var(--gc-outline-variant)"><div class="flex gap-1"><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary)"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.1s"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.2s"></span></div></div>';
+      var borderRadius = isRtl ? 'rounded-br-md' : 'rounded-tl-md';
+      div.innerHTML = '<div class="px-4 py-3 rounded-2xl ' + borderRadius + '" style="background:var(--gc-surface-container);border:1px solid var(--gc-outline-variant)"><div class="flex gap-1"><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary)"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.1s"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.2s"></span></div></div>';
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     }
