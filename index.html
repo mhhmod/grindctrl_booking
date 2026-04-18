@@ -595,15 +595,15 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions">
       <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span>How It Works</span>
     </a>
-    <a href="#install" class="drawer-link relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high overflow-hidden" data-nav="install" style="background:linear-gradient(var(--gc-surface-container-high),var(--gc-surface-container-high)) padding-box,linear-gradient(90deg,var(--gc-primary),var(--gc-accent),var(--gc-primary)) border-box;border:2px solid transparent;animation:gradientRotate 3s linear infinite">
-      <span class="absolute inset-0 rounded-xl opacity-20" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));animation:pulseGlow 2s ease-in-out infinite"></span>
-      <span class="material-symbols-outlined text-primary text-xl relative z-10">rocket_launch</span>
+    <a href="#install" class="drawer-link group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high border-2 border-primary/30 overflow-hidden transition-all hover:border-primary/60" data-nav="install">
+      <span class="absolute inset-0 -translate-x-full group-hover:animate-shimmer" style="background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)"></span>
+      <span class="material-symbols-outlined text-primary text-xl relative z-10 group-hover:scale-110 transition-transform">rocket_launch</span>
       <span class="relative z-10">Install Widget</span>
-      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 animate-pulse shadow-lg">New</span>
+      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 shadow-lg">New</span>
     </a>
     <style>
-      @keyframes gradientRotate{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
-      @keyframes pulseGlow{0%,100%{opacity:0.15}50%{opacity:0.3}}
+      @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+      .group:hover .group-hover\:animate-shimmer{animation:shimmer 1.5s ease-in-out}
     </style>
     <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book">
       <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
@@ -1223,17 +1223,17 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
             <!-- Widget Panel -->
             <div id="mockup-panel" class="absolute left-4 right-4 bottom-24 rounded-2xl overflow-hidden border border-outline shadow-2xl transition-all duration-500" style="background:var(--gc-surface-container-lowest);max-height:0;opacity:0;transform:translateY(20px)">
               <!-- Header -->
-              <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--gc-outline-variant);background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent))">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-on-primary text-[12px] font-black" style="background:rgba(255,255,255,0.2)">
+              <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--gc-outline-variant);background:linear-gradient(135deg,#1a1917,#2a2826)">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-[12px] font-black" style="background:rgba(240,237,233,0.15);color:#f0ede9">
                   <span class="material-symbols-outlined text-[20px]">support_agent</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <div class="text-[14px] font-bold text-white">Demo Support</div>
-                  <div class="text-[11px] text-white/80 flex items-center gap-1.5">
+                  <div class="text-[14px] font-bold" style="color:#f0ede9">Demo Support</div>
+                  <div class="text-[11px] flex items-center gap-1.5" style="color:rgba(240,237,233,0.7)">
                     <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Online now
                   </div>
                 </div>
-                <button onclick="mockupToggle()" class="flex items-center justify-center w-8 h-8 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all">
+                <button onclick="mockupToggle()" class="flex items-center justify-center w-8 h-8 rounded-full transition-all hover:bg-white/10" style="color:rgba(240,237,233,0.8)">
                   <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </div>
@@ -1461,8 +1461,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       </ul>
       <a href="#book" class="ui-btn ui-btn-secondary w-full text-[12px] text-center block">Get Started</a>
     </div>
-    <div class="ui-card relative min-w-0 border-primary/30">
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-on-primary rounded-full text-[10px] font-black uppercase tracking-widest">Popular</div>
+    <div class="ui-card relative min-w-0 border-2 border-primary/40 overflow-visible">
+      <div class="flex justify-center -mt-6 mb-2">
+        <span class="inline-block px-4 py-1.5 bg-primary text-on-primary rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg">Popular</span>
+      </div>
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Growth</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">$149<span class="text-[16px] font-medium text-secondary">/mo</span></div>
       <div class="text-[12px] text-secondary font-medium mb-6">Billed monthly</div>
@@ -1472,7 +1474,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Priority support</li>
         <li class="flex items-start gap-2 text-[12px] text-on-surface font-medium"><span class="material-symbols-outlined text-primary text-sm shrink-0">check</span> Custom domain</li>
       </ul>
-      <a href="#book" class="ui-btn ui-btn-primary w-full text-[12px] text-center block">Get Started</a>
+      <a href="#book" class="inline-flex items-center justify-center w-full px-4 py-3 rounded-xl text-[12px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98]" style="background:var(--gc-primary);color:var(--gc-on-primary)">Get Started</a>
     </div>
     <div class="ui-card">
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Premium</div>
