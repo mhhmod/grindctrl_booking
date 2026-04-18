@@ -595,9 +595,16 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions">
       <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span>How It Works</span>
     </a>
-    <a href="#install" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="install">
-      <span class="material-symbols-outlined text-ink-dim text-xl">widget</span> <span>Install Widget</span>
+    <a href="#install" class="drawer-link relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high overflow-hidden" data-nav="install" style="background:linear-gradient(var(--gc-surface-container-high),var(--gc-surface-container-high)) padding-box,linear-gradient(90deg,var(--gc-primary),var(--gc-accent),var(--gc-primary)) border-box;border:2px solid transparent;animation:gradientRotate 3s linear infinite">
+      <span class="absolute inset-0 rounded-xl opacity-20" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));animation:pulseGlow 2s ease-in-out infinite"></span>
+      <span class="material-symbols-outlined text-primary text-xl relative z-10">rocket_launch</span>
+      <span class="relative z-10">Install Widget</span>
+      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 animate-pulse shadow-lg">New</span>
     </a>
+    <style>
+      @keyframes gradientRotate{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+      @keyframes pulseGlow{0%,100%{opacity:0.15}50%{opacity:0.3}}
+    </style>
     <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book">
       <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
     </a>
@@ -1181,79 +1188,102 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   </div>
 </div>
 
-<!-- ── Live Preview ── -->
+<!-- ── Interactive Live Preview ── -->
 <div class="mb-20 sm:mb-28 reveal">
   <div class="mb-10">
-    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Preview</span>
-    <h2 class="h3-fluid font-headline text-on-surface mb-3">This Is What Your Visitors See</h2>
-    <p class="text-secondary text-[15px] max-w-xl font-medium">The widget appears as a floating launcher on your site. Visitors click it, choose an intent, and start a conversation — instantly.</p>
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Try It Now</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3">Experience the Widget Live</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium">Click the launcher below to open the widget. Select an intent or type a message to see how AI responds to your visitors.</p>
   </div>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-    <!-- Phone mockup with widget preview -->
+    <!-- Interactive Phone Mockup -->
     <div class="flex justify-center">
-      <div class="relative w-full max-w-[340px]">
+      <div class="relative w-full max-w-[360px]">
         <!-- Phone frame -->
-        <div class="rounded-[2.5rem] border-[3px] border-outline-variant bg-canvas overflow-hidden shadow-2xl">
+        <div class="rounded-[2.5rem] border-[4px] border-outline-variant bg-canvas overflow-hidden shadow-2xl" style="height:640px">
           <!-- Status bar -->
-          <div class="flex items-center justify-between px-5 py-2 bg-surface-container-low text-[10px] text-secondary font-bold">
-            <span>9:41</span>
+          <div class="flex items-center justify-between px-6 py-3 bg-surface-container-low text-[11px] text-secondary font-bold">
+            <span id="mockup-time">9:41</span>
             <div class="flex items-center gap-1">
-              <span class="material-symbols-outlined text-[12px]">signal_cellular_alt</span>
-              <span class="material-symbols-outlined text-[12px]">wifi</span>
-              <span class="material-symbols-outlined text-[12px]">battery_5_bar</span>
+              <span class="material-symbols-outlined text-[14px]">signal_cellular_alt</span>
+              <span class="material-symbols-outlined text-[14px]">wifi</span>
+              <span class="material-symbols-outlined text-[14px]">battery_5_bar</span>
             </div>
           </div>
-          <!-- Fake website content -->
-          <div class="p-5 space-y-3" style="background:var(--gc-canvas-low);min-height:260px">
-            <div class="h-4 w-3/5 rounded bg-surface-container-high"></div>
-            <div class="h-3 w-full rounded bg-surface-container"></div>
-            <div class="h-3 w-4/5 rounded bg-surface-container"></div>
-            <div class="h-3 w-2/3 rounded bg-surface-container"></div>
-            <div class="mt-4 h-24 rounded-xl bg-surface-container border border-softer"></div>
-            <div class="h-3 w-full rounded bg-surface-container"></div>
-            <div class="h-3 w-3/4 rounded bg-surface-container"></div>
-          </div>
-          <!-- Widget panel (inline preview) -->
-          <div class="mx-3 mb-3 rounded-2xl overflow-hidden border border-outline" style="background:var(--gc-surface-container-lowest)">
-            <div class="flex items-center gap-2.5 px-4 py-3 border-b" style="border-color:var(--gc-outline-variant);background:var(--gc-surface-container)">
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center text-on-primary text-[11px] font-black" style="background:var(--gc-primary)">
-                <span class="material-symbols-outlined text-[15px]" style="color:var(--gc-on-primary)">support_agent</span>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="text-[12px] font-bold" style="color:var(--gc-on-surface)">Demo Support</div>
-                <div class="text-[10px]" style="color:var(--gc-secondary)">Online now</div>
-              </div>
-              <button class="flex items-center justify-center w-6 h-6 rounded-full" style="color:var(--gc-secondary)">
-                <span class="material-symbols-outlined text-[16px]">close</span>
-              </button>
-            </div>
-            <div class="px-4 py-3">
-              <p class="text-[12px] leading-relaxed mb-3" style="color:var(--gc-on-surface)">How can we help you today?</p>
-              <div class="flex flex-wrap gap-1.5 mb-3">
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border" style="color:var(--gc-primary);border-color:var(--gc-outline)">
-                  <span class="material-symbols-outlined text-[12px]">headset</span>Talk to Sales
-                </span>
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border" style="color:var(--gc-primary);border-color:var(--gc-outline)">
-                  <span class="material-symbols-outlined text-[12px]">help</span>Get Help
-                </span>
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold border" style="color:var(--gc-primary);border-color:var(--gc-outline)">
-                  <span class="material-symbols-outlined text-[12px]">arrow_forward</span>Book a Meeting
-                </span>
-              </div>
-              <div class="flex items-between gap-2">
-                <div class="flex-1 rounded-xl px-3 py-2 text-[11px]" style="background:var(--gc-surface-container);color:var(--gc-secondary)">Type a message...</div>
-                <button class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:var(--gc-primary);color:var(--gc-on-primary)">
-                  <span class="material-symbols-outlined text-[14px]">send</span>
+          <!-- Website content -->
+          <div class="relative p-5 space-y-3" style="background:var(--gc-canvas-low);height:calc(100% - 46px)">
+            <div class="h-5 w-3/5 rounded-lg bg-surface-container-high"></div>
+            <div class="h-3.5 w-full rounded bg-surface-container"></div>
+            <div class="h-3.5 w-4/5 rounded bg-surface-container"></div>
+            <div class="h-3.5 w-2/3 rounded bg-surface-container"></div>
+            <div class="mt-6 h-32 rounded-xl bg-surface-container border border-softer"></div>
+            <div class="h-3.5 w-full rounded bg-surface-container"></div>
+            <div class="h-3.5 w-3/4 rounded bg-surface-container"></div>
+            
+            <!-- Widget Panel -->
+            <div id="mockup-panel" class="absolute left-4 right-4 bottom-24 rounded-2xl overflow-hidden border border-outline shadow-2xl transition-all duration-500" style="background:var(--gc-surface-container-lowest);max-height:0;opacity:0;transform:translateY(20px)">
+              <!-- Header -->
+              <div class="flex items-center gap-3 px-5 py-4 border-b" style="border-color:var(--gc-outline-variant);background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent))">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-on-primary text-[12px] font-black" style="background:rgba(255,255,255,0.2)">
+                  <span class="material-symbols-outlined text-[20px]">support_agent</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[14px] font-bold text-white">Demo Support</div>
+                  <div class="text-[11px] text-white/80 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span> Online now
+                  </div>
+                </div>
+                <button onclick="mockupToggle()" class="flex items-center justify-center w-8 h-8 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-all">
+                  <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </div>
+              <!-- Messages -->
+              <div id="mockup-messages" class="px-4 py-4 space-y-3 overflow-y-auto" style="max-height:280px;background:var(--gc-surface-container-lowest)">
+                <div id="mockup-greeting" class="flex justify-start animate-[fadeIn_0.4s_ease]">
+                  <div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-md text-[13px] leading-relaxed" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
+                    Hello! How can we help you today?
+                  </div>
+                </div>
+              </div>
+              <!-- Intents -->
+              <div id="mockup-intents" class="px-4 pb-3">
+                <div class="text-[11px] font-medium mb-2" style="color:var(--gc-secondary)">Quick options:</div>
+                <div class="flex flex-wrap gap-2">
+                  <button onclick="mockupIntent('sales')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                    <span class="material-symbols-outlined text-[14px]">headset</span>Talk to Sales
+                  </button>
+                  <button onclick="mockupIntent('help')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                    <span class="material-symbols-outlined text-[14px]">help</span>Get Help
+                  </button>
+                  <button onclick="mockupIntent('meeting')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                    <span class="material-symbols-outlined text-[14px]">event</span>Book a Meeting
+                  </button>
+                </div>
+              </div>
+              <!-- Input -->
+              <div class="px-4 py-3 border-t" style="border-color:var(--gc-outline-variant)">
+                <div class="flex items-center gap-2">
+                  <input id="mockup-input" type="text" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="flex-1 rounded-xl px-4 py-3 text-[12px] outline-none transition-all" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
+                  <button onclick="mockupSend()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95" style="background:var(--gc-primary);color:var(--gc-on-primary)">
+                    <span class="material-symbols-outlined text-[18px]">send</span>
+                  </button>
+                </div>
+              </div>
             </div>
+            
+            <!-- Launcher -->
+            <button id="mockup-launcher" onclick="mockupToggle()" class="absolute bottom-5 right-5 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-[14px] font-bold shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">
+              <span id="mockup-launcher-icon" class="material-symbols-outlined text-[22px]">chat</span>
+              <span id="mockup-launcher-text">Support</span>
+            </button>
           </div>
-          <!-- Launcher pill at bottom -->
-          <div class="flex justify-end px-4 pb-4">
-            <div class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-[13px] font-semibold shadow-lg" style="background:var(--gc-primary);color:var(--gc-on-primary)">
-              <span class="material-symbols-outlined text-[18px]" style="font-variation-settings:&#39;FILL&#39; 1">chat</span>
-              Support
-            </div>
+        </div>
+        <!-- Try it hint -->
+        <div class="absolute -right-4 top-1/2 -translate-y-1/2 translate-x-full hidden lg:block">
+          <div class="bg-primary text-on-primary px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-xl whitespace-nowrap animate-pulse">
+            <span class="material-symbols-outlined text-[16px] inline-block mr-1">touch_app</span>
+            Click to try!
+            <div class="absolute left-0 top-1/2 -translate-x-1.5 -translate-y-1/2 w-3 h-3 bg-primary rotate-45"></div>
           </div>
         </div>
       </div>
@@ -1693,6 +1723,132 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       });
     }
   };
+
+  // Interactive mockup functions
+  (function(){
+    var isOpen = false;
+    var hasStarted = false;
+    
+    window.mockupToggle = function() {
+      var panel = document.getElementById('mockup-panel');
+      var launcherIcon = document.getElementById('mockup-launcher-icon');
+      var launcherText = document.getElementById('mockup-launcher-text');
+      
+      isOpen = !isOpen;
+      
+      if (isOpen) {
+        panel.style.maxHeight = '420px';
+        panel.style.opacity = '1';
+        panel.style.transform = 'translateY(0)';
+        launcherIcon.textContent = 'close';
+        launcherText.textContent = 'Close';
+        if (!hasStarted) {
+          hasStarted = true;
+        }
+      } else {
+        panel.style.maxHeight = '0';
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(20px)';
+        launcherIcon.textContent = 'chat';
+        launcherText.textContent = 'Support';
+      }
+    };
+    
+    window.mockupIntent = function(intent) {
+      var intents = { sales: 'Talk to Sales', help: 'Get Help', meeting: 'Book a Meeting' };
+      var userMsg = intents[intent];
+      mockupAddMessage(userMsg, 'user');
+      mockupHideIntents();
+      mockupAddTyping();
+      
+      setTimeout(function() {
+        mockupRemoveTyping();
+        var responses = {
+          sales: "Hi! I'd love to help you find the right plan. What's your team size and expected support volume?",
+          help: "I'm here to help! What would you like to accomplish? I can guide you through setup or troubleshooting.",
+          meeting: "I'd be happy to schedule a demo! What's your email and what time works best this week?"
+        };
+        mockupAddMessage(responses[intent] || "How can I assist you today?", 'assistant');
+      }, 1200);
+    };
+    
+    window.mockupSend = function() {
+      var input = document.getElementById('mockup-input');
+      var text = input.value.trim();
+      if (!text) return;
+      
+      mockupAddMessage(text, 'user');
+      input.value = '';
+      mockupHideIntents();
+      mockupAddTyping();
+      
+      setTimeout(function() {
+        mockupRemoveTyping();
+        var responses = [
+          "That's a great question! Our widget supports unlimited sites on Growth and Premium plans. Want to see pricing?",
+          "I can definitely help with that! Setup takes about 2 minutes — just add one script tag to your site.",
+          "Thanks for reaching out! Let me connect you with our team for a personalized walkthrough.",
+          "Absolutely! We offer a 15-day free trial with full access. No credit card required!",
+          "The widget works with Shopify, WordPress, React, Vue, or any HTML site. Which platform are you using?"
+        ];
+        mockupAddMessage(responses[Math.floor(Math.random() * responses.length)], 'assistant');
+      }, 1500);
+    };
+    
+    function mockupAddMessage(text, role) {
+      var container = document.getElementById('mockup-messages');
+      var div = document.createElement('div');
+      div.className = 'flex ' + (role === 'user' ? 'justify-end' : 'justify-start') + ' animate-[fadeIn_0.3s_ease]';
+      
+      if (role === 'assistant') {
+        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-tl-md text-[13px] leading-relaxed" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">' + escapeHtml(text) + '</div>';
+      } else {
+        div.innerHTML = '<div class="max-w-[85%] px-4 py-3 rounded-2xl rounded-tr-md text-[13px] leading-relaxed" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">' + escapeHtml(text) + '</div>';
+      }
+      
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    function mockupAddTyping() {
+      var container = document.getElementById('mockup-messages');
+      var div = document.createElement('div');
+      div.id = 'mockup-typing';
+      div.className = 'flex justify-start';
+      div.innerHTML = '<div class="px-4 py-3 rounded-2xl rounded-tl-md" style="background:var(--gc-surface-container);border:1px solid var(--gc-outline-variant)"><div class="flex gap-1"><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary)"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.1s"></span><span class="w-2 h-2 rounded-full animate-bounce" style="background:var(--gc-secondary);animation-delay:0.2s"></span></div></div>';
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    function mockupRemoveTyping() {
+      var typing = document.getElementById('mockup-typing');
+      if (typing) typing.remove();
+    }
+    
+    function mockupHideIntents() {
+      var intents = document.getElementById('mockup-intents');
+      var greeting = document.getElementById('mockup-greeting');
+      if (intents) intents.style.display = 'none';
+      if (greeting) greeting.style.display = 'none';
+    }
+    
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Update clock
+    setInterval(function() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes().toString().padStart(2, '0');
+      var ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      var timeEl = document.getElementById('mockup-time');
+      if (timeEl) timeEl.textContent = hours + ':' + minutes + ' ' + ampm;
+    }, 1000);
+  })();
 
   // Init — read initial hash without triggering hashchange
   var initPage = getPageFromHash(location.hash);
