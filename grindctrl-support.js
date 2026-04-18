@@ -1035,13 +1035,13 @@
         state.conversationId = existingConvId;
       }
 
-      if (self._config && self._config.onReady) {
-        self._config.onReady(state.config);
+      if (state.config && state.config.onReady) {
+        state.config.onReady(state.config);
       }
     }).catch(function (err) {
       state.phase = 'error';
-      if (self._config && self._config.onError) {
-        self._config.onError(err);
+      if (state.config && state.config.onError) {
+        state.config.onError(err);
       }
       console.error('[GrindctrlSupport] Failed to load config:', err.message);
     });

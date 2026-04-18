@@ -1192,11 +1192,11 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
       <div>
         <label class="block text-[11px] font-bold uppercase tracking-[0.15em] text-secondary mb-2">Embed Key</label>
-        <input id="test-embed-key" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="pk_live_..."/>
+        <input id="test-embed-key" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" value="demo-test-key-1234" placeholder="demo-test-key-1234"/>
       </div>
       <div>
         <label class="block text-[11px] font-bold uppercase tracking-[0.15em] text-secondary mb-2">Domain</label>
-        <input id="test-domain" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="yoursite.com"/>
+        <input id="test-domain" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" value="localhost" placeholder="yoursite.com"/>
       </div>
     </div>
     <div class="flex flex-wrap items-center gap-3">
@@ -1712,11 +1712,9 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       _testScriptEl = null;
     }
 
-    // Remove widget DOM elements
-    var widgetEl = document.getElementById('grindctrl-widget');
-    if (widgetEl) widgetEl.remove();
-    var launcherEl = document.getElementById('gc-launcher');
-    if (launcherEl) launcherEl.remove();
+    // Remove widget DOM elements (gc-widget-host is the main DOM element)
+    var hostEl = document.getElementById('gc-widget-host');
+    if (hostEl) hostEl.remove();
 
     // Reset UI
     status.textContent = '';
