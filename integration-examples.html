@@ -1,0 +1,328 @@
+<!--
+  GRINDCTRL Support Widget — Integration Examples
+  Version: 1.0.0
+
+  This file contains ready-to-use integration snippets for:
+  1. Plain HTML websites
+  2. React / Next.js
+  3. WordPress / CMS
+
+  Replace YOUR_EMBED_KEY with your actual embed key from the dashboard.
+  Replace yourdomain.com with your actual domain.
+-->
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 1: Plain HTML Website
+  Paste before </body> on every page
+═══════════════════════════════════════════════════════ -->
+<script src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
+<script>
+  GrindctrlSupport.init({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
+    // Optional overrides:
+    // launcherLabel: 'Help',
+    // launcherPosition: 'bottom-left',
+    // greetingMessage: 'How can we help?',
+    // showIntentButtons: true,
+    // userEmail: 'user@example.com', // if logged in
+    // userName: 'Jane Smith',
+    // onEvent: function(name, data) { console.log('gc_event', name, data); },
+    // onConversationStart: function(data) { console.log('conv_start', data); },
+    // onReady: function(config) { console.log('widget_ready', config); },
+  });
+</script>
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 2: React / Next.js
+  Use as a component or in _app.js / layout.tsx
+═══════════════════════════════════════════════════════ -->
+<!--
+  // Option A: Plain script tag in _app.tsx or layout.tsx
+  // Add to the <head> or body:
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.grindctrl.com/grindctrl-support.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.GrindctrlSupport) {
+        window.GrindctrlSupport.init({
+          embedKey: process.env.NEXT_PUBLIC_GRINDCTRL_KEY,
+          domain: window.location.hostname,
+        });
+      }
+    };
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+
+  // Option B: TypeScript component (grindctrl-widget.tsx)
+
+  import { useEffect } from 'react';
+
+  declare global {
+    interface Window {
+      GrindctrlSupport: any;
+    }
+  }
+
+  interface GrindctrlWidgetProps {
+    embedKey: string;
+    userEmail?: string;
+    userName?: string;
+    greetingMessage?: string;
+    onEvent?: (name: string, data: any) => void;
+    onReady?: (config: any) => void;
+  }
+
+  export default function GrindctrlWidget({
+    embedKey,
+    userEmail,
+    userName,
+    greetingMessage,
+    onEvent,
+    onReady,
+  }: GrindctrlWidgetProps) {
+    useEffect(() => {
+      // Load script if not already present
+      if (!document.querySelector('script[src*="grindctrl-support"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.grindctrl.com/grindctrl-support.js';
+        script.async = true;
+        document.body.appendChild(script);
+        script.onload = initWidget;
+      } else if (window.GrindctrlSupport) {
+        initWidget();
+      }
+
+      function initWidget() {
+        if (window.GrindctrlSupport) {
+          window.GrindctrlSupport.init({
+            embedKey,
+            domain: window.location.hostname,
+            userEmail,
+            userName,
+            greetingMessage,
+            onEvent,
+            onReady,
+          });
+        }
+      }
+
+      return () => {
+        // Cleanup on unmount (optional)
+        // window.GrindctrlSupport?.destroy?.();
+      };
+    }, [embedKey, userEmail, userName]);
+
+    return null; // Renders in shadow DOM
+  }
+
+
+  // Usage in Next.js page:
+  // <GrindctrlWidget
+  //   embedKey={process.env.NEXT_PUBLIC_GRINDCTRL_KEY!}
+  //   userEmail={session?.user?.email}
+  //   userName={session?.user?.name}
+  // />
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 3: WordPress (via functions.php or custom plugin)
+  Method A: functions.php
+═══════════════════════════════════════════════════════ -->
+<!--
+  // Add to your theme's functions.php:
+
+  add_action('wp_footer', 'grindctrl_load_widget');
+  function grindctrl_load_widget() {
+      ?>
+      <script src="https://cdn.grindctrl.com/grindctrl-support.js" async></script>
+      <script>
+          window.GrindctrlSupport = window.GrindctrlSupport || [];
+          window.GrindctrlSupport.push(function(api) {
+              api.init({
+                  embedKey: 'YOUR_EMBED_KEY',
+                  domain: window.location.hostname,
+              });
+          });
+      </script>
+      <?php
+  }
+
+  // Method B: If you want to pass WordPress user data:
+  add_action('wp_footer', 'grindctrl_load_widget_user_aware');
+  function grindctrl_load_widget_user_aware() {
+      $current_user = wp_get_current_user();
+      ?>
+      <script src="https://cdn.grindctrl.com/grindctrl-support.js" async></script>
+      <script>
+          window.GrindctrlSupport = window.GrindctrlSupport || [];
+          window.GrindctrlSupport.push(function(api) {
+              api.init({
+                  embedKey: 'YOUR_EMBED_KEY',
+                  domain: window.location.hostname,
+                  <?php if ($current_user->exists()) : ?>
+                  userEmail: '<?php echo esc_js($current_user->user_email); ?>',
+                  userName: '<?php echo esc_js($current_user->display_name); ?>',
+                  <?php endif; ?>
+              });
+          });
+      </script>
+      <?php
+  }
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 4: Vue.js
+═══════════════════════════════════════════════════════ -->
+<!--
+  // Vue 3 plugin (grindctrl-plugin.js):
+  const GrindctrlPlugin = {
+      install(app, options) {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.grindctrl.com/grindctrl-support.js';
+          script.async = true;
+          document.body.appendChild(script);
+
+          script.onload = () => {
+              if (window.GrindctrlSupport) {
+                  window.GrindctrlSupport.init({
+                      embedKey: options.embedKey,
+                      domain: window.location.hostname,
+                      ...options,
+                  });
+              }
+          };
+      }
+  };
+
+  // Usage:
+  // app.use(GrindctrlPlugin, {
+  //   embedKey: 'YOUR_EMBED_KEY',
+  //   userEmail: user.value?.email,
+  // });
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 5: Shopify (via theme.liquid)
+═══════════════════════════════════════════════════════ -->
+<!--
+  Add to your theme.liquid before </body>:
+
+  <script src="https://cdn.grindctrl.com/grindctrl-support.js" async></script>
+  <script>
+    window.GrindctrlSupport = window.GrindctrlSupport || [];
+    window.GrindctrlSupport.push(function(api) {
+      api.init({
+        embedKey: 'YOUR_EMBED_KEY',
+        domain: window.location.hostname,
+        {% if customer %}
+        userEmail: {{ customer.email | json }},
+        userName: {{ customer.name | json }},
+        {% endif %}
+      });
+    });
+  </script>
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 6: Laravel / PHP
+═══════════════════════════════════════════════════════ -->
+<!--
+  // In your blade layout (layouts/app.blade.php):
+  // Add before </body>:
+
+  <script src="https://cdn.grindctrl.com/grindctrl-support.js" async></script>
+  <script>
+    window.GrindctrlSupport = window.GrindctrlSupport || [];
+    window.GrindctrlSupport.push(function(api) {
+      api.init({
+        embedKey: '{{ config('services.grindctrl.embed_key') }}',
+        domain: window.location.hostname,
+        @auth
+        userEmail: '{{ Auth::user()->email }}',
+        userName: '{{ Auth::user()->name }}',
+        @endauth
+      });
+    });
+  </script>
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 7: Control per-page labels and intents
+═══════════════════════════════════════════════════════ -->
+<!--
+  Pass page-specific overrides via the init call:
+
+  // Homepage: business/sales focused
+  if (is_homepage) {
+    GrindctrlSupport.init({
+      embedKey: 'YOUR_EMBED_KEY',
+      domain: window.location.hostname,
+      launcherLabel: 'Talk to Us',
+      greetingMessage: 'Have questions about our product? We\'re here to help.',
+    });
+  }
+
+  // Pricing page: pricing focused
+  if (is_pricing_page) {
+    GrindctrlSupport.init({
+      embedKey: 'YOUR_EMBED_KEY',
+      domain: window.location.hostname,
+      launcherLabel: 'Pricing Help',
+      greetingMessage: 'Have questions about our plans?',
+    });
+  }
+
+  // Knowledge base / docs
+  if (is_docs) {
+    GrindctrlSupport.init({
+      embedKey: 'YOUR_EMBED_KEY',
+      domain: window.location.hostname,
+      launcherLabel: 'Get Help',
+      greetingMessage: 'How can we help you with our docs?',
+      intents: [
+        { id: '1', label_en: 'Search docs', icon: 'search', action_type: 'message', action_payload: { text: 'Search docs' } },
+        { id: '2', label_en: 'Contact support', icon: 'support_agent', action_type: 'escalation', action_payload: { team: 'support' } },
+      ]
+    });
+  }
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 8: NPM Package (future)
+  Once published to npm:
+═══════════════════════════════════════════════════════ -->
+<!--
+  npm install @grindctrl/support-widget
+
+  // React
+  import GrindctrlWidget from '@grindctrl/support-widget';
+
+  function App() {
+    return (
+      <>
+        <YourApp />
+        <GrindctrlWidget
+          embedKey={process.env.NEXT_PUBLIC_GRINDCTRL_KEY}
+          userEmail={user.email}
+          onEvent={(name, data) => analytics.track(name, data)}
+        />
+      </>
+    );
+  }
+-->

@@ -1,0 +1,691 @@
+{
+  "name": "GRINDCTRL Groq AI Blueprint MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-blueprint-text",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        -280
+      ],
+      "id": "webhook-text",
+      "name": "Webhook Text"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body ?? $json;\nconst locale = String(body.locale || 'en').toLowerCase().startsWith('ar') ? 'ar' : 'en';\nconst useCase = String(body.use_case || body.preset || 'custom').trim() || 'custom';\nconst preset = useCase;\nconst details = String(body.details || body.prompt || body.message || '').trim();\nconst prompt = String(body.prompt || body.message || details).trim();\nconst source = String(body.source || 'landing').trim() || 'landing';\nconst historyRaw = body.history;\nlet history = [];\nif (Array.isArray(historyRaw)) history = historyRaw;\nelse if (typeof historyRaw === 'string') { try { history = JSON.parse(historyRaw); } catch (_) { history = []; } }\nconst sessionId = String(body.session_id || '').trim();\nlet route = 'ok';\nlet errorMessage = null;\nif (!sessionId) { route = 'bad_request'; errorMessage = 'session_id is required'; }\nelse if (!prompt) { route = 'bad_request'; errorMessage = 'prompt or details is required'; }\nreturn {\n  json: {\n    session_id: sessionId,\n    locale,\n    use_case: useCase,\n    preset,\n    source,\n    details,\n    prompt,\n    history: Array.isArray(history) ? history.slice(-4) : [],\n    model: 'openai/gpt-oss-20b',\n    route,\n    error_message: errorMessage\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1456,
+        -280
+      ],
+      "id": "normalize-text",
+      "name": "Normalize Text Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.route}}",
+              "rightValue": "bad_request",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        -280
+      ],
+      "id": "if-text-bad",
+      "name": "IF Text Bad Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: { http_code: 400, ok: false, message: $json.error_message || 'Invalid request' } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -408
+      ],
+      "id": "build-text-400",
+      "name": "Build Text 400"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        -408
+      ],
+      "id": "respond-text-400",
+      "name": "Respond Text 400"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const history = Array.isArray($json.history) ? $json.history : [];\nconst historyLines = history.length\n  ? history.map((item, index) => `${index + 1}. ${item.role === 'assistant' ? 'assistant' : 'user'}: ${String(item.content || '').trim()}`).join('\\n')\n  : 'None';\nconst systemPrompt = [\n  'You design concise AI agent blueprints for business automation MVPs.',\n  'Return valid JSON only. No markdown. No prose outside JSON.',\n  'Required keys: agent_name, business_goal, workflow, example_output, roi, suggested_stack, next_step.',\n  'Workflow must have 4 to 6 steps. suggested_stack must have 3 to 6 items.',\n  'Keep output practical, short, and implementation-minded.',\n  'Prefer n8n, Groq, CRM, messaging, scheduling, reporting tools when relevant.'\n].join(' ');\nconst userPrompt = [\n  `Locale: ${$json.locale}`,\n  `Use case: ${$json.use_case || $json.preset || 'custom'}`,\n  `Preset: ${$json.preset || 'custom'}`,\n  `Source: ${$json.source || 'landing'}`,\n  'Recent context:',\n  historyLines,\n  'Business task details:',\n  $json.details || $json.prompt,\n  'Prompt fallback:',\n  $json.prompt,\n  'Need one production-minded AI agent blueprint for landing page MVP.'\n].join('\\n');\nreturn {\n  json: {\n    ...$json,\n    request_body: {\n      model: $json.model,\n      temperature: 0.2,\n      max_tokens: 700,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userPrompt }\n      ],\n      response_format: {\n        type: 'json_schema',\n        json_schema: {\n          name: 'ai_agent_blueprint',\n          strict: true,\n          schema: {\n            type: 'object',\n            additionalProperties: false,\n            required: ['agent_name','business_goal','workflow','example_output','roi','suggested_stack','next_step'],\n            properties: {\n              agent_name: { type: 'string' },\n              business_goal: { type: 'string' },\n              workflow: { type: 'array', minItems: 4, maxItems: 6, items: { type: 'string' } },\n              example_output: { type: 'string' },\n              roi: { type: 'string' },\n              suggested_stack: { type: 'array', minItems: 3, maxItems: 6, items: { type: 'string' } },\n              next_step: { type: 'string' }\n            }\n          }\n        }\n      }\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        -152
+      ],
+      "id": "build-text-request",
+      "name": "Build Text Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.request_body}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -784,
+        -152
+      ],
+      "id": "groq-text",
+      "name": "Groq Text Completion",
+      "credentials": {
+        "groqApi": {
+          "id": "replace-me",
+          "name": "Groq API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Build Text Request').item.json;\nconst headers = $json.headers || {};\nconst status = Number($json.statusCode || 0);\nlet body = $json.body;\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) {} }\nconst retryHeader = headers['retry-after'] || headers['Retry-After'] || null;\nconst parseRetryAfter = (value) => { if (!value) return null; const numeric = Number(value); if (Number.isFinite(numeric) && numeric > 0) return numeric; const parsedDate = Date.parse(value); return Number.isFinite(parsedDate) ? Math.max(1, Math.ceil((parsedDate - Date.now()) / 1000)) : null; };\nconst retryAfter = parseRetryAfter(retryHeader);\nconst temporary = [429, 498, 500, 502, 503, 504].includes(status);\nconst parseJsonContent = (value) => { if (!value) return null; let raw = value; if (Array.isArray(raw)) raw = raw.map((part) => part?.text || part?.content || '').join(''); if (typeof raw !== 'string') raw = JSON.stringify(raw); try { return JSON.parse(raw); } catch (_) {} const match = raw.match(/\\{[\\s\\S]*\\}$/); if (!match) return null; try { return JSON.parse(match[0]); } catch (_) { return null; } };\nconst detectPreset = (input) => { const text = String(input || '').toLowerCase(); if (/lead|crm|qualif|sales/.test(text)) return 'qualify_leads'; if (/support|ticket|order|refund|shipping/.test(text)) return 'customer_support'; if (/report|dashboard|summary|kpi/.test(text)) return 'generate_reports'; if (/meeting|book|calendar|schedule/.test(text)) return 'book_meetings'; if (/follow.?up|nurture|remind/.test(text)) return 'follow_up'; return 'custom'; };\nconst buildFallback = (prompt, preset, reason) => { const mode = preset || detectPreset(prompt); const templates = { qualify_leads: { agent_name: 'Lead Qualification Agent', business_goal: 'Score inbound leads fast, route high-intent prospects, and stop manual triage delay.', workflow: ['Capture new lead into n8n webhook.', 'Enrich source, budget, service, and location fields.', 'Score fit and push qualified records into CRM.', 'Trigger instant follow-up with booking link.', 'Escalate edge cases to sales with summary.'], example_output: 'Lead from Meta ads scored 87/100 and booked automatically.', roi: 'Reduces lead-response delay and cuts wasted sales effort on weak leads.', suggested_stack: ['n8n','Groq gpt-oss-20b','CRM','Calendly','WhatsApp or email'], next_step: 'Define scoring rules and test on last 20 leads.' }, customer_support: { agent_name: 'Support Resolution Agent', business_goal: 'Resolve repetitive support tickets automatically and escalate risky cases to humans.', workflow: ['Receive ticket or message.', 'Classify issue and urgency.', 'Fetch order or account context.', 'Draft answer or escalate with summary.', 'Log reason code and outcome.'], example_output: 'Delayed shipment question answered instantly with tracking details.', roi: 'Lowers support load and improves consistency under ticket spikes.', suggested_stack: ['n8n','Groq gpt-oss-20b','Shopify or CRM','Helpdesk','Slack'], next_step: 'List top intents and escalation rules.' }, generate_reports: { agent_name: 'Operations Reporting Agent', business_goal: 'Assemble multi-tool reports automatically for leadership.', workflow: ['Pull KPIs from source apps.', 'Normalize fields and compare against prior period.', 'Generate concise summary with anomalies.', 'Send report to Slack or email.', 'Archive report for audit trail.'], example_output: 'Weekly ops report sent with sales, support, and finance summary.', roi: 'Removes manual report assembly and shortens decision cycles.', suggested_stack: ['n8n','Groq gpt-oss-20b','Sheets or warehouse','Slack','Email'], next_step: 'Lock KPI list and schedule.' }, book_meetings: { agent_name: 'Meeting Booking Agent', business_goal: 'Qualify prospects before booking and protect calendar quality.', workflow: ['Collect inbound booking request.', 'Ask qualification questions.', 'Validate fit rules and timezone.', 'Offer best slot and create CRM record.', 'Send reminder and no-show recovery flow.'], example_output: 'Qualified prospect booked for tomorrow with CRM entry created.', roi: 'Improves calendar utilization and blocks poor-fit meetings.', suggested_stack: ['n8n','Groq gpt-oss-20b','Google Calendar','CRM','Email or WhatsApp'], next_step: 'Connect calendar and define qualification gates.' }, follow_up: { agent_name: 'Lead Follow-up Agent', business_goal: 'Revive warm leads with timed context-aware follow-up.', workflow: ['Detect stale lead or missed action.', 'Pull previous conversation context.', 'Generate short follow-up message.', 'Send sequence with stop conditions.', 'Escalate engaged replies to sales.'], example_output: 'Pricing lead re-engaged with reminder and booking link.', roi: 'Recovers pipeline value without manual chasing.', suggested_stack: ['n8n','Groq gpt-oss-20b','CRM','Email/WhatsApp','Slack'], next_step: 'Define inactivity trigger and approved sequences.' }, custom: { agent_name: 'Custom Workflow Agent', business_goal: String(prompt || 'Automate repetitive business task with one clear workflow.'), workflow: ['Capture task request.', 'Normalize business context.', 'Generate structured next action.', 'Escalate exceptions when needed.', 'Track outcome for iteration.'], example_output: 'Agent receives task, returns structured result, and logs next action.', roi: 'Creates consistent execution path for repetitive work.', suggested_stack: ['n8n','Groq gpt-oss-20b','Primary business app','Slack or email'], next_step: 'Document happy path and one exception path.' } }; const blueprint = templates[mode] || templates.custom; return { ...blueprint, next_step: blueprint.next_step + (reason ? ` Fallback reason: ${reason}.` : '') }; };\nif (temporary) { const fallback = buildFallback(base.details || base.prompt, base.use_case || base.preset, 'provider_busy'); return { json: { http_code: 200, ok: true, fallback: true, retry_after_seconds: retryAfter, message: 'Provider busy. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'text', status }, ...fallback } }; }\nif (status < 200 || status >= 300) { const fallback = buildFallback(base.details || base.prompt, base.use_case || base.preset, 'provider_error'); return { json: { http_code: 200, ok: true, fallback: true, retry_after_seconds: retryAfter, message: body?.error?.message || 'Provider error. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'text', status }, ...fallback } }; }\nconst parsed = parseJsonContent(body?.choices?.[0]?.message?.content);\nif (!parsed || !Array.isArray(parsed.workflow) || !Array.isArray(parsed.suggested_stack)) { const fallback = buildFallback(base.details || base.prompt, base.use_case || base.preset, 'invalid_json'); return { json: { http_code: 200, ok: true, fallback: true, retry_after_seconds: retryAfter, message: 'Model returned invalid JSON. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'text', status }, ...fallback } }; }\nreturn { json: { http_code: 200, ok: true, fallback: false, retry_after_seconds: retryAfter, message: 'Blueprint generated.', meta: { provider: 'groq', model: base.model, mode: 'text', status }, agent_name: String(parsed.agent_name || '').trim(), business_goal: String(parsed.business_goal || '').trim(), workflow: Array.isArray(parsed.workflow) ? parsed.workflow.slice(0, 6).map((item) => String(item).trim()).filter(Boolean) : [], example_output: String(parsed.example_output || '').trim(), roi: String(parsed.roi || '').trim(), suggested_stack: Array.isArray(parsed.suggested_stack) ? parsed.suggested_stack.slice(0, 6).map((item) => String(item).trim()).filter(Boolean) : [], next_step: String(parsed.next_step || '').trim() } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -152
+      ],
+      "id": "format-text-response",
+      "name": "Format Text Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        -152
+      ],
+      "id": "respond-text",
+      "name": "Respond Text"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-blueprint-voice",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        260
+      ],
+      "id": "webhook-voice",
+      "name": "Webhook Voice"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body ?? $json;\nconst binaryKeys = Object.keys($binary || {});\nconst audioField = String(body.audio_field || binaryKeys[0] || '').trim();\nconst locale = String(body.locale || 'en').toLowerCase().startsWith('ar') ? 'ar' : 'en';\nconst useCase = String(body.use_case || body.preset || 'custom').trim() || 'custom';\nconst preset = useCase;\nconst source = String(body.source || 'landing').trim() || 'landing';\nconst sessionId = String(body.session_id || '').trim();\nconst continueGeneration = ['1','true','yes','on'].includes(String(body.continue_generation ?? 'true').toLowerCase());\nlet route = 'ok';\nlet errorMessage = null;\nif (!sessionId) { route = 'bad_request'; errorMessage = 'session_id is required'; }\nelse if (!audioField || !$binary[audioField]) { route = 'bad_request'; errorMessage = 'audio binary field is required'; }\nreturn { json: { session_id: sessionId, locale, use_case: useCase, preset, source, continue_generation: continueGeneration, audio_field: audioField, model: 'openai/gpt-oss-20b', transcription_model: 'whisper-large-v3', route, error_message: errorMessage }, binary: $binary };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1456,
+        260
+      ],
+      "id": "normalize-voice",
+      "name": "Normalize Voice Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.route}}",
+              "rightValue": "bad_request",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1232,
+        260
+      ],
+      "id": "if-voice-bad",
+      "name": "IF Voice Bad Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return { json: { http_code: 400, ok: false, message: $json.error_message || 'Invalid voice request', transcript: null } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        132
+      ],
+      "id": "build-voice-400",
+      "name": "Build Voice 400"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        132
+      ],
+      "id": "respond-voice-400",
+      "name": "Respond Voice 400"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "temperature",
+              "value": "0"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            },
+            {
+              "name": "language",
+              "value": "={{$json.locale}}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{$json.audio_field}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1008,
+        388
+      ],
+      "id": "groq-transcription",
+      "name": "Groq Transcription",
+      "credentials": {
+        "groqApi": {
+          "id": "replace-me",
+          "name": "Groq API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Normalize Voice Request').item.json;\nconst headers = $json.headers || {};\nconst status = Number($json.statusCode || 0);\nlet body = $json.body;\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) {} }\nconst retryHeader = headers['retry-after'] || headers['Retry-After'] || null;\nconst parseRetryAfter = (value) => { if (!value) return null; const numeric = Number(value); if (Number.isFinite(numeric) && numeric > 0) return numeric; const parsedDate = Date.parse(value); return Number.isFinite(parsedDate) ? Math.max(1, Math.ceil((parsedDate - Date.now()) / 1000)) : null; };\nconst retryAfter = parseRetryAfter(retryHeader);\nconst transcript = String(body?.text || '').trim();\nif ([429, 498, 500, 502, 503, 504].includes(status)) { return { json: { http_code: 429, ok: false, retry_after_seconds: retryAfter, message: 'Transcription provider busy. Retry after backoff.', transcript: null, route: 'respond' } }; }\nif (status < 200 || status >= 300) { return { json: { http_code: 502, ok: false, retry_after_seconds: retryAfter, message: body?.error?.message || 'Transcription failed.', transcript: null, route: 'respond' } }; }\nif (!transcript) { return { json: { http_code: 502, ok: false, retry_after_seconds: retryAfter, message: 'Transcript missing from provider response.', transcript: null, route: 'respond' } }; }\nif (!base.continue_generation) { return { json: { http_code: 200, ok: true, fallback: false, message: 'Transcript ready.', transcript, route: 'respond' } }; }\nreturn { json: { ...base, http_code: 200, ok: true, fallback: false, transcript, retry_after_seconds: retryAfter, route: 'continue_generation' } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        388
+      ],
+      "id": "parse-transcript",
+      "name": "Parse Transcript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.route}}",
+              "rightValue": "continue_generation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -560,
+        388
+      ],
+      "id": "if-continue-generation",
+      "name": "IF Continue Generation"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        260
+      ],
+      "id": "respond-voice-direct",
+      "name": "Respond Voice Direct"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const systemPrompt = [\n  'You design concise AI agent blueprints for business automation MVPs.',\n  'Return valid JSON only. No markdown. No prose outside JSON.',\n  'Required keys: agent_name, business_goal, workflow, example_output, roi, suggested_stack, next_step.',\n  'Workflow must have 4 to 6 steps. suggested_stack must have 3 to 6 items.',\n  'Keep output practical, short, and implementation-minded.'\n].join(' ');\nconst userPrompt = [\n  `Locale: ${$json.locale}`,\n  `Use case: ${$json.use_case || $json.preset || 'custom'}`,\n  `Preset: ${$json.preset || 'custom'}`,\n  `Source: ${$json.source || 'landing'}`,\n  'Voice transcript:',\n  $json.transcript,\n  'Need one production-minded AI agent blueprint for landing page MVP.'\n].join('\\n');\nreturn { json: { ...$json, request_body: { model: $json.model, temperature: 0.2, max_tokens: 700, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], response_format: { type: 'json_schema', json_schema: { name: 'ai_agent_blueprint', strict: true, schema: { type: 'object', additionalProperties: false, required: ['agent_name','business_goal','workflow','example_output','roi','suggested_stack','next_step'], properties: { agent_name: { type: 'string' }, business_goal: { type: 'string' }, workflow: { type: 'array', minItems: 4, maxItems: 6, items: { type: 'string' } }, example_output: { type: 'string' }, roi: { type: 'string' }, suggested_stack: { type: 'array', minItems: 3, maxItems: 6, items: { type: 'string' } }, next_step: { type: 'string' } } } } } } } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        516
+      ],
+      "id": "build-voice-text-request",
+      "name": "Build Voice Text Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.request_body}}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -112,
+        516
+      ],
+      "id": "groq-voice-text",
+      "name": "Groq Voice Blueprint Completion",
+      "credentials": {
+        "groqApi": {
+          "id": "replace-me",
+          "name": "Groq API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Build Voice Text Request').item.json;\nconst headers = $json.headers || {};\nconst status = Number($json.statusCode || 0);\nlet body = $json.body;\nif (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) {} }\nconst retryHeader = headers['retry-after'] || headers['Retry-After'] || null;\nconst parseRetryAfter = (value) => { if (!value) return null; const numeric = Number(value); if (Number.isFinite(numeric) && numeric > 0) return numeric; const parsedDate = Date.parse(value); return Number.isFinite(parsedDate) ? Math.max(1, Math.ceil((parsedDate - Date.now()) / 1000)) : null; };\nconst retryAfter = parseRetryAfter(retryHeader);\nconst parseJsonContent = (value) => { if (!value) return null; let raw = value; if (Array.isArray(raw)) raw = raw.map((part) => part?.text || part?.content || '').join(''); if (typeof raw !== 'string') raw = JSON.stringify(raw); try { return JSON.parse(raw); } catch (_) {} const match = raw.match(/\\{[\\s\\S]*\\}$/); if (!match) return null; try { return JSON.parse(match[0]); } catch (_) { return null; } };\nconst detectPreset = (input) => { const text = String(input || '').toLowerCase(); if (/lead|crm|qualif|sales/.test(text)) return 'qualify_leads'; if (/support|ticket|order|refund|shipping/.test(text)) return 'customer_support'; if (/report|dashboard|summary|kpi/.test(text)) return 'generate_reports'; if (/meeting|book|calendar|schedule/.test(text)) return 'book_meetings'; if (/follow.?up|nurture|remind/.test(text)) return 'follow_up'; return 'custom'; };\nconst buildFallback = (prompt, preset, reason) => { const mode = preset || detectPreset(prompt); const templates = { qualify_leads: { agent_name: 'Lead Qualification Agent', business_goal: 'Score inbound leads fast, route high-intent prospects, and stop manual triage delay.', workflow: ['Capture new lead into n8n webhook.', 'Enrich source, budget, service, and location fields.', 'Score fit and push qualified records into CRM.', 'Trigger instant follow-up with booking link.', 'Escalate edge cases to sales with summary.'], example_output: 'Lead from Meta ads scored 87/100 and booked automatically.', roi: 'Reduces lead-response delay and cuts wasted sales effort on weak leads.', suggested_stack: ['n8n','Groq gpt-oss-20b','CRM','Calendly','WhatsApp or email'], next_step: 'Define scoring rules and test on last 20 leads.' }, customer_support: { agent_name: 'Support Resolution Agent', business_goal: 'Resolve repetitive support tickets automatically and escalate risky cases to humans.', workflow: ['Receive ticket or message.', 'Classify issue and urgency.', 'Fetch order or account context.', 'Draft answer or escalate with summary.', 'Log reason code and outcome.'], example_output: 'Delayed shipment question answered instantly with tracking details.', roi: 'Lowers support load and improves consistency under ticket spikes.', suggested_stack: ['n8n','Groq gpt-oss-20b','Shopify or CRM','Helpdesk','Slack'], next_step: 'List top intents and escalation rules.' }, generate_reports: { agent_name: 'Operations Reporting Agent', business_goal: 'Assemble multi-tool reports automatically for leadership.', workflow: ['Pull KPIs from source apps.', 'Normalize fields and compare against prior period.', 'Generate concise summary with anomalies.', 'Send report to Slack or email.', 'Archive report for audit trail.'], example_output: 'Weekly ops report sent with sales, support, and finance summary.', roi: 'Removes manual report assembly and shortens decision cycles.', suggested_stack: ['n8n','Groq gpt-oss-20b','Sheets or warehouse','Slack','Email'], next_step: 'Lock KPI list and schedule.' }, book_meetings: { agent_name: 'Meeting Booking Agent', business_goal: 'Qualify prospects before booking and protect calendar quality.', workflow: ['Collect inbound booking request.', 'Ask qualification questions.', 'Validate fit rules and timezone.', 'Offer best slot and create CRM record.', 'Send reminder and no-show recovery flow.'], example_output: 'Qualified prospect booked for tomorrow with CRM entry created.', roi: 'Improves calendar utilization and blocks poor-fit meetings.', suggested_stack: ['n8n','Groq gpt-oss-20b','Google Calendar','CRM','Email or WhatsApp'], next_step: 'Connect calendar and define qualification gates.' }, follow_up: { agent_name: 'Lead Follow-up Agent', business_goal: 'Revive warm leads with timed context-aware follow-up.', workflow: ['Detect stale lead or missed action.', 'Pull previous conversation context.', 'Generate short follow-up message.', 'Send sequence with stop conditions.', 'Escalate engaged replies to sales.'], example_output: 'Pricing lead re-engaged with reminder and booking link.', roi: 'Recovers pipeline value without manual chasing.', suggested_stack: ['n8n','Groq gpt-oss-20b','CRM','Email/WhatsApp','Slack'], next_step: 'Define inactivity trigger and approved sequences.' }, custom: { agent_name: 'Custom Workflow Agent', business_goal: String(prompt || 'Automate repetitive business task with one clear workflow.'), workflow: ['Capture task request.', 'Normalize business context.', 'Generate structured next action.', 'Escalate exceptions when needed.', 'Track outcome for iteration.'], example_output: 'Agent receives task, returns structured result, and logs next action.', roi: 'Creates consistent execution path for repetitive work.', suggested_stack: ['n8n','Groq gpt-oss-20b','Primary business app','Slack or email'], next_step: 'Document happy path and one exception path.' } }; const blueprint = templates[mode] || templates.custom; return { ...blueprint, next_step: blueprint.next_step + (reason ? ` Fallback reason: ${reason}.` : '') }; };\nif ([429, 498, 500, 502, 503, 504].includes(status)) { const fallback = buildFallback(base.transcript, base.use_case || base.preset, 'provider_busy'); return { json: { http_code: 200, ok: true, fallback: true, transcript: base.transcript, retry_after_seconds: retryAfter, message: 'Provider busy. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'voice', status }, ...fallback } }; }\nif (status < 200 || status >= 300) { const fallback = buildFallback(base.transcript, base.use_case || base.preset, 'provider_error'); return { json: { http_code: 200, ok: true, fallback: true, transcript: base.transcript, retry_after_seconds: retryAfter, message: body?.error?.message || 'Provider error. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'voice', status }, ...fallback } }; }\nconst parsed = parseJsonContent(body?.choices?.[0]?.message?.content);\nif (!parsed || !Array.isArray(parsed.workflow) || !Array.isArray(parsed.suggested_stack)) { const fallback = buildFallback(base.transcript, base.use_case || base.preset, 'invalid_json'); return { json: { http_code: 200, ok: true, fallback: true, transcript: base.transcript, retry_after_seconds: retryAfter, message: 'Model returned invalid JSON. Returned fallback blueprint.', meta: { provider: 'groq', model: base.model, mode: 'voice', status }, ...fallback } }; }\nreturn { json: { http_code: 200, ok: true, fallback: false, transcript: base.transcript, retry_after_seconds: retryAfter, message: 'Transcript and blueprint ready.', meta: { provider: 'groq', model: base.model, mode: 'voice', status }, agent_name: String(parsed.agent_name || '').trim(), business_goal: String(parsed.business_goal || '').trim(), workflow: Array.isArray(parsed.workflow) ? parsed.workflow.slice(0, 6).map((item) => String(item).trim()).filter(Boolean) : [], example_output: String(parsed.example_output || '').trim(), roi: String(parsed.roi || '').trim(), suggested_stack: Array.isArray(parsed.suggested_stack) ? parsed.suggested_stack.slice(0, 6).map((item) => String(item).trim()).filter(Boolean) : [], next_step: String(parsed.next_step || '').trim() } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        516
+      ],
+      "id": "format-voice-final",
+      "name": "Format Voice Final"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        336,
+        516
+      ],
+      "id": "respond-voice-final",
+      "name": "Respond Voice Final"
+    }
+  ],
+  "connections": {
+    "Webhook Text": {
+      "main": [
+        [
+          {
+            "node": "Normalize Text Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Text Request": {
+      "main": [
+        [
+          {
+            "node": "IF Text Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Text Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build Text 400",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Text Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Text 400": {
+      "main": [
+        [
+          {
+            "node": "Respond Text 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Text Request": {
+      "main": [
+        [
+          {
+            "node": "Groq Text Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Text Completion": {
+      "main": [
+        [
+          {
+            "node": "Format Text Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Text Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Voice": {
+      "main": [
+        [
+          {
+            "node": "Normalize Voice Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Voice Request": {
+      "main": [
+        [
+          {
+            "node": "IF Voice Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Voice Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build Voice 400",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Groq Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Voice 400": {
+      "main": [
+        [
+          {
+            "node": "Respond Voice 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Transcription": {
+      "main": [
+        [
+          {
+            "node": "Parse Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Transcript": {
+      "main": [
+        [
+          {
+            "node": "IF Continue Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Continue Generation": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Text Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Voice Direct",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Voice Text Request": {
+      "main": [
+        [
+          {
+            "node": "Groq Voice Blueprint Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Voice Blueprint Completion": {
+      "main": [
+        [
+          {
+            "node": "Format Voice Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Voice Final": {
+      "main": [
+        [
+          {
+            "node": "Respond Voice Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {},
+  "versionId": "2ad2cfc9-c258-4a79-b0bd-f18b3a4bb001",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

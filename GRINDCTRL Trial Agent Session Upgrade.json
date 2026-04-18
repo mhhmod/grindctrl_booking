@@ -1,0 +1,541 @@
+{
+  "name": "GRINDCTRL Trial Agent Session Upgrade",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trial-agent-session-upgrade",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        0
+      ],
+      "id": "c4a7b0ce-5564-47a9-a30a-0bcbe3400101",
+      "name": "Webhook Session Upgrade",
+      "webhookId": "grindctrl-trial-agent-session-upgrade"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body ?? $json;\nconst sessionId = body.session_id ? String(body.session_id).trim() : '';\nconst userId = body.user_id ? String(body.user_id).trim() : '';\nconst email = body.email ? String(body.email).trim().toLowerCase() : null;\nconst provider = body.provider ? String(body.provider).trim().toLowerCase() : 'email';\nconst locale = String(body.locale || 'en').toLowerCase().startsWith('ar') ? 'ar' : 'en';\nconst direction = String(body.direction || (locale === 'ar' ? 'rtl' : 'ltr')).toLowerCase() === 'rtl' ? 'rtl' : 'ltr';\nconst guestIdentityKey = body.guest_identity_key ? String(body.guest_identity_key).trim() : null;\nconst sourcePage = body.source_page || 'landing';\nconst identityKey = userId ? `user:${userId}` : '';\nlet route = 'ok';\nlet errorMessage = null;\nif (!sessionId) {\n  route = 'bad_request';\n  errorMessage = 'session_id is required';\n} else if (!userId) {\n  route = 'bad_request';\n  errorMessage = 'user_id is required';\n}\nreturn {\n  json: {\n    request_received_at: new Date().toISOString(),\n    db_base_url: 'https://qldgpkqpyfpqfdchozsp.supabase.co',\n    session_id: sessionId,\n    user_id: userId,\n    identity_key: identityKey,\n    guest_identity_key: guestIdentityKey,\n    auth_email: email,\n    auth_provider: provider,\n    locale,\n    direction,\n    source_page: sourcePage,\n    day_limit: 10,\n    tts_day_limit: 3,\n    route,\n    error_message: errorMessage\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        0
+      ],
+      "id": "ab934c48-9d29-47fe-b8f1-29fd5655f32a",
+      "name": "Normalize Upgrade Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.route}}",
+              "rightValue": "bad_request",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -880,
+        0
+      ],
+      "id": "ef8d3dcb-dcad-46f4-879e-fcb0d68033a2",
+      "name": "IF Upgrade Bad Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    http_code: 400,\n    ok: false,\n    status: 'error',\n    message: $json.error_message || 'Invalid request'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -96
+      ],
+      "id": "d948ae2f-bf64-4f1d-95ba-f49c36aa06d0",
+      "name": "Build Upgrade 400"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        -96
+      ],
+      "id": "b6df878b-5f7d-43a8-9be9-09f405f3f0db",
+      "name": "Respond Upgrade 400"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Normalize Upgrade Request').item.json.db_base_url + '/rest/v1/trial_sessions?select=session_id,identity_key,is_authenticated&session_id=eq.' + encodeURIComponent($('Normalize Upgrade Request').item.json.session_id) + '&limit=1' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -656,
+        96
+      ],
+      "id": "7afaf8fe-64cf-4d6c-8623-ecc336aeb2a1",
+      "name": "Get Trial Session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Normalize Upgrade Request').item.json;\nconst row = Array.isArray($json) ? ($json[0] || null) : $json;\nconst existingIdentity = row?.identity_key ? String(row.identity_key) : null;\nconst guestIdentityKey = base.guest_identity_key || (existingIdentity && existingIdentity.startsWith('anon:') ? existingIdentity : null);\nreturn {\n  json: {\n    ...base,\n    session_found: !!row,\n    existing_identity_key: existingIdentity,\n    guest_identity_key: guestIdentityKey\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        96
+      ],
+      "id": "89d9c712-cfd8-4902-a3cc-9e303f345acd",
+      "name": "Merge Upgrade Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ String($json.session_found) }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -208,
+        96
+      ],
+      "id": "91887192-53c3-47d4-a77f-7c39b7d666d2",
+      "name": "IF Session Missing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    http_code: 404,\n    ok: false,\n    status: 'error',\n    message: 'Session not found'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "e524cbef-f925-4905-a01f-0d878056eb5a",
+      "name": "Build Upgrade 404"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "e17afaa8-78a0-4829-8cf3-0d79de2238e7",
+      "name": "Respond Upgrade 404"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Merge Upgrade Context').item.json.db_base_url + '/rest/v1/trial_sessions?session_id=eq.' + encodeURIComponent($('Merge Upgrade Context').item.json.session_id) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { user_id: $('Merge Upgrade Context').item.json.user_id, identity_key: $('Merge Upgrade Context').item.json.identity_key, is_authenticated: true, guest_identity_key: $('Merge Upgrade Context').item.json.guest_identity_key, auth_email: $('Merge Upgrade Context').item.json.auth_email, auth_provider: $('Merge Upgrade Context').item.json.auth_provider, upgraded_at: new Date().toISOString(), status: 'active', last_seen_at: new Date().toISOString(), locale: $('Merge Upgrade Context').item.json.locale, current_direction: $('Merge Upgrade Context').item.json.direction, source_page: $('Merge Upgrade Context').item.json.source_page } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        16,
+        192
+      ],
+      "id": "f2e0720e-1b29-47a9-bd9b-e837e4d6c56d",
+      "name": "Update Trial Session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Merge Upgrade Context').item.json.db_base_url + '/rest/v1/trial_events' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Merge Upgrade Context').item.json.session_id, event_type: 'auth_upgrade', severity: 'info', payload_json: { user_id: $('Merge Upgrade Context').item.json.user_id, identity_key: $('Merge Upgrade Context').item.json.identity_key, guest_identity_key: $('Merge Upgrade Context').item.json.guest_identity_key, auth_email: $('Merge Upgrade Context').item.json.auth_email, auth_provider: $('Merge Upgrade Context').item.json.auth_provider, source_page: $('Merge Upgrade Context').item.json.source_page }, created_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        240,
+        192
+      ],
+      "id": "0ddeebc5-0e8b-4f24-b354-c40a6014ebfa",
+      "name": "Log Auth Upgrade Event",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Merge Upgrade Context').item.json.db_base_url + '/rest/v1/trial_messages?select=id,created_at&role=eq.user&identity_key=eq.' + encodeURIComponent($('Merge Upgrade Context').item.json.identity_key) + '&created_at=gte.' + encodeURIComponent(new Date(Date.now() - 24*60*60*1000).toISOString()) + '&order=created_at.asc&limit=20' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        464,
+        192
+      ],
+      "id": "f7978436-3b1c-4038-82ae-c7e757d1b8fd",
+      "name": "Get Auth 24h User Turns",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Merge Upgrade Context').item.json.db_base_url + '/rest/v1/trial_tts_assets?select=id,created_at&identity_key=eq.' + encodeURIComponent($('Merge Upgrade Context').item.json.identity_key) + '&created_at=gte.' + encodeURIComponent(new Date(Date.now() - 24*60*60*1000).toISOString()) + '&order=created_at.asc&limit=20' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        688,
+        192
+      ],
+      "id": "8339b383-d35b-4333-bf99-0eef98795560",
+      "name": "Get Auth 24h TTS Previews",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const base = $('Merge Upgrade Context').item.json;\nconst turnHeaders = $json?.headers || {};\nconst turnRange = turnHeaders['content-range'] || turnHeaders['Content-Range'] || '';\nconst turnMatch = String(turnRange).match(/\\/(\\d+)$/);\nconst turnsUsedDay = turnMatch ? Number(turnMatch[1]) : (Array.isArray($json?.body) ? $json.body.length : 0);\nconst ttsResponse = $('Get Auth 24h TTS Previews').item.json || {};\nconst ttsHeaders = ttsResponse.headers || {};\nconst ttsRange = ttsHeaders['content-range'] || ttsHeaders['Content-Range'] || '';\nconst ttsMatch = String(ttsRange).match(/\\/(\\d+)$/);\nconst ttsUsedDay = ttsMatch ? Number(ttsMatch[1]) : (Array.isArray(ttsResponse.body) ? ttsResponse.body.length : 0);\nconst remainingTurnsDay = Math.max(Number(base.day_limit || 10) - (Number.isFinite(turnsUsedDay) ? turnsUsedDay : 0), 0);\nconst remainingTtsDay = Math.max(Number(base.tts_day_limit || 3) - (Number.isFinite(ttsUsedDay) ? ttsUsedDay : 0), 0);\nconst imageGenSessionLimit = 4;\nreturn {\n  json: {\n    http_code: 200,\n    ok: true,\n    status: 'upgraded',\n    session_id: base.session_id,\n    message: 'Session upgraded',\n    reply_language: base.locale,\n    remaining_turns_session: null,\n    remaining_turns_day: remainingTurnsDay,\n    remaining_tts_previews_session: null,\n    remaining_tts_previews_day: remainingTtsDay,\n    remaining_image_gen: imageGenSessionLimit,\n    tts_available: remainingTtsDay > 0,\n    soft_warning_state: 'none',\n    cta_state: 'continue_trial',\n    cta_payload: {\n      title: 'You’re in. Your chat is still here.',\n      subtitle: 'Keep going in this same playground with your larger free quota.',\n      message: 'Keep going in this same playground with your larger free quota.',\n      primary: { type: 'continue_trial', label: 'Keep Exploring' },\n      secondary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' },\n      tertiary: { type: 'book_call', label: 'Book a Call', href: '#book' }\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        192
+      ],
+      "id": "51bdf99a-f1f5-49b1-8255-806b0b9674c6",
+      "name": "Build Upgrade Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        192
+      ],
+      "id": "d2608d55-6ba4-485a-b5d4-91d625279912",
+      "name": "Respond Upgrade Success"
+    }
+  ],
+  "connections": {
+    "Webhook Session Upgrade": {
+      "main": [
+        [
+          {
+            "node": "Normalize Upgrade Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Upgrade Request": {
+      "main": [
+        [
+          {
+            "node": "IF Upgrade Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Upgrade Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build Upgrade 400",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Trial Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Upgrade 400": {
+      "main": [
+        [
+          {
+            "node": "Respond Upgrade 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Trial Session": {
+      "main": [
+        [
+          {
+            "node": "Merge Upgrade Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Upgrade Context": {
+      "main": [
+        [
+          {
+            "node": "IF Session Missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Session Missing": {
+      "main": [
+        [
+          {
+            "node": "Build Upgrade 404",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Trial Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Upgrade 404": {
+      "main": [
+        [
+          {
+            "node": "Respond Upgrade 404",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Trial Session": {
+      "main": [
+        [
+          {
+            "node": "Log Auth Upgrade Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Auth Upgrade Event": {
+      "main": [
+        [
+          {
+            "node": "Get Auth 24h User Turns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Auth 24h User Turns": {
+      "main": [
+        [
+          {
+            "node": "Get Auth 24h TTS Previews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Auth 24h TTS Previews": {
+      "main": [
+        [
+          {
+            "node": "Build Upgrade Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Upgrade Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Upgrade Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "cf4ef97c-7320-4e5f-b935-63d8586e9f5f",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "grindctrl-trial-agent-session-upgrade",
+  "tags": []
+}

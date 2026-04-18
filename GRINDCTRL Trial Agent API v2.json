@@ -1,0 +1,3602 @@
+{
+  "name": "GRINDCTRL Trial Agent API v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trial-agent",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -5072,
+        -576
+      ],
+      "id": "d717bfbc-3e39-4aec-915d-875ceabdd269",
+      "name": "Webhook Trial Agent",
+      "webhookId": "grindctrl-trial-agent-v2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst body = $json.body ?? $json;\nconst headers = $json.headers ?? {};\nconst nowIso = new Date().toISOString();\nconst requestId = (globalThis.crypto?.randomUUID?.() ?? `req_${Date.now()}_${Math.random().toString(36).slice(2,10)}`);\nconst maxTextChars = 500;\nconst action = String(body.action || '').trim().toLowerCase();\nconst isImageGen = action === 'image_generate';\nconst rawModality = isImageGen ? 'image_generate' : String(body.modality || body.content_type || (body.audio_url || body.audio_storage_path || body.audio_asset_id ? 'voice' : 'text')).toLowerCase();\nconst modality = isImageGen ? 'image_generate' : (['voice', 'audio', 'voice_transcript'].includes(rawModality) ? 'voice' : (rawModality === 'text' ? 'text' : rawModality));\nconst sessionId = body.session_id ? String(body.session_id).trim() : '';\nconst userId = body.user_id ? String(body.user_id).trim() : null;\nconst localeRaw = String(body.locale || body.language || 'en').toLowerCase();\nconst locale = localeRaw.startsWith('ar') ? 'ar' : 'en';\nconst direction = String(body.direction || (locale === 'ar' ? 'rtl' : 'ltr')).toLowerCase() === 'rtl' ? 'rtl' : 'ltr';\nconst message = isImageGen ? String(body.prompt || '').trim() : (typeof body.message === 'string' ? body.message.trim() : '');\nconst binaryKeys = Object.keys($binary || {});\nconst audioField = binaryKeys.length ? binaryKeys[0] : null;\nconst binaryMeta = audioField ? ($binary?.[audioField] || null) : null;\nconst fileSizeRaw = binaryMeta?.fileSize ?? binaryMeta?.fileSizeInBytes ?? body.audio_size_bytes ?? body.size_bytes ?? null;\nconst parseBytes = (value) => {\n  if (value === null || value === undefined || value === '') return null;\n  if (typeof value === 'number') return Number.isFinite(value) ? value : null;\n  const match = String(value).match(/(\\d+(?:\\.\\d+)?)/);\n  return match ? Math.round(Number(match[1])) : null;\n};\nconst parseBoolean = (value) => {\n  if (typeof value === 'boolean') return value;\n  if (typeof value === 'number') return value === 1;\n  const normalized = String(value ?? '').trim().toLowerCase();\n  return ['1','true','yes','y','on'].includes(normalized);\n};\nconst normalizeHistory = (value) => {\n  let source = value;\n  if (typeof source === 'string') {\n    try {\n      source = JSON.parse(source);\n    } catch (error) {\n      source = [];\n    }\n  }\n  if (!Array.isArray(source)) return [];\n  return source\n    .map((entry) => ({\n      role: entry?.role === 'assistant' ? 'assistant' : 'user',\n      content: String(entry?.content || entry?.text || '').trim(),\n    }))\n    .filter((entry) => entry.content)\n    .slice(-6);\n};\nconst detectLanguage = (value) => /[\\u0600-\\u06FF]/.test(String(value || '')) ? 'ar' : 'en';\nconst resolveReplyLanguage = (explicitValue, detected, localeValue) => {\n  const explicit = String(explicitValue || '').trim().toLowerCase();\n  if (explicit.startsWith('ar')) return { value: 'ar', source: 'explicit' };\n  if (explicit.startsWith('en')) return { value: 'en', source: 'explicit' };\n  if (detected === 'ar') return { value: 'ar', source: 'detected' };\n  if (detected === 'en') return { value: 'en', source: 'detected' };\n  if (String(localeValue || '').startsWith('ar')) return { value: 'ar', source: 'locale' };\n  return { value: 'en', source: 'fallback' };\n};\nconst audioSizeBytes = parseBytes(fileSizeRaw);\nconst mimeType = binaryMeta?.mimeType || body.mime_type || body.content_type_audio || null;\nconst audioDurationSeconds = body.audio_duration_seconds ?? body.duration_seconds ?? null;\nconst fingerprintHash = body.fingerprint_hash ? String(body.fingerprint_hash).trim() : null;\nconst userAgentHash = body.user_agent_hash ? String(body.user_agent_hash) : null;\nconst ipHash = body.ip_hash ? String(body.ip_hash) : null;\nconst anonymousKey = fingerprintHash || sessionId;\nconst identityKey = userId ? `user:${userId}` : `anon:${anonymousKey}`;\nconst lockKey = `gc:trial:lock:${identityKey}`;\nconst burstKey = `gc:trial:burst:${identityKey}`;\nconst activeSessionKey = `gc:trial:active:${identityKey}`;\nconst isAuthenticated = !!userId;\nconst sessionLimit = isAuthenticated ? null : 3;\nconst dayLimit = isAuthenticated ? 10 : 5;\nconst ttsSessionLimit = isAuthenticated ? null : 1;\nconst ttsDayLimit = isAuthenticated ? 3 : 2;\nconst imageGenSessionLimit = isAuthenticated ? 4 : 2;\nconst wantsVoiceReply = parseBoolean(body.wants_voice_reply);\nconst history = normalizeHistory(body.history);\nconst detectedInputLanguage = detectLanguage(message || history.map((item) => item.content).join(' '));\nconst replyLanguageInfo = resolveReplyLanguage(body.reply_language, detectedInputLanguage, locale);\nconst imageGenModel = body.model || '@cf/black-forest-labs/flux-1-schnell';\n\nlet route = 'ok';\nlet errorCode = null;\nlet errorMessage = null;\n\nif (!sessionId) {\n  route = 'bad_request';\n  errorCode = 'missing_session_id';\n  errorMessage = 'session_id is required';\n} else if (isImageGen && !message) {\n  route = 'bad_request';\n  errorCode = 'empty_prompt';\n  errorMessage = 'prompt is required for image generation';\n} else if (!isImageGen && !['text','voice'].includes(modality)) {\n  route = 'bad_request';\n  errorCode = 'malformed_request';\n  errorMessage = 'modality must be text or voice';\n} else if (modality === 'text' && !message) {\n  route = 'bad_request';\n  errorCode = 'empty_text';\n  errorMessage = 'message is required for text modality';\n} else if (modality === 'text' && message.length > maxTextChars) {\n  route = 'bad_request';\n  errorCode = 'message_too_long';\n  errorMessage = `Text messages are limited to ${maxTextChars} characters`;\n}\n\nreturn {\n  json: {\n    request_id: requestId,\n    request_received_at: nowIso,\n    db_base_url: 'https://qldgpkqpyfpqfdchozsp.supabase.co',\n    action,\n    session_id: sessionId,\n    user_id: userId,\n    is_authenticated: isAuthenticated,\n    identity_key: identityKey,\n    locale,\n    direction,\n    source_page: body.source_page || 'landing',\n    page_context: body.page_context || null,\n    theme: body.theme || null,\n    history,\n    message,\n    modality,\n    modality_echo: modality,\n    wants_voice_reply: wantsVoiceReply,\n    reply_language: replyLanguageInfo.value,\n    reply_language_source: replyLanguageInfo.source,\n    detected_input_language: detectedInputLanguage,\n    audio_url: body.audio_url || null,\n    audio_field: audioField,\n    audio_size_bytes: audioSizeBytes,\n    audio_mime_type: mimeType,\n    audio_duration_seconds: audioDurationSeconds ? Number(audioDurationSeconds) : null,\n    fingerprint_hash: fingerprintHash,\n    user_agent_hash: userAgentHash,\n    ip_hash: ipHash,\n    session_limit: sessionLimit,\n    day_limit: dayLimit,\n    tts_session_limit: ttsSessionLimit,\n    tts_day_limit: ttsDayLimit,\n    image_gen_session_limit: imageGenSessionLimit,\n    image_gen_model: imageGenModel,\n    tts_bucket: 'trial-tts',\n    tts_response_format: 'wav',\n    memory_session_key: `trial:${identityKey}`,\n    lock_key: lockKey,\n    burst_key: burstKey,\n    active_session_key: activeSessionKey,\n    route,\n    error_code: errorCode,\n    error_message: errorMessage,\n    frontend_headers: headers,\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4848,
+        -576
+      ],
+      "id": "720f0377-4846-4ce9-8bca-2e5ea1c3927e",
+      "name": "Normalize Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d22a1280-19fa-42e0-af97-04bbd39ffd93",
+              "leftValue": "={{$json.route}}",
+              "rightValue": "bad_request",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4624,
+        -576
+      ],
+      "id": "6e6e1ac1-ad36-4426-b072-ce2d52f3fcfe",
+      "name": "IF Bad Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize Request').item.json;\nreturn {\n  json: {\n    http_code: 400,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id || null,\n    limit_state: 'invalid_request',\n    retry_after_seconds: null,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: base.error_message || 'Invalid request',\n    transcript: null,\n    modality_echo: base.modality || null,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.error_code || 'invalid_request',\n    }\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4400,
+        -672
+      ],
+      "id": "3188a943-1876-4d36-af35-6dc35183f613",
+      "name": "Build 400 Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -4176,
+        -672
+      ],
+      "id": "cbd4c1d1-99b3-431d-9d2f-20235c9378c4",
+      "name": "Respond 400"
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{$json.lock_key}}",
+        "expire": true,
+        "ttl": 45
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -4400,
+        -480
+      ],
+      "id": "0102670e-f093-487f-ba88-90500c9b184f",
+      "name": "Redis InFlight Lock",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Normalize Request').item;\nconst base = baseItem.json;\nconst raw = $json?.value ?? $json?.data ?? Object.values($json || {})[0] ?? 0;\nconst lockCount = Number(raw ?? 0);\nreturn {\n  json: {\n    ...base,\n    lock_count: Number.isFinite(lockCount) ? lockCount : 0,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4176,
+        -480
+      ],
+      "id": "ebf596cc-88c3-413c-b35e-8bdc39b7dbac",
+      "name": "Parse Lock Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e7f3bc4-9316-445a-af22-5b1898a3cfd3",
+              "leftValue": "={{$json.lock_count}}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "larger",
+                "name": "filter.operator.larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3952,
+        -480
+      ],
+      "id": "55c84e10-dd7c-4c24-a3ab-e7805c500ce8",
+      "name": "IF Lock Contended"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Parse Lock Result').item.json;\nreturn {\n  json: {\n    http_code: 429,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'in_flight_request_limit',\n    retry_after_seconds: 45,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: 'Another request is already in flight for this session. Please wait a moment.',\n    transcript: null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: 'in_flight_request_limit',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3728,
+        -576
+      ],
+      "id": "f2f22b0e-3acb-4034-a3bc-d766f5cbcc1c",
+      "name": "Build 429 InFlight"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3504,
+        -576
+      ],
+      "id": "46ed6bc1-e349-404b-b73f-d53e1dda0d94",
+      "name": "Respond 429 InFlight"
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{$json.burst_key}}",
+        "expire": true,
+        "ttl": 30
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -3728,
+        -384
+      ],
+      "id": "4f1e9a65-42d4-4048-9160-fc06ceb027bd",
+      "name": "Redis Burst Counter",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Parse Lock Result').item;\nconst base = baseItem.json;\nconst raw = $json?.value ?? $json?.data ?? Object.values($json || {})[0] ?? 0;\nconst burstCount = Number(raw ?? 0);\nreturn {\n  json: {\n    ...base,\n    burst_count: Number.isFinite(burstCount) ? burstCount : 0,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3504,
+        -384
+      ],
+      "id": "b752cd92-2446-4b89-a64a-00f2e8b33e43",
+      "name": "Parse Burst Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3cfe228b-6bf5-4f5c-ba26-3bd314be62f1",
+              "leftValue": "={{$json.burst_count}}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "larger",
+                "name": "filter.operator.larger"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3280,
+        -384
+      ],
+      "id": "e94b8a65-6ea0-47a1-ade9-124c84fb5abb",
+      "name": "IF Burst Limited"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        -480
+      ],
+      "id": "1ef27d56-4df9-4780-8674-0f4575915bbe",
+      "name": "Redis Delete Lock After Burst",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Parse Burst Result').item.json;\nreturn {\n  json: {\n    http_code: 429,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'burst_limit',\n    retry_after_seconds: 30,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: 'Too many requests in a short time. Please try again shortly.',\n    transcript: null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: 'burst_limit',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        -480
+      ],
+      "id": "471b0eb6-87d6-4834-b222-6f3a3200ee77",
+      "name": "Build 429 Burst"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2608,
+        -480
+      ],
+      "id": "93140c6f-2676-4fd2-b025-f999799a997a",
+      "name": "Respond 429 Burst"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{$json.active_session_key}}",
+        "keyType": "string",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        -288
+      ],
+      "id": "7d61c05a-c74f-4cd5-98c6-20c6f1f2e6a4",
+      "name": "Redis Get Active Session",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Parse Burst Result').item;\nconst base = baseItem.json;\nconst raw = $json?.value ?? $json?.data ?? Object.values($json || {})[0] ?? '';\nconst activeValue = raw === null || raw === undefined ? '' : String(raw);\nconst activeConflict = (!base.is_authenticated) && !!activeValue && activeValue !== base.session_id;\nreturn {\n  json: {\n    ...base,\n    active_session_value: activeValue,\n    active_session_conflict: activeConflict,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        -288
+      ],
+      "id": "0ffdec8d-0ebc-4fa1-88dd-f16945180faf",
+      "name": "Parse Active Session"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e48c8607-8de9-4bb7-9a64-770e2bb7b6f1",
+              "leftValue": "={{ String($json.active_session_conflict) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2608,
+        -288
+      ],
+      "id": "84c657df-42c0-4e35-aec2-59e0dd2d1677",
+      "name": "IF Active Session Conflict"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2384,
+        -384
+      ],
+      "id": "37daf87f-90b6-4d93-8854-0253888270e4",
+      "name": "Redis Delete Lock After Active Conflict",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Parse Active Session').item.json;\nreturn {\n  json: {\n    http_code: 409,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'active_conversation_exists',\n    retry_after_seconds: 1800,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: 'Only one active anonymous conversation is allowed at a time.',\n    transcript: null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: 'active_conversation_exists',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        -384
+      ],
+      "id": "ba0f4fb1-c0a2-4ecc-af17-662710f571d5",
+      "name": "Build 409 Active Conversation"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1936,
+        -384
+      ],
+      "id": "03b4e4cd-4a31-4be4-a328-6a68b0b55e05",
+      "name": "Respond 409 Active Conversation"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{$json.active_session_key}}",
+        "value": "={{$json.session_id}}",
+        "keyType": "string",
+        "expire": true,
+        "ttl": 1800
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2384,
+        -192
+      ],
+      "id": "17f3ff2e-a906-42d9-b72d-633255df08d6",
+      "name": "Redis Set Active Session",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Parse Active Session').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        -192
+      ],
+      "id": "847d3e3b-e912-472d-9521-da157781edba",
+      "name": "Request Context Ready"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Request Context Ready').item.json.db_base_url + '/rest/v1/trial_sessions?on_conflict=session_id' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Request Context Ready').item.json.session_id, user_id: $('Request Context Ready').item.json.user_id, identity_key: $('Request Context Ready').item.json.identity_key, is_authenticated: $('Request Context Ready').item.json.is_authenticated, locale: $('Request Context Ready').item.json.locale, source_page: $('Request Context Ready').item.json.source_page, page_context: $('Request Context Ready').item.json.page_context, current_theme: $('Request Context Ready').item.json.theme, current_direction: $('Request Context Ready').item.json.direction, user_agent_hash: $('Request Context Ready').item.json.user_agent_hash, ip_hash: $('Request Context Ready').item.json.ip_hash, status: 'active', last_seen_at: $('Request Context Ready').item.json.request_received_at } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1936,
+        -192
+      ],
+      "id": "0c16e750-4b37-44b0-825b-76831df6ee92",
+      "name": "Upsert Trial Session",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Request Context Ready').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1712,
+        -192
+      ],
+      "id": "1bf32079-480d-4ac1-a588-02fc92365731",
+      "name": "Rehydrate Session Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "92e09d58-2b94-4030-b92a-5d714687c9d1",
+              "leftValue": "={{$json.modality}}",
+              "rightValue": "voice",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1488,
+        -192
+      ],
+      "id": "94e40ebf-d370-4adf-a3f1-62030a70edc4",
+      "name": "IF Voice Modality"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nreturn {\n  json: {\n    ...$json,\n    normalized_user_text: $json.message,\n    transcript: null,\n    route: 'ok',\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        96
+      ],
+      "id": "7bbc37e4-a661-4a8d-97f5-f7d3436a63d0",
+      "name": "Prepare Text Input"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst allowed = ['audio/mpeg','audio/wav','audio/wave','audio/mp4','audio/webm','audio/ogg','audio/x-m4a'];\nconst maxBytes = 2 * 1024 * 1024;\nlet route = 'voice_ok';\nlet errorCode = null;\nlet errorMessage = null;\nif (!$json.audio_field) {\n  route = 'invalid_audio';\n  errorCode = 'invalid_audio_file';\n  errorMessage = 'Binary audio upload is required for voice modality';\n} else if ($json.audio_size_bytes !== null && $json.audio_size_bytes !== undefined && Number($json.audio_size_bytes) > maxBytes) {\n  route = 'oversized_audio';\n  errorCode = 'oversized_audio';\n  errorMessage = 'Audio file exceeds the 2 MB app limit';\n} else if ($json.audio_mime_type && !allowed.includes(String($json.audio_mime_type).toLowerCase())) {\n  route = 'invalid_audio';\n  errorCode = 'invalid_audio_file';\n  errorMessage = 'Unsupported audio file type';\n} else if ($json.audio_duration_seconds !== null && $json.audio_duration_seconds !== undefined && Number($json.audio_duration_seconds) > 30) {\n  route = 'oversized_audio';\n  errorCode = 'voice_too_long';\n  errorMessage = 'Voice clip exceeds the 30 second limit';\n}\nreturn {\n  json: {\n    ...$json,\n    route,\n    error_code: errorCode,\n    error_message: errorMessage,\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        -288
+      ],
+      "id": "ab3fd1ba-a103-4c21-8b09-1d0c8b10bb15",
+      "name": "Validate Voice Payload"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "570354cc-2e70-4832-9484-cb6ebd878940",
+              "leftValue": "={{$json.route}}",
+              "rightValue": "voice_ok",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals",
+                "name": "filter.operator.notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1040,
+        -288
+      ],
+      "id": "836ea3d1-dc9e-4b62-bf1f-55bb88b6c872",
+      "name": "IF Voice Validation Failed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Validate Voice Payload').item.json;\nreturn {\n  json: {\n    http_code: base.error_code === 'oversized_audio' || base.error_code === 'voice_too_long' ? 413 : 400,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'voice_validation_failed',\n    retry_after_seconds: null,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: base.error_message || 'Invalid audio input',\n    transcript: null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.error_code || 'voice_validation_failed',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        -384
+      ],
+      "id": "a87d0cde-ded5-43cf-9387-23527f49f0fc",
+      "name": "Build Voice Error"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -384
+      ],
+      "id": "607ad351-baf9-49b7-a9c2-e946d2d2ba7f",
+      "name": "Redis Delete Lock Voice Error",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -384
+      ],
+      "id": "6e6e196a-a027-4718-bf61-56c8c2fc0cf9",
+      "name": "Respond Voice Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Validate Voice Payload').item.json.db_base_url + '/rest/v1/trial_audio_assets' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Validate Voice Payload').item.json.session_id, identity_key: $('Validate Voice Payload').item.json.identity_key, source_url: $('Validate Voice Payload').item.json.audio_url || null, mime_type: $('Validate Voice Payload').item.json.audio_mime_type, size_bytes: $('Validate Voice Payload').item.json.audio_size_bytes, status: 'processing', created_at: $('Validate Voice Payload').item.json.request_received_at } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -816,
+        -192
+      ],
+      "id": "b26fb45c-3142-4fad-b952-43fd25c432a0",
+      "name": "Create Audio Asset",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Validate Voice Payload').item;\nconst base = baseItem.json;\nconst row = Array.isArray($json) ? ($json[0] || {}) : (($json.body?.[0]) || ($json.body) || $json || {});\nconst audioAssetId = row.id || row[0]?.id || null;\nconst mimeType = String(base.audio_mime_type || '').toLowerCase();\nconst extensionByMime = {\n  'audio/webm': 'webm',\n  'audio/mpeg': 'mp3',\n  'audio/wav': 'wav',\n  'audio/wave': 'wav',\n  'audio/mp4': 'm4a',\n  'audio/x-m4a': 'm4a',\n  'audio/ogg': 'ogg',\n  'audio/aac': 'aac',\n  'audio/flac': 'flac',\n};\nconst extension = extensionByMime[mimeType] || 'webm';\nconst storagePath = `${base.session_id}/${audioAssetId || 'audio'}.${extension}`;\nreturn {\n  json: {\n    ...base,\n    audio_asset_id: audioAssetId,\n    audio_storage_path: storagePath,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -192
+      ],
+      "id": "52511663-cae9-46b5-84a6-288d6bcb714a",
+      "name": "Rehydrate After Audio Asset"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Rehydrate After Audio Asset').item.json.db_base_url + '/storage/v1/object/trial-audio/' + $('Rehydrate After Audio Asset').item.json.audio_storage_path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "={{ $binary[$('Rehydrate After Audio Asset').item.json.audio_field || 'file']?.mimeType || $('Rehydrate After Audio Asset').item.json.audio_mime_type || 'audio/webm' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "={{ $('Rehydrate After Audio Asset').item.json.audio_field || 'file' }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -368,
+        -192
+      ],
+      "id": "af009c51-a6e6-47b3-a48a-d51dc400ad13",
+      "name": "Upload Audio Storage",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Rehydrate After Audio Asset').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -192
+      ],
+      "id": "0c08911c-6d30-401f-950e-f1e9544b59a8",
+      "name": "Rehydrate After Audio Upload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-large-v3"
+            },
+            {
+              "name": "temperature",
+              "value": "0"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "={{ $('Rehydrate After Audio Upload').item.json.audio_field || 'file' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        80,
+        -192
+      ],
+      "id": "6c06805a-5f17-43a1-a32e-4f67661515cd",
+      "name": "Groq Transcription",
+      "credentials": {
+        "groqApi": {
+          "id": "lJ53f2DRGaR5auXa",
+          "name": "telegram POSTS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Rehydrate After Audio Upload').item;\nconst base = baseItem.json;\nconst transcript = String($json?.text || $json?.transcript || '').trim();\nconst duration = $json?.duration !== undefined && $json?.duration !== null ? Number($json.duration) : null;\nlet route = 'ok';\nlet errorCode = null;\nlet errorMessage = null;\nif (!transcript) {\n  route = 'transcription_failed';\n  errorCode = 'transcription_failure';\n  errorMessage = 'Transcription returned empty text';\n} else if (duration !== null && Number.isFinite(duration) && duration > 30) {\n  route = 'oversized_audio';\n  errorCode = 'voice_too_long';\n  errorMessage = 'Voice clip exceeds the 30 second limit';\n}\nreturn {\n  json: {\n    ...base,\n    transcript,\n    normalized_user_text: transcript,\n    transcript_duration_seconds: duration,\n    route,\n    error_code: errorCode,\n    error_message: errorMessage,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -192
+      ],
+      "id": "d2680143-8a94-48e9-8a3c-ba37fa17cee9",
+      "name": "Normalize Transcript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8c03f99b-2fd9-4ffb-adea-4523c2911a3b",
+              "leftValue": "={{$json.route}}",
+              "rightValue": "ok",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals",
+                "name": "filter.operator.notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -192
+      ],
+      "id": "7e2ffb23-b1ba-4479-a3fb-327d224b5c7d",
+      "name": "IF Transcription Failed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize Transcript').item.json;\nreturn {\n  json: {\n    http_code: base.error_code === 'voice_too_long' ? 413 : 502,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'transcription_failure',\n    retry_after_seconds: null,\n    remaining_turns_session: null,\n    remaining_turns_day: null,\n    assistant_message: null,\n    message: base.error_message || 'Voice transcription failed',\n    transcript: base.transcript || null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.error_code || 'transcription_failure',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -288
+      ],
+      "id": "47190991-dc00-44fe-9984-7d36a8763354",
+      "name": "Build Transcription Error"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -288
+      ],
+      "id": "5a7fefe3-e7d7-4aa8-9940-3a812ddebb65",
+      "name": "Redis Delete Lock Transcription Error",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -288
+      ],
+      "id": "b3688484-86f0-4041-88ed-8566b52f1b61",
+      "name": "Respond Transcription Error"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Normalize Transcript').item.json.db_base_url + '/rest/v1/trial_audio_assets?id=eq.' + encodeURIComponent($('Normalize Transcript').item.json.audio_asset_id) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { storage_path: $('Normalize Transcript').item.json.audio_storage_path, transcript_text: $('Normalize Transcript').item.json.transcript, duration_seconds: $('Normalize Transcript').item.json.transcript_duration_seconds, status: 'completed' } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        752,
+        -96
+      ],
+      "id": "85fd00ce-d38c-48e9-af37-6b00cf89d3ce",
+      "name": "Update Audio Asset Transcript",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Normalize Transcript').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "2f09eade-a893-463b-a4a3-df6e38dd7c2a",
+      "name": "Rehydrate After Audio Transcript"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nreturn {\n  json: {\n    ...$json,\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "581d628a-3351-425f-9b7c-036142d9d27a",
+      "name": "Ready Input Context"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Ready Input Context').item.json.db_base_url + '/rest/v1/trial_messages?select=id,created_at,modality&role=eq.user&session_id=eq.' + encodeURIComponent($('Ready Input Context').item.json.session_id) + '&order=created_at.desc&limit=10' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "ee10e44e-fc1c-4846-9256-00de6301abbd",
+      "name": "Get Session User Turns",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Ready Input Context').item;\nconst base = baseItem.json;\nconst headers = $json?.headers || {};\nconst contentRange = headers['content-range'] || headers['Content-Range'] || '';\nconst match = String(contentRange).match(/\\/(\\d+)$/);\nconst rows = Array.isArray($json?.body) ? $json.body : [];\nconst turnsSessionUsed = match ? Number(match[1]) : rows.length;\nconst voiceTurnsSessionUsed = rows.filter((entry) => entry?.modality === 'voice').length;\nreturn {\n  json: {\n    ...base,\n    turns_used_session: Number.isFinite(turnsSessionUsed) ? turnsSessionUsed : 0,\n    voice_turns_used_session: Number.isFinite(voiceTurnsSessionUsed) ? voiceTurnsSessionUsed : 0,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        0
+      ],
+      "id": "0560b294-da73-48ab-bc8f-8f9c6b8fc1da",
+      "name": "Parse Session Count"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Parse Session Count').item.json.db_base_url + '/rest/v1/trial_messages?select=id,created_at,modality&role=eq.user&identity_key=eq.' + encodeURIComponent($('Parse Session Count').item.json.identity_key) + '&created_at=gte.' + encodeURIComponent(new Date(Date.now() - 24*60*60*1000).toISOString()) + '&order=created_at.asc&limit=20' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1872,
+        0
+      ],
+      "id": "28afc97a-1253-4794-9e0c-dc6c3a16b6ec",
+      "name": "Get 24h Identity User Turns",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Parse Session TTS Count').item;\nconst base = baseItem.json;\nconst turnResponse = $('Get 24h Identity User Turns').item.json || {};\nconst turnHeaders = turnResponse.headers || {};\nconst turnRange = turnHeaders['content-range'] || turnHeaders['Content-Range'] || '';\nconst turnMatch = String(turnRange).match(/\\/(\\d+)$/);\nconst turnRows = Array.isArray(turnResponse.body) ? turnResponse.body : [];\nconst turnsDayUsed = turnMatch ? Number(turnMatch[1]) : turnRows.length;\nconst voiceTurnsDayUsed = turnRows.filter((entry) => entry?.modality === 'voice').length;\nconst ttsHeaders = $json?.headers || {};\nconst ttsRange = ttsHeaders['content-range'] || ttsHeaders['Content-Range'] || '';\nconst ttsMatch = String(ttsRange).match(/\\/(\\d+)$/);\nconst ttsDayUsed = ttsMatch ? Number(ttsMatch[1]) : (Array.isArray($json?.body) ? $json.body.length : 0);\nconst turnsSessionUsed = Number(base.turns_used_session || 0);\nconst sessionLimit = base.session_limit === null || base.session_limit === undefined ? null : Number(base.session_limit);\nconst dayLimit = Number(base.day_limit || 0);\nconst ttsSessionLimit = base.tts_session_limit === null || base.tts_session_limit === undefined ? null : Number(base.tts_session_limit);\nconst ttsDayLimit = Number(base.tts_day_limit || 0);\nconst ttsSessionUsed = Number(base.tts_previews_used_session || 0);\nconst wantsVoiceReply = !!base.wants_voice_reply;\nconst resolveTtsLimitState = (remainingSessionValue, remainingDayValue) => {\n  if (remainingDayValue <= 0) return 'tts_day_limit_reached';\n  if (remainingSessionValue !== null && remainingSessionValue !== undefined && remainingSessionValue <= 0) return 'tts_session_limit_reached';\n  return 'ok';\n};\nlet limited = false;\nlet limitState = 'ok';\nlet retryAfter = null;\n\nif (!base.is_authenticated && sessionLimit !== null && turnsSessionUsed >= sessionLimit) {\n  limited = true;\n  limitState = 'session_limit';\n  retryAfter = 1800;\n}\nif (turnsDayUsed >= dayLimit) {\n  limited = true;\n  limitState = 'rolling_24h_limit';\n  const oldest = turnRows.length ? new Date(turnRows[0].created_at).getTime() : Date.now();\n  retryAfter = Math.max(60, Math.ceil(((oldest + 24 * 60 * 60 * 1000) - Date.now()) / 1000));\n}\n\nconst remainingSession = sessionLimit === null ? null : Math.max(sessionLimit - turnsSessionUsed, 0);\nconst remainingDay = Math.max(dayLimit - turnsDayUsed, 0);\nconst remainingTtsSession = ttsSessionLimit === null ? null : Math.max(ttsSessionLimit - ttsSessionUsed, 0);\nconst remainingTtsDay = Math.max(ttsDayLimit - ttsDayUsed, 0);\nconst ttsLimitState = resolveTtsLimitState(remainingTtsSession, remainingTtsDay);\nconst ttsAvailable = ttsLimitState === 'ok';\nconst willConsumeTts = wantsVoiceReply && ttsAvailable;\nconst nextRemainingSession = remainingSession === null ? null : Math.max(remainingSession - 1, 0);\nconst nextRemainingDay = Math.max(remainingDay - 1, 0);\nconst nextRemainingTtsSession = remainingTtsSession === null ? null : Math.max(remainingTtsSession - (willConsumeTts ? 1 : 0), 0);\nconst nextRemainingTtsDay = Math.max(remainingTtsDay - (willConsumeTts ? 1 : 0), 0);\nconst nextTtsLimitState = resolveTtsLimitState(nextRemainingTtsSession, nextRemainingTtsDay);\nconst nextTtsAvailable = nextTtsLimitState === 'ok';\nconst turnSoftWarning = !limited && ((nextRemainingDay <= 1) || (nextRemainingSession !== null && nextRemainingSession <= 1));\nlet ttsWarningState = 'none';\nif (wantsVoiceReply && !ttsAvailable) {\n  ttsWarningState = ttsLimitState === 'tts_day_limit_reached' ? 'tts_day_exhausted' : 'tts_session_exhausted';\n} else if (willConsumeTts && !nextTtsAvailable) {\n  ttsWarningState = nextTtsLimitState === 'tts_day_limit_reached' ? 'tts_day_exhausted' : 'tts_session_exhausted';\n} else if (willConsumeTts && ((nextRemainingTtsDay <= 1) || (nextRemainingTtsSession !== null && nextRemainingTtsSession <= 1))) {\n  ttsWarningState = 'tts_last_preview';\n}\nlet softWarningState = 'none';\nif (turnSoftWarning && ttsWarningState === 'tts_last_preview') softWarningState = 'turns_and_tts_near_limit';\nelse if (turnSoftWarning) softWarningState = 'turns_near_limit';\nelse if (ttsWarningState !== 'none') softWarningState = ttsWarningState;\nreturn {\n  json: {\n    ...base,\n    turns_used_day: Number.isFinite(turnsDayUsed) ? turnsDayUsed : 0,\n    voice_turns_used_day: Number.isFinite(voiceTurnsDayUsed) ? voiceTurnsDayUsed : 0,\n    tts_previews_used_day: Number.isFinite(ttsDayUsed) ? ttsDayUsed : 0,\n    remaining_turns_session: remainingSession,\n    remaining_turns_day: remainingDay,\n    next_remaining_turns_session: nextRemainingSession,\n    next_remaining_turns_day: nextRemainingDay,\n    remaining_tts_previews_session: remainingTtsSession,\n    remaining_tts_previews_day: remainingTtsDay,\n    next_remaining_tts_previews_session: nextRemainingTtsSession,\n    next_remaining_tts_previews_day: nextRemainingTtsDay,\n    tts_available: ttsAvailable,\n    tts_limit_state: ttsLimitState,\n    next_tts_limit_state: nextTtsLimitState,\n    limited,\n    limit_state: limitState,\n    retry_after_seconds: retryAfter,\n    soft_warning: turnSoftWarning || ttsWarningState !== 'none',\n    soft_warning_state: softWarningState,\n    route: limited ? 'limited' : 'ok',\n  },\n  binary: baseItem.binary,\n};\n",
+        "position": [
+          2768,
+          0
+        ]
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2096,
+        0
+      ],
+      "id": "fb7951c7-28c1-4e51-8657-b3954863b0e0",
+      "name": "Quota Evaluation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "993076d3-e27b-4077-a079-d0f5a4482565",
+              "leftValue": "={{ String($json.limited) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2320,
+        0
+      ],
+      "id": "f5f4f661-264c-4d4a-93d1-aaf1c4fb9b97",
+      "name": "IF Limited"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Quota Evaluation').item.json;\nreturn {\n  json: {\n    http_code: 429,\n    ok: false,\n    status: 'limit_exceeded',\n    session_id: base.session_id,\n    limit_state: base.limit_state,\n    retry_after_seconds: base.retry_after_seconds,\n    remaining_turns_session: base.remaining_turns_session,\n    remaining_turns_day: base.remaining_turns_day,\n    remaining_tts_previews_session: base.remaining_tts_previews_session,\n    remaining_tts_previews_day: base.remaining_tts_previews_day,\n    tts_available: base.tts_available,\n    tts_audio_url: null,\n    reply_language: base.reply_language,\n    soft_warning_state: 'limit_reached',\n    assistant_message: null,\n    subtitle: 'Guest limit reached. Sign in to keep this same chat going.',\n    message: 'Guest limit reached. Sign in to keep this same chat going.',\n    transcript: base.transcript || null,\n    modality_echo: base.modality_echo,\n    cta_state: 'auth_upgrade',\n    cta_payload: {\n      title: 'Guest limit reached. Keep this chat going.',\n      subtitle: 'Sign in to unlock a larger free quota without losing this session.',\n      message: 'Sign in to unlock a larger free quota without losing this session.',\n      primary: {\n        type: 'auth_google',\n        label: 'Continue with Google',\n        href: '',\n      },\n      secondary: {\n        type: 'auth_email',\n        label: 'Continue with Email',\n        href: '',\n      },\n      tertiary: {\n        type: 'workflow_tour',\n        label: 'See the 2-Min Tour',\n        href: '#solutions',\n      },\n    },\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.limit_state,\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        -96
+      ],
+      "id": "7ee3f11d-915c-431a-8d09-479a59382865",
+      "name": "Build Limit Payload"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        -96
+      ],
+      "id": "1df745de-26e5-4e1f-8621-329ec4ccd205",
+      "name": "Redis Delete Lock After Limit",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2992,
+        -96
+      ],
+      "id": "e14ef9bd-34c9-4ce3-84b8-1c83610c5a9c",
+      "name": "Respond 429 Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Quota Evaluation').item.json.db_base_url + '/rest/v1/trial_messages' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Quota Evaluation').item.json.session_id, user_id: $('Quota Evaluation').item.json.user_id, identity_key: $('Quota Evaluation').item.json.identity_key, role: 'user', modality: $('Quota Evaluation').item.json.modality, raw_text: $('Quota Evaluation').item.json.modality === 'text' ? $('Quota Evaluation').item.json.normalized_user_text : null, transcript_text: $('Quota Evaluation').item.json.modality === 'voice' ? $('Quota Evaluation').item.json.normalized_user_text : null, response_text: null, reply_language: $('Quota Evaluation').item.json.reply_language, provider: $('Quota Evaluation').item.json.modality === 'voice' ? 'groq' : null, model: $('Quota Evaluation').item.json.modality === 'voice' ? 'whisper-large-v3' : null, locale: $('Quota Evaluation').item.json.locale, direction: $('Quota Evaluation').item.json.direction, source_page: $('Quota Evaluation').item.json.source_page, created_at: $('Quota Evaluation').item.json.request_received_at } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2544,
+        96
+      ],
+      "id": "01488132-9676-4e5e-b41f-39c82c408ef6",
+      "name": "Insert User Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Quota Evaluation').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2768,
+        96
+      ],
+      "id": "bb91ab58-d046-4ece-84b7-6896ef368193",
+      "name": "User Message Context"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst history = Array.isArray($json.history) ? $json.history.slice(-4) : [];\nconst historyText = history.length\n  ? history.map((item, index) => `${index + 1}. ${item.role}: ${item.content}`).join('\\n')\n  : 'None';\nconst chatInput = [\n  `Reply language: ${$json.reply_language}`,\n  `User locale: ${$json.locale}`,\n  `Source page: ${$json.source_page || 'landing'}`,\n  `Voice reply requested: ${$json.wants_voice_reply ? 'yes - keep the answer within two short sentences' : 'no'}`,\n  `Recent context:`,\n  historyText,\n  `Current user message: ${$json.normalized_user_text}`,\n].join('\\n');\nreturn {\n  json: {\n    ...$json,\n    chatInput,\n    input: $json.normalized_user_text,\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2992,
+        96
+      ],
+      "id": "b272c2f3-d7a5-48d7-b70a-a7001afd6def",
+      "name": "Set Chat Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{$json.chatInput}}",
+        "options": {
+          "systemMessage": "You are the GRINDCTRL AI Playground assistant.\n\nHelp cold visitors quickly understand where AI automation, AI agents, and business systems can improve operations.\nReply in the resolved target language: Arabic or English.\n\nStyle:\n- concise\n- direct\n- premium\n- business-focused\n- practical\n\nYou are strong at workflows, automation, AI agents, lead handling, follow-up, support, reporting, handoffs, CRM thinking, and admin reduction.\n\nRules:\n- prefer concrete examples over abstract theory\n- do not hallucinate capabilities, integrations, pricing, or implementation details\n- do not claim GRINDCTRL has audited the business unless the user says so\n- do not sound generic, overly technical, or overly salesy\n- keep replies short enough for a landing-page trial\n- if voice reply is requested, keep the answer to at most two short sentences\n- if helpful, suggest exactly one next step\n- output short paragraphs or very short bullets only\n- no filler or hype"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3216,
+        96
+      ],
+      "id": "b05a771c-af8b-4b73-9439-47c9cfbcfb3f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        320
+      ],
+      "id": "eb388d3c-f459-42b4-8980-70f737829412",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lJ53f2DRGaR5auXa",
+          "name": "telegram POSTS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('User Message Context').item;\nconst base = baseItem.json;\nconst rawReply = $json?.output ?? $json?.text ?? $json?.response ?? $json?.message ?? '';\nconst assistantMessage = String(rawReply || '').trim();\nlet route = 'ok';\nlet errorCode = null;\nlet errorMessage = null;\nif (!assistantMessage) {\n  route = 'chat_failure';\n  errorCode = 'chat_model_failure';\n  errorMessage = 'AI Agent returned empty output';\n}\nreturn {\n  json: {\n    ...base,\n    assistant_message: assistantMessage,\n    latency_ms: null,\n    route,\n    error_code: errorCode,\n    error_message: errorMessage,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3568,
+        96
+      ],
+      "id": "21947aa5-c856-4c23-a943-31d40365e474",
+      "name": "Normalize AI Output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4b07d167-04d0-466b-aeab-b759251f5d1c",
+              "leftValue": "={{$json.route}}",
+              "rightValue": "chat_failure",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3792,
+        96
+      ],
+      "id": "6fac6d66-2b19-4fe4-82d1-c6a309ae188f",
+      "name": "IF AI Failed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize AI Output').item.json;\nreturn {\n  json: {\n    http_code: 502,\n    ok: false,\n    status: 'error',\n    session_id: base.session_id,\n    limit_state: 'chat_model_failure',\n    retry_after_seconds: 60,\n    remaining_turns_session: base.remaining_turns_session,\n    remaining_turns_day: base.remaining_turns_day,\n    assistant_message: null,\n    message: base.error_message || 'Chat model failed to produce a response',\n    transcript: base.transcript || null,\n    modality_echo: base.modality_echo,\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.error_code || 'chat_model_failure',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4016,
+        0
+      ],
+      "id": "dc755d86-ee4e-4e4b-8c30-85eb885bfddf",
+      "name": "Build AI Error"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4240,
+        0
+      ],
+      "id": "5932c115-4eb5-421f-963b-7957e14be8ab",
+      "name": "Redis Delete Lock AI Error",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4464,
+        0
+      ],
+      "id": "d60fc5a9-f513-48bb-9ca2-a031cead3671",
+      "name": "Respond AI Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize AI Output').item.json.db_base_url + '/rest/v1/trial_messages' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Prepare Assistant Record').item.json.session_id, user_id: $('Prepare Assistant Record').item.json.user_id, identity_key: $('Prepare Assistant Record').item.json.identity_key, role: 'assistant', modality: 'text', raw_text: null, transcript_text: null, response_text: $('Prepare Assistant Record').item.json.assistant_public_message || $('Prepare Assistant Record').item.json.assistant_message, reply_language: $('Prepare Assistant Record').item.json.reply_language, provider: 'groq', model: 'openai/gpt-oss-20b', locale: $('Prepare Assistant Record').item.json.locale, direction: $('Prepare Assistant Record').item.json.direction, source_page: $('Prepare Assistant Record').item.json.source_page, created_at: $('Prepare Assistant Record').item.json.assistant_created_at } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5808,
+        192
+      ],
+      "id": "71f28d4a-e13a-4dd9-aa33-0aeff6357c36",
+      "name": "Insert Assistant Message",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize AI Output').item.json.db_base_url + '/rest/v1/trial_usage_counters?on_conflict=counter_scope_key' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ [ { counter_scope_key: 'session:' + $json.session_id, session_id: $json.session_id, user_id: $json.user_id, identity_key: $json.identity_key, window_type: 'session', turns_used: Number($json.turns_used_session || 0) + 1, voice_turns_used: Number($json.voice_turns_used_session || 0) + ($json.modality === 'voice' ? 1 : 0), tts_previews_used: Number($json.tts_previews_used_session || 0) + ($json.tts_generated ? 1 : 0), last_turn_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { counter_scope_key: 'rolling24:' + $json.identity_key, session_id: $json.session_id, user_id: $json.user_id, identity_key: $json.identity_key, window_type: 'rolling_24h', turns_used: Number($json.turns_used_day || 0) + 1, voice_turns_used: Number($json.voice_turns_used_day || 0) + ($json.modality === 'voice' ? 1 : 0), tts_previews_used: Number($json.tts_previews_used_day || 0) + ($json.tts_generated ? 1 : 0), last_turn_at: new Date().toISOString(), updated_at: new Date().toISOString() } ] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6256,
+        192
+      ],
+      "id": "5a289802-ba4b-408e-a1ee-8c7ae9aa98dc",
+      "name": "Upsert Usage Snapshot",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize AI Output').item.json.db_base_url + '/rest/v1/trial_events' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Rehydrate Assistant Context').item.json.session_id, event_type: $('Rehydrate Assistant Context').item.json.tts_generated ? 'assistant_response_tts' : 'assistant_response', severity: 'info', payload_json: { request_id: $('Rehydrate Assistant Context').item.json.request_id, modality: $('Rehydrate Assistant Context').item.json.modality, source_page: $('Rehydrate Assistant Context').item.json.source_page, soft_warning: $('Rehydrate Assistant Context').item.json.soft_warning, soft_warning_state: $('Rehydrate Assistant Context').item.json.soft_warning_state, remaining_turns_session: $('Rehydrate Assistant Context').item.json.next_remaining_turns_session, remaining_turns_day: $('Rehydrate Assistant Context').item.json.next_remaining_turns_day, remaining_tts_previews_session: $('Rehydrate Assistant Context').item.json.next_remaining_tts_previews_session, remaining_tts_previews_day: $('Rehydrate Assistant Context').item.json.next_remaining_tts_previews_day, tts_requested: $('Rehydrate Assistant Context').item.json.tts_requested, tts_generated: $('Rehydrate Assistant Context').item.json.tts_generated, reply_language: $('Rehydrate Assistant Context').item.json.reply_language }, created_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6480,
+        192
+      ],
+      "id": "226d6b83-1e8e-4179-8ac4-8e7cac7c3356",
+      "name": "Log Trial Event",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst ai = $('Rehydrate Assistant Context').item.json;\nconst nextTtsAvailable = ai.next_tts_limit_state ? ai.next_tts_limit_state === 'ok' : (Number(ai.next_remaining_tts_previews_day || 0) > 0 && (ai.next_remaining_tts_previews_session === null || ai.next_remaining_tts_previews_session > 0));\nconst publicMessage = ai.assistant_public_message || ai.assistant_message || '';\nconst fullMessage = ai.assistant_full_message || ai.assistant_message || publicMessage;\nconst voiceMessage = ai.assistant_voice_message || ai.tts_preview_text || null;\nconst isNearLimit = ['turns_near_limit', 'turns_and_tts_near_limit', 'tts_last_preview'].includes(ai.soft_warning_state);\nlet ctaPayload = {\n  title: null,\n  subtitle: null,\n  message: null,\n  primary: { type: 'continue_trial', label: 'Keep Exploring' },\n  secondary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' },\n  tertiary: { type: 'book_call', label: 'Book a Call', href: '#book' }\n};\nif (ai.soft_warning_state === 'turns_near_limit' || ai.soft_warning_state === 'turns_and_tts_near_limit') {\n  ctaPayload = {\n    title: '1 guest turn left',\n    subtitle: 'Use your last guest turn now, or sign in to unlock more free turns in this same chat.',\n    message: 'Use your last guest turn now, or sign in to unlock more free turns in this same chat.',\n    primary: { type: 'auth_google', label: 'Continue with Google' },\n    secondary: { type: 'continue_trial', label: 'Use Last Guest Turn', href: '' },\n    tertiary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' }\n  };\n} else if (ai.soft_warning_state === 'tts_last_preview') {\n  ctaPayload = {\n    title: '1 voice preview left',\n    subtitle: 'Text replies stay on. You still have one spoken preview left.',\n    message: 'Text replies stay on. You still have one spoken preview left.',\n    primary: { type: 'continue_trial', label: 'Keep Exploring' },\n    secondary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' },\n    tertiary: { type: 'book_call', label: 'Book a Call', href: '#book' }\n  };\n} else if (ai.soft_warning_state === 'tts_session_exhausted') {\n  ctaPayload = {\n    title: 'Voice preview unavailable',\n    subtitle: 'This session has used its voice preview. Text replies are still available.',\n    message: 'This session has used its voice preview. Text replies are still available.',\n    primary: { type: 'continue_trial', label: 'Keep Exploring' },\n    secondary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' },\n    tertiary: { type: 'book_call', label: 'Book a Call', href: '#book' }\n  };\n} else if (ai.soft_warning_state === 'tts_day_exhausted') {\n  ctaPayload = {\n    title: 'Voice preview unavailable',\n    subtitle: 'Today\\'s voice previews are used up. Text replies are still available.',\n    message: 'Today\\'s voice previews are used up. Text replies are still available.',\n    primary: { type: 'continue_trial', label: 'Keep Exploring' },\n    secondary: { type: 'workflow_tour', label: 'See the 2-Min Tour', href: '#solutions' },\n    tertiary: { type: 'book_call', label: 'Book a Call', href: '#book' }\n  };\n}\nreturn {\n  json: {\n    http_code: 200,\n    ok: true,\n    status: 'ok',\n    session_id: ai.session_id,\n    limit_state: isNearLimit ? 'near_limit' : (nextTtsAvailable ? 'ok' : ai.next_tts_limit_state || ai.tts_limit_state || 'ok'),\n    soft_warning_state: ai.soft_warning_state || 'none',\n    retry_after_seconds: null,\n    remaining_turns_session: ai.next_remaining_turns_session,\n    remaining_turns_day: ai.next_remaining_turns_day,\n    remaining_tts_previews_session: ai.next_remaining_tts_previews_session,\n    remaining_tts_previews_day: ai.next_remaining_tts_previews_day,\n    assistant_message: publicMessage,\n    assistant_full_message: fullMessage,\n    assistant_voice_message: ai.tts_generated ? voiceMessage : null,\n    message: publicMessage,\n    output: publicMessage,\n    text: publicMessage,\n    transcript: ai.transcript || null,\n    modality_echo: ai.modality_echo,\n    reply_language: ai.reply_language,\n    tts_available: nextTtsAvailable,\n    tts_audio_url: ai.tts_audio_url || null,\n    wants_voice_reply: !!ai.wants_voice_reply,\n    voice_only_reply: !!ai.voice_only_reply,\n    cta_state: ai.soft_warning_state && ai.soft_warning_state !== 'none' ? 'soft_warning' : 'continue_trial',\n    cta_payload: ctaPayload,\n    diagnostics_safe: {\n      request_id: ai.request_id,\n      locale: ai.locale,\n      direction: ai.direction,\n      reply_language: ai.reply_language,\n    },\n    lock_key: ai.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6704,
+        192
+      ],
+      "id": "86a9b86f-f3f9-4354-bb2e-229c33ea2889",
+      "name": "Build Success Response"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        6928,
+        192
+      ],
+      "id": "64857e4c-8289-476a-a686-b1efe7a4c400",
+      "name": "Redis Delete Final Lock",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        7152,
+        192
+      ],
+      "id": "dbb55a52-cca6-49ab-95fd-d83a2a6f0a80",
+      "name": "Respond Success"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trial-agent-cta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -5072,
+        528
+      ],
+      "id": "4c9dbc96-e15f-4af4-9dbf-d6fa71b47fa1",
+      "name": "Webhook CTA Event",
+      "webhookId": "grindctrl-trial-agent-cta-v2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst body = $json.body ?? $json;\nconst okInput = !!body.session_id && !!body.cta_type && !!body.event_action;\nreturn {\n  json: {\n    db_base_url: 'https://qldgpkqpyfpqfdchozsp.supabase.co',\n    ok_input: okInput,\n    session_id: body.session_id || null,\n    cta_type: body.cta_type || null,\n    cta_location: body.cta_location || 'chat',\n    event_action: body.event_action || null,\n    source_page: body.source_page || 'landing',\n    locale: body.locale || body.language || 'en',\n    created_at: new Date().toISOString(),\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4848,
+        528
+      ],
+      "id": "75fa8e9b-bacf-457a-ba72-b6a490a3e98a",
+      "name": "Normalize CTA Event"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "42191da0-eddc-4a49-876b-12cbd6b140c8",
+              "leftValue": "={{ String($json.ok_input) }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4624,
+        528
+      ],
+      "id": "130f3a8b-71c1-42a0-9774-b1522316ad5c",
+      "name": "IF CTA Bad Request"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nreturn {\n  json: {\n    http_code: 400,\n    ok: false,\n    status: 'error',\n    message: 'session_id, cta_type, and event_action are required',\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4400,
+        432
+      ],
+      "id": "9afdd7f1-e779-403d-a99e-9233eee8146e",
+      "name": "Build CTA 400"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -4176,
+        432
+      ],
+      "id": "6b804fe4-cd06-4c55-bf07-90ccc3a25554",
+      "name": "Respond CTA 400"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize CTA Event').item.json.db_base_url + '/rest/v1/trial_cta_events' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Normalize CTA Event').item.json.session_id, cta_type: $('Normalize CTA Event').item.json.cta_type, cta_location: $('Normalize CTA Event').item.json.cta_location, event_action: $('Normalize CTA Event').item.json.event_action, source_page: $('Normalize CTA Event').item.json.source_page, locale: $('Normalize CTA Event').item.json.locale, created_at: $('Normalize CTA Event').item.json.created_at } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4400,
+        624
+      ],
+      "id": "88214166-0c53-4834-9b7e-1699d15cc9ab",
+      "name": "Insert CTA Event",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, status: \"ok\" } }}",
+        "options": {
+          "responseCode": "200"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -4176,
+        624
+      ],
+      "id": "41f6bd60-3acd-4464-bfb3-4ac9f68deb91",
+      "name": "Respond CTA Success"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Parse Session Count').item.json.db_base_url + '/rest/v1/trial_tts_assets?select=id,created_at&session_id=eq.' + encodeURIComponent($('Parse Session Count').item.json.session_id) + '&order=created_at.desc&limit=10' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2096,
+        -96
+      ],
+      "id": "eaf4f12a-8cf7-4b96-b4df-59ef71bb4a01",
+      "name": "Get Session TTS Previews",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Parse Session Count').item;\nconst base = baseItem.json;\nconst headers = $json?.headers || {};\nconst contentRange = headers['content-range'] || headers['Content-Range'] || '';\nconst match = String(contentRange).match(/\\/(\\d+)$/);\nconst previewsSessionUsed = match ? Number(match[1]) : (Array.isArray($json?.body) ? $json.body.length : 0);\nreturn {\n  json: {\n    ...base,\n    tts_previews_used_session: Number.isFinite(previewsSessionUsed) ? previewsSessionUsed : 0,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        -96
+      ],
+      "id": "4b2a1b6c-4ce7-4b88-94f5-bf36fa26f3aa",
+      "name": "Parse Session TTS Count"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Parse Session TTS Count').item.json.db_base_url + '/rest/v1/trial_tts_assets?select=id,created_at&identity_key=eq.' + encodeURIComponent($('Parse Session TTS Count').item.json.identity_key) + '&created_at=gte.' + encodeURIComponent(new Date(Date.now() - 24*60*60*1000).toISOString()) + '&order=created_at.asc&limit=20' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "count=exact"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2544,
+        -96
+      ],
+      "id": "1fd4293a-2378-4f88-a5bd-14f1bdcb1c1f",
+      "name": "Get 24h Identity TTS Previews",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize AI Output').item.json;\nconst collapse = (value) => String(value || '').replace(/\\s+/g, ' ').trim();\nconst sanitizeReply = (value) => collapse(value)\n  .replace(/[\\*_#>`~]/g, '')\n  .replace(/\\[(.*?)\\]\\((.*?)\\)/g, '$1')\n  .replace(/\\s+/g, ' ')\n  .trim();\nconst buildVoiceReply = (value, maxChars = 190, maxSentences = 2) => {\n  const cleaned = sanitizeReply(value);\n  if (!cleaned) return '';\n  const sentenceParts = cleaned.match(/[^.!?؟\\n]+[.!?؟]?/g) || [cleaned];\n  let candidate = sentenceParts.slice(0, maxSentences).join(' ').trim();\n  if (!candidate) candidate = cleaned;\n  if (candidate.length <= maxChars) return candidate;\n  const cutoff = candidate.slice(0, maxChars);\n  const boundary = Math.max(\n    cutoff.lastIndexOf('. '),\n    cutoff.lastIndexOf('! '),\n    cutoff.lastIndexOf('? '),\n    cutoff.lastIndexOf('؟ '),\n    cutoff.lastIndexOf('، '),\n    cutoff.lastIndexOf(', ')\n  );\n  if (boundary > 80) return cutoff.slice(0, boundary + 1).trim();\n  return cutoff.trim().replace(/[,:;.!?؟،]+$/, '') + '...';\n};\nconst replyLanguage = String(base.reply_language || base.detected_input_language || base.locale || 'en').startsWith('ar') ? 'ar' : 'en';\nconst ttsModel = replyLanguage === 'ar' ? 'canopylabs/orpheus-arabic-saudi' : 'canopylabs/orpheus-v1-english';\nconst ttsVoice = replyLanguage === 'ar' ? 'noura' : 'hannah';\nconst wantsVoiceReply = !!base.wants_voice_reply;\nconst ttsAllowed = wantsVoiceReply && !!base.tts_available;\nconst assistantFullMessage = sanitizeReply(base.assistant_message || '');\nconst assistantVoiceMessage = buildVoiceReply(assistantFullMessage);\nconst ttsStoragePath = `${base.session_id}/tts_${base.request_id}.${base.tts_response_format || 'wav'}`;\nreturn {\n  json: {\n    ...base,\n    reply_language: replyLanguage,\n    wants_voice_reply: wantsVoiceReply,\n    tts_requested: wantsVoiceReply,\n    tts_generate: ttsAllowed && !!assistantVoiceMessage,\n    tts_generated: false,\n    tts_audio_url: null,\n    assistant_full_message: assistantFullMessage,\n    assistant_public_message: assistantFullMessage,\n    assistant_voice_message: assistantVoiceMessage,\n    voice_only_reply: false,\n    tts_preview_text: assistantVoiceMessage,\n    tts_model: ttsModel,\n    tts_voice: ttsVoice,\n    tts_storage_path: ttsStoragePath,\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4016,
+        192
+      ],
+      "id": "d438d38d-947b-43c7-a304-550f5aa6cb2d",
+      "name": "Prepare TTS Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c9eaab3-aa4f-47ca-b6a4-1bfcd1ff4da7",
+              "leftValue": "={{ String($json.tts_generate) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4240,
+        192
+      ],
+      "id": "43ce08b5-5da4-45de-9f7f-d5a594cf07d0",
+      "name": "IF Generate TTS"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/audio/speech",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Prepare TTS Request').item.json.tts_model, input: $('Prepare TTS Request').item.json.tts_preview_text, voice: $('Prepare TTS Request').item.json.tts_voice, response_format: $('Prepare TTS Request').item.json.tts_response_format || 'wav' } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4464,
+        96
+      ],
+      "id": "40a16ca0-af48-4d5d-8bdf-1ef5281f5d55",
+      "name": "Groq TTS",
+      "credentials": {
+        "groqApi": {
+          "id": "lJ53f2DRGaR5auXa",
+          "name": "telegram POSTS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Prepare TTS Request').item.json.db_base_url + '/storage/v1/object/' + $('Prepare TTS Request').item.json.tts_bucket + '/' + $('Prepare TTS Request').item.json.tts_storage_path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "audio/wav"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4688,
+        96
+      ],
+      "id": "491f2518-5310-4517-a92d-ff03b3327c3d",
+      "name": "Upload TTS Storage",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Prepare TTS Request').item.json.db_base_url + '/storage/v1/object/sign/' + $('Prepare TTS Request').item.json.tts_bucket + '/' + $('Prepare TTS Request').item.json.tts_storage_path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { expiresIn: 86400 } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4912,
+        96
+      ],
+      "id": "385fcc1a-aac7-4753-abeb-cab13b88f09b",
+      "name": "Create Signed TTS URL",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Prepare TTS Request').item.json.db_base_url + '/rest/v1/trial_tts_assets' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { session_id: $('Prepare TTS Request').item.json.session_id, user_id: $('Prepare TTS Request').item.json.user_id, identity_key: $('Prepare TTS Request').item.json.identity_key, source_text: $('Prepare TTS Request').item.json.assistant_message, preview_text: $('Prepare TTS Request').item.json.tts_preview_text, reply_language: $('Prepare TTS Request').item.json.reply_language, provider: 'groq', model: $('Prepare TTS Request').item.json.tts_model, voice: $('Prepare TTS Request').item.json.tts_voice, storage_path: $('Prepare TTS Request').item.json.tts_storage_path, status: 'completed', created_at: new Date().toISOString() } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5136,
+        96
+      ],
+      "id": "7e3d40a2-c91f-4a12-99f0-c1a4ccac8f66",
+      "name": "Insert TTS Asset",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Prepare TTS Request').item;\nconst base = baseItem.json;\nconst signed = $('Create Signed TTS URL').item.json || {};\nconst raw = signed?.signedURL || signed?.signedUrl || signed?.path || null;\nconst fullUrl = raw ? (String(raw).startsWith('http') ? String(raw) : `${base.db_base_url}/storage/v1${raw}`) : null;\nconst publicMessage = fullUrl ? (base.assistant_voice_message || base.tts_preview_text || base.assistant_full_message || base.assistant_message || '') : (base.assistant_full_message || base.assistant_message || '');\nreturn {\n  json: {\n    ...base,\n    tts_generated: !!fullUrl,\n    tts_audio_url: fullUrl,\n    assistant_public_message: publicMessage,\n    voice_only_reply: !!(fullUrl && base.wants_voice_reply),\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5360,
+        96
+      ],
+      "id": "80aa0f61-4520-4d1f-bc71-2b0eb4810c12",
+      "name": "Normalize TTS Output"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nreturn {\n  json: {\n    ...$json,\n    assistant_created_at: new Date().toISOString(),\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5584,
+        192
+      ],
+      "id": "d04b6805-76d9-4cf4-ae6e-a7c0e099b7a6",
+      "name": "Prepare Assistant Record"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst baseItem = $('Prepare Assistant Record').item;\nreturn {\n  json: {\n    ...baseItem.json,\n  },\n  binary: baseItem.binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6032,
+        192
+      ],
+      "id": "da22c278-9e7a-43c8-9abd-f2e9e5b67c99",
+      "name": "Rehydrate Assistant Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "img-route-001",
+              "leftValue": "={{$json.modality}}",
+              "rightValue": "image_generate",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1488,
+        -450
+      ],
+      "id": "a1b2c3d4-img-route-0001",
+      "name": "IF Image Generate"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $json;\nconst sessionKey = 'session:' + base.session_id;\nconst limit = Number(base.image_gen_session_limit || 2);\n\n// We'll check usage from the counter that was already fetched\n// For image gen, we track via the image_gen_used field on trial_usage_counters\n// Since we don't have a separate counter query for images, we do an inline check\nreturn {\n  json: {\n    ...base,\n    image_gen_limit: limit,\n    image_gen_route: 'ok',\n  },\n  binary: $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        -450
+      ],
+      "id": "a1b2c3d4-img-quota-0001",
+      "name": "Image Gen Quota Check"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.db_base_url + '/rest/v1/trial_usage_counters?select=image_gen_used&counter_scope_key=eq.session:' + encodeURIComponent($json.session_id) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1040,
+        -450
+      ],
+      "id": "a1b2c3d4-img-usage-0001",
+      "name": "Get Image Gen Usage",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Image Gen Quota Check').item.json;\nconst rows = Array.isArray($json) ? $json : (Array.isArray($json?.body) ? $json.body : []);\nconst usageRow = rows[0] || {};\nconst imageGenUsed = Number(usageRow.image_gen_used || 0);\nconst limit = Number(base.image_gen_limit || 2);\nconst limited = imageGenUsed >= limit;\nconst remaining = Math.max(limit - imageGenUsed, 0);\n\nreturn {\n  json: {\n    ...base,\n    image_gen_used: imageGenUsed,\n    image_gen_remaining: remaining,\n    image_gen_limited: limited,\n  },\n  binary: base.binary || $binary,\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -816,
+        -450
+      ],
+      "id": "a1b2c3d4-img-eval-0001",
+      "name": "Evaluate Image Quota"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "img-limit-001",
+              "leftValue": "={{ String($json.image_gen_limited) }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        -450
+      ],
+      "id": "a1b2c3d4-img-limit-if-0001",
+      "name": "IF Image Limited"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Evaluate Image Quota').item.json;\nreturn {\n  json: {\n    http_code: 429,\n    ok: false,\n    status: 'limit_exceeded',\n    action: 'image_generate',\n    session_id: base.session_id,\n    limit_state: 'image_gen_limit',\n    retry_after_seconds: 1800,\n    remaining_image_gen: 0,\n    assistant_message: null,\n    message: 'Image generation limit reached for this session.',\n    modality_echo: 'image_generate',\n    cta_state: 'auth_upgrade',\n    cta_payload: {\n      title: 'Image generation limit reached',\n      subtitle: 'Sign in to unlock more free image generations.',\n      primary: { type: 'auth_google', label: 'Continue with Google' },\n      secondary: { type: 'continue_trial', label: 'Continue chatting' },\n    },\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: 'image_gen_limit',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -546
+      ],
+      "id": "a1b2c3d4-img-limit-resp-0001",
+      "name": "Build Image Limit Response"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -546
+      ],
+      "id": "a1b2c3d4-img-limit-redis-0001",
+      "name": "Redis Delete Lock Image Limit",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        80,
+        -546
+      ],
+      "id": "a1b2c3d4-img-limit-respond-0001",
+      "name": "Respond Image Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudflare.com/client/v4/accounts/{{ $('Evaluate Image Quota').item.json.cf_account_id || '0fec965e04580ced289a175825685af2' }}/ai/run/@cf/black-forest-labs/flux-1-schnell",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ prompt: $('Evaluate Image Quota').item.json.message, num_steps: 4 }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -368,
+        -354
+      ],
+      "id": "a1b2c3d4-cf-ai-0001",
+      "name": "Cloudflare Generate Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "cf-workers-ai-token",
+          "name": "Cloudflare Workers AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Evaluate Image Quota').item.json;\nlet imageBase64 = null;\nlet imageMime = 'image/png';\nlet route = 'ok';\nlet errorCode = null;\nlet errorMessage = null;\n\ntry {\n  // Strategy 1: Cloudflare returns JSON { result: { image: 'base64...' }, success: true }\n  if ($json?.result?.image) {\n    imageBase64 = $json.result.image;\n  }\n  // Strategy 2: image at top level of response\n  else if ($json?.image) {\n    imageBase64 = $json.image;\n  }\n  // Strategy 3: binary data (if responseFormat was 'file')\n  else {\n    const binaryKeys = Object.keys($binary || {});\n    if (binaryKeys.length > 0) {\n      const binaryData = $binary[binaryKeys[0]];\n      if (binaryData?.mimeType?.startsWith('image/')) {\n        imageBase64 = binaryData.data;\n        imageMime = binaryData.mimeType;\n      } else if (binaryData?.data) {\n        // Binary might be JSON text — try to parse it\n        try {\n          const decoded = Buffer.from(binaryData.data, 'base64').toString('utf8');\n          const parsed = JSON.parse(decoded);\n          if (parsed?.result?.image) {\n            imageBase64 = parsed.result.image;\n          } else if (parsed?.image) {\n            imageBase64 = parsed.image;\n          }\n        } catch (_) { /* not parseable, skip */ }\n      }\n    }\n  }\n\n  // Strategy 4: check body wrapper (fullResponse mode)\n  if (!imageBase64 && $json?.body) {\n    const body = typeof $json.body === 'string' ? JSON.parse($json.body) : $json.body;\n    if (body?.result?.image) imageBase64 = body.result.image;\n    else if (body?.image) imageBase64 = body.image;\n  }\n\n  // Check for Cloudflare API errors\n  if (!imageBase64 && $json?.success === false) {\n    route = 'image_gen_failed';\n    errorCode = 'cloudflare_api_error';\n    const cfErrors = $json?.errors;\n    errorMessage = Array.isArray(cfErrors) && cfErrors.length > 0\n      ? cfErrors.map(e => e.message || JSON.stringify(e)).join('; ')\n      : 'Cloudflare API returned an error';\n  } else if (!imageBase64) {\n    route = 'image_gen_failed';\n    errorCode = 'image_generation_failure';\n    errorMessage = 'Image generation returned empty result';\n  }\n} catch (e) {\n  route = 'image_gen_failed';\n  errorCode = 'image_generation_failure';\n  errorMessage = 'Failed to process image generation response: ' + e.message;\n}\n\nreturn {\n  json: {\n    ...base,\n    image_base64: imageBase64,\n    image_mime: imageMime,\n    route,\n    error_code: errorCode,\n    error_message: errorMessage,\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        -354
+      ],
+      "id": "a1b2c3d4-img-normalize-0001",
+      "name": "Normalize Image Output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "img-fail-001",
+              "leftValue": "={{$json.route}}",
+              "rightValue": "image_gen_failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        -354
+      ],
+      "id": "a1b2c3d4-img-fail-if-0001",
+      "name": "IF Image Gen Failed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize Image Output').item.json;\nreturn {\n  json: {\n    http_code: 502,\n    ok: false,\n    status: 'error',\n    action: 'image_generate',\n    session_id: base.session_id,\n    limit_state: 'image_gen_failure',\n    retry_after_seconds: 30,\n    remaining_image_gen: base.image_gen_remaining,\n    assistant_message: null,\n    message: base.error_message || 'Image generation failed',\n    modality_echo: 'image_generate',\n    cta_state: 'error',\n    cta_payload: null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: base.error_code || 'image_generation_failure',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -450
+      ],
+      "id": "a1b2c3d4-img-err-build-0001",
+      "name": "Build Image Gen Error"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        528,
+        -450
+      ],
+      "id": "a1b2c3d4-img-err-redis-0001",
+      "name": "Redis Delete Lock Image Error",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        -450
+      ],
+      "id": "a1b2c3d4-img-err-respond-0001",
+      "name": "Respond Image Gen Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize Image Output').item.json.db_base_url + '/rest/v1/trial_image_assets' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ session_id: $('Normalize Image Output').item.json.session_id, identity_key: $('Normalize Image Output').item.json.identity_key, prompt: $('Normalize Image Output').item.json.message, provider: 'cloudflare', model: '@cf/black-forest-labs/flux-1-schnell', status: 'completed', created_at: new Date().toISOString() }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        304,
+        -258
+      ],
+      "id": "a1b2c3d4-img-insert-0001",
+      "name": "Insert Image Asset",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Normalize Image Output').item.json.db_base_url + '/rest/v1/rpc/increment_image_gen_used' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ p_counter_scope_key: 'session:' + $('Normalize Image Output').item.json.session_id }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        528,
+        -258
+      ],
+      "id": "a1b2c3d4-img-usage-upsert-0001",
+      "name": "Increment Image Gen Counter",
+      "credentials": {
+        "supabaseApi": {
+          "id": "B6pGGwnaFZpMNxWq",
+          "name": "grindctrl Production"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst base = $('Normalize Image Output').item.json;\nconst nextRemaining = Math.max((base.image_gen_remaining || 1) - 1, 0);\nreturn {\n  json: {\n    http_code: 200,\n    ok: true,\n    status: 'ok',\n    action: 'image_generate',\n    session_id: base.session_id,\n    limit_state: nextRemaining <= 0 ? 'image_gen_limit' : 'ok',\n    remaining_image_gen: nextRemaining,\n    image_base64: base.image_base64,\n    image_mime: base.image_mime,\n    prompt: base.message,\n    model: base.image_gen_model || '@cf/black-forest-labs/flux-1-schnell',\n    modality_echo: 'image_generate',\n    reply_language: base.reply_language,\n    message: null,\n    assistant_message: null,\n    cta_state: nextRemaining <= 0 ? 'auth_upgrade' : 'continue_trial',\n    cta_payload: nextRemaining <= 0 ? {\n      title: 'Image generation limit reached',\n      subtitle: 'Sign in to unlock more free image generations.',\n      primary: { type: 'auth_google', label: 'Continue with Google' },\n      secondary: { type: 'continue_trial', label: 'Continue chatting' },\n    } : null,\n    diagnostics_safe: {\n      request_id: base.request_id,\n      locale: base.locale,\n      direction: base.direction,\n      code: 'image_generated',\n    },\n    lock_key: base.lock_key,\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -258
+      ],
+      "id": "a1b2c3d4-img-success-0001",
+      "name": "Build Image Success Response"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{$json.lock_key}}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        976,
+        -258
+      ],
+      "id": "a1b2c3d4-img-success-redis-0001",
+      "name": "Redis Delete Lock Image Success",
+      "credentials": {
+        "redis": {
+          "id": "U94B8TJ0w5B2vRlc",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {
+          "responseCode": "={{$json.http_code}}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -258
+      ],
+      "id": "a1b2c3d4-img-success-respond-0001",
+      "name": "Respond Image Success"
+    }
+  ],
+  "pinData": {
+    "Webhook Trial Agent": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1141109.hstgr.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+            "content-length": "193",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9",
+            "content-type": "application/json",
+            "origin": "null",
+            "priority": "u=1, i",
+            "sec-ch-ua": "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "102.186.180.206",
+            "x-forwarded-host": "n8n.srv1141109.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "b3b649865be6",
+            "x-real-ip": "102.186.180.206"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "session_id": "ba161860-d52d-4b7e-bc2d-872b76f50dfe",
+            "message": "hi",
+            "content_type": "text",
+            "language": "en",
+            "fingerprint_hash": "19c432f9-099f-4197-bb26-8a2f55b92204",
+            "turn_number": 1,
+            "history": []
+          },
+          "webhookUrl": "https://n8n.srv1141109.hstgr.cloud/webhook/trial-agent",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Trial Agent": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "IF Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build 400 Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis InFlight Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 400 Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis InFlight Lock": {
+      "main": [
+        [
+          {
+            "node": "Parse Lock Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Lock Result": {
+      "main": [
+        [
+          {
+            "node": "IF Lock Contended",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Lock Contended": {
+      "main": [
+        [
+          {
+            "node": "Build 429 InFlight",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Burst Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 429 InFlight": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 InFlight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Burst Counter": {
+      "main": [
+        [
+          {
+            "node": "Parse Burst Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Burst Result": {
+      "main": [
+        [
+          {
+            "node": "IF Burst Limited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Burst Limited": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock After Burst",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Get Active Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock After Burst": {
+      "main": [
+        [
+          {
+            "node": "Build 429 Burst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 429 Burst": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 Burst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Get Active Session": {
+      "main": [
+        [
+          {
+            "node": "Parse Active Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Active Session": {
+      "main": [
+        [
+          {
+            "node": "IF Active Session Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Active Session Conflict": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock After Active Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Set Active Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock After Active Conflict": {
+      "main": [
+        [
+          {
+            "node": "Build 409 Active Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 409 Active Conversation": {
+      "main": [
+        [
+          {
+            "node": "Respond 409 Active Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Set Active Session": {
+      "main": [
+        [
+          {
+            "node": "Request Context Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Context Ready": {
+      "main": [
+        [
+          {
+            "node": "Upsert Trial Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Trial Session": {
+      "main": [
+        [
+          {
+            "node": "Rehydrate Session Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rehydrate Session Context": {
+      "main": [
+        [
+          {
+            "node": "IF Image Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Voice Modality": {
+      "main": [
+        [
+          {
+            "node": "Validate Voice Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Text Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Text Input": {
+      "main": [
+        [
+          {
+            "node": "Ready Input Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Voice Payload": {
+      "main": [
+        [
+          {
+            "node": "IF Voice Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Voice Validation Failed": {
+      "main": [
+        [
+          {
+            "node": "Build Voice Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Audio Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Voice Error": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Voice Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Voice Error": {
+      "main": [
+        [
+          {
+            "node": "Respond Voice Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Audio Asset": {
+      "main": [
+        [
+          {
+            "node": "Rehydrate After Audio Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rehydrate After Audio Asset": {
+      "main": [
+        [
+          {
+            "node": "Upload Audio Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Audio Storage": {
+      "main": [
+        [
+          {
+            "node": "Rehydrate After Audio Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rehydrate After Audio Upload": {
+      "main": [
+        [
+          {
+            "node": "Groq Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Transcription": {
+      "main": [
+        [
+          {
+            "node": "Normalize Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Transcript": {
+      "main": [
+        [
+          {
+            "node": "IF Transcription Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Transcription Failed": {
+      "main": [
+        [
+          {
+            "node": "Build Transcription Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Audio Asset Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Transcription Error": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Transcription Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Transcription Error": {
+      "main": [
+        [
+          {
+            "node": "Respond Transcription Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Audio Asset Transcript": {
+      "main": [
+        [
+          {
+            "node": "Rehydrate After Audio Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rehydrate After Audio Transcript": {
+      "main": [
+        [
+          {
+            "node": "Ready Input Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ready Input Context": {
+      "main": [
+        [
+          {
+            "node": "Get Session User Turns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session User Turns": {
+      "main": [
+        [
+          {
+            "node": "Parse Session Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Session Count": {
+      "main": [
+        [
+          {
+            "node": "Get 24h Identity User Turns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get 24h Identity User Turns": {
+      "main": [
+        [
+          {
+            "node": "Get Session TTS Previews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quota Evaluation": {
+      "main": [
+        [
+          {
+            "node": "IF Limited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Limited": {
+      "main": [
+        [
+          {
+            "node": "Build Limit Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert User Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Limit Payload": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock After Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock After Limit": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert User Message": {
+      "main": [
+        [
+          {
+            "node": "User Message Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Message Context": {
+      "main": [
+        [
+          {
+            "node": "Set Chat Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Chat Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Normalize AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize AI Output": {
+      "main": [
+        [
+          {
+            "node": "IF AI Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF AI Failed": {
+      "main": [
+        [
+          {
+            "node": "Build AI Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare TTS Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Error": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock AI Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock AI Error": {
+      "main": [
+        [
+          {
+            "node": "Respond AI Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Assistant Message": {
+      "main": [
+        [
+          {
+            "node": "Rehydrate Assistant Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Usage Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Log Trial Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Trial Event": {
+      "main": [
+        [
+          {
+            "node": "Build Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Success Response": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Final Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Final Lock": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook CTA Event": {
+      "main": [
+        [
+          {
+            "node": "Normalize CTA Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize CTA Event": {
+      "main": [
+        [
+          {
+            "node": "IF CTA Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF CTA Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build CTA 400",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert CTA Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build CTA 400": {
+      "main": [
+        [
+          {
+            "node": "Respond CTA 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert CTA Event": {
+      "main": [
+        [
+          {
+            "node": "Respond CTA Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session TTS Previews": {
+      "main": [
+        [
+          {
+            "node": "Parse Session TTS Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Session TTS Count": {
+      "main": [
+        [
+          {
+            "node": "Get 24h Identity TTS Previews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get 24h Identity TTS Previews": {
+      "main": [
+        [
+          {
+            "node": "Quota Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare TTS Request": {
+      "main": [
+        [
+          {
+            "node": "IF Generate TTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Generate TTS": {
+      "main": [
+        [
+          {
+            "node": "Groq TTS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Assistant Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq TTS": {
+      "main": [
+        [
+          {
+            "node": "Upload TTS Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload TTS Storage": {
+      "main": [
+        [
+          {
+            "node": "Create Signed TTS URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Signed TTS URL": {
+      "main": [
+        [
+          {
+            "node": "Insert TTS Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert TTS Asset": {
+      "main": [
+        [
+          {
+            "node": "Normalize TTS Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize TTS Output": {
+      "main": [
+        [
+          {
+            "node": "Prepare Assistant Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Assistant Record": {
+      "main": [
+        [
+          {
+            "node": "Insert Assistant Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rehydrate Assistant Context": {
+      "main": [
+        [
+          {
+            "node": "Upsert Usage Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Image Generate": {
+      "main": [
+        [
+          {
+            "node": "Image Gen Quota Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF Voice Modality",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Gen Quota Check": {
+      "main": [
+        [
+          {
+            "node": "Get Image Gen Usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image Gen Usage": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Image Quota",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Image Quota": {
+      "main": [
+        [
+          {
+            "node": "IF Image Limited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Image Limited": {
+      "main": [
+        [
+          {
+            "node": "Build Image Limit Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cloudflare Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Limit Response": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Image Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Image Limit": {
+      "main": [
+        [
+          {
+            "node": "Respond Image Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cloudflare Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Normalize Image Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Image Output": {
+      "main": [
+        [
+          {
+            "node": "IF Image Gen Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Image Gen Failed": {
+      "main": [
+        [
+          {
+            "node": "Build Image Gen Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Image Asset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Gen Error": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Image Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Image Error": {
+      "main": [
+        [
+          {
+            "node": "Respond Image Gen Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Image Asset": {
+      "main": [
+        [
+          {
+            "node": "Increment Image Gen Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Image Gen Counter": {
+      "main": [
+        [
+          {
+            "node": "Build Image Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Image Success Response": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Image Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Image Success": {
+      "main": [
+        [
+          {
+            "node": "Respond Image Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a20fdbef-f641-4a7f-b723-a3f27947348b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e2ee7e1361f37e2c25875b321ce063f1ed4a04e698d8cbb5529c6778b9f1a9e"
+  },
+  "id": "7lgZibb4VwgD2QVf2LbRI",
+  "tags": []
+}
