@@ -634,6 +634,9 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <span class="ed-trust-legend-item" data-trust="safe"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-safe)"></span>Safe to automate</span>
       <span class="ed-trust-legend-item" data-trust="review"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-review)"></span>Needs review</span>
       <span class="ed-trust-legend-item" data-trust="override"><span class="ed-trust-legend-dot" style="background:var(--ed-trust-override)"></span>Human override required</span>
+      <button class="ed-support-trigger" onclick="window.gcOpenChat()" title="Get help with trust states" aria-label="Exception Support">
+        <span class="material-symbols-outlined">help</span>
+      </button>
     </div>
     <div class="ed-kbd-hints">
       <span><span class="ed-kbd">⌘↵</span> Approve</span>
@@ -739,6 +742,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         </button>
         <button class="ed-btn ed-btn-escalate" onclick="edEscalate()">
           <span class="material-symbols-outlined">flag</span> Escalate
+        </button>
+        <button class="ed-btn ed-btn-support" onclick="window.gcOpenChat()" title="Get help with this action">
+          <span class="material-symbols-outlined">help</span>
+          <span class="ed-btn-support-label">Support</span>
         </button>
       </div>
     </div>
@@ -951,7 +958,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   <div class="ui-card bg-surface-container text-center">
     <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4">See it on your own data.</h3>
     <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]">Bring a real exception from your operations. We'll show how the desk resolves it live.</p>
-    <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span>Book a Live Demo</span> <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+      <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span>Book a Live Demo</span> <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+      <button onclick="window.gcOpenChat()" class="ui-btn ui-btn-secondary px-6 py-4 text-[13px] gap-2"><span class="material-symbols-outlined text-sm">chat</span> <span>Ask a Question</span></button>
+    </div>
     <p class="text-secondary text-xs mt-4">Free · 30 minutes · No obligation</p>
   </div>
 </section>
@@ -1223,9 +1233,8 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     } else {
       window.scrollTo({top:0, behavior:'smooth'});
     }
-    // Toggle Exception Support chat trigger (hide on workspace, show elsewhere)
-    var chatTrigger = document.getElementById('gc-chat-trigger');
-    if (chatTrigger) chatTrigger.style.display = (page === 'home') ? 'none' : '';
+    // Expose current page for contextual support system
+    window.__gcCurrentPage = page;
 
     setTimeout(observeRevealElements, 200);
     closeDrawer();
@@ -1282,16 +1291,8 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     reveals.forEach(function(el) { obs.observe(el); });
   }
 
-  // Handle visibility for the floating "up" pill or other sticky elements
-  var pill = document.querySelector('.floating-pill');
-  function handlePillVisibility() {
-    if (!pill) return;
-    if (window.scrollY > 400) { pill.classList.add('show'); }
-    else { pill.classList.remove('show'); }
-  }
-
-  // Define listeners
-  window.addEventListener('scroll', handlePillVisibility, {passive:true});
+  // Support layer page context — set initial value
+  window.__gcCurrentPage = 'home';
 
   // ── Mouse Glow Tracker ──
   document.addEventListener('mousemove', function(e) {

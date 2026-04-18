@@ -1887,6 +1887,67 @@ html:not(.dark) .gc-toast {
 }
 
 /* -------------------------------------------------------------------------- */
+/* CONTEXTUAL SUPPORT INTENTS                                                  */
+/* -------------------------------------------------------------------------- */
+
+.gc-context-intents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 16px;
+  justify-content: center;
+}
+
+.gc-context-intent {
+  appearance: none;
+  border: 1px solid var(--gc-border);
+  border-radius: 14px;
+  padding: 10px 16px;
+  background: var(--gc-bg-soft);
+  color: var(--gc-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gc-context-intent:hover {
+  background: var(--gc-bg-elevated);
+  color: var(--gc-text);
+  border-color: var(--gc-border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.2);
+}
+
+html:not(.dark) .gc-context-intent {
+  background: rgba(26, 25, 23, 0.04);
+  border-color: rgba(26, 25, 23, 0.08);
+  color: #4f4a45;
+}
+
+html:not(.dark) .gc-context-intent:hover {
+  background: rgba(26, 25, 23, 0.08);
+  color: #1a1917;
+  border-color: rgba(26, 25, 23, 0.14);
+}
+
+@media (max-width: 639px) {
+  .gc-context-intents {
+    gap: 6px;
+  }
+  .gc-context-intent {
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* ANIMATIONS & STATES                                                        */
 /* -------------------------------------------------------------------------- */
 

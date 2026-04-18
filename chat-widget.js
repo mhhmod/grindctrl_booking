@@ -34,6 +34,36 @@
     }
   };
 
+  var SUPPORT_CONTEXT = {
+    home: {
+      intro: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
+      desc: { en: 'Get help with anomalies, trust states, and resolution actions.', ar: 'احصل على مساعدة في الشذوذات وحالات الثقة وإجراءات الحل.' },
+      placeholder: { en: 'Ask about this exception…', ar: 'اسأل عن هذا الاستثناء…' },
+      prompts: {
+        en: ['Explain this anomaly', 'Help resolve this case', 'Why is this flagged?', 'Escalate to manager'],
+        ar: ['اشرح لي هذا الشذوذ', 'ساعدني في حل هذه الحالة', 'لماذا تم تمييز هذا؟', 'صعّد إلى المدير']
+      }
+    },
+    solutions: {
+      intro: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
+      desc: { en: 'Ask about how the desk works, integrations, or your business case.', ar: 'اسأل عن كيفية عمل المكتب أو التكاملات أو حالة عملك.' },
+      placeholder: { en: 'Ask about the Exception Desk…', ar: 'اسأل عن مكتب الاستثناءات…' },
+      prompts: {
+        en: ['Show me how this works', 'Ask about integrations', 'Can this handle my use case?', 'Talk to sales'],
+        ar: ['أرني كيف يعمل هذا', 'اسأل عن التكاملات', 'هل يناسب حالة استخدامي؟', 'تحدث مع المبيعات']
+      }
+    },
+    book: {
+      intro: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
+      desc: { en: 'Get help with booking, pricing, or setup questions.', ar: 'احصل على مساعدة في الحجز أو التسعير أو أسئلة الإعداد.' },
+      placeholder: { en: 'Ask about pricing or setup…', ar: 'اسأل عن التسعير أو الإعداد…' },
+      prompts: {
+        en: ['Book a demo', 'Share my use case', 'Ask about pricing', 'Ask about setup'],
+        ar: ['احجز عرضاً توضيحياً', 'شارك حالة استخدامي', 'اسأل عن التسعير', 'اسأل عن الإعداد']
+      }
+    }
+  };
+
   var state = {
     phase: 'closed',
     sessionId: null,
@@ -512,7 +542,36 @@
   }
 
   function getPromptList() {
-    return CONFIG.PROMPTS[currentLang()] || CONFIG.PROMPTS.en;
+    return getContextPrompts();
+  }
+
+  function getCurrentPage() {
+    return window.__gcCurrentPage || 'home';
+  }
+
+  function getContextConfig() {
+    var page = getCurrentPage();
+    return SUPPORT_CONTEXT[page] || SUPPORT_CONTEXT.home;
+  }
+
+  function getContextPrompts() {
+    var lang = currentLang();
+    var ctx = getContextConfig();
+    return (ctx.prompts && ctx.prompts[lang]) || ctx.prompts.en || CONFIG.PROMPTS.en;
+  }
+
+  function getContextIntro() {
+    var lang = currentLang();
+    var ctx = getContextConfig();
+    var title = (ctx.intro && ctx.intro[lang]) || ctx.intro.en || 'Exception Support';
+    var desc = (ctx.desc && ctx.desc[lang]) || ctx.desc.en || '';
+    return { title: title, desc: desc };
+  }
+
+  function getContextPlaceholder() {
+    var lang = currentLang();
+    var ctx = getContextConfig();
+    return (ctx.placeholder && ctx.placeholder[lang]) || ctx.placeholder.en || t('chat_placeholder');
   }
 
   function isAuthenticated() {
@@ -868,9 +927,6 @@
       '<span class="gc-chat-trigger-badge"></span>'
     ].join('');
     document.body.appendChild(trigger);
-    // Hide on workspace page (navigateTo already ran before widget built)
-    var activePage = document.querySelector('[data-page].active');
-    if (activePage && activePage.dataset.page === 'home') trigger.style.display = 'none';
 
     var scrim = document.createElement('div');
     scrim.id = 'gc-chat-scrim';
@@ -978,7 +1034,7 @@
 
     if (trigger) trigger.setAttribute('aria-label', t('chat_open_label'));
     if (triggerLabel) triggerLabel.textContent = t('chat_trigger_label');
-    if (panel) panel.setAttribute('aria-label', t('chat_empty_title'));
+    if (panel) panel.setAttribute('aria-label', getContextIntro().title);
     if (closeButton) {
       closeButton.setAttribute('aria-label', t('chat_close_label'));
       var closeBtnLabel = closeButton.querySelector('.gc-btn-label');
@@ -1042,11 +1098,20 @@
       return;
     }
 
+    var ctx = getContextIntro();
+    var prompts = getContextPrompts().slice(0, 4);
+    var intentHTML = '<div class="gc-context-intents">' +
+      prompts.map(function(prompt, index) {
+        return '<button class="gc-context-intent" type="button" data-action="prompt" data-prompt-index="' + index + '">' + escapeHTML(prompt) + '</button>';
+      }).join('') +
+      '</div>';
+
     intro.innerHTML = [
       '<div class="gc-chat-intro-copy gc-chat-intro-copy-center">',
-      '  <div class="gc-chat-intro-title">' + escapeHTML(t('chat_empty_title')) + '</div>',
-      '  <div class="gc-chat-intro-desc">' + escapeHTML(t('chat_empty_desc')) + '</div>',
-      '</div>'
+      '  <div class="gc-chat-intro-title">' + escapeHTML(ctx.title) + '</div>',
+      '  <div class="gc-chat-intro-desc">' + escapeHTML(ctx.desc) + '</div>',
+      '</div>',
+      intentHTML
     ].join('');
   }
 
@@ -1374,7 +1439,7 @@
     var emptyMode = !state.messages.length && !state.historyLoading && !inLimitMode && !state.imageMode && state.phase !== 'responding' && state.phase !== 'transcribing' && state.phase !== 'generating_image';
 
     if (textarea) {
-      textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder');
+      textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : getContextPlaceholder();
       textarea.disabled = inLimitMode;
       textarea.setAttribute('aria-label', state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder'));
     }
@@ -1967,7 +2032,6 @@
     var panel = $('gc-chat-panel');
     var trigger = $('gc-chat-trigger');
     var scrim = $('gc-chat-scrim');
-    var pill = document.getElementById('floating-pill');
 
     if (!panel || !trigger || !scrim) return;
 
@@ -1985,7 +2049,6 @@
       : trigger;
     state.phase = state.phase === 'limit' ? 'limit' : 'open';
     document.body.style.overflow = 'hidden';
-    if (pill) pill.style.display = 'none';
 
     ensureSession().then(function () {
       renderHeader();
@@ -2004,7 +2067,6 @@
     var panel = $('gc-chat-panel');
     var trigger = $('gc-chat-trigger');
     var scrim = $('gc-chat-scrim');
-    var pill = document.getElementById('floating-pill');
 
     if (!panel || !trigger || !scrim) return;
 
@@ -2015,7 +2077,6 @@
     
     setTimeout(function() {
       panel.classList.remove('state-closing');
-      if (pill) pill.style.display = '';
     }, 400);
 
     document.body.style.overflow = '';
@@ -2282,6 +2343,16 @@
       if (shouldRender) renderAll();
     });
     rootObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'lang', 'dir'] });
+
+    // Listen for page changes to re-render contextual support
+    var lastKnownPage = getCurrentPage();
+    setInterval(function () {
+      var currentPage = getCurrentPage();
+      if (currentPage !== lastKnownPage) {
+        lastKnownPage = currentPage;
+        renderAll();
+      }
+    }, 300);
   }
 
   window.gcOpenChat = openChat;
