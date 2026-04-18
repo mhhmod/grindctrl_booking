@@ -1169,21 +1169,49 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       </button>
     </div>
     <div class="p-6 sm:p-8 bg-surface-container-lowest/50 overflow-x-auto">
-      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0"><!-- GRINDCTRL Support Widget -->
+      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0">&lt;!-- GRINDCTRL Support Widget --&gt;
+&lt;script src="https://cdn.grindctrl.com/grindctrl-support.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-  (function(g,c,t,r,l){
-    g.__gc=r;g[r]=g[r]||function(){
-    (g[r].q=g[r].q||[]).push(arguments)};
-    var s=c.createElement(t);s.async=1;
-    s.src='https://cdn.grindctrl.com/grindctrl-support.js';
-    var m=c.getElementsByTagName(t)[0];
-    m.parentNode.insertBefore(s,m);
-  })(window,document,'script','gc');
-  gc('init',{ siteId:'YOUR_SITE_ID', apiKey:'YOUR_API_KEY' });
-  gc('embed','#grindctrl-widget');
-&lt;/script&gt;
+  GrindctrlSupport.init({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
+  });
+&lt;/script&gt;</pre>
+    </div>
+  </div>
+</div>
 
-&lt;div id="grindctrl-widget"&gt;&lt;/div&gt;</pre>
+<!-- ── Live Test ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="mb-10">
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Test Drive</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3">Try It Live</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium">Enter your embed key and domain. The widget will load right here — no deployment needed.</p>
+  </div>
+  <div class="ui-card max-w-2xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-[0.15em] text-secondary mb-2">Embed Key</label>
+        <input id="test-embed-key" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="pk_live_..."/>
+      </div>
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-[0.15em] text-secondary mb-2">Domain</label>
+        <input id="test-domain" type="text" class="w-full bg-surface-container-low/50 border border-softer text-[13px] rounded-xl px-4 py-3 text-on-surface placeholder:text-secondary/50 font-medium focus:ring-1 focus:ring-primary focus:border-primary" placeholder="yoursite.com"/>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="test-load-btn" onclick="testLoadWidget()" class="ui-btn ui-btn-primary px-6 py-3 text-[13px] gap-2"><span class="material-symbols-outlined text-sm">play_arrow</span> Load Widget</button>
+      <button id="test-unload-btn" onclick="testUnloadWidget()" class="ui-btn ui-btn-secondary px-5 py-3 text-[13px] gap-2" style="display:none"><span class="material-symbols-outlined text-sm">stop</span> Unload</button>
+      <span id="test-status" class="text-[12px] font-medium text-secondary"></span>
+    </div>
+    <div id="test-result" class="mt-6 p-4 rounded-xl border border-softer bg-surface-container-low/50" style="display:none">
+      <div class="flex items-start gap-3">
+        <span id="test-result-icon" class="material-symbols-outlined text-lg shrink-0 mt-0.5"></span>
+        <div>
+          <div id="test-result-title" class="text-[13px] font-bold text-on-surface mb-1"></div>
+          <div id="test-result-body" class="text-[12px] text-secondary font-medium leading-relaxed"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1577,6 +1605,129 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
           setTimeout(function() { btn.innerHTML = orig; }, 2000);
         }
       });
+    }
+  };
+
+  // Test widget loader
+  var _testScriptEl = null;
+
+  window.testLoadWidget = function() {
+    var key = document.getElementById('test-embed-key').value.trim();
+    var domain = document.getElementById('test-domain').value.trim();
+    var status = document.getElementById('test-status');
+    var result = document.getElementById('test-result');
+    var resultIcon = document.getElementById('test-result-icon');
+    var resultTitle = document.getElementById('test-result-title');
+    var resultBody = document.getElementById('test-result-body');
+    var loadBtn = document.getElementById('test-load-btn');
+    var unloadBtn = document.getElementById('test-unload-btn');
+
+    if (!key) {
+      status.textContent = '';
+      result.style.display = '';
+      resultIcon.textContent = 'error';
+      resultIcon.style.color = 'var(--gc-error)';
+      resultTitle.textContent = 'Missing embed key';
+      resultBody.textContent = 'Enter your public embed key to test the widget.';
+      return;
+    }
+
+    // Remove existing test widget if any
+    testUnloadWidget();
+
+    status.textContent = 'Loading...';
+    result.style.display = 'none';
+    loadBtn.disabled = true;
+
+    // Create script element
+    _testScriptEl = document.createElement('script');
+    _testScriptEl.src = 'grindctrl-support.js';
+    _testScriptEl.onload = function() {
+      if (typeof GrindctrlSupport === 'function' || (typeof GrindctrlSupport === 'object' && GrindctrlSupport.init)) {
+        try {
+          GrindctrlSupport.init({
+            embedKey: key,
+            domain: domain || window.location.hostname,
+            onReady: function() {
+              status.textContent = '';
+              result.style.display = '';
+              resultIcon.textContent = 'check_circle';
+              resultIcon.style.color = 'var(--gc-secondary)';
+              resultTitle.textContent = 'Widget loaded successfully';
+              resultBody.textContent = 'The widget is now active on this page. Look for the launcher button in the bottom-right corner.';
+              loadBtn.disabled = false;
+              loadBtn.style.display = 'none';
+              unloadBtn.style.display = '';
+            },
+            onError: function(err) {
+              status.textContent = '';
+              result.style.display = '';
+              resultIcon.textContent = 'error';
+              resultIcon.style.color = 'var(--gc-error)';
+              resultTitle.textContent = 'Widget error';
+              resultBody.textContent = err && err.message ? err.message : 'Failed to initialize widget. Check your embed key and domain.';
+              loadBtn.disabled = false;
+            }
+          });
+        } catch(e) {
+          status.textContent = '';
+          result.style.display = '';
+          resultIcon.textContent = 'error';
+          resultIcon.style.color = 'var(--gc-error)';
+          resultTitle.textContent = 'Initialization failed';
+          resultBody.textContent = e.message || 'Unknown error during widget init.';
+          loadBtn.disabled = false;
+        }
+      } else {
+        status.textContent = '';
+        result.style.display = '';
+        resultIcon.textContent = 'error';
+        resultIcon.style.color = 'var(--gc-error)';
+        resultTitle.textContent = 'Script loaded but GrindctrlSupport not found';
+        resultBody.textContent = 'The script loaded but the widget API is not available. Check the console for errors.';
+        loadBtn.disabled = false;
+      }
+    };
+    _testScriptEl.onerror = function() {
+      status.textContent = '';
+      result.style.display = '';
+      resultIcon.textContent = 'error';
+      resultIcon.style.color = 'var(--gc-error)';
+      resultTitle.textContent = 'Failed to load widget script';
+      resultBody.textContent = 'Could not load grindctrl-support.js. Make sure the file is accessible from this page.';
+      loadBtn.disabled = false;
+    };
+    document.head.appendChild(_testScriptEl);
+  };
+
+  window.testUnloadWidget = function() {
+    var status = document.getElementById('test-status');
+    var result = document.getElementById('test-result');
+    var loadBtn = document.getElementById('test-load-btn');
+    var unloadBtn = document.getElementById('test-unload-btn');
+
+    // Remove the script element
+    if (_testScriptEl && _testScriptEl.parentNode) {
+      _testScriptEl.parentNode.removeChild(_testScriptEl);
+      _testScriptEl = null;
+    }
+
+    // Remove widget DOM elements
+    var widgetEl = document.getElementById('grindctrl-widget');
+    if (widgetEl) widgetEl.remove();
+    var launcherEl = document.getElementById('gc-launcher');
+    if (launcherEl) launcherEl.remove();
+
+    // Reset UI
+    status.textContent = '';
+    result.style.display = 'none';
+    loadBtn.style.display = '';
+    loadBtn.disabled = false;
+    unloadBtn.style.display = 'none';
+
+    // Clear the global
+    if (window.GrindctrlSupport) {
+      window.GrindctrlSupport = undefined;
     }
   };
 
