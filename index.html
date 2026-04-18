@@ -1168,9 +1168,9 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
         <span class="material-symbols-outlined text-sm">content_copy</span> Copy
       </button>
     </div>
-    <div class="p-6 sm:p-8 bg-surface-container-lowest/50">
-      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed overflow-x-auto whitespace-pre-wrap"><!-- GRINDCTRL Support Widget -->
-<script>
+    <div class="p-6 sm:p-8 bg-surface-container-lowest/50 overflow-x-auto">
+      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0"><!-- GRINDCTRL Support Widget -->
+&lt;script&gt;
   (function(g,c,t,r,l){
     g.__gc=r;g[r]=g[r]||function(){
     (g[r].q=g[r].q||[]).push(arguments)};
@@ -1181,7 +1181,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   })(window,document,'script','gc');
   gc('init',{ siteId:'YOUR_SITE_ID', apiKey:'YOUR_API_KEY' });
   gc('embed','#grindctrl-widget');
-</script>
+&lt;/script&gt;
 
 &lt;div id="grindctrl-widget"&gt;&lt;/div&gt;</pre>
     </div>
@@ -1233,7 +1233,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <div class="mb-20 sm:mb-28 reveal">
   <div class="ui-card bg-surface-container">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-      <div>
+      <div class="order-2 lg:order-1">
         <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">White-Label</span>
         <h2 class="h3-fluid font-headline text-on-surface mb-4">Full Control, Zero Compromise</h2>
         <p class="text-secondary text-[15px] leading-relaxed font-medium mb-6">
@@ -1257,18 +1257,18 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
             Locked attribution — GRINDCTRL attribution removed permanently
           </li>
         </ul>
-        <div class="mt-8 flex items-center gap-3 p-4 bg-surface-container-high/50 border border-softer rounded-xl">
-          <span class="material-symbols-outlined text-accent text-xl">info</span>
-          <p class="text-[12px] text-secondary font-medium">Starter plan shows "Powered by GRINDCTRL" attribution. Growth and Premium plans remove it.</p>
+        <div class="mt-8 flex items-start gap-3 p-4 bg-surface-container-high/50 border border-softer rounded-xl">
+          <span class="material-symbols-outlined text-accent text-xl shrink-0 mt-0.5">info</span>
+          <p class="text-[12px] text-secondary font-medium leading-relaxed">Starter plan shows "Powered by GRINDCTRL" attribution. Growth and Premium plans remove it.</p>
         </div>
       </div>
-      <div class="relative">
-        <div class="rounded-2xl border border-softer bg-surface-container-lowest/50 p-6 shadow-xl">
+      <div class="order-1 lg:order-2 relative">
+        <div class="rounded-2xl border border-softer bg-surface-container-lowest/50 p-6 shadow-xl max-w-sm mx-auto overflow-hidden">
           <div class="flex items-center gap-3 mb-6">
-            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary text-[11px] font-black">G</div>
-            <div>
-              <div class="text-[13px] font-bold text-on-surface">Acme Support</div>
-              <div class="text-[11px] text-secondary">help.acme.com</div>
+            <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary text-[11px] font-black shrink-0">G</div>
+            <div class="min-w-0">
+              <div class="text-[13px] font-bold text-on-surface truncate">Acme Support</div>
+              <div class="text-[11px] text-secondary truncate">help.acme.com</div>
             </div>
           </div>
           <div class="space-y-2 mb-4">
@@ -1292,8 +1292,8 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Pricing</span>
     <h2 class="h3-fluid font-headline text-on-surface mb-3">Simple, Scalable Plans</h2>
   </div>
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    <div class="ui-card">
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+    <div class="ui-card min-w-0">
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Trial</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">Free</div>
       <div class="text-[12px] text-secondary font-medium mb-6">15 days</div>
@@ -1317,7 +1317,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       </ul>
       <a href="#book" class="ui-btn ui-btn-secondary w-full text-[12px] text-center block">Get Started</a>
     </div>
-    <div class="ui-card relative border-primary/30">
+    <div class="ui-card relative min-w-0 border-primary/30">
       <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-on-primary rounded-full text-[10px] font-black uppercase tracking-widest">Popular</div>
       <div class="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Growth</div>
       <div class="text-3xl font-black font-headline text-on-surface mb-1">$149<span class="text-[16px] font-medium text-secondary">/mo</span></div>
@@ -1371,7 +1371,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <img src="logo-light.svg" alt="GRINDCTRL" class="logo-light h-6 w-auto"/>
       <span class="text-xl font-black font-headline tracking-[-0.04em]">GRINDCTRL</span>
     </div>
-    <p class="text-secondary max-w-xs text-[14px] font-medium">Autonomous exception processing. From messy input to structured, approval‑ready business action.</p>
+    <p class="text-secondary max-w-xs text-[14px] font-medium">AI-powered embeddable support widget. Drop on any website. White-label ready. 15-day free trial.</p>
     <div class="flex gap-4 mt-8">
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">public</span></span>
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">hub</span></span>
