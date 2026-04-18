@@ -458,7 +458,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 .floating-pill.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
 
 /* ── RTL / Arabic Support ── */
-[dir="rtl"] body{font-family:'IBM Plex Sans Arabic','Inter',system-ui,sans-serif}
+[dir="rtl"] body{font-family:'IBM Plex Sans Arabic','Inter',system-ui,sans-serif;overflow-x:hidden}
+[dir="rtl"] .ui-shell{overflow-x:hidden}
+[dir="rtl"] .ui-container{width:100%;max-width:1536px;box-sizing:border-box;padding-left:clamp(1.25rem, 6vw, 2.5rem);padding-right:clamp(1.25rem, 6vw, 2.5rem)}
+[dir="rtl"] section{overflow-x:hidden}
+[dir="rtl"] .reveal{max-width:100vw}
 [dir="rtl"] .font-headline{font-family:'IBM Plex Sans Arabic','Manrope',system-ui,sans-serif}
 [dir="rtl"] .drawer-panel{right:auto;left:0;transform:translateX(-100%);border-left:none;border-right:1px solid var(--gc-outline)}
 [dir="rtl"] .drawer-panel.open{transform:translateX(0)}
@@ -1197,7 +1201,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     <div class="flex justify-center" id="mockup-container">
       <div class="relative w-full max-w-[360px]">
         <!-- Phone frame -->
-        <div class="rounded-[2.5rem] border-[4px] border-outline-variant bg-canvas overflow-hidden shadow-2xl" style="height:640px">
+        <div id="mockup-phone-frame" class="rounded-[2.5rem] border-[4px] border-outline-variant bg-canvas overflow-hidden shadow-2xl" style="height:640px">
           <!-- Status bar -->
           <div class="flex items-center justify-between px-6 py-3 bg-surface-container-low text-[11px] text-secondary font-bold">
             <span id="mockup-time">9:41</span>
@@ -1571,8 +1575,8 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 <!-- ── Plan Tiers ── -->
 <div class="mb-20 sm:mb-28 reveal">
   <div class="mb-10">
-    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Pricing</span>
-    <h2 class="h3-fluid font-headline text-on-surface mb-3">Simple, Scalable Plans</h2>
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block" data-i18n="install_pricing_badge">Pricing</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3" data-i18n="install_pricing_title">Simple, Scalable Plans</h2>
   </div>
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
     <!-- Trial -->
@@ -1886,7 +1890,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       var launcherIcon = document.getElementById('mockup-launcher-icon');
       var launcherText = document.getElementById('mockup-launcher-text');
       var phoneFrame = document.getElementById('mockup-container');
-      var phoneInner = phoneFrame ? phoneFrame.querySelector('.rounded-\[2\.5rem\]') : null;
+      var phoneInner = document.getElementById('mockup-phone-frame');
       
       isOpen = !isOpen;
       
