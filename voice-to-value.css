@@ -16,9 +16,7 @@
     --ed-mono: 'SF Mono', 'IBM Plex Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
 }
 
-/* ── Hide Chat Widget on Workspace ── */
-.ed-workspace-section ~ .gc-chat-trigger,
-.gc-chat-trigger { display: none !important; }
+/* ── Chat trigger visibility controlled by JS navigateTo() ── */
 
 /* ── Workspace Section ── */
 .ed-workspace-section {

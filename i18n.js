@@ -9,18 +9,16 @@
 
   var T = {
     /* ────────── NAV ────────── */
-    nav_home: { en: 'Home', ar: 'الرئيسية' },
-    nav_solutions: { en: 'Solutions', ar: 'الحلول' },
-    nav_ai_trainer: { en: 'AI Trainer', ar: 'المدرب الذكي' },
+    nav_home: { en: 'Workspace', ar: 'مساحة العمل' },
+    nav_solutions: { en: 'How It Works', ar: 'كيف يعمل' },
     nav_packages: { en: 'Packages', ar: 'الباقات' },
     nav_book_cta: { en: 'Book a Call', ar: 'احجز مكالمة' },
 
     /* ────────── DRAWER ────────── */
-    drawer_home: { en: ' Home', ar: ' الرئيسية' },
-    drawer_solutions: { en: ' Solutions', ar: ' الحلول' },
-    drawer_ai_trainer: { en: ' AI Trainer', ar: ' المدرب الذكي' },
+    drawer_home: { en: ' Workspace', ar: ' مساحة العمل' },
+    drawer_solutions: { en: ' How It Works', ar: ' كيف يعمل' },
     drawer_packages: { en: ' Packages', ar: ' الباقات' },
-    drawer_book_cta: { en: 'Book a Strategy Call', ar: 'احجز مكالمة استراتيجية' },
+    drawer_book_cta: { en: 'Book a Call', ar: 'احجز مكالمة' },
 
     /* ────────── FLOATING PILL ────────── */
     pill_book: { en: ' Book a Call', ar: ' احجز مكالمة' },
@@ -300,12 +298,11 @@
     book_private_desc: { en: 'All discussed operational data is protected by our standard confidentiality protocol.', ar: 'كافة البيانات التشغيلية المناقشة محمية ببروتوكول السرية المعتمد لدينا.' },
 
     /* ────────── FOOTER ────────── */
-    footer_tagline: { en: 'Architecting the next generation of business intelligence through precision automation and elite AI infrastructure.', ar: 'نبني الجيل القادم من ذكاء الأعمال من خلال الأتمتة الدقيقة والبنية التحتية المتقدمة للذكاء الاصطناعي.' },
-    footer_solutions: { en: 'Solutions', ar: 'الحلول' },
-    footer_sol_auto: { en: 'AI Automation', ar: 'الأتمتة الذكية' },
-    footer_sol_agents: { en: 'AI Agents', ar: 'الوكلاء الأذكياء' },
-    footer_sol_biz: { en: 'Business OS', ar: 'نظام تشغيل الأعمال' },
-    footer_sol_trainer: { en: 'AI Trainer', ar: 'المدرب الذكي' },
+    footer_tagline: { en: 'Autonomous exception processing for modern operations teams.', ar: 'معالجة استثناءات مؤتمتة لفرق العمليات الحديثة.' },
+    footer_solutions: { en: 'Product', ar: 'المنتج' },
+    footer_sol_auto: { en: 'Exception Desk', ar: 'مكتب الاستثناءات' },
+    footer_sol_agents: { en: 'How It Works', ar: 'كيف يعمل' },
+    footer_sol_biz: { en: 'Integrations', ar: 'التكاملات' },
     footer_company: { en: 'Company', ar: 'الشركة' },
     footer_privacy: { en: 'Privacy', ar: 'الخصوصية' },
     footer_terms: { en: 'Terms', ar: 'الشروط' },
@@ -393,13 +390,13 @@
     bp_studio_fallback_message: { en: 'Starter blueprint shown.', ar: 'تم عرض مخطط أولي.' },
 
     /* ────────── AI AGENT TRIAL: CHAT WIDGET ────────── */
-    chat_empty_title: { en: 'Ask about your operations', ar: 'اسأل عن عملياتك' },
-    chat_empty_desc: { en: 'Type, record, or upload audio. Switch to image creation when you need a visual.', ar: 'اكتب أو سجّل أو ارفع ملفاً صوتياً. ويمكنك التبديل إلى إنشاء صورة عند الحاجة.' },
-    chat_placeholder: { en: 'Ask about leads, follow-up, support, or operations…', ar: 'اسأل عن العملاء أو المتابعة أو الدعم أو العمليات…' },
-    chat_prompt_1: { en: 'Where can AI save the most time in my business?', ar: 'أين يمكن للذكاء الاصطناعي أن يوفر أكبر وقت في عملي؟' },
-    chat_prompt_2: { en: 'Show me a better lead follow-up flow', ar: 'اعرض لي أسلوباً أفضل لمتابعة العملاء المحتملين' },
-    chat_prompt_3: { en: 'What can an AI agent handle for a gym?', ar: 'ما الذي يمكن لوكيل ذكي أن يديره لصالة رياضية؟' },
-    chat_prompt_4: { en: 'How would GRINDCTRL reduce admin work here?', ar: 'كيف يمكن لـ GRINDCTRL تقليل العمل الإداري هنا؟' },
+    chat_empty_title: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
+    chat_empty_desc: { en: 'Get help with anomalies, trust states, and resolution actions.', ar: 'احصل على مساعدة في الشذوذات وحالات الثقة وإجراءات الحل.' },
+    chat_placeholder: { en: 'Ask about this exception…', ar: 'اسأل عن هذا الاستثناء…' },
+    chat_prompt_1: { en: 'Explain this anomaly to me', ar: 'اشرح لي هذا الشذوذ' },
+    chat_prompt_2: { en: 'What does this trust state mean?', ar: 'ماذا تعني حالة الثقة هذه؟' },
+    chat_prompt_3: { en: 'Help me draft a correction email', ar: 'ساعدني في كتابة بريد تصحيح' },
+    chat_prompt_4: { en: 'Show me similar past exceptions', ar: 'أرني استثناءات مشابهة سابقة' },
     chat_turns_remaining: { en: ' turns remaining', ar: ' محاولات متبقية' },
     chat_turns_left: { en: 'left', ar: 'متبقي' },
     chat_today_left: { en: 'today', ar: 'اليوم' },
@@ -417,8 +414,8 @@
     chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
     chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
     chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-    chat_open_label: { en: 'Open GRINDCTRL assistant', ar: 'فتح مساعد GRINDCTRL' },
-    chat_trigger_label: { en: 'Ask GRINDCTRL', ar: 'اسأل GRINDCTRL' },
+    chat_open_label: { en: 'Open Exception Support', ar: 'فتح دعم الاستثناءات' },
+    chat_trigger_label: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
     chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
     chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
     chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },

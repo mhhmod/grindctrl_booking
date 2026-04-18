@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="dark" lang="en" dir="ltr">
 <head>
 <meta charset="utf-8"/>
@@ -555,8 +555,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   </a>
   <div class="hidden md:flex items-center gap-7" id="nav-marketing-links">
     <a class="nav-link text-secondary hover:text-ink text-[12px] active" href="#home" data-nav="home">Workspace</a>
-    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions" data-i18n="nav_solutions">Solutions</a>
-    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#ai-trainer" data-nav="ai-trainer" data-i18n="nav_ai_trainer">AI Trainer</a>
+    <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions">How It Works</a>
     <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book">Book a Call</a>
   </div>
   <div class="flex items-center gap-2">
@@ -593,10 +592,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <span class="material-symbols-outlined text-ink-dim text-xl">inbox_customize</span> <span>Workspace</span>
     </a>
     <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions">
-      <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span data-i18n="nav_solutions">Solutions</span>
-    </a>
-    <a href="#ai-trainer" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="ai-trainer">
-      <span class="material-symbols-outlined text-ink-dim text-xl">fitness_center</span> <span data-i18n="nav_ai_trainer">AI Trainer</span>
+      <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span>How It Works</span>
     </a>
     <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book">
       <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
@@ -604,7 +600,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
   </nav>
   <div class="mt-auto pt-8">
     <a href="#book" onclick="document.getElementById('drawer-overlay').classList.remove('open'); document.getElementById('drawer-panel').classList.remove('open'); document.body.style.overflow='';" class="drawer-link block w-full text-center cta-primary py-4 text-base">
-      Book a Strategy Call
+      Book Exception Desk Demo
     </a>
   </div>
 </div>
@@ -762,421 +758,209 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 </div>
 
 <!-- =========================================================== -->
-<!-- PAGE: SOLUTIONS -->
+<!-- PAGE: HOW IT WORKS -->
 <!-- =========================================================== -->
 <div id="page-solutions" class="page-section" data-page="solutions">
 
+<!-- Hero Section -->
 <section class="pt-28 sm:pt-36 pb-16 sm:pb-24 ui-container">
-<header class="mb-16 sm:mb-24 max-w-3xl reveal">
-  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="sol_hero_title">
-    Architecture for the <span class="text-ink-dim italic font-bold">Automated</span> Enterprise.
+<header class="mb-16 sm:mb-20 max-w-3xl reveal">
+  <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-6 block">How It Works</span>
+  <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8">
+    From <span class="text-ink-dim italic font-bold">Messy Input</span> to Structured Action.
   </h1>
-  <p class="text-fluid text-secondary max-w-xl" data-i18n="sol_hero_desc">
-    We design and implement autonomous systems that eliminate operational friction. Our core pillars represent the modular building blocks of a self-sustaining business.
+  <p class="text-fluid text-secondary max-w-xl">
+    The Exception Desk processes garbled emails, mismatched invoices, and chaotic order notes — then extracts clean fields, flags anomalies, and produces approval-ready resolutions.
   </p>
 </header>
 
-<div class="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-5">
-  <!-- AI Automation — Workflow Builder Preview -->
-  <div class="md:col-span-8 ui-card premium-glow group reveal">
-    <div class="flex flex-col lg:flex-row justify-between h-full gap-8 sm:gap-12">
-      <div class="flex-1 space-y-6">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] uppercase tracking-[0.2em] font-bold">
-          <span class="material-symbols-outlined text-xs">hub</span> Core Engine
-        </div>
-        <h2 class="text-3xl sm:text-4xl font-bold font-headline tracking-tighter text-on-surface">AI Automation</h2>
-        <p class="text-secondary text-[16px] leading-relaxed max-w-lg font-medium">Precision integration of Large Language Models (LLMs) into your proprietary workflows. We eliminate manual data processing, classification, and reporting with autonomous logic.</p>
-        <div class="flex items-center gap-2.5 text-primary text-[14px]">
-          <span class="material-symbols-outlined text-sm font-bold">check_circle</span>
-          <span class="font-bold tracking-tight">Efficiency gain: Up to 85% workflow reduction</span>
+<!-- ── 3-Step Flow ── -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-20 sm:mb-28">
+
+  <!-- Step 1: Drop -->
+  <div class="ui-card group reveal">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary text-[13px] font-black shadow-lg">1</div>
+      <span class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">Drop</span>
+    </div>
+    <h3 class="text-xl sm:text-2xl font-bold font-headline tracking-tight text-on-surface mb-3">Drop any messy input</h3>
+    <p class="text-secondary text-[14px] leading-relaxed font-medium mb-6">Paste an email, drag a PDF, upload a screenshot — any format from any source. No cleanup needed.</p>
+    <div class="space-y-2">
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-container/60 border border-softer text-[11px]">
+        <span class="material-symbols-outlined text-primary text-sm">email</span>
+        <span class="text-on-surface font-bold">Forwarded emails</span>
+      </div>
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-container/60 border border-softer text-[11px]">
+        <span class="material-symbols-outlined text-primary text-sm">picture_as_pdf</span>
+        <span class="text-on-surface font-bold">PDF invoices &amp; POs</span>
+      </div>
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-container/60 border border-softer text-[11px]">
+        <span class="material-symbols-outlined text-primary text-sm">screenshot</span>
+        <span class="text-on-surface font-bold">Screenshots &amp; photos</span>
+      </div>
+      <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-container/60 border border-softer text-[11px]">
+        <span class="material-symbols-outlined text-primary text-sm">content_paste</span>
+        <span class="text-on-surface font-bold">Copied text &amp; notes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Extract -->
+  <div class="ui-card group reveal reveal-delay-1">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary text-[13px] font-black shadow-lg">2</div>
+      <span class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">Extract</span>
+    </div>
+    <h3 class="text-xl sm:text-2xl font-bold font-headline tracking-tight text-on-surface mb-3">AI extracts &amp; classifies</h3>
+    <p class="text-secondary text-[14px] leading-relaxed font-medium mb-6">Every field is extracted, verified, and assigned a deterministic trust state. Anomalies are flagged with severity.</p>
+    <div class="space-y-3">
+      <div class="flex items-center gap-3 p-3 rounded-xl border" style="background:var(--ed-trust-safe-bg);border-color:var(--ed-trust-safe-border)">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-safe)"></span>
+        <div class="text-[12px] flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--ed-trust-safe)">Safe to automate</div>
+          <div class="text-[10px] text-secondary font-medium">Verified fields — no human review needed</div>
         </div>
       </div>
-      <!-- Automation Builder Preview -->
-      <div class="w-full lg:w-[45%] bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-6 border border-softer shadow-inner">
-        <div class="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold mb-4">Autonomous Logic · Q2 Pipeline</div>
-        <div class="space-y-3">
-          <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-            <span class="material-symbols-outlined text-primary text-sm font-bold">bolt</span>
-            <div class="text-[12px] flex-1"><div class="text-on-surface font-bold">Trigger: High-Value Lead</div><div class="text-[10px] text-secondary font-medium">Webhook · Real-time</div></div>
-          </div>
-          <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-            <span class="material-symbols-outlined text-sm text-on-surface-variant">auto_awesome</span>
-            <div class="text-[12px] flex-1"><div class="text-on-surface font-bold">AI: Scoring & Context</div><div class="text-[10px] text-secondary font-medium">GPT-4o · Conf. 98.4%</div></div>
-          </div>
-          <div class="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-softer transition-colors hover:bg-surface-container/60">
-            <span class="material-symbols-outlined text-sm text-on-surface-variant">call_split</span>
-            <div class="text-[12px] flex-1"><div class="text-on-surface font-bold">Route: Exec / Standard</div><div class="text-[10px] text-secondary font-medium">3 conditional logic paths</div></div>
-          </div>
-          <div class="flex items-center gap-3 p-3 bg-primary text-on-primary rounded-xl shadow-lg shadow-primary/20 scale-[1.02] transform transition-transform">
-            <span class="material-symbols-outlined text-base font-bold">send</span>
-            <div class="text-[12px] flex-1"><div class="font-bold">Action: VIP Notification</div><div class="text-[10px] opacity-80 font-medium">Slack Priority + HubSpot Deal</div></div>
-          </div>
+      <div class="flex items-center gap-3 p-3 rounded-xl border" style="background:var(--ed-trust-review-bg);border-color:var(--ed-trust-review-border)">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-review)"></span>
+        <div class="text-[12px] flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--ed-trust-review)">Needs review</div>
+          <div class="text-[10px] text-secondary font-medium">Ambiguous data — quick human check required</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 p-3 rounded-xl border" style="background:var(--ed-trust-override-bg);border-color:var(--ed-trust-override-border)">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-override)"></span>
+        <div class="text-[12px] flex-1 min-w-0">
+          <div class="font-bold" style="color:var(--ed-trust-override)">Human override required</div>
+          <div class="text-[10px] text-secondary font-medium">Critical discrepancy — must be verified</div>
         </div>
       </div>
     </div>
   </div>
-  <!-- AI Agents — Agent Console Preview -->
-  <div class="md:col-span-4 ui-card premium-glow group reveal reveal-delay-1">
-    <div class="space-y-4 mb-8">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-secondary text-[10px] uppercase tracking-[0.2em] font-bold">
-        <span class="material-symbols-outlined text-xs">smart_toy</span> Frontline Intelligence
-      </div>
-      <h2 class="text-2xl sm:text-3xl font-bold font-headline tracking-tighter text-on-surface">AI Agents</h2>
-      <p class="text-secondary text-[15px] leading-relaxed font-medium">Persona-driven digital employees. From 24/7 lead response to complex procurement handling.</p>
+
+  <!-- Step 3: Act -->
+  <div class="ui-card group reveal reveal-delay-2">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary text-[13px] font-black shadow-lg">3</div>
+      <span class="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">Act</span>
     </div>
-    <!-- Agent conversation preview -->
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer text-[12px] space-y-4 shadow-sm">
-      <div class="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold">Procurement Agent · Live</div>
-      <div class="flex gap-3">
-        <div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-[10px] font-bold text-on-surface-variant shrink-0 shadow-sm">CN</div>
-        <div class="bg-surface-container/60 rounded-xl rounded-tl-none p-3 text-on-surface-variant border border-softer max-w-[85%] font-medium">Confirm stock for Batch #821?</div>
+    <h3 class="text-xl sm:text-2xl font-bold font-headline tracking-tight text-on-surface mb-3">Approve, edit, or escalate</h3>
+    <p class="text-secondary text-[14px] leading-relaxed font-medium mb-6">One-click resolution with full audit trail. Safe fields route automatically; anomalies require human sign-off.</p>
+    <div class="space-y-2">
+      <div class="flex items-center gap-3 p-3 rounded-xl text-[12px] font-bold" style="background:var(--ed-trust-safe-bg);border:1px solid var(--ed-trust-safe-border);color:var(--ed-trust-safe)">
+        <span class="material-symbols-outlined text-sm">check</span> Approve &amp; Route
       </div>
-      <div class="flex gap-3 justify-end">
-        <div class="bg-primary/5 rounded-xl rounded-tr-none p-3 text-on-surface border border-primary/10 max-w-[85%] font-bold shadow-sm">Batch #821 confirmed. 4,200 units at Hub B. Priority shipment ready for approval.</div>
-        <div class="w-8 h-8 rounded-lg bg-primary-container/30 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 shadow-sm">AI</div>
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-high border border-softer text-[12px] font-bold text-on-surface">
+        <span class="material-symbols-outlined text-sm">edit</span> Edit Fields
       </div>
-      <div class="flex items-center gap-2 text-[10px] text-secondary pt-3 border-t border-softer font-bold"><span class="status-dot status-active"></span> 98.2% Accuracy · Avg 3s Response</div>
-    </div>
-  </div>
-  <!-- Business Systems — Lead Pipeline Preview -->
-  <div class="md:col-span-4 ui-card premium-glow group reveal">
-    <div class="space-y-4 mb-8">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high text-secondary text-[10px] uppercase tracking-[0.2em] font-bold">
-        <span class="material-symbols-outlined text-xs">settings_input_component</span> System Architecture
-      </div>
-      <h2 class="text-2xl sm:text-3xl font-bold font-headline tracking-tighter text-on-surface">Business Systems</h2>
-      <p class="text-secondary text-[15px] leading-relaxed font-medium">Re-engineering your core CRM/ERP for the AI-first era. Modular, scalable, and fully integrated.</p>
-    </div>
-    <!-- Lead pipeline preview -->
-    <div class="bg-surface-container-lowest/50 backdrop-blur-xl rounded-xl p-5 border border-softer text-[12px] shadow-sm">
-      <div class="text-[10px] text-primary/70 uppercase tracking-[0.2em] font-bold mb-4">Lead Velocity Index</div>
-      <div class="space-y-3">
-        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-softer transition-all hover:translate-x-1 group/item">
-          <span class="flex items-center gap-3 font-bold text-on-surface"><span class="status-dot status-active"></span> <span class="group-hover/item:text-primary transition-colors">Nexura Alpha</span></span>
-          <span class="text-primary font-bold preview-stat">Proposal</span>
-        </div>
-        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-softer transition-all hover:translate-x-1 group/item">
-          <span class="flex items-center gap-3 font-bold text-on-surface"><span class="status-dot status-active"></span> <span class="group-hover/item:text-primary transition-colors">TechFlow UAE</span></span>
-          <span class="text-on-surface-variant font-bold preview-stat">Qualified</span>
-        </div>
-        <div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low border border-softer transition-all hover:translate-x-1 group/item">
-          <span class="flex items-center gap-3 font-bold text-on-surface"><span class="status-dot status-warning"></span> <span class="group-hover/item:text-primary transition-colors">KSA Logistics</span></span>
-          <span class="text-secondary font-bold preview-stat">Nurture</span>
-        </div>
+      <div class="flex items-center gap-3 p-3 rounded-xl text-[12px] font-bold" style="background:var(--ed-trust-override-bg);border:1px solid var(--ed-trust-override-border);color:var(--ed-trust-override)">
+        <span class="material-symbols-outlined text-sm">flag</span> Escalate to Manager
       </div>
     </div>
   </div>
-  <!-- AI Trainer -->
-  <div class="md:col-span-8 ui-card group reveal reveal-delay-1">
-    <div class="flex flex-col md:flex-row justify-between h-full gap-6 sm:gap-8">
-      <!-- Client mobile preview -->
-      <div class="w-full md:w-2/5 order-2 md:order-1 bg-surface-container-lowest rounded-lg p-4 border border-softer">
-        <div class="text-[10px] text-secondary uppercase tracking-widest font-semibold mb-3">Client Mobile View</div>
-        <div class="space-y-3">
-          <div class="bg-surface-container rounded p-2.5">
-            <div class="text-[10px] text-secondary mb-1">Today's Plan</div>
-            <div class="text-[12px] text-on-surface font-medium">Upper Body · Hypertrophy B</div>
-            <div class="text-[10px] text-primary mt-1">6 exercises · ~55 min</div>
-          </div>
-          <div class="bg-surface-container rounded p-2.5">
-            <div class="text-[10px] text-secondary mb-1">Weekly Progress</div>
-            <div class="flex gap-1 items-end h-6 mt-1">
-              <div class="w-full bg-primary/30 rounded-sm" style="height:40%"></div>
-              <div class="w-full bg-primary/30 rounded-sm" style="height:60%"></div>
-              <div class="w-full bg-primary/30 rounded-sm" style="height:80%"></div>
-              <div class="w-full bg-primary rounded-sm" style="height:100%"></div>
-              <div class="w-full bg-primary/50 rounded-sm" style="height:50%"></div>
-              <div class="w-full bg-surface-container-high rounded-sm" style="height:10%"></div>
-              <div class="w-full bg-surface-container-high rounded-sm" style="height:10%"></div>
-            </div>
-            <div class="text-[9px] text-secondary mt-1">Mon–Sun · 4/7 sessions complete</div>
-          </div>
-          <div class="bg-surface-container rounded p-2.5">
-            <div class="text-[10px] text-secondary mb-1">Coach Message</div>
-            <div class="text-[11px] text-on-surface-variant italic">"Volume looking great. Let's push deadlift 5% next week."</div>
-            <div class="text-[9px] text-secondary mt-1">Coach Ahmed · 2h ago</div>
-          </div>
-        </div>
+
+</div>
+
+<!-- ── What It Catches ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="mb-10">
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">What It Catches</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3">Real exceptions. Real discrepancies.</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium">Every business has messy handoffs. The Exception Desk finds what humans miss and surfaces it before it costs money.</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-override)"></span>
+        <span class="text-[9px] font-black uppercase tracking-[0.15em]" style="color:var(--ed-trust-override)">Override</span>
       </div>
-      <div class="flex-1 space-y-4 order-1 md:order-2">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-container/15 text-primary-dim text-[10px] uppercase tracking-widest font-semibold">
-          <span class="material-symbols-outlined text-xs">model_training</span> Human Alpha
-        </div>
-        <h2 class="text-2xl sm:text-3xl font-bold font-headline tracking-tight text-on-surface">AI Trainer</h2>
-        <p class="text-secondary text-[14px] leading-relaxed">Upskilling your leadership and staff to co-pilot with AI. We transform your team into highly efficient system architects.</p>
-        <div class="flex items-center gap-2 text-primary text-[13px]">
-          <span class="material-symbols-outlined text-sm">groups</span>
-          <span class="font-medium">Future-proofed human capital</span>
-        </div>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1">Quantity Mismatches</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed">PO says 500 units, invoice says 5,000. AI catches the 10× discrepancy instantly.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-review)"></span>
+        <span class="text-[9px] font-black uppercase tracking-[0.15em]" style="color:var(--ed-trust-review)">Review</span>
       </div>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1">Address Errors</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed">Old warehouse listed on a new shipment. Flagged for quick human verification.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-override)"></span>
+        <span class="text-[9px] font-black uppercase tracking-[0.15em]" style="color:var(--ed-trust-override)">Override</span>
+      </div>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1">Pricing Conflicts</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed">Contract price vs. invoiced price mismatch. Total exposure calculated automatically.</p>
+    </div>
+    <div class="p-5 rounded-2xl border border-softer bg-surface-container-low">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:var(--ed-trust-safe)"></span>
+        <span class="text-[9px] font-black uppercase tracking-[0.15em]" style="color:var(--ed-trust-safe)">Safe</span>
+      </div>
+      <h4 class="text-[14px] font-bold text-on-surface mb-1">Routine Confirmations</h4>
+      <p class="text-[12px] text-secondary font-medium leading-relaxed">Standard acknowledgments and matching data. Routes straight to automation — zero touch.</p>
     </div>
   </div>
 </div>
 
-<!-- Solutions CTA -->
-<section class="mt-20 sm:mt-28 relative overflow-hidden reveal">
+<!-- ── Where It Plugs In ── -->
+<div class="mb-20 sm:mb-28 reveal">
+  <div class="mb-10">
+    <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-4 block">Integrations</span>
+    <h2 class="h3-fluid font-headline text-on-surface mb-3">Plugs into what you already use.</h2>
+    <p class="text-secondary text-[15px] max-w-xl font-medium">The Exception Desk connects to your existing email, ERP, CRM, and communication stack. No migration. No disruption.</p>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">email</span> Outlook
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">mail</span> Gmail
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">inventory_2</span> SAP
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">database</span> Oracle
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">hub</span> HubSpot
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">cloud</span> Salesforce
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">chat</span> Slack
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">groups</span> Teams
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">forum</span> WhatsApp
+    </div>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-surface-container-low border border-softer text-[12px] font-bold text-on-surface hover:border-primary/30 transition-colors">
+      <span class="material-symbols-outlined text-primary text-sm">integration_instructions</span> Custom API
+    </div>
+  </div>
+</div>
+
+<!-- ── CTA ── -->
+<section class="relative overflow-hidden reveal">
   <div class="ui-card bg-surface-container text-center">
-  <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4" data-i18n="sol_cta_title">Ready to automate the grind?</h3>
-  <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]" data-i18n="sol_cta_desc">Let's audit your current systems and find where AI can deliver 10x ROI within 30 days.</p>
-  <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span data-i18n="sol_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
-  <p class="text-secondary text-xs mt-4" data-i18n="sol_cta_fine">Free · 30 minutes · No obligation</p>
-</section>
+    <h3 class="text-2xl sm:text-3xl font-headline font-bold mb-4">See it on your own data.</h3>
+    <p class="text-secondary max-w-lg mx-auto mb-8 text-[15px]">Bring a real exception from your operations. We'll show how the desk resolves it live.</p>
+    <a href="#book" class="ui-btn ui-btn-primary px-8 py-4 text-[15px] gap-2"><span>Book a Live Demo</span> <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+    <p class="text-secondary text-xs mt-4">Free · 30 minutes · No obligation</p>
   </div>
 </section>
 
-</div>
-
-<!-- =========================================================== -->
-<!-- PAGE: AI TRAINER -->
-<!-- =========================================================== -->
-<div id="page-ai-trainer" class="page-section" data-page="ai-trainer">
-
-<section class="ui-container pt-28 sm:pt-40 pb-16 sm:pb-32">
-<div class="max-w-5xl reveal">
-  <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-8 block" data-i18n="ait_badge">Institutional Grade Intelligence</span>
-  <h1 class="font-headline text-5xl sm:text-7xl md:text-8xl lg:text-[7.5rem] font-extrabold tracking-[-0.04em] leading-[0.92] text-on-surface mb-8 sm:mb-12" data-i18n-html="ait_hero_title">
-    AI Precision for<br/><span class="text-ink-dim italic">Elite</span> Modern Trainers.
-  </h1>
-  <p class="font-body text-lg sm:text-xl text-secondary leading-relaxed max-w-2xl mb-12 sm:mb-16 font-medium" data-i18n="ait_hero_desc">
-    Automate the administrative friction of high-level coaching. Scale your methodology with high-fidelity tracking and AI-driven insights designed for elite practitioners.
-  </p>
-  <div class="flex flex-wrap gap-4">
-    <a href="#book" class="ui-btn ui-btn-primary px-8 sm:px-12 py-4 sm:py-5 text-[16px] font-bold gap-3 shadow-2xl">
-      <span data-i18n="ait_get_started">Inquire for Access</span> <span class="material-symbols-outlined scale-125" data-i18n-icon>arrow_forward</span>
-    </a>
-    <a href="#packages" class="ui-btn ui-btn-secondary px-8 sm:px-12 py-4 sm:py-5 text-[16px] font-bold" data-i18n="ait_view_plans">Explore Systems</a>
-  </div>
-</div>
-</section>
-
-<!-- Trainer Command Center — Realistic Dashboard -->
-<section class="bg-surface-container-low py-20 sm:py-32">
-<div class="ui-container">
-<div class="mb-10 sm:mb-14 reveal">
-  <h2 class="font-headline text-2xl sm:text-3xl font-bold mb-3" data-i18n="ait_cmd_title">The Command Center</h2>
-  <p class="text-secondary max-w-lg text-[14px] sm:text-[15px]" data-i18n="ait_cmd_desc">A high-density overview of your client roster, active protocols, and automated progress loops.</p>
-</div>
-<div class="ui-card p-0 shadow-[0_48px_120px_-20px_rgba(0,0,0,0.5)] reveal premium-glow border border-primary/10 bg-surface-container-lowest/30 backdrop-blur-3xl overflow-hidden ring-1 ring-white/5">
-  <div class="flex flex-col lg:flex-row min-h-[420px] lg:min-h-[600px]">
-    <!-- Sidebar -->
-    <div class="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-primary/5 p-8 flex flex-col bg-surface-container-low/20">
-      <div class="flex lg:flex-col gap-5 lg:gap-10 overflow-x-auto lg:overflow-visible">
-        <div class="bg-primary/5 p-4 rounded-2xl flex items-center gap-4 shrink-0 border border-primary/10 shadow-inner">
-          <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary text-[11px] font-black shadow-lg">GC</div>
-          <div class="min-w-0">
-            <div class="text-[13px] font-bold text-on-surface truncate">GrindCTRL OS</div>
-            <div class="text-[10px] text-primary/60 font-bold uppercase tracking-wider">v4.2.0-Alpha</div>
-          </div>
-        </div>
-        <div class="flex lg:flex-col gap-3 shrink-0">
-          <div class="flex items-center gap-4 text-[13px] text-primary font-bold p-4 bg-primary/10 rounded-2xl whitespace-nowrap shadow-sm border border-primary/10">
-            <span class="material-symbols-outlined text-[22px]">dashboard</span> Command Center
-          </div>
-          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
-            <span class="material-symbols-outlined text-[22px]">group</span> Elite Roster
-          </div>
-          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
-            <span class="material-symbols-outlined text-[22px]">analytics</span> Macro Engine
-          </div>
-          <div class="flex items-center gap-4 text-[13px] text-secondary font-bold p-4 hover:bg-surface-container/60 rounded-2xl cursor-pointer whitespace-nowrap transition-all hover:text-on-surface">
-            <span class="material-symbols-outlined text-[22px]">verified_user</span> Security Audit
-          </div>
-        </div>
-      </div>
-      <div class="mt-auto hidden lg:block pt-6 border-t border-softer">
-         <div class="bg-primary/5 rounded-xl p-4 border border-primary/10">
-            <div class="text-[10px] font-black text-primary uppercase tracking-widest mb-1">System Load</div>
-            <div class="h-1.5 w-full bg-primary/10 rounded-full overflow-hidden mb-2">
-              <div class="h-full bg-primary rounded-full" style="width: 24%"></div>
-            </div>
-            <div class="text-[9px] text-secondary font-bold">24% Resource Usage</div>
-         </div>
-      </div>
-    </div>
-    <!-- Content -->
-    <div class="flex-1 p-6 sm:p-12 overflow-hidden bg-surface-container-low/10">
-      <!-- Dashboard Header -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 sm:mb-12 gap-6">
-        <div>
-          <div class="flex items-center gap-3 mb-2">
-             <h3 class="text-2xl sm:text-3xl font-black font-headline tracking-tight text-on-surface">System Overview</h3>
-             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest shadow-sm border border-primary/20">Live</span>
-          </div>
-          <p class="text-[12px] text-secondary font-bold uppercase tracking-[0.2em] opacity-80">12 High-Performance Entities</p>
-        </div>
-        <div class="grid grid-cols-2 sm:flex gap-3 sm:gap-4 w-full sm:w-auto">
-           <button class="px-4 py-2.5 bg-surface-container-highest/60 rounded-xl text-[11px] font-bold text-on-surface border border-softer shadow-sm hover:bg-surface-container-highest transition-colors">Export Logs</button>
-           <button class="px-4 py-2.5 bg-primary text-on-primary rounded-xl text-[11px] font-bold shadow-xl hover:scale-105 transition-all">Configure AI</button>
-        </div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
-        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
-          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">Avg Response</div>
-          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">1.2s</div>
-          <div class="text-[10px] text-primary font-bold mt-1">↑ 12% Optimization</div>
-        </div>
-        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
-          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">Accuracy Index</div>
-          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">98.4%</div>
-          <div class="text-[10px] text-secondary font-bold mt-1 tracking-tight">RLHF Calibrated</div>
-        </div>
-        <div class="p-5 bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-softer shadow-sm group hover:bg-surface-container-lowest/60 transition-all">
-          <div class="text-[10px] text-secondary font-black uppercase tracking-widest mb-3">System Load</div>
-          <div class="text-3xl font-black text-on-surface font-headline tracking-tighter">24%</div>
-          <div class="text-[10px] text-secondary font-bold mt-1 tracking-tight">Optimal Performance</div>
-        </div>
-      </div>
-
-      <!-- Client Monitoring -->
-      <div class="bg-surface-container-lowest/40 backdrop-blur-xl rounded-2xl border border-primary/10 shadow-inner overflow-hidden">
-        <div class="p-5 border-b border-softer bg-surface-container-low/20 flex justify-between items-center">
-          <span class="text-[11px] font-black text-on-surface uppercase tracking-widest">Active Client Monitoring</span>
-          <span class="material-symbols-outlined text-secondary text-base cursor-pointer hover:text-primary">more_horiz</span>
-        </div>
-        <div class="divide-y divide-softer">
-          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer hover:bg-surface-container-low/30 transition-colors gap-5">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-xl bg-surface-container-highest/60 flex items-center justify-center text-[10px] font-black text-on-surface border border-softer">MC</div>
-              <div>
-                <div class="text-[13px] font-bold text-on-surface">Marcus Crawford</div>
-                <div class="text-[10px] text-secondary font-bold uppercase tracking-wide">Elite Performance · Wk 6</div>
-              </div>
-            </div>
-            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-               <div class="text-left sm:text-right">
-                 <div class="text-[12px] font-black text-on-surface tracking-tighter">3,842kcal</div>
-                 <div class="text-[9px] text-secondary font-bold uppercase opacity-60">Macro Target</div>
-               </div>
-               <div class="flex items-center gap-3">
-                 <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20">COMPLIANT</span>
-                 <span class="material-symbols-outlined text-outline text-lg">chevron_right</span>
-               </div>
-            </div>
-          </div>
-          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between group cursor-pointer hover:bg-surface-container-low/30 transition-colors gap-5">
-            <div class="flex items-center gap-4">
-              <div class="w-10 h-10 rounded-xl bg-surface-container-highest/60 flex items-center justify-center text-[10px] font-black text-on-surface border border-softer">SJ</div>
-              <div>
-                <div class="text-[13px] font-bold text-on-surface">Sarah Jenkins</div>
-                <div class="text-[10px] text-secondary font-bold uppercase tracking-wide">Hypertrophy B · Wk 2</div>
-              </div>
-            </div>
-            <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-               <div class="text-left sm:text-right">
-                 <div class="text-[12px] font-black text-on-surface tracking-tighter">2,140kcal</div>
-                 <div class="text-[9px] text-secondary font-bold uppercase opacity-60">Macro Target</div>
-               </div>
-               <div class="flex items-center gap-3">
-                 <span class="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black border border-primary/20">COMPLIANT</span>
-                 <span class="material-symbols-outlined text-outline text-lg">chevron_right</span>
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-          <span class="px-5 py-2.5 bg-surface-container-high rounded-xl text-[11px] font-bold text-secondary cursor-pointer hover:bg-surface-container transition-all border border-softer shadow-sm">Reporting</span>
-          <span class="px-5 py-2.5 bg-primary text-on-primary rounded-xl text-[11px] font-black shadow-lg shadow-primary/25 hover:scale-105 transition-all">+ New Block</span>
-        </div>
-      </div>
-      <!-- KPI strip -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
-        <div class="bg-surface-container-lowest border border-softer rounded-xl p-4 shadow-sm"><div class="text-[10px] text-secondary font-bold uppercase tracking-widest mb-2">Total Roster</div><div class="text-2xl font-black preview-stat font-headline text-on-surface">24</div></div>
-        <div class="bg-surface-container-lowest border border-softer rounded-xl p-4 shadow-sm"><div class="text-[10px] text-secondary font-bold uppercase tracking-widest mb-2">Block Adherence</div><div class="text-2xl font-black preview-stat font-headline text-primary">94.2%</div></div>
-        <div class="bg-surface-container-lowest border border-softer rounded-xl p-4 shadow-sm"><div class="text-[10px] text-secondary font-bold uppercase tracking-widest mb-2">Readiness Avg</div><div class="text-2xl font-black preview-stat font-headline text-on-surface">8.4</div></div>
-        <div class="bg-surface-container-lowest border border-softer rounded-xl p-4 shadow-sm"><div class="text-[10px] text-secondary font-bold uppercase tracking-widest mb-2">Velocity Index</div><div class="text-2xl font-black preview-stat font-headline text-on-surface">1.2x</div></div>
-      </div>
-      <!-- Client rows -->
-      <div class="space-y-3">
-        <div class="group/dash-item flex items-center gap-4 p-4 bg-surface-container-lowest/60 rounded-xl border border-softer transition-all hover:bg-primary/5 hover:border-primary/20 hover:scale-[1.01] cursor-pointer shadow-sm">
-          <div class="w-10 h-10 rounded-xl bg-primary-container/25 flex items-center justify-center text-[11px] font-black text-primary shrink-0 transition-transform group-hover/dash-item:rotate-3 shadow-inner">MC</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-[14px] font-bold text-on-surface truncate group-hover/dash-item:text-primary transition-colors">Marcus Chen</div>
-            <div class="text-[11px] text-secondary font-bold uppercase tracking-tighter">Elite Conditioning · Block 02 · 72h Readiness</div>
-          </div>
-          <div class="hidden md:block w-32">
-            <div class="flex justify-between text-[9px] font-bold text-secondary mb-1 uppercase tracking-widest"><span>Metabolic</span> <span>88%</span></div>
-            <div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden shadow-inner"><div class="h-full w-[88%] bg-primary rounded-full"></div></div>
-          </div>
-          <div class="px-3 py-1 rounded bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hidden sm:block">Optimal</div>
-        </div>
-        <div class="group/dash-item flex items-center gap-4 p-4 bg-surface-container-lowest/60 rounded-xl border border-softer transition-all hover:bg-primary/5 hover:border-primary/20 hover:scale-[1.01] cursor-pointer shadow-sm">
-          <div class="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-[11px] font-black text-on-surface-variant shrink-0 transition-transform group-hover/dash-item:rotate-3 shadow-inner">SJ</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-[14px] font-bold text-on-surface truncate group-hover/dash-item:text-primary transition-colors">Sarah Jenkins</div>
-            <div class="text-[11px] text-secondary font-bold uppercase tracking-tighter">Strength Macro · System Sync Due</div>
-          </div>
-          <div class="hidden md:block w-32">
-            <div class="flex justify-between text-[9px] font-bold text-secondary mb-1 uppercase tracking-widest"><span>Neural</span> <span>42%</span></div>
-            <div class="h-1.5 bg-surface-container-high rounded-full overflow-hidden shadow-inner"><div class="h-full w-[42%] bg-secondary rounded-full"></div></div>
-          </div>
-          <div class="px-3 py-1 rounded bg-surface-container-high text-secondary text-[10px] font-black uppercase tracking-widest hidden sm:block">Attention</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-</section>
-
-<!-- Features -->
-<section class="ui-container py-20 sm:py-32">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-  <div class="md:col-span-2 ui-card flex-col justify-between min-h-[280px] sm:min-h-[340px] reveal">
-    <div>
-      <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">auto_awesome</span></div>
-      <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3" data-i18n="ait_auto_plan">Autonomous Plan Generation</h3>
-      <p class="text-secondary text-[14px] sm:text-[15px] leading-relaxed max-w-lg" data-i18n="ait_auto_plan_desc">Our AI engine analyzes historical performance and physiological markers to draft optimal training blocks.</p>
-    </div>
-    <div class="mt-6 flex gap-4 text-[10px] font-semibold tracking-widest text-primary uppercase"><span data-i18n="ait_adaptive">Adaptive Loads</span><span data-i18n="ait_periodization">Periodization Engine</span></div>
-  </div>
-  <div class="ui-card flex-col reveal reveal-delay-1">
-    <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">notifications_active</span></div>
-    <h3 class="font-headline text-lg sm:text-xl font-bold mb-3" data-i18n="ait_checkins_title">Automated Check-ins</h3>
-    <p class="text-secondary text-[14px] leading-relaxed" data-i18n="ait_checkins_desc">No more chasing messages. GrindCTRL handles status updates and data collection on a schedule.</p>
-  </div>
-  <div class="ui-card flex-col reveal">
-    <div class="w-10 h-10 bg-primary-container/15 rounded-lg flex items-center justify-center text-primary mb-6"><span class="material-symbols-outlined text-xl">trending_up</span></div>
-    <h3 class="font-headline text-lg sm:text-xl font-bold mb-3" data-i18n="ait_tracking_title">Granular Tracking</h3>
-    <p class="text-secondary text-[14px] leading-relaxed" data-i18n="ait_tracking_desc">From RPE to resting heart rate, visualize every metric that matters for your client's success.</p>
-  </div>
-  <div class="md:col-span-2 ui-card flex-col md:flex-row items-start gap-8 reveal reveal-delay-1">
-    <div class="flex-1">
-      <h3 class="font-headline text-xl sm:text-2xl font-bold mb-3" data-i18n="ait_comm_title">Seamless Communication</h3>
-      <p class="text-secondary text-[14px] sm:text-[15px] leading-relaxed" data-i18n="ait_comm_desc">Centralized feedback loops. Annotate workouts, record video critiques, and keep your business conversations separate.</p>
-    </div>
-    <!-- Chat preview instead of stock image -->
-    <div class="w-full md:w-1/3 bg-surface-container-lowest rounded-lg p-3 border border-softer text-[11px] space-y-2">
-      <div class="text-[10px] text-secondary uppercase tracking-widest font-semibold">Client Chat</div>
-      <div class="flex gap-2">
-        <div class="w-5 h-5 rounded-full bg-surface-container-high flex items-center justify-center text-[8px] font-bold text-on-surface-variant shrink-0">MC</div>
-        <div class="bg-surface-container rounded p-2 text-on-surface-variant">Feeling tight on squats today</div>
-      </div>
-      <div class="flex gap-2 justify-end">
-        <div class="bg-primary-container/15 rounded p-2 text-on-surface">Try pause squats at 70% — send me a video of your warm-up set.</div>
-        <div class="w-5 h-5 rounded-full bg-primary-container/25 flex items-center justify-center text-[8px] font-bold text-primary shrink-0">C</div>
-      </div>
-      <div class="text-[9px] text-secondary">Today, 3:14 PM</div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- Trainer CTA -->
-<section class="max-w-screen-2xl mx-auto px-4 sm:px-8 py-24 sm:py-36 text-center border-t border-softer">
-<div class="max-w-3xl mx-auto reveal">
-  <h2 class="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-5 sm:mb-6" data-i18n="ait_cta_title">Ready to Scale Your Methodology?</h2>
-  <p class="text-secondary text-[15px] sm:text-base mb-10 sm:mb-12" data-i18n="ait_cta_desc">Join the elite network of trainers using GrindCTRL to deliver professional results without the administrative burnout.</p>
-  <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-    <a href="#book" class="ui-btn ui-btn-primary px-8 sm:px-10 py-4 text-[15px] gap-2"><span data-i18n="ait_cta_book">Book a Strategy Call</span> <span class="material-symbols-outlined text-base" data-i18n-icon>arrow_forward</span></a>
-    <a href="#packages" class="ui-btn ui-btn-secondary px-8 sm:px-10 py-4 text-[15px]" data-i18n="ait_cta_plans">View Pricing Plans</a>
-  </div>
-</div>
 </section>
 
 </div>
+
+<!-- AI Trainer page removed — product refocused to Exception Desk -->
+<div id="page-ai-trainer" class="page-section" data-page="ai-trainer" style="display:none"></div>
 
 <!-- =========================================================== -->
 <!-- PAGE: BOOK A CALL -->
@@ -1350,19 +1134,19 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
       <img src="logo-light.svg" alt="GRINDCTRL" class="logo-light h-6 w-auto"/>
       <span class="text-xl font-black font-headline tracking-[-0.04em]">GRINDCTRL</span>
     </div>
-    <p class="text-secondary max-w-xs text-[14px] font-medium" data-i18n="footer_tagline">Engineering autonomous business entities through precision automation and elite AI infrastructure.</p>
+    <p class="text-secondary max-w-xs text-[14px] font-medium">Autonomous exception processing. From messy input to structured, approval‑ready business action.</p>
     <div class="flex gap-4 mt-8">
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">public</span></span>
        <span class="w-8 h-8 rounded-lg bg-surface-container border border-softer flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[18px]">hub</span></span>
     </div>
   </div>
   <div>
-    <h5 class="text-on-surface font-black uppercase tracking-[0.2em] mb-7 text-[11px]" data-i18n="footer_solutions">Architecture</h5>
+    <h5 class="text-on-surface font-black uppercase tracking-[0.2em] mb-7 text-[11px]">Product</h5>
     <ul class="space-y-4 font-bold">
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_sol_auto">AI Automation</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_sol_agents">AI Agents</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_sol_biz">Business OS</span></a></li>
-      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#ai-trainer"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span data-i18n="footer_sol_trainer">AI Trainer</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#home"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Exception Desk</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>How It Works</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#solutions"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Integrations</span></a></li>
+      <li><a class="text-secondary hover:text-primary transition-all flex items-center gap-2 group" href="#book"><span class="w-1 h-1 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></span> <span>Book a Demo</span></a></li>
     </ul>
   </div>
   <div>
@@ -1411,6 +1195,7 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     if (!hash || hash === '#') return 'home';
     var clean = hash.replace('#','');
     if (clean === 'packages') return 'home';
+    if (clean === 'ai-trainer') return 'home';
     return clean;
   }
 
@@ -1437,6 +1222,10 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
     } else {
       window.scrollTo({top:0, behavior:'smooth'});
     }
+    // Toggle Exception Support chat trigger (hide on workspace, show elsewhere)
+    var chatTrigger = document.getElementById('gc-chat-trigger');
+    if (chatTrigger) chatTrigger.style.display = (page === 'home') ? 'none' : '';
+
     setTimeout(observeRevealElements, 200);
     closeDrawer();
   }

@@ -20,16 +20,16 @@
     AUDIO_TYPES: ['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a'],
     PROMPTS: {
       en: [
-        'Where can AI save the most time in my business?',
-        'Show me a better lead follow-up flow',
-        'What would an AI agent handle for a gym?',
-        'How would GRINDCTRL reduce admin work here?'
+        'Explain this anomaly to me',
+        'What does this trust state mean?',
+        'Help me draft a correction email',
+        'Show me similar past exceptions'
       ],
       ar: [
-        'أين يمكن للذكاء الاصطناعي أن يوفر أكبر وقت في عملي؟',
-        'اعرض لي أسلوباً أفضل لمتابعة العملاء المحتملين',
-        'ما الذي يمكن لوكيل ذكي أن يديره لصالة رياضية؟',
-        'كيف يمكن لـ GRINDCTRL تقليل العمل الإداري هنا؟'
+        'اشرح لي هذا الشذوذ',
+        'ماذا تعني حالة الثقة هذه؟',
+        'ساعدني في كتابة بريد تصحيح',
+        'أرني استثناءات مشابهة سابقة'
       ]
     }
   };
@@ -150,9 +150,9 @@
     if (dict[key] && dict[key][lang] != null) return dict[key][lang];
 
     var fallback = {
-      chat_empty_title: { en: 'Ask about your operations', ar: 'اسأل عن عملياتك' },
-      chat_empty_desc: { en: 'Type, record, or upload audio. Switch to image creation when you need a visual.', ar: 'اكتب أو سجّل أو ارفع ملفاً صوتياً. ويمكنك التبديل إلى إنشاء صورة عند الحاجة.' },
-      chat_placeholder: { en: 'Ask about leads, follow-up, support, or operations…', ar: 'اسأل عن العملاء أو المتابعة أو الدعم أو العمليات…' },
+      chat_empty_title: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
+      chat_empty_desc: { en: 'Get help with anomalies, trust states, and resolution actions.', ar: 'احصل على مساعدة في الشذوذات وحالات الثقة وإجراءات الحل.' },
+      chat_placeholder: { en: 'Ask about this exception…', ar: 'اسأل عن هذا الاستثناء…' },
       chat_trial_agent: { en: 'Trial Agent', ar: 'الوكيل التجريبي' },
       chat_mode_chat: { en: 'Chat', ar: 'محادثة' },
       chat_turns_left: { en: 'left', ar: 'متبقي' },
@@ -168,8 +168,8 @@
       chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
       chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
       chat_drop_audio: { en: 'Drop audio file here', ar: 'أفلت ملف الصوت هنا' },
-      chat_open_label: { en: 'Open GRINDCTRL assistant', ar: 'فتح مساعد GRINDCTRL' },
-      chat_trigger_label: { en: 'Ask GRINDCTRL', ar: 'اسأل GRINDCTRL' },
+      chat_open_label: { en: 'Open Exception Support', ar: 'فتح دعم الاستثناءات' },
+      chat_trigger_label: { en: 'Exception Support', ar: 'دعم الاستثناءات' },
       chat_close_label: { en: 'Close chat', ar: 'إغلاق المحادثة' },
       chat_send_label: { en: 'Send message', ar: 'إرسال الرسالة' },
       chat_mic_label: { en: 'Record voice message', ar: 'تسجيل رسالة صوتية' },
@@ -868,6 +868,9 @@
       '<span class="gc-chat-trigger-badge"></span>'
     ].join('');
     document.body.appendChild(trigger);
+    // Hide on workspace page (navigateTo already ran before widget built)
+    var activePage = document.querySelector('[data-page].active');
+    if (activePage && activePage.dataset.page === 'home') trigger.style.display = 'none';
 
     var scrim = document.createElement('div');
     scrim.id = 'gc-chat-scrim';
