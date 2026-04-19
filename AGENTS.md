@@ -2,32 +2,59 @@
 
 ## What this repo is
 
-Static HTML/CSS/JS site — **no build step, no package.json, no npm**. Deployed to GitHub Pages on push to `main` via `.github/workflows/static.yml`.
+Vite-built static site deployed to GitHub Pages. Source lives in `src/`, Vite builds to `dist/`. The GitHub Actions workflow (`.github/workflows/static.yml`) runs `npm run build` and deploys `dist/`.
 
-The site serves as both a marketing landing page and host for several embedded product modules.
+```bash
+npm run dev      # local dev server (Vite)
+npm run build    # production build → dist/
+npm run preview  # preview production build locally
+```
 
 ## Architecture at a glance
 
-| File | Role |
+| Path | Role |
 |------|------|
-| `index.html` | Landing page (Tailwind CDN + custom CSS) |
-| `tokens.css` | Shared design tokens (spacing, radius, colors, shadows, motion) |
-| `base.css` | Resets, font loading, fluid typography, animation primitives |
-| `layout.css` | Shell, container, grid, drawer, page transitions, reveal |
-| `components.css` | Reusable UI: badges, buttons, cards, inputs, chips, nav, CTAs |
-| `chat-widget.css` / `.js` | Trial playground chat assistant (own `--gc-*` token scope) |
-| `blueprint-studio.css` / `.js` | AI Blueprint Studio tool |
-| `voice-to-value.css` / `.js` | Exception Desk triage workspace |
-| `grindctrl-support.js` | Production embeddable widget (Shadow DOM, CDN-distributed) |
-| `widget-admin.html` | Admin dashboard (standalone page) |
-| `i18n.js` | EN/AR i18n dictionary + runtime swap |
-| `supabase/*.sql` | Manual delta migrations (applied via Supabase MCP, not CLI) |
+| `src/index.html` | Landing page (Tailwind CDN + custom CSS + Shoelace) |
+| `src/tokens.css` | Shared design tokens (spacing, radius, colors, shadows, motion) |
+| `src/base.css` | Resets, font loading, fluid typography, animation primitives |
+| `src/layout.css` | Shell, container, grid, page transitions, reveal |
+| `src/components.css` | Reusable UI: badges, buttons, cards, inputs, chips, nav, CTAs |
+| `src/chat-widget.css` | Trial playground chat assistant (own `--gc-*` token scope) |
+| `src/blueprint-studio.css` | AI Blueprint Studio tool |
+| `src/voice-to-value.css` | Exception Desk triage workspace |
+| `src/scripts/web-awesome.js` | Shoelace component registry (ES module) |
+| `src/scripts/site-header.js` | Header/nav drawer logic (ES module) |
+| `src/scripts/i18n.js` | EN/AR i18n dictionary + runtime swap |
+| `src/scripts/chat-widget.js` | Trial playground widget logic |
+| `src/scripts/voice-to-value.js` | Exception Desk triage logic |
+| `src/scripts/grindctrl-support.js` | Production embeddable widget (Shadow DOM) |
+| `src/scripts/blueprint-studio.js` | Blueprint Studio logic |
+| `src/shoelace/` | Shoelace assets (icons). Copied from `node_modules` at setup. |
+| `src/public/` | Static files copied as-is to `dist/` (scripts, SVGs, shoelace assets) |
+| `vite.config.js` | Vite config. Root is `src/`, output is `dist/`, base is `./`. |
 
 ## CSS load order
 
 `tokens.css` → `base.css` → `layout.css` → `components.css` → module CSS → inline `<style>` overrides.
 
 The foundation layer defines shared tokens and patterns. Module CSS (`chat-widget.css`, `blueprint-studio.css`, `voice-to-value.css`) can override tokens in their own scope. The inline `<style>` in `index.html` contains page-specific overrides — keep it minimal.
+
+## JS architecture
+
+Two kinds of scripts in `src/`:
+- **ES modules** (`<script type="module">`): `web-awesome.js`, `site-header.js`. Vite bundles these.
+- **Classic scripts** (`<script src="...">`): `i18n.js`, `chat-widget.js`, `voice-to-value.js`. These live in `src/public/scripts/` and are copied as-is to `dist/scripts/` — no bundling.
+
+Do not convert classic scripts to modules without testing the global `window.*` variables they export.
+
+## Shoelace (Web Awesome)
+
+Components from `@shoelace-style/shoelace`. Import only what you need in `src/scripts/web-awesome.js`. Icon assets are in `src/shoelace/icons/` — synced from `node_modules` manually.
+
+To add a new Shoelace component:
+1. `import '@shoelace-style/shoelace/dist/components/<name>/<name>.js';` in `web-awesome.js`
+2. Use `<wa-*>` tag in HTML
+3. Style overrides go in `components.css` using `wa-*::part(*)` selectors
 
 ## Two Supabase projects in play
 
@@ -44,7 +71,7 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 
 ## Frontend conventions
 
-- **No build tooling** — Tailwind loads via CDN (`cdn.tailwindcss.com`). The CDN warning is intentionally suppressed in `index.html`.
+- **Vite builds the site** — Tailwind still loads via CDN (`cdn.tailwindcss.com`). The CDN warning is intentionally suppressed in `index.html`.
 - **Dark mode** via `.dark` class on `<html>`. Default is dark.
 - **CSS custom properties** for theming: `--gc-*` prefix throughout. Use `tokens.css` tokens (e.g., `--gc-space-4`, `--gc-radius-lg`, `--gc-ink`, `--gc-surface-container`) instead of magic values.
 - **Font loading**: Google Fonts with Bunny.net fallback (3 s timeout per CDN). Material Symbols loaded directly (Bunny.net does not mirror icon fonts).
@@ -52,6 +79,7 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - **RTL**: Arabic triggers `dir="rtl"` automatically. All CSS must handle RTL — check existing patterns before adding layout. Use logical properties (`inset-inline-start`, `padding-inline`, etc.).
 - **Shadow DOM**: `grindctrl-support.js` renders inside Shadow DOM for style isolation. Do not assume global CSS reaches it.
 - **Component classes**: Use `.gc-btn`, `.gc-card`, `.gc-input`, `.gc-chip`, etc. from `components.css`. Prefer these over raw Tailwind for UI elements that appear more than once.
+- **Shoelace overrides**: Use `wa-*::part(*)` selectors in `components.css`. Do not put Shoelace styles in the inline `<style>` block.
 - **Breakpoints**: 390px (small phone), 480px (phone), 540px (large phone), 640px (sm/tablet), 768px (md), 1024px (lg), 1280px (xl), 1536px (2xl).
 
 ## Limits and quotas (hardcoded in JS)
@@ -72,13 +100,20 @@ SQL files in `supabase/` are **manual delta migrations** applied via Supabase MC
 
 ## Deploy
 
-Push to `main` → GitHub Pages deploys the entire repo root. No build step. Changes go live immediately after the workflow completes.
+Push to `main` → GitHub Actions runs `npm ci && npm run build` → deploys `dist/` to GitHub Pages. No manual deploy step.
+
+## GitHub Pages settings
+
+Go to **Settings → Pages** and verify:
+- **Source**: "GitHub Actions" (not "Deploy from a branch")
 
 ## Common mistakes to avoid
 
-- Do not add `package.json` or install npm dependencies — this is a static site.
+- Do not run `npm run build` at the project root and expect the old static files to work — source is in `src/`.
 - Do not assume a single Supabase project — there are two with different anon keys.
 - Do not apply Supabase migrations via CLI — use MCP or manual SQL execution.
 - Do not break the Tailwind CDN warning suppression (must be before Tailwind script loads).
 - Do not add global CSS that could leak into the Shadow DOM widget.
 - Do not hardcode Arabic text directly in JS — use `i18n.js` keys and the `t()` helper.
+- Do not convert classic scripts (`<script src="...">`) to modules without testing `window.*` exports.
+- Shoelace icon assets in `src/shoelace/` are synced from `node_modules/@shoelace-style/shoelace/dist/assets`. Re-sync after upgrading the package.
