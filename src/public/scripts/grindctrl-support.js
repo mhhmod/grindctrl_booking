@@ -41,6 +41,13 @@
     captureEmailOnFirst: true,
     captureNameOnFirst: false,
 
+    // Lead capture settings
+    leadCaptureMode: 'off',           // 'off' | 'before_first_message' | 'after_intent' | 'after_2_messages' | 'after_3_messages'
+    leadCaptureFields: ['name', 'email'], // ['name', 'email', 'phone', 'company'] — order matters
+    leadCaptureTitle: null,           // custom heading (null = i18n default)
+    leadCaptureSubtitle: null,        // custom subtitle (null = i18n default)
+    leadCaptureSkippable: false,      // allow skipping the form
+
     // Visual (can be overridden by client if white-label allows)
     primaryColor: '#4F46E5',
     accentColor: '#6366F1',
@@ -93,6 +100,12 @@
     typingTimeout: null,
     sessionStorageId: 'gc_ws',
     localStorageId: 'gc_visitor',
+    // Initialization tracking
+    _initialized: false,
+    // Lead capture tracking
+    _leadCaptured: false,
+    _messageCount: 0,
+    _leadCaptureActive: false,
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -166,6 +179,19 @@
         request_white_label: 'Request White-Label',
         talk_to_sales: 'Talk to Sales',
         welcome_back: 'Welcome back',
+        // Lead capture
+        lead_capture_title: 'Before we start',
+        lead_capture_subtitle: 'Tell us a bit about yourself',
+        lead_capture_name: 'Full name',
+        lead_capture_email: 'Work email',
+        lead_capture_phone: 'Phone number',
+        lead_capture_company: 'Company name',
+        lead_capture_submit: 'Start chatting',
+        lead_capture_skip: 'Skip for now',
+        lead_capture_name_error: 'Please enter your name',
+        lead_capture_email_error: 'Please enter a valid email',
+        lead_capture_phone_error: 'Please enter a valid phone number',
+        lead_capture_company_error: 'Please enter your company name',
       },
       ar: {
         greeting_default: 'كيف يمكننا مساعدتك اليوم؟',
@@ -185,6 +211,19 @@
         request_white_label: 'طلب علامة بيضاء',
         talk_to_sales: 'تحدث مع المبيعات',
         welcome_back: 'مرحباً بعودتك',
+        // Lead capture
+        lead_capture_title: 'قبل البدء',
+        lead_capture_subtitle: 'عرّفنا بنفسك قليلاً',
+        lead_capture_name: 'الاسم الكامل',
+        lead_capture_email: 'البريد الإلكتروني',
+        lead_capture_phone: 'رقم الهاتف',
+        lead_capture_company: 'اسم الشركة',
+        lead_capture_submit: 'ابدأ المحادثة',
+        lead_capture_skip: 'تخطي الآن',
+        lead_capture_name_error: 'يرجى إدخال اسمك',
+        lead_capture_email_error: 'يرجى إدخال بريد إلكتروني صحيح',
+        lead_capture_phone_error: 'يرجى إدخال رقم هاتف صحيح',
+        lead_capture_company_error: 'يرجى إدخال اسم الشركة',
       }
     };
     var lang = currentLang();
@@ -688,6 +727,24 @@
       '  text-align: center;',
       '}',
       '.gc-limit-msg strong { color: #ef4444; }',
+      '/* Lead capture form */',
+      '.gc-lead-capture { padding: 20px 16px; display: none; }',
+      '.gc-lead-capture.active { display: block; }',
+      '.gc-lead-header { text-align: center; margin-bottom: 16px; }',
+      '.gc-lead-title { font-size: 15px; font-weight: 700; color: var(--gc-text); margin-bottom: 4px; }',
+      '.gc-lead-subtitle { font-size: 12px; color: rgba(250,250,250,0.45); }',
+      '.gc-lead-form { display: flex; flex-direction: column; gap: 12px; }',
+      '.gc-lead-field { display: flex; flex-direction: column; gap: 4px; }',
+      '.gc-lead-label { font-size: 11px; font-weight: 600; color: rgba(250,250,250,0.5); text-transform: uppercase; letter-spacing: 0.04em; }',
+      '.gc-lead-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; color: var(--gc-text); font-size: 13px; outline: none; transition: border-color 0.2s; }',
+      '.gc-lead-input:focus { border-color: var(--gc-primary); }',
+      '.gc-lead-input::placeholder { color: rgba(250,250,250,0.3); }',
+      '.gc-lead-input.error { border-color: #ef4444; }',
+      '.gc-lead-error { font-size: 11px; color: #ef4444; min-height: 16px; }',
+      '.gc-lead-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }',
+      '.gc-lead-skip { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(250,250,250,0.5); padding: 8px 16px; border-radius: 10px; font-size: 12px; cursor: pointer; transition: all 0.2s; }',
+      '.gc-lead-skip:hover { border-color: rgba(255,255,255,0.2); color: var(--gc-text); }',
+      '.gc-lead-submit { min-width: 120px; width: auto; height: auto; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; }',
       '/* Responsive */',
       '@media (max-width: 480px) {',
       '  :host {',
@@ -700,10 +757,11 @@
       '  }',
       '  .gc-launcher-label { display: none; }',
       '  .gc-launcher.open { border-radius: 50%; }',
-      '  .gc-intents { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; }',
-      '  .gc-intent { flex-shrink: 0; }',
-      '  .gc-messages { padding: 12px; }',
-      '}'
+  '  .gc-intents { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; }',
+  '  .gc-intent { flex-shrink: 0; }',
+  '  .gc-messages { padding: 12px; }',
+  '  .gc-lead-capture { padding: 16px 12px; }',
+  '}'
     ].join('\n');
   }
 
@@ -815,7 +873,8 @@
       '  <div class="gc-greeting-title">' + escapeHtml(brandName) + '</div>',
       '  <div class="gc-greeting-desc">' + escapeHtml(greeting) + '</div>',
       '</div>',
-      '<div class="gc-input-area">',
+      buildLeadCaptureHTML(cfg),
+      '<div class="gc-input-area" id="gc-input-area">',
       '  <div class="gc-input-row">',
       '    <textarea class="gc-input" id="gc-input" rows="1" placeholder="' + t('placeholder') + '" dir="auto" aria-label="' + t('placeholder') + '"></textarea>',
       '    <button class="gc-send-btn" id="gc-send-btn" disabled aria-label="' + t('send') + '">' +
@@ -866,6 +925,37 @@
   }
 
   // ─────────────────────────────────────────────────────────────
+  // LEAD CAPTURE HTML BUILDER
+  // ─────────────────────────────────────────────────────────────
+  function buildLeadCaptureHTML(cfg) {
+    var fields = cfg.leadCaptureFields || ['name', 'email'];
+    var title = cfg.leadCaptureTitle || t('lead_capture_title');
+    var subtitle = cfg.leadCaptureSubtitle || t('lead_capture_subtitle');
+    var fieldHTML = fields.map(function(field) {
+      var type = field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text';
+      return '<div class="gc-lead-field">' +
+        '<label class="gc-lead-label" for="gc-lead-' + field + '">' + t('lead_capture_' + field) + '</label>' +
+        '<input class="gc-lead-input" id="gc-lead-' + field + '" type="' + type + '" placeholder="' + t('lead_capture_' + field) + '" dir="auto" />' +
+        '<div class="gc-lead-error" id="gc-lead-error-' + field + '"></div>' +
+        '</div>';
+    }).join('');
+    var skipBtn = cfg.leadCaptureSkippable ? '<button class="gc-lead-skip" id="gc-lead-skip" type="button">' + t('lead_capture_skip') + '</button>' : '';
+    return '<div class="gc-lead-capture" id="gc-lead-capture">' +
+      '<div class="gc-lead-header">' +
+      '<div class="gc-lead-title">' + escapeHtml(title) + '</div>' +
+      '<div class="gc-lead-subtitle">' + escapeHtml(subtitle) + '</div>' +
+      '</div>' +
+      '<form class="gc-lead-form" id="gc-lead-form">' +
+      fieldHTML +
+      '<div class="gc-lead-actions">' +
+      skipBtn +
+      '<button class="gc-lead-submit gc-send-btn" id="gc-lead-submit" type="submit">' + t('lead_capture_submit') + '</button>' +
+      '</div>' +
+      '</form>' +
+      '</div>';
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // CORE WIDGET CLASS
   // ─────────────────────────────────────────────────────────────
   function GrindctrlSupport() {
@@ -874,6 +964,12 @@
 
   GrindctrlSupport.prototype.init = function (userConfig) {
     var self = this;
+
+    // Prevent double-init
+    if (state._initialized) {
+      console.warn('[GrindctrlSupport] Already initialized. Use updateConfig() to change settings.');
+      return this;
+    }
 
     // Merge config
     var cfg = {};
@@ -1003,6 +1099,7 @@
     loadConfig().then(function (serverCfg) {
       state.config = Object.assign({}, state.config, serverCfg);
       state.phase = 'ready';
+      state._initialized = true;
 
       // Rebuild styles with server config
       var style = state._shadow.querySelector('style');
@@ -1035,6 +1132,11 @@
         state.conversationId = existingConvId;
       }
 
+      // Show lead capture form if configured for before_first_message
+      if (self._shouldShowLeadCapture('init')) {
+        self._showLeadCapture();
+      }
+
       if (state.config && state.config.onReady) {
         state.config.onReady(state.config);
       }
@@ -1051,8 +1153,15 @@
     var self = this;
     var intent = (state.config.intents || []).find(function (i) { return i.id === intentId; });
 
+    // Check if we should show lead capture before proceeding
+    if (self._shouldShowLeadCapture('intent')) {
+      self._showLeadCapture();
+      return;
+    }
+
     // Add user intent message
     self._addMessage({ role: 'user', content: label, created_at: new Date().toISOString() });
+    state._messageCount++;
 
     // Hide greeting
     var greeting = state._shadow.getElementById('gc-greeting');
@@ -1071,7 +1180,10 @@
     } else {
       // Start conversation with intent as first message
       self._startConvIfNeeded().then(function () {
-        sendMessage(label, label).catch(function (err) {
+        sendMessage(label, label).then(function () {
+          // Show demo reply for now (until real transport is implemented)
+          self._showDemoReply(label);
+        }).catch(function (err) {
           self._handleError(err);
         });
       });
@@ -1091,12 +1203,21 @@
 
     self._hideGreeting();
     self._addMessage({ role: 'user', content: text, created_at: new Date().toISOString() });
+    state._messageCount++;
+
+    // Check if lead capture should be shown after this message
+    if (self._shouldShowLeadCapture('message')) {
+      self._showLeadCapture();
+      return;
+    }
 
     this._startConvIfNeeded().then(function () {
       sendMessage(text).then(function (msg) {
         if (self._config && self._config.onMessageSent) {
           self._config.onMessageSent({ content: text });
         }
+        // Show demo reply for now (until real transport is implemented)
+        self._showDemoReply(text);
       }).catch(function (err) {
         self._handleError(err);
       });
@@ -1172,6 +1293,176 @@
     if (this._config && this._config.onEvent) {
       this._config.onEvent(eventName, data);
     }
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // LEAD CAPTURE METHODS
+  // ─────────────────────────────────────────────────────────────
+
+  GrindctrlSupport.prototype._shouldShowLeadCapture = function (trigger) {
+    if (!state.config || state.config.leadCaptureMode === 'off') return false;
+    if (state._leadCaptured) return false;
+
+    var mode = state.config.leadCaptureMode;
+    if (mode === 'before_first_message' && trigger === 'init') return true;
+    if (mode === 'after_intent' && trigger === 'intent') return true;
+    if (mode === 'after_2_messages' && trigger === 'message' && state._messageCount >= 2) return true;
+    if (mode === 'after_3_messages' && trigger === 'message' && state._messageCount >= 3) return true;
+    return false;
+  };
+
+  GrindctrlSupport.prototype._showLeadCapture = function () {
+    var self = this;
+    state._leadCaptureActive = true;
+
+    var form = state._shadow.getElementById('gc-lead-capture');
+    var inputArea = state._shadow.getElementById('gc-input-area');
+    var greeting = state._shadow.getElementById('gc-greeting');
+
+    if (form) form.classList.add('active');
+    if (inputArea) inputArea.style.display = 'none';
+    if (greeting) greeting.style.display = 'none';
+
+    // Wire up form events
+    var formEl = state._shadow.getElementById('gc-lead-form');
+    if (formEl) {
+      formEl.addEventListener('submit', function (e) {
+        e.preventDefault();
+        self._handleLeadCaptureSubmit();
+      });
+    }
+
+    // Wire skip button if present
+    var skipBtn = state._shadow.getElementById('gc-lead-skip');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', function () {
+        state._leadCaptured = true;
+        self._hideLeadCapture();
+        self._trackEvent('lead_capture_skipped', {});
+      });
+    }
+
+    // Focus first input
+    setTimeout(function () {
+      var firstInput = state._shadow.querySelector('.gc-lead-input');
+      if (firstInput) firstInput.focus();
+    }, 100);
+  };
+
+  GrindctrlSupport.prototype._hideLeadCapture = function () {
+    state._leadCaptureActive = false;
+
+    var form = state._shadow.getElementById('gc-lead-capture');
+    var inputArea = state._shadow.getElementById('gc-input-area');
+    var greeting = state._shadow.getElementById('gc-greeting');
+
+    if (form) form.classList.remove('active');
+    if (inputArea) inputArea.style.display = '';
+    if (greeting && state._messageCount === 0) greeting.style.display = '';
+  };
+
+  GrindctrlSupport.prototype._handleLeadCaptureSubmit = function () {
+    var self = this;
+    var cfg = state.config;
+    var fields = cfg.leadCaptureFields || ['name', 'email'];
+    var leadData = {};
+    var hasError = false;
+
+    // Clear previous errors
+    fields.forEach(function (field) {
+      var input = state._shadow.getElementById('gc-lead-' + field);
+      var error = state._shadow.getElementById('gc-lead-error-' + field);
+      if (input) input.classList.remove('error');
+      if (error) error.textContent = '';
+    });
+
+    // Validate and collect
+    fields.forEach(function (field) {
+      var input = state._shadow.getElementById('gc-lead-' + field);
+      if (!input) return;
+      var value = input.value.trim();
+      leadData[field] = value;
+
+      var error = self._validateLeadField(field, value);
+      if (error) {
+        hasError = true;
+        input.classList.add('error');
+        var errorEl = state._shadow.getElementById('gc-lead-error-' + field);
+        if (errorEl) errorEl.textContent = error;
+      }
+    });
+
+    if (hasError) return;
+
+    // Success — store lead data
+    state._leadCaptured = true;
+    this.identifyUser(leadData.email, leadData.name);
+    state.config.userPhone = leadData.phone;
+    state.config.userCompany = leadData.company;
+
+    this._trackEvent('lead_captured', { fields: fields });
+    this._hideLeadCapture();
+
+    // Start conversation with lead data
+    this._startConvIfNeeded().then(function () {
+      // Send a welcome message to acknowledge
+      self._addMessage({
+        role: 'assistant',
+        content: t('welcome_back') + (leadData.name ? ', ' + leadData.name : '') + '!',
+        created_at: new Date().toISOString()
+      });
+    });
+
+    // Focus textarea
+    setTimeout(function () {
+      var ta = state._shadow.getElementById('gc-input');
+      if (ta) ta.focus();
+    }, 100);
+  };
+
+  GrindctrlSupport.prototype._validateLeadField = function (field, value) {
+    if (field === 'name' && !value) return t('lead_capture_name_error');
+    if (field === 'email') {
+      if (!value) return t('lead_capture_email_error');
+      var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) return t('lead_capture_email_error');
+    }
+    if (field === 'phone' && value) {
+      var phoneRegex = /^[+]?[\d\s()-]{7,20}$/;
+      if (!phoneRegex.test(value)) return t('lead_capture_phone_error');
+    }
+    if (field === 'company' && !value) return t('lead_capture_company_error');
+    return null;
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // REPLY TRANSPORT BOUNDARY (stub for future polling/WebSocket)
+  // ─────────────────────────────────────────────────────────────
+
+  // ─── REPLY TRANSPORT BOUNDARY ───
+  // Future: Replace this stub with polling (GET /widget-message?conversation_id=...)
+  // or WebSocket/SSE subscription. The onReply callback receives:
+  //   { conversation_id, role: 'assistant', content: string, created_at: string }
+  // The transport should call widget._addMessage(replyData) and widget._hideTyping().
+
+  var replyTransport = {
+    init: function(conversationId, config) {
+      // TODO: Initialize real transport here
+    },
+    onReply: null,  // callback: function(replyData) { ... }
+    destroy: function() {
+      // TODO: Clean up transport here
+    }
+  };
+
+  GrindctrlSupport.prototype._showDemoReply = function(userText) {
+    var self = this;
+    self._showTyping();
+    setTimeout(function() {
+      self._hideTyping();
+      var reply = 'Thanks for your message. Our team will get back to you shortly.';
+      self._addMessage({ role: 'assistant', content: reply, created_at: new Date().toISOString() });
+    }, 1500);
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -1259,7 +1550,7 @@
   };
 
   // ─────────────────────────────────────────────────────────────
-  // FACTORY INIT
+  // FACTORY INIT + QUEUE SYSTEM
   // ─────────────────────────────────────────────────────────────
   var instance = null;
 
@@ -1276,7 +1567,45 @@
     return widget.init(config);
   };
 
+  // Proxy all public instance methods to the factory for convenient API
+  var publicMethods = ['open', 'close', 'toggle', 'destroy', 'updateConfig',
+                       'setContext', 'identifyUser', 'trackEvent', 'getVersion'];
+  publicMethods.forEach(function(method) {
+    GrindctrlSupportFactory[method] = function() {
+      if (!instance) {
+        console.warn('[GrindctrlSupport] Widget not initialized. Call init() first.');
+        return;
+      }
+      return instance[method].apply(instance, arguments);
+    };
+  });
+
+  // Queue processing: handle both config-objects and callback functions
+  GrindctrlSupportFactory.push = function(item) {
+    if (typeof item === 'function') {
+      // Compatibility: callback receives the factory API
+      item(GrindctrlSupportFactory);
+    } else if (item && typeof item === 'object') {
+      // Canonical: config object with embedKey
+      GrindctrlSupportFactory.init(item);
+    }
+  };
+
+  // Process any queued items that were declared before script loaded
+  var queue = (typeof window !== 'undefined' &&
+               Array.isArray(window.GrindctrlSupport)) ? window.GrindctrlSupport : [];
+
+  // Replace the global with the factory
   window.GrindctrlSupport = GrindctrlSupportFactory;
+
+  // Process the queue
+  for (var i = 0; i < queue.length; i++) {
+    try {
+      GrindctrlSupportFactory.push(queue[i]);
+    } catch (e) {
+      console.error('[GrindctrlSupport] Failed to process queue item:', e);
+    }
+  }
 
   // AMD / CommonJS export
   if (typeof define === 'function' && define.amd) {

@@ -1,23 +1,25 @@
 <!--
   GRINDCTRL Support Widget — Integration Examples
-  Version: 1.0.0
+  Version: 1.1.0
 
   This file contains ready-to-use integration snippets for:
-  1. Plain HTML websites
+  1. Plain HTML websites (queue pattern — recommended)
   2. React / Next.js
   3. WordPress / CMS
+  4. Lead capture configuration examples
 
   Replace YOUR_EMBED_KEY with your actual embed key from the dashboard.
   Replace yourdomain.com with your actual domain.
 -->
 
 <!-- ═══════════════════════════════════════════════════════
-  EXAMPLE 1: Plain HTML Website
-  Paste before </body> on every page
+  EXAMPLE 1: Plain HTML Website — Queue Pattern (Recommended)
+  Safe async bootstrap: config can be declared before script loads.
+  Paste before </body> on every page.
 ═══════════════════════════════════════════════════════ -->
-<script src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
 <script>
-  GrindctrlSupport.init({
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
     embedKey: 'YOUR_EMBED_KEY',
     domain: window.location.hostname,
     // Optional overrides:
@@ -30,6 +32,20 @@
     // onEvent: function(name, data) { console.log('gc_event', name, data); },
     // onConversationStart: function(data) { console.log('conv_start', data); },
     // onReady: function(config) { console.log('widget_ready', config); },
+  });
+</script>
+<script async src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 1b: Plain HTML — Direct Init (Classic Pattern)
+  Use this if you prefer synchronous initialization.
+═══════════════════════════════════════════════════════ -->
+<script src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
+<script>
+  GrindctrlSupport.init({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
   });
 </script>
 
@@ -304,7 +320,50 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
-  EXAMPLE 8: NPM Package (future)
+  EXAMPLE 8: Lead Capture Configuration
+  Collect visitor info before or during the conversation.
+  Available leadCaptureMode options:
+    - 'off' (default): No lead capture
+    - 'before_first_message': Gate the chat until info is collected
+    - 'after_intent': Show form after user clicks an intent button
+    - 'after_2_messages': Show form after 2 messages
+    - 'after_3_messages': Show form after 3 messages
+═══════════════════════════════════════════════════════ -->
+<!--
+  // Full business intake (name, email, phone, company)
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
+    leadCaptureMode: 'before_first_message',
+    leadCaptureFields: ['name', 'email', 'phone', 'company'],
+    leadCaptureTitle: 'Get a personalized demo',
+    leadCaptureSubtitle: 'Tell us about your business',
+  });
+
+  // Lightweight capture (name + email only)
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
+    leadCaptureMode: 'after_intent',
+    leadCaptureFields: ['name', 'email'],
+  });
+
+  // Skippable form (user can bypass)
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname,
+    leadCaptureMode: 'before_first_message',
+    leadCaptureFields: ['name', 'email'],
+    leadCaptureSkippable: true,
+  });
+-->
+
+
+<!-- ═══════════════════════════════════════════════════════
+  EXAMPLE 9: NPM Package (future)
   Once published to npm:
 ═══════════════════════════════════════════════════════ -->
 <!--

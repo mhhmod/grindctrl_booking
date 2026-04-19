@@ -12,9 +12,28 @@ Add a professional support layer to any website in minutes. Works on plain HTML,
 
 Sign up at [grindctrl.com](https://grindctrl.com) and create your first widget site. Copy your **Embed Key** from the dashboard.
 
-### 2. Add to Your Site
+### 2. Add to Your Site (Recommended Queue Pattern)
 
 Paste this before `</body>` on every page:
+
+```html
+<script>
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
+    embedKey: 'YOUR_EMBED_KEY',
+    domain: window.location.hostname
+  });
+</script>
+<script async src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
+```
+
+**Why the queue pattern?** Your config can be declared immediately, even before the script loads. This prevents race conditions and works reliably with async script loading.
+
+**That's it.** The widget loads asynchronously, never blocks your page, and works on any website.
+
+### Alternative: Direct Init Pattern
+
+If you prefer synchronous initialization:
 
 ```html
 <script src="https://cdn.grindctrl.com/grindctrl-support.js"></script>
@@ -25,8 +44,6 @@ Paste this before `</body>` on every page:
   });
 </script>
 ```
-
-**That's it.** The widget loads asynchronously, never blocks your page, and works on any website.
 
 ---
 
@@ -112,8 +129,13 @@ GrindctrlSupport.init({
   greetingMessage: 'How can we help today?',
   showIntentButtons: true,
   persistentSessions: true,         // Remember returning visitors
-  captureEmailOnFirst: true,        // Collect email before first message
-  captureNameOnFirst: false,
+
+  // Lead capture (new in v1.1)
+  leadCaptureMode: 'off',           // off | before_first_message | after_intent | after_2_messages | after_3_messages
+  leadCaptureFields: ['name', 'email'], // Fields to collect: name, email, phone, company
+  leadCaptureTitle: null,           // Custom form title (null = default)
+  leadCaptureSubtitle: null,        // Custom form subtitle
+  leadCaptureSkippable: false,      // Allow user to skip the form
 
   // Identity (pass logged-in user data)
   userEmail: 'user@example.com',   // Pass from your auth system
@@ -214,6 +236,58 @@ The `onEvent` callback receives these events:
 | `intent_click` | Quick intent button clicked |
 | `message_sent` | User sends a message |
 | `escalation_trigger` | User requests human escalation |
+| `lead_captured` | Lead form submitted with valid data |
+| `lead_capture_skipped` | User skipped the lead form |
+
+---
+
+## Lead Capture
+
+Turn visitor conversations into structured leads with configurable intake forms.
+
+### When to Show the Form
+
+Configure when the lead capture form appears:
+
+```js
+leadCaptureMode: 'before_first_message'  // Gate chat until form is completed
+leadCaptureMode: 'after_intent'          // Show after user clicks an intent
+leadCaptureMode: 'after_2_messages'      // Show after 2 messages
+leadCaptureMode: 'after_3_messages'      // Show after 3 messages
+leadCaptureMode: 'off'                   // Disable lead capture
+```
+
+### Which Fields to Collect
+
+Choose which fields appear on the form (in order):
+
+```js
+leadCaptureFields: ['name', 'email']                    // Minimal
+leadCaptureFields: ['name', 'email', 'phone']           // Standard
+leadCaptureFields: ['name', 'email', 'phone', 'company'] // Full business intake
+```
+
+### Customizing the Form
+
+```js
+GrindctrlSupport.init({
+  embedKey: 'YOUR_EMBED_KEY',
+  domain: window.location.hostname,
+  leadCaptureMode: 'before_first_message',
+  leadCaptureFields: ['name', 'email', 'company'],
+  leadCaptureTitle: 'Get a personalized demo',
+  leadCaptureSubtitle: 'Tell us about your business and we\'ll connect you with the right team.',
+  leadCaptureSkippable: false,  // Set to true to allow skipping
+});
+```
+
+### How Lead Data Flows
+
+1. Visitor submits the form
+2. Data is stored in the widget config (`userEmail`, `userName`, `userPhone`, `userCompany`)
+3. Data is sent to the server with `startConversation()`
+4. `lead_captured` event fires with `{ fields: ['name', 'email'] }`
+5. Conversation continues normally
 
 ---
 
