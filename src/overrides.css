@@ -1,0 +1,151 @@
+/* ================================================================
+   GRINDCTRL Page-Level Overrides
+   Minimal rules that customize the shared design system for this
+   specific page. Loaded last in the CSS cascade.
+   ================================================================ */
+
+/* ── Page sections: display + transition ── */
+/* (layout.css defines opacity/animation only; display toggle lives here) */
+.page-section {
+  display: none;
+  transition: opacity var(--gc-duration-base) var(--gc-ease-in-out);
+}
+.page-section.active {
+  display: block;
+}
+
+/* ── Premium glow: mouse-tracked radial highlight ── */
+.premium-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    400px circle at var(--x, 50%) var(--y, 50%),
+    color-mix(in srgb, var(--gc-primary) 6%, transparent),
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--gc-duration-base) var(--gc-ease-out);
+}
+.premium-glow:hover::after {
+  opacity: 1;
+}
+
+/* ── Semantic status classes (alternate naming for footer etc.) ── */
+.status-active { background: var(--gc-secondary-dim); }
+.status-warning { background: var(--gc-error-dim); }
+.status-idle { background: var(--gc-ink-muted); }
+
+/* ── Preview card extras ── */
+.preview-stat {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Drawer link active state with border accent ── */
+.drawer-link.text-on-surface.bg-surface-container-high {
+  border-left: 3px solid var(--gc-primary);
+  padding-left: 13px;
+}
+[dir="rtl"] .drawer-link.text-on-surface.bg-surface-container-high {
+  border-left: none;
+  border-right: 3px solid var(--gc-primary);
+  padding-left: inherit;
+  padding-right: 13px;
+}
+.drawer-link:not(.text-on-surface) {
+  border-left: 3px solid transparent;
+  padding-left: 13px;
+}
+[dir="rtl"] .drawer-link:not(.text-on-surface) {
+  border-left: none;
+  border-right: 3px solid transparent;
+  padding-left: inherit;
+  padding-right: 13px;
+}
+
+/* ── Floating pill (bottom-right CTA) ── */
+.floating-pill {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: var(--gc-z-pill);
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+  pointer-events: none;
+  transition: all var(--gc-duration-base) var(--gc-ease-in-out);
+}
+.floating-pill.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+[dir="rtl"] .floating-pill {
+  right: auto;
+  left: 24px;
+}
+
+/* ── Theme-specific overrides ── */
+html:not(.dark) footer {
+  background: var(--gc-canvas-deep) !important;
+}
+html:not(.dark) input,
+html:not(.dark) textarea {
+  background: var(--gc-surface-container-lowest) !important;
+}
+
+/* ── Drawer panel RTL ── */
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--gc-z-drawer);
+  width: 300px;
+  max-width: 85vw;
+  background: var(--gc-canvas-low);
+  border-left: 1px solid var(--gc-outline);
+  transform: translateX(100%);
+  transition: transform var(--gc-duration-base) var(--gc-ease-out);
+}
+.drawer-panel.open {
+  transform: translateX(0);
+}
+[dir="rtl"] .drawer-panel {
+  right: auto;
+  left: 0;
+  transform: translateX(-100%);
+  border-left: none;
+  border-right: 1px solid var(--gc-outline);
+}
+[dir="rtl"] .drawer-panel.open {
+  transform: translateX(0);
+}
+
+/* ── Light theme nav border ── */
+html:not(.dark) .gc-site-nav {
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* ── Mobile touch targets ── */
+@media (max-width: 480px) {
+  /* Calendar cells: 44px min touch target */
+  .aspect-square {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Section spacing on mobile */
+  section {
+    padding-top: var(--gc-space-10);
+    padding-bottom: var(--gc-space-10);
+  }
+
+  /* Footer links: better touch targets */
+  footer li a {
+    padding-block: var(--gc-space-2);
+    display: block;
+    min-height: var(--gc-space-11);
+  }
+}

@@ -19,7 +19,9 @@ body {
   background: var(--gc-canvas);
   color: var(--gc-ink);
   overflow-x: hidden;
+  font-size: 1rem;
   font-weight: 400;
+  line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
@@ -31,6 +33,7 @@ body {
 
 .font-headline {
   font-family: var(--gc-font-display);
+  letter-spacing: -0.01em;
 }
 
 [dir="rtl"] .font-headline {
