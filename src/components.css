@@ -831,30 +831,37 @@ html:not(.dark) input, html:not(.dark) textarea { background: var(--gc-surface-c
 }
 
 /* Shoelace drawer theme overrides */
-wa-drawer::part(panel) {
+
+/* Hide slotted drawer content until the custom element registers.
+   Without this, children render inline on the page before Shoelace loads. */
+sl-drawer:not(:defined) > * {
+  display: none;
+}
+
+sl-drawer::part(panel) {
   background: var(--gc-canvas-low);
   border-left: 1px solid var(--gc-outline);
   width: 300px;
   max-width: 85vw;
 }
-[dir="rtl"] wa-drawer::part(panel) {
+[dir="rtl"] sl-drawer::part(panel) {
   border-left: none;
   border-right: 1px solid var(--gc-outline);
 }
-wa-drawer::part(overlay) {
+sl-drawer::part(overlay) {
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-wa-drawer::part(header) {
+sl-drawer::part(header) {
   display: none;
 }
-wa-drawer::part(body) {
+sl-drawer::part(body) {
   padding: var(--gc-space-6);
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-wa-drawer::part(footer) {
+sl-drawer::part(footer) {
   display: none;
 }

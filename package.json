@@ -7,9 +7,13 @@
     "postinstall": "node -e \"const fs=require('fs'),s='node_modules/@shoelace-style/shoelace/dist/assets',d='src/public/shoelace';fs.rmSync(d,{recursive:true,force:true});fs.cpSync(s,d,{recursive:true})\"",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui",
+    "test:update-snapshots": "npx playwright test --update-snapshots"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "vite": "^6.3.0"
   },
   "dependencies": {

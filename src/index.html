@@ -214,15 +214,15 @@ tailwind.config = {
         <span class="material-symbols-outlined text-lg theme-icon-dark">light_mode</span>
         <span class="material-symbols-outlined text-lg theme-icon-light" style="display:none">dark_mode</span>
       </button>
-      <wa-button id="hamburger-btn" class="gc-site-nav__hamburger" size="small" variant="text" aria-label="Open menu">
-        <wa-icon name="list" library="default"></wa-icon>
-      </wa-button>
+      <sl-button id="hamburger-btn" class="gc-site-nav__hamburger" size="small" variant="text" aria-label="Open menu">
+        <sl-icon name="list" library="default"></sl-icon>
+      </sl-button>
     </div>
   </div>
 </nav>
 
 <!-- ===== MOBILE DRAWER (Shoelace) ===== -->
-<wa-drawer id="nav-drawer" label="Navigation menu" placement="end">
+<sl-drawer id="nav-drawer" label="Navigation menu" placement="end">
   <div class="gc-drawer__header">
     <div class="flex items-center gap-2.5">
       <img src="logo-dark.svg" alt="GRINDCTRL" class="logo-dark h-6 w-auto"/>
@@ -246,11 +246,11 @@ tailwind.config = {
       <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
     </a>
   </nav>
-  <wa-divider></wa-divider>
+  <sl-divider></sl-divider>
   <a href="#book" class="drawer-link block w-full text-center cta-primary py-4 text-base" data-i18n="drawer_start_trial">
     Start Free Trial
   </a>
-</wa-drawer>
+</sl-drawer>
 
 <!-- Floating pill removed — workspace-first UI -->
 
