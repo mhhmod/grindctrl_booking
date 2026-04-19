@@ -897,9 +897,9 @@ tailwind.config = {
               </div>
               <!-- Input -->
               <div class="px-4 py-3 border-t" style="border-color:var(--gc-outline-variant)">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 mockup-input-row">
                   <input id="mockup-input" type="text" data-i18n-placeholder="mockup_input_placeholder" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="flex-1 rounded-xl px-4 py-3 text-[12px] outline-none transition-all" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
-                  <button onclick="mockupSend()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95" style="background:var(--gc-primary);color:var(--gc-on-primary)">
+                  <button onclick="mockupSend()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 mockup-send-btn" style="background:var(--gc-primary);color:var(--gc-on-primary)">
                     <span class="material-symbols-outlined text-[18px]">send</span>
                   </button>
                 </div>
