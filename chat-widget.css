@@ -1605,7 +1605,34 @@ html:not(.dark) .gc-toast {
 }
 
 [dir="rtl"] .gc-create-mode-exit .material-symbols-outlined {
+  /* Only flip icons, not text - explicitly exclude text content */
   transform: scaleX(-1);
+}
+
+/* Fix: Prevent text mirroring in RTL - ensure proper text direction */
+[dir="rtl"] .gc-chat-panel,
+[dir="rtl"] .gc-msg,
+[dir="rtl"] .gc-msg-content,
+[dir="rtl"] .gc-system-card,
+[dir="rtl"] .gc-chat-header,
+[dir="rtl"] .gc-chat-header-title,
+[dir="rtl"] .gc-chat-header-subtitle,
+[dir="rtl"] .gc-input-text,
+[dir="rtl"] .gc-prompt-chip,
+[dir="rtl"] .gc-auth-input {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: normal;
+}
+
+[dir="rtl"] .gc-msg-user .gc-msg-content {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .gc-msg-assistant .gc-msg-content {
+  direction: rtl;
+  text-align: right;
 }
 
 @media (prefers-reduced-motion: reduce) {
