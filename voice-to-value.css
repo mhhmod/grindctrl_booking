@@ -886,13 +886,77 @@
     margin-right: auto;
 }
 
+/* ── Small Phone Refinements (480px and below) ── */
 @media (max-width: 480px) {
+    /* Touch-friendly support trigger - 44px minimum */
     .ed-support-trigger {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        min-width: 44px;
+        min-height: 44px;
     }
     .ed-support-trigger .material-symbols-outlined {
-        font-size: 12px;
+        font-size: 18px;
+    }
+    
+    /* Smaller panel min-height on small phones */
+    .ed-panel {
+        min-height: 240px !important;
+    }
+    
+    /* Compact header */
+    .ed-workspace-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    /* Trust legend - wrap */
+    .ed-trust-legend {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    /* Hide keyboard shortcuts on mobile */
+    .ed-kbd-hints {
+        display: none !important;
+    }
+    
+    /* Compact approval bar */
+    .ed-approval-bar {
+        padding: 6px;
+        gap: 4px;
+    }
+    
+    /* Larger buttons for touch */
+    .ed-btn {
+        min-height: 44px;
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+    
+    /* Drop zone - smaller padding */
+    .ed-drop-zone {
+        padding: 1.25rem;
+    }
+    
+    .ed-drop-title {
+        font-size: 0.875rem;
+    }
+    
+    .ed-drop-subtitle {
+        font-size: 0.6875rem;
+    }
+    
+    .ed-drop-btn {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 10px 14px;
+    }
+    
+    /* Ghost labels */
+    .ed-ghost-label {
+        font-size: 9px;
     }
 }

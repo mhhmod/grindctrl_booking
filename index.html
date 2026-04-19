@@ -440,11 +440,72 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 }
 
 @media (max-width: 480px) {
+    /* Card sizing */
     .ui-card {
-        padding: 1.25rem;
-        border-radius: 1.25rem;
+        padding: 1rem;
+        border-radius: 1rem;
     }
-    .h1-fluid { font-size: 2.25rem; }
+    
+    /* Typography - smaller on small phones */
+    .h1-fluid { font-size: clamp(1.75rem, 1rem + 3vw, 2.5rem); line-height: 1.1; }
+    .h2-fluid { font-size: clamp(1.375rem, 1rem + 1.5vw, 2rem); }
+    .h3-fluid { font-size: clamp(1.125rem, 0.9rem + 1vw, 1.5rem); }
+    .text-fluid { font-size: 0.875rem; line-height: 1.6; }
+    
+    /* Full-width buttons on mobile */
+    .ui-btn { width: 100%; min-height: 48px; }
+    
+    /* Touch targets - calendar cells */
+    .aspect-square { 
+        min-height: 44px !important; 
+        min-width: 44px !important;
+    }
+    
+    /* Touch targets - time slot buttons */
+    .grid.grid-cols-3.gap-3 > div {
+        min-height: 44px !important;
+        padding: 12px 8px !important;
+    }
+    
+    /* Forms - prevent iOS zoom */
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    textarea { font-size: 16px !important; min-height: 48px; }
+    
+    /* Section spacing */
+    section { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+    
+    /* Integration pills - scrollable on mobile */
+    .flex.flex-wrap.gap-3 {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        scroll-snap-type: x mandatory;
+    }
+    
+    .flex.flex-wrap.gap-3 > div {
+        flex-shrink: 0;
+        scroll-snap-align: start;
+        min-height: 44px;
+        padding: 10px 16px;
+    }
+    
+    /* Footer links - better touch targets */
+    footer li a {
+        padding: 8px 0 !important;
+        display: block;
+        min-height: 44px;
+    }
+}
+
+/* Small phones (320px-374px) */
+@media (max-width: 374px) {
+    .ui-card { padding: 0.875rem; border-radius: 0.875rem; }
+    .h1-fluid { font-size: 1.5rem; }
+    .h2-fluid { font-size: 1.25rem; }
+    .h3-fluid { font-size: 1rem; }
 }
 
 /* Mobile drawer */
@@ -452,6 +513,20 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--gc-canvas);color:
 .drawer-overlay.open{opacity:1;pointer-events:auto}
 .drawer-panel{position:fixed;top:0;right:0;bottom:0;z-index:70;width:300px;max-width:85vw;background:var(--gc-canvas-low);border-left:1px solid var(--gc-outline);transform:translateX(100%);transition:transform .3s cubic-bezier(.16,1,.3,1)}
 .drawer-panel.open{transform:translateX(0)}
+
+/* Drawer link active state */
+.drawer-link {
+    position: relative;
+    transition: all 0.2s ease;
+}
+.drawer-link.text-on-surface.bg-surface-container-high {
+    border-left: 3px solid var(--gc-primary);
+    padding-left: 13px;
+}
+.drawer-link:not(.text-on-surface) {
+    border-left: 3px solid transparent;
+    padding-left: 13px;
+}
 
 /* Floating pill */
 .floating-pill{position:fixed;bottom:24px;right:24px;z-index:40;opacity:0;transform:translateY(20px) scale(0.9);pointer-events:none;transition:all .3s ease}
