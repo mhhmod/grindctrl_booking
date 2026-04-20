@@ -1,0 +1,153 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --gc-auth-bg: #0a0a0a;
+  --gc-auth-surface: #141414;
+  --gc-auth-border: rgba(255, 255, 255, 0.07);
+  --gc-auth-text: #fafafa;
+  --gc-auth-text-muted: rgba(250, 250, 250, 0.45);
+  --gc-auth-primary: #4F46E5;
+  --gc-auth-accent: #6366F1;
+}
+
+html {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--gc-auth-bg);
+  color: var(--gc-auth-text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.gc-auth-page {
+  width: 100%;
+  max-width: 440px;
+}
+
+.gc-auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.gc-auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  color: var(--gc-auth-text);
+}
+
+.gc-auth-brand-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--gc-auth-primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.gc-auth-brand-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.gc-auth-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.gc-auth-subtitle {
+  font-size: 0.875rem;
+  color: var(--gc-auth-text-muted);
+}
+
+.gc-auth-card {
+  background: var(--gc-auth-surface);
+  border: 1px solid var(--gc-auth-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.6);
+}
+
+.gc-auth-mount {
+  min-height: 300px;
+}
+
+.gc-auth-mount:empty::after {
+  content: 'Loading authentication...';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--gc-auth-text-muted);
+  font-size: 0.875rem;
+}
+
+.gc-auth-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--gc-auth-text-muted);
+}
+
+.gc-auth-footer a {
+  color: var(--gc-auth-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.gc-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.gc-auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gc-auth-text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  transition: color 0.2s;
+}
+
+.gc-auth-back:hover {
+  color: var(--gc-auth-text);
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 1rem 0.75rem;
+    justify-content: flex-start;
+    padding-top: 4rem;
+  }
+
+  .gc-auth-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .gc-auth-title {
+    font-size: 1.25rem;
+  }
+}
