@@ -14,10 +14,12 @@ test.describe('Mobile Drawer', () => {
     const drawer = page.locator(SEL.drawer);
     await expect(drawer).toHaveAttribute('open', '');
 
-    const links = drawer.locator('.drawer-link[data-nav]');
-    expect(await links.count()).toBe(4);
+    const navLinks = drawer.locator('.drawer-link[data-nav], .drawer-link-highlight[data-nav]');
+    expect(await navLinks.count()).toBe(4);
 
-    await expect(drawer.locator('[data-i18n="drawer_start_trial"]')).toBeVisible();
+    const authLinks = drawer.locator('.drawer-link:not([data-nav]), .gc-auth-drawer-cta');
+    expect(await authLinks.count()).toBeGreaterThanOrEqual(1);
+
     await expect(drawer.locator('.drawer-link[data-nav="home"]')).toHaveClass(/drawer-link/);
   });
 

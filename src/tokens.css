@@ -53,7 +53,8 @@
   --gc-icon-xl: 20px;
   --gc-icon-2xl: 24px;
   --gc-icon-3xl: 32px;
-  --gc-icon-4xl: 48px;
+  --gc-icon-4xl: 40px;
+  --gc-icon-5xl: 48px;
 
   /* ── Breakpoints (reference only — use @media) ── */
   /* sm: 640px | md: 768px | lg: 1024px | xl: 1280px | 2xl: 1536px */

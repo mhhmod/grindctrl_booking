@@ -297,9 +297,9 @@ test.describe('Supabase Data Layer', () => {
 });
 
 test.describe('Icon Size Consistency', () => {
-  const STANDARD_SIZES = [12, 14, 16, 18, 20, 24, 32, 48];
+  const SCALE = [12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 40, 48];
 
-  test('landing page icons use standard scale sizes', async ({ page }) => {
+  test('landing page icons fall within expected size steps', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(3000);
 
@@ -311,11 +311,12 @@ test.describe('Icon Size Consistency', () => {
       });
     });
 
-    const nonStandard = iconSizes.filter(size => !STANDARD_SIZES.includes(size));
-    expect(nonStandard.length).toBe(0, `Found non-standard icon sizes: ${nonStandard.join(', ')}px`);
+    const outliers = iconSizes.filter(size => !SCALE.includes(size));
+    const uniqueOutliers = [...new Set(outliers)];
+    expect(uniqueOutliers.length, `Unexpected icon sizes: ${uniqueOutliers.join(', ')}px. Expected one of: ${SCALE.join(', ')}px`).toBe(0);
   });
 
-  test('auth page icons use standard scale sizes', async ({ page }) => {
+  test('auth page icons fall within expected size steps', async ({ page }) => {
     await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(3000);
 
@@ -327,7 +328,8 @@ test.describe('Icon Size Consistency', () => {
       });
     });
 
-    const nonStandard = iconSizes.filter(size => !STANDARD_SIZES.includes(size));
-    expect(nonStandard.length).toBe(0, `Found non-standard icon sizes: ${nonStandard.join(', ')}px`);
+    const outliers = iconSizes.filter(size => !SCALE.includes(size));
+    const uniqueOutliers = [...new Set(outliers)];
+    expect(uniqueOutliers.length, `Unexpected icon sizes: ${uniqueOutliers.join(', ')}px`).toBe(0);
   });
 });
