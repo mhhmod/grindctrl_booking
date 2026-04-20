@@ -259,6 +259,7 @@
       chat_image_save: { en: 'Save', ar: 'حفظ' },
       chat_image_retry: { en: 'Generate again', ar: 'إنشاء مرة أخرى' },
       chat_image_failed: { en: 'Image generation failed. Please try again.', ar: 'فشل إنشاء الصورة. يرجى المحاولة مرة أخرى.' },
+      chat_image_model_error: { en: 'Image generation is temporarily unavailable. Please try again later.', ar: 'إنشاء الصور غير متاح مؤقتاً. يرجى المحاولة لاحقاً.' },
       chat_image_quota_exhausted: { en: 'Image generation limit reached for this session.', ar: 'تم الوصول إلى حد إنشاء الصور لهذه الجلسة.' },
       chat_create_mode: { en: 'Create image', ar: 'إنشاء صورة' },
       chat_exit_create: { en: 'Back to chat', ar: 'العودة للمحادثة' }
@@ -1684,7 +1685,9 @@
         state.phase = 'open';
         state.messages.pop();
         renderAll();
-        showError(data.message || t('chat_image_failed'));
+        var errMsg = data.message || '';
+        var isModelError = /does not support|model.*error|cannot read/i.test(errMsg);
+        showError(isModelError ? t('chat_image_model_error') : (errMsg || t('chat_image_failed')));
         return;
       }
 
