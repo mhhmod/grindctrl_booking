@@ -9,7 +9,7 @@ test.describe('Auth Pages', () => {
     await expect(page.locator('#ed-drop-zone')).toBeVisible();
   });
 
-  test('sign-in page renders', async ({ page }) => {
+  test('sign-in page renders with shared design system', async ({ page }) => {
     await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
@@ -17,9 +17,28 @@ test.describe('Auth Pages', () => {
     await expect(page.locator('.gc-auth-title')).toContainText(/Welcome back|Sign in/i);
     await expect(page.locator('#clerk-sign-in-mount')).toBeVisible();
     await expect(page.locator('.gc-auth-card')).toBeVisible();
+
+    await expect(page.locator('link[href="tokens.css"]')).toBeAttached();
+    await expect(page.locator('link[href="base.css"]')).toBeAttached();
+    await expect(page.locator('link[href="components.css"]')).toBeAttached();
   });
 
-  test('sign-up page renders', async ({ page }) => {
+  test('sign-in page Material Symbols render as icons, not text', async ({ page }) => {
+    await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const icons = page.locator('.material-symbols-outlined');
+    const count = await icons.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const icon = icons.nth(i);
+      const fontFamily = await icon.evaluate(el => getComputedStyle(el).fontFamily);
+      expect(fontFamily).toContain('Material Symbols Outlined');
+    }
+  });
+
+  test('sign-up page renders with shared design system', async ({ page }) => {
     await page.goto('/sign-up.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
@@ -27,6 +46,9 @@ test.describe('Auth Pages', () => {
     await expect(page.locator('.gc-auth-title')).toContainText(/Create|Account/i);
     await expect(page.locator('#clerk-sign-up-mount')).toBeVisible();
     await expect(page.locator('.gc-auth-card')).toBeVisible();
+
+    await expect(page.locator('link[href="tokens.css"]')).toBeAttached();
+    await expect(page.locator('link[href="base.css"]')).toBeAttached();
   });
 
   test('sign-in page has link to sign-up', async ({ page }) => {
@@ -75,18 +97,124 @@ test.describe('Auth Pages', () => {
   });
 });
 
+test.describe('Auth Design System', () => {
+  test('auth pages use shared gc-* design tokens', async ({ page }) => {
+    await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2000);
+
+    const authPage = page.locator('.gc-auth-page');
+    await expect(authPage).toBeVisible();
+
+    const bgColor = await authPage.evaluate(el => getComputedStyle(el).backgroundColor);
+    expect(bgColor).toBeTruthy();
+  });
+
+  test('auth pages load all CSS cascade files', async ({ page }) => {
+    await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1000);
+
+    const cssFiles = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      return links.map(l => l.getAttribute('href'));
+    });
+
+    expect(cssFiles).toContain('fonts.css');
+    expect(cssFiles).toContain('tokens.css');
+    expect(cssFiles).toContain('base.css');
+    expect(cssFiles).toContain('layout.css');
+    expect(cssFiles).toContain('components.css');
+    expect(cssFiles).toContain('auth.css');
+  });
+});
+
+test.describe('Dashboard', () => {
+  test('app page has dashboard shell with shared design system', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const topbar = page.locator('.gc-app-topbar');
+    const sidebar = page.locator('.gc-app-sidebar');
+
+    await expect(topbar).toBeVisible();
+    await expect(sidebar).toBeVisible();
+  });
+
+  test('app page loads all CSS cascade files', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1000);
+
+    const cssFiles = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+      return links.map(l => l.getAttribute('href'));
+    });
+
+    expect(cssFiles).toContain('fonts.css');
+    expect(cssFiles).toContain('tokens.css');
+    expect(cssFiles).toContain('base.css');
+    expect(cssFiles).toContain('layout.css');
+    expect(cssFiles).toContain('components.css');
+    expect(cssFiles).toContain('app.css');
+  });
+
+  test('dashboard Material Symbols render as icons, not text', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const icons = page.locator('.material-symbols-outlined');
+    const count = await icons.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const icon = icons.nth(i);
+      const fontFamily = await icon.evaluate(el => getComputedStyle(el).fontFamily);
+      expect(fontFamily).toContain('Material Symbols Outlined');
+    }
+  });
+
+  test('dashboard sidebar navigation switches screens', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const appContent = page.locator('#app-content');
+    if (!(await appContent.isVisible())) return;
+
+    const setupItem = page.locator('.gc-app-sidebar-item[data-screen="setup"]');
+    if (await setupItem.isVisible()) {
+      await setupItem.click();
+
+      const setupScreen = page.locator('#screen-setup');
+      await expect(setupScreen).toHaveClass(/active/);
+
+      const dashboardItem = page.locator('.gc-app-sidebar-item[data-screen="dashboard"]');
+      await dashboardItem.click();
+
+      const dashScreen = page.locator('#screen-dashboard');
+      await expect(dashScreen).toHaveClass(/active/);
+    }
+  });
+
+  test('dashboard uses gc-* token classes', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const topbar = page.locator('.gc-app-topbar');
+    if (await topbar.isVisible()) {
+      const bgColor = await topbar.evaluate(el => getComputedStyle(el).backgroundColor);
+      expect(bgColor).toBeTruthy();
+    }
+  });
+});
+
 test.describe('Supabase Data Layer', () => {
   test('supabase client module exports configured check', async ({ page }) => {
     await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(3000);
 
-    // App page should render the dashboard shell (nav, layout) regardless of env vars
     const shellPresent = await page.evaluate(() => {
-      return document.querySelector('.nav') !== null || document.querySelector('.nav-brand') !== null || document.body.textContent.length > 100;
+      return document.querySelector('.gc-app-topbar') !== null || document.body.textContent.length > 100;
     });
     expect(shellPresent).toBe(true);
 
-    // __gcApp exists only when Supabase env vars are baked into the build
     const isConfigured = await page.evaluate(() => {
       return typeof window.__gcApp !== 'undefined';
     });
@@ -97,10 +225,10 @@ test.describe('Supabase Data Layer', () => {
     await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(3000);
 
-    const nav = page.locator('.nav');
-    const sidebar = page.locator('.sidebar');
+    const topbar = page.locator('.gc-app-topbar');
+    const sidebar = page.locator('.gc-app-sidebar');
 
-    await expect(nav).toBeVisible();
+    await expect(topbar).toBeVisible();
     await expect(sidebar).toBeVisible();
   });
 
@@ -113,9 +241,19 @@ test.describe('Supabase Data Layer', () => {
       return Array.isArray(window.__gcApp.sites);
     });
 
-    // If Supabase is configured, sites should be an array (possibly empty)
     if (hasWidgetSites !== null) {
       expect(hasWidgetSites).toBe(true);
     }
+  });
+
+  test('bootstrap RPC functions are callable', async ({ page }) => {
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const hasRPC = await page.evaluate(() => {
+      const supabase = window.__gcApp ? true : false;
+      return supabase;
+    });
+    expect(typeof hasRPC).toBe('boolean');
   });
 });

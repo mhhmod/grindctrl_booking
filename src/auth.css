@@ -1,91 +1,99 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* ================================================================
+   GRINDCTRL Auth Page Overrides
+   Loaded after the shared design cascade (fonts → tokens → base
+   → layout → components). Only auth-specific overrides here.
+   ================================================================ */
 
-:root {
-  --gc-auth-bg: #0a0a0a;
-  --gc-auth-surface: #141414;
-  --gc-auth-border: rgba(255, 255, 255, 0.07);
-  --gc-auth-text: #fafafa;
-  --gc-auth-text-muted: rgba(250, 250, 250, 0.45);
-  --gc-auth-primary: #4F46E5;
-  --gc-auth-accent: #6366F1;
-}
-
-html {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--gc-auth-bg);
-  color: var(--gc-auth-text);
-  font-size: 15px;
-  line-height: 1.5;
-}
-
-body {
-  min-height: 100vh;
+/* ── Auth Page Layout ── */
+.gc-auth-page {
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: var(--gc-space-8) var(--gc-space-4);
+  position: relative;
 }
 
-.gc-auth-page {
-  width: 100%;
-  max-width: 440px;
+/* ── Auth Back Link ── */
+.gc-auth-back {
+  position: absolute;
+  top: var(--gc-space-6);
+  inset-inline-start: var(--gc-space-6);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gc-space-1);
+  color: var(--gc-ink-muted);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: color var(--gc-duration-fast) var(--gc-ease-in-out);
+}
+.gc-auth-back:hover {
+  color: var(--gc-ink);
 }
 
+/* ── Auth Header ── */
 .gc-auth-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: var(--gc-space-8);
 }
 
 .gc-auth-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 1.5rem;
+  gap: var(--gc-space-2);
+  margin-bottom: var(--gc-space-6);
   text-decoration: none;
-  color: var(--gc-auth-text);
+  color: var(--gc-ink);
 }
 
 .gc-auth-brand-icon {
   width: 36px;
   height: 36px;
-  background: var(--gc-auth-primary);
-  border-radius: 10px;
+  background: var(--gc-primary);
+  border-radius: var(--gc-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 20px;
+  color: var(--gc-on-primary);
+}
+
+.gc-auth-brand-icon .material-symbols-outlined {
+  font-size: 18px;
 }
 
 .gc-auth-brand-text {
+  font-family: var(--gc-font-display);
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .gc-auth-title {
-  font-size: 1.5rem;
+  font-family: var(--gc-font-display);
+  font-size: clamp(1.25rem, 1rem + 1.5vw, 1.5rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--gc-space-2);
+  color: var(--gc-ink);
 }
 
 .gc-auth-subtitle {
   font-size: 0.875rem;
-  color: var(--gc-auth-text-muted);
+  color: var(--gc-secondary);
+  line-height: 1.5;
 }
 
+/* ── Auth Card (Clerk mount container) ── */
 .gc-auth-card {
-  background: var(--gc-auth-surface);
-  border: 1px solid var(--gc-auth-border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.6);
+  width: 100%;
+  max-width: 440px;
+  background: var(--gc-surface-container-low);
+  border: 1px solid var(--gc-outline);
+  border-radius: var(--gc-radius-xl);
+  padding: var(--gc-space-6);
+  box-shadow: var(--gc-card-shadow);
 }
 
 .gc-auth-mount {
@@ -93,61 +101,96 @@ body {
 }
 
 .gc-auth-mount:empty::after {
-  content: 'Loading authentication...';
+  content: 'Loading authentication\u2026';
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  color: var(--gc-auth-text-muted);
+  color: var(--gc-ink-muted);
   font-size: 0.875rem;
 }
 
+/* ── Auth Footer ── */
 .gc-auth-footer {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: var(--gc-space-6);
   font-size: 0.875rem;
-  color: var(--gc-auth-text-muted);
+  color: var(--gc-secondary);
 }
 
 .gc-auth-footer a {
-  color: var(--gc-auth-accent);
+  color: var(--gc-accent);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--gc-duration-fast) var(--gc-ease-in-out);
+}
+.gc-auth-footer a:hover {
+  color: var(--gc-ink);
+  text-decoration: underline;
+}
+
+/* ── Auth Fallback (not-configured state) ── */
+.gc-auth-fallback {
+  text-align: center;
+  padding: var(--gc-space-12) var(--gc-space-6);
+}
+.gc-auth-fallback p {
+  color: var(--gc-secondary);
+  margin-bottom: var(--gc-space-4);
+}
+.gc-auth-fallback a {
+  color: var(--gc-accent);
   text-decoration: none;
   font-weight: 600;
 }
 
-.gc-auth-footer a:hover {
-  text-decoration: underline;
-}
-
-.gc-auth-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--gc-auth-text-muted);
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 1.5rem;
-  transition: color 0.2s;
-}
-
-.gc-auth-back:hover {
-  color: var(--gc-auth-text);
-}
-
+/* ── Mobile ── */
 @media (max-width: 480px) {
-  body {
-    padding: 1rem 0.75rem;
+  .gc-auth-page {
     justify-content: flex-start;
-    padding-top: 4rem;
+    padding-top: 5rem;
   }
-
   .gc-auth-card {
-    padding: 1rem;
-    border-radius: 12px;
+    padding: var(--gc-space-4);
+    border-radius: var(--gc-radius-lg);
   }
+  .gc-auth-back {
+    top: var(--gc-space-4);
+    inset-inline-start: var(--gc-space-4);
+  }
+}
 
-  .gc-auth-title {
-    font-size: 1.25rem;
-  }
+/* ── Clerk injected UI overrides ── */
+.gc-auth-mount .cl-rootBox,
+.gc-auth-mount .cl-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
+
+.gc-auth-mount .cl-cardBox {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.gc-auth-mount .cl-formButtonPrimary {
+  background: var(--gc-primary) !important;
+  color: var(--gc-on-primary) !important;
+  border-radius: var(--gc-radius-md) !important;
+  font-weight: 600 !important;
+}
+
+.gc-auth-mount .cl-formFieldInput {
+  border-radius: var(--gc-radius-md) !important;
+  border-color: var(--gc-outline) !important;
+  background: color-mix(in srgb, var(--gc-ink) 3%, transparent) !important;
+  color: var(--gc-on-surface) !important;
+}
+
+.gc-auth-mount .cl-formFieldInput:focus {
+  border-color: var(--gc-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gc-primary) 10%, transparent) !important;
 }

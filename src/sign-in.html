@@ -1,14 +1,23 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html class="dark" lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In — GRINDCTRL</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="stylesheet" href="fonts.css" />
-  <link rel="stylesheet" href="auth.css" />
+  <link rel="icon" type="image/svg+xml" href="logo-dark.svg" media="(prefers-color-scheme: dark)"/>
+  <link rel="icon" type="image/svg+xml" href="logo-light.svg" media="(prefers-color-scheme: light)"/>
+  <!-- Self-hosted fonts (no external CDN dependencies) -->
+  <link rel="stylesheet" href="fonts.css"/>
+  <!-- Design system foundation (tokens → base → layout → components) -->
+  <link rel="stylesheet" href="tokens.css"/>
+  <link rel="stylesheet" href="base.css"/>
+  <link rel="stylesheet" href="layout.css"/>
+  <link rel="stylesheet" href="components.css"/>
+  <!-- Auth page overrides (must be last) -->
+  <link rel="stylesheet" href="auth.css"/>
 </head>
-<body>
+<body class="ui-shell">
   <div class="gc-auth-page">
     <a href="/" class="gc-auth-back">
       <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
@@ -18,7 +27,7 @@
     <div class="gc-auth-header">
       <a href="/" class="gc-auth-brand">
         <div class="gc-auth-brand-icon">
-          <span class="material-symbols-outlined" style="font-size:20px">smart_toy</span>
+          <span class="material-symbols-outlined" style="font-size:18px">smart_toy</span>
         </div>
         <span class="gc-auth-brand-text">GRINDCTRL</span>
       </a>

@@ -1,436 +1,428 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html class="dark" lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — GRINDCTRL</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="stylesheet" href="fonts.css" />
-  <link rel="stylesheet" href="app.css" />
+  <link rel="icon" type="image/svg+xml" href="logo-dark.svg" media="(prefers-color-scheme: dark)"/>
+  <link rel="icon" type="image/svg+xml" href="logo-light.svg" media="(prefers-color-scheme: light)"/>
+  <!-- Self-hosted fonts (no external CDN dependencies) -->
+  <link rel="stylesheet" href="fonts.css"/>
+  <!-- Design system foundation (tokens → base → layout → components) -->
+  <link rel="stylesheet" href="tokens.css"/>
+  <link rel="stylesheet" href="base.css"/>
+  <link rel="stylesheet" href="layout.css"/>
+  <link rel="stylesheet" href="components.css"/>
+  <!-- Dashboard overrides (must be last) -->
+  <link rel="stylesheet" href="app.css"/>
 </head>
-<body>
+<body class="ui-shell">
 
-<nav class="nav">
-  <div class="nav-brand">
-    <div class="nav-brand-icon"><span class="material-symbols-outlined" style="font-size:18px">smart_toy</span></div>
-    GRINDCTRL
+<!-- ═══ Top Bar ═══ -->
+<header class="gc-app-topbar">
+  <a href="/" class="gc-app-topbar-brand">
+    <div class="gc-app-topbar-brand-icon">
+      <span class="material-symbols-outlined">smart_toy</span>
+    </div>
+    <span class="gc-app-topbar-brand-text">GRINDCTRL</span>
+  </a>
+
+  <div class="gc-app-topbar-links">
+    <button class="gc-app-topbar-link active" data-nav="dashboard">Dashboard</button>
+    <button class="gc-app-topbar-link" data-nav="setup">Widget Setup</button>
+    <button class="gc-app-topbar-link" data-nav="branding">Branding</button>
+    <button class="gc-app-topbar-link" data-nav="intents">Intents</button>
+    <button class="gc-app-topbar-link" data-nav="usage">Usage</button>
   </div>
-  <div class="nav-links">
-    <button class="nav-link active" data-nav="dashboard">Dashboard</button>
-    <button class="nav-link" data-nav="setup">Widget Setup</button>
-    <button class="nav-link" data-nav="branding">Branding</button>
-    <button class="nav-link" data-nav="intents">Intents</button>
-    <button class="nav-link" data-nav="usage">Usage</button>
-  </div>
-  <div class="nav-user">
-    <span class="nav-user-email" id="nav-user-email"></span>
+
+  <div class="gc-app-topbar-user">
+    <span class="gc-app-topbar-email" id="nav-user-email"></span>
     <div id="gc-user-button"></div>
   </div>
-</nav>
+</header>
 
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Overview</div>
-      <button class="sidebar-item active" data-screen="dashboard"><span class="material-symbols-outlined">dashboard</span> Dashboard</button>
-      <button class="sidebar-item" data-screen="setup"><span class="material-symbols-outlined">settings</span> Widget Setup</button>
+<div class="gc-app-layout">
+
+  <!-- ═══ Sidebar ═══ -->
+  <aside class="gc-app-sidebar">
+    <div class="gc-app-sidebar-section">
+      <div class="gc-app-sidebar-label">Overview</div>
+      <button class="gc-app-sidebar-item active" data-screen="dashboard">
+        <span class="material-symbols-outlined">dashboard</span> Dashboard
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="setup">
+        <span class="material-symbols-outlined">settings</span> Widget Setup
+      </button>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Configure</div>
-      <button class="sidebar-item" data-screen="branding"><span class="material-symbols-outlined">palette</span> Branding</button>
-      <button class="sidebar-item" data-screen="intents"><span class="material-symbols-outlined">flash_on</span> Intents</button>
-      <button class="sidebar-item" data-screen="domains"><span class="material-symbols-outlined">language</span> Domains</button>
+    <div class="gc-app-sidebar-section">
+      <div class="gc-app-sidebar-label">Configure</div>
+      <button class="gc-app-sidebar-item" data-screen="branding">
+        <span class="material-symbols-outlined">palette</span> Branding
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="intents">
+        <span class="material-symbols-outlined">flash_on</span> Intents
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="domains">
+        <span class="material-symbols-outlined">language</span> Domains
+      </button>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Account</div>
-      <button class="sidebar-item" data-screen="usage"><span class="material-symbols-outlined">bar_chart</span> Usage &amp; Plan</button>
-      <button class="sidebar-item" data-screen="integrations"><span class="material-symbols-outlined">cable</span> Integrations</button>
-      <button class="sidebar-item" data-screen="settings"><span class="material-symbols-outlined">tune</span> Settings</button>
+    <div class="gc-app-sidebar-section">
+      <div class="gc-app-sidebar-label">Account</div>
+      <button class="gc-app-sidebar-item" data-screen="usage">
+        <span class="material-symbols-outlined">bar_chart</span> Usage &amp; Plan
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="integrations">
+        <span class="material-symbols-outlined">cable</span> Integrations
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="settings">
+        <span class="material-symbols-outlined">tune</span> Settings
+      </button>
     </div>
   </aside>
 
-  <main class="main">
+  <!-- ═══ Main Content ═══ -->
+  <main class="gc-app-main">
 
-    <div id="app-setup-message" class="gc-setup-msg" style="display:none">
+    <!-- Setup fallback (shown when Clerk env is not configured) -->
+    <div id="app-setup-message" class="gc-app-setup-msg" style="display:none">
+      <span class="material-symbols-outlined" style="font-size:48px;color:var(--gc-warning)">warning</span>
       <h2>Authentication Not Configured</h2>
-      <p>Clerk environment variables are not set. Add <code>VITE_CLERK_PUBLISHABLE_KEY</code> to your <code>.env</code> file.</p>
-      <a href="/" class="btn btn-secondary">Return to home</a>
+      <p>Add <code>VITE_CLERK_PUBLISHABLE_KEY</code> to your <code>.env</code> file to enable sign-in.</p>
+      <a href="/" class="gc-btn gc-btn--secondary">Return to home</a>
     </div>
 
+    <!-- Authenticated content -->
     <div id="app-content" style="display:none">
 
-      <section class="screen active" id="screen-dashboard">
-        <div class="trial-banner">
-          <div class="trial-banner-icon"><span class="material-symbols-outlined">schedule</span></div>
-          <div style="flex:1">
-            <div class="trial-banner-title">15-Day Trial Active</div>
-            <div class="trial-banner-desc">White-label mode enabled · Full feature access · No credit card required</div>
-            <div class="trial-progress"><div class="trial-progress-bar" style="width:73%"></div></div>
+      <!-- ═══ Dashboard Screen ═══ -->
+      <section class="gc-app-screen active" id="screen-dashboard">
+        <div class="gc-app-trial-banner" id="trial-banner">
+          <div class="gc-app-trial-banner-icon"><span class="material-symbols-outlined">schedule</span></div>
+          <div class="gc-app-trial-info">
+            <div class="gc-app-trial-title">15-Day Trial Active</div>
+            <div class="gc-app-trial-desc">White-label mode enabled · Full feature access · No credit card required</div>
+            <div class="gc-app-trial-progress"><div class="gc-app-trial-progress-bar" style="width:73%"></div></div>
           </div>
           <div style="text-align:center">
-            <div class="trial-days">11</div>
-            <div style="font-size:11px;color:var(--text-muted)">days left</div>
+            <div class="gc-app-trial-days-value">11</div>
+            <div class="gc-app-trial-days-label">days left</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <button class="btn btn-primary btn-sm">Upgrade Plan</button>
-            <button class="btn btn-secondary btn-sm">Book a Demo</button>
-          </div>
-        </div>
-
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="stat-value" style="color:var(--text)">127</div>
-            <div class="stat-label">Conversations</div>
-            <div class="stat-change">↑ 23% this month</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" style="color:var(--text)">48</div>
-            <div class="stat-label">Active Visitors</div>
-            <div class="stat-change">↑ 12% this week</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" style="color:var(--accent)">3</div>
-            <div class="stat-label">Escalations</div>
-            <div class="stat-change">↓ resolved 100%</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" style="color:var(--success)">94%</div>
-            <div class="stat-label">Auto-resolved</div>
-            <div class="stat-change">↑ 8% vs last week</div>
+          <div class="gc-app-trial-actions">
+            <button class="gc-btn gc-btn--primary gc-btn--sm">Upgrade Plan</button>
+            <button class="gc-btn gc-btn--secondary gc-btn--sm">Book a Demo</button>
           </div>
         </div>
 
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header">
-            <div class="card-title">Get Started</div>
-            <span class="badge badge-info">3 / 5 complete</span>
+        <div class="gc-app-stats" id="dash-stats">
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value" id="stat-conversations">—</div>
+            <div class="gc-app-stat-label">Conversations</div>
+            <div class="gc-app-stat-change" id="stat-conversations-change"></div>
           </div>
-          <div class="steps">
-            <div class="step done"><div class="step-num">&#10003;</div><div class="step-label">Create Account</div></div>
-            <div class="step done"><div class="step-num">&#10003;</div><div class="step-label">Add Domain</div></div>
-            <div class="step done"><div class="step-num">&#10003;</div><div class="step-label">Install Code</div></div>
-            <div class="step active"><div class="step-num">4</div><div class="step-label">Test Widget</div></div>
-            <div class="step"><div class="step-num">5</div><div class="step-label">Go Live</div></div>
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value" id="stat-visitors">—</div>
+            <div class="gc-app-stat-label">Active Visitors</div>
+            <div class="gc-app-stat-change" id="stat-visitors-change"></div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:14px">open_in_new</span> Preview Widget</button>
-            <button class="btn btn-secondary btn-sm"><span class="material-symbols-outlined" style="font-size:14px">code</span> Copy Install Snippet</button>
-            <button class="btn btn-ghost btn-sm"><span class="material-symbols-outlined" style="font-size:14px">flash_on</span> Customize Intents</button>
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value" style="color:var(--gc-accent)" id="stat-escalations">—</div>
+            <div class="gc-app-stat-label">Escalations</div>
+            <div class="gc-app-stat-change" id="stat-escalations-change"></div>
+          </div>
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value" style="color:var(--gc-success)" id="stat-resolution">—</div>
+            <div class="gc-app-stat-label">Auto-resolved</div>
+            <div class="gc-app-stat-change" id="stat-resolution-change"></div>
           </div>
         </div>
 
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header">
-            <div class="card-title">Install on Your Site</div>
-            <span class="badge badge-success"><span class="material-symbols-outlined" style="font-size:12px">check_circle</span> Domain Verified</span>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Get Started</div>
+            <span class="gc-app-badge gc-app-badge--info">3 / 5 complete</span>
           </div>
-          <div class="snippet-box">
-            <div class="snippet-header">
-              <span class="snippet-lang">HTML</span>
-              <button class="snippet-copy" onclick="copySnippet()"><span class="material-symbols-outlined" style="font-size:12px">content_copy</span> Copy</button>
+          <div class="gc-app-steps">
+            <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Create Account</div></div>
+            <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Add Domain</div></div>
+            <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Install Code</div></div>
+            <div class="gc-app-step active"><div class="gc-app-step-num">4</div><div class="gc-app-step-label">Test Widget</div></div>
+            <div class="gc-app-step"><div class="gc-app-step-num">5</div><div class="gc-app-step-label">Go Live</div></div>
+          </div>
+          <div style="display:flex;gap:var(--gc-space-2);flex-wrap:wrap">
+            <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined" style="font-size:14px">open_in_new</span> Preview Widget</button>
+            <button class="gc-btn gc-btn--secondary gc-btn--sm"><span class="material-symbols-outlined" style="font-size:14px">code</span> Copy Install Snippet</button>
+            <button class="gc-btn gc-btn--ghost gc-btn--sm"><span class="material-symbols-outlined" style="font-size:14px">flash_on</span> Customize Intents</button>
+          </div>
+        </div>
+
+        <div class="gc-app-card" id="dash-install-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Install on Your Site</div>
+            <span class="gc-app-badge gc-app-badge--success"><span class="material-symbols-outlined">check_circle</span> Domain Verified</span>
+          </div>
+          <div class="gc-app-snippet-box">
+            <div class="gc-app-snippet-header">
+              <span class="gc-app-snippet-lang">HTML</span>
+              <button class="gc-app-snippet-copy" onclick="window.__copySnippet && window.__copySnippet()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
             </div>
-            <div class="snippet-body" id="install-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+            <div class="gc-app-snippet-body" id="install-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
 <span class="tag">&lt;script&gt;</span>
   GrindctrlSupport.init({
-    <span class="attr">embedKey</span>: <span class="str">'abc-1234-efgh'</span>,
-    <span class="attr">domain</span>: <span class="str">'yourdomain.com'</span>
+    <span class="attr">embedKey</span>: <span class="str" id="snippet-embed-key">gc_live_…</span>,
+    <span class="attr">domain</span>: <span class="str" id="snippet-domain">yourdomain.com</span>
   });
 <span class="tag">&lt;/script&gt;</span></div>
           </div>
-          <p class="form-hint" style="margin-top:8px">Paste this before the closing <code style="font-family:monospace;background:var(--surface-raised);padding:2px 6px;border-radius:4px">&lt;/body&gt;</code> tag on every page where you want the widget to appear.</p>
+          <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)">Paste this before the closing <code style="font-family:var(--gc-font-mono);background:var(--gc-surface-container);padding:2px 6px;border-radius:var(--gc-radius-xs)">&lt;/body&gt;</code> tag on every page where you want the widget to appear.</p>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Recent Conversations</div>
-            <button class="btn btn-ghost btn-sm">View All</button>
+        <div class="gc-app-card" id="dash-conversations-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Recent Conversations</div>
+            <button class="gc-btn gc-btn--ghost gc-btn--sm">View All</button>
           </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div class="intent-item" style="cursor:pointer">
-              <div class="intent-icon"><span class="material-symbols-outlined">chat</span></div>
-              <div style="flex:1">
-                <div class="intent-label">"How do I connect Slack?"</div>
-                <div style="font-size:11px;color:var(--text-dim)">2 min ago · homepage · auto-resolved</div>
-              </div>
-              <span class="badge badge-success">Resolved</span>
-            </div>
-            <div class="intent-item" style="cursor:pointer">
-              <div class="intent-icon" style="background:rgba(245,158,11,0.12);color:var(--warning)"><span class="material-symbols-outlined">flag</span></div>
-              <div style="flex:1">
-                <div class="intent-label">"I need to speak with a human"</div>
-                <div style="font-size:11px;color:var(--text-dim)">14 min ago · /contact · escalated to support@</div>
-              </div>
-              <span class="badge badge-warning">Escalated</span>
-            </div>
-            <div class="intent-item" style="cursor:pointer">
-              <div class="intent-icon"><span class="material-symbols-outlined">chat</span></div>
-              <div style="flex:1">
-                <div class="intent-label">"Can you explain pricing?"</div>
-                <div style="font-size:11px;color:var(--text-dim)">1 hour ago · /pricing · auto-resolved</div>
-              </div>
-              <span class="badge badge-success">Resolved</span>
-            </div>
+          <div class="gc-app-empty" id="dash-conversations-empty">
+            <span class="material-symbols-outlined">inbox</span>
+            <div class="gc-app-empty-title">No conversations yet</div>
+            <div class="gc-app-empty-desc">Conversations will appear here once visitors start chatting.</div>
           </div>
         </div>
       </section>
 
-      <section class="screen" id="screen-setup">
-        <div class="page-header">
-          <h1 class="page-title">Widget Setup</h1>
-          <p class="page-desc">Configure how your support widget behaves across your site.</p>
+      <!-- ═══ Widget Setup Screen ═══ -->
+      <section class="gc-app-screen" id="screen-setup">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Widget Setup</h1>
+          <p class="gc-app-page-desc">Configure how your support widget behaves across your site.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header">
-            <div class="card-title">Embed Key</div>
-            <span class="badge badge-success">Active</span>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Embed Key</div>
+            <span class="gc-app-badge gc-app-badge--success">Active</span>
           </div>
-          <div class="form-group">
-            <label class="form-label">Public Embed Key</label>
-            <div class="input-group">
-              <input class="form-input" type="text" value="gc_live_abc1234xyz567" readonly id="embed-key-display"/>
-              <button class="btn btn-secondary" onclick="copyEmbedKey()"><span class="material-symbols-outlined" style="font-size:14px">content_copy</span> Copy</button>
+          <div class="gc-app-form-group">
+            <label class="gc-app-form-label">Public Embed Key</label>
+            <div class="gc-app-input-group">
+              <input class="gc-app-form-input" type="text" value="gc_live_…" readonly id="embed-key-display"/>
+              <button class="gc-btn gc-btn--secondary gc-btn--sm" onclick="window.__copyEmbedKey && window.__copyEmbedKey()"><span class="material-symbols-outlined" style="font-size:14px">content_copy</span> Copy</button>
             </div>
-            <p class="form-hint">This key is safe to expose in client-side code. Keep your admin access private.</p>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header"><div class="card-title">Launcher Behavior</div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div class="form-group">
-              <label class="form-label">Launcher Position</label>
-              <select class="form-select"><option>Bottom Right</option><option>Bottom Left</option><option>Top Right</option><option>Top Left</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Launcher Icon</label>
-              <select class="form-select"><option>Chat</option><option>Help</option><option>Support Agent</option><option>Headset</option></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Default Label</label>
-              <input class="form-input" type="text" value="Support"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Support Mode</label>
-              <select class="form-select"><option>Mixed (Support + Sales)</option><option>Support Only</option><option>Sales Only</option><option>Operations</option></select>
-            </div>
-          </div>
-          <div class="divider"></div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Greeting Message</label>
-            <textarea class="form-textarea" placeholder="How can we help you today?">How can we help you today?</textarea>
+            <p class="gc-app-form-hint">This key is safe to expose in client-side code. Keep your admin access private.</p>
           </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-secondary">Preview</button>
-          <button class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:14px">save</span> Save Changes</button>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header"><div class="gc-app-card-title">Launcher Behavior</div></div>
+          <div class="gc-app-form-row">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Launcher Position</label>
+              <select class="gc-app-form-select gc-app-form-input"><option>Bottom Right</option><option>Bottom Left</option></select>
+            </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Default Label</label>
+              <input class="gc-app-form-input" type="text" value="Support"/>
+            </div>
+          </div>
+          <div class="gc-app-divider"></div>
+          <div class="gc-app-form-group" style="margin-bottom:0">
+            <label class="gc-app-form-label">Greeting Message</label>
+            <textarea class="gc-app-form-textarea" placeholder="How can we help you today?">How can we help you today?</textarea>
+          </div>
+        </div>
+        <div style="display:flex;gap:var(--gc-space-2);justify-content:flex-end">
+          <button class="gc-btn gc-btn--secondary">Preview</button>
+          <button class="gc-btn gc-btn--primary"><span class="material-symbols-outlined" style="font-size:14px">save</span> Save Changes</button>
         </div>
       </section>
 
-      <section class="screen" id="screen-branding">
-        <div class="page-header">
-          <h1 class="page-title">Branding</h1>
-          <p class="page-desc">Customize the widget appearance and attribution.</p>
+      <!-- ═══ Branding Screen ═══ -->
+      <section class="gc-app-screen" id="screen-branding">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Branding</h1>
+          <p class="gc-app-page-desc">Customize the widget appearance and attribution.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem">
-          <div style="width:48px;height:48px;background:var(--primary-dim);border-radius:12px;display:flex;align-items:center;justify-content:center">
-            <span class="material-symbols-outlined" style="font-size:24px;color:var(--accent)">palette</span>
+        <div class="gc-app-card" style="display:flex;align-items:center;gap:var(--gc-space-4)">
+          <div style="width:48px;height:48px;background:color-mix(in srgb, var(--gc-primary) 15%, transparent);border-radius:var(--gc-radius-md);display:flex;align-items:center;justify-content:center">
+            <span class="material-symbols-outlined" style="font-size:24px;color:var(--gc-accent)">palette</span>
           </div>
           <div style="flex:1">
-            <div style="font-size:14px;font-weight:700">White-Label Active</div>
-            <div style="font-size:12px;color:var(--text-muted)">Your brand name and logo are shown. Attribution hidden during trial.</div>
+            <div style="font-size:0.875rem;font-weight:700;color:var(--gc-ink)">White-Label Active</div>
+            <div style="font-size:0.75rem;color:var(--gc-secondary)">Your brand name and logo are shown. Attribution hidden during trial.</div>
           </div>
-          <span class="badge badge-success">Trial: 11 days left</span>
+          <span class="gc-app-badge gc-app-badge--success">Trial: 11 days left</span>
         </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header"><div class="card-title">Visual Identity</div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div class="form-group">
-              <label class="form-label">Primary Color</label>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="color" value="#4F46E5" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px"/>
-                <input class="form-input" type="text" value="#4F46E5"/>
-              </div>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header"><div class="gc-app-card-title">Visual Identity</div></div>
+          <div class="gc-app-form-row">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Brand Name</label>
+              <input class="gc-app-form-input" type="text" id="branding-name" value="" placeholder="Your brand name"/>
             </div>
-            <div class="form-group">
-              <label class="form-label">Accent Color</label>
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="color" value="#6366F1" style="width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px"/>
-                <input class="form-input" type="text" value="#6366F1"/>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Brand Name</label>
-              <input class="form-input" type="text" value="Acme Support"/>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Logo URL</label>
-              <input class="form-input" type="text" placeholder="https://your-logo.png"/>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Logo URL</label>
+              <input class="gc-app-form-input" type="text" placeholder="https://your-logo.png"/>
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:14px">save</span> Save Branding</button>
+        <div style="display:flex;gap:var(--gc-space-2);justify-content:flex-end">
+          <button class="gc-btn gc-btn--primary"><span class="material-symbols-outlined" style="font-size:14px">save</span> Save Branding</button>
         </div>
       </section>
 
-      <section class="screen" id="screen-intents">
-        <div class="page-header">
-          <h1 class="page-title">Quick Intents</h1>
-          <p class="page-desc">Define the quick action buttons shown in your support panel.</p>
+      <!-- ═══ Intents Screen ═══ -->
+      <section class="gc-app-screen" id="screen-intents">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Quick Intents</h1>
+          <p class="gc-app-page-desc">Define the quick action buttons shown in your support panel.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header">
-            <div class="card-title">Default Intent Set</div>
-            <button class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:14px">add</span> Add Intent</button>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Default Intent Set</div>
+            <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined" style="font-size:14px">add</span> Add Intent</button>
           </div>
-          <div class="intent-list">
-            <div class="intent-item">
-              <div class="intent-icon"><span class="material-symbols-outlined">explaining</span></div>
-              <div class="intent-label">Explain this</div>
-              <span class="intent-type">Send Message</span>
+          <div class="gc-app-intent-list">
+            <div class="gc-app-intent-item">
+              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">explaining</span></div>
+              <div class="gc-app-intent-label">Explain this</div>
+              <span class="gc-app-intent-type">Send Message</span>
             </div>
-            <div class="intent-item">
-              <div class="intent-icon"><span class="material-symbols-outlined">help</span></div>
-              <div class="intent-label">Help me resolve</div>
-              <span class="intent-type">Send Message</span>
+            <div class="gc-app-intent-item">
+              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">help</span></div>
+              <div class="gc-app-intent-label">Help me resolve</div>
+              <span class="gc-app-intent-type">Send Message</span>
             </div>
-            <div class="intent-item">
-              <div class="intent-icon"><span class="material-symbols-outlined">upload</span></div>
-              <div class="intent-label">Share my case</div>
-              <span class="intent-type">Send Message</span>
+            <div class="gc-app-intent-item">
+              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">upload</span></div>
+              <div class="gc-app-intent-label">Share my case</div>
+              <span class="gc-app-intent-type">Send Message</span>
             </div>
-            <div class="intent-item">
-              <div class="intent-icon" style="background:rgba(34,197,94,0.12);color:var(--success)"><span class="material-symbols-outlined">support_agent</span></div>
-              <div class="intent-label">Talk to a human</div>
-              <span class="intent-type" style="background:rgba(34,197,94,0.12);color:var(--success)">Escalate</span>
+            <div class="gc-app-intent-item">
+              <div class="gc-app-intent-icon" style="background:var(--gc-success-bg);color:var(--gc-success)"><span class="material-symbols-outlined">support_agent</span></div>
+              <div class="gc-app-intent-label">Talk to a human</div>
+              <span class="gc-app-intent-type" style="background:var(--gc-success-bg);color:var(--gc-success)">Escalate</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="screen" id="screen-domains">
-        <div class="page-header">
-          <h1 class="page-title">Domains</h1>
-          <p class="page-desc">Manage allowed domains for your embed key.</p>
+      <!-- ═══ Domains Screen ═══ -->
+      <section class="gc-app-screen" id="screen-domains">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Domains</h1>
+          <p class="gc-app-page-desc">Manage allowed domains for your embed key.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header">
-            <div class="card-title">Allowed Domains</div>
-            <button class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:14px">add</span> Add Domain</button>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title">Allowed Domains</div>
+            <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined" style="font-size:14px">add</span> Add Domain</button>
           </div>
-          <div class="domain-list">
-            <div class="domain-item">
-              <div class="domain-name">grindctrl.cloud</div>
-              <div class="domain-status">
-                <span class="status-dot online"></span>
-                <span style="font-size:12px;color:var(--success)">Verified</span>
-              </div>
-            </div>
-            <div class="domain-item">
-              <div class="domain-name">localhost</div>
-              <div class="domain-status">
-                <span class="status-dot offline"></span>
-                <span style="font-size:12px;color:var(--text-dim)">Development</span>
-              </div>
+          <div class="gc-app-domain-list" id="domain-list">
+            <div class="gc-app-empty">
+              <span class="material-symbols-outlined">language</span>
+              <div class="gc-app-empty-title">No domains configured</div>
+              <div class="gc-app-empty-desc">Add a domain to start using your widget on your site.</div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="screen" id="screen-usage">
-        <div class="page-header">
-          <h1 class="page-title">Usage &amp; Plan</h1>
-          <p class="page-desc">Monitor your usage and manage your subscription.</p>
+      <!-- ═══ Usage & Plan Screen ═══ -->
+      <section class="gc-app-screen" id="screen-usage">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Usage &amp; Plan</h1>
+          <p class="gc-app-page-desc">Monitor your usage and manage your subscription.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem;background:linear-gradient(135deg,rgba(79,70,229,0.15),rgba(99,102,241,0.08));border-color:rgba(79,70,229,0.25)">
-          <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+        <div class="gc-app-card" style="background:linear-gradient(135deg, color-mix(in srgb, var(--gc-primary) 15%, transparent), color-mix(in srgb, var(--gc-accent) 8%, transparent)); border-color: color-mix(in srgb, var(--gc-accent) 25%, transparent)">
+          <div style="display:flex;align-items:center;gap:var(--gc-space-4);margin-bottom:var(--gc-space-4)">
             <div>
-              <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:4px">Current Plan</div>
-              <div style="font-size:2rem;font-weight:800;letter-spacing:-0.04em">Trial</div>
+              <div style="font-size:0.75rem;color:var(--gc-secondary);text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:var(--gc-space-1)">Current Plan</div>
+              <div style="font-family:var(--gc-font-display);font-size:2rem;font-weight:800;letter-spacing:-0.04em;color:var(--gc-ink)">Trial</div>
             </div>
             <div style="flex:1">
-              <div style="font-size:13px;font-weight:600;margin-bottom:4px">15 days · Full features</div>
-              <div style="font-size:12px;color:var(--text-muted)">Your trial includes white-label mode, all intents, and full usage limits.</div>
+              <div style="font-size:0.8125rem;font-weight:600;margin-bottom:var(--gc-space-1)">15 days · Full features</div>
+              <div style="font-size:0.75rem;color:var(--gc-secondary)">Your trial includes white-label mode, all intents, and full usage limits.</div>
             </div>
           </div>
-          <div class="trial-progress"><div class="trial-progress-bar" style="width:73%"></div></div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">11 of 15 days used · <strong style="color:var(--warning)">4 days remaining</strong></div>
+          <div class="gc-app-trial-progress"><div class="gc-app-trial-progress-bar" style="width:73%"></div></div>
+          <div style="font-size:0.6875rem;color:var(--gc-secondary);margin-top:var(--gc-space-1)">11 of 15 days used · <strong style="color:var(--gc-warning)">4 days remaining</strong></div>
         </div>
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="stat-value">127<span style="font-size:1rem;color:var(--text-muted)"> / 500</span></div>
-            <div class="stat-label">Conversations (monthly)</div>
+        <div class="gc-app-stats">
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value">—<span style="font-size:1rem;color:var(--gc-secondary)"> / 500</span></div>
+            <div class="gc-app-stat-label">Conversations (monthly)</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value">842<span style="font-size:1rem;color:var(--text-muted)"> / 2000</span></div>
-            <div class="stat-label">Messages (monthly)</div>
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value">—<span style="font-size:1rem;color:var(--gc-secondary)"> / 2000</span></div>
+            <div class="gc-app-stat-label">Messages (monthly)</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value" style="color:var(--success)">94%</div>
-            <div class="stat-label">Auto-resolve rate</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="screen" id="screen-integrations">
-        <div class="page-header">
-          <h1 class="page-title">Integrations</h1>
-          <p class="page-desc">Connect your workflows and tools.</p>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1rem">
-          <div class="card">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-              <div style="width:40px;height:40px;background:#4A154B;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px">S</div>
-              <div><div style="font-size:14px;font-weight:700">Slack</div><div style="font-size:11px;color:var(--text-muted)">Team notifications</div></div>
-            </div>
-            <button class="btn btn-secondary" style="width:100%">Connect Slack</button>
-          </div>
-          <div class="card">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-              <div style="width:40px;height:40px;background:#7B1166;border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px">N</div>
-              <div><div style="font-size:14px;font-weight:700">n8n Workflows</div><div style="font-size:11px;color:var(--text-muted)">AI, routing &amp; escalation</div></div>
-            </div>
-            <button class="btn btn-secondary" style="width:100%">Connect n8n</button>
-          </div>
-          <div class="card">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-              <div style="width:40px;height:40px;background:var(--surface-raised);border:1px solid var(--border-strong);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px">&#127760;</div>
-              <div><div style="font-size:14px;font-weight:700">Webhook</div><div style="font-size:11px;color:var(--text-muted)">Custom HTTP endpoints</div></div>
-            </div>
-            <button class="btn btn-secondary" style="width:100%">Configure Webhook</button>
+          <div class="gc-app-stat">
+            <div class="gc-app-stat-value" style="color:var(--gc-success)">—</div>
+            <div class="gc-app-stat-label">Auto-resolve rate</div>
           </div>
         </div>
       </section>
 
-      <section class="screen" id="screen-settings">
-        <div class="page-header">
-          <h1 class="page-title">Settings</h1>
-          <p class="page-desc">Account and workspace settings.</p>
+      <!-- ═══ Integrations Screen ═══ -->
+      <section class="gc-app-screen" id="screen-integrations">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Integrations</h1>
+          <p class="gc-app-page-desc">Connect your workflows and tools.</p>
         </div>
-        <div class="card" style="margin-bottom:1.5rem">
-          <div class="card-header"><div class="card-title">Account</div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-            <div class="form-group">
-              <label class="form-label">Name</label>
-              <input class="form-input" type="text" id="settings-name" value="" />
+        <div class="gc-app-integrations">
+          <div class="gc-app-integration-card">
+            <div style="display:flex;align-items:center;gap:var(--gc-space-3);margin-bottom:var(--gc-space-4)">
+              <div class="gc-app-integration-icon" style="background:#4A154B;color:#fff">S</div>
+              <div><div class="gc-app-integration-title">Slack</div><div class="gc-app-integration-desc">Team notifications</div></div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input class="form-input" type="email" id="settings-email" value="" readonly />
+            <button class="gc-btn gc-btn--secondary gc-btn--sm gc-btn--full">Connect Slack</button>
+          </div>
+          <div class="gc-app-integration-card">
+            <div style="display:flex;align-items:center;gap:var(--gc-space-3);margin-bottom:var(--gc-space-4)">
+              <div class="gc-app-integration-icon" style="background:#7B1166;color:#fff">N</div>
+              <div><div class="gc-app-integration-title">n8n Workflows</div><div class="gc-app-integration-desc">AI, routing &amp; escalation</div></div>
+            </div>
+            <button class="gc-btn gc-btn--secondary gc-btn--sm gc-btn--full">Connect n8n</button>
+          </div>
+          <div class="gc-app-integration-card">
+            <div style="display:flex;align-items:center;gap:var(--gc-space-3);margin-bottom:var(--gc-space-4)">
+              <div class="gc-app-integration-icon" style="background:var(--gc-surface-container);border:1px solid var(--gc-outline);color:var(--gc-secondary)"><span class="material-symbols-outlined" style="font-size:16px">cable</span></div>
+              <div><div class="gc-app-integration-title">Webhook</div><div class="gc-app-integration-desc">Custom HTTP endpoints</div></div>
+            </div>
+            <button class="gc-btn gc-btn--secondary gc-btn--sm gc-btn--full">Configure Webhook</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ Settings Screen ═══ -->
+      <section class="gc-app-screen" id="screen-settings">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title">Settings</h1>
+          <p class="gc-app-page-desc">Account and workspace settings.</p>
+        </div>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header"><div class="gc-app-card-title">Account</div></div>
+          <div class="gc-app-form-row">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Name</label>
+              <input class="gc-app-form-input" type="text" id="settings-name" value="" />
+            </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Email</label>
+              <input class="gc-app-form-input" type="email" id="settings-email" value="" readonly />
             </div>
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Workspace Name</label>
-            <input class="form-input" type="text" value="GRINDCTRL Workspace" />
+          <div class="gc-app-form-group" style="margin-bottom:0">
+            <label class="gc-app-form-label">Workspace Name</label>
+            <input class="gc-app-form-input" type="text" id="settings-workspace" value="" placeholder="My Workspace" />
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Danger Zone</div></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border)">
+        <div class="gc-app-card">
+          <div class="gc-app-card-header"><div class="gc-app-card-title">Danger Zone</div></div>
+          <div class="gc-app-danger-item">
             <div>
-              <div style="font-size:13px;font-weight:600">Delete Workspace</div>
-              <div style="font-size:12px;color:var(--text-muted)">Permanently delete all data and widget installations.</div>
+              <div class="gc-app-danger-title">Delete Workspace</div>
+              <div class="gc-app-danger-desc">Permanently delete all data and widget installations.</div>
             </div>
-            <button class="btn" style="background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.2)">Delete Workspace</button>
+            <button class="gc-btn gc-btn--danger gc-btn--sm">Delete Workspace</button>
           </div>
         </div>
       </section>
