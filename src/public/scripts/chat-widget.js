@@ -459,8 +459,7 @@
         })
       };
 
-      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, fetchOptions).catch(function(err) {
-        console.warn('CORS or Network error during session upgrade:', err);
+      var response = await fetch(CONFIG.N8N_SESSION_UPGRADE_WEBHOOK, fetchOptions).catch(function() {
         return { ok: false, status: 'cors_or_network_error' };
       });
 
@@ -470,8 +469,6 @@
       }
 
       if (!response || !response.ok || !data.ok) {
-        // Log technical details but show a standard message to user
-        console.error('Session upgrade failed:', response ? response.status : 'no_response');
         setAuthHelper('error', t('chat_auth_upgrade_failed'));
         renderAll();
         return false;
@@ -1691,6 +1688,14 @@
         return;
       }
 
+      if (data.status === 'failed' || !data.image_base64) {
+        state.phase = 'open';
+        state.messages.pop();
+        renderAll();
+        showError(t('chat_image_model_error'));
+        return;
+      }
+
       updateQuotaFromResponse(data);
       pushMessage({
         role: 'assistant',
@@ -1709,8 +1714,7 @@
       state.phase = 'open';
       state.messages.pop();
       renderAll();
-      showError();
-      trackEvent('error', { error: networkError.message || 'image_gen_network_error' });
+      showError(t('chat_image_model_error'));
     }
   }
 
@@ -1754,8 +1758,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         body: JSON.stringify(payload)
-      }).catch(function(err) {
-        console.warn('CORS or Network error during sendMessage:', err);
+      }).catch(function() {
         return { ok: false, status: 'cors_or_network_error' };
       });
 
