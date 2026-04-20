@@ -45,6 +45,16 @@
   --gc-duration-base: 0.3s;
   --gc-duration-slow: 0.5s;
 
+  /* ── Icon Size Scale ── */
+  --gc-icon-xs: 12px;
+  --gc-icon-sm: 14px;
+  --gc-icon-md: 16px;
+  --gc-icon-lg: 18px;
+  --gc-icon-xl: 20px;
+  --gc-icon-2xl: 24px;
+  --gc-icon-3xl: 32px;
+  --gc-icon-4xl: 48px;
+
   /* ── Breakpoints (reference only — use @media) ── */
   /* sm: 640px | md: 768px | lg: 1024px | xl: 1280px | 2xl: 1536px */
   /* Special: 390px (small phone), 480px (phone), 540px (large phone) */

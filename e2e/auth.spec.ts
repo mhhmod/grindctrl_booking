@@ -91,18 +91,27 @@ test.describe('Auth Pages', () => {
     }
   });
 
-  test('auth nav links visible on landing page', async ({ page }) => {
+  test('auth nav links use gc-auth-nav and gc-auth-link classes', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
     const authNav = page.locator('#gc-auth-nav');
     await expect(authNav).toBeVisible();
 
-    const signInLink = page.locator('#gc-auth-nav a[href="/sign-in.html"]');
-    const signUpLink = page.locator('#gc-auth-nav a[href="/sign-up.html"]');
+    const signInLink = authNav.locator('.gc-auth-link[href="/sign-in.html"]');
+    const signUpCTA = authNav.locator('.gc-auth-cta[href="/sign-up.html"]');
 
     await expect(signInLink).toBeVisible();
-    await expect(signUpLink).toBeVisible();
+    await expect(signUpCTA).toBeVisible();
+
+    if (await signInLink.isVisible()) {
+      const linkStyle = await signInLink.evaluate(el => {
+        const s = getComputedStyle(el);
+        return { color: s.color, fontSize: s.fontSize };
+      });
+      expect(linkStyle.color).toBeTruthy();
+      expect(linkStyle.fontSize).toBeTruthy();
+    }
   });
 });
 
@@ -284,5 +293,41 @@ test.describe('Supabase Data Layer', () => {
       return supabase;
     });
     expect(typeof hasRPC).toBe('boolean');
+  });
+});
+
+test.describe('Icon Size Consistency', () => {
+  const STANDARD_SIZES = [12, 14, 16, 18, 20, 24, 32, 48];
+
+  test('landing page icons use standard scale sizes', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const iconSizes = await page.evaluate(() => {
+      const icons = document.querySelectorAll('.material-symbols-outlined');
+      return Array.from(icons).map(el => {
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        return Math.round(size);
+      });
+    });
+
+    const nonStandard = iconSizes.filter(size => !STANDARD_SIZES.includes(size));
+    expect(nonStandard.length).toBe(0, `Found non-standard icon sizes: ${nonStandard.join(', ')}px`);
+  });
+
+  test('auth page icons use standard scale sizes', async ({ page }) => {
+    await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(3000);
+
+    const iconSizes = await page.evaluate(() => {
+      const icons = document.querySelectorAll('.material-symbols-outlined');
+      return Array.from(icons).map(el => {
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        return Math.round(size);
+      });
+    });
+
+    const nonStandard = iconSizes.filter(size => !STANDARD_SIZES.includes(size));
+    expect(nonStandard.length).toBe(0, `Found non-standard icon sizes: ${nonStandard.join(', ')}px`);
   });
 });

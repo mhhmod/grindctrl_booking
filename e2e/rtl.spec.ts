@@ -95,4 +95,24 @@ test.describe('RTL / Arabic toggle', () => {
     const homeText = await page.locator(SEL.navLink('home')).textContent();
     expect(homeText).not.toContain('Live Demo');
   });
+
+  test('RTL widget panel does not use text-align:right on message bubbles', async ({ page }) => {
+    await setupPage(page);
+    await page.locator(SEL.langToggle).click();
+    await page.waitForTimeout(500);
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+
+    const chatWidgetCSS = await page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return style.getPropertyValue('direction');
+    });
+    expect(chatWidgetCSS).toBe('rtl');
+
+    const msgBubbles = page.locator('.gc-msg-bubble');
+    if (await msgBubbles.count() > 0) {
+      const firstBubble = msgBubbles.first();
+      const textAlign = await firstBubble.evaluate(el => getComputedStyle(el).textAlign);
+      expect(textAlign).not.toBe('right');
+    }
+  });
 });

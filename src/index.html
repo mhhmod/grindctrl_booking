@@ -160,39 +160,34 @@ tailwind.config = {
 <!-- ===== MOBILE DRAWER (Shoelace) ===== -->
 <sl-drawer id="nav-drawer" label="Navigation menu" placement="end">
   <div class="gc-drawer__header">
-    <div class="flex items-center gap-2.5">
+    <div class="gc-drawer__brand">
       <img src="logo-dark.svg" alt="GRINDCTRL" class="logo-dark h-6 w-auto"/>
       <img src="logo-light.svg" alt="GRINDCTRL" class="logo-light h-6 w-auto"/>
-      <span class="text-base font-bold font-headline tracking-[-0.03em]">GRINDCTRL</span>
+      <span class="gc-drawer__brand-text">GRINDCTRL</span>
     </div>
   </div>
   <nav class="gc-drawer__nav">
-    <a href="#home" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-on-surface font-medium bg-surface-container-high transition-colors" data-nav="home" data-i18n="drawer_home">
-      <span class="material-symbols-outlined text-ink-dim text-xl">inbox_customize</span> <span> Live Demo</span>
+    <a href="#home" class="drawer-link drawer-link-active" data-nav="home" data-i18n="drawer_home">
+      <span class="material-symbols-outlined">inbox_customize</span> Live Demo
     </a>
-    <a href="#solutions" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="solutions" data-i18n="drawer_solutions">
-      <span class="material-symbols-outlined text-ink-dim text-xl">hub</span> <span> How It Works</span>
+    <a href="#solutions" class="drawer-link" data-nav="solutions" data-i18n="drawer_solutions">
+      <span class="material-symbols-outlined">hub</span> How It Works
     </a>
-    <a href="#install" class="drawer-link group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-on-surface font-bold bg-surface-container-high border-2 border-primary/30 overflow-hidden transition-all hover:border-primary/60" data-nav="install" data-i18n="drawer_install">
-      <span class="material-symbols-outlined text-primary text-xl relative z-10 group-hover:scale-110 transition-transform">rocket_launch</span>
-      <span class="relative z-10"> Install Widget</span>
-      <span class="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-primary text-on-primary relative z-10 shadow-lg" data-i18n="popular_badge">New</span>
+    <a href="#install" class="drawer-link-highlight" data-nav="install" data-i18n="drawer_install">
+      <span class="material-symbols-outlined">rocket_launch</span> Install Widget
+      <span class="drawer-link-badge" data-i18n="popular_badge">New</span>
     </a>
-    <a href="#book" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors" data-nav="book" data-i18n="drawer_book_cta">
-      <span class="material-symbols-outlined text-ink-dim text-xl">calendar_today</span> <span>Book a Call</span>
+    <a href="#book" class="drawer-link" data-nav="book" data-i18n="drawer_book_cta">
+      <span class="material-symbols-outlined">calendar_today</span> Book a Call
     </a>
   </nav>
   <sl-divider></sl-divider>
   <div id="gc-auth-drawer" class="gc-auth-drawer">
-    <a href="/sign-in.html" class="drawer-link flex items-center gap-3 px-4 py-3.5 rounded-lg text-secondary font-medium hover:bg-surface-container-high transition-colors">
-      <span class="material-symbols-outlined text-ink-dim text-xl">login</span> <span>Sign in</span>
+    <a href="/sign-in.html" class="drawer-link">
+      <span class="material-symbols-outlined">login</span> Sign in
     </a>
-    <a href="/sign-up.html" class="block w-full text-center cta-primary py-4 text-base">Get started</a>
+    <a href="/sign-up.html" class="gc-auth-cta gc-auth-drawer-cta">Get started</a>
   </div>
-  <sl-divider></sl-divider>
-  <a href="#book" class="drawer-link block w-full text-center cta-primary py-4 text-base" data-i18n="drawer_start_trial">
-    Start Free Trial
-  </a>
 </sl-drawer>
 
 <!-- Floating pill removed — workspace-first UI -->
