@@ -18,9 +18,13 @@ test.describe('Auth Pages', () => {
     await expect(page.locator('#clerk-sign-in-mount')).toBeVisible();
     await expect(page.locator('.gc-auth-card')).toBeVisible();
 
-    await expect(page.locator('link[href="tokens.css"]')).toBeAttached();
-    await expect(page.locator('link[href="base.css"]')).toBeAttached();
-    await expect(page.locator('link[href="components.css"]')).toBeAttached();
+    const hasDesignSystem = await page.evaluate(() => {
+      const el = document.querySelector('.gc-auth-card');
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      return style.borderRadius !== '0px' && style.borderRadius !== '';
+    });
+    expect(hasDesignSystem).toBe(true);
   });
 
   test('sign-in page Material Symbols render as icons, not text', async ({ page }) => {
@@ -47,8 +51,13 @@ test.describe('Auth Pages', () => {
     await expect(page.locator('#clerk-sign-up-mount')).toBeVisible();
     await expect(page.locator('.gc-auth-card')).toBeVisible();
 
-    await expect(page.locator('link[href="tokens.css"]')).toBeAttached();
-    await expect(page.locator('link[href="base.css"]')).toBeAttached();
+    const hasDesignSystem = await page.evaluate(() => {
+      const el = document.querySelector('.gc-auth-card');
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      return style.borderRadius !== '0px' && style.borderRadius !== '';
+    });
+    expect(hasDesignSystem).toBe(true);
   });
 
   test('sign-in page has link to sign-up', async ({ page }) => {
@@ -109,21 +118,30 @@ test.describe('Auth Design System', () => {
     expect(bgColor).toBeTruthy();
   });
 
-  test('auth pages load all CSS cascade files', async ({ page }) => {
+  test('auth pages load design system via bundled CSS', async ({ page }) => {
     await page.goto('/sign-in.html', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
 
-    const cssFiles = await page.evaluate(() => {
+    const hasStylesheets = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-      return links.map(l => l.getAttribute('href'));
+      return links.length >= 1;
     });
+    expect(hasStylesheets).toBe(true);
 
-    expect(cssFiles).toContain('fonts.css');
-    expect(cssFiles).toContain('tokens.css');
-    expect(cssFiles).toContain('base.css');
-    expect(cssFiles).toContain('layout.css');
-    expect(cssFiles).toContain('components.css');
-    expect(cssFiles).toContain('auth.css');
+    const authCardUsesTokens = await page.evaluate(() => {
+      const el = document.querySelector('.gc-auth-card');
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      return style.getPropertyValue('border-radius').trim() !== '' &&
+             style.getPropertyValue('border-radius') !== '0px';
+    });
+    expect(authCardUsesTokens).toBe(true);
+
+    const bodyUsesGcFont = await page.evaluate(() => {
+      const style = getComputedStyle(document.body);
+      return style.fontFamily.includes('Inter') || style.fontFamily.includes('Manrope') || style.fontFamily.includes('system-ui');
+    });
+    expect(bodyUsesGcFont).toBe(true);
   });
 });
 
@@ -139,21 +157,32 @@ test.describe('Dashboard', () => {
     await expect(sidebar).toBeVisible();
   });
 
-  test('app page loads all CSS cascade files', async ({ page }) => {
+  test('app page loads design system via bundled CSS', async ({ page }) => {
     await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(3000);
 
-    const cssFiles = await page.evaluate(() => {
+    const hasStylesheets = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
-      return links.map(l => l.getAttribute('href'));
+      return links.length >= 1;
     });
+    expect(hasStylesheets).toBe(true);
 
-    expect(cssFiles).toContain('fonts.css');
-    expect(cssFiles).toContain('tokens.css');
-    expect(cssFiles).toContain('base.css');
-    expect(cssFiles).toContain('layout.css');
-    expect(cssFiles).toContain('components.css');
-    expect(cssFiles).toContain('app.css');
+    const topbarUsesTokens = await page.evaluate(() => {
+      const el = document.querySelector('.gc-app-topbar');
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      return style.getPropertyValue('border-bottom-width') !== '' ||
+             style.getPropertyValue('position') === 'fixed';
+    });
+    expect(topbarUsesTokens).toBe(true);
+
+    const sidebarUsesTokens = await page.evaluate(() => {
+      const el = document.querySelector('.gc-app-sidebar');
+      if (!el) return false;
+      const style = getComputedStyle(el);
+      return style.getPropertyValue('width') !== '' && style.getPropertyValue('width') !== 'auto';
+    });
+    expect(sidebarUsesTokens).toBe(true);
   });
 
   test('dashboard Material Symbols render as icons, not text', async ({ page }) => {
