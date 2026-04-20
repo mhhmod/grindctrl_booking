@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — GRINDCTRL</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="fonts.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+  <div class="gc-auth-page">
+    <a href="/" class="gc-auth-back">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+      Back to GRINDCTRL
+    </a>
+
+    <div class="gc-auth-header">
+      <a href="/" class="gc-auth-brand">
+        <div class="gc-auth-brand-icon">
+          <span class="material-symbols-outlined" style="font-size:20px">smart_toy</span>
+        </div>
+        <span class="gc-auth-brand-text">GRINDCTRL</span>
+      </a>
+      <h1 class="gc-auth-title">Welcome back</h1>
+      <p class="gc-auth-subtitle">Sign in to access your dashboard</p>
+    </div>
+
+    <div class="gc-auth-card">
+      <div id="clerk-sign-in-mount" class="gc-auth-mount"></div>
+    </div>
+
+    <div class="gc-auth-footer">
+      Don't have an account? <a href="/sign-up.html">Create account</a>
+    </div>
+  </div>
+
+  <script type="module" src="/scripts/auth-sign-in.js"></script>
+</body>
+</html>

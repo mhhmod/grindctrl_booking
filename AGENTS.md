@@ -19,6 +19,8 @@ npm run preview  # preview production build locally
 | `src/base.css` | Resets, font loading, fluid typography, animation primitives |
 | `src/layout.css` | Shell, container, grid, page transitions, reveal |
 | `src/components.css` | Reusable UI: badges, buttons, cards, inputs, chips, nav, CTAs |
+| `src/fonts.css` | Self-hosted @font-face declarations for Inter, Manrope, IBM Plex Sans Arabic, Material Symbols Outlined |
+| `src/fonts/` | Woff2 font files (variable + static). Sourced from @fontsource packages + Google. |
 | `src/chat-widget.css` | Trial playground chat assistant (own `--gc-*` token scope) |
 | `src/blueprint-studio.css` | AI Blueprint Studio tool |
 | `src/voice-to-value.css` | Exception Desk triage workspace |
@@ -35,7 +37,7 @@ npm run preview  # preview production build locally
 
 ## CSS load order
 
-`tokens.css` → `base.css` → `layout.css` → `components.css` → module CSS → inline `<style>` overrides.
+`fonts.css` → `tokens.css` → `base.css` → `layout.css` → `components.css` → module CSS → inline `<style>` overrides.
 
 The foundation layer defines shared tokens and patterns. Module CSS (`chat-widget.css`, `blueprint-studio.css`, `voice-to-value.css`) can override tokens in their own scope. The inline `<style>` in `index.html` contains page-specific overrides — keep it minimal.
 
@@ -115,5 +117,8 @@ Go to **Settings → Pages** and verify:
 - Do not break the Tailwind CDN warning suppression (must be before Tailwind script loads).
 - Do not add global CSS that could leak into the Shadow DOM widget.
 - Do not hardcode Arabic text directly in JS — use `i18n.js` keys and the `t()` helper.
+- Do not convert classic scripts (`<script src="...">`) to modules without testing `window.*` exports.
+- Do not add Google Fonts, Bunny Fonts, or any external font CDN link — all fonts are self-hosted in `src/fonts/` with `@font-face` declarations in `src/fonts.css`.
+- To update font files, copy from `node_modules/@fontsource-variable/` or `node_modules/@fontsource/` into `src/fonts/` and update `src/fonts.css` if needed.
 - Do not convert classic scripts (`<script src="...">`) to modules without testing `window.*` exports.
 - Shoelace icon assets in `src/shoelace/` are synced from `node_modules/@shoelace-style/shoelace/dist/assets`. Re-sync after upgrading the package.
