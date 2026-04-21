@@ -25,6 +25,11 @@ export function setClerkUserId(clerkUserId) {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
   supabaseWithClerkContext = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: {
       headers: {
         'app.settings.clerk_user_id': clerkUserId,
