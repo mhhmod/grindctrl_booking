@@ -7,6 +7,8 @@
 
 This plan is anchored to the current repository state, not an idealized rebuild. The goal is to preserve the good parts of the current GRINDCTRL implementation, systematically revise weak shared foundations, and selectively rewrite the parts that are fragile or broken.
 
+This revision also corrects the first auth/dashboard stabilization direction: sign-in and sign-up should move back toward a more native Clerk feel with a restrained auth-only neutral palette, and the dashboard progress treatment should be redesigned based on the latest screenshot-backed review.
+
 The work should prioritize shared-system fixes over page-local pixel nudges:
 
 - Fix shared visual primitives before touching page-local overrides.
@@ -20,14 +22,14 @@ The work should prioritize shared-system fixes over page-local pixel nudges:
 **Language/Version**: HTML5, CSS3, JavaScript on Node.js with Vite  
 **Primary Dependencies**: Vite, `@clerk/clerk-js`, `@supabase/supabase-js`, `@shoelace-style/shoelace`  
 **Storage**: Supabase Postgres, browser local/session storage  
-**Testing**: `npm run build`, manual responsive and RTL QA, browser console/runtime verification  
+**Testing**: `npm run build`, targeted Playwright validation, manual responsive and RTL QA, browser console/runtime verification  
 **Target Platform**: GitHub Pages-served static site across mobile, tablet, and desktop browsers  
 **Project Type**: Single-repo frontend with static public pages, protected app shell, and copied classic widget scripts  
 **Constraints**: Current repo is the baseline; preserve working auth; keep classic public scripts as classic scripts; support EN and AR; keep dark mode; do not mix Supabase projects; do not broadly disable RLS
 
 ## Constitution Check
 
-The repository constitution file at `.specify/memory/constitution.md` is still a placeholder, so this plan uses the repo `AGENTS.md`, feature spec, and current architecture as the effective governance.
+The repository constitution file at `.specify/memory/constitution.md` is authoritative for this plan and its MUST rules govern scope, validation, and release readiness.
 
 | Gate | Status | Notes |
 |------|--------|-------|
@@ -35,7 +37,7 @@ The repository constitution file at `.specify/memory/constitution.md` is still a
 | Shared system before local patching | PASS | CSS cascade, Clerk appearance, header/drawer logic, widget composer rules, and icon strategy are addressed first. |
 | Supported vendor integration paths only | PASS | Clerk stays on supported `appearance` config; Supabase fixes remain targeted. |
 | Security posture preserved | PASS | Runtime fixes must avoid broad RLS disablement. |
-| Constitution completeness | WARNING | Placeholder constitution means repo/spec guidance remains authoritative. |
+| Constitution completeness | PASS | Constitution v1.0.0 is present and governs this plan. |
 
 ## Current Repo Baseline
 
@@ -202,7 +204,7 @@ Focus:
 
 ### Phase 2: Auth Shell and Clerk Appearance
 
-Goal: make sign-in and sign-up feel premium, readable, and native to GRINDCTRL.
+Goal: make sign-in and sign-up feel premium, readable, and visually calmer by moving closer to the native Clerk feel inside a restrained GRINDCTRL auth shell.
 
 File order:
 
@@ -222,8 +224,9 @@ Revise:
 
 - brand lockup scale and composition
 - page intro/card balance
+- auth-only gray, off-white, and near-white background treatment
 - contrast and readability
-- Clerk supported appearance values
+- Clerk supported appearance values with fewer heavy overrides
 - mobile spacing and desktop proportion
 
 Rewrite only if needed:
@@ -292,7 +295,7 @@ Rewrite only if needed:
 
 ### Phase 5: Dashboard Shell Refinement
 
-Goal: bring the protected dashboard into the same product language as landing and auth without overbuilding.
+Goal: bring the protected dashboard into the same product language as landing and auth without overbuilding, while correcting the visibly broken progress treatment shown in the latest screenshots.
 
 File order:
 
@@ -311,8 +314,10 @@ Revise:
 - top bar rhythm and density
 - sidebar/main-content relationship
 - card hierarchy and spacing
+- progress, trial, and step-treatment presentation
 - mobile adaptation of shell and controls
 - placeholder feel in banners, empty states, and setup blocks
+- screenshot-backed overlap or emphasis issues in the in-scope dashboard views
 
 Rewrite only if needed:
 
@@ -393,7 +398,8 @@ Auth:
 
 - readable contrast in titles, subtitles, helper text, fields, and dividers
 - brand lockup feels appropriately prominent
-- Clerk internals look native, not pasted in
+- auth shell uses a restrained neutral palette instead of a visually heavy dark block
+- Clerk internals stay close to native, not over-restyled or pasted in
 - no cramped mobile composition
 
 Widget and mockup:
@@ -408,6 +414,7 @@ Dashboard:
 - top bar, sidebar, and main content remain coherent at tablet and narrow mobile widths
 - card rhythm and empty states feel production-ready
 - no obvious placeholder/mock composition
+- progress bars, step indicators, and trial-state labels remain readable and do not overlap, clip, or fight adjacent controls
 
 Runtime:
 
@@ -430,6 +437,7 @@ Runtime:
 - implementation proceeds in the file order above
 - no phase is considered done without width checks at `320`, `360`, `375`, `390`, `414`, and `768`
 - no phase is considered done without both EN and AR validation
+- no phase is considered done without the relevant Playwright coverage or a documented equivalent automated check where the repo supports it
 - icon migration decision is implemented consistently for in-scope shell UI
 - auth remains working
 - runtime fixes preserve security and avoid broad RLS disablement

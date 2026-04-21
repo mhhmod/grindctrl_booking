@@ -7,6 +7,36 @@ const setupMsg = document.getElementById('app-setup-message');
 const appContent = document.getElementById('app-content');
 const inlineError = document.getElementById('app-inline-error');
 
+function hydrateStaticProgress() {
+  const trialBanner = document.getElementById('trial-banner');
+  if (trialBanner) {
+    const totalDays = Number(trialBanner.getAttribute('data-total-days')) || 15;
+    const daysLeft = Number(trialBanner.getAttribute('data-days-left')) || 0;
+    const percent = Math.max(0, Math.min(100, Math.round((daysLeft / totalDays) * 100)));
+    const trialBar = document.getElementById('trial-progress-bar');
+    const trialCopy = document.getElementById('trial-progress-copy');
+    const trialDays = document.getElementById('trial-days-left');
+
+    trialBanner.querySelector('.gc-app-trial-progress')?.setAttribute('aria-valuenow', String(percent));
+    if (trialBar) trialBar.style.width = percent + '%';
+    if (trialCopy) trialCopy.textContent = daysLeft + ' of ' + totalDays + ' trial days remaining';
+    if (trialDays) trialDays.textContent = String(daysLeft);
+  }
+
+  const setupProgress = document.querySelector('.gc-app-setup-progress');
+  if (setupProgress) {
+    const completed = Number(setupProgress.getAttribute('data-completed')) || 0;
+    const total = Number(setupProgress.getAttribute('data-total')) || 1;
+    const percent = Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
+    const setupBar = document.getElementById('setup-progress-bar');
+    const setupRatio = document.getElementById('setup-progress-ratio');
+
+    setupProgress.querySelector('.gc-app-setup-progress-track')?.setAttribute('aria-valuenow', String(percent));
+    if (setupBar) setupBar.style.width = percent + '%';
+    if (setupRatio) setupRatio.textContent = percent + '%';
+  }
+}
+
 function setInlineError(visible) {
   if (!inlineError) return;
   inlineError.style.display = visible ? 'flex' : 'none';
@@ -82,6 +112,8 @@ if (!clerk) {
     }
   }
 }
+
+hydrateStaticProgress();
 
 function populateDashboard(syncResult, workspace, sites) {
   const embedKeyDisplay = document.getElementById('embed-key-display');

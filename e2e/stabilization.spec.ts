@@ -44,6 +44,26 @@ async function assertAuthContrast(page: any) {
   expect(ratio).toBeGreaterThan(3.2);
 }
 
+async function assertAuthNeutralShell(page: any) {
+  const shellLooksNeutral = await page.evaluate(() => {
+    const pageEl = document.querySelector('.gc-auth-page');
+    const intro = document.querySelector('.gc-auth-intro');
+    const card = document.querySelector('.gc-auth-card');
+    if (!pageEl || !intro || !card) return false;
+
+    const pageStyle = getComputedStyle(pageEl);
+    const introStyle = getComputedStyle(intro);
+    const cardStyle = getComputedStyle(card);
+
+    return pageStyle.backgroundImage !== 'none' &&
+      introStyle.borderTopColor !== 'rgba(0, 0, 0, 0)' &&
+      cardStyle.borderTopColor !== 'rgba(0, 0, 0, 0)' &&
+      Number.parseFloat(cardStyle.borderTopWidth) >= 1;
+  });
+
+  expect(shellLooksNeutral).toBe(true);
+}
+
 test.describe('Stabilization Pass', () => {
   test('sign-in desktop layout + contrast + Clerk frame', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -56,6 +76,7 @@ test.describe('Stabilization Pass', () => {
 
     await assertNoHorizontalOverflow(page);
     await assertAuthContrast(page);
+    await assertAuthNeutralShell(page);
 
     const clerkFrameLooksIntegrated = await page.evaluate(() => {
       const card = document.querySelector('.gc-auth-card');
@@ -280,5 +301,36 @@ test.describe('Stabilization Pass', () => {
     await page.waitForTimeout(3000);
     await expect(page.locator('.gc-app-topbar')).toBeVisible();
     expect(errors).toEqual([]);
+  });
+
+  test('dashboard progress surfaces stay readable without overlap', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/app.html', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+
+    const setupVisible = await page.locator('#app-setup-message').isVisible();
+    if (setupVisible) {
+      await expect(page.locator('#app-setup-message')).toBeVisible();
+      await assertNoHorizontalOverflow(page);
+      return;
+    }
+
+    const progressReadable = await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('.gc-app-step-row')) as HTMLElement[];
+      const trialProgress = document.querySelector('.gc-app-trial-progress') as HTMLElement | null;
+      if (!rows.length || !trialProgress) return false;
+
+      const rowsOk = rows.every((row) => {
+        const status = row.querySelector('.gc-app-step-status') as HTMLElement | null;
+        if (!status) return false;
+        return row.getBoundingClientRect().height >= 56 &&
+          status.textContent.trim().length > 0;
+      });
+
+      return rowsOk && trialProgress.getBoundingClientRect().height >= 8;
+    });
+
+    expect(progressReadable).toBe(true);
+    await assertNoHorizontalOverflow(page);
   });
 });

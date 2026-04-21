@@ -188,6 +188,32 @@
 
 ---
 
+## Phase 10: Auth And Dashboard Direction Correction
+
+**Purpose**: Apply the revised UI direction after screenshot review without discarding the completed stabilization history.
+
+**Critical**: This phase supersedes the earlier auth visual direction where the new request conflicts with it.
+
+### Validation for Revised Direction
+
+- [X] T049 Validate the revised auth/dashboard visual target from the latest screenshot review against `specs/001-ui-stabilization/spec.md`, `src/sign-in.html`, `src/sign-up.html`, `src/auth.css`, `src/scripts/clerk-appearance.js`, `src/app.html`, and `src/app.css`
+
+### Implementation for Revised Direction
+
+- [X] T050 [US1] Rework auth-only shell palette, surface layering, and background treatment toward restrained gray/off-white/near-white styling in `src/auth.css`
+- [X] T051 [P] [US1] Rebalance the sign-in shell markup and copy emphasis to feel calmer and more harmonious with native Clerk in `src/sign-in.html`
+- [X] T052 [P] [US1] Rebalance the sign-up shell markup and copy emphasis to feel calmer and more harmonious with native Clerk in `src/sign-up.html`
+- [X] T053 [US2] Reduce Clerk appearance overrides so controls stay closer to the native Clerk look while fitting the surrounding auth shell in `src/scripts/clerk-appearance.js`
+- [X] T054 [US5] Redesign the dashboard progress, trial-status, and step-treatment UI in `src/app.html` and `src/app.css`
+- [X] T055 [US5] Apply screenshot-audit fixes for in-scope dashboard overlap, density, and emphasis issues in `src/app.html`, `src/app.css`, and `src/scripts/app.js`
+- [X] T056 [US1] Validate `src/sign-in.html`, `src/sign-up.html`, `src/auth.css`, and `src/scripts/clerk-appearance.js` at `320`, `360`, `375`, `390`, `414`, and `768` in EN/AR for neutral auth palette, readability, and native-like Clerk harmony
+- [X] T057 [US5] Validate `src/app.html`, `src/app.css`, and `src/scripts/app.js` at mobile, tablet, and desktop widths in EN/AR for progress readability, step stability, and screenshot-backed dashboard polish
+- [X] T058 Run targeted automated regression coverage for the revised auth/dashboard direction in `e2e/stabilization.spec.ts`, `e2e/stabilization-matrix.spec.ts`, and `package.json`
+
+**Checkpoint**: The revised auth and dashboard direction is independently functional and visually aligned with the latest screenshots.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -201,6 +227,7 @@
 - Phase 7 (US6): Depends on Phase 2
 - Phase 8 (US5): Depends on Phase 2 and should land after the P1 stories if shared dashboard files are still moving
 - Phase 9: Depends on all desired user stories being complete
+- Phase 10: Depends on the completed stabilization pass and supersedes conflicting earlier auth/dashboard visual choices
 
 ### User Story Dependency Graph
 
@@ -211,6 +238,7 @@
 - `US1 -> US2`
 - `US1 + US2 + US3 + US4 + US6 -> US5`
 - `US1 + US2 + US3 + US4 + US5 + US6 -> Polish`
+- `Polish -> Direction Correction`
 
 ### Within Each User Story
 
@@ -227,6 +255,7 @@
 - `US3`: `T025` and `T026` can run in parallel after `T023-T024`
 - `US4`: `T031` and `T032` can run in parallel after `T029-T030`
 - `US6`: `T036` and `T037` can run in parallel after `T035`
+- `Phase 10`: `T051` and `T052` can run in parallel after `T050`
 
 ---
 

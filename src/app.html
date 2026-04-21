@@ -106,16 +106,30 @@
 
       <!-- ═══ Dashboard Screen ═══ -->
       <section class="gc-app-screen active" id="screen-dashboard">
-        <div class="gc-app-trial-banner" id="trial-banner">
-          <div class="gc-app-trial-banner-icon"><span class="material-symbols-outlined">schedule</span></div>
-          <div class="gc-app-trial-info">
-            <div class="gc-app-trial-title">15-Day Trial Active</div>
-            <div class="gc-app-trial-desc">White-label mode enabled · Full feature access · No credit card required</div>
-            <div class="gc-app-trial-progress"><div class="gc-app-trial-progress-bar" style="width:73%"></div></div>
+        <div class="gc-app-trial-banner" id="trial-banner" data-total-days="15" data-days-left="11">
+          <div class="gc-app-trial-overview">
+            <div class="gc-app-trial-banner-icon"><span class="material-symbols-outlined">schedule</span></div>
+            <div class="gc-app-trial-info">
+              <div class="gc-app-trial-kicker">Trial status</div>
+              <div class="gc-app-trial-title">15-Day Trial Active</div>
+              <div class="gc-app-trial-desc">White-label mode enabled, full feature access, and no credit card required during setup.</div>
+            </div>
           </div>
-          <div class="gc-app-trial-summary">
-            <div class="gc-app-trial-days-value">11</div>
-            <div class="gc-app-trial-days-label">days left</div>
+          <div class="gc-app-trial-progress-block">
+            <div class="gc-app-trial-progress-head">
+              <div class="gc-app-trial-summary">
+                <div class="gc-app-trial-days-value" id="trial-days-left">11</div>
+                <div class="gc-app-trial-days-label">days left</div>
+              </div>
+              <div class="gc-app-trial-progress-copy" id="trial-progress-copy">11 of 15 trial days remaining</div>
+            </div>
+            <div class="gc-app-trial-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="73">
+              <div class="gc-app-trial-progress-bar" id="trial-progress-bar" style="width:73%"></div>
+            </div>
+            <div class="gc-app-trial-meta">
+              <span class="gc-app-badge gc-app-badge--info">White-label active</span>
+              <span class="gc-app-badge gc-app-badge--success">No card required</span>
+            </div>
           </div>
           <div class="gc-app-trial-actions">
             <button class="gc-btn gc-btn--primary gc-btn--sm">Upgrade Plan</button>
@@ -153,12 +167,59 @@
                 <div class="gc-app-card-title">Get Started</div>
                 <span class="gc-app-badge gc-app-badge--info">3 / 5 complete</span>
               </div>
-              <div class="gc-app-steps">
-                <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Create Account</div></div>
-                <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Add Domain</div></div>
-                <div class="gc-app-step done"><div class="gc-app-step-num">&#10003;</div><div class="gc-app-step-label">Install Code</div></div>
-                <div class="gc-app-step active"><div class="gc-app-step-num">4</div><div class="gc-app-step-label">Test Widget</div></div>
-                <div class="gc-app-step"><div class="gc-app-step-num">5</div><div class="gc-app-step-label">Go Live</div></div>
+              <div class="gc-app-setup-progress" data-completed="3" data-total="5">
+                <div class="gc-app-setup-progress-header">
+                  <div>
+                    <div class="gc-app-setup-progress-kicker">Onboarding progress</div>
+                    <div class="gc-app-setup-progress-desc">Three steps are complete. Test the widget next, then launch it for visitors.</div>
+                  </div>
+                  <div class="gc-app-setup-progress-ratio" id="setup-progress-ratio">60%</div>
+                </div>
+                <div class="gc-app-setup-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
+                  <div class="gc-app-setup-progress-bar" id="setup-progress-bar" style="width:60%"></div>
+                </div>
+              </div>
+              <div class="gc-app-step-list">
+                <div class="gc-app-step-row is-done">
+                  <div class="gc-app-step-marker" aria-hidden="true">&#10003;</div>
+                  <div class="gc-app-step-copy">
+                    <div class="gc-app-step-title">Create Account</div>
+                    <div class="gc-app-step-desc">Workspace access is connected and ready.</div>
+                  </div>
+                  <span class="gc-app-step-status">Done</span>
+                </div>
+                <div class="gc-app-step-row is-done">
+                  <div class="gc-app-step-marker" aria-hidden="true">&#10003;</div>
+                  <div class="gc-app-step-copy">
+                    <div class="gc-app-step-title">Add Domain</div>
+                    <div class="gc-app-step-desc">Your first site is verified and linked.</div>
+                  </div>
+                  <span class="gc-app-step-status">Done</span>
+                </div>
+                <div class="gc-app-step-row is-done">
+                  <div class="gc-app-step-marker" aria-hidden="true">&#10003;</div>
+                  <div class="gc-app-step-copy">
+                    <div class="gc-app-step-title">Install Code</div>
+                    <div class="gc-app-step-desc">Embed snippet is ready to paste on your site.</div>
+                  </div>
+                  <span class="gc-app-step-status">Done</span>
+                </div>
+                <div class="gc-app-step-row is-active">
+                  <div class="gc-app-step-marker" aria-hidden="true">4</div>
+                  <div class="gc-app-step-copy">
+                    <div class="gc-app-step-title">Test Widget</div>
+                    <div class="gc-app-step-desc">Confirm the launcher, greeting, and escalation path on your live pages.</div>
+                  </div>
+                  <span class="gc-app-step-status">Current</span>
+                </div>
+                <div class="gc-app-step-row">
+                  <div class="gc-app-step-marker" aria-hidden="true">5</div>
+                  <div class="gc-app-step-copy">
+                    <div class="gc-app-step-title">Go Live</div>
+                    <div class="gc-app-step-desc">Turn the widget on for all visitors once final checks pass.</div>
+                  </div>
+                  <span class="gc-app-step-status">Next</span>
+                </div>
               </div>
               <div class="gc-app-actions">
                 <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">open_in_new</span> Preview Widget</button>
@@ -309,7 +370,7 @@
           </div>
           <div class="gc-app-intent-list">
             <div class="gc-app-intent-item">
-              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">explaining</span></div>
+              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">lightbulb</span></div>
               <div class="gc-app-intent-label">Explain this</div>
               <span class="gc-app-intent-type">Send Message</span>
             </div>

@@ -3,7 +3,7 @@
 **Feature Branch**: `001-ui-stabilization`  
 **Created**: 2026-04-21  
 **Status**: Draft  
-**Input**: User description: "/speckit.specify Refine the current GRINDCTRL repo state rather than starting from scratch. This is a correction/refinement feature for the existing implementation. We already have auth, Clerk, dashboard, widget, and Supabase-related work in the repo. The goal is to refine the current implementation so it reaches production-ready GRINDCTRL quality. Focus on: auth page composition and contrast, Clerk appearance aligned with GRINDCTRL dark theme, mobile header/nav/drawer correctness, widget and mockup input/send-row layout stability, dashboard shell polish and consistency, icon consistency and robustness, Supabase/runtime stability and no recursive policy/runtime regressions, EN + AR consistency, desktop + mobile quality. Do not treat this as a greenfield feature. Treat the current repo as the baseline and refine it."
+**Input**: User description: "/speckit.specify Refine the current GRINDCTRL repo state rather than starting from scratch. This is a correction/refinement feature for the existing implementation. We already have auth, Clerk, dashboard, widget, and Supabase-related work in the repo. The goal is to refine the current implementation so it reaches production-ready GRINDCTRL quality. Focus on: auth page composition and contrast, Clerk appearance aligned with GRINDCTRL dark theme, mobile header/nav/drawer correctness, widget and mockup input/send-row layout stability, dashboard shell polish and consistency, icon consistency and robustness, Supabase/runtime stability and no recursive policy/runtime regressions, EN + AR consistency, desktop + mobile quality. Do not treat this as a greenfield feature. Treat the current repo as the baseline and refine it. Follow-up direction: revert sign-in and sign-up closer to the native Clerk feel, use a restrained gray/white/gray auth-only palette, redesign the dashboard progress treatment, and audit the provided screenshots for additional visual inconsistencies."
 
 ## Context
 
@@ -34,11 +34,18 @@ Bring the GRINDCTRL frontend back to a premium, coherent, production-ready level
 - Q: When runtime data fails on dashboard or widget-backed surfaces, how should the UI degrade? → A: Keep the shell or frame visible and show an inline error state for the affected content area.
 - Q: How far can icon cleanup go in this brownfield pass? → A: Allow targeted replacement with a shared lightweight SVG approach where current icon behavior is fragile or inconsistent.
 
+### Session 2026-04-22
+
+- Q: How should the auth screens change after the first stabilization pass? → A: Pull sign-in and sign-up back toward the native Clerk feel instead of a heavily customized dark-shell treatment.
+- Q: What palette direction should auth use in this pass? → A: Use a restrained auth-only gray, off-white, and near-white treatment so the auth pages feel cleaner and more harmonious with native Clerk controls.
+- Q: Which dashboard element is explicitly in scope for redesign? → A: The current progress treatment, including the trial/progress presentation and stepper-like completion visuals, is in scope because it looks visually broken.
+- Q: How should the supplied screenshots affect scope? → A: Use them as a visual audit source for auth and dashboard inconsistencies that are visible in the referenced images, but keep the changes limited to the affected in-scope surfaces.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Use public and auth surfaces that feel premium and readable (Priority: P1)
 
-As a visitor or returning user, I can use the landing page, sign-in page, and sign-up page on mobile and desktop without low-contrast text, weak branding, awkward spacing, or unstable composition.
+As a visitor or returning user, I can use the landing page, sign-in page, and sign-up page on mobile and desktop without low-contrast text, weak branding, awkward spacing, unstable composition, or auth surfaces that feel over-styled relative to the native product controls.
 
 **Why this priority**: The public and auth surfaces define first impression, trust, and conversion. If these surfaces feel broken or off-brand, the product loses credibility before users reach the dashboard.
 
@@ -46,23 +53,25 @@ As a visitor or returning user, I can use the landing page, sign-in page, and si
 
 **Acceptance Scenarios**:
 
-1. **Given** a user opens the sign-in or sign-up page, **When** the page finishes loading, **Then** text remains readable, the brand lockup feels appropriately prominent, and the layout feels intentionally composed rather than cramped or visually weak.
+1. **Given** a user opens the sign-in or sign-up page, **When** the page finishes loading, **Then** text remains readable, the brand lockup feels appropriately prominent, and the layout feels intentionally composed rather than cramped, visually weak, or overly customized.
 2. **Given** a user opens the same surfaces on mobile and desktop, **When** content adapts to the viewport, **Then** spacing, hierarchy, and composition remain stable without overlap, clipping, or low-contrast regressions.
+3. **Given** a user opens the auth pages, **When** they compare the shell and the embedded auth controls, **Then** the surrounding GRINDCTRL presentation feels restrained and harmonious with the native Clerk experience rather than competing with it.
 
 ---
 
 ### User Story 2 - Experience Clerk-auth UI as part of the GRINDCTRL product (Priority: P1)
 
-As a user authenticating with Clerk, I experience fields, buttons, surfaces, borders, radii, dividers, and helper text that feel native to the GRINDCTRL dark interface rather than visually disconnected third-party defaults.
+As a user authenticating with Clerk, I experience fields, buttons, surfaces, borders, radii, dividers, and helper text that preserve a mostly native Clerk feel while still sitting cleanly inside a restrained GRINDCTRL auth shell.
 
-**Why this priority**: Authentication is a critical trust surface. If Clerk internals do not match the rest of the product, the experience feels stitched together and less credible.
+**Why this priority**: Authentication is a critical trust surface. If Clerk internals are over-customized or fight the surrounding shell, the experience feels less credible than a cleaner native presentation.
 
-**Independent Test**: Load the Clerk-driven sign-in and sign-up flows and confirm the supported appearance configuration produces a dark theme aligned with the GRINDCTRL visual system across key auth states.
+**Independent Test**: Load the Clerk-driven sign-in and sign-up flows and confirm the supported appearance configuration keeps the controls close to native Clerk while the surrounding auth shell uses a restrained neutral palette and remains visually aligned.
 
 **Acceptance Scenarios**:
 
-1. **Given** a user loads a Clerk auth page, **When** Clerk components render, **Then** the resulting controls, text, and surfaces match the surrounding GRINDCTRL shell in color, contrast, spacing, and shape language.
-2. **Given** a user moves through the auth flow, **When** they view inputs, buttons, separators, and support text, **Then** those elements feel visually consistent with the product and remain readable in dark mode.
+1. **Given** a user loads a Clerk auth page, **When** Clerk components render, **Then** the resulting controls, text, and surfaces stay close to the native Clerk visual baseline instead of being heavily restyled.
+2. **Given** a user moves through the auth flow, **When** they view inputs, buttons, separators, and support text, **Then** those elements feel visually consistent with the surrounding shell and remain readable without relying on deep visual overrides.
+3. **Given** the auth shell uses a neutral background treatment, **When** Clerk elements render inside it, **Then** the combination feels calm and coherent rather than high-contrast in a way that makes the embedded form look pasted in.
 
 ---
 
@@ -99,7 +108,7 @@ As a user interacting with the real widget or demo/mockup, I can use the message
 
 ### User Story 5 - Use a dashboard that feels like the same product (Priority: P2)
 
-As an authenticated user, I can use the protected dashboard on desktop and mobile and experience spacing, rhythm, hierarchy, and responsiveness that feel consistent with the landing and auth surfaces rather than like a placeholder or disconnected shell.
+As an authenticated user, I can use the protected dashboard on desktop and mobile and experience spacing, rhythm, hierarchy, progress indicators, and responsiveness that feel consistent with the landing and auth surfaces rather than like a placeholder or disconnected shell.
 
 **Why this priority**: Once users authenticate, the product must continue the same visual quality and trust level rather than dropping into a less polished environment.
 
@@ -109,6 +118,7 @@ As an authenticated user, I can use the protected dashboard on desktop and mobil
 
 1. **Given** an authenticated user opens the dashboard, **When** the main shell and first-view content regions or states render, **Then** the dashboard feels visually consistent with the public and auth experience.
 2. **Given** the dashboard is viewed on mobile and desktop, **When** layout adapts to the viewport, **Then** spacing, hierarchy, and responsiveness remain polished without overbuilt placeholder behavior.
+3. **Given** the user views progress, onboarding, or trial-state UI, **When** those components render, **Then** progress bars, steps, labels, and completion states remain readable, non-overlapping, and visually intentional.
 
 ---
 
@@ -131,13 +141,14 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - Contrast and readability regressions
 - Weak or undersized brand lockup
 - Awkward spacing and composition
-- Clerk internals not fully aligned with GRINDCTRL theme
+- Clerk internals feel over-styled instead of comfortably close to the native Clerk look
+- Auth background treatment is too dark and visually heavy for the current desired direction
 - Desktop and mobile polish still insufficient
 
 2. Clerk appearance
 - Use official supported appearance configuration
-- Dark mode must fit GRINDCTRL
-- Fields, buttons, dividers, text, surfaces, borders, radii, and spacing must feel native
+- Favor a more native Clerk appearance baseline with only restrained shell-level alignment
+- Fields, buttons, dividers, text, surfaces, borders, radii, and spacing must feel clean and coherent without fighting the default Clerk look
 
 3. Mobile header, nav, and drawer
 - Overlap and collision problems
@@ -156,13 +167,18 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - Still needs polish and consistency with landing and auth
 - Spacing, rhythm, hierarchy, and responsive behavior need refinement
 - Reduce placeholder or mock feel without overbuilding
+- Progress, trial, and step-treatment UI needs redesign because the current presentation looks broken and visually inconsistent
 
-6. Icon strategy
+6. Screenshot-driven audit findings
+- The referenced screenshots reveal auth and dashboard inconsistencies that must be reviewed directly before more UI work ships
+- Visible overlap, clipping, awkward density, and unbalanced emphasis in screenshot-backed areas must be corrected in the affected in-scope screens
+
+7. Icon strategy
 - Icons still need a more robust, consistent system
 - Remove fragile or inconsistent icon behavior
 - If needed, move to a lightweight SVG icon approach
 
-7. Supabase and runtime stability
+8. Supabase and runtime stability
 - No duplicate-client warnings
 - No policy recursion
 - No widget_sites load failures
@@ -174,10 +190,12 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - Very small phone widths must keep auth composition, header controls, drawer actions, and widget send rows fully usable without overlap or horizontal scrolling.
 - Arabic RTL mode must preserve layout direction, icon direction where relevant, text alignment, and drawer or header action placement without introducing mirrored spacing bugs.
 - Clerk-driven auth states such as validation, error, loading, and alternate auth steps must remain readable and visually aligned with the surrounding dark shell.
+- Clerk-driven auth states such as validation, error, loading, and alternate auth steps must remain readable and visually aligned with the surrounding restrained neutral auth shell.
 - Widget and mockup composer rows must remain stable when placeholder text is long, when quick actions wrap to multiple lines, and when the host container is narrower than a typical phone viewport.
 - Dashboard entry must fail safely if runtime data is temporarily unavailable, avoiding broken shell layout, recursive policy failures, or misleading empty states.
 - If runtime data fails on dashboard or widget-backed surfaces, the shell or frame must remain visible while the affected content area shows an explicit inline error state.
 - Runtime and data-access corrections must not solve loading failures by weakening security boundaries or broadly disabling row-level protections.
+- Dashboard progress and trial-state UI must remain readable when labels are long, completion counts change, or the component compresses at tablet and smaller widths.
 
 ## Requirements *(mandatory)*
 
@@ -188,7 +206,7 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - **FR-003**: The system MUST keep sign-in and sign-up surfaces visually polished, readable, responsive, and clearly on-brand across supported mobile and desktop breakpoints.
 - **FR-004**: The system MUST ensure the brand lockup and auth-page composition feel intentional and appropriately prominent rather than visually weak or cramped.
 - **FR-005**: The system MUST style Clerk-driven auth experiences using officially supported appearance configuration.
-- **FR-006**: The system MUST ensure Clerk fields, buttons, dividers, text, surfaces, borders, radii, and spacing feel native to the GRINDCTRL dark product shell.
+- **FR-006**: The system MUST ensure Clerk fields, buttons, dividers, text, surfaces, borders, radii, and spacing remain close to the native Clerk visual baseline while fitting cleanly within the surrounding auth shell.
 - **FR-007**: The system MUST keep the mobile header free from overlap and collision at common supported device widths.
 - **FR-008**: The system MUST establish clear responsive priority between brand, controls, CTA or auth affordances, and menu trigger in constrained mobile layouts.
 - **FR-009**: The system MUST keep the mobile drawer visually clean and stable in both left-to-right and right-to-left presentation.
@@ -197,6 +215,7 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - **FR-012**: The system MUST ensure quick actions wrap consistently across the real widget and the demo or mockup surfaces.
 - **FR-013**: The system MUST refine the protected dashboard shell so it feels like the same product as the landing and auth surfaces.
 - **FR-014**: The system MUST improve dashboard spacing, rhythm, hierarchy, and responsive behavior without introducing unnecessary complexity or overbuilt placeholder UI.
+- **FR-014A**: The system MUST redesign the in-scope dashboard progress treatment so trial status, progress bars, steps, and completion indicators read clearly and do not overlap, clip, or feel visually broken.
 - **FR-015**: The system MUST use a consistent, robust icon strategy across in-scope surfaces and MUST remove fragile or inconsistent icon behavior.
 - **FR-016**: The system MUST eliminate previously observed duplicate-client warnings, policy recursion issues, and widget site loading failures in the in-scope runtime paths.
 - **FR-017**: The system MUST preserve security posture while addressing runtime and data-access issues and MUST NOT broadly disable row-level security.
@@ -208,6 +227,8 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 - **FR-023**: The system MUST limit public-site refinement to shared shell elements tied to this work, including header, navigation, drawer, auth entry points, and nearby composition, and MUST NOT expand this pass into a broad landing-page redesign.
 - **FR-024**: The system MUST preserve the dashboard shell or widget frame during transient runtime failures and MUST show an explicit inline error state for the affected content area instead of collapsing the full screen into a blank, misleading, or placeholder state.
 - **FR-025**: The system MAY replace fragile or inconsistent in-scope icons with a shared lightweight SVG approach where needed for robustness and consistency, but MUST NOT expand this pass into a repo-wide icon-system migration.
+- **FR-026**: The system MUST update sign-in and sign-up so their auth-only shell uses a restrained gray, off-white, and near-white palette instead of the heavier dark treatment introduced in the prior pass.
+- **FR-027**: The system MUST use the provided screenshots as a visual audit source for auth and dashboard cleanup in this pass and MUST correct any confirmed overlap, clipping, awkward density, or emphasis imbalance found in the affected in-scope surfaces.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -231,11 +252,12 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 ## Acceptance Criteria
 
 - Sign-in and sign-up are visually polished, readable, responsive, and on-brand
-- Clerk appearance matches the GRINDCTRL dark product shell
+- Clerk appearance stays close to the native Clerk look while fitting the surrounding auth shell
 - Mobile header has no overlap at common device widths
 - Drawer is visually clean and stable in left-to-right and right-to-left modes
 - Widget input row never clips or protrudes in English or Arabic
 - Dashboard feels like the same product as landing and auth
+- Dashboard progress treatment is readable, intentional, and free from overlap or broken step styling
 - Icons are consistent and robust
 - Dashboard loads without previous Supabase or runtime errors
 - Transient runtime failures preserve shell or frame with an inline error state
@@ -249,9 +271,11 @@ As a user loading protected or widget-driven surfaces, I can use the product wit
 
 - **SC-001**: In review across in-scope public, auth, dashboard, widget, and mockup surfaces, all critical paths show no unresolved high-severity visual regressions affecting readability, containment, or responsive stability.
 - **SC-002**: Sign-in and sign-up validation on supported mobile and desktop breakpoints confirms readable contrast, stable composition, and clearly on-brand presentation in 100% of reviewed states.
+- **SC-002A**: Sign-in and sign-up review confirms the auth-only palette is restrained and neutral, and Clerk controls remain visually closer to native than to a heavily customized dark-shell variant in 100% of reviewed states.
 - **SC-003**: Mobile header and drawer validation on representative phone widths confirms no overlap or collision in 100% of reviewed English and Arabic states.
 - **SC-004**: Widget and mockup validation confirms the input row and send control remain fully contained in 100% of reviewed English and Arabic states.
 - **SC-005**: Dashboard review confirms spacing, hierarchy, and shell consistency align with the landing and auth experience across reviewed mobile and desktop states.
+- **SC-005A**: Dashboard review confirms the in-scope progress and trial-state UI presents readable labels, stable step treatment, and no overlap or clipping in 100% of reviewed states.
 - **SC-006**: Runtime validation confirms previously observed duplicate-client warnings, policy recursion issues, and widget site loading failures are absent from normal in-scope usage paths.
 - **SC-007**: In reviewed transient runtime-failure scenarios, the affected dashboard or widget-backed surface preserves its shell or frame and presents an explicit inline error state in 100% of tested cases.
 - **SC-008**: Stakeholder review concludes the refined UI is premium, coherent, and production-ready without requiring a full redesign from zero.

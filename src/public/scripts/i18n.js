@@ -23,10 +23,11 @@
     /* ────────── AUTH ────────── */
     auth_back_home: { en: 'Back to GRINDCTRL', ar: 'العودة إلى GRINDCTRL' },
     auth_brand_caption: { en: 'Operations AI Control Center', ar: 'مركز تحكم الذكاء الاصطناعي للعمليات' },
+    auth_shell_caption: { en: 'Secure workspace access', ar: 'وصول آمن إلى مساحة العمل' },
     auth_sign_in_title: { en: 'Welcome back', ar: 'مرحباً بعودتك' },
-    auth_sign_in_subtitle: { en: 'Sign in to access your dashboard', ar: 'سجّل الدخول للوصول إلى لوحة التحكم' },
+    auth_sign_in_subtitle: { en: 'Sign in to access your dashboard with a cleaner, native-feeling auth flow.', ar: 'سجّل الدخول للوصول إلى لوحة التحكم عبر تجربة دخول أكثر هدوءاً وقرباً من الواجهة الأصلية.' },
     auth_sign_up_title: { en: 'Create your account', ar: 'أنشئ حسابك' },
-    auth_sign_up_subtitle: { en: 'Get started with GRINDCTRL dashboard', ar: 'ابدأ مع لوحة تحكم GRINDCTRL' },
+    auth_sign_up_subtitle: { en: 'Get started with GRINDCTRL using a calmer, native-feeling sign-up flow.', ar: 'ابدأ مع GRINDCTRL عبر تجربة تسجيل أكثر هدوءاً وقرباً من الواجهة الأصلية.' },
     auth_footer_signup_prompt: { en: 'Don\'t have an account?', ar: 'ليس لديك حساب؟' },
     auth_footer_signup_link: { en: 'Create account', ar: 'إنشاء حساب' },
     auth_footer_signin_prompt: { en: 'Already have an account?', ar: 'لديك حساب بالفعل؟' },

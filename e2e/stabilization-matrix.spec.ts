@@ -49,6 +49,26 @@ async function assertAuthContrast(page: any) {
   expect(ratio).toBeGreaterThan(3.2);
 }
 
+async function assertAuthNeutralShell(page: any) {
+  const shellLooksNeutral = await page.evaluate(() => {
+    const pageEl = document.querySelector('.gc-auth-page');
+    const intro = document.querySelector('.gc-auth-intro');
+    const card = document.querySelector('.gc-auth-card');
+    if (!pageEl || !intro || !card) return false;
+
+    const pageStyle = getComputedStyle(pageEl);
+    const introStyle = getComputedStyle(intro);
+    const cardStyle = getComputedStyle(card);
+
+    return pageStyle.backgroundImage !== 'none' &&
+      introStyle.borderTopColor !== 'rgba(0, 0, 0, 0)' &&
+      cardStyle.borderTopColor !== 'rgba(0, 0, 0, 0)' &&
+      Number.parseFloat(cardStyle.borderTopWidth) >= 1;
+  });
+
+  expect(shellLooksNeutral).toBe(true);
+}
+
 for (const lang of ['en', 'ar'] as const) {
   test.describe(`Stabilization Matrix (${lang.toUpperCase()})`, () => {
     test.beforeEach(async ({ page }) => {
@@ -67,6 +87,7 @@ for (const lang of ['en', 'ar'] as const) {
         await expect(page.locator('.gc-auth-card')).toBeVisible();
         await assertNoHorizontalOverflow(page);
         await assertAuthContrast(page);
+        await assertAuthNeutralShell(page);
 
         await page.goto('/sign-up.html', { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(1600);
@@ -74,6 +95,7 @@ for (const lang of ['en', 'ar'] as const) {
         await expect(page.locator('.gc-auth-card')).toBeVisible();
         await assertNoHorizontalOverflow(page);
         await assertAuthContrast(page);
+        await assertAuthNeutralShell(page);
       });
     }
 
@@ -89,6 +111,7 @@ for (const lang of ['en', 'ar'] as const) {
         } else {
           await expect(page.locator('.gc-app-topbar')).toBeVisible();
           await expect(page.locator('.gc-app-sidebar')).toBeVisible();
+          await expect(page.locator('.gc-app-step-row')).toHaveCount(5);
         }
 
         await assertNoHorizontalOverflow(page);
