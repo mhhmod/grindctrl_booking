@@ -821,7 +821,7 @@ function initEventHandlers() {
         if (intent) openIntentForm(intent);
       } else if (btn.classList.contains('btn-delete-intent')) {
         showConfirmDialog('Delete Intent?', 'This action cannot be undone.', async function () {
-          const ok = await deleteIntent(intentId);
+          const ok = await deleteIntent(clerk.user.id, intentId);
           if (ok) {
             await populateIntentsScreen();
             showToast('Intent deleted', 'success');

@@ -220,11 +220,11 @@ security definer
 set search_path = public
 as $$
 declare
-  v_domain public.widget_domains;
+  v_domain jsonb;
 begin
   insert into public.widget_domains (widget_site_id, domain)
   values (p_site_id, p_domain)
-  returning row_to_json(public.widget_domains.*)
+  returning to_jsonb(public.widget_domains.*)
   into v_domain;
 
   return v_domain;
@@ -243,12 +243,12 @@ security definer
 set search_path = public
 as $$
 declare
-  v_domain public.widget_domains;
+  v_domain jsonb;
 begin
   update public.widget_domains set
     verification_status = p_status
   where id = p_domain_id
-  returning row_to_json(public.widget_domains.*)
+  returning to_jsonb(public.widget_domains.*)
   into v_domain;
 
   return v_domain;
@@ -307,11 +307,11 @@ security definer
 set search_path = public
 as $$
 declare
-  v_intent public.widget_intents;
+  v_intent jsonb;
 begin
   insert into public.widget_intents (widget_site_id, label, icon, action_type, message_text, external_url, sort_order)
   values (p_site_id, p_label, coalesce(p_icon, 'chat'), coalesce(p_action_type, 'send_message'), p_message_text, p_external_url, coalesce(p_sort_order, 0))
-  returning row_to_json(public.widget_intents.*)
+  returning to_jsonb(public.widget_intents.*)
   into v_intent;
 
   return v_intent;
@@ -335,7 +335,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_intent public.widget_intents;
+  v_intent jsonb;
 begin
   update public.widget_intents set
     label         = coalesce(p_label,        label),
@@ -345,7 +345,7 @@ begin
     external_url  = coalesce(p_external_url, external_url),
     sort_order    = coalesce(p_sort_order,    sort_order)
   where id = p_intent_id
-  returning row_to_json(public.widget_intents.*)
+  returning to_jsonb(public.widget_intents.*)
   into v_intent;
 
   return v_intent;
@@ -413,11 +413,11 @@ security definer
 set search_path = public
 as $$
 declare
-  v_lead public.widget_leads;
+  v_lead jsonb;
 begin
   insert into public.widget_leads (widget_site_id, workspace_id, name, email, phone, company, source_domain)
   values (p_widget_site_id, p_workspace_id, p_name, p_email, p_phone, p_company, p_source_domain)
-  returning row_to_json(public.widget_leads.*)
+  returning to_jsonb(public.widget_leads.*)
   into v_lead;
 
   return v_lead;
