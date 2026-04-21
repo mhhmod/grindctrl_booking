@@ -27,6 +27,7 @@
     embedKey: null,         // Required: your public embed key
     domain: null,           // Required: hostname to bind to
     apiBase: 'https://egvdxshlbcqndrcnzcdn.supabase.co', // Supabase project
+    apiKey: '', // Supabase anon key (public)
 
     // Optional overrides (from widget config, not user-overridable)
     launcherPosition: 'bottom-right',
@@ -249,45 +250,80 @@
 
   async function loadConfig() {
     var cfg = state.config;
+    // Query widget_sites directly with related data
     var res = await fetch(
-      cfg.apiBase + '/functions/v1/widget-config' +
-      '?key=' + encodeURIComponent(cfg.embedKey) +
-      '&domain=' + encodeURIComponent(cfg.domain),
-      { headers: { 'Content-Type': 'application/json' } }
+      cfg.apiBase + '/rest/v1/widget_sites?embed_key=eq.' + encodeURIComponent(cfg.embedKey) +
+      '&select=*,widget_domains(domain,verification_status),widget_intents(label,icon,action_type,message_text,external_url,sort_order)',
+      { headers: { 'Content-Type': 'application/json', 'apikey': cfg.apiKey || '' } }
     );
 
     if (!res.ok) {
       throw new Error('Invalid embed key or domain not verified.');
     }
 
-    var data = await res.json();
+    var rows = await res.json();
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error('Embed key not found.');
+    }
+
+    var data = rows[0];
+
+    // Domain validation
+    var hostname = window.location.hostname;
+    var isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    if (!isLocalhost && data.widget_domains) {
+      var verifiedDomains = data.widget_domains.filter(function (d) {
+        return d.verification_status === 'verified';
+      });
+      var isAllowed = verifiedDomains.some(function (d) {
+        return d.domain === hostname || hostname.endsWith('.' + d.domain);
+      });
+      if (!isAllowed) {
+        console.warn('[GrindctrlSupport] Domain not verified: ' + hostname);
+        throw new Error('Domain not verified for this embed key.');
+      }
+    }
+
+    var configJson = data.config_json || {};
+    var brandingJson = data.branding_json || {};
+    var leadCaptureJson = data.lead_capture_json || {};
+
     return Object.assign({}, cfg, {
       _config: data,
-      launcherPosition: data.launcher_position || cfg.launcherPosition,
-      launcherLabel: data.launcher_label || cfg.launcherLabel,
-      launcherIcon: data.launcher_icon || cfg.launcherIcon,
-      launcherPillMode: data.launcher_pill_mode !== undefined ? data.launcher_pill_mode : cfg.launcherPillMode,
-      defaultOpen: data.default_open || false,
-      supportMode: data.support_mode || 'mixed',
-      greetingMessage: data.greeting_message || null,
-      showIntentButtons: data.show_intent_buttons !== undefined ? data.show_intent_buttons : true,
-      persistentSessions: data.persistent_sessions !== undefined ? data.persistent_sessions : true,
-      captureEmailOnFirst: data.capture_email_on_first !== undefined ? data.capture_email_on_first : true,
-      captureNameOnFirst: data.capture_name_on_first !== undefined ? data.capture_name_on_first : false,
-      primaryColor: data.primary_color || cfg.primaryColor,
-      accentColor: data.accent_color || cfg.accentColor,
-      backgroundColor: data.background_color || cfg.backgroundColor,
-      textColor: data.text_color || cfg.textColor,
-      customBrandName: data.custom_brand_name || null,
-      customLogoUrl: data.custom_logo_url || null,
-      customIconUrl: data.custom_icon_url || null,
-      attributionMode: data.attribution_mode || 'grindctrl_powered',
-      showPoweredBy: data.show_powered_by || false,
-      whiteLabelAllowed: data.white_label_allowed || false,
-      trialDaysRemaining: data.trial_days_remaining || 0,
-      trialExpired: data.trial_expired || false,
-      intents: data.intents || [],
-      pageLabels: data.page_labels || {},
+      launcherPosition: configJson.launcher_position || cfg.launcherPosition,
+      launcherLabel: configJson.launcher_label || cfg.launcherLabel,
+      launcherIcon: configJson.launcher_icon || cfg.launcherIcon,
+      launcherPillMode: configJson.launcher_pill_mode !== undefined ? configJson.launcher_pill_mode : cfg.launcherPillMode,
+      defaultOpen: configJson.default_open || false,
+      supportMode: configJson.support_mode || 'mixed',
+      greetingMessage: configJson.greeting_message || null,
+      showIntentButtons: configJson.show_intent_buttons !== undefined ? configJson.show_intent_buttons : true,
+      persistentSessions: configJson.persistent_sessions !== undefined ? configJson.persistent_sessions : true,
+      activeState: configJson.active_state !== undefined ? configJson.active_state : true,
+      primaryColor: brandingJson.primary_color || cfg.primaryColor,
+      accentColor: brandingJson.accent_color || cfg.accentColor,
+      backgroundColor: brandingJson.background_color || cfg.backgroundColor,
+      textColor: brandingJson.text_color || cfg.textColor,
+      customBrandName: brandingJson.brand_name || null,
+      customLogoUrl: brandingJson.logo_url || null,
+      customIconUrl: brandingJson.icon_url || null,
+      attributionMode: configJson.attribution_mode || 'grindctrl_powered',
+      showPoweredBy: configJson.show_powered_by || false,
+      whiteLabelAllowed: configJson.white_label_allowed || false,
+      trialDaysRemaining: configJson.trial_days_remaining || 0,
+      trialExpired: configJson.trial_expired || false,
+      intents: data.widget_intents || [],
+      pageLabels: configJson.page_labels || {},
+      // Lead capture from new JSONB
+      leadCaptureMode: leadCaptureJson.timing_mode || 'disabled',
+      leadCaptureFields: leadCaptureJson.fields_enabled || ['name', 'email'],
+      leadCaptureTitle: leadCaptureJson.prompt_text ? null : null,
+      leadCaptureSubtitle: leadCaptureJson.prompt_text || null,
+      leadCaptureSkippable: leadCaptureJson.timing_mode === 'before_skippable',
+      leadCaptureEnabled: leadCaptureJson.enabled === true,
+      // Store IDs for lead submission
+      widgetSiteId: data.id,
+      workspaceId: data.workspace_id,
     });
   }
 
@@ -840,10 +876,10 @@
       if (pageIntents.length > 0) {
         intentsHTML = '<div class="gc-intents">' +
           pageIntents.map(function (intent) {
-            var label = currentLang() === 'ar'
-              ? (intent.label_ar || intent.label_en || '')
-              : (intent.label_en || intent.label_ar || '');
-            return '<button class="gc-intent" data-intent-id="' + intent.id + '" data-intent-label="' + escapeHtml(label) + '">' +
+            var label = intent.label || '';
+            var icon = intent.icon || 'chat';
+            return '<button class="gc-intent" data-intent-id="' + (intent.id || '') + '" data-intent-label="' + escapeHtml(label) + '" data-action-type="' + (intent.action_type || 'send_message') + '" data-message-text="' + escapeHtml(intent.message_text || label) + '" data-external-url="' + escapeHtml(intent.external_url || '') + '">' +
+              '<span class="material-symbols-outlined" style="font-size:14px">' + escapeHtml(icon) + '</span>' +
               '<span>' + escapeHtml(label) + '</span>' +
               '</button>';
           }).join('') +
@@ -1079,7 +1115,10 @@
       if (target.classList.contains('gc-intent')) {
         var label = target.getAttribute('data-intent-label');
         var intentId = target.getAttribute('data-intent-id');
-        self._handleIntent(intentId, label);
+        var actionType = target.getAttribute('data-action-type');
+        var messageText = target.getAttribute('data-message-text');
+        var externalUrl = target.getAttribute('data-external-url');
+        self._handleIntent(intentId, label, actionType, messageText, externalUrl);
         return;
       }
       if (id === 'gc-send-btn') {
@@ -1114,6 +1153,13 @@
     state.phase = 'loading';
 
     loadConfig().then(function (serverCfg) {
+      // Check if widget is active
+      if (!serverCfg.activeState || serverCfg._config.status !== 'active') {
+        console.warn('[GrindctrlSupport] Widget is not active for this site.');
+        state.phase = 'disabled';
+        return;
+      }
+
       state.config = Object.assign({}, state.config, serverCfg);
       state.phase = 'ready';
       state._initialized = true;
@@ -1166,7 +1212,7 @@
     });
   };
 
-  GrindctrlSupport.prototype._handleIntent = function (intentId, label) {
+  GrindctrlSupport.prototype._handleIntent = function (intentId, label, actionType, messageText, externalUrl) {
     var self = this;
     var intent = (state.config.intents || []).find(function (i) { return i.id === intentId; });
 
@@ -1176,17 +1222,23 @@
       return;
     }
 
+    this._trackEvent('intent_click', { intent_id: intentId, label: label, action_type: actionType });
+
+    if (actionType === 'external_link' && externalUrl) {
+      window.open(externalUrl, '_blank');
+      return;
+    }
+
     // Add user intent message
-    self._addMessage({ role: 'user', content: label, created_at: new Date().toISOString() });
+    var displayText = messageText || label;
+    self._addMessage({ role: 'user', content: displayText, created_at: new Date().toISOString() });
     state._messageCount++;
 
     // Hide greeting
     var greeting = state._shadow.getElementById('gc-greeting');
     if (greeting) greeting.style.display = 'none';
 
-    this._trackEvent('intent_click', { intent_id: intentId, label: label });
-
-    if (intent && intent.action_type === 'escalation') {
+    if (actionType === 'escalate' || (intent && intent.action_type === 'escalate')) {
       // Show escalation message
       self._addMessage({
         role: 'assistant',
@@ -1197,9 +1249,9 @@
     } else {
       // Start conversation with intent as first message
       self._startConvIfNeeded().then(function () {
-        sendMessage(label, label).then(function () {
+        sendMessage(displayText, label).then(function () {
           // Show demo reply for now (until real transport is implemented)
-          self._showDemoReply(label);
+          self._showDemoReply(displayText);
         }).catch(function (err) {
           self._handleError(err);
         });
@@ -1321,14 +1373,22 @@
   // ─────────────────────────────────────────────────────────────
 
   GrindctrlSupport.prototype._shouldShowLeadCapture = function (trigger) {
-    if (!state.config || state.config.leadCaptureMode === 'off') return false;
+    var cfg = state.config;
+    if (!cfg || !cfg.leadCaptureEnabled) return false;
     if (state._leadCaptured) return false;
 
-    var mode = state.config.leadCaptureMode;
-    if (mode === 'before_first_message' && trigger === 'init') return true;
-    if (mode === 'after_intent' && trigger === 'intent') return true;
-    if (mode === 'after_2_messages' && trigger === 'message' && state._messageCount >= 2) return true;
-    if (mode === 'after_3_messages' && trigger === 'message' && state._messageCount >= 3) return true;
+    // Session-based deduplication
+    try {
+      var sessionKey = 'gc_lead_' + cfg.widgetSiteId;
+      if (sessionStorage.getItem(sessionKey)) return false;
+    } catch (e) {}
+
+    var mode = cfg.leadCaptureMode;
+    if (mode === 'disabled') return false;
+    if (mode === 'before_required' && trigger === 'init') return true;
+    if (mode === 'before_skippable' && trigger === 'init') return true;
+    if (mode === 'during' && trigger === 'message' && state._messageCount >= 1) return true;
+    if (mode === 'after' && trigger === 'message' && state._messageCount >= 2) return true;
     return false;
   };
 
@@ -1421,6 +1481,15 @@
     state.config.userPhone = leadData.phone;
     state.config.userCompany = leadData.company;
 
+    // Session deduplication
+    try {
+      var sessionKey = 'gc_lead_' + state.config.widgetSiteId;
+      sessionStorage.setItem(sessionKey, '1');
+    } catch (e) {}
+
+    // Submit to Supabase
+    self._submitLead(leadData);
+
     this._trackEvent('lead_captured', { fields: fields });
     this._hideLeadCapture();
 
@@ -1439,6 +1508,35 @@
       var ta = state._shadow.getElementById('gc-input');
       if (ta) ta.focus();
     }, 100);
+  };
+
+  GrindctrlSupport.prototype._submitLead = function (leadData) {
+    var cfg = state.config;
+    if (!cfg.widgetSiteId || !cfg.workspaceId) return;
+
+    var payload = {
+      widget_site_id: cfg.widgetSiteId,
+      workspace_id: cfg.workspaceId,
+      name: leadData.name || null,
+      email: leadData.email || null,
+      phone: leadData.phone || null,
+      company: leadData.company || null,
+      source_domain: window.location.hostname,
+    };
+
+    fetch(cfg.apiBase + '/rest/v1/widget_leads', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.apiKey || '',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(payload),
+    }).then(function (res) {
+      if (!res.ok) console.error('[GrindctrlSupport] Lead submit failed:', res.status);
+    }).catch(function (err) {
+      console.error('[GrindctrlSupport] Lead submit error:', err);
+    });
   };
 
   GrindctrlSupport.prototype._validateLeadField = function (field, value) {

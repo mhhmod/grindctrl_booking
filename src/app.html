@@ -34,6 +34,8 @@
     <button class="gc-app-topbar-link" data-nav="setup">Widget Setup</button>
     <button class="gc-app-topbar-link" data-nav="branding">Branding</button>
     <button class="gc-app-topbar-link" data-nav="intents">Intents</button>
+    <button class="gc-app-topbar-link" data-nav="domains">Domains</button>
+    <button class="gc-app-topbar-link" data-nav="leads">Leads</button>
     <button class="gc-app-topbar-link" data-nav="usage">Usage</button>
   </div>
 
@@ -67,6 +69,9 @@
       </button>
       <button class="gc-app-sidebar-item" data-screen="domains">
         <span class="material-symbols-outlined">language</span> Domains
+      </button>
+      <button class="gc-app-sidebar-item" data-screen="leads">
+        <span class="material-symbols-outlined">group</span> Leads
       </button>
     </div>
     <div class="gc-app-sidebar-section">
@@ -103,6 +108,53 @@
           <div class="gc-app-inline-error-desc" data-i18n="app_inline_error_desc">Your dashboard shell is still available. Try refreshing or check your data access settings.</div>
         </div>
       </div>
+
+      <!-- ═══ Site Selector ═══ -->
+      <div class="gc-app-site-selector" id="site-selector-container" style="display:none">
+        <div class="gc-app-card" style="margin-bottom:var(--gc-space-4);padding:var(--gc-space-3) var(--gc-space-4)">
+          <div class="gc-app-form-row" style="gap:var(--gc-space-3);margin:0;align-items:center">
+            <div class="gc-app-form-group" style="margin:0;flex:1">
+              <label class="gc-app-form-label" data-i18n="ws_select_site">Select Site</label>
+              <select class="gc-app-site-select" id="site-selector">
+                <option value="" data-i18n="ws_select_site">Select Site</option>
+              </select>
+            </div>
+            <button class="gc-btn gc-btn--primary gc-btn--sm" id="btn-create-site" data-i18n="ws_create_site">Create Widget Site</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Create Site Dialog ═══ -->
+      <div class="gc-app-dialog-overlay" id="create-site-dialog">
+        <div class="gc-app-dialog">
+          <div class="gc-app-dialog-title" data-i18n="ws_create_site">Create Widget Site</div>
+          <div class="gc-app-dialog-body">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="ws_site_name">Site Name</label>
+              <input class="gc-app-form-input" type="text" id="create-site-name" data-i18n-placeholder="ws_site_name_placeholder" placeholder="My Support Widget" />
+            </div>
+          </div>
+          <div class="gc-app-dialog-actions">
+            <button class="gc-btn gc-btn--secondary" id="create-site-cancel" data-i18n="dash_cancel">Cancel</button>
+            <button class="gc-btn gc-btn--primary" id="create-site-confirm" data-i18n="dash_create">Create</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Confirm Dialog ═══ -->
+      <div class="gc-app-dialog-overlay" id="confirm-dialog">
+        <div class="gc-app-dialog">
+          <div class="gc-app-dialog-title" id="confirm-dialog-title" data-i18n="domains_confirm">Are you sure?</div>
+          <div class="gc-app-dialog-body" id="confirm-dialog-body"></div>
+          <div class="gc-app-dialog-actions">
+            <button class="gc-btn gc-btn--secondary" id="confirm-cancel" data-i18n="dash_cancel">Cancel</button>
+            <button class="gc-btn gc-btn--danger" id="confirm-ok" data-i18n="dash_confirm">Confirm</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Toast Container ═══ -->
+      <div id="toast-container"></div>
 
       <!-- ═══ Dashboard Screen ═══ -->
       <section class="gc-app-screen active" id="screen-dashboard">
@@ -223,8 +275,8 @@
               </div>
               <div class="gc-app-actions">
                 <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">open_in_new</span> Preview Widget</button>
-                <button class="gc-btn gc-btn--secondary gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">code</span> Copy Install Snippet</button>
-                <button class="gc-btn gc-btn--ghost gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">flash_on</span> Customize Intents</button>
+                <button class="gc-btn gc-btn--secondary gc-btn--sm" onclick="window.__copySnippet && window.__copySnippet()"><span class="material-symbols-outlined gc-icon gc-icon--sm">code</span> Copy Install Snippet</button>
+                <button class="gc-btn gc-btn--ghost gc-btn--sm" data-screen-nav="intents"><span class="material-symbols-outlined gc-icon gc-icon--sm">flash_on</span> Customize Intents</button>
               </div>
             </div>
 
@@ -282,52 +334,111 @@
       <!-- ═══ Widget Setup Screen ═══ -->
       <section class="gc-app-screen" id="screen-setup">
         <div class="gc-app-page-header">
-          <h1 class="gc-app-page-title">Widget Setup</h1>
-          <p class="gc-app-page-desc">Configure how your support widget behaves across your site.</p>
+          <h1 class="gc-app-page-title" data-i18n="ws_title">Widget Setup</h1>
+          <p class="gc-app-page-desc" data-i18n="ws_desc">Configure how your support widget behaves across your site.</p>
         </div>
-        <div class="gc-app-card">
-          <div class="gc-app-card-header">
-            <div class="gc-app-card-title">Embed Key</div>
-            <span class="gc-app-badge gc-app-badge--success">Active</span>
-          </div>
-          <div class="gc-app-form-group">
-            <label class="gc-app-form-label">Public Embed Key</label>
-            <div class="gc-app-input-group">
-              <input class="gc-app-form-input" type="text" value="gc_live_…" readonly id="embed-key-display"/>
-              <button class="gc-btn gc-btn--secondary gc-btn--sm" onclick="window.__copyEmbedKey && window.__copyEmbedKey()"><span class="material-symbols-outlined gc-icon gc-icon--sm">content_copy</span> Copy</button>
-            </div>
-            <p class="gc-app-form-hint">This key is safe to expose in client-side code. Keep your admin access private.</p>
+
+        <!-- Empty state -->
+        <div class="gc-app-card" id="setup-empty-state" style="display:none">
+          <div class="gc-app-empty">
+            <span class="material-symbols-outlined">widgets</span>
+            <div class="gc-app-empty-title" data-i18n="ws_no_sites_title">No Widget Sites</div>
+            <div class="gc-app-empty-desc" data-i18n="ws_no_sites_desc">Create your first widget site to get started.</div>
+            <button class="gc-btn gc-btn--primary" id="setup-empty-create" data-i18n="ws_create_site">Create Widget Site</button>
           </div>
         </div>
-        <div class="gc-app-card">
-          <div class="gc-app-card-header"><div class="gc-app-card-title">Launcher Behavior</div></div>
-          <div class="gc-app-form-row">
-            <div class="gc-app-form-group">
-              <label class="gc-app-form-label">Launcher Position</label>
-              <select class="gc-app-form-select gc-app-form-input"><option>Bottom Right</option><option>Bottom Left</option></select>
+
+        <!-- Setup content -->
+        <div id="setup-content">
+          <div class="gc-app-card">
+            <div class="gc-app-card-header">
+              <div class="gc-app-card-title" data-i18n="ws_embed_key_label">Public Embed Key</div>
+              <span class="gc-app-badge gc-app-badge--success" id="setup-status-badge">Active</span>
             </div>
             <div class="gc-app-form-group">
-              <label class="gc-app-form-label">Default Label</label>
-              <input class="gc-app-form-input" type="text" value="Support"/>
+              <label class="gc-app-form-label" data-i18n="ws_embed_key_label">Public Embed Key</label>
+              <div class="gc-app-input-group">
+                <input class="gc-app-form-input" type="text" value="" readonly id="embed-key-display"/>
+                <button class="gc-btn gc-btn--secondary gc-btn--sm" id="btn-copy-embed-key"><span class="material-symbols-outlined gc-icon gc-icon--sm">content_copy</span> <span data-i18n="ws_copy">Copy</span></button>
+              </div>
+              <p class="gc-app-form-hint" data-i18n="ws_embed_key_hint">This key is safe to expose in client-side code. Keep your admin access private.</p>
             </div>
           </div>
-          <div class="gc-app-divider"></div>
-          <div class="gc-app-form-group" style="margin-bottom:0">
-            <label class="gc-app-form-label">Greeting Message</label>
-            <textarea class="gc-app-form-textarea" placeholder="How can we help you today?">How can we help you today?</textarea>
+
+          <div class="gc-app-card">
+            <div class="gc-app-card-header"><div class="gc-app-card-title" data-i18n="ws_snippet_label">Install Snippet</div></div>
+            <div class="gc-app-snippet-box">
+              <div class="gc-app-snippet-header">
+                <span class="gc-app-snippet-lang">HTML</span>
+                <button class="gc-app-snippet-copy" id="btn-copy-snippet"><span class="material-symbols-outlined">content_copy</span> <span data-i18n="ws_copy">Copy</span></button>
+              </div>
+              <div class="gc-app-snippet-body" id="setup-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+  GrindctrlSupport.init({
+    <span class="attr">embedKey</span>: <span class="str" id="setup-snippet-embed-key">gc_live_…</span>,
+    <span class="attr">domain</span>: <span class="str" id="setup-snippet-domain">yourdomain.com</span>
+  });
+<span class="tag">&lt;/script&gt;</span></div>
+            </div>
+            <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)" data-i18n="ws_snippet_hint">Paste this before the closing &lt;/body&gt; tag on every page where you want the widget to appear.</p>
           </div>
-        </div>
-        <div class="gc-app-actions gc-app-actions--end">
-          <button class="gc-btn gc-btn--secondary">Preview</button>
-          <button class="gc-btn gc-btn--primary"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> Save Changes</button>
+
+          <div class="gc-app-card">
+            <div class="gc-app-card-header"><div class="gc-app-card-title">Launcher Behavior</div></div>
+            <div class="gc-app-form-row">
+              <div class="gc-app-form-group">
+                <label class="gc-app-form-label" data-i18n="ws_launcher_position">Launcher Position</label>
+                <select class="gc-app-form-select gc-app-form-input" id="config-launcher-position">
+                  <option value="bottom-right">Bottom Right</option>
+                  <option value="bottom-left">Bottom Left</option>
+                  <option value="top-right">Top Right</option>
+                  <option value="top-left">Top Left</option>
+                </select>
+              </div>
+              <div class="gc-app-form-group">
+                <label class="gc-app-form-label" data-i18n="ws_launcher_label">Launcher Label</label>
+                <input class="gc-app-form-input" type="text" id="config-launcher-label" value="Support" placeholder="Support"/>
+              </div>
+            </div>
+            <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
+              <div class="gc-app-form-group">
+                <label class="gc-app-form-label" data-i18n="ws_support_mode">Support Mode</label>
+                <select class="gc-app-form-select gc-app-form-input" id="config-support-mode">
+                  <option value="mixed">Mixed</option>
+                  <option value="support_only">Support Only</option>
+                  <option value="sales_only">Sales Only</option>
+                  <option value="operations">Operations</option>
+                </select>
+              </div>
+              <div class="gc-app-form-group">
+                <label class="gc-app-form-label" data-i18n="ws_active_state">Widget Active</label>
+                <div style="display:flex;align-items:center;height:48px">
+                  <label class="gc-app-toggle">
+                    <input type="checkbox" class="gc-app-toggle-input" id="config-active-state" checked/>
+                    <span class="gc-app-toggle-label" id="config-active-label" data-i18n="ws_status_active">Active</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="gc-app-divider"></div>
+            <div class="gc-app-form-group" style="margin-bottom:0">
+              <label class="gc-app-form-label" data-i18n="ws_greeting_message">Greeting Message</label>
+              <textarea class="gc-app-form-textarea" id="config-greeting" placeholder="How can we help you today?">How can we help you today?</textarea>
+            </div>
+          </div>
+
+          <div class="gc-app-actions gc-app-actions--end">
+            <button class="gc-btn gc-btn--secondary" data-i18n="ws_preview">Preview</button>
+            <button class="gc-btn gc-btn--primary" id="btn-save-config"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> <span data-i18n="ws_save">Save Changes</span></button>
+          </div>
         </div>
       </section>
 
       <!-- ═══ Branding Screen ═══ -->
       <section class="gc-app-screen" id="screen-branding">
         <div class="gc-app-page-header">
-          <h1 class="gc-app-page-title">Branding</h1>
-          <p class="gc-app-page-desc">Customize the widget appearance and attribution.</p>
+          <h1 class="gc-app-page-title" data-i18n="branding_title">Branding</h1>
+          <p class="gc-app-page-desc" data-i18n="branding_desc">Customize the widget appearance and attribution.</p>
         </div>
         <div class="gc-app-card gc-app-highlight-card">
           <div class="gc-app-highlight-icon">
@@ -343,52 +454,94 @@
           <div class="gc-app-card-header"><div class="gc-app-card-title">Visual Identity</div></div>
           <div class="gc-app-form-row">
             <div class="gc-app-form-group">
-              <label class="gc-app-form-label">Brand Name</label>
+              <label class="gc-app-form-label" data-i18n="branding_name">Brand Name</label>
               <input class="gc-app-form-input" type="text" id="branding-name" value="" placeholder="Your brand name"/>
             </div>
             <div class="gc-app-form-group">
-              <label class="gc-app-form-label">Logo URL</label>
-              <input class="gc-app-form-input" type="text" placeholder="https://your-logo.png"/>
+              <label class="gc-app-form-label" data-i18n="branding_logo_url">Logo URL</label>
+              <input class="gc-app-form-input" type="text" id="branding-logo-url" placeholder="https://your-logo.png"/>
+            </div>
+          </div>
+          <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="branding_primary_color">Primary Color</label>
+              <div style="display:flex;align-items:center;gap:var(--gc-space-2)">
+                <input type="color" class="gc-app-color-input" id="branding-primary-color" value="#4F46E5"/>
+                <input class="gc-app-form-input" type="text" id="branding-primary-hex" value="#4F46E5" style="flex:1"/>
+              </div>
+            </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="branding_accent_color">Accent Color</label>
+              <div style="display:flex;align-items:center;gap:var(--gc-space-2)">
+                <input type="color" class="gc-app-color-input" id="branding-accent-color" value="#6366F1"/>
+                <input class="gc-app-form-input" type="text" id="branding-accent-hex" value="#6366F1" style="flex:1"/>
+              </div>
             </div>
           </div>
         </div>
         <div class="gc-app-actions gc-app-actions--end">
-          <button class="gc-btn gc-btn--primary"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> Save Branding</button>
+          <button class="gc-btn gc-btn--primary" id="btn-save-branding"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> <span data-i18n="branding_save">Save Branding</span></button>
         </div>
       </section>
 
       <!-- ═══ Intents Screen ═══ -->
       <section class="gc-app-screen" id="screen-intents">
         <div class="gc-app-page-header">
-          <h1 class="gc-app-page-title">Quick Intents</h1>
-          <p class="gc-app-page-desc">Define the quick action buttons shown in your support panel.</p>
+          <h1 class="gc-app-page-title" data-i18n="intents_title">Quick Intents</h1>
+          <p class="gc-app-page-desc" data-i18n="intents_desc">Define the quick action buttons shown in your support panel.</p>
         </div>
         <div class="gc-app-card">
           <div class="gc-app-card-header">
-            <div class="gc-app-card-title">Default Intent Set</div>
-            <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">add</span> Add Intent</button>
+            <div class="gc-app-card-title">Intents</div>
+            <button class="gc-btn gc-btn--primary gc-btn--sm" id="btn-add-intent"><span class="material-symbols-outlined gc-icon gc-icon--sm">add</span> <span data-i18n="intents_add">Add Intent</span></button>
           </div>
-          <div class="gc-app-intent-list">
-            <div class="gc-app-intent-item">
-              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">lightbulb</span></div>
-              <div class="gc-app-intent-label">Explain this</div>
-              <span class="gc-app-intent-type">Send Message</span>
+          <div class="gc-app-intent-list" id="intents-list">
+            <div class="gc-app-empty">
+              <span class="material-symbols-outlined">flash_on</span>
+              <div class="gc-app-empty-title" data-i18n="intents_empty_title">No intents configured</div>
+              <div class="gc-app-empty-desc" data-i18n="intents_empty_desc">Add your first intent to help visitors get support faster.</div>
             </div>
-            <div class="gc-app-intent-item">
-              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">help</span></div>
-              <div class="gc-app-intent-label">Help me resolve</div>
-              <span class="gc-app-intent-type">Send Message</span>
+          </div>
+        </div>
+
+        <!-- Add/Edit Intent Form -->
+        <div class="gc-app-card" id="intent-form-card" style="display:none">
+          <div class="gc-app-card-header"><div class="gc-app-card-title" id="intent-form-title">Add Intent</div></div>
+          <div class="gc-app-form-row">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="intents_label">Label</label>
+              <input class="gc-app-form-input" type="text" id="intent-label" placeholder="Talk to Sales"/>
             </div>
-            <div class="gc-app-intent-item">
-              <div class="gc-app-intent-icon"><span class="material-symbols-outlined">upload</span></div>
-              <div class="gc-app-intent-label">Share my case</div>
-              <span class="gc-app-intent-type">Send Message</span>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="intents_icon">Icon</label>
+              <input class="gc-app-form-input" type="text" id="intent-icon" placeholder="headset" value="chat"/>
             </div>
-            <div class="gc-app-intent-item">
-              <div class="gc-app-intent-icon" style="background:var(--gc-success-bg);color:var(--gc-success)"><span class="material-symbols-outlined">support_agent</span></div>
-              <div class="gc-app-intent-label">Talk to a human</div>
-              <span class="gc-app-intent-type" style="background:var(--gc-success-bg);color:var(--gc-success)">Escalate</span>
+          </div>
+          <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="intents_action_type">Action Type</label>
+              <select class="gc-app-form-select gc-app-form-input" id="intent-action-type">
+                <option value="send_message" data-i18n="intents_action_send_message">Send Message</option>
+                <option value="escalate" data-i18n="intents_action_escalate">Escalate</option>
+                <option value="external_link" data-i18n="intents_action_external_link">External Link</option>
+              </select>
             </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Sort Order</label>
+              <input class="gc-app-form-input" type="number" id="intent-sort-order" value="0" min="0"/>
+            </div>
+          </div>
+          <div class="gc-app-form-group" style="margin-top:var(--gc-space-4);margin-bottom:0">
+            <label class="gc-app-form-label" data-i18n="intents_message_text">Message Text</label>
+            <textarea class="gc-app-form-textarea" id="intent-message-text" placeholder="Message to send when clicked"></textarea>
+          </div>
+          <div class="gc-app-form-group" id="intent-external-url-group" style="display:none;margin-top:var(--gc-space-4);margin-bottom:0">
+            <label class="gc-app-form-label" data-i18n="intents_external_url">External URL</label>
+            <input class="gc-app-form-input" type="url" id="intent-external-url" placeholder="https://..."/>
+          </div>
+          <div class="gc-app-actions gc-app-actions--end" style="margin-top:var(--gc-space-5)">
+            <button class="gc-btn gc-btn--secondary" id="btn-cancel-intent" data-i18n="dash_cancel">Cancel</button>
+            <button class="gc-btn gc-btn--primary" id="btn-save-intent"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> <span data-i18n="dash_save">Save</span></button>
           </div>
         </div>
       </section>
@@ -396,19 +549,112 @@
       <!-- ═══ Domains Screen ═══ -->
       <section class="gc-app-screen" id="screen-domains">
         <div class="gc-app-page-header">
-          <h1 class="gc-app-page-title">Domains</h1>
-          <p class="gc-app-page-desc">Manage allowed domains for your embed key.</p>
+          <h1 class="gc-app-page-title" data-i18n="domains_title">Domains</h1>
+          <p class="gc-app-page-desc" data-i18n="domains_desc">Manage allowed domains for your embed key.</p>
         </div>
         <div class="gc-app-card">
           <div class="gc-app-card-header">
-            <div class="gc-app-card-title">Allowed Domains</div>
-            <button class="gc-btn gc-btn--primary gc-btn--sm"><span class="material-symbols-outlined gc-icon gc-icon--sm">add</span> Add Domain</button>
+            <div class="gc-app-card-title" data-i18n="domains_title">Allowed Domains</div>
+            <button class="gc-btn gc-btn--primary gc-btn--sm" id="btn-add-domain"><span class="material-symbols-outlined gc-icon gc-icon--sm">add</span> <span data-i18n="domains_add">Add Domain</span></button>
+          </div>
+          <div class="gc-app-form-row" id="add-domain-form" style="display:none;margin-bottom:var(--gc-space-4)">
+            <div class="gc-app-form-group" style="margin-bottom:0;flex:1">
+              <label class="gc-app-form-label" data-i18n="domains_add">Add Domain</label>
+              <div class="gc-app-input-group">
+                <input class="gc-app-form-input" type="text" id="domain-input" data-i18n-placeholder="domains_input_placeholder" placeholder="example.com"/>
+                <button class="gc-btn gc-btn--primary gc-btn--sm" id="btn-confirm-add-domain" data-i18n="domains_add">Add Domain</button>
+              </div>
+              <p class="gc-app-form-hint" data-i18n="domains_localhost_hint">localhost is always allowed for development.</p>
+            </div>
           </div>
           <div class="gc-app-domain-list" id="domain-list">
             <div class="gc-app-empty">
               <span class="material-symbols-outlined">language</span>
-              <div class="gc-app-empty-title">No domains configured</div>
-              <div class="gc-app-empty-desc">Add a domain to start using your widget on your site.</div>
+              <div class="gc-app-empty-title" data-i18n="domains_empty_title">No domains configured</div>
+              <div class="gc-app-empty-desc" data-i18n="domains_empty_desc">Add a domain to start using your widget on your site.</div>
+            </div>
+          </div>
+        </div>
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title" data-i18n="domains_regenerate_key">Regenerate Embed Key</div>
+          </div>
+          <p class="gc-app-form-hint" data-i18n="domains_regenerate_warn">This will invalidate the current embed key. The widget will stop working on sites using the old key.</p>
+          <div class="gc-app-actions" style="margin-top:var(--gc-space-4)">
+            <button class="gc-btn gc-btn--danger gc-btn--sm" id="btn-regenerate-key"><span class="material-symbols-outlined gc-icon gc-icon--sm">refresh</span> <span data-i18n="domains_regenerate_key">Regenerate Embed Key</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ Leads Screen ═══ -->
+      <section class="gc-app-screen" id="screen-leads">
+        <div class="gc-app-page-header">
+          <h1 class="gc-app-page-title" data-i18n="leads_title">Leads</h1>
+          <p class="gc-app-page-desc" data-i18n="leads_desc">View and manage leads captured through your widget.</p>
+        </div>
+
+        <!-- Lead Capture Settings -->
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title" data-i18n="leads_capture_settings">Lead Capture Settings</div>
+          </div>
+          <div class="gc-app-form-row">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="leads_enable_capture">Enable Lead Capture</label>
+              <div style="display:flex;align-items:center;height:48px">
+                <label class="gc-app-toggle">
+                  <input type="checkbox" class="gc-app-toggle-input" id="lead-capture-enabled"/>
+                  <span class="gc-app-toggle-label" data-i18n="leads_enable_capture">Enable Lead Capture</span>
+                </label>
+              </div>
+            </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label" data-i18n="leads_timing_mode">Timing</label>
+              <select class="gc-app-form-select gc-app-form-input" id="lead-capture-timing">
+                <option value="disabled" data-i18n="leads_timing_disabled">Disabled</option>
+                <option value="before_required" data-i18n="leads_timing_before_required">Before chat (required)</option>
+                <option value="before_skippable" data-i18n="leads_timing_before_skippable">Before chat (skippable)</option>
+                <option value="during" data-i18n="leads_timing_during">During chat</option>
+                <option value="after" data-i18n="leads_timing_after">After chat</option>
+              </select>
+            </div>
+          </div>
+          <div class="gc-app-form-group" style="margin-top:var(--gc-space-4)">
+            <label class="gc-app-form-label" data-i18n="leads_fields">Fields to capture</label>
+            <div class="gc-app-checkbox-group">
+              <label class="gc-app-checkbox">
+                <input type="checkbox" id="lead-field-name" checked/> <span data-i18n="leads_field_name">Name</span>
+              </label>
+              <label class="gc-app-checkbox">
+                <input type="checkbox" id="lead-field-email" checked/> <span data-i18n="leads_field_email">Email</span>
+              </label>
+              <label class="gc-app-checkbox">
+                <input type="checkbox" id="lead-field-phone"/> <span data-i18n="leads_field_phone">Phone</span>
+              </label>
+              <label class="gc-app-checkbox">
+                <input type="checkbox" id="lead-field-company"/> <span data-i18n="leads_field_company">Company</span>
+              </label>
+            </div>
+          </div>
+          <div class="gc-app-form-group" style="margin-top:var(--gc-space-4);margin-bottom:0">
+            <label class="gc-app-form-label" data-i18n="leads_prompt_text">Prompt Text</label>
+            <textarea class="gc-app-form-textarea" id="lead-capture-prompt" data-i18n-placeholder="leads_prompt_placeholder" placeholder="Please share your details so we can assist you better."></textarea>
+          </div>
+          <div class="gc-app-actions gc-app-actions--end" style="margin-top:var(--gc-space-5)">
+            <button class="gc-btn gc-btn--primary" id="btn-save-lead-capture"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> <span data-i18n="dash_save">Save</span></button>
+          </div>
+        </div>
+
+        <!-- Leads List -->
+        <div class="gc-app-card">
+          <div class="gc-app-card-header">
+            <div class="gc-app-card-title" data-i18n="leads_title">Captured Leads</div>
+          </div>
+          <div id="leads-list-container">
+            <div class="gc-app-empty">
+              <span class="material-symbols-outlined">group</span>
+              <div class="gc-app-empty-title" data-i18n="leads_empty_title">No leads yet</div>
+              <div class="gc-app-empty-desc" data-i18n="leads_empty_desc">Leads will appear here once visitors submit their information.</div>
             </div>
           </div>
         </div>
