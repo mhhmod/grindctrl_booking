@@ -1,0 +1,161 @@
+/* ================================================================
+   GRINDCTRL Control System
+   Shared normalization layer for dense premium control surfaces.
+   Loaded after components.css and before page-level CSS.
+   ================================================================ */
+
+:where(.gc-control-cluster, .gc-segmented) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gc-control-gap);
+  min-inline-size: 0;
+  padding: var(--gc-tray-padding);
+  border: 1px solid var(--gc-control-border);
+  border-radius: var(--gc-tray-radius);
+  background: var(--gc-tray-bg);
+  box-shadow: var(--gc-control-shadow-rest);
+}
+
+.gc-control-cluster {
+  flex-wrap: wrap;
+}
+
+.gc-segmented {
+  position: relative;
+  isolation: isolate;
+}
+
+.gc-segmented__indicator {
+  position: absolute;
+  inset-block: var(--gc-tray-padding);
+  inset-inline-start: var(--gc-tray-padding);
+  inline-size: 0;
+  border-radius: var(--gc-control-radius-md);
+  background: color-mix(in srgb, var(--gc-primary) 12%, var(--gc-control-bg));
+  border: 1px solid color-mix(in srgb, var(--gc-primary) 12%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.gc-segmented__item {
+  position: relative;
+  z-index: 1;
+}
+
+:where(.gc-btn, .ui-btn, .btn, .ed-btn, .ed-drop-btn, .gc-system-card-primary, .gc-system-card-secondary, .gc-auth-inline-btn, .bp-studio-action, .bp-studio-export-btn, .gc-lead-submit, .gc-input-btn, .gc-image-action-btn, .gc-header-btn, .gc-auth-cta, .gc-auth-link, .gc-app-snippet-copy, .theme-btn, .gc-site-nav__hamburger, .ed-support-trigger, .ed-btn-support, .gc-utility-chip, .gc-prompt-chip, .gc-chip, .bp-studio-chip, .gc-segmented-btn, .gc-app-topbar-link, .nav-link, .tab, .drawer-link, .drawer-link-highlight, .gc-app-sidebar-item) {
+  transition: background var(--gc-duration-fast) var(--gc-ease-in-out), color var(--gc-duration-fast) var(--gc-ease-in-out), border-color var(--gc-duration-fast) var(--gc-ease-in-out), box-shadow var(--gc-duration-fast) var(--gc-ease-in-out), transform var(--gc-duration-fast) var(--gc-ease-out), opacity var(--gc-duration-fast) var(--gc-ease-in-out);
+}
+
+:where(.gc-btn--secondary, .ui-btn-secondary, .btn-secondary, .ed-btn-edit, .gc-system-card-secondary, .bp-studio-export-btn, .gc-app-snippet-copy, .gc-auth-link, .gc-btn--ghost, .ui-btn-ghost, .btn-ghost, .ed-support-trigger, .ed-btn-support, .gc-header-btn, .theme-btn, .gc-site-nav__hamburger, .gc-chat-close, .gc-recording-cancel, .gc-image-action-btn) {
+  background: var(--gc-control-bg);
+  border-color: var(--gc-control-border);
+  color: var(--gc-on-surface);
+  box-shadow: var(--gc-control-shadow-rest);
+}
+
+:where(.gc-btn--secondary, .ui-btn-secondary, .btn-secondary, .ed-btn-edit, .gc-system-card-secondary, .bp-studio-export-btn, .gc-btn--ghost, .gc-auth-link, .ed-support-trigger, .ed-btn-support, .gc-header-btn, .theme-btn, .gc-site-nav__hamburger, .gc-chat-close, .gc-recording-cancel, .gc-image-action-btn, .gc-app-snippet-copy):hover {
+  background: var(--gc-control-bg-hover);
+  border-color: var(--gc-control-border-hover);
+  transform: translateY(var(--gc-hover-lift-control));
+  box-shadow: var(--gc-control-shadow-hover);
+}
+
+:where(.gc-btn--primary, .ui-btn-primary, .btn-primary, .gc-auth-cta, .ed-btn-approve, .gc-system-card-primary, .bp-studio-action-primary, .gc-lead-submit, .gc-input-btn-send):hover {
+  transform: translateY(var(--gc-hover-lift-control));
+}
+
+:where(.gc-btn, .ui-btn, .btn, .ed-btn, .ed-drop-btn, .gc-system-card-primary, .gc-system-card-secondary, .gc-auth-inline-btn, .bp-studio-action, .bp-studio-export-btn, .gc-lead-submit, .gc-input-btn, .gc-image-action-btn, .gc-header-btn, .gc-auth-cta, .gc-auth-link, .gc-app-snippet-copy, .theme-btn, .gc-site-nav__hamburger, .ed-support-trigger, .ed-btn-support, .gc-utility-chip, .gc-prompt-chip, .gc-chip, .bp-studio-chip, .gc-segmented-btn, .gc-app-topbar-link, .nav-link, .tab, .drawer-link, .drawer-link-highlight, .gc-app-sidebar-item):active {
+  transform: scale(var(--gc-press-scale));
+}
+
+:where(.gc-input, .gc-textarea, .gc-app-form-input, .gc-app-form-select, .gc-app-form-textarea, .gc-app-site-select, .form-input, .form-select, .form-textarea, .gc-auth-input, .gc-lead-input, .bp-studio-textarea) {
+  background: var(--gc-field-bg-inset);
+  border: 1px solid var(--gc-control-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+:where(.gc-input, .gc-app-form-input, .gc-app-form-select, .gc-app-site-select, .form-input, .form-select, .gc-auth-input, .gc-lead-input) {
+  min-height: var(--gc-control-height-md);
+  padding-inline: var(--gc-control-pad-x-md);
+  border-radius: var(--gc-control-radius-md);
+  font-size: 0.875rem;
+}
+
+:where(.gc-textarea, .gc-app-form-textarea, .form-textarea, .bp-studio-textarea) {
+  border-radius: var(--gc-control-radius-lg);
+  padding: 1rem;
+}
+
+:where(.gc-input, .gc-textarea, .gc-app-form-input, .gc-app-form-select, .gc-app-form-textarea, .gc-app-site-select, .form-input, .form-select, .form-textarea, .gc-auth-input, .gc-lead-input, .bp-studio-textarea):focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--gc-primary) 28%, var(--gc-control-border-hover));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), var(--gc-focus-ring);
+}
+
+:where(.gc-card, .ui-card, .gc-app-card, .gc-app-stat, .gc-app-integration-card, .gc-app-site-card, .ed-panel, .gc-chat-panel, .gc-system-card, .bp-studio-panel, .card, .stat-card) {
+  border-radius: var(--gc-panel-radius);
+  border-color: var(--gc-control-border);
+  box-shadow: var(--gc-panel-shadow-rest);
+}
+
+:where(.gc-card:hover, .ui-card:hover, .gc-app-site-card:hover, .bp-studio-panel:hover) {
+  transform: translateY(var(--gc-hover-lift-panel));
+  box-shadow: var(--gc-panel-shadow-hover);
+}
+
+:where(.gc-app-badge, .gc-badge, .badge, .ed-trust-badge, .drawer-link-badge) {
+  border-radius: var(--gc-radius-full);
+}
+
+:where(.gc-chip, .gc-utility-chip, .gc-prompt-chip, .bp-studio-chip, .gc-intent) {
+  min-height: var(--gc-control-height-xs);
+  border-radius: var(--gc-control-radius-md);
+}
+
+:where(.gc-app-topbar-link, .nav-link, .tab, .gc-segmented-btn) {
+  min-height: 36px;
+  padding-inline: 14px;
+  border-radius: var(--gc-control-radius-md);
+  border: 0;
+  background: transparent;
+  color: var(--gc-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+}
+
+:where(.gc-app-topbar-link.active, .nav-link.active, .tab.active, .gc-segmented-btn.active) {
+  color: var(--gc-on-surface);
+}
+
+:where(.drawer-link, .drawer-link-highlight, .gc-app-sidebar-item) {
+  min-height: 44px;
+  padding-inline: 14px;
+  border-radius: var(--gc-control-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+:where(.drawer-link:hover, .drawer-link-highlight:hover, .gc-app-sidebar-item:hover) {
+  background: var(--gc-control-bg-hover);
+  border-color: var(--gc-control-border);
+  transform: translateY(var(--gc-hover-lift-control));
+}
+
+:where(.drawer-link-active, .gc-app-sidebar-item.active) {
+  background: color-mix(in srgb, var(--gc-primary) 10%, var(--gc-control-bg));
+  border-color: color-mix(in srgb, var(--gc-primary) 18%, var(--gc-control-border));
+  color: var(--gc-on-surface);
+}
+
+@media (max-width: 767px) {
+  :where(.gc-control-cluster, .gc-segmented) {
+    max-inline-size: 100%;
+  }
+
+  :where(.gc-chip, .gc-utility-chip, .gc-prompt-chip, .bp-studio-chip, .gc-intent) {
+    min-height: 40px;
+  }
+}

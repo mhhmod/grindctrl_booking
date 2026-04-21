@@ -27,8 +27,9 @@
 
     drawerLinks.forEach(function (link) {
       var isActive = link.dataset.nav === page || (link.dataset.nav === 'packages' && page === 'home');
-      link.classList.toggle('text-on-surface', isActive);
-      link.classList.toggle('bg-surface-container-high', isActive);
+      link.classList.toggle('drawer-link-active', isActive);
+      link.classList.toggle('text-on-surface', false);
+      link.classList.toggle('bg-surface-container-high', false);
       link.classList.toggle('text-secondary', !isActive);
     });
   }

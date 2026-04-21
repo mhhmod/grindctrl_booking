@@ -10,7 +10,7 @@ export const GRINDCTRL_APPEARANCE = {
   },
   variables: {
     fontFamily: 'Inter, system-ui, sans-serif',
-    borderRadius: '12px',
+    borderRadius: '16px',
     colorPrimary: '#f3efe8',
     colorPrimaryForeground: '#131110',
     colorBackground: 'transparent',
@@ -28,7 +28,7 @@ export const GRINDCTRL_APPEARANCE = {
     colorSuccess: '#66bb6a',
     colorWarning: '#ffb454',
     colorBackgroundAlpha: '#292521',
-    spacingUnit: '0.9rem',
+    spacingUnit: '1rem',
     fontSize: '15px',
   },
   elements: {
@@ -58,13 +58,13 @@ export const GRINDCTRL_APPEARANCE = {
     },
     socialButtonsBlockButton: {
       minHeight: '46px',
-      borderRadius: '12px',
+      borderRadius: '16px',
       border: '1px solid #453f39',
       backgroundColor: '#161412',
       color: '#f3efe8',
       fontWeight: '600',
       fontSize: '0.875rem',
-      boxShadow: 'none',
+      boxShadow: '0 8px 24px -14px rgba(0,0,0,0.34)',
       transition: 'all 180ms ease',
       '&:hover': {
         backgroundColor: '#1d1a18',
@@ -88,13 +88,13 @@ export const GRINDCTRL_APPEARANCE = {
       fontWeight: '600',
     },
     formFieldInput: {
-      minHeight: '48px',
-      borderRadius: '12px',
+      minHeight: '46px',
+      borderRadius: '16px',
       border: '1px solid #4a433d',
       backgroundColor: '#161412',
       color: '#f3efe8',
       fontSize: '0.9375rem',
-      boxShadow: 'none',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
       '&:focus': {
         border: '1px solid #f3efe8',
         boxShadow: '0 0 0 3px rgba(243, 239, 232, 0.1)',
@@ -117,14 +117,14 @@ export const GRINDCTRL_APPEARANCE = {
       fontWeight: '600',
     },
     formButtonPrimary: {
-      minHeight: '48px',
-      borderRadius: '12px',
+      minHeight: '46px',
+      borderRadius: '16px',
       border: '1px solid transparent',
       backgroundColor: '#f3efe8',
       color: '#131110',
       fontSize: '0.9375rem',
       fontWeight: '700',
-      boxShadow: '0 10px 24px -14px rgba(0, 0, 0, 0.45)',
+      boxShadow: '0 8px 24px -14px rgba(0, 0, 0, 0.34)',
       transition: 'all 180ms ease',
       '&:hover': {
         backgroundColor: '#e6dfd6',
@@ -162,7 +162,7 @@ export const GRINDCTRL_APPEARANCE = {
       },
     },
     otpCodeFieldInput: {
-      borderRadius: '10px',
+      borderRadius: '16px',
       backgroundColor: '#161412',
       border: '1px solid #4b443e',
       color: '#f3efe8',

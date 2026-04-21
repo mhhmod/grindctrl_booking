@@ -69,24 +69,22 @@
 }
 
 .gc-app-topbar-link {
-  padding: 8px 10px;
-  border-radius: var(--gc-radius-md);
+  padding: 0 14px;
+  border-radius: var(--gc-control-radius-md);
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--gc-secondary);
+  font-weight: 700;
+  color: var(--gc-on-surface-variant);
   cursor: pointer;
   border: none;
   background: transparent;
-  transition: all var(--gc-duration-fast) var(--gc-ease-in-out);
+  transition: background var(--gc-duration-fast) var(--gc-ease-in-out), color var(--gc-duration-fast) var(--gc-ease-in-out), transform var(--gc-duration-fast) var(--gc-ease-out);
   font-family: inherit;
 }
 .gc-app-topbar-link:hover {
-  background: var(--gc-surface-container);
-  color: var(--gc-ink);
+  color: var(--gc-on-surface);
 }
 .gc-app-topbar-link.active {
-  background: color-mix(in srgb, var(--gc-primary) 17%, transparent);
-  color: var(--gc-ink);
+  color: var(--gc-on-surface);
 }
 
 .gc-app-topbar-user {
@@ -156,25 +154,23 @@
   align-items: center;
   gap: var(--gc-space-3);
   padding: var(--gc-space-2) var(--gc-space-3);
-  border-radius: var(--gc-radius-md);
+  border-radius: var(--gc-control-radius-md);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--gc-secondary);
+  color: var(--gc-on-surface-variant);
   cursor: pointer;
   border: none;
   background: transparent;
   width: 100%;
   text-align: start;
   font-family: inherit;
-  transition: all var(--gc-duration-fast) var(--gc-ease-in-out);
+  transition: background var(--gc-duration-fast) var(--gc-ease-in-out), color var(--gc-duration-fast) var(--gc-ease-in-out), border-color var(--gc-duration-fast) var(--gc-ease-in-out), transform var(--gc-duration-fast) var(--gc-ease-out);
 }
 .gc-app-sidebar-item:hover {
-  background: var(--gc-surface-container);
-  color: var(--gc-ink);
+  color: var(--gc-on-surface);
 }
 .gc-app-sidebar-item.active {
-  background: color-mix(in srgb, var(--gc-primary) 17%, transparent);
-  color: var(--gc-ink);
+  color: var(--gc-on-surface);
 }
 .gc-app-sidebar-item .material-symbols-outlined {
   font-size: var(--gc-icon-lg);
@@ -683,11 +679,11 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--gc-surface-container-high) 54%, transparent), transparent),
     var(--gc-surface-container-low);
-  border: 1px solid var(--gc-outline-variant);
-  border-radius: var(--gc-radius-xl);
+  border: 1px solid var(--gc-control-border);
+  border-radius: var(--gc-panel-radius);
   padding: clamp(var(--gc-space-5), 2vw, var(--gc-space-7));
   margin-bottom: var(--gc-space-6);
-  box-shadow: var(--gc-card-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: var(--gc-panel-shadow-rest), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .gc-app-card-header {
@@ -715,7 +711,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--gc-secondary);
-  margin-bottom: var(--gc-space-1);
+  margin-bottom: var(--gc-label-gap);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -724,22 +720,22 @@
 .gc-app-form-select,
 .gc-app-form-textarea {
   width: 100%;
-  padding: var(--gc-space-2) var(--gc-space-3);
-  background: var(--gc-surface-container);
-  border: 1px solid var(--gc-outline-variant);
-  border-radius: var(--gc-radius-sm);
+  padding: 0 var(--gc-control-pad-x-md);
+  background: var(--gc-field-bg-inset);
+  border: 1px solid var(--gc-control-border);
+  border-radius: var(--gc-control-radius-md);
   color: var(--gc-on-surface);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-family: inherit;
   outline: none;
   transition: border-color var(--gc-duration-fast) var(--gc-ease-in-out);
-  min-height: 48px;
+  min-height: var(--gc-control-height-md);
 }
 .gc-app-form-input:focus,
 .gc-app-form-select:focus,
 .gc-app-form-textarea:focus {
-  border-color: var(--gc-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gc-primary) 10%, transparent);
+  border-color: color-mix(in srgb, var(--gc-primary) 28%, var(--gc-control-border-hover));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), var(--gc-focus-ring);
 }
 .gc-app-form-input::placeholder,
 .gc-app-form-textarea::placeholder {
@@ -747,7 +743,8 @@
 }
 .gc-app-form-textarea {
   resize: vertical;
-  min-height: 80px;
+  min-height: 96px;
+  padding: 1rem;
 }
 .gc-app-form-hint {
   font-size: 0.6875rem;
@@ -766,7 +763,7 @@
   gap: 0;
 }
 .gc-app-input-group .gc-app-form-input {
-  border-radius: var(--gc-radius-sm) 0 0 var(--gc-radius-sm);
+  border-radius: var(--gc-control-radius-md) 0 0 var(--gc-control-radius-md);
   flex: 1;
 }
 
@@ -1256,16 +1253,16 @@
 }
 .gc-app-site-select {
   width: 100%;
-  padding: var(--gc-space-2) var(--gc-space-3);
-  background: var(--gc-surface-container);
-  border: 1px solid var(--gc-outline-variant);
-  border-radius: var(--gc-radius-sm);
+  padding: 0 var(--gc-control-pad-x-md);
+  background: var(--gc-field-bg-inset);
+  border: 1px solid var(--gc-control-border);
+  border-radius: var(--gc-control-radius-md);
   color: var(--gc-on-surface);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-family: inherit;
   outline: none;
   cursor: pointer;
-  min-height: 48px;
+  min-height: var(--gc-control-height-md);
 }
 .gc-app-site-select:focus {
   border-color: var(--gc-primary);

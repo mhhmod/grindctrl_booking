@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="base.css"/>
   <link rel="stylesheet" href="layout.css"/>
   <link rel="stylesheet" href="components.css"/>
+  <link rel="stylesheet" href="control-system.css"/>
   <!-- Dashboard overrides (must be last) -->
   <link rel="stylesheet" href="app.css"/>
 </head>
@@ -29,14 +30,15 @@
     <span class="gc-app-topbar-brand-text">GRINDCTRL</span>
   </a>
 
-  <div class="gc-app-topbar-links">
-    <button class="gc-app-topbar-link active" data-nav="dashboard">Dashboard</button>
-    <button class="gc-app-topbar-link" data-nav="setup">Widget Setup</button>
-    <button class="gc-app-topbar-link" data-nav="branding">Branding</button>
-    <button class="gc-app-topbar-link" data-nav="intents">Intents</button>
-    <button class="gc-app-topbar-link" data-nav="domains">Domains</button>
-    <button class="gc-app-topbar-link" data-nav="leads">Leads</button>
-    <button class="gc-app-topbar-link" data-nav="usage">Usage</button>
+  <div class="gc-app-topbar-links gc-segmented" data-motion-tab>
+    <span class="gc-segmented__indicator" data-motion-indicator aria-hidden="true"></span>
+    <button class="gc-segmented__item gc-app-topbar-link active" data-nav="dashboard" data-motion-tab-active>Dashboard</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="setup" data-motion-tab-active>Widget Setup</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="branding" data-motion-tab-active>Branding</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="intents" data-motion-tab-active>Intents</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="domains" data-motion-tab-active>Domains</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="leads" data-motion-tab-active>Leads</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="usage" data-motion-tab-active>Usage</button>
   </div>
 
   <div class="gc-app-topbar-user">
@@ -768,5 +770,6 @@
 
 <script src="/scripts/i18n.js"></script>
 <script type="module" src="/scripts/app.js"></script>
+<script type="module" src="/scripts/motion-system.js"></script>
 </body>
 </html>

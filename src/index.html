@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="base.css"/>
 <link rel="stylesheet" href="layout.css"/>
 <link rel="stylesheet" href="components.css"/>
+<link rel="stylesheet" href="control-system.css"/>
 <!-- Module-specific CSS -->
 <link rel="stylesheet" href="chat-widget.css"/>
 <link rel="stylesheet" href="blueprint-studio.css"/>
@@ -135,13 +136,15 @@ tailwind.config = {
       <img src="logo-light.svg" alt="GRINDCTRL Symbol" class="logo-light h-6 w-auto"/>
       <span class="gc-site-nav__logo-text">GRINDCTRL</span>
     </a>
-    <div class="gc-site-nav__links" id="nav-marketing-links">
-      <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#home" data-nav="home" data-i18n="nav_home">Live Demo</a>
-      <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions" data-i18n="nav_solutions">How It Works</a>
-      <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#install" data-nav="install" data-i18n="nav_install">Install Widget</a>
-      <a class="nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book" data-i18n="nav_book_cta">Book a Call</a>
+    <div class="gc-site-nav__links gc-segmented" id="nav-marketing-links" data-motion-tab>
+      <span class="gc-segmented__indicator" data-motion-indicator aria-hidden="true"></span>
+      <a class="gc-segmented__item nav-link text-secondary hover:text-ink text-[12px]" href="#home" data-nav="home" data-motion-tab-active data-i18n="nav_home">Live Demo</a>
+      <a class="gc-segmented__item nav-link text-secondary hover:text-ink text-[12px]" href="#solutions" data-nav="solutions" data-motion-tab-active data-i18n="nav_solutions">How It Works</a>
+      <a class="gc-segmented__item nav-link text-secondary hover:text-ink text-[12px]" href="#install" data-nav="install" data-motion-tab-active data-i18n="nav_install">Install Widget</a>
+      <a class="gc-segmented__item nav-link text-secondary hover:text-ink text-[12px]" href="#book" data-nav="book" data-motion-tab-active data-i18n="nav_book_cta">Book a Call</a>
     </div>
     <div class="gc-site-nav__actions">
+      <div class="gc-control-cluster">
       <button id="lang-toggle" class="theme-btn" aria-label="Switch language">
         <span class="text-[11px] font-bold font-headline leading-none">عر</span>
       </button>
@@ -152,6 +155,7 @@ tailwind.config = {
       <button id="hamburger-btn" class="gc-site-nav__hamburger theme-btn" aria-label="Open menu" aria-expanded="false">
         <span class="gc-svg-icon" aria-hidden="true"><img src="/icons/menu.svg" alt=""/></span>
       </button>
+      </div>
       <div id="gc-auth-nav" class="gc-auth-nav" aria-label="Authentication navigation"></div>
     </div>
   </div>
@@ -744,7 +748,7 @@ tailwind.config = {
         <span class="material-symbols-outlined text-primary text-xl">code</span>
         <span class="font-headline font-bold text-[13px] text-on-surface" data-i18n="install_snippet_label">Your Embed Snippet</span>
       </div>
-      <button onclick="copyInstallSnippet()" class="flex items-center gap-2 text-[11px] font-bold text-primary border border-primary/20 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-all">
+      <button onclick="copyInstallSnippet()" class="gc-btn gc-btn--secondary gc-btn--sm">
         <span class="material-symbols-outlined text-sm">content_copy</span> <span data-i18n="install_snippet_copy">Copy</span>
       </button>
     </div>
@@ -822,13 +826,13 @@ tailwind.config = {
               <div id="mockup-intents" class="px-4 pb-3">
                 <div class="text-[11px] font-medium mb-2" style="color:var(--gc-secondary)" data-i18n="mockup_intent_label">Quick options:</div>
                 <div class="flex flex-wrap gap-2">
-                  <button onclick="mockupIntent('sales')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                  <button onclick="mockupIntent('sales')" class="gc-chip gc-chip--sm">
                     <span class="material-symbols-outlined text-[14px]">headset</span><span data-i18n="mockup_intent_sales">Talk to Sales</span>
                   </button>
-                  <button onclick="mockupIntent('help')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                  <button onclick="mockupIntent('help')" class="gc-chip gc-chip--sm">
                     <span class="material-symbols-outlined text-[14px]">help</span><span data-i18n="mockup_intent_help">Get Help</span>
                   </button>
-                  <button onclick="mockupIntent('meeting')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold border transition-all duration-200 hover:scale-105 active:scale-95" style="color:var(--gc-primary);border-color:var(--gc-outline);background:transparent">
+                  <button onclick="mockupIntent('meeting')" class="gc-chip gc-chip--sm">
                     <span class="material-symbols-outlined text-[14px]">event</span><span data-i18n="mockup_intent_meeting">Book a Meeting</span>
                   </button>
                 </div>
@@ -845,7 +849,7 @@ tailwind.config = {
             </div>
             
             <!-- Launcher -->
-            <button id="mockup-launcher" onclick="mockupToggle()" class="absolute bottom-5 right-5 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full text-[14px] font-bold shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 hover:shadow-2xl" style="background:linear-gradient(135deg,var(--gc-primary),var(--gc-accent));color:var(--gc-on-primary)">
+            <button id="mockup-launcher" onclick="mockupToggle()" class="gc-btn gc-btn--primary absolute bottom-5 right-5">
               <span id="mockup-launcher-icon" class="material-symbols-outlined text-[22px]">chat</span>
               <span id="mockup-launcher-text" data-i18n="nav_install">Support</span>
             </button>
@@ -1161,27 +1165,24 @@ tailwind.config = {
     // Update URL hash without triggering navigation (safe for file://)
     try { history.replaceState(null, '', hash); } catch(err) { /* file:// may block this — that's fine */ }
     navigateTo(page, isPackages);
+    notifyMotionPageReady();
   });
 
   // Also handle back/forward if served via http
   window.addEventListener('popstate', function() {
     navigateTo(getPageFromHash(location.hash), location.hash === '#packages');
+    notifyMotionPageReady();
   });
 
   // Drawer (Shoelace wa-drawer)
   var drawer = document.getElementById('nav-drawer');
   function closeDrawer() { if (drawer && drawer.open) drawer.hide(); }
 
-  // Scroll reveal
-  function observeRevealElements() {
-    var reveals = document.querySelectorAll('.reveal:not(.visible)');
-    if (reveals.length === 0) return;
-    var obs = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) { entry.target.classList.add('visible'); obs.unobserve(entry.target); }
-      });
-    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-    reveals.forEach(function(el) { obs.observe(el); });
+  // Scroll reveal is handled by GSAP ScrollTrigger in motion-system.js
+  function notifyMotionPageReady() {
+    if (window.__motion && typeof window.__motion.pageReady === 'function') {
+      window.__motion.pageReady();
+    }
   }
 
   // Support layer page context — set initial value
@@ -1401,12 +1402,13 @@ tailwind.config = {
   // Init — read initial hash without triggering hashchange
   var initPage = getPageFromHash(location.hash);
   navigateTo(initPage, location.hash === '#packages');
-  observeRevealElements();
+  notifyMotionPageReady();
 })();
 </script>
 <script type="module" src="scripts/web-awesome.js"></script>
 <script type="module" src="scripts/site-header.js"></script>
 <script type="module" src="scripts/clerk-header.js"></script>
+<script type="module" src="scripts/motion-system.js"></script>
 <script src="scripts/i18n.js"></script>
 <script src="scripts/chat-widget.js"></script>
 <script src="scripts/voice-to-value.js"></script>

@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GRINDCTRL — Exception Support Widget</title>
   <link rel="stylesheet" href="fonts.css"/>
+  <link rel="stylesheet" href="tokens.css"/>
+  <link rel="stylesheet" href="base.css"/>
+  <link rel="stylesheet" href="layout.css"/>
+  <link rel="stylesheet" href="components.css"/>
+  <link rel="stylesheet" href="control-system.css"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -28,7 +33,7 @@
       --shadow: 0 24px 64px -12px rgba(0,0,0,0.6);
     }
 
-    html { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+    html { font-family: var(--gc-font-body); background: var(--gc-canvas); color: var(--gc-ink); font-size: 15px; line-height: 1.5; }
 
     body { min-height: 100vh; overflow-x: hidden; }
 
@@ -290,7 +295,7 @@
     }
   </style>
 </head>
-<body>
+<body class="ui-shell">
 
 <!-- NAV -->
 <nav class="nav">
