@@ -250,39 +250,23 @@
 
   async function loadConfig() {
     var cfg = state.config;
-    // Query widget_sites directly with related data
     var res = await fetch(
-      cfg.apiBase + '/rest/v1/widget_sites?embed_key=eq.' + encodeURIComponent(cfg.embedKey) +
-      '&select=*,widget_domains(domain,verification_status),widget_intents(label,icon,action_type,message_text,external_url,sort_order)',
+      cfg.apiBase + '/rest/v1/rpc/get_widget_full_config_by_embed_key?p_embed_key=eq.' + encodeURIComponent(cfg.embedKey),
       { headers: { 'Content-Type': 'application/json', 'apikey': cfg.apiKey || '' } }
     );
 
     if (!res.ok) {
-      throw new Error('Invalid embed key or domain not verified.');
+      throw new Error('Invalid embed key or site not active.');
     }
 
-    var rows = await res.json();
-    if (!Array.isArray(rows) || rows.length === 0) {
+    var result = await res.json();
+    if (!result || !result.site) {
       throw new Error('Embed key not found.');
     }
 
-    var data = rows[0];
-
-    // Domain validation
-    var hostname = window.location.hostname;
-    var isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-    if (!isLocalhost && data.widget_domains) {
-      var verifiedDomains = data.widget_domains.filter(function (d) {
-        return d.verification_status === 'verified';
-      });
-      var isAllowed = verifiedDomains.some(function (d) {
-        return d.domain === hostname || hostname.endsWith('.' + d.domain);
-      });
-      if (!isAllowed) {
-        console.warn('[GrindctrlSupport] Domain not verified: ' + hostname);
-        throw new Error('Domain not verified for this embed key.');
-      }
-    }
+    var data = result.site;
+    var domains = result.domains || [];
+    var intents = result.intents || [];
 
     var configJson = data.config_json || {};
     var brandingJson = data.branding_json || {};
@@ -312,7 +296,7 @@
       whiteLabelAllowed: configJson.white_label_allowed || false,
       trialDaysRemaining: configJson.trial_days_remaining || 0,
       trialExpired: configJson.trial_expired || false,
-      intents: data.widget_intents || [],
+      intents: intents,
       pageLabels: configJson.page_labels || {},
       // Lead capture from new JSONB
       leadCaptureMode: leadCaptureJson.timing_mode || 'disabled',

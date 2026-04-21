@@ -2,6 +2,7 @@ import { initClerk, requireAuth, mountUserButton } from './clerk.js';
 import {
   syncClerkUserToSupabase,
   getCurrentWorkspace,
+  getUserRole,
   isSupabaseConfigured,
   createWidgetSite,
   updateWidgetSite,
@@ -312,7 +313,7 @@ async function populateDomainsScreen() {
     return;
   }
 
-  const domains = await getWorkspaceDomains(site.id);
+  const domains = await getWorkspaceDomains(clerk.user.id, site.id);
   appState.domains = domains;
 
   if (domains.length === 0) {
@@ -373,7 +374,7 @@ async function populateIntentsScreen() {
     return;
   }
 
-  const intents = await getWidgetIntents(site.id);
+  const intents = await getWidgetIntents(clerk.user.id, site.id);
   appState.intents = intents;
 
   if (intents.length === 0) {
@@ -425,7 +426,7 @@ async function populateLeadsScreen() {
   const container = document.getElementById('leads-list-container');
   if (!container || !workspace) return;
 
-  const leads = await getWidgetLeads(workspace.id, site ? site.id : null);
+  const leads = await getWidgetLeads(clerk.user.id, workspace.id, site ? site.id : null);
   appState.leads = leads;
 
   if (leads.length === 0) {
@@ -536,7 +537,7 @@ function initEventHandlers() {
         return;
       }
       setLoading(createSiteConfirm, true);
-      const site = await createWidgetSite(workspace.id, profile.id, name);
+      const site = await createWidgetSite(clerk.user.id, workspace.id, name);
       setLoading(createSiteConfirm, false);
       if (site) {
         appState.sites.unshift(site);
@@ -584,7 +585,7 @@ function initEventHandlers() {
         active_state: document.getElementById('config-active-state').checked,
       };
       setLoading(btnSaveConfig, true);
-      const updated = await updateWidgetSite(site.id, { config_json: config });
+      const updated = await updateWidgetSite(clerk.user.id, site.id, { config_json: config });
       setLoading(btnSaveConfig, false);
       if (updated) {
         appState.selectedSite = updated;
@@ -610,7 +611,7 @@ function initEventHandlers() {
         accent_color: document.getElementById('branding-accent-color').value,
       };
       setLoading(btnSaveBranding, true);
-      const updated = await updateWidgetSite(site.id, { branding_json: branding });
+      const updated = await updateWidgetSite(clerk.user.id, site.id, { branding_json: branding });
       setLoading(btnSaveBranding, false);
       if (updated) {
         appState.selectedSite = updated;
@@ -659,7 +660,7 @@ function initEventHandlers() {
         return;
       }
       setLoading(btnConfirmAddDomain, true);
-      const result = await addDomain(site.id, domain);
+      const result = await addDomain(clerk.user.id, site.id, domain);
       setLoading(btnConfirmAddDomain, false);
       if (result) {
         input.value = '';
@@ -682,20 +683,20 @@ function initEventHandlers() {
       if (!domainId) return;
 
       if (btn.classList.contains('btn-verify-domain')) {
-        const result = await updateDomainStatus(domainId, 'verified');
+        const result = await updateDomainStatus(clerk.user.id, domainId, 'verified');
         if (result) {
           await populateDomainsScreen();
           showToast('Domain verified', 'success');
         }
       } else if (btn.classList.contains('btn-reject-domain')) {
-        const result = await updateDomainStatus(domainId, 'failed');
+        const result = await updateDomainStatus(clerk.user.id, domainId, 'failed');
         if (result) {
           await populateDomainsScreen();
           showToast('Domain rejected', 'success');
         }
       } else if (btn.classList.contains('btn-remove-domain')) {
         showConfirmDialog('Remove Domain?', 'This domain will no longer be able to host the widget.', async function () {
-          const ok = await removeDomain(domainId);
+          const ok = await removeDomain(clerk.user.id, domainId);
           if (ok) {
             await populateDomainsScreen();
             showToast('Domain removed', 'success');
@@ -715,7 +716,7 @@ function initEventHandlers() {
       if (!site) return;
       showConfirmDialog('Regenerate Embed Key?', 'This will invalidate the current key. The widget will stop working on sites using the old key.', async function () {
         setLoading(btnRegenerateKey, true);
-        const updated = await regenerateEmbedKey(site.id);
+        const updated = await regenerateEmbedKey(clerk.user.id, site.id);
         setLoading(btnRegenerateKey, false);
         if (updated) {
           appState.selectedSite = updated;
@@ -791,9 +792,9 @@ function initEventHandlers() {
       setLoading(btnSaveIntent, true);
       let result;
       if (editingIntentId) {
-        result = await updateIntent(editingIntentId, intent);
+        result = await updateIntent(clerk.user.id, editingIntentId, intent);
       } else {
-        result = await createIntent(site.id, intent);
+        result = await createIntent(clerk.user.id, site.id, intent);
       }
       setLoading(btnSaveIntent, false);
       if (result) {
@@ -930,17 +931,9 @@ if (!clerk) {
             // Check if user is admin/owner
             let isAdmin = false;
             try {
-              const client = (await import('../lib/supabase.js')).getSupabase();
-              if (client) {
-                const { data: members } = await client
-                  .from('workspace_members')
-                  .select('role')
-                  .eq('workspace_id', workspace.id)
-                  .eq('profile_id', syncResult.profile.id)
-                  .single();
-                if (members) {
-                  isAdmin = members.role === 'owner' || members.role === 'admin';
-                }
+              const role = await getUserRole(clerk.user.id, workspace.id);
+              if (role) {
+                isAdmin = role === 'owner' || role === 'admin';
               }
             } catch (e) {
               // Fallback: assume admin if they own the workspace

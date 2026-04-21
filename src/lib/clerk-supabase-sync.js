@@ -98,22 +98,37 @@ export async function getWidgetSites(workspaceId, clerkUserId) {
   });
 }
 
-export async function createWidgetSite(workspaceId, profileId, name, domain) {
+export async function getUserRole(clerkUserId, workspaceId) {
   const client = getSupabase();
-  if (!client || !workspaceId || !profileId) return null;
+  if (!client || !clerkUserId || !workspaceId) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_sites')
-      .insert({
-        workspace_id: workspaceId,
-        created_by_profile_id: profileId,
-        name: name || 'New Widget Site',
-        domain: domain || null,
-        status: 'draft',
-      })
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_get_user_role', {
+      p_clerk_user_id: clerkUserId,
+      p_workspace_id: workspaceId,
+    });
+
+    if (error) {
+      console.error('[clerk-sync] getUserRole failed:', error.message);
+      return null;
+    }
+    return data || null;
+  } catch (err) {
+    console.error('[clerk-sync] getUserRole error:', err.message);
+    return null;
+  }
+}
+
+export async function createWidgetSite(clerkUserId, workspaceId, name) {
+  const client = getSupabase();
+  if (!client || !clerkUserId || !workspaceId) return null;
+
+  try {
+    const { data, error } = await client.rpc('dashboard_create_widget_site', {
+      p_clerk_user_id: clerkUserId,
+      p_workspace_id: workspaceId,
+      p_name: name || 'New Widget Site',
+    });
 
     if (error) {
       console.error('[clerk-sync] createWidgetSite failed:', error.message);
@@ -126,17 +141,20 @@ export async function createWidgetSite(workspaceId, profileId, name, domain) {
   }
 }
 
-export async function updateWidgetSite(siteId, updates) {
+export async function updateWidgetSite(clerkUserId, siteId, updates) {
   const client = getSupabase();
-  if (!client || !siteId) return null;
+  if (!client || !clerkUserId || !siteId) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_sites')
-      .update(updates)
-      .eq('id', siteId)
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_update_widget_site', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: siteId,
+      p_name: updates.name || null,
+      p_status: updates.status || null,
+      p_config_json: updates.config_json || null,
+      p_branding_json: updates.branding_json || null,
+      p_lead_capture_json: updates.lead_capture_json || null,
+    });
 
     if (error) {
       console.error('[clerk-sync] updateWidgetSite failed:', error.message);
@@ -149,15 +167,15 @@ export async function updateWidgetSite(siteId, updates) {
   }
 }
 
-export async function deleteWidgetSite(siteId) {
+export async function deleteWidgetSite(clerkUserId, siteId) {
   const client = getSupabase();
-  if (!client || !siteId) return false;
+  if (!client || !clerkUserId || !siteId) return false;
 
   try {
-    const { error } = await client
-      .from('widget_sites')
-      .delete()
-      .eq('id', siteId);
+    const { error } = await client.rpc('dashboard_delete_widget_site', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: siteId,
+    });
 
     if (error) {
       console.error('[clerk-sync] deleteWidgetSite failed:', error.message);
@@ -170,22 +188,15 @@ export async function deleteWidgetSite(siteId) {
   }
 }
 
-export async function regenerateEmbedKey(siteId) {
+export async function regenerateEmbedKey(clerkUserId, siteId) {
   const client = getSupabase();
-  if (!client || !siteId) return null;
-
-  const newKey = 'gc_' +
-    Math.random().toString(36).substring(2, 10) + '_' +
-    Math.random().toString(36).substring(2, 10) + '_' +
-    Math.random().toString(36).substring(2, 10);
+  if (!client || !clerkUserId || !siteId) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_sites')
-      .update({ embed_key: newKey })
-      .eq('id', siteId)
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_regenerate_embed_key', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: siteId,
+    });
 
     if (error) {
       console.error('[clerk-sync] regenerateEmbedKey failed:', error.message);
@@ -198,16 +209,15 @@ export async function regenerateEmbedKey(siteId) {
   }
 }
 
-export async function getWorkspaceDomains(widgetSiteId) {
+export async function getWorkspaceDomains(clerkUserId, widgetSiteId) {
   const client = getSupabase();
-  if (!client || !widgetSiteId) return [];
+  if (!client || !clerkUserId || !widgetSiteId) return [];
 
   try {
-    const { data, error } = await client
-      .from('widget_domains')
-      .select('*')
-      .eq('widget_site_id', widgetSiteId)
-      .order('created_at', { ascending: false });
+    const { data, error } = await client.rpc('dashboard_list_domains', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: widgetSiteId,
+    });
 
     if (error) {
       console.error('[clerk-sync] getWorkspaceDomains failed:', error.message);
@@ -220,20 +230,16 @@ export async function getWorkspaceDomains(widgetSiteId) {
   }
 }
 
-export async function addDomain(widgetSiteId, domainName) {
+export async function addDomain(clerkUserId, widgetSiteId, domainName) {
   const client = getSupabase();
-  if (!client || !widgetSiteId || !domainName) return null;
+  if (!client || !clerkUserId || !widgetSiteId || !domainName) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_domains')
-      .insert({
-        widget_site_id: widgetSiteId,
-        domain: domainName,
-        verification_status: 'pending',
-      })
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_add_domain', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: widgetSiteId,
+      p_domain: domainName,
+    });
 
     if (error) {
       console.error('[clerk-sync] addDomain failed:', error.message);
@@ -246,17 +252,16 @@ export async function addDomain(widgetSiteId, domainName) {
   }
 }
 
-export async function updateDomainStatus(domainId, status) {
+export async function updateDomainStatus(clerkUserId, domainId, status) {
   const client = getSupabase();
-  if (!client || !domainId) return null;
+  if (!client || !clerkUserId || !domainId) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_domains')
-      .update({ verification_status: status })
-      .eq('id', domainId)
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_update_domain_status', {
+      p_clerk_user_id: clerkUserId,
+      p_domain_id: domainId,
+      p_status: status,
+    });
 
     if (error) {
       console.error('[clerk-sync] updateDomainStatus failed:', error.message);
@@ -269,15 +274,15 @@ export async function updateDomainStatus(domainId, status) {
   }
 }
 
-export async function removeDomain(domainId) {
+export async function removeDomain(clerkUserId, domainId) {
   const client = getSupabase();
-  if (!client || !domainId) return false;
+  if (!client || !clerkUserId || !domainId) return false;
 
   try {
-    const { error } = await client
-      .from('widget_domains')
-      .delete()
-      .eq('id', domainId);
+    const { error } = await client.rpc('dashboard_remove_domain', {
+      p_clerk_user_id: clerkUserId,
+      p_domain_id: domainId,
+    });
 
     if (error) {
       console.error('[clerk-sync] removeDomain failed:', error.message);
@@ -290,16 +295,15 @@ export async function removeDomain(domainId) {
   }
 }
 
-export async function getWidgetIntents(widgetSiteId) {
+export async function getWidgetIntents(clerkUserId, widgetSiteId) {
   const client = getSupabase();
-  if (!client || !widgetSiteId) return [];
+  if (!client || !clerkUserId || !widgetSiteId) return [];
 
   try {
-    const { data, error } = await client
-      .from('widget_intents')
-      .select('*')
-      .eq('widget_site_id', widgetSiteId)
-      .order('sort_order', { ascending: true });
+    const { data, error } = await client.rpc('dashboard_list_intents', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: widgetSiteId,
+    });
 
     if (error) {
       console.error('[clerk-sync] getWidgetIntents failed:', error.message);
@@ -312,24 +316,21 @@ export async function getWidgetIntents(widgetSiteId) {
   }
 }
 
-export async function createIntent(widgetSiteId, intent) {
+export async function createIntent(clerkUserId, widgetSiteId, intent) {
   const client = getSupabase();
-  if (!client || !widgetSiteId || !intent) return null;
+  if (!client || !clerkUserId || !widgetSiteId || !intent) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_intents')
-      .insert({
-        widget_site_id: widgetSiteId,
-        label: intent.label,
-        icon: intent.icon || 'chat',
-        action_type: intent.action_type || 'send_message',
-        message_text: intent.message_text || null,
-        external_url: intent.external_url || null,
-        sort_order: intent.sort_order || 0,
-      })
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_create_intent', {
+      p_clerk_user_id: clerkUserId,
+      p_site_id: widgetSiteId,
+      p_label: intent.label,
+      p_icon: intent.icon || 'chat',
+      p_action_type: intent.action_type || 'send_message',
+      p_message_text: intent.message_text || null,
+      p_external_url: intent.external_url || null,
+      p_sort_order: intent.sort_order || 0,
+    });
 
     if (error) {
       console.error('[clerk-sync] createIntent failed:', error.message);
@@ -342,17 +343,21 @@ export async function createIntent(widgetSiteId, intent) {
   }
 }
 
-export async function updateIntent(intentId, updates) {
+export async function updateIntent(clerkUserId, intentId, updates) {
   const client = getSupabase();
-  if (!client || !intentId) return null;
+  if (!client || !clerkUserId || !intentId) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_intents')
-      .update(updates)
-      .eq('id', intentId)
-      .select()
-      .single();
+    const { data, error } = await client.rpc('dashboard_update_intent', {
+      p_clerk_user_id: clerkUserId,
+      p_intent_id: intentId,
+      p_label: updates.label || null,
+      p_icon: updates.icon || null,
+      p_action_type: updates.action_type || null,
+      p_message_text: updates.message_text || null,
+      p_external_url: updates.external_url || null,
+      p_sort_order: updates.sort_order !== undefined ? updates.sort_order : null,
+    });
 
     if (error) {
       console.error('[clerk-sync] updateIntent failed:', error.message);
@@ -365,15 +370,15 @@ export async function updateIntent(intentId, updates) {
   }
 }
 
-export async function deleteIntent(intentId) {
+export async function deleteIntent(clerkUserId, intentId) {
   const client = getSupabase();
-  if (!client || !intentId) return false;
+  if (!client || !clerkUserId || !intentId) return false;
 
   try {
-    const { error } = await client
-      .from('widget_intents')
-      .delete()
-      .eq('id', intentId);
+    const { error } = await client.rpc('dashboard_delete_intent', {
+      p_clerk_user_id: clerkUserId,
+      p_intent_id: intentId,
+    });
 
     if (error) {
       console.error('[clerk-sync] deleteIntent failed:', error.message);
@@ -386,22 +391,16 @@ export async function deleteIntent(intentId) {
   }
 }
 
-export async function getWidgetLeads(workspaceId, widgetSiteId) {
+export async function getWidgetLeads(clerkUserId, workspaceId, widgetSiteId) {
   const client = getSupabase();
-  if (!client || !workspaceId) return [];
+  if (!client || !clerkUserId || !workspaceId) return [];
 
   try {
-    let query = client
-      .from('widget_leads')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: false });
-
-    if (widgetSiteId) {
-      query = query.eq('widget_site_id', widgetSiteId);
-    }
-
-    const { data, error } = await query;
+    const { data, error } = await client.rpc('dashboard_list_leads', {
+      p_clerk_user_id: clerkUserId,
+      p_workspace_id: workspaceId,
+      p_site_id: widgetSiteId || null,
+    });
 
     if (error) {
       console.error('[clerk-sync] getWidgetLeads failed:', error.message);
@@ -419,19 +418,15 @@ export async function submitLeadFromWidget(lead) {
   if (!client || !lead) return null;
 
   try {
-    const { data, error } = await client
-      .from('widget_leads')
-      .insert({
-        widget_site_id: lead.widget_site_id,
-        workspace_id: lead.workspace_id,
-        name: lead.name || null,
-        email: lead.email || null,
-        phone: lead.phone || null,
-        company: lead.company || null,
-        source_domain: lead.source_domain || null,
-      })
-      .select()
-      .single();
+    const { data, error } = await client.rpc('submit_widget_lead', {
+      p_widget_site_id: lead.widget_site_id,
+      p_workspace_id: lead.workspace_id,
+      p_name: lead.name || null,
+      p_email: lead.email || null,
+      p_phone: lead.phone || null,
+      p_company: lead.company || null,
+      p_source_domain: lead.source_domain || null,
+    });
 
     if (error) {
       console.error('[clerk-sync] submitLeadFromWidget failed:', error.message);
