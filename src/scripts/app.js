@@ -852,7 +852,7 @@ function initEventHandlers() {
         deduplicate_session: true,
       };
       setLoading(btnSaveLeadCapture, true);
-      const updated = await updateWidgetSite(site.id, { lead_capture_json: leadCapture });
+      const updated = await updateWidgetSite(clerk.user.id, site.id, { lead_capture_json: leadCapture });
       setLoading(btnSaveLeadCapture, false);
       if (updated) {
         appState.selectedSite = updated;

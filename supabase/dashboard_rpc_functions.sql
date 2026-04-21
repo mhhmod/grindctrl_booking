@@ -91,7 +91,7 @@ set search_path = public
 as $$
 declare
   v_profile public.profiles;
-  v_site public.widget_sites;
+  v_site jsonb;
 begin
   select * into v_profile
   from public.profiles
@@ -104,7 +104,7 @@ begin
 
   insert into public.widget_sites (workspace_id, name, created_by_profile_id)
   values (p_workspace_id, coalesce(p_name, 'New Widget Site'), v_profile.id)
-  returning row_to_json(public.widget_sites.*)
+  returning to_jsonb(public.widget_sites.*)
   into v_site;
 
   return v_site;
@@ -127,7 +127,7 @@ security definer
 set search_path = public
 as $$
 declare
-  v_site public.widget_sites;
+  v_site jsonb;
 begin
   update public.widget_sites set
     name        = coalesce(p_name,        name),
@@ -137,7 +137,7 @@ begin
     lead_capture_json = coalesce(p_lead_capture_json, lead_capture_json),
     updated_at   = now()
   where id = p_site_id
-  returning row_to_json(public.widget_sites.*)
+  returning to_jsonb(public.widget_sites.*)
   into v_site;
 
   return v_site;
@@ -172,7 +172,7 @@ set search_path = public
 as $$
 declare
   v_new_key text;
-  v_site public.widget_sites;
+  v_site jsonb;
 begin
   v_new_key := 'gc_' || substr(md5(random()::text), 1, 8) || '_' ||
                substr(md5(random()::text), 1, 8) || '_' ||
@@ -182,7 +182,7 @@ begin
     embed_key   = v_new_key,
     updated_at  = now()
   where id = p_site_id
-  returning row_to_json(public.widget_sites.*)
+  returning to_jsonb(public.widget_sites.*)
   into v_site;
 
   return v_site;
