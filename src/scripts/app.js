@@ -5,6 +5,12 @@ const clerk = await initClerk();
 
 const setupMsg = document.getElementById('app-setup-message');
 const appContent = document.getElementById('app-content');
+const inlineError = document.getElementById('app-inline-error');
+
+function setInlineError(visible) {
+  if (!inlineError) return;
+  inlineError.style.display = visible ? 'flex' : 'none';
+}
 
 if (!clerk) {
   setupMsg.style.display = 'block';
@@ -16,7 +22,7 @@ if (!clerk) {
     appContent.style.display = 'block';
 
     const emailEl = document.getElementById('nav-user-email');
-    if (clerk.user && clerk.user.primaryEmailAddress) {
+    if (emailEl && clerk.user && clerk.user.primaryEmailAddress) {
       emailEl.textContent = clerk.user.primaryEmailAddress.emailAddress;
     }
 
@@ -60,11 +66,19 @@ if (!clerk) {
             };
 
             populateDashboard(syncResult, workspace, sites);
+            setInlineError(false);
+          } else {
+            setInlineError(true);
           }
+        } else {
+          setInlineError(true);
         }
       } catch (err) {
         console.error('[app] Sync error:', err);
+        setInlineError(true);
       }
+    } else {
+      setInlineError(true);
     }
   }
 }

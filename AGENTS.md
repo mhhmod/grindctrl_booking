@@ -122,3 +122,8 @@ Go to **Settings → Pages** and verify:
 - To update font files, copy from `node_modules/@fontsource-variable/` or `node_modules/@fontsource/` into `src/fonts/` and update `src/fonts.css` if needed.
 - Do not convert classic scripts (`<script src="...">`) to modules without testing `window.*` exports.
 - Shoelace icon assets in `src/shoelace/` are synced from `node_modules/@shoelace-style/shoelace/dist/assets`. Re-sync after upgrading the package.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->

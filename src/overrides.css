@@ -82,11 +82,11 @@ html:not(.dark) .gc-site-nav {
 .mockup-input-shell {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--gc-space-2);
   min-inline-size: 0;
-  padding: 8px;
+  padding: var(--gc-space-2);
   border: 1px solid var(--gc-outline-variant);
-  border-radius: 14px;
+  border-radius: var(--gc-radius-md);
   background: var(--gc-surface-container);
 }
 
@@ -107,17 +107,23 @@ html:not(.dark) .gc-site-nav {
 }
 
 .mockup-send-btn {
-  inline-size: 40px;
-  block-size: 40px;
+  inline-size: 42px;
+  block-size: 42px;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--gc-radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 40px;
+  flex: 0 0 42px;
   background: var(--gc-primary);
   color: var(--gc-on-primary);
   transition: background var(--gc-duration-fast) var(--gc-ease-in-out);
+}
+
+.mockup-send-btn:focus-visible {
+  outline: 2px solid var(--gc-primary);
+  outline-offset: 2px;
+  box-shadow: var(--gc-focus-ring);
 }
 
 .mockup-send-btn:hover {

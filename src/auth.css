@@ -32,6 +32,14 @@
   min-inline-size: 0;
   display: grid;
   gap: var(--gc-space-5);
+  align-content: start;
+  padding: clamp(var(--gc-space-5), 4vw, var(--gc-space-8));
+  border: 1px solid color-mix(in srgb, var(--gc-primary) 10%, var(--gc-outline));
+  border-radius: calc(var(--gc-radius-xl) + var(--gc-space-1));
+  background:
+    radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--gc-primary) 8%, transparent), transparent 52%),
+    linear-gradient(180deg, color-mix(in srgb, var(--gc-surface-container-high) 45%, transparent), color-mix(in srgb, var(--gc-surface-container-low) 72%, transparent));
+  box-shadow: var(--gc-card-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .gc-auth-back {
@@ -64,8 +72,8 @@
 }
 
 .gc-auth-brand-mark {
-  inline-size: 70px;
-  block-size: 70px;
+  inline-size: 76px;
+  block-size: 76px;
   border-radius: var(--gc-radius-lg);
   border: 1px solid color-mix(in srgb, var(--gc-primary) 16%, var(--gc-outline));
   background: color-mix(in srgb, var(--gc-surface-container-high) 70%, transparent);
@@ -96,7 +104,7 @@
 }
 
 .gc-auth-brand-caption {
-  color: var(--gc-ink-dim);
+  color: var(--gc-on-surface-variant);
   font-size: 0.875rem;
   line-height: 1.45;
 }
@@ -117,13 +125,41 @@
   max-inline-size: 38ch;
   font-size: 1rem;
   line-height: 1.65;
+  color: var(--gc-on-surface-variant);
+}
+
+.gc-auth-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--gc-space-2);
+}
+
+.gc-auth-points li {
+  position: relative;
+  padding-inline-start: var(--gc-space-4);
+  font-size: 0.875rem;
   color: var(--gc-ink-dim);
+  line-height: 1.4;
+}
+
+.gc-auth-points li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0.55em;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gc-primary) 65%, transparent);
 }
 
 .gc-auth-card-wrap {
   min-inline-size: 0;
   display: grid;
   gap: var(--gc-space-5);
+  align-content: center;
 }
 
 .gc-auth-card {
@@ -133,10 +169,19 @@
   border: 1px solid color-mix(in srgb, var(--gc-primary) 12%, var(--gc-outline));
   border-radius: var(--gc-radius-xl);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--gc-surface-container-high) 65%, transparent), color-mix(in srgb, var(--gc-surface-container) 60%, transparent)),
-    var(--gc-surface-container-low);
+    linear-gradient(180deg, color-mix(in srgb, var(--gc-surface-container-highest) 60%, transparent), color-mix(in srgb, var(--gc-surface-container) 74%, transparent)),
+    var(--gc-surface-container);
   padding: clamp(var(--gc-space-5), 3.6vw, var(--gc-space-7));
   box-shadow: var(--gc-card-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.gc-auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%);
+  pointer-events: none;
 }
 
 .gc-auth-mount {
@@ -158,7 +203,7 @@
   align-items: center;
   justify-content: center;
   gap: var(--gc-space-2);
-  color: var(--gc-ink-dim);
+  color: var(--gc-on-surface-variant);
   font-size: 0.9375rem;
 }
 
@@ -203,7 +248,7 @@
 
 .gc-auth-mount .cl-formFieldInput {
   color: var(--gc-ink) !important;
-  background: var(--gc-canvas-deep) !important;
+  background: var(--gc-surface-container-lowest) !important;
 }
 
 .gc-auth-mount .cl-formFieldInput::placeholder {
@@ -230,10 +275,19 @@
   .gc-auth-intro {
     text-align: center;
     justify-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .gc-auth-subtitle {
     margin-inline: auto;
+  }
+
+  .gc-auth-points {
+    justify-items: start;
   }
 }
 

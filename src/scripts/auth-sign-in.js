@@ -20,6 +20,12 @@ if (!clerk) {
   const mountEl = document.getElementById('clerk-sign-in-mount') || document.getElementById('clerk-sign-up-mount');
   if (mountEl) {
     const method = mountEl.id === 'clerk-sign-in-mount' ? 'mountSignIn' : 'mountSignUp';
-    clerk[method](mountEl, { appearance: GRINDCTRL_APPEARANCE });
+    clerk[method](mountEl, {
+      appearance: GRINDCTRL_APPEARANCE,
+      signInUrl: '/sign-in.html',
+      signUpUrl: '/sign-up.html',
+      afterSignInUrl: '/app.html',
+      afterSignUpUrl: '/app.html',
+    });
   }
 }

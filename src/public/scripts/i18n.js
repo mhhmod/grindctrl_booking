@@ -31,6 +31,13 @@
     auth_footer_signup_link: { en: 'Create account', ar: 'إنشاء حساب' },
     auth_footer_signin_prompt: { en: 'Already have an account?', ar: 'لديك حساب بالفعل؟' },
     auth_footer_signin_link: { en: 'Sign in', ar: 'تسجيل الدخول' },
+    auth_point_secure: { en: 'Secure Clerk authentication', ar: 'مصادقة آمنة عبر Clerk' },
+    auth_point_dashboard: { en: 'Access your GRINDCTRL dashboard', ar: 'الوصول إلى لوحة تحكم GRINDCTRL' },
+    auth_point_widget: { en: 'Manage widget behavior in one place', ar: 'إدارة سلوك الويدجت من مكان واحد' },
+
+    /* ────────── DASHBOARD ────────── */
+    app_inline_error_title: { en: 'We could not load some workspace data.', ar: 'تعذر تحميل بعض بيانات مساحة العمل.' },
+    app_inline_error_desc: { en: 'Your dashboard shell is still available. Try refreshing or check your data access settings.', ar: 'هيكل لوحة التحكم ما زال متاحاً. حاول إعادة التحميل أو تحقق من إعدادات الوصول للبيانات.' },
 
     /* ────────── FLOATING PILL ────────── */
     pill_book: { en: ' Book a Call', ar: ' احجز مكالمة' },

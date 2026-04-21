@@ -149,10 +149,10 @@ tailwind.config = {
         <span class="material-symbols-outlined gc-icon gc-icon--xl theme-icon-dark">light_mode</span>
         <span class="material-symbols-outlined gc-icon gc-icon--xl theme-icon-light" style="display:none">dark_mode</span>
       </button>
-      <div id="gc-auth-nav" class="gc-auth-nav"></div>
       <button id="hamburger-btn" class="gc-site-nav__hamburger theme-btn" aria-label="Open menu" aria-expanded="false">
-        <span class="material-symbols-outlined gc-icon gc-icon--xl">menu</span>
+        <span class="gc-svg-icon" aria-hidden="true"><img src="/icons/menu.svg" alt=""/></span>
       </button>
+      <div id="gc-auth-nav" class="gc-auth-nav" aria-label="Authentication navigation"></div>
     </div>
   </div>
 </nav>
@@ -838,7 +838,7 @@ tailwind.config = {
                 <div class="mockup-input-shell">
                   <input id="mockup-input" type="text" data-i18n-placeholder="mockup_input_placeholder" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="mockup-input-field">
                   <button onclick="mockupSend()" class="mockup-send-btn" aria-label="Send mockup message">
-                    <span class="material-symbols-outlined gc-icon gc-icon--xl">send</span>
+                    <span class="gc-svg-icon" aria-hidden="true"><img src="/icons/send.svg" alt=""/></span>
                   </button>
                 </div>
               </div>

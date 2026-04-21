@@ -16,8 +16,8 @@
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding-left: clamp(1.25rem, 6vw, 2.5rem);
-  padding-right: clamp(1.25rem, 6vw, 2.5rem);
+  padding-left: clamp(1rem, 5vw, 2.5rem);
+  padding-right: clamp(1rem, 5vw, 2.5rem);
   max-width: 1536px;
 }
 
@@ -162,7 +162,7 @@
 }
 @media (max-width: 480px) {
   .ui-section {
-    padding-top: var(--gc-space-10);
-    padding-bottom: var(--gc-space-10);
+    padding-top: var(--gc-space-9);
+    padding-bottom: var(--gc-space-9);
   }
 }

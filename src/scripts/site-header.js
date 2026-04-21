@@ -38,6 +38,18 @@
       syncDrawerPlacement();
       drawer.show();
     });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && drawer.open) {
+        drawer.hide();
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 768 && drawer.open) {
+        drawer.hide();
+      }
+    });
   }
 
   if (drawer) {
@@ -45,6 +57,14 @@
       var targetLink = event.target.closest('a[href^="#"], a[href^="/"]');
       if (targetLink) {
         drawer.hide();
+      }
+    });
+
+    drawer.addEventListener('sl-initial-focus', function (event) {
+      var firstLink = drawer.querySelector('.drawer-link, .drawer-link-highlight, .gc-auth-drawer-cta');
+      if (firstLink) {
+        event.preventDefault();
+        firstLink.focus();
       }
     });
 

@@ -8,6 +8,11 @@ function t(en, ar) {
   return isArabic() ? ar : en;
 }
 
+function chevronIcon() {
+  var path = isArabic() ? '/icons/chevron-start.svg' : '/icons/chevron-end.svg';
+  return '<span class="gc-svg-icon" aria-hidden="true"><img src="' + path + '" alt=""/></span>';
+}
+
 function renderSignedOut(navContainer, drawerContainer) {
   if (navContainer) {
     navContainer.innerHTML = [
@@ -16,7 +21,7 @@ function renderSignedOut(navContainer, drawerContainer) {
       '  <span>' + t('Sign in', 'تسجيل الدخول') + '</span>',
       '</a>',
       '<a href="/sign-up.html" class="gc-auth-cta">',
-      '  <span class="material-symbols-outlined gc-icon gc-icon--md">arrow_forward</span>',
+      '  ' + chevronIcon(),
       '  <span>' + t('Get started', 'ابدأ الآن') + '</span>',
       '</a>',
     ].join('');
@@ -29,7 +34,7 @@ function renderSignedOut(navContainer, drawerContainer) {
       '  <span>' + t('Sign in', 'تسجيل الدخول') + '</span>',
       '</a>',
       '<a href="/sign-up.html" class="gc-auth-cta gc-auth-drawer-cta">',
-      '  <span class="material-symbols-outlined gc-icon gc-icon--md">arrow_forward</span>',
+      '  ' + chevronIcon(),
       '  <span>' + t('Get started', 'ابدأ الآن') + '</span>',
       '</a>',
     ].join('');
@@ -39,7 +44,7 @@ function renderSignedOut(navContainer, drawerContainer) {
 function renderSignedIn(clerk, navContainer, drawerContainer) {
   if (navContainer) {
     navContainer.innerHTML = [
-      '<a href="/app.html" class="gc-auth-link gc-auth-link--dashboard">',
+      '<a href="/app.html" class="gc-auth-cta gc-auth-cta--dashboard">',
       '  <span class="material-symbols-outlined gc-icon gc-icon--md">dashboard</span>',
       '  <span>' + t('Dashboard', 'لوحة التحكم') + '</span>',
       '</a>',
@@ -58,7 +63,7 @@ function renderSignedIn(clerk, navContainer, drawerContainer) {
       '</a>',
       '<a href="/app.html" class="drawer-link">',
       '  <span class="material-symbols-outlined gc-icon gc-icon--xl">manage_accounts</span>',
-      '  <span>' + t('Account', 'الحساب') + '</span>',
+      '  <span>' + t('Account settings', 'إعدادات الحساب') + '</span>',
       '</a>',
     ].join('');
   }

@@ -44,6 +44,7 @@
   --gc-duration-fast: 0.2s;
   --gc-duration-base: 0.3s;
   --gc-duration-slow: 0.5s;
+  --gc-focus-ring: 0 0 0 3px color-mix(in srgb, var(--gc-primary) 24%, transparent);
 
   /* ── Icon Size Scale ── */
   --gc-icon-xs: 12px;
@@ -133,7 +134,7 @@
   /* ── Deep Premium Dark Theme ── */
   --gc-ink: #f8f7f4;
   --gc-ink-dim: #d1cec9;
-  --gc-ink-muted: #9b9793;
+  --gc-ink-muted: #aaa6a2;
   --gc-canvas: #0a0a09;
   --gc-canvas-low: #0f0f0e;
   --gc-canvas-deep: #050505;
@@ -148,7 +149,7 @@
   --gc-on-surface: #f8f7f4;
   --gc-on-surface-variant: #d1cec9;
   --gc-on-background: #f8f7f4;
-  --gc-outline: #3b3835;
+  --gc-outline: #45413d;
   --gc-outline-variant: #252321;
   --gc-primary: #f8f7f4;
   --gc-primary-dim: #d1cec9;

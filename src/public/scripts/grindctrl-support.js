@@ -656,6 +656,7 @@
       '  gap: 8px;',
       '  min-inline-size: 0;',
       '  overflow: clip;',
+      '  isolation: isolate;',
       '}',
       '.gc-input {',
       '  inline-size: 100%;',
@@ -680,6 +681,8 @@
       '.gc-send-btn {',
       '  width: 42px;',
       '  height: 42px;',
+      '  min-width: 42px;',
+      '  min-height: 42px;',
       '  border: none;',
       '  background: var(--gc-primary);',
       '  color: #fff;',
@@ -889,7 +892,7 @@
       '</div>',
       buildLeadCaptureHTML(cfg),
       '<div class="gc-input-area" id="gc-input-area">',
-      '  <div class="gc-input-row">',
+      '  <div class="gc-input-row" dir="' + (currentLang() === 'ar' ? 'rtl' : 'ltr') + '">',
       '    <textarea class="gc-input" id="gc-input" rows="1" placeholder="' + t('placeholder') + '" dir="auto" aria-label="' + t('placeholder') + '"></textarea>',
       '    <button class="gc-send-btn" id="gc-send-btn" disabled aria-label="' + t('send') + '">' +
       '      <span>' + getIcon('send') + '</span></button>',
@@ -1200,6 +1203,8 @@
         }).catch(function (err) {
           self._handleError(err);
         });
+      }).catch(function (err) {
+        self._handleError(err);
       });
     }
   };
@@ -1235,6 +1240,8 @@
       }).catch(function (err) {
         self._handleError(err);
       });
+    }).catch(function (err) {
+      self._handleError(err);
     });
   };
 

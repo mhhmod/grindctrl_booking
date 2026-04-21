@@ -82,6 +82,23 @@ body {
 .gc-icon--xl { --gc-icon-size-local: var(--gc-icon-xl); }
 .gc-icon--2xl { --gc-icon-size-local: var(--gc-icon-2xl); }
 
+.gc-svg-icon {
+  --gc-icon-size-local: var(--gc-icon-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--gc-icon-size-local);
+  block-size: var(--gc-icon-size-local);
+  flex-shrink: 0;
+}
+
+.gc-svg-icon img,
+.gc-svg-icon svg {
+  inline-size: 100%;
+  block-size: 100%;
+  display: block;
+}
+
 /* ── Custom Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -92,6 +109,7 @@ body {
 :focus-visible {
   outline: 2px solid var(--gc-primary);
   outline-offset: 3px;
+  box-shadow: var(--gc-focus-ring);
 }
 
 /* ── Selection ── */

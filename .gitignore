@@ -1,9 +1,17 @@
 node_modules/
 dist/
+build/
 src/public/shoelace/
 test-results/
 playwright-report/
+coverage/
 e2e/__screenshots__/
 .env
 .env.*
 !.env.example
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

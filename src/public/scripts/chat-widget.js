@@ -194,6 +194,8 @@
       chat_limit_cta3: { en: 'Tell Us About Your Business', ar: 'أخبرنا عن أعمالك' },
       chat_limit_fine: { en: 'Free 30-min session · No obligation · Confidential', ar: 'جلسة مجانية ٣٠ دقيقة · بدون التزام · سري' },
       chat_error_msg: { en: 'Something went wrong. Please try again.', ar: 'حدث خطأ. يرجى المحاولة مرة أخرى.' },
+      chat_runtime_title: { en: 'Connection issue detected', ar: 'تم رصد مشكلة في الاتصال' },
+      chat_runtime_desc: { en: 'The chat shell is still available. Try sending again in a moment.', ar: 'واجهة المحادثة ما زالت متاحة. حاول الإرسال مرة أخرى بعد لحظة.' },
       chat_retry: { en: 'Retry', ar: 'إعادة المحاولة' },
       chat_cancel: { en: 'Cancel', ar: 'إلغاء' },
       chat_transcribing: { en: 'Transcribing...', ar: 'جارٍ النسخ...' },
@@ -1439,6 +1441,7 @@
     if (textarea) {
       textarea.placeholder = state.imageMode ? t('chat_create_placeholder') : getContextPlaceholder();
       textarea.disabled = inLimitMode;
+      textarea.setAttribute('dir', currentDir());
       textarea.setAttribute('aria-label', state.imageMode ? t('chat_create_placeholder') : t('chat_placeholder'));
     }
 
@@ -1458,6 +1461,7 @@
     if (inputArea) inputArea.classList.toggle('gc-chat-input-area-empty', emptyMode);
     if (panel) panel.classList.toggle('gc-chat-panel-empty', emptyMode);
     if (inputRow) inputRow.classList.toggle('gc-hidden', inLimitMode);
+    if (inputRow) inputRow.setAttribute('dir', currentDir());
     if (recordingBar) {
       recordingBar.classList.toggle('active', state.phase === 'recording' && !inLimitMode);
       recordingBar.classList.toggle('gc-hidden', inLimitMode);
@@ -1510,6 +1514,16 @@
 
   function showError(message) {
     showToast(message || t('chat_error_msg'));
+  }
+
+  function showRuntimeNotice() {
+    setNotice('soft_warning', {
+      title: t('chat_runtime_title'),
+      message: t('chat_runtime_desc'),
+      primary: { type: 'continue_trial', label: t('chat_cta_continue'), href: '' },
+      secondary: { type: 'workflow_tour', label: t('chat_cta_tour'), href: '#solutions' },
+      tertiary: { type: 'book_call', label: t('chat_cta_book'), href: '#book' }
+    }, 'runtime_notice');
   }
 
   function isValidEmail(value) {
@@ -1769,6 +1783,7 @@
 
       if (!response || response.status === 'cors_or_network_error') {
         state.phase = 'open';
+        showRuntimeNotice();
         renderAll();
         showError(t('chat_error_msg'));
         return;
@@ -1801,6 +1816,7 @@
       if (!response.ok) {
         state.phase = 'open';
         state.messages.pop();
+        showRuntimeNotice();
         renderAll();
         showError(data.message || t('chat_error_msg'));
         return;
@@ -1831,6 +1847,7 @@
     } catch (networkError) {
       state.phase = 'open';
       state.messages.pop();
+      showRuntimeNotice();
       renderAll();
       showError();
       trackEvent('error', { error: networkError.message || 'network_error' });
@@ -1921,6 +1938,7 @@
       if (!response.ok) {
         removeMessageById(pendingVoiceMessage.id);
         state.phase = 'open';
+        showRuntimeNotice();
         renderAll();
         showError(data.message || t('chat_error_msg'));
         return;
@@ -1955,6 +1973,7 @@
     } catch (networkError) {
       removeMessageById(pendingVoiceMessage.id);
       state.phase = 'open';
+      showRuntimeNotice();
       renderAll();
       showError();
       trackEvent('error', { error: networkError.message || 'network_error' });
