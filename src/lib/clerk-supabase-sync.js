@@ -1,4 +1,4 @@
-import { getSupabase, isSupabaseConfigured, setClerkUserId, getClerkUserId, getSupabaseWithClerkContext } from './supabase.js';
+import { getSupabase, isSupabaseConfigured } from './supabase.js';
 
 export { isSupabaseConfigured };
 
@@ -24,19 +24,17 @@ export async function syncClerkUserToSupabase(clerkUser) {
     });
 
     if (error) {
-      console.error('[clerk-sync] Bootstrap RPC failed:', error.message);
+      console.error('[clerk-sync] bootstrap_user failed:', error.message);
       return null;
     }
 
-    if (!data) {
-      console.error('[clerk-sync] Bootstrap returned no data');
+    if (!data || !data.profile) {
+      console.error('[clerk-sync] bootstrap_user returned no profile');
       return null;
     }
 
     const profile = data.profile;
-    const workspace = data.workspace;
-
-    setClerkUserId(clerkUserId);
+    const workspace = data.workspace || null;
 
     return {
       profile,
@@ -45,17 +43,14 @@ export async function syncClerkUserToSupabase(clerkUser) {
       workspaceCreated: workspace ? new Date(workspace.created_at) > Date.now() - 60000 : false,
     };
   } catch (err) {
-    console.error('[clerk-sync] Sync error:', err.message);
+    console.error('[clerk-sync] sync error:', err.message);
     return null;
   }
 }
 
-export async function getCurrentWorkspace(profile) {
-  const client = getSupabaseWithClerkContext();
-  if (!client || !profile) return null;
-
-  const clerkUserId = getClerkUserId();
-  if (!clerkUserId) return null;
+export async function getCurrentWorkspace(clerkUserId) {
+  const client = getSupabase();
+  if (!client || !clerkUserId) return null;
 
   try {
     const { data, error } = await client.rpc('get_user_workspace', {
@@ -67,37 +62,31 @@ export async function getCurrentWorkspace(profile) {
       return null;
     }
 
-    return data?.workspace || null;
+    if (!data || !data.workspace) return null;
+
+    return {
+      workspace: data.workspace,
+      sites: Array.isArray(data.sites) ? data.sites : [],
+    };
   } catch (err) {
     console.error('[clerk-sync] get_user_workspace error:', err.message);
     return null;
   }
 }
 
-export async function getWidgetSites(workspaceId) {
-  const client = getSupabaseWithClerkContext();
-  if (!client || !workspaceId) return [];
+export async function getWidgetSites(workspaceId, clerkUserId) {
+  if (!workspaceId || !clerkUserId) return [];
 
-  try {
-    const { data, error } = await client
-      .from('widget_sites')
-      .select('*')
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: false });
+  const workspaceBundle = await getCurrentWorkspace(clerkUserId);
+  if (!workspaceBundle) return [];
 
-    if (error) {
-      console.error('[clerk-sync] getWidgetSites failed:', error.message);
-      return [];
-    }
-    return data || [];
-  } catch (err) {
-    console.error('[clerk-sync] getWidgetSites error:', err.message);
-    return [];
-  }
+  return workspaceBundle.sites.filter(function (site) {
+    return site.workspace_id === workspaceId;
+  });
 }
 
 export async function createWidgetSite(workspaceId, profileId, name, domain) {
-  const client = getSupabaseWithClerkContext();
+  const client = getSupabase();
   if (!client || !workspaceId || !profileId) return null;
 
   try {
@@ -124,15 +113,15 @@ export async function createWidgetSite(workspaceId, profileId, name, domain) {
   }
 }
 
-export async function getWorkspaceDomains(workspaceId) {
-  const client = getSupabaseWithClerkContext();
-  if (!client || !workspaceId) return [];
+export async function getWorkspaceDomains(widgetSiteId) {
+  const client = getSupabase();
+  if (!client || !widgetSiteId) return [];
 
   try {
     const { data, error } = await client
       .from('widget_domains')
       .select('*')
-      .eq('widget_site_id', workspaceId)
+      .eq('widget_site_id', widgetSiteId)
       .order('created_at', { ascending: false });
 
     if (error) {

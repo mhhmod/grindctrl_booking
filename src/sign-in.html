@@ -20,30 +20,39 @@
 <body class="ui-shell">
   <div class="gc-auth-page">
     <a href="/" class="gc-auth-back">
-      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
-      Back to GRINDCTRL
+      <span class="material-symbols-outlined gc-icon gc-icon--lg" data-i18n-icon aria-hidden="true">arrow_back</span>
+      <span data-i18n="auth_back_home">Back to GRINDCTRL</span>
     </a>
 
-    <div class="gc-auth-header">
-      <a href="/" class="gc-auth-brand">
-        <div class="gc-auth-brand-icon">
-          <span class="material-symbols-outlined" style="font-size:18px">smart_toy</span>
+    <div class="gc-auth-shell">
+      <div class="gc-auth-intro">
+        <a href="/" class="gc-auth-brand">
+          <span class="gc-auth-brand-mark">
+            <img src="logo-dark.svg" alt="GRINDCTRL" class="logo-dark" />
+            <img src="logo-light.svg" alt="GRINDCTRL" class="logo-light" />
+          </span>
+          <span class="gc-auth-brand-stack">
+            <span class="gc-auth-brand-text">GRINDCTRL</span>
+            <span class="gc-auth-brand-caption" data-i18n="auth_brand_caption">Operations AI Control Center</span>
+          </span>
+        </a>
+        <h1 class="gc-auth-title" data-i18n="auth_sign_in_title">Welcome back</h1>
+        <p class="gc-auth-subtitle" data-i18n="auth_sign_in_subtitle">Sign in to access your dashboard</p>
+      </div>
+
+      <div class="gc-auth-card-wrap">
+        <div class="gc-auth-card">
+          <div id="clerk-sign-in-mount" class="gc-auth-mount"></div>
         </div>
-        <span class="gc-auth-brand-text">GRINDCTRL</span>
-      </a>
-      <h1 class="gc-auth-title">Welcome back</h1>
-      <p class="gc-auth-subtitle">Sign in to access your dashboard</p>
-    </div>
-
-    <div class="gc-auth-card">
-      <div id="clerk-sign-in-mount" class="gc-auth-mount"></div>
-    </div>
-
-    <div class="gc-auth-footer">
-      Don't have an account? <a href="/sign-up.html">Create account</a>
+        <div class="gc-auth-footer">
+          <span data-i18n="auth_footer_signup_prompt">Don't have an account?</span>
+          <a href="/sign-up.html" data-i18n="auth_footer_signup_link">Create account</a>
+        </div>
+      </div>
     </div>
   </div>
 
+  <script src="/scripts/i18n.js"></script>
   <script type="module" src="/scripts/auth-sign-in.js"></script>
 </body>
 </html>

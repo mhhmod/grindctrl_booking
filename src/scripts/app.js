@@ -1,5 +1,5 @@
 import { initClerk, requireAuth, mountUserButton } from './clerk.js';
-import { syncClerkUserToSupabase, getCurrentWorkspace, getWidgetSites, isSupabaseConfigured } from '../lib/clerk-supabase-sync.js';
+import { syncClerkUserToSupabase, getCurrentWorkspace, isSupabaseConfigured } from '../lib/clerk-supabase-sync.js';
 
 const clerk = await initClerk();
 
@@ -42,13 +42,14 @@ if (!clerk) {
       try {
         const syncResult = await syncClerkUserToSupabase(clerk.user);
         if (syncResult) {
-          const workspace = syncResult.workspace || await getCurrentWorkspace(syncResult.profile);
+          const workspaceBundle = await getCurrentWorkspace(clerk.user.id);
+          const workspace = workspaceBundle?.workspace || syncResult.workspace || null;
+          const sites = workspaceBundle?.sites || [];
+
           if (workspace) {
             if (settingsWorkspace) {
               settingsWorkspace.value = workspace.name || '';
             }
-
-            const sites = await getWidgetSites(workspace.id);
 
             window.__gcApp = {
               profile: syncResult.profile,

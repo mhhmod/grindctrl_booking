@@ -102,32 +102,6 @@
   transform: translateX(0);
 }
 
-/* ── Drawer Link States ── */
-.drawer-link {
-  position: relative;
-  transition: all var(--gc-duration-fast) var(--gc-ease-in-out);
-}
-.drawer-link.text-on-surface.bg-surface-container-high {
-  border-left: 3px solid var(--gc-primary);
-  padding-left: 13px;
-}
-[dir="rtl"] .drawer-link.text-on-surface.bg-surface-container-high {
-  border-left: none;
-  border-right: 3px solid var(--gc-primary);
-  padding-left: inherit;
-  padding-right: 13px;
-}
-.drawer-link:not(.text-on-surface) {
-  border-left: 3px solid transparent;
-  padding-left: 13px;
-}
-[dir="rtl"] .drawer-link:not(.text-on-surface) {
-  border-left: none;
-  border-right: 3px solid transparent;
-  padding-left: inherit;
-  padding-right: 13px;
-}
-
 /* ── Floating Pill ── */
 .floating-pill {
   position: fixed;

@@ -434,8 +434,8 @@
       '  position: absolute;',
       '  bottom: 70px;',
       isRtl ? '  left: 0;' : '  right: 0;',
-      '  width: 380px;',
-      '  max-height: 600px;',
+      '  width: min(380px, calc(100vw - 24px));',
+      '  max-height: min(600px, calc(100dvh - 96px - env(safe-area-inset-bottom)));',
       '  background: var(--gc-bg);',
       '  border: 1px solid rgba(255,255,255,0.08);',
       '  border-radius: var(--gc-radius);',
@@ -529,6 +529,7 @@
       '  gap: 8px;',
       '  padding: 14px 16px;',
       '  border-bottom: 1px solid rgba(255,255,255,0.05);',
+      '  min-inline-size: 0;',
       '}',
       '.gc-intent {',
       '  appearance: none;',
@@ -544,7 +545,9 @@
       '  display: inline-flex;',
       '  align-items: center;',
       '  gap: 5px;',
-      '  white-space: nowrap;',
+      '  white-space: normal;',
+      '  text-wrap: balance;',
+      '  max-inline-size: 100%;',
       '}',
       '.gc-intent:hover {',
       '  background: rgba(255,255,255,0.08);',
@@ -642,17 +645,21 @@
       '}',
       '/* Input */',
       '.gc-input-area {',
-      '  padding: 12px 16px;',
+      '  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));',
       '  border-top: 1px solid rgba(255,255,255,0.06);',
       '  background: rgba(255,255,255,0.02);',
       '}',
       '.gc-input-row {',
-      '  display: flex;',
-      '  align-items: flex-end;',
+      '  display: grid;',
+      '  grid-template-columns: minmax(0, 1fr) 42px;',
+      '  align-items: end;',
       '  gap: 8px;',
+      '  min-inline-size: 0;',
+      '  overflow: clip;',
       '}',
       '.gc-input {',
-      '  flex: 1;',
+      '  inline-size: 100%;',
+      '  min-inline-size: 0;',
       '  background: rgba(255,255,255,0.06);',
       '  border: 1px solid rgba(255,255,255,0.1);',
       '  border-radius: 12px;',
@@ -662,14 +669,17 @@
       '  resize: none;',
       '  max-height: 120px;',
       '  outline: none;',
+      '  box-sizing: border-box;',
+      '  text-align: start;',
       '  transition: border-color 0.2s;',
       '  line-height: 1.4;',
       '}',
       '.gc-input::placeholder { color: rgba(250,250,250,0.3); }',
+      '[dir="rtl"] .gc-input { text-align: right; }',
       '.gc-input:focus { border-color: var(--gc-primary); }',
       '.gc-send-btn {',
-      '  width: 40px;',
-      '  height: 40px;',
+      '  width: 42px;',
+      '  height: 42px;',
       '  border: none;',
       '  background: var(--gc-primary);',
       '  color: #fff;',
@@ -679,9 +689,10 @@
       '  align-items: center;',
       '  justify-content: center;',
       '  flex-shrink: 0;',
+      '  box-sizing: border-box;',
       '  transition: all 0.2s;',
       '}',
-      '.gc-send-btn:hover:not(:disabled) { background: var(--gc-accent); transform: scale(1.05); }',
+      '.gc-send-btn:hover:not(:disabled) { background: var(--gc-accent); }',
       '.gc-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }',
       '.gc-send-btn span { font-size: 18px; }',
       '/* Powered by */',
@@ -757,8 +768,8 @@
       '  }',
       '  .gc-launcher-label { display: none; }',
       '  .gc-launcher.open { border-radius: 50%; }',
-  '  .gc-intents { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; }',
-  '  .gc-intent { flex-shrink: 0; }',
+  '  .gc-intents { flex-wrap: wrap; overflow: visible; padding-bottom: 8px; }',
+  '  .gc-intent { flex: 1 1 auto; }',
   '  .gc-messages { padding: 12px; }',
   '  .gc-lead-capture { padding: 16px 12px; }',
   '}'
@@ -826,8 +837,11 @@
       if (pageIntents.length > 0) {
         intentsHTML = '<div class="gc-intents">' +
           pageIntents.map(function (intent) {
-            return '<button class="gc-intent" data-intent-id="' + intent.id + '" data-intent-label="' + escapeHtml(intent.label_en) + '">' +
-              '<span>' + escapeHtml(intent.label_en) + '</span>' +
+            var label = currentLang() === 'ar'
+              ? (intent.label_ar || intent.label_en || '')
+              : (intent.label_en || intent.label_ar || '');
+            return '<button class="gc-intent" data-intent-id="' + intent.id + '" data-intent-label="' + escapeHtml(label) + '">' +
+              '<span>' + escapeHtml(label) + '</span>' +
               '</button>';
           }).join('') +
           '</div>';
@@ -848,7 +862,7 @@
     }
 
     return [
-      '<div class="gc-panel" id="gc-panel" role="dialog" aria-modal="false" aria-label="' + brandName + '">',
+      '<div class="gc-panel" id="gc-panel" role="dialog" aria-modal="false" aria-label="' + brandName + '" dir="' + (currentLang() === 'ar' ? 'rtl' : 'ltr') + '">',
       trialBanner,
       '<div class="gc-header">',
       '  <div class="gc-header-brand">',

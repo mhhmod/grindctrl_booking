@@ -1,25 +1,22 @@
 -- ============================================================
--- Migration: fix_workspace_members_rls_recursion
+-- Migration: fix_workspace_members_rls_commands_split
 -- Date: 2026-04-21
--- Purpose: Replace recursive workspace_members RLS policies with
---   non-recursive versions that reference workspaces/profiles
---   directly. Prevents infinite recursion when widget_sites or
---   workspaces policies query workspace_members.
+-- Purpose: Eliminate recursion by avoiding FOR ALL policies on
+-- workspace_members, and splitting owner management by command.
 -- ============================================================
 
 begin;
 
--- Drop recursive policies on workspace_members
--- (These self-reference workspace_members in their USING clause)
 drop policy if exists "workspace_members: read own workspace" on public.workspace_members;
 drop policy if exists "workspace_members: insert admin_or_owner" on public.workspace_members;
 drop policy if exists "workspace_members: update admin_or_owner" on public.workspace_members;
 drop policy if exists "workspace_members: delete admin_or_owner" on public.workspace_members;
 drop policy if exists "workspace_members: manage by owner" on public.workspace_members;
+drop policy if exists "workspace_members: read own" on public.workspace_members;
+drop policy if exists "workspace_members: insert by owner" on public.workspace_members;
+drop policy if exists "workspace_members: update by owner" on public.workspace_members;
+drop policy if exists "workspace_members: delete by owner" on public.workspace_members;
 
--- Simplified read: user can see their own membership rows.
--- This is sufficient for widget_sites / workspaces policies that
--- subquery workspace_members for the current user's profile_id.
 create policy "workspace_members: read own"
   on public.workspace_members for select
   using (
@@ -29,10 +26,6 @@ create policy "workspace_members: read own"
     )
   );
 
--- Owner-only management (insert/update/delete) via workspaces table.
--- Avoids recursion by querying workspaces.owner_profile_id instead of
--- workspace_members.role. Policies are split by command so SELECT
--- does not accidentally inherit owner checks through FOR ALL.
 create policy "workspace_members: insert by owner"
   on public.workspace_members for insert
   with check (

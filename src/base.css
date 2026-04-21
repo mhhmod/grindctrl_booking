@@ -58,6 +58,30 @@ body {
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 
+/* ── Icon Contract (shared sizing/alignment across pages) ── */
+.gc-icon {
+  --gc-icon-size-local: var(--gc-icon-lg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1em;
+  block-size: 1em;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.material-symbols-outlined.gc-icon {
+  font-size: var(--gc-icon-size-local);
+}
+
+.gc-icon--xs { --gc-icon-size-local: var(--gc-icon-xs); }
+.gc-icon--sm { --gc-icon-size-local: var(--gc-icon-sm); }
+.gc-icon--md { --gc-icon-size-local: var(--gc-icon-md); }
+.gc-icon--lg { --gc-icon-size-local: var(--gc-icon-lg); }
+.gc-icon--xl { --gc-icon-size-local: var(--gc-icon-xl); }
+.gc-icon--2xl { --gc-icon-size-local: var(--gc-icon-2xl); }
+
 /* ── Custom Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

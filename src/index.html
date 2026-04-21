@@ -146,13 +146,13 @@ tailwind.config = {
         <span class="text-[11px] font-bold font-headline leading-none">عر</span>
       </button>
       <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
-        <span class="material-symbols-outlined text-lg theme-icon-dark">light_mode</span>
-        <span class="material-symbols-outlined text-lg theme-icon-light" style="display:none">dark_mode</span>
+        <span class="material-symbols-outlined gc-icon gc-icon--xl theme-icon-dark">light_mode</span>
+        <span class="material-symbols-outlined gc-icon gc-icon--xl theme-icon-light" style="display:none">dark_mode</span>
       </button>
       <div id="gc-auth-nav" class="gc-auth-nav"></div>
-      <sl-button id="hamburger-btn" class="gc-site-nav__hamburger" size="small" variant="text" aria-label="Open menu">
-        <sl-icon name="list" library="default"></sl-icon>
-      </sl-button>
+      <button id="hamburger-btn" class="gc-site-nav__hamburger theme-btn" aria-label="Open menu" aria-expanded="false">
+        <span class="material-symbols-outlined gc-icon gc-icon--xl">menu</span>
+      </button>
     </div>
   </div>
 </nav>
@@ -168,23 +168,23 @@ tailwind.config = {
   </div>
   <nav class="gc-drawer__nav">
     <a href="#home" class="drawer-link drawer-link-active" data-nav="home" data-i18n="drawer_home">
-      <span class="material-symbols-outlined">inbox_customize</span> Live Demo
+      <span class="material-symbols-outlined gc-icon gc-icon--xl">inbox_customize</span> Live Demo
     </a>
     <a href="#solutions" class="drawer-link" data-nav="solutions" data-i18n="drawer_solutions">
-      <span class="material-symbols-outlined">hub</span> How It Works
+      <span class="material-symbols-outlined gc-icon gc-icon--xl">hub</span> How It Works
     </a>
     <a href="#install" class="drawer-link-highlight" data-nav="install" data-i18n="drawer_install">
-      <span class="material-symbols-outlined">rocket_launch</span> Install Widget
+      <span class="material-symbols-outlined gc-icon gc-icon--xl">rocket_launch</span> Install Widget
       <span class="drawer-link-badge" data-i18n="popular_badge">New</span>
     </a>
     <a href="#book" class="drawer-link" data-nav="book" data-i18n="drawer_book_cta">
-      <span class="material-symbols-outlined">calendar_today</span> Book a Call
+      <span class="material-symbols-outlined gc-icon gc-icon--xl">calendar_today</span> Book a Call
     </a>
   </nav>
   <sl-divider></sl-divider>
   <div id="gc-auth-drawer" class="gc-auth-drawer">
     <a href="/sign-in.html" class="drawer-link">
-      <span class="material-symbols-outlined">login</span> Sign in
+      <span class="material-symbols-outlined gc-icon gc-icon--xl">login</span> Sign in
     </a>
     <a href="/sign-up.html" class="gc-auth-cta gc-auth-drawer-cta">Get started</a>
   </div>
@@ -835,10 +835,10 @@ tailwind.config = {
               </div>
               <!-- Input -->
               <div class="px-4 py-3 border-t" style="border-color:var(--gc-outline-variant)">
-                <div class="flex items-center gap-2 mockup-input-row">
-                  <input id="mockup-input" type="text" data-i18n-placeholder="mockup_input_placeholder" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="flex-1 rounded-xl px-4 py-3 text-[12px] outline-none transition-all" style="background:var(--gc-surface-container);color:var(--gc-on-surface);border:1px solid var(--gc-outline-variant)">
-                  <button onclick="mockupSend()" class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 mockup-send-btn" style="background:var(--gc-primary);color:var(--gc-on-primary)">
-                    <span class="material-symbols-outlined text-[18px]">send</span>
+                <div class="mockup-input-shell">
+                  <input id="mockup-input" type="text" data-i18n-placeholder="mockup_input_placeholder" placeholder="Type a message..." onkeypress="if(event.key==='Enter')mockupSend()" class="mockup-input-field">
+                  <button onclick="mockupSend()" class="mockup-send-btn" aria-label="Send mockup message">
+                    <span class="material-symbols-outlined gc-icon gc-icon--xl">send</span>
                   </button>
                 </div>
               </div>
@@ -1108,7 +1108,7 @@ tailwind.config = {
   var currentPage = 'home';
   const pages = document.querySelectorAll('.page-section');
   const navLinks = document.querySelectorAll('.nav-link');
-  const drawerLinks = document.querySelectorAll('.drawer-link');
+  const drawerLinks = document.querySelectorAll('.drawer-link, .drawer-link-highlight');
 
   function getPageFromHash(hash) {
     if (!hash || hash === '#') return 'home';
@@ -1411,48 +1411,5 @@ tailwind.config = {
 <script src="scripts/chat-widget.js"></script>
 <script src="scripts/voice-to-value.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-.gc-auth-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.gc-auth-link {
-  color: var(--gc-secondary, rgba(240,237,233,0.6));
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  transition: color 0.2s, background 0.2s;
-}
-.gc-auth-link:hover {
-  color: var(--gc-ink, #f0ede9);
-  background: rgba(240,237,233,0.06);
-}
-.gc-auth-cta {
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-  padding: 6px 16px;
-  border-radius: 8px;
-  background: var(--gc-primary, #4F46E5);
-  color: var(--gc-on-primary, #fff);
-  transition: opacity 0.2s;
-}
-.gc-auth-cta:hover {
-  opacity: 0.9;
-}
-.gc-auth-drawer {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-#gc-user-button {
-  display: flex;
-  align-items: center;
-}
-</style>
 </body>
 </html>

@@ -1,236 +1,279 @@
 /* ================================================================
-   GRINDCTRL Auth Page Overrides
-   Loaded after the shared design cascade (fonts → tokens → base
-   → layout → components). Only auth-specific overrides here.
+   GRINDCTRL Auth Surface
+   Premium sign-in/sign-up shell + Clerk integration overrides.
    ================================================================ */
 
-/* ── Auth Page Layout ── */
 .gc-auth-page {
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--gc-space-8) var(--gc-space-4);
-  padding-top: max(var(--gc-space-8), env(safe-area-inset-top, 0px));
   position: relative;
-  background: radial-gradient(ellipse at 50% 0%, rgba(248,247,244,0.03), transparent 60%),
-              var(--gc-canvas);
+  min-height: 100dvh;
+  display: grid;
+  align-items: center;
+  padding:
+    max(var(--gc-space-10), env(safe-area-inset-top))
+    clamp(var(--gc-space-4), 4vw, var(--gc-space-10))
+    max(var(--gc-space-8), env(safe-area-inset-bottom));
+  background:
+    radial-gradient(1200px circle at 0% -10%, color-mix(in srgb, var(--gc-primary) 10%, transparent), transparent 45%),
+    radial-gradient(900px circle at 100% 110%, color-mix(in srgb, var(--gc-accent) 8%, transparent), transparent 58%),
+    var(--gc-canvas);
+  overflow: clip;
 }
 
-/* ── Auth Back Link ── */
+.gc-auth-shell {
+  inline-size: min(1120px, 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 468px);
+  gap: clamp(var(--gc-space-6), 5vw, var(--gc-space-12));
+  align-items: center;
+}
+
+.gc-auth-intro {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--gc-space-5);
+}
+
 .gc-auth-back {
   position: absolute;
-  top: max(var(--gc-space-6), env(safe-area-inset-top, 0px));
-  inset-inline-start: var(--gc-space-6);
+  inset-block-start: max(var(--gc-space-5), env(safe-area-inset-top));
+  inset-inline-start: clamp(var(--gc-space-3), 4vw, var(--gc-space-8));
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: var(--gc-space-2);
   color: var(--gc-ink-muted);
   text-decoration: none;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   transition: color var(--gc-duration-fast) var(--gc-ease-in-out);
-  z-index: var(--gc-z-sticky, 40);
-}
-.gc-auth-back:hover {
-  color: var(--gc-ink);
-}
-.gc-auth-back .gc-icon {
-  width: 18px;
-  height: 18px;
-  color: currentColor;
 }
 
-/* ── Auth Header ── */
-.gc-auth-header {
-  text-align: center;
-  margin-bottom: var(--gc-space-10);
+.gc-auth-back:hover {
+  color: var(--gc-ink);
 }
 
 .gc-auth-brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--gc-space-3);
-  margin-bottom: var(--gc-space-10);
+  gap: var(--gc-space-4);
+  inline-size: fit-content;
   text-decoration: none;
   color: var(--gc-ink);
 }
 
-.gc-auth-brand-icon {
-  width: 56px;
-  height: 56px;
-  background: var(--gc-primary);
+.gc-auth-brand-mark {
+  inline-size: 70px;
+  block-size: 70px;
   border-radius: var(--gc-radius-lg);
-  display: flex;
+  border: 1px solid color-mix(in srgb, var(--gc-primary) 16%, var(--gc-outline));
+  background: color-mix(in srgb, var(--gc-surface-container-high) 70%, transparent);
+  box-shadow: 0 18px 42px -18px rgba(0, 0, 0, 0.6);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--gc-on-primary);
-  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.4);
+  padding: var(--gc-space-3);
 }
-.gc-auth-brand-icon .gc-icon {
-  width: 28px;
-  height: 28px;
+
+.gc-auth-brand-mark img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+}
+
+.gc-auth-brand-stack {
+  display: grid;
+  gap: 4px;
 }
 
 .gc-auth-brand-text {
   font-family: var(--gc-font-display);
-  font-size: 1.75rem;
+  font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.2rem);
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.gc-auth-brand-caption {
+  color: var(--gc-ink-dim);
+  font-size: 0.875rem;
+  line-height: 1.45;
 }
 
 .gc-auth-title {
+  margin: 0;
   font-family: var(--gc-font-display);
-  font-size: clamp(1.75rem, 1rem + 2.5vw, 2.25rem);
+  font-size: clamp(2rem, 1.3rem + 2.1vw, 3rem);
+  line-height: 1.06;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  margin-bottom: var(--gc-space-3);
+  letter-spacing: -0.04em;
   color: var(--gc-ink);
-  line-height: 1.1;
+  text-wrap: balance;
 }
 
 .gc-auth-subtitle {
+  margin: 0;
+  max-inline-size: 38ch;
   font-size: 1rem;
+  line-height: 1.65;
   color: var(--gc-ink-dim);
-  line-height: 1.6;
-  max-width: 32ch;
-  margin-inline: auto;
 }
 
-/* ── Auth Card (Clerk mount container) ── */
+.gc-auth-card-wrap {
+  min-inline-size: 0;
+  display: grid;
+  gap: var(--gc-space-5);
+}
+
 .gc-auth-card {
-  width: 100%;
-  max-width: 440px;
-  background: var(--gc-surface-container);
-  border: 1px solid var(--gc-outline);
-  border-radius: var(--gc-radius-xl);
-  padding: var(--gc-space-8) var(--gc-space-7);
-  box-shadow: var(--gc-card-shadow), 0 0 0 1px rgba(255,255,255,0.04);
   position: relative;
-  overflow: hidden;
-}
-
-.gc-auth-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 40%);
-  pointer-events: none;
-  opacity: 0.6;
-  border-radius: inherit;
+  inline-size: 100%;
+  min-inline-size: 0;
+  border: 1px solid color-mix(in srgb, var(--gc-primary) 12%, var(--gc-outline));
+  border-radius: var(--gc-radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--gc-surface-container-high) 65%, transparent), color-mix(in srgb, var(--gc-surface-container) 60%, transparent)),
+    var(--gc-surface-container-low);
+  padding: clamp(var(--gc-space-5), 3.6vw, var(--gc-space-7));
+  box-shadow: var(--gc-card-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .gc-auth-mount {
-  min-height: 280px;
-  position: relative;
-  z-index: 1;
+  min-block-size: 320px;
 }
 
 .gc-auth-mount:empty::after {
-  content: 'Loading authentication\2026';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 280px;
+  content: "Loading authentication...";
+  display: grid;
+  place-items: center;
+  min-block-size: 320px;
   color: var(--gc-ink-muted);
   font-size: 0.875rem;
 }
 
-/* ── Auth Footer ── */
 .gc-auth-footer {
-  text-align: center;
-  margin-top: var(--gc-space-8);
-  font-size: 0.9375rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gc-space-2);
   color: var(--gc-ink-dim);
+  font-size: 0.9375rem;
 }
 
 .gc-auth-footer a {
   color: var(--gc-ink);
   text-decoration: none;
-  font-weight: 600;
-  transition: color var(--gc-duration-fast) var(--gc-ease-in-out);
-}
-.gc-auth-footer a:hover {
-  color: var(--gc-accent);
-  text-decoration: underline;
+  font-weight: 700;
 }
 
-/* ── Auth Fallback (not-configured state) ── */
+.gc-auth-footer a:hover {
+  text-decoration: underline;
+  color: var(--gc-primary);
+}
+
+/* Fallback (missing Clerk env) */
 .gc-auth-fallback {
   text-align: center;
-  padding: var(--gc-space-12) var(--gc-space-6);
+  padding: var(--gc-space-8) var(--gc-space-4);
 }
+
 .gc-auth-fallback p {
   color: var(--gc-secondary);
   margin-bottom: var(--gc-space-4);
-  font-size: 0.9375rem;
-  line-height: 1.6;
-}
-.gc-auth-fallback code {
-  font-family: var(--gc-font-mono);
-  background: var(--gc-surface-container);
-  padding: 2px 6px;
-  border-radius: var(--gc-radius-xs);
-  font-size: 0.875rem;
-  color: var(--gc-accent);
 }
 
-/* ── Clerk injected UI ── */
-/* Remove Clerk's default chrome so our shell provides the card frame */
+/* Clerk integration surface */
 .gc-auth-mount .cl-rootBox,
-.gc-auth-mount .cl-card {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.gc-auth-mount .cl-cardBox {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
+.gc-auth-mount .cl-cardBox,
+.gc-auth-mount .cl-card,
 .gc-auth-mount .cl-main {
+  inline-size: 100% !important;
   background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Patch spacing inside Clerk mount */
-.gc-auth-mount .cl-internal-about-redirect {
-  display: none;
+.gc-auth-mount .cl-formFieldLabel {
+  color: var(--gc-ink-dim) !important;
 }
 
-/* ── Small-phone / cramped layout ── */
-@media (max-width: 480px) {
+.gc-auth-mount .cl-formFieldInput {
+  color: var(--gc-ink) !important;
+  background: var(--gc-canvas-deep) !important;
+}
+
+.gc-auth-mount .cl-formFieldInput::placeholder {
+  color: var(--gc-ink-muted) !important;
+}
+
+.gc-auth-mount .cl-dividerText,
+.gc-auth-mount .cl-footerActionText,
+.gc-auth-mount .cl-formFieldHintText {
+  color: var(--gc-ink-muted) !important;
+}
+
+.gc-auth-mount .cl-footerActionLink,
+.gc-auth-mount .cl-identityPreviewEditButton {
+  color: var(--gc-ink) !important;
+}
+
+@media (max-width: 1023px) {
+  .gc-auth-shell {
+    grid-template-columns: 1fr;
+    gap: var(--gc-space-7);
+  }
+
+  .gc-auth-intro {
+    text-align: center;
+    justify-items: center;
+  }
+
+  .gc-auth-subtitle {
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 640px) {
   .gc-auth-page {
-    justify-content: flex-start;
-    padding-top: 5.5rem;
-    padding-bottom: var(--gc-space-8);
+    align-items: start;
+    padding-top: max(82px, env(safe-area-inset-top));
   }
-  .gc-auth-card {
-    padding: var(--gc-space-6) var(--gc-space-5);
-    border-radius: var(--gc-radius-lg);
+
+  .gc-auth-brand-mark {
+    inline-size: 58px;
+    block-size: 58px;
+    border-radius: var(--gc-radius-md);
   }
-  .gc-auth-back {
-    top: var(--gc-space-5);
-    inset-inline-start: var(--gc-space-4);
-  }
-  .gc-auth-header {
-    margin-bottom: var(--gc-space-8);
-  }
-  .gc-auth-brand {
-    margin-bottom: var(--gc-space-8);
-  }
-  .gc-auth-brand-icon {
-    width: 48px;
-    height: 48px;
-  }
+
   .gc-auth-brand-text {
-    font-size: 1.5rem;
+    font-size: 1.55rem;
+  }
+
+  .gc-auth-brand-caption {
+    font-size: 0.8125rem;
+  }
+
+  .gc-auth-card {
+    border-radius: var(--gc-radius-lg);
+    padding: var(--gc-space-5);
+  }
+
+  .gc-auth-mount {
+    min-block-size: 300px;
+  }
+}
+
+@media (max-width: 389px) {
+  .gc-auth-page {
+    padding-inline: var(--gc-space-3);
+  }
+
+  .gc-auth-back {
+    inset-inline-start: var(--gc-space-3);
+    font-size: 0.8125rem;
   }
 }

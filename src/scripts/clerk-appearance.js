@@ -1,150 +1,178 @@
-// GRINDCTRL Clerk Appearance — shared across sign-in and sign-up.
-// Aligned with the dark premium design system.
+// Clerk appearance contract for GRINDCTRL auth surfaces.
+// Uses Clerk's supported `appearance.variables` + `appearance.elements`.
 
 export const GRINDCTRL_APPEARANCE = {
-  baseTheme: 'dark',
   layout: {
     logoPlacement: 'none',
-    socialButtonsPlacement: 'bottom',
+    socialButtonsPlacement: 'top',
     socialButtonsVariant: 'blockButton',
     showOptionalFields: false,
   },
   variables: {
-    colorPrimary: '#f8f7f4',
-    colorPrimaryForeground: '#0a0a09',
-    colorBackground: '#161514',
-    colorBackgroundHover: '#1c1b1a',
-    colorInputBackground: '#0a0a09',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    borderRadius: '12px',
+    colorPrimary: '#f0ede9',
+    colorPrimaryForeground: '#11100f',
+    colorBackground: 'transparent',
+    colorInputBackground: '#11100f',
     colorInputForeground: '#f8f7f4',
-    colorInputPlaceholder: '#9b9793',
-    colorInputBorder: '#3b3835',
-    colorInputBorderHover: '#6b6763',
-    colorInputBorderFocus: '#f8f7f4',
-    colorInputBorderRadius: '0.75rem',
-    colorInputShadow: '0 0 0 3px rgba(248,247,244,0.1)',
+    colorInputPlaceholder: '#938f8a',
+    colorInputBorder: '#3a3734',
+    colorInputBorderHover: '#5a5652',
+    colorInputBorderFocus: '#f0ede9',
+    colorInputShadow: '0 0 0 3px rgba(240, 237, 233, 0.12)',
     colorTextPrimary: '#f8f7f4',
-    colorTextSecondary: '#d1cec9',
-    colorTextTertiary: '#9b9793',
-    colorDanger: '#d4736e',
+    colorTextSecondary: '#c8c4bf',
+    colorTextTertiary: '#96918c',
+    colorDanger: '#e1736d',
     colorSuccess: '#66bb6a',
-    colorWarning: '#ffa726',
-    colorBackgroundAlpha: '#3b3835',
-    borderRadius: '0.75rem',
-    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+    colorWarning: '#ffb454',
+    colorBackgroundAlpha: '#302d2a',
+    spacingUnit: '0.875rem',
     fontSize: '15px',
-    spacing: '0.75rem',
   },
   elements: {
     rootBox: {
-      boxShadow: 'none',
-      border: 'none',
+      width: '100%',
     },
     cardBox: {
+      width: '100%',
       boxShadow: 'none',
-      border: 'none',
+      border: '0',
       backgroundColor: 'transparent',
       padding: '0',
+      margin: '0',
     },
     card: {
+      backgroundColor: 'transparent',
+      border: '0',
       boxShadow: 'none',
-      border: 'none',
-      backgroundColor: 'transparent',
+      padding: '0',
+      margin: '0',
     },
-    main: {
-      backgroundColor: 'transparent',
+    headerTitle: {
+      display: 'none',
     },
-    formButtonPrimary: {
-      backgroundColor: '#f8f7f4',
-      color: '#0a0a09',
-      borderRadius: '0.75rem',
-      fontWeight: 600,
-      fontSize: '15px',
-      letterSpacing: '0.02em',
-      boxShadow: '0 8px 24px -8px rgba(0,0,0,0.3)',
-      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-      '&:hover': {
-        backgroundColor: '#d1cec9',
-      },
-      '&:active': {
-        transform: 'scale(0.98)',
-      },
-    },
-    formFieldInput: {
-      borderRadius: '0.75rem',
-      border: '1px solid #3b3835',
-      backgroundColor: '#0a0a09',
-      color: '#f8f7f4',
-      fontSize: '15px',
-      '&:focus': {
-        border: '1px solid #f8f7f4',
-        boxShadow: '0 0 0 3px rgba(248,247,244,0.1)',
-      },
-    },
-    formFieldLabel: {
-      color: '#b0aca8',
-      fontSize: '12px',
-      fontWeight: 600,
-      textTransform: 'uppercase',
-      letterSpacing: '0.08em',
-    },
-    formFieldHint: {
-      color: '#9b9793',
-      fontSize: '12px',
-    },
-    formFieldErrorText: {
-      color: '#d4736e',
-      fontSize: '12px',
-    },
-    dividerLine: {
-      backgroundColor: '#3b3835',
-    },
-    dividerText: {
-      color: '#9b9793',
+    headerSubtitle: {
+      display: 'none',
     },
     socialButtonsBlockButton: {
-      borderRadius: '0.75rem',
-      border: '1px solid #3b3835',
-      backgroundColor: '#161514',
+      minHeight: '46px',
+      borderRadius: '12px',
+      border: '1px solid #3a3734',
+      backgroundColor: '#161412',
       color: '#f8f7f4',
+      fontWeight: '600',
+      fontSize: '0.875rem',
+      boxShadow: 'none',
+      transition: 'all 180ms ease',
       '&:hover': {
-        backgroundColor: '#1c1b1a',
-        border: '1px solid #6b6763',
+        backgroundColor: '#1d1b19',
+        border: '1px solid #595550',
       },
     },
-    footerActionLink: {
-      color: '#d1cec9',
+    socialButtonsProviderIcon: {
+      color: '#f0ede9',
+    },
+    dividerLine: {
+      backgroundColor: '#2f2c29',
+    },
+    dividerText: {
+      color: '#908b86',
+      fontSize: '0.75rem',
+      fontWeight: '600',
+      letterSpacing: '0.02em',
+    },
+    formFieldLabel: {
+      color: '#c8c4bf',
+      fontSize: '0.75rem',
+      fontWeight: '700',
+      letterSpacing: '0.045em',
+      textTransform: 'uppercase',
+    },
+    formFieldInput: {
+      minHeight: '48px',
+      borderRadius: '12px',
+      border: '1px solid #3a3734',
+      backgroundColor: '#11100f',
+      color: '#f8f7f4',
+      fontSize: '0.9375rem',
+      boxShadow: 'none',
+      '&:focus': {
+        border: '1px solid #f0ede9',
+        boxShadow: '0 0 0 3px rgba(240, 237, 233, 0.12)',
+      },
+    },
+    formFieldInputShowPasswordButton: {
+      color: '#97928d',
       '&:hover': {
-        color: '#f8f7f4',
+        color: '#f0ede9',
+      },
+    },
+    formFieldHintText: {
+      color: '#918d88',
+      fontSize: '0.75rem',
+      lineHeight: '1.45',
+    },
+    formFieldErrorText: {
+      color: '#e1736d',
+      fontSize: '0.75rem',
+      fontWeight: '600',
+    },
+    formButtonPrimary: {
+      minHeight: '48px',
+      borderRadius: '12px',
+      border: '1px solid transparent',
+      backgroundColor: '#f0ede9',
+      color: '#11100f',
+      fontSize: '0.9375rem',
+      fontWeight: '700',
+      letterSpacing: '0.02em',
+      boxShadow: '0 10px 30px -12px rgba(0, 0, 0, 0.55)',
+      transition: 'all 180ms ease',
+      '&:hover': {
+        backgroundColor: '#d8d4cf',
       },
     },
     footer: {
       backgroundColor: 'transparent',
+      padding: '0',
     },
-    formFieldShowPasswordButton: {
-      color: '#9b9793',
+    footerActionText: {
+      color: '#918d88',
+      fontSize: '0.8125rem',
     },
-    alternateMethods: {
-      border: 'none',
+    footerActionLink: {
+      color: '#f8f7f4',
+      fontWeight: '700',
+      '&:hover': {
+        color: '#f0ede9',
+      },
     },
     alertText: {
-      color: '#d4736e',
+      color: '#e1736d',
     },
     identityPreviewText: {
       color: '#f8f7f4',
     },
     identityPreviewEditButton: {
-      color: '#d1cec9',
+      color: '#d5d1cc',
     },
     formResendCodeLink: {
-      color: '#d1cec9',
+      color: '#d5d1cc',
+      fontWeight: '600',
       '&:hover': {
         color: '#f8f7f4',
       },
     },
     otpCodeFieldInput: {
-      backgroundColor: '#0a0a09',
-      border: '1px solid #3b3835',
+      borderRadius: '10px',
+      backgroundColor: '#11100f',
+      border: '1px solid #3a3734',
       color: '#f8f7f4',
+      '&:focus': {
+        border: '1px solid #f0ede9',
+      },
     },
   },
 };

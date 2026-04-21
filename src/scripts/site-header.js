@@ -1,51 +1,78 @@
 /* ================================================================
-   Site Header & Navigation
-   Wires up the Shoelace drawer and page navigation.
+   Site Header / Drawer Coordination
    ================================================================ */
 
 (function () {
   var drawer = document.getElementById('nav-drawer');
   var hamburgerBtn = document.getElementById('hamburger-btn');
 
-  // Open drawer on hamburger click
+  function syncDrawerPlacement() {
+    if (!drawer) return;
+    var isRtl = (document.documentElement.getAttribute('dir') || 'ltr') === 'rtl';
+    drawer.placement = isRtl ? 'start' : 'end';
+  }
+
+  function syncHamburgerState() {
+    if (!hamburgerBtn || !drawer) return;
+    hamburgerBtn.setAttribute('aria-expanded', drawer.open ? 'true' : 'false');
+  }
+
+  function updateActiveNav(page) {
+    var navLinks = document.querySelectorAll('.nav-link[data-nav]');
+    var drawerLinks = document.querySelectorAll('.drawer-link[data-nav], .drawer-link-highlight[data-nav]');
+
+    navLinks.forEach(function (link) {
+      link.classList.toggle('active', link.dataset.nav === page || (link.dataset.nav === 'packages' && page === 'home'));
+    });
+
+    drawerLinks.forEach(function (link) {
+      var isActive = link.dataset.nav === page || (link.dataset.nav === 'packages' && page === 'home');
+      link.classList.toggle('text-on-surface', isActive);
+      link.classList.toggle('bg-surface-container-high', isActive);
+      link.classList.toggle('text-secondary', !isActive);
+    });
+  }
+
   if (hamburgerBtn && drawer) {
     hamburgerBtn.addEventListener('click', function () {
+      syncDrawerPlacement();
       drawer.show();
     });
   }
 
-  // Close drawer when a link inside is clicked
   if (drawer) {
-    drawer.addEventListener('click', function (e) {
-      var link = e.target.closest('a[href^="#"]');
-      if (link) {
+    drawer.addEventListener('click', function (event) {
+      var targetLink = event.target.closest('a[href^="#"], a[href^="/"]');
+      if (targetLink) {
         drawer.hide();
       }
     });
+
+    drawer.addEventListener('sl-after-show', syncHamburgerState);
+    drawer.addEventListener('sl-after-hide', syncHamburgerState);
   }
 
-  // Highlight active nav link based on page hash
-  function updateActiveNav(page) {
-    var navLinks = document.querySelectorAll('.nav-link[data-nav]');
-    var drawerLinks = document.querySelectorAll('.drawer-link[data-nav]');
-    navLinks.forEach(function (l) {
-      l.classList.toggle('active', l.dataset.nav === page || (l.dataset.nav === 'packages' && page === 'home'));
-    });
-    drawerLinks.forEach(function (l) {
-      var isActive = l.dataset.nav === page || (l.dataset.nav === 'packages' && page === 'home');
-      l.classList.toggle('text-on-surface', isActive);
-      l.classList.toggle('bg-surface-container-high', isActive);
-      l.classList.toggle('text-secondary', !isActive);
-    });
-  }
-
-  // Listen for hash changes to update active state
   window.addEventListener('hashchange', function () {
     var hash = location.hash.replace('#', '') || 'home';
     if (hash === 'packages' || hash === 'ai-trainer' || hash === 'workspace') hash = 'home';
     updateActiveNav(hash);
   });
 
-  // Expose for the main navigation system
+  var htmlObserver = new MutationObserver(function (changes) {
+    for (var i = 0; i < changes.length; i += 1) {
+      if (changes[i].attributeName === 'dir') {
+        syncDrawerPlacement();
+        break;
+      }
+    }
+  });
+
+  htmlObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['dir'],
+  });
+
+  syncDrawerPlacement();
+  syncHamburgerState();
   window.__updateActiveNav = updateActiveNav;
 })();

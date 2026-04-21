@@ -20,6 +20,18 @@
     drawer_packages: { en: ' Packages', ar: ' الباقات' },
     drawer_book_cta: { en: 'Book a Call', ar: 'احجز مكالمة' },
 
+    /* ────────── AUTH ────────── */
+    auth_back_home: { en: 'Back to GRINDCTRL', ar: 'العودة إلى GRINDCTRL' },
+    auth_brand_caption: { en: 'Operations AI Control Center', ar: 'مركز تحكم الذكاء الاصطناعي للعمليات' },
+    auth_sign_in_title: { en: 'Welcome back', ar: 'مرحباً بعودتك' },
+    auth_sign_in_subtitle: { en: 'Sign in to access your dashboard', ar: 'سجّل الدخول للوصول إلى لوحة التحكم' },
+    auth_sign_up_title: { en: 'Create your account', ar: 'أنشئ حسابك' },
+    auth_sign_up_subtitle: { en: 'Get started with GRINDCTRL dashboard', ar: 'ابدأ مع لوحة تحكم GRINDCTRL' },
+    auth_footer_signup_prompt: { en: 'Don\'t have an account?', ar: 'ليس لديك حساب؟' },
+    auth_footer_signup_link: { en: 'Create account', ar: 'إنشاء حساب' },
+    auth_footer_signin_prompt: { en: 'Already have an account?', ar: 'لديك حساب بالفعل؟' },
+    auth_footer_signin_link: { en: 'Sign in', ar: 'تسجيل الدخول' },
+
     /* ────────── FLOATING PILL ────────── */
     pill_book: { en: ' Book a Call', ar: ' احجز مكالمة' },
 

@@ -43,28 +43,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Drawer link active state with border accent ── */
-.drawer-link.text-on-surface.bg-surface-container-high {
-  border-left: 3px solid var(--gc-primary);
-  padding-left: 13px;
-}
-[dir="rtl"] .drawer-link.text-on-surface.bg-surface-container-high {
-  border-left: none;
-  border-right: 3px solid var(--gc-primary);
-  padding-left: inherit;
-  padding-right: 13px;
-}
-.drawer-link:not(.text-on-surface) {
-  border-left: 3px solid transparent;
-  padding-left: 13px;
-}
-[dir="rtl"] .drawer-link:not(.text-on-surface) {
-  border-left: none;
-  border-right: 3px solid transparent;
-  padding-left: inherit;
-  padding-right: 13px;
-}
-
 /* ── Floating pill (bottom-right CTA) ── */
 .floating-pill {
   position: fixed;
@@ -95,42 +73,63 @@ html:not(.dark) textarea {
   background: var(--gc-surface-container-lowest) !important;
 }
 
-/* ── Drawer panel RTL ── */
-.drawer-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--gc-z-drawer);
-  width: 300px;
-  max-width: 85vw;
-  background: var(--gc-canvas-low);
-  border-left: 1px solid var(--gc-outline);
-  transform: translateX(100%);
-  transition: transform var(--gc-duration-base) var(--gc-ease-out);
-}
-.drawer-panel.open {
-  transform: translateX(0);
-}
-[dir="rtl"] .drawer-panel {
-  right: auto;
-  left: 0;
-  transform: translateX(-100%);
-  border-left: none;
-  border-right: 1px solid var(--gc-outline);
-}
-[dir="rtl"] .drawer-panel.open {
-  transform: translateX(0);
-}
-
 /* ── Light theme nav border ── */
 html:not(.dark) .gc-site-nav {
   border-bottom: 1px solid rgba(0,0,0,0.06);
 }
 
-/* ── Mockup widget input: keep button on right in RTL ── */
-[dir="rtl"] .mockup-input-row {
+/* ── Mockup widget: input containment / EN+AR behavior ── */
+.mockup-input-shell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-inline-size: 0;
+  padding: 8px;
+  border: 1px solid var(--gc-outline-variant);
+  border-radius: 14px;
+  background: var(--gc-surface-container);
+}
+
+.mockup-input-field {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--gc-on-surface);
+  font: inherit;
+  font-size: 12px;
+  text-align: start;
+}
+
+.mockup-input-field::placeholder {
+  color: var(--gc-ink-muted);
+}
+
+.mockup-send-btn {
+  inline-size: 40px;
+  block-size: 40px;
+  border: 0;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  background: var(--gc-primary);
+  color: var(--gc-on-primary);
+  transition: background var(--gc-duration-fast) var(--gc-ease-in-out);
+}
+
+.mockup-send-btn:hover {
+  background: var(--gc-primary-dim);
+}
+
+[dir="rtl"] .mockup-input-shell {
   flex-direction: row-reverse;
+}
+
+[dir="rtl"] .mockup-input-field {
+  text-align: right;
 }
 
 /* ── Mobile touch targets ── */

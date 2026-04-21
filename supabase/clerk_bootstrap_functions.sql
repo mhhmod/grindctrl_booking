@@ -10,10 +10,9 @@
 --   Clerk authentication, which safely bypasses RLS for bootstrap
 --   writes while keeping all other RLS policies intact.
 --
---   For reads, the browser client creates a new Supabase client
---   with the 'app.settings.clerk_user_id' header set, which
---   PostgREST maps to current_setting('app.clerk_user_id') for
---   RLS evaluation.
+--   For reads, the browser uses security-definer RPCs
+--   (get_user_workspace) instead of direct table selects during
+--   bootstrap, which avoids RLS recursion paths.
 -- ============================================================
 
 begin;
