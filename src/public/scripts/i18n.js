@@ -41,8 +41,8 @@
     app_inline_error_desc: { en: 'Your dashboard shell is still available. Try refreshing or check your data access settings.', ar: 'هيكل لوحة التحكم ما زال متاحاً. حاول إعادة التحميل أو تحقق من إعدادات الوصول للبيانات.' },
 
     /* ────────── DASHBOARD: WIDGET SETUP ────────── */
-    ws_title: { en: 'Widget Setup', ar: 'إعداد الأداة' },
-    ws_desc: { en: 'Configure how your support widget behaves across your site.', ar: 'اضبط كيفية عمل أداة الدعم عبر موقعك.' },
+    ws_title: { en: 'Install Widget', ar: 'تثبيت الأداة' },
+    ws_desc: { en: 'Copy-paste your install snippet and verify the widget is live on your domain.', ar: 'انسخ والصق مقتطف التثبيت وتحقق من عمل الأداة على نطاقك.' },
     ws_embed_key_label: { en: 'Public Embed Key', ar: 'مفتاح التضمين العام' },
     ws_embed_key_hint: { en: 'This key is safe to expose in client-side code. Keep your admin access private.', ar: 'هذا المفتاح آمن للعرض في كود العميل. حافظ على خصوصية وصولك الإداري.' },
     ws_copy: { en: 'Copy', ar: 'نسخ' },

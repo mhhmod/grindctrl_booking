@@ -33,7 +33,7 @@
   <div class="gc-app-topbar-links gc-segmented" data-motion-tab>
     <span class="gc-segmented__indicator" data-motion-indicator aria-hidden="true"></span>
     <button class="gc-segmented__item gc-app-topbar-link active" data-nav="dashboard" data-motion-tab-active>Dashboard</button>
-    <button class="gc-segmented__item gc-app-topbar-link" data-nav="setup" data-motion-tab-active>Widget Setup</button>
+    <button class="gc-segmented__item gc-app-topbar-link" data-nav="setup" data-motion-tab-active>Install Widget</button>
     <button class="gc-segmented__item gc-app-topbar-link" data-nav="branding" data-motion-tab-active>Branding</button>
     <button class="gc-segmented__item gc-app-topbar-link" data-nav="intents" data-motion-tab-active>Intents</button>
     <button class="gc-segmented__item gc-app-topbar-link" data-nav="domains" data-motion-tab-active>Domains</button>
@@ -58,7 +58,7 @@
         <span class="material-symbols-outlined">dashboard</span> Dashboard
       </button>
       <button class="gc-app-sidebar-item" data-screen="setup">
-        <span class="material-symbols-outlined">settings</span> Widget Setup
+        <span class="material-symbols-outlined">settings</span> Install Widget
       </button>
     </div>
     <div class="gc-app-sidebar-section">
@@ -292,13 +292,7 @@
                   <span class="gc-app-snippet-lang">HTML</span>
                   <button class="gc-app-snippet-copy" onclick="window.__copySnippet && window.__copySnippet()"><span class="material-symbols-outlined">content_copy</span> Copy</button>
                 </div>
-                <div class="gc-app-snippet-body" id="install-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
-<span class="tag">&lt;script&gt;</span>
-  GrindctrlSupport.init({
-    <span class="attr">embedKey</span>: <span class="str" id="snippet-embed-key">gc_live_…</span>,
-    <span class="attr">domain</span>: <span class="str" id="snippet-domain">yourdomain.com</span>
-  });
-<span class="tag">&lt;/script&gt;</span></div>
+                <div class="gc-app-snippet-body" id="install-snippet"></div>
               </div>
               <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)">Paste this before the closing <code class="gc-app-code-inline">&lt;/body&gt;</code> tag on every page where you want the widget to appear.</p>
             </div>
@@ -336,8 +330,8 @@
       <!-- ═══ Widget Setup Screen ═══ -->
       <section class="gc-app-screen" id="screen-setup">
         <div class="gc-app-page-header">
-          <h1 class="gc-app-page-title" data-i18n="ws_title">Widget Setup</h1>
-          <p class="gc-app-page-desc" data-i18n="ws_desc">Configure how your support widget behaves across your site.</p>
+          <h1 class="gc-app-page-title" data-i18n="ws_title">Install Widget</h1>
+          <p class="gc-app-page-desc" data-i18n="ws_desc">Copy-paste your install snippet and verify the widget is live on your domain.</p>
         </div>
 
         <!-- Empty state -->
@@ -368,73 +362,30 @@
           </div>
 
           <div class="gc-app-card">
-            <div class="gc-app-card-header"><div class="gc-app-card-title" data-i18n="ws_snippet_label">Install Snippet</div></div>
-            <div class="gc-app-snippet-box">
-              <div class="gc-app-snippet-header">
-                <span class="gc-app-snippet-lang">HTML</span>
-                <button class="gc-app-snippet-copy" id="btn-copy-snippet"><span class="material-symbols-outlined">content_copy</span> <span data-i18n="ws_copy">Copy</span></button>
-              </div>
-              <div class="gc-app-snippet-body" id="setup-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
-<span class="tag">&lt;script&gt;</span>
-  GrindctrlSupport.init({
-    <span class="attr">embedKey</span>: <span class="str" id="setup-snippet-embed-key">gc_live_…</span>,
-    <span class="attr">domain</span>: <span class="str" id="setup-snippet-domain">yourdomain.com</span>
-  });
-<span class="tag">&lt;/script&gt;</span></div>
-            </div>
-            <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)" data-i18n="ws_snippet_hint">Paste this before the closing &lt;/body&gt; tag on every page where you want the widget to appear.</p>
-          </div>
+             <div class="gc-app-card-header"><div class="gc-app-card-title" data-i18n="ws_snippet_label">Install Snippet</div></div>
+             <div class="gc-app-snippet-box">
+               <div class="gc-app-snippet-header">
+                 <span class="gc-app-snippet-lang">HTML</span>
+                 <button class="gc-app-snippet-copy" id="btn-copy-snippet"><span class="material-symbols-outlined">content_copy</span> <span data-i18n="ws_copy">Copy</span></button>
+               </div>
+              <div class="gc-app-snippet-body" id="setup-snippet"></div>
+             </div>
+             <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)" data-i18n="ws_snippet_hint">Paste this before the closing &lt;/body&gt; tag on every page where you want the widget to appear.</p>
+           </div>
 
-          <div class="gc-app-card">
-            <div class="gc-app-card-header"><div class="gc-app-card-title">Launcher Behavior</div></div>
-            <div class="gc-app-form-row">
-              <div class="gc-app-form-group">
-                <label class="gc-app-form-label" data-i18n="ws_launcher_position">Launcher Position</label>
-                <select class="gc-app-form-select gc-app-form-input" id="config-launcher-position">
-                  <option value="bottom-right">Bottom Right</option>
-                  <option value="bottom-left">Bottom Left</option>
-                  <option value="top-right">Top Right</option>
-                  <option value="top-left">Top Left</option>
-                </select>
-              </div>
-              <div class="gc-app-form-group">
-                <label class="gc-app-form-label" data-i18n="ws_launcher_label">Launcher Label</label>
-                <input class="gc-app-form-input" type="text" id="config-launcher-label" value="Support" placeholder="Support"/>
-              </div>
-            </div>
-            <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
-              <div class="gc-app-form-group">
-                <label class="gc-app-form-label" data-i18n="ws_support_mode">Support Mode</label>
-                <select class="gc-app-form-select gc-app-form-input" id="config-support-mode">
-                  <option value="mixed">Mixed</option>
-                  <option value="support_only">Support Only</option>
-                  <option value="sales_only">Sales Only</option>
-                  <option value="operations">Operations</option>
-                </select>
-              </div>
-              <div class="gc-app-form-group">
-                <label class="gc-app-form-label" data-i18n="ws_active_state">Widget Active</label>
-                <div style="display:flex;align-items:center;height:48px">
-                  <label class="gc-app-toggle">
-                    <input type="checkbox" class="gc-app-toggle-input" id="config-active-state" checked/>
-                    <span class="gc-app-toggle-label" id="config-active-label" data-i18n="ws_status_active">Active</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div class="gc-app-divider"></div>
-            <div class="gc-app-form-group" style="margin-bottom:0">
-              <label class="gc-app-form-label" data-i18n="ws_greeting_message">Greeting Message</label>
-              <textarea class="gc-app-form-textarea" id="config-greeting" placeholder="How can we help you today?">How can we help you today?</textarea>
-            </div>
-          </div>
-
-          <div class="gc-app-actions gc-app-actions--end">
-            <button class="gc-btn gc-btn--secondary" data-i18n="ws_preview">Preview</button>
-            <button class="gc-btn gc-btn--primary" id="btn-save-config"><span class="material-symbols-outlined gc-icon gc-icon--sm">save</span> <span data-i18n="ws_save">Save Changes</span></button>
-          </div>
-        </div>
-      </section>
+           <div class="gc-app-card">
+             <div class="gc-app-card-header"><div class="gc-app-card-title">CSP-Friendly Snippet</div></div>
+             <div class="gc-app-snippet-box">
+               <div class="gc-app-snippet-header">
+                 <span class="gc-app-snippet-lang">HTML</span>
+                 <button class="gc-app-snippet-copy" id="btn-copy-snippet-csp"><span class="material-symbols-outlined">content_copy</span> <span data-i18n="ws_copy">Copy</span></button>
+               </div>
+               <div class="gc-app-snippet-body" id="setup-snippet-csp"></div>
+             </div>
+             <p class="gc-app-form-hint" style="margin-top:var(--gc-space-2)">Use this if your site forbids inline scripts via CSP.</p>
+           </div>
+         </div>
+       </section>
 
       <!-- ═══ Branding Screen ═══ -->
       <section class="gc-app-screen" id="screen-branding">
@@ -466,18 +417,31 @@
           </div>
           <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
             <div class="gc-app-form-group">
-              <label class="gc-app-form-label" data-i18n="branding_primary_color">Primary Color</label>
-              <div style="display:flex;align-items:center;gap:var(--gc-space-2)">
-                <input type="color" class="gc-app-color-input" id="branding-primary-color" value="#4F46E5"/>
-                <input class="gc-app-form-input" type="text" id="branding-primary-hex" value="#4F46E5" style="flex:1"/>
-              </div>
+              <label class="gc-app-form-label">Assistant Name</label>
+              <input class="gc-app-form-input" type="text" id="branding-assistant-name" value="" placeholder="Support"/>
             </div>
             <div class="gc-app-form-group">
-              <label class="gc-app-form-label" data-i18n="branding_accent_color">Accent Color</label>
-              <div style="display:flex;align-items:center;gap:var(--gc-space-2)">
-                <input type="color" class="gc-app-color-input" id="branding-accent-color" value="#6366F1"/>
-                <input class="gc-app-form-input" type="text" id="branding-accent-hex" value="#6366F1" style="flex:1"/>
-              </div>
+              <label class="gc-app-form-label">Launcher Label</label>
+              <input class="gc-app-form-input" type="text" id="branding-launcher-label" value="" placeholder="Support"/>
+            </div>
+          </div>
+          <div class="gc-app-form-row" style="margin-top:var(--gc-space-4)">
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Launcher Position</label>
+              <select class="gc-app-form-select gc-app-form-input" id="branding-launcher-position">
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+              </select>
+            </div>
+            <div class="gc-app-form-group">
+              <label class="gc-app-form-label">Radius Style</label>
+              <select class="gc-app-form-select gc-app-form-input" id="branding-radius-style">
+                <option value="soft">Soft</option>
+                <option value="rounded">Rounded</option>
+                <option value="sharp">Sharp</option>
+              </select>
             </div>
           </div>
         </div>
@@ -613,11 +577,12 @@
             <div class="gc-app-form-group">
               <label class="gc-app-form-label" data-i18n="leads_timing_mode">Timing</label>
               <select class="gc-app-form-select gc-app-form-input" id="lead-capture-timing">
-                <option value="disabled" data-i18n="leads_timing_disabled">Disabled</option>
-                <option value="before_required" data-i18n="leads_timing_before_required">Before chat (required)</option>
-                <option value="before_skippable" data-i18n="leads_timing_before_skippable">Before chat (skippable)</option>
-                <option value="during" data-i18n="leads_timing_during">During chat</option>
-                <option value="after" data-i18n="leads_timing_after">After chat</option>
+                <option value="off" data-i18n="leads_timing_disabled">Off</option>
+                <option value="before_chat_required" data-i18n="leads_timing_before_required">Before chat (required)</option>
+                <option value="before_chat_skippable" data-i18n="leads_timing_before_skippable">Before chat (skippable)</option>
+                <option value="after_intent">After intent</option>
+                <option value="after_2_messages">After 2 messages</option>
+                <option value="after_3_messages">After 3 messages</option>
               </select>
             </div>
           </div>

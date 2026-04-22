@@ -9,7 +9,10 @@ export async function initClerk() {
   if (initPromise) return initPromise;
 
   if (!publishableKey) {
-    initPromise = Promise.resolve(null);
+    // E2E / local override (used by Playwright tests).
+    const mock = globalThis.__gcClerkMock || null;
+    clerkInstance = mock;
+    initPromise = Promise.resolve(mock);
     return initPromise;
   }
 

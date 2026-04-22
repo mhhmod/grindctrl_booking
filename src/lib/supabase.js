@@ -6,7 +6,10 @@ const GLOBAL_CLIENT_KEY = '__gc_dashboard_supabase_client__';
 
 let supabase = null;
 
-if (supabaseUrl && supabaseAnonKey) {
+// E2E / local override (used by Playwright tests).
+if (globalThis.__gcSupabaseMock) {
+  supabase = globalThis.__gcSupabaseMock;
+} else if (supabaseUrl && supabaseAnonKey) {
   if (globalThis[GLOBAL_CLIENT_KEY]) {
     supabase = globalThis[GLOBAL_CLIENT_KEY];
   } else {

@@ -115,39 +115,165 @@ function copyToClipboard(text, btnEl) {
   });
 }
 
-function getConfigDefaults() {
+function getSettingsDefaults() {
+  // Spec: specs/002-widget-production-readiness/spec.md (Settings Schema v1)
   return {
-    launcher_position: 'bottom-right',
-    launcher_label: 'Support',
-    greeting_message: 'How can we help you today?',
-    support_mode: 'mixed',
-    active_state: true,
+    branding: {
+      brand_name: '',
+      assistant_name: 'Support',
+      logo_url: '',
+      avatar_url: '',
+      launcher_label: 'Support',
+      launcher_icon: 'chat',
+      theme_mode: 'auto',
+      radius_style: 'soft',
+      attribution: {
+        mode: 'auto',
+        show_powered_by: true,
+      },
+    },
+    widget: {
+      position: 'bottom-right',
+      default_open: false,
+      show_intents: true,
+      rtl_supported: true,
+      locale: 'auto',
+    },
+    leads: {
+      enabled: false,
+      capture_timing: 'off',
+      fields: ['name', 'email'],
+      required_fields: ['email'],
+      prompt_title: '',
+      prompt_subtitle: '',
+      skippable: false,
+      dedupe: { mode: 'session' },
+      consent: { mode: 'none', text: '', privacy_url: '' },
+    },
+    routing: {
+      default_intent_behavior: 'chat',
+      handoff: { enabled: false, channel: 'email', target: '' },
+      availability: { enabled: false, timezone: 'UTC', hours: [] },
+    },
+    security: {
+      allow_localhost: true,
+      allowed_iframe_parents: [],
+      rate_limits: { bootstrap_per_min: 60, messages_per_min: 20, leads_per_hour: 30 },
+    },
   };
 }
 
-function getBrandingDefaults() {
-  return {
-    brand_name: '',
-    primary_color: '#4F46E5',
-    accent_color: '#6366F1',
-    logo_url: '',
-  };
+function isPlainObject(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-function getLeadCaptureDefaults() {
-  return {
-    enabled: false,
-    timing_mode: 'disabled',
-    fields_enabled: ['name', 'email'],
-    prompt_text: 'Please share your details so we can assist you better.',
-    deduplicate_session: true,
+function normalizeSettingsJson(raw) {
+  const d = getSettingsDefaults();
+  const s = isPlainObject(raw) ? raw : {};
+
+  const branding = isPlainObject(s.branding) ? s.branding : {};
+  const widget = isPlainObject(s.widget) ? s.widget : {};
+  const leads = isPlainObject(s.leads) ? s.leads : {};
+  const routing = isPlainObject(s.routing) ? s.routing : {};
+  const security = isPlainObject(s.security) ? s.security : {};
+
+  const out = {
+    ...d,
+    ...s,
+    branding: {
+      ...d.branding,
+      ...branding,
+      attribution: {
+        ...d.branding.attribution,
+        ...(isPlainObject(branding.attribution) ? branding.attribution : {}),
+      },
+    },
+    widget: {
+      ...d.widget,
+      ...widget,
+    },
+    leads: {
+      ...d.leads,
+      ...leads,
+      fields: Array.isArray(leads.fields) ? leads.fields.map(String) : d.leads.fields,
+      required_fields: Array.isArray(leads.required_fields) ? leads.required_fields.map(String) : d.leads.required_fields,
+      dedupe: {
+        ...d.leads.dedupe,
+        ...(isPlainObject(leads.dedupe) ? leads.dedupe : {}),
+      },
+      consent: {
+        ...d.leads.consent,
+        ...(isPlainObject(leads.consent) ? leads.consent : {}),
+      },
+    },
+    routing: {
+      ...d.routing,
+      ...routing,
+      handoff: {
+        ...d.routing.handoff,
+        ...(isPlainObject(routing.handoff) ? routing.handoff : {}),
+      },
+      availability: {
+        ...d.routing.availability,
+        ...(isPlainObject(routing.availability) ? routing.availability : {}),
+        hours: Array.isArray(routing.availability?.hours) ? routing.availability.hours : d.routing.availability.hours,
+      },
+    },
+    security: {
+      ...d.security,
+      ...security,
+      allowed_iframe_parents: Array.isArray(security.allowed_iframe_parents) ? security.allowed_iframe_parents : d.security.allowed_iframe_parents,
+      rate_limits: {
+        ...d.security.rate_limits,
+        ...(isPlainObject(security.rate_limits) ? security.rate_limits : {}),
+      },
+    },
   };
+
+  return out;
 }
 
 function safeJsonParse(json, defaults) {
   if (!json) return defaults;
   if (typeof json === 'object') return json;
   try { return JSON.parse(json); } catch (e) { return defaults; }
+}
+
+function getSiteSettings(site) {
+  const raw = safeJsonParse(site ? site.settings_json : null, {});
+  return normalizeSettingsJson(raw);
+}
+
+function buildCanonicalInstallSnippet(embedKey) {
+  const key = String(embedKey || 'gc_live_xxxxx');
+  return [
+    '<script>',
+    '  window.GrindctrlSupport = window.GrindctrlSupport || [];',
+    '  window.GrindctrlSupport.push({',
+    `    embedKey: '${key}',`,
+    '    user: {',
+    '      id: null,',
+    '      email: null,',
+    '      name: null',
+    '    },',
+    '    context: {',
+    '      custom: {}',
+    '    }',
+    '  });',
+    '</script>',
+    '<script async src="https://cdn.grindctrl.com/widget/v1/loader.js"></script>'
+  ].join('\n');
+}
+
+function buildCspInstallSnippet(embedKey) {
+  const key = String(embedKey || 'gc_live_xxxxx');
+  return [
+    '<script',
+    '  async',
+    '  src="https://cdn.grindctrl.com/widget/v1/loader.js"',
+    `  data-gc-embed-key="${key}">`,
+    '</script>'
+  ].join('\n');
 }
 
 // ── Hydrate Static Progress ──
@@ -256,14 +382,10 @@ function populateAllScreens() {
 
 function populateDashboard() {
   const site = appState.selectedSite;
-  const embedKeyDisplay = document.getElementById('embed-key-display');
-  if (embedKeyDisplay && site) embedKeyDisplay.value = site.embed_key || '';
-
-  const snippetEmbedKey = document.getElementById('snippet-embed-key');
-  if (snippetEmbedKey && site) snippetEmbedKey.textContent = site.embed_key || 'gc_live_…';
-
-  const snippetDomain = document.getElementById('snippet-domain');
-  if (snippetDomain && site && site.domain) snippetDomain.textContent = site.domain;
+  const installSnippet = document.getElementById('install-snippet');
+  if (installSnippet) {
+    installSnippet.textContent = site ? buildCanonicalInstallSnippet(site.embed_key) : '';
+  }
 }
 
 function populateSetupScreen(site) {
@@ -272,28 +394,11 @@ function populateSetupScreen(site) {
   const embedKeyDisplay = document.getElementById('embed-key-display');
   if (embedKeyDisplay) embedKeyDisplay.value = site.embed_key || '';
 
-  const setupSnippetEmbedKey = document.getElementById('setup-snippet-embed-key');
-  if (setupSnippetEmbedKey) setupSnippetEmbedKey.textContent = site.embed_key || 'gc_live_…';
+  const setupSnippet = document.getElementById('setup-snippet');
+  if (setupSnippet) setupSnippet.textContent = buildCanonicalInstallSnippet(site.embed_key);
 
-  const setupSnippetDomain = document.getElementById('setup-snippet-domain');
-  if (setupSnippetDomain) setupSnippetDomain.textContent = site.domain || 'yourdomain.com';
-
-  const config = safeJsonParse(site.config_json, getConfigDefaults());
-
-  const pos = document.getElementById('config-launcher-position');
-  if (pos) pos.value = config.launcher_position || 'bottom-right';
-
-  const label = document.getElementById('config-launcher-label');
-  if (label) label.value = config.launcher_label || 'Support';
-
-  const greeting = document.getElementById('config-greeting');
-  if (greeting) greeting.value = config.greeting_message || 'How can we help you today?';
-
-  const mode = document.getElementById('config-support-mode');
-  if (mode) mode.value = config.support_mode || 'mixed';
-
-  const active = document.getElementById('config-active-state');
-  if (active) active.checked = config.active_state !== false;
+  const setupSnippetCsp = document.getElementById('setup-snippet-csp');
+  if (setupSnippetCsp) setupSnippetCsp.textContent = buildCspInstallSnippet(site.embed_key);
 
   const badge = document.getElementById('setup-status-badge');
   if (badge) {
@@ -345,7 +450,9 @@ function populateBrandingScreen() {
   const site = appState.selectedSite;
   if (!site) return;
 
-  const branding = safeJsonParse(site.branding_json, getBrandingDefaults());
+  const settings = getSiteSettings(site);
+  const branding = settings.branding || {};
+  const widget = settings.widget || {};
 
   const name = document.getElementById('branding-name');
   if (name) name.value = branding.brand_name || '';
@@ -353,15 +460,17 @@ function populateBrandingScreen() {
   const logoUrl = document.getElementById('branding-logo-url');
   if (logoUrl) logoUrl.value = branding.logo_url || '';
 
-  const primary = document.getElementById('branding-primary-color');
-  const primaryHex = document.getElementById('branding-primary-hex');
-  if (primary) primary.value = branding.primary_color || '#4F46E5';
-  if (primaryHex) primaryHex.value = branding.primary_color || '#4F46E5';
+  const assistant = document.getElementById('branding-assistant-name');
+  if (assistant) assistant.value = branding.assistant_name || 'Support';
 
-  const accent = document.getElementById('branding-accent-color');
-  const accentHex = document.getElementById('branding-accent-hex');
-  if (accent) accent.value = branding.accent_color || '#6366F1';
-  if (accentHex) accentHex.value = branding.accent_color || '#6366F1';
+  const launcherLabel = document.getElementById('branding-launcher-label');
+  if (launcherLabel) launcherLabel.value = branding.launcher_label || 'Support';
+
+  const launcherPos = document.getElementById('branding-launcher-position');
+  if (launcherPos) launcherPos.value = widget.position || 'bottom-right';
+
+  const radius = document.getElementById('branding-radius-style');
+  if (radius) radius.value = branding.radius_style || 'soft';
 }
 
 async function populateIntentsScreen() {
@@ -400,14 +509,15 @@ async function populateLeadsScreen() {
   const site = appState.selectedSite;
 
   if (site) {
-    const leadCapture = safeJsonParse(site.lead_capture_json, getLeadCaptureDefaults());
+    const settings = getSiteSettings(site);
+    const leadCapture = settings.leads || {};
     const enabled = document.getElementById('lead-capture-enabled');
     if (enabled) enabled.checked = leadCapture.enabled === true;
 
     const timing = document.getElementById('lead-capture-timing');
-    if (timing) timing.value = leadCapture.timing_mode || 'disabled';
+    if (timing) timing.value = leadCapture.capture_timing || 'off';
 
-    const fields = leadCapture.fields_enabled || ['name', 'email'];
+    const fields = Array.isArray(leadCapture.fields) ? leadCapture.fields : ['name', 'email'];
     const nameCb = document.getElementById('lead-field-name');
     const emailCb = document.getElementById('lead-field-email');
     const phoneCb = document.getElementById('lead-field-phone');
@@ -418,7 +528,7 @@ async function populateLeadsScreen() {
     if (companyCb) companyCb.checked = fields.includes('company');
 
     const prompt = document.getElementById('lead-capture-prompt');
-    if (prompt) prompt.value = leadCapture.prompt_text || '';
+    if (prompt) prompt.value = leadCapture.prompt_subtitle || '';
   }
 
   // Load leads list
@@ -566,35 +676,16 @@ function initEventHandlers() {
     btnCopySnippet.addEventListener('click', function () {
       const site = appState.selectedSite;
       if (!site) return;
-      const snippet = '<script src="https://cdn.grindctrl.com/grindctrl-support.js"><\/script>\n<script>\n  GrindctrlSupport.init({\n    embedKey: "' + site.embed_key + '",\n    domain: window.location.hostname\n  });\n<\/script>';
-      copyToClipboard(snippet, btnCopySnippet);
+      copyToClipboard(buildCanonicalInstallSnippet(site.embed_key), btnCopySnippet);
     });
   }
 
-  // Save config
-  const btnSaveConfig = document.getElementById('btn-save-config');
-  if (btnSaveConfig) {
-    btnSaveConfig.addEventListener('click', async function () {
+  const btnCopySnippetCsp = document.getElementById('btn-copy-snippet-csp');
+  if (btnCopySnippetCsp) {
+    btnCopySnippetCsp.addEventListener('click', function () {
       const site = appState.selectedSite;
       if (!site) return;
-      const config = {
-        launcher_position: document.getElementById('config-launcher-position').value,
-        launcher_label: document.getElementById('config-launcher-label').value,
-        greeting_message: document.getElementById('config-greeting').value,
-        support_mode: document.getElementById('config-support-mode').value,
-        active_state: document.getElementById('config-active-state').checked,
-      };
-      setLoading(btnSaveConfig, true);
-      const updated = await updateWidgetSite(clerk.user.id, site.id, { config_json: config });
-      setLoading(btnSaveConfig, false);
-      if (updated) {
-        appState.selectedSite = updated;
-        const idx = appState.sites.findIndex(function (s) { return s.id === updated.id; });
-        if (idx >= 0) appState.sites[idx] = updated;
-        showToast('Changes saved', 'success');
-      } else {
-        showToast('Failed to save', 'error');
-      }
+      copyToClipboard(buildCspInstallSnippet(site.embed_key), btnCopySnippetCsp);
     });
   }
 
@@ -604,14 +695,16 @@ function initEventHandlers() {
     btnSaveBranding.addEventListener('click', async function () {
       const site = appState.selectedSite;
       if (!site) return;
-      const branding = {
-        brand_name: document.getElementById('branding-name').value,
-        logo_url: document.getElementById('branding-logo-url').value,
-        primary_color: document.getElementById('branding-primary-color').value,
-        accent_color: document.getElementById('branding-accent-color').value,
-      };
+      const settings = getSiteSettings(site);
+      settings.branding.brand_name = document.getElementById('branding-name').value;
+      settings.branding.logo_url = document.getElementById('branding-logo-url').value;
+      settings.branding.assistant_name = document.getElementById('branding-assistant-name').value;
+      settings.branding.launcher_label = document.getElementById('branding-launcher-label').value;
+      settings.branding.radius_style = document.getElementById('branding-radius-style').value;
+      settings.widget.position = document.getElementById('branding-launcher-position').value;
+
       setLoading(btnSaveBranding, true);
-      const updated = await updateWidgetSite(clerk.user.id, site.id, { branding_json: branding });
+      const updated = await updateWidgetSite(clerk.user.id, site.id, { settings_json: settings });
       setLoading(btnSaveBranding, false);
       if (updated) {
         appState.selectedSite = updated;
@@ -622,20 +715,6 @@ function initEventHandlers() {
         showToast('Failed to save branding', 'error');
       }
     });
-  }
-
-  // Color pickers sync with text inputs
-  const primaryColor = document.getElementById('branding-primary-color');
-  const primaryHex = document.getElementById('branding-primary-hex');
-  if (primaryColor && primaryHex) {
-    primaryColor.addEventListener('input', function () { primaryHex.value = this.value; });
-    primaryHex.addEventListener('change', function () { primaryColor.value = this.value; });
-  }
-  const accentColor = document.getElementById('branding-accent-color');
-  const accentHex = document.getElementById('branding-accent-hex');
-  if (accentColor && accentHex) {
-    accentColor.addEventListener('input', function () { accentHex.value = this.value; });
-    accentHex.addEventListener('change', function () { accentColor.value = this.value; });
   }
 
   // Domains
@@ -839,20 +918,28 @@ function initEventHandlers() {
     btnSaveLeadCapture.addEventListener('click', async function () {
       const site = appState.selectedSite;
       if (!site) return;
-      const fields = [];
-      if (document.getElementById('lead-field-name').checked) fields.push('name');
-      if (document.getElementById('lead-field-email').checked) fields.push('email');
-      if (document.getElementById('lead-field-phone').checked) fields.push('phone');
-      if (document.getElementById('lead-field-company').checked) fields.push('company');
-      const leadCapture = {
-        enabled: document.getElementById('lead-capture-enabled').checked,
-        timing_mode: document.getElementById('lead-capture-timing').value,
-        fields_enabled: fields,
-        prompt_text: document.getElementById('lead-capture-prompt').value,
-        deduplicate_session: true,
-      };
+      const settings = getSiteSettings(site);
+
+      const allFields = ['name', 'email', 'phone', 'company'];
+      const fields = allFields.filter(function (f) {
+        const el = document.getElementById('lead-field-' + f);
+        return !!(el && el.checked);
+      });
+
+      const enabled = document.getElementById('lead-capture-enabled').checked;
+      const captureTiming = document.getElementById('lead-capture-timing').value;
+
+      settings.leads.enabled = enabled;
+      settings.leads.capture_timing = enabled ? captureTiming : 'off';
+      settings.leads.fields = fields;
+      settings.leads.required_fields = fields.includes('email') ? ['email'] : [];
+      settings.leads.prompt_subtitle = document.getElementById('lead-capture-prompt').value;
+
+      // Minimal mapping: skippable mirrors the timing mode.
+      settings.leads.skippable = enabled && captureTiming === 'before_chat_skippable';
+
       setLoading(btnSaveLeadCapture, true);
-      const updated = await updateWidgetSite(clerk.user.id, site.id, { lead_capture_json: leadCapture });
+      const updated = await updateWidgetSite(clerk.user.id, site.id, { settings_json: settings });
       setLoading(btnSaveLeadCapture, false);
       if (updated) {
         appState.selectedSite = updated;
@@ -870,14 +957,10 @@ function initEventHandlers() {
 window.__copySnippet = function () {
   const site = appState.selectedSite;
   if (!site) return;
-  const snippet = '<script src="https://cdn.grindctrl.com/grindctrl-support.js"><\/script>\n<script>\n  GrindctrlSupport.init({\n    embedKey: "' + site.embed_key + '",\n    domain: window.location.hostname\n  });\n<\/script>';
-  navigator.clipboard.writeText(snippet).then(function () {
-    var btn = document.querySelector('.gc-app-snippet-copy');
-    if (btn) {
-      var orig = btn.innerHTML;
-      btn.innerHTML = '<span class="material-symbols-outlined">check</span> Copied!';
-      setTimeout(function () { btn.innerHTML = orig; }, 2000);
-    }
+  navigator.clipboard.writeText(buildCanonicalInstallSnippet(site.embed_key)).then(function () {
+    showToast('Copied!', 'success');
+  }).catch(function () {
+    showToast('Copy failed', 'error');
   });
 };
 

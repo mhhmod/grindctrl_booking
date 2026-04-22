@@ -16,6 +16,9 @@
 
 begin;
 
+-- Cutover: remove legacy update function signature (no dual-write).
+drop function if exists public.dashboard_update_widget_site(text, uuid, text, text, jsonb, jsonb, jsonb);
+
 -- ── get_user_workspace (enhance) ──
 -- Ensure workspace_members role is included in the returned data
 create or replace function public.get_user_workspace(
@@ -42,7 +45,25 @@ begin
     return null;
   end if;
 
-  select coalesce(jsonb_agg(row_to_json(ws.*)), '[]'::jsonb)
+  -- Explicit column projection: settings_json is the only authoritative config.
+  -- Do not return legacy JSON columns to the client.
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', ws.id,
+        'workspace_id', ws.workspace_id,
+        'name', ws.name,
+        'embed_key', ws.embed_key,
+        'status', ws.status,
+        'settings_json', ws.settings_json,
+        'settings_version', ws.settings_version,
+        'created_at', ws.created_at,
+        'updated_at', ws.updated_at
+      )
+      order by ws.created_at asc
+    ),
+    '[]'::jsonb
+  )
   into v_sites
   from public.widget_sites ws
   where ws.workspace_id = v_workspace.id;
@@ -104,7 +125,17 @@ begin
 
   insert into public.widget_sites (workspace_id, name, created_by_profile_id)
   values (p_workspace_id, coalesce(p_name, 'New Widget Site'), v_profile.id)
-  returning to_jsonb(public.widget_sites.*)
+  returning jsonb_build_object(
+    'id', id,
+    'workspace_id', workspace_id,
+    'name', name,
+    'embed_key', embed_key,
+    'status', status,
+    'settings_json', settings_json,
+    'settings_version', settings_version,
+    'created_at', created_at,
+    'updated_at', updated_at
+  )
   into v_site;
 
   return v_site;
@@ -117,9 +148,7 @@ create or replace function public.dashboard_update_widget_site(
   p_site_id uuid,
   p_name text,
   p_status text,
-  p_config_json jsonb,
-  p_branding_json jsonb,
-  p_lead_capture_json jsonb
+  p_settings_json jsonb
 )
 returns jsonb
 language plpgsql
@@ -129,15 +158,27 @@ as $$
 declare
   v_site jsonb;
 begin
+  if p_settings_json is not null and jsonb_typeof(p_settings_json) <> 'object' then
+    raise exception 'settings_json_must_be_object';
+  end if;
+
   update public.widget_sites set
     name        = coalesce(p_name,        name),
     status      = coalesce(p_status,      status),
-    config_json = coalesce(p_config_json,  config_json),
-    branding_json     = coalesce(p_branding_json,    branding_json),
-    lead_capture_json = coalesce(p_lead_capture_json, lead_capture_json),
+    settings_json = coalesce(p_settings_json, settings_json),
     updated_at   = now()
   where id = p_site_id
-  returning to_jsonb(public.widget_sites.*)
+  returning jsonb_build_object(
+    'id', id,
+    'workspace_id', workspace_id,
+    'name', name,
+    'embed_key', embed_key,
+    'status', status,
+    'settings_json', settings_json,
+    'settings_version', settings_version,
+    'created_at', created_at,
+    'updated_at', updated_at
+  )
   into v_site;
 
   return v_site;
@@ -182,7 +223,17 @@ begin
     embed_key   = v_new_key,
     updated_at  = now()
   where id = p_site_id
-  returning to_jsonb(public.widget_sites.*)
+  returning jsonb_build_object(
+    'id', id,
+    'workspace_id', workspace_id,
+    'name', name,
+    'embed_key', embed_key,
+    'status', status,
+    'settings_json', settings_json,
+    'settings_version', settings_version,
+    'created_at', created_at,
+    'updated_at', updated_at
+  )
   into v_site;
 
   return v_site;
@@ -428,7 +479,7 @@ $$;
 grant execute on function public.get_user_workspace(text) to anon, authenticated;
 grant execute on function public.dashboard_get_user_role(text, uuid) to anon, authenticated;
 grant execute on function public.dashboard_create_widget_site(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_update_widget_site(text, uuid, text, text, jsonb, jsonb, jsonb) to anon, authenticated;
+grant execute on function public.dashboard_update_widget_site(text, uuid, text, text, jsonb) to anon, authenticated;
 grant execute on function public.dashboard_delete_widget_site(text, uuid) to anon, authenticated;
 grant execute on function public.dashboard_regenerate_embed_key(text, uuid) to anon, authenticated;
 grant execute on function public.dashboard_list_domains(text, uuid) to anon, authenticated;
@@ -440,6 +491,9 @@ grant execute on function public.dashboard_create_intent(text, uuid, text, text,
 grant execute on function public.dashboard_update_intent(text, uuid, text, text, text, text, text, integer) to anon, authenticated;
 grant execute on function public.dashboard_delete_intent(text, uuid) to anon, authenticated;
 grant execute on function public.dashboard_list_leads(text, uuid, uuid) to anon, authenticated;
-grant execute on function public.submit_widget_lead(uuid, uuid, text, text, text, text, text) to anon, authenticated;
+
+-- Security: lead insertion is handled by Edge Functions only.
+-- Ensure this legacy RPC is not callable by browser roles.
+revoke execute on function public.submit_widget_lead(uuid, uuid, text, text, text, text, text) from public, anon, authenticated;
 
 commit;

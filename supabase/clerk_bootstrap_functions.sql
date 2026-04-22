@@ -164,7 +164,25 @@ begin
     return null;
   end if;
 
-  select coalesce(jsonb_agg(row_to_json(ws.*)), '[]'::jsonb)
+  -- Explicit column projection: settings_json is the only authoritative config.
+  -- Do not return legacy JSON columns to the client.
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', ws.id,
+        'workspace_id', ws.workspace_id,
+        'name', ws.name,
+        'embed_key', ws.embed_key,
+        'status', ws.status,
+        'settings_json', ws.settings_json,
+        'settings_version', ws.settings_version,
+        'created_at', ws.created_at,
+        'updated_at', ws.updated_at
+      )
+      order by ws.created_at asc
+    ),
+    '[]'::jsonb
+  )
   into v_sites
   from public.widget_sites ws
   where ws.workspace_id = v_workspace.id;

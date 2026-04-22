@@ -151,9 +151,7 @@ export async function updateWidgetSite(clerkUserId, siteId, updates) {
       p_site_id: siteId,
       p_name: updates.name || null,
       p_status: updates.status || null,
-      p_config_json: updates.config_json || null,
-      p_branding_json: updates.branding_json || null,
-      p_lead_capture_json: updates.lead_capture_json || null,
+      p_settings_json: updates.settings_json || null,
     });
 
     if (error) {
