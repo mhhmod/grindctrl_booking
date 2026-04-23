@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    background: #09090b;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-50 antialiased;
+    min-height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: #27272a;
+    color: #fff;
+  }
+}
