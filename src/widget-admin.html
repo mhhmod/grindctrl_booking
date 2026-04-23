@@ -414,17 +414,30 @@
         <div class="snippet-box">
           <div class="snippet-header">
             <span class="snippet-lang">HTML</span>
-            <button class="snippet-copy" onclick="copySnippet()"><span class="material-symbols-outlined" style="font-size:12px">content_copy</span> Copy</button>
+            <button class="snippet-copy" onclick="copySnippet('install-snippet', this)"><span class="material-symbols-outlined" style="font-size:12px">content_copy</span> Copy</button>
           </div>
-          <div class="snippet-body" id="install-snippet"><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/grindctrl-support.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
-<span class="tag">&lt;script&gt;</span>
-  <span class="material-symbols-outlined" style="font-size:12px;color:#7dd3fc">smart_toy</span> GrindctrlSupport.init({
+          <div class="snippet-body" id="install-snippet"><span class="tag">&lt;script&gt;</span>
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
     <span class="attr">embedKey</span>: <span class="str">'abc-1234-efgh'</span>,
-    <span class="attr">domain</span>: <span class="str">'yourdomain.com'</span>
+    <span class="attr">user</span>: { <span class="attr">id</span>: <span class="str">null</span>, <span class="attr">email</span>: <span class="str">null</span>, <span class="attr">name</span>: <span class="str">null</span> },
+    <span class="attr">context</span>: { <span class="attr">custom</span>: {} }
   });
-<span class="tag">&lt;/script&gt;</span></div>
+<span class="tag">&lt;/script&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">async src</span>=<span class="str">"https://cdn.grindctrl.com/widget/v1/loader.js"</span><span class="tag">&gt;&lt;/script&gt;</span></div>
         </div>
         <p class="form-hint" style="margin-top:8px">Paste this before the closing <code style="font-family:monospace;background:var(--surface-raised);padding:2px 6px;border-radius:4px">&lt;/body&gt;</code> tag on every page where you want the widget to appear.</p>
+        <div class="divider"></div>
+        <div class="snippet-box">
+          <div class="snippet-header">
+            <span class="snippet-lang">CSP-Friendly</span>
+            <button class="snippet-copy" onclick="copySnippet('install-snippet-csp', this)"><span class="material-symbols-outlined" style="font-size:12px">content_copy</span> Copy</button>
+          </div>
+          <div class="snippet-body" id="install-snippet-csp"><span class="tag">&lt;script</span>
+  <span class="attr">async</span>
+  <span class="attr">src</span>=<span class="str">"https://cdn.grindctrl.com/widget/v1/loader.js"</span>
+  <span class="attr">data-gc-embed-key</span>=<span class="str">"abc-1234-efgh"</span><span class="tag">&gt;&lt;/script&gt;</span></div>
+        </div>
       </div>
 
       <!-- Recent Conversations -->
@@ -1005,10 +1018,10 @@
     });
   });
 
-  function copySnippet() {
-    var code = document.getElementById('install-snippet').textContent;
+  function copySnippet(snippetId, button) {
+    var code = document.getElementById(snippetId).textContent;
     navigator.clipboard.writeText(code).then(function() {
-      var btn = document.querySelector('.snippet-copy');
+      var btn = button;
       btn.textContent = 'Copied!';
       setTimeout(function() { btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:12px">content_copy</span> Copy'; }, 2000);
     });
