@@ -733,33 +733,61 @@ tailwind.config = {
 <header class="mb-16 sm:mb-20 max-w-3xl reveal">
   <span class="text-[12px] font-bold tracking-[0.25em] text-primary uppercase mb-6 block" data-i18n="install_hero_badge">Install</span>
   <h1 class="h1-fluid font-headline text-on-surface mb-6 sm:mb-8" data-i18n-html="install_hero_title_html">
-    One Script Tag.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>
+    Queue + Loader.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>
   </h1>
   <p class="text-fluid text-secondary max-w-xl" data-i18n="install_hero_subtitle">
-    Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML. One script. Zero dependencies. Full AI support on every page.
+    Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML with the canonical queue + loader install or the CSP-friendly variant.
   </p>
 </header>
 
 <!-- ── Install Snippet ── -->
-<div class="mb-20 sm:mb-28 reveal">
+<div class="mb-20 sm:mb-28 reveal space-y-6">
   <div class="ui-card p-0 overflow-hidden max-w-3xl">
     <div class="bg-surface-container-high px-6 py-4 flex items-center justify-between border-b border-softer">
       <div class="flex items-center gap-3">
         <span class="material-symbols-outlined text-primary text-xl">code</span>
-        <span class="font-headline font-bold text-[13px] text-on-surface" data-i18n="install_snippet_label">Your Embed Snippet</span>
+        <span class="font-headline font-bold text-[13px] text-on-surface" data-i18n="install_snippet_label">Primary Install Snippet</span>
       </div>
       <button onclick="copyInstallSnippet()" class="gc-btn gc-btn--secondary gc-btn--sm">
         <span class="material-symbols-outlined text-sm">content_copy</span> <span data-i18n="install_snippet_copy">Copy</span>
       </button>
     </div>
     <div class="p-6 sm:p-8 bg-surface-container-lowest/50 overflow-x-auto">
-      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0">&lt;!-- GRINDCTRL Support Widget --&gt;
-&lt;script src="https://cdn.grindctrl.com/grindctrl-support.js"&gt;&lt;/script&gt;
+      <pre id="install-snippet" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0">&lt;!-- GRINDCTRL Support Widget — Canonical Queue + Loader --&gt;
 &lt;script&gt;
-  GrindctrlSupport.init({
+  window.GrindctrlSupport = window.GrindctrlSupport || [];
+  window.GrindctrlSupport.push({
     embedKey: 'YOUR_EMBED_KEY',
-    domain: window.location.hostname,
+    user: {
+      id: null,
+      email: null,
+      name: null
+    },
+    context: {
+      custom: {}
+    }
   });
+&lt;/script&gt;
+&lt;script async src="https://cdn.grindctrl.com/widget/v1/loader.js"&gt;&lt;/script&gt;</pre>
+    </div>
+  </div>
+
+  <div class="ui-card p-0 overflow-hidden max-w-3xl">
+    <div class="bg-surface-container-high px-6 py-4 flex items-center justify-between border-b border-softer">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-xl">policy</span>
+        <span class="font-headline font-bold text-[13px] text-on-surface">CSP-Friendly Variant</span>
+      </div>
+      <button onclick="copyInstallSnippetCsp()" class="gc-btn gc-btn--secondary gc-btn--sm">
+        <span class="material-symbols-outlined text-sm">content_copy</span> Copy CSP Snippet
+      </button>
+    </div>
+    <div class="p-6 sm:p-8 bg-surface-container-lowest/50 overflow-x-auto">
+      <pre id="install-snippet-csp" class="text-[13px] sm:text-sm font-mono text-on-surface leading-relaxed" style="white-space:normal;min-width:0">&lt;!-- GRINDCTRL Support Widget — CSP-Friendly --&gt;
+&lt;script
+  async
+  src="https://cdn.grindctrl.com/widget/v1/loader.js"
+  data-gc-embed-key="YOUR_EMBED_KEY"&gt;
 &lt;/script&gt;</pre>
     </div>
   </div>
@@ -1230,13 +1258,13 @@ tailwind.config = {
   } catch(e) {}
 
   // Copy install snippet
-  window.copyInstallSnippet = function() {
-    var snippet = document.getElementById('install-snippet');
+  function copySnippetById(preId, buttonSelector) {
+    var snippet = document.getElementById(preId);
     if (!snippet) return;
     var text = snippet.textContent || snippet.innerText;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(function() {
-        var btn = document.querySelector('[onclick="copyInstallSnippet()"]');
+        var btn = document.querySelector(buttonSelector);
         if (btn) {
           var orig = btn.innerHTML;
           btn.innerHTML = '<span class="material-symbols-outlined text-sm">check</span> Copied!';
@@ -1244,6 +1272,14 @@ tailwind.config = {
         }
       });
     }
+  }
+
+  window.copyInstallSnippet = function() {
+    copySnippetById('install-snippet', '[onclick="copyInstallSnippet()"]');
+  };
+
+  window.copyInstallSnippetCsp = function() {
+    copySnippetById('install-snippet-csp', '[onclick="copyInstallSnippetCsp()"]');
   };
 
   // Interactive mockup functions

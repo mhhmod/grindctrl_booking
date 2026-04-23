@@ -733,11 +733,11 @@
 
     /* ────────── INSTALL: HERO ────────── */
     install_hero_badge: { en: 'Install', ar: 'تثبيت' },
-    install_hero_title_html: { en: 'One Script Tag.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>', ar: 'سطر كود واحد.<br/><span class="text-ink-dim italic font-bold">أي موقع.</span>' },
-    install_hero_subtitle: { en: 'Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML. One script. Zero dependencies. Full AI support on every page.', ar: 'ثبّت أداة GRINDCTRL على شوبيفاي، ووردبريس، ورياكت، وفوي، أو HTML عادي. سطر كود واحد بدون تبعيات. دعم ذكي كامل على كل صفحة.' },
+    install_hero_title_html: { en: 'Queue + Loader.<br/><span class="text-ink-dim italic font-bold">Any Website.</span>', ar: 'الصف + المحمّل.<br/><span class="text-ink-dim italic font-bold">أي موقع.</span>' },
+    install_hero_subtitle: { en: 'Drop the GRINDCTRL widget on Shopify, WordPress, React, Vue, or plain HTML with the canonical queue + loader install or the CSP-friendly variant.', ar: 'ثبّت أداة GRINDCTRL على شوبيفاي، ووردبريس، ورياكت، وفوي، أو HTML عادي باستخدام الصف + المحمّل الرسمي أو النسخة المتوافقة مع CSP.' },
 
     /* ────────── INSTALL: SNIPPET ────────── */
-    install_snippet_label: { en: 'Your Embed Snippet', ar: 'كود التضمين الخاص بك' },
+    install_snippet_label: { en: 'Primary Install Snippet', ar: 'كود التثبيت الرئيسي' },
     install_snippet_copy: { en: 'Copy', ar: 'نسخ' },
 
     /* ────────── INSTALL: INTERACTIVE PREVIEW ────────── */
