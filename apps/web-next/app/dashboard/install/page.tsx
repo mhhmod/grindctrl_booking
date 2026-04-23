@@ -1,9 +1,11 @@
+import React from 'react';
 import { InstallPageContent } from '@/components/dashboard/install-page-content';
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
+import { listDomains } from '@/lib/adapters/domains';
 import { buildCanonicalInstallSnippet, buildCspInstallSnippet } from '@/lib/adapters/install';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
-import { selectWidgetSite } from '@/lib/adapters/widgetSites';
+import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';
 import type { SearchParams } from '@/lib/types';
 
 type Props = {
@@ -28,6 +30,9 @@ export default async function DashboardInstallPage({ searchParams }: Props) {
     return <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900 p-6 text-sm text-zinc-400">No widget site could be selected for install.</div>;
   }
 
+  const domains = await listDomains(clerkUserId, site.id);
+  const settings = normalizeSettingsJson(site.settings_json);
+
   return (
     <div className="grid gap-6">
       <div className="flex justify-end">
@@ -35,6 +40,8 @@ export default async function DashboardInstallPage({ searchParams }: Props) {
       </div>
       <InstallPageContent
         site={site}
+        domains={domains}
+        allowLocalhost={settings.security.allow_localhost}
         canonicalSnippet={buildCanonicalInstallSnippet(site.embed_key)}
         cspSnippet={buildCspInstallSnippet(site.embed_key)}
       />
