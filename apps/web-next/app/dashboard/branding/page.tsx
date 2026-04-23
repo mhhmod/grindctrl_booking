@@ -1,7 +1,8 @@
 import React from 'react';
+import { saveBrandingAction } from '@/app/dashboard/branding/actions';
+import { getInitialBrandingFormState } from '@/app/dashboard/branding/state';
 import { BrandingForm } from '@/components/dashboard/branding-form';
 import { SiteSelector } from '@/components/dashboard/site-selector';
-import { getInitialBrandingFormState, saveBrandingAction } from '@/app/dashboard/branding/actions';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';

@@ -1,3 +1,7 @@
+import React from 'react';
+import { createIntentAction, deleteIntentAction, reorderIntentAction, updateIntentAction } from '@/app/dashboard/intents/actions';
+import { getInitialIntentEditorValues, getInitialIntentsState } from '@/app/dashboard/intents/state';
+import { IntentsManager } from '@/components/dashboard/intents-manager';
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listIntents } from '@/lib/adapters/intents';
@@ -22,27 +26,23 @@ export default async function DashboardIntentsPage({ searchParams }: Props) {
   }
 
   const intents = await listIntents(clerkUserId, site.id);
+  const initialState = getInitialIntentsState(intents);
+  const initialValues = getInitialIntentEditorValues(intents);
+  const context = { clerkUserId, siteId: site.id };
 
   return (
     <div className="grid gap-6">
       <div className="flex justify-end">
         <SiteSelector sites={bundle.sites} selectedSiteId={site.id} />
       </div>
-      <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
-        <h2 className="text-lg font-semibold text-white">Configured intents</h2>
-        {intents.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 p-4 text-sm text-zinc-400">No intents are configured for this site yet.</p>
-        ) : (
-          <ul className="mt-4 grid gap-3">
-            {intents.map((intent) => (
-              <li key={intent.id} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <div className="text-sm font-medium text-zinc-100">{intent.label}</div>
-                <div className="mt-1 text-sm text-zinc-500">{intent.action_type ?? 'send_message'}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <IntentsManager
+        initialState={initialState}
+        initialValues={initialValues}
+        createIntentAction={createIntentAction.bind(null, context)}
+        updateIntentAction={updateIntentAction.bind(null, context)}
+        deleteIntentAction={deleteIntentAction.bind(null, context)}
+        reorderIntentAction={reorderIntentAction.bind(null, context)}
+      />
     </div>
   );
 }

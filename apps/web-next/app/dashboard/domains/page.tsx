@@ -1,7 +1,8 @@
 import React from 'react';
+import { addDomainAction, removeDomainAction, updateDomainStatusAction } from '@/app/dashboard/domains/actions';
+import { getInitialDomainsState } from '@/app/dashboard/domains/state';
 import { DomainsManager } from '@/components/dashboard/domains-manager';
 import { SiteSelector } from '@/components/dashboard/site-selector';
-import { addDomainAction, getInitialDomainsState, removeDomainAction, updateDomainStatusAction } from '@/app/dashboard/domains/actions';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useEffect, useState, useTransition } from 'react';
-import type { DomainsState } from '@/app/dashboard/domains/actions';
+import type { DomainsState } from '@/app/dashboard/domains/state';
 import { DOMAIN_STATUS_OPTIONS, getDomainStatusTone, isValidDomainInput, normalizeDomainInput } from '@/lib/domains';
 
 const inputClassName = 'mt-2 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 outline-none transition focus:border-zinc-600';

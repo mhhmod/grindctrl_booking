@@ -1,18 +1,18 @@
 'use server';
 
-import type { BrandingFormState } from '@/app/dashboard/branding/state';
+import type { LeadSettingsFormState } from '@/app/dashboard/leads/state';
 import { normalizeSettingsJson, updateWidgetSite } from '@/lib/adapters/widgetSites';
 import type { JsonObject, SettingsJson } from '@/lib/types';
-import { getBrandingViewModel, getBrandingViewModelFromFormData, mergeBrandingViewModel, type BrandingViewModel } from '@/lib/view-models/branding';
+import { getLeadSettingsViewModel, getLeadSettingsViewModelFromFormData, mergeLeadSettingsViewModel, type LeadSettingsViewModel } from '@/lib/view-models/leads';
 
-export async function saveBrandingAction(
+export async function saveLeadSettingsAction(
   context: { clerkUserId: string; siteId: string; currentSettings: SettingsJson },
   formData: FormData,
-): Promise<BrandingFormState> {
-  const values = getBrandingViewModelFromFormData(formData);
+): Promise<LeadSettingsFormState> {
+  const values = getLeadSettingsViewModelFromFormData(formData);
 
   try {
-    const nextSettings = mergeBrandingViewModel(context.currentSettings, values);
+    const nextSettings = mergeLeadSettingsViewModel(context.currentSettings, values);
     const updatedSite = await updateWidgetSite({
       clerkUserId: context.clerkUserId,
       siteId: context.siteId,
@@ -23,13 +23,13 @@ export async function saveBrandingAction(
 
     return {
       status: 'success',
-      message: 'Branding saved to settings_json.',
-      values: getBrandingViewModel(normalizedSettings),
+      message: 'Lead capture settings saved to settings_json.',
+      values: getLeadSettingsViewModel(normalizedSettings),
     };
   } catch (error) {
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unable to save branding.',
+      message: error instanceof Error ? error.message : 'Unable to save lead capture settings.',
       values,
     };
   }

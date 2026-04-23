@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useEffect, useState, useTransition } from 'react';
-import type { BrandingFormState } from '@/app/dashboard/branding/actions';
+import type { BrandingFormState } from '@/app/dashboard/branding/state';
 import type { BrandingViewModel } from '@/lib/view-models/branding';
 
 const themeModeOptions = [

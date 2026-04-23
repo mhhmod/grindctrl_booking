@@ -1,8 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import type { BrandingFormState } from '@/app/dashboard/branding/state';
 import { BrandingForm } from '@/components/dashboard/branding-form';
-import type { BrandingFormState } from '@/app/dashboard/branding/actions';
 
 const initialState: BrandingFormState = {
   status: 'idle',

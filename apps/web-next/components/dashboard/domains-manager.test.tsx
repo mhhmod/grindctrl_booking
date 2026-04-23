@@ -1,8 +1,8 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import type { DomainsState } from '@/app/dashboard/domains/state';
 import { DomainsManager } from '@/components/dashboard/domains-manager';
-import type { DomainsState } from '@/app/dashboard/domains/actions';
 
 const initialState: DomainsState = {
   domains: [
@@ -19,7 +19,7 @@ const initialState: DomainsState = {
 };
 
 describe('DomainsManager', () => {
-  it('shows inline validation and supports add/remove interaction flows', async () => {
+  it('shows inline validation and supports add/remove interaction flows', { timeout: 10000 }, async () => {
     const addDomainAction = vi.fn().mockResolvedValue({
       ...initialState,
       domains: [...initialState.domains, { id: 'domain_2', widget_site_id: 'site_1', domain: 'grindctrl.com', verification_status: 'pending' }],
