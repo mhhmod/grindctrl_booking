@@ -51,6 +51,12 @@ export interface WidgetLead {
   created_at?: string;
 }
 
+export interface WidgetInstallVerification {
+  last_heartbeat_at?: string | null;
+  last_seen_origin?: string | null;
+  last_seen_domain?: string | null;
+}
+
 export interface WorkspaceBundle {
   workspace: Workspace | null;
   sites: WidgetSite[];

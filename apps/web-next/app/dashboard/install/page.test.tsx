@@ -14,6 +14,10 @@ vi.mock('@/lib/adapters/domains', () => ({
   listDomains: vi.fn(),
 }));
 
+vi.mock('@/lib/adapters/installVerification', () => ({
+  getInstallVerification: vi.fn(),
+}));
+
 vi.mock('@/components/dashboard/site-selector', () => ({
   SiteSelector: () => <div data-testid="site-selector" />,
 }));
@@ -21,6 +25,7 @@ vi.mock('@/components/dashboard/site-selector', () => ({
 import DashboardInstallPage from '@/app/dashboard/install/page';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
+import { getInstallVerification } from '@/lib/adapters/installVerification';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 
 describe('DashboardInstallPage', () => {
@@ -42,13 +47,37 @@ describe('DashboardInstallPage', () => {
     });
   });
 
+  it('requires dashboard authentication for the install route', async () => {
+    vi.mocked(listDomains).mockResolvedValue([]);
+    vi.mocked(getInstallVerification).mockResolvedValue(null);
+
+    const result = await DashboardInstallPage({ searchParams: Promise.resolve({}) });
+    render(result);
+
+    expect(requireDashboardUser).toHaveBeenCalledWith('/dashboard/install');
+  });
+
   it('shows domain setup state from the real adapter path on install', async () => {
     vi.mocked(listDomains).mockResolvedValue([]);
+    vi.mocked(getInstallVerification).mockResolvedValue(null);
 
     const result = await DashboardInstallPage({ searchParams: Promise.resolve({}) });
     render(result);
 
     expect(listDomains).toHaveBeenCalledWith('user_123', 'site_1');
-    expect(screen.getByText(/No allowed domains are configured yet/)).toBeInTheDocument();
+    expect(getInstallVerification).toHaveBeenCalledWith('user_123', 'site_1');
+    expect(screen.getAllByText(/No allowed domains are configured yet/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Never seen')).toBeInTheDocument();
+  });
+
+  it('shows an install verification error state when the heartbeat contract fails', async () => {
+    vi.mocked(listDomains).mockResolvedValue([]);
+    vi.mocked(getInstallVerification).mockRejectedValue(new Error('dashboard_get_install_verification failed: boom'));
+
+    const result = await DashboardInstallPage({ searchParams: Promise.resolve({}) });
+    render(result);
+
+    expect(screen.getByText('Unable to load install verification.')).toBeInTheDocument();
+    expect(screen.getByText('dashboard_get_install_verification failed: boom')).toBeInTheDocument();
   });
 });

@@ -1,22 +1,40 @@
 import React from 'react';
 import { CopyButton } from '@/components/dashboard/copy-button';
 import { getDomainStatusTone } from '@/lib/domains';
-import type { WidgetDomain, WidgetSite } from '@/lib/types';
+import { getInstallDomainSafety, getInstallStatus, getInstallStatusLabel, getInstallStatusTone } from '@/lib/adapters/install';
+import type { WidgetDomain, WidgetInstallVerification, WidgetSite } from '@/lib/types';
+
+function formatTimestamp(value?: string | null) {
+  if (!value) return 'Not seen yet';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString();
+}
 
 export function InstallPageContent({
   site,
   domains,
   allowLocalhost,
+  verificationState,
   canonicalSnippet,
   cspSnippet,
 }: {
   site: WidgetSite;
   domains: WidgetDomain[];
   allowLocalhost: boolean;
+  verificationState: {
+    status: 'success' | 'error';
+    verification: WidgetInstallVerification | null;
+    message: string | null;
+  };
   canonicalSnippet: string;
   cspSnippet: string;
 }) {
   const verifiedDomains = domains.filter((domain) => domain.verification_status === 'verified');
+  const installStatus = getInstallStatus(verificationState.verification);
+  const domainSafety = getInstallDomainSafety(domains, verificationState.verification, allowLocalhost);
 
   return (
     <div className="grid gap-6">
@@ -55,12 +73,55 @@ export function InstallPageContent({
         <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
+              <h2 className="text-lg font-semibold text-white">Install verification</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-400">Uses the latest backend-recorded `widget_heartbeat` event so operators can confirm the selected install is alive without changing the snippet contract.</p>
+            </div>
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${getInstallStatusTone(installStatus)}`}>{getInstallStatusLabel(installStatus)}</span>
+          </div>
+
+          {verificationState.status === 'error' ? (
+            <div className="mt-5 rounded-2xl border border-rose-500/30 bg-rose-950/20 p-4 text-sm text-rose-200">
+              <p className="font-medium">Unable to load install verification.</p>
+              <p className="mt-2 leading-6 text-rose-100/80">{verificationState.message ?? 'The heartbeat read contract returned an error.'}</p>
+            </div>
+          ) : null}
+
+          {verificationState.status === 'success' && !verificationState.verification?.last_heartbeat_at ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 p-4 text-sm text-zinc-400">
+              <p className="font-medium text-zinc-200">This widget has not been seen yet.</p>
+              <p className="mt-2 leading-6">Once the canonical snippet boots on an allowed origin, the runtime will emit a heartbeat and the latest activity will appear here.</p>
+            </div>
+          ) : null}
+
+          <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <dt className="text-sm text-zinc-500">Last heartbeat</dt>
+              <dd className="mt-2 text-sm text-zinc-100">{formatTimestamp(verificationState.verification?.last_heartbeat_at)}</dd>
+            </div>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <dt className="text-sm text-zinc-500">Last seen origin</dt>
+              <dd className="mt-2 break-all text-sm text-zinc-100">{verificationState.verification?.last_seen_origin ?? 'Not seen yet'}</dd>
+            </div>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 sm:col-span-2">
+              <dt className="text-sm text-zinc-500">Last seen domain</dt>
+              <dd className="mt-2 text-sm text-zinc-100">{verificationState.verification?.last_seen_domain ?? 'Not seen yet'}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
               <h2 className="text-lg font-semibold text-white">Domain safety</h2>
               <p className="mt-2 text-sm leading-6 text-zinc-400">Install snippets stay unchanged, but production rollout should be tied to the real allowed-domain state for this site.</p>
             </div>
-            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${domains.length === 0 ? 'border-amber-500/30 bg-amber-500/10 text-amber-200' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'}`}>
-              {domains.length === 0 ? 'Action needed' : 'Configured'}
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${domainSafety.tone}`}>
+              {domainSafety.label}
             </span>
+          </div>
+
+          <div className={`mt-5 rounded-2xl border p-4 text-sm ${domainSafety.tone}`}>
+            {domainSafety.summary}
           </div>
 
           {domains.length === 0 ? (
@@ -87,6 +148,7 @@ export function InstallPageContent({
             <li className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">Verified production domains: {verifiedDomains.length}</li>
             <li className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">Configured hostnames: {domains.length}</li>
             <li className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">Localhost/dev access: {allowLocalhost ? 'Enabled through settings_json security defaults.' : 'Disabled in settings_json.'}</li>
+            <li className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">Heartbeat read path: `dashboard_get_install_verification`</li>
           </ul>
           <p className="mt-4 text-sm leading-6 text-zinc-400">`localhost` can stay available for development while production installs should use verified hostnames from the current site domain list.</p>
         </div>

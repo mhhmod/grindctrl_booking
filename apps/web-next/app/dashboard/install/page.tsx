@@ -3,9 +3,11 @@ import { InstallPageContent } from '@/components/dashboard/install-page-content'
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
+import { getInstallVerification } from '@/lib/adapters/installVerification';
 import { buildCanonicalInstallSnippet, buildCspInstallSnippet } from '@/lib/adapters/install';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';
+import type { WidgetInstallVerification } from '@/lib/types';
 import type { SearchParams } from '@/lib/types';
 
 type Props = {
@@ -32,6 +34,25 @@ export default async function DashboardInstallPage({ searchParams }: Props) {
 
   const domains = await listDomains(clerkUserId, site.id);
   const settings = normalizeSettingsJson(site.settings_json);
+  let verificationState: {
+    status: 'success' | 'error';
+    verification: WidgetInstallVerification | null;
+    message: string | null;
+  };
+
+  try {
+    verificationState = {
+      status: 'success',
+      verification: await getInstallVerification(clerkUserId, site.id),
+      message: null,
+    };
+  } catch (error) {
+    verificationState = {
+      status: 'error',
+      verification: null,
+      message: error instanceof Error ? error.message : 'Unable to load install verification state.',
+    };
+  }
 
   return (
     <div className="grid gap-6">
@@ -42,6 +63,7 @@ export default async function DashboardInstallPage({ searchParams }: Props) {
         site={site}
         domains={domains}
         allowLocalhost={settings.security.allow_localhost}
+        verificationState={verificationState}
         canonicalSnippet={buildCanonicalInstallSnippet(site.embed_key)}
         cspSnippet={buildCspInstallSnippet(site.embed_key)}
       />
