@@ -25,6 +25,15 @@ const initialSettingsState: LeadSettingsFormState = {
 const populatedLeadsState: LeadsListState = {
   status: 'success',
   message: null,
+  query: '',
+  sort: 'captured_desc',
+  page: 1,
+  pageSize: 10,
+  totalPages: 1,
+  startIndex: 1,
+  endIndex: 1,
+  filteredCount: 1,
+  totalCount: 1,
   leads: [
     {
       id: 'lead_1',
@@ -50,7 +59,7 @@ describe('LeadsDashboard', () => {
         }),
     );
 
-    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} />);
+    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} selectedSiteId="site_1" />);
 
     fireEvent.change(screen.getByLabelText('Prompt title'), { target: { value: 'Contact us next' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Save lead settings' }).closest('form') as HTMLFormElement);
@@ -79,24 +88,98 @@ describe('LeadsDashboard', () => {
       message: 'dashboard_update_widget_site failed',
     });
 
-    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} />);
+    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} selectedSiteId="site_1" />);
 
+    fireEvent.change(screen.getByLabelText('Prompt title'), { target: { value: 'New prompt title' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Save lead settings' }).closest('form') as HTMLFormElement);
 
     expect(await screen.findByText('dashboard_update_widget_site failed')).toBeInTheDocument();
   });
 
+  it('marks invalid lead settings fields and blocks submit until fixed', () => {
+    const saveSettingsAction = vi.fn().mockResolvedValue(initialSettingsState);
+
+    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} selectedSiteId="site_1" />);
+
+    fireEvent.change(screen.getByLabelText('Consent copy'), { target: { value: '' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Save lead settings' }).closest('form') as HTMLFormElement);
+
+    expect(screen.getAllByText('Consent text is required when consent mode is optional or required.').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Consent copy')).toHaveAttribute('aria-invalid', 'true');
+    expect(saveSettingsAction).not.toHaveBeenCalled();
+  });
+
   it('shows loading, empty, and error states for the leads list', () => {
     const saveSettingsAction = vi.fn().mockResolvedValue(initialSettingsState);
-    const { container, rerender } = render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={{ status: 'loading', message: null, leads: [] }} />);
+    const { container, rerender } = render(
+      <LeadsDashboard
+        initialSettingsState={initialSettingsState}
+        saveSettingsAction={saveSettingsAction}
+        leadsState={{
+          status: 'loading',
+          message: null,
+          leads: [],
+          query: '',
+          sort: 'captured_desc',
+          page: 1,
+          pageSize: 10,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+          filteredCount: 0,
+          totalCount: 0,
+        }}
+        selectedSiteId="site_1"
+      />,
+    );
 
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
 
-    rerender(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={{ status: 'success', message: null, leads: [] }} />);
+    rerender(
+      <LeadsDashboard
+        initialSettingsState={initialSettingsState}
+        saveSettingsAction={saveSettingsAction}
+        leadsState={{
+          status: 'success',
+          message: null,
+          leads: [],
+          query: '',
+          sort: 'captured_desc',
+          page: 1,
+          pageSize: 10,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+          filteredCount: 0,
+          totalCount: 0,
+        }}
+        selectedSiteId="site_1"
+      />,
+    );
 
     expect(screen.getByText('No leads captured yet.')).toBeInTheDocument();
 
-    rerender(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={{ status: 'error', message: 'dashboard_list_leads failed', leads: [] }} />);
+    rerender(
+      <LeadsDashboard
+        initialSettingsState={initialSettingsState}
+        saveSettingsAction={saveSettingsAction}
+        leadsState={{
+          status: 'error',
+          message: 'dashboard_list_leads failed',
+          leads: [],
+          query: '',
+          sort: 'captured_desc',
+          page: 1,
+          pageSize: 10,
+          totalPages: 1,
+          startIndex: 0,
+          endIndex: 0,
+          filteredCount: 0,
+          totalCount: 0,
+        }}
+        selectedSiteId="site_1"
+      />,
+    );
 
     expect(screen.getByText('Unable to load leads.')).toBeInTheDocument();
     expect(screen.getByText('dashboard_list_leads failed')).toBeInTheDocument();
@@ -105,7 +188,7 @@ describe('LeadsDashboard', () => {
   it('keeps the UI read-only for leads and does not introduce a browser-side lead insert path', () => {
     const saveSettingsAction = vi.fn().mockResolvedValue(initialSettingsState);
 
-    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} />);
+    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} selectedSiteId="site_1" />);
 
     expect(screen.queryByRole('button', { name: /add lead/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /create lead/i })).not.toBeInTheDocument();

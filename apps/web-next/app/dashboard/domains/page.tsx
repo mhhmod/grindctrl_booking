@@ -5,6 +5,7 @@ import { DomainsManager } from '@/components/dashboard/domains-manager';
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
+import { parseDomainsListQuery } from '@/lib/dashboard/domains-list-query';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';
 import type { SearchParams } from '@/lib/types';
@@ -20,6 +21,7 @@ export default async function DashboardDomainsPage({ searchParams }: Props) {
   const clerkUserId = await requireDashboardUser('/dashboard/domains');
   const bundle = await getWorkspaceBundle(clerkUserId);
   const site = selectWidgetSite(bundle.sites, params.site);
+  const listQuery = parseDomainsListQuery(params);
 
   if (!site) {
     return <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900 p-6 text-sm text-zinc-400">No widget site is available for domains yet.</div>;
@@ -41,6 +43,8 @@ export default async function DashboardDomainsPage({ searchParams }: Props) {
         updateDomainStatusAction={updateDomainStatusAction.bind(null, context)}
         removeDomainAction={removeDomainAction.bind(null, context)}
         allowLocalhost={settings.security.allow_localhost}
+        selectedSiteId={site.id}
+        listQuery={listQuery}
       />
     </div>
   );

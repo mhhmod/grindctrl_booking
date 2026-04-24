@@ -69,8 +69,22 @@ describe('BrandingForm', () => {
 
     render(<BrandingForm initialState={initialState} saveAction={saveAction} />);
 
+    fireEvent.change(screen.getByLabelText('Brand name'), { target: { value: 'GRINDCTRL Plus' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Save branding' }).closest('form') as HTMLFormElement);
 
     expect(await screen.findByText('dashboard_update_widget_site failed')).toBeInTheDocument();
+  });
+
+  it('marks invalid URL fields and blocks submit until fixed', () => {
+    const saveAction = vi.fn().mockResolvedValue(initialState);
+
+    render(<BrandingForm initialState={initialState} saveAction={saveAction} />);
+
+    fireEvent.change(screen.getByLabelText('Logo URL'), { target: { value: 'not-a-url' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Save branding' }).closest('form') as HTMLFormElement);
+
+    expect(screen.getAllByText('Use valid http/https URLs for logo and avatar fields.').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Logo URL')).toHaveAttribute('aria-invalid', 'true');
+    expect(saveAction).not.toHaveBeenCalled();
   });
 });

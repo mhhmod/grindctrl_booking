@@ -1,14 +1,7 @@
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
-import {
-  DashboardSquare01Icon,
-  Download01Icon,
-  Globe02Icon,
-  MagicWand01Icon,
-  Palette,
-  UserGroupIcon,
-} from '@hugeicons/core-free-icons';
 import { Icon } from '@/components/icons';
+import { DashboardRouteTabs } from '@/components/dashboard/dashboard-route-tabs';
 import {
   SidebarProvider,
   Sidebar,
@@ -22,24 +15,19 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-
-const nav = [
-  { href: '/dashboard/overview', label: 'Overview', icon: DashboardSquare01Icon },
-  { href: '/dashboard/install', label: 'Install Widget', icon: Download01Icon },
-  { href: '/dashboard/branding', label: 'Branding', icon: Palette },
-  { href: '/dashboard/intents', label: 'Intents', icon: MagicWand01Icon },
-  { href: '/dashboard/domains', label: 'Domains', icon: Globe02Icon },
-  { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon },
-];
+import type { DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
+import type { DashboardBreadcrumbItem } from '@/lib/dashboard/route-meta';
 
 export function DashboardShell({
-  currentPath,
+  navItems,
+  breadcrumbs,
   title,
   description,
   userEmail,
   children,
 }: {
-  currentPath: string;
+  navItems: DashboardResolvedNavItem[];
+  breadcrumbs: DashboardBreadcrumbItem[];
   title: string;
   description: string;
   userEmail: string;
@@ -64,14 +52,12 @@ export function DashboardShell({
 
         <SidebarContent className="px-2 py-3">
           <SidebarMenu>
-            {nav.map((item) => {
-              const active = currentPath === item.href;
-
+            {navItems.map((item) => {
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={active}>
+                  <SidebarMenuButton asChild isActive={item.isActive}>
                     <Link href={item.href}>
-                      <Icon icon={item.icon} data-icon="inline-start" />
+                      <Icon icon={item.icon} />
                       <span>{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -98,13 +84,40 @@ export function DashboardShell({
       <SidebarInset>
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
           <header className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger variant="outline" size="icon-sm" className="md:hidden" aria-label="Open dashboard navigation" />
+              <nav aria-label="Breadcrumb" className="min-w-0">
+                <ol className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground sm:text-sm">
+                  {breadcrumbs.map((crumb, index) => {
+                    const isLast = index === breadcrumbs.length - 1;
+
+                    return (
+                      <li key={`${crumb.label}-${index}`} className="inline-flex min-w-0 items-center gap-1">
+                        {index > 0 ? <span aria-hidden="true" className="text-muted-foreground/60">/</span> : null}
+                        {crumb.href && !isLast ? (
+                          <Link href={crumb.href} className="truncate hover:text-foreground">
+                            {crumb.label}
+                          </Link>
+                        ) : (
+                          <span aria-current={isLast ? 'page' : undefined} className="truncate text-foreground">
+                            {crumb.label}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ol>
+              </nav>
+            </div>
+
             <div className="flex items-start gap-3 sm:items-center">
-              <SidebarTrigger variant="outline" size="icon" className="md:hidden" />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
               </div>
             </div>
+
+            <DashboardRouteTabs items={navItems} />
             <Separator />
           </header>
 

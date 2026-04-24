@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest';
 import type { DomainsState } from '@/app/dashboard/domains/state';
 import { DomainsManager } from '@/components/dashboard/domains-manager';
+import type { DomainsListQuery } from '@/lib/dashboard/domains-list-query';
 
 const initialState: DomainsState = {
   domains: [
@@ -16,6 +17,14 @@ const initialState: DomainsState = {
   message: null,
   messageType: null,
   fieldError: null,
+};
+
+const defaultListQuery: DomainsListQuery = {
+  q: '',
+  status: 'all',
+  sort: 'domain_asc',
+  page: 1,
+  pageSize: 10,
 };
 
 describe('DomainsManager', () => {
@@ -43,6 +52,8 @@ describe('DomainsManager', () => {
         updateDomainStatusAction={updateDomainStatusAction}
         removeDomainAction={removeDomainAction}
         allowLocalhost={true}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
       />,
     );
 
@@ -80,9 +91,12 @@ describe('DomainsManager', () => {
         updateDomainStatusAction={updateDomainStatusAction}
         removeDomainAction={vi.fn().mockResolvedValue(initialState)}
         allowLocalhost={true}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
       />,
     );
 
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'verified' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save status' }));
     expect(await screen.findByText('Saving domain changes...')).toBeInTheDocument();
 

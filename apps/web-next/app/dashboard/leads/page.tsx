@@ -5,6 +5,7 @@ import { LeadsDashboard, type LeadsListState } from '@/components/dashboard/lead
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listLeads } from '@/lib/adapters/leads';
+import { parseLeadsListQuery, resolveLeadsList } from '@/lib/dashboard/leads-list-query';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';
 import type { SearchParams } from '@/lib/types';
@@ -38,17 +39,39 @@ export default async function DashboardLeadsPage({ searchParams }: Props) {
   });
 
   let leadsState: LeadsListState;
+  const leadsQuery = parseLeadsListQuery(params);
   try {
+    const allLeads = await listLeads(clerkUserId, bundle.workspace.id, site.id);
+    const resolvedLeads = resolveLeadsList(allLeads, leadsQuery);
+
     leadsState = {
       status: 'success',
-      leads: await listLeads(clerkUserId, bundle.workspace.id, site.id),
+      leads: resolvedLeads.items,
       message: null,
+      query: leadsQuery.q,
+      sort: leadsQuery.sort,
+      page: resolvedLeads.page,
+      pageSize: resolvedLeads.pageSize,
+      totalPages: resolvedLeads.totalPages,
+      startIndex: resolvedLeads.startIndex,
+      endIndex: resolvedLeads.endIndex,
+      filteredCount: resolvedLeads.totalItems,
+      totalCount: allLeads.length,
     };
   } catch (error) {
     leadsState = {
       status: 'error',
       leads: [],
       message: error instanceof Error ? error.message : 'Unable to load leads.',
+      query: leadsQuery.q,
+      sort: leadsQuery.sort,
+      page: 1,
+      pageSize: leadsQuery.pageSize,
+      totalPages: 1,
+      startIndex: 0,
+      endIndex: 0,
+      filteredCount: 0,
+      totalCount: 0,
     };
   }
 
@@ -57,7 +80,7 @@ export default async function DashboardLeadsPage({ searchParams }: Props) {
       <div className="flex justify-end">
         <SiteSelector sites={bundle.sites} selectedSiteId={site.id} />
       </div>
-      <LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettings} leadsState={leadsState} />
+      <LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettings} leadsState={leadsState} selectedSiteId={site.id} />
     </div>
   );
 }

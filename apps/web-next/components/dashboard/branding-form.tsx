@@ -6,6 +6,7 @@ import type { BrandingFormState } from '@/app/dashboard/branding/state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardFormFeedback } from '@/components/dashboard/form-feedback';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BrandingViewModel } from '@/lib/view-models/branding';
@@ -40,6 +41,23 @@ function updateValue(values: BrandingViewModel, key: keyof BrandingViewModel, va
   return { ...values, [key]: value };
 }
 
+function isOptionalUrlValid(value: string) {
+  if (!value) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function isBrandingViewModelEqual(left: BrandingViewModel, right: BrandingViewModel) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export function BrandingForm({
   initialState,
   saveAction,
@@ -49,12 +67,21 @@ export function BrandingForm({
 }) {
   const [state, setState] = useState(initialState);
   const [values, setValues] = useState(initialState.values);
+  const [savedValues, setSavedValues] = useState(initialState.values);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setState(initialState);
     setValues(initialState.values);
+    setSavedValues(initialState.values);
   }, [initialState]);
+
+  const logoUrlInvalid = values.logoUrl.trim().length > 0 && !isOptionalUrlValid(values.logoUrl);
+  const avatarUrlInvalid = values.avatarUrl.trim().length > 0 && !isOptionalUrlValid(values.avatarUrl);
+  const hasUrlValidationError = logoUrlInvalid || avatarUrlInvalid;
+  const validationMessage = hasUrlValidationError ? 'Use valid http/https URLs for logo and avatar fields.' : null;
+
+  const isDirty = !isBrandingViewModelEqual(values, savedValues);
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
@@ -73,11 +100,18 @@ export function BrandingForm({
             onSubmit={(event) => {
               event.preventDefault();
 
+              if (!isDirty || validationMessage) {
+                return;
+              }
+
               const formData = new FormData(event.currentTarget);
               startTransition(async () => {
                 const nextState = await saveAction(formData);
                 setState(nextState);
                 setValues(nextState.values);
+                if (nextState.status === 'success') {
+                  setSavedValues(nextState.values);
+                }
               });
             }}
           >
@@ -104,12 +138,28 @@ export function BrandingForm({
 
               <div className="space-y-2">
                 <Label htmlFor="logoUrl">Logo URL</Label>
-                <Input id="logoUrl" name="logoUrl" type="url" value={values.logoUrl} onChange={(event) => setValues((current) => updateValue(current, 'logoUrl', event.target.value))} />
+                <Input
+                  id="logoUrl"
+                  name="logoUrl"
+                  type="url"
+                  value={values.logoUrl}
+                  aria-invalid={logoUrlInvalid ? 'true' : 'false'}
+                  aria-describedby={hasUrlValidationError ? 'branding-url-error' : undefined}
+                  onChange={(event) => setValues((current) => updateValue(current, 'logoUrl', event.target.value))}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="avatarUrl">Avatar URL</Label>
-                <Input id="avatarUrl" name="avatarUrl" type="url" value={values.avatarUrl} onChange={(event) => setValues((current) => updateValue(current, 'avatarUrl', event.target.value))} />
+                <Input
+                  id="avatarUrl"
+                  name="avatarUrl"
+                  type="url"
+                  value={values.avatarUrl}
+                  aria-invalid={avatarUrlInvalid ? 'true' : 'false'}
+                  aria-describedby={hasUrlValidationError ? 'branding-url-error' : undefined}
+                  onChange={(event) => setValues((current) => updateValue(current, 'avatarUrl', event.target.value))}
+                />
               </div>
 
               <div className="space-y-2">
@@ -174,19 +224,21 @@ export function BrandingForm({
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-h-6 text-sm" role="status" aria-live="polite">
-                {isPending ? <span className="text-muted-foreground">Saving branding...</span> : null}
-                {!isPending && state.message ? (
-                  state.status === 'error' ? (
-                    <span className="text-destructive">{state.message}</span>
-                  ) : (
-                    <span className="text-emerald-600 dark:text-emerald-400">{state.message}</span>
-                  )
-                ) : null}
-              </div>
+            {validationMessage ? (
+              <p id="branding-url-error" className="text-sm text-destructive">
+                {validationMessage}
+              </p>
+            ) : null}
 
-              <Button type="submit" disabled={isPending}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <DashboardFormFeedback
+                isPending={isPending}
+                pendingMessage="Saving branding..."
+                message={validationMessage ?? state.message ?? (!isDirty ? 'No unsaved changes.' : null)}
+                tone={validationMessage ? 'error' : state.status === 'error' ? 'error' : state.status === 'success' ? 'success' : null}
+              />
+
+              <Button type="submit" disabled={isPending || !isDirty || Boolean(validationMessage)}>
                 {isPending ? 'Saving...' : 'Save branding'}
               </Button>
             </div>

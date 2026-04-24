@@ -1,17 +1,21 @@
 'use client';
 
 import React from 'react';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
+import { useEffect, useState, useTransition } from 'react';
 import type { LeadSettingsFormState } from '@/app/dashboard/leads/state';
+import { LEADS_PAGE_SIZE_OPTIONS, LEADS_SORT_OPTIONS, type LeadsSortOption } from '@/lib/dashboard/leads-list-query';
 import type { WidgetLead } from '@/lib/types';
 import { LEAD_CAPTURE_TIMING_OPTIONS, LEAD_CONSENT_MODE_OPTIONS, LEAD_DEDUPE_MODE_OPTIONS, LEAD_FIELD_OPTIONS, type LeadSettingsViewModel } from '@/lib/view-models/leads';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardFormFeedback } from '@/components/dashboard/form-feedback';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const selectClassName = 'h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
 const textareaClassName = 'w-full min-h-24 resize-y rounded-2xl border border-input bg-input/30 px-3 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
@@ -21,6 +25,39 @@ export interface LeadsListState {
   status: 'loading' | 'success' | 'error';
   leads: WidgetLead[];
   message: string | null;
+  query: string;
+  sort: LeadsSortOption;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+  filteredCount: number;
+  totalCount: number;
+}
+
+const LEADS_SORT_LABELS: Record<LeadsSortOption, string> = {
+  captured_desc: 'Captured date (newest)',
+  captured_asc: 'Captured date (oldest)',
+  name_asc: 'Lead name (A-Z)',
+  name_desc: 'Lead name (Z-A)',
+};
+
+function isOptionalUrlValid(value: string) {
+  if (!value) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function isLeadSettingsEqual(left: LeadSettingsViewModel, right: LeadSettingsViewModel) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function formatLeadDate(value?: string) {
@@ -45,27 +82,65 @@ export function LeadsDashboard({
   initialSettingsState,
   saveSettingsAction,
   leadsState,
+  selectedSiteId,
 }: {
   initialSettingsState: LeadSettingsFormState;
   saveSettingsAction: (formData: FormData) => Promise<LeadSettingsFormState>;
   leadsState: LeadsListState;
+  selectedSiteId: string;
 }) {
   const [settingsState, setSettingsState] = useState(initialSettingsState);
   const [values, setValues] = useState(initialSettingsState.values);
-  const [query, setQuery] = useState('');
+  const [savedValues, setSavedValues] = useState(initialSettingsState.values);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     setSettingsState(initialSettingsState);
     setValues(initialSettingsState.values);
+    setSavedValues(initialSettingsState.values);
   }, [initialSettingsState]);
 
-  const filteredLeads = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return leadsState.leads;
+  const consentTextInvalid = values.consentMode !== 'none' && !values.consentText.trim();
+  const privacyUrlInvalid = values.privacyUrl.trim().length > 0 && !isOptionalUrlValid(values.privacyUrl);
+  const validationMessage =
+    (consentTextInvalid ? 'Consent text is required when consent mode is optional or required.' : null)
+    ?? (privacyUrlInvalid ? 'Use a valid http/https URL for the privacy policy field.' : null);
 
-    return leadsState.leads.filter((lead) => [lead.name, lead.email, lead.company, lead.phone, lead.source_domain].some((value) => value?.toLowerCase().includes(normalizedQuery)));
-  }, [leadsState.leads, query]);
+  const isDirty = !isLeadSettingsEqual(values, savedValues);
+
+  function buildLeadsHref(next: {
+    q?: string;
+    sort?: LeadsSortOption;
+    page?: number;
+    pageSize?: number;
+  }) {
+    const params = new URLSearchParams();
+
+    if (selectedSiteId) {
+      params.set('site', selectedSiteId);
+    }
+
+    const nextQuery = (next.q ?? leadsState.query).trim();
+    const nextSort = next.sort ?? leadsState.sort;
+    const nextPage = next.page ?? leadsState.page;
+    const nextPageSize = next.pageSize ?? leadsState.pageSize;
+
+    if (nextQuery) {
+      params.set('q', nextQuery);
+    }
+    if (nextSort !== 'captured_desc') {
+      params.set('sort', nextSort);
+    }
+    if (nextPage > 1) {
+      params.set('page', String(nextPage));
+    }
+    if (nextPageSize !== 10) {
+      params.set('pageSize', String(nextPageSize));
+    }
+
+    const queryString = params.toString();
+    return queryString ? `/dashboard/leads?${queryString}` : '/dashboard/leads';
+  }
 
   const enabledFieldCount = values.fields.length;
   const requiredFieldCount = values.requiredFields.length;
@@ -87,11 +162,18 @@ export function LeadsDashboard({
             onSubmit={(event) => {
               event.preventDefault();
 
+              if (!isDirty || validationMessage) {
+                return;
+              }
+
               const formData = new FormData(event.currentTarget);
               startTransition(async () => {
                 const nextState = await saveSettingsAction(formData);
                 setSettingsState(nextState);
                 setValues(nextState.values);
+                if (nextState.status === 'success') {
+                  setSavedValues(nextState.values);
+                }
               });
             }}
           >
@@ -222,28 +304,46 @@ export function LeadsDashboard({
 
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="consentText">Consent copy</Label>
-                <textarea id="consentText" name="consentText" className={textareaClassName} value={values.consentText} onChange={(event) => setValues((current) => updateValue(current, 'consentText', event.target.value))} />
+                <textarea
+                  id="consentText"
+                  name="consentText"
+                  className={textareaClassName}
+                  value={values.consentText}
+                  aria-invalid={consentTextInvalid ? 'true' : 'false'}
+                  aria-describedby={consentTextInvalid ? 'lead-settings-inline-error' : undefined}
+                  onChange={(event) => setValues((current) => updateValue(current, 'consentText', event.target.value))}
+                />
               </div>
 
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="privacyUrl">Privacy policy URL</Label>
-                <Input id="privacyUrl" name="privacyUrl" type="url" value={values.privacyUrl} onChange={(event) => setValues((current) => updateValue(current, 'privacyUrl', event.target.value))} />
+                <Input
+                  id="privacyUrl"
+                  name="privacyUrl"
+                  type="url"
+                  value={values.privacyUrl}
+                  aria-invalid={privacyUrlInvalid ? 'true' : 'false'}
+                  aria-describedby={privacyUrlInvalid ? 'lead-settings-inline-error' : undefined}
+                  onChange={(event) => setValues((current) => updateValue(current, 'privacyUrl', event.target.value))}
+                />
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-h-6 text-sm" role="status" aria-live="polite">
-                {isPending ? <span className="text-muted-foreground">Saving lead capture settings...</span> : null}
-                {!isPending && settingsState.message ? (
-                  settingsState.status === 'error' ? (
-                    <span className="text-destructive">{settingsState.message}</span>
-                  ) : (
-                    <span className="text-emerald-600 dark:text-emerald-400">{settingsState.message}</span>
-                  )
-                ) : null}
-              </div>
+            {validationMessage ? (
+              <p id="lead-settings-inline-error" className="text-sm text-destructive">
+                {validationMessage}
+              </p>
+            ) : null}
 
-              <Button type="submit" disabled={isPending}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <DashboardFormFeedback
+                isPending={isPending}
+                pendingMessage="Saving lead capture settings..."
+                message={validationMessage ?? settingsState.message ?? (!isDirty ? 'No unsaved changes.' : null)}
+                tone={validationMessage ? 'error' : settingsState.status === 'error' ? 'error' : settingsState.status === 'success' ? 'success' : null}
+              />
+
+              <Button type="submit" disabled={isPending || !isDirty || Boolean(validationMessage)}>
                 {isPending ? 'Saving...' : 'Save lead settings'}
               </Button>
             </div>
@@ -276,10 +376,44 @@ export function LeadsDashboard({
           </CardHeader>
 
           <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="lead-search">Search leads</Label>
-              <Input id="lead-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, email, company, phone, or source" />
-            </div>
+            <form method="get" action="/dashboard/leads" className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_140px_auto] md:items-end">
+              <div className="space-y-2">
+                <Label htmlFor="lead-search">Search leads</Label>
+                <Input id="lead-search" name="q" defaultValue={leadsState.query} placeholder="Search name, email, company, phone, or source" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lead-sort">Sort by</Label>
+                <select id="lead-sort" name="sort" className={selectClassName} defaultValue={leadsState.sort}>
+                  {LEADS_SORT_OPTIONS.map((sort) => (
+                    <option key={sort} value={sort}>
+                      {LEADS_SORT_LABELS[sort]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lead-page-size">Rows</Label>
+                <select id="lead-page-size" name="pageSize" className={selectClassName} defaultValue={String(leadsState.pageSize)}>
+                  {LEADS_PAGE_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Button type="submit">Apply</Button>
+                <Button asChild type="button" variant="outline">
+                  <Link href={buildLeadsHref({ q: '', sort: 'captured_desc', page: 1, pageSize: 10 })}>Clear</Link>
+                </Button>
+              </div>
+
+              <input type="hidden" name="site" value={selectedSiteId} />
+              <input type="hidden" name="page" value="1" />
+            </form>
 
             {leadsState.status === 'loading' ? (
               <div className="mt-4 grid gap-3">
@@ -295,17 +429,29 @@ export function LeadsDashboard({
               </Alert>
             ) : null}
 
-            {leadsState.status === 'success' && filteredLeads.length === 0 ? (
+            {leadsState.status === 'success' && leadsState.filteredCount === 0 ? (
               <div className="mt-4 rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
-                <p className="font-medium text-foreground">{leadsState.leads.length === 0 ? 'No leads captured yet.' : 'No leads match the current search.'}</p>
-                <p className="mt-2 leading-6">{leadsState.leads.length === 0 ? 'Lead submission remains backend and Edge controlled. New rows will appear here when the existing runtime captures them.' : 'Try a different search term or clear the filter.'}</p>
+                <p className="font-medium text-foreground">{leadsState.totalCount === 0 ? 'No leads captured yet.' : 'No leads match the current search.'}</p>
+                <p className="mt-2 leading-6">{leadsState.totalCount === 0 ? 'Lead submission remains backend and Edge controlled. New rows will appear here when the existing runtime captures them.' : 'Try a different search term or clear the filter.'}</p>
               </div>
             ) : null}
 
-            {leadsState.status === 'success' && filteredLeads.length > 0 ? (
+            {leadsState.status === 'success' && leadsState.filteredCount > 0 ? (
               <>
+                <div className="mt-4 flex flex-col gap-3 border-b pb-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                  <p>
+                    Showing <span className="font-medium text-foreground">{leadsState.startIndex}-{leadsState.endIndex}</span> of{' '}
+                    <span className="font-medium text-foreground">{leadsState.filteredCount}</span> matched leads
+                    {leadsState.filteredCount !== leadsState.totalCount ? ` (${leadsState.totalCount} total)` : ''}.
+                  </p>
+                  <p>
+                    Page <span className="font-medium text-foreground">{leadsState.page}</span> of{' '}
+                    <span className="font-medium text-foreground">{leadsState.totalPages}</span>
+                  </p>
+                </div>
+
                 <ul className="mt-4 grid gap-3 md:hidden">
-                  {filteredLeads.map((lead) => (
+                  {leadsState.leads.map((lead) => (
                     <li key={lead.id} className="rounded-lg border bg-muted/10 p-4">
                       <div className="text-sm font-medium text-foreground">{lead.name ?? lead.email ?? 'Unnamed lead'}</div>
                       <dl className="mt-3 grid gap-2 text-sm">
@@ -319,32 +465,54 @@ export function LeadsDashboard({
                   ))}
                 </ul>
 
-                <div className="mt-4 hidden overflow-x-auto rounded-lg border md:block">
-                  <table className="min-w-full text-start text-sm">
-                    <thead className="border-b text-muted-foreground">
-                      <tr>
-                        <th className="px-4 py-3 font-medium">Lead</th>
-                        <th className="px-4 py-3 font-medium">Company</th>
-                        <th className="px-4 py-3 font-medium">Phone</th>
-                        <th className="px-4 py-3 font-medium">Source</th>
-                        <th className="px-4 py-3 font-medium">Captured</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredLeads.map((lead) => (
-                        <tr key={lead.id} className="border-b last:border-b-0 align-top">
-                          <td className="px-4 py-4">
+                <div className="mt-4 hidden rounded-lg border md:block">
+                  <Table>
+                    <TableHeader className="text-muted-foreground">
+                      <TableRow>
+                        <TableHead>Lead</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Captured</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leadsState.leads.map((lead) => (
+                        <TableRow key={lead.id} className="align-top">
+                          <TableCell>
                             <div className="font-medium text-foreground">{lead.name ?? 'Unnamed lead'}</div>
                             <div className="mt-1 text-muted-foreground" dir="ltr">{lead.email ?? '—'}</div>
-                          </td>
-                          <td className="px-4 py-4 text-foreground">{lead.company ?? '—'}</td>
-                          <td className="px-4 py-4 text-foreground" dir="ltr">{lead.phone ?? '—'}</td>
-                          <td className="px-4 py-4 text-foreground" dir="ltr">{lead.source_domain ?? '—'}</td>
-                          <td className="px-4 py-4 text-foreground">{formatLeadDate(lead.created_at)}</td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="text-foreground">{lead.company ?? '—'}</TableCell>
+                          <TableCell className="text-foreground" dir="ltr">{lead.phone ?? '—'}</TableCell>
+                          <TableCell className="text-foreground" dir="ltr">{lead.source_domain ?? '—'}</TableCell>
+                          <TableCell className="text-foreground">{formatLeadDate(lead.created_at)}</TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  {leadsState.page > 1 ? (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={buildLeadsHref({ page: leadsState.page - 1 })}>Previous</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Previous
+                    </Button>
+                  )}
+
+                  {leadsState.page < leadsState.totalPages ? (
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={buildLeadsHref({ page: leadsState.page + 1 })}>Next</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled>
+                      Next
+                    </Button>
+                  )}
                 </div>
               </>
             ) : null}

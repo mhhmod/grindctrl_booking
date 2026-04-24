@@ -5,6 +5,7 @@ import { IntentsManager } from '@/components/dashboard/intents-manager';
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listIntents } from '@/lib/adapters/intents';
+import { parseIntentsListQuery } from '@/lib/dashboard/intents-list-query';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { selectWidgetSite } from '@/lib/adapters/widgetSites';
 import type { SearchParams } from '@/lib/types';
@@ -20,6 +21,7 @@ export default async function DashboardIntentsPage({ searchParams }: Props) {
   const clerkUserId = await requireDashboardUser('/dashboard/intents');
   const bundle = await getWorkspaceBundle(clerkUserId);
   const site = selectWidgetSite(bundle.sites, params.site);
+  const listQuery = parseIntentsListQuery(params);
 
   if (!site) {
     return <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900 p-6 text-sm text-zinc-400">No widget site is available for intents yet.</div>;
@@ -42,6 +44,8 @@ export default async function DashboardIntentsPage({ searchParams }: Props) {
         updateIntentAction={updateIntentAction.bind(null, context)}
         deleteIntentAction={deleteIntentAction.bind(null, context)}
         reorderIntentAction={reorderIntentAction.bind(null, context)}
+        selectedSiteId={site.id}
+        listQuery={listQuery}
       />
     </div>
   );

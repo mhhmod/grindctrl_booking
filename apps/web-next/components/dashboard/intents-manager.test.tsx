@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest';
 import type { IntentsState } from '@/app/dashboard/intents/state';
 import { IntentsManager } from '@/components/dashboard/intents-manager';
+import type { IntentsListQuery } from '@/lib/dashboard/intents-list-query';
 
 const initialState: IntentsState = {
   intents: [
@@ -22,16 +23,17 @@ const initialValues = {
   sortOrder: '1',
 };
 
+const defaultListQuery: IntentsListQuery = {
+  q: '',
+  action: 'all',
+  sort: 'priority_asc',
+  page: 1,
+  pageSize: 10,
+};
+
 describe('IntentsManager', () => {
   it('shows empty and validation states, then supports create flow', async () => {
-    const createIntentAction = vi.fn()
-      .mockResolvedValueOnce({
-        ...initialState,
-        message: 'Enter an intent label.',
-        messageType: 'error',
-        fieldError: 'Enter an intent label.',
-      })
-      .mockResolvedValueOnce({
+    const createIntentAction = vi.fn().mockResolvedValue({
         ...initialState,
         intents: [...initialState.intents, { id: 'intent_2', widget_site_id: 'site_1', label: 'Book demo', icon: 'event', action_type: 'external_link', external_url: 'https://example.com/demo', sort_order: 1 }],
         message: 'Intent created.',
@@ -47,6 +49,8 @@ describe('IntentsManager', () => {
         updateIntentAction={vi.fn().mockResolvedValue(initialState)}
         deleteIntentAction={vi.fn().mockResolvedValue(initialState)}
         reorderIntentAction={vi.fn().mockResolvedValue(initialState)}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
       />,
     );
 
@@ -60,11 +64,12 @@ describe('IntentsManager', () => {
         updateIntentAction={vi.fn().mockResolvedValue(initialState)}
         deleteIntentAction={vi.fn().mockResolvedValue(initialState)}
         reorderIntentAction={vi.fn().mockResolvedValue(initialState)}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Create intent' }));
-    await waitFor(() => expect(screen.getByText('Enter an intent label.')).toBeInTheDocument());
+    expect(screen.getByText('Intent label is required.')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Book demo' } });
     fireEvent.change(screen.getByLabelText('Action type'), { target: { value: 'external_link' } });
@@ -72,9 +77,33 @@ describe('IntentsManager', () => {
     fireEvent.change(screen.getByLabelText('Sort order'), { target: { value: '1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create intent' }));
 
-    await waitFor(() => expect(createIntentAction).toHaveBeenCalled());
+    await waitFor(() => expect(createIntentAction).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(screen.getByText('Intent created.')).toBeInTheDocument());
     expect(screen.getByText('Book demo')).toBeInTheDocument();
+  });
+
+  it('marks invalid editor fields with aria-invalid before submit', () => {
+    render(
+      <IntentsManager
+        initialState={initialState}
+        initialValues={initialValues}
+        createIntentAction={vi.fn().mockResolvedValue(initialState)}
+        updateIntentAction={vi.fn().mockResolvedValue(initialState)}
+        deleteIntentAction={vi.fn().mockResolvedValue(initialState)}
+        reorderIntentAction={vi.fn().mockResolvedValue(initialState)}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
+      />,
+    );
+
+    expect(screen.getByLabelText('Label')).toHaveAttribute('aria-invalid', 'true');
+
+    fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Book demo' } });
+    fireEvent.change(screen.getByLabelText('Action type'), { target: { value: 'external_link' } });
+    fireEvent.change(screen.getByLabelText('External URL'), { target: { value: 'invalid-url' } });
+
+    expect(screen.getByText('Enter a valid external URL.')).toBeInTheDocument();
+    expect(screen.getByLabelText('External URL')).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('supports edit, delete, reorder, and error feedback', async () => {
@@ -122,6 +151,8 @@ describe('IntentsManager', () => {
         updateIntentAction={updateIntentAction}
         deleteIntentAction={deleteIntentAction}
         reorderIntentAction={reorderIntentAction}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
       />,
     );
 
@@ -140,6 +171,7 @@ describe('IntentsManager', () => {
     confirmSpy.mockRestore();
 
     fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Broken intent' } });
+    fireEvent.change(screen.getByLabelText('Message text'), { target: { value: 'Need support help' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create intent' }));
     expect(await screen.findByText('Saving intent changes...')).toBeInTheDocument();
 
