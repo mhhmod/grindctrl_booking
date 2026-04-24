@@ -5,7 +5,12 @@ const isDashboardRoute = createRouteMatcher(['/dashboard(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isDashboardRoute(req)) {
-    await auth.protect();
+    const { userId } = await auth();
+    if (!userId) {
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', `${req.nextUrl.pathname}${req.nextUrl.search}`);
+      return NextResponse.redirect(signInUrl);
+    }
   }
 
   const requestHeaders = new Headers(req.headers);
