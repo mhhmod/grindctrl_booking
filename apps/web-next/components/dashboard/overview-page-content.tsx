@@ -105,7 +105,7 @@ export function OverviewPageContent({
             <CardTitle className="text-base">{metricLabel(domains.length)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Real domain count from `dashboard_list_domains`.</div>
+            <div className="text-sm text-muted-foreground">Real domain count from dashboard_list_domains.</div>
           </CardContent>
         </Card>
 
@@ -115,7 +115,7 @@ export function OverviewPageContent({
             <CardTitle className="text-base">{metricLabel(leads.length)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-sm text-muted-foreground">Real lead count from `dashboard_list_leads`.</div>
+            <div className="text-sm text-muted-foreground">Real lead count from dashboard_list_leads.</div>
           </CardContent>
         </Card>
       </section>
@@ -142,8 +142,8 @@ export function OverviewPageContent({
             <SetupItem label="Widget site selected" done={hasSite} hint="Pick a site to scope domains, intents, and leads." />
             <SetupItem label="Embed key available" done={hasEmbedKey} hint="Used by the canonical loader contract." />
             <SetupItem label="At least one allowed domain" done={hasDomains} hint="Controls where the widget may load." />
-            <SetupItem label="At least one intent" done={hasIntents} hint="Intents are loaded from `dashboard_list_intents`." />
-            <SetupItem label="Leads observed (optional)" done={hasLeads} hint="Leads come from `dashboard_list_leads` when captured." />
+            <SetupItem label="At least one intent" done={hasIntents} hint="Intents are loaded from dashboard_list_intents." />
+            <SetupItem label="Leads observed (optional)" done={hasLeads} hint="Leads come from dashboard_list_leads when captured." />
 
             <Separator />
 
@@ -158,7 +158,7 @@ export function OverviewPageContent({
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <CardTitle>Widget interaction analytics</CardTitle>
-              <CardDescription>Real event telemetry from `widget_events`, scoped to the selected site.</CardDescription>
+              <CardDescription>Real event telemetry from widget_events, scoped to the selected site.</CardDescription>
             </div>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
               {(['24h', '7d', '30d'] as WidgetEventsWindow[]).map((windowValue) => (
@@ -234,10 +234,10 @@ export function OverviewPageContent({
             <CardDescription>What this dashboard shows today.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Domains loaded from `dashboard_list_domains`</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Intents loaded from `dashboard_list_intents`</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Leads loaded from `dashboard_list_leads`</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Editable widget config stays consolidated in `settings_json`</div>
+            <div className="rounded-lg border bg-muted/10 px-3 py-3">Domains loaded from dashboard_list_domains</div>
+            <div className="rounded-lg border bg-muted/10 px-3 py-3">Intents loaded from dashboard_list_intents</div>
+            <div className="rounded-lg border bg-muted/10 px-3 py-3">Leads loaded from dashboard_list_leads</div>
+            <div className="rounded-lg border bg-muted/10 px-3 py-3">Editable widget config stays consolidated in settings_json</div>
           </CardContent>
         </Card>
       </section>
