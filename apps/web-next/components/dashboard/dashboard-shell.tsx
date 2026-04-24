@@ -70,7 +70,7 @@ export function DashboardShell({
 
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+                  <SidebarMenuButton asChild isActive={active}>
                     <Link href={item.href}>
                       <Icon icon={item.icon} data-icon="inline-start" />
                       <span>{item.label}</span>
