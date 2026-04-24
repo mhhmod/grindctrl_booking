@@ -53,13 +53,21 @@ jobs:
           script: |
             set -e
             REPO_DIR="/root/grindctrl-next"
-            if [ -d "$REPO_DIR/.git" ]; then
-              cd "$REPO_DIR"
-              if [ -n "$(git status --porcelain)" ]; then
-                STASH_NAME="auto-predeploy-$(date -u +%Y%m%dT%H%M%SZ)"
-                git stash push -u -m "$STASH_NAME"
-                echo "Stashed server local changes as $STASH_NAME"
-              fi
+            if [ ! -d "$REPO_DIR" ]; then
+              echo "Server repo directory not found: $REPO_DIR"
+              exit 1
+            fi
+
+            cd "$REPO_DIR"
+            TOP_LEVEL="$(git rev-parse --show-toplevel)"
+            echo "Using server repo: $TOP_LEVEL"
+
+            if [ -n "$(git -C "$TOP_LEVEL" status --porcelain)" ]; then
+              STASH_NAME="auto-predeploy-$(date -u +%Y%m%dT%H%M%SZ)"
+              git -C "$TOP_LEVEL" stash push -u -m "$STASH_NAME"
+              echo "Stashed server local changes as $STASH_NAME"
+            else
+              echo "Server repo is already clean"
             fi
 
       - name: Run server deploy script
