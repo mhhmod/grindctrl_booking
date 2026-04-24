@@ -29,9 +29,19 @@ jobs:
         run: |
           install -m 700 -d ~/.ssh
           KEY_CONTENT="${VPS_SSH_KEY//$'\r'/}"
-          printf '%b' "${KEY_CONTENT//\\n/$'\n'}" > ~/.ssh/grindctrl_vps_key
+
+          if [[ "$KEY_CONTENT" == *"BEGIN "*" PRIVATE KEY"* ]]; then
+            printf '%b' "${KEY_CONTENT//\\n/$'\n'}" > ~/.ssh/grindctrl_vps_key
+          else
+            printf '%s' "$KEY_CONTENT" | base64 -d > ~/.ssh/grindctrl_vps_key
+          fi
+
           chmod 600 ~/.ssh/grindctrl_vps_key
-          ssh-keygen -l -f ~/.ssh/grindctrl_vps_key > /dev/null
+
+          if ! ssh-keygen -yf ~/.ssh/grindctrl_vps_key > /dev/null 2>&1; then
+            echo "VPS_SSH_KEY is not a valid private key (raw or base64)."
+            exit 1
+          fi
 
       - name: Deploy Next app over SSH
         uses: appleboy/ssh-action@v1.2.0
