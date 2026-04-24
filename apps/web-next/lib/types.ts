@@ -57,6 +57,78 @@ export interface WidgetInstallVerification {
   last_seen_domain?: string | null;
 }
 
+export type WidgetEventsWindow = '24h' | '7d' | '30d';
+
+export interface WidgetEventTimeseriesPoint {
+  bucket_start: string;
+  heartbeat_count: number;
+  widget_open_count: number;
+  widget_close_count: number;
+  conversation_start_count: number;
+  message_sent_count: number;
+  intent_click_count: number;
+  lead_captured_count: number;
+  lead_capture_skipped_count: number;
+  escalation_trigger_count: number;
+  other_count: number;
+  total_count: number;
+}
+
+export interface WidgetEventBreakdownRow {
+  event_name: string;
+  total_count: number;
+}
+
+export interface WidgetEventFunnelSummary {
+  widget_open_count: number;
+  conversation_start_count: number;
+  message_sent_count: number;
+  lead_captured_count: number;
+  escalation_trigger_count: number;
+  open_to_conversation_rate: number | null;
+  conversation_to_message_rate: number | null;
+  message_to_lead_rate: number | null;
+}
+
+export interface WidgetEventAnalyticsBundle {
+  timeseries: WidgetEventTimeseriesPoint[];
+  breakdown: WidgetEventBreakdownRow[];
+  funnel: WidgetEventFunnelSummary | null;
+}
+
+export type WidgetAnalyticsWindow = '24h' | '7d' | '30d';
+
+export interface WidgetEventTimeseriesPoint {
+  bucket_start: string;
+  heartbeat_count: number;
+  widget_open_count: number;
+  widget_close_count: number;
+  conversation_start_count: number;
+  message_sent_count: number;
+  intent_click_count: number;
+  lead_captured_count: number;
+  lead_capture_skipped_count: number;
+  escalation_trigger_count: number;
+  other_count: number;
+  total_count: number;
+}
+
+export interface WidgetEventBreakdownItem {
+  event_name: string;
+  total_count: number;
+}
+
+export interface WidgetEventFunnelSummary {
+  widget_open_count: number;
+  conversation_start_count: number;
+  message_sent_count: number;
+  lead_captured_count: number;
+  escalation_trigger_count: number;
+  open_to_conversation_rate: number | null;
+  conversation_to_message_rate: number | null;
+  message_to_lead_rate: number | null;
+}
+
 export interface WorkspaceBundle {
   workspace: Workspace | null;
   sites: WidgetSite[];

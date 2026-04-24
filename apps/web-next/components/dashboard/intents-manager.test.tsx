@@ -131,11 +131,13 @@ describe('IntentsManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save intent' }));
     await waitFor(() => expect(screen.getByText('Intent updated.')).toBeInTheDocument());
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Down' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /move .* down/i })[0]);
     await waitFor(() => expect(screen.getByText('Intent order updated.')).toBeInTheDocument());
 
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
     await waitFor(() => expect(screen.getByText('Intent deleted.')).toBeInTheDocument());
+    confirmSpy.mockRestore();
 
     fireEvent.change(screen.getByLabelText('Label'), { target: { value: 'Broken intent' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create intent' }));

@@ -21,7 +21,6 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const nav = [
@@ -100,11 +99,7 @@ export function DashboardShell({
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
           <header className="flex flex-col gap-4">
             <div className="flex items-start gap-3 sm:items-center">
-              <SidebarTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden">
-                  <span className="sr-only">Open navigation</span>
-                </Button>
-              </SidebarTrigger>
+              <SidebarTrigger variant="outline" size="icon" className="md:hidden" />
               <div className="min-w-0">
                 <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>

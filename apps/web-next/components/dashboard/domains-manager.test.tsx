@@ -57,9 +57,11 @@ describe('DomainsManager', () => {
     await waitFor(() => expect(screen.getByText('Added grindctrl.com.')).toBeInTheDocument());
     expect(screen.getByText('grindctrl.com')).toBeInTheDocument();
 
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[1]);
     await waitFor(() => expect(removeDomainAction).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByText('Domain removed.')).toBeInTheDocument());
+    confirmSpy.mockRestore();
   });
 
   it('shows saving state during status updates', async () => {

@@ -15,6 +15,21 @@ const baseProps = {
   allowLocalhost: true,
   canonicalSnippet: '<script>\nwindow.GrindctrlSupport = window.GrindctrlSupport || [];\nwindow.GrindctrlSupport.push({ embedKey: \'gc_live_real_embed\' });\n</script>',
   cspSnippet: '<script data-gc-embed-key="gc_live_real_embed"></script>',
+  widgetEventsWindow: '7d',
+  widgetEventsWindowLinks: {
+    '24h': '/dashboard/install?window=24h',
+    '7d': '/dashboard/install?window=7d',
+    '30d': '/dashboard/install?window=30d',
+  },
+  widgetEventsState: {
+    status: 'success',
+    bundle: {
+      timeseries: [],
+      breakdown: [],
+      funnel: null,
+    },
+    message: null,
+  },
 } as const;
 
 describe('InstallPageContent', () => {

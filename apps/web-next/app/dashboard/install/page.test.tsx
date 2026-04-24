@@ -18,6 +18,11 @@ vi.mock('@/lib/adapters/installVerification', () => ({
   getInstallVerification: vi.fn(),
 }));
 
+vi.mock('@/lib/adapters/widgetEvents', () => ({
+  getWidgetEventAnalyticsBundle: vi.fn(),
+  normalizeWidgetEventsWindow: vi.fn(),
+}));
+
 vi.mock('@/components/dashboard/site-selector', () => ({
   SiteSelector: () => <div data-testid="site-selector" />,
 }));
@@ -26,11 +31,18 @@ import DashboardInstallPage from '@/app/dashboard/install/page';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
 import { getInstallVerification } from '@/lib/adapters/installVerification';
+import { getWidgetEventAnalyticsBundle, normalizeWidgetEventsWindow } from '@/lib/adapters/widgetEvents';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 
 describe('DashboardInstallPage', () => {
   beforeEach(() => {
     vi.mocked(requireDashboardUser).mockResolvedValue('user_123');
+    vi.mocked(normalizeWidgetEventsWindow).mockReturnValue('7d');
+    vi.mocked(getWidgetEventAnalyticsBundle).mockResolvedValue({
+      timeseries: [],
+      breakdown: [],
+      funnel: null,
+    });
     vi.mocked(getWorkspaceBundle).mockResolvedValue({
       workspace: { id: 'workspace_1', name: 'Workspace' },
       role: 'owner',
@@ -66,6 +78,7 @@ describe('DashboardInstallPage', () => {
 
     expect(listDomains).toHaveBeenCalledWith('user_123', 'site_1');
     expect(getInstallVerification).toHaveBeenCalledWith('user_123', 'site_1');
+    expect(getWidgetEventAnalyticsBundle).toHaveBeenCalledWith('user_123', 'site_1', '7d');
     expect(screen.getAllByText(/No allowed domains are configured yet/).length).toBeGreaterThan(0);
     expect(screen.getByText('Never seen')).toBeInTheDocument();
   });

@@ -1,11 +1,20 @@
 import Link from 'next/link';
-import type { WidgetDomain, WidgetIntent, WidgetLead, WidgetSite, Workspace } from '@/lib/types';
+import type {
+  WidgetDomain,
+  WidgetEventAnalyticsBundle,
+  WidgetEventsWindow,
+  WidgetIntent,
+  WidgetLead,
+  WidgetSite,
+  Workspace,
+} from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { WidgetInteractionCharts } from '@/components/dashboard/widget-interaction-charts';
 import { cn } from '@/lib/utils';
 
 function metricLabel(value: number | null, emptyLabel = 'No data yet') {
@@ -42,6 +51,9 @@ export function OverviewPageContent({
   domains,
   intents,
   leads,
+  widgetEventsWindow,
+  widgetEventsWindowLinks,
+  widgetEventsState,
 }: {
   workspace: Workspace;
   site: WidgetSite | null;
@@ -49,6 +61,13 @@ export function OverviewPageContent({
   domains: WidgetDomain[];
   intents: WidgetIntent[];
   leads: WidgetLead[];
+  widgetEventsWindow: WidgetEventsWindow;
+  widgetEventsWindowLinks: Record<WidgetEventsWindow, string>;
+  widgetEventsState: {
+    status: 'loading' | 'success' | 'error';
+    bundle: WidgetEventAnalyticsBundle;
+    message: string | null;
+  };
 }) {
   const hasSite = Boolean(site);
   const hasEmbedKey = Boolean(site?.embed_key);
@@ -110,7 +129,7 @@ export function OverviewPageContent({
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
-          <CardHeader className="flex-row items-start justify-between gap-4">
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <CardTitle>Install readiness</CardTitle>
               <CardDescription>The dashboard only reflects real contracts. No fabricated analytics.</CardDescription>
@@ -130,20 +149,43 @@ export function OverviewPageContent({
 
             <div className="rounded-lg border bg-muted/20 px-3 py-2">
               <div className="text-xs font-medium text-muted-foreground">Embed key</div>
-              <div className="mt-1 break-all font-mono text-xs text-foreground">{site?.embed_key ?? 'No site available'}</div>
+              <div className="mt-1 break-all font-mono text-xs text-foreground" dir="ltr">{site?.embed_key ?? 'No site available'}</div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Analytics availability</CardTitle>
-            <CardDescription>Backend metrics are deferred until exposed via a production contract.</CardDescription>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle>Widget interaction analytics</CardTitle>
+              <CardDescription>Real event telemetry from `widget_events`, scoped to the selected site.</CardDescription>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              {(['24h', '7d', '30d'] as WidgetEventsWindow[]).map((windowValue) => (
+                <Button key={windowValue} asChild size="sm" variant={widgetEventsWindow === windowValue ? 'default' : 'outline'}>
+                  <Link href={widgetEventsWindowLinks[windowValue]} aria-current={widgetEventsWindow === windowValue ? 'page' : undefined}>
+                    {windowValue}
+                  </Link>
+                </Button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-dashed bg-muted/10 px-3 py-3 text-sm text-muted-foreground">
-              Conversation volume, active visitors, and escalation trends are intentionally not shown yet.
-            </div>
+            {widgetEventsState.status === 'loading' ? (
+              <WidgetInteractionCharts status="loading" timeseries={[]} breakdown={[]} funnel={null} />
+            ) : widgetEventsState.status === 'error' ? (
+              <Alert>
+                <AlertTitle>Unable to load widget interaction analytics</AlertTitle>
+                <AlertDescription>{widgetEventsState.message ?? 'The analytics read contract returned an error.'}</AlertDescription>
+              </Alert>
+            ) : (
+              <WidgetInteractionCharts
+                status="success"
+                timeseries={widgetEventsState.bundle.timeseries}
+                breakdown={widgetEventsState.bundle.breakdown}
+                funnel={widgetEventsState.bundle.funnel}
+              />
+            )}
           </CardContent>
         </Card>
       </section>
@@ -172,10 +214,10 @@ export function OverviewPageContent({
                     {leads.slice(0, 5).map((lead) => (
                       <TableRow key={lead.id}>
                         <TableCell className="font-medium">
-                          <span className="break-all">{lead.email ?? lead.name ?? 'Unnamed lead'}</span>
+                          <span className="break-all" dir={lead.email ? 'ltr' : 'auto'}>{lead.email ?? lead.name ?? 'Unnamed lead'}</span>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          <span className="break-all">{lead.source_domain ?? 'Unknown source'}</span>
+                          <span className="break-all" dir="ltr">{lead.source_domain ?? 'Unknown source'}</span>
                         </TableCell>
                       </TableRow>
                     ))}
