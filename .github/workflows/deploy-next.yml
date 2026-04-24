@@ -52,14 +52,50 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             set -e
-            REPO_DIR="/root/grindctrl-next"
-            if [ ! -d "$REPO_DIR" ]; then
-              echo "Server repo directory not found: $REPO_DIR"
+            DEPLOY_SCRIPT="/root/grindctrl-next/deploy-next.sh"
+
+            if [ ! -f "$DEPLOY_SCRIPT" ]; then
+              echo "Deploy script not found: $DEPLOY_SCRIPT"
               exit 1
             fi
 
-            cd "$REPO_DIR"
-            TOP_LEVEL="$(git rev-parse --show-toplevel)"
+            REPO_DIR=""
+
+            SCRIPT_CD="$(awk '/^[[:space:]]*cd[[:space:]]+/{print $2; exit}' "$DEPLOY_SCRIPT" | tr -d '"' | tr -d "'")"
+            if [ -n "$SCRIPT_CD" ] && [ -d "$SCRIPT_CD/.git" ]; then
+              REPO_DIR="$SCRIPT_CD"
+            fi
+
+            if [ -z "$REPO_DIR" ] && [ -d "/root/grindctrl-booking/.git" ]; then
+              REPO_DIR="/root/grindctrl-booking"
+            fi
+
+            if [ -z "$REPO_DIR" ] && [ -d "/root/grindctrl-next/.git" ]; then
+              REPO_DIR="/root/grindctrl-next"
+            fi
+
+            if [ -z "$REPO_DIR" ]; then
+              for ROOT in /root /home; do
+                [ -d "$ROOT" ] || continue
+                while IFS= read -r GIT_DIR; do
+                  CANDIDATE="${GIT_DIR%/.git}"
+                  ORIGIN_URL="$(git -C "$CANDIDATE" config --get remote.origin.url || true)"
+                  case "$ORIGIN_URL" in
+                    *mhhmod/grindctrl_booking* )
+                      REPO_DIR="$CANDIDATE"
+                      break 2
+                      ;;
+                  esac
+                done < <(find "$ROOT" -maxdepth 6 -type d -name .git 2>/dev/null)
+              done
+            fi
+
+            if [ -z "$REPO_DIR" ]; then
+              echo "Could not detect deploy git repository on server"
+              exit 1
+            fi
+
+            TOP_LEVEL="$(git -C "$REPO_DIR" rev-parse --show-toplevel)"
             echo "Using server repo: $TOP_LEVEL"
 
             if [ -n "$(git -C "$TOP_LEVEL" status --porcelain)" ]; then
