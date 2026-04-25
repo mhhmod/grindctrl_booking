@@ -110,8 +110,11 @@ export function WidgetInteractionCharts({
 
   if (noData) {
     return (
-      <div className="rounded-lg border border-dashed bg-muted/10 px-3 py-3 text-sm text-muted-foreground" role="status" aria-live="polite">
-        No interaction events are available for this time window yet.
+      <div className="rounded-xl border border-dashed bg-muted/10 px-4 py-5" role="status" aria-live="polite">
+        <p className="text-sm font-medium text-foreground">No widget events yet</p>
+        <p className="mt-1 max-w-md text-sm leading-6 text-muted-foreground">
+          Analytics are ready. Events will appear here after the installed widget records opens, messages, intents, or leads.
+        </p>
       </div>
     );
   }

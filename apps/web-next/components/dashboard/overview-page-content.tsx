@@ -32,7 +32,7 @@ function SetupItem({
   hint?: string;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg border bg-background px-3 py-2">
+    <div className="flex items-start justify-between gap-3 rounded-xl border bg-background/80 px-3 py-2.5">
       <div className="min-w-0">
         <div className="text-sm font-medium text-foreground">{label}</div>
         {hint ? <div className="mt-1 text-xs text-muted-foreground">{hint}</div> : null}
@@ -41,6 +41,28 @@ function SetupItem({
         {done ? 'Done' : 'Todo'}
       </Badge>
     </div>
+  );
+}
+
+function OverviewMetricCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <Card size="sm" className="min-w-0">
+      <CardHeader className="min-w-0 pb-0">
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="break-words text-2xl font-semibold tracking-tight">{value}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs leading-5 text-muted-foreground">{hint}</p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -77,47 +99,11 @@ export function OverviewPageContent({
 
   return (
     <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
-      <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardHeader className="min-w-0">
-            <CardDescription>Workspace</CardDescription>
-            <CardTitle className="break-words text-base">{workspace.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Role: {role ?? 'Unavailable'}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="min-w-0">
-            <CardDescription>Selected site</CardDescription>
-            <CardTitle className="break-words text-base">{site?.name ?? 'No widget sites yet'}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm text-muted-foreground">Status: {site?.status ?? 'draft'}</div>
-            <Badge variant={hasSite ? 'default' : 'secondary'}>{hasSite ? 'Active' : 'None'}</Badge>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardDescription>Allowed domains</CardDescription>
-            <CardTitle className="text-base">{metricLabel(domains.length)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Real domain count from dashboard_list_domains.</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardDescription>Captured leads</CardDescription>
-            <CardTitle className="text-base">{metricLabel(leads.length)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">Real lead count from dashboard_list_leads.</div>
-          </CardContent>
-        </Card>
+      <section className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <OverviewMetricCard label="Workspace" value={workspace.name} hint={`Role: ${role ?? 'Unavailable'}`} />
+        <OverviewMetricCard label="Selected site" value={site?.name ?? 'No site'} hint={`Status: ${site?.status ?? 'draft'}${hasSite ? ' / active' : ''}`} />
+        <OverviewMetricCard label="Allowed domains" value={metricLabel(domains.length)} hint="From dashboard_list_domains." />
+        <OverviewMetricCard label="Captured leads" value={metricLabel(leads.length)} hint="From dashboard_list_leads." />
       </section>
 
       {!hasSite ? (
@@ -128,7 +114,7 @@ export function OverviewPageContent({
       ) : null}
 
       <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:gap-6">
-        <Card>
+        <Card size="sm">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <CardTitle>Install readiness</CardTitle>
@@ -138,7 +124,7 @@ export function OverviewPageContent({
               <Link href="/dashboard/install">Open install</Link>
             </Button>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-2.5">
             <SetupItem label="Widget site selected" done={hasSite} hint="Pick a site to scope domains, intents, and leads." />
             <SetupItem label="Embed key available" done={hasEmbedKey} hint="Used by the canonical loader contract." />
             <SetupItem label="At least one allowed domain" done={hasDomains} hint="Controls where the widget may load." />
@@ -147,14 +133,14 @@ export function OverviewPageContent({
 
             <Separator />
 
-            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+            <div className="rounded-xl border bg-muted/20 px-3 py-2">
               <div className="text-xs font-medium text-muted-foreground">Embed key</div>
               <div className="mt-1 break-all font-mono text-xs text-foreground" dir="ltr">{site?.embed_key ?? 'No site available'}</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card size="sm">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <CardTitle>Widget interaction analytics</CardTitle>
@@ -191,14 +177,14 @@ export function OverviewPageContent({
       </section>
 
       <section className="grid min-w-0 gap-5 lg:grid-cols-2 xl:gap-6">
-        <Card>
+        <Card size="sm">
           <CardHeader>
             <CardTitle>Recent leads</CardTitle>
             <CardDescription>Latest captured leads for the selected scope.</CardDescription>
           </CardHeader>
           <CardContent>
             {leads.length === 0 ? (
-              <div className="rounded-lg border border-dashed bg-muted/10 px-3 py-3 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed bg-muted/10 px-3 py-3 text-sm text-muted-foreground">
                 No leads have been captured for this scope yet.
               </div>
             ) : (
@@ -228,16 +214,16 @@ export function OverviewPageContent({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card size="sm">
           <CardHeader>
             <CardTitle>Current scope</CardTitle>
             <CardDescription>What this dashboard shows today.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 text-sm">
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Domains loaded from dashboard_list_domains</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Intents loaded from dashboard_list_intents</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Leads loaded from dashboard_list_leads</div>
-            <div className="rounded-lg border bg-muted/10 px-3 py-3">Editable widget config stays consolidated in settings_json</div>
+            <div className="rounded-xl border bg-muted/10 px-3 py-2.5">Domains loaded from dashboard_list_domains</div>
+            <div className="rounded-xl border bg-muted/10 px-3 py-2.5">Intents loaded from dashboard_list_intents</div>
+            <div className="rounded-xl border bg-muted/10 px-3 py-2.5">Leads loaded from dashboard_list_leads</div>
+            <div className="rounded-xl border bg-muted/10 px-3 py-2.5">Editable widget config stays consolidated in settings_json</div>
           </CardContent>
         </Card>
       </section>

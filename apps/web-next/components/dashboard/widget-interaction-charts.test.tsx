@@ -23,7 +23,7 @@ describe('WidgetInteractionCharts', () => {
   it('renders empty state when no timeseries data is available', () => {
     render(<WidgetInteractionCharts timeseries={[]} breakdown={[]} funnel={null} />);
 
-    expect(screen.getByText('No interaction events are available for this time window yet.')).toBeInTheDocument();
+    expect(screen.getByText('No widget events yet')).toBeInTheDocument();
   });
 
   it('renders funnel values when analytics data is available', () => {
