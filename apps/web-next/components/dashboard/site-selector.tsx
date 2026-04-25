@@ -16,7 +16,7 @@ export function SiteSelector({ sites, selectedSiteId }: { sites: WidgetSite[]; s
   }
 
   return (
-    <div className="flex w-full max-w-xs flex-col gap-2 sm:w-auto sm:items-end">
+    <div className="flex w-full min-w-0 flex-col gap-2 sm:w-auto sm:max-w-xs sm:items-end">
       <Label htmlFor="site-selector">Widget site</Label>
       <select
         id="site-selector"

@@ -9,8 +9,8 @@ export function DashboardRouteTabs({ items }: { items: DashboardResolvedNavItem[
   }
 
   return (
-    <nav aria-label="Dashboard sections" className="-mx-1 overflow-x-auto pb-1">
-      <ul className="flex min-w-max items-center gap-2 px-1">
+    <nav aria-label="Dashboard sections" className="-mx-3 overflow-x-auto px-3 pb-1 sm:-mx-5 sm:px-5">
+      <ul className="flex w-max min-w-full items-center gap-2">
         {items.map((item) => (
           <li key={item.href}>
             <Link

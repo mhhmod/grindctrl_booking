@@ -89,8 +89,8 @@ export default async function DashboardOverviewPage({ searchParams }: Props) {
   );
 
   return (
-    <div className="grid gap-6">
-      <div className="flex justify-start sm:justify-end">
+    <div className="grid min-w-0 gap-5 sm:gap-6">
+      <div className="flex min-w-0 justify-start sm:justify-end">
         <SiteSelector sites={bundle.sites} selectedSiteId={site?.id} />
       </div>
       <OverviewPageContent

@@ -76,12 +76,12 @@ export function OverviewPageContent({
   const hasLeads = leads.length > 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
+      <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardHeader>
+          <CardHeader className="min-w-0">
             <CardDescription>Workspace</CardDescription>
-            <CardTitle className="text-base">{workspace.name}</CardTitle>
+            <CardTitle className="break-words text-base">{workspace.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-sm text-muted-foreground">Role: {role ?? 'Unavailable'}</div>
@@ -89,11 +89,11 @@ export function OverviewPageContent({
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="min-w-0">
             <CardDescription>Selected site</CardDescription>
-            <CardTitle className="text-base">{site?.name ?? 'No widget sites yet'}</CardTitle>
+            <CardTitle className="break-words text-base">{site?.name ?? 'No widget sites yet'}</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center justify-between gap-3">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-muted-foreground">Status: {site?.status ?? 'draft'}</div>
             <Badge variant={hasSite ? 'default' : 'secondary'}>{hasSite ? 'Active' : 'None'}</Badge>
           </CardContent>
@@ -127,7 +127,7 @@ export function OverviewPageContent({
         </Alert>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:gap-6">
         <Card>
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
@@ -190,7 +190,7 @@ export function OverviewPageContent({
         </Card>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
+      <section className="grid min-w-0 gap-5 lg:grid-cols-2 xl:gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Recent leads</CardTitle>

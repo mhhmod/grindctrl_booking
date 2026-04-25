@@ -81,8 +81,8 @@ export function DashboardShell({
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
+      <SidebarInset className="min-w-0 overflow-x-hidden">
+        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5 px-3 py-4 sm:gap-6 sm:px-5 lg:px-8 lg:py-7 xl:px-10">
           <header className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <SidebarTrigger variant="outline" size="icon-sm" className="md:hidden" aria-label="Open dashboard navigation" />
@@ -112,12 +112,14 @@ export function DashboardShell({
 
             <div className="flex items-start gap-3 sm:items-center">
               <div className="min-w-0">
-                <h1 className="truncate text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
               </div>
             </div>
 
-            <DashboardRouteTabs items={navItems} />
+            <div className="md:hidden">
+              <DashboardRouteTabs items={navItems} />
+            </div>
             <Separator />
           </header>
 
