@@ -44,7 +44,7 @@ function SetupItem({
   );
 }
 
-function OverviewMetricCard({
+function OverviewMetricTile({
   label,
   value,
   hint,
@@ -54,15 +54,11 @@ function OverviewMetricCard({
   hint: string;
 }) {
   return (
-    <Card size="sm" className="min-w-0">
-      <CardHeader className="min-w-0 pb-0">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="break-words text-2xl font-semibold tracking-tight">{value}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-xs leading-5 text-muted-foreground">{hint}</p>
-      </CardContent>
-    </Card>
+    <div className="min-w-0 rounded-xl border bg-background/70 p-3 shadow-sm">
+      <div className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</div>
+      <div className="mt-2 break-words text-2xl font-semibold tracking-tight text-foreground">{value}</div>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">{hint}</p>
+    </div>
   );
 }
 
@@ -99,12 +95,27 @@ export function OverviewPageContent({
 
   return (
     <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
-      <section className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <OverviewMetricCard label="Workspace" value={workspace.name} hint={`Role: ${role ?? 'Unavailable'}`} />
-        <OverviewMetricCard label="Selected site" value={site?.name ?? 'No site'} hint={`Status: ${site?.status ?? 'draft'}${hasSite ? ' / active' : ''}`} />
-        <OverviewMetricCard label="Allowed domains" value={metricLabel(domains.length)} hint="From dashboard_list_domains." />
-        <OverviewMetricCard label="Captured leads" value={metricLabel(leads.length)} hint="From dashboard_list_leads." />
-      </section>
+      <Card size="sm" className="border-primary/25 bg-primary/5 shadow-sm">
+        <CardContent className="grid gap-4 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.65fr)] md:items-stretch">
+          <div className="flex min-w-0 flex-col justify-between rounded-xl border bg-background/70 p-4">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Active workspace</div>
+              <h2 className="mt-3 break-words text-2xl font-semibold tracking-tight text-foreground">{workspace.name}</h2>
+              <p className="mt-2 break-words text-sm text-muted-foreground">{site?.name ?? 'No widget site selected'}</p>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Badge variant="secondary">Role: {role ?? 'Unavailable'}</Badge>
+              <Badge variant={hasSite ? 'default' : 'secondary'}>{hasSite ? `Site ${site?.status ?? 'active'}` : 'No site'}</Badge>
+            </div>
+          </div>
+
+          <div className="grid min-w-0 gap-3 sm:grid-cols-3">
+            <OverviewMetricTile label="Domains" value={metricLabel(domains.length)} hint="Allowed hostnames" />
+            <OverviewMetricTile label="Intents" value={metricLabel(intents.length)} hint="Configured quick actions" />
+            <OverviewMetricTile label="Leads" value={metricLabel(leads.length)} hint="Captured contacts" />
+          </div>
+        </CardContent>
+      </Card>
 
       {!hasSite ? (
         <Alert>
@@ -113,7 +124,7 @@ export function OverviewPageContent({
         </Alert>
       ) : null}
 
-      <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] xl:gap-6">
+      <section className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-6">
         <Card size="sm">
           <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
