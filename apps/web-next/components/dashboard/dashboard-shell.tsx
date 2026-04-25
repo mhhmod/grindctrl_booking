@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { Icon } from '@/components/icons';
-import { DashboardRouteTabs } from '@/components/dashboard/dashboard-route-tabs';
+import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarFooter,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -23,22 +22,20 @@ export function DashboardShell({
   breadcrumbs,
   title,
   description,
-  userEmail,
   children,
 }: {
   navItems: DashboardResolvedNavItem[];
   breadcrumbs: DashboardBreadcrumbItem[];
   title: string;
   description: string;
-  userEmail: string;
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider defaultOpen>
-      <Sidebar>
-        <SidebarHeader className="px-3 py-3">
-          <Link href="/" className="flex items-center gap-3 rounded-lg px-2 py-2 text-sidebar-foreground">
-            <span className="grid size-9 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold">
+      <SidebarProvider defaultOpen>
+        <Sidebar>
+        <SidebarHeader className="p-2">
+          <Link href="/" className="flex h-10 items-center gap-2 rounded-lg px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <span className="grid size-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold">
               G
             </span>
             <div className="min-w-0">
@@ -50,12 +47,12 @@ export function DashboardShell({
 
         <Separator />
 
-        <SidebarContent className="px-2 py-3">
+        <SidebarContent className="p-2">
           <SidebarMenu>
             {navItems.map((item) => {
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={item.isActive}>
+                  <SidebarMenuButton asChild isActive={item.isActive} size="sm">
                     <Link href={item.href}>
                       <Icon icon={item.icon} />
                       <span>{item.label}</span>
@@ -66,28 +63,16 @@ export function DashboardShell({
             })}
           </SidebarMenu>
         </SidebarContent>
-
-        <Separator />
-
-        <SidebarFooter className="px-3 py-3">
-          <div className="rounded-lg border bg-card px-3 py-3">
-            <div className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Signed in</div>
-            <div className="mt-2 break-all text-sm text-card-foreground">{userEmail}</div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Clerk session</span>
-              <UserButton afterSignOutUrl="/" />
-            </div>
-          </div>
-        </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="min-w-0 overflow-x-hidden">
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5 px-3 py-4 sm:gap-6 sm:px-5 lg:px-8 lg:py-7 xl:px-10">
-          <header className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger variant="outline" size="icon-sm" className="md:hidden" aria-label="Open dashboard navigation" />
-              <nav aria-label="Breadcrumb" className="min-w-0">
-                <ol className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground sm:text-sm">
+      <SidebarInset className="min-w-0 overflow-x-hidden bg-muted/40">
+        <header className="sticky top-0 z-50 w-full border-b border-sidebar-border bg-background">
+          <div className="container flex h-14 items-center justify-between gap-4 px-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <SidebarTrigger variant="ghost" size="icon-sm" aria-label="Toggle dashboard navigation" />
+              <div className="min-w-0">
+                <nav aria-label="Breadcrumb" className="min-w-0">
+                  <ol className="flex min-w-0 flex-wrap items-center gap-1 text-xs text-muted-foreground">
                   {breadcrumbs.map((crumb, index) => {
                     const isLast = index === breadcrumbs.length - 1;
 
@@ -106,25 +91,28 @@ export function DashboardShell({
                       </li>
                     );
                   })}
-                </ol>
-              </nav>
-            </div>
-
-            <div className="flex items-start gap-3 sm:items-center">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
+                  </ol>
+                </nav>
+                <div className="truncate text-sm font-semibold leading-5 text-foreground">{title}</div>
               </div>
             </div>
 
-            <div className="md:hidden">
-              <DashboardRouteTabs items={navItems} />
+            <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle />
+              <UserButton afterSignOutUrl="/" />
             </div>
-            <Separator />
-          </header>
+          </div>
+        </header>
 
+        <main className="min-h-[calc(100svh-3.5rem)]">
+          <div className="container grid gap-4 p-4">
+            <div className="space-y-1 md:hidden">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
           {children}
-        </div>
+          </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

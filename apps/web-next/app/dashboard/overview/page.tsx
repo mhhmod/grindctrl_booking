@@ -1,4 +1,3 @@
-import { SiteSelector } from '@/components/dashboard/site-selector';
 import { OverviewPageContent } from '@/components/dashboard/overview-page-content';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { listDomains } from '@/lib/adapters/domains';
@@ -89,10 +88,7 @@ export default async function DashboardOverviewPage({ searchParams }: Props) {
   );
 
   return (
-    <div className="grid min-w-0 gap-5 sm:gap-6">
-      <div className="flex min-w-0 justify-start sm:justify-end">
-        <SiteSelector sites={bundle.sites} selectedSiteId={site?.id} />
-      </div>
+    <div className="grid min-w-0 gap-4">
       <OverviewPageContent
         workspace={bundle.workspace}
         site={site}

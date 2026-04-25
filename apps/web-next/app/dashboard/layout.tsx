@@ -1,4 +1,3 @@
-import { currentUser } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
@@ -12,7 +11,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const pathname = headerList.get('x-pathname') ?? '/dashboard/overview';
 
   const clerkUserId = await requireDashboardUser(pathname);
-  const user = await currentUser();
   const workspaceBundle = await getWorkspaceBundle(clerkUserId);
   const routeMeta = getDashboardRouteMeta(pathname);
   const permissions = resolveDashboardPermissions({ role: workspaceBundle.role });
@@ -24,7 +22,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
       breadcrumbs={routeMeta.breadcrumbs}
       title={routeMeta.title}
       description={routeMeta.description}
-      userEmail={user?.primaryEmailAddress?.emailAddress ?? 'Authenticated user'}
     >
       {children}
     </DashboardShell>
