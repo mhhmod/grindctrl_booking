@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import type { BrandingFormState } from '@/app/dashboard/branding/state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -65,16 +65,20 @@ export function BrandingForm({
   initialState: BrandingFormState;
   saveAction: (formData: FormData) => Promise<BrandingFormState>;
 }) {
+  return <BrandingFormInner key={JSON.stringify(initialState)} initialState={initialState} saveAction={saveAction} />;
+}
+
+function BrandingFormInner({
+  initialState,
+  saveAction,
+}: {
+  initialState: BrandingFormState;
+  saveAction: (formData: FormData) => Promise<BrandingFormState>;
+}) {
   const [state, setState] = useState(initialState);
   const [values, setValues] = useState(initialState.values);
   const [savedValues, setSavedValues] = useState(initialState.values);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setState(initialState);
-    setValues(initialState.values);
-    setSavedValues(initialState.values);
-  }, [initialState]);
 
   const logoUrlInvalid = values.logoUrl.trim().length > 0 && !isOptionalUrlValid(values.logoUrl);
   const avatarUrlInvalid = values.avatarUrl.trim().length > 0 && !isOptionalUrlValid(values.avatarUrl);

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import type { LeadSettingsFormState } from '@/app/dashboard/leads/state';
 import { LEADS_PAGE_SIZE_OPTIONS, LEADS_SORT_OPTIONS, type LeadsSortOption } from '@/lib/dashboard/leads-list-query';
 import type { WidgetLead } from '@/lib/types';
@@ -89,16 +89,32 @@ export function LeadsDashboard({
   leadsState: LeadsListState;
   selectedSiteId: string;
 }) {
+  return (
+    <LeadsDashboardInner
+      key={JSON.stringify(initialSettingsState)}
+      initialSettingsState={initialSettingsState}
+      saveSettingsAction={saveSettingsAction}
+      leadsState={leadsState}
+      selectedSiteId={selectedSiteId}
+    />
+  );
+}
+
+function LeadsDashboardInner({
+  initialSettingsState,
+  saveSettingsAction,
+  leadsState,
+  selectedSiteId,
+}: {
+  initialSettingsState: LeadSettingsFormState;
+  saveSettingsAction: (formData: FormData) => Promise<LeadSettingsFormState>;
+  leadsState: LeadsListState;
+  selectedSiteId: string;
+}) {
   const [settingsState, setSettingsState] = useState(initialSettingsState);
   const [values, setValues] = useState(initialSettingsState.values);
   const [savedValues, setSavedValues] = useState(initialSettingsState.values);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setSettingsState(initialSettingsState);
-    setValues(initialSettingsState.values);
-    setSavedValues(initialSettingsState.values);
-  }, [initialSettingsState]);
 
   const consentTextInvalid = values.consentMode !== 'none' && !values.consentText.trim();
   const privacyUrlInvalid = values.privacyUrl.trim().length > 0 && !isOptionalUrlValid(values.privacyUrl);

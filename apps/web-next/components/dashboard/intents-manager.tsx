@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import type { IntentsState, IntentEditorValues } from '@/app/dashboard/intents/state';
 import { getIntentActionLabel, getIntentTone, INTENT_ACTION_OPTIONS } from '@/lib/intents';
 import type { WidgetIntent } from '@/lib/types';
@@ -136,20 +136,46 @@ export function IntentsManager({
   selectedSiteId: string;
   listQuery: IntentsListQuery;
 }) {
+  return (
+    <IntentsManagerInner
+      key={JSON.stringify({ initialState, initialValues })}
+      initialState={initialState}
+      initialValues={initialValues}
+      createIntentAction={createIntentAction}
+      updateIntentAction={updateIntentAction}
+      deleteIntentAction={deleteIntentAction}
+      reorderIntentAction={reorderIntentAction}
+      selectedSiteId={selectedSiteId}
+      listQuery={listQuery}
+    />
+  );
+}
+
+function IntentsManagerInner({
+  initialState,
+  initialValues,
+  createIntentAction,
+  updateIntentAction,
+  deleteIntentAction,
+  reorderIntentAction,
+  selectedSiteId,
+  listQuery,
+}: {
+  initialState: IntentsState;
+  initialValues: IntentEditorValues;
+  createIntentAction: (formData: FormData) => Promise<IntentsState>;
+  updateIntentAction: (formData: FormData) => Promise<IntentsState>;
+  deleteIntentAction: (formData: FormData) => Promise<IntentsState>;
+  reorderIntentAction: (formData: FormData) => Promise<IntentsState>;
+  selectedSiteId: string;
+  listQuery: IntentsListQuery;
+}) {
   const [state, setState] = useState(initialState);
   const [values, setValues] = useState(initialValues);
   const [editingIntentId, setEditingIntentId] = useState<string | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(initialState.fieldError);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setState(initialState);
-    setValues(initialValues);
-    setEditingIntentId(null);
-    setInlineError(initialState.fieldError);
-    setPendingAction(null);
-  }, [initialState, initialValues]);
 
   const resolvedIntents = useMemo(() => resolveIntentsList(state.intents, listQuery), [state.intents, listQuery]);
   const editingIntent = editingIntentId ? state.intents.find((intent) => intent.id === editingIntentId) ?? null : null;

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import type { DomainsState } from '@/app/dashboard/domains/state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,20 +40,43 @@ export function DomainsManager({
   selectedSiteId: string;
   listQuery: DomainsListQuery;
 }) {
+  return (
+    <DomainsManagerInner
+      key={JSON.stringify(initialState)}
+      initialState={initialState}
+      addDomainAction={addDomainAction}
+      updateDomainStatusAction={updateDomainStatusAction}
+      removeDomainAction={removeDomainAction}
+      allowLocalhost={allowLocalhost}
+      selectedSiteId={selectedSiteId}
+      listQuery={listQuery}
+    />
+  );
+}
+
+function DomainsManagerInner({
+  initialState,
+  addDomainAction,
+  updateDomainStatusAction,
+  removeDomainAction,
+  allowLocalhost,
+  selectedSiteId,
+  listQuery,
+}: {
+  initialState: DomainsState;
+  addDomainAction: (formData: FormData) => Promise<DomainsState>;
+  updateDomainStatusAction: (formData: FormData) => Promise<DomainsState>;
+  removeDomainAction: (formData: FormData) => Promise<DomainsState>;
+  allowLocalhost: boolean;
+  selectedSiteId: string;
+  listQuery: DomainsListQuery;
+}) {
   const [state, setState] = useState(initialState);
   const [domainDraft, setDomainDraft] = useState('');
   const [inlineError, setInlineError] = useState<string | null>(initialState.fieldError);
-  const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>({});
+  const [statusDrafts, setStatusDrafts] = useState<Record<string, string>>(() => Object.fromEntries(initialState.domains.map((domain) => [domain.id, domain.verification_status])));
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setState(initialState);
-    setDomainDraft('');
-    setInlineError(initialState.fieldError);
-    setStatusDrafts(Object.fromEntries(initialState.domains.map((domain) => [domain.id, domain.verification_status])));
-    setPendingAction(null);
-  }, [initialState]);
 
   const resolvedDomains = useMemo(() => resolveDomainsList(state.domains, listQuery), [state.domains, listQuery]);
 
