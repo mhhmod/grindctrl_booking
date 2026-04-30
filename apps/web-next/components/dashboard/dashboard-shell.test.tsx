@@ -16,8 +16,9 @@ vi.mock('@/components/dashboard/theme-toggle', () => ({
 }));
 
 const navItems = [
-  { href: '/dashboard/overview', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const },
-  { href: '/dashboard/install', label: 'Install Widget', icon: {} as never, isActive: false, permissionKey: 'canViewInstall' as const },
+  { href: '/dashboard/overview', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const, group: 'core' as const },
+  { href: '/dashboard/install', label: 'Install', icon: {} as never, isActive: false, permissionKey: 'canViewInstall' as const, group: 'widgets' as const },
+  { href: '/dashboard/workflows', label: 'Workflows', icon: {} as never, isActive: false, permissionKey: 'canViewWorkflows' as const, group: 'platform' as const },
 ];
 
 const breadcrumbs = [
@@ -56,10 +57,11 @@ describe('DashboardShell', () => {
     expect(within(banner).getByRole('button', { name: 'Switch to light mode' })).toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'User account' })).toBeInTheDocument();
 
-    const sidebarNav = screen.getByRole('link', { name: /GRINDCTRL Dashboard/i }).closest('[data-sidebar="sidebar"]');
+    const sidebarNav = screen.getByRole('link', { name: /GRINDCTRL Operations Platform/i }).closest('[data-sidebar="sidebar"]');
     expect(sidebarNav).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Overview' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Install Widget' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Install' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Workflows' })).toBeInTheDocument();
     expect(screen.queryByText('Signed in')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Dashboard content')).toBeInTheDocument();
   });

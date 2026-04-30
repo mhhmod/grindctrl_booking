@@ -41,7 +41,7 @@ export function DashboardShell({
             </span>
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold leading-5">GRINDCTRL</div>
-              <div className="truncate text-xs text-muted-foreground">Dashboard</div>
+              <div className="truncate text-xs text-muted-foreground">Operations Platform</div>
             </div>
           </Link>
         </SidebarHeader>
@@ -50,16 +50,22 @@ export function DashboardShell({
 
         <SidebarContent className="p-2">
           <SidebarMenu>
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
+              const prevGroup = index > 0 ? navItems[index - 1].group : undefined;
+              const showSeparator = item.group && prevGroup && item.group !== prevGroup;
+
               return (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={item.isActive} size="sm">
-                    <Link href={item.href}>
-                      <Icon icon={item.icon} />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <React.Fragment key={item.href}>
+                  {showSeparator && <Separator className="my-1" />}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={item.isActive} size="sm">
+                      <Link href={item.href}>
+                        <Icon icon={item.icon} />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </React.Fragment>
               );
             })}
           </SidebarMenu>
