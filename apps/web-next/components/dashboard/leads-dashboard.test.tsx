@@ -194,4 +194,15 @@ describe('LeadsDashboard', () => {
     expect(screen.queryByRole('button', { name: /create lead/i })).not.toBeInTheDocument();
     expect(screen.getByText(/This screen does not create leads in the browser\./)).toBeInTheDocument();
   });
+
+  it('renders operational lead states as UI-only fields', () => {
+    const saveSettingsAction = vi.fn().mockResolvedValue(initialSettingsState);
+
+    render(<LeadsDashboard initialSettingsState={initialSettingsState} saveSettingsAction={saveSettingsAction} leadsState={populatedLeadsState} selectedSiteId="site_1" />);
+
+    expect(screen.getAllByText('Qualified').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Unassigned').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Ready to sync').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Follow-up needed').length).toBeGreaterThan(0);
+  });
 });

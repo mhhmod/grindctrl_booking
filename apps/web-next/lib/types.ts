@@ -43,12 +43,67 @@ export interface WidgetLead {
   id: string;
   workspace_id: string;
   widget_site_id: string;
+  conversation_id?: string | null;
+  intent_id?: string | null;
+  visitor_id?: string | null;
   name?: string | null;
   email?: string | null;
   phone?: string | null;
   company?: string | null;
   source_domain?: string | null;
+  status?: string | null;
+  status_reason?: string | null;
+  sync_status?: string | null;
+  booking_status?: string | null;
+  assigned_profile_id?: string | null;
+  page_url?: string | null;
+  referrer?: string | null;
   created_at?: string;
+}
+
+export interface WidgetConversation {
+  id: string;
+  widget_site_id: string;
+  visitor_id: string;
+  status: string;
+  started_at?: string | null;
+  closed_at?: string | null;
+  last_message_at?: string | null;
+  last_page_url?: string | null;
+  last_referrer?: string | null;
+  assigned_profile_id?: string | null;
+  message_count?: number;
+  lead_count?: number;
+  latest_message_preview?: string | null;
+  visitor_name?: string | null;
+  visitor_email?: string | null;
+}
+
+export interface WidgetMessage {
+  id: string;
+  conversation_id: string;
+  role: string;
+  content: string;
+  content_type?: string | null;
+  intent_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface WidgetConversationDetail {
+  conversation: WidgetConversation | null;
+  messages: WidgetMessage[];
+  leads: WidgetLead[];
+}
+
+export interface WorkflowAuditState {
+  executedActions: string[];
+  externalRefs: string[];
+  auditTrail: string[];
+  observability: {
+    providerRefs: string[];
+    latencyMs: number;
+    costEstimate: number;
+  };
 }
 
 export interface WidgetInstallVerification {

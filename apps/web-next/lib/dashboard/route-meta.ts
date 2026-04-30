@@ -25,24 +25,9 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Workspace health, site metrics, and operational summary.',
   },
   {
-    pathname: '/dashboard/install',
-    title: 'Install',
-    description: 'Embed your AI widget using the canonical install contract and site key.',
-  },
-  {
-    pathname: '/dashboard/branding',
-    title: 'Branding',
-    description: 'Configure the visual identity and appearance of your widget.',
-  },
-  {
-    pathname: '/dashboard/intents',
-    title: 'Intents',
-    description: 'Manage AI routing intents that drive widget behavior and actions.',
-  },
-  {
-    pathname: '/dashboard/domains',
-    title: 'Domains',
-    description: 'Control which domains are authorized to load your widget.',
+    pathname: '/dashboard/inbox',
+    title: 'Inbox',
+    description: 'Triaged conversation queue with ownership, status filters, and operator detail view.',
   },
   {
     pathname: '/dashboard/leads',
@@ -50,9 +35,14 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Review and manage leads captured through AI interactions.',
   },
   {
-    pathname: '/dashboard/conversations',
-    title: 'Conversations',
-    description: 'Browse widget conversation logs and AI interaction history.',
+    pathname: '/dashboard/sites',
+    title: 'Sites',
+    description: 'Manage install, branding, and domain controls for each deployed widget site.',
+  },
+  {
+    pathname: '/dashboard/routing',
+    title: 'Routing',
+    description: 'Manage AI routing intents and fallback behavior for widget conversations.',
   },
   {
     pathname: '/dashboard/workflows',
@@ -70,6 +60,14 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Workspace configuration, team members, and API access.',
   },
 ];
+
+const DASHBOARD_ROUTE_ALIASES: Record<string, string> = {
+  '/dashboard/conversations': '/dashboard/inbox',
+  '/dashboard/install': '/dashboard/sites',
+  '/dashboard/branding': '/dashboard/sites',
+  '/dashboard/domains': '/dashboard/sites',
+  '/dashboard/intents': '/dashboard/routing',
+};
 
 function toTitleCase(segment: string) {
   return segment
@@ -95,11 +93,13 @@ export function normalizeDashboardPathname(pathname: string) {
     return DASHBOARD_HOME_PATH;
   }
 
-  if (pathname.length > 1 && pathname.endsWith('/')) {
-    return pathname.slice(0, -1);
+  const withoutTrailingSlash = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+
+  if (DASHBOARD_ROUTE_ALIASES[withoutTrailingSlash]) {
+    return DASHBOARD_ROUTE_ALIASES[withoutTrailingSlash];
   }
 
-  return pathname;
+  return withoutTrailingSlash;
 }
 
 export function getDashboardRouteMeta(pathname: string): DashboardRouteMeta {

@@ -1,14 +1,12 @@
 import {
   DashboardSquare01Icon,
-  Download01Icon,
-  Globe02Icon,
   MagicWand01Icon,
-  Palette,
   UserGroupIcon,
   ConversationIcon,
   WorkflowSquare03Icon,
   Plug01Icon,
   Settings02Icon,
+  Globe02Icon,
 } from '@hugeicons/core-free-icons';
 import type { IconGlyph } from '@/components/icons';
 import { normalizeDashboardPathname } from '@/lib/dashboard/route-meta';
@@ -30,14 +28,12 @@ export type DashboardResolvedNavItem = DashboardNavItem & {
 const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   // ── Core ──
   { href: '/dashboard/overview', label: 'Overview', icon: DashboardSquare01Icon, permissionKey: 'canViewOverview', group: 'core' },
-  { href: '/dashboard/conversations', label: 'Conversations', icon: ConversationIcon, permissionKey: 'canViewConversations', group: 'core' },
+  { href: '/dashboard/inbox', label: 'Inbox', icon: ConversationIcon, permissionKey: 'canViewConversations', group: 'core' },
+  { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon, permissionKey: 'canViewLeads', group: 'core' },
 
   // ── Widget operations ──
-  { href: '/dashboard/install', label: 'Install', icon: Download01Icon, permissionKey: 'canViewInstall', group: 'widgets' },
-  { href: '/dashboard/branding', label: 'Branding', icon: Palette, permissionKey: 'canViewBranding', group: 'widgets' },
-  { href: '/dashboard/intents', label: 'Intents', icon: MagicWand01Icon, permissionKey: 'canViewIntents', group: 'widgets' },
-  { href: '/dashboard/domains', label: 'Domains', icon: Globe02Icon, permissionKey: 'canViewDomains', group: 'widgets' },
-  { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon, permissionKey: 'canViewLeads', group: 'widgets' },
+  { href: '/dashboard/sites', label: 'Sites', icon: Globe02Icon, permissionKey: 'canViewInstall', group: 'widgets' },
+  { href: '/dashboard/routing', label: 'Routing', icon: MagicWand01Icon, permissionKey: 'canViewIntents', group: 'widgets' },
 
   // ── Platform ──
   { href: '/dashboard/workflows', label: 'Workflows', icon: WorkflowSquare03Icon, permissionKey: 'canViewWorkflows', group: 'platform' },

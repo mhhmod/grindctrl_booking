@@ -59,3 +59,38 @@ Need one production-minded AI agent blueprint for landing page MVP.
   - `follow_up`
   - `custom`
 - Include friendly `message`, `ok`, `fallback`, `retry_after_seconds`, and `meta` envelope in final response.
+
+## Landing Sandbox Structured Output Rules
+
+When the caller source is `landing_sandbox`, normalize output into a workflow envelope instead of chat text.
+
+Required top-level envelope fields:
+- `ok`
+- `fallback`
+- `message`
+- `retry_after_seconds`
+- `result`
+- `meta`
+
+Required `result` fields:
+- `status`
+- `workflow_slug`
+- `summary`
+- `confidence`
+- `extracted_entities`
+- `decision`
+- `recommended_action`
+- `executed_actions` (must be `[]` for anonymous runs)
+- `external_refs` (must be `[]` for anonymous runs)
+- `audit_trail`
+- `observability`
+
+Required `decision` fields:
+- `route`
+- `priority`
+- `handoff_required`
+
+Landing sandbox constraints:
+- No anonymous persistence.
+- No external side effects.
+- Keep output concise and structured for UI result cards.

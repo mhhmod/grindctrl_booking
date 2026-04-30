@@ -234,6 +234,73 @@ Fired when a tenant reaches 80% of a usage limit.
 
 ---
 
+## Event: `landing_sandbox.requested`
+
+Fired when an anonymous landing-page sandbox run is submitted. This event is contract-only in Phase 1.1; anonymous backend execution itself remains side-effect-free.
+
+```json
+{
+  "event": "landing_sandbox.requested",
+  "source": "landing_sandbox",
+  "mode": "workflow",
+  "session_id": "anon_session_id",
+  "ip_hash": "sha256 hash",
+  "locale": "en",
+  "has_file": false,
+  "prompt_preview": "Route support requests and capture leads",
+  "timestamp": "2026-04-30T14:32:00.000Z"
+}
+```
+
+---
+
+## Event: `landing_sandbox.completed`
+
+Represents the normalized response envelope returned by the landing sandbox backend.
+
+```json
+{
+  "event": "landing_sandbox.completed",
+  "source": "landing_sandbox",
+  "ok": true,
+  "fallback": true,
+  "message": "Provider unavailable. Returned deterministic fallback blueprint.",
+  "retry_after_seconds": null,
+  "result": {
+    "status": "completed",
+    "workflow_slug": "workflow_planner",
+    "summary": "Workflow Planner Blueprint: Turn business workflow requests into deployable AI plans.",
+    "confidence": 78,
+    "extracted_entities": {
+      "agent_name": "Workflow Planner Blueprint",
+      "workflow_steps": "Capture business trigger and desired outcome. | Map required inputs, constraints, and escalation rules."
+    },
+    "decision": {
+      "route": "workflow_design",
+      "priority": "medium",
+      "handoff_required": false
+    },
+    "recommended_action": "Sign in to save and deploy this workflow blueprint.",
+    "executed_actions": [],
+    "external_refs": [],
+    "audit_trail": ["anonymous_request_received", "normalized_output_returned"],
+    "observability": {
+      "provider_refs": [],
+      "latency_ms": 42,
+      "cost_estimate": 0
+    }
+  },
+  "meta": {
+    "mode": "workflow",
+    "locale": "en",
+    "limit_state": "ok",
+    "timestamp": "2026-04-30T14:32:00.000Z"
+  }
+}
+```
+
+---
+
 ## n8n Workflow Example: AI Response Router
 
 A minimal n8n workflow structure to process `message_sent`:

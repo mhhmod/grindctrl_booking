@@ -4,17 +4,17 @@ import { getDashboardRouteMeta, normalizeDashboardPathname } from '@/lib/dashboa
 describe('dashboard route metadata', () => {
   it('normalizes dashboard index and trailing slash paths', () => {
     expect(normalizeDashboardPathname('/dashboard')).toBe('/dashboard/overview');
-    expect(normalizeDashboardPathname('/dashboard/install/')).toBe('/dashboard/install');
+    expect(normalizeDashboardPathname('/dashboard/inbox/')).toBe('/dashboard/inbox');
   });
 
   it('returns canonical metadata for known routes', () => {
-    const meta = getDashboardRouteMeta('/dashboard/domains');
+    const meta = getDashboardRouteMeta('/dashboard/sites');
 
-    expect(meta.title).toBe('Domains');
-    expect(meta.description).toContain('authorized');
+    expect(meta.title).toBe('Sites');
+    expect(meta.description).toContain('install');
     expect(meta.breadcrumbs).toEqual([
       { label: 'Dashboard', href: '/dashboard/overview' },
-      { label: 'Domains' },
+      { label: 'Sites' },
     ]);
   });
 
@@ -40,15 +40,23 @@ describe('dashboard route metadata', () => {
     ]);
   });
 
-  it('returns metadata for Conversations route', () => {
-    const meta = getDashboardRouteMeta('/dashboard/conversations');
+  it('returns metadata for Inbox route', () => {
+    const meta = getDashboardRouteMeta('/dashboard/inbox');
 
-    expect(meta.title).toBe('Conversations');
+    expect(meta.title).toBe('Inbox');
     expect(meta.description).toContain('conversation');
     expect(meta.breadcrumbs).toEqual([
       { label: 'Dashboard', href: '/dashboard/overview' },
-      { label: 'Conversations' },
+      { label: 'Inbox' },
     ]);
+  });
+
+  it('normalizes legacy route aliases to canonical routes', () => {
+    expect(normalizeDashboardPathname('/dashboard/conversations')).toBe('/dashboard/inbox');
+    expect(normalizeDashboardPathname('/dashboard/install')).toBe('/dashboard/sites');
+    expect(normalizeDashboardPathname('/dashboard/branding')).toBe('/dashboard/sites');
+    expect(normalizeDashboardPathname('/dashboard/domains')).toBe('/dashboard/sites');
+    expect(normalizeDashboardPathname('/dashboard/intents')).toBe('/dashboard/routing');
   });
 
   it('returns metadata for Integrations route', () => {

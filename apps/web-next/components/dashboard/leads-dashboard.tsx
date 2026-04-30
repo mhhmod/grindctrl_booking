@@ -43,6 +43,44 @@ const LEADS_SORT_LABELS: Record<LeadsSortOption, string> = {
   name_desc: 'Lead name (Z-A)',
 };
 
+type LeadQualificationState = 'qualified' | 'needs_review' | 'new';
+type LeadSyncStatus = 'not_synced' | 'ready_to_sync';
+type LeadBookingStatus = 'not_booked' | 'follow_up';
+
+function getLeadQualificationState(lead: WidgetLead): LeadQualificationState {
+  const hasEmail = Boolean(lead.email?.trim());
+  const hasCompany = Boolean(lead.company?.trim());
+  const hasPhone = Boolean(lead.phone?.trim());
+
+  if (hasEmail && (hasCompany || hasPhone)) {
+    return 'qualified';
+  }
+  if (hasEmail || hasPhone) {
+    return 'needs_review';
+  }
+  return 'new';
+}
+
+function getLeadSyncStatus(lead: WidgetLead): LeadSyncStatus {
+  return lead.email || lead.phone ? 'ready_to_sync' : 'not_synced';
+}
+
+function getLeadBookingStatus(lead: WidgetLead): LeadBookingStatus {
+  return lead.source_domain ? 'follow_up' : 'not_booked';
+}
+
+function getQualificationLabel(state: LeadQualificationState) {
+  if (state === 'qualified') return 'Qualified';
+  if (state === 'needs_review') return 'Needs review';
+  return 'New';
+}
+
+function getQualificationTone(state: LeadQualificationState) {
+  if (state === 'qualified') return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+  if (state === 'needs_review') return 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+  return 'bg-muted text-muted-foreground border-border';
+}
+
 function isOptionalUrlValid(value: string) {
   if (!value) {
     return true;
@@ -467,18 +505,30 @@ function LeadsDashboardInner({
                 </div>
 
                 <ul className="mt-4 grid gap-3 md:hidden">
-                  {leadsState.leads.map((lead) => (
+                  {leadsState.leads.map((lead) => {
+                    const qualification = getLeadQualificationState(lead);
+                    const syncStatus = getLeadSyncStatus(lead);
+                    const bookingStatus = getLeadBookingStatus(lead);
+
+                    return (
                     <li key={lead.id} className="rounded-lg border bg-muted/10 p-4">
                       <div className="text-sm font-medium text-foreground">{lead.name ?? lead.email ?? 'Unnamed lead'}</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${getQualificationTone(qualification)}`}>{getQualificationLabel(qualification)}</span>
+                        <Badge variant="outline" className="text-xs">Owner: Unassigned</Badge>
+                      </div>
                       <dl className="mt-3 grid gap-2 text-sm">
                         <div><dt className="text-muted-foreground">Email</dt><dd className="text-foreground" dir="ltr">{lead.email ?? '—'}</dd></div>
                         <div><dt className="text-muted-foreground">Company</dt><dd className="text-foreground">{lead.company ?? '—'}</dd></div>
                         <div><dt className="text-muted-foreground">Phone</dt><dd className="text-foreground" dir="ltr">{lead.phone ?? '—'}</dd></div>
                         <div><dt className="text-muted-foreground">Source</dt><dd className="text-foreground" dir="ltr">{lead.source_domain ?? '—'}</dd></div>
+                        <div><dt className="text-muted-foreground">Sync</dt><dd className="text-foreground">{syncStatus === 'ready_to_sync' ? 'Ready to sync' : 'Not synced'}</dd></div>
+                        <div><dt className="text-muted-foreground">Booking</dt><dd className="text-foreground">{bookingStatus === 'follow_up' ? 'Follow-up needed' : 'Not booked'}</dd></div>
                         <div><dt className="text-muted-foreground">Captured</dt><dd className="text-foreground">{formatLeadDate(lead.created_at)}</dd></div>
                       </dl>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
 
                 <div className="mt-4 hidden rounded-lg border md:block">
@@ -486,25 +536,43 @@ function LeadsDashboardInner({
                     <TableHeader className="text-muted-foreground">
                       <TableRow>
                         <TableHead>Lead</TableHead>
+                        <TableHead>Qualification</TableHead>
+                        <TableHead>Owner</TableHead>
                         <TableHead>Company</TableHead>
                         <TableHead>Phone</TableHead>
+                        <TableHead>Sync</TableHead>
+                        <TableHead>Booking</TableHead>
                         <TableHead>Source</TableHead>
                         <TableHead>Captured</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leadsState.leads.map((lead) => (
+                      {leadsState.leads.map((lead) => {
+                        const qualification = getLeadQualificationState(lead);
+                        const syncStatus = getLeadSyncStatus(lead);
+                        const bookingStatus = getLeadBookingStatus(lead);
+
+                        return (
                         <TableRow key={lead.id} className="align-top">
                           <TableCell>
                             <div className="font-medium text-foreground">{lead.name ?? 'Unnamed lead'}</div>
                             <div className="mt-1 text-muted-foreground" dir="ltr">{lead.email ?? '—'}</div>
                           </TableCell>
+                          <TableCell>
+                            <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs ${getQualificationTone(qualification)}`}>
+                              {getQualificationLabel(qualification)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-foreground">Unassigned</TableCell>
                           <TableCell className="text-foreground">{lead.company ?? '—'}</TableCell>
                           <TableCell className="text-foreground" dir="ltr">{lead.phone ?? '—'}</TableCell>
+                          <TableCell className="text-foreground">{syncStatus === 'ready_to_sync' ? 'Ready to sync' : 'Not synced'}</TableCell>
+                          <TableCell className="text-foreground">{bookingStatus === 'follow_up' ? 'Follow-up needed' : 'Not booked'}</TableCell>
                           <TableCell className="text-foreground" dir="ltr">{lead.source_domain ?? '—'}</TableCell>
                           <TableCell className="text-foreground">{formatLeadDate(lead.created_at)}</TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

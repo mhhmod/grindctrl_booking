@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { TryGrindctrlSandbox } from '@/components/landing/try-grindctrl-sandbox';
 
 const capabilities = [
   {
@@ -235,6 +236,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <TryGrindctrlSandbox />
 
         {/* ─── Capabilities ─── */}
         <section id="capabilities" className="border-b">

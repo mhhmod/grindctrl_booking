@@ -1,13 +1,4 @@
-import React from 'react';
-import { addDomainAction, removeDomainAction, updateDomainStatusAction } from '@/app/dashboard/domains/actions';
-import { getInitialDomainsState } from '@/app/dashboard/domains/state';
-import { DomainsManager } from '@/components/dashboard/domains-manager';
-import { SiteSelector } from '@/components/dashboard/site-selector';
-import { requireDashboardUser } from '@/lib/auth/dashboard';
-import { listDomains } from '@/lib/adapters/domains';
-import { parseDomainsListQuery } from '@/lib/dashboard/domains-list-query';
-import { getWorkspaceBundle } from '@/lib/adapters/workspace';
-import { normalizeSettingsJson, selectWidgetSite } from '@/lib/adapters/widgetSites';
+import { redirect } from 'next/navigation';
 import type { SearchParams } from '@/lib/types';
 
 type Props = { searchParams?: Promise<SearchParams> };
@@ -18,34 +9,13 @@ async function resolveSearchParams(searchParams?: Promise<SearchParams>) {
 
 export default async function DashboardDomainsPage({ searchParams }: Props) {
   const params = await resolveSearchParams(searchParams);
-  const clerkUserId = await requireDashboardUser('/dashboard/domains');
-  const bundle = await getWorkspaceBundle(clerkUserId);
-  const site = selectWidgetSite(bundle.sites, params.site);
-  const listQuery = parseDomainsListQuery(params);
-
-  if (!site) {
-    return <div className="rounded-3xl border border-dashed border-zinc-700 bg-zinc-900 p-6 text-sm text-zinc-400">No widget site is available for domains yet.</div>;
-  }
-
-  const domains = await listDomains(clerkUserId, site.id);
-  const initialState = getInitialDomainsState(domains);
-  const settings = normalizeSettingsJson(site.settings_json);
-  const context = { clerkUserId, siteId: site.id };
-
-  return (
-    <div className="grid gap-6">
-      <div className="flex justify-end">
-        <SiteSelector sites={bundle.sites} selectedSiteId={site.id} />
-      </div>
-      <DomainsManager
-        initialState={initialState}
-        addDomainAction={addDomainAction.bind(null, context)}
-        updateDomainStatusAction={updateDomainStatusAction.bind(null, context)}
-        removeDomainAction={removeDomainAction.bind(null, context)}
-        allowLocalhost={settings.security.allow_localhost}
-        selectedSiteId={site.id}
-        listQuery={listQuery}
-      />
-    </div>
-  );
+  const next = new URLSearchParams();
+  if (typeof params.site === 'string' && params.site) next.set('site', params.site);
+  if (typeof params.q === 'string' && params.q) next.set('q', params.q);
+  if (typeof params.status === 'string' && params.status) next.set('status', params.status);
+  if (typeof params.sort === 'string' && params.sort) next.set('sort', params.sort);
+  if (typeof params.page === 'string' && params.page) next.set('page', params.page);
+  if (typeof params.pageSize === 'string' && params.pageSize) next.set('pageSize', params.pageSize);
+  next.set('tab', 'domains');
+  redirect(`/dashboard/sites?${next.toString()}`);
 }

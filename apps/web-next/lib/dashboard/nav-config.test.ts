@@ -5,18 +5,18 @@ import { getDefaultDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 describe('dashboard navigation config', () => {
   it('marks the matching route as active', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/install',
+      pathname: '/dashboard/sites',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items.find((item) => item.href === '/dashboard/install')?.isActive).toBe(true);
+    expect(items.find((item) => item.href === '/dashboard/sites')?.isActive).toBe(true);
     expect(items.find((item) => item.href === '/dashboard/overview')?.isActive).toBe(false);
   });
 
   it('filters out entries denied by permissions', () => {
     const permissions = {
       ...getDefaultDashboardPermissions(),
-      canViewDomains: false,
+      canViewInstall: false,
     };
 
     const items = resolveDashboardNavItems({
@@ -24,7 +24,7 @@ describe('dashboard navigation config', () => {
       permissions,
     });
 
-    expect(items.some((item) => item.href === '/dashboard/domains')).toBe(false);
+    expect(items.some((item) => item.href === '/dashboard/sites')).toBe(false);
   });
 
   it('includes all platform nav items by default', () => {
@@ -38,15 +38,15 @@ describe('dashboard navigation config', () => {
     expect(items.some((item) => item.href === '/dashboard/settings')).toBe(true);
   });
 
-  it('includes Conversations in the core group', () => {
+  it('includes Inbox in the core group', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    const conversations = items.find((item) => item.href === '/dashboard/conversations');
-    expect(conversations).toBeDefined();
-    expect(conversations?.group).toBe('core');
+    const inbox = items.find((item) => item.href === '/dashboard/inbox');
+    expect(inbox).toBeDefined();
+    expect(inbox?.group).toBe('core');
   });
 
   it('assigns group hints to nav items', () => {
@@ -56,32 +56,34 @@ describe('dashboard navigation config', () => {
     });
 
     const overview = items.find((item) => item.href === '/dashboard/overview');
-    const install = items.find((item) => item.href === '/dashboard/install');
+    const sites = items.find((item) => item.href === '/dashboard/sites');
     const workflows = items.find((item) => item.href === '/dashboard/workflows');
     const integrations = items.find((item) => item.href === '/dashboard/integrations');
 
     expect(overview?.group).toBe('core');
-    expect(install?.group).toBe('widgets');
+    expect(sites?.group).toBe('widgets');
     expect(workflows?.group).toBe('platform');
     expect(integrations?.group).toBe('platform');
   });
 
-  it('uses short label "Install" instead of "Install Widget"', () => {
+  it('uses product labels for Sites and Routing', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    const install = items.find((item) => item.href === '/dashboard/install');
-    expect(install?.label).toBe('Install');
+    const sites = items.find((item) => item.href === '/dashboard/sites');
+    const routing = items.find((item) => item.href === '/dashboard/routing');
+    expect(sites?.label).toBe('Sites');
+    expect(routing?.label).toBe('Routing');
   });
 
-  it('has exactly 10 nav items with default permissions', () => {
+  it('has exactly 8 nav items with default permissions', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items).toHaveLength(10);
+    expect(items).toHaveLength(8);
   });
 });
