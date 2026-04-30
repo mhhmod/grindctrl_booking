@@ -4,7 +4,11 @@ export type DashboardPermissionKey =
   | 'canViewBranding'
   | 'canViewIntents'
   | 'canViewDomains'
-  | 'canViewLeads';
+  | 'canViewLeads'
+  | 'canViewConversations'
+  | 'canViewWorkflows'
+  | 'canViewIntegrations'
+  | 'canViewSettings';
 
 export type DashboardPermissionSet = Record<DashboardPermissionKey, boolean>;
 
@@ -36,6 +40,10 @@ export function getDefaultDashboardPermissions(): DashboardPermissionSet {
     canViewIntents: true,
     canViewDomains: true,
     canViewLeads: true,
+    canViewConversations: true,
+    canViewWorkflows: true,
+    canViewIntegrations: true,
+    canViewSettings: true,
   };
 }
 

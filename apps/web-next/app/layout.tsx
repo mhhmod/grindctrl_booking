@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL Dashboard',
-  description: 'Manage your GRINDCTRL widget sites, install snippets, settings, domains, intents, and leads.',
+  title: 'GRINDCTRL — AI Implementation & Automation',
+  description:
+    'GrindCTRL helps businesses integrate AI into operations across text, voice, images, video, files, CRMs, Google tools, cloud systems, and dashboards.',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {

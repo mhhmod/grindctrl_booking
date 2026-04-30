@@ -11,10 +11,54 @@ describe('dashboard route metadata', () => {
     const meta = getDashboardRouteMeta('/dashboard/domains');
 
     expect(meta.title).toBe('Domains');
-    expect(meta.description).toContain('allowed domains');
+    expect(meta.description).toContain('authorized');
     expect(meta.breadcrumbs).toEqual([
       { label: 'Dashboard', href: '/dashboard/overview' },
       { label: 'Domains' },
+    ]);
+  });
+
+  it('returns metadata for Workflows route', () => {
+    const meta = getDashboardRouteMeta('/dashboard/workflows');
+
+    expect(meta.title).toBe('Workflows');
+    expect(meta.description).toContain('automation');
+    expect(meta.breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/dashboard/overview' },
+      { label: 'Workflows' },
+    ]);
+  });
+
+  it('returns metadata for Settings route', () => {
+    const meta = getDashboardRouteMeta('/dashboard/settings');
+
+    expect(meta.title).toBe('Settings');
+    expect(meta.description).toContain('Workspace');
+    expect(meta.breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/dashboard/overview' },
+      { label: 'Settings' },
+    ]);
+  });
+
+  it('returns metadata for Conversations route', () => {
+    const meta = getDashboardRouteMeta('/dashboard/conversations');
+
+    expect(meta.title).toBe('Conversations');
+    expect(meta.description).toContain('conversation');
+    expect(meta.breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/dashboard/overview' },
+      { label: 'Conversations' },
+    ]);
+  });
+
+  it('returns metadata for Integrations route', () => {
+    const meta = getDashboardRouteMeta('/dashboard/integrations');
+
+    expect(meta.title).toBe('Integrations');
+    expect(meta.description).toContain('Connect');
+    expect(meta.breadcrumbs).toEqual([
+      { label: 'Dashboard', href: '/dashboard/overview' },
+      { label: 'Integrations' },
     ]);
   });
 

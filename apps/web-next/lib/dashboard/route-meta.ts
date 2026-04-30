@@ -22,32 +22,52 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   {
     pathname: '/dashboard/overview',
     title: 'Overview',
-    description: 'Real workspace and site data, without fake dashboard analytics.',
+    description: 'Workspace health, site metrics, and operational summary.',
   },
   {
     pathname: '/dashboard/install',
-    title: 'Install Widget',
-    description: 'Use the canonical GRINDCTRL install contract and the selected site embed key.',
+    title: 'Install',
+    description: 'Embed your AI widget using the canonical install contract and site key.',
   },
   {
     pathname: '/dashboard/branding',
     title: 'Branding',
-    description: 'Inspect the active branding subset stored inside settings_json.',
+    description: 'Configure the visual identity and appearance of your widget.',
   },
   {
     pathname: '/dashboard/intents',
     title: 'Intents',
-    description: 'Review current widget intents from the existing dashboard RPC contract.',
+    description: 'Manage AI routing intents that drive widget behavior and actions.',
   },
   {
     pathname: '/dashboard/domains',
     title: 'Domains',
-    description: 'Review allowed domains for the selected widget site.',
+    description: 'Control which domains are authorized to load your widget.',
   },
   {
     pathname: '/dashboard/leads',
     title: 'Leads',
-    description: 'Review captured leads from the current backend-controlled submission flow.',
+    description: 'Review and manage leads captured through AI interactions.',
+  },
+  {
+    pathname: '/dashboard/conversations',
+    title: 'Conversations',
+    description: 'Browse widget conversation logs and AI interaction history.',
+  },
+  {
+    pathname: '/dashboard/workflows',
+    title: 'Workflows',
+    description: 'Build and manage AI automation workflows across your operations.',
+  },
+  {
+    pathname: '/dashboard/integrations',
+    title: 'Integrations',
+    description: 'Connect CRMs, Google Workspace, cloud systems, and third-party services.',
+  },
+  {
+    pathname: '/dashboard/settings',
+    title: 'Settings',
+    description: 'Workspace configuration, team members, and API access.',
   },
 ];
 
