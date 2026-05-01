@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   * {
@@ -125,6 +125,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -156,6 +157,72 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+:root {
+  --gc-landing-border: oklch(0.88 0.006 255);
+  --gc-landing-panel: oklch(1 0 0 / 88%);
+  --gc-landing-panel-strong: oklch(1 0 0 / 96%);
+  --gc-landing-panel-subtle: oklch(0.975 0.006 255 / 88%);
+  --gc-landing-shadow: 0 22px 70px -46px oklch(0.28 0.025 255 / 42%);
+  --gc-input-icon-bg: oklch(0.955 0.035 252);
+  --gc-input-icon-fg: oklch(0.48 0.17 255);
+  --gc-input-icon-border: oklch(0.82 0.08 252);
+  --gc-output-icon-bg: oklch(0.958 0.038 295);
+  --gc-output-icon-fg: oklch(0.5 0.16 292);
+  --gc-output-icon-border: oklch(0.84 0.085 292);
+}
+
+.dark {
+  --gc-landing-border: oklch(1 0 0 / 10%);
+  --gc-landing-panel: oklch(1 0 0 / 3.5%);
+  --gc-landing-panel-strong: oklch(0.205 0 0 / 72%);
+  --gc-landing-panel-subtle: oklch(1 0 0 / 2.5%);
+  --gc-landing-shadow: 0 24px 80px -48px oklch(0 0 0 / 65%);
+  --gc-input-icon-bg: oklch(0.72 0.14 255 / 15%);
+  --gc-input-icon-fg: oklch(0.82 0.1 252);
+  --gc-input-icon-border: oklch(0.72 0.14 255 / 22%);
+  --gc-output-icon-bg: oklch(0.78 0.14 295 / 14%);
+  --gc-output-icon-fg: oklch(0.86 0.09 292);
+  --gc-output-icon-border: oklch(0.78 0.14 295 / 22%);
+}
+
+:where(body, header, section, article, div, span, button, textarea, input, a, svg) {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 220ms;
+  transition-timing-function: ease;
+}
+
+.gc-landing-border {
+  border-color: var(--gc-landing-border);
+}
+
+.gc-landing-card {
+  border-color: var(--gc-landing-border);
+  background: var(--gc-landing-panel-strong);
+  box-shadow: var(--gc-landing-shadow);
+}
+
+.gc-landing-panel {
+  border-color: var(--gc-landing-border);
+  background: var(--gc-landing-panel);
+}
+
+.gc-landing-subtle {
+  border-color: var(--gc-landing-border);
+  background: var(--gc-landing-panel-subtle);
+}
+
+.gc-icon-input {
+  border-color: var(--gc-input-icon-border);
+  background: var(--gc-input-icon-bg);
+  color: var(--gc-input-icon-fg);
+}
+
+.gc-icon-output {
+  border-color: var(--gc-output-icon-border);
+  background: var(--gc-output-icon-bg);
+  color: var(--gc-output-icon-fg);
 }
 
 /* ─── GrindCTRL Landing Animations ─── */
@@ -361,7 +428,8 @@
   .gc-trail::before,
   .gc-template-progress::after,
   .gc-animated,
-  .gc-animated * {
+  .gc-animated *,
+  :where(body, header, section, article, div, span, button, textarea, input, a, svg) {
     animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;

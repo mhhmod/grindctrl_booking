@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { BrandLogo } from '@/components/brand-logo';
+import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { TryGrindctrlSandbox } from '@/components/landing/try-grindctrl-sandbox';
 import { HeroWorkflowPreview } from '@/components/landing/hero-workflow-preview';
 import { LandingAfterPlaygroundSections } from '@/components/landing/landing-after-playground-sections';
@@ -18,13 +20,10 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="flex items-center gap-3 text-foreground"
+            className="rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label="GRINDCTRL home"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-              G
-            </span>
-            <span className="text-sm font-bold uppercase tracking-widest">GRINDCTRL</span>
+            <BrandLogo />
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -43,7 +42,8 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
+            <ThemeToggle className="me-1" />
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
               <Link href="/sign-in">Sign in</Link>
             </Button>
             <Button asChild size="sm">
@@ -55,7 +55,7 @@ export default function LandingPage() {
 
       <main>
         {/* ─── Hero ─── */}
-        <section className="relative overflow-hidden border-b border-white/10">
+        <section className="relative overflow-hidden border-b border-border dark:border-white/10">
           {/* Animated grid background */}
           <div className="pointer-events-none absolute inset-0 -z-10 gc-hero-grid gc-grid-pulse" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
@@ -91,7 +91,7 @@ export default function LandingPage() {
                       <ArrowRight className="ms-2 size-4" />
                     </a>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-12 rounded-xl border-white/10 bg-white/[0.03] px-5 text-sm font-semibold hover:bg-white/[0.06] lg:px-6">
+                  <Button asChild variant="outline" size="lg" className="h-12 rounded-xl border-border bg-card/70 px-5 text-sm font-semibold hover:bg-muted/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] lg:px-6">
                     <Link href="/sign-up">
                       Start 14-day trial
                       <ArrowRight className="ms-2 size-4" />
@@ -142,12 +142,7 @@ export default function LandingPage() {
       <footer className="border-t px-4 py-8 text-sm text-muted-foreground sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
-              G
-            </span>
-            <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-              GRINDCTRL
-            </span>
+            <BrandLogo size="sm" textClassName="text-xs" />
           </div>
           <p className="text-xs">AI implementation and automation platform.</p>
           <div className="flex items-center gap-4 text-xs">

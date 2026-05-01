@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
+import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import {
@@ -36,13 +37,7 @@ export function DashboardShell({
         <Sidebar>
         <SidebarHeader className="p-2">
           <Link href="/" className="flex h-10 items-center gap-2 rounded-lg px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-            <span className="grid size-8 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold">
-              G
-            </span>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold leading-5">GRINDCTRL</div>
-              <div className="truncate text-xs text-muted-foreground">Operations Platform</div>
-            </div>
+            <BrandLogo size="sm" subtitle="Operations Platform" />
           </Link>
         </SidebarHeader>
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { DashboardSquare01Icon, Globe02Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
+import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -47,8 +48,7 @@ export function AuthShell({
       <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8 lg:py-12">
         <section className="space-y-6">
           <Link href="/" className="inline-flex items-center gap-3 rounded-lg border bg-card/60 px-3 py-2 text-sm font-medium text-card-foreground">
-            <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">G</span>
-            <span>GRINDCTRL</span>
+            <BrandLogo size="sm" />
           </Link>
 
           <div className="space-y-3">

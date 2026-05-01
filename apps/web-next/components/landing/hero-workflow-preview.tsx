@@ -58,14 +58,12 @@ function WorkflowNode({
 }) {
   return (
     <div
-      className="gc-node-pulse group flex min-w-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.035] px-3 py-2.5 text-[13px] text-muted-foreground shadow-sm transition duration-300 hover:border-white/20 hover:bg-white/[0.055]"
+      className="gc-node-pulse gc-landing-panel group flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-2.5 text-[13px] text-muted-foreground shadow-sm transition duration-300 hover:shadow-md"
       style={{ animationDelay: `${index * 0.55}s` }}
     >
       <span
         className={`grid size-8 shrink-0 place-items-center rounded-xl border ${
-          side === 'input'
-            ? 'border-blue-400/15 bg-blue-400/10 text-blue-200'
-            : 'border-violet-300/15 bg-violet-300/10 text-violet-100'
+          side === 'input' ? 'gc-icon-input' : 'gc-icon-output'
         }`}
       >
         <Icon className="size-4" />
@@ -77,7 +75,7 @@ function WorkflowNode({
 
 export function HeroWorkflowPreview() {
   return (
-    <Card className="gc-soft-glow relative min-h-[520px] overflow-hidden rounded-3xl border-white/10 bg-card/70 p-4 shadow-2xl shadow-black/40 backdrop-blur sm:p-6">
+    <Card className="gc-soft-glow gc-landing-card relative min-h-[520px] overflow-hidden rounded-3xl border p-4 backdrop-blur sm:p-6">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_18%,rgba(96,165,250,0.16),transparent_32%),radial-gradient(circle_at_28%_72%,rgba(168,85,247,0.12),transparent_36%)]" />
       <div className="pointer-events-none absolute inset-x-8 top-24 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
       <div className="pointer-events-none absolute inset-x-8 bottom-36 h-px bg-gradient-to-r from-transparent via-violet-300/25 to-transparent" />
@@ -92,7 +90,7 @@ export function HeroWorkflowPreview() {
               Live workflow preview
             </h2>
           </div>
-          <Badge variant="outline" className="h-7 rounded-full border-white/10 bg-white/[0.03] px-3 text-[11px]">
+          <Badge variant="outline" className="gc-landing-subtle h-7 rounded-full border px-3 text-[11px]">
             Preview mode
           </Badge>
         </div>
@@ -108,8 +106,8 @@ export function HeroWorkflowPreview() {
           </div>
 
           <div className="relative flex min-h-44 items-center justify-center py-4">
-            <div className="gc-trail-line absolute inset-x-2 top-1/2 h-px -translate-y-1/2 overflow-hidden rounded-full bg-white/10" />
-            <div className="relative z-10 flex flex-col items-center gap-3 rounded-[1.75rem] border border-white/10 bg-background/80 p-4 text-center shadow-xl shadow-black/30">
+            <div className="gc-trail-line absolute inset-x-2 top-1/2 h-px -translate-y-1/2 overflow-hidden rounded-full bg-border dark:bg-white/10" />
+            <div className="gc-landing-card relative z-10 flex flex-col items-center gap-3 rounded-[1.75rem] border p-4 text-center">
               <div className="relative grid size-16 place-items-center rounded-2xl border border-primary/20 bg-primary/10">
                 <Sparkles className="gc-pulse-glow size-6 text-primary" />
                 <span className="gc-node-ping absolute inset-0 rounded-2xl border border-primary/20" />
@@ -120,7 +118,7 @@ export function HeroWorkflowPreview() {
                   Understands signal, policy, and next best action.
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-muted-foreground">
+              <div className="gc-landing-subtle flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] text-muted-foreground">
                 <GitBranch className="size-3" />
                 Routing active
               </div>
@@ -137,7 +135,7 @@ export function HeroWorkflowPreview() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-background/70 p-3">
+        <div className="gc-landing-panel rounded-2xl border p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-[12px] font-semibold text-foreground/90">Processing log</p>
             <Send className="size-3.5 text-muted-foreground" />
@@ -146,7 +144,7 @@ export function HeroWorkflowPreview() {
             {logLines.map((line, index) => (
               <div
                 key={line}
-                className="gc-step-appear flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2 text-[12px] text-muted-foreground"
+                className="gc-step-appear gc-landing-subtle flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-[12px] text-muted-foreground"
                 style={{ animationDelay: `${0.25 + index * 0.16}s` }}
               >
                 <Bot className="size-3.5 shrink-0 text-primary" />

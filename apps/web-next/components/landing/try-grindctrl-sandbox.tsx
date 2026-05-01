@@ -207,7 +207,7 @@ export function TryGrindctrlSandbox() {
   }
 
   return (
-    <section id="try-grindctrl" className="relative overflow-hidden border-b border-white/10 bg-muted/10">
+    <section id="try-grindctrl" className="relative overflow-hidden border-b border-border bg-muted/10 dark:border-white/10">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_50%_0%,rgba(96,165,250,0.12),transparent_55%)]" />
       <div className="relative mx-auto w-full max-w-7xl px-4 py-[72px] sm:px-6 lg:px-8 lg:py-[104px]">
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -224,13 +224,13 @@ export function TryGrindctrlSandbox() {
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="h-7 w-fit rounded-full border-white/10 bg-white/[0.03] px-3 text-[11px]">
+          <Badge variant="outline" className="gc-landing-subtle h-7 w-fit rounded-full border px-3 text-[11px]">
             3 guided previews included
           </Badge>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,0.36fr)_minmax(240px,0.24fr)_minmax(0,0.4fr)] lg:gap-6">
-          <Card className="gc-card-hover min-h-[620px] rounded-3xl border-white/10 bg-card/70">
+          <Card className="gc-card-hover gc-landing-card min-h-[620px] rounded-3xl border">
             <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
               <CardTitle className="text-lg">Input console</CardTitle>
             </CardHeader>
@@ -246,7 +246,7 @@ export function TryGrindctrlSandbox() {
                       variant={isActive ? 'default' : 'outline'}
                       aria-pressed={isActive}
                       className={`h-11 justify-start rounded-xl px-3 text-[13px] font-semibold ${
-                        isActive ? '' : 'border-white/10 bg-white/[0.03] text-muted-foreground hover:bg-white/[0.06]'
+                        isActive ? '' : 'border-border bg-card/80 text-muted-foreground hover:bg-muted/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]'
                       }`}
                       onClick={() => resetPreview(option.value)}
                     >
@@ -257,9 +257,9 @@ export function TryGrindctrlSandbox() {
                 })}
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-background/70 p-4">
+              <div className="gc-landing-panel rounded-2xl border p-4">
                 {!result && !isLoading ? (
-                  <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-[13px] leading-[1.55] text-muted-foreground">
+                  <div className="gc-landing-subtle mb-4 rounded-2xl border p-3 text-[13px] leading-[1.55] text-muted-foreground">
                     <p className="font-semibold text-foreground">Try 3 guided previews before setup.</p>
                     <p className="mt-1">No tools connected yet.</p>
                     <p>No external actions are executed in preview.</p>
@@ -277,7 +277,7 @@ export function TryGrindctrlSandbox() {
                     </label>
                     <textarea
                       id="sandbox-prompt"
-                      className="min-h-32 w-full rounded-xl border border-white/10 bg-background/70 p-3 text-sm leading-[1.55] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="min-h-32 w-full rounded-xl border border-input bg-background/80 p-3 text-sm leading-[1.55] shadow-inner shadow-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-background/70"
                       placeholder={mode === 'workflow' ? 'Describe a process you want AI to handle...' : 'Add context for this file or image intake...'}
                       value={prompt}
                       onChange={(event) => setPrompt(event.target.value)}
@@ -291,7 +291,7 @@ export function TryGrindctrlSandbox() {
                     </label>
                     <textarea
                       id="sandbox-transcript"
-                      className="min-h-32 w-full rounded-xl border border-white/10 bg-background/70 p-3 text-sm leading-[1.55] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      className="min-h-32 w-full rounded-xl border border-input bg-background/80 p-3 text-sm leading-[1.55] shadow-inner shadow-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-background/70"
                       placeholder="Paste a short lead transcript or upload a voice file preview..."
                       value={transcript}
                       onChange={(event) => setTranscript(event.target.value)}
@@ -301,7 +301,7 @@ export function TryGrindctrlSandbox() {
                 )}
 
                 {mode !== 'workflow' ? (
-                  <div className="mt-4 min-h-24 rounded-xl border border-dashed border-white/15 bg-white/[0.025] p-4">
+                  <div className="mt-4 min-h-24 rounded-xl border border-dashed border-border bg-muted/35 p-4 dark:border-white/15 dark:bg-white/[0.025]">
                     <label className="text-[13px] font-medium" htmlFor="sandbox-file">
                       {mode === 'voice' ? 'Voice file preview' : 'Upload file or image'}
                     </label>
@@ -309,7 +309,7 @@ export function TryGrindctrlSandbox() {
                       id="sandbox-file"
                       type="file"
                       accept={acceptForMode(mode)}
-                      className="mt-3 block w-full text-sm text-muted-foreground file:me-3 file:rounded-lg file:border file:border-white/10 file:bg-white/[0.04] file:px-3 file:py-2 file:text-foreground"
+                      className="mt-3 block w-full text-sm text-muted-foreground file:me-3 file:rounded-lg file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-foreground dark:file:border-white/10 dark:file:bg-white/[0.04]"
                       onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                     />
                     <p className="mt-2 text-xs text-muted-foreground">
@@ -324,7 +324,7 @@ export function TryGrindctrlSandbox() {
                   <button
                     key={sample}
                     type="button"
-                    className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground"
+                    className="rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-muted/80 hover:text-foreground dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
                     onClick={() => applySample(sample)}
                   >
                     {sample}
@@ -352,7 +352,7 @@ export function TryGrindctrlSandbox() {
                   <Sparkles className="me-2 size-4" />
                   {isLoading ? 'Generating preview...' : 'Generate workflow preview'}
                 </Button>
-                <Button type="button" variant="outline" className="h-10 rounded-xl border-white/10 bg-white/[0.03]" onClick={() => resetPreview()}>
+                <Button type="button" variant="outline" className="h-10 rounded-xl border-border bg-card/80 dark:border-white/10 dark:bg-white/[0.03]" onClick={() => resetPreview()}>
                   <RefreshCcw className="me-2 size-4" />
                   Reset preview
                 </Button>
@@ -360,7 +360,7 @@ export function TryGrindctrlSandbox() {
             </CardContent>
           </Card>
 
-          <Card className="gc-card-hover rounded-3xl border-white/10 bg-white/[0.025]">
+          <Card className="gc-card-hover gc-landing-card rounded-3xl border">
             <CardHeader className="p-5 pb-4">
               <CardTitle className="text-lg">Processing trail</CardTitle>
             </CardHeader>
@@ -375,10 +375,10 @@ export function TryGrindctrlSandbox() {
                       state === 'active'
                         ? 'border-primary/30 bg-primary/10 text-foreground'
                         : state === 'complete'
-                          ? 'border-emerald-400/20 bg-emerald-400/5 text-emerald-200'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/5 dark:text-emerald-200'
                           : state === 'locked'
-                            ? 'border-amber-400/25 bg-amber-400/5 text-amber-200'
-                            : 'border-white/10 bg-background/50 text-muted-foreground'
+                            ? 'border-amber-500/35 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/5 dark:text-amber-200'
+                            : 'border-border bg-background/70 text-muted-foreground dark:border-white/10 dark:bg-background/50'
                     }`}
                   >
                     <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-current/15 bg-current/5">
@@ -390,14 +390,14 @@ export function TryGrindctrlSandbox() {
                         {state === 'active' ? 'Running now' : state === 'complete' ? 'Complete' : state === 'locked' ? 'Ready to unlock' : 'Waiting'}
                       </p>
                     </div>
-                    <span className={`size-2 rounded-full ${state === 'idle' ? 'bg-white/20' : 'bg-current'}`} />
+                    <span className={`size-2 rounded-full ${state === 'idle' ? 'bg-muted-foreground/35 dark:bg-white/20' : 'bg-current'}`} />
                   </div>
                 );
               })}
             </CardContent>
           </Card>
 
-          <Card className="gc-card-hover min-h-[620px] rounded-3xl border-white/10 bg-card/70" data-testid="sandbox-result" aria-live="polite">
+          <Card className="gc-card-hover gc-landing-card min-h-[620px] rounded-3xl border" data-testid="sandbox-result" aria-live="polite">
             <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Sparkles className="size-5 text-primary" />
@@ -408,19 +408,19 @@ export function TryGrindctrlSandbox() {
               {!result ? (
                   <div className="grid gap-3">
                   {['Summary', 'Extracted entities', 'Decision route', 'Prepared actions'].map((label) => (
-                    <div key={label} className="rounded-2xl border border-dashed border-white/10 bg-white/[0.025] p-4">
+                    <div key={label} className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/[0.025]">
                       <p className="text-sm font-semibold">{label}</p>
-                      <div className="mt-3 h-2 w-3/4 rounded-full bg-white/10" />
+                      <div className="mt-3 h-2 w-3/4 rounded-full bg-muted dark:bg-white/10" />
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="gc-result-reveal space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="rounded-full border-white/10 text-xs">
+                    <Badge variant="outline" className="rounded-full border-border text-xs dark:border-white/10">
                       {result.workflowSlug}
                     </Badge>
-                    <Badge variant="outline" className="rounded-full border-white/10 text-xs">
+                    <Badge variant="outline" className="rounded-full border-border text-xs dark:border-white/10">
                       {result.status}
                     </Badge>
                     <Badge variant="secondary" className="rounded-full text-xs">
@@ -428,27 +428,27 @@ export function TryGrindctrlSandbox() {
                     </Badge>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="gc-landing-subtle rounded-2xl border p-4">
                     <p className="text-xs text-muted-foreground">Summary</p>
                     <p className="mt-2 text-sm font-medium leading-6">{result.summary}</p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="gc-landing-subtle rounded-2xl border p-3">
                       <p className="text-xs text-muted-foreground">Decision route</p>
                       <p className="mt-1 text-sm font-semibold">{result.decision.route}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="gc-landing-subtle rounded-2xl border p-3">
                       <p className="text-xs text-muted-foreground">Priority</p>
                       <p className="mt-1 text-sm font-semibold capitalize">{result.decision.priority}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="gc-landing-subtle rounded-2xl border p-3">
                       <p className="text-xs text-muted-foreground">Handoff required</p>
                       <p className="mt-1 text-sm font-semibold">{result.decision.handoffRequired ? 'Yes' : 'No'}</p>
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="gc-landing-subtle rounded-2xl border p-4">
                     <p className="mb-3 text-xs text-muted-foreground">Extracted entities</p>
                     <dl className="grid gap-2">
                       {Object.entries(result.extractedEntities).map(([key, value]) => (
@@ -460,7 +460,7 @@ export function TryGrindctrlSandbox() {
                     </dl>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="gc-landing-subtle rounded-2xl border p-4">
                     <p className="text-xs text-muted-foreground">Prepared actions</p>
                     <p className="mt-2 text-sm font-medium">{result.recommendedAction}</p>
                     <p className="mt-3 text-xs text-muted-foreground">
@@ -471,7 +471,7 @@ export function TryGrindctrlSandbox() {
                         <button
                           key={action}
                           type="button"
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 text-xs text-amber-200 transition hover:bg-amber-400/10"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 text-xs text-amber-700 transition hover:bg-amber-500/15 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200 dark:hover:bg-amber-400/10"
                           onClick={() => triggerGate(action)}
                         >
                           <Lock className="size-3.5" />
