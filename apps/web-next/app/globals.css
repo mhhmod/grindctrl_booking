@@ -157,3 +157,218 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+/* ─── GrindCTRL Landing Animations ─── */
+
+@keyframes gc-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes gc-pulse-glow {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 0 0 oklch(0.7 0.1 260 / 0); }
+  50% { opacity: 1; box-shadow: 0 0 20px 4px oklch(0.7 0.1 260 / 0.15); }
+}
+
+@keyframes gc-signal-flow {
+  0% { transform: translateX(-100%); opacity: 0; }
+  30% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes gc-scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 0.5; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+@keyframes gc-fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gc-grid-pulse {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.07; }
+}
+
+@keyframes gc-node-ping {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+@keyframes gc-step-appear {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes gc-trail-sweep {
+  0% { transform: translateX(-120%); opacity: 0; }
+  20% { opacity: 0.85; }
+  80% { opacity: 0.85; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+@keyframes gc-node-pulse-soft {
+  0%, 72%, 100% {
+    border-color: oklch(1 0 0 / 10%);
+    box-shadow: 0 0 0 0 oklch(0.72 0.14 265 / 0);
+    transform: translateY(0);
+  }
+  12%, 28% {
+    border-color: oklch(0.72 0.14 265 / 34%);
+    box-shadow: 0 0 24px -8px oklch(0.72 0.14 265 / 42%);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes gc-soft-glow {
+  0%, 100% { box-shadow: 0 24px 80px -48px oklch(0.65 0.16 260 / 35%); }
+  50% { box-shadow: 0 24px 90px -42px oklch(0.74 0.16 290 / 38%); }
+}
+
+@keyframes gc-ambient-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.55; }
+  50% { transform: translate3d(-18px, 14px, 0); opacity: 0.85; }
+}
+
+@keyframes gc-result-reveal {
+  from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes gc-progress-glow {
+  0% { transform: translateX(-110%); opacity: 0; }
+  22% { opacity: 0.65; }
+  78% { opacity: 0.65; }
+  100% { transform: translateX(110%); opacity: 0; }
+}
+
+.gc-float { animation: gc-float 4s ease-in-out infinite; }
+.gc-pulse-glow { animation: gc-pulse-glow 3s ease-in-out infinite; }
+.gc-signal-flow { animation: gc-signal-flow 3s ease-in-out infinite; }
+.gc-scan-line { animation: gc-scan-line 4s linear infinite; }
+.gc-fade-in-up { animation: gc-fade-in-up 0.5s ease-out both; }
+.gc-grid-pulse { animation: gc-grid-pulse 6s ease-in-out infinite; }
+.gc-node-ping { animation: gc-node-ping 2s ease-out infinite; }
+.gc-step-appear { animation: gc-step-appear 0.4s ease-out both; }
+.gc-node-pulse { animation: gc-node-pulse-soft 6.6s ease-in-out infinite; }
+.gc-soft-glow { animation: gc-soft-glow 12s ease-in-out infinite; }
+.gc-ambient-glow { animation: gc-ambient-drift 10s ease-in-out infinite; will-change: transform, opacity; }
+.gc-result-reveal { animation: gc-result-reveal 280ms ease-out both; }
+
+.gc-card-hover {
+  transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
+}
+
+.gc-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: oklch(1 0 0 / 20%);
+  box-shadow: 0 18px 48px -36px oklch(0.72 0.14 265 / 38%);
+}
+
+.gc-trail-line::before,
+.gc-trail::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inline-size: 45%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, oklch(0.78 0.14 260 / 70%), transparent);
+  animation: gc-trail-sweep 5.8s ease-in-out infinite;
+}
+
+.gc-template-progress {
+  position: relative;
+  overflow: hidden;
+}
+
+.gc-template-progress::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.76 0.14 275 / 65%), transparent);
+  animation: gc-progress-glow 8s ease-in-out infinite;
+}
+
+/* Staggered delays for children */
+.gc-stagger > :nth-child(1) { animation-delay: 0s; }
+.gc-stagger > :nth-child(2) { animation-delay: 0.08s; }
+.gc-stagger > :nth-child(3) { animation-delay: 0.16s; }
+.gc-stagger > :nth-child(4) { animation-delay: 0.24s; }
+.gc-stagger > :nth-child(5) { animation-delay: 0.32s; }
+.gc-stagger > :nth-child(6) { animation-delay: 0.4s; }
+.gc-stagger > :nth-child(7) { animation-delay: 0.48s; }
+.gc-stagger > :nth-child(8) { animation-delay: 0.56s; }
+
+/* Hero background grid */
+.gc-hero-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 4%) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Glassmorphism card hover */
+.gc-glass {
+  background: oklch(1 0 0 / 4%);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 8%);
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+.gc-glass:hover {
+  border-color: oklch(1 0 0 / 15%);
+  box-shadow: 0 0 24px -4px oklch(0.7 0.08 260 / 0.12);
+  transform: translateY(-2px);
+}
+
+/* Processing step connector */
+.gc-connector {
+  position: relative;
+}
+
+.gc-connector::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 1px;
+  height: 8px;
+  background: oklch(1 0 0 / 15%);
+}
+
+/* Reduced motion: disable all gc animations */
+@media (prefers-reduced-motion: reduce) {
+  .gc-float,
+  .gc-pulse-glow,
+  .gc-signal-flow,
+  .gc-scan-line,
+  .gc-fade-in-up,
+  .gc-grid-pulse,
+  .gc-node-ping,
+  .gc-step-appear,
+  .gc-node-pulse,
+  .gc-soft-glow,
+  .gc-ambient-glow,
+  .gc-result-reveal,
+  .gc-trail-line::before,
+  .gc-trail::before,
+  .gc-template-progress::after,
+  .gc-animated,
+  .gc-animated * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .gc-glass:hover,
+  .gc-card-hover:hover {
+    transform: none;
+  }
+}
