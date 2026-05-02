@@ -8,8 +8,8 @@ vi.mock('next/navigation', () => ({
 import DashboardBrandingPage from '@/app/dashboard/branding/page';
 
 describe('DashboardBrandingPage', () => {
-  it('redirects legacy branding route to sites branding tab', async () => {
+  it('redirects legacy branding route to install center preserving site query', async () => {
     await DashboardBrandingPage({ searchParams: Promise.resolve({ site: 'site_1' }) });
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/sites?site=site_1&tab=branding');
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard/install?site=site_1');
   });
 });

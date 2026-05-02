@@ -1,0 +1,1424 @@
+{
+  "name": "GrindCTRL Landing Trial Inflow - Preview Router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "grindctrl-trial-inflow",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "binaryPropertyName": "data",
+          "ignoreBots": true
+        }
+      },
+      "id": "6f45081c-e6fe-48c9-a1c1-165b7e554de5",
+      "name": "Webhook Landing Trial Inflow",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1580,
+        0
+      ],
+      "webhookId": "adeb37a3-3f4c-4898-8082-5478cc11ebb5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first() || { json: {}, binary: {} };\nconst raw = item.json || {};\nconst body = raw.body && typeof raw.body === 'object' && !Array.isArray(raw.body) ? raw.body : raw;\nconst binary = item.binary || {};\nconst headersRaw = raw.headers || {};\nconst headers = {};\nfor (const [key, value] of Object.entries(headersRaw)) {\n  headers[String(key).toLowerCase()] = Array.isArray(value) ? value.join(',') : String(value ?? '');\n}\n\n// Optional shared-token support.\n// Leave empty to keep token validation disabled. Set this literal in this node later to enable.\n// Do not use environment-variable expressions here.\nconst expectedSandboxToken = \"\";\nconst suppliedSandboxToken = headers['x-grindctrl-sandbox-token'] || \"\";\nconst tokenOk = !expectedSandboxToken || suppliedSandboxToken === expectedSandboxToken;\n\nconst clean = (value) => typeof value === 'string' ? value.trim() : (value == null ? '' : String(value).trim());\nconst normalizeMode = (value) => {\n  const mode = clean(value).toLowerCase();\n  if (['workflow', 'voice', 'file'].includes(mode)) return mode;\n  return mode;\n};\nconst normalizeLocale = (value) => clean(value).toLowerCase().startsWith('ar') ? 'ar' : 'en';\nconst now = new Date();\nconst requestReceivedAt = now.toISOString();\nconst requestId = `gc_${now.getTime()}_${Math.random().toString(36).slice(2, 10)}`;\n\nconst source = clean(body.source || raw.source);\nconst mode = normalizeMode(body.mode || raw.mode);\nconst locale = normalizeLocale(body.locale || raw.locale);\nconst sessionId = clean(body.sessionId || raw.sessionId);\nconst userId = clean(body.userId || raw.userId);\nconst prompt = clean(body.prompt || raw.prompt);\nconst transcript = clean(body.transcript || raw.transcript);\nconst pageUrl = clean(body.pageUrl || raw.pageUrl);\nconst userAgentHash = clean(body.userAgentHash || raw.userAgentHash);\nconst ipHash = clean(body.ipHash || raw.ipHash);\n\nconst binaryKeys = Object.keys(binary);\nconst binaryProperty = binaryKeys[0] || null;\nconst binaryMeta = binaryProperty ? (binary[binaryProperty] || {}) : {};\nconst fileName = clean(body.fileName || raw.fileName || binaryMeta.fileName || binaryMeta.file || binaryProperty || '');\nconst mimeType = clean(binaryMeta.mimeType || binaryMeta.mime || body.mimeType || raw.mimeType || '');\nconst hasBinary = Boolean(binaryProperty);\n\nfunction parseSize(value) {\n  if (typeof value === 'number' && Number.isFinite(value)) return value;\n  if (!value) return 0;\n  const text = String(value).trim().toLowerCase();\n  const match = text.match(/([\\d.]+)\\s*(b|kb|kib|mb|mib|gb|gib)?/);\n  if (!match) return 0;\n  const amount = Number(match[1]);\n  const unit = match[2] || 'b';\n  const mult = unit === 'kb' ? 1000 :\n    unit === 'kib' ? 1024 :\n    unit === 'mb' ? 1000 * 1000 :\n    unit === 'mib' ? 1024 * 1024 :\n    unit === 'gb' ? 1000 * 1000 * 1000 :\n    unit === 'gib' ? 1024 * 1024 * 1024 : 1;\n  return Math.round(amount * mult);\n}\n\nconst fileSizeBytes = parseSize(binaryMeta.fileSize || binaryMeta.fileSizeBytes || binaryMeta.size || body.fileSize || raw.fileSize);\nconst maxFileSizeBytes = 10 * 1024 * 1024;\nconst fileSizeExceeded = fileSizeBytes > maxFileSizeBytes && fileSizeBytes > 0;\n\nfunction cairoDateKey(date = new Date()) {\n  const parts = new Intl.DateTimeFormat('en-US', {\n    timeZone: 'Africa/Cairo',\n    year: 'numeric',\n    month: '2-digit',\n    day: '2-digit',\n  }).formatToParts(date).reduce((acc, part) => {\n    acc[part.type] = part.value;\n    return acc;\n  }, {});\n  return `${parts.year}-${parts.month}-${parts.day}`;\n}\n\nconst todayKey = cairoDateKey();\n\nlet identityKey = '';\nlet identityWarning = null;\nif (userId) identityKey = `user:${userId}`;\nelse if (sessionId) identityKey = `session:${sessionId}`;\nelse if (ipHash) identityKey = `ip:${ipHash}`;\nelse {\n  identityKey = `request:${requestId}`;\n  identityWarning = 'No stable identity was supplied; request-scoped preview controls were used.';\n}\n\nconst dailyLimit = userId ? 10 : 3;\nconst modeSoftLimit = userId ? 3 : 1;\n\nconst lockKey = `gc:trial:lock:${identityKey}`;\nconst burstKey = `gc:trial:burst:${identityKey}`;\nconst dailyKey = `gc:trial:daily:${identityKey}:${todayKey}`;\nconst modeKey = `gc:trial:mode:${identityKey}:${mode || 'unknown'}:${todayKey}`;\n\nconst errors = [];\nif (source !== 'landing_sandbox') errors.push('source must be landing_sandbox');\nif (!['workflow', 'voice', 'file'].includes(mode)) errors.push('mode must be workflow, voice, or file');\nif (!tokenOk) errors.push('sandbox token is not valid');\nif (fileSizeExceeded) errors.push(`file is larger than ${Math.round(maxFileSizeBytes / 1024 / 1024)} MB`);\n\nif (mode === 'workflow' && !(prompt || transcript)) {\n  errors.push('workflow mode needs a business process prompt');\n}\nif (mode === 'voice' && !(transcript || hasBinary)) {\n  errors.push('voice mode needs a transcript or audio file');\n}\nif (mode === 'file' && !(prompt || hasBinary || fileName)) {\n  errors.push('file mode needs a file, file name, or context prompt');\n}\n\nlet validationMessage = '';\nif (errors.length) {\n  if (errors.some(e => e.includes('source'))) {\n    validationMessage = 'This preview endpoint only accepts landing sandbox requests.';\n  } else if (errors.some(e => e.includes('token'))) {\n    validationMessage = 'This guided preview could not be verified.';\n  } else if (errors.some(e => e.includes('larger'))) {\n    validationMessage = `Please upload a file under ${Math.round(maxFileSizeBytes / 1024 / 1024)} MB for this guided preview.`;\n  } else {\n    validationMessage = 'Please add the missing prompt, transcript, or file context to run this guided preview.';\n  }\n}\n\nreturn [{\n  json: {\n    source,\n    mode,\n    locale,\n    sessionId,\n    userId,\n    prompt,\n    transcript,\n    fileName,\n    pageUrl,\n    userAgentHash,\n    ipHash,\n    requestId,\n    requestReceivedAt,\n    todayKey,\n    identityKey,\n    identityWarning,\n    lockKey,\n    burstKey,\n    dailyKey,\n    modeKey,\n    dailyLimit,\n    modeSoftLimit,\n    hasBinary,\n    binaryProperty,\n    binaryMeta: {\n      fileName,\n      mimeType,\n      fileSizeBytes,\n    },\n    maxFileSizeBytes,\n    isBadRequest: errors.length > 0,\n    validationErrors: errors,\n    validationMessage,\n    fallback: false,\n    route: 'ok',\n    auditTrail: ['request_received', 'request_normalized'],\n  }\n}];"
+      },
+      "id": "70aea179-22a8-4fd7-b98c-dba29097ecbe",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d83c4929-73d0-4777-981b-1101eac5ec46",
+              "leftValue": "={{ $json.isBadRequest }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "652cf8e9-fefc-423c-81c4-ab889f6106bc",
+      "name": "IF Bad Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1140,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function baseSlug(mode) {\n  if (mode === 'voice') return 'voice_lead_capture';\n  if (mode === 'file') return 'file_image_intake';\n  return 'workflow_planner';\n}\nfunction failedEnvelope(base, message, status, retryAfterSeconds = null) {\n  const now = new Date().toISOString();\n  const auditTrail = Array.from(new Set([...(base.auditTrail || []), 'response_sent']));\n  const envelope = {\n    ok: status < 400,\n    fallback: false,\n    message,\n    retryAfterSeconds,\n    result: {\n      status: status === 429 ? 'rate_limited' : 'failed',\n      workflowSlug: baseSlug(base.mode),\n      summary: '',\n      confidence: 0,\n      extractedEntities: {},\n      decision: {\n        route: 'validation',\n        priority: 'low',\n        handoffRequired: false\n      },\n      recommendedAction: status === 429\n        ? 'Start a 14-day trial to save, connect, deploy, and monitor workflows.'\n        : 'Update the request and run another guided preview.',\n      executedActions: [],\n      externalRefs: [],\n      auditTrail,\n      observability: {\n        providerRefs: [],\n        latencyMs: Math.max(0, Date.now() - Date.parse(base.requestReceivedAt || now)),\n        costEstimate: 0\n      }\n    },\n    meta: {\n      source: 'landing_sandbox',\n      mode: ['workflow', 'voice', 'file'].includes(base.mode) ? base.mode : 'workflow',\n      locale: base.locale === 'ar' ? 'ar' : 'en',\n      timestamp: now,\n      limitState: status === 429 ? 'rate_limited' : 'ok'\n    }\n  };\n  if (base.identityWarning || base.requestId) {\n    envelope.diagnostics_safe = {\n      requestId: base.requestId || null,\n      mode: envelope.meta.mode,\n      limitState: envelope.meta.limitState,\n      fallback: false\n    };\n    if (base.identityWarning) envelope.diagnostics_safe.warning = base.identityWarning;\n  }\n  return envelope;\n}\n\nconst base = $input.first().json;\nconst message = base.validationMessage || 'Please add the missing prompt, transcript, or file context to run this guided preview.';\nreturn [{ json: failedEnvelope(base, message, 400, null) }];\n"
+      },
+      "id": "21b941a4-fb12-4577-9f79-656847b1367d",
+      "name": "Build Bad Request Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "ebc9240a-fedc-4de2-ba2c-68493137bf22",
+      "name": "Respond 400 Bad Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -700,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.lockKey }}",
+        "expire": true,
+        "ttl": 45
+      },
+      "id": "61ae3562-75e4-4076-804b-270148fbe92e",
+      "name": "Redis In-Flight Lock",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Normalize Request').first().json;\nfunction redisNumber(payload) {\n  if (typeof payload === 'number') return payload;\n  const candidates = [\n    payload.value,\n    payload.data,\n    payload.result,\n    payload.count,\n    payload.counter,\n    payload[base.lockKey],\n    payload[base.burstKey],\n    payload[base.dailyKey],\n    payload[base.modeKey]\n  ];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst count = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    lockCount: count,\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'limits_checked']))\n  }\n}];"
+      },
+      "id": "ac6c910e-ac08-4cb6-a7ca-b017542e37ca",
+      "name": "Attach Lock Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "78e6b5ab-c23b-4cca-938f-66620e96c98f",
+              "leftValue": "={{ Number($json.lockCount || 0) > 1 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "df2a4653-60f2-4faf-aad1-ad7f4225e09f",
+      "name": "IF In-Flight Locked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -480,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function baseSlug(mode) {\n  if (mode === 'voice') return 'voice_lead_capture';\n  if (mode === 'file') return 'file_image_intake';\n  return 'workflow_planner';\n}\nfunction failedEnvelope(base, message, status, retryAfterSeconds = null) {\n  const now = new Date().toISOString();\n  const auditTrail = Array.from(new Set([...(base.auditTrail || []), 'response_sent']));\n  const envelope = {\n    ok: status < 400,\n    fallback: false,\n    message,\n    retryAfterSeconds,\n    result: {\n      status: status === 429 ? 'rate_limited' : 'failed',\n      workflowSlug: baseSlug(base.mode),\n      summary: '',\n      confidence: 0,\n      extractedEntities: {},\n      decision: {\n        route: 'validation',\n        priority: 'low',\n        handoffRequired: false\n      },\n      recommendedAction: status === 429\n        ? 'Start a 14-day trial to save, connect, deploy, and monitor workflows.'\n        : 'Update the request and run another guided preview.',\n      executedActions: [],\n      externalRefs: [],\n      auditTrail,\n      observability: {\n        providerRefs: [],\n        latencyMs: Math.max(0, Date.now() - Date.parse(base.requestReceivedAt || now)),\n        costEstimate: 0\n      }\n    },\n    meta: {\n      source: 'landing_sandbox',\n      mode: ['workflow', 'voice', 'file'].includes(base.mode) ? base.mode : 'workflow',\n      locale: base.locale === 'ar' ? 'ar' : 'en',\n      timestamp: now,\n      limitState: status === 429 ? 'rate_limited' : 'ok'\n    }\n  };\n  if (base.identityWarning || base.requestId) {\n    envelope.diagnostics_safe = {\n      requestId: base.requestId || null,\n      mode: envelope.meta.mode,\n      limitState: envelope.meta.limitState,\n      fallback: false\n    };\n    if (base.identityWarning) envelope.diagnostics_safe.warning = base.identityWarning;\n  }\n  return envelope;\n}\nconst base = $input.first().json;\nreturn [{\n  json: failedEnvelope(\n    base,\n    'A guided preview is already running for this session. Please try again shortly.',\n    429,\n    45\n  )\n}];\n"
+      },
+      "id": "54e14109-df46-4b55-9236-20769a1fea1b",
+      "name": "Build 429 In-Flight Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 429,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Retry-After",
+                "value": "45"
+              }
+            ]
+          }
+        }
+      },
+      "id": "699e58af-816a-47be-9972-ae3a426bf3c2",
+      "name": "Respond 429 In-Flight",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.burstKey }}",
+        "expire": true,
+        "ttl": 30
+      },
+      "id": "4de099fc-dac5-4944-82e7-d056d9faddfa",
+      "name": "Redis Burst Counter",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Attach Lock Count').first().json;\nfunction redisNumber(payload) {\n  if (typeof payload === 'number') return payload;\n  const candidates = [\n    payload.value,\n    payload.data,\n    payload.result,\n    payload.count,\n    payload.counter,\n    payload[base.lockKey],\n    payload[base.burstKey],\n    payload[base.dailyKey],\n    payload[base.modeKey]\n  ];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst count = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    burstCount: count,\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'limits_checked']))\n  }\n}];"
+      },
+      "id": "b892ef82-3391-48cd-9c2b-de3dedbfc55e",
+      "name": "Attach Burst Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "36b86de9-bae3-4833-af36-110bb9e2192c",
+              "leftValue": "={{ Number($json.burstCount || 0) > 3 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d2ded68b-839a-4394-8e24-02707223c314",
+      "name": "IF Burst Exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function baseSlug(mode) {\n  if (mode === 'voice') return 'voice_lead_capture';\n  if (mode === 'file') return 'file_image_intake';\n  return 'workflow_planner';\n}\nfunction failedEnvelope(base, message, status, retryAfterSeconds = null) {\n  const now = new Date().toISOString();\n  const auditTrail = Array.from(new Set([...(base.auditTrail || []), 'response_sent']));\n  const envelope = {\n    ok: status < 400,\n    fallback: false,\n    message,\n    retryAfterSeconds,\n    result: {\n      status: status === 429 ? 'rate_limited' : 'failed',\n      workflowSlug: baseSlug(base.mode),\n      summary: '',\n      confidence: 0,\n      extractedEntities: {},\n      decision: {\n        route: 'validation',\n        priority: 'low',\n        handoffRequired: false\n      },\n      recommendedAction: status === 429\n        ? 'Start a 14-day trial to save, connect, deploy, and monitor workflows.'\n        : 'Update the request and run another guided preview.',\n      executedActions: [],\n      externalRefs: [],\n      auditTrail,\n      observability: {\n        providerRefs: [],\n        latencyMs: Math.max(0, Date.now() - Date.parse(base.requestReceivedAt || now)),\n        costEstimate: 0\n      }\n    },\n    meta: {\n      source: 'landing_sandbox',\n      mode: ['workflow', 'voice', 'file'].includes(base.mode) ? base.mode : 'workflow',\n      locale: base.locale === 'ar' ? 'ar' : 'en',\n      timestamp: now,\n      limitState: status === 429 ? 'rate_limited' : 'ok'\n    }\n  };\n  if (base.identityWarning || base.requestId) {\n    envelope.diagnostics_safe = {\n      requestId: base.requestId || null,\n      mode: envelope.meta.mode,\n      limitState: envelope.meta.limitState,\n      fallback: false\n    };\n    if (base.identityWarning) envelope.diagnostics_safe.warning = base.identityWarning;\n  }\n  return envelope;\n}\nconst base = $input.first().json;\nreturn [{\n  json: failedEnvelope(\n    base,\n    'A few preview runs are already in progress. Please try again shortly.',\n    429,\n    30\n  )\n}];\n"
+      },
+      "id": "4a48d41b-4de1-4ea8-b0ca-b8f5cc303c66",
+      "name": "Build 429 Burst Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Attach Burst Count').first().json.lockKey }}"
+      },
+      "id": "9284f3dc-b631-4588-b08e-5d82486f875a",
+      "name": "Redis Delete Lock Burst",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        620,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Build 429 Burst Envelope').first().json }];"
+      },
+      "id": "eacc6db6-4756-4d9a-9d3b-77342d505b29",
+      "name": "Prepare 429 Burst Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 429,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Retry-After",
+                "value": "30"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e1980498-5f4e-42b8-9dc4-f60be696dc0d",
+      "name": "Respond 429 Burst",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1060,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.dailyKey }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "c0fecc0c-efc2-41df-ab66-7c5b689c7d1d",
+      "name": "Redis Daily Counter",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        400,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Attach Burst Count').first().json;\nfunction redisNumber(payload) {\n  if (typeof payload === 'number') return payload;\n  const candidates = [\n    payload.value,\n    payload.data,\n    payload.result,\n    payload.count,\n    payload.counter,\n    payload[base.lockKey],\n    payload[base.burstKey],\n    payload[base.dailyKey],\n    payload[base.modeKey]\n  ];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst count = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    dailyCount: count,\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'limits_checked']))\n  }\n}];"
+      },
+      "id": "b999cc4a-0464-44bd-9a27-8cdd7e36740d",
+      "name": "Attach Daily Count",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a6860aa6-cb2c-42b5-b858-f79149060fcf",
+              "leftValue": "={{ Number($json.dailyCount || 0) > Number($json.dailyLimit || 3) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1a2e0c94-7d8e-4f00-8a36-d9e08b131c07",
+      "name": "IF Daily Exceeded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function baseSlug(mode) {\n  if (mode === 'voice') return 'voice_lead_capture';\n  if (mode === 'file') return 'file_image_intake';\n  return 'workflow_planner';\n}\nfunction failedEnvelope(base, message, status, retryAfterSeconds = null) {\n  const now = new Date().toISOString();\n  const auditTrail = Array.from(new Set([...(base.auditTrail || []), 'response_sent']));\n  const envelope = {\n    ok: status < 400,\n    fallback: false,\n    message,\n    retryAfterSeconds,\n    result: {\n      status: status === 429 ? 'rate_limited' : 'failed',\n      workflowSlug: baseSlug(base.mode),\n      summary: '',\n      confidence: 0,\n      extractedEntities: {},\n      decision: {\n        route: 'validation',\n        priority: 'low',\n        handoffRequired: false\n      },\n      recommendedAction: status === 429\n        ? 'Start a 14-day trial to save, connect, deploy, and monitor workflows.'\n        : 'Update the request and run another guided preview.',\n      executedActions: [],\n      externalRefs: [],\n      auditTrail,\n      observability: {\n        providerRefs: [],\n        latencyMs: Math.max(0, Date.now() - Date.parse(base.requestReceivedAt || now)),\n        costEstimate: 0\n      }\n    },\n    meta: {\n      source: 'landing_sandbox',\n      mode: ['workflow', 'voice', 'file'].includes(base.mode) ? base.mode : 'workflow',\n      locale: base.locale === 'ar' ? 'ar' : 'en',\n      timestamp: now,\n      limitState: status === 429 ? 'rate_limited' : 'ok'\n    }\n  };\n  if (base.identityWarning || base.requestId) {\n    envelope.diagnostics_safe = {\n      requestId: base.requestId || null,\n      mode: envelope.meta.mode,\n      limitState: envelope.meta.limitState,\n      fallback: false\n    };\n    if (base.identityWarning) envelope.diagnostics_safe.warning = base.identityWarning;\n  }\n  return envelope;\n}\nconst base = $input.first().json;\nreturn [{\n  json: failedEnvelope(\n    base,\n    'You’ve completed today’s guided previews. Start a 14-day trial to save, connect, deploy, and monitor workflows.',\n    429,\n    86400\n  )\n}];\n"
+      },
+      "id": "f2d11092-b9c5-4071-9707-ef37596fdd3a",
+      "name": "Build 429 Daily Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Attach Daily Count').first().json.lockKey }}"
+      },
+      "id": "3b7a8907-7fb1-48bf-a6b2-6d66d072dad2",
+      "name": "Redis Delete Lock Daily",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Build 429 Daily Envelope').first().json }];"
+      },
+      "id": "8002920b-5505-4045-8ac0-0bbe3c66cb2d",
+      "name": "Prepare 429 Daily Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 429,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Retry-After",
+                "value": "86400"
+              }
+            ]
+          }
+        }
+      },
+      "id": "eff18f85-1d09-49c1-93c8-6707abfce4a2",
+      "name": "Respond 429 Daily",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1720,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e1e082e9-02a6-4268-839a-5fc05666fab1",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "workflow",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5041e649-17d3-41d4-b749-6af6d25b27c7",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "voice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "45a2dbe1-3774-4b60-96be-ea30d9fa3774",
+                    "leftValue": "={{ $json.mode }}",
+                    "rightValue": "file",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ccb159fd-5603-4ab4-8659-c2721c6bb181",
+      "name": "Mode Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1060,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $input.first().json;\nconst userText = base.prompt || base.transcript || '';\nconst agentPrompt = {\n  mode: 'workflow',\n  requestId: base.requestId,\n  locale: base.locale,\n  prompt: userText,\n  requiredOutput: {\n    workflowSlug: 'workflow_planner',\n    summary: 'A concise business workflow summary',\n    confidence: 'integer 70-95',\n    extractedEntities: {\n      primary_signal: 'workflow_request',\n      business_goal: 'string',\n      suggested_modules: 'string',\n      owner: 'support_ops | sales_ops | operations',\n      estimated_steps: 'integer 4-6'\n    },\n    decision: {\n      route: 'support_and_ops_routing | lead_capture | file_intake | reporting | custom_workflow',\n      priority: 'low | medium | high',\n      handoffRequired: false\n    },\n    recommendedAction: 'Start a 14-day trial to save this preview, connect tools, and deploy the workflow.'\n  }\n};\nreturn [{\n  json: {\n    ...base,\n    agentPrompt: JSON.stringify(agentPrompt),\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'mode_routed']))\n  }\n}];"
+      },
+      "id": "db55c92f-e614-4826-b266-713b149b21b9",
+      "name": "Build Workflow Planner AI Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agentPrompt }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "Return valid JSON only. No markdown. No prose outside JSON. Generate a practical GrindCTRL guided workflow preview. Do not claim external actions were executed. executedActions must be [] and externalRefs must be []."
+        }
+      },
+      "id": "56634e47-f130-4349-afbe-0b8041918556",
+      "name": "AI Agent Workflow Planner",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1500,
+        460
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nfunction stripJsonText(raw) {\n  if (raw == null) return '';\n  if (typeof raw === 'object') return JSON.stringify(raw);\n  let text = String(raw).trim();\n  text = text.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n  const first = text.indexOf('{');\n  const last = text.lastIndexOf('}');\n  if (first >= 0 && last > first) text = text.slice(first, last + 1);\n  return text;\n}\nfunction tryParse(raw) {\n  try {\n    const text = stripJsonText(raw);\n    if (!text) return null;\n    return JSON.parse(text);\n  } catch (e) {\n    return null;\n  }\n}\nfunction clampInt(value, min, max, fallback) {\n  const n = Math.round(Number(value));\n  if (!Number.isFinite(n)) return fallback;\n  return Math.min(max, Math.max(min, n));\n}\nfunction pick(value, allowed, fallback) {\n  return allowed.includes(value) ? value : fallback;\n}\nfunction words(text) {\n  return String(text || '').toLowerCase();\n}\nfunction safeString(value, fallback = '') {\n  const s = typeof value === 'string' ? value.trim() : '';\n  return s || fallback;\n}\nfunction providerRaw() {\n  const input = $input.first()?.json || {};\n  return input.output ?? input.text ?? input.response ?? input.data ?? input.result ?? '';\n}\nfunction hasProviderError() {\n  const input = $input.first()?.json || {};\n  if (input.error || input.message?.toLowerCase?.().includes('error')) return true;\n  const raw = String(providerRaw() || '').toLowerCase();\n  return ['429', '498', '500', '502', '503', '504', 'timeout'].some(code => raw.includes(code));\n}\n\nconst base = $('Build Workflow Planner AI Input').first().json;\nconst prompt = base.prompt || base.transcript || '';\nconst raw = providerRaw();\nlet parsed = hasProviderError() ? null : tryParse(raw);\nlet fallback = !parsed;\n\nfunction fallbackResult() {\n  const t = words(prompt);\n  const owner = t.includes('lead') || t.includes('sales') || t.includes('crm') ? 'sales_ops'\n    : t.includes('support') || t.includes('ticket') || t.includes('inbox') ? 'support_ops'\n    : 'operations';\n  const route = t.includes('lead') || t.includes('sales') || t.includes('crm') ? 'lead_capture'\n    : t.includes('file') || t.includes('image') || t.includes('pdf') ? 'file_intake'\n    : t.includes('report') || t.includes('dashboard') || t.includes('metric') ? 'reporting'\n    : t.includes('support') || t.includes('ticket') || t.includes('inbox') ? 'support_and_ops_routing'\n    : 'custom_workflow';\n  const priority = t.includes('urgent') || t.includes('asap') || t.includes('high priority') ? 'high'\n    : t.length > 80 ? 'medium' : 'low';\n  const modules = route === 'lead_capture' ? 'Forms, Lead Capture, CRM, Follow-up'\n    : route === 'file_intake' ? 'Intake, Extraction, Routing, CRM'\n    : route === 'reporting' ? 'Data Capture, Reporting, Dashboards'\n    : 'Webhook, AI Routing, CRM, Google Sheets, Support Inbox';\n  return {\n    status: 'completed',\n    workflowSlug: 'workflow_planner',\n    summary: prompt\n      ? `Workflow preview for: ${prompt.slice(0, 140)}${prompt.length > 140 ? '…' : ''}`\n      : 'Workflow preview generated from the supplied business process context.',\n    confidence: 82,\n    extractedEntities: {\n      primary_signal: 'workflow_request',\n      business_goal: prompt || 'Capture the process, route work, and prepare deployment steps.',\n      suggested_modules: modules,\n      owner,\n      estimated_steps: 5\n    },\n    decision: {\n      route,\n      priority,\n      handoffRequired: false\n    },\n    recommendedAction: 'Start a 14-day trial to save this preview, connect tools, and deploy the workflow.',\n    executedActions: [],\n    externalRefs: []\n  };\n}\n\nlet result = fallbackResult();\nif (parsed && typeof parsed === 'object') {\n  const e = parsed.extractedEntities || {};\n  const d = parsed.decision || {};\n  result = {\n    status: 'completed',\n    workflowSlug: 'workflow_planner',\n    summary: safeString(parsed.summary, result.summary),\n    confidence: clampInt(parsed.confidence, 70, 95, result.confidence),\n    extractedEntities: {\n      primary_signal: 'workflow_request',\n      business_goal: safeString(e.business_goal, result.extractedEntities.business_goal),\n      suggested_modules: safeString(e.suggested_modules, result.extractedEntities.suggested_modules),\n      owner: pick(e.owner, ['support_ops', 'sales_ops', 'operations'], result.extractedEntities.owner),\n      estimated_steps: clampInt(e.estimated_steps, 4, 6, result.extractedEntities.estimated_steps)\n    },\n    decision: {\n      route: pick(d.route, ['support_and_ops_routing', 'lead_capture', 'file_intake', 'reporting', 'custom_workflow'], result.decision.route),\n      priority: pick(d.priority, ['low', 'medium', 'high'], result.decision.priority),\n      handoffRequired: false\n    },\n    recommendedAction: safeString(parsed.recommendedAction, result.recommendedAction),\n    executedActions: [],\n    externalRefs: []\n  };\n  fallback = false;\n}\nreturn [{\n  json: {\n    ...base,\n    previewResult: result,\n    fallback,\n    providerRefs: fallback ? [] : ['groq_chat_model_preview'],\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'ai_preview_generated']))\n  }\n}];\n"
+      },
+      "id": "bf89d1f6-3d30-4142-9441-3d069f7f8c14",
+      "name": "Parse Workflow AI Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.modeKey }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "52fa10f4-2b4f-4b3d-a3b9-d6e02255e6f9",
+      "name": "Redis Mode Counter Workflow",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Parse Workflow AI Result').first().json;\nfunction redisNumber(payload) {\n  const candidates = [payload.value, payload.data, payload.result, payload.count, payload.counter, payload[base.modeKey]];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst modeCount = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    modeCount,\n    modeRemainingToday: Math.max(0, Number(base.modeSoftLimit || 1) - modeCount)\n  }\n}];"
+      },
+      "id": "7e052d15-49f8-4e0d-8b61-e3f8f0e905fb",
+      "name": "Attach Mode Count Workflow",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $input.first().json;\nconst transcript = base.transcript || '';\nconst noTranscriptAudioFallback = Boolean(base.hasBinary && !transcript);\nconst agentPrompt = {\n  mode: 'voice',\n  requestId: base.requestId,\n  locale: base.locale,\n  transcript,\n  audioReceived: Boolean(base.hasBinary),\n  binaryProperty: base.binaryProperty,\n  note: noTranscriptAudioFallback\n    ? 'Audio was received, but no transcription provider reference was supplied in the source workflow. Use transcript/context fallback.'\n    : 'Use transcript for structured lead preview.',\n  requiredOutput: {\n    workflowSlug: 'voice_lead_capture',\n    summary: 'Lead captured and routed based on spoken request.',\n    confidence: 'integer 70-95',\n    extractedEntities: {\n      primary_signal: 'voice_lead',\n      lead_name: 'string or null',\n      company: 'string or null',\n      detected_need: 'string',\n      lead_priority: 'low | medium | high',\n      lead_score: 'integer 0-100',\n      suggested_modules: 'Voice, Lead Capture, CRM, Follow-up',\n      owner: 'sales_ops'\n    },\n    decision: {\n      route: 'lead_capture',\n      priority: 'medium | high',\n      handoffRequired: true\n    },\n    recommendedAction: 'Start a 14-day trial to save this lead flow and connect CRM/Sheets.'\n  }\n};\nreturn [{\n  json: {\n    ...base,\n    agentPrompt: JSON.stringify(agentPrompt),\n    audioNeedsTranscriptFallback: noTranscriptAudioFallback,\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'mode_routed']))\n  }\n}];"
+      },
+      "id": "1d2442b3-4688-4519-96cb-e617a742da3a",
+      "name": "Build Voice Lead AI Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agentPrompt }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "Return valid JSON only. No markdown. No prose outside JSON. Generate a practical voice lead capture preview. Do not claim external actions were executed. executedActions must be [] and externalRefs must be []."
+        }
+      },
+      "id": "8cfddac9-31d7-4db0-b0cd-43fcd70b07e6",
+      "name": "AI Agent Voice Lead Capture",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1500,
+        680
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nfunction stripJsonText(raw) {\n  if (raw == null) return '';\n  if (typeof raw === 'object') return JSON.stringify(raw);\n  let text = String(raw).trim();\n  text = text.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n  const first = text.indexOf('{');\n  const last = text.lastIndexOf('}');\n  if (first >= 0 && last > first) text = text.slice(first, last + 1);\n  return text;\n}\nfunction tryParse(raw) {\n  try {\n    const text = stripJsonText(raw);\n    if (!text) return null;\n    return JSON.parse(text);\n  } catch (e) {\n    return null;\n  }\n}\nfunction clampInt(value, min, max, fallback) {\n  const n = Math.round(Number(value));\n  if (!Number.isFinite(n)) return fallback;\n  return Math.min(max, Math.max(min, n));\n}\nfunction pick(value, allowed, fallback) {\n  return allowed.includes(value) ? value : fallback;\n}\nfunction words(text) {\n  return String(text || '').toLowerCase();\n}\nfunction safeString(value, fallback = '') {\n  const s = typeof value === 'string' ? value.trim() : '';\n  return s || fallback;\n}\nfunction providerRaw() {\n  const input = $input.first()?.json || {};\n  return input.output ?? input.text ?? input.response ?? input.data ?? input.result ?? '';\n}\nfunction hasProviderError() {\n  const input = $input.first()?.json || {};\n  if (input.error || input.message?.toLowerCase?.().includes('error')) return true;\n  const raw = String(providerRaw() || '').toLowerCase();\n  return ['429', '498', '500', '502', '503', '504', 'timeout'].some(code => raw.includes(code));\n}\n\nconst base = $('Build Voice Lead AI Input').first().json;\nconst transcript = base.transcript || '';\nconst raw = providerRaw();\nlet parsed = hasProviderError() ? null : tryParse(raw);\nlet fallback = !parsed || base.audioNeedsTranscriptFallback;\n\nfunction findName(text) {\n  const m = String(text || '').match(/\\b(?:my name is|i am|i'm|this is)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?)/i);\n  return m ? m[1] : null;\n}\nfunction findCompany(text) {\n  const m = String(text || '').match(/\\b(?:from|at|company is|work at)\\s+([A-Z][A-Za-z0-9&.\\- ]{1,40})/i);\n  return m ? m[1].trim() : null;\n}\nfunction fallbackResult() {\n  const t = words(transcript);\n  const priority = t.includes('urgent') || t.includes('asap') || t.includes('today') || t.includes('enterprise') ? 'high' : 'medium';\n  const score = priority === 'high' ? 86 : (transcript ? 74 : 70);\n  const detected = transcript\n    ? transcript.slice(0, 160)\n    : 'Audio was received. Add a transcript or context to improve lead extraction in this guided preview.';\n  return {\n    status: 'completed',\n    workflowSlug: 'voice_lead_capture',\n    summary: transcript\n      ? 'Lead captured and routed based on spoken request.'\n      : 'Voice lead preview prepared from audio upload metadata. Add transcript/context for stronger extraction.',\n    confidence: transcript ? 82 : 70,\n    extractedEntities: {\n      primary_signal: 'voice_lead',\n      lead_name: findName(transcript),\n      company: findCompany(transcript),\n      detected_need: detected,\n      lead_priority: priority,\n      lead_score: score,\n      suggested_modules: 'Voice, Lead Capture, CRM, Follow-up',\n      owner: 'sales_ops'\n    },\n    decision: {\n      route: 'lead_capture',\n      priority,\n      handoffRequired: true\n    },\n    recommendedAction: 'Start a 14-day trial to save this lead flow and connect CRM/Sheets.',\n    executedActions: [],\n    externalRefs: []\n  };\n}\n\nlet result = fallbackResult();\nif (parsed && typeof parsed === 'object' && !base.audioNeedsTranscriptFallback) {\n  const e = parsed.extractedEntities || {};\n  const d = parsed.decision || {};\n  result = {\n    status: 'completed',\n    workflowSlug: 'voice_lead_capture',\n    summary: safeString(parsed.summary, result.summary),\n    confidence: clampInt(parsed.confidence, 70, 95, result.confidence),\n    extractedEntities: {\n      primary_signal: 'voice_lead',\n      lead_name: e.lead_name ?? result.extractedEntities.lead_name,\n      company: e.company ?? result.extractedEntities.company,\n      detected_need: safeString(e.detected_need, result.extractedEntities.detected_need),\n      lead_priority: pick(e.lead_priority, ['low', 'medium', 'high'], result.extractedEntities.lead_priority),\n      lead_score: clampInt(e.lead_score, 0, 100, result.extractedEntities.lead_score),\n      suggested_modules: safeString(e.suggested_modules, 'Voice, Lead Capture, CRM, Follow-up'),\n      owner: 'sales_ops'\n    },\n    decision: {\n      route: 'lead_capture',\n      priority: pick(d.priority, ['medium', 'high'], result.decision.priority === 'low' ? 'medium' : result.decision.priority),\n      handoffRequired: true\n    },\n    recommendedAction: safeString(parsed.recommendedAction, result.recommendedAction),\n    executedActions: [],\n    externalRefs: []\n  };\n  fallback = false;\n}\nreturn [{\n  json: {\n    ...base,\n    previewResult: result,\n    fallback,\n    providerRefs: fallback ? [] : ['groq_chat_model_preview'],\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'ai_preview_generated']))\n  }\n}];\n"
+      },
+      "id": "663db201-e705-4bd9-ab0d-14c495962e9b",
+      "name": "Parse Voice AI Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.modeKey }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "b0ad8718-cd48-4a78-852d-51e1e8283b1f",
+      "name": "Redis Mode Counter Voice",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Parse Voice AI Result').first().json;\nfunction redisNumber(payload) {\n  const candidates = [payload.value, payload.data, payload.result, payload.count, payload.counter, payload[base.modeKey]];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst modeCount = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    modeCount,\n    modeRemainingToday: Math.max(0, Number(base.modeSoftLimit || 1) - modeCount)\n  }\n}];"
+      },
+      "id": "0860c3a3-d155-4ab3-a3d8-653202046a8e",
+      "name": "Attach Mode Count Voice",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $input.first().json;\nconst agentPrompt = {\n  mode: 'file',\n  requestId: base.requestId,\n  locale: base.locale,\n  prompt: base.prompt || '',\n  fileName: base.fileName || '',\n  mimeType: base.binaryMeta?.mimeType || '',\n  fileReceived: Boolean(base.hasBinary),\n  note: 'Do not persist or upload the file. Use filename, mime type, and prompt context for the guided preview.',\n  requiredOutput: {\n    workflowSlug: 'file_image_intake',\n    summary: 'File/image intake mapped into extraction and routing workflow.',\n    confidence: 'integer 65-90',\n    extractedEntities: {\n      primary_signal: 'file_or_image_intake',\n      asset_name: 'string',\n      intake_type: 'image_intake | pdf_intake | document_intake | spreadsheet_intake | unknown',\n      recommended_route: 'support_ops | finance_ops | sales_ops | operations',\n      extracted_fields: 'integer 3-8',\n      suggested_modules: 'Intake, Extraction, Routing, CRM'\n    },\n    decision: {\n      route: 'intake_triage',\n      priority: 'low | medium | high',\n      handoffRequired: false\n    },\n    recommendedAction: 'Start a 14-day trial to save this intake flow and connect your tools.'\n  }\n};\nreturn [{\n  json: {\n    ...base,\n    agentPrompt: JSON.stringify(agentPrompt),\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'mode_routed']))\n  }\n}];"
+      },
+      "id": "0608f257-4135-4e49-a347-6b6a55218278",
+      "name": "Build File Intake AI Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agentPrompt }}",
+        "hasOutputParser": false,
+        "options": {
+          "systemMessage": "Return valid JSON only. No markdown. No prose outside JSON. Generate a practical file/image intake preview. Do not persist files and do not claim external actions were executed. executedActions must be [] and externalRefs must be []."
+        }
+      },
+      "id": "1e96583a-f245-445f-85aa-d505d0e0c06a",
+      "name": "AI Agent File Intake",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1500,
+        900
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nfunction stripJsonText(raw) {\n  if (raw == null) return '';\n  if (typeof raw === 'object') return JSON.stringify(raw);\n  let text = String(raw).trim();\n  text = text.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n  const first = text.indexOf('{');\n  const last = text.lastIndexOf('}');\n  if (first >= 0 && last > first) text = text.slice(first, last + 1);\n  return text;\n}\nfunction tryParse(raw) {\n  try {\n    const text = stripJsonText(raw);\n    if (!text) return null;\n    return JSON.parse(text);\n  } catch (e) {\n    return null;\n  }\n}\nfunction clampInt(value, min, max, fallback) {\n  const n = Math.round(Number(value));\n  if (!Number.isFinite(n)) return fallback;\n  return Math.min(max, Math.max(min, n));\n}\nfunction pick(value, allowed, fallback) {\n  return allowed.includes(value) ? value : fallback;\n}\nfunction words(text) {\n  return String(text || '').toLowerCase();\n}\nfunction safeString(value, fallback = '') {\n  const s = typeof value === 'string' ? value.trim() : '';\n  return s || fallback;\n}\nfunction providerRaw() {\n  const input = $input.first()?.json || {};\n  return input.output ?? input.text ?? input.response ?? input.data ?? input.result ?? '';\n}\nfunction hasProviderError() {\n  const input = $input.first()?.json || {};\n  if (input.error || input.message?.toLowerCase?.().includes('error')) return true;\n  const raw = String(providerRaw() || '').toLowerCase();\n  return ['429', '498', '500', '502', '503', '504', 'timeout'].some(code => raw.includes(code));\n}\n\nconst base = $('Build File Intake AI Input').first().json;\nconst prompt = base.prompt || '';\nconst fileName = base.fileName || '';\nconst mime = base.binaryMeta?.mimeType || '';\nconst raw = providerRaw();\nlet parsed = hasProviderError() ? null : tryParse(raw);\nlet fallback = !parsed;\n\nfunction intakeType() {\n  const name = fileName.toLowerCase();\n  const m = mime.toLowerCase();\n  if (m.startsWith('image/') || /\\.(png|jpe?g|webp|gif|heic|svg)$/i.test(name)) return 'image_intake';\n  if (m.includes('pdf') || /\\.pdf$/i.test(name)) return 'pdf_intake';\n  if (m.includes('spreadsheet') || m.includes('csv') || /\\.(csv|xlsx?|ods)$/i.test(name)) return 'spreadsheet_intake';\n  if (m.includes('word') || m.includes('text') || /\\.(docx?|txt|rtf)$/i.test(name)) return 'document_intake';\n  return 'unknown';\n}\nfunction fallbackResult() {\n  const t = words(`${prompt} ${fileName}`);\n  const recommended_route = t.includes('invoice') || t.includes('receipt') || t.includes('payment') ? 'finance_ops'\n    : t.includes('lead') || t.includes('proposal') || t.includes('quote') ? 'sales_ops'\n    : t.includes('support') || t.includes('ticket') || t.includes('issue') ? 'support_ops'\n    : 'operations';\n  const priority = t.includes('urgent') || t.includes('asap') ? 'high'\n    : t.includes('invoice') || t.includes('contract') ? 'medium' : 'low';\n  const type = intakeType();\n  return {\n    status: 'completed',\n    workflowSlug: 'file_image_intake',\n    summary: 'File/image intake mapped into extraction and routing workflow.',\n    confidence: base.hasBinary || fileName || prompt ? 78 : 65,\n    extractedEntities: {\n      primary_signal: 'file_or_image_intake',\n      asset_name: fileName || 'uploaded_asset',\n      intake_type: type,\n      recommended_route,\n      extracted_fields: type === 'spreadsheet_intake' ? 8 : type === 'unknown' ? 3 : 5,\n      suggested_modules: 'Intake, Extraction, Routing, CRM'\n    },\n    decision: {\n      route: 'intake_triage',\n      priority,\n      handoffRequired: false\n    },\n    recommendedAction: 'Start a 14-day trial to save this intake flow and connect your tools.',\n    executedActions: [],\n    externalRefs: []\n  };\n}\n\nlet result = fallbackResult();\nif (parsed && typeof parsed === 'object') {\n  const e = parsed.extractedEntities || {};\n  const d = parsed.decision || {};\n  result = {\n    status: 'completed',\n    workflowSlug: 'file_image_intake',\n    summary: safeString(parsed.summary, result.summary),\n    confidence: clampInt(parsed.confidence, 65, 90, result.confidence),\n    extractedEntities: {\n      primary_signal: 'file_or_image_intake',\n      asset_name: safeString(e.asset_name, result.extractedEntities.asset_name),\n      intake_type: pick(e.intake_type, ['image_intake', 'pdf_intake', 'document_intake', 'spreadsheet_intake', 'unknown'], result.extractedEntities.intake_type),\n      recommended_route: pick(e.recommended_route, ['support_ops', 'finance_ops', 'sales_ops', 'operations'], result.extractedEntities.recommended_route),\n      extracted_fields: clampInt(e.extracted_fields, 3, 8, result.extractedEntities.extracted_fields),\n      suggested_modules: safeString(e.suggested_modules, 'Intake, Extraction, Routing, CRM')\n    },\n    decision: {\n      route: 'intake_triage',\n      priority: pick(d.priority, ['low', 'medium', 'high'], result.decision.priority),\n      handoffRequired: false\n    },\n    recommendedAction: safeString(parsed.recommendedAction, result.recommendedAction),\n    executedActions: [],\n    externalRefs: []\n  };\n  fallback = false;\n}\nreturn [{\n  json: {\n    ...base,\n    previewResult: result,\n    fallback,\n    providerRefs: fallback ? [] : ['groq_chat_model_preview'],\n    auditTrail: Array.from(new Set([...(base.auditTrail || []), 'ai_preview_generated']))\n  }\n}];\n"
+      },
+      "id": "12efb642-7d18-419d-a172-85e34ce6853d",
+      "name": "Parse File AI Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ $json.modeKey }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "bb6cb739-2c1e-4993-9599-0f5d7aff3d06",
+      "name": "Redis Mode Counter File",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const redisPayload = $input.first().json || {};\nconst base = $('Parse File AI Result').first().json;\nfunction redisNumber(payload) {\n  const candidates = [payload.value, payload.data, payload.result, payload.count, payload.counter, payload[base.modeKey]];\n  for (const candidate of candidates) {\n    const n = Number(candidate);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  for (const value of Object.values(payload)) {\n    const n = Number(value);\n    if (Number.isFinite(n) && n >= 0) return n;\n  }\n  return 1;\n}\nconst modeCount = redisNumber(redisPayload);\nreturn [{\n  json: {\n    ...base,\n    modeCount,\n    modeRemainingToday: Math.max(0, Number(base.modeSoftLimit || 1) - modeCount)\n  }\n}];"
+      },
+      "id": "d0ea3b96-8bab-4ec2-a2e8-23740b034886",
+      "name": "Attach Mode Count File",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "595d8258-be42-440c-9167-b23fa0486d3c",
+      "name": "Groq Chat Model - Preview LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        1150
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "9d339fbb-7077-451d-93a4-6c5442b4b657",
+      "name": "Preview Calculator Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1720,
+        1150
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $input.first().json;\nconst now = new Date().toISOString();\nconst latencyMs = Math.max(0, Date.now() - Date.parse(base.requestReceivedAt || now));\nconst result = base.previewResult || {};\nconst auditTrail = Array.from(new Set([\n  ...(base.auditTrail || []),\n  'limits_checked',\n  'mode_routed',\n  'ai_preview_generated',\n  'envelope_normalized',\n  'response_sent'\n]));\n\nconst normalizedResult = {\n  status: 'completed',\n  workflowSlug: result.workflowSlug || (base.mode === 'voice' ? 'voice_lead_capture' : base.mode === 'file' ? 'file_image_intake' : 'workflow_planner'),\n  summary: String(result.summary || 'Preview generated.'),\n  confidence: Number.isFinite(Number(result.confidence)) ? Number(result.confidence) : 0,\n  extractedEntities: result.extractedEntities && typeof result.extractedEntities === 'object' ? result.extractedEntities : {},\n  decision: {\n    route: result.decision?.route || 'custom_workflow',\n    priority: ['low', 'medium', 'high'].includes(result.decision?.priority) ? result.decision.priority : 'medium',\n    handoffRequired: Boolean(result.decision?.handoffRequired)\n  },\n  recommendedAction: result.recommendedAction || 'Start a 14-day trial to save and deploy this guided preview.',\n  executedActions: [],\n  externalRefs: [],\n  auditTrail,\n  observability: {\n    providerRefs: Array.isArray(base.providerRefs) ? base.providerRefs : [],\n    latencyMs,\n    costEstimate: 0\n  }\n};\n\nconst envelope = {\n  ok: true,\n  fallback: Boolean(base.fallback),\n  message: base.fallback ? 'Preview generated with fallback logic.' : 'Preview generated.',\n  retryAfterSeconds: null,\n  result: normalizedResult,\n  meta: {\n    source: 'landing_sandbox',\n    mode: ['workflow', 'voice', 'file'].includes(base.mode) ? base.mode : 'workflow',\n    locale: base.locale === 'ar' ? 'ar' : 'en',\n    timestamp: now,\n    limitState: 'ok'\n  }\n};\n\nif (base.fallback || base.identityWarning) {\n  envelope.diagnostics_safe = {\n    requestId: base.requestId || null,\n    mode: envelope.meta.mode,\n    limitState: 'ok',\n    fallback: Boolean(base.fallback)\n  };\n  if (base.identityWarning) envelope.diagnostics_safe.warning = base.identityWarning;\n}\n\nreturn [{ json: envelope }];"
+      },
+      "id": "3bdb1146-ca8b-481d-9db2-9f41fa239d94",
+      "name": "Normalize Final Envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2380,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Attach Daily Count').first().json.lockKey }}"
+      },
+      "id": "ee0b07a0-e05e-440d-9b2f-ba6e92170a6a",
+      "name": "Redis Delete Lock Success",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2600,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Normalize Final Envelope').first().json }];"
+      },
+      "id": "affbff6e-6e06-41ff-b809-acc9ba59e262",
+      "name": "Prepare Final 200 Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2820,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fd7daaaf-c359-4286-ad51-eedf9aed5462",
+      "name": "Respond 200 Preview",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## GrindCTRL Trial/Playground Inflow\n\n- Accepts POST `/webhook/grindctrl-trial-inflow`.\n- Validates `source = landing_sandbox`.\n- Uses Redis INCR+TTL for in-flight, burst, daily, and per-mode counters.\n- AI Agent nodes are connected to Groq Chat Model and a no-side-effect Calculator tool.\n- If AI/transcription credentials or provider calls fail, parser nodes return deterministic fallback envelopes.\n- No CRM, Sheets, email, tickets, Slack, WhatsApp, Telegram, or deployable workflow side effects are executed.\n- To enable shared-token validation, set `expectedSandboxToken` inside **Normalize Request**. No environment-variable expressions are used.",
+        "height": 340,
+        "width": 620,
+        "color": 4
+      },
+      "id": "35e09d76-65d4-48e2-a1fe-34568df29e7d",
+      "name": "Trial Safety Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1580,
+        -420
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Landing Trial Inflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Request": {
+      "main": [
+        [
+          {
+            "node": "IF Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Bad Request": {
+      "main": [
+        [
+          {
+            "node": "Build Bad Request Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis In-Flight Lock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Bad Request Envelope": {
+      "main": [
+        [
+          {
+            "node": "Respond 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis In-Flight Lock": {
+      "main": [
+        [
+          {
+            "node": "Attach Lock Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Lock Count": {
+      "main": [
+        [
+          {
+            "node": "IF In-Flight Locked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF In-Flight Locked": {
+      "main": [
+        [
+          {
+            "node": "Build 429 In-Flight Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Burst Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 429 In-Flight Envelope": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 In-Flight",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Burst Counter": {
+      "main": [
+        [
+          {
+            "node": "Attach Burst Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Burst Count": {
+      "main": [
+        [
+          {
+            "node": "IF Burst Exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Burst Exceeded": {
+      "main": [
+        [
+          {
+            "node": "Build 429 Burst Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Daily Counter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 429 Burst Envelope": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Burst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Burst": {
+      "main": [
+        [
+          {
+            "node": "Prepare 429 Burst Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare 429 Burst Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 Burst",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Daily Counter": {
+      "main": [
+        [
+          {
+            "node": "Attach Daily Count",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Daily Count": {
+      "main": [
+        [
+          {
+            "node": "IF Daily Exceeded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Daily Exceeded": {
+      "main": [
+        [
+          {
+            "node": "Build 429 Daily Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mode Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build 429 Daily Envelope": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Daily": {
+      "main": [
+        [
+          {
+            "node": "Prepare 429 Daily Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare 429 Daily Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 429 Daily",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode Router": {
+      "main": [
+        [
+          {
+            "node": "Build Workflow Planner AI Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Voice Lead AI Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build File Intake AI Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Workflow Planner AI Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Workflow Planner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Workflow Planner": {
+      "main": [
+        [
+          {
+            "node": "Parse Workflow AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Workflow AI Result": {
+      "main": [
+        [
+          {
+            "node": "Redis Mode Counter Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Mode Counter Workflow": {
+      "main": [
+        [
+          {
+            "node": "Attach Mode Count Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Mode Count Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Final Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Voice Lead AI Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Voice Lead Capture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Voice Lead Capture": {
+      "main": [
+        [
+          {
+            "node": "Parse Voice AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Voice AI Result": {
+      "main": [
+        [
+          {
+            "node": "Redis Mode Counter Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Mode Counter Voice": {
+      "main": [
+        [
+          {
+            "node": "Attach Mode Count Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Mode Count Voice": {
+      "main": [
+        [
+          {
+            "node": "Normalize Final Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build File Intake AI Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent File Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent File Intake": {
+      "main": [
+        [
+          {
+            "node": "Parse File AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse File AI Result": {
+      "main": [
+        [
+          {
+            "node": "Redis Mode Counter File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Mode Counter File": {
+      "main": [
+        [
+          {
+            "node": "Attach Mode Count File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Mode Count File": {
+      "main": [
+        [
+          {
+            "node": "Normalize Final Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model - Preview LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Workflow Planner",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Voice Lead Capture",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent File Intake",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preview Calculator Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Workflow Planner",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent Voice Lead Capture",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent File Intake",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Final Envelope": {
+      "main": [
+        [
+          {
+            "node": "Redis Delete Lock Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Delete Lock Success": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final 200 Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Final 200 Response": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 Preview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Cairo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6ece7a51-bd99-4cd1-801f-a8932ef077da",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

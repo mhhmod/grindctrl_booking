@@ -1,15 +1,15 @@
-import { describe, expect, it, vi } from 'vitest';
-
-const redirectMock = vi.fn();
-vi.mock('next/navigation', () => ({
-  redirect: (...args: unknown[]) => redirectMock(...args),
-}));
-
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import DashboardInstallPage from '@/app/dashboard/install/page';
 
 describe('DashboardInstallPage', () => {
-  it('redirects legacy install route to sites install tab', async () => {
-    await DashboardInstallPage({ searchParams: Promise.resolve({ site: 'site_1', window: '7d' }) });
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/sites?site=site_1&window=7d&tab=install');
+  it('renders snippet with placeholder key and copy button', () => {
+    render(<DashboardInstallPage />);
+
+    expect(screen.getByText(/widget embed and install center/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/gc_your_site_key_here/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /copy snippet/i })).toBeInTheDocument();
+    expect(screen.getByText(/https:\/\/grindctrl.cloud\/scripts\/grindctrl-support.js/i)).toBeInTheDocument();
   });
 });

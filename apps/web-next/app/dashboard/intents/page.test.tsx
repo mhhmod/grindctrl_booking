@@ -9,8 +9,8 @@ vi.mock('next/navigation', () => ({
 import DashboardIntentsPage from '@/app/dashboard/intents/page';
 
 describe('DashboardIntentsPage', () => {
-  it('redirects legacy intents route to canonical routing', async () => {
+  it('redirects legacy intents route to agents hub', async () => {
     await DashboardIntentsPage();
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/routing');
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard/agents');
   });
 });

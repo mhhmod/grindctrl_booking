@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CheckCircle2,
   FileImage,
@@ -11,22 +11,26 @@ import {
   RefreshCcw,
   Route,
   Sparkles,
+  Square,
+  Upload,
 } from 'lucide-react';
 import type { LandingSandboxEnvelope, SandboxMode } from '@/lib/landing-sandbox/types';
-import { buildMockSandboxEnvelope } from '@/lib/landing/mock-sandbox-runner';
 import {
   LANDING_PREVIEW_HISTORY_KEY,
   LANDING_PREVIEW_LIMIT,
 } from '@/lib/landing/trial-preview-state';
+import { runLandingSandbox } from '@/lib/landing-sandbox/client';
+import { saveLandingPreviewHandoff } from '@/lib/trial/landing-preview-handoff';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { AuthGateModal, useAuthGate } from '@/components/landing/auth-gate-modal';
 import { TrialPathCard } from '@/components/landing/trial-path-card';
 import { UnlockWorkflowCard } from '@/components/landing/unlock-workflow-card';
 
 type PlaygroundMode = 'workflow' | 'voice' | 'file';
 type StageState = 'idle' | 'active' | 'complete' | 'locked';
+type RecordingState = 'idle' | 'recording';
 
 const MAX_TEXT_CHARS = 500;
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
@@ -45,7 +49,7 @@ const modeOptions: Array<{
     value: 'workflow',
     label: 'Workflow Planner',
     description: 'Map a business process into route, owner, and action steps.',
-    sandboxMode: 'text',
+    sandboxMode: 'workflow',
     icon: Network,
     samples: ['Support + lead routing', 'Missed call follow-up', 'File intake to CRM', 'Daily ops report'],
   },
@@ -61,7 +65,7 @@ const modeOptions: Array<{
     value: 'file',
     label: 'File/Image Intake',
     description: 'Extract routing signals from docs, screenshots, and attachments.',
-    sandboxMode: 'image',
+    sandboxMode: 'file',
     icon: FileImage,
     samples: ['Invoice extraction', 'Damaged product image', 'Contract summary', 'Support attachment triage'],
   },
@@ -120,6 +124,17 @@ function stageState(index: number, activeStage: number, hasResult: boolean): Sta
   return 'idle';
 }
 
+function labelForEntity(key: string) {
+  return key.replace(/_/g, ' ');
+}
+
+function sourceLabel(envelope: LandingSandboxEnvelope | null) {
+  if (!envelope) return 'Ready';
+  if (envelope.meta.runtime === 'live') return 'Workflow response';
+  if (envelope.meta.runtime === 'fallback' || envelope.fallback) return 'Fallback preview';
+  return 'Local preview';
+}
+
 export function TryGrindctrlSandbox() {
   const [mode, setMode] = useState<PlaygroundMode>('workflow');
   const [prompt, setPrompt] = useState('');
@@ -127,16 +142,36 @@ export function TryGrindctrlSandbox() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
   const [activeStage, setActiveStage] = useState(-1);
   const [resultEnvelope, setResultEnvelope] = useState<LandingSandboxEnvelope | null>(null);
   const [runCount, setRunCount] = useState(() => readRunHistory().length);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<BlobPart[]>([]);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const { gatedAction, triggerGate, closeGate } = useAuthGate();
 
   const selectedMode = modeOptions.find((option) => option.value === mode) ?? modeOptions[0];
   const remainingRuns = useMemo(() => Math.max(LANDING_PREVIEW_LIMIT - runCount, 0), [runCount]);
   const result = resultEnvelope?.result ?? null;
+  const visibleEntities = useMemo(
+    () => Object.entries(result?.extractedEntities ?? {}).filter(([, value]) => value !== null && String(value).trim()).slice(0, 6),
+    [result],
+  );
+  const responseSourceLabel = sourceLabel(resultEnvelope);
+  const inputLabel = mode === 'voice' ? 'Voice transcript' : mode === 'workflow' ? 'Process description' : 'Intake context';
+  const inputValue = mode === 'voice' ? transcript : prompt;
+  const inputLength = compactText(inputValue).length;
+
+  useEffect(() => {
+    return () => {
+      mediaRecorderRef.current?.stop();
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   function resetPreview(nextMode = mode) {
+    stopVoiceRecording();
     setMode(nextMode);
     setPrompt('');
     setTranscript('');
@@ -145,6 +180,50 @@ export function TryGrindctrlSandbox() {
     setActiveStage(-1);
     setResultEnvelope(null);
     setIsLoading(false);
+  }
+
+  function stopVoiceRecording() {
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    mediaStreamRef.current = null;
+    setRecordingState('idle');
+  }
+
+  async function startVoiceRecording() {
+    setError('');
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setError('Voice recording is not available in this browser. Upload an audio file instead.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordedChunksRef.current = [];
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordedChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+        const voiceFile = new File([blob], `voice-preview-${Date.now()}.webm`, { type: blob.type || 'audio/webm' });
+        setFile(voiceFile);
+        setTranscript((current) => current || 'Recorded voice preview ready for guided routing.');
+        stream.getTracks().forEach((track) => track.stop());
+        setRecordingState('idle');
+      };
+
+      recorder.start();
+      setFile(null);
+      setRecordingState('recording');
+    } catch {
+      setRecordingState('idle');
+      setError('Microphone access was blocked. Upload an audio file or paste a transcript.');
+    }
   }
 
   function validateInputs() {
@@ -187,17 +266,39 @@ export function TryGrindctrlSandbox() {
       window.setTimeout(() => setActiveStage(index), index * STAGE_DELAY_MS);
     });
 
-    window.setTimeout(() => {
-      const envelope = buildMockSandboxEnvelope({
-        mode: selectedMode.sandboxMode,
-        prompt: compactText(prompt),
-        transcript: compactText(transcript),
-        fileName: file?.name,
-      });
-      setResultEnvelope(envelope);
-      setRunCount(noteSuccessfulRun());
-      setActiveStage(stages.length - 1);
-      setIsLoading(false);
+    window.setTimeout(async () => {
+      try {
+        const envelope = await runLandingSandbox({
+          mode: selectedMode.sandboxMode,
+          prompt: compactText(prompt),
+          transcript: compactText(transcript),
+          fileName: file?.name,
+          locale: 'en',
+          source: 'landing_sandbox',
+        });
+
+        if (envelope.ok && envelope.result.status !== 'failed') {
+          saveLandingPreviewHandoff({
+            source: 'landing_sandbox',
+            mode: envelope.meta.mode,
+            workflowSlug: envelope.result.workflowSlug,
+            summary: envelope.result.summary,
+            confidence: envelope.result.confidence,
+            extractedEntities: envelope.result.extractedEntities,
+            decision: envelope.result.decision,
+            recommendedAction: envelope.result.recommendedAction,
+          });
+        }
+
+        setResultEnvelope(envelope);
+        setRunCount(noteSuccessfulRun());
+        setActiveStage(stages.length - 1);
+      } catch {
+        setResultEnvelope(null);
+        setError('Preview mode is not available right now.');
+      } finally {
+        setIsLoading(false);
+      }
     }, stages.length * STAGE_DELAY_MS + (process.env.NODE_ENV === 'test' ? 1 : 180));
   }
 
@@ -207,9 +308,8 @@ export function TryGrindctrlSandbox() {
   }
 
   return (
-    <section id="try-grindctrl" className="relative overflow-hidden border-b border-border bg-muted/10 dark:border-white/10">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_50%_0%,rgba(96,165,250,0.12),transparent_55%)]" />
-      <div className="relative mx-auto w-full max-w-7xl px-4 py-[72px] sm:px-6 lg:px-8 lg:py-[104px]">
+    <section id="try-grindctrl" className="relative overflow-hidden bg-background">
+      <div className="relative mx-auto w-full max-w-7xl px-4 pb-[72px] pt-14 sm:px-6 sm:pt-16 lg:px-8 lg:pb-[104px] lg:pt-20">
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl space-y-4">
             <Badge variant="secondary" className="h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]">
@@ -229,13 +329,10 @@ export function TryGrindctrlSandbox() {
           </Badge>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,0.36fr)_minmax(240px,0.24fr)_minmax(0,0.4fr)] lg:gap-6">
-          <Card className="gc-card-hover gc-landing-card min-h-[620px] rounded-3xl border">
-            <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
-              <CardTitle className="text-lg">Input console</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 p-5 pt-0 sm:p-6 sm:pt-0">
-              <div className="grid gap-2">
+        <div className="mx-auto grid max-w-5xl gap-4">
+          <Card className="gc-landing-card rounded-[2rem] border">
+            <CardContent className="p-4 sm:p-5">
+              <div className="grid gap-2 sm:grid-cols-3">
                 {modeOptions.map((option) => {
                   const Icon = option.icon;
                   const isActive = option.value === mode;
@@ -245,8 +342,8 @@ export function TryGrindctrlSandbox() {
                       type="button"
                       variant={isActive ? 'default' : 'outline'}
                       aria-pressed={isActive}
-                      className={`h-11 justify-start rounded-xl px-3 text-[13px] font-semibold ${
-                        isActive ? '' : 'border-border bg-card/80 text-muted-foreground hover:bg-muted/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]'
+                      className={`h-11 justify-start rounded-2xl px-3 text-[13px] font-semibold ${
+                        isActive ? '' : 'border-border bg-card/70 text-muted-foreground hover:bg-muted/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]'
                       }`}
                       onClick={() => resetPreview(option.value)}
                     >
@@ -257,69 +354,90 @@ export function TryGrindctrlSandbox() {
                 })}
               </div>
 
-              <div className="gc-landing-panel rounded-2xl border p-4">
-                {!result && !isLoading ? (
-                  <div className="gc-landing-subtle mb-4 rounded-2xl border p-3 text-[13px] leading-[1.55] text-muted-foreground">
-                    <p className="font-semibold text-foreground">Try 3 guided previews before setup.</p>
-                    <p className="mt-1">No tools connected yet.</p>
-                    <p>No external actions are executed in preview.</p>
+              <div className="mt-4 rounded-[1.75rem] border border-border bg-background/75 p-3 shadow-inner shadow-black/5 dark:border-white/10 dark:bg-background/60">
+                <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <label className="text-sm font-semibold" htmlFor={mode === 'voice' ? 'sandbox-transcript' : 'sandbox-prompt'}>
+                      {inputLabel}
+                    </label>
+                    <p className="mt-1 text-[13px] leading-5 text-muted-foreground">{selectedMode.description}</p>
                   </div>
-                ) : null}
-                <div className="mb-4 space-y-1">
-                  <p className="text-sm font-semibold">{selectedMode.label}</p>
-                  <p className="text-[13px] leading-[1.55] text-muted-foreground">{selectedMode.description}</p>
+                  <Badge variant="outline" className="gc-landing-subtle rounded-full border text-[11px]">
+                    {remainingRuns} previews left
+                  </Badge>
                 </div>
 
-                {mode !== 'voice' ? (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="sandbox-prompt">
-                      {mode === 'workflow' ? 'Process description' : 'Intake context'}
-                    </label>
-                    <textarea
-                      id="sandbox-prompt"
-                      className="min-h-32 w-full rounded-xl border border-input bg-background/80 p-3 text-sm leading-[1.55] shadow-inner shadow-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-background/70"
-                      placeholder={mode === 'workflow' ? 'Describe a process you want AI to handle...' : 'Add context for this file or image intake...'}
-                      value={prompt}
-                      onChange={(event) => setPrompt(event.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">{compactText(prompt).length}/{MAX_TEXT_CHARS} characters</p>
-                  </div>
+                {mode === 'voice' ? (
+                  <textarea
+                    id="sandbox-transcript"
+                    className="min-h-28 w-full resize-y rounded-2xl border border-input bg-muted/20 p-3 text-base leading-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-white/[0.025]"
+                    placeholder="Paste a short lead transcript or upload a voice file preview..."
+                    value={transcript}
+                    onChange={(event) => setTranscript(event.target.value)}
+                  />
                 ) : (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium" htmlFor="sandbox-transcript">
-                      Voice transcript
-                    </label>
-                    <textarea
-                      id="sandbox-transcript"
-                      className="min-h-32 w-full rounded-xl border border-input bg-background/80 p-3 text-sm leading-[1.55] shadow-inner shadow-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-background/70"
-                      placeholder="Paste a short lead transcript or upload a voice file preview..."
-                      value={transcript}
-                      onChange={(event) => setTranscript(event.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">{compactText(transcript).length}/{MAX_TEXT_CHARS} characters</p>
-                  </div>
+                  <textarea
+                    id="sandbox-prompt"
+                    className="min-h-28 w-full resize-y rounded-2xl border border-input bg-muted/20 p-3 text-base leading-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:border-white/10 dark:bg-white/[0.025]"
+                    placeholder={mode === 'workflow' ? 'Describe a process you want AI to handle...' : 'Add context for this file or image intake...'}
+                    value={prompt}
+                    onChange={(event) => setPrompt(event.target.value)}
+                  />
                 )}
 
-                {mode !== 'workflow' ? (
-                  <div className="mt-4 min-h-24 rounded-xl border border-dashed border-border bg-muted/35 p-4 dark:border-white/15 dark:bg-white/[0.025]">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>{inputLength}/{MAX_TEXT_CHARS} characters</span>
+                  <span>No external actions run in preview.</span>
+                </div>
+
+                {mode === 'voice' ? (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 rounded-2xl border-border bg-card/80 dark:border-white/10 dark:bg-white/[0.03]"
+                      onClick={recordingState === 'recording' ? stopVoiceRecording : startVoiceRecording}
+                    >
+                      {recordingState === 'recording' ? <Square className="me-2 size-4 fill-current" /> : <Mic className="me-2 size-4" />}
+                      {recordingState === 'recording' ? 'Stop recording' : 'Record voice'}
+                    </Button>
+                    <Button asChild type="button" variant="outline" className="h-10 rounded-2xl border-border bg-card/80 dark:border-white/10 dark:bg-white/[0.03]">
+                      <label htmlFor="sandbox-voice-file" className="cursor-pointer">
+                        <Upload className="me-2 size-4" />
+                        Upload audio
+                      </label>
+                    </Button>
+                    <input
+                      id="sandbox-voice-file"
+                      type="file"
+                      accept="audio/*"
+                      className="sr-only"
+                      aria-label="Upload voice file"
+                      onChange={(event) => {
+                        setFile(event.target.files?.[0] ?? null);
+                        setTranscript((current) => current || 'Uploaded voice preview ready for guided routing.');
+                      }}
+                    />
+                    <span className="text-xs text-muted-foreground">{file ? `Loaded: ${file.name}` : 'No audio yet'}</span>
+                  </div>
+                ) : mode === 'file' ? (
+                  <div className="mt-3 rounded-2xl border border-dashed border-border bg-muted/25 p-3 dark:border-white/15 dark:bg-white/[0.025]">
                     <label className="text-[13px] font-medium" htmlFor="sandbox-file">
-                      {mode === 'voice' ? 'Voice file preview' : 'Upload file or image'}
+                      Upload file or image
                     </label>
                     <input
                       id="sandbox-file"
                       type="file"
                       accept={acceptForMode(mode)}
-                      className="mt-3 block w-full text-sm text-muted-foreground file:me-3 file:rounded-lg file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-foreground dark:file:border-white/10 dark:file:bg-white/[0.04]"
+                      className="mt-2 block w-full text-sm text-muted-foreground file:me-3 file:rounded-xl file:border file:border-border file:bg-card file:px-3 file:py-2 file:text-foreground dark:file:border-white/10 dark:file:bg-white/[0.04]"
                       onChange={(event) => setFile(event.target.files?.[0] ?? null)}
                     />
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {file ? `Loaded: ${file.name}` : 'Optional preview upload. No external action runs.'}
-                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">{file ? `Loaded: ${file.name}` : 'Optional preview upload.'}</p>
                   </div>
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {selectedMode.samples.map((sample) => (
                   <button
                     key={sample}
@@ -333,81 +451,61 @@ export function TryGrindctrlSandbox() {
               </div>
 
               {error ? (
-                error.includes('completed') ? (
-                  <UnlockWorkflowCard variant="completed" />
-                ) : (
-                  <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-                    {error}
-                  </p>
-                )
+                <div className="mt-3">
+                  {error.includes('completed') ? (
+                    <UnlockWorkflowCard variant="completed" />
+                  ) : (
+                    <p className="rounded-2xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                      {error}
+                    </p>
+                  )}
+                </div>
               ) : null}
 
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  className="h-12 flex-1 rounded-xl text-sm font-semibold"
-                  disabled={isLoading}
-                  onClick={runPreview}
-                >
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Button type="button" className="h-12 flex-1 rounded-2xl text-sm font-semibold" disabled={isLoading} onClick={runPreview}>
                   <Sparkles className="me-2 size-4" />
                   {isLoading ? 'Generating preview...' : 'Generate workflow preview'}
                 </Button>
-                <Button type="button" variant="outline" className="h-10 rounded-xl border-border bg-card/80 dark:border-white/10 dark:bg-white/[0.03]" onClick={() => resetPreview()}>
+                <Button type="button" variant="outline" className="h-12 rounded-2xl border-border bg-card/80 dark:border-white/10 dark:bg-white/[0.03]" onClick={() => resetPreview()}>
                   <RefreshCcw className="me-2 size-4" />
-                  Reset preview
+                  Reset
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="gc-card-hover gc-landing-card rounded-3xl border">
-            <CardHeader className="p-5 pb-4">
-              <CardTitle className="text-lg">Processing trail</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-5 pt-0">
+          <div className="gc-landing-subtle rounded-2xl border p-3" role="status" aria-label="Processing trail">
+            <div className="grid gap-2 sm:grid-cols-5">
               {stages.map((stage, index) => {
                 const Icon = stage.icon;
                 const state = stageState(index, activeStage, Boolean(result));
                 return (
                   <div
                     key={stage.label}
-                    className={`flex min-h-[72px] items-center gap-3 rounded-2xl border p-3.5 transition duration-300 ${
+                    className={`flex min-h-12 items-center gap-2 rounded-xl border px-3 py-2 text-xs transition duration-300 ${
                       state === 'active'
                         ? 'border-primary/30 bg-primary/10 text-foreground'
                         : state === 'complete'
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/5 dark:text-emerald-200'
+                          ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
                           : state === 'locked'
-                            ? 'border-amber-500/35 bg-amber-500/10 text-amber-700 dark:border-amber-400/25 dark:bg-amber-400/5 dark:text-amber-200'
-                            : 'border-border bg-background/70 text-muted-foreground dark:border-white/10 dark:bg-background/50'
+                            ? 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-200'
+                            : 'border-border bg-background/60 text-muted-foreground dark:border-white/10 dark:bg-background/40'
                     }`}
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-current/15 bg-current/5">
-                      <Icon className={`size-[18px] ${state === 'active' ? 'gc-pulse-glow' : ''}`} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">{stage.label}</p>
-                      <p className="mt-1 text-xs text-current/70">
-                        {state === 'active' ? 'Running now' : state === 'complete' ? 'Complete' : state === 'locked' ? 'Ready to unlock' : 'Waiting'}
-                      </p>
-                    </div>
-                    <span className={`size-2 rounded-full ${state === 'idle' ? 'bg-muted-foreground/35 dark:bg-white/20' : 'bg-current'}`} />
+                    <Icon className={`size-4 shrink-0 ${state === 'active' ? 'gc-pulse-glow' : ''}`} />
+                    <span className="min-w-0 truncate font-medium">{stage.label}</span>
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="gc-card-hover gc-landing-card min-h-[620px] rounded-3xl border" data-testid="sandbox-result" aria-live="polite">
-            <CardHeader className="p-5 pb-4 sm:p-6 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="size-5 text-primary" />
-                Workflow preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 p-5 pt-0 sm:p-6 sm:pt-0">
+          <Card className="gc-landing-card rounded-[2rem] border" data-testid="sandbox-result" aria-live="polite">
+            <CardContent className="p-4 sm:p-5">
               {!result ? (
-                  <div className="grid gap-3">
-                  {['Summary', 'Extracted entities', 'Decision route', 'Prepared actions'].map((label) => (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {['Answer', 'Decision', 'Proof'].map((label) => (
                     <div key={label} className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 dark:border-white/10 dark:bg-white/[0.025]">
                       <p className="text-sm font-semibold">{label}</p>
                       <div className="mt-3 h-2 w-3/4 rounded-full bg-muted dark:bg-white/10" />
@@ -417,67 +515,78 @@ export function TryGrindctrlSandbox() {
               ) : (
                 <div className="gc-result-reveal space-y-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="outline" className="rounded-full border-border text-xs dark:border-white/10">
-                      {result.workflowSlug}
+                    <Badge variant={resultEnvelope?.meta.runtime === 'live' ? 'secondary' : 'outline'} className="rounded-full text-xs">
+                      {responseSourceLabel}
                     </Badge>
                     <Badge variant="outline" className="rounded-full border-border text-xs dark:border-white/10">
                       {result.status}
+                    </Badge>
+                    <Badge variant="outline" className="rounded-full border-border text-xs dark:border-white/10">
+                      {result.workflowSlug}
                     </Badge>
                     <Badge variant="secondary" className="rounded-full text-xs">
                       {result.confidence}% confidence
                     </Badge>
                   </div>
 
-                  <div className="gc-landing-subtle rounded-2xl border p-4">
-                    <p className="text-xs text-muted-foreground">Summary</p>
-                    <p className="mt-2 text-sm font-medium leading-6">{result.summary}</p>
+                  <div className="rounded-[1.5rem] border border-border bg-background/70 p-4 dark:border-white/10 dark:bg-white/[0.025]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Answer</p>
+                    <p className="mt-3 text-base font-medium leading-7 sm:text-lg">{result.summary}</p>
+                    <p className="mt-3 text-sm text-muted-foreground">{resultEnvelope?.message}</p>
+                    {resultEnvelope?.meta.requestId ? (
+                      <p className="mt-2 text-xs text-muted-foreground">Workflow request: {resultEnvelope.meta.requestId}</p>
+                    ) : null}
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-3">
                     <div className="gc-landing-subtle rounded-2xl border p-3">
-                      <p className="text-xs text-muted-foreground">Decision route</p>
-                      <p className="mt-1 text-sm font-semibold">{result.decision.route}</p>
+                      <p className="text-xs text-muted-foreground">Route</p>
+                      <p className="mt-1 truncate text-sm font-semibold">{result.decision.route}</p>
                     </div>
                     <div className="gc-landing-subtle rounded-2xl border p-3">
                       <p className="text-xs text-muted-foreground">Priority</p>
                       <p className="mt-1 text-sm font-semibold capitalize">{result.decision.priority}</p>
                     </div>
                     <div className="gc-landing-subtle rounded-2xl border p-3">
-                      <p className="text-xs text-muted-foreground">Handoff required</p>
-                      <p className="mt-1 text-sm font-semibold">{result.decision.handoffRequired ? 'Yes' : 'No'}</p>
+                      <p className="text-xs text-muted-foreground">Handoff</p>
+                      <p className="mt-1 text-sm font-semibold">{result.decision.handoffRequired ? 'Needed' : 'Not needed'}</p>
                     </div>
                   </div>
 
-                  <div className="gc-landing-subtle rounded-2xl border p-4">
-                    <p className="mb-3 text-xs text-muted-foreground">Extracted entities</p>
-                    <dl className="grid gap-2">
-                      {Object.entries(result.extractedEntities).map(([key, value]) => (
-                        <div key={key} className="flex items-start justify-between gap-3 text-sm">
-                          <dt className="text-muted-foreground">{key}</dt>
-                          <dd className="max-w-[55%] break-words text-end font-medium">{String(value)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.75fr)]">
+                    <div className="gc-landing-subtle rounded-2xl border p-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Signals found</p>
+                      {visibleEntities.length ? (
+                        <dl className="grid gap-2">
+                          {visibleEntities.map(([key, value]) => (
+                            <div key={key} className="flex items-start justify-between gap-3 text-sm">
+                              <dt className="capitalize text-muted-foreground">{labelForEntity(key)}</dt>
+                              <dd className="max-w-[58%] break-words text-end font-medium">{String(value)}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No extra fields returned.</p>
+                      )}
+                    </div>
 
-                  <div className="gc-landing-subtle rounded-2xl border p-4">
-                    <p className="text-xs text-muted-foreground">Prepared actions</p>
-                    <p className="mt-2 text-sm font-medium">{result.recommendedAction}</p>
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Ready to unlock: Save, deploy, sync, and export.
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {LOCKED_ACTIONS.map((action) => (
-                        <button
-                          key={action}
-                          type="button"
-                          className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 text-xs text-amber-700 transition hover:bg-amber-500/15 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200 dark:hover:bg-amber-400/10"
-                          onClick={() => triggerGate(action)}
-                        >
-                          <Lock className="size-3.5" />
-                          {action}
-                        </button>
-                      ))}
+                    <div className="gc-landing-subtle rounded-2xl border p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Next step</p>
+                      <p className="mt-3 text-sm font-medium leading-6">{result.recommendedAction}</p>
+                      <p className="mt-3 text-xs text-muted-foreground">Ready to unlock: Save, deploy, sync, and export.</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {LOCKED_ACTIONS.map((action) => (
+                          <button
+                            key={action}
+                            type="button"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 text-xs text-amber-700 transition hover:bg-amber-500/15 dark:border-amber-400/20 dark:bg-amber-400/5 dark:text-amber-200 dark:hover:bg-amber-400/10"
+                            onClick={() => triggerGate(action)}
+                          >
+                            <Lock className="size-3.5" />
+                            {action}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 

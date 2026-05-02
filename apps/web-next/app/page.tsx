@@ -55,7 +55,7 @@ export default function LandingPage() {
 
       <main>
         {/* ─── Hero ─── */}
-        <section className="relative overflow-hidden border-b border-border dark:border-white/10">
+        <section className="relative overflow-hidden">
           {/* Animated grid background */}
           <div className="pointer-events-none absolute inset-0 -z-10 gc-hero-grid gc-grid-pulse" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
@@ -63,8 +63,9 @@ export default function LandingPage() {
             <div className="gc-ambient-glow absolute bottom-10 start-[-8rem] h-[28rem] w-[28rem] rounded-full bg-violet-500/8 blur-[110px]" style={{ animationDelay: '1.8s' }} />
             <div className="gc-ambient-glow absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/5 blur-[100px]" style={{ animationDelay: '3.1s' }} />
           </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-b from-transparent to-background" aria-hidden="true" />
 
-          <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
             <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
               {/* Left: copy */}
               <div className="space-y-6">

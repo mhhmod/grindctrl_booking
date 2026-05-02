@@ -85,7 +85,7 @@ Required `result` fields:
 - `audit_trail`
 - `observability`
 
-Required `decision` fields:
+Required `dOkay, it’s done now, but I want the voice and other features to behave like a recordable file that can be recorded or uploaded, similar to ChatGPT: when you click the microphone, an animation of sound should appear.ecision` fields:
 - `route`
 - `priority`
 - `handoff_required`

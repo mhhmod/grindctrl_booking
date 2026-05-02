@@ -22,51 +22,73 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   {
     pathname: '/dashboard/overview',
     title: 'Overview',
-    description: 'Workspace health, site metrics, and operational summary.',
+    description: 'Trial workspace home, saved preview handoff, and next best actions.',
   },
   {
-    pathname: '/dashboard/inbox',
-    title: 'Inbox',
-    description: 'Triaged conversation queue with ownership, status filters, and operator detail view.',
+    pathname: '/dashboard/agents',
+    title: 'AI Agents',
+    description: 'Preview and plan AI agents across website, social, voice, file, and CRM channels.',
+  },
+  {
+    pathname: '/dashboard/conversations',
+    title: 'Conversations',
+    description: 'Unified inbox preview for website and social channel conversations.',
+  },
+  {
+    pathname: '/dashboard/messages',
+    title: 'Messages',
+    description: 'Message-level preview with AI suggestions and handoff readiness.',
   },
   {
     pathname: '/dashboard/leads',
     title: 'Leads',
-    description: 'Review and manage leads captured through AI interactions.',
+    description: 'Preview lead qualification output from conversations, voice, forms, and files.',
   },
   {
-    pathname: '/dashboard/sites',
-    title: 'Sites',
-    description: 'Manage install, branding, and domain controls for each deployed widget site.',
-  },
-  {
-    pathname: '/dashboard/routing',
-    title: 'Routing',
-    description: 'Manage AI routing intents and fallback behavior for widget conversations.',
+    pathname: '/dashboard/crm',
+    title: 'CRM',
+    description: 'Pipeline preview from captured lead to implementation and conversion.',
   },
   {
     pathname: '/dashboard/workflows',
     title: 'Workflows',
-    description: 'Build and manage AI automation workflows across your operations.',
+    description: 'Workflow catalog and latest trial preview history.',
+  },
+  {
+    pathname: '/dashboard/install',
+    title: 'Widget / Embed',
+    description: 'Install snippet, verification concept, and widget preview panel.',
   },
   {
     pathname: '/dashboard/integrations',
     title: 'Integrations',
-    description: 'Connect CRMs, Google Workspace, cloud systems, and third-party services.',
+    description: 'Connection catalog across AI, social, CRM, support, ops, data, and automation.',
+  },
+  {
+    pathname: '/dashboard/analytics',
+    title: 'Analytics',
+    description: 'Preview trial funnel, operations metrics, and channel breakdown.',
   },
   {
     pathname: '/dashboard/settings',
     title: 'Settings',
-    description: 'Workspace configuration, team members, and API access.',
+    description: 'Workspace configuration and account-level controls.',
+  },
+  {
+    pathname: '/dashboard/implementation',
+    title: 'Implementation',
+    description: 'Prepare implementation request form for real tool connections.',
   },
 ];
 
 const DASHBOARD_ROUTE_ALIASES: Record<string, string> = {
-  '/dashboard/conversations': '/dashboard/inbox',
-  '/dashboard/install': '/dashboard/sites',
-  '/dashboard/branding': '/dashboard/sites',
-  '/dashboard/domains': '/dashboard/sites',
-  '/dashboard/intents': '/dashboard/routing',
+  '/dashboard/inbox': '/dashboard/conversations',
+  '/dashboard/sites': '/dashboard/install',
+  '/dashboard/branding': '/dashboard/install',
+  '/dashboard/domains': '/dashboard/install',
+  '/dashboard/routing': '/dashboard/agents',
+  '/dashboard/intents': '/dashboard/agents',
+  '/dashboard/widget': '/dashboard/install',
 };
 
 function toTitleCase(segment: string) {

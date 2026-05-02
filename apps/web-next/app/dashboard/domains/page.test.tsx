@@ -8,18 +8,15 @@ vi.mock('next/navigation', () => ({
 import DashboardDomainsPage from '@/app/dashboard/domains/page';
 
 describe('DashboardDomainsPage', () => {
-  it('redirects legacy domains route to sites domains tab preserving filters', async () => {
+  it('redirects legacy domains route to install center preserving site context', async () => {
     await DashboardDomainsPage({
       searchParams: Promise.resolve({
         site: 'site_1',
         q: 'example',
         status: 'verified',
-        sort: 'domain_asc',
-        page: '2',
-        pageSize: '25',
       }),
     });
 
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/sites?site=site_1&q=example&status=verified&sort=domain_asc&page=2&pageSize=25&tab=domains');
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard/install?site=site_1');
   });
 });

@@ -5,18 +5,18 @@ import { getDefaultDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 describe('dashboard navigation config', () => {
   it('marks the matching route as active', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/sites',
+      pathname: '/dashboard/install',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items.find((item) => item.href === '/dashboard/sites')?.isActive).toBe(true);
+    expect(items.find((item) => item.href === '/dashboard/install')?.isActive).toBe(true);
     expect(items.find((item) => item.href === '/dashboard/overview')?.isActive).toBe(false);
   });
 
   it('filters out entries denied by permissions', () => {
     const permissions = {
       ...getDefaultDashboardPermissions(),
-      canViewInstall: false,
+      canViewAnalytics: false,
     };
 
     const items = resolveDashboardNavItems({
@@ -24,29 +24,30 @@ describe('dashboard navigation config', () => {
       permissions,
     });
 
-    expect(items.some((item) => item.href === '/dashboard/sites')).toBe(false);
+    expect(items.some((item) => item.href === '/dashboard/analytics')).toBe(false);
   });
 
-  it('includes all platform nav items by default', () => {
+  it('includes all required customer-journey nav modules by default', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items.some((item) => item.href === '/dashboard/workflows')).toBe(true);
-    expect(items.some((item) => item.href === '/dashboard/integrations')).toBe(true);
-    expect(items.some((item) => item.href === '/dashboard/settings')).toBe(true);
-  });
-
-  it('includes Inbox in the core group', () => {
-    const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
-      permissions: getDefaultDashboardPermissions(),
-    });
-
-    const inbox = items.find((item) => item.href === '/dashboard/inbox');
-    expect(inbox).toBeDefined();
-    expect(inbox?.group).toBe('core');
+    const hrefs = items.map((item) => item.href);
+    expect(hrefs).toEqual([
+      '/dashboard/overview',
+      '/dashboard/agents',
+      '/dashboard/conversations',
+      '/dashboard/messages',
+      '/dashboard/leads',
+      '/dashboard/crm',
+      '/dashboard/workflows',
+      '/dashboard/install',
+      '/dashboard/integrations',
+      '/dashboard/analytics',
+      '/dashboard/settings',
+      '/dashboard/implementation',
+    ]);
   });
 
   it('assigns group hints to nav items', () => {
@@ -55,35 +56,28 @@ describe('dashboard navigation config', () => {
       permissions: getDefaultDashboardPermissions(),
     });
 
-    const overview = items.find((item) => item.href === '/dashboard/overview');
-    const sites = items.find((item) => item.href === '/dashboard/sites');
-    const workflows = items.find((item) => item.href === '/dashboard/workflows');
-    const integrations = items.find((item) => item.href === '/dashboard/integrations');
-
-    expect(overview?.group).toBe('core');
-    expect(sites?.group).toBe('widgets');
-    expect(workflows?.group).toBe('platform');
-    expect(integrations?.group).toBe('platform');
+    expect(items.find((item) => item.href === '/dashboard/overview')?.group).toBe('core');
+    expect(items.find((item) => item.href === '/dashboard/leads')?.group).toBe('journey');
+    expect(items.find((item) => item.href === '/dashboard/integrations')?.group).toBe('platform');
   });
 
-  it('uses product labels for Sites and Routing', () => {
+  it('uses product labels for UI journey modules', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    const sites = items.find((item) => item.href === '/dashboard/sites');
-    const routing = items.find((item) => item.href === '/dashboard/routing');
-    expect(sites?.label).toBe('Sites');
-    expect(routing?.label).toBe('Routing');
+    expect(items.find((item) => item.href === '/dashboard/agents')?.label).toBe('AI Agents');
+    expect(items.find((item) => item.href === '/dashboard/install')?.label).toBe('Widget / Embed');
+    expect(items.find((item) => item.href === '/dashboard/implementation')?.label).toBe('Implementation');
   });
 
-  it('has exactly 8 nav items with default permissions', () => {
+  it('has exactly 12 nav items with default permissions', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items).toHaveLength(8);
+    expect(items).toHaveLength(12);
   });
 });

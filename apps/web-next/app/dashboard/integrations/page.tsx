@@ -1,70 +1,92 @@
+import React from 'react';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { INTEGRATION_CATALOG, INTEGRATION_CATEGORIES, type IntegrationCategory, type IntegrationItem } from '@/lib/dashboard/integration-catalog';
+import type { SearchParams } from '@/lib/types';
 
-const INTEGRATION_CATEGORIES = [
-  {
-    title: 'CRM Systems',
-    description: 'Sync leads, contacts, and deals with your CRM.',
-    examples: 'HubSpot, Salesforce, Pipedrive',
-  },
-  {
-    title: 'Google Workspace',
-    description: 'Connect Gmail, Calendar, Drive, and Sheets.',
-    examples: 'Gmail, Google Calendar, Google Sheets',
-  },
-  {
-    title: 'Cloud Platforms',
-    description: 'Push data and trigger workflows in your cloud stack.',
-    examples: 'AWS, Azure, GCP',
-  },
-  {
-    title: 'Communication',
-    description: 'Route notifications and messages to your team channels.',
-    examples: 'Slack, Teams, Email',
-  },
-  {
-    title: 'Databases & Storage',
-    description: 'Connect external databases and file storage providers.',
-    examples: 'PostgreSQL, Airtable, S3',
-  },
-  {
-    title: 'Webhooks & APIs',
-    description: 'Custom integrations via webhooks and REST API endpoints.',
-    examples: 'Custom webhooks, REST APIs',
-  },
-] as const;
+type Props = {
+  searchParams?: Promise<SearchParams>;
+};
 
-export default function IntegrationsPage() {
+async function resolveSearchParams(searchParams?: Promise<SearchParams>) {
+  return (await searchParams) ?? {};
+}
+
+const STATUS_VARIANT: Record<IntegrationItem['status'], 'default' | 'secondary' | 'outline'> = {
+  'Available by implementation': 'default',
+  Planned: 'outline',
+  'Needs credentials': 'secondary',
+};
+
+function resolveCategory(value: string | string[] | undefined): IntegrationCategory | 'All' {
+  if (typeof value !== 'string') return 'All';
+  if (INTEGRATION_CATEGORIES.includes(value as IntegrationCategory)) {
+    return value as IntegrationCategory;
+  }
+  return 'All';
+}
+
+export default async function DashboardIntegrationsPage({ searchParams }: Props) {
+  const params = await resolveSearchParams(searchParams);
+  const selectedCategory = resolveCategory(params.category);
+  const items = selectedCategory === 'All'
+    ? INTEGRATION_CATALOG
+    : INTEGRATION_CATALOG.filter((item) => item.category === selectedCategory);
+
   return (
-    <div className="grid min-w-0 gap-4">
-      <Card className="border-dashed">
+    <section className="grid gap-4">
+      <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <CardTitle className="text-lg">Integrations</CardTitle>
-            <Badge variant="secondary" className="text-xs">Coming soon</Badge>
-          </div>
-          <CardDescription>
-            Connect your existing tools, CRMs, Google Workspace, cloud systems, and third-party services to GrindCTRL.
-          </CardDescription>
+          <CardTitle>Integrations and Channels Center</CardTitle>
+          <CardDescription>Preview provider catalog. Request connection starts implementation flow.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {INTEGRATION_CATEGORIES.map((cat) => (
-              <div key={cat.title} className="rounded-xl border border-dashed bg-muted/30 p-4">
-                <div className="text-sm font-medium">{cat.title}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{cat.description}</p>
-                <div className="mt-2 text-[11px] text-muted-foreground/60">{cat.examples}</div>
-              </div>
-            ))}
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Filter by category</CardTitle>
+        </CardHeader>
+        <CardContent className="-mx-2 overflow-x-auto px-2 pb-1">
+          <div className="flex w-max min-w-full items-center gap-2">
+            {(['All', ...INTEGRATION_CATEGORIES] as const).map((category) => {
+              const isActive = category === selectedCategory;
+              const href = category === 'All'
+                ? '/dashboard/integrations'
+                : `/dashboard/integrations?category=${encodeURIComponent(category)}`;
+
+              return (
+                <Button key={category} asChild size="sm" variant={isActive ? 'default' : 'outline'}>
+                  <Link href={href}>{category}</Link>
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
-    </div>
+
+      <Card>
+        <CardHeader>
+          <Badge variant="secondary" className="w-fit">Preview catalog</Badge>
+          <CardTitle className="text-base">{selectedCategory === 'All' ? 'All categories' : selectedCategory}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {items.map((item) => (
+            <article key={item.id} className="rounded-xl border bg-muted/20 p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">{item.provider}</h3>
+                <Badge variant="outline">{item.category}</Badge>
+                <Badge variant={STATUS_VARIANT[item.status]}>{item.status}</Badge>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{item.enables}</p>
+              <Button asChild className="mt-3" size="sm" variant="outline">
+                <Link href="/dashboard/implementation">Request connection</Link>
+              </Button>
+            </article>
+          ))}
+        </CardContent>
+      </Card>
+    </section>
   );
 }

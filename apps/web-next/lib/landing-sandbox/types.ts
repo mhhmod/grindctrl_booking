@@ -1,5 +1,5 @@
-export type SandboxMode = 'workflow' | 'voice' | 'file';
 import type { WorkflowAuditState } from '@/lib/types';
+export type SandboxMode = 'workflow' | 'voice' | 'file';
 
 export interface LandingSandboxInput {
   mode: SandboxMode;
@@ -7,6 +7,7 @@ export interface LandingSandboxInput {
   locale: 'en' | 'ar';
   prompt: string;
   transcript?: string;
+  fileName?: string;
   source: 'landing_sandbox';
   file?: File | null;
 }
@@ -39,6 +40,8 @@ export interface LandingSandboxEnvelope {
     locale: 'en' | 'ar';
     timestamp: string;
     limitState: 'ok' | 'rate_limited';
+    runtime?: 'mock' | 'live' | 'fallback';
+    requestId?: string | null;
   };
 }
 

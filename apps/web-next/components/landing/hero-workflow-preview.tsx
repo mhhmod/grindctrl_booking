@@ -77,8 +77,6 @@ export function HeroWorkflowPreview() {
   return (
     <Card className="gc-soft-glow gc-landing-card relative min-h-[520px] overflow-hidden rounded-3xl border p-4 backdrop-blur sm:p-6">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_18%,rgba(96,165,250,0.16),transparent_32%),radial-gradient(circle_at_28%_72%,rgba(168,85,247,0.12),transparent_36%)]" />
-      <div className="pointer-events-none absolute inset-x-8 top-24 h-px bg-gradient-to-r from-transparent via-blue-300/30 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-8 bottom-36 h-px bg-gradient-to-r from-transparent via-violet-300/25 to-transparent" />
 
       <div className="relative flex h-full min-h-[488px] flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -106,7 +104,6 @@ export function HeroWorkflowPreview() {
           </div>
 
           <div className="relative flex min-h-44 items-center justify-center py-4">
-            <div className="gc-trail-line absolute inset-x-2 top-1/2 h-px -translate-y-1/2 overflow-hidden rounded-full bg-border dark:bg-white/10" />
             <div className="gc-landing-card relative z-10 flex flex-col items-center gap-3 rounded-[1.75rem] border p-4 text-center">
               <div className="relative grid size-16 place-items-center rounded-2xl border border-primary/20 bg-primary/10">
                 <Sparkles className="gc-pulse-glow size-6 text-primary" />
@@ -135,7 +132,7 @@ export function HeroWorkflowPreview() {
           </div>
         </div>
 
-        <div className="gc-landing-panel rounded-2xl border p-3">
+        <div className="gc-landing-panel rounded-2xl p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <p className="text-[12px] font-semibold text-foreground/90">Processing log</p>
             <Send className="size-3.5 text-muted-foreground" />

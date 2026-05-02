@@ -84,6 +84,21 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - **Shoelace overrides**: Use `wa-*::part(*)` selectors in `components.css`. Do not put Shoelace styles in the inline `<style>` block.
 - **Breakpoints**: 390px (small phone), 480px (phone), 540px (large phone), 640px (sm/tablet), 768px (md), 1024px (lg), 1280px (xl), 1536px (2xl).
 
+## Next app UI front line
+
+`apps/web-next` is the Next.js application surface. For UI work there, shadcn/ui is the first-line component source and `components.json` is the source of truth for shadcn settings:
+
+- Check `apps/web-next/components/ui` before building a primitive from scratch.
+- If a primitive is missing, add it with the shadcn CLI/MCP into `apps/web-next`, then adapt it locally.
+- Prefer composition of shadcn primitives for buttons, cards, dialogs, sheets, forms, tables, tabs, menus, sidebars, command palettes, empty states, skeletons, and dashboard controls.
+- Keep generated/copied shadcn components editable in-repo. Do not treat shadcn as an opaque package API.
+- Preserve the current `components.json` choices: RTL enabled, Hugeicons icon library, Tailwind CSS variables, and aliases under `@/components`, `@/components/ui`, `@/lib`, and `@/hooks`.
+- Use Shadboard (`https://github.com/Qualiora/shadboard`) as the primary dashboard layout/reference app because it targets Next 15, React 19, Tailwind, Radix UI, i18n, auth, and shadcn-style dashboard patterns.
+- Use Kiranism Next Shadcn Dashboard Starter (`https://github.com/Kiranism/next-shadcn-dashboard-starter`) selectively for admin patterns such as charts, tables, filters, forms, command-k, and feature-based dashboard structure. Account for its newer Next version before copying patterns.
+- Use CreemBase / UI Pacekit (`https://github.com/pacekit/creembase`) as a SaaS/Supabase/product-flow reference, especially for auth, billing, onboarding, pricing, and app shell ideas.
+- These reference repos are not package dependencies or MCP servers unless they expose a shadcn-compatible registry URL. Inspect and adapt patterns instead of copying whole files blindly.
+- For every non-trivial UI change: audit existing layout/components first, implement with shadcn-first primitives, then verify responsive behavior and RTL/LTR assumptions.
+
 ## Limits and quotas (hardcoded in JS)
 
 - Anonymous session: 3 turns. Daily anonymous: 5. Daily authenticated: 10.

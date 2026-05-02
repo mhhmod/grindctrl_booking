@@ -44,7 +44,7 @@ export function TrialPathCard() {
           </div>
 
           <Button asChild className="h-11 rounded-xl px-4 text-sm font-semibold">
-            <Link href="/sign-up">
+            <Link href="/sign-up?from=landing-preview">
               Start 14-day trial
               <ArrowRight className="ms-2 size-4" />
             </Link>

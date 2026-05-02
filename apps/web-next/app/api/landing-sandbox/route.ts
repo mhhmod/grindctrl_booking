@@ -18,7 +18,8 @@ async function readPayload(request: NextRequest) {
       locale: String(formData.get('locale') ?? 'en'),
       prompt: String(formData.get('prompt') ?? ''),
       transcript: String(formData.get('transcript') ?? ''),
-      source: String(formData.get('source') ?? 'landing_sandbox'),
+      fileName: String(formData.get('fileName') ?? ''),
+      source: String(formData.get('source') ?? ''),
       file: formData.get('file') as File | null,
     };
   }
@@ -30,7 +31,8 @@ async function readPayload(request: NextRequest) {
     locale: String(body.locale ?? 'en'),
     prompt: String(body.prompt ?? ''),
     transcript: String(body.transcript ?? ''),
-    source: String(body.source ?? 'landing_sandbox'),
+    fileName: String(body.fileName ?? ''),
+    source: String(body.source ?? ''),
     file: null,
   };
 }
@@ -55,7 +57,17 @@ export async function POST(request: NextRequest) {
     const response = await runLandingSandbox(parsed.input, { ip, userAgent });
     const status = response.meta.limitState === 'rate_limited' ? 429 : 200;
     return NextResponse.json(response, { status });
-  } catch {
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: 'Invalid JSON payload.',
+        },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       {
         ok: false,

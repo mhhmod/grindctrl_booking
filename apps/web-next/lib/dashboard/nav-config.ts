@@ -1,12 +1,12 @@
 import {
-  DashboardSquare01Icon,
-  MagicWand01Icon,
-  UserGroupIcon,
   ConversationIcon,
-  WorkflowSquare03Icon,
+  DashboardSquare01Icon,
+  Globe02Icon,
+  MagicWand01Icon,
   Plug01Icon,
   Settings02Icon,
-  Globe02Icon,
+  UserGroupIcon,
+  WorkflowSquare03Icon,
 } from '@hugeicons/core-free-icons';
 import type { IconGlyph } from '@/components/icons';
 import { normalizeDashboardPathname } from '@/lib/dashboard/route-meta';
@@ -17,8 +17,7 @@ export type DashboardNavItem = {
   label: string;
   icon: IconGlyph;
   permissionKey: DashboardPermissionKey;
-  /** Optional grouping hint for visual separators in the sidebar. */
-  group?: 'core' | 'widgets' | 'platform';
+  group?: 'core' | 'journey' | 'platform';
 };
 
 export type DashboardResolvedNavItem = DashboardNavItem & {
@@ -26,19 +25,18 @@ export type DashboardResolvedNavItem = DashboardNavItem & {
 };
 
 const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  // ── Core ──
   { href: '/dashboard/overview', label: 'Overview', icon: DashboardSquare01Icon, permissionKey: 'canViewOverview', group: 'core' },
-  { href: '/dashboard/inbox', label: 'Inbox', icon: ConversationIcon, permissionKey: 'canViewConversations', group: 'core' },
-  { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon, permissionKey: 'canViewLeads', group: 'core' },
-
-  // ── Widget operations ──
-  { href: '/dashboard/sites', label: 'Sites', icon: Globe02Icon, permissionKey: 'canViewInstall', group: 'widgets' },
-  { href: '/dashboard/routing', label: 'Routing', icon: MagicWand01Icon, permissionKey: 'canViewIntents', group: 'widgets' },
-
-  // ── Platform ──
-  { href: '/dashboard/workflows', label: 'Workflows', icon: WorkflowSquare03Icon, permissionKey: 'canViewWorkflows', group: 'platform' },
+  { href: '/dashboard/agents', label: 'AI Agents', icon: MagicWand01Icon, permissionKey: 'canViewAgents', group: 'core' },
+  { href: '/dashboard/conversations', label: 'Conversations', icon: ConversationIcon, permissionKey: 'canViewConversations', group: 'core' },
+  { href: '/dashboard/messages', label: 'Messages', icon: ConversationIcon, permissionKey: 'canViewMessages', group: 'core' },
+  { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon, permissionKey: 'canViewLeads', group: 'journey' },
+  { href: '/dashboard/crm', label: 'CRM', icon: UserGroupIcon, permissionKey: 'canViewCrm', group: 'journey' },
+  { href: '/dashboard/workflows', label: 'Workflows', icon: WorkflowSquare03Icon, permissionKey: 'canViewWorkflows', group: 'journey' },
+  { href: '/dashboard/install', label: 'Widget / Embed', icon: Globe02Icon, permissionKey: 'canViewInstall', group: 'journey' },
   { href: '/dashboard/integrations', label: 'Integrations', icon: Plug01Icon, permissionKey: 'canViewIntegrations', group: 'platform' },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: DashboardSquare01Icon, permissionKey: 'canViewAnalytics', group: 'platform' },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings02Icon, permissionKey: 'canViewSettings', group: 'platform' },
+  { href: '/dashboard/implementation', label: 'Implementation', icon: WorkflowSquare03Icon, permissionKey: 'canViewImplementation', group: 'platform' },
 ];
 
 function isDashboardNavItemActive(pathname: string, itemHref: string) {

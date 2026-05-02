@@ -11,6 +11,5 @@ export default async function DashboardBrandingPage({ searchParams }: Props) {
   const params = await resolveSearchParams(searchParams);
   const next = new URLSearchParams();
   if (typeof params.site === 'string' && params.site) next.set('site', params.site);
-  next.set('tab', 'branding');
-  redirect(`/dashboard/sites?${next.toString()}`);
+  redirect(`/dashboard/install${next.toString() ? `?${next.toString()}` : ''}`);
 }

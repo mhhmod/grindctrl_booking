@@ -1,9 +1,19 @@
 import type { LandingSandboxInput, SandboxMode } from '@/lib/landing-sandbox/types';
 
 const MAX_TEXT_CHARS = 500;
-const MAX_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_FILE_BYTES = 8 * 1024 * 1024;
 const AUDIO_TYPES = new Set(['audio/mpeg', 'audio/wav', 'audio/wave', 'audio/mp4', 'audio/webm', 'audio/ogg', 'audio/x-m4a']);
 const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']);
+const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/mpeg']);
+const DOCUMENT_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+]);
 const TEXT_TYPES = ['text/', 'application/json', 'application/xml', 'text/csv'];
 
 function cleanText(value: string) {
@@ -24,7 +34,7 @@ function isTextLikeMimeType(mime: string) {
 function validateFile(file: File | null | undefined, mode: SandboxMode): string | null {
   if (!file) return null;
   if (file.size > MAX_FILE_BYTES) {
-    return 'File exceeds 2 MB limit.';
+    return 'File exceeds 8 MB limit.';
   }
 
   const mime = (file.type || '').toLowerCase();
@@ -32,16 +42,11 @@ function validateFile(file: File | null | undefined, mode: SandboxMode): string 
     return 'File type is required.';
   }
 
-  if (mode === 'voice') {
-    if (!AUDIO_TYPES.has(mime)) return 'Unsupported audio type.';
-    return null;
-  }
-
+  if (mode === 'voice') return AUDIO_TYPES.has(mime) ? null : 'Unsupported audio type.';
   if (mode === 'file') {
-    if (IMAGE_TYPES.has(mime) || isTextLikeMimeType(mime) || mime === 'application/pdf') {
-      return null;
-    }
-    return 'Unsupported file/image type.';
+    return IMAGE_TYPES.has(mime) || DOCUMENT_TYPES.has(mime) || isTextLikeMimeType(mime)
+      ? null
+      : 'Unsupported file type.';
   }
 
   return 'File uploads are not supported for workflow mode.';
@@ -60,6 +65,7 @@ export function parseLandingSandboxInput(raw: {
   prompt?: string;
   transcript?: string;
   source?: string;
+  fileName?: string;
   file?: File | null;
 }): ParseInputResult {
   const mode = readMode(String(raw.mode || ''));
@@ -68,13 +74,13 @@ export function parseLandingSandboxInput(raw: {
   }
 
   const locale = String(raw.locale || 'en').toLowerCase().startsWith('ar') ? 'ar' : 'en';
-  const source = raw.source && raw.source !== 'landing_sandbox' ? null : 'landing_sandbox';
-  if (!source) {
+  if (raw.source !== 'landing_sandbox') {
     return { ok: false, error: 'Invalid source.' };
   }
 
   const prompt = cleanText(String(raw.prompt || ''));
   const transcript = cleanText(String(raw.transcript || ''));
+  const fileName = cleanText(String(raw.fileName || '')).slice(0, 160);
   const file = raw.file ?? null;
 
   if (prompt.length > MAX_TEXT_CHARS || transcript.length > MAX_TEXT_CHARS) {
@@ -90,12 +96,12 @@ export function parseLandingSandboxInput(raw: {
     return { ok: false, error: 'Workflow mode requires prompt.' };
   }
 
-  if (mode === 'voice' && !transcript && !file) {
+  if (mode === 'voice' && !transcript && !file && !fileName) {
     return { ok: false, error: 'Voice mode requires transcript or audio file.' };
   }
 
-  if (mode === 'file' && !file && !prompt) {
-    return { ok: false, error: 'File mode requires file upload or prompt context.' };
+  if (mode === 'file' && !prompt && !file && !fileName) {
+    return { ok: false, error: 'File mode requires prompt or file.' };
   }
 
   return {
@@ -106,6 +112,7 @@ export function parseLandingSandboxInput(raw: {
       locale,
       prompt,
       transcript: transcript || undefined,
+      fileName: fileName || file?.name || undefined,
       source: 'landing_sandbox',
       file,
     },

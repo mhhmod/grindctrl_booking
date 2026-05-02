@@ -1,14 +1,16 @@
 export type DashboardPermissionKey =
   | 'canViewOverview'
-  | 'canViewInstall'
-  | 'canViewBranding'
-  | 'canViewIntents'
-  | 'canViewDomains'
-  | 'canViewLeads'
+  | 'canViewAgents'
   | 'canViewConversations'
+  | 'canViewMessages'
+  | 'canViewLeads'
+  | 'canViewCrm'
   | 'canViewWorkflows'
+  | 'canViewInstall'
   | 'canViewIntegrations'
-  | 'canViewSettings';
+  | 'canViewAnalytics'
+  | 'canViewSettings'
+  | 'canViewImplementation';
 
 export type DashboardPermissionSet = Record<DashboardPermissionKey, boolean>;
 
@@ -35,15 +37,17 @@ export function normalizeDashboardWorkspaceRole(role?: string | null): Dashboard
 export function getDefaultDashboardPermissions(): DashboardPermissionSet {
   return {
     canViewOverview: true,
-    canViewInstall: true,
-    canViewBranding: true,
-    canViewIntents: true,
-    canViewDomains: true,
-    canViewLeads: true,
+    canViewAgents: true,
     canViewConversations: true,
+    canViewMessages: true,
+    canViewLeads: true,
+    canViewCrm: true,
     canViewWorkflows: true,
+    canViewInstall: true,
     canViewIntegrations: true,
+    canViewAnalytics: true,
     canViewSettings: true,
+    canViewImplementation: true,
   };
 }
 

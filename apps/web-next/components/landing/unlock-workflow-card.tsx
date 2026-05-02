@@ -29,13 +29,13 @@ export function UnlockWorkflowCard({ variant = 'result' }: UnlockWorkflowCardPro
       </div>
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <Button asChild size="sm" className="h-11 rounded-xl">
-          <Link href="/sign-up">
+          <Link href="/sign-up?from=landing-preview">
             Start 14-day trial
             <ArrowRight className="ms-2 size-4" />
           </Link>
         </Button>
         <Button asChild variant="outline" size="sm" className="h-11 rounded-xl border-white/10 bg-white/[0.03]">
-          <Link href="/sign-in">Sign in</Link>
+          <Link href="/sign-in?from=landing-preview">Sign in</Link>
         </Button>
       </div>
     </div>

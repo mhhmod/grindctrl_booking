@@ -13,20 +13,20 @@ function clean(value: string) {
 
 function modeLabel(mode: SandboxMode) {
   if (mode === 'voice') return 'Voice lead capture';
-  if (mode === 'image') return 'File and image intake';
+  if (mode === 'file') return 'File and image intake';
   return 'Workflow planner';
 }
 
 function workflowSlug(mode: SandboxMode) {
   if (mode === 'voice') return 'voice_lead_capture';
-  if (mode === 'image') return 'file_image_intake';
+  if (mode === 'file') return 'file_image_intake';
   return 'workflow_planner';
 }
 
 export function buildMockSandboxEnvelope(input: MockSandboxInput): LandingSandboxEnvelope {
   const signal = clean(input.transcript || input.prompt || input.fileName || 'guided workflow preview');
   const isVoice = input.mode === 'voice';
-  const isFile = input.mode === 'image';
+  const isFile = input.mode === 'file';
 
   return {
     ok: true,
