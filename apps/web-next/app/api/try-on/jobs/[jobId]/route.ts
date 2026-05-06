@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJob } from '@/lib/try-on/service';
-import type { TryOnApiResponse, TryOnJob } from '@/lib/try-on/types';
+import type {
+  TryOnJob,
+  TryOnJobApiResponse,
+} from '@/lib/try-on/types';
+
+function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
+  return {
+    ok: true,
+    jobId: job.jobId,
+    status: job.status,
+    resultImageUrl: job.resultImageUrl,
+    productId: job.productId,
+    message: job.message,
+    meta: job.meta,
+  };
+}
 
 /**
  * GET /api/try-on/jobs/[jobId]
@@ -13,17 +28,25 @@ export async function GET(
   const { jobId } = await params;
 
   if (!jobId) {
-    const res: TryOnApiResponse = { ok: false, error: 'Job ID is required.' };
+    const res: TryOnJobApiResponse = {
+      ok: false,
+      message: 'Job ID is required.',
+      error: 'Job ID is required.',
+    };
     return NextResponse.json(res, { status: 400 });
   }
 
   const job = getJob(jobId);
 
   if (!job) {
-    const res: TryOnApiResponse = { ok: false, error: 'Job not found.' };
+    const res: TryOnJobApiResponse = {
+      ok: false,
+      message: 'Job not found.',
+      error: 'Job not found.',
+    };
     return NextResponse.json(res, { status: 404 });
   }
 
-  const res: TryOnApiResponse<TryOnJob> = { ok: true, data: job };
+  const res = toJobResponse(job);
   return NextResponse.json(res, { status: 200 });
 }

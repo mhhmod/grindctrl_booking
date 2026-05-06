@@ -52,7 +52,7 @@ export default function TryOnPage() {
           </h1>
           <p className="mx-auto max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
             Upload your photo and instantly preview how a product looks on you.
-            No guessing, no returns — just confident purchases.
+            Less guessing, more confidence before checkout.
           </p>
         </div>
 

@@ -13,7 +13,12 @@ import { Button } from '@/components/ui/button';
 import { PhotoUpload } from './photo-upload';
 import { TryOnResult } from './try-on-result';
 import { getDefaultProduct } from '@/lib/try-on/products';
-import type { TryOnJob, TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
+import type {
+  TryOnApiResponse,
+  TryOnJob,
+  TryOnJobApiResponse,
+  TryOnSession,
+} from '@/lib/try-on/types';
 
 type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 
@@ -80,18 +85,33 @@ export function TryOnDemo() {
           sessionId: sessionData.data.sessionId,
           productId: product.id,
           photoSource: 'upload',
-          customerPhotoDataUrl: photoDataUrl,
+          photoReference: photoDataUrl ? 'uploaded-photo' : undefined,
         }),
       });
-      const genData: TryOnApiResponse<TryOnJob> = await genRes.json();
+      const genData: TryOnJobApiResponse = await genRes.json();
 
       clearInterval(stepInterval);
 
-      if (!genData.ok || !genData.data) {
-        throw new Error(genData.error || 'Failed to generate preview.');
+      if (
+        !genData.ok ||
+        !genData.jobId ||
+        !genData.status ||
+        !genData.productId ||
+        !genData.meta
+      ) {
+        throw new Error(genData.message || genData.error || 'Failed to generate preview.');
       }
 
-      setJob(genData.data);
+      setJob({
+        jobId: genData.jobId,
+        sessionId: sessionData.data.sessionId,
+        productId: genData.productId,
+        status: genData.status,
+        resultImageUrl: genData.resultImageUrl,
+        message: genData.message,
+        createdAt: new Date().toISOString(),
+        meta: genData.meta,
+      });
       setStep('result');
     } catch (err) {
       clearInterval(stepInterval);

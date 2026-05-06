@@ -22,7 +22,7 @@ describe('POST /api/try-on/generate', () => {
 
     expect(response.status).toBe(400);
     expect(body.ok).toBe(false);
-    expect(body.error).toMatch(/photo reference is required/i);
+    expect(body.message).toMatch(/photo reference is required/i);
   });
 
   it('accepts generation with an uploaded photo reference', async () => {
@@ -30,14 +30,20 @@ describe('POST /api/try-on/generate', () => {
       makeRequest({
         sessionId: 'sess_test',
         productId: 'premium-ringer-tee',
-        customerPhotoDataUrl: 'data:image/png;base64,abc123',
+        photoReference: 'uploaded-photo',
       }),
     );
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.data.meta.runtime).toBe('mock');
+    expect(body.jobId).toMatch(/^tryon_/);
+    expect(body.status).toBe('completed');
+    expect(body.resultImageUrl).toBe('/try-on/mock-result.png');
+    expect(body.productId).toBe('premium-ringer-tee');
+    expect(body.message).toMatch(/mock mode/i);
+    expect(body.meta.runtime).toBe('mock');
+    expect(body.data).toBeUndefined();
   });
 
   it('accepts generation with explicit mock photo flag', async () => {
@@ -52,6 +58,10 @@ describe('POST /api/try-on/generate', () => {
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.data.meta.runtime).toBe('mock');
+    expect(body.jobId).toMatch(/^tryon_/);
+    expect(body.status).toBe('completed');
+    expect(body.productId).toBe('premium-ringer-tee');
+    expect(body.meta.runtime).toBe('mock');
+    expect(body.data).toBeUndefined();
   });
 });

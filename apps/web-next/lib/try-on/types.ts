@@ -37,10 +37,12 @@ export interface TryOnGenerateRequest {
    * Required. Indicates how the customer photo was supplied.
    * The API rejects requests that omit this field so that callers
    * cannot accidentally trigger generation without a photo reference.
-   */
+  */
   photoSource: TryOnPhotoSource;
-  /** Base64 data URL of the uploaded photo (client-side only, not persisted) */
-  customerPhotoDataUrl?: string;
+  /** Lightweight server-facing reference for an uploaded photo. */
+  photoReference?: string;
+  /** Explicitly opts into the demo placeholder photo path. */
+  useMockPhoto?: boolean;
 }
 
 /** Individual job record */
@@ -67,6 +69,18 @@ export interface TryOnJobMeta {
 export interface TryOnApiResponse<T = unknown> {
   ok: boolean;
   data?: T;
+  error?: string;
+}
+
+/** API envelope returned by try-on job endpoints. */
+export interface TryOnJobApiResponse {
+  ok: boolean;
+  jobId?: string;
+  status?: TryOnJobStatus;
+  resultImageUrl?: string;
+  productId?: string;
+  message?: string;
+  meta?: TryOnJobMeta;
   error?: string;
 }
 
