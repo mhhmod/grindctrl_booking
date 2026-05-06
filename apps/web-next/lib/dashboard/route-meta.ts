@@ -55,6 +55,11 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Workflow catalog and latest trial preview history.',
   },
   {
+    pathname: '/dashboard/try-on',
+    title: 'Try-On Agent',
+    description: 'Mock-first management surface for product try-on previews and lead capture flow.',
+  },
+  {
     pathname: '/dashboard/install',
     title: 'Widget / Embed',
     description: 'Install snippet, verification concept, and widget preview panel.',

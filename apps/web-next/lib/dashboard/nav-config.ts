@@ -32,6 +32,7 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { href: '/dashboard/leads', label: 'Leads', icon: UserGroupIcon, permissionKey: 'canViewLeads', group: 'journey' },
   { href: '/dashboard/crm', label: 'CRM', icon: UserGroupIcon, permissionKey: 'canViewCrm', group: 'journey' },
   { href: '/dashboard/workflows', label: 'Workflows', icon: WorkflowSquare03Icon, permissionKey: 'canViewWorkflows', group: 'journey' },
+  { href: '/dashboard/try-on', label: 'Try-On Agent', icon: MagicWand01Icon, permissionKey: 'canViewAgents', group: 'journey' },
   { href: '/dashboard/install', label: 'Widget / Embed', icon: Globe02Icon, permissionKey: 'canViewInstall', group: 'journey' },
   { href: '/dashboard/integrations', label: 'Integrations', icon: Plug01Icon, permissionKey: 'canViewIntegrations', group: 'platform' },
   { href: '/dashboard/analytics', label: 'Analytics', icon: DashboardSquare01Icon, permissionKey: 'canViewAnalytics', group: 'platform' },

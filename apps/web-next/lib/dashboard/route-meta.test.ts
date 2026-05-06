@@ -25,12 +25,16 @@ describe('dashboard route metadata', () => {
   it('returns metadata for analytics and install routes', () => {
     const install = getDashboardRouteMeta('/dashboard/install');
     const analytics = getDashboardRouteMeta('/dashboard/analytics');
+    const tryOn = getDashboardRouteMeta('/dashboard/try-on');
 
     expect(install.title).toBe('Widget / Embed');
     expect(install.description).toContain('Install snippet');
 
     expect(analytics.title).toBe('Analytics');
     expect(analytics.description).toContain('trial funnel');
+
+    expect(tryOn.title).toBe('Try-On Agent');
+    expect(tryOn.description).toContain('Mock-first management');
   });
 
   it('normalizes legacy route aliases to canonical routes', () => {
