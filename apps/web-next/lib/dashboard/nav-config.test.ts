@@ -42,6 +42,7 @@ describe('dashboard navigation config', () => {
       '/dashboard/leads',
       '/dashboard/crm',
       '/dashboard/workflows',
+      '/dashboard/try-on',
       '/dashboard/install',
       '/dashboard/integrations',
       '/dashboard/analytics',
@@ -68,16 +69,17 @@ describe('dashboard navigation config', () => {
     });
 
     expect(items.find((item) => item.href === '/dashboard/agents')?.label).toBe('AI Agents');
+    expect(items.find((item) => item.href === '/dashboard/try-on')?.label).toBe('Try-On Agent');
     expect(items.find((item) => item.href === '/dashboard/install')?.label).toBe('Widget / Embed');
     expect(items.find((item) => item.href === '/dashboard/implementation')?.label).toBe('Implementation');
   });
 
-  it('has exactly 12 nav items with default permissions', () => {
+  it('has exactly 13 nav items with default permissions', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items).toHaveLength(12);
+    expect(items).toHaveLength(13);
   });
 });
