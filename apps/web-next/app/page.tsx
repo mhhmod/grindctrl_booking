@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -11,6 +12,7 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { TryGrindctrlSandbox } from '@/components/landing/try-grindctrl-sandbox';
 import { HeroWorkflowPreview } from '@/components/landing/hero-workflow-preview';
 import { LandingAfterPlaygroundSections } from '@/components/landing/landing-after-playground-sections';
+import { TryOnAgentShowcase } from '@/components/landing/try-on-agent-showcase';
 
 export default function LandingPage() {
   return (
@@ -35,6 +37,9 @@ export default function LandingPage() {
             </a>
             <a href="#use-cases" className="transition-colors hover:text-foreground">
               Use cases
+            </a>
+            <a href="#try-on-agent" className="transition-colors hover:text-foreground">
+              Try-On
             </a>
             <a href="#try-grindctrl" className="transition-colors hover:text-foreground">
               Playground
@@ -135,6 +140,7 @@ export default function LandingPage() {
           </div>
         </section>
 
+        <TryOnAgentShowcase />
         <TryGrindctrlSandbox />
         <LandingAfterPlaygroundSections />
       </main>
