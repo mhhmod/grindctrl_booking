@@ -140,9 +140,13 @@ export default function DashboardTryOnPage() {
             <CardTitle>Lead capture flow</CardTitle>
             <CardDescription>Workflow staged for upcoming live implementation.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-3">
             <p className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">
               Try-on completed → WhatsApp follow-up → CRM/Sheets → business owner notification.
+            </p>
+            <p className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">
+              Webhook routing: Ready when TRYON_COMPLETED_WEBHOOK_URL is configured.
+              Optional server-side event only; no customer photo bytes are sent.
             </p>
           </CardContent>
         </Card>
