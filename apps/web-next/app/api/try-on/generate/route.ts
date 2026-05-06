@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTryOn } from '@/lib/try-on/service';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
+import { notifyTryOnCompleted } from '@/lib/try-on/webhook';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -91,6 +92,13 @@ export async function POST(request: NextRequest) {
     }
 
     const job = await generateTryOn(sessionId, productId, resolvedPhotoSource);
+    if (job.status === 'completed') {
+      await notifyTryOnCompleted(job, {
+        hasPhoto: true,
+        cta: 'none',
+        userAgent: request.headers.get('user-agent'),
+      });
+    }
 
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });

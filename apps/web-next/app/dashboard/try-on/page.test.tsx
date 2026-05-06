@@ -14,6 +14,9 @@ describe('DashboardTryOnPage', () => {
     expect(screen.getByText('mock mode active')).toBeInTheDocument();
     expect(screen.getByText('Recent try-on jobs')).toBeInTheDocument();
     expect(screen.getByText('Lead capture flow')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Webhook routing: Ready when TRYON_COMPLETED_WEBHOOK_URL is configured/i),
+    ).toBeInTheDocument();
     expect(screen.getByText('Embed setup')).toBeInTheDocument();
     expect(screen.getByText('Current mode')).toBeInTheDocument();
     expect(screen.getByText('Mock')).toBeInTheDocument();
