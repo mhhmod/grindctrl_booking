@@ -1,170 +1,31 @@
-import React from 'react';
-import Link from 'next/link';
+import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { LandingLocaleProvider } from '@/components/landing/landing-locale';
+import { SiteLanding } from '@/components/landing/site-landing';
 import {
-  ArrowRight,
-  CheckCircle,
-  LayoutPanelTop,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { BrandLogo } from '@/components/brand-logo';
-import { ThemeToggle } from '@/components/dashboard/theme-toggle';
-import { TryGrindctrlSandbox } from '@/components/landing/try-grindctrl-sandbox';
-import { HeroWorkflowPreview } from '@/components/landing/hero-workflow-preview';
-import { LandingAfterPlaygroundSections } from '@/components/landing/landing-after-playground-sections';
-import { TryOnAgentShowcase } from '@/components/landing/try-on-agent-showcase';
+  DEFAULT_SITE_LOCALE,
+  isSiteLocale,
+  SITE_LOCALE_COOKIE,
+  type SiteLocale,
+} from '@/lib/landing/landing-i18n';
 
-export default function LandingPage() {
+export const metadata: Metadata = {
+  title: 'GRINDCTRL — Done-for-you AI automation',
+  description:
+    'GrindCTRL builds, runs, and maintains your AI automations across support, leads, files, and voice, while you control everything from one dashboard.',
+};
+
+export default async function LandingPage() {
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(SITE_LOCALE_COOKIE)?.value;
+  const initialLocale: SiteLocale = isSiteLocale(cookieLocale) ? cookieLocale : DEFAULT_SITE_LOCALE;
+
   return (
-    <div className="gc-animated min-h-screen bg-background text-foreground">
-      {/* ─── Header ─── */}
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label="GRINDCTRL home"
-          >
-            <BrandLogo />
-          </Link>
-
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#capabilities" className="transition-colors hover:text-foreground">
-              Services
-            </a>
-            <a href="#how-it-works" className="transition-colors hover:text-foreground">
-              How it works
-            </a>
-            <a href="#use-cases" className="transition-colors hover:text-foreground">
-              Use cases
-            </a>
-            <a href="#try-on-agent" className="transition-colors hover:text-foreground">
-              Try-On
-            </a>
-            <a href="#try-grindctrl" className="transition-colors hover:text-foreground">
-              Playground
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="me-1" />
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/sign-up">Get started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <main>
-        {/* ─── Hero ─── */}
-        <section className="relative overflow-hidden">
-          {/* Animated grid background */}
-          <div className="pointer-events-none absolute inset-0 -z-10 gc-hero-grid gc-grid-pulse" aria-hidden="true" />
-          <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-            <div className="gc-ambient-glow absolute -top-36 end-[-7rem] h-[34rem] w-[34rem] rounded-full bg-blue-500/10 blur-[110px]" />
-            <div className="gc-ambient-glow absolute bottom-10 start-[-8rem] h-[28rem] w-[28rem] rounded-full bg-violet-500/8 blur-[110px]" style={{ animationDelay: '1.8s' }} />
-            <div className="gc-ambient-glow absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/5 blur-[100px]" style={{ animationDelay: '3.1s' }} />
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-b from-transparent to-background" aria-hidden="true" />
-
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
-            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-              {/* Left: copy */}
-              <div className="space-y-6">
-                <Badge
-                  variant="secondary"
-                  className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase leading-3 tracking-[0.2em]"
-                >
-                  AI operations for real business workflows
-                </Badge>
-
-                <h1 className="gc-fade-in-up max-w-4xl text-[44px] font-bold leading-[1.05] tracking-normal text-foreground sm:text-[56px] sm:leading-[1.02] lg:text-[72px] lg:leading-[1]" style={{ animationDelay: '0.1s' }}>
-                  Turn customer conversations, files, voice, and workflows into business actions.
-                </h1>
-
-                <p className="gc-fade-in-up max-w-2xl text-base leading-[1.65] text-muted-foreground sm:text-lg" style={{ animationDelay: '0.2s' }}>
-                  GrindCTRL helps teams build AI-powered support, lead capture, CRM updates, file
-                  processing, and operations workflows across the tools they already use.
-                </p>
-
-                <div className="gc-fade-in-up flex flex-col gap-3 sm:flex-row sm:items-center" style={{ animationDelay: '0.3s' }}>
-                  <Button asChild size="lg" className="h-12 rounded-xl px-5 text-sm font-semibold shadow-[0_0_32px_rgba(99,102,241,0.18)] lg:px-6">
-                    <a href="#try-grindctrl">
-                      Try the AI playground
-                      <ArrowRight className="ms-2 size-4" />
-                    </a>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="h-12 rounded-xl border-border bg-card/70 px-5 text-sm font-semibold hover:bg-muted/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] lg:px-6">
-                    <Link href="/sign-up">
-                      Start 14-day trial
-                      <ArrowRight className="ms-2 size-4" />
-                    </Link>
-                  </Button>
-                  <Link
-                    href="/dashboard/overview"
-                    className="inline-flex h-12 items-center gap-2 rounded-xl px-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <LayoutPanelTop className="size-4" />
-                    Open dashboard
-                  </Link>
-                </div>
-
-                <div className="gc-fade-in-up flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground" style={{ animationDelay: '0.4s' }}>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-primary" />
-                    Support + service
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-primary" />
-                    Leads + CRM
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-primary" />
-                    Files + voice
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <CheckCircle className="size-3.5 text-primary" />
-                    Human handoff
-                  </span>
-                </div>
-              </div>
-
-              {/* Right: workflow preview */}
-              <div className="gc-fade-in-up lg:self-center" style={{ animationDelay: '0.18s' }}>
-                <HeroWorkflowPreview />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <TryOnAgentShowcase />
-        <TryGrindctrlSandbox />
-        <LandingAfterPlaygroundSections />
-      </main>
-
-      {/* ─── Footer ─── */}
-      <footer className="border-t px-4 py-8 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <BrandLogo size="sm" textClassName="text-xs" />
-          </div>
-          <p className="text-xs">AI implementation and automation platform.</p>
-          <div className="flex items-center gap-4 text-xs">
-            <Link href="/sign-in" className="transition-colors hover:text-foreground">
-              Sign in
-            </Link>
-            <Link href="/sign-up" className="transition-colors hover:text-foreground">
-              Sign up
-            </Link>
-            <Link href="/dashboard/overview" className="transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    <LandingLocaleProvider
+      initialLocale={initialLocale}
+      className="gc-landing-root gc-animated min-h-screen bg-background text-foreground"
+    >
+      <SiteLanding />
+    </LandingLocaleProvider>
   );
 }

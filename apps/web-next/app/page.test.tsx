@@ -1,37 +1,45 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import LandingPage from '@/app/page';
+import { LandingLocaleProvider } from '@/components/landing/landing-locale';
+import { SiteLanding } from '@/components/landing/site-landing';
 
 vi.mock('@/components/dashboard/theme-toggle', () => ({
   ThemeToggle: () => <button type="button">Theme</button>,
 }));
 
-vi.mock('@/components/landing/hero-workflow-preview', () => ({
-  HeroWorkflowPreview: () => <div>Hero workflow preview</div>,
-}));
+function renderLanding(initialLocale: 'en' | 'ar' = 'en') {
+  return render(
+    <LandingLocaleProvider initialLocale={initialLocale}>
+      <SiteLanding />
+    </LandingLocaleProvider>,
+  );
+}
 
-vi.mock('@/components/landing/try-grindctrl-sandbox', () => ({
-  TryGrindctrlSandbox: () => <section data-testid="try-grindctrl-sandbox">AI playground</section>,
-}));
+describe('SiteLanding', () => {
+  it('renders the done-for-you positioning and a booking CTA', () => {
+    renderLanding('en');
 
-vi.mock('@/components/landing/landing-after-playground-sections', () => ({
-  LandingAfterPlaygroundSections: () => <section>After playground sections</section>,
-}));
+    expect(
+      screen.getByRole('heading', { name: 'We build, run, and maintain your AI.' }),
+    ).toBeInTheDocument();
 
-describe('LandingPage', () => {
-  it('shows Try-On nav and places the Try-On showcase before the playground', () => {
-    const { container } = render(<LandingPage />);
+    const bookingLinks = screen.getAllByRole('link', { name: /Book a call/i });
+    expect(bookingLinks.length).toBeGreaterThan(0);
+    expect(bookingLinks[0]).toHaveAttribute('href', expect.stringMatching(/^(mailto:|https?:)/));
+  });
 
-    expect(screen.getByRole('link', { name: 'Try-On' })).toHaveAttribute('href', '#try-on-agent');
-    expect(screen.getByRole('heading', {
-      name: 'Let shoppers preview products on themselves before they buy.',
-    })).toBeInTheDocument();
+  it('links the live demo to the try-on page', () => {
+    const { container } = renderLanding('en');
+    const demoLink = container.querySelector('a[href="/try-on"]');
+    expect(demoLink).toBeInTheDocument();
+  });
 
-    const showcase = container.querySelector('#try-on-agent');
-    const playground = screen.getByTestId('try-grindctrl-sandbox');
-
-    expect(showcase).toBeInTheDocument();
-    expect(showcase?.compareDocumentPosition(playground) ?? 0).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  it('switches to Arabic and flips direction to RTL', () => {
+    const { container } = renderLanding('ar');
+    expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'نبني ونُشغّل ونصون الذكاء الاصطناعي الخاص بك.' }),
+    ).toBeInTheDocument();
   });
 });

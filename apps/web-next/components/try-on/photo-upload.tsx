@@ -3,8 +3,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { Upload, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { validateUploadedFile } from '@/lib/try-on/validator';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
+import { useTryOnLocale } from './locale-provider';
 
 interface PhotoUploadProps {
   onFileSelected: (file: File, dataUrl: string) => void;
@@ -19,6 +19,7 @@ export function PhotoUpload({
   previewUrl,
   disabled = false,
 }: PhotoUploadProps) {
+  const { t } = useTryOnLocale();
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,9 +27,14 @@ export function PhotoUpload({
   const handleFile = useCallback(
     (file: File) => {
       setError(null);
-      const validation = validateUploadedFile(file);
-      if (!validation.ok) {
-        setError(validation.error ?? 'Invalid file.');
+
+      const allowedTypes = TRYON_FILE_CONFIG.allowedTypes as readonly string[];
+      if (!allowedTypes.includes(file.type)) {
+        setError(t.errUnsupported(TRYON_FILE_CONFIG.allowedExtensions.join(', ')));
+        return;
+      }
+      if (file.size > TRYON_FILE_CONFIG.maxSizeBytes) {
+        setError(t.errTooLarge(TRYON_FILE_CONFIG.maxSizeMB));
         return;
       }
 
@@ -38,7 +44,7 @@ export function PhotoUpload({
       };
       reader.readAsDataURL(file);
     },
-    [onFileSelected],
+    [onFileSelected, t],
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +76,7 @@ export function PhotoUpload({
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium text-foreground">Your photo</label>
+      <label className="text-sm font-medium text-foreground">{t.photoLabel}</label>
 
       {previewUrl ? (
         /* ─── Preview state ─── */
@@ -86,7 +92,7 @@ export function PhotoUpload({
               type="button"
               onClick={handleClear}
               className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-background"
-              aria-label="Remove photo"
+              aria-label={t.removePhoto}
             >
               <X className="size-4" />
             </button>
@@ -108,7 +114,7 @@ export function PhotoUpload({
             isDragging && 'border-primary/60 bg-primary/5',
             disabled && 'pointer-events-none opacity-50',
           )}
-          aria-label="Upload your photo"
+          aria-label={t.uploadAria}
           id="photo-upload-dropzone"
         >
           <div className="flex size-12 items-center justify-center rounded-full bg-muted/60 transition-colors group-hover:bg-muted">
@@ -116,10 +122,10 @@ export function PhotoUpload({
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">
-              Drag and drop your photo here
+              {t.dropTitle}
             </p>
             <p className="text-xs text-muted-foreground">
-              or click to browse · JPG, PNG, WebP · Max {TRYON_FILE_CONFIG.maxSizeMB} MB
+              {t.dropHint(TRYON_FILE_CONFIG.maxSizeMB)}
             </p>
           </div>
         </button>

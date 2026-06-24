@@ -12,7 +12,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { PhotoUpload } from './photo-upload';
 import { TryOnResult } from './try-on-result';
+import { useTryOnLocale } from './locale-provider';
 import { getDefaultProduct } from '@/lib/try-on/products';
+import { localizeProduct } from '@/lib/try-on/i18n';
 import type {
   TryOnApiResponse,
   TryOnJob,
@@ -22,16 +24,11 @@ import type {
 
 type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 
-const LOADING_STEPS = [
-  'Preparing your preview…',
-  'Analyzing photo composition…',
-  'Mapping product to your photo…',
-  'Rendering try-on preview…',
-  'Finalizing result…',
-];
-
 export function TryOnDemo() {
-  const product = getDefaultProduct();
+  const { t, locale } = useTryOnLocale();
+  const baseProduct = getDefaultProduct();
+  const product = localizeProduct(baseProduct, locale);
+  const loadingSteps = t.loadingSteps;
 
   const [step, setStep] = useState<DemoStep>('upload');
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
@@ -59,7 +56,7 @@ export function TryOnDemo() {
     // Animate through loading steps
     const stepInterval = setInterval(() => {
       setLoadingStepIdx((prev) => {
-        if (prev < LOADING_STEPS.length - 1) return prev + 1;
+        if (prev < loadingSteps.length - 1) return prev + 1;
         return prev;
       });
     }, 600);
@@ -74,7 +71,7 @@ export function TryOnDemo() {
       const sessionData: TryOnApiResponse<TryOnSession> = await sessionRes.json();
 
       if (!sessionData.ok || !sessionData.data) {
-        throw new Error(sessionData.error || 'Failed to create session.');
+        throw new Error(sessionData.error || t.genericError);
       }
 
       // 2. Generate try-on
@@ -99,7 +96,7 @@ export function TryOnDemo() {
         !genData.productId ||
         !genData.meta
       ) {
-        throw new Error(genData.message || genData.error || 'Failed to generate preview.');
+        throw new Error(genData.message || genData.error || t.genericError);
       }
 
       setJob({
@@ -115,10 +112,10 @@ export function TryOnDemo() {
       setStep('result');
     } catch (err) {
       clearInterval(stepInterval);
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setError(err instanceof Error ? err.message : t.genericError);
       setStep('error');
     }
-  }, [photoDataUrl, product.id]);
+  }, [photoDataUrl, product.id, loadingSteps.length, t]);
 
   const handleReset = useCallback(() => {
     setPhotoDataUrl(null);
@@ -162,18 +159,16 @@ export function TryOnDemo() {
       </div>
 
       {/* ─── Flow area ─── */}
-      <div className="gc-fade-in-up rounded-2xl border p-6 sm:p-8 gc-landing-card" style={{ animationDelay: '0.1s' }}>
+      <div className="gc-fade-in-up min-h-[420px] rounded-2xl border p-6 sm:p-8 gc-landing-card" style={{ animationDelay: '0.1s' }}>
         {/* Step: Upload */}
         {step === 'upload' && (
           <div className="space-y-6">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">
-                Upload your photo
+                {t.uploadTitle}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Upload a full or half-body photo to preview how the{' '}
-                <span className="font-medium text-foreground">{product.name}</span>{' '}
-                looks on you.
+                {t.uploadSubtitle(product.name)}
               </p>
             </div>
             <PhotoUpload
@@ -189,10 +184,10 @@ export function TryOnDemo() {
           <div className="space-y-6">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">
-                Ready to generate your preview
+                {t.consentTitle}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Review the details below and tap generate when ready.
+                {t.consentSubtitle}
               </p>
             </div>
 
@@ -210,7 +205,7 @@ export function TryOnDemo() {
                 <p className="truncate text-sm font-medium text-foreground">
                   {product.name}
                 </p>
-                <p className="text-xs text-muted-foreground">Your photo is ready</p>
+                <p className="text-xs text-muted-foreground">{t.photoReady}</p>
               </div>
               <Button
                 variant="ghost"
@@ -218,7 +213,7 @@ export function TryOnDemo() {
                 onClick={handleFileClear}
                 className="shrink-0 text-xs text-muted-foreground"
               >
-                Change photo
+                {t.changePhoto}
               </Button>
             </div>
 
@@ -227,13 +222,12 @@ export function TryOnDemo() {
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p>
-                  <span className="font-medium text-foreground">Privacy:</span>{' '}
-                  Your photo is used only to create this try-on preview. It is not stored
-                  permanently or shared publicly.
+                  <span className="font-medium text-foreground">{t.privacyLabel}</span>{' '}
+                  {t.privacyText}
                 </p>
                 <p>
-                  <span className="font-medium text-foreground">Note:</span>{' '}
-                  The preview is visual guidance, not an exact sizing guarantee.
+                  <span className="font-medium text-foreground">{t.noteLabel}</span>{' '}
+                  {t.noteText}
                 </p>
               </div>
             </div>
@@ -245,7 +239,7 @@ export function TryOnDemo() {
               id="tryon-generate-btn"
             >
               <Sparkles className="size-4" />
-              Generate Try-On Preview
+              {t.generateBtn}
             </Button>
           </div>
         )}
@@ -261,10 +255,10 @@ export function TryOnDemo() {
 
             <div className="space-y-4 text-center">
               <h3 className="text-lg font-semibold text-foreground">
-                Creating your preview
+                {t.generatingTitle}
               </h3>
               <div className="mx-auto max-w-xs space-y-2">
-                {LOADING_STEPS.map((label, idx) => (
+                {loadingSteps.map((label, idx) => (
                   <div
                     key={label}
                     className={`flex items-center gap-2 text-sm transition-all duration-300 ${
@@ -307,7 +301,7 @@ export function TryOnDemo() {
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">
-                Something went wrong
+                {t.errorTitle}
               </h3>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
@@ -317,7 +311,7 @@ export function TryOnDemo() {
               className="rounded-xl"
               id="tryon-retry-btn"
             >
-              Try again
+              {t.tryAgain}
             </Button>
           </div>
         )}

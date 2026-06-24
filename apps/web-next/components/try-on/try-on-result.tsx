@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Download, MessageCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TryOnJob } from '@/lib/try-on/types';
+import { useTryOnLocale } from './locale-provider';
 
 interface TryOnResultProps {
   job: TryOnJob;
@@ -13,6 +14,7 @@ interface TryOnResultProps {
 }
 
 export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
+  const { t } = useTryOnLocale();
   const handleDownload = () => {
     if (!job.resultImageUrl) return;
     const link = document.createElement('a');
@@ -40,13 +42,13 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           {/* Demo / mock badge */}
           {job.meta.runtime === 'mock' && (
             <div className="absolute start-3 top-3 inline-flex items-center rounded-full bg-amber-500/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-black backdrop-blur-sm">
-              Demo Preview
+              {t.demoBadge}
             </div>
           )}
 
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-4">
             <p className="text-sm font-medium text-white">
-              {productName} — {job.meta.runtime === 'mock' ? 'Demo Preview' : 'Try-On Preview'}
+              {productName} · {job.meta.runtime === 'mock' ? t.demoBadge : t.previewLabel}
             </p>
           </div>
         </div>
@@ -62,7 +64,7 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           id="tryon-download-btn"
         >
           <Download className="size-4" />
-          Download preview
+          {t.download}
         </Button>
 
         <Button
@@ -72,13 +74,13 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           className="h-11 gap-2 rounded-xl"
         >
           <a
-            href={`https://wa.me/?text=${encodeURIComponent(`I'd like to order the ${productName}! Here's my try-on preview.`)}`}
+            href={`https://wa.me/?text=${encodeURIComponent(t.whatsappMsg(productName))}`}
             target="_blank"
             rel="noopener noreferrer"
             id="tryon-whatsapp-btn"
           >
             <MessageCircle className="size-4" />
-            Request order / WhatsApp
+            {t.whatsapp}
           </a>
         </Button>
 
@@ -88,18 +90,16 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           className="h-11 gap-2 rounded-xl"
         >
           <Link href="/sign-up" id="tryon-trial-btn">
-            Start business trial
-            <ArrowRight className="size-4" />
+            {t.trial}
+            <ArrowRight className="size-4 rtl:-scale-x-100" />
           </Link>
         </Button>
       </div>
 
       {/* Disclaimer */}
       <p className="mx-auto max-w-md text-center text-xs text-muted-foreground">
-        {job.meta.runtime === 'mock'
-          ? 'This is a demo preview using a placeholder image — no real AI generation was performed. '
-          : 'This preview is visual guidance only and is not an exact sizing guarantee. '}
-        Colors may vary slightly from the actual product.
+        {job.meta.runtime === 'mock' ? t.disclaimerMock : t.disclaimerLive}
+        {t.colorsVary}
       </p>
 
       {/* Try again */}
@@ -111,7 +111,7 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           className="text-muted-foreground hover:text-foreground"
           id="tryon-reset-btn"
         >
-          Try with a different photo
+          {t.tryDifferent}
         </Button>
       </div>
     </div>
