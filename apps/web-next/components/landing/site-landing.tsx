@@ -11,6 +11,7 @@ import {
   Headphones,
   LayoutDashboard,
   Mic,
+  Quote,
   RefreshCw,
   UserCheck,
   Wrench,
@@ -33,6 +34,18 @@ const PROOF_IMAGES = [
   '/landing/proof-whatsapp.jpg',
   '/landing/proof-leads.jpg',
 ];
+
+/* Testimonials are seeded with sample copy for design preview only.
+   Keep OFF until real client quotes + photos are supplied, so we never
+   publish fabricated social proof. Flip to true once real data is in. */
+const ENABLE_TESTIMONIALS = false;
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return (parts[0][0] + parts[parts.length - 1][0]);
+}
 
 function ScreenshotFrame({
   src,
@@ -117,13 +130,16 @@ export function SiteLanding() {
             <a href="#how" className="transition-colors hover:text-foreground">{t.navHow}</a>
             <a href="#automate" className="transition-colors hover:text-foreground">{t.navAutomate}</a>
             <a href="#proof" className="transition-colors hover:text-foreground">{t.navProof}</a>
+            {ENABLE_TESTIMONIALS && (
+              <a href="#clients" className="transition-colors hover:text-foreground">{t.navClients}</a>
+            )}
             <Link href={DEMO_URL} className="transition-colors hover:text-foreground">{t.navDemo}</Link>
           </nav>
 
           <div className="flex items-center gap-2">
-            <LandingLocaleToggle className="hidden sm:inline-flex" />
+            <LandingLocaleToggle />
             <ThemeToggle />
-            <Button asChild size="sm" className="rounded-full px-4 font-semibold">
+            <Button asChild size="sm" className="hidden rounded-full px-4 font-semibold sm:inline-flex">
               <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{t.bookCall}</a>
             </Button>
           </div>
@@ -139,7 +155,7 @@ export function SiteLanding() {
               <Badge variant="secondary" className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]">
                 {t.heroBadge}
               </Badge>
-              <h1 className="gc-fade-in-up text-[40px] font-bold leading-[1.04] tracking-tight sm:text-[54px] lg:text-[66px] lg:leading-[1]" style={{ animationDelay: '0.05s' }}>
+              <h1 className="gc-fade-in-up text-[clamp(2.1rem,7vw,4.25rem)] font-bold leading-[1.06] tracking-tight" style={{ animationDelay: '0.05s' }}>
                 {t.heroTitle}
               </h1>
               <p className="gc-fade-in-up max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg" style={{ animationDelay: '0.12s' }}>
@@ -246,6 +262,41 @@ export function SiteLanding() {
             <p className="mt-6 text-xs text-muted-foreground">{t.proofPlaceholder}</p>
           </div>
         </section>
+
+        {/* ─── Testimonials ─── */}
+        {ENABLE_TESTIMONIALS && t.testimonials.length > 0 && (
+          <section id="clients" className="border-b border-border bg-muted/20">
+            <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+              <SectionHeading
+                eyebrow={t.testimonialsEyebrow}
+                title={t.testimonialsTitle}
+                body={t.testimonialsBody}
+              />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {t.testimonials.map((item) => (
+                  <figure
+                    key={`${item.name}-${item.quote.slice(0, 12)}`}
+                    className="gc-landing-panel flex flex-col rounded-2xl border p-6"
+                  >
+                    <Quote className="size-6 shrink-0 text-muted-foreground/40" aria-hidden="true" />
+                    <blockquote className="mt-3 flex-1 text-[15px] leading-[1.7] text-foreground">
+                      {item.quote}
+                    </blockquote>
+                    <figcaption className="mt-5 flex items-center gap-3 border-t border-border pt-4">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-sm font-semibold uppercase">
+                        {initials(item.name)}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-foreground">{item.name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{item.role}</span>
+                      </span>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ─── Integrations ─── */}
         <section className="border-b border-border bg-muted/20">

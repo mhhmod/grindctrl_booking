@@ -23,7 +23,7 @@ export default async function LandingPage() {
   return (
     <LandingLocaleProvider
       initialLocale={initialLocale}
-      className="gc-landing-root gc-animated min-h-screen bg-background text-foreground"
+      className="gc-landing-root gc-animated min-h-dvh overflow-x-hidden bg-background text-foreground"
     >
       <SiteLanding />
     </LandingLocaleProvider>

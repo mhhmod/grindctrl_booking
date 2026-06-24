@@ -1,4 +1,10 @@
 import type {Metadata} from 'next';
+// Self-hosted fonts (no build-time Google Fonts dependency).
+import '@fontsource-variable/manrope';
+import '@fontsource/ibm-plex-sans-arabic/400.css';
+import '@fontsource/ibm-plex-sans-arabic/500.css';
+import '@fontsource/ibm-plex-sans-arabic/600.css';
+import '@fontsource/ibm-plex-sans-arabic/700.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import { cn } from "@/lib/utils";

@@ -27,6 +27,7 @@ interface LandingDict {
   navHow: string;
   navAutomate: string;
   navProof: string;
+  navClients: string;
   navDemo: string;
   signIn: string;
   bookCall: string;
@@ -54,6 +55,11 @@ interface LandingDict {
   proofCaptions: string[];
   proofPlaceholder: string;
 
+  testimonialsEyebrow: string;
+  testimonialsTitle: string;
+  testimonialsBody: string;
+  testimonials: { quote: string; name: string; role: string }[];
+
   integrationsEyebrow: string;
   integrationsTitle: string;
   integrations: string[];
@@ -77,6 +83,7 @@ const en: LandingDict = {
   navHow: 'How it works',
   navAutomate: 'What we automate',
   navProof: 'Proof',
+  navClients: 'Clients',
   navDemo: 'Live demo',
   signIn: 'Sign in',
   bookCall: 'Book a call',
@@ -155,6 +162,49 @@ const en: LandingDict = {
   ],
   proofPlaceholder: 'Screens from the GrindCTRL platform.',
 
+  testimonialsEyebrow: 'What clients say',
+  testimonialsTitle: 'Businesses that let GrindCTRL run the busywork.',
+  testimonialsBody:
+    'Real teams using GrindCTRL to answer customers, capture leads, and stay in control.',
+  testimonials: [
+    {
+      quote:
+        'Our WhatsApp inquiries used to sit for hours. Now replies go out instantly and the right leads reach my sales team the same minute.',
+      name: 'Mohammed A.',
+      role: 'Founder, Cairo Apparel',
+    },
+    {
+      quote:
+        'We captured 3x more leads in the first month without adding headcount. The dashboard shows me exactly what is happening.',
+      name: 'Sara K.',
+      role: 'Operations Lead, GulfMart',
+    },
+    {
+      quote:
+        'They built it, they run it, and they keep it healthy. I just watch the results come in.',
+      name: 'Omar H.',
+      role: 'Owner, Riyadh Electronics',
+    },
+    {
+      quote:
+        'Customer support that never sleeps. Our response time dropped from hours to seconds.',
+      name: 'Lina T.',
+      role: 'Marketing Director, BeautyBox',
+    },
+    {
+      quote:
+        'File and order intake that used to take my team all morning is now automatic and accurate.',
+      name: 'Khaled S.',
+      role: 'CEO, LogiServe',
+    },
+    {
+      quote:
+        'The setup was done for us and the follow-up flows just work. Best decision we made this year.',
+      name: 'Nour F.',
+      role: 'Founder, HomeStyle',
+    },
+  ],
+
   integrationsEyebrow: 'Connected tools',
   integrationsTitle: 'Built around the tools you already use.',
   integrations: [
@@ -189,16 +239,17 @@ const ar: LandingDict = {
   langSwitchTo: 'English',
 
   navHow: 'كيف نعمل',
-  navAutomate: 'ماذا نُؤتمت',
+  navAutomate: 'ماذا نشغّل عنك',
   navProof: 'إثبات',
+  navClients: 'العملاء',
   navDemo: 'تجربة مباشرة',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
 
   heroBadge: 'أتمتة ذكاء اصطناعي جاهزة بالكامل',
-  heroTitle: 'نبني ونُشغّل ونصون الذكاء الاصطناعي الخاص بك.',
+  heroTitle: 'نبني ونشغّل ونعتني بالذكاء الاصطناعي الخاص بك.',
   heroSubtitle:
-    'يصمم GrindCTRL أتمتة الذكاء الاصطناعي الخاصة بك، ويُشغّلها في بيئة الإنتاج، ويحافظ على عملها، بينما تتابع وتتحكم بكل شيء من لوحة تحكم واحدة.',
+    'يبني GrindCTRL أنظمة الذكاء الاصطناعي الخاصة بك، ويشغّلها، ويعتني بها، وأنت تتابع كل شيء وتتحكم به من لوحة واحدة.',
   heroPrimary: 'احجز مكالمة',
   heroSecondary: 'شاهدها مباشرة',
   heroChips: [
@@ -211,26 +262,26 @@ const ar: LandingDict = {
   heroFrameCaption: 'عملياتك مباشرة في لوحة تحكم واحدة',
 
   howEyebrow: 'كيف نعمل',
-  howTitle: 'أنت تُحضر العمل، ونحن نُحضر الأتمتة.',
+  howTitle: 'أنت تركّز على عملك، ونحن نتولّى الباقي.',
   howSteps: [
     {
-      title: 'نحن نبنيها',
-      body: 'نرسم خرائط سير عملك ونبني أتمتة الذكاء الاصطناعي حول الأدوات التي تستخدمها بالفعل.',
+      title: 'نبنيه لك',
+      body: 'نفهم طريقة عملك ونبني لك الذكاء الاصطناعي حول الأدوات التي تستخدمها أصلًا.',
     },
     {
-      title: 'نُشغّلها ونصونها',
-      body: 'تعمل الأتمتة في بيئة الإنتاج. نراقبها ونصلحها ونحسّنها لتستمر في العمل.',
+      title: 'نشغّله ونعتني به',
+      body: 'كل شيء يعمل فعليًا. نراقبه ونصلحه ونحسّنه باستمرار ليبقى شغّالًا.',
     },
     {
-      title: 'تبقى أنت المتحكم',
-      body: 'تابع كل سير عمل وعميل ومحادثة من لوحة تحكم واحدة. رؤية كاملة دون صندوق مغلق.',
+      title: 'أنت دائمًا المتحكم',
+      body: 'تابع كل عملية وكل عميل وكل محادثة من لوحة واحدة. كل شيء واضح أمامك.',
     },
   ],
 
-  automateEyebrow: 'ماذا نُؤتمت',
+  automateEyebrow: 'ماذا نشغّل عنك',
   automateTitle: 'ذكاء اصطناعي يتولى الأعمال التي يكرّرها فريقك.',
   automateBody:
-    'عبر النصوص والصوت والصور والملفات وأدواتك الحالية، نحوّل العمليات اليومية إلى مسارات عمل مؤتمتة.',
+    'من النصوص والصوت والصور والملفات وأدواتك الحالية، نحوّل أعمالك اليومية إلى مهام تلقائية.',
   automateItems: [
     {
       title: 'دعم العملاء بالذكاء الاصطناعي',
@@ -254,7 +305,7 @@ const ar: LandingDict = {
     },
     {
       title: 'صيانة النظام',
-      body: 'نُبقي النظام بأكمله يعمل: تحديثات وإصلاحات وتحسينات مستمرة.',
+      body: 'نُبقي كل شيء شغّالًا: تحديثات وإصلاحات وتحسينات مستمرة.',
     },
   ],
 
@@ -268,6 +319,49 @@ const ar: LandingDict = {
     'مسار العملاء والمتابعة',
   ],
   proofPlaceholder: 'شاشات من منصة GrindCTRL.',
+
+  testimonialsEyebrow: 'ماذا يقول العملاء',
+  testimonialsTitle: 'شركات تركت GrindCTRL يتولّى المهام المتكررة.',
+  testimonialsBody:
+    'فرق حقيقية تستخدم GrindCTRL للرد على العملاء، وجذب العملاء المحتملين، والتحكّم بكل شيء.',
+  testimonials: [
+    {
+      quote:
+        'كانت استفسارات واتساب تبقى دون رد لساعات. الآن تُرسَل الردود فورًا ويصل العملاء المناسبون إلى فريق المبيعات في نفس الدقيقة.',
+      name: 'محمد ع.',
+      role: 'مؤسس، Cairo Apparel',
+    },
+    {
+      quote:
+        'ضاعفنا العملاء المحتملين ثلاث مرات في الشهر الأول دون زيادة الموظفين. ولوحة التحكم تُظهر لي كل ما يحدث.',
+      name: 'سارة ك.',
+      role: 'مديرة العمليات، GulfMart',
+    },
+    {
+      quote:
+        'هم بنوه، وهم يُشغّلونه، ويحافظون على عمله. وأنا فقط أتابع النتائج.',
+      name: 'عمر ح.',
+      role: 'مالك، Riyadh Electronics',
+    },
+    {
+      quote:
+        'دعم عملاء لا ينام. انخفض زمن استجابتنا من ساعات إلى ثوانٍ.',
+      name: 'لينا ت.',
+      role: 'مديرة التسويق، BeautyBox',
+    },
+    {
+      quote:
+        'استقبال الملفات والطلبات الذي كان يستغرق صباحًا كاملًا أصبح تلقائيًا ودقيقًا.',
+      name: 'خالد س.',
+      role: 'الرئيس التنفيذي، LogiServe',
+    },
+    {
+      quote:
+        'تم الإعداد بالكامل نيابةً عنا، ومسارات المتابعة تعمل ببساطة. أفضل قرار اتخذناه هذا العام.',
+      name: 'نور ف.',
+      role: 'مؤسِّسة، HomeStyle',
+    },
+  ],
 
   integrationsEyebrow: 'أدوات متصلة',
   integrationsTitle: 'مبنية حول الأدوات التي تستخدمها بالفعل.',

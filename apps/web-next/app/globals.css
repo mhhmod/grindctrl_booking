@@ -47,8 +47,9 @@
 }
 
 @theme inline {
-  --font-heading: "Manrope", "Inter", "Segoe UI", sans-serif;
-  --font-sans: "Manrope", "Inter", "Segoe UI", sans-serif;
+  --font-heading: "Manrope Variable", "Inter", "Segoe UI", sans-serif;
+  --font-sans: "Manrope Variable", "Inter", "Segoe UI", sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Manrope Variable", "Segoe UI", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -253,6 +254,23 @@
     linear-gradient(90deg, var(--foreground) 1px, transparent 1px);
   background-size: 56px 56px;
   opacity: 0.04;
+}
+
+/* Arabic typography: use the Arabic face and undo Latin-only treatments.
+   Letter-spacing and uppercase break connected Arabic script, so reset
+   them within the landing when the active locale is Arabic. */
+.gc-landing-root:lang(ar) {
+  font-family: var(--font-arabic);
+}
+.gc-landing-root:lang(ar) * {
+  letter-spacing: normal;
+  text-transform: none;
+}
+.gc-landing-root:lang(ar) :where(h1, h2, h3) {
+  line-height: 1.22;
+}
+.gc-landing-root:lang(ar) :where(p, li) {
+  line-height: 1.85;
 }
 
 .gc-landing-border {
