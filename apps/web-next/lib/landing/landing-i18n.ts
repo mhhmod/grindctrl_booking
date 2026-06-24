@@ -159,6 +159,7 @@ const en: LandingDict = {
     'Operations dashboard',
     'WhatsApp automation in action',
     'Lead pipeline & follow-up',
+    'Conversations inbox',
   ],
   proofPlaceholder: 'Screens from the GrindCTRL platform.',
 
@@ -317,6 +318,7 @@ const ar: LandingDict = {
     'لوحة تحكم العمليات',
     'أتمتة واتساب أثناء العمل',
     'مسار العملاء والمتابعة',
+    'صندوق المحادثات',
   ],
   proofPlaceholder: 'شاشات من منصة GrindCTRL.',
 

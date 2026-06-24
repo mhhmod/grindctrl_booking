@@ -33,6 +33,7 @@ const PROOF_IMAGES = [
   '/landing/proof-operations.jpg',
   '/landing/proof-whatsapp.jpg',
   '/landing/proof-leads.jpg',
+  '/landing/proof-inbox.png',
 ];
 
 /* Testimonials are seeded with sample copy for design preview only.
@@ -247,7 +248,7 @@ export function SiteLanding() {
         <section id="proof" className="border-b border-border">
           <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <SectionHeading eyebrow={t.proofEyebrow} title={t.proofTitle} body={t.proofBody} />
-            <div className="grid gap-5 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2">
               {t.proofCaptions.map((caption, i) => (
                 <ScreenshotFrame
                   key={caption}
