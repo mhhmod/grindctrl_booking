@@ -39,7 +39,7 @@ describe('SiteLanding', () => {
     const { container } = renderLanding('ar');
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'نبني ونُشغّل ونصون الذكاء الاصطناعي الخاص بك.' }),
+      screen.getByRole('heading', { name: 'نبني ونشغّل ونعتني بالذكاء الاصطناعي الخاص بك.' }),
     ).toBeInTheDocument();
   });
 });

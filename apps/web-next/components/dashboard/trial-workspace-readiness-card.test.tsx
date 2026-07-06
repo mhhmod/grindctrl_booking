@@ -4,29 +4,28 @@ import { describe, expect, it } from 'vitest';
 import { TrialWorkspaceReadinessCard } from '@/components/dashboard/trial-workspace-readiness-card';
 
 describe('TrialWorkspaceReadinessCard', () => {
-  it('renders trial status badges and readiness lines', () => {
+  it('renders welcome badges and done-for-you lines', () => {
     render(<TrialWorkspaceReadinessCard />);
 
-    expect(screen.getByText(/your grindctrl trial workspace is ready/i)).toBeInTheDocument();
-    expect(screen.getByText(/preview active/i)).toBeInTheDocument();
-    expect(screen.getByText(/ready to connect/i)).toBeInTheDocument();
-    expect(screen.getByText(/^implementation-ready$/i)).toBeInTheDocument();
+    expect(screen.getByText(/welcome to grindctrl\. your workspace is ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/^workspace ready$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^done-for-you setup$/i)).toBeInTheDocument();
 
-    expect(screen.getByText(/^14-day trial$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^guided previews ready$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^implementation-ready workflows$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^connect tools later$/i)).toBeInTheDocument();
+    expect(screen.getByText(/we build your automations around your tools/i)).toBeInTheDocument();
+    expect(screen.getByText(/we run and maintain them in production/i)).toBeInTheDocument();
+    expect(screen.getByText(/you watch everything from this dashboard/i)).toBeInTheDocument();
   });
 
-  it('renders review checklist items', () => {
+  it('renders next steps and primary CTAs', () => {
     render(<TrialWorkspaceReadinessCard />);
 
-    expect(screen.getByText(/review checklist/i)).toBeInTheDocument();
-    expect(screen.getByText(/^try a landing preview$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^sign up$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^review saved workflow preview$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^explore agents \/ conversations \/ leads$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^copy widget snippet$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^request implementation plan$/i)).toBeInTheDocument();
+    expect(screen.getByText(/next steps/i)).toBeInTheDocument();
+    expect(screen.getByText(/book your kickoff call so we can map your first workflow/i)).toBeInTheDocument();
+
+    expect(screen.getByRole('link', { name: /book your kickoff call/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('calendar.app.google'),
+    );
+    expect(screen.getByRole('link', { name: /try the live demo/i })).toHaveAttribute('href', '/dashboard/try-on');
   });
 });

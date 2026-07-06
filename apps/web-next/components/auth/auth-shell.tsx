@@ -8,18 +8,18 @@ import { Card, CardContent } from '@/components/ui/card';
 const AUTH_POINTS = [
   {
     icon: DashboardSquare01Icon,
-    title: 'Workspace control',
-    description: 'Manage install, domains, intents, and lead capture from one dashboard.',
-  },
-  {
-    icon: Globe02Icon,
-    title: 'Verified rollout',
-    description: 'Track domain safety and heartbeat telemetry before production launch.',
+    title: 'Everything in one dashboard',
+    description: 'Watch every workflow, lead, and conversation in one place.',
   },
   {
     icon: MagicWand01Icon,
-    title: 'Real interaction data',
-    description: 'Review widget opens, messages, leads, and escalations without fake analytics.',
+    title: 'Run and maintained for you',
+    description: 'We monitor, fix, and improve your automations while they run in production.',
+  },
+  {
+    icon: Globe02Icon,
+    title: 'Real numbers, no black box',
+    description: 'Leads, replies, and outcomes as they happen. No vanity metrics.',
   },
 ];
 

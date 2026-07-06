@@ -8,7 +8,7 @@ export default function SignUpPage() {
     return (
       <AuthShell
         title="Create your workspace"
-        subtitle="Set up your GRINDCTRL access to manage install safety, intents, and lead capture at production quality."
+        subtitle="Create your account and watch your automations work from one dashboard."
         footerPrompt="Already have an account?"
         footerCtaLabel="Sign in"
         footerCtaHref="/sign-in"
@@ -26,7 +26,7 @@ export default function SignUpPage() {
   return (
     <AuthShell
       title="Create your workspace"
-      subtitle="Set up your GRINDCTRL access to manage install safety, intents, and lead capture at production quality."
+      subtitle="Create your account and watch your automations work from one dashboard."
       footerPrompt="Already have an account?"
       footerCtaLabel="Sign in"
       footerCtaHref="/sign-in"

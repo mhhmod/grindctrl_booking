@@ -69,7 +69,7 @@ describe('TrialPreviewHandoffCard', () => {
     render(<TrialPreviewHandoffCard />);
 
     expect(await screen.findByText(/start with a guided ai workflow preview/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /try playground/i })).toHaveAttribute('href', '/#try-grindctrl');
+    expect(screen.getByRole('link', { name: /try the live demo/i })).toHaveAttribute('href', '/dashboard/try-on');
     expect(screen.getByRole('link', { name: /request implementation plan/i })).toHaveAttribute('href', '/dashboard/implementation');
   });
 

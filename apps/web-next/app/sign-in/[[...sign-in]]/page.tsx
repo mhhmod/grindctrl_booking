@@ -8,7 +8,7 @@ export default function SignInPage() {
     return (
       <AuthShell
         title="Welcome back"
-        subtitle="Sign in to continue managing your widget rollout, site safety, and interaction telemetry."
+        subtitle="Sign in to see your automations, leads, and conversations in one dashboard."
         footerPrompt="Need an account?"
         footerCtaLabel="Create one"
         footerCtaHref="/sign-up"
@@ -26,7 +26,7 @@ export default function SignInPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to continue managing your widget rollout, site safety, and interaction telemetry."
+      subtitle="Sign in to see your automations, leads, and conversations in one dashboard."
       footerPrompt="Need an account?"
       footerCtaLabel="Create one"
       footerCtaHref="/sign-up"

@@ -25,9 +25,9 @@ describe('TrialWorkspaceActionsCard', () => {
   it('uses required CTA destinations', () => {
     render(<TrialWorkspaceActionsCard />);
 
-    expect(screen.getByRole('link', { name: /preview support workflow/i })).toHaveAttribute('href', '/#try-grindctrl');
-    expect(screen.getByRole('link', { name: /preview lead capture/i })).toHaveAttribute('href', '/#try-grindctrl');
-    expect(screen.getByRole('link', { name: /preview file intake/i })).toHaveAttribute('href', '/#try-grindctrl');
+    expect(screen.getByRole('link', { name: /preview support workflow/i })).toHaveAttribute('href', '/dashboard/try-on');
+    expect(screen.getByRole('link', { name: /preview lead capture/i })).toHaveAttribute('href', '/dashboard/try-on');
+    expect(screen.getByRole('link', { name: /preview file intake/i })).toHaveAttribute('href', '/dashboard/try-on');
     expect(screen.getByRole('link', { name: /^request implementation plan/i })).toHaveAttribute('href', '/dashboard/implementation');
   });
 });

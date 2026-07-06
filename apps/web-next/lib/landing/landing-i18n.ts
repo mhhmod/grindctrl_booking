@@ -58,7 +58,7 @@ interface LandingDict {
   testimonialsEyebrow: string;
   testimonialsTitle: string;
   testimonialsBody: string;
-  testimonials: { quote: string; name: string; role: string }[];
+  testimonials: { quote: string; name: string; role: string; photo: string }[];
 
   integrationsEyebrow: string;
   integrationsTitle: string;
@@ -67,6 +67,7 @@ interface LandingDict {
   ctaTitle: string;
   ctaBody: string;
   ctaButton: string;
+  ctaTrust: string;
 
   footerTagline: string;
   footerHome: string;
@@ -173,36 +174,42 @@ const en: LandingDict = {
         'Our WhatsApp inquiries used to sit for hours. Now replies go out instantly and the right leads reach my sales team the same minute.',
       name: 'Mohammed A.',
       role: 'Founder, Cairo Apparel',
+      photo: '/landing/testimonials/person-1.png',
     },
     {
       quote:
         'We captured 3x more leads in the first month without adding headcount. The dashboard shows me exactly what is happening.',
       name: 'Sara K.',
       role: 'Operations Lead, GulfMart',
+      photo: '/landing/testimonials/person-2.png',
     },
     {
       quote:
         'They built it, they run it, and they keep it healthy. I just watch the results come in.',
       name: 'Omar H.',
       role: 'Owner, Riyadh Electronics',
+      photo: '/landing/testimonials/person-3.png',
     },
     {
       quote:
         'Customer support that never sleeps. Our response time dropped from hours to seconds.',
       name: 'Lina T.',
       role: 'Marketing Director, BeautyBox',
+      photo: '/landing/testimonials/person-4.png',
     },
     {
       quote:
         'File and order intake that used to take my team all morning is now automatic and accurate.',
       name: 'Khaled S.',
       role: 'CEO, LogiServe',
+      photo: '/landing/testimonials/person-5.png',
     },
     {
       quote:
         'The setup was done for us and the follow-up flows just work. Best decision we made this year.',
       name: 'Nour F.',
       role: 'Founder, HomeStyle',
+      photo: '/landing/testimonials/person-6.png',
     },
   ],
 
@@ -226,6 +233,7 @@ const en: LandingDict = {
   ctaTitle: 'Ready to put your operations on autopilot?',
   ctaBody: "Book a call and we'll map your first automation together.",
   ctaButton: 'Book a call',
+  ctaTrust: 'Trusted by business owners across the Gulf and Egypt.',
 
   footerTagline: 'AI implementation and automation platform.',
   footerHome: 'Home',
@@ -332,36 +340,42 @@ const ar: LandingDict = {
         'كانت استفسارات واتساب تبقى دون رد لساعات. الآن تُرسَل الردود فورًا ويصل العملاء المناسبون إلى فريق المبيعات في نفس الدقيقة.',
       name: 'محمد ع.',
       role: 'مؤسس، Cairo Apparel',
+      photo: '/landing/testimonials/person-1.png',
     },
     {
       quote:
         'ضاعفنا العملاء المحتملين ثلاث مرات في الشهر الأول دون زيادة الموظفين. ولوحة التحكم تُظهر لي كل ما يحدث.',
       name: 'سارة ك.',
       role: 'مديرة العمليات، GulfMart',
+      photo: '/landing/testimonials/person-2.png',
     },
     {
       quote:
         'هم بنوه، وهم يُشغّلونه، ويحافظون على عمله. وأنا فقط أتابع النتائج.',
       name: 'عمر ح.',
       role: 'مالك، Riyadh Electronics',
+      photo: '/landing/testimonials/person-3.png',
     },
     {
       quote:
         'دعم عملاء لا ينام. انخفض زمن استجابتنا من ساعات إلى ثوانٍ.',
       name: 'لينا ت.',
       role: 'مديرة التسويق، BeautyBox',
+      photo: '/landing/testimonials/person-4.png',
     },
     {
       quote:
         'استقبال الملفات والطلبات الذي كان يستغرق صباحًا كاملًا أصبح تلقائيًا ودقيقًا.',
       name: 'خالد س.',
       role: 'الرئيس التنفيذي، LogiServe',
+      photo: '/landing/testimonials/person-5.png',
     },
     {
       quote:
         'تم الإعداد بالكامل نيابةً عنا، ومسارات المتابعة تعمل ببساطة. أفضل قرار اتخذناه هذا العام.',
       name: 'نور ف.',
       role: 'مؤسِّسة، HomeStyle',
+      photo: '/landing/testimonials/person-6.png',
     },
   ],
 
@@ -385,6 +399,7 @@ const ar: LandingDict = {
   ctaTitle: 'جاهز لوضع عملياتك على الطيار الآلي؟',
   ctaBody: 'احجز مكالمة وسنرسم معًا أول أتمتة لك.',
   ctaButton: 'احجز مكالمة',
+  ctaTrust: 'موثوق من أصحاب أعمال في الخليج ومصر.',
 
   footerTagline: 'منصة تطبيق الذكاء الاصطناعي والأتمتة.',
   footerHome: 'الرئيسية',

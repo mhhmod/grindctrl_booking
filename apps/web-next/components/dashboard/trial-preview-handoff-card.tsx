@@ -45,7 +45,7 @@ export function TrialPreviewHandoffCard() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild>
-            <Link href="/#try-grindctrl">Try playground</Link>
+            <Link href="/dashboard/try-on">Try the live demo</Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/dashboard/implementation">Request implementation plan</Link>
@@ -96,7 +96,7 @@ export function TrialPreviewHandoffCard() {
             {savedForTrialReview ? 'Saved for trial review' : 'Save to trial review'}
           </Button>
           <Button asChild variant="outline">
-            <Link href="/#try-grindctrl">Test another workflow</Link>
+            <Link href="/dashboard/try-on">Test another workflow</Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/dashboard/implementation">Request implementation plan</Link>

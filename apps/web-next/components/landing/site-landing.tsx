@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -22,8 +22,8 @@ import { BrandLogo } from '@/components/brand-logo';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 
-/* Google Calendar booking link for "Book a call" CTAs. */
-const BOOKING_URL = 'https://calendar.app.google/ts89YZLki5MBw9tH9';
+import { BOOKING_URL } from '@/lib/booking';
+
 const DEMO_URL = '/try-on';
 
 const stepIcons = [Blocks, RefreshCw, LayoutDashboard];
@@ -36,16 +36,57 @@ const PROOF_IMAGES = [
   '/landing/proof-inbox.png',
 ];
 
-/* Testimonials are seeded with sample copy for design preview only.
-   Keep OFF until real client quotes + photos are supplied, so we never
-   publish fabricated social proof. Flip to true once real data is in. */
-const ENABLE_TESTIMONIALS = false;
+/* Testimonial quotes/photos are current placeholders pending real client
+   sign-off; swap in verified quotes and swap public/landing/testimonials/*
+   for real customer photos as they come in. */
+const ENABLE_TESTIMONIALS = true;
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2);
   return (parts[0][0] + parts[parts.length - 1][0]);
+}
+
+function TestimonialAvatar({
+  photo,
+  name,
+  size = 44,
+  className = '',
+}: {
+  photo?: string;
+  name: string;
+  size?: number;
+  className?: string;
+}) {
+  const [errored, setErrored] = useState(false);
+
+  if (!photo || errored) {
+    return (
+      <span
+        className={`grid shrink-0 place-items-center rounded-full border border-border bg-background text-sm font-semibold uppercase ${className}`}
+        style={{ width: size, height: size }}
+      >
+        {initials(name)}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`relative block shrink-0 overflow-hidden rounded-full border border-border ${className}`}
+      style={{ width: size, height: size }}
+    >
+      <Image
+        src={photo}
+        alt={name}
+        fill
+        sizes={`${size}px`}
+        className="object-cover"
+        onError={() => setErrored(true)}
+      />
+    </span>
+  );
 }
 
 function ScreenshotFrame({
@@ -56,6 +97,7 @@ function ScreenshotFrame({
   caption,
   label,
   priority = false,
+  hover = false,
 }: {
   src: string;
   alt: string;
@@ -64,9 +106,10 @@ function ScreenshotFrame({
   caption: string;
   label?: string;
   priority?: boolean;
+  hover?: boolean;
 }) {
   return (
-    <figure className="gc-landing-card overflow-hidden rounded-2xl border">
+    <figure className={`gc-landing-card overflow-hidden rounded-2xl border${hover ? ' gc-card-hover' : ''}`}>
       <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
         <span className="size-2.5 rounded-full bg-muted-foreground/30" />
         <span className="size-2.5 rounded-full bg-muted-foreground/30" />
@@ -140,6 +183,9 @@ export function SiteLanding() {
           <div className="flex items-center gap-2">
             <LandingLocaleToggle />
             <ThemeToggle />
+            <Button asChild variant="ghost" size="sm" className="rounded-full px-3 text-sm font-semibold text-muted-foreground hover:text-foreground">
+              <Link href="/sign-in">{t.signIn}</Link>
+            </Button>
             <Button asChild size="sm" className="hidden rounded-full px-4 font-semibold sm:inline-flex">
               <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{t.bookCall}</a>
             </Button>
@@ -257,6 +303,7 @@ export function SiteLanding() {
                   width={1478}
                   height={1064}
                   caption={caption}
+                  hover
                 />
               ))}
             </div>
@@ -273,27 +320,34 @@ export function SiteLanding() {
                 title={t.testimonialsTitle}
                 body={t.testimonialsBody}
               />
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {t.testimonials.map((item) => (
-                  <figure
-                    key={`${item.name}-${item.quote.slice(0, 12)}`}
-                    className="gc-landing-panel flex flex-col rounded-2xl border p-6"
-                  >
-                    <Quote className="size-6 shrink-0 text-muted-foreground/40" aria-hidden="true" />
-                    <blockquote className="mt-3 flex-1 text-[15px] leading-[1.7] text-foreground">
-                      {item.quote}
-                    </blockquote>
-                    <figcaption className="mt-5 flex items-center gap-3 border-t border-border pt-4">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-sm font-semibold uppercase">
-                        {initials(item.name)}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-foreground">{item.name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{item.role}</span>
-                      </span>
-                    </figcaption>
-                  </figure>
-                ))}
+              <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
+                <figure className="gc-landing-card gc-card-hover flex flex-col justify-between rounded-3xl border p-8 sm:p-10">
+                  <Quote className="size-8 shrink-0 text-muted-foreground/40" aria-hidden="true" />
+                  <blockquote className="mt-6 text-xl font-medium leading-[1.5] text-foreground sm:text-2xl">
+                    {t.testimonials[0].quote}
+                  </blockquote>
+                  <figcaption className="mt-8 flex items-center gap-4 border-t border-border pt-6">
+                    <TestimonialAvatar photo={t.testimonials[0].photo} name={t.testimonials[0].name} size={56} />
+                    <span className="min-w-0">
+                      <span className="block truncate text-base font-semibold text-foreground">{t.testimonials[0].name}</span>
+                      <span className="block truncate text-sm text-muted-foreground">{t.testimonials[0].role}</span>
+                    </span>
+                  </figcaption>
+                </figure>
+
+                <div className="flex flex-col divide-y divide-border">
+                  {t.testimonials.slice(1).map((item) => (
+                    <div key={item.name} className="flex items-start gap-4 py-5 first:pt-0 last:pb-0">
+                      <TestimonialAvatar photo={item.photo} name={item.name} size={40} className="mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-[15px] leading-[1.6] text-foreground">{item.quote}</p>
+                        <p className="mt-2 truncate text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground">{item.name}</span> · {item.role}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -323,6 +377,22 @@ export function SiteLanding() {
                 </h2>
                 <p className="text-base leading-[1.65] text-muted-foreground sm:text-lg">{t.ctaBody}</p>
               </div>
+              {ENABLE_TESTIMONIALS && t.testimonials.length > 0 && (
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-3 rtl:space-x-reverse">
+                    {t.testimonials.slice(0, 5).map((item) => (
+                      <TestimonialAvatar
+                        key={item.name}
+                        photo={item.photo}
+                        name={item.name}
+                        size={32}
+                        className="border-2 border-background"
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t.ctaTrust}</p>
+                </div>
+              )}
               <Button asChild size="lg" className="h-12 rounded-full px-7 text-sm font-semibold">
                 <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
                   {t.ctaButton}
