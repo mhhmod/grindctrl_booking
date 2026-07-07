@@ -1,5 +1,5 @@
 import React from 'react';
-import { SignUp } from '@clerk/nextjs';
+import { AuthSignUp } from '@/components/auth/auth-clerk';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -31,7 +31,7 @@ export default function SignUpPage() {
       footerCtaLabel="Sign in"
       footerCtaHref="/sign-in"
     >
-      <SignUp path="/sign-up" routing="path" signInUrl="/sign-in" fallbackRedirectUrl="/dashboard/overview" />
+      <AuthSignUp />
     </AuthShell>
   );
 }

@@ -108,28 +108,49 @@ function ScreenshotFrame({
   priority?: boolean;
   hover?: boolean;
 }) {
+  const chrome = (
+    <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
+      <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+      <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+      <span className="size-2.5 rounded-full bg-muted-foreground/30" />
+      {label ? (
+        <span className="ms-3 truncate text-xs font-medium text-muted-foreground">{label}</span>
+      ) : null}
+    </div>
+  );
+  const image = (
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      priority={priority}
+      sizes="(max-width: 1024px) 100vw, 50vw"
+      className="h-auto w-full"
+    />
+  );
+
+  if (!hover) {
+    return (
+      <figure className="gc-landing-card overflow-hidden rounded-2xl border">
+        {chrome}
+        {image}
+        <figcaption className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+          {caption}
+        </figcaption>
+      </figure>
+    );
+  }
+
   return (
-    <figure className={`gc-landing-card overflow-hidden rounded-2xl border${hover ? ' gc-card-hover' : ''}`}>
-      <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
-        <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-        <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-        <span className="size-2.5 rounded-full bg-muted-foreground/30" />
-        {label ? (
-          <span className="ms-3 truncate text-xs font-medium text-muted-foreground">{label}</span>
-        ) : null}
+    <figure className="gc-landing-card gc-card-hover gc-hover-reveal overflow-hidden rounded-2xl border">
+      {chrome}
+      <div className="gc-reveal-media">
+        {image}
+        <figcaption className="gc-reveal-caption px-4 py-3 text-xs font-medium text-foreground">
+          {caption}
+        </figcaption>
       </div>
-      <Image
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        priority={priority}
-        sizes="(max-width: 1024px) 100vw, 50vw"
-        className="h-auto w-full"
-      />
-      <figcaption className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {caption}
-      </figcaption>
     </figure>
   );
 }
@@ -238,6 +259,7 @@ export function SiteLanding() {
                 caption={t.heroFrameCaption}
                 label="grindctrl.cloud"
                 priority
+                hover
               />
             </div>
           </div>
@@ -251,7 +273,7 @@ export function SiteLanding() {
               {t.howSteps.map((step, i) => {
                 const Icon = stepIcons[i] ?? Blocks;
                 return (
-                  <div key={step.title} className="gc-landing-panel rounded-2xl border p-6">
+                  <div key={step.title} className="gc-card-hover gc-landing-panel rounded-2xl border p-6">
                     <div className="flex items-center gap-3">
                       <div className="grid size-10 place-items-center rounded-xl border border-border bg-background">
                         <Icon className="size-5 text-foreground" />

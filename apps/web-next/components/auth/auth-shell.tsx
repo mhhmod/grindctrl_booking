@@ -1,28 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
-import { DashboardSquare01Icon, Globe02Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
 import { BrandLogo } from '@/components/brand-logo';
-import { Icon } from '@/components/icons';
-import { Card, CardContent } from '@/components/ui/card';
 
-const AUTH_POINTS = [
-  {
-    icon: DashboardSquare01Icon,
-    title: 'Everything in one dashboard',
-    description: 'Watch every workflow, lead, and conversation in one place.',
-  },
-  {
-    icon: MagicWand01Icon,
-    title: 'Run and maintained for you',
-    description: 'We monitor, fix, and improve your automations while they run in production.',
-  },
-  {
-    icon: Globe02Icon,
-    title: 'Real numbers, no black box',
-    description: 'Leads, replies, and outcomes as they happen. No vanity metrics.',
-  },
-];
-
+/* Split-screen auth: brand statement pane (always warm-dark, independent
+   of the theme toggle) + form pane on the app theme. On mobile the brand
+   pane collapses to a slim strip so the form is immediately reachable. */
 export function AuthShell({
   title,
   subtitle,
@@ -39,49 +21,36 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-28 end-[-6rem] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-36 start-[-4rem] h-80 w-80 rounded-full bg-chart-3/15 blur-3xl" />
-      </div>
+    <main className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[1fr_1.1fr]">
+      <section className="gc-auth-brand relative flex flex-col justify-between gap-6 overflow-hidden px-5 py-5 sm:px-8 lg:px-12 lg:py-12">
+        <div className="pointer-events-none absolute inset-0 gc-hero-grid-warm" aria-hidden="true" />
+        <Link href="/" className="relative inline-flex w-fit items-center rounded-lg">
+          <BrandLogo size="sm" />
+        </Link>
+        <div className="relative hidden max-w-xl space-y-5 lg:block">
+          <h2 className="text-[clamp(1.9rem,3.4vw,3.1rem)] font-bold leading-[1.08] tracking-tight">
+            We build, run, and maintain your AI.
+          </h2>
+          <p className="text-base leading-[1.7] opacity-70">
+            You watch every workflow, lead, and conversation from one dashboard.
+          </p>
+        </div>
+        <p className="relative hidden text-xs opacity-50 lg:block">grindctrl.cloud</p>
+        <p className="relative text-sm leading-snug opacity-70 lg:hidden">
+          Done-for-you AI automation, watched from one dashboard.
+        </p>
+      </section>
 
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8 lg:py-12">
-        <section className="space-y-6">
-          <Link href="/" className="inline-flex items-center gap-3 rounded-lg border bg-card/60 px-3 py-2 text-sm font-medium text-card-foreground">
-            <BrandLogo size="sm" />
-          </Link>
-
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Secure dashboard access</p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
-            <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">{subtitle}</p>
+      <section className="flex flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
+        <div className="mx-auto w-full max-w-md space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+            <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">{subtitle}</p>
           </div>
 
-          <ul className="grid gap-3">
-            {AUTH_POINTS.map((point) => (
-              <li key={point.title} className="rounded-xl border bg-card/40 px-4 py-3">
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <Icon icon={point.icon} size={16} />
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{point.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{point.description}</p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="space-y-4">
-          <Card className="border bg-card/70 shadow-xl shadow-black/10">
-            <CardContent className="px-3 py-4 sm:px-6 sm:py-6">
-              <div className="[&_.cl-card]:border-0 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerAction]:text-foreground [&_.cl-footerActionLink]:text-foreground [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-socialButtonsBlockButton]:bg-background">
-                {children}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="[&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-card]:w-full">
+            {children}
+          </div>
 
           <p className="text-center text-sm text-muted-foreground">
             {footerPrompt}{' '}
@@ -89,8 +58,8 @@ export function AuthShell({
               {footerCtaLabel}
             </Link>
           </p>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }

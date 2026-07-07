@@ -90,116 +90,9 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Warm near-black-and-white identity from the logo palette
+   (cream #f0ede9 + warm charcoal #2a2826), applied app-wide. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  color-scheme: dark;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
-:root {
-  --gc-landing-border: oklch(0.88 0.006 255);
-  --gc-landing-panel: oklch(1 0 0 / 88%);
-  --gc-landing-panel-strong: oklch(1 0 0 / 96%);
-  --gc-landing-panel-subtle: oklch(0.975 0.006 255 / 88%);
-  --gc-landing-shadow: 0 22px 70px -46px oklch(0.28 0.025 255 / 42%);
-  --gc-input-icon-bg: oklch(0.955 0.035 252);
-  --gc-input-icon-fg: oklch(0.48 0.17 255);
-  --gc-input-icon-border: oklch(0.82 0.08 252);
-  --gc-output-icon-bg: oklch(0.958 0.038 295);
-  --gc-output-icon-fg: oklch(0.5 0.16 292);
-  --gc-output-icon-border: oklch(0.84 0.085 292);
-}
-
-.dark {
-  --gc-landing-border: oklch(1 0 0 / 10%);
-  --gc-landing-panel: oklch(1 0 0 / 3.5%);
-  --gc-landing-panel-strong: oklch(0.205 0 0 / 72%);
-  --gc-landing-panel-subtle: oklch(1 0 0 / 2.5%);
-  --gc-landing-shadow: 0 24px 80px -48px oklch(0 0 0 / 65%);
-  --gc-input-icon-bg: oklch(0.72 0.14 255 / 15%);
-  --gc-input-icon-fg: oklch(0.82 0.1 252);
-  --gc-input-icon-border: oklch(0.72 0.14 255 / 22%);
-  --gc-output-icon-bg: oklch(0.78 0.14 295 / 14%);
-  --gc-output-icon-fg: oklch(0.86 0.09 292);
-  --gc-output-icon-border: oklch(0.78 0.14 295 / 22%);
-}
-
-:where(body, header, section, article, div, span, button, textarea, input, a, svg) {
-  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
-  transition-duration: 220ms;
-  transition-timing-function: ease;
-}
-
-/* ─── GrindCTRL warm brand surface (scoped to landing root) ───
-   Warm near-black-and-white identity from the logo palette
-   (cream #f0ede9 + warm charcoal #2a2826). Adapts light/dark via
-   the global .dark class. Scoped to .gc-landing-root so the
-   dashboard's neutral theme stays untouched. */
-.gc-landing-root {
   --background: oklch(0.945 0.007 75);
   --foreground: oklch(0.235 0.006 60);
   --card: oklch(0.965 0.007 78);
@@ -214,16 +107,28 @@
   --muted-foreground: oklch(0.5 0.008 66);
   --accent: oklch(0.905 0.008 76);
   --accent-foreground: oklch(0.235 0.006 60);
+  --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.86 0.009 76);
   --input: oklch(0.86 0.009 76);
   --ring: oklch(0.55 0.008 66);
-  --gc-landing-border: oklch(0.86 0.009 76);
-  --gc-landing-panel: oklch(0.97 0.007 78 / 70%);
-  --gc-landing-panel-strong: oklch(0.975 0.007 78);
-  --gc-landing-panel-subtle: oklch(0.92 0.008 76 / 80%);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.965 0.007 78);
+  --sidebar-foreground: oklch(0.235 0.006 60);
+  --sidebar-primary: oklch(0.235 0.006 60);
+  --sidebar-primary-foreground: oklch(0.945 0.007 75);
+  --sidebar-accent: oklch(0.905 0.008 76);
+  --sidebar-accent-foreground: oklch(0.235 0.006 60);
+  --sidebar-border: oklch(0.86 0.009 76);
+  --sidebar-ring: oklch(0.55 0.008 66);
 }
 
-.dark .gc-landing-root {
+.dark {
+  color-scheme: dark;
   /* Deepest warm black #0d0c0b with cream #f0ede9 ink */
   --background: oklch(0.135 0.004 70);
   --foreground: oklch(0.94 0.008 78);
@@ -239,13 +144,68 @@
   --muted-foreground: oklch(0.68 0.012 72);
   --accent: oklch(0.205 0.006 64);
   --accent-foreground: oklch(0.94 0.008 78);
+  --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.26 0.006 66);
   --input: oklch(0.26 0.006 66);
   --ring: oklch(0.55 0.01 70);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.175 0.005 68);
+  --sidebar-foreground: oklch(0.94 0.008 78);
+  --sidebar-primary: oklch(0.94 0.008 78);
+  --sidebar-primary-foreground: oklch(0.205 0.006 64);
+  --sidebar-accent: oklch(0.205 0.006 64);
+  --sidebar-accent-foreground: oklch(0.94 0.008 78);
+  --sidebar-border: oklch(0.26 0.006 66);
+  --sidebar-ring: oklch(0.55 0.01 70);
+}
+
+:root {
+  --gc-landing-border: oklch(0.86 0.009 76);
+  --gc-landing-panel: oklch(0.97 0.007 78 / 70%);
+  --gc-landing-panel-strong: oklch(0.975 0.007 78);
+  --gc-landing-panel-subtle: oklch(0.92 0.008 76 / 80%);
+  --gc-landing-shadow: 0 22px 70px -46px oklch(0.28 0.012 70 / 42%);
+  --gc-input-icon-bg: oklch(0.955 0.035 252);
+  --gc-input-icon-fg: oklch(0.48 0.17 255);
+  --gc-input-icon-border: oklch(0.82 0.08 252);
+  --gc-output-icon-bg: oklch(0.958 0.038 295);
+  --gc-output-icon-fg: oklch(0.5 0.16 292);
+  --gc-output-icon-border: oklch(0.84 0.085 292);
+}
+
+.dark {
   --gc-landing-border: oklch(1 0 0 / 9%);
   --gc-landing-panel: oklch(0.94 0.008 78 / 3%);
   --gc-landing-panel-strong: oklch(0.175 0.005 68 / 80%);
   --gc-landing-panel-subtle: oklch(0.94 0.008 78 / 2.5%);
+  --gc-landing-shadow: 0 24px 80px -48px oklch(0 0 0 / 65%);
+  --gc-input-icon-bg: oklch(0.72 0.14 255 / 15%);
+  --gc-input-icon-fg: oklch(0.82 0.1 252);
+  --gc-input-icon-border: oklch(0.72 0.14 255 / 22%);
+  --gc-output-icon-bg: oklch(0.78 0.14 295 / 14%);
+  --gc-output-icon-fg: oklch(0.86 0.09 292);
+  --gc-output-icon-border: oklch(0.78 0.14 295 / 22%);
+}
+
+:where(body, header, section, article, div, span, button, textarea, input, a, svg) {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 220ms;
+  transition-timing-function: ease;
+}
+
+/* The warm brand tokens above are global since Jul 2026; .gc-landing-root
+   remains only as a scope hook for landing-specific rules (Arabic
+   typography resets, hero grid, animations). */
+
+/* Auth brand pane: always warm-dark regardless of the theme toggle. */
+.gc-auth-brand {
+  background: oklch(0.135 0.004 70);
+  color: oklch(0.94 0.008 78);
+  --foreground: oklch(0.94 0.008 78);
 }
 
 .gc-hero-grid-warm {
@@ -411,10 +371,51 @@
   transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
 }
 
+/* Image + text hover: media zooms slightly, caption slides up over the
+   image. Caption stays pinned visible on touch and reduced-motion. */
+.gc-hover-reveal .gc-reveal-media {
+  position: relative;
+  overflow: hidden;
+}
+
+.gc-hover-reveal .gc-reveal-media img {
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gc-hover-reveal .gc-reveal-caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  transform: translateY(100%);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  background: color-mix(in oklch, var(--background) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+}
+
+.gc-hover-reveal:hover .gc-reveal-media img,
+.gc-hover-reveal:focus-within .gc-reveal-media img {
+  transform: scale(1.04);
+}
+
+.gc-hover-reveal:hover .gc-reveal-caption,
+.gc-hover-reveal:focus-within .gc-reveal-caption {
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .gc-hover-reveal .gc-reveal-caption {
+    transform: none;
+  }
+  .gc-hover-reveal .gc-reveal-media img {
+    transition: none;
+  }
+}
+
 .gc-card-hover:hover {
   transform: translateY(-2px);
-  border-color: oklch(1 0 0 / 20%);
-  box-shadow: 0 18px 48px -36px oklch(0.72 0.14 265 / 38%);
+  border-color: color-mix(in oklch, var(--foreground) 24%, transparent);
+  box-shadow: 0 18px 48px -30px color-mix(in oklch, var(--foreground) 30%, transparent);
 }
 
 .gc-trail-line::before,
@@ -461,7 +462,7 @@
   background-size: 48px 48px;
 }
 
-/* Glassmorphism card hover */
+/* Glassmorphism card hover (used by ai-operations-trail, animated-capability-card) */
 .gc-glass {
   background: oklch(1 0 0 / 4%);
   backdrop-filter: blur(12px);
@@ -517,6 +518,16 @@
 
   .gc-glass:hover,
   .gc-card-hover:hover {
+    transform: none;
+  }
+
+  .gc-hover-reveal .gc-reveal-caption {
+    transform: none;
+    transition: none;
+  }
+
+  .gc-hover-reveal:hover .gc-reveal-media img,
+  .gc-hover-reveal:focus-within .gc-reveal-media img {
     transform: none;
   }
 }
