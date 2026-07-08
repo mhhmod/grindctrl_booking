@@ -17,9 +17,14 @@ function useClerkAppearance() {
   /* Before hydration resolvedTheme is undefined; the app defaults to dark. */
   const isDark = resolvedTheme !== 'light';
 
+  /* The AuthShell brand pane already shows the logo; Clerk's in-card logo
+     image has a baked-in white background that clashes in dark mode. */
+  const layout = { logoPlacement: 'none' as const };
+
   if (isDark) {
     return {
       baseTheme: dark,
+      layout,
       variables: {
         colorPrimary: WARM_CREAM,
         colorBackground: WARM_DARK_CARD,
@@ -31,6 +36,7 @@ function useClerkAppearance() {
   }
 
   return {
+    layout,
     variables: {
       colorPrimary: WARM_CHARCOAL,
       colorBackground: '#f7f5f2',

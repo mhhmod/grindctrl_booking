@@ -208,6 +208,13 @@
   --foreground: oklch(0.94 0.008 78);
 }
 
+/* Auth form pane: soft top glow so the surface reads as lit, not flat. */
+.gc-auth-form-pane {
+  background:
+    radial-gradient(110% 70% at 80% -10%, color-mix(in oklch, var(--card) 85%, var(--foreground) 4%) 0%, transparent 62%),
+    var(--background);
+}
+
 .gc-hero-grid-warm {
   background-image:
     linear-gradient(var(--foreground) 1px, transparent 1px),

@@ -41,7 +41,7 @@ export function AuthShell({
         </p>
       </section>
 
-      <section className="flex flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
+      <section className="gc-auth-form-pane flex flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
         <div className="mx-auto w-full max-w-md space-y-6">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
