@@ -1,0 +1,7 @@
+api_version = "2026-10"
+
+[[extensions]]
+name = "GrindCTRL Try-On"
+handle = "grindctrl-tryon-block"
+uid = "045b3d19-9947-bdf6-0619-a16f1c59c482843df2e9"
+type = "theme"

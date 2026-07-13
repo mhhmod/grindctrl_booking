@@ -1,0 +1,32 @@
+.gc-tryon-root {
+  margin: 12px 0;
+}
+
+.gc-tryon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #2a2826;
+  color: #f0ede9;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.gc-tryon-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.gc-tryon-frame {
+  width: 100%;
+  min-height: 480px;
+  border: 0;
+  border-radius: 12px;
+  margin-top: 12px;
+}
