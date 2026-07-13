@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { PhotoUpload } from './photo-upload';
 import { TryOnResult } from './try-on-result';
 import { useTryOnLocale } from './locale-provider';
-import { getDefaultProduct } from '@/lib/try-on/products';
+import { getDefaultProduct, getProduct } from '@/lib/try-on/products';
 import { localizeProduct } from '@/lib/try-on/i18n';
 import type {
   TryOnApiResponse,
@@ -24,9 +24,9 @@ import type {
 
 type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 
-export function TryOnDemo() {
+export function TryOnDemo({ productId }: { productId?: string } = {}) {
   const { t, locale } = useTryOnLocale();
-  const baseProduct = getDefaultProduct();
+  const baseProduct = (productId && getProduct(productId)) || getDefaultProduct();
   const product = localizeProduct(baseProduct, locale);
   const loadingSteps = t.loadingSteps;
 
