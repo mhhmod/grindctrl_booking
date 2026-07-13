@@ -3,50 +3,55 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
+import { getTryOnSettings } from '@/lib/try-on/settings';
+import { saveTryOnSettingsAction } from './actions';
 
-const KPI_ITEMS = [
-  { label: 'Try-ons generated', value: '184' },
-  { label: 'Leads captured', value: '47' },
-  { label: 'Top product', value: 'Premium Ringer Tee' },
-  { label: 'Demo conversion intent', value: '26%' },
-];
+export const dynamic = 'force-dynamic';
 
-const JOB_ROWS = [
-  { jobId: 'tryon_20260506_a1f2', product: 'Premium Ringer Tee', status: 'completed', leadCaptured: 'Yes', createdTime: '2026-05-06 10:22', runtime: 'mock' },
-  { jobId: 'tryon_20260506_b7k9', product: 'Premium Ringer Tee', status: 'completed', leadCaptured: 'No', createdTime: '2026-05-06 09:54', runtime: 'mock' },
-  { jobId: 'tryon_20260506_c3t1', product: 'Premium Ringer Tee', status: 'processing', leadCaptured: 'No', createdTime: '2026-05-06 09:41', runtime: 'mock' },
-  { jobId: 'tryon_20260505_d8m4', product: 'Premium Ringer Tee', status: 'completed', leadCaptured: 'Yes', createdTime: '2026-05-05 18:17', runtime: 'mock' },
-];
-
-const PRODUCT_DETAILS = [
-  'cream/off-white body',
-  'dark chocolate-brown ribbed crew neck',
-  'dark chocolate-brown ribbed sleeve cuffs',
-  'small left-chest embroidered emblem',
-  'athletic/muscle-fit silhouette',
-];
-
-const EMBED_SCRIPT = `<script src="https://grindctrl.cloud/scripts/grindctrl-tryon.js" data-site="your-site-key" defer></script>`;
+/* Theme-editor deep link: opens the merchant's theme editor with the
+   try-on app block pre-added to the product template. */
+const APP_BLOCK_UID = '045b3d19-9947-bdf6-0619-a16f1c59c482843df2e9';
+const DEEP_LINK = `https://admin.shopify.com/store/grindctrl/themes/current/editor?template=product&addAppBlockId=${APP_BLOCK_UID}/tryon&target=mainSection`;
 
 function statusTone(status: string) {
-  if (status === 'completed') return 'secondary';
-  if (status === 'processing') return 'outline';
-  return 'destructive';
+  if (status === 'completed') return 'secondary' as const;
+  return 'destructive' as const;
 }
 
-export default function DashboardTryOnPage() {
+export default async function DashboardTryOnPage() {
+  const [jobs, settings] = await Promise.all([
+    listRecentTryOnJobs(25),
+    getTryOnSettings('default'),
+  ]);
+
+  const completed = jobs.filter((j) => j.status === 'completed');
+  const totalCost = jobs.reduce((sum, j) => sum + (j.cost_usd ?? 0), 0);
+  const avgSeconds = completed.length
+    ? completed.reduce((sum, j) => sum + (j.duration_ms ?? 0), 0) / completed.length / 1000
+    : 0;
+
+  const kpis = [
+    { label: 'Recent generations', value: String(jobs.length) },
+    { label: 'Completed', value: String(completed.length) },
+    { label: 'Avg generation time', value: completed.length ? `${avgSeconds.toFixed(1)}s` : '—' },
+    { label: 'Provider spend (recent)', value: `$${totalCost.toFixed(2)}` },
+  ];
+
   return (
     <section className="grid gap-6">
       <header className="grid gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Try-On Agent</h1>
         <p className="text-sm text-muted-foreground">
-          Let customers preview products on themselves before buying.
+          Live AI try-on: journey styling, job history, and Shopify install.
         </p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {KPI_ITEMS.map((kpi) => (
+        {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardHeader className="pb-2">
               <CardDescription>{kpi.label}</CardDescription>
@@ -58,51 +63,136 @@ export default function DashboardTryOnPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Active product</CardTitle>
-            <CardDescription>Product currently used for the dashboard demo flow.</CardDescription>
+            <CardTitle>Journey settings</CardTitle>
+            <CardDescription>
+              Controls the try-on button and flow everywhere it appears: storefront blocks,
+              the embed, and the public demo. Changes go live within a minute.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-3">
-            <div className="flex items-center justify-between gap-2 rounded-xl border bg-muted/20 p-3">
-              <p className="font-medium text-foreground">Premium Ringer Tee</p>
-              <Badge variant="secondary">mock mode active</Badge>
-            </div>
-            <ul className="list-disc space-y-1 ps-5 text-sm text-muted-foreground">
-              {PRODUCT_DETAILS.map((detail) => (
-                <li key={detail}>{detail}</li>
-              ))}
-            </ul>
+          <CardContent>
+            <form action={saveTryOnSettingsAction} className="grid gap-4">
+              <input type="hidden" name="shop" value="default" />
+              <div className="grid gap-2">
+                <Label htmlFor="button_label">Button label</Label>
+                <Input
+                  id="button_label"
+                  name="button_label"
+                  defaultValue={settings.buttonLabel}
+                  maxLength={40}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="accent_bg">Button color</Label>
+                  <Input
+                    id="accent_bg"
+                    name="accent_bg"
+                    type="color"
+                    defaultValue={settings.accentBg}
+                    className="h-10 p-1"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="accent_fg">Button text color</Label>
+                  <Input
+                    id="accent_fg"
+                    name="accent_fg"
+                    type="color"
+                    defaultValue={settings.accentFg}
+                    className="h-10 p-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="radius_px">Corner radius (px)</Label>
+                  <Input
+                    id="radius_px"
+                    name="radius_px"
+                    type="number"
+                    min={0}
+                    max={999}
+                    defaultValue={settings.radiusPx}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="widget_theme">Widget theme</Label>
+                  <select
+                    id="widget_theme"
+                    name="widget_theme"
+                    defaultValue={settings.widgetTheme}
+                    className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
+                <textarea
+                  id="loading_steps"
+                  name="loading_steps"
+                  rows={4}
+                  defaultValue={settings.loadingSteps?.join('\n') ?? ''}
+                  placeholder={'Analyzing your photo\nFitting the garment\nRendering the final look'}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <Button type="submit" className="w-fit">Save settings</Button>
+            </form>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Live generation status</CardTitle>
-            <CardDescription>Provider connection remains intentionally disabled in this phase.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2 text-sm">
-            <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2">
-              <span className="text-muted-foreground">Current mode</span>
-              <span className="font-medium text-foreground">Mock</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2">
-              <span className="text-muted-foreground">Live provider</span>
-              <span className="font-medium text-foreground">Not connected</span>
-            </div>
-            <div className="rounded-lg border bg-muted/20 px-3 py-2">
-              <p className="text-muted-foreground">Next step</p>
-              <p className="font-medium text-foreground">Connect image provider after dashboard base.</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 content-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>Shopify install</CardTitle>
+              <CardDescription>
+                One click adds the try-on block to the store&apos;s product page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Button asChild className="w-fit">
+                <a href={DEEP_LINK} target="_blank" rel="noopener noreferrer">
+                  Add block to product page
+                </a>
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Opens the theme editor with the GrindCTRL Try-On block already placed.
+                The merchant only clicks Save.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Preview</CardTitle>
+              <CardDescription>The exact embed a store visitor sees.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button asChild variant="outline">
+                <Link href="/embed/try-on" target="_blank">Open embed preview</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/try-on" target="_blank">Open public demo</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Recent try-on jobs</CardTitle>
-          <CardDescription>Mock/demo rows only. No persistence and no live provider yet.</CardDescription>
+          <CardDescription>
+            {jobs.length
+              ? 'Live generation history (metadata only; customer photos are never stored).'
+              : 'No generations recorded yet. Jobs appear here as customers use the try-on.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -112,70 +202,29 @@ export default function DashboardTryOnPage() {
                   <TableHead>Job ID</TableHead>
                   <TableHead>Product</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Lead captured</TableHead>
-                  <TableHead>Created time</TableHead>
-                  <TableHead>Runtime</TableHead>
+                  <TableHead>Model</TableHead>
+                  <TableHead>Cost</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {JOB_ROWS.map((row) => (
-                  <TableRow key={row.jobId}>
-                    <TableCell className="font-mono text-xs">{row.jobId}</TableCell>
-                    <TableCell>{row.product}</TableCell>
-                    <TableCell><Badge variant={statusTone(row.status)}>{row.status}</Badge></TableCell>
-                    <TableCell>{row.leadCaptured}</TableCell>
-                    <TableCell>{row.createdTime}</TableCell>
-                    <TableCell>{row.runtime}</TableCell>
+                {jobs.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-mono text-xs">{row.id}</TableCell>
+                    <TableCell>{row.product_id}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusTone(row.status)}>{row.status}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs">{row.provider ?? '—'}</TableCell>
+                    <TableCell>{row.cost_usd != null ? `$${Number(row.cost_usd).toFixed(3)}` : '—'}</TableCell>
+                    <TableCell>{row.duration_ms != null ? `${(row.duration_ms / 1000).toFixed(1)}s` : '—'}</TableCell>
+                    <TableCell className="text-xs">{new Date(row.created_at).toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lead capture flow</CardTitle>
-            <CardDescription>Workflow staged for upcoming live implementation.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">
-              Try-on completed → WhatsApp follow-up → CRM/Sheets → business owner notification.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Embed setup</CardTitle>
-            <CardDescription>Coming soon script preview for storefront activation.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Badge variant="outline" className="w-fit">Disabled / coming soon</Badge>
-            <pre className="overflow-x-auto rounded-xl border bg-muted/20 p-3 text-xs text-foreground">
-              <code>{EMBED_SCRIPT}</code>
-            </pre>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Next actions</CardTitle>
-          <CardDescription>Open demo now, then prepare live and embed phases.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Button asChild>
-            <Link href="/try-on">Open public demo</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/integrations">Prepare live generation</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/install">Prepare embed widget</Link>
-          </Button>
         </CardContent>
       </Card>
     </section>

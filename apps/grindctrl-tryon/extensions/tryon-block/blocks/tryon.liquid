@@ -6,6 +6,7 @@
   class="gc-tryon-root"
   data-embed-base="{{ block.settings.embed_base }}"
   data-product="{{ product.handle }}"
+  data-shop="{{ shop.permanent_domain }}"
   data-locale="{{ request.locale.iso_code }}"
   data-theme="{{ block.settings.widget_theme }}"
   {{ block.shopify_attributes }}
@@ -31,10 +32,11 @@
       "id": "widget_theme",
       "label": "Widget theme",
       "options": [
+        { "value": "", "label": "From GrindCTRL dashboard" },
         { "value": "light", "label": "Light" },
         { "value": "dark", "label": "Dark" }
       ],
-      "default": "light"
+      "default": ""
     },
     {
       "type": "text",

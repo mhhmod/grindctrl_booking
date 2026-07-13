@@ -24,11 +24,20 @@ import type {
 
 type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 
-export function TryOnDemo({ productId }: { productId?: string } = {}) {
+export type TryOnDemoOverrides = {
+  generateLabel?: string;
+  loadingSteps?: string[];
+};
+
+export function TryOnDemo({
+  productId,
+  overrides,
+}: { productId?: string; overrides?: TryOnDemoOverrides } = {}) {
   const { t, locale } = useTryOnLocale();
   const baseProduct = (productId && getProduct(productId)) || getDefaultProduct();
   const product = localizeProduct(baseProduct, locale);
-  const loadingSteps = t.loadingSteps;
+  const loadingSteps = overrides?.loadingSteps?.length ? overrides.loadingSteps : t.loadingSteps;
+  const generateLabel = overrides?.generateLabel || t.generateBtn;
 
   const [step, setStep] = useState<DemoStep>('upload');
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
@@ -240,7 +249,7 @@ export function TryOnDemo({ productId }: { productId?: string } = {}) {
               id="tryon-generate-btn"
             >
               <Sparkles className="size-4" />
-              {t.generateBtn}
+              {generateLabel}
             </Button>
           </div>
         )}
