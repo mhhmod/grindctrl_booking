@@ -3,6 +3,7 @@
 import type { TryOnJob, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
 import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
+import { persistTryOnJob } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
 
 /**
@@ -66,6 +67,7 @@ export async function generateTryOn(
   }
 
   const mode = getTryOnMode();
+  const startedAt = Date.now();
 
   let job: TryOnJob;
 
@@ -91,6 +93,11 @@ export async function generateTryOn(
 
   // Store job for polling (⚠️ MVP in-memory — see jobStore comment above)
   jobStore.set(job.jobId, job);
+
+  // Job history for the dashboard; best-effort, never fails the request.
+  if (mode === 'live') {
+    await persistTryOnJob(job, Date.now() - startedAt).catch(() => {});
+  }
 
   return job;
 }
