@@ -2,7 +2,7 @@
 
 import type { TryOnJob, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
 import { runMockGeneration } from './mock-runner';
-import { runOpenAiGeneration } from './openai-runner';
+import { runImageGeneration } from './image-runner';
 import { validateProductId, validateSessionId } from './validator';
 
 /**
@@ -47,7 +47,7 @@ export function createSession(productId: string): TryOnSession {
  *                    without a deliberate photo reference.
  *
  * In mock mode → uses mock-runner (static demo image).
- * In live mode → OpenAI gpt-image-2 (person photo + garment image → composite).
+ * In live mode → OpenRouter image model (TRYON_MODEL) compositing person + garment.
  */
 export async function generateTryOn(
   sessionId: string,
@@ -70,7 +70,7 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (mode === 'live' && photoSource === 'upload' && photoData) {
-    job = await runOpenAiGeneration(sessionId, productId, photoData);
+    job = await runImageGeneration(sessionId, productId, photoData);
   } else if (mode === 'live') {
     job = {
       jobId: `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -81,7 +81,7 @@ export async function generateTryOn(
       createdAt: new Date().toISOString(),
       meta: {
         runtime: 'live',
-        provider: 'openai',
+        provider: 'openrouter',
         costEstimate: 0,
       },
     };

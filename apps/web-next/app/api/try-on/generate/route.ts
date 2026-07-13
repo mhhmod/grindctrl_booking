@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
     const productId = body.productId ?? '';
     const photoSource = body.photoSource ?? '';
     const photoReference = body.photoReference?.trim() ?? '';
-    const hasPhotoReference = photoReference.length > 0;
+    const hasPhotoReference =
+      photoReference.length > 0 ||
+      (typeof body.photoData === 'string' && body.photoData.length > 0);
     const usesMockPhoto = body.useMockPhoto === true || photoSource === 'mock';
 
     // ── Validate session ──

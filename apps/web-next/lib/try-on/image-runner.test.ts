@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePhotoDataUrl } from './openai-runner';
+import { parsePhotoDataUrl } from './image-runner';
 import { checkRateLimit, sweepRateLimits } from './rate-limit';
 
 const PNG_1PX =
