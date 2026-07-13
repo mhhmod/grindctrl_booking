@@ -273,7 +273,7 @@ export function SiteLanding() {
               {t.howSteps.map((step, i) => {
                 const Icon = stepIcons[i] ?? Blocks;
                 return (
-                  <div key={step.title} className="gc-card-hover gc-landing-panel rounded-2xl border p-6">
+                  <div key={step.title} className="gc-spotlight gc-card-hover gc-landing-panel rounded-2xl border p-6">
                     <div className="flex items-center gap-3">
                       <div className="grid size-10 place-items-center rounded-xl border border-border bg-background">
                         <Icon className="size-5 text-foreground" />
@@ -299,7 +299,7 @@ export function SiteLanding() {
               {t.automateItems.map((item, i) => {
                 const Icon = automateIcons[i] ?? Headphones;
                 return (
-                  <div key={item.title} className="gc-card-hover gc-landing-panel rounded-2xl border p-6">
+                  <div key={item.title} className="gc-spotlight gc-card-hover gc-landing-panel rounded-2xl border p-6">
                     <div className="grid size-11 place-items-center rounded-xl border border-border bg-background">
                       <Icon className="size-5 text-foreground" />
                     </div>
@@ -343,7 +343,7 @@ export function SiteLanding() {
                 body={t.testimonialsBody}
               />
               <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
-                <figure className="gc-landing-card gc-card-hover flex flex-col justify-between rounded-3xl border p-8 sm:p-10">
+                <figure className="gc-spotlight gc-landing-card gc-card-hover flex flex-col justify-between rounded-3xl border p-8 sm:p-10">
                   <Quote className="size-8 shrink-0 text-muted-foreground/40" aria-hidden="true" />
                   <blockquote className="mt-6 text-xl font-medium leading-[1.5] text-foreground sm:text-2xl">
                     {t.testimonials[0].quote}

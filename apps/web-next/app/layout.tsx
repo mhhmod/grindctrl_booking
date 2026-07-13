@@ -9,6 +9,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
+import { GcSpotlight } from '@/components/gc-spotlight';
 
 export const metadata: Metadata = {
   title: 'GRINDCTRL — AI Implementation & Automation',
@@ -23,6 +24,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
     <html lang="en" className={cn("font-sans")} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ThemeProvider>
+          <GcSpotlight />
           {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
         </ThemeProvider>
       </body>

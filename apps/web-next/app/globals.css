@@ -378,6 +378,34 @@
   transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
 }
 
+/* Cursor-following warm spotlight (Linear/Vercel card pattern).
+   A global listener writes --gc-mx/--gc-my per card; the glow only
+   paints on hover-capable devices. */
+@media (hover: hover) {
+  .gc-spotlight {
+    position: relative;
+  }
+
+  .gc-spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 320ms ease;
+    background: radial-gradient(
+      280px circle at var(--gc-mx, 50%) var(--gc-my, 50%),
+      color-mix(in oklch, var(--foreground) 9%, transparent),
+      transparent 65%
+    );
+  }
+
+  .gc-spotlight:hover::before {
+    opacity: 1;
+  }
+}
+
 /* Image + text hover: media zooms slightly, caption slides up over the
    image. Caption stays pinned visible on touch and reduced-motion. */
 .gc-hover-reveal .gc-reveal-media {
