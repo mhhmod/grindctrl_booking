@@ -41,6 +41,8 @@ export interface TryOnGenerateRequest {
   photoSource: TryOnPhotoSource;
   /** Lightweight server-facing reference for an uploaded photo. */
   photoReference?: string;
+  /** The uploaded photo itself as a data URL (jpeg/png/webp). Required for live mode. */
+  photoData?: string;
   /** Explicitly opts into the demo placeholder photo path. */
   useMockPhoto?: boolean;
 }

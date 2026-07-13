@@ -83,6 +83,7 @@ export function TryOnDemo() {
           productId: product.id,
           photoSource: 'upload',
           photoReference: photoDataUrl ? 'uploaded-photo' : undefined,
+          photoData: photoDataUrl ?? undefined,
         }),
       });
       const genData: TryOnJobApiResponse = await genRes.json();

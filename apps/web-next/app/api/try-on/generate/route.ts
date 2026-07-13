@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateTryOn } from '@/lib/try-on/service';
+import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
+import { checkRateLimit } from '@/lib/try-on/rate-limit';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
+import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -8,6 +10,10 @@ import type {
 } from '@/lib/try-on/types';
 
 const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
+
+/* Base64 inflates bytes by ~4/3; allow the 8MB file cap plus data-URL header. */
+const MAX_PHOTO_DATA_LENGTH = Math.ceil((TRYON_FILE_CONFIG.maxSizeBytes * 4) / 3) + 64;
+const PHOTO_DATA_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,/;
 
 function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
   return {
@@ -39,11 +45,24 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
  */
 export async function POST(request: NextRequest) {
   try {
+    /* Real generations cost provider money: rate-limit per client IP. */
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const limit = checkRateLimit(ip);
+    if (!limit.ok) {
+      const message = 'Too many try-on requests. Please try again in a few minutes.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 429, headers: { 'Retry-After': String(limit.retryAfterSec ?? 60) } },
+      );
+    }
+
     const body = (await request.json()) as {
       sessionId?: string;
       productId?: string;
       photoSource?: string;
       photoReference?: string;
+      photoData?: string;
       useMockPhoto?: boolean;
     };
 
@@ -90,7 +109,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    const job = await generateTryOn(sessionId, productId, resolvedPhotoSource);
+    // ── Validate photo payload (live mode requires the actual image) ──
+    const photoData = body.photoData;
+    if (photoData !== undefined) {
+      if (
+        typeof photoData !== 'string' ||
+        !PHOTO_DATA_PREFIX_RE.test(photoData) ||
+        photoData.length > MAX_PHOTO_DATA_LENGTH
+      ) {
+        const message = 'Photo must be a jpeg, png, or webp image up to 8 MB.';
+        return NextResponse.json(
+          { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+          { status: 400 },
+        );
+      }
+    } else if (getTryOnMode() === 'live' && resolvedPhotoSource === 'upload') {
+      const message = 'Photo upload is required for try-on generation.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+
+    const job = await generateTryOn(sessionId, productId, resolvedPhotoSource, photoData);
 
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });

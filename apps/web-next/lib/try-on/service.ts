@@ -2,6 +2,7 @@
 
 import type { TryOnJob, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
 import { runMockGeneration } from './mock-runner';
+import { runOpenAiGeneration } from './openai-runner';
 import { validateProductId, validateSessionId } from './validator';
 
 /**
@@ -46,12 +47,13 @@ export function createSession(productId: string): TryOnSession {
  *                    without a deliberate photo reference.
  *
  * In mock mode → uses mock-runner (static demo image).
- * In live mode → returns a safe fallback since no provider exists yet.
+ * In live mode → OpenAI gpt-image-2 (person photo + garment image → composite).
  */
 export async function generateTryOn(
   sessionId: string,
   productId: string,
   photoSource: TryOnPhotoSource,
+  photoData?: string,
 ): Promise<TryOnJob> {
   const sv = validateSessionId(sessionId);
   if (!sv.ok) throw new Error(sv.error);
@@ -67,18 +69,19 @@ export async function generateTryOn(
 
   let job: TryOnJob;
 
-  if (mode === 'live') {
-    // No live provider configured yet — return safe fallback.
+  if (mode === 'live' && photoSource === 'upload' && photoData) {
+    job = await runOpenAiGeneration(sessionId, productId, photoData);
+  } else if (mode === 'live') {
     job = {
       jobId: `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       sessionId,
       productId,
       status: 'failed',
-      message: 'Live provider is not configured yet. Please use mock mode or configure a provider.',
+      message: 'Live mode needs an uploaded photo.',
       createdAt: new Date().toISOString(),
       meta: {
         runtime: 'live',
-        provider: 'none',
+        provider: 'openai',
         costEstimate: 0,
       },
     };

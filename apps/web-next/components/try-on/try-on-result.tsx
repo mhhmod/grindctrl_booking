@@ -37,6 +37,7 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
             height={533}
             className="aspect-[3/4] w-full object-cover"
             priority
+            unoptimized={job.resultImageUrl.startsWith('data:')}
           />
 
           {/* Demo / mock badge */}
