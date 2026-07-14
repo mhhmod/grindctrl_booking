@@ -9,6 +9,8 @@ export type TryOnSettings = {
   accentFg: string;
   radiusPx: number;
   widgetTheme: 'light' | 'dark';
+  iconBgFrom: string;
+  iconBgTo: string;
   loadingSteps: string[] | null;
 };
 
@@ -18,6 +20,8 @@ const DEFAULTS: TryOnSettings = {
   accentFg: '#f0ede9',
   radiusPx: 999,
   widgetTheme: 'light',
+  iconBgFrom: '#ff9a3d',
+  iconBgTo: '#ffd76e',
   loadingSteps: null,
 };
 
@@ -35,6 +39,8 @@ type Row = {
   accent_fg: string | null;
   radius_px: number | null;
   widget_theme: string | null;
+  icon_bg_from: string | null;
+  icon_bg_to: string | null;
   loading_steps: string[] | null;
 };
 
@@ -46,6 +52,8 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
     accentFg: row.accent_fg ?? base.accentFg,
     radiusPx: row.radius_px ?? base.radiusPx,
     widgetTheme: row.widget_theme === 'dark' ? 'dark' : base.widgetTheme,
+    iconBgFrom: row.icon_bg_from ?? base.iconBgFrom,
+    iconBgTo: row.icon_bg_to ?? base.iconBgTo,
     loadingSteps: row.loading_steps ?? base.loadingSteps,
   };
 }
@@ -56,7 +64,7 @@ export async function getSettingsForShop(shop: string): Promise<TryOnSettings> {
 
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, loading_steps')
+    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_steps')
     .in('shop', ['default', shop]);
 
   if (error || !data) return DEFAULTS;
@@ -79,6 +87,8 @@ export async function saveSettingsForShop(
     accent_fg: values.accentFg ?? null,
     radius_px: values.radiusPx ?? null,
     widget_theme: values.widgetTheme ?? null,
+    icon_bg_from: values.iconBgFrom ?? null,
+    icon_bg_to: values.iconBgTo ?? null,
     loading_steps: values.loadingSteps ?? null,
     updated_at: new Date().toISOString(),
   });

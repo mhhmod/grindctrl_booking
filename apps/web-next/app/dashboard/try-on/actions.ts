@@ -22,6 +22,8 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     accentFg: String(formData.get('accent_fg') || '').trim() || undefined,
     radiusPx: Number.isFinite(radius) ? Math.max(0, Math.min(999, radius)) : undefined,
     widgetTheme: formData.get('widget_theme') === 'dark' ? 'dark' : 'light',
+    iconBgFrom: String(formData.get('icon_bg_from') || '').trim() || undefined,
+    iconBgTo: String(formData.get('icon_bg_to') || '').trim() || undefined,
     loadingSteps,
   });
 

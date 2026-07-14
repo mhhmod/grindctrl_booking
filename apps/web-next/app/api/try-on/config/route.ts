@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
       accentFg: settings.accentFg,
       radiusPx: settings.radiusPx,
       widgetTheme: settings.widgetTheme,
+      iconBgFrom: settings.iconBgFrom,
+      iconBgTo: settings.iconBgTo,
     },
     { headers: CORS_HEADERS },
   );

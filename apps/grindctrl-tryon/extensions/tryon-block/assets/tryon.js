@@ -25,6 +25,10 @@
         if (cfg.accentFg) btn.style.color = cfg.accentFg;
         if (typeof cfg.radiusPx === 'number') btn.style.borderRadius = cfg.radiusPx + 'px';
         if (cfg.widgetTheme) root.dataset.theme = root.dataset.theme || cfg.widgetTheme;
+        if (cfg.iconBgFrom && cfg.iconBgTo) {
+          btn.style.setProperty('--gc-ic-from', cfg.iconBgFrom);
+          btn.style.setProperty('--gc-ic-to', cfg.iconBgTo);
+        }
       })
       .catch(function () { /* defaults from CSS/schema stay */ })
       .then(function () {

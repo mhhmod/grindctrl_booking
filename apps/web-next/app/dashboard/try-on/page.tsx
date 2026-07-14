@@ -132,6 +132,28 @@ export default async function DashboardTryOnPage() {
                   </select>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="icon_bg_from">Icon gradient start</Label>
+                  <Input
+                    id="icon_bg_from"
+                    name="icon_bg_from"
+                    type="color"
+                    defaultValue={settings.iconBgFrom}
+                    className="h-10 p-1"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="icon_bg_to">Icon gradient end</Label>
+                  <Input
+                    id="icon_bg_to"
+                    name="icon_bg_to"
+                    type="color"
+                    defaultValue={settings.iconBgTo}
+                    className="h-10 p-1"
+                  />
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
                 <textarea

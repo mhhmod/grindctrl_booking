@@ -45,6 +45,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       ? Math.max(0, Math.min(999, radius))
       : undefined,
     widgetTheme: form.get("widgetTheme") === "dark" ? "dark" : "light",
+    iconBgFrom: String(form.get("iconBgFrom") || "").trim() || undefined,
+    iconBgTo: String(form.get("iconBgTo") || "").trim() || undefined,
     loadingSteps: loadingStepsRaw
       ? loadingStepsRaw.split("\n").map((s) => s.trim()).filter(Boolean)
       : null,
@@ -123,6 +125,18 @@ export default function Index() {
                 <s-option value="light">Light</s-option>
                 <s-option value="dark">Dark</s-option>
               </s-select>
+            </s-stack>
+            <s-stack direction="inline" gap="base">
+              <s-color-field
+                label="Icon gradient start"
+                name="iconBgFrom"
+                defaultValue={settings.iconBgFrom}
+              />
+              <s-color-field
+                label="Icon gradient end"
+                name="iconBgTo"
+                defaultValue={settings.iconBgTo}
+              />
             </s-stack>
             <s-text-area
               label="Loading steps (one per line, empty = default)"
