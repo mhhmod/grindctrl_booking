@@ -25,6 +25,38 @@ type Settings = {
 
 const APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 
+/* Preset themes modeled on the most common Shopify storefront button
+   styles (Dawn-style minimal black, warm editorial, bold commerce
+   accents). Picking one fills the color fields; editing any = Custom. */
+const THEMES: Array<{
+  key: string;
+  label: string;
+  accentBg: string;
+  accentFg: string;
+  iconBgFrom: string;
+  iconBgTo: string;
+  radiusPx: number;
+}> = [
+  { key: 'minimal', label: 'Minimal Black', accentBg: '#121212', accentFg: '#ffffff', iconBgFrom: '#3a3a3a', iconBgTo: '#6b6b6b', radiusPx: 4 },
+  { key: 'cream', label: 'Warm Cream', accentBg: '#2a2826', accentFg: '#f0ede9', iconBgFrom: '#ff9a3d', iconBgTo: '#ffd76e', radiusPx: 999 },
+  { key: 'bold', label: 'Bold Orange', accentBg: '#eb7805', accentFg: '#ffffff', iconBgFrom: '#ffb25c', iconBgTo: '#ffe08a', radiusPx: 999 },
+  { key: 'ocean', label: 'Ocean Blue', accentBg: '#1a73e8', accentFg: '#ffffff', iconBgFrom: '#6ab7ff', iconBgTo: '#a7d9ff', radiusPx: 8 },
+  { key: 'forest', label: 'Forest Green', accentBg: '#1f7a4d', accentFg: '#ffffff', iconBgFrom: '#5cc98d', iconBgTo: '#b6f0cd', radiusPx: 8 },
+  { key: 'luxe', label: 'Luxe Gold', accentBg: '#191919', accentFg: '#e8c872', iconBgFrom: '#e8c872', iconBgTo: '#f7e7b8', radiusPx: 0 },
+];
+
+function matchTheme(s: Settings): string {
+  const t = THEMES.find(
+    (t) =>
+      t.accentBg.toLowerCase() === s.accentBg.toLowerCase() &&
+      t.accentFg.toLowerCase() === s.accentFg.toLowerCase() &&
+      t.iconBgFrom.toLowerCase() === s.iconBgFrom.toLowerCase() &&
+      t.iconBgTo.toLowerCase() === s.iconBgTo.toLowerCase() &&
+      t.radiusPx === s.radiusPx,
+  );
+  return t?.key ?? 'custom';
+}
+
 async function withToken(): Promise<string> {
   // App Bridge script loads sync, but wait up to 5s to be safe.
   for (let i = 0; i < 50 && !window.shopify; i++) {
@@ -34,9 +66,60 @@ async function withToken(): Promise<string> {
   return window.shopify.idToken();
 }
 
+/* Same icon SVG + animation as the storefront block (tryon.liquid). */
+function TryOnButtonPreview({ s }: { s: Settings }) {
+  return (
+    <div
+      className="rounded-lg border p-6 sm:p-8"
+      style={{ background: s.widgetTheme === 'dark' ? '#1b1917' : '#faf8f5' }}
+    >
+      <style>{`
+        @keyframes pv-tee { 0% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } 16%, 80% { opacity: 1; transform: none; } 94%, 100% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } }
+        @keyframes pv-spark { 0%, 10% { opacity: 0; transform: scale(0.4); } 22% { opacity: 1; transform: scale(1); } 38%, 100% { opacity: 0; transform: scale(0.4); } }
+        @keyframes pv-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .pv-tee { animation: pv-tee 3.6s ease-in-out infinite; transform-origin: 12px 13px; }
+        .pv-spark { animation: pv-spark 3.6s ease-in-out infinite; }
+        .pv-spark2 { animation-delay: 0.5s; }
+        @media (prefers-reduced-motion: reduce) { .pv-tee, .pv-spark { animation: none; opacity: 1; } }
+      `}</style>
+      <div
+        className="mx-auto flex w-full max-w-md items-center justify-center gap-0 px-5 py-3 text-sm font-semibold"
+        style={{
+          background: s.accentBg,
+          color: s.accentFg,
+          borderRadius: `${s.radiusPx}px`,
+        }}
+      >
+        <span
+          className="flex h-7 w-7 flex-none items-center justify-center rounded-full p-[3px]"
+          style={{
+            marginInlineEnd: 10,
+            background: `linear-gradient(120deg, ${s.iconBgFrom}, ${s.iconBgTo}, ${s.iconBgFrom})`,
+            backgroundSize: '220% 220%',
+            animation: 'pv-pan 5s ease-in-out infinite',
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-full w-full">
+            <circle cx="12" cy="4.6" r="2.1" />
+            <path d="M9.4 20.5V15M14.6 20.5V15" />
+            <path className="pv-tee" d="M8.2 9.3 6.2 12l1.9 1.5.6-.8V17h6.6v-4.3l.6.8L17.8 12l-2-2.7c-1.2-.6-2.4-.9-3.8-.9s-2.6.3-3.8.9Z" />
+            <path className="pv-spark" d="m19.6 3.4.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5Z" fill="currentColor" stroke="none" />
+            <path className="pv-spark pv-spark2" d="m4.3 6 .4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4Z" fill="currentColor" stroke="none" />
+          </svg>
+        </span>
+        <span>{s.buttonLabel || 'Try it on with AI'}</span>
+      </div>
+      <p className="mt-3 text-center text-xs" style={{ color: s.widgetTheme === 'dark' ? '#9c968f' : '#8a8378' }}>
+        Live preview — exactly how the button renders on your product page
+      </p>
+    </div>
+  );
+}
+
 export function ShopifyAdminSettings() {
   const [shop, setShop] = useState('');
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const [s, setS] = useState<Settings | null>(null);
+  const [loadingStepsText, setLoadingStepsText] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'error'>(
     'loading',
   );
@@ -53,7 +136,8 @@ export function ShopifyAdminSettings() {
         const data = (await res.json()) as { shop: string; settings: Settings };
         if (cancelled) return;
         setShop(data.shop);
-        setSettings(data.settings);
+        setS(data.settings);
+        setLoadingStepsText(data.settings.loadingSteps?.join('\n') ?? '');
         setStatus('ready');
       } catch {
         if (!cancelled) setStatus('error');
@@ -64,44 +148,37 @@ export function ShopifyAdminSettings() {
     };
   }, []);
 
-  const save = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (!settings) return;
-      setStatus('saving');
-      try {
-        const form = new FormData(e.currentTarget);
-        const loadingStepsRaw = String(form.get('loading_steps') || '').trim();
-        const token = await withToken();
-        const res = await fetch('/api/shopify/admin/settings', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            buttonLabel: String(form.get('button_label') || ''),
-            accentBg: String(form.get('accent_bg') || ''),
-            accentFg: String(form.get('accent_fg') || ''),
-            radiusPx: Number(form.get('radius_px')),
-            widgetTheme: String(form.get('widget_theme') || 'light'),
-            iconBgFrom: String(form.get('icon_bg_from') || ''),
-            iconBgTo: String(form.get('icon_bg_to') || ''),
-            loadingSteps: loadingStepsRaw
-              ? loadingStepsRaw.split('\n').map((s) => s.trim()).filter(Boolean)
-              : null,
-          }),
-        });
-        setStatus(res.ok ? 'saved' : 'error');
-      } catch {
-        setStatus('error');
-      }
-    },
-    [settings],
-  );
+  const set = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
+    setS((prev) => (prev ? { ...prev, [key]: value } : prev));
+    setStatus((st) => (st === 'saved' ? 'ready' : st));
+  }, []);
+
+  const save = useCallback(async () => {
+    if (!s) return;
+    setStatus('saving');
+    try {
+      const token = await withToken();
+      const res = await fetch('/api/shopify/admin/settings', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...s,
+          loadingSteps: loadingStepsText.trim()
+            ? loadingStepsText.split('\n').map((l) => l.trim()).filter(Boolean)
+            : null,
+        }),
+      });
+      setStatus(res.ok ? 'saved' : 'error');
+    } catch {
+      setStatus('error');
+    }
+  }, [s, loadingStepsText]);
 
   if (status === 'loading') {
     return <p className="p-6 text-sm text-muted-foreground">Loading settings…</p>;
   }
 
-  if (status === 'error' && !settings) {
+  if (!s) {
     return (
       <p className="p-6 text-sm text-destructive">
         Could not load settings. Open this page from your Shopify admin.
@@ -109,6 +186,7 @@ export function ShopifyAdminSettings() {
     );
   }
 
+  const activeTheme = matchTheme(s);
   const deepLink = shop
     ? `https://${shop}/admin/themes/current/editor?template=product&addAppBlockId=${APP_CLIENT_ID}/tryon&target=mainSection`
     : '#';
@@ -119,8 +197,8 @@ export function ShopifyAdminSettings() {
         <CardHeader>
           <CardTitle>Add try-on to your product pages</CardTitle>
           <CardDescription>
-            One click opens the theme editor with the try-on block already placed.
-            Just press Save there.
+            One click opens the theme editor with the try-on block already placed. Just press
+            Save there.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,80 +214,137 @@ export function ShopifyAdminSettings() {
         <CardHeader>
           <CardTitle>Try-on button &amp; journey</CardTitle>
           <CardDescription>
-            Controls how the try-on looks in your store. Changes go live within a minute.
+            Pick a theme or fine-tune colors. Changes go live within a minute.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={save} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="button_label">Button label</Label>
-              <Input
-                id="button_label"
-                name="button_label"
-                defaultValue={settings?.buttonLabel}
-                maxLength={40}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="accent_bg">Button color</Label>
-                <Input id="accent_bg" name="accent_bg" type="color" defaultValue={settings?.accentBg} className="h-10 p-1" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="accent_fg">Button text color</Label>
-                <Input id="accent_fg" name="accent_fg" type="color" defaultValue={settings?.accentFg} className="h-10 p-1" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="icon_bg_from">Icon gradient start</Label>
-                <Input id="icon_bg_from" name="icon_bg_from" type="color" defaultValue={settings?.iconBgFrom} className="h-10 p-1" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="icon_bg_to">Icon gradient end</Label>
-                <Input id="icon_bg_to" name="icon_bg_to" type="color" defaultValue={settings?.iconBgTo} className="h-10 p-1" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="radius_px">Corner radius (px)</Label>
-                <Input id="radius_px" name="radius_px" type="number" min={0} max={999} defaultValue={settings?.radiusPx} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="widget_theme">Widget theme</Label>
-                <select
-                  id="widget_theme"
-                  name="widget_theme"
-                  defaultValue={settings?.widgetTheme}
-                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+        <CardContent className="grid gap-5">
+          <TryOnButtonPreview s={s} />
+
+          <div className="grid gap-2">
+            <Label>Theme</Label>
+            <div className="flex flex-wrap gap-2">
+              {THEMES.map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() =>
+                    setS((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            accentBg: t.accentBg,
+                            accentFg: t.accentFg,
+                            iconBgFrom: t.iconBgFrom,
+                            iconBgTo: t.iconBgTo,
+                            radiusPx: t.radiusPx,
+                          }
+                        : prev,
+                    )
+                  }
+                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                    activeTheme === t.key
+                      ? 'border-foreground bg-foreground/5 font-medium'
+                      : 'border-input hover:bg-muted'
+                  }`}
                 >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
-              </div>
+                  <span
+                    className="h-4 w-4 rounded-full border"
+                    style={{
+                      background: `linear-gradient(120deg, ${t.accentBg} 55%, ${t.iconBgFrom})`,
+                    }}
+                  />
+                  {t.label}
+                </button>
+              ))}
+              <span
+                className={`flex items-center rounded-full border px-3 py-1.5 text-sm ${
+                  activeTheme === 'custom'
+                    ? 'border-foreground bg-foreground/5 font-medium'
+                    : 'border-dashed border-input text-muted-foreground'
+                }`}
+              >
+                Custom
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="button_label">Button label</Label>
+            <Input
+              id="button_label"
+              value={s.buttonLabel}
+              maxLength={40}
+              onChange={(e) => set('buttonLabel', e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="accent_bg">Button color</Label>
+              <Input id="accent_bg" type="color" value={s.accentBg} className="h-10 p-1" onChange={(e) => set('accentBg', e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
-              <textarea
-                id="loading_steps"
-                name="loading_steps"
-                rows={4}
-                defaultValue={settings?.loadingSteps?.join('\n') ?? ''}
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+              <Label htmlFor="accent_fg">Button text color</Label>
+              <Input id="accent_fg" type="color" value={s.accentFg} className="h-10 p-1" onChange={(e) => set('accentFg', e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="icon_bg_from">Icon gradient start</Label>
+              <Input id="icon_bg_from" type="color" value={s.iconBgFrom} className="h-10 p-1" onChange={(e) => set('iconBgFrom', e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="icon_bg_to">Icon gradient end</Label>
+              <Input id="icon_bg_to" type="color" value={s.iconBgTo} className="h-10 p-1" onChange={(e) => set('iconBgTo', e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="radius_px">Corner radius (px)</Label>
+              <Input
+                id="radius_px"
+                type="number"
+                min={0}
+                max={999}
+                value={s.radiusPx}
+                onChange={(e) => set('radiusPx', Math.max(0, Math.min(999, Number(e.target.value) || 0)))}
               />
             </div>
-            <div className="flex items-center gap-3">
-              <Button type="submit" disabled={status === 'saving'}>
-                {status === 'saving' ? 'Saving…' : 'Save settings'}
-              </Button>
-              {status === 'saved' && (
-                <span className="text-sm text-muted-foreground">Saved — live within a minute.</span>
-              )}
-              {status === 'error' && settings && (
-                <span className="text-sm text-destructive">Could not save. Try again.</span>
-              )}
+            <div className="grid gap-2">
+              <Label htmlFor="widget_theme">Widget theme</Label>
+              <select
+                id="widget_theme"
+                value={s.widgetTheme}
+                onChange={(e) => set('widgetTheme', e.target.value === 'dark' ? 'dark' : 'light')}
+                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
             </div>
-          </form>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
+            <textarea
+              id="loading_steps"
+              rows={4}
+              value={loadingStepsText}
+              onChange={(e) => setLoadingStepsText(e.target.value)}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button type="button" onClick={save} disabled={status === 'saving'}>
+              {status === 'saving' ? 'Saving…' : 'Save settings'}
+            </Button>
+            {status === 'saved' && (
+              <span className="text-sm text-muted-foreground">Saved — live within a minute.</span>
+            )}
+            {status === 'error' && (
+              <span className="text-sm text-destructive">Could not save. Try again.</span>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
