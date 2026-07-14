@@ -53,6 +53,17 @@
 
       var garment = root.dataset.garment || '';
       if (garment.indexOf('//') === 0) garment = 'https:' + garment;
+      // Custom-domain stores serve images from their own host; rewrite to
+      // the permanent *.myshopify.com domain (same /cdn/ path) so the
+      // embed's Shopify-only garment allowlist accepts it.
+      try {
+        var gu = new URL(garment);
+        var host = gu.hostname;
+        if (host !== 'cdn.shopify.com' && !/\.myshopify\.com$/.test(host) && root.dataset.shop) {
+          gu.hostname = root.dataset.shop;
+          garment = gu.toString();
+        }
+      } catch (_) { /* keep as-is; embed validates */ }
 
       var src =
         EMBED_ORIGIN +

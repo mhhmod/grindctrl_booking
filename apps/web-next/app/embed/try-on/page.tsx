@@ -5,6 +5,7 @@ import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { getProduct } from '@/lib/try-on/products';
+import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import {
   DEFAULT_TRYON_LOCALE,
   isTryOnLocale,
@@ -36,13 +37,7 @@ export default async function EmbedTryOnPage({
 
   /* Store-product mode: the block passes the product's own image + title
      so customers try on the actual product, not the seeded demo garment. */
-  let garmentHost = '';
-  try {
-    garmentHost = params.garment ? new URL(params.garment).hostname : '';
-  } catch {
-    garmentHost = '';
-  }
-  const garmentOk = !!params.garment && garmentHost === 'cdn.shopify.com';
+  const garmentOk = !!params.garment && isAllowedGarmentUrl(params.garment);
   /* Never show the seeded demo garment for a store product: even when an
      old cached block script omits garment/title, a non-catalog handle
      renders as the store's product (name prettified from the handle). */

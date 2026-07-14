@@ -127,7 +127,9 @@ export function TryOnDemo({
         !genData.jobId ||
         !genData.status ||
         !genData.productId ||
-        !genData.meta
+        !genData.meta ||
+        genData.status === 'failed' ||
+        (genData.status === 'completed' && !genData.resultImageUrl)
       ) {
         throw new Error(genData.message || genData.error || t.genericError);
       }

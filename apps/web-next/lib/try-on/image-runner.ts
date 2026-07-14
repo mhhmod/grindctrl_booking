@@ -25,11 +25,18 @@ export function parsePhotoDataUrl(photoData: string): { mime: string } | null {
 
 const MAX_GARMENT_BYTES = 8 * 1024 * 1024;
 
-/* Only Shopify's image CDN is allowed as a remote garment source (SSRF guard). */
+/* Only Shopify-controlled image hosts are allowed as remote garment
+   sources (SSRF guard): the shared CDN, or a *.myshopify.com shop
+   domain's /cdn/ path (modern image_url returns shop-domain URLs). */
 export function isAllowedGarmentUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' && parsed.hostname === 'cdn.shopify.com';
+    if (parsed.protocol !== 'https:') return false;
+    if (parsed.hostname === 'cdn.shopify.com') return true;
+    return (
+      /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(parsed.hostname) &&
+      parsed.pathname.startsWith('/cdn/')
+    );
   } catch {
     return false;
   }
