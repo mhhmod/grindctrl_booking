@@ -14,6 +14,8 @@ export type TryOnSettings = {
   /** Animated gradient badge behind the button icon. */
   iconBgFrom: string;
   iconBgTo: string;
+  /** Loading animation style in the widget. */
+  loadingStyle: 'steps' | 'pulse' | 'bar';
   /** null → use the built-in localized loading steps */
   loadingSteps: string[] | null;
 };
@@ -27,6 +29,7 @@ export const DEFAULT_SETTINGS: TryOnSettings = {
   widgetTheme: 'light',
   iconBgFrom: '#ff9a3d',
   iconBgTo: '#ffd76e',
+  loadingStyle: 'steps',
   loadingSteps: null,
 };
 
@@ -46,6 +49,7 @@ type Row = {
   widget_theme: string | null;
   icon_bg_from: string | null;
   icon_bg_to: string | null;
+  loading_style: string | null;
   loading_steps: string[] | null;
 };
 
@@ -60,6 +64,10 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
     widgetTheme: row.widget_theme === 'dark' ? 'dark' : base.widgetTheme,
     iconBgFrom: row.icon_bg_from ?? base.iconBgFrom,
     iconBgTo: row.icon_bg_to ?? base.iconBgTo,
+    loadingStyle:
+      row.loading_style === 'pulse' || row.loading_style === 'bar'
+        ? row.loading_style
+        : base.loadingStyle,
     loadingSteps: row.loading_steps ?? base.loadingSteps,
   };
 }
@@ -72,7 +80,7 @@ export async function getTryOnSettings(shop?: string | null): Promise<TryOnSetti
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_steps')
+    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps')
     .in('shop', shops);
 
   if (error || !data) return DEFAULT_SETTINGS;
@@ -98,6 +106,7 @@ export async function saveTryOnSettings(
     widget_theme: values.widgetTheme ?? null,
     icon_bg_from: values.iconBgFrom ?? null,
     icon_bg_to: values.iconBgTo ?? null,
+    loading_style: values.loadingStyle ?? null,
     loading_steps: values.loadingSteps ?? null,
     updated_at: new Date().toISOString(),
   });

@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       widgetTheme: settings.widgetTheme,
       iconBgFrom: settings.iconBgFrom,
       iconBgTo: settings.iconBgTo,
+      loadingStyle: settings.loadingStyle,
     },
     { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
   );

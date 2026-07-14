@@ -20,6 +20,7 @@ type Settings = {
   widgetTheme: 'light' | 'dark';
   iconBgFrom: string;
   iconBgTo: string;
+  loadingStyle: 'steps' | 'pulse' | 'bar';
   loadingSteps: string[] | null;
 };
 
@@ -372,6 +373,22 @@ export function ShopifyAdminSettings() {
                 <option value="dark">Dark</option>
               </select>
             </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="loading_style">Loading animation</Label>
+            <select
+              id="loading_style"
+              value={s.loadingStyle ?? 'steps'}
+              onChange={(e) =>
+                set('loadingStyle', e.target.value === 'pulse' || e.target.value === 'bar' ? e.target.value : 'steps')
+              }
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="steps">Checklist steps</option>
+              <option value="pulse">Product photo pulse</option>
+              <option value="bar">Progress bar</option>
+            </select>
           </div>
 
           <div className="grid gap-2">

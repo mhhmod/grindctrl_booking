@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Download, MessageCircle, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Download, MessageCircle, ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TryOnJob } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
@@ -11,10 +12,19 @@ interface TryOnResultProps {
   job: TryOnJob;
   productName: string;
   onReset: () => void;
+  /** Inside a merchant storefront: primary CTA is add-to-cart, not trial. */
+  shopMode?: boolean;
 }
 
-export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
+export function TryOnResult({ job, productName, onReset, shopMode }: TryOnResultProps) {
   const { t } = useTryOnLocale();
+  const [carted, setCarted] = useState(false);
+
+  const handleAddToCart = () => {
+    setCarted(true);
+    // The host block (tryon.js) adds the variant via /cart/add.js.
+    window.parent.postMessage({ type: 'grindctrl-tryon:add-to-cart' }, '*');
+  };
   const handleDownload = () => {
     if (!job.resultImageUrl) return;
     const link = document.createElement('a');
@@ -85,16 +95,25 @@ export function TryOnResult({ job, productName, onReset }: TryOnResultProps) {
           </a>
         </Button>
 
-        <Button
-          asChild
-          size="lg"
-          className="h-11 gap-2 rounded-xl"
-        >
-          <Link href="/sign-up" id="tryon-trial-btn">
-            {t.trial}
-            <ArrowRight className="size-4 rtl:-scale-x-100" />
-          </Link>
-        </Button>
+        {shopMode ? (
+          <Button
+            size="lg"
+            className="h-11 gap-2 rounded-xl"
+            onClick={handleAddToCart}
+            disabled={carted}
+            id="tryon-add-to-cart-btn"
+          >
+            <ShoppingCart className="size-4" />
+            {carted ? t.addedToCart : t.addToCart}
+          </Button>
+        ) : (
+          <Button asChild size="lg" className="h-11 gap-2 rounded-xl">
+            <Link href="/sign-up" id="tryon-trial-btn">
+              {t.trial}
+              <ArrowRight className="size-4 rtl:-scale-x-100" />
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Disclaimer */}

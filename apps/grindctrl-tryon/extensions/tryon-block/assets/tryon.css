@@ -59,30 +59,62 @@
   50% { background-position: 100% 50%; }
 }
 
+/* Choreography (4.2s loop): tee drops onto the figure and settles with a
+   soft squash, a sheen sweeps across the fabric, sparkles pop staggered. */
 .gc-ic-tee {
-  animation: gc-tee-on 3.6s ease-in-out infinite;
+  animation: gc-tee-on 4.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   transform-origin: 12px 13px;
 }
 
+.gc-ic-sheen {
+  animation: gc-sheen 4.2s ease-in-out infinite;
+}
+
 .gc-ic-spark {
-  animation: gc-spark 3.6s ease-in-out infinite;
+  animation: gc-spark 4.2s ease-out infinite;
 }
 
 .gc-ic-spark2 {
-  animation-delay: 0.5s;
+  animation-delay: 0.35s;
 }
 
 @keyframes gc-tee-on {
-  0% { opacity: 0; transform: translateY(-2.5px) scale(0.9); }
-  16% { opacity: 1; transform: none; }
-  80% { opacity: 1; transform: none; }
-  94%, 100% { opacity: 0; transform: translateY(-2.5px) scale(0.9); }
+  0% { opacity: 0; transform: translateY(-5px) scale(0.82); }
+  9% { opacity: 1; transform: translateY(0.5px) scale(1.04, 0.93); }
+  13% { transform: none; }
+  86% { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; transform: translateY(-5px) scale(0.82); }
+}
+
+@keyframes gc-sheen {
+  0%, 15% { opacity: 0; transform: skewX(-18deg) translateX(-8px); }
+  18% { opacity: 0.75; }
+  32% { opacity: 0.75; transform: skewX(-18deg) translateX(14px); }
+  34%, 100% { opacity: 0; transform: skewX(-18deg) translateX(14px); }
 }
 
 @keyframes gc-spark {
-  0%, 10% { opacity: 0; transform: scale(0.4); }
-  22% { opacity: 1; transform: scale(1); }
-  38%, 100% { opacity: 0; transform: scale(0.4); }
+  0%, 30% { opacity: 0; transform: scale(0.3); }
+  38% { opacity: 1; transform: scale(1.15); }
+  44% { transform: scale(1); }
+  58%, 100% { opacity: 0; transform: scale(0.3); }
+}
+
+.gc-tryon-btn {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+}
+
+.gc-tryon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.gc-tryon-btn:hover .gc-tryon-ic {
+  transform: scale(1.1);
+}
+
+.gc-tryon-ic {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -91,6 +123,17 @@
   .gc-ic-spark {
     animation: none;
     opacity: 1;
+    transform: none;
+  }
+
+  .gc-ic-sheen {
+    animation: none;
+    opacity: 0;
+  }
+
+  .gc-tryon-btn,
+  .gc-tryon-btn:hover,
+  .gc-tryon-btn:hover .gc-tryon-ic {
     transform: none;
   }
 }

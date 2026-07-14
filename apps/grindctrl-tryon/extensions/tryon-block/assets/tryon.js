@@ -93,10 +93,10 @@
       }
 
       window.addEventListener('message', function (event) {
+        if (event.source !== frame.contentWindow || event.origin !== embedOrigin || !event.data) {
+          return;
+        }
         if (
-          event.source === frame.contentWindow &&
-          event.origin === embedOrigin &&
-          event.data &&
           event.data.type === 'grindctrl-tryon:height' &&
           typeof event.data.height === 'number' &&
           Number.isFinite(event.data.height) &&
@@ -104,6 +104,20 @@
           event.data.height <= 5000
         ) {
           frame.style.height = event.data.height + 'px';
+        }
+        if (event.data.type === 'grindctrl-tryon:add-to-cart') {
+          var variantId = parseInt(root.dataset.variant, 10);
+          if (!variantId) return;
+          fetch('/cart/add.js', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ items: [{ id: variantId, quantity: 1 }] })
+          })
+            .then(function (res) {
+              if (res.ok) window.location.href = '/cart';
+            })
+            .catch(function () { /* leave the widget visible */ });
         }
       });
 

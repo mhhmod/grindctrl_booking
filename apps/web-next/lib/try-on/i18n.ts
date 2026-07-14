@@ -69,6 +69,8 @@ interface TryOnDict {
   whatsapp: string;
   whatsappMsg: (product: string) => string;
   trial: string;
+  addToCart: string;
+  addedToCart: string;
   disclaimerMock: string;
   disclaimerLive: string;
   colorsVary: string;
@@ -137,6 +139,8 @@ const en: TryOnDict = {
   whatsapp: 'Request order / WhatsApp',
   whatsappMsg: (product) => `I'd like to order the ${product}! Here's my try-on preview.`,
   trial: 'Start business trial',
+  addToCart: 'Add to cart',
+  addedToCart: 'Added, opening cart…',
   disclaimerMock:
     'This is a demo preview using a placeholder image, no real AI generation was performed. ',
   disclaimerLive:
@@ -207,6 +211,8 @@ const ar: TryOnDict = {
   whatsapp: 'اطلب الآن / واتساب',
   whatsappMsg: (product) => `أرغب في طلب ${product}! إليك معاينة التجربة الخاصة بي.`,
   trial: 'ابدأ النسخة التجريبية للأعمال',
+  addToCart: 'أضِف إلى السلة',
+  addedToCart: 'تمت الإضافة، جارٍ فتح السلة…',
   disclaimerMock:
     'هذه معاينة تجريبية تستخدم صورة بديلة، ولم يتم إجراء أي توليد فعلي بالذكاء الاصطناعي. ',
   disclaimerLive:

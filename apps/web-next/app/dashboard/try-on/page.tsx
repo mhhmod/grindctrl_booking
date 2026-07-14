@@ -155,6 +155,19 @@ export default async function DashboardTryOnPage() {
                 </div>
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="loading_style">Loading animation</Label>
+                <select
+                  id="loading_style"
+                  name="loading_style"
+                  defaultValue={settings.loadingStyle}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="steps">Checklist steps</option>
+                  <option value="pulse">Product pulse</option>
+                  <option value="bar">Progress bar</option>
+                </select>
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
                 <textarea
                   id="loading_steps"

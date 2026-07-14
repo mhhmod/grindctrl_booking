@@ -24,6 +24,9 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     widgetTheme: formData.get('widget_theme') === 'dark' ? 'dark' : 'light',
     iconBgFrom: String(formData.get('icon_bg_from') || '').trim() || undefined,
     iconBgTo: String(formData.get('icon_bg_to') || '').trim() || undefined,
+    loadingStyle: (['pulse', 'bar'].includes(String(formData.get('loading_style')))
+      ? String(formData.get('loading_style'))
+      : 'steps') as 'steps' | 'pulse' | 'bar',
     loadingSteps,
   });
 

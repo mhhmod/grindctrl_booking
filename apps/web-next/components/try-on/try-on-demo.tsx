@@ -27,6 +27,7 @@ type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 export type TryOnDemoOverrides = {
   generateLabel?: string;
   loadingSteps?: string[];
+  loadingStyle?: 'steps' | 'pulse' | 'bar';
 };
 
 export type ShopProductOverride = {
@@ -58,6 +59,7 @@ export function TryOnDemo({
       }
     : localizeProduct(baseProduct, locale);
   const loadingSteps = overrides?.loadingSteps?.length ? overrides.loadingSteps : t.loadingSteps;
+  const loadingStyle = overrides?.loadingStyle ?? 'steps';
   const generateLabel = overrides?.generateLabel || t.generateBtn;
 
   const [step, setStep] = useState<DemoStep>('upload');
@@ -281,42 +283,72 @@ export function TryOnDemo({
           </div>
         )}
 
-        {/* Step: Generating */}
+        {/* Step: Generating (style is merchant-configurable) */}
         {step === 'generating' && (
           <div className="flex flex-col items-center gap-6 py-8">
-            <div className="relative">
+            {loadingStyle === 'pulse' && product.imageUrl ? (
+              <div className="relative">
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  width={160}
+                  height={213}
+                  className="aspect-[3/4] w-32 animate-pulse rounded-xl border object-cover"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-background/60 to-transparent" />
+              </div>
+            ) : loadingStyle !== 'bar' ? (
               <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10">
                 <Loader2 className="size-7 animate-spin text-primary" />
               </div>
-            </div>
+            ) : null}
 
-            <div className="space-y-4 text-center">
+            <div className="w-full space-y-4 text-center">
               <h3 className="text-lg font-semibold text-foreground">
                 {t.generatingTitle}
               </h3>
-              <div className="mx-auto max-w-xs space-y-2">
-                {loadingSteps.map((label, idx) => (
-                  <div
-                    key={label}
-                    className={`flex items-center gap-2 text-sm transition-all duration-300 ${
-                      idx < loadingStepIdx
-                        ? 'text-primary'
-                        : idx === loadingStepIdx
-                          ? 'font-medium text-foreground'
-                          : 'text-muted-foreground/40'
-                    }`}
-                  >
-                    {idx < loadingStepIdx ? (
-                      <CheckCircle className="size-4 shrink-0" />
-                    ) : idx === loadingStepIdx ? (
-                      <Loader2 className="size-4 shrink-0 animate-spin" />
-                    ) : (
-                      <div className="size-4 shrink-0" />
-                    )}
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
+
+              {loadingStyle === 'steps' ? (
+                <div className="mx-auto max-w-xs space-y-2">
+                  {loadingSteps.map((label, idx) => (
+                    <div
+                      key={label}
+                      className={`flex items-center gap-2 text-sm transition-all duration-300 ${
+                        idx < loadingStepIdx
+                          ? 'text-primary'
+                          : idx === loadingStepIdx
+                            ? 'font-medium text-foreground'
+                            : 'text-muted-foreground/40'
+                      }`}
+                    >
+                      {idx < loadingStepIdx ? (
+                        <CheckCircle className="size-4 shrink-0" />
+                      ) : idx === loadingStepIdx ? (
+                        <Loader2 className="size-4 shrink-0 animate-spin" />
+                      ) : (
+                        <div className="size-4 shrink-0" />
+                      )}
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mx-auto max-w-xs space-y-3">
+                  {loadingStyle === 'bar' && (
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
+                        style={{
+                          width: `${Math.round(((loadingStepIdx + 1) / loadingSteps.length) * 90)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    {loadingSteps[Math.min(loadingStepIdx, loadingSteps.length - 1)]}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -326,6 +358,7 @@ export function TryOnDemo({
           <TryOnResult
             job={job}
             productName={product.name}
+            shopMode={!!shopProduct}
             onReset={handleReset}
           />
         )}

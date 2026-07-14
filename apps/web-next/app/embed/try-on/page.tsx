@@ -77,7 +77,7 @@ export default async function EmbedTryOnPage({
         <TryOnDemo
           productId={params.product}
           shopProduct={shopProduct}
-          overrides={{ loadingSteps: settings.loadingSteps ?? undefined }}
+          overrides={{ loadingSteps: settings.loadingSteps ?? undefined, loadingStyle: settings.loadingStyle }}
         />
       </main>
     </TryOnLocaleProvider>
