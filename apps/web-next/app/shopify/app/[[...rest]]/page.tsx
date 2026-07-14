@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
 import { SHOPIFY_CLIENT_ID } from '@/lib/shopify/session-token';
 
@@ -14,7 +13,10 @@ export default function ShopifyAdminPage() {
   return (
     <>
       <meta name="shopify-api-key" content={SHOPIFY_CLIENT_ID} />
-      <Script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" strategy="beforeInteractive" />
+      {/* Plain sync script: executes during HTML parse, before hydration.
+          next/script beforeInteractive only works in the root layout. */}
+      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
       <main className="min-h-dvh bg-background text-foreground">
         <ShopifyAdminSettings />
       </main>

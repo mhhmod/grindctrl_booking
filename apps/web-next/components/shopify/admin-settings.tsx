@@ -26,6 +26,10 @@ type Settings = {
 const APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 
 async function withToken(): Promise<string> {
+  // App Bridge script loads sync, but wait up to 5s to be safe.
+  for (let i = 0; i < 50 && !window.shopify; i++) {
+    await new Promise((r) => setTimeout(r, 100));
+  }
   if (!window.shopify) throw new Error('App Bridge not ready');
   return window.shopify.idToken();
 }
