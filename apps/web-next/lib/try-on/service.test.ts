@@ -20,8 +20,8 @@ describe('try-on service', () => {
       expect(session.createdAt).toBeTruthy();
     });
 
-    it('throws for an invalid product', () => {
-      expect(() => createSession('invalid')).toThrow();
+    it('throws for a malformed product ID', () => {
+      expect(() => createSession('INVALID product!!')).toThrow();
     });
   });
 

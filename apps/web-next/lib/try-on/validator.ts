@@ -30,15 +30,19 @@ export function validateUploadedFile(file: File): TryOnValidationResult {
   return { ok: true };
 }
 
+/* Shopify product handles: lowercase slugs. Catalog products also match. */
+const PRODUCT_HANDLE_RE = /^[a-z0-9][a-z0-9\-_]{0,99}$/;
+
 /**
- * Validates a product ID exists in the catalog.
+ * Validates a product ID: either a seeded catalog product or a
+ * store-product handle (whose garment image arrives with the request).
  */
 export function validateProductId(productId: string): TryOnValidationResult {
   if (!productId) {
     return { ok: false, error: 'Product ID is required.' };
   }
 
-  if (!getProduct(productId)) {
+  if (!getProduct(productId) && !PRODUCT_HANDLE_RE.test(productId)) {
     return { ok: false, error: `Product "${productId}" not found.` };
   }
 

@@ -23,7 +23,36 @@ export function parsePhotoDataUrl(photoData: string): { mime: string } | null {
   return { mime: `image/${match[1]}` };
 }
 
-async function loadGarmentDataUrl(productId: string): Promise<string> {
+const MAX_GARMENT_BYTES = 8 * 1024 * 1024;
+
+/* Only Shopify's image CDN is allowed as a remote garment source (SSRF guard). */
+export function isAllowedGarmentUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === 'cdn.shopify.com';
+  } catch {
+    return false;
+  }
+}
+
+async function loadGarmentDataUrl(productId: string, garmentUrl?: string): Promise<string> {
+  if (garmentUrl) {
+    if (!isAllowedGarmentUrl(garmentUrl)) {
+      throw new Error('Garment image must come from the Shopify CDN.');
+    }
+    const res = await fetch(garmentUrl);
+    if (!res.ok) throw new Error(`Garment image fetch failed (HTTP ${res.status}).`);
+    const mime = res.headers.get('content-type')?.split(';')[0] ?? '';
+    if (!/^image\/(jpeg|png|webp)$/.test(mime)) {
+      throw new Error('Garment image must be jpeg, png, or webp.');
+    }
+    const bytes = Buffer.from(await res.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > MAX_GARMENT_BYTES) {
+      throw new Error('Garment image is empty or too large.');
+    }
+    return `data:${mime};base64,${bytes.toString('base64')}`;
+  }
+
   const product = getProduct(productId);
   if (!product) throw new Error(`Unknown product: ${productId}`);
   const filePath = path.join(process.cwd(), 'public', product.imageUrl);
@@ -41,6 +70,8 @@ export async function runImageGeneration(
   sessionId: string,
   productId: string,
   photoData: string,
+  garmentUrl?: string,
+  productName?: string,
 ): Promise<TryOnJob> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.TRYON_MODEL || DEFAULT_MODEL;
@@ -66,7 +97,13 @@ export async function runImageGeneration(
   }
 
   const product = getProduct(productId);
-  const garmentDataUrl = await loadGarmentDataUrl(productId);
+  const garmentName = productName || product?.name || 'the garment';
+  let garmentDataUrl: string;
+  try {
+    garmentDataUrl = await loadGarmentDataUrl(productId, garmentUrl);
+  } catch (err) {
+    return fail(err instanceof Error ? err.message : 'Could not load the garment image.');
+  }
 
   const res = await fetch(OPENROUTER_IMAGES_URL, {
     method: 'POST',
@@ -77,7 +114,7 @@ export async function runImageGeneration(
     body: JSON.stringify({
       model,
       prompt:
-        `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${product?.name ?? 'the garment'}). ` +
+        `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
         "Keep the person's face, pose, body shape, and background unchanged. " +
         'Fit the garment naturally with realistic drape, lighting, and shadows. Photorealistic.',
       input_references: [

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
 import { checkRateLimit } from '@/lib/try-on/rate-limit';
+import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import type {
@@ -63,6 +64,8 @@ export async function POST(request: NextRequest) {
       photoSource?: string;
       photoReference?: string;
       photoData?: string;
+      garmentUrl?: string;
+      productName?: string;
       useMockPhoto?: boolean;
     };
 
@@ -133,7 +136,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const job = await generateTryOn(sessionId, productId, resolvedPhotoSource, photoData);
+    // ── Optional store-product garment (Shopify CDN only; SSRF guard) ──
+    const garmentUrl = typeof body.garmentUrl === 'string' ? body.garmentUrl : undefined;
+    if (garmentUrl && !isAllowedGarmentUrl(garmentUrl)) {
+      const message = 'Garment image must come from the Shopify CDN.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+    const productName =
+      typeof body.productName === 'string' ? body.productName.slice(0, 120) : undefined;
+
+    const job = await generateTryOn(
+      sessionId,
+      productId,
+      resolvedPhotoSource,
+      photoData,
+      garmentUrl,
+      productName,
+    );
 
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });

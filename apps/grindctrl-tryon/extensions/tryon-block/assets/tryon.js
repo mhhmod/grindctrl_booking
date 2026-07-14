@@ -17,7 +17,9 @@
       .then(function (cfg) {
         if (!cfg) return;
         if (root.dataset.labelSource !== 'theme' && cfg.buttonLabel) {
-          btn.textContent = cfg.buttonLabel;
+          var labelEl = btn.querySelector('.gc-tryon-label');
+          if (labelEl) { labelEl.textContent = cfg.buttonLabel; }
+          else { btn.textContent = cfg.buttonLabel; }
         }
         if (cfg.accentBg) btn.style.background = cfg.accentBg;
         if (cfg.accentFg) btn.style.color = cfg.accentFg;
@@ -45,10 +47,17 @@
         return;
       }
 
+      var garment = root.dataset.garment || '';
+      if (garment.indexOf('//') === 0) garment = 'https:' + garment;
+
       var src =
         EMBED_ORIGIN +
         '/embed/try-on?product=' +
         encodeURIComponent(root.dataset.product || '') +
+        '&title=' +
+        encodeURIComponent(root.dataset.title || '') +
+        '&garment=' +
+        encodeURIComponent(garment) +
         '&shop=' +
         encodeURIComponent(root.dataset.shop || '') +
         '&locale=' +

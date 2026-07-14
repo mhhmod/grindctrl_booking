@@ -55,6 +55,8 @@ export async function generateTryOn(
   productId: string,
   photoSource: TryOnPhotoSource,
   photoData?: string,
+  garmentUrl?: string,
+  productName?: string,
 ): Promise<TryOnJob> {
   const sv = validateSessionId(sessionId);
   if (!sv.ok) throw new Error(sv.error);
@@ -72,7 +74,7 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (mode === 'live' && photoSource === 'upload' && photoData) {
-    job = await runImageGeneration(sessionId, productId, photoData);
+    job = await runImageGeneration(sessionId, productId, photoData, garmentUrl, productName);
   } else if (mode === 'live') {
     job = {
       jobId: `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,

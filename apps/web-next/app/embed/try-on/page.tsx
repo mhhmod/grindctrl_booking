@@ -22,9 +22,29 @@ export const metadata: Metadata = {
 export default async function EmbedTryOnPage({
   searchParams,
 }: {
-  searchParams: Promise<{ product?: string; shop?: string; locale?: string; theme?: string }>;
+  searchParams: Promise<{
+    product?: string;
+    shop?: string;
+    locale?: string;
+    theme?: string;
+    garment?: string;
+    title?: string;
+  }>;
 }) {
   const params = await searchParams;
+
+  /* Store-product mode: the block passes the product's own image + title
+     so customers try on the actual product, not the seeded demo garment. */
+  let garmentHost = '';
+  try {
+    garmentHost = params.garment ? new URL(params.garment).hostname : '';
+  } catch {
+    garmentHost = '';
+  }
+  const shopProduct =
+    params.product && params.title && params.garment && garmentHost === 'cdn.shopify.com'
+      ? { handle: params.product, name: params.title, imageUrl: params.garment }
+      : undefined;
   const settings = await getTryOnSettings(params.shop);
 
   const initialLocale: TryOnLocale = isTryOnLocale(params.locale)
@@ -50,6 +70,7 @@ export default async function EmbedTryOnPage({
       <main className="px-4 py-6 sm:px-6" style={tokenOverrides}>
         <TryOnDemo
           productId={params.product}
+          shopProduct={shopProduct}
           overrides={{ loadingSteps: settings.loadingSteps ?? undefined }}
         />
       </main>

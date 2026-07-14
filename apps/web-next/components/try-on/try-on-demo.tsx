@@ -29,13 +29,34 @@ export type TryOnDemoOverrides = {
   loadingSteps?: string[];
 };
 
+export type ShopProductOverride = {
+  /** Product handle from the host store. */
+  handle: string;
+  name: string;
+  /** Garment image URL (Shopify CDN). */
+  imageUrl: string;
+};
+
 export function TryOnDemo({
   productId,
+  shopProduct,
   overrides,
-}: { productId?: string; overrides?: TryOnDemoOverrides } = {}) {
+}: {
+  productId?: string;
+  shopProduct?: ShopProductOverride;
+  overrides?: TryOnDemoOverrides;
+} = {}) {
   const { t, locale } = useTryOnLocale();
   const baseProduct = (productId && getProduct(productId)) || getDefaultProduct();
-  const product = localizeProduct(baseProduct, locale);
+  const product = shopProduct
+    ? {
+        id: shopProduct.handle,
+        name: shopProduct.name,
+        category: '',
+        imageUrl: shopProduct.imageUrl,
+        details: [],
+      }
+    : localizeProduct(baseProduct, locale);
   const loadingSteps = overrides?.loadingSteps?.length ? overrides.loadingSteps : t.loadingSteps;
   const generateLabel = overrides?.generateLabel || t.generateBtn;
 
@@ -93,6 +114,8 @@ export function TryOnDemo({
           photoSource: 'upload',
           photoReference: photoDataUrl ? 'uploaded-photo' : undefined,
           photoData: photoDataUrl ?? undefined,
+          garmentUrl: shopProduct?.imageUrl,
+          productName: shopProduct?.name,
         }),
       });
       const genData: TryOnJobApiResponse = await genRes.json();
@@ -125,7 +148,7 @@ export function TryOnDemo({
       setError(err instanceof Error ? err.message : t.genericError);
       setStep('error');
     }
-  }, [photoDataUrl, product.id, loadingSteps.length, t]);
+  }, [photoDataUrl, product.id, shopProduct, loadingSteps.length, t]);
 
   const handleReset = useCallback(() => {
     setPhotoDataUrl(null);

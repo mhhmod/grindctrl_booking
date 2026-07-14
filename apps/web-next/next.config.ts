@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   output: 'standalone',
+  images: {
+    remotePatterns: [{ protocol: 'https', hostname: 'cdn.shopify.com' }],
+  },
   async headers() {
     return [
       {

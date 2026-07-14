@@ -49,8 +49,13 @@ describe('try-on validator', () => {
       expect(result.ok).toBe(false);
     });
 
-    it('rejects unknown product', () => {
-      const result = validateProductId('unknown-product');
+    it('accepts store-product handles', () => {
+      const handle = validateProductId('unknown-product');
+      expect(handle.ok).toBe(true);
+    });
+
+    it('rejects malformed product IDs', () => {
+      const result = validateProductId('Not A Handle!!');
       expect(result.ok).toBe(false);
       expect(result.error).toContain('not found');
     });
