@@ -10,7 +10,7 @@ name = "grindctrl-tryon"
 scopes = "read_products,write_app_proxy"
 
 [app_proxy]
-url = "/proxy"
+url = "https://grindctrl.cloud/api/shopify/proxy"
 prefix = "apps"
 subpath = "grindctrl"
 
