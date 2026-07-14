@@ -2,26 +2,41 @@
    API (dashboard-editable); clicking expands an iframe to the GrindCTRL
    embed inline. Height auto-syncs via postMessage from the embed. */
 (function () {
-  function applyConfig(root, btn, base, shop) {
-    fetch(base + '/api/try-on/config?shop=' + encodeURIComponent(shop || ''))
+  var EMBED_ORIGIN = 'https://grindctrl.cloud';
+
+  function normalizeLocale(value) {
+    return String(value || '').toLowerCase().split('-')[0] === 'ar' ? 'ar' : 'en';
+  }
+
+  function applyConfig(root, btn, locale) {
+    fetch('/apps/grindctrl/config?locale=' + encodeURIComponent(locale), {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (cfg) {
         if (!cfg) return;
-        if (cfg.buttonLabel) btn.textContent = cfg.buttonLabel;
+        if (root.dataset.labelSource !== 'theme' && cfg.buttonLabel) {
+          btn.textContent = cfg.buttonLabel;
+        }
         if (cfg.accentBg) btn.style.background = cfg.accentBg;
         if (cfg.accentFg) btn.style.color = cfg.accentFg;
         if (typeof cfg.radiusPx === 'number') btn.style.borderRadius = cfg.radiusPx + 'px';
         if (cfg.widgetTheme) root.dataset.theme = root.dataset.theme || cfg.widgetTheme;
       })
-      .catch(function () { /* defaults from CSS/schema stay */ });
+      .catch(function () { /* defaults from CSS/schema stay */ })
+      .then(function () {
+        btn.classList.remove('gc-tryon-btn--loading');
+        btn.removeAttribute('aria-busy');
+      });
   }
 
   function mount(root) {
     var btn = root.querySelector('.gc-tryon-btn');
     if (!btn) return;
 
-    var base = (root.dataset.embedBase || 'https://grindctrl.cloud').replace(/\/+$/, '');
-    applyConfig(root, btn, base, root.dataset.shop);
+    var locale = normalizeLocale(root.dataset.locale);
+    applyConfig(root, btn, locale);
 
     btn.addEventListener('click', function () {
       var existing = root.querySelector('iframe');
@@ -30,9 +45,8 @@
         return;
       }
 
-      var locale = (root.dataset.locale || 'en').slice(0, 2);
       var src =
-        base +
+        EMBED_ORIGIN +
         '/embed/try-on?product=' +
         encodeURIComponent(root.dataset.product || '') +
         '&shop=' +
@@ -47,11 +61,23 @@
       frame.title = 'GrindCTRL Try-On';
       frame.className = 'gc-tryon-frame';
 
+      var embedOrigin;
+      try {
+        embedOrigin = new URL(src, window.location.href).origin;
+      } catch (_) {
+        return;
+      }
+
       window.addEventListener('message', function (event) {
         if (
+          event.source === frame.contentWindow &&
+          event.origin === embedOrigin &&
           event.data &&
           event.data.type === 'grindctrl-tryon:height' &&
-          typeof event.data.height === 'number'
+          typeof event.data.height === 'number' &&
+          Number.isFinite(event.data.height) &&
+          event.data.height >= 200 &&
+          event.data.height <= 5000
         ) {
           frame.style.height = event.data.height + 'px';
         }

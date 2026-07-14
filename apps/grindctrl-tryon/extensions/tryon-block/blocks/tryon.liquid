@@ -2,16 +2,22 @@
   GrindCTRL Try-On app block: renders a button on the product page that
   expands the try-on experience inline (iframe to the GrindCTRL embed).
 {% endcomment %}
+{% assign resolved_button_label = 'Try it on with AI' %}
+{% if block.settings.button_label_source == 'theme' %}
+  {% assign resolved_button_label = block.settings.button_label %}
+{% endif %}
 <div
   class="gc-tryon-root"
-  data-embed-base="{{ block.settings.embed_base }}"
   data-product="{{ product.handle }}"
   data-shop="{{ shop.permanent_domain }}"
   data-locale="{{ request.locale.iso_code }}"
   data-theme="{{ block.settings.widget_theme }}"
+  data-label-source="{{ block.settings.button_label_source }}"
   {{ block.shopify_attributes }}
 >
-  <button type="button" class="gc-tryon-btn">{{ block.settings.button_label }}</button>
+  <button type="button" class="gc-tryon-btn gc-tryon-btn--loading" aria-busy="true">
+    {{ resolved_button_label | escape }}
+  </button>
 </div>
 <link rel="stylesheet" href="{{ 'tryon.css' | asset_url }}">
 <script src="{{ 'tryon.js' | asset_url }}" defer></script>
@@ -22,9 +28,19 @@
   "target": "section",
   "settings": [
     {
+      "type": "select",
+      "id": "button_label_source",
+      "label": "Button label source",
+      "options": [
+        { "value": "dashboard", "label": "GrindCTRL dashboard" },
+        { "value": "theme", "label": "Theme override" }
+      ],
+      "default": "dashboard"
+    },
+    {
       "type": "text",
       "id": "button_label",
-      "label": "Button label",
+      "label": "Theme override label",
       "default": "Try it on with AI"
     },
     {
@@ -37,13 +53,6 @@
         { "value": "dark", "label": "Dark" }
       ],
       "default": ""
-    },
-    {
-      "type": "text",
-      "id": "embed_base",
-      "label": "GrindCTRL base URL",
-      "default": "https://grindctrl.cloud",
-      "info": "Leave as-is unless GrindCTRL tells you otherwise."
     }
   ]
 }
