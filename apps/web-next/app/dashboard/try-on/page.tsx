@@ -13,9 +13,10 @@ import { saveTryOnSettingsAction } from './actions';
 export const dynamic = 'force-dynamic';
 
 /* Theme-editor deep link: opens the merchant's theme editor with the
-   try-on app block pre-added to the product template. */
-const APP_BLOCK_UID = '045b3d19-9947-bdf6-0619-a16f1c59c482843df2e9';
-const DEEP_LINK = `https://admin.shopify.com/store/grindctrl/themes/current/editor?template=product&addAppBlockId=${APP_BLOCK_UID}/tryon&target=mainSection`;
+   try-on app block pre-added to the product template. The block id is
+   the Shopify app CLIENT ID + block filename (extension uid fails). */
+const SHOPIFY_APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
+const DEEP_LINK = `https://grindctrl.myshopify.com/admin/themes/current/editor?template=product&addAppBlockId=${SHOPIFY_APP_CLIENT_ID}/tryon&target=mainSection`;
 
 function statusTone(status: string) {
   if (status === 'completed') return 'secondary' as const;

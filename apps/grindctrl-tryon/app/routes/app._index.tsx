@@ -14,19 +14,19 @@ import {
 } from "../tryon-settings.server";
 
 /* Theme-editor deep link that pre-adds the try-on block to the product
-   template; the merchant only clicks Save. */
-const APP_BLOCK_UID = "045b3d19-9947-bdf6-0619-a16f1c59c482843df2e9";
+   template; the merchant only clicks Save. The block id is the app CLIENT
+   ID + block filename (extension uid does not work here). */
+const APP_CLIENT_ID = "fc095fe656d9029fdc249a4af2315f19";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop; // e.g. grindctrl.myshopify.com
-  const storeHandle = shop.replace(".myshopify.com", "");
   const settings = await getSettingsForShop(shop);
 
   return {
     shop,
     settings,
-    deepLink: `https://admin.shopify.com/store/${storeHandle}/themes/current/editor?template=product&addAppBlockId=${APP_BLOCK_UID}/tryon&target=mainSection`,
+    deepLink: `https://${shop}/admin/themes/current/editor?template=product&addAppBlockId=${APP_CLIENT_ID}/tryon&target=mainSection`,
   };
 };
 
