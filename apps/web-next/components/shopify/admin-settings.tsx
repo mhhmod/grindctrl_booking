@@ -68,10 +68,12 @@ async function withToken(): Promise<string> {
 
 /* Same icon SVG + animation as the storefront block (tryon.liquid). */
 function TryOnButtonPreview({ s }: { s: Settings }) {
+  const dark = s.widgetTheme === 'dark';
+  const sub = dark ? '#9c968f' : '#8a8378';
   return (
     <div
       className="rounded-lg border p-6 sm:p-8"
-      style={{ background: s.widgetTheme === 'dark' ? '#1b1917' : '#faf8f5' }}
+      style={{ background: dark ? '#1b1917' : '#faf8f5' }}
     >
       <style>{`
         @keyframes pv-tee { 0% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } 16%, 80% { opacity: 1; transform: none; } 94%, 100% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } }
@@ -109,8 +111,57 @@ function TryOnButtonPreview({ s }: { s: Settings }) {
         </span>
         <span>{s.buttonLabel || 'Try it on with AI'}</span>
       </div>
-      <p className="mt-3 text-center text-xs" style={{ color: s.widgetTheme === 'dark' ? '#9c968f' : '#8a8378' }}>
-        Live preview — exactly how the button renders on your product page
+
+      {/* Expanded widget mock: what shoppers see after clicking the button.
+          The product card always shows the product being viewed. */}
+      <div
+        className="mx-auto mt-4 w-full max-w-md rounded-xl border p-4"
+        style={{
+          background: dark ? '#242220' : '#ffffff',
+          borderColor: dark ? '#3a3733' : '#e8e4de',
+          color: dark ? '#f0ede9' : '#2a2826',
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className="flex h-24 w-20 flex-none items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
+            style={{
+              background: dark ? '#2e2b28' : '#f5f2ec',
+              borderColor: dark ? '#3a3733' : '#e8e4de',
+              color: sub,
+            }}
+          >
+            Product
+            <br />
+            photo
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: sub }}>
+              Your store
+            </p>
+            <p className="truncate text-base font-bold">The product being viewed</p>
+            <p className="mt-1 text-xs" style={{ color: sub }}>
+              Shoppers always try on the product on the page they opened — image and
+              name come from your store automatically.
+            </p>
+          </div>
+        </div>
+        <div
+          className="mt-4 rounded-lg border border-dashed px-4 py-5 text-center text-xs"
+          style={{ borderColor: dark ? '#4a463f' : '#d8d2c8', color: sub }}
+        >
+          Upload your photo
+        </div>
+        <div
+          className="mt-3 flex items-center justify-center px-4 py-2.5 text-xs font-semibold"
+          style={{ background: s.accentBg, color: s.accentFg, borderRadius: `${Math.min(s.radiusPx, 20)}px` }}
+        >
+          Generate my look
+        </div>
+      </div>
+
+      <p className="mt-3 text-center text-xs" style={{ color: sub }}>
+        Live preview — the button and try-on journey as they render on your product page
       </p>
     </div>
   );

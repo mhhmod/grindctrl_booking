@@ -4,6 +4,7 @@ import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
+import { getProduct } from '@/lib/try-on/products';
 import {
   DEFAULT_TRYON_LOCALE,
   isTryOnLocale,
@@ -41,10 +42,20 @@ export default async function EmbedTryOnPage({
   } catch {
     garmentHost = '';
   }
-  const shopProduct =
-    params.product && params.title && params.garment && garmentHost === 'cdn.shopify.com'
-      ? { handle: params.product, name: params.title, imageUrl: params.garment }
-      : undefined;
+  const garmentOk = !!params.garment && garmentHost === 'cdn.shopify.com';
+  /* Never show the seeded demo garment for a store product: even when an
+     old cached block script omits garment/title, a non-catalog handle
+     renders as the store's product (name prettified from the handle). */
+  const isStoreProduct = !!params.product && !getProduct(params.product);
+  const shopProduct = isStoreProduct
+    ? {
+        handle: params.product!,
+        name:
+          params.title ||
+          params.product!.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        imageUrl: garmentOk ? params.garment! : '',
+      }
+    : undefined;
   const settings = await getTryOnSettings(params.shop);
 
   const initialLocale: TryOnLocale = isTryOnLocale(params.locale)

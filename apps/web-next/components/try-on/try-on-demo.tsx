@@ -162,16 +162,18 @@ export function TryOnDemo({
     <div className="mx-auto w-full max-w-4xl space-y-10">
       {/* ─── Product showcase ─── */}
       <div className="gc-fade-in-up flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
-        <div className="relative shrink-0 overflow-hidden rounded-xl border bg-muted/20 shadow-sm">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            width={240}
-            height={320}
-            className="aspect-[3/4] w-48 object-cover sm:w-60"
-            priority
-          />
-        </div>
+        {product.imageUrl ? (
+          <div className="relative shrink-0 overflow-hidden rounded-xl border bg-muted/20 shadow-sm">
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              width={240}
+              height={320}
+              className="aspect-[3/4] w-48 object-cover sm:w-60"
+              priority
+            />
+          </div>
+        ) : null}
 
         <div className="flex-1 space-y-3 text-center sm:text-start">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
