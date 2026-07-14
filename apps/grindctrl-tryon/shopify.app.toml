@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "fc095fe656d9029fdc249a4af2315f19"
-application_url = "https://shopify.grindctrl.cloud"
+application_url = "https://grindctrl.cloud/shopify/app"
 embedded = true
 name = "grindctrl-tryon"
 
@@ -18,18 +18,16 @@ subpath = "grindctrl"
 api_version = "2026-10"
 
   [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
   topics = [ "app/uninstalled" ]
 
   [[webhooks.subscriptions]]
-  uri = "/webhooks/app/scopes_update"
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
   topics = [ "app/scopes_update" ]
 
 [auth]
 redirect_urls = [
-  "https://shopify.grindctrl.cloud/auth/callback",
-  "https://shopify.grindctrl.cloud/auth/shopify/callback",
-  "https://shopify.grindctrl.cloud/api/auth/callback"
+  "https://grindctrl.cloud/shopify/app"
 ]
 
 [build]
