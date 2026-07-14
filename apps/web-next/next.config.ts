@@ -10,7 +10,10 @@ const nextConfig: NextConfig = {
   },
   output: 'standalone',
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: 'cdn.shopify.com' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'cdn.shopify.com' },
+      { protocol: 'https', hostname: '*.myshopify.com', pathname: '/cdn/**' },
+    ],
   },
   async headers() {
     return [
