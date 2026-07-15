@@ -34,8 +34,10 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value:
-              "frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com https://*.shopifypreview.com",
+            /* Any HTTPS parent may frame the embed: Shopify's editor chain
+               and client custom-domain storefronts aren't enumerable, and
+               the widget exposes no framing-sensitive actions. */
+            value: 'frame-ancestors https:',
           },
         ],
       },
