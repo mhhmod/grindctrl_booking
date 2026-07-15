@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
     iconBgFrom?: string;
     iconBgTo?: string;
     loadingStyle?: string;
+    catalogLabel?: string;
+    catalogIconPx?: number;
+    catalogFontPx?: number;
+    catalogPadPx?: number;
+    buttonIconPx?: number;
     showDownload?: boolean;
     showWhatsapp?: boolean;
     showAddToCart?: boolean;
@@ -40,6 +45,10 @@ export async function POST(request: NextRequest) {
     loadingSteps?: string[] | null;
   };
 
+  const clamp = (value: unknown, min: number, max: number, fallback: number) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : fallback;
+  };
   const radius = Number(body.radiusPx);
   const ok = await saveTryOnSettings(session.shop, {
     buttonLabel: body.buttonLabel?.trim() || undefined,
@@ -52,6 +61,11 @@ export async function POST(request: NextRequest) {
     loadingStyle: (body.loadingStyle === 'pulse' || body.loadingStyle === 'bar'
       ? body.loadingStyle
       : 'steps') as 'steps' | 'pulse' | 'bar',
+    catalogLabel: body.catalogLabel?.trim().slice(0, 24) || 'Try on',
+    catalogIconPx: clamp(body.catalogIconPx, 10, 32, 14),
+    catalogFontPx: clamp(body.catalogFontPx, 9, 20, 12),
+    catalogPadPx: clamp(body.catalogPadPx, 2, 16, 6),
+    buttonIconPx: clamp(body.buttonIconPx, 18, 40, 28),
     showDownload: body.showDownload !== false,
     showWhatsapp: body.showWhatsapp !== false,
     showAddToCart: body.showAddToCart !== false,

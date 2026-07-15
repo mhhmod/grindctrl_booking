@@ -80,14 +80,25 @@ export default async function DashboardTryOnPage() {
             </div>
             <form action={saveTryOnSettingsAction} className="grid gap-4">
               <input type="hidden" name="shop" value="default" />
-              <div className="grid gap-2">
-                <Label htmlFor="button_label">Button label</Label>
-                <Input
-                  id="button_label"
-                  name="button_label"
-                  defaultValue={settings.buttonLabel}
-                  maxLength={40}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="button_label">Button label</Label>
+                  <Input
+                    id="button_label"
+                    name="button_label"
+                    defaultValue={settings.buttonLabel}
+                    maxLength={40}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="catalog_label">Catalog pill label</Label>
+                  <Input
+                    id="catalog_label"
+                    name="catalog_label"
+                    defaultValue={settings.catalogLabel}
+                    maxLength={24}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -157,6 +168,30 @@ export default async function DashboardTryOnPage() {
                     className="h-10 p-1"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {([
+                  ['button_icon_px', 'Button icon size', settings.buttonIconPx, 18, 40],
+                  ['catalog_icon_px', 'Catalog icon size', settings.catalogIconPx, 10, 32],
+                  ['catalog_font_px', 'Catalog label size', settings.catalogFontPx, 9, 20],
+                  ['catalog_pad_px', 'Catalog pill padding', settings.catalogPadPx, 2, 16],
+                ] as const).map(([name, label, value, min, max]) => (
+                  <div key={name} className="grid gap-1.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <Label htmlFor={name} className="text-sm">{label}</Label>
+                      <span className="tabular-nums text-xs text-muted-foreground">{value}px</span>
+                    </div>
+                    <input
+                      id={name}
+                      name={name}
+                      type="range"
+                      min={min}
+                      max={max}
+                      defaultValue={value}
+                      className="h-2 w-full cursor-pointer appearance-none rounded-full bg-muted accent-foreground"
+                    />
+                  </div>
+                ))}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="loading_style">Loading animation</Label>

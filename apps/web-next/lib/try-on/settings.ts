@@ -16,6 +16,13 @@ export type TryOnSettings = {
   iconBgTo: string;
   /** Loading animation style in the widget. */
   loadingStyle: 'steps' | 'pulse' | 'bar';
+  /** Catalog pill: label and element sizing (px). */
+  catalogLabel: string;
+  catalogIconPx: number;
+  catalogFontPx: number;
+  catalogPadPx: number;
+  /** Product-page button: icon badge size (px). */
+  buttonIconPx: number;
   /** Result-screen CTA visibility. */
   showDownload: boolean;
   showWhatsapp: boolean;
@@ -37,6 +44,11 @@ export const DEFAULT_SETTINGS: TryOnSettings = {
   iconBgFrom: '#ff9a3d',
   iconBgTo: '#ffd76e',
   loadingStyle: 'steps',
+  catalogLabel: 'Try on',
+  catalogIconPx: 14,
+  catalogFontPx: 12,
+  catalogPadPx: 6,
+  buttonIconPx: 28,
   showDownload: true,
   showWhatsapp: true,
   showAddToCart: true,
@@ -62,6 +74,11 @@ type Row = {
   icon_bg_from: string | null;
   icon_bg_to: string | null;
   loading_style: string | null;
+  catalog_label: string | null;
+  catalog_icon_px: number | null;
+  catalog_font_px: number | null;
+  catalog_pad_px: number | null;
+  button_icon_px: number | null;
   show_download: boolean | null;
   show_whatsapp: boolean | null;
   show_add_to_cart: boolean | null;
@@ -85,6 +102,11 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
       row.loading_style === 'pulse' || row.loading_style === 'bar'
         ? row.loading_style
         : base.loadingStyle,
+    catalogLabel: row.catalog_label ?? base.catalogLabel,
+    catalogIconPx: row.catalog_icon_px ?? base.catalogIconPx,
+    catalogFontPx: row.catalog_font_px ?? base.catalogFontPx,
+    catalogPadPx: row.catalog_pad_px ?? base.catalogPadPx,
+    buttonIconPx: row.button_icon_px ?? base.buttonIconPx,
     showDownload: row.show_download ?? base.showDownload,
     showWhatsapp: row.show_whatsapp ?? base.showWhatsapp,
     showAddToCart: row.show_add_to_cart ?? base.showAddToCart,
@@ -112,7 +134,7 @@ async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text')
+    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text')
     .in('shop', shops);
 
   if (error || !data) return DEFAULT_SETTINGS;
@@ -139,6 +161,11 @@ export async function saveTryOnSettings(
     icon_bg_from: values.iconBgFrom ?? null,
     icon_bg_to: values.iconBgTo ?? null,
     loading_style: values.loadingStyle ?? null,
+    catalog_label: values.catalogLabel ?? null,
+    catalog_icon_px: values.catalogIconPx ?? null,
+    catalog_font_px: values.catalogFontPx ?? null,
+    catalog_pad_px: values.catalogPadPx ?? null,
+    button_icon_px: values.buttonIconPx ?? null,
     show_download: values.showDownload ?? null,
     show_whatsapp: values.showWhatsapp ?? null,
     show_add_to_cart: values.showAddToCart ?? null,

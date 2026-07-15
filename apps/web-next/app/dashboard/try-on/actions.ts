@@ -14,6 +14,10 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     ? loadingStepsRaw.split('\n').map((s) => s.trim()).filter(Boolean)
     : null;
 
+  const clamp = (value: FormDataEntryValue | null, min: number, max: number, fallback: number) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : fallback;
+  };
   const radius = Number(formData.get('radius_px'));
 
   await saveTryOnSettings(shop, {
@@ -27,6 +31,11 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     loadingStyle: (['pulse', 'bar'].includes(String(formData.get('loading_style')))
       ? String(formData.get('loading_style'))
       : 'steps') as 'steps' | 'pulse' | 'bar',
+    catalogLabel: String(formData.get('catalog_label') || '').trim().slice(0, 24) || 'Try on',
+    catalogIconPx: clamp(formData.get('catalog_icon_px'), 10, 32, 14),
+    catalogFontPx: clamp(formData.get('catalog_font_px'), 9, 20, 12),
+    catalogPadPx: clamp(formData.get('catalog_pad_px'), 2, 16, 6),
+    buttonIconPx: clamp(formData.get('button_icon_px'), 18, 40, 28),
     showDownload: formData.get('show_download') === 'on',
     showWhatsapp: formData.get('show_whatsapp') === 'on',
     showAddToCart: formData.get('show_add_to_cart') === 'on',

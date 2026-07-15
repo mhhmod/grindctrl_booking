@@ -34,8 +34,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--gc-ic-size, 28px);
+  height: var(--gc-ic-size, 28px);
   margin-inline-end: 10px;
   flex: none;
   border-radius: 50%;

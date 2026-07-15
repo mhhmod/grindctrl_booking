@@ -17,7 +17,8 @@ export default function ShopifyAdminPage() {
           next/script beforeInteractive only works in the root layout. */}
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
-      <main className="min-h-dvh bg-background text-foreground">
+      {/* The settings UI owns its own light/dark shell (merchant-toggleable). */}
+      <main>
         <ShopifyAdminSettings />
       </main>
     </>

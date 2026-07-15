@@ -1,20 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useTheme } from 'next-themes';
 
 /**
- * Runs inside the /embed/try-on iframe:
- * - forces the theme requested by the host page (?theme=light|dark)
- * - reports content height to the parent so the iframe can auto-size
+ * Runs inside the /embed/try-on iframe: reports content height to the
+ * parent so the iframe can auto-size. Theme is server-rendered.
  */
-export function EmbedFrameBridge({ theme }: { theme: 'light' | 'dark' }) {
-  const { setTheme } = useTheme();
-
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme, setTheme]);
-
+export function EmbedFrameBridge() {
   useEffect(() => {
     if (window.parent === window) return;
 

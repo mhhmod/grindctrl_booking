@@ -92,7 +92,9 @@
 
 /* Warm near-black-and-white identity from the logo palette
    (cream #f0ede9 + warm charcoal #2a2826), applied app-wide. */
-:root {
+:root,
+.light {
+  color-scheme: light;
   --background: oklch(0.945 0.007 75);
   --foreground: oklch(0.235 0.006 60);
   --card: oklch(0.965 0.007 78);
@@ -163,7 +165,8 @@
   --sidebar-ring: oklch(0.55 0.01 70);
 }
 
-:root {
+:root,
+.light {
   --gc-landing-border: oklch(0.86 0.009 76);
   --gc-landing-panel: oklch(0.97 0.007 78 / 70%);
   --gc-landing-panel-strong: oklch(0.975 0.007 78);

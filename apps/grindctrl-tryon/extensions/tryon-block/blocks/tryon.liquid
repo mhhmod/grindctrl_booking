@@ -14,7 +14,6 @@
   data-variant="{{ product.selected_or_first_available_variant.id }}"
   data-shop="{{ shop.permanent_domain }}"
   data-locale="{{ request.locale.iso_code }}"
-  data-theme="{{ block.settings.widget_theme }}"
   data-label-source="{{ block.settings.button_label_source }}"
   {{ block.shopify_attributes }}
 >
@@ -63,17 +62,6 @@
       "id": "button_label",
       "label": "Theme override label",
       "default": "Try it on with AI"
-    },
-    {
-      "type": "select",
-      "id": "widget_theme",
-      "label": "Widget theme",
-      "options": [
-        { "value": "auto", "label": "From GrindCTRL dashboard" },
-        { "value": "light", "label": "Light" },
-        { "value": "dark", "label": "Dark" }
-      ],
-      "default": "auto"
     }
   ]
 }

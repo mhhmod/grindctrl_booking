@@ -24,7 +24,9 @@
         if (cfg.accentBg) btn.style.background = cfg.accentBg;
         if (cfg.accentFg) btn.style.color = cfg.accentFg;
         if (typeof cfg.radiusPx === 'number') btn.style.borderRadius = cfg.radiusPx + 'px';
-        if (cfg.widgetTheme) root.dataset.theme = root.dataset.theme || cfg.widgetTheme;
+        if (typeof cfg.buttonIconPx === 'number') {
+          btn.style.setProperty('--gc-ic-size', cfg.buttonIconPx + 'px');
+        }
         if (cfg.iconBgFrom && cfg.iconBgTo) {
           btn.style.setProperty('--gc-ic-from', cfg.iconBgFrom);
           btn.style.setProperty('--gc-ic-to', cfg.iconBgTo);
@@ -76,9 +78,7 @@
         '&shop=' +
         encodeURIComponent(root.dataset.shop || '') +
         '&locale=' +
-        encodeURIComponent(locale) +
-        '&theme=' +
-        encodeURIComponent(root.dataset.theme || '');
+        encodeURIComponent(locale);
 
       var frame = document.createElement('iframe');
       frame.src = src;

@@ -16,8 +16,20 @@
     headers: { Accept: 'application/json' }
   })
     .then(function (res) { return res.ok ? res.json() : null; })
-    .then(function (data) { cfg = data; return data; })
+    .then(function (data) { cfg = data; applyConfigVars(data); return data; })
     .catch(function () { return null; });
+
+  /* Sizing + surface come from the same settings as the product-page block. */
+  function applyConfigVars(c) {
+    if (!c) return;
+    var root = document.documentElement;
+    if (typeof c.catalogIconPx === 'number') root.style.setProperty('--gc-cat-icon', c.catalogIconPx + 'px');
+    if (typeof c.catalogFontPx === 'number') root.style.setProperty('--gc-cat-font', c.catalogFontPx + 'px');
+    if (typeof c.catalogPadPx === 'number') root.style.setProperty('--gc-cat-pad', c.catalogPadPx + 'px');
+    var dark = c.widgetTheme === 'dark';
+    root.style.setProperty('--gc-cat-surface', dark ? 'oklch(0.135 0.004 70)' : 'oklch(0.945 0.007 75)');
+    root.style.setProperty('--gc-cat-ink', dark ? 'oklch(0.68 0.012 72)' : 'oklch(0.5 0.008 66)');
+  }
 
   /* All styles injected by JS: theme card layouts stretch children and
      external stylesheets lose specificity wars; !important + fixed
@@ -27,13 +39,14 @@
     'top:auto!important;inset-inline-start:auto!important;z-index:3!important;' +
     'display:inline-flex!important;align-items:center!important;gap:6px!important;' +
     'width:auto!important;height:auto!important;max-width:calc(100% - 16px)!important;' +
-    'padding:6px 12px!important;margin:0!important;border:0!important;border-radius:999px;' +
-    'background:#2a2826;color:#f0ede9;font-size:12px!important;font-weight:600!important;' +
+    'padding:var(--gc-cat-pad,6px) calc(var(--gc-cat-pad,6px) * 2)!important;'+
+    'margin:0!important;border:0!important;border-radius:999px;' +
+    'background:#2a2826;color:#f0ede9;font-size:var(--gc-cat-font,12px)!important;font-weight:600!important;' +
     'line-height:1!important;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);' +
     'transition:transform .2s cubic-bezier(.22,1,.36,1);min-height:0!important;min-width:0!important;' +
     'pointer-events:auto!important;z-index:2147482000!important;}' +
     '.gc-cat-btn:hover{transform:translateY(-1px) scale(1.03);}' +
-    '.gc-cat-btn-ic{display:inline-flex;width:14px;height:14px;flex:none;}' +
+    '.gc-cat-btn-ic{display:inline-flex;width:var(--gc-cat-icon,14px);height:var(--gc-cat-icon,14px);flex:none;}' +
     '.gc-cat-btn-ic svg{width:100%;height:100%;}' +
     '@keyframes gc-cat-scan{0%{transform:translateY(0);opacity:0}12%{opacity:1}58%{transform:translateY(17px);opacity:1}72%,100%{transform:translateY(17px);opacity:0}}' +
     '.gc-cat-scan{animation:gc-cat-scan 2.6s cubic-bezier(.4,0,.2,1) infinite;}' +
@@ -44,11 +57,16 @@
     '.gc-cat-overlay--open{display:flex!important;}' +
     '.gc-cat-lock{overflow:hidden;}' +
     '.gc-cat-dialog{position:relative;width:100%;max-width:560px;max-height:90dvh;overflow:hidden;' +
-    'border-radius:16px;background:#faf8f5;box-shadow:0 24px 64px rgba(0,0,0,.35);}' +
+    'border-radius:16px;background:var(--gc-cat-surface,oklch(0.945 0.007 75));' +
+    'box-shadow:0 24px 64px rgba(0,0,0,.35);}' +
     '.gc-cat-close{position:absolute;top:8px;inset-inline-end:8px;z-index:2;width:32px;height:32px;' +
     'border:0;border-radius:999px;background:rgba(42,40,38,.75);color:#f0ede9;font-size:20px;' +
     'line-height:1;cursor:pointer;}' +
-    '.gc-cat-frame{display:block;width:100%;height:min(80dvh,720px);border:0;}';
+    '.gc-cat-frame{display:block;width:100%;height:min(80dvh,720px);border:0;position:relative;z-index:1;}' +
+    '@keyframes gc-cat-pulse{0%,100%{opacity:.35}50%{opacity:.6}}' +
+    '.gc-cat-loading{position:absolute;inset:0;display:grid;place-items:center;z-index:0;' +
+    'font:600 13px/1 system-ui,sans-serif;color:var(--gc-cat-ink,#8a8378);' +
+    'animation:gc-cat-pulse 1.4s ease-in-out infinite;}';
 
   function injectStyles() {
     if (document.getElementById('gc-cat-styles')) return;
@@ -111,6 +129,14 @@
     }
 
     var dialog = overlay.querySelector('.gc-cat-dialog');
+    var loading = overlay.querySelector('.gc-cat-loading');
+    if (!loading) {
+      loading = document.createElement('div');
+      loading.className = 'gc-cat-loading';
+      loading.textContent = 'Loading try-on…';
+      dialog.appendChild(loading);
+    }
+    loading.style.display = '';
     if (frame) frame.remove();
     frame = document.createElement('iframe');
     frame.className = 'gc-cat-frame';
@@ -121,11 +147,13 @@
       '&title=' + encodeURIComponent(title || '') +
       '&garment=' + encodeURIComponent(garment || '') +
       '&shop=' + encodeURIComponent(SHOP) +
-      '&locale=' + encodeURIComponent(LOCALE) +
-      '&theme=' + encodeURIComponent((cfg && cfg.widgetTheme) || '');
+      '&locale=' + encodeURIComponent(LOCALE);
+    frame.addEventListener('load', function () { loading.style.display = 'none'; });
     dialog.appendChild(frame);
     overlay.classList.add('gc-cat-overlay--open');
     document.documentElement.classList.add('gc-cat-lock');
+    var close = overlay.querySelector('.gc-cat-close');
+    if (close) close.focus();
   }
 
   function closeDialog() {
@@ -203,12 +231,17 @@
     btn.className = 'gc-cat-btn';
     btn.setAttribute('data-gc-handle', handle);
     btn.setAttribute('data-gc-title', (img.getAttribute('alt') || handle.replace(/-/g, ' ')).trim());
-    btn.innerHTML = '<span class="gc-cat-btn-ic">' + ICON_SVG + '</span><span>Try on</span>';
+    btn.innerHTML =
+      '<span class="gc-cat-btn-ic">' + ICON_SVG + '</span><span class="gc-cat-btn-label">Try on</span>';
 
     cfgPromise.then(function (c) {
       if (c) {
         btn.style.background = c.accentBg || '';
         btn.style.color = c.accentFg || '';
+        if (c.catalogLabel) {
+          var lbl = btn.querySelector('.gc-cat-btn-label');
+          if (lbl) lbl.textContent = c.catalogLabel;
+        }
         if (typeof c.radiusPx === 'number') {
           btn.style.borderRadius = Math.min(c.radiusPx, 999) + 'px';
         }

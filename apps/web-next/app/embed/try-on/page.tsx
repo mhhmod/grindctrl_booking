@@ -18,8 +18,8 @@ export const metadata: Metadata = {
 };
 
 /* Bare try-on for embedding in an iframe (Shopify product pages).
-   Query params: product=<id> shop=<domain> locale=en|ar theme=light|dark
-   Journey styling comes from tryon_settings (dashboard-editable).
+   Query params: product=<handle> shop=<domain> locale=en|ar garment title
+   Journey styling and theme come from tryon_settings (dashboard-editable).
    Height is reported to the parent via postMessage (EmbedFrameBridge). */
 export default async function EmbedTryOnPage({
   searchParams,
@@ -28,7 +28,6 @@ export default async function EmbedTryOnPage({
     product?: string;
     shop?: string;
     locale?: string;
-    theme?: string;
     garment?: string;
     title?: string;
   }>;
@@ -56,9 +55,10 @@ export default async function EmbedTryOnPage({
   const initialLocale: TryOnLocale = isTryOnLocale(params.locale)
     ? params.locale
     : DEFAULT_TRYON_LOCALE;
-  /* Explicit param wins; otherwise the dashboard-configured theme. */
-  const theme =
-    params.theme === 'dark' || params.theme === 'light' ? params.theme : settings.widgetTheme;
+  /* Single source of truth: tryon_settings. Rendered server-side as a
+     `light`/`dark` class so the panel never depends on next-themes or
+     localStorage, which a third-party iframe may not have. */
+  const themeClass = settings.widgetTheme === 'dark' ? 'dark' : 'light';
 
   /* Config → design tokens: shadcn primitives pick these up directly. */
   const tokenOverrides = {
@@ -70,9 +70,9 @@ export default async function EmbedTryOnPage({
   return (
     <TryOnLocaleProvider
       initialLocale={initialLocale}
-      className="min-h-dvh bg-background text-foreground"
+      className={`${themeClass} min-h-dvh bg-background text-foreground`}
     >
-      <EmbedFrameBridge theme={theme} />
+      <EmbedFrameBridge />
       <main className="px-4 py-6 sm:px-6" style={tokenOverrides}>
         <TryOnDemo
           productId={params.product}
