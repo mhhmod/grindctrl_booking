@@ -286,6 +286,32 @@ export function ShopifyAdminSettings() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Try-on on catalog pages</CardTitle>
+          <CardDescription>
+            Adds a small &quot;Try on&quot; button to every product card in your
+            collection grids. It opens the same try-on journey with the same
+            settings below. One click, then press Save in the theme editor.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <a
+              href={
+                shop
+                  ? `https://${shop}/admin/themes/current/editor?context=apps&activateAppId=${APP_CLIENT_ID}/tryon-catalog`
+                  : '#'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Enable catalog try-on
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Try-on button &amp; journey</CardTitle>
           <CardDescription>
             Pick a theme or fine-tune colors. Changes go live within a minute.

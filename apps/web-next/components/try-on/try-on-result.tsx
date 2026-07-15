@@ -28,6 +28,7 @@ interface TryOnResultProps {
 export function TryOnResult({ job, productName, onReset, shopMode, controls }: TryOnResultProps) {
   const { t } = useTryOnLocale();
   const [cartState, setCartState] = useState<'idle' | 'adding' | 'failed'>('idle');
+  const [cartError, setCartError] = useState('');
   const ackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = {
@@ -46,6 +47,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
       if (event.data?.type === 'grindctrl-tryon:cart-result') {
         if (ackTimer.current) clearTimeout(ackTimer.current);
         setCartState(event.data.ok ? 'idle' : 'failed');
+        setCartError(typeof event.data.message === 'string' ? event.data.message.slice(0, 160) : '');
       }
     };
     window.addEventListener('message', onMessage);
@@ -57,6 +59,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
 
   const handleAddToCart = () => {
     setCartState('adding');
+    setCartError('');
     window.parent.postMessage({ type: 'grindctrl-tryon:add-to-cart' }, '*');
     ackTimer.current = setTimeout(() => setCartState('failed'), 5000);
   };
@@ -126,6 +129,9 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
               <ArrowRight className="size-4 rtl:-scale-x-100" />
             </Link>
           </Button>
+        )}
+        {shopMode && show.addToCart && cartState === 'failed' && cartError && (
+          <p className="text-center text-xs text-destructive">{cartError}</p>
         )}
 
         {/* Secondary utilities: one compact row */}

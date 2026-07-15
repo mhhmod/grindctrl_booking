@@ -99,9 +99,9 @@
     if (!frame || event.source !== frame.contentWindow || event.origin !== EMBED_ORIGIN) return;
     var data = event.data || {};
     if (data.type === 'grindctrl-tryon:add-to-cart') {
-      var fail = function () {
+      var fail = function (message) {
         frame.contentWindow.postMessage(
-          { type: 'grindctrl-tryon:cart-result', ok: false },
+          { type: 'grindctrl-tryon:cart-result', ok: false, message: message || '' },
           EMBED_ORIGIN
         );
       };
@@ -122,8 +122,11 @@
             headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
             body: JSON.stringify({ items: [{ id: variant.id, quantity: 1 }] })
           }).then(function (res) {
-            if (res.ok) window.location.href = '/cart';
-            else fail();
+            if (res.ok) { window.location.href = '/cart'; return; }
+            return res.json().then(
+              function (data) { fail(data && (data.description || data.message)); },
+              function () { fail(); }
+            );
           });
         })
         .catch(fail);

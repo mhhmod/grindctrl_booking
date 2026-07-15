@@ -106,9 +106,9 @@
           frame.style.height = event.data.height + 'px';
         }
         if (event.data.type === 'grindctrl-tryon:add-to-cart') {
-          var fail = function () {
+          var fail = function (message) {
             frame.contentWindow.postMessage(
-              { type: 'grindctrl-tryon:cart-result', ok: false },
+              { type: 'grindctrl-tryon:cart-result', ok: false, message: message || '' },
               embedOrigin
             );
           };
@@ -121,10 +121,13 @@
             body: JSON.stringify({ items: [{ id: variantId, quantity: 1 }] })
           })
             .then(function (res) {
-              if (res.ok) window.location.href = '/cart';
-              else fail();
+              if (res.ok) { window.location.href = '/cart'; return; }
+              return res.json().then(
+                function (data) { fail(data && (data.description || data.message)); },
+                function () { fail(); }
+              );
             })
-            .catch(fail);
+            .catch(function () { fail(); });
         }
       });
 
