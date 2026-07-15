@@ -31,7 +31,7 @@
     'background:#2a2826;color:#f0ede9;font-size:12px!important;font-weight:600!important;' +
     'line-height:1!important;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);' +
     'transition:transform .2s cubic-bezier(.22,1,.36,1);min-height:0!important;min-width:0!important;' +
-    'pointer-events:auto!important;z-index:20!important;}' +
+    'pointer-events:auto!important;z-index:2147482000!important;}' +
     '.gc-cat-btn:hover{transform:translateY(-1px) scale(1.03);}' +
     '.gc-cat-btn-ic{display:inline-flex;width:14px;height:14px;flex:none;}' +
     '.gc-cat-btn-ic svg{width:100%;height:100%;}' +
@@ -224,18 +224,36 @@
 
   // One delegated capture-phase listener: fires before theme handlers and
   // survives themes cloning/re-rendering card DOM (which drops listeners).
+  // Themes cover cards with invisible stretched-link overlays; the pill can
+  // lose hit-testing even when visually on top. Resolve the pill by point.
+  function pillFromEvent(e) {
+    var t = e.target && e.target.closest && e.target.closest('.gc-cat-btn');
+    if (t) return t;
+    if (typeof document.elementsFromPoint === 'function' && typeof e.clientX === 'number') {
+      var els = document.elementsFromPoint(e.clientX, e.clientY);
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].closest) {
+          var p = els[i].closest('.gc-cat-btn');
+          if (p) return p;
+        }
+      }
+    }
+    return null;
+  }
+
   document.addEventListener(
     'click',
     function (e) {
-      var btn = e.target && e.target.closest && e.target.closest('.gc-cat-btn');
+      var btn = pillFromEvent(e);
       if (!btn) return;
       e.preventDefault();
       e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       try {
         var handle = btn.getAttribute('data-gc-handle') || '';
         var title = btn.getAttribute('data-gc-title') || handle.replace(/-/g, ' ');
-        var container = btn.parentElement || document;
-        var img = container.querySelector('img');
+        var scope = btn.closest('li, .grid__item, .card-wrapper, .product-card, [class*="product-item"]') || btn.parentElement || document;
+        var img = scope.querySelector('img');
         var garment = img ? normalizeImage(img.currentSrc || img.src) : '';
         if (handle) openDialog(handle, title, garment);
       } catch (err) {
