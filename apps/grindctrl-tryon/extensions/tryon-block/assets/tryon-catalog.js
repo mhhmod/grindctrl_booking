@@ -19,6 +19,40 @@
     .then(function (data) { cfg = data; return data; })
     .catch(function () { return null; });
 
+  /* All styles injected by JS: theme card layouts stretch children and
+     external stylesheets lose specificity wars; !important + fixed
+     dimensions make the pill un-stretchable. */
+  var STYLE_CSS =
+    '.gc-cat-btn{position:absolute!important;inset-inline-end:8px!important;bottom:8px!important;' +
+    'top:auto!important;inset-inline-start:auto!important;z-index:3!important;' +
+    'display:inline-flex!important;align-items:center!important;gap:6px!important;' +
+    'width:auto!important;height:auto!important;max-width:calc(100% - 16px)!important;' +
+    'padding:6px 12px!important;margin:0!important;border:0!important;border-radius:999px;' +
+    'background:#2a2826;color:#f0ede9;font-size:12px!important;font-weight:600!important;' +
+    'line-height:1!important;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);' +
+    'transition:transform .2s cubic-bezier(.22,1,.36,1);min-height:0!important;min-width:0!important;}' +
+    '.gc-cat-btn:hover{transform:translateY(-1px) scale(1.03);}' +
+    '.gc-cat-btn-ic{display:inline-flex;width:14px;height:14px;flex:none;}' +
+    '.gc-cat-btn-ic svg{width:100%;height:100%;}' +
+    '.gc-cat-overlay{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;' +
+    'justify-content:center;padding:16px;background:rgba(20,18,16,.6);}' +
+    '.gc-cat-overlay--open{display:flex;}' +
+    '.gc-cat-lock{overflow:hidden;}' +
+    '.gc-cat-dialog{position:relative;width:100%;max-width:560px;max-height:90dvh;overflow:hidden;' +
+    'border-radius:16px;background:#faf8f5;box-shadow:0 24px 64px rgba(0,0,0,.35);}' +
+    '.gc-cat-close{position:absolute;top:8px;inset-inline-end:8px;z-index:2;width:32px;height:32px;' +
+    'border:0;border-radius:999px;background:rgba(42,40,38,.75);color:#f0ede9;font-size:20px;' +
+    'line-height:1;cursor:pointer;}' +
+    '.gc-cat-frame{display:block;width:100%;height:min(80dvh,720px);border:0;}';
+
+  function injectStyles() {
+    if (document.getElementById('gc-cat-styles')) return;
+    var el = document.createElement('style');
+    el.id = 'gc-cat-styles';
+    el.textContent = STYLE_CSS;
+    document.head.appendChild(el);
+  }
+
   var ICON_SVG =
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
     'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -186,6 +220,7 @@
   }
 
   function init() {
+    injectStyles();
     findCards();
     // Themes lazy-render grids (filtering, infinite scroll); re-scan calmly.
     var t = null;
