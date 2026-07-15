@@ -30,13 +30,18 @@
     'padding:6px 12px!important;margin:0!important;border:0!important;border-radius:999px;' +
     'background:#2a2826;color:#f0ede9;font-size:12px!important;font-weight:600!important;' +
     'line-height:1!important;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);' +
-    'transition:transform .2s cubic-bezier(.22,1,.36,1);min-height:0!important;min-width:0!important;}' +
+    'transition:transform .2s cubic-bezier(.22,1,.36,1);min-height:0!important;min-width:0!important;' +
+    'pointer-events:auto!important;z-index:20!important;}' +
     '.gc-cat-btn:hover{transform:translateY(-1px) scale(1.03);}' +
     '.gc-cat-btn-ic{display:inline-flex;width:14px;height:14px;flex:none;}' +
     '.gc-cat-btn-ic svg{width:100%;height:100%;}' +
-    '.gc-cat-overlay{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;' +
-    'justify-content:center;padding:16px;background:rgba(20,18,16,.6);}' +
-    '.gc-cat-overlay--open{display:flex;}' +
+    '@keyframes gc-cat-scan{0%{transform:translateY(0);opacity:0}12%{opacity:1}58%{transform:translateY(17px);opacity:1}72%,100%{transform:translateY(17px);opacity:0}}' +
+    '.gc-cat-scan{animation:gc-cat-scan 2.6s cubic-bezier(.4,0,.2,1) infinite;}' +
+    '@media (prefers-reduced-motion:reduce){.gc-cat-scan{animation:none;opacity:1;transform:none;}}' +
+    '.gc-cat-overlay{position:fixed!important;inset:0!important;z-index:2147483000!important;' +
+    'display:none!important;align-items:center!important;justify-content:center!important;' +
+    'padding:16px;background:rgba(20,18,16,.6);opacity:1!important;visibility:visible!important;}' +
+    '.gc-cat-overlay--open{display:flex!important;}' +
     '.gc-cat-lock{overflow:hidden;}' +
     '.gc-cat-dialog{position:relative;width:100%;max-width:560px;max-height:90dvh;overflow:hidden;' +
     'border-radius:16px;background:#faf8f5;box-shadow:0 24px 64px rgba(0,0,0,.35);}' +
@@ -54,11 +59,12 @@
   }
 
   var ICON_SVG =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" ' +
-    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<circle cx="12" cy="4.6" r="2.1"/>' +
-    '<path d="M8.2 9.3 6.2 12l1.9 1.5.6-.8V17h6.6v-4.3l.6.8L17.8 12l-2-2.7c-1.2-.6-2.4-.9-3.8-.9s-2.6.3-3.8.9Z"/>' +
-    '<path d="m19.6 3.4.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5Z" fill="currentColor" stroke="none"/>' +
+    '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">' +
+    '<defs><clipPath id="gc-bust-cat"><circle cx="12" cy="6.6" r="3.2"/>' +
+    '<path d="M4.6 21c0-4.5 3.3-7.2 7.4-7.2s7.4 2.7 7.4 7.2Z"/></clipPath></defs>' +
+    '<g opacity="0.5"><circle cx="12" cy="6.6" r="3.2"/>' +
+    '<path d="M4.6 21c0-4.5 3.3-7.2 7.4-7.2s7.4 2.7 7.4 7.2Z"/></g>' +
+    '<g clip-path="url(#gc-bust-cat)"><rect class="gc-cat-scan" x="2" y="1" width="20" height="2.4" rx="1.2"/></g>' +
     '</svg>';
 
   function productHandleFromHref(href) {
@@ -195,14 +201,9 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'gc-cat-btn';
+    btn.setAttribute('data-gc-handle', handle);
+    btn.setAttribute('data-gc-title', (img.getAttribute('alt') || handle.replace(/-/g, ' ')).trim());
     btn.innerHTML = '<span class="gc-cat-btn-ic">' + ICON_SVG + '</span><span>Try on</span>';
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var title = (img.getAttribute('alt') || handle.replace(/-/g, ' ')).trim();
-      var garment = normalizeImage(img.currentSrc || img.src);
-      openDialog(handle, title, garment);
-    });
 
     cfgPromise.then(function (c) {
       if (c) {
@@ -212,12 +213,37 @@
           btn.style.borderRadius = Math.min(c.radiusPx, 999) + 'px';
         }
       }
-      // A stable position relative to the card image.
-      var host = img.closest('a') || img.parentElement || card;
+      // Outside the product <a>: theme capture/delegated link handlers
+      // otherwise swallow the click before it reaches the pill.
+      var link = img.closest('a');
+      var host = (link && link.parentElement) || img.parentElement || card;
       if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
       host.appendChild(btn);
     });
   }
+
+  // One delegated capture-phase listener: fires before theme handlers and
+  // survives themes cloning/re-rendering card DOM (which drops listeners).
+  document.addEventListener(
+    'click',
+    function (e) {
+      var btn = e.target && e.target.closest && e.target.closest('.gc-cat-btn');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        var handle = btn.getAttribute('data-gc-handle') || '';
+        var title = btn.getAttribute('data-gc-title') || handle.replace(/-/g, ' ');
+        var container = btn.parentElement || document;
+        var img = container.querySelector('img');
+        var garment = img ? normalizeImage(img.currentSrc || img.src) : '';
+        if (handle) openDialog(handle, title, garment);
+      } catch (err) {
+        if (window.console && console.error) console.error('[GrindCTRL] try-on dialog failed', err);
+      }
+    },
+    true
+  );
 
   function init() {
     injectStyles();

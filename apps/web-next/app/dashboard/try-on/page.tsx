@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { saveTryOnSettingsAction } from './actions';
+import { WidgetPreview } from '@/components/try-on/widget-preview';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,6 +75,9 @@ export default async function DashboardTryOnPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <WidgetPreview s={settings} />
+            </div>
             <form action={saveTryOnSettingsAction} className="grid gap-4">
               <input type="hidden" name="shop" value="default" />
               <div className="grid gap-2">

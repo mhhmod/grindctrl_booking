@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { WidgetPreview } from '@/components/try-on/widget-preview';
 
 declare global {
   interface Window {
@@ -70,107 +71,6 @@ async function withToken(): Promise<string> {
   }
   if (!window.shopify) throw new Error('App Bridge not ready');
   return window.shopify.idToken();
-}
-
-/* Same icon SVG + animation as the storefront block (tryon.liquid). */
-function TryOnButtonPreview({ s }: { s: Settings }) {
-  const dark = s.widgetTheme === 'dark';
-  const sub = dark ? '#9c968f' : '#8a8378';
-  return (
-    <div
-      className="rounded-lg border p-6 sm:p-8"
-      style={{ background: dark ? '#1b1917' : '#faf8f5' }}
-    >
-      <style>{`
-        @keyframes pv-tee { 0% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } 16%, 80% { opacity: 1; transform: none; } 94%, 100% { opacity: 0; transform: translateY(-2.5px) scale(0.9); } }
-        @keyframes pv-spark { 0%, 10% { opacity: 0; transform: scale(0.4); } 22% { opacity: 1; transform: scale(1); } 38%, 100% { opacity: 0; transform: scale(0.4); } }
-        @keyframes pv-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        .pv-tee { animation: pv-tee 3.6s ease-in-out infinite; transform-origin: 12px 13px; }
-        .pv-spark { animation: pv-spark 3.6s ease-in-out infinite; }
-        .pv-spark2 { animation-delay: 0.5s; }
-        @media (prefers-reduced-motion: reduce) { .pv-tee, .pv-spark { animation: none; opacity: 1; } }
-      `}</style>
-      <div
-        className="mx-auto flex w-full max-w-md items-center justify-center gap-0 px-5 py-3 text-sm font-semibold"
-        style={{
-          background: s.accentBg,
-          color: s.accentFg,
-          borderRadius: `${s.radiusPx}px`,
-        }}
-      >
-        <span
-          className="flex h-7 w-7 flex-none items-center justify-center rounded-full p-[3px]"
-          style={{
-            marginInlineEnd: 10,
-            background: `linear-gradient(120deg, ${s.iconBgFrom}, ${s.iconBgTo}, ${s.iconBgFrom})`,
-            backgroundSize: '220% 220%',
-            animation: 'pv-pan 5s ease-in-out infinite',
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-full w-full">
-            <circle cx="12" cy="4.6" r="2.1" />
-            <path d="M9.4 20.5V15M14.6 20.5V15" />
-            <path className="pv-tee" d="M8.2 9.3 6.2 12l1.9 1.5.6-.8V17h6.6v-4.3l.6.8L17.8 12l-2-2.7c-1.2-.6-2.4-.9-3.8-.9s-2.6.3-3.8.9Z" />
-            <path className="pv-spark" d="m19.6 3.4.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5Z" fill="currentColor" stroke="none" />
-            <path className="pv-spark pv-spark2" d="m4.3 6 .4 1 1 .4-1 .4-.4 1-.4-1-1-.4 1-.4Z" fill="currentColor" stroke="none" />
-          </svg>
-        </span>
-        <span>{s.buttonLabel || 'Try it on with AI'}</span>
-      </div>
-
-      {/* Expanded widget mock: what shoppers see after clicking the button.
-          The product card always shows the product being viewed. */}
-      <div
-        className="mx-auto mt-4 w-full max-w-md rounded-xl border p-4"
-        style={{
-          background: dark ? '#242220' : '#ffffff',
-          borderColor: dark ? '#3a3733' : '#e8e4de',
-          color: dark ? '#f0ede9' : '#2a2826',
-        }}
-      >
-        <div className="flex items-start gap-4">
-          <div
-            className="flex h-24 w-20 flex-none items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
-            style={{
-              background: dark ? '#2e2b28' : '#f5f2ec',
-              borderColor: dark ? '#3a3733' : '#e8e4de',
-              color: sub,
-            }}
-          >
-            Product
-            <br />
-            photo
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: sub }}>
-              Your store
-            </p>
-            <p className="truncate text-base font-bold">The product being viewed</p>
-            <p className="mt-1 text-xs" style={{ color: sub }}>
-              Shoppers always try on the product on the page they opened, image and
-              name come from your store automatically.
-            </p>
-          </div>
-        </div>
-        <div
-          className="mt-4 rounded-lg border border-dashed px-4 py-5 text-center text-xs"
-          style={{ borderColor: dark ? '#4a463f' : '#d8d2c8', color: sub }}
-        >
-          Upload your photo
-        </div>
-        <div
-          className="mt-3 flex items-center justify-center px-4 py-2.5 text-xs font-semibold"
-          style={{ background: s.accentBg, color: s.accentFg, borderRadius: `${Math.min(s.radiusPx, 20)}px` }}
-        >
-          Generate my look
-        </div>
-      </div>
-
-      <p className="mt-3 text-center text-xs" style={{ color: sub }}>
-        Live preview: the button and try-on journey as they render on your product page
-      </p>
-    </div>
-  );
 }
 
 export function ShopifyAdminSettings() {
@@ -318,7 +218,7 @@ export function ShopifyAdminSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-5">
-          <TryOnButtonPreview s={s} />
+          <WidgetPreview s={s} />
 
           <div className="grid gap-2">
             <Label>Theme</Label>
