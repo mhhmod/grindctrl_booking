@@ -4,6 +4,8 @@ import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
 
+export type SettingsRow = Row;
+
 export type TryOnSettings = {
   shop: string;
   buttonLabel: string;
@@ -87,7 +89,7 @@ type Row = {
   loading_steps: string[] | null;
 };
 
-function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
+export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettings {
   if (!row) return base;
   return {
     shop: row.shop,
@@ -95,11 +97,18 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
     accentBg: row.accent_bg ?? base.accentBg,
     accentFg: row.accent_fg ?? base.accentFg,
     radiusPx: row.radius_px ?? base.radiusPx,
-    widgetTheme: row.widget_theme === 'dark' ? 'dark' : base.widgetTheme,
+    // Explicit values must win over the inherited row, so 'light' and
+    // 'steps' are matched too, not just the non-default variants.
+    widgetTheme:
+      row.widget_theme === 'light' || row.widget_theme === 'dark'
+        ? row.widget_theme
+        : base.widgetTheme,
     iconBgFrom: row.icon_bg_from ?? base.iconBgFrom,
     iconBgTo: row.icon_bg_to ?? base.iconBgTo,
     loadingStyle:
-      row.loading_style === 'pulse' || row.loading_style === 'bar'
+      row.loading_style === 'steps' ||
+      row.loading_style === 'pulse' ||
+      row.loading_style === 'bar'
         ? row.loading_style
         : base.loadingStyle,
     catalogLabel: row.catalog_label ?? base.catalogLabel,
@@ -139,10 +148,32 @@ async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
 
   if (error || !data) return DEFAULT_SETTINGS;
 
-  const defaults = merge(DEFAULT_SETTINGS, data.find((r) => r.shop === 'default') ?? null);
+  const defaults = mergeSettings(DEFAULT_SETTINGS, data.find((r) => r.shop === 'default') ?? null);
   const shopRow = shop ? (data.find((r) => r.shop === shop) ?? null) : null;
-  return merge(defaults, shopRow);
+  return mergeSettings(defaults, shopRow);
 }
+
+const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
+  buttonLabel: 'button_label',
+  accentBg: 'accent_bg',
+  accentFg: 'accent_fg',
+  radiusPx: 'radius_px',
+  widgetTheme: 'widget_theme',
+  iconBgFrom: 'icon_bg_from',
+  iconBgTo: 'icon_bg_to',
+  loadingStyle: 'loading_style',
+  catalogLabel: 'catalog_label',
+  catalogIconPx: 'catalog_icon_px',
+  catalogFontPx: 'catalog_font_px',
+  catalogPadPx: 'catalog_pad_px',
+  buttonIconPx: 'button_icon_px',
+  showDownload: 'show_download',
+  showWhatsapp: 'show_whatsapp',
+  showAddToCart: 'show_add_to_cart',
+  showTryAgain: 'show_try_again',
+  disclaimerText: 'disclaimer_text',
+  loadingSteps: 'loading_steps',
+};
 
 export async function saveTryOnSettings(
   shop: string,
@@ -151,29 +182,16 @@ export async function saveTryOnSettings(
   const supabase = getServiceClient();
   if (!supabase) return false;
 
-  const { error } = await supabase.from('tryon_settings').upsert({
-    shop,
-    button_label: values.buttonLabel ?? null,
-    accent_bg: values.accentBg ?? null,
-    accent_fg: values.accentFg ?? null,
-    radius_px: values.radiusPx ?? null,
-    widget_theme: values.widgetTheme ?? null,
-    icon_bg_from: values.iconBgFrom ?? null,
-    icon_bg_to: values.iconBgTo ?? null,
-    loading_style: values.loadingStyle ?? null,
-    catalog_label: values.catalogLabel ?? null,
-    catalog_icon_px: values.catalogIconPx ?? null,
-    catalog_font_px: values.catalogFontPx ?? null,
-    catalog_pad_px: values.catalogPadPx ?? null,
-    button_icon_px: values.buttonIconPx ?? null,
-    show_download: values.showDownload ?? null,
-    show_whatsapp: values.showWhatsapp ?? null,
-    show_add_to_cart: values.showAddToCart ?? null,
-    show_try_again: values.showTryAgain ?? null,
-    disclaimer_text: values.disclaimerText ?? null,
-    loading_steps: values.loadingSteps ?? null,
-    updated_at: new Date().toISOString(),
-  });
+  /* Only write columns the caller actually sent: a partial save (an older
+     admin bundle, a future PATCH) must not reset everything else. */
+  const payload: Record<string, unknown> = { shop, updated_at: new Date().toISOString() };
+  for (const [key, column] of Object.entries(COLUMNS)) {
+    if (Object.hasOwn(values, key)) {
+      payload[column] = values[key as keyof typeof COLUMNS] ?? null;
+    }
+  }
+
+  const { error } = await supabase.from('tryon_settings').upsert(payload);
 
   if (error) {
     console.error('tryon_settings upsert failed:', error.message);
@@ -181,3 +199,4 @@ export async function saveTryOnSettings(
   }
   return true;
 }
+

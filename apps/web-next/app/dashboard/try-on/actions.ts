@@ -8,7 +8,9 @@ export async function saveTryOnSettingsAction(formData: FormData) {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');
 
-  const shop = String(formData.get('shop') || 'default').trim() || 'default';
+  // This dashboard edits the global default row only; a client-supplied
+  // shop would let an authenticated caller overwrite any merchant's settings.
+  const shop = 'default';
   const loadingStepsRaw = String(formData.get('loading_steps') || '').trim();
   const loadingSteps = loadingStepsRaw
     ? loadingStepsRaw.split('\n').map((s) => s.trim()).filter(Boolean)
