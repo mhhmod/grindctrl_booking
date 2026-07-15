@@ -24,5 +24,7 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  matcher: ['/((?!_next|.*\\..*).*)', '/'],
+  /* Embed + storefront-facing APIs are cookie-less third-party contexts:
+     Clerk's handshake can redirect them (blank iframes). Keep them out. */
+  matcher: ['/((?!_next|embed|api/try-on|api/shopify|.*\\..*).*)', '/'],
 };

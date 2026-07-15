@@ -96,6 +96,16 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
 
 /** Default settings overlaid with the shop's row (if any). */
 export async function getTryOnSettings(shop?: string | null): Promise<TryOnSettings> {
+  try {
+    return await loadSettings(shop);
+  } catch (err) {
+    // The embed must render even when settings storage is unreachable.
+    console.error('getTryOnSettings failed:', err instanceof Error ? err.message : err);
+    return DEFAULT_SETTINGS;
+  }
+}
+
+async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
   const supabase = getServiceClient();
   if (!supabase) return DEFAULT_SETTINGS;
 

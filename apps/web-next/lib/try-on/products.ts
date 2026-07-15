@@ -22,7 +22,11 @@ export const PRODUCTS: Record<string, TryOnProduct> = {
 export const DEFAULT_PRODUCT_ID = 'premium-ringer-tee';
 
 export function getProduct(productId: string): TryOnProduct | undefined {
-  return PRODUCTS[productId];
+  // hasOwnProperty guard: handles like "constructor" must not resolve
+  // to inherited object members.
+  return Object.prototype.hasOwnProperty.call(PRODUCTS, productId)
+    ? PRODUCTS[productId]
+    : undefined;
 }
 
 export function getDefaultProduct(): TryOnProduct {
