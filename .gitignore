@@ -15,4 +15,7 @@ e2e/__screenshots__/
 Thumbs.db
 .vscode/
 .idea/
+.codex-temp/
 nul
+tsconfig.tsbuildinfo
+.playwright-mcp/
