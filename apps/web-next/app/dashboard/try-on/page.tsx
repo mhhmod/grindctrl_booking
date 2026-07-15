@@ -167,6 +167,33 @@ export default async function DashboardTryOnPage() {
                   <option value="bar">Progress bar</option>
                 </select>
               </div>
+              <fieldset className="grid gap-2">
+                <Label>Result screen buttons</Label>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {([
+                    ['show_add_to_cart', 'Add to cart', settings.showAddToCart],
+                    ['show_download', 'Download preview', settings.showDownload],
+                    ['show_whatsapp', 'Request order / WhatsApp', settings.showWhatsapp],
+                    ['show_try_again', 'Try with a different photo', settings.showTryAgain],
+                  ] as const).map(([name, label, checked]) => (
+                    <label key={name} className="flex items-center gap-2">
+                      <input type="checkbox" name={name} defaultChecked={checked} className="size-4 accent-primary" />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div className="grid gap-2">
+                <Label htmlFor="disclaimer_text">Disclaimer under the result (empty = default)</Label>
+                <textarea
+                  id="disclaimer_text"
+                  name="disclaimer_text"
+                  rows={2}
+                  defaultValue={settings.disclaimerText ?? ''}
+                  placeholder="This preview is visual guidance only..."
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
                 <textarea

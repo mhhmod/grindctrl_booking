@@ -1,0 +1,21 @@
+{% comment %}
+  GrindCTRL Try-On catalog embed: adds a "Try on" button to every product
+  card in collection/catalog grids. Clicking opens a dialog with the same
+  try-on experience (same settings, colors, and journey as the product-
+  page block). Enable under Theme settings -> App embeds.
+{% endcomment %}
+<script
+  src="{{ 'tryon-catalog.js' | asset_url }}"
+  defer
+  data-gc-shop="{{ shop.permanent_domain }}"
+  data-gc-locale="{{ request.locale.iso_code }}"
+></script>
+<link rel="stylesheet" href="{{ 'tryon.css' | asset_url }}">
+
+{% schema %}
+{
+  "name": "Try-On on product cards",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}

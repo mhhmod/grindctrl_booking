@@ -3,7 +3,7 @@
 client_id = "fc095fe656d9029fdc249a4af2315f19"
 application_url = "https://grindctrl.cloud/shopify/app"
 embedded = true
-name = "grindctrl-tryon"
+name = "GrindCTRL Try-On"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes

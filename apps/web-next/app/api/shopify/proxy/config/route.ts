@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
       iconBgFrom: settings.iconBgFrom,
       iconBgTo: settings.iconBgTo,
       loadingStyle: settings.loadingStyle,
+      showDownload: settings.showDownload,
+      showWhatsapp: settings.showWhatsapp,
+      showAddToCart: settings.showAddToCart,
+      showTryAgain: settings.showTryAgain,
+      disclaimerText: settings.disclaimerText,
     },
     { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
   );

@@ -106,8 +106,14 @@
           frame.style.height = event.data.height + 'px';
         }
         if (event.data.type === 'grindctrl-tryon:add-to-cart') {
+          var fail = function () {
+            frame.contentWindow.postMessage(
+              { type: 'grindctrl-tryon:cart-result', ok: false },
+              embedOrigin
+            );
+          };
           var variantId = parseInt(root.dataset.variant, 10);
-          if (!variantId) return;
+          if (!variantId) return fail();
           fetch('/cart/add.js', {
             method: 'POST',
             credentials: 'same-origin',
@@ -116,8 +122,9 @@
           })
             .then(function (res) {
               if (res.ok) window.location.href = '/cart';
+              else fail();
             })
-            .catch(function () { /* leave the widget visible */ });
+            .catch(fail);
         }
       });
 

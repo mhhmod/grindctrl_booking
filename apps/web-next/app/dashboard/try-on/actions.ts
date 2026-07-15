@@ -27,6 +27,11 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     loadingStyle: (['pulse', 'bar'].includes(String(formData.get('loading_style')))
       ? String(formData.get('loading_style'))
       : 'steps') as 'steps' | 'pulse' | 'bar',
+    showDownload: formData.get('show_download') === 'on',
+    showWhatsapp: formData.get('show_whatsapp') === 'on',
+    showAddToCart: formData.get('show_add_to_cart') === 'on',
+    showTryAgain: formData.get('show_try_again') === 'on',
+    disclaimerText: String(formData.get('disclaimer_text') || '').trim() || null,
     loadingSteps,
   });
 

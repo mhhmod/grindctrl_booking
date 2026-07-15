@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
     widgetTheme?: string;
     iconBgFrom?: string;
     iconBgTo?: string;
+    loadingStyle?: string;
+    showDownload?: boolean;
+    showWhatsapp?: boolean;
+    showAddToCart?: boolean;
+    showTryAgain?: boolean;
+    disclaimerText?: string | null;
     loadingSteps?: string[] | null;
   };
 
@@ -43,6 +49,17 @@ export async function POST(request: NextRequest) {
     widgetTheme: body.widgetTheme === 'dark' ? 'dark' : 'light',
     iconBgFrom: body.iconBgFrom?.trim() || undefined,
     iconBgTo: body.iconBgTo?.trim() || undefined,
+    loadingStyle: (body.loadingStyle === 'pulse' || body.loadingStyle === 'bar'
+      ? body.loadingStyle
+      : 'steps') as 'steps' | 'pulse' | 'bar',
+    showDownload: body.showDownload !== false,
+    showWhatsapp: body.showWhatsapp !== false,
+    showAddToCart: body.showAddToCart !== false,
+    showTryAgain: body.showTryAgain !== false,
+    disclaimerText:
+      typeof body.disclaimerText === 'string'
+        ? body.disclaimerText.slice(0, 300).trim() || null
+        : null,
     loadingSteps:
       Array.isArray(body.loadingSteps) && body.loadingSteps.length
         ? body.loadingSteps.map((s) => String(s).trim()).filter(Boolean)

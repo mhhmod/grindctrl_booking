@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PhotoUpload } from './photo-upload';
-import { TryOnResult } from './try-on-result';
+import { TryOnResult, type ResultControls } from './try-on-result';
 import { useTryOnLocale } from './locale-provider';
 import { getDefaultProduct, getProduct } from '@/lib/try-on/products';
 import { localizeProduct } from '@/lib/try-on/i18n';
@@ -28,6 +28,7 @@ export type TryOnDemoOverrides = {
   generateLabel?: string;
   loadingSteps?: string[];
   loadingStyle?: 'steps' | 'pulse' | 'bar';
+  result?: ResultControls;
 };
 
 export type ShopProductOverride = {
@@ -359,6 +360,7 @@ export function TryOnDemo({
             job={job}
             productName={product.name}
             shopMode={!!shopProduct}
+            controls={overrides?.result}
             onReset={handleReset}
           />
         )}

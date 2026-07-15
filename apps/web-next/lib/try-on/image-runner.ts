@@ -122,8 +122,12 @@ export async function runImageGeneration(
       model,
       prompt:
         `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
-        "Keep the person's face, pose, body shape, and background unchanged. " +
-        'Fit the garment naturally with realistic drape, lighting, and shadows. Photorealistic.',
+        'This must look like the SAME photograph, retaken with the person wearing the new garment: ' +
+        "identical face, skin tone, hair, pose, body proportions, camera angle, background, and framing. " +
+        'Match the original photo\'s lighting direction, color temperature, grain, and sharpness so the garment blends seamlessly. ' +
+        'The garment must keep its true color, pattern, logo placement, and fabric texture, with natural drape, ' +
+        'realistic wrinkles, and correct fit for the person\'s build. ' +
+        'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
       input_references: [
         { type: 'image_url', image_url: { url: photoData } },
         { type: 'image_url', image_url: { url: garmentDataUrl } },

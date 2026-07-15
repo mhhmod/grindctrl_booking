@@ -23,6 +23,11 @@ export async function GET(request: NextRequest) {
       iconBgFrom: settings.iconBgFrom,
       iconBgTo: settings.iconBgTo,
       loadingStyle: settings.loadingStyle,
+      showDownload: settings.showDownload,
+      showWhatsapp: settings.showWhatsapp,
+      showAddToCart: settings.showAddToCart,
+      showTryAgain: settings.showTryAgain,
+      disclaimerText: settings.disclaimerText,
     },
     { headers: CORS_HEADERS },
   );

@@ -16,6 +16,13 @@ export type TryOnSettings = {
   iconBgTo: string;
   /** Loading animation style in the widget. */
   loadingStyle: 'steps' | 'pulse' | 'bar';
+  /** Result-screen CTA visibility. */
+  showDownload: boolean;
+  showWhatsapp: boolean;
+  showAddToCart: boolean;
+  showTryAgain: boolean;
+  /** null = built-in localized disclaimer. */
+  disclaimerText: string | null;
   /** null → use the built-in localized loading steps */
   loadingSteps: string[] | null;
 };
@@ -30,6 +37,11 @@ export const DEFAULT_SETTINGS: TryOnSettings = {
   iconBgFrom: '#ff9a3d',
   iconBgTo: '#ffd76e',
   loadingStyle: 'steps',
+  showDownload: true,
+  showWhatsapp: true,
+  showAddToCart: true,
+  showTryAgain: true,
+  disclaimerText: null,
   loadingSteps: null,
 };
 
@@ -50,6 +62,11 @@ type Row = {
   icon_bg_from: string | null;
   icon_bg_to: string | null;
   loading_style: string | null;
+  show_download: boolean | null;
+  show_whatsapp: boolean | null;
+  show_add_to_cart: boolean | null;
+  show_try_again: boolean | null;
+  disclaimer_text: string | null;
   loading_steps: string[] | null;
 };
 
@@ -68,6 +85,11 @@ function merge(base: TryOnSettings, row: Row | null): TryOnSettings {
       row.loading_style === 'pulse' || row.loading_style === 'bar'
         ? row.loading_style
         : base.loadingStyle,
+    showDownload: row.show_download ?? base.showDownload,
+    showWhatsapp: row.show_whatsapp ?? base.showWhatsapp,
+    showAddToCart: row.show_add_to_cart ?? base.showAddToCart,
+    showTryAgain: row.show_try_again ?? base.showTryAgain,
+    disclaimerText: row.disclaimer_text ?? base.disclaimerText,
     loadingSteps: row.loading_steps ?? base.loadingSteps,
   };
 }
@@ -80,7 +102,7 @@ export async function getTryOnSettings(shop?: string | null): Promise<TryOnSetti
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps')
+    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text')
     .in('shop', shops);
 
   if (error || !data) return DEFAULT_SETTINGS;
@@ -107,6 +129,11 @@ export async function saveTryOnSettings(
     icon_bg_from: values.iconBgFrom ?? null,
     icon_bg_to: values.iconBgTo ?? null,
     loading_style: values.loadingStyle ?? null,
+    show_download: values.showDownload ?? null,
+    show_whatsapp: values.showWhatsapp ?? null,
+    show_add_to_cart: values.showAddToCart ?? null,
+    show_try_again: values.showTryAgain ?? null,
+    disclaimer_text: values.disclaimerText ?? null,
     loading_steps: values.loadingSteps ?? null,
     updated_at: new Date().toISOString(),
   });

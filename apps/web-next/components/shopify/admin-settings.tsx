@@ -21,6 +21,11 @@ type Settings = {
   iconBgFrom: string;
   iconBgTo: string;
   loadingStyle: 'steps' | 'pulse' | 'bar';
+  showDownload: boolean;
+  showWhatsapp: boolean;
+  showAddToCart: boolean;
+  showTryAgain: boolean;
+  disclaimerText: string | null;
   loadingSteps: string[] | null;
 };
 
@@ -142,7 +147,7 @@ function TryOnButtonPreview({ s }: { s: Settings }) {
             </p>
             <p className="truncate text-base font-bold">The product being viewed</p>
             <p className="mt-1 text-xs" style={{ color: sub }}>
-              Shoppers always try on the product on the page they opened — image and
+              Shoppers always try on the product on the page they opened, image and
               name come from your store automatically.
             </p>
           </div>
@@ -162,7 +167,7 @@ function TryOnButtonPreview({ s }: { s: Settings }) {
       </div>
 
       <p className="mt-3 text-center text-xs" style={{ color: sub }}>
-        Live preview — the button and try-on journey as they render on your product page
+        Live preview: the button and try-on journey as they render on your product page
       </p>
     </div>
   );
@@ -245,6 +250,23 @@ export function ShopifyAdminSettings() {
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
+      <header className="flex items-center gap-3 px-1 pt-1">
+        <span
+          className="flex size-9 items-center justify-center rounded-full p-1.5 text-[#2a2826]"
+          style={{ background: 'linear-gradient(120deg, #ff9a3d, #ffd76e)' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-full w-full">
+            <circle cx="12" cy="4.6" r="2.1" />
+            <path d="M8.2 9.3 6.2 12l1.9 1.5.6-.8V17h6.6v-4.3l.6.8L17.8 12l-2-2.7c-1.2-.6-2.4-.9-3.8-.9s-2.6.3-3.8.9Z" />
+          </svg>
+        </span>
+        <div>
+          <p className="text-base font-bold leading-tight tracking-tight">GrindCTRL Try-On</p>
+          <p className="text-xs text-muted-foreground">
+            AI try-on for your product pages, managed for you
+          </p>
+        </div>
+      </header>
       <Card>
         <CardHeader>
           <CardTitle>Add try-on to your product pages</CardTitle>
@@ -362,7 +384,7 @@ export function ShopifyAdminSettings() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="widget_theme">Widget theme</Label>
+              <Label htmlFor="widget_theme">Try-on panel background</Label>
               <select
                 id="widget_theme"
                 value={s.widgetTheme}
@@ -372,7 +394,48 @@ export function ShopifyAdminSettings() {
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
+              <p className="text-xs text-muted-foreground">
+                The surface behind the try-on journey. Pick whichever matches your
+                store design; the preview above shows the effect.
+              </p>
             </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Result screen buttons</Label>
+            <p className="text-xs text-muted-foreground">
+              What shoppers can do after seeing themselves in the product.
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {([
+                ['showAddToCart', 'Add to cart'],
+                ['showDownload', 'Download preview'],
+                ['showWhatsapp', 'Request order / WhatsApp'],
+                ['showTryAgain', 'Try with a different photo'],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={s[key]}
+                    onChange={(e) => set(key, e.target.checked)}
+                    className="size-4 accent-primary"
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="disclaimer_text">Disclaimer under the result (empty = default)</Label>
+            <textarea
+              id="disclaimer_text"
+              rows={2}
+              value={s.disclaimerText ?? ''}
+              onChange={(e) => set('disclaimerText', e.target.value || null)}
+              placeholder="This preview is visual guidance only..."
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
           </div>
 
           <div className="grid gap-2">
