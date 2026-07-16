@@ -51,6 +51,9 @@ interface TryOnDict {
 
   generatingTitle: string;
 
+  noProductTitle: string;
+  noProductDescription: string;
+
   errorTitle: string;
   tryAgain: string;
   genericError: string;
@@ -120,6 +123,9 @@ const en: TryOnDict = {
   generateBtn: 'Generate Try-On Preview',
 
   generatingTitle: 'Creating your preview',
+
+  noProductTitle: 'No product selected',
+  noProductDescription: 'Open try-on from a product page to preview that item.',
 
   errorTitle: 'Something went wrong',
   tryAgain: 'Try again',
@@ -193,6 +199,9 @@ const ar: TryOnDict = {
   generateBtn: 'إنشاء معاينة التجربة',
 
   generatingTitle: 'جارٍ إنشاء معاينتك',
+
+  noProductTitle: 'لم يتم تحديد منتج',
+  noProductDescription: 'افتح ميزة التجربة من صفحة منتج لمعاينة هذا المنتج.',
 
   errorTitle: 'حدث خطأ ما',
   tryAgain: 'حاول مرة أخرى',

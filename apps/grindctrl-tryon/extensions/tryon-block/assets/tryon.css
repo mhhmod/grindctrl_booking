@@ -29,13 +29,13 @@
 
 /* Animated visual hint: a tee settles onto the figure inside a slowly
    shifting gradient badge (colors dashboard-controlled), sparkles twinkle. */
-.gc-tryon-ic {
+.gc-tryon-btn .gc-tryon-ic {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--gc-ic-size, 28px);
-  height: var(--gc-ic-size, 28px);
+  width: var(--gc-ic-size, 28px) !important;
+  height: var(--gc-ic-size, 28px) !important;
   margin-inline-end: 10px;
   flex: none;
   border-radius: 50%;
@@ -50,9 +50,9 @@
   animation: gc-ic-pan 5s ease-in-out infinite;
 }
 
-.gc-tryon-ic svg {
-  width: 100%;
-  height: 100%;
+.gc-tryon-btn .gc-tryon-ic svg {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 @keyframes gc-ic-pan {
@@ -125,12 +125,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: var(--gc-cat-pad, 6px) calc(var(--gc-cat-pad, 6px) * 2);
   border: 0;
   border-radius: 999px;
   background: #2a2826;
   color: #f0ede9;
-  font-size: 12px;
+  font-size: var(--gc-cat-font, 12px);
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -142,15 +142,15 @@
   transform: translateY(-1px) scale(1.03);
 }
 
-.gc-cat-btn-ic {
-  display: inline-flex;
-  width: 14px;
-  height: 14px;
+.gc-cat-btn .gc-cat-btn-ic {
+  display: inline-flex !important;
+  width: var(--gc-cat-icon, 14px) !important;
+  height: var(--gc-cat-icon, 14px) !important;
 }
 
-.gc-cat-btn-ic svg {
-  width: 100%;
-  height: 100%;
+.gc-cat-btn .gc-cat-btn-ic svg {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .gc-cat-overlay {
