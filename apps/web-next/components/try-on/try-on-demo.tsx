@@ -41,10 +41,12 @@ export type ShopProductOverride = {
 
 export function TryOnDemo({
   productId,
+  shop,
   shopProduct,
   overrides,
 }: {
   productId?: string;
+  shop?: string;
   shopProduct?: ShopProductOverride;
   overrides?: TryOnDemoOverrides;
 } = {}) {
@@ -99,7 +101,7 @@ export function TryOnDemo({
       const sessionRes = await fetch('/api/try-on/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id }),
+        body: JSON.stringify({ productId: product.id, shop }),
       });
       const sessionData: TryOnApiResponse<TryOnSession> = await sessionRes.json();
 
@@ -114,6 +116,7 @@ export function TryOnDemo({
         body: JSON.stringify({
           sessionId: sessionData.data.sessionId,
           productId: product.id,
+          shop: sessionData.data.shop,
           photoSource: 'upload',
           photoReference: photoDataUrl ? 'uploaded-photo' : undefined,
           photoData: photoDataUrl ?? undefined,
@@ -141,6 +144,7 @@ export function TryOnDemo({
         jobId: genData.jobId,
         sessionId: sessionData.data.sessionId,
         productId: genData.productId,
+        shop: sessionData.data.shop,
         status: genData.status,
         resultImageUrl: genData.resultImageUrl,
         message: genData.message,
@@ -153,7 +157,7 @@ export function TryOnDemo({
       setError(err instanceof Error ? err.message : t.genericError);
       setStep('error');
     }
-  }, [photoDataUrl, product.id, shopProduct, loadingSteps.length, t]);
+  }, [photoDataUrl, product.id, shop, shopProduct, loadingSteps.length, t]);
 
   const handleReset = useCallback(() => {
     setPhotoDataUrl(null);

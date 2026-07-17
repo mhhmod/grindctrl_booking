@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
+import { markTryOnShopUninstalled, recordTryOnShopSeen } from '@/lib/shopify/shops';
 
 /* Mandatory Shopify webhooks receiver (app/uninstalled, scopes_update).
-   Verifies the HMAC header and acknowledges; no state to clean up since
-   sessions are token-based and settings should survive reinstalls. */
+   Settings survive reinstalls; only the shop lifecycle record changes. */
 export async function POST(request: NextRequest) {
   const secret = process.env.SHOPIFY_API_SECRET;
   const hmacHeader = request.headers.get('x-shopify-hmac-sha256') ?? '';
@@ -18,6 +18,20 @@ export async function POST(request: NextRequest) {
   const b = Buffer.from(hmacHeader);
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const topic = request.headers.get('x-shopify-topic');
+  const shop = request.headers.get('x-shopify-shop-domain');
+  let recorded = true;
+
+  if (topic === 'app/uninstalled') {
+    recorded = await markTryOnShopUninstalled(shop);
+  } else if (topic === 'app/scopes_update') {
+    recorded = await recordTryOnShopSeen(shop);
+  }
+
+  if (!recorded) {
+    return NextResponse.json({ error: 'Shop lifecycle update failed' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

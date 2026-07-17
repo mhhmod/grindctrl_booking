@@ -6,11 +6,11 @@ import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
 /**
  * POST /api/try-on/session
  * Creates a new try-on session for a product.
- * Body: { productId: string }
+ * Body: { productId: string, shop?: string }
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { productId?: string };
+    const body = (await request.json()) as { productId?: string; shop?: unknown };
     const productId = body.productId ?? '';
 
     const validation = validateProductId(productId);
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    const session = createSession(productId);
+    const session = createSession(productId, body.shop);
     const res: TryOnApiResponse<TryOnSession> = { ok: true, data: session };
     return NextResponse.json(res, { status: 200 });
   } catch (error) {

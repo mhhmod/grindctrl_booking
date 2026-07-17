@@ -77,6 +77,7 @@ export async function runImageGeneration(
   sessionId: string,
   productId: string,
   photoData: string,
+  shop: string | null,
   garmentUrl?: string,
   productName?: string,
 ): Promise<TryOnJob> {
@@ -89,6 +90,7 @@ export async function runImageGeneration(
     jobId,
     sessionId,
     productId,
+    shop,
     status: 'failed',
     message,
     createdAt,
@@ -156,6 +158,7 @@ export async function runImageGeneration(
     jobId,
     sessionId,
     productId,
+    shop,
     status: 'completed',
     resultImageUrl: `data:${image.media_type ?? 'image/png'};base64,${image.b64_json}`,
     createdAt,

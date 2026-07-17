@@ -7,6 +7,7 @@ import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
 import type { TryOnJob } from './types';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -23,6 +24,7 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
     id: job.jobId,
     session_id: job.sessionId,
     product_id: job.productId,
+    shop: normalizeShopDomain(job.shop),
     status: job.status,
     provider: job.meta.provider,
     cost_usd: job.meta.costEstimate,
@@ -38,6 +40,8 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
 export type TryOnJobRow = {
   id: string;
   product_id: string;
+  /** null for demo-page jobs; a myshopify domain for storefront traffic. */
+  shop: string | null;
   status: string;
   provider: string | null;
   cost_usd: number | null;
@@ -52,7 +56,7 @@ export async function listRecentTryOnJobs(limit = 20): Promise<TryOnJobRow[]> {
 
   const { data, error } = await supabase
     .from('tryon_jobs')
-    .select('id, product_id, status, provider, cost_usd, duration_ms, message, created_at')
+    .select('id, product_id, shop, status, provider, cost_usd, duration_ms, message, created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
 

@@ -19,6 +19,7 @@ export interface TryOnProduct {
 export interface TryOnSession {
   sessionId: string;
   productId: string;
+  shop: string | null;
   createdAt: string;
 }
 
@@ -33,6 +34,7 @@ export type TryOnPhotoSource = 'upload' | 'mock';
 export interface TryOnGenerateRequest {
   sessionId: string;
   productId: string;
+  shop?: string | null;
   /**
    * Required. Indicates how the customer photo was supplied.
    * The API rejects requests that omit this field so that callers
@@ -52,6 +54,7 @@ export interface TryOnJob {
   jobId: string;
   sessionId: string;
   productId: string;
+  shop: string | null;
   status: TryOnJobStatus;
   resultImageUrl?: string;
   message?: string;

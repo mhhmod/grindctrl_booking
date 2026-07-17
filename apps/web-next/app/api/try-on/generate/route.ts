@@ -35,6 +35,7 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
  * Body: {
  *   sessionId: string,
  *   productId: string,
+ *   shop?: string,
  *   photoSource?: 'upload' | 'mock',
  *   photoReference?: string,
  *   useMockPhoto?: boolean
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as {
       sessionId?: string;
       productId?: string;
+      shop?: unknown;
       photoSource?: string;
       photoReference?: string;
       photoData?: string;
@@ -155,6 +157,7 @@ export async function POST(request: NextRequest) {
       photoData,
       garmentUrl,
       productName,
+      body.shop,
     );
 
     const res = toJobResponse(job);

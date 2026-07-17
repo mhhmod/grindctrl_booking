@@ -15,6 +15,7 @@ import type { TryOnJob } from './types';
 export async function runMockGeneration(
   sessionId: string,
   productId: string,
+  shop: string | null,
 ): Promise<TryOnJob> {
   const jobId = `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const now = new Date().toISOString();
@@ -26,6 +27,7 @@ export async function runMockGeneration(
     jobId,
     sessionId,
     productId,
+    shop,
     status: 'completed',
     resultImageUrl: '/try-on/mock-result.png',
     message: 'Demo preview generated (mock mode — not a real AI result).',

@@ -5,6 +5,7 @@ import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import {
   DEFAULT_TRYON_LOCALE,
   getDictionary,
@@ -34,6 +35,7 @@ export default async function EmbedTryOnPage({
 }) {
   const params = await searchParams;
   const productHandle = params.product?.trim() || '';
+  const shop = normalizeShopDomain(params.shop);
 
   /* Store-product mode: the block passes the product's own image + title
      so customers try on the actual product, not the seeded demo garment. */
@@ -49,7 +51,7 @@ export default async function EmbedTryOnPage({
         imageUrl: garmentOk ? params.garment! : '',
       }
     : undefined;
-  const settings = await getTryOnSettings(params.shop);
+  const settings = await getTryOnSettings(shop);
 
   const initialLocale: TryOnLocale = isTryOnLocale(params.locale)
     ? params.locale
@@ -77,6 +79,7 @@ export default async function EmbedTryOnPage({
         {shopProduct ? (
           <TryOnDemo
             productId={productHandle}
+            shop={shop ?? undefined}
             shopProduct={shopProduct}
             overrides={{
               loadingSteps: settings.loadingSteps ?? undefined,

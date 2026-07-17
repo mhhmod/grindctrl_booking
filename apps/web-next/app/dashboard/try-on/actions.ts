@@ -1,16 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '@clerk/nextjs/server';
+import { requireManagedTryOnShop } from '@/lib/shopify/shops';
 import { saveTryOnSettings } from '@/lib/try-on/settings';
 
 export async function saveTryOnSettingsAction(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) throw new Error('Unauthorized');
-
-  // This dashboard edits the global default row only; a client-supplied
-  // shop would let an authenticated caller overwrite any merchant's settings.
-  const shop = 'default';
+  const shop = await requireManagedTryOnShop(formData.get('shop') ?? 'default');
   const loadingStepsRaw = String(formData.get('loading_steps') || '').trim();
   const loadingSteps = loadingStepsRaw
     ? loadingStepsRaw.split('\n').map((s) => s.trim()).filter(Boolean)

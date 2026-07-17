@@ -5,6 +5,7 @@ import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
 import { persistTryOnJob } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 /**
  * In-memory job store.
@@ -27,13 +28,14 @@ export function getTryOnMode(): TryOnMode {
 /**
  * Creates a new try-on session.
  */
-export function createSession(productId: string): TryOnSession {
+export function createSession(productId: string, shop?: unknown): TryOnSession {
   const v = validateProductId(productId);
   if (!v.ok) throw new Error(v.error);
 
   return {
     sessionId: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     productId,
+    shop: normalizeShopDomain(shop),
     createdAt: new Date().toISOString(),
   };
 }
@@ -57,6 +59,7 @@ export async function generateTryOn(
   photoData?: string,
   garmentUrl?: string,
   productName?: string,
+  shop?: unknown,
 ): Promise<TryOnJob> {
   const sv = validateSessionId(sessionId);
   if (!sv.ok) throw new Error(sv.error);
@@ -70,16 +73,25 @@ export async function generateTryOn(
 
   const mode = getTryOnMode();
   const startedAt = Date.now();
+  const normalizedShop = normalizeShopDomain(shop);
 
   let job: TryOnJob;
 
   if (mode === 'live' && photoSource === 'upload' && photoData) {
-    job = await runImageGeneration(sessionId, productId, photoData, garmentUrl, productName);
+    job = await runImageGeneration(
+      sessionId,
+      productId,
+      photoData,
+      normalizedShop,
+      garmentUrl,
+      productName,
+    );
   } else if (mode === 'live') {
     job = {
       jobId: `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       sessionId,
       productId,
+      shop: normalizedShop,
       status: 'failed',
       message: 'Live mode needs an uploaded photo.',
       createdAt: new Date().toISOString(),
@@ -90,7 +102,7 @@ export async function generateTryOn(
       },
     };
   } else {
-    job = await runMockGeneration(sessionId, productId);
+    job = await runMockGeneration(sessionId, productId, normalizedShop);
   }
 
   // Store job for polling (⚠️ MVP in-memory — see jobStore comment above)

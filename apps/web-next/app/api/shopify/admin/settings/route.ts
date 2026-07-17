@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/shopify/session-token';
+import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
 
 /* Embedded-admin settings API: authenticated by Shopify session token
@@ -15,6 +16,7 @@ export async function GET(request: NextRequest) {
   const session = authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  await recordTryOnShopSeen(session.shop);
   const settings = await getTryOnSettings(session.shop);
   return NextResponse.json({ shop: session.shop, settings });
 }
@@ -23,6 +25,7 @@ export async function POST(request: NextRequest) {
   const session = authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  await recordTryOnShopSeen(session.shop);
   const body = (await request.json()) as {
     buttonLabel?: string;
     accentBg?: string;
