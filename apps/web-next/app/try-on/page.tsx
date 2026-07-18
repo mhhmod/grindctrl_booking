@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnPageContent } from '@/components/try-on/try-on-page-content';
 import {
@@ -18,9 +18,15 @@ export const metadata: Metadata = {
 export default async function TryOnPage() {
   const cookieStore = await cookies();
   const cookieLocale = cookieStore.get(TRYON_LOCALE_COOKIE)?.value;
+  /* An explicit choice (cookie) wins; otherwise Arabic browsers get Arabic
+     on first visit instead of having to find the toggle. */
+  const acceptLanguage = (await headers()).get('accept-language') ?? '';
+  const browserLocale: TryOnLocale = /^ar\b|,\s*ar\b/i.test(acceptLanguage)
+    ? 'ar'
+    : DEFAULT_TRYON_LOCALE;
   const initialLocale: TryOnLocale = isTryOnLocale(cookieLocale)
     ? cookieLocale
-    : DEFAULT_TRYON_LOCALE;
+    : browserLocale;
 
   return (
     <TryOnLocaleProvider

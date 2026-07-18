@@ -14,24 +14,24 @@ export function TryOnPageContent() {
   return (
     <>
       {/* ─── Header ─── */}
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              aria-label={t.brandHome}
-            >
-              <BrandLogo />
-            </Link>
-          </div>
+      <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            aria-label={t.brandHome}
+          >
+            <BrandLogo subtitle={t.heroBadge} />
+          </Link>
 
-          <div className="flex items-center gap-2">
-            <LocaleToggle />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* The language switch is the header's one loud control: Arabic
+                visitors must find it without hunting. */}
+            <LocaleToggle className="border-foreground/25 px-3 text-sm" />
             <ThemeToggle />
             <Link
               href="/"
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="hidden h-9 items-center gap-1.5 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
             >
               <ArrowLeft className="size-3.5 rtl:-scale-x-100" />
               {t.home}
