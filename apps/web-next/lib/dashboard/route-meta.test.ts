@@ -33,8 +33,8 @@ describe('dashboard route metadata', () => {
     expect(analytics.title).toBe('Analytics');
     expect(analytics.description).toContain('trial funnel');
 
-    expect(tryOn.title).toBe('Try-On Agent');
-    expect(tryOn.description).toContain('Mock-first management');
+    expect(tryOn.title).toBe('Try-On');
+    expect(tryOn.description).toContain('generation history');
   });
 
   it('normalizes legacy route aliases to canonical routes', () => {

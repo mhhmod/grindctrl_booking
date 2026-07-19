@@ -58,15 +58,7 @@ export default async function DashboardTryOnPage({
   ];
 
   return (
-    <section className="grid gap-6">
-      <header className="grid gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Try-On</h1>
-        <p className="text-sm text-muted-foreground">
-          Every merchant surface reads the settings below. Generation history and provider
-          spend are live.
-        </p>
-      </header>
-
+    <section className="grid min-w-0 gap-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>

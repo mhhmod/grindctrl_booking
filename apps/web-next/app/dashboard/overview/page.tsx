@@ -34,17 +34,11 @@ export default async function DashboardOverviewPage() {
 
   return (
     <section className="grid min-w-0 gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="text-sm text-muted-foreground">
-            The try-on business this week, across every merchant store.
-          </p>
-        </div>
+      <div className="flex justify-end">
         <Button asChild size="sm" variant="outline">
           <Link href="/dashboard/try-on">Manage try-on</Link>
         </Button>
-      </header>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>

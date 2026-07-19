@@ -22,7 +22,7 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   {
     pathname: '/dashboard/overview',
     title: 'Overview',
-    description: 'Trial workspace home, saved preview handoff, and next best actions.',
+    description: 'The try-on business this week, across every merchant store.',
   },
   {
     pathname: '/dashboard/agents',
@@ -56,8 +56,8 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   },
   {
     pathname: '/dashboard/try-on',
-    title: 'Try-On Agent',
-    description: 'Mock-first management surface for product try-on previews and lead capture flow.',
+    title: 'Try-On',
+    description: 'Settings, plans, and generation history for every merchant store.',
   },
   {
     pathname: '/dashboard/install',

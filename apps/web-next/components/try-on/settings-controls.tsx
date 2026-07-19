@@ -227,7 +227,7 @@ export function TryOnSettingsControls({
             id="widget_theme"
             value={s.widgetTheme}
             onChange={(e) => onChange('widgetTheme', e.target.value === 'dark' ? 'dark' : 'light')}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             <option value="light">Light</option>
             <option value="dark">Dark</option>
@@ -247,7 +247,7 @@ export function TryOnSettingsControls({
           onChange={(e) =>
             onChange('loadingStyle', e.target.value === 'pulse' || e.target.value === 'bar' ? e.target.value : 'steps')
           }
-          className="h-10 rounded-md border border-input bg-background px-3 text-sm sm:max-w-xs"
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-xs"
         >
           <option value="steps">Checklist steps</option>
           <option value="pulse">Product photo pulse</option>

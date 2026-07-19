@@ -96,7 +96,8 @@ describe('DashboardTryOnPage', () => {
   it('shows the installed shops and the shared settings controls', async () => {
     await renderPage();
 
-    expect(screen.getByRole('heading', { name: 'Try-On' })).toBeInTheDocument();
+    // The shell owns the page title now; assert on a section heading instead.
+    expect(screen.getByText('Merchant shops')).toBeInTheDocument();
     expect(screen.getByText('Installed shops')).toBeInTheDocument();
     // The shop is listed in the table (it also appears as a selector option).
     expect(screen.getByRole('cell', { name: 'grindctrl.myshopify.com' })).toBeInTheDocument();

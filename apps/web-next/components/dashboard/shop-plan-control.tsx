@@ -197,7 +197,7 @@ export function ShopPlanControl({
             id="plan_select"
             value={planKey}
             onChange={(e) => setPlanKey(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             {plans.map((plan) => (
               <option key={plan.planKey} value={plan.planKey}>
@@ -254,7 +254,7 @@ export function ShopPlanControl({
             id="pack_select"
             value={packKey}
             onChange={(e) => setPackKey(e.target.value)}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
             {packs.map((pack) => (
               <option key={pack.packKey} value={pack.packKey}>
