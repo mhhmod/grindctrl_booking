@@ -20,8 +20,35 @@ export async function listPlansCatalog() {
   return listEntitlementCatalog();
 }
 
+/* The global-defaults view has no per-shop plan, so 'default' returns a
+   neutral state instead of hitting getShopEntitlement, which requires a
+   real myshopify domain. */
+const NO_SHOP_PLAN_STATE: ShopEntitlement = {
+  shop: 'default',
+  subscriptionId: null,
+  planId: null,
+  planKey: null,
+  planName: null,
+  status: 'none',
+  isFree: false,
+  rendersIncluded: 0,
+  planCreditsRemaining: 0,
+  topUpCreditsRemaining: 0,
+  totalCreditsRemaining: 0,
+  currentPeriodStart: null,
+  currentPeriodEnd: null,
+  graceEndsAt: null,
+  daysRemaining: 0,
+  bannerState: 'none',
+  available: false,
+  pendingPlanKey: null,
+  pendingPlanEffectiveAt: null,
+  notes: null,
+};
+
 export async function getShopPlanState(shop: unknown): Promise<ShopEntitlement> {
   const domain = await requireManagedTryOnShop(shop);
+  if (domain === 'default') return NO_SHOP_PLAN_STATE;
   await runDailyReconciliation();
   return getShopEntitlement(domain);
 }
