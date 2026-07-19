@@ -112,3 +112,28 @@ Rate limits versus credits. Rate limits (10/IP and 30/shop per 10 minutes)
 absorb bursts and return 429 with Retry-After; they never consume credits.
 Credits are the durable ceiling; entitlement failures return the stable code
 TRYON_UNAVAILABLE and never reach the provider.
+
+## Phase 1 status (19 July 2026)
+
+Live in production. Catalog v1 seeded; ledger, subscriptions, and atomic
+Postgres functions applied; enforcement active on shop-attributed live
+generations; owner controls in the dashboard; merchant plan card in the
+Shopify admin; storefront availability served through the app proxy with no
+business data exposed.
+
+Verified against the live database: free grant issues 20, a successful render
+debits one, a failed render refunds automatically, the ledger rejects updates
+and deletes, upgrading Free to Launch grants only the 280 difference,
+replaying an action key changes nothing, and a top-up adds its 80.
+
+Deferred to phase 1.5, in priority order:
+1. Signed Shopify App Proxy verification, so the storefront shop identity is
+   server-derived rather than taken from the iframe. Until then a crafted
+   request could spend another shop's credits.
+2. Widget-generated request UUIDs, so a shopper's retry reuses one reservation
+   instead of relying on the server-side fallback key.
+3. Model-per-plan at runtime (the catalog already carries model_key; the
+   runner still reads the global TRYON_MODEL).
+4. Scheduled reconciliation. Expiry and renewal currently apply lazily on read
+   and when the owner dashboard loads, which is correct but means a shop that
+   nobody visits keeps a stale period row until someone looks.
