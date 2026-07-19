@@ -1,7 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
+import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
 import { checkRateLimit } from '@/lib/try-on/rate-limit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import type {
@@ -15,6 +18,7 @@ const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
 /* Base64 inflates bytes by ~4/3; allow the 8MB file cap plus data-URL header. */
 const MAX_PHOTO_DATA_LENGTH = Math.ceil((TRYON_FILE_CONFIG.maxSizeBytes * 4) / 3) + 64;
 const PHOTO_DATA_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
   return {
@@ -63,6 +67,7 @@ export async function POST(request: NextRequest) {
       sessionId?: string;
       productId?: string;
       shop?: unknown;
+      requestKey?: unknown;
       photoSource?: string;
       photoReference?: string;
       photoData?: string;
@@ -149,6 +154,18 @@ export async function POST(request: NextRequest) {
     }
     const productName =
       typeof body.productName === 'string' ? body.productName.slice(0, 120) : undefined;
+    if (body.requestKey !== undefined &&
+      (typeof body.requestKey !== 'string' || !UUID_RE.test(body.requestKey))) {
+      const message = 'requestKey must be a UUID.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+    const normalizedShop = normalizeShopDomain(body.shop);
+    const requestKey = normalizedShop
+      ? (body.requestKey as string | undefined) ?? randomUUID()
+      : (body.requestKey as string | undefined);
 
     const job = await generateTryOn(
       sessionId,
@@ -157,12 +174,24 @@ export async function POST(request: NextRequest) {
       photoData,
       garmentUrl,
       productName,
-      body.shop,
+      normalizedShop,
+      requestKey,
     );
 
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    if (error instanceof TryOnUnavailableError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          code: 'TRYON_UNAVAILABLE',
+          message: error.message,
+        } satisfies TryOnJobApiResponse,
+        { status: 200 },
+      );
+    }
+
     if (error instanceof SyntaxError) {
       const res: TryOnJobApiResponse = {
         ok: false,

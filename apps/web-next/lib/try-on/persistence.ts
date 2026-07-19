@@ -1,12 +1,19 @@
-/* ─── Try-On Agent — job persistence (Supabase, service-role) ───
+/* Try-on job persistence (Supabase, service role).
    Metadata only: images are never stored, so customer photos stay
-   ephemeral. Persistence is best-effort — a DB hiccup must never fail
+   ephemeral. Persistence is best-effort. A DB hiccup must never fail
    a generation that already succeeded. */
 
 import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
 import type { TryOnJob } from './types';
+import {
+  finalizeCreditJob,
+  getShopEntitlement,
+  reserveCredit,
+  type CreditReservation,
+  type ShopEntitlement,
+} from './entitlement';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 function getServiceClient() {
@@ -35,6 +42,32 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
   if (error) {
     console.error('tryon_jobs insert failed:', error.message);
   }
+}
+
+export async function beginTryOnJob(input: {
+  shop: string;
+  jobId: string;
+  requestKey: string;
+  modelKey: string;
+  sessionId: string;
+  productId: string;
+}): Promise<CreditReservation> {
+  return reserveCredit(input);
+}
+
+export async function finalizeTryOnJob(job: TryOnJob, durationMs: number): Promise<void> {
+  await finalizeCreditJob({
+    jobId: job.jobId,
+    status: job.status === 'completed' ? 'completed' : 'failed',
+    provider: job.meta.provider,
+    costUsd: job.meta.costEstimate,
+    durationMs,
+    message: job.message,
+  });
+}
+
+export async function getShopEntitlementState(shop: unknown): Promise<ShopEntitlement> {
+  return getShopEntitlement(shop);
 }
 
 export type TryOnJobRow = {

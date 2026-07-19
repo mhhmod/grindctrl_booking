@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/shopify/session-token';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
+import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
 
 /* Embedded-admin settings API: authenticated by Shopify session token
    (Bearer, from App Bridge idToken()). The shop comes from the token,
@@ -17,8 +18,27 @@ export async function GET(request: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await recordTryOnShopSeen(session.shop);
-  const settings = await getTryOnSettings(session.shop);
-  return NextResponse.json({ shop: session.shop, settings });
+  await ensureFreeSubscription(session.shop);
+  const [settings, entitlement] = await Promise.all([
+    getTryOnSettings(session.shop),
+    getShopEntitlement(session.shop),
+  ]);
+  return NextResponse.json({
+    shop: session.shop,
+    settings,
+    plan: {
+      planName: entitlement.planName,
+      status: entitlement.status,
+      rendersIncluded: entitlement.rendersIncluded,
+      planCreditsRemaining: entitlement.planCreditsRemaining,
+      topUpCreditsRemaining: entitlement.topUpCreditsRemaining,
+      totalCreditsRemaining: entitlement.totalCreditsRemaining,
+      currentPeriodEnd: entitlement.currentPeriodEnd,
+      graceEndsAt: entitlement.graceEndsAt,
+      daysRemaining: entitlement.daysRemaining,
+      bannerState: entitlement.bannerState,
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {

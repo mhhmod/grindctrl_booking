@@ -10,6 +10,7 @@ import {
   TryOnSettingsControls,
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
+import { MerchantPlanCard, type MerchantPlan } from '@/components/shopify/merchant-plan-card';
 
 declare global {
   interface Window {
@@ -31,6 +32,7 @@ async function withToken(): Promise<string> {
 export function ShopifyAdminSettings() {
   const [shop, setShop] = useState('');
   const [s, setS] = useState<TryOnWidgetSettings | null>(null);
+  const [plan, setPlan] = useState<MerchantPlan | null>(null);
   const [loadingStepsText, setLoadingStepsText] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'error'>(
     'loading',
@@ -48,10 +50,15 @@ export function ShopifyAdminSettings() {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as { shop: string; settings: TryOnWidgetSettings };
+        const data = (await res.json()) as {
+          shop: string;
+          settings: TryOnWidgetSettings;
+          plan?: MerchantPlan;
+        };
         if (cancelled) return;
         setShop(data.shop);
         setS(data.settings);
+        if (data.plan) setPlan(data.plan);
         setLoadingStepsText(data.settings.loadingSteps?.join('\n') ?? '');
         setStatus('ready');
       } catch {
@@ -132,6 +139,8 @@ export function ShopifyAdminSettings() {
           <Moon className="size-4 dark:hidden" />
         </Button>
       </header>
+
+      {plan && <MerchantPlanCard plan={plan} shop={shop} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>

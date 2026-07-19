@@ -1,36 +1,31 @@
-/* ─── Try-On Agent — Service Layer ─── */
-
-import type { TryOnJob, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
+import { randomUUID } from 'node:crypto';
+import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
 import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
-import { persistTryOnJob } from './persistence';
+import {
+  beginTryOnJob,
+  finalizeTryOnJob,
+  persistTryOnJob,
+} from './persistence';
 import { validateProductId, validateSessionId } from './validator';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
-/**
- * In-memory job store.
- *
- * ⚠️  MVP / MOCK-ONLY — This Map lives in the Node process and is lost on
- * restart, redeploy, or cold-start.  Replace with a persistent store
- * (e.g. Supabase) before enabling live mode or going to production.
- */
+const DEFAULT_MODEL = 'google/gemini-3.1-flash-image';
 const jobStore = new Map<string, TryOnJob>();
 
-/**
- * Reads TRYON_MODE from env. Defaults to 'mock' if missing.
- */
+function createJobId(): string {
+  return `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function getTryOnMode(): TryOnMode {
   const mode = process.env.TRYON_MODE?.toLowerCase();
   if (mode === 'live') return 'live';
   return 'mock';
 }
 
-/**
- * Creates a new try-on session.
- */
 export function createSession(productId: string, shop?: unknown): TryOnSession {
-  const v = validateProductId(productId);
-  if (!v.ok) throw new Error(v.error);
+  const validation = validateProductId(productId);
+  if (!validation.ok) throw new Error(validation.error);
 
   return {
     sessionId: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -40,18 +35,6 @@ export function createSession(productId: string, shop?: unknown): TryOnSession {
   };
 }
 
-/**
- * Runs the try-on generation pipeline.
- *
- * @param sessionId   Active session identifier.
- * @param productId   Catalog product to render.
- * @param photoSource How the customer photo was supplied (`'upload'` or `'mock'`).
- *                    The caller **must** supply this so generation never fires
- *                    without a deliberate photo reference.
- *
- * In mock mode → uses mock-runner (static demo image).
- * In live mode → OpenRouter image model (TRYON_MODEL) compositing person + garment.
- */
 export async function generateTryOn(
   sessionId: string,
   productId: string,
@@ -60,24 +43,98 @@ export async function generateTryOn(
   garmentUrl?: string,
   productName?: string,
   shop?: unknown,
+  requestKey?: string,
 ): Promise<TryOnJob> {
-  const sv = validateSessionId(sessionId);
-  if (!sv.ok) throw new Error(sv.error);
+  const sessionValidation = validateSessionId(sessionId);
+  if (!sessionValidation.ok) throw new Error(sessionValidation.error);
 
-  const pv = validateProductId(productId);
-  if (!pv.ok) throw new Error(pv.error);
-
-  if (!photoSource) {
-    throw new Error('photoSource is required — supply "upload" or "mock".');
-  }
+  const productValidation = validateProductId(productId);
+  if (!productValidation.ok) throw new Error(productValidation.error);
+  if (!photoSource) throw new Error('photoSource is required. Supply "upload" or "mock".');
 
   const mode = getTryOnMode();
   const startedAt = Date.now();
   const normalizedShop = normalizeShopDomain(shop);
+  const billableLiveJob =
+    mode === 'live' &&
+    normalizedShop !== null &&
+    photoSource === 'upload' &&
+    Boolean(photoData);
 
   let job: TryOnJob;
 
-  if (mode === 'live' && photoSource === 'upload' && photoData) {
+  if (billableLiveJob) {
+    const modelKey = process.env.TRYON_MODEL || DEFAULT_MODEL;
+    const effectiveRequestKey = requestKey ?? randomUUID();
+    const reservedJobId = createJobId();
+    const reservation = await beginTryOnJob({
+      shop: normalizedShop,
+      jobId: reservedJobId,
+      requestKey: effectiveRequestKey,
+      modelKey,
+      sessionId,
+      productId,
+    });
+
+    if (!reservation.created) {
+      job = {
+        jobId: reservation.jobId,
+        sessionId,
+        productId,
+        shop: normalizedShop,
+        requestKey: effectiveRequestKey,
+        modelKey: reservation.modelKey,
+        status: reservation.status as TryOnJobStatus,
+        message: reservation.message ?? undefined,
+        createdAt: reservation.createdAt,
+        meta: {
+          runtime: 'live',
+          provider: reservation.provider ?? reservation.modelKey,
+          costEstimate: reservation.costUsd ?? 0,
+        },
+      };
+      jobStore.set(job.jobId, job);
+      return job;
+    }
+
+    let generated: TryOnJob;
+    try {
+      generated = await runImageGeneration(
+        sessionId,
+        productId,
+        photoData as string,
+        normalizedShop,
+        garmentUrl,
+        productName,
+      );
+    } catch (error) {
+      const failedJob: TryOnJob = {
+        jobId: reservedJobId,
+        sessionId,
+        productId,
+        shop: normalizedShop,
+        requestKey: effectiveRequestKey,
+        modelKey,
+        status: 'failed',
+        message: error instanceof Error ? error.message : 'Image generation failed.',
+        createdAt: reservation.createdAt,
+        meta: { runtime: 'live', provider: modelKey, costEstimate: 0 },
+      };
+      await finalizeTryOnJob(failedJob, Date.now() - startedAt);
+      jobStore.set(failedJob.jobId, failedJob);
+      throw error;
+    }
+
+    job = {
+      ...generated,
+      jobId: reservedJobId,
+      shop: normalizedShop,
+      requestKey: effectiveRequestKey,
+      modelKey,
+      createdAt: reservation.createdAt,
+    };
+    await finalizeTryOnJob(job, Date.now() - startedAt);
+  } else if (mode === 'live' && photoSource === 'upload' && photoData) {
     job = await runImageGeneration(
       sessionId,
       productId,
@@ -88,39 +145,26 @@ export async function generateTryOn(
     );
   } else if (mode === 'live') {
     job = {
-      jobId: `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      jobId: createJobId(),
       sessionId,
       productId,
       shop: normalizedShop,
       status: 'failed',
       message: 'Live mode needs an uploaded photo.',
       createdAt: new Date().toISOString(),
-      meta: {
-        runtime: 'live',
-        provider: 'openrouter',
-        costEstimate: 0,
-      },
+      meta: { runtime: 'live', provider: 'openrouter', costEstimate: 0 },
     };
   } else {
     job = await runMockGeneration(sessionId, productId, normalizedShop);
   }
 
-  // Store job for polling (⚠️ MVP in-memory — see jobStore comment above)
   jobStore.set(job.jobId, job);
-
-  // Job history for the dashboard; best-effort, never fails the request.
-  if (mode === 'live') {
+  if (mode === 'live' && !billableLiveJob) {
     await persistTryOnJob(job, Date.now() - startedAt).catch(() => {});
   }
-
   return job;
 }
 
-/**
- * Retrieves a job by ID from the in-memory store.
- *
- * ⚠️  MVP / MOCK-ONLY — reads from process-local Map.
- */
 export function getJob(jobId: string): TryOnJob | undefined {
   return jobStore.get(jobId);
 }

@@ -1,4 +1,4 @@
-/* ─── Try-On Agent — Shared Types ─── */
+/* Try-on shared types. */
 
 /** Job status lifecycle */
 export type TryOnJobStatus = 'queued' | 'processing' | 'completed' | 'failed';
@@ -35,6 +35,7 @@ export interface TryOnGenerateRequest {
   sessionId: string;
   productId: string;
   shop?: string | null;
+  requestKey?: string;
   /**
    * Required. Indicates how the customer photo was supplied.
    * The API rejects requests that omit this field so that callers
@@ -55,6 +56,8 @@ export interface TryOnJob {
   sessionId: string;
   productId: string;
   shop: string | null;
+  requestKey?: string;
+  modelKey?: string;
   status: TryOnJobStatus;
   resultImageUrl?: string;
   message?: string;
@@ -80,6 +83,7 @@ export interface TryOnApiResponse<T = unknown> {
 /** API envelope returned by try-on job endpoints. */
 export interface TryOnJobApiResponse {
   ok: boolean;
+  code?: 'TRYON_UNAVAILABLE';
   jobId?: string;
   status?: TryOnJobStatus;
   resultImageUrl?: string;

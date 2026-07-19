@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTryOnSettings } from '@/lib/try-on/settings';
+import { getShopEntitlement } from '@/lib/try-on/entitlement';
 
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
@@ -9,6 +10,12 @@ import { getTryOnSettings } from '@/lib/try-on/settings';
 export async function GET(request: NextRequest) {
   const shop = request.nextUrl.searchParams.get('shop');
   const settings = await getTryOnSettings(shop);
+  let available = false;
+  try {
+    available = (await getShopEntitlement(shop)).available;
+  } catch {
+    available = false;
+  }
 
   return NextResponse.json(
     {
@@ -30,7 +37,9 @@ export async function GET(request: NextRequest) {
       showAddToCart: settings.showAddToCart,
       showTryAgain: settings.showTryAgain,
       disclaimerText: settings.disclaimerText,
+      available,
+      messageKey: available ? null : 'tryOnTemporarilyUnavailable',
     },
-    { headers: { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' } },
+    { headers: { 'Cache-Control': 'private, no-store' } },
   );
 }

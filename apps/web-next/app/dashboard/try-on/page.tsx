@@ -9,6 +9,8 @@ import { getTryOnSettings } from '@/lib/try-on/settings';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
+import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
+import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,9 +33,11 @@ export default async function DashboardTryOnPage({
   const selectedShop =
     requested && shops.some((shop) => shop.domain === requested) ? requested : 'default';
 
-  const [jobs, settings] = await Promise.all([
+  const [jobs, settings, catalog, planState] = await Promise.all([
     listRecentTryOnJobs(25),
     getTryOnSettings(selectedShop),
+    listPlansCatalog(),
+    getShopPlanState(selectedShop),
   ]);
 
   const completed = jobs.filter((j) => j.status === 'completed');
@@ -118,6 +122,24 @@ export default async function DashboardTryOnPage({
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Plan and credits</CardTitle>
+          <CardDescription>
+            Payment is collected outside the app, so activating here is what grants credits.
+            Every action is recorded in the ledger with its payment reference.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ShopPlanControl
+            shop={selectedShop}
+            state={planState}
+            plans={catalog.plans}
+            packs={catalog.packs}
+          />
         </CardContent>
       </Card>
 
