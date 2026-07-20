@@ -2,20 +2,17 @@ import React from 'react';
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { BrandLogo } from '@/components/brand-logo';
-import { Icon } from '@/components/icons';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import {
   SidebarProvider,
   Sidebar,
   SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { DashboardSidebarNav } from '@/components/dashboard/nav-link';
 import type { DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
 import type { DashboardBreadcrumbItem } from '@/lib/dashboard/route-meta';
 
@@ -44,30 +41,11 @@ export function DashboardShell({
         <Separator />
 
         <SidebarContent className="p-2">
-          <SidebarMenu>
-            {navItems.map((item, index) => {
-              const prevGroup = index > 0 ? navItems[index - 1].group : undefined;
-              const showSeparator = item.group && prevGroup && item.group !== prevGroup;
-
-              return (
-                <React.Fragment key={item.href}>
-                  {showSeparator && <Separator className="my-1" />}
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={item.isActive} size="sm">
-                      <Link href={item.href}>
-                        <Icon icon={item.icon} />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </React.Fragment>
-              );
-            })}
-          </SidebarMenu>
+          <DashboardSidebarNav navItems={navItems} />
         </SidebarContent>
       </Sidebar>
 
-      <SidebarInset className="min-w-0 overflow-x-hidden bg-muted/40">
+      <SidebarInset className="min-w-0 bg-muted/40">
         <header className="sticky top-0 z-50 w-full border-b border-sidebar-border bg-background">
           <div className="container flex h-14 items-center justify-between gap-4 px-4">
             <div className="flex min-w-0 items-center gap-3">
@@ -106,13 +84,13 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="min-h-[calc(100svh-3.5rem)]">
-          <div className="container grid gap-4 p-4">
+        <main className="min-w-0 min-h-[calc(100svh-3.5rem)]">
+          <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-4 p-4">
             <div className="space-y-1 md:hidden">
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
-          {children}
+            <div className="min-w-0">{children}</div>
           </div>
         </main>
       </SidebarInset>

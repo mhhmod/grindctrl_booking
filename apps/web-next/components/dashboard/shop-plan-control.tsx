@@ -197,7 +197,7 @@ export function ShopPlanControl({
             id="plan_select"
             value={planKey}
             onChange={(e) => setPlanKey(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm"
           >
             {plans.map((plan) => (
               <option key={plan.planKey} value={plan.planKey}>
@@ -208,7 +208,7 @@ export function ShopPlanControl({
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              size="sm"
+              size="sm" className="h-10 sm:h-8"
               disabled={busy !== null || !planKey || isDowngrade}
               onClick={() =>
                 run('Activation', () =>
@@ -220,7 +220,7 @@ export function ShopPlanControl({
             </Button>
             <Button
               type="button"
-              size="sm"
+              size="sm" className="h-10 sm:h-8"
               variant="outline"
               disabled={busy !== null || !canRenew}
               title={canRenew ? undefined : 'Renewal opens at the period boundary'}
@@ -233,7 +233,7 @@ export function ShopPlanControl({
             {isDowngrade && (
               <Button
                 type="button"
-                size="sm"
+                size="sm" className="h-10 sm:h-8"
                 variant="outline"
                 disabled={busy !== null}
                 onClick={() =>
@@ -254,7 +254,7 @@ export function ShopPlanControl({
             id="pack_select"
             value={packKey}
             onChange={(e) => setPackKey(e.target.value)}
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm"
           >
             {packs.map((pack) => (
               <option key={pack.packKey} value={pack.packKey}>
@@ -266,7 +266,7 @@ export function ShopPlanControl({
             type="button"
             size="sm"
             variant="outline"
-            className="w-fit"
+            className="h-10 w-fit sm:h-8"
             disabled={busy !== null || !packKey || !state.available}
             title={state.available ? undefined : 'Top-ups need an active or grace subscription'}
             onClick={() =>

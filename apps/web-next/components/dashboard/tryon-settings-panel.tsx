@@ -93,7 +93,7 @@ export function TryOnSettingsPanel({
           onChange={(e) =>
             startNavigation(() => router.push(`/dashboard/try-on?shop=${encodeURIComponent(e.target.value)}`))
           }
-          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
+          className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
         >
           <option value="default">Global defaults (every shop without its own settings)</option>
           {shops.map((shop) => (

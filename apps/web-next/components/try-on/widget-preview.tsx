@@ -155,7 +155,7 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
                 setExpanded(false);
                 setDialogOpen(false);
               }}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+              className={`min-h-10 rounded-md px-3.5 py-1 text-xs font-medium transition-colors ${
                 view === v
                   ? 'bg-foreground text-background'
                   : 'text-muted-foreground hover:text-foreground'

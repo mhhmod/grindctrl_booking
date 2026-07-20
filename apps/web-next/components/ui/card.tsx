@@ -14,7 +14,7 @@ function Card({
     <Comp
       data-slot="card"
       className={cn(
-        "gc-spotlight rounded-lg border bg-card text-card-foreground",
+        "gc-spotlight min-w-0 rounded-lg border bg-card text-card-foreground",
         className
       )}
       {...props}
