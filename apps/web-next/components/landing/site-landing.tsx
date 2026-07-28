@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
+import { GeminiMark, ShopifyMark } from '@/components/brand-marks';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
@@ -310,6 +311,11 @@ function BeforeAfterSlider({
     </figure>
   );
 }
+
+const BRAND_MARKS: Record<string, ((props: { className?: string; style?: React.CSSProperties }) => React.JSX.Element) | undefined> = {
+  Shopify: ShopifyMark,
+  Gemini: GeminiMark,
+};
 
 export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
   const { locale, t } = useLandingLocale();
@@ -697,11 +703,23 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                 </h2>
               </div>
               <div className="flex min-w-0 flex-wrap gap-2.5">
-                {t.integrations.map((name) => (
-                  <Badge key={name} variant="outline" className="rounded-full border-border bg-background px-3.5 py-1.5 text-[13px] font-medium">
-                    {name}
-                  </Badge>
-                ))}
+                {t.integrations.map((name) => {
+                  /* Shopify and Gemini are real products, so they carry their
+                     own mark. The rest are surfaces, not brands, and stay
+                     text-only. Matching on the untranslated brand name works
+                     because both stay Latin script in the Arabic copy too. */
+                  const Mark = BRAND_MARKS[name];
+                  return (
+                    <Badge
+                      key={name}
+                      variant="outline"
+                      className="gc-integration-chip inline-flex items-center gap-1.5 rounded-full border-border bg-background px-3.5 text-[13px] font-medium"
+                    >
+                      {Mark ? <Mark className="shrink-0" /> : null}
+                      {name}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           </div>

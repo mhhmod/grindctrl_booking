@@ -418,6 +418,29 @@
   animation: gc-aurora-c 38s ease-in-out infinite;
 }
 
+/* Integration chips carrying a third-party logo. The base Badge pins svg
+   children to 12px with an important rule and clamps itself to 20px, which is
+   below the size a logo stays legible at. Every chip in the strip gets the
+   taller box so the row keeps one height whether or not it has a mark.
+
+   Inside @layer components on purpose. Badge's rule is `size-3!`, and for
+   important declarations the cascade layer order inverts, so an unlayered
+   important rule would lose to a layered one. components sorts before
+   utilities, so this wins. */
+@layer components {
+  /* Important as well: Badge's own h-5 is a utility, and utilities beat
+     components for normal declarations. Without this the 18px mark would be
+     clipped by a 20px pill that also sets overflow-hidden. */
+  .gc-integration-chip {
+    height: 1.75rem !important;
+  }
+
+  .gc-integration-chip > svg {
+    width: 1.125rem !important;
+    height: 1.125rem !important;
+  }
+}
+
 /* Coarse pointers (phones) carry a lighter layer: two blobs, smaller blur. */
 @media (pointer: coarse) {
   .gc-aurora span { filter: blur(52px); }

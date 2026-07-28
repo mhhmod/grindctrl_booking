@@ -1,11 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { BrandLogo } from '@/components/brand-logo';
+import type { AuthCopy } from '@/lib/auth/auth-i18n';
+import { getDir, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 /* Split-screen auth: brand statement pane (always warm-dark, independent
    of the theme toggle) + form pane on the app theme. On mobile the brand
    pane collapses to a slim strip so the form is immediately reachable. */
 export function AuthShell({
+  locale,
+  copy,
   title,
   subtitle,
   footerPrompt,
@@ -13,6 +17,8 @@ export function AuthShell({
   footerCtaHref,
   children,
 }: {
+  locale: SiteLocale;
+  copy: AuthCopy;
   title: string;
   subtitle: string;
   footerPrompt: string;
@@ -21,7 +27,11 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[1fr_1.1fr]">
+    <main
+      dir={getDir(locale)}
+      lang={locale}
+      className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[1fr_1.1fr]"
+    >
       <section className="gc-auth-brand relative flex flex-col justify-between gap-6 overflow-hidden px-5 py-5 sm:px-8 lg:px-12 lg:py-12">
         <div className="pointer-events-none absolute inset-0 gc-hero-grid-warm" aria-hidden="true" />
         <Link href="/" className="relative inline-flex w-fit items-center rounded-lg">
@@ -29,16 +39,12 @@ export function AuthShell({
         </Link>
         <div className="relative hidden max-w-xl space-y-5 lg:block">
           <h2 className="text-[clamp(1.9rem,3.4vw,3.1rem)] font-bold leading-[1.08] tracking-tight">
-            We build, run, and maintain your AI.
+            {copy.brandHeadline}
           </h2>
-          <p className="text-base leading-[1.7] opacity-70">
-            You watch every workflow, lead, and conversation from one dashboard.
-          </p>
+          <p className="text-base leading-[1.7] opacity-70">{copy.brandBody}</p>
         </div>
         <p className="relative hidden text-xs opacity-50 lg:block">grindctrl.cloud</p>
-        <p className="relative text-sm leading-snug opacity-70 lg:hidden">
-          Done-for-you AI automation, watched from one dashboard.
-        </p>
+        <p className="relative text-sm leading-snug opacity-70 lg:hidden">{copy.brandTagline}</p>
       </section>
 
       <section className="gc-auth-form-pane flex flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">

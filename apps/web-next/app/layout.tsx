@@ -6,10 +6,12 @@ import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@fontsource/ibm-plex-sans-arabic/700.css';
 import { ClerkProvider } from '@clerk/nextjs';
+import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 import { GcSpotlight } from '@/components/gc-spotlight';
+import { getRequestLocale } from '@/lib/auth/locale';
 
 export const metadata: Metadata = {
   title: 'GRINDCTRL — AI Implementation & Automation',
@@ -17,15 +19,23 @@ export const metadata: Metadata = {
     'GrindCTRL helps businesses integrate AI into operations across text, voice, images, video, files, CRMs, Google tools, cloud systems, and dashboards.',
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default async function RootLayout({children}: {children: React.ReactNode}) {
   const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  /* Clerk renders its own form copy, so it needs the same language the rest
+     of the site resolved from the shared locale cookie. It only accepts this
+     at the provider, not per component. */
+  const locale = await getRequestLocale();
 
   return (
     <html lang="en" className={cn("font-sans")} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ThemeProvider>
           <GcSpotlight />
-          {clerkConfigured ? <ClerkProvider>{children}</ClerkProvider> : children}
+          {clerkConfigured ? (
+            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>{children}</ClerkProvider>
+          ) : (
+            children
+          )}
         </ThemeProvider>
       </body>
     </html>

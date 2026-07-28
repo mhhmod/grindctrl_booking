@@ -12,6 +12,18 @@ const WARM_CHARCOAL = '#2a2826';
 const WARM_DARK_CARD = '#1d1a17';
 const WARM_NEAR_BLACK = '#141210';
 
+/* Clerk's own defaults render fields and buttons at 13px, which is two
+   separate mobile bugs: iOS force-zooms any focused input under 16px, and a
+   30px control is well under the 44px minimum touch target. Both are fixed
+   here rather than with CSS overrides so Clerk keeps deriving its internal
+   spacing from a sane base. */
+const TOUCH_SAFE_ELEMENTS = {
+  formFieldInput: { fontSize: '16px', minHeight: '44px' },
+  formButtonPrimary: { fontSize: '16px', minHeight: '44px' },
+  socialButtonsBlockButton: { fontSize: '16px', minHeight: '44px' },
+  formFieldInputShowPasswordButton: { minWidth: '44px', minHeight: '44px' },
+} as const;
+
 function useClerkAppearance() {
   const { resolvedTheme } = useTheme();
   /* Before hydration resolvedTheme is undefined; the app defaults to dark. */
@@ -25,7 +37,9 @@ function useClerkAppearance() {
     return {
       baseTheme: dark,
       layout,
+      elements: TOUCH_SAFE_ELEMENTS,
       variables: {
+        fontSize: '16px',
         colorPrimary: WARM_CREAM,
         colorBackground: WARM_DARK_CARD,
         colorInput: WARM_NEAR_BLACK,
@@ -37,7 +51,9 @@ function useClerkAppearance() {
 
   return {
     layout,
+    elements: TOUCH_SAFE_ELEMENTS,
     variables: {
+      fontSize: '16px',
       colorPrimary: WARM_CHARCOAL,
       colorBackground: '#f7f5f2',
       colorInput: '#ffffff',

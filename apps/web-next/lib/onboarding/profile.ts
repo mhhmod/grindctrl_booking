@@ -21,6 +21,12 @@ export type OnboardingProfile = OnboardingInput & { onboardedAt: string | null }
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
 
+/* One message per validated field. primaryGoal is optional, so it has none. */
+export type OnboardingErrorMessages = Record<
+  Exclude<keyof OnboardingInput, 'primaryGoal'>,
+  string
+>;
+
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -30,34 +36,38 @@ function getServiceClient() {
 
 /* Validation runs on the server because the client form can be bypassed.
    Phone and website are the two fields the sales team actually needs to be
-   usable, so they get format checks, not just a presence check. */
-export function validateOnboarding(input: OnboardingInput): OnboardingErrors {
+   usable, so they get format checks, not just a presence check. Messages are
+   passed in so the caller can return them in the visitor's language. */
+export function validateOnboarding(
+  input: OnboardingInput,
+  messages: OnboardingErrorMessages,
+): OnboardingErrors {
   const errors: OnboardingErrors = {};
 
   if (input.fullName.trim().length < 2) {
-    errors.fullName = 'Enter your full name.';
+    errors.fullName = messages.fullName;
   }
 
   // Digits only after stripping the usual separators, 7 to 15 per E.164.
   const digits = input.phone.replace(/[\s()+.-]/g, '');
   if (!/^\d{7,15}$/.test(digits)) {
-    errors.phone = 'Enter a valid phone number, including the country code.';
+    errors.phone = messages.phone;
   }
 
   if (!isUsableUrl(input.website)) {
-    errors.website = 'Enter a valid store or website address.';
+    errors.website = messages.website;
   }
 
   if (input.companyName.trim().length < 2) {
-    errors.companyName = 'Enter your store or company name.';
+    errors.companyName = messages.companyName;
   }
 
   if (!input.storePlatform.trim()) {
-    errors.storePlatform = 'Pick where your store runs.';
+    errors.storePlatform = messages.storePlatform;
   }
 
   if (!input.monthlyOrders.trim()) {
-    errors.monthlyOrders = 'Pick a monthly order range.';
+    errors.monthlyOrders = messages.monthlyOrders;
   }
 
   return errors;
@@ -121,10 +131,11 @@ export async function saveOnboardingProfile(
   clerkUserId: string,
   email: string,
   input: OnboardingInput,
+  messages: { noStorage: string; saveFailed: string },
 ): Promise<{ ok: boolean; message?: string }> {
   const supabase = getServiceClient();
   if (!supabase) {
-    return { ok: false, message: 'Storage is not configured. Contact support.' };
+    return { ok: false, message: messages.noStorage };
   }
 
   const { error } = await supabase.from('tryon_onboarding_profiles').upsert(
@@ -146,7 +157,7 @@ export async function saveOnboardingProfile(
 
   if (error) {
     console.error('onboarding upsert failed:', error.message);
-    return { ok: false, message: 'Could not save your details. Try again.' };
+    return { ok: false, message: messages.saveFailed };
   }
 
   return { ok: true };

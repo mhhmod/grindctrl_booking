@@ -81,7 +81,7 @@ const en: PricingCopy = {
     'launch-v1': {
       name: 'Launch',
       description: 'The best value for stores ready to make try-on part of the buying journey.',
-      benefits: ['Best price per delivered try-on', 'Top-ups available when you need them'],
+      benefits: ['Our best value for a growing store', 'Top-ups available when you need them'],
     },
     'dfy-v1': {
       name: 'Done-for-you',
@@ -176,7 +176,7 @@ const ar: PricingCopy = {
     'launch-v1': {
       name: 'انطلاق',
       description: 'أفضل قيمة للمتاجر الجاهزة لجعل التجربة جزءًا من رحلة الشراء.',
-      benefits: ['أفضل سعر لكل صورة مستلمة', 'أرصدة إضافية عند الحاجة'],
+      benefits: ['أفضل قيمة لمتجر في مرحلة النمو', 'أرصدة إضافية عند الحاجة'],
     },
     'dfy-v1': {
       name: 'خدمة متكاملة',

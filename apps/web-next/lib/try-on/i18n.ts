@@ -5,7 +5,12 @@ import type { TryOnProduct } from './types';
 export const TRYON_LOCALES = ['en', 'ar'] as const;
 export type TryOnLocale = (typeof TRYON_LOCALES)[number];
 
-export const TRYON_LOCALE_COOKIE = 'tryon-locale';
+/* Deliberately the same cookie the landing and pricing pages use
+   (SITE_LOCALE_COOKIE in lib/landing/landing-i18n.ts). It used to be
+   'tryon-locale', which meant picking Arabic on the landing page and then
+   opening the demo dropped you back to English. Both surfaces speak the same
+   two locales, so they share one preference. */
+export const TRYON_LOCALE_COOKIE = 'gc-locale';
 export const DEFAULT_TRYON_LOCALE: TryOnLocale = 'en';
 
 export function isTryOnLocale(value: unknown): value is TryOnLocale {

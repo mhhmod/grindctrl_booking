@@ -6,6 +6,16 @@ vi.mock('@clerk/nextjs', () => ({
   SignIn: () => <div data-testid="clerk-sign-in">Clerk SignIn</div>,
 }));
 
+/* The page resolves its language from the locale cookie, so the test controls
+   that cookie directly. */
+let cookieLocale: string | undefined;
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) =>
+      name === 'gc-locale' && cookieLocale ? { name, value: cookieLocale } : undefined,
+  }),
+}));
+
 import SignInPage from '@/app/sign-in/[[...sign-in]]/page';
 
 const originalClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -22,23 +32,34 @@ function restoreClerkKey() {
 describe('SignInPage', () => {
   afterEach(() => {
     restoreClerkKey();
+    cookieLocale = undefined;
   });
 
-  it('shows the env-missing alert when Clerk is not configured', () => {
+  it('shows the env-missing alert when Clerk is not configured', async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-    render(<SignInPage />);
+    render(await SignInPage());
 
     expect(screen.getByText('Clerk environment variables are missing')).toBeInTheDocument();
     expect(screen.queryByTestId('clerk-sign-in')).not.toBeInTheDocument();
   });
 
-  it('renders Clerk sign-in when the publishable key is configured', () => {
+  it('renders Clerk sign-in when the publishable key is configured', async () => {
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
 
-    render(<SignInPage />);
+    render(await SignInPage());
 
     expect(screen.getByTestId('clerk-sign-in')).toBeInTheDocument();
     expect(screen.queryByText('Clerk environment variables are missing')).not.toBeInTheDocument();
+  });
+
+  it('renders Arabic and flips direction when the locale cookie says so', async () => {
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+    cookieLocale = 'ar';
+
+    const { container } = render(await SignInPage());
+
+    expect(screen.getByRole('heading', { name: 'أهلًا بعودتك' })).toBeInTheDocument();
+    expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
   });
 });

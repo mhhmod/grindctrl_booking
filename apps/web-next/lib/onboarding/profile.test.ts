@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeWebsite, validateOnboarding, type OnboardingInput } from './profile';
+import { getAuthCopy } from '@/lib/auth/auth-i18n';
+import {
+  normalizeWebsite,
+  validateOnboarding as validate,
+  type OnboardingInput,
+} from './profile';
+
+const en = getAuthCopy('en');
+const MESSAGES = {
+  fullName: en.errorName,
+  phone: en.errorPhone,
+  website: en.errorWebsite,
+  companyName: en.errorCompany,
+  storePlatform: en.errorPlatform,
+  monthlyOrders: en.errorOrders,
+};
+
+const validateOnboarding = (input: OnboardingInput) => validate(input, MESSAGES);
 
 const VALID: OnboardingInput = {
   fullName: 'Nagy Sabry',

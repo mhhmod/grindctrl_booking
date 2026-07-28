@@ -7,16 +7,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import type { AuthCopy } from '@/lib/auth/auth-i18n';
 import type { OnboardingProfile } from '@/lib/onboarding/profile';
 import { cn } from '@/lib/utils';
-
-const PLATFORMS = ['Shopify', 'WooCommerce', 'Salla', 'Zid', 'Custom build', 'Not live yet'];
-const ORDER_RANGES = [
-  'Under 100 a month',
-  '100 to 500 a month',
-  '500 to 2000 a month',
-  'Over 2000 a month',
-];
 
 const INITIAL_STATE: OnboardingFormState = { errors: {} };
 
@@ -25,7 +18,13 @@ const INITIAL_STATE: OnboardingFormState = { errors: {} };
    touch target. */
 const FIELD_CLASS = 'h-11 md:h-10';
 
-export function OnboardingForm({ profile }: { profile: OnboardingProfile | null }) {
+export function OnboardingForm({
+  profile,
+  copy,
+}: {
+  profile: OnboardingProfile | null;
+  copy: AuthCopy;
+}) {
   const [state, formAction] = useActionState(submitOnboarding, INITIAL_STATE);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -52,7 +51,7 @@ export function OnboardingForm({ profile }: { profile: OnboardingProfile | null 
 
       <Field
         name="fullName"
-        label="Your name"
+        label={copy.fieldName}
         required
         error={state.errors.fullName}
         inputProps={{ autoComplete: 'name', defaultValue: value('fullName') }}
@@ -60,9 +59,9 @@ export function OnboardingForm({ profile }: { profile: OnboardingProfile | null 
 
       <Field
         name="phone"
-        label="Phone number"
+        label={copy.fieldPhone}
         required
-        hint="Include the country code so we can reach you on WhatsApp."
+        hint={copy.fieldPhoneHint}
         error={state.errors.phone}
         inputProps={{
           type: 'tel',
@@ -75,7 +74,7 @@ export function OnboardingForm({ profile }: { profile: OnboardingProfile | null 
 
       <Field
         name="companyName"
-        label="Store or company name"
+        label={copy.fieldCompany}
         required
         error={state.errors.companyName}
         inputProps={{ autoComplete: 'organization', defaultValue: value('companyName') }}
@@ -83,9 +82,9 @@ export function OnboardingForm({ profile }: { profile: OnboardingProfile | null 
 
       <Field
         name="website"
-        label="Store website"
+        label={copy.fieldWebsite}
         required
-        hint="We look at your product pages before the call."
+        hint={copy.fieldWebsiteHint}
         error={state.errors.website}
         inputProps={{
           type: 'url',
@@ -98,37 +97,39 @@ export function OnboardingForm({ profile }: { profile: OnboardingProfile | null 
 
       <SelectField
         name="storePlatform"
-        label="Where does your store run?"
-        options={PLATFORMS}
+        label={copy.fieldPlatform}
+        options={copy.platforms}
         error={state.errors.storePlatform}
+        placeholder={copy.selectPlaceholder}
         defaultValue={String(value('storePlatform'))}
       />
 
       <SelectField
         name="monthlyOrders"
-        label="Roughly how many orders a month?"
-        options={ORDER_RANGES}
+        label={copy.fieldOrders}
+        options={copy.orderRanges}
         error={state.errors.monthlyOrders}
+        placeholder={copy.selectPlaceholder}
         defaultValue={String(value('monthlyOrders'))}
       />
 
       <TextAreaField
         name="primaryGoal"
-        label="What do you want AI to fix first?"
-        hint="Optional. One line is enough."
+        label={copy.fieldGoal}
+        hint={copy.fieldGoalHint}
         defaultValue={String(value('primaryGoal'))}
       />
 
-      <SubmitButton />
+      <SubmitButton copy={copy} />
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ copy }: { copy: AuthCopy }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="lg" className="mt-1 h-11 rounded-full" disabled={pending}>
-      {pending ? 'Saving...' : 'Go to my dashboard'}
+      {pending ? copy.submitting : copy.submit}
     </Button>
   );
 }
@@ -170,12 +171,14 @@ function SelectField({
   options,
   error,
   defaultValue,
+  placeholder,
 }: {
   name: string;
   label: string;
-  options: string[];
+  options: readonly string[];
   error?: string;
   defaultValue: string;
+  placeholder: string;
 }) {
   const id = useId();
   const errorId = `${id}-error`;
@@ -196,7 +199,7 @@ function SelectField({
         className="h-11 w-full min-w-0 rounded-4xl border border-input bg-input/30 px-3 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:h-10 md:text-sm"
       >
         <option value="" disabled>
-          Select an option
+          {placeholder}
         </option>
         {options.map((option) => (
           <option key={option} value={option}>
