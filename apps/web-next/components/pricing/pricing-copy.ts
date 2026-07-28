@@ -21,14 +21,13 @@ export type PricingCopy = {
   tryDemo: string;
   marketLabel: string;
   marketLead: string;
-  marketTail: (price: string) => string;
+  marketTail: (renders: string) => string;
   plansEyebrow: string;
   plansTitle: string;
   plansBody: string;
   recommended: string;
   month: string;
   tryOnsPerMonth: (count: string) => string;
-  perTryOn: (price: string) => string;
   standardQuality: string;
   premiumQuality: string;
   choosePlan: (name: string) => string;
@@ -61,8 +60,8 @@ const en: PricingCopy = {
   bookCall: 'Book a pricing call',
   tryDemo: 'Try the live demo',
   marketLabel: 'Market position',
-  marketLead: 'Entry plans from other Shopify try-on apps run from $0.13 to $0.20 per render.',
-  marketTail: (price) => `Launch comes in at ${price}.`,
+  marketLead: 'Entry plans from other Shopify try-on apps typically include 100 to 150 try-ons a month.',
+  marketTail: (renders) => `Launch includes ${renders} for $15.`,
   plansEyebrow: 'Monthly plans',
   plansTitle: 'Pick the level of support your store needs.',
   plansBody:
@@ -70,7 +69,6 @@ const en: PricingCopy = {
   recommended: 'Recommended',
   month: 'month',
   tryOnsPerMonth: (count) => `${count} try-ons per month`,
-  perTryOn: (price) => `${price} per try-on`,
   standardQuality: 'Standard image quality',
   premiumQuality: 'Premium image quality',
   choosePlan: (name) => `Choose ${name}`,
@@ -157,8 +155,8 @@ const ar: PricingCopy = {
   bookCall: 'احجز مكالمة للأسعار',
   tryDemo: 'جرّب النسخة المباشرة',
   marketLabel: 'موقعنا في السوق',
-  marketLead: 'تبدأ خطط تطبيقات تجربة الملابس الأخرى على Shopify من 0.13 إلى 0.20 دولار لكل صورة.',
-  marketTail: (price) => `ويبلغ سعر خطة انطلاق ${price} فقط.`,
+  marketLead: 'تتضمن الخطط الأساسية في تطبيقات تجربة الملابس الأخرى على Shopify من 100 إلى 150 تجربة شهريًا.',
+  marketTail: (renders) => `بينما تتضمن خطة انطلاق ${renders} مقابل 15 دولارًا.`,
   plansEyebrow: 'الخطط الشهرية',
   plansTitle: 'اختر مستوى الدعم المناسب لمتجرك.',
   plansBody:
@@ -166,7 +164,6 @@ const ar: PricingCopy = {
   recommended: 'موصى بها',
   month: 'شهر',
   tryOnsPerMonth: (count) => `${count} تجربة كل شهر`,
-  perTryOn: (price) => `${price} لكل تجربة`,
   standardQuality: 'جودة صور قياسية',
   premiumQuality: 'جودة صور مميزة',
   choosePlan: (name) => `اختر ${name}`,

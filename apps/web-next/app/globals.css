@@ -21,7 +21,9 @@
 
   body {
     min-height: 100vh;
-    @apply bg-background text-foreground antialiased;
+    /* Transparent on purpose: html already paints the page background, and an
+       opaque body would bury the fixed z-index -1 ambient layer behind it. */
+    @apply bg-transparent text-foreground antialiased;
     font-family: var(--font-sans);
   }
 
@@ -352,6 +354,76 @@
   50% { transform: translate3d(-18px, 14px, 0); opacity: 0.85; }
 }
 
+/* Ambient page background.
+   Performance contract: the layer is fixed and animates transform/opacity
+   only, so it gets its own compositor layer and is never repainted while
+   the page scrolls. Blur is a static value, rasterized once, not animated.
+   Three blobs maximum, long durations, so per-frame work stays trivial. */
+@keyframes gc-aurora-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vw, -4vh, 0) scale(1.12); }
+}
+
+@keyframes gc-aurora-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-7vw, 5vh, 0) scale(0.94); }
+}
+
+@keyframes gc-aurora-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.96); }
+  50% { transform: translate3d(4vw, 6vh, 0) scale(1.1); }
+}
+
+.gc-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.gc-aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  filter: blur(72px);
+  will-change: transform;
+}
+
+.gc-aurora span:nth-child(1) {
+  inset-inline-start: -12%;
+  top: -8%;
+  width: 46vmax;
+  height: 46vmax;
+  background: color-mix(in oklch, var(--primary) 22%, transparent);
+  animation: gc-aurora-a 26s ease-in-out infinite;
+}
+
+.gc-aurora span:nth-child(2) {
+  inset-inline-end: -14%;
+  top: 22%;
+  width: 40vmax;
+  height: 40vmax;
+  background: color-mix(in oklch, var(--primary) 14%, transparent);
+  animation: gc-aurora-b 32s ease-in-out infinite;
+}
+
+.gc-aurora span:nth-child(3) {
+  inset-inline-start: 28%;
+  bottom: -18%;
+  width: 38vmax;
+  height: 38vmax;
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  animation: gc-aurora-c 38s ease-in-out infinite;
+}
+
+/* Coarse pointers (phones) carry a lighter layer: two blobs, smaller blur. */
+@media (pointer: coarse) {
+  .gc-aurora span { filter: blur(52px); }
+  .gc-aurora span:nth-child(3) { display: none; }
+}
+
 @keyframes gc-scroll-reveal {
   from { opacity: 0; transform: translateY(18px); }
   to { opacity: 1; transform: translateY(0); }
@@ -658,6 +730,11 @@
     animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .gc-aurora span {
+    animation: none !important;
+    transform: none !important;
   }
 
   .gc-glass:hover,

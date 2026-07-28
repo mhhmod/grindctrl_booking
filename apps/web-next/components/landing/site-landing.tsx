@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
+import { AmbientBackground } from '@/components/landing/ambient-background';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
@@ -316,6 +317,8 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
 
   return (
     <>
+      <AmbientBackground />
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
@@ -360,8 +363,10 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             className="gc-ambient-glow pointer-events-none absolute -end-32 top-16 -z-10 size-80 rounded-full bg-primary/6 blur-3xl"
             aria-hidden="true"
           />
-          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.88fr_1.12fr] lg:gap-16 lg:px-8 lg:py-28">
-            <div className="min-w-0 flex flex-col gap-7">
+          <div className="mx-auto grid w-full max-w-7xl gap-7 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-[0.88fr_1.12fr] lg:gap-x-16 lg:gap-y-6 lg:px-8 lg:py-28">
+            {/* Mobile order: headline, then the proof, then the pitch. The
+                visual has to land above the fold on a phone. */}
+            <div className="order-1 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:justify-end lg:gap-6">
               <Badge
                 variant="secondary"
                 className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]"
@@ -375,6 +380,13 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
               >
                 {t.heroTitle}
               </h1>
+            </div>
+
+            <div className="order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+              <BeforeAfterSlider locale={locale} t={t} />
+            </div>
+
+            <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">
               <p
                 className="gc-fade-in-up max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg"
                 style={{ animationDelay: '0.12s' }}
@@ -416,8 +428,6 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                 ))}
               </div>
             </div>
-
-            <BeforeAfterSlider locale={locale} t={t} />
           </div>
         </section>
 

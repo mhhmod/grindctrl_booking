@@ -127,10 +127,10 @@ const en: LandingDict = {
   signIn: 'Sign in',
   bookCall: 'Book a call',
 
-  heroBadge: 'Virtual try-on for Shopify fashion stores',
+  heroBadge: 'AI systems for online stores, built and run for you',
   heroTitle: 'Let shoppers see it on themselves before they buy.',
   heroSubtitle:
-    'Add a brand-matched try-on experience to your Shopify store. We set it up, run it, and keep it working in English and Arabic.',
+    'Virtual try-on is where most stores start with us. From there we build the rest: shopper support, follow-up, and the repeat work behind the scenes. We set it up, run it, and keep it working in English and Arabic.',
   heroPrimary: 'Book a call',
   heroSecondary: 'Try it yourself',
   heroChips: [
@@ -252,13 +252,13 @@ const en: LandingDict = {
     'Gemini',
   ],
 
-  otherEyebrow: 'We also build',
-  otherTitle: 'Focused AI systems for the work around your store.',
+  otherEyebrow: 'Beyond try-on',
+  otherTitle: 'The rest of the AI your store runs on.',
   otherBody:
-    'Try-on is the main product. We can also build supporting automation when a clear business need calls for it.',
+    'Once try-on is live, the same team builds the systems around it: answering shoppers, chasing leads, and removing the manual work someone repeats every day.',
   otherItems: [
     'AI customer support',
-    'Lead routing',
+    'Lead capture and routing',
     'Document workflows',
     'Operations automation',
   ],
@@ -286,10 +286,10 @@ const ar: LandingDict = {
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
 
-  heroBadge: 'تجربة افتراضية للملابس على Shopify',
+  heroBadge: 'أنظمة ذكاء اصطناعي للمتاجر الإلكترونية، نبنيها ونشغّلها لك',
   heroTitle: 'دع عملاءك يرون القطعة عليهم قبل الشراء.',
   heroSubtitle:
-    'أضف تجربة ملابس افتراضية متناسقة مع هوية متجرك على Shopify. نتولى الإعداد والتشغيل والمتابعة بالعربية والإنجليزية.',
+    'التجربة الافتراضية هي نقطة البداية مع معظم المتاجر. بعدها نبني الباقي: خدمة العملاء، والمتابعة، والمهام المتكررة خلف الكواليس. نتولى الإعداد والتشغيل والمتابعة بالعربية والإنجليزية.',
   heroPrimary: 'احجز مكالمة',
   heroSecondary: 'جرّبها بنفسك',
   heroChips: [
@@ -411,13 +411,13 @@ const ar: LandingDict = {
     'Gemini',
   ],
 
-  otherEyebrow: 'نبني أيضًا',
-  otherTitle: 'أنظمة ذكاء اصطناعي مركزة للأعمال المحيطة بمتجرك.',
+  otherEyebrow: 'ما بعد التجربة الافتراضية',
+  otherTitle: 'باقي أنظمة الذكاء الاصطناعي التي يعمل بها متجرك.',
   otherBody:
-    'تجربة الملابس هي المنتج الرئيسي. ويمكننا أيضًا بناء أتمتة مساندة عندما توجد حاجة تجارية واضحة.',
+    'بعد تشغيل التجربة الافتراضية، يبني الفريق نفسه الأنظمة المحيطة بها: الرد على العملاء، ومتابعة العملاء المحتملين، وإلغاء العمل اليدوي المتكرر كل يوم.',
   otherItems: [
     'دعم العملاء بالذكاء الاصطناعي',
-    'توجيه العملاء المحتملين',
+    'جمع وتوجيه العملاء المحتملين',
     'أتمتة المستندات',
     'أتمتة العمليات',
   ],

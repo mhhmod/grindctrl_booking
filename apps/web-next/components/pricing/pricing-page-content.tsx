@@ -4,6 +4,7 @@ import { CheckmarkCircle02Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import Link from 'next/link';
 import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
+import { AmbientBackground } from '@/components/landing/ambient-background';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,6 @@ import type {
   PublicEntitlementCatalog,
   PublicPlanCatalogItem,
 } from '@/lib/try-on/public-catalog';
-import { calculatePerRenderPrice } from '@/lib/try-on/pricing';
 import { cn } from '@/lib/utils';
 import { getPricingCopy, type PricingCopy } from './pricing-copy';
 
@@ -85,14 +85,6 @@ function PlanCard({
     : plan.description ?? copy?.description;
   const recommended = getPlanCopyKey(plan.planKey) === 'launch-v1';
   const price = formatCurrency(plan.priceMinor / 100, plan.currency, locale, 0);
-  const perRender = plan.isFree
-    ? null
-    : formatCurrency(
-        calculatePerRenderPrice(plan.priceMinor, plan.rendersIncluded),
-        plan.currency,
-        locale,
-        3,
-      );
   const benefits = [
     t.tryOnsPerMonth(formatNumber(plan.rendersIncluded, locale)),
     isPremiumPlan(plan) ? t.premiumQuality : t.standardQuality,
@@ -129,11 +121,6 @@ function PlanCard({
               </span>
               <span className="pb-1 text-sm text-muted-foreground">/ {t.month}</span>
             </p>
-            {perRender ? (
-              <p className="mt-2 text-sm font-medium text-foreground">
-                {t.perTryOn(perRender)}
-              </p>
-            ) : null}
           </div>
         </div>
       </CardHeader>
@@ -175,17 +162,14 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
   const launchPlan = sortedPlans.find(
     (plan) => getPlanCopyKey(plan.planKey) === 'launch-v1',
   );
-  const launchPrice = launchPlan
-    ? formatCurrency(
-        calculatePerRenderPrice(launchPlan.priceMinor, launchPlan.rendersIncluded),
-        launchPlan.currency,
-        locale,
-        2,
-      )
-    : null;
+  const launchRenders = launchPlan ? launchPlan.rendersIncluded.toLocaleString(
+    locale === 'ar' ? 'ar-EG' : 'en-US',
+  ) : null;
 
   return (
     <>
+      <AmbientBackground />
+
       <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <Link href="/" aria-label={t.brandHome} className="min-w-0 rounded-lg">
@@ -269,10 +253,10 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
               </p>
               <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
                 {t.marketLead}
-                {launchPrice ? (
+                {launchRenders ? (
                   <>
                     {' '}
-                    <span className="text-muted-foreground">{t.marketTail(launchPrice)}</span>
+                    <span className="text-muted-foreground">{t.marketTail(launchRenders)}</span>
                   </>
                 ) : null}
               </p>

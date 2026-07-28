@@ -11,9 +11,9 @@ import {
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL | AI virtual try-on for Shopify',
+  title: 'GRINDCTRL | AI systems for online stores',
   description:
-    'Managed AI virtual try-on for Shopify fashion stores, with brand-matched storefront experiences in English and Arabic.',
+    'Managed AI for online stores, starting with virtual try-on for Shopify and extending to support, lead capture, and operations automation, in English and Arabic.',
 };
 
 export default async function LandingPage() {

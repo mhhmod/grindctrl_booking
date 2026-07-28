@@ -67,7 +67,9 @@ export function AuthSignUp() {
       path="/sign-up"
       routing="path"
       signInUrl="/sign-in"
-      fallbackRedirectUrl="/dashboard/overview"
+      /* New accounts land on onboarding. Existing users who already completed
+         it get bounced straight through to the dashboard by the page itself. */
+      fallbackRedirectUrl="/onboarding"
       appearance={appearance}
     />
   );
