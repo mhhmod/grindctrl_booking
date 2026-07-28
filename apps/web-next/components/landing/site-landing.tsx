@@ -1,11 +1,10 @@
 'use client';
 
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight02Icon,
-  Camera01Icon,
   CheckmarkCircle02Icon,
   ClothesIcon,
   ImageUploadIcon,
@@ -19,8 +18,8 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 import { BOOKING_URL } from '@/lib/booking';
+import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
-import { cn } from '@/lib/utils';
 
 const DEMO_URL = '/try-on';
 
@@ -79,10 +78,12 @@ function TestimonialAvatar({
 }
 
 function SectionHeading({
+  id,
   eyebrow,
   title,
   body,
 }: {
+  id?: string;
   eyebrow: string;
   title: string;
   body?: string;
@@ -92,7 +93,7 @@ function SectionHeading({
       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
         {eyebrow}
       </p>
-      <h2 className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
+      <h2 id={id} className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
         {title}
       </h2>
       {body ? (
@@ -132,6 +133,181 @@ function formatPlanPrice(
   } catch {
     return `${currency} ${Math.round(priceMinor / 100)}`;
   }
+}
+
+function BeforeAfterSlider({
+  locale,
+  t,
+}: {
+  locale: SiteLocale;
+  t: LandingTranslator;
+}) {
+  const [reveal, setReveal] = useState(58);
+  const activePointerRef = useRef<number | null>(null);
+  const handleRef = useRef<HTMLButtonElement>(null);
+  const hiddenPercent = 100 - reveal;
+  const resultClip = locale === 'ar'
+    ? `inset(0 0 0 ${hiddenPercent}%)`
+    : `inset(0 ${hiddenPercent}% 0 0)`;
+
+  function clamp(value: number) {
+    return Math.min(100, Math.max(0, value));
+  }
+
+  function updateFromClientX(clientX: number, element: HTMLDivElement) {
+    const bounds = element.getBoundingClientRect();
+    if (bounds.width === 0) return;
+
+    const physicalPercent = clamp(((clientX - bounds.left) / bounds.width) * 100);
+    const logicalPercent = locale === 'ar' ? 100 - physicalPercent : physicalPercent;
+    setReveal(Math.round(clamp(logicalPercent)));
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+    activePointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    handleRef.current?.focus({ preventScroll: true });
+    updateFromClientX(event.clientX, event.currentTarget);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (activePointerRef.current !== event.pointerId) return;
+    updateFromClientX(event.clientX, event.currentTarget);
+  }
+
+  function finishPointer(event: React.PointerEvent<HTMLDivElement>) {
+    if (activePointerRef.current !== event.pointerId) return;
+
+    updateFromClientX(event.clientX, event.currentTarget);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    activePointerRef.current = null;
+  }
+
+  function cancelPointer(event: React.PointerEvent<HTMLDivElement>) {
+    if (activePointerRef.current !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    activePointerRef.current = null;
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    const step = event.shiftKey ? 10 : 2;
+    let next = reveal;
+
+    switch (event.key) {
+      case 'ArrowRight':
+        next += locale === 'ar' ? -step : step;
+        break;
+      case 'ArrowLeft':
+        next += locale === 'ar' ? step : -step;
+        break;
+      case 'ArrowUp':
+        next += step;
+        break;
+      case 'ArrowDown':
+        next -= step;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = 100;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    setReveal(clamp(next));
+  }
+
+  return (
+    <figure className="gc-fade-in-up min-w-0 lg:self-center" style={{ animationDelay: '0.1s' }}>
+      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <Badge variant="outline" className="rounded-full bg-background/80 px-3 py-1">
+          {t.heroPreviewLabel}
+        </Badge>
+        <span className="text-xs text-muted-foreground">{t.heroPreviewType}</span>
+      </div>
+
+      <div
+        className="gc-compare-frame relative isolate aspect-square min-w-0 touch-none select-none overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--gc-landing-shadow)]"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishPointer}
+        onPointerCancel={cancelPointer}
+      >
+        <Image
+          src="/try-on/premium-ringer-tee.png"
+          alt={t.heroProductAlt}
+          fill
+          priority
+          draggable={false}
+          sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
+          className="pointer-events-none object-cover"
+        />
+
+        <div
+          className="pointer-events-none absolute inset-0 will-change-[clip-path]"
+          style={{ clipPath: resultClip }}
+        >
+          <Image
+            src="/try-on/mock-result.png"
+            alt={t.heroResultAlt}
+            fill
+            priority
+            draggable={false}
+            sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
+            className="object-cover"
+          />
+        </div>
+
+        <span className="pointer-events-none absolute start-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
+          {t.heroAfterLabel}
+        </span>
+        <span className="pointer-events-none absolute end-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
+          {t.heroBeforeLabel}
+        </span>
+
+        <span
+          className="gc-compare-divider pointer-events-none absolute inset-block-0 z-10 w-px"
+          style={{ insetInlineStart: `${reveal}%` }}
+          aria-hidden="true"
+        />
+        <button
+          ref={handleRef}
+          type="button"
+          role="slider"
+          aria-label={t.heroSliderLabel}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={reveal}
+          aria-valuetext={t.heroSliderValue(reveal)}
+          aria-orientation="horizontal"
+          onKeyDown={handleKeyDown}
+          className="gc-compare-handle absolute z-20 grid size-12 cursor-ew-resize place-items-center rounded-full border border-border bg-background text-foreground shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          style={{
+            insetInlineStart: `clamp(1.5rem, ${reveal}%, calc(100% - 1.5rem))`,
+          }}
+        >
+          <span className="flex items-center gap-1" aria-hidden="true">
+            <span className="h-4 w-px rounded-full bg-current/55" />
+            <span className="h-4 w-px rounded-full bg-current/55" />
+          </span>
+        </button>
+      </div>
+
+      <figcaption className="mt-3 flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground">
+        <span className="font-medium text-foreground">{t.heroSliderHint}</span>
+        <span>{t.heroPreviewNote}</span>
+      </figcaption>
+    </figure>
+  );
 }
 
 export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
@@ -178,9 +354,13 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
 
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden border-b border-border" aria-labelledby="landing-hero-title">
+        <section className="relative overflow-hidden" aria-labelledby="landing-hero-title">
           <div className="pointer-events-none absolute inset-0 -z-10 gc-hero-grid-warm" aria-hidden="true" />
-          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:gap-14 lg:px-8 lg:py-24">
+          <div
+            className="gc-ambient-glow pointer-events-none absolute -end-32 top-16 -z-10 size-80 rounded-full bg-primary/6 blur-3xl"
+            aria-hidden="true"
+          />
+          <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.88fr_1.12fr] lg:gap-16 lg:px-8 lg:py-28">
             <div className="min-w-0 flex flex-col gap-7">
               <Badge
                 variant="secondary"
@@ -237,105 +417,53 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
               </div>
             </div>
 
-            <figure
-              className="gc-fade-in-up min-w-0 lg:self-center"
-              style={{ animationDelay: '0.1s' }}
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <Badge variant="outline" className="rounded-full bg-background/80 px-3 py-1">
-                  {t.heroPreviewLabel}
-                </Badge>
-                <span className="text-xs text-muted-foreground">{t.heroPreviewType}</span>
-              </div>
-
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-3">
-                <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
-                  <div className="border-b border-border px-3 py-2 text-xs font-semibold text-muted-foreground">
-                    {t.heroBeforeLabel}
-                  </div>
-                  <Image
-                    src="/try-on/premium-ringer-tee.png"
-                    alt={t.heroProductAlt}
-                    width={1024}
-                    height={1024}
-                    sizes="(max-width: 1024px) 42vw, 250px"
-                    className="h-auto max-w-full"
-                  />
-                  <div className="flex min-w-0 items-center gap-1.5 border-t border-border px-3 py-2 text-xs text-muted-foreground">
-                    <Icon icon={Camera01Icon} size={14} className="shrink-0" />
-                    <span className="min-w-0">{t.heroPhotoInput}</span>
-                  </div>
-                </div>
-
-                <span
-                  className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground shadow-sm sm:size-10"
-                  aria-hidden="true"
-                >
-                  <Icon icon={ArrowRight02Icon} size={18} className="rtl:-scale-x-100" />
-                </span>
-
-                <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--gc-landing-shadow)]">
-                  <div className="border-b border-border px-3 py-2 text-xs font-semibold text-muted-foreground">
-                    {t.heroAfterLabel}
-                  </div>
-                  <Image
-                    src="/try-on/mock-result.png"
-                    alt={t.heroResultAlt}
-                    width={1024}
-                    height={1024}
-                    priority
-                    sizes="(max-width: 1024px) 42vw, 250px"
-                    className="h-auto max-w-full"
-                  />
-                  <div className="border-t border-border px-3 py-2 text-xs font-medium text-foreground">
-                    {t.heroResultLabel}
-                  </div>
-                </div>
-              </div>
-
-              <figcaption className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                {t.heroPreviewNote}
-              </figcaption>
-            </figure>
+            <BeforeAfterSlider locale={locale} t={t} />
           </div>
         </section>
 
         {/* How it works */}
-        <section id="how" className="scroll-mt-20 border-b border-border" aria-labelledby="how-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div id="how-title">
-              <SectionHeading eyebrow={t.howEyebrow} title={t.howTitle} body={t.howBody} />
+        <section id="how" className="scroll-mt-20" aria-labelledby="how-title">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-16 sm:px-6 lg:px-8 lg:pb-32 lg:pt-24">
+            <div className="gc-scroll-reveal grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:items-end lg:gap-16">
+              <div className="min-w-0 flex flex-col gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  {t.howEyebrow}
+                </p>
+                <h2 id="how-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
+                  {t.howTitle}
+                </h2>
+              </div>
+              <p className="min-w-0 max-w-2xl text-base leading-[1.7] text-muted-foreground sm:text-lg lg:justify-self-end">
+                {t.howBody}
+              </p>
             </div>
-            <div className="gc-landing-panel grid overflow-hidden rounded-2xl border md:grid-cols-3">
+
+            <ol className="gc-how-sequence relative mt-14 grid min-w-0 gap-10 md:grid-cols-3 md:gap-8 lg:mt-20 lg:gap-12">
               {t.howSteps.map((step, i) => (
-                <div
+                <li
                   key={step.title}
-                  className={cn(
-                    'min-w-0 p-6 sm:p-8',
-                    i > 0 && 'border-t border-border md:border-s md:border-t-0',
-                  )}
+                  className="gc-how-step relative z-10 min-w-0 ps-16 md:ps-0 md:pt-16"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="grid size-11 place-items-center rounded-xl border border-border bg-background">
+                  <div className="absolute start-0 top-0 flex flex-col items-center gap-2 md:w-full md:flex-row md:justify-between md:gap-3">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background shadow-sm">
                       <Icon icon={stepIcons[i] ?? ClothesIcon} size={20} />
                     </span>
                     <span className="text-xs font-semibold tabular-nums text-muted-foreground">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                   </div>
-                  <h3 className="mt-5 text-lg font-semibold">{step.title}</h3>
+                  <h3 className="text-lg font-semibold">{step.title}</h3>
                   <p className="mt-2 text-[15px] leading-[1.65] text-muted-foreground">{step.body}</p>
-                </div>
+                </li>
               ))}
-            </div>
+            </ol>
           </div>
         </section>
 
         {/* Live demo */}
-        <section id="demo" className="scroll-mt-20 border-b border-border bg-muted/20" aria-labelledby="demo-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div className="gc-landing-card gc-card-hover grid min-w-0 overflow-hidden rounded-3xl border lg:grid-cols-[1fr_0.72fr]">
-              <div className="min-w-0 flex flex-col items-start justify-center gap-5 p-7 sm:p-10 lg:p-14">
+        <section id="demo" className="scroll-mt-20 bg-muted/35" aria-labelledby="demo-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:gap-16 lg:px-8 lg:py-20">
+              <div className="min-w-0 flex flex-col items-start justify-center gap-5 lg:py-8">
                 <Badge variant="secondary" className="rounded-full px-3 py-1">
                   {t.demoEyebrow}
                 </Badge>
@@ -357,44 +485,44 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                 </Button>
                 <p className="text-xs leading-relaxed text-muted-foreground">{t.demoNote}</p>
               </div>
-              <div className="relative min-w-0 border-t border-border bg-muted/30 p-4 sm:p-6 lg:border-s lg:border-t-0">
+              <div className="relative min-w-0">
                 <Image
                   src="/try-on/mock-result.png"
                   alt={t.demoImageAlt}
                   width={1024}
                   height={1024}
                   sizes="(max-width: 1024px) 100vw, 430px"
-                  className="h-auto max-w-full rounded-2xl border border-border"
+                  className="h-auto max-w-full rounded-3xl border border-border shadow-[var(--gc-landing-shadow)]"
                 />
-                <Badge className="absolute end-7 top-7 rounded-full sm:end-9 sm:top-9">
+                <Badge className="absolute end-3 top-3 rounded-full sm:end-5 sm:top-5">
                   {t.demoPreviewLabel}
                 </Badge>
               </div>
-            </div>
           </div>
         </section>
 
         {/* Merchant benefits */}
-        <section id="benefits" className="scroll-mt-20 border-b border-border" aria-labelledby="benefits-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div id="benefits-title">
+        <section id="benefits" className="scroll-mt-20" aria-labelledby="benefits-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1.32fr)] lg:gap-20 lg:px-8 lg:py-32">
+            <div className="min-w-0 lg:pt-4">
               <SectionHeading
+                id="benefits-title"
                 eyebrow={t.benefitsEyebrow}
                 title={t.benefitsTitle}
                 body={t.benefitsBody}
               />
             </div>
-            <div className="grid min-w-0 gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-14">
-              <div className="gc-landing-card min-w-0 rounded-3xl border p-7 sm:p-10">
-                <div className="flex flex-col gap-3">
+
+            <div className="min-w-0">
+              <div className="grid min-w-0 border-y border-border sm:grid-cols-2">
+                <div className="flex min-w-0 flex-col gap-3 py-7 sm:pe-8">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {t.returnBenefitLabel}
                   </p>
                   <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.returnBenefitTitle}</h3>
                   <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.returnBenefitBody}</p>
                 </div>
-                <Separator className="my-8" />
-                <div className="flex flex-col gap-3">
+                <div className="flex min-w-0 flex-col gap-3 border-t border-border py-7 sm:border-s sm:border-t-0 sm:ps-8">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     {t.confidenceBenefitLabel}
                   </p>
@@ -403,11 +531,11 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                 </div>
               </div>
 
-              <div className="min-w-0">
+              <div className="mt-8 min-w-0">
                 {t.merchantFeatures.map((feature, i) => (
                   <Fragment key={feature.title}>
                     {i > 0 ? <Separator /> : null}
-                    <div className="grid min-w-0 gap-3 py-6 first:pt-0 last:pb-0 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5">
+                    <div className="grid min-w-0 gap-3 py-5 first:pt-0 last:pb-0 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5">
                       <span className="grid size-10 place-items-center rounded-full border border-border bg-muted/40 text-foreground">
                         <Icon icon={CheckmarkCircle02Icon} size={19} />
                       </span>
@@ -426,50 +554,53 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         </section>
 
         {/* Pricing teaser */}
-        <section id="pricing" className="scroll-mt-20 border-b border-border bg-muted/20" aria-labelledby="pricing-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div id="pricing-title">
-              <SectionHeading eyebrow={t.pricingEyebrow} title={t.pricingTitle} body={t.pricingBody} />
+        <section id="pricing" className="scroll-mt-20 bg-muted/30" aria-labelledby="pricing-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] lg:gap-16 lg:px-8 lg:py-24">
+            <div className="min-w-0">
+              <SectionHeading id="pricing-title" eyebrow={t.pricingEyebrow} title={t.pricingTitle} body={t.pricingBody} />
             </div>
-            {/* The pricing page owns the full comparison. This teaser uses the public plan catalog. */}
-            <div className="gc-landing-card overflow-hidden rounded-2xl border">
-              {sortedPlans.map((plan, i) => {
-                const copyKey = getPlanCopyKey(plan.planKey);
-                const name = t.pricingPlanNames[copyKey] ?? plan.name;
-                const line = copyKey === 'dfy-v1'
-                  ? t.pricingManagedLine(plan.rendersIncluded)
-                  : t.pricingRenderLine(plan.rendersIncluded);
 
-                return (
-                  <Fragment key={plan.planKey}>
-                    {i > 0 ? <Separator /> : null}
-                    <div className="grid min-w-0 gap-2 p-5 sm:grid-cols-[minmax(0,0.72fr)_auto_minmax(0,1.35fr)] sm:items-center sm:gap-6 sm:p-6">
-                      <h3 className="min-w-0 text-lg font-semibold">{name}</h3>
-                      <p className="text-xl font-bold tabular-nums sm:text-end">
-                        {formatPlanPrice(plan.priceMinor, plan.currency, locale)}
-                      </p>
-                      <p className="min-w-0 text-sm leading-relaxed text-muted-foreground">{line}</p>
-                    </div>
-                  </Fragment>
-                );
-              })}
-            </div>
-            <div className="mt-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm leading-relaxed text-muted-foreground">{t.pricingNote}</p>
-              <Button asChild variant="outline" className="rounded-full px-5 font-semibold">
-                <Link href="/pricing">
-                  {t.pricingLink}
-                  <ArrowIcon />
-                </Link>
-              </Button>
+            <div className="min-w-0">
+              {/* The pricing page owns the full comparison. This teaser uses the public plan catalog. */}
+              <div className="overflow-hidden border-y border-border">
+                {sortedPlans.map((plan, i) => {
+                  const copyKey = getPlanCopyKey(plan.planKey);
+                  const name = t.pricingPlanNames[copyKey] ?? plan.name;
+                  const line = copyKey === 'dfy-v1'
+                    ? t.pricingManagedLine(plan.rendersIncluded)
+                    : t.pricingRenderLine(plan.rendersIncluded);
+
+                  return (
+                    <Fragment key={plan.planKey}>
+                      {i > 0 ? <Separator /> : null}
+                      <div className="grid min-w-0 gap-2 py-5 sm:grid-cols-[minmax(0,0.72fr)_auto_minmax(0,1.35fr)] sm:items-center sm:gap-6 sm:py-6">
+                        <h3 className="min-w-0 text-lg font-semibold">{name}</h3>
+                        <p className="text-xl font-bold tabular-nums sm:text-end">
+                          {formatPlanPrice(plan.priceMinor, plan.currency, locale)}
+                        </p>
+                        <p className="min-w-0 text-sm leading-relaxed text-muted-foreground">{line}</p>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm leading-relaxed text-muted-foreground">{t.pricingNote}</p>
+                <Button asChild variant="outline" className="rounded-full px-5 font-semibold">
+                  <Link href="/pricing">
+                    {t.pricingLink}
+                    <ArrowIcon />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Product proof */}
-        <section id="proof" className="border-b border-border" aria-labelledby="proof-title">
-          <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14 lg:px-8 lg:py-24">
-            <div className="min-w-0 flex flex-col items-start gap-5">
+        <section id="proof" aria-labelledby="proof-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-16 lg:px-8 lg:py-28">
+            <div className="min-w-0 flex flex-col items-start gap-5 lg:ps-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 {t.proofEyebrow}
               </p>
@@ -485,7 +616,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
               </Button>
               <p className="text-xs leading-relaxed text-muted-foreground">{t.proofDisclaimer}</p>
             </div>
-            <figure className="gc-landing-card min-w-0 overflow-hidden rounded-2xl border">
+            <figure className="gc-landing-card gc-card-hover min-w-0 overflow-hidden rounded-3xl border lg:order-first">
               <Image
                 src="/try-on/mock-result.png"
                 alt={t.proofImageAlt}
@@ -503,9 +634,10 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
 
         {/* Testimonials remain disabled until the placeholder quotes are replaced. */}
         {ENABLE_TESTIMONIALS && t.testimonials.length > 0 && (
-          <section id="clients" className="border-b border-border bg-muted/20">
-            <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+          <section id="clients" className="bg-muted/30" aria-labelledby="clients-title">
+            <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
               <SectionHeading
+                id="clients-title"
                 eyebrow={t.testimonialsEyebrow}
                 title={t.testimonialsTitle}
                 body={t.testimonialsBody}
@@ -543,8 +675,8 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         )}
 
         {/* Integrations */}
-        <section className="border-b border-border" aria-labelledby="integrations-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+        <section aria-labelledby="integrations-title">
+          <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
             <div className="flex min-w-0 flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0 flex max-w-2xl flex-col gap-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -566,8 +698,8 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         </section>
 
         {/* Other services */}
-        <section className="border-b border-border bg-muted/20" aria-labelledby="other-services-title">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-7 px-4 py-12 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <section className="bg-muted/30" aria-labelledby="other-services-title">
+          <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-7 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-12">
             <div className="min-w-0 flex max-w-2xl flex-col gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 {t.otherEyebrow}
@@ -586,17 +718,17 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         </section>
 
         {/* Final CTA */}
-        <section className="border-b border-border" aria-labelledby="final-cta-title">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div className="gc-landing-card flex flex-col items-center gap-6 rounded-3xl border p-8 text-center sm:p-14">
-              <div className="flex max-w-2xl flex-col gap-3">
+        <section className="bg-primary text-primary-foreground" aria-labelledby="final-cta-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-16 lg:px-8 lg:py-20">
+              <div className="flex min-w-0 max-w-3xl flex-col gap-3">
                 <h2 id="final-cta-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[42px]">
                   {t.ctaTitle}
                 </h2>
-                <p className="text-base leading-[1.65] text-muted-foreground sm:text-lg">{t.ctaBody}</p>
+                <p className="text-base leading-[1.65] text-primary-foreground/70 sm:text-lg">{t.ctaBody}</p>
               </div>
               <Button
                 asChild
+                variant="secondary"
                 size="lg"
                 className="h-12 rounded-full px-7 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
               >
@@ -605,7 +737,6 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                   <ArrowIcon />
                 </a>
               </Button>
-            </div>
           </div>
         </section>
       </main>

@@ -352,6 +352,21 @@
   50% { transform: translate3d(-18px, 14px, 0); opacity: 0.85; }
 }
 
+@keyframes gc-scroll-reveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gc-sequence-draw {
+  from { transform: var(--gc-sequence-start, scaleY(0)); }
+  to { transform: none; }
+}
+
+@keyframes gc-slider-cue {
+  0%, 100% { box-shadow: 0 8px 24px -12px color-mix(in oklch, var(--foreground) 35%, transparent); }
+  48% { box-shadow: 0 0 0 8px color-mix(in oklch, var(--foreground) 10%, transparent), 0 8px 24px -12px color-mix(in oklch, var(--foreground) 35%, transparent); }
+}
+
 @keyframes gc-result-reveal {
   from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
   to { opacity: 1; transform: translateY(0); filter: blur(0); }
@@ -376,6 +391,96 @@
 .gc-soft-glow { animation: gc-soft-glow 12s ease-in-out infinite; }
 .gc-ambient-glow { animation: gc-ambient-drift 10s ease-in-out infinite; will-change: transform, opacity; }
 .gc-result-reveal { animation: gc-result-reveal 280ms ease-out both; }
+
+.gc-compare-frame {
+  cursor: ew-resize;
+}
+
+.gc-compare-divider {
+  background: var(--background);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 38%, transparent);
+}
+
+.gc-compare-handle {
+  inset-block-start: 50%;
+  transform: translate(-50%, -50%);
+  animation: gc-slider-cue 900ms cubic-bezier(0.22, 1, 0.36, 1) 600ms 1 both;
+}
+
+.gc-landing-root[dir='rtl'] .gc-compare-handle {
+  transform: translate(50%, -50%);
+}
+
+.gc-how-sequence {
+  --gc-sequence-start: scaleY(0);
+}
+
+.gc-how-sequence::before,
+.gc-how-sequence::after {
+  content: '';
+  position: absolute;
+  inset-block: 22px;
+  inset-inline-start: 21px;
+  inline-size: 1px;
+  background: var(--border);
+}
+
+.gc-how-sequence::after {
+  background: color-mix(in oklch, var(--foreground) 42%, transparent);
+  transform: none;
+  transform-origin: 50% 0;
+}
+
+@media (min-width: 48rem) {
+  .gc-how-sequence {
+    --gc-sequence-start: scaleX(0);
+  }
+
+  .gc-how-sequence::before,
+  .gc-how-sequence::after {
+    inset-block: 22px auto;
+    inset-inline: 22px;
+    block-size: 1px;
+    inline-size: auto;
+  }
+
+  .gc-how-sequence::after {
+    transform-origin: 0 50%;
+  }
+
+  .gc-landing-root[dir='rtl'] .gc-how-sequence::after {
+    transform-origin: 100% 50%;
+  }
+}
+
+/* View timelines are enhancement only. Base content above is visible. */
+@supports (animation-timeline: view()) {
+  .gc-scroll-reveal {
+    animation: gc-scroll-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 28%;
+  }
+
+  .gc-how-step {
+    animation: gc-scroll-reveal 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 24%;
+  }
+
+  .gc-how-step:nth-child(2) {
+    animation-range: entry 14% cover 30%;
+  }
+
+  .gc-how-step:nth-child(3) {
+    animation-range: entry 20% cover 36%;
+  }
+
+  .gc-how-sequence::after {
+    animation: gc-sequence-draw 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 34%;
+  }
+}
 
 .gc-card-hover {
   transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease;
@@ -546,6 +651,7 @@
   .gc-trail-line::before,
   .gc-trail::before,
   .gc-template-progress::after,
+  .gc-how-sequence::after,
   .gc-animated,
   .gc-animated *,
   :where(body, header, section, article, div, span, button, textarea, input, a, svg) {
@@ -557,6 +663,10 @@
   .gc-glass:hover,
   .gc-card-hover:hover {
     transform: none;
+  }
+
+  .gc-how-sequence::after {
+    transform: none !important;
   }
 
   .gc-hover-reveal .gc-reveal-caption {
