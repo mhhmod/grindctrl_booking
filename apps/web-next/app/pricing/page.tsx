@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
-import { SiteLanding } from '@/components/landing/site-landing';
+import { PricingPageContent } from '@/components/pricing/pricing-page-content';
 import {
   DEFAULT_SITE_LOCALE,
   isSiteLocale,
@@ -11,25 +11,27 @@ import {
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL | AI virtual try-on for Shopify',
+  title: 'GrindCTRL AI Try-On Pricing',
   description:
-    'Managed AI virtual try-on for Shopify fashion stores, with brand-matched storefront experiences in English and Arabic.',
+    'Compare GrindCTRL AI Try-On plans, monthly render credits, premium setup, and top-up packs for Shopify stores.',
 };
 
-export default async function LandingPage() {
+export default async function PricingPage() {
   const [cookieStore, catalog] = await Promise.all([
     cookies(),
     listPublicPlanCatalog(),
   ]);
   const cookieLocale = cookieStore.get(SITE_LOCALE_COOKIE)?.value;
-  const initialLocale: SiteLocale = isSiteLocale(cookieLocale) ? cookieLocale : DEFAULT_SITE_LOCALE;
+  const initialLocale: SiteLocale = isSiteLocale(cookieLocale)
+    ? cookieLocale
+    : DEFAULT_SITE_LOCALE;
 
   return (
     <LandingLocaleProvider
       initialLocale={initialLocale}
       className="gc-landing-root gc-animated min-h-dvh overflow-x-hidden bg-background text-foreground"
     >
-      <SiteLanding plans={catalog.plans} />
+      <PricingPageContent catalog={catalog} />
     </LandingLocaleProvider>
   );
 }

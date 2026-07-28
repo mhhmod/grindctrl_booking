@@ -1,4 +1,4 @@
-/* ─── GrindCTRL landing — lightweight i18n (en / ar) ─── */
+/* GrindCTRL landing: lightweight i18n for English and Arabic. */
 
 export const SITE_LOCALES = ['en', 'ar'] as const;
 export type SiteLocale = (typeof SITE_LOCALES)[number];
@@ -25,10 +25,9 @@ interface LandingDict {
   langSwitchTo: string;
 
   navHow: string;
-  navAutomate: string;
-  navProof: string;
-  navClients: string;
   navDemo: string;
+  navBenefits: string;
+  navPricing: string;
   signIn: string;
   bookCall: string;
 
@@ -38,22 +37,56 @@ interface LandingDict {
   heroPrimary: string;
   heroSecondary: string;
   heroChips: string[];
-  heroFrameCaption: string;
+  heroPreviewLabel: string;
+  heroPreviewType: string;
+  heroBeforeLabel: string;
+  heroAfterLabel: string;
+  heroPhotoInput: string;
+  heroResultLabel: string;
+  heroPreviewNote: string;
+  heroProductAlt: string;
+  heroResultAlt: string;
 
   howEyebrow: string;
   howTitle: string;
+  howBody: string;
   howSteps: Item[];
 
-  automateEyebrow: string;
-  automateTitle: string;
-  automateBody: string;
-  automateItems: Item[];
+  demoEyebrow: string;
+  demoTitle: string;
+  demoBody: string;
+  demoButton: string;
+  demoNote: string;
+  demoPreviewLabel: string;
+  demoImageAlt: string;
+
+  benefitsEyebrow: string;
+  benefitsTitle: string;
+  benefitsBody: string;
+  returnBenefitLabel: string;
+  returnBenefitTitle: string;
+  returnBenefitBody: string;
+  confidenceBenefitLabel: string;
+  confidenceBenefitTitle: string;
+  confidenceBenefitBody: string;
+  merchantFeatures: Item[];
+
+  pricingEyebrow: string;
+  pricingTitle: string;
+  pricingBody: string;
+  pricingPlanNames: Record<string, string>;
+  pricingRenderLine: (renders: number) => string;
+  pricingManagedLine: (renders: number) => string;
+  pricingNote: string;
+  pricingLink: string;
 
   proofEyebrow: string;
   proofTitle: string;
   proofBody: string;
-  proofCaptions: string[];
-  proofPlaceholder: string;
+  proofButton: string;
+  proofDisclaimer: string;
+  proofImageAlt: string;
+  proofCaption: string;
 
   testimonialsEyebrow: string;
   testimonialsTitle: string;
@@ -64,16 +97,19 @@ interface LandingDict {
   integrationsTitle: string;
   integrations: string[];
 
+  otherEyebrow: string;
+  otherTitle: string;
+  otherBody: string;
+  otherItems: string[];
+
   ctaTitle: string;
   ctaBody: string;
   ctaButton: string;
-  ctaTrust: string;
 
   footerTagline: string;
   footerHome: string;
   footerDemo: string;
-  footerDashboard: string;
-  footerRights: string;
+  footerPricing: string;
 }
 
 const en: LandingDict = {
@@ -82,164 +118,154 @@ const en: LandingDict = {
   langSwitchTo: 'العربية',
 
   navHow: 'How it works',
-  navAutomate: 'What we automate',
-  navProof: 'Proof',
-  navClients: 'Clients',
   navDemo: 'Live demo',
+  navBenefits: 'Why it matters',
+  navPricing: 'Pricing',
   signIn: 'Sign in',
   bookCall: 'Book a call',
 
-  heroBadge: 'Done-for-you AI automation',
-  heroTitle: 'We build, run, and maintain your AI.',
+  heroBadge: 'Virtual try-on for Shopify fashion stores',
+  heroTitle: 'Let shoppers see it on themselves before they buy.',
   heroSubtitle:
-    'GrindCTRL designs your AI automations, runs them in production, and keeps them healthy, while you watch and control everything from one dashboard.',
+    'Add a brand-matched try-on experience to your Shopify store. We set it up, run it, and keep it working in English and Arabic.',
   heroPrimary: 'Book a call',
-  heroSecondary: 'See it live',
+  heroSecondary: 'Try it yourself',
   heroChips: [
-    'Support & service',
-    'Leads & CRM',
-    'Files & voice',
-    'WhatsApp follow-up',
-    'Live dashboard',
+    'Built for Shopify',
+    'Managed setup',
+    'Arabic and English',
   ],
-  heroFrameCaption: 'Your operations, live in one dashboard',
+  heroPreviewLabel: 'Example preview',
+  heroPreviewType: 'Before and after',
+  heroBeforeLabel: 'Selected garment',
+  heroAfterLabel: 'Result',
+  heroPhotoInput: '+ shopper photo',
+  heroResultLabel: 'Preview on the shopper',
+  heroPreviewNote:
+    'Example preview using a sample shopper photo. Results are visual guidance, not an exact sizing guarantee.',
+  heroProductAlt: 'Cream ringer T-shirt before virtual try-on',
+  heroResultAlt: 'Example shopper wearing the cream ringer T-shirt after virtual try-on',
 
   howEyebrow: 'How it works',
-  howTitle: 'You bring the business. We bring the automation.',
+  howTitle: 'From product page to a more confident cart.',
+  howBody:
+    'The experience stays close to the shopping journey, with no detour into a separate app.',
   howSteps: [
     {
-      title: 'We build it',
-      body: 'We map your workflows and build the AI automations around the tools you already use.',
+      title: 'Shopper opens a product',
+      body: 'The try-on action appears on product pages and collection grids as they browse.',
     },
     {
-      title: 'We run & maintain it',
-      body: 'Your automations run in production. We monitor, fix, and improve them so they keep working.',
+      title: 'They upload a photo',
+      body: 'A short, private flow guides them to add a clear full-body or half-body photo.',
     },
     {
-      title: 'You stay in control',
-      body: 'Watch every workflow, lead, and conversation from one dashboard. Full visibility, no black box.',
+      title: 'They see it, then shop',
+      body: 'The preview shows the item on their photo and brings them back to add it to cart.',
     },
   ],
 
-  automateEyebrow: 'What we automate',
-  automateTitle: 'AI that handles the work your team repeats.',
-  automateBody:
-    'Across text, voice, images, files, and your existing tools, we turn everyday operations into automated workflows.',
-  automateItems: [
+  demoEyebrow: 'Live demo',
+  demoTitle: 'Try it on yourself, right now.',
+  demoBody:
+    'Open the live experience, choose the sample garment, and see the full shopper flow for yourself.',
+  demoButton: 'Open the live try-on',
+  demoNote: 'Bring a clear full-body or half-body photo. A preview takes about 9 seconds.',
+  demoPreviewLabel: 'Example result',
+  demoImageAlt: 'Example virtual try-on result for the cream ringer T-shirt',
+
+  benefitsEyebrow: 'Why merchants care',
+  benefitsTitle: 'Give shoppers more certainty without changing how they shop.',
+  benefitsBody:
+    'The try-on sits inside your storefront, follows your brand, and supports the moments where purchase decisions happen.',
+  returnBenefitLabel: 'Fewer avoidable returns',
+  returnBenefitTitle: 'Less guessing after delivery.',
+  returnBenefitBody:
+    'A visual preview can help reduce returns caused by shoppers feeling unsure about how a garment will look on them.',
+  confidenceBenefitLabel: 'More confidence',
+  confidenceBenefitTitle: 'A clearer decision before checkout.',
+  confidenceBenefitBody:
+    'Shoppers can picture the product on themselves while purchase intent is still high.',
+  merchantFeatures: [
     {
-      title: 'AI customer support',
-      body: 'Answer, classify, and route customer messages, with human handoff when it matters.',
+      title: 'Product pages and collection grids',
+      body: 'The try-on entry point can appear where shoppers view one item or compare many.',
     },
     {
-      title: 'Lead capture & CRM',
-      body: 'Capture, score, and sync leads into your CRM, then follow up automatically.',
+      title: 'Native to Shopify',
+      body: 'The experience works with the storefront journey and returns shoppers to the product and cart.',
     },
     {
-      title: 'Files & documents',
-      body: 'Read invoices, contracts, and screenshots and turn them into structured records.',
+      title: 'Matched to your brand',
+      body: 'Colors, corner radius, labels, and calls to action are tuned to feel at home in your store.',
     },
     {
-      title: 'Voice & WhatsApp',
-      body: 'Handle voice notes and WhatsApp conversations end to end.',
-    },
-    {
-      title: 'Dashboards & monitoring',
-      body: 'See runs, performance, and outcomes live, with alerts when something needs you.',
-    },
-    {
-      title: 'System maintenance',
-      body: 'We keep the whole system running: updates, fixes, and improvements over time.',
+      title: 'Arabic and English',
+      body: 'Shopper-facing copy and direction adapt for both RTL and LTR storefronts.',
     },
   ],
 
-  proofEyebrow: 'Proof',
-  proofTitle: 'Real systems, running in production.',
+  pricingEyebrow: 'Pricing',
+  pricingTitle: 'Start small, then scale with demand.',
+  pricingBody:
+    'Every plan includes a monthly render allowance. The managed tier adds setup and ongoing care.',
+  pricingPlanNames: {
+    'free-v1': 'Free',
+    'launch-v1': 'Launch',
+    'dfy-v1': 'Done-for-you',
+  },
+  pricingRenderLine: (renders) => `${renders} renders per month.`,
+  pricingManagedLine: (renders) =>
+    `${renders} renders per month, setup, and a monthly check-in.`,
+  pricingNote: 'See the full comparison for plan terms, top-ups, and included service.',
+  pricingLink: 'View full pricing',
+
+  proofEyebrow: 'Product proof',
+  proofTitle: 'Built for the storefront, managed behind the scenes.',
   proofBody:
-    'Not slideware. These are the dashboards and automations we build and operate for businesses.',
-  proofCaptions: [
-    'Operations dashboard',
-    'WhatsApp automation in action',
-    'Lead pipeline & follow-up',
-    'Conversations inbox',
-  ],
-  proofPlaceholder: 'Screens from the GrindCTRL platform.',
+    'The shopper sees a simple visual flow. GrindCTRL handles configuration, brand matching, monitoring, and ongoing care.',
+  proofButton: 'Test the shopper flow',
+  proofDisclaimer:
+    'The image is an example preview. It is not a customer testimonial or a performance claim.',
+  proofImageAlt: 'Example shopper wearing the cream ringer T-shirt in a virtual try-on preview',
+  proofCaption: 'Example virtual try-on result using a sample shopper photo.',
 
   testimonialsEyebrow: 'What clients say',
-  testimonialsTitle: 'Businesses that let GrindCTRL run the busywork.',
-  testimonialsBody:
-    'Real teams using GrindCTRL to answer customers, capture leads, and stay in control.',
-  testimonials: [
-    {
-      quote:
-        'Our WhatsApp inquiries used to sit for hours. Now replies go out instantly and the right leads reach my sales team the same minute.',
-      name: 'Mohammed A.',
-      role: 'Founder, Cairo Apparel',
-      photo: '/landing/testimonials/person-1.png',
-    },
-    {
-      quote:
-        'We captured 3x more leads in the first month without adding headcount. The dashboard shows me exactly what is happening.',
-      name: 'Sara K.',
-      role: 'Operations Lead, GulfMart',
-      photo: '/landing/testimonials/person-2.png',
-    },
-    {
-      quote:
-        'They built it, they run it, and they keep it healthy. I just watch the results come in.',
-      name: 'Omar H.',
-      role: 'Owner, Riyadh Electronics',
-      photo: '/landing/testimonials/person-3.png',
-    },
-    {
-      quote:
-        'Customer support that never sleeps. Our response time dropped from hours to seconds.',
-      name: 'Lina T.',
-      role: 'Marketing Director, BeautyBox',
-      photo: '/landing/testimonials/person-4.png',
-    },
-    {
-      quote:
-        'File and order intake that used to take my team all morning is now automatic and accurate.',
-      name: 'Khaled S.',
-      role: 'CEO, LogiServe',
-      photo: '/landing/testimonials/person-5.png',
-    },
-    {
-      quote:
-        'The setup was done for us and the follow-up flows just work. Best decision we made this year.',
-      name: 'Nour F.',
-      role: 'Founder, HomeStyle',
-      photo: '/landing/testimonials/person-6.png',
-    },
-  ],
+  testimonialsTitle: 'Merchant stories will appear here after sign-off.',
+  testimonialsBody: 'This section stays hidden until verified customer quotes are approved.',
+  testimonials: [],
 
-  integrationsEyebrow: 'Connected tools',
-  integrationsTitle: 'Built around the tools you already use.',
+  integrationsEyebrow: 'Storefront fit',
+  integrationsTitle: 'Made for the Shopify surfaces that matter.',
   integrations: [
-    'OpenAI',
+    'Shopify',
+    'Product pages',
+    'Collection grids',
+    'Theme editor',
+    'Storefront API',
     'Gemini',
-    'WhatsApp',
-    'Telegram',
-    'HubSpot',
-    'Google Sheets',
-    'Slack',
-    'Notion',
-    'Google Calendar',
-    'n8n',
-    'Supabase',
-    'APIs',
   ],
 
-  ctaTitle: 'Ready to put your operations on autopilot?',
-  ctaBody: "Book a call and we'll map your first automation together.",
-  ctaButton: 'Book a call',
-  ctaTrust: 'Trusted by business owners across the Gulf and Egypt.',
+  otherEyebrow: 'We also build',
+  otherTitle: 'Focused AI systems for the work around your store.',
+  otherBody:
+    'Try-on is the main product. We can also build supporting automation when a clear business need calls for it.',
+  otherItems: [
+    'AI customer support',
+    'Lead routing',
+    'Document workflows',
+    'Operations automation',
+  ],
 
-  footerTagline: 'AI implementation and automation platform.',
+  ctaTitle: 'Give shoppers a reason to feel sure before checkout.',
+  ctaBody:
+    'Book a call and we will map the try-on experience to your Shopify theme, catalog, and customer journey.',
+  ctaButton: 'Book a call',
+
+  footerTagline: 'Managed AI virtual try-on for Shopify fashion stores.',
   footerHome: 'Home',
   footerDemo: 'Live demo',
-  footerDashboard: 'Dashboard',
-  footerRights: 'All rights reserved.',
+  footerPricing: 'Pricing',
 };
 
 const ar: LandingDict = {
@@ -247,165 +273,155 @@ const ar: LandingDict = {
   langToggleLabel: 'تغيير اللغة',
   langSwitchTo: 'English',
 
-  navHow: 'كيف نعمل',
-  navAutomate: 'ماذا نشغّل عنك',
-  navProof: 'إثبات',
-  navClients: 'العملاء',
+  navHow: 'كيف تعمل',
   navDemo: 'تجربة مباشرة',
+  navBenefits: 'لماذا تهم المتاجر',
+  navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
 
-  heroBadge: 'أتمتة ذكاء اصطناعي جاهزة بالكامل',
-  heroTitle: 'نبني ونشغّل ونعتني بالذكاء الاصطناعي الخاص بك.',
+  heroBadge: 'تجربة افتراضية للملابس على Shopify',
+  heroTitle: 'دع عملاءك يرون القطعة عليهم قبل الشراء.',
   heroSubtitle:
-    'يبني GrindCTRL أنظمة الذكاء الاصطناعي الخاصة بك، ويشغّلها، ويعتني بها، وأنت تتابع كل شيء وتتحكم به من لوحة واحدة.',
+    'أضف تجربة ملابس افتراضية متناسقة مع هوية متجرك على Shopify. نتولى الإعداد والتشغيل والمتابعة بالعربية والإنجليزية.',
   heroPrimary: 'احجز مكالمة',
-  heroSecondary: 'شاهدها مباشرة',
+  heroSecondary: 'جرّبها بنفسك',
   heroChips: [
-    'الدعم والخدمة',
-    'العملاء المحتملون وCRM',
-    'الملفات والصوت',
-    'متابعة واتساب',
-    'لوحة تحكم مباشرة',
+    'مصممة لمتاجر Shopify',
+    'إعداد وإدارة بالكامل',
+    'العربية والإنجليزية',
   ],
-  heroFrameCaption: 'عملياتك مباشرة في لوحة تحكم واحدة',
+  heroPreviewLabel: 'معاينة توضيحية',
+  heroPreviewType: 'قبل وبعد',
+  heroBeforeLabel: 'القطعة المختارة',
+  heroAfterLabel: 'النتيجة',
+  heroPhotoInput: '+ صورة العميل',
+  heroResultLabel: 'معاينة على العميل',
+  heroPreviewNote:
+    'مثال توضيحي باستخدام صورة عميل تجريبية. النتيجة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.',
+  heroProductAlt: 'تيشيرت رينجر كريمي قبل التجربة الافتراضية',
+  heroResultAlt: 'مثال لعميل يرتدي تيشيرت رينجر الكريمي بعد التجربة الافتراضية',
 
-  howEyebrow: 'كيف نعمل',
-  howTitle: 'أنت تركّز على عملك، ونحن نتولّى الباقي.',
+  howEyebrow: 'كيف تعمل',
+  howTitle: 'من صفحة المنتج إلى سلة شراء بثقة أكبر.',
+  howBody:
+    'تبقى التجربة داخل رحلة التسوق نفسها دون تحويل العميل إلى تطبيق منفصل.',
   howSteps: [
     {
-      title: 'نبنيه لك',
-      body: 'نفهم طريقة عملك ونبني لك الذكاء الاصطناعي حول الأدوات التي تستخدمها أصلًا.',
+      title: 'يفتح العميل منتجًا',
+      body: 'يظهر زر التجربة في صفحات المنتجات وشبكات المجموعات أثناء التصفح.',
     },
     {
-      title: 'نشغّله ونعتني به',
-      body: 'كل شيء يعمل فعليًا. نراقبه ونصلحه ونحسّنه باستمرار ليبقى شغّالًا.',
+      title: 'يرفع صورته',
+      body: 'توجهه خطوات قصيرة وخاصة لرفع صورة واضحة لكامل الجسم أو نصفه.',
     },
     {
-      title: 'أنت دائمًا المتحكم',
-      body: 'تابع كل عملية وكل عميل وكل محادثة من لوحة واحدة. كل شيء واضح أمامك.',
+      title: 'يرى القطعة ثم يشتري',
+      body: 'تظهر المعاينة القطعة على صورته ثم تعيده إلى المنتج لإضافته إلى السلة.',
     },
   ],
 
-  automateEyebrow: 'ماذا نشغّل عنك',
-  automateTitle: 'ذكاء اصطناعي يتولى الأعمال التي يكرّرها فريقك.',
-  automateBody:
-    'من النصوص والصوت والصور والملفات وأدواتك الحالية، نحوّل أعمالك اليومية إلى مهام تلقائية.',
-  automateItems: [
+  demoEyebrow: 'تجربة مباشرة',
+  demoTitle: 'جرّبها على نفسك الآن.',
+  demoBody:
+    'افتح التجربة المباشرة، واختر القطعة التجريبية، وشاهد رحلة العميل كاملة بنفسك.',
+  demoButton: 'افتح تجربة الملابس',
+  demoNote: 'جهّز صورة واضحة لكامل الجسم أو نصفه. تستغرق المعاينة نحو 9 ثوانٍ.',
+  demoPreviewLabel: 'نتيجة توضيحية',
+  demoImageAlt: 'نتيجة توضيحية لتجربة تيشيرت رينجر الكريمي افتراضيًا',
+
+  benefitsEyebrow: 'لماذا تهم المتاجر',
+  benefitsTitle: 'امنح العملاء وضوحًا أكبر دون تغيير طريقة تسوقهم.',
+  benefitsBody:
+    'تعمل التجربة داخل واجهة متجرك، وتتبع هويتك، وتظهر في اللحظات التي يتخذ فيها العميل قرار الشراء.',
+  returnBenefitLabel: 'مرتجعات أقل يمكن تجنبها',
+  returnBenefitTitle: 'تخمين أقل بعد الاستلام.',
+  returnBenefitBody:
+    'يمكن للمعاينة البصرية أن تساعد في تقليل المرتجعات الناتجة عن تردد العميل بشأن شكل القطعة عليه.',
+  confidenceBenefitLabel: 'ثقة أكبر',
+  confidenceBenefitTitle: 'قرار أوضح قبل الدفع.',
+  confidenceBenefitBody:
+    'يستطيع العميل تصور المنتج عليه بينما لا تزال رغبته في الشراء مرتفعة.',
+  merchantFeatures: [
     {
-      title: 'دعم العملاء بالذكاء الاصطناعي',
-      body: 'الرد على رسائل العملاء وتصنيفها وتوجيهها، مع تحويلها إلى موظف عند الحاجة.',
+      title: 'صفحات المنتجات وشبكات المجموعات',
+      body: 'يمكن أن يظهر مدخل التجربة عند مشاهدة منتج واحد أو مقارنة عدة منتجات.',
     },
     {
-      title: 'جذب العملاء وCRM',
-      body: 'التقاط العملاء المحتملين وتقييمهم ومزامنتهم مع نظام CRM ثم المتابعة تلقائيًا.',
+      title: 'متكاملة مع Shopify',
+      body: 'تعمل التجربة مع رحلة المتجر وتعيد العميل إلى المنتج والسلة.',
     },
     {
-      title: 'الملفات والمستندات',
-      body: 'قراءة الفواتير والعقود ولقطات الشاشة وتحويلها إلى سجلات منظمة.',
+      title: 'متناسقة مع علامتك',
+      body: 'نضبط الألوان والزوايا والنصوص وأزرار الإجراء لتبدو جزءًا طبيعيًا من متجرك.',
     },
     {
-      title: 'الصوت وواتساب',
-      body: 'التعامل مع الرسائل الصوتية ومحادثات واتساب من البداية إلى النهاية.',
-    },
-    {
-      title: 'لوحات التحكم والمراقبة',
-      body: 'متابعة التشغيل والأداء والنتائج مباشرة، مع تنبيهات عند الحاجة لتدخّلك.',
-    },
-    {
-      title: 'صيانة النظام',
-      body: 'نُبقي كل شيء شغّالًا: تحديثات وإصلاحات وتحسينات مستمرة.',
+      title: 'العربية والإنجليزية',
+      body: 'تتكيف النصوص والاتجاهات الظاهرة للعميل مع واجهات RTL وLTR.',
     },
   ],
 
-  proofEyebrow: 'إثبات',
-  proofTitle: 'أنظمة حقيقية تعمل في بيئة الإنتاج.',
+  pricingEyebrow: 'الأسعار',
+  pricingTitle: 'ابدأ بحجم صغير ثم توسع مع الطلب.',
+  pricingBody:
+    'تتضمن كل خطة عددًا شهريًا من المعاينات. وتضيف خطة الإدارة الكاملة الإعداد والمتابعة المستمرة.',
+  pricingPlanNames: {
+    'free-v1': 'Free',
+    'launch-v1': 'Launch',
+    'dfy-v1': 'Done-for-you',
+  },
+  pricingRenderLine: (renders) => `${renders} معاينة شهريًا.`,
+  pricingManagedLine: (renders) =>
+    `${renders} معاينة شهريًا، مع الإعداد ومراجعة شهرية.`,
+  pricingNote: 'شاهد المقارنة الكاملة لمعرفة شروط الخطط والباقات الإضافية والخدمة المتضمنة.',
+  pricingLink: 'شاهد الأسعار كاملة',
+
+  proofEyebrow: 'دليل المنتج',
+  proofTitle: 'مصممة لواجهة المتجر، ومدارة بالكامل خلف الكواليس.',
   proofBody:
-    'ليست مجرد شرائح عرض. هذه لوحات التحكم والأتمتة التي نبنيها ونُشغّلها للشركات.',
-  proofCaptions: [
-    'لوحة تحكم العمليات',
-    'أتمتة واتساب أثناء العمل',
-    'مسار العملاء والمتابعة',
-    'صندوق المحادثات',
-  ],
-  proofPlaceholder: 'شاشات من منصة GrindCTRL.',
+    'يرى العميل خطوات بصرية بسيطة، بينما يتولى GrindCTRL الإعداد وتنسيق الهوية والمراقبة والمتابعة المستمرة.',
+  proofButton: 'جرّب رحلة العميل',
+  proofDisclaimer:
+    'هذه الصورة معاينة توضيحية، وليست شهادة عميل أو ادعاءً بشأن الأداء.',
+  proofImageAlt: 'مثال لعميل يرتدي تيشيرت رينجر الكريمي في معاينة افتراضية',
+  proofCaption: 'نتيجة توضيحية لتجربة الملابس باستخدام صورة عميل تجريبية.',
 
-  testimonialsEyebrow: 'ماذا يقول العملاء',
-  testimonialsTitle: 'شركات تركت GrindCTRL يتولّى المهام المتكررة.',
-  testimonialsBody:
-    'فرق حقيقية تستخدم GrindCTRL للرد على العملاء، وجذب العملاء المحتملين، والتحكّم بكل شيء.',
-  testimonials: [
-    {
-      quote:
-        'كانت استفسارات واتساب تبقى دون رد لساعات. الآن تُرسَل الردود فورًا ويصل العملاء المناسبون إلى فريق المبيعات في نفس الدقيقة.',
-      name: 'محمد ع.',
-      role: 'مؤسس، Cairo Apparel',
-      photo: '/landing/testimonials/person-1.png',
-    },
-    {
-      quote:
-        'ضاعفنا العملاء المحتملين ثلاث مرات في الشهر الأول دون زيادة الموظفين. ولوحة التحكم تُظهر لي كل ما يحدث.',
-      name: 'سارة ك.',
-      role: 'مديرة العمليات، GulfMart',
-      photo: '/landing/testimonials/person-2.png',
-    },
-    {
-      quote:
-        'هم بنوه، وهم يُشغّلونه، ويحافظون على عمله. وأنا فقط أتابع النتائج.',
-      name: 'عمر ح.',
-      role: 'مالك، Riyadh Electronics',
-      photo: '/landing/testimonials/person-3.png',
-    },
-    {
-      quote:
-        'دعم عملاء لا ينام. انخفض زمن استجابتنا من ساعات إلى ثوانٍ.',
-      name: 'لينا ت.',
-      role: 'مديرة التسويق، BeautyBox',
-      photo: '/landing/testimonials/person-4.png',
-    },
-    {
-      quote:
-        'استقبال الملفات والطلبات الذي كان يستغرق صباحًا كاملًا أصبح تلقائيًا ودقيقًا.',
-      name: 'خالد س.',
-      role: 'الرئيس التنفيذي، LogiServe',
-      photo: '/landing/testimonials/person-5.png',
-    },
-    {
-      quote:
-        'تم الإعداد بالكامل نيابةً عنا، ومسارات المتابعة تعمل ببساطة. أفضل قرار اتخذناه هذا العام.',
-      name: 'نور ف.',
-      role: 'مؤسِّسة، HomeStyle',
-      photo: '/landing/testimonials/person-6.png',
-    },
-  ],
+  testimonialsEyebrow: 'آراء العملاء',
+  testimonialsTitle: 'ستظهر قصص المتاجر هنا بعد اعتمادها.',
+  testimonialsBody: 'يبقى هذا القسم مخفيًا حتى اعتماد اقتباسات موثقة من العملاء.',
+  testimonials: [],
 
-  integrationsEyebrow: 'أدوات متصلة',
-  integrationsTitle: 'مبنية حول الأدوات التي تستخدمها بالفعل.',
+  integrationsEyebrow: 'تكامل واجهة المتجر',
+  integrationsTitle: 'مصممة لأهم نقاط التفاعل في Shopify.',
   integrations: [
-    'OpenAI',
+    'Shopify',
+    'صفحات المنتجات',
+    'شبكات المجموعات',
+    'محرر القالب',
+    'Storefront API',
     'Gemini',
-    'WhatsApp',
-    'Telegram',
-    'HubSpot',
-    'Google Sheets',
-    'Slack',
-    'Notion',
-    'Google Calendar',
-    'n8n',
-    'Supabase',
-    'APIs',
   ],
 
-  ctaTitle: 'جاهز لوضع عملياتك على الطيار الآلي؟',
-  ctaBody: 'احجز مكالمة وسنرسم معًا أول أتمتة لك.',
-  ctaButton: 'احجز مكالمة',
-  ctaTrust: 'موثوق من أصحاب أعمال في الخليج ومصر.',
+  otherEyebrow: 'نبني أيضًا',
+  otherTitle: 'أنظمة ذكاء اصطناعي مركزة للأعمال المحيطة بمتجرك.',
+  otherBody:
+    'تجربة الملابس هي المنتج الرئيسي. ويمكننا أيضًا بناء أتمتة مساندة عندما توجد حاجة تجارية واضحة.',
+  otherItems: [
+    'دعم العملاء بالذكاء الاصطناعي',
+    'توجيه العملاء المحتملين',
+    'أتمتة المستندات',
+    'أتمتة العمليات',
+  ],
 
-  footerTagline: 'منصة تطبيق الذكاء الاصطناعي والأتمتة.',
+  ctaTitle: 'امنح عملاءك سببًا للثقة قبل إتمام الشراء.',
+  ctaBody:
+    'احجز مكالمة وسنحدد كيف تتكامل تجربة الملابس مع قالب Shopify والكتالوج ورحلة عملائك.',
+  ctaButton: 'احجز مكالمة',
+
+  footerTagline: 'تجربة ملابس افتراضية مدارة لمتاجر الأزياء على Shopify.',
   footerHome: 'الرئيسية',
   footerDemo: 'تجربة مباشرة',
-  footerDashboard: 'لوحة التحكم',
-  footerRights: 'جميع الحقوق محفوظة.',
+  footerPricing: 'الأسعار',
 };
 
 export const LANDING_DICTIONARIES: Record<SiteLocale, LandingDict> = { en, ar };
