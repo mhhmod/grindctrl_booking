@@ -23,6 +23,11 @@ export interface SettingsFormCopy {
   textColor: string;
   iconGradientStart: string;
   iconGradientEnd: string;
+  gradientPresets: string;
+  gradientUseMyColour: string;
+  gradientBaseColour: string;
+  gradientIntensity: string;
+  gradientAdvanced: string;
   cornerRadius: string;
   panelBackground: string;
   light: string;
@@ -63,6 +68,11 @@ const en: SettingsFormCopy = {
   textColor: 'Text color',
   iconGradientStart: 'Icon gradient start',
   iconGradientEnd: 'Icon gradient end',
+  gradientPresets: 'Icon gradient',
+  gradientUseMyColour: 'Use my colour',
+  gradientBaseColour: 'Brand colour',
+  gradientIntensity: 'Gradient strength',
+  gradientAdvanced: 'Advanced: pick both colours',
   cornerRadius: 'Corner radius (px)',
   panelBackground: 'Try-on panel background',
   light: 'Light',
@@ -102,6 +112,11 @@ const ar: SettingsFormCopy = {
   textColor: 'لون النص',
   iconGradientStart: 'بداية تدرّج الأيقونة',
   iconGradientEnd: 'نهاية تدرّج الأيقونة',
+  gradientPresets: 'تدرّج الأيقونة',
+  gradientUseMyColour: 'استخدم لوني',
+  gradientBaseColour: 'لون العلامة',
+  gradientIntensity: 'قوة التدرّج',
+  gradientAdvanced: 'خيارات متقدمة: اختر اللونين',
   cornerRadius: 'استدارة الحواف (بكسل)',
   panelBackground: 'خلفية لوحة التجربة',
   light: 'فاتح',
