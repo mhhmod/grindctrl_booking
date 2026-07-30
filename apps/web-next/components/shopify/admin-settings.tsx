@@ -11,6 +11,8 @@ import {
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
 import { MerchantPlanCard, type MerchantPlan } from '@/components/shopify/merchant-plan-card';
+import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
+import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 declare global {
   interface Window {
@@ -29,7 +31,8 @@ async function withToken(): Promise<string> {
   return window.shopify.idToken();
 }
 
-export function ShopifyAdminSettings() {
+export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }) {
+  const c = getSettingsFormCopy(locale);
   const [shop, setShop] = useState('');
   const [s, setS] = useState<TryOnWidgetSettings | null>(null);
   const [plan, setPlan] = useState<MerchantPlan | null>(null);
@@ -145,7 +148,7 @@ export function ShopifyAdminSettings() {
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Product pages</CardTitle>
+            <CardTitle className="text-base">{c.productPages}</CardTitle>
             <CardDescription>
               Adds the try-on button under your product details. Press Save in the theme editor.
             </CardDescription>
@@ -161,7 +164,7 @@ export function ShopifyAdminSettings() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Catalog pages</CardTitle>
+            <CardTitle className="text-base">{c.catalogPages}</CardTitle>
             <CardDescription>
               Adds a Try on pill to every product card in your collection grids.
             </CardDescription>
@@ -178,7 +181,7 @@ export function ShopifyAdminSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle>{c.appearance}</CardTitle>
           <CardDescription>
             One set of settings drives the product page, the catalog pill, and both journeys.
             Changes go live within a minute.
@@ -186,6 +189,7 @@ export function ShopifyAdminSettings() {
         </CardHeader>
         <CardContent className="grid gap-6">
           <TryOnSettingsControls
+            locale={locale}
             value={s}
             onChange={set}
             loadingStepsText={loadingStepsText}
@@ -194,13 +198,13 @@ export function ShopifyAdminSettings() {
 
           <div className="flex items-center gap-3">
             <Button type="button" onClick={save} disabled={status === 'saving'}>
-              {status === 'saving' ? 'Saving…' : 'Save settings'}
+              {status === 'saving' ? c.saving : c.save}
             </Button>
             {status === 'saved' && (
-              <span className="text-sm text-muted-foreground">Saved, live within a minute.</span>
+              <span className="text-sm text-muted-foreground">{c.saved}</span>
             )}
             {status === 'error' && (
-              <span className="text-sm text-destructive">Could not save. Try again.</span>
+              <span className="text-sm text-destructive">{c.saveFailed}</span>
             )}
           </div>
         </CardContent>

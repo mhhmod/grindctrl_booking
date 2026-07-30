@@ -4,6 +4,8 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WidgetPreview } from '@/components/try-on/widget-preview';
+import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
+import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 /* The one try-on settings form. The Shopify embedded admin and the
    GrindCTRL dashboard both render this, so the two surfaces cannot drift:
@@ -112,12 +114,17 @@ export function TryOnSettingsControls({
   onChange,
   loadingStepsText,
   onLoadingStepsTextChange,
+  locale = 'en',
 }: {
   value: TryOnWidgetSettings;
   onChange: <K extends keyof TryOnWidgetSettings>(key: K, next: TryOnWidgetSettings[K]) => void;
   loadingStepsText: string;
   onLoadingStepsTextChange: (text: string) => void;
+  /* The merchant's language, not the shopper's. Shopify supplies it as
+     ?locale on the embedded admin URL; the dashboard uses its own cookie. */
+  locale?: TryOnLocale;
 }) {
+  const c = getSettingsFormCopy(locale);
   const activeTheme = matchTryOnTheme(s);
 
   return (
@@ -128,7 +135,7 @@ export function TryOnSettingsControls({
       </div>
 
       <div className="grid gap-2">
-        <Label>Theme</Label>
+        <Label>{c.theme}</Label>
         <div className="flex flex-wrap gap-2">
           {TRYON_THEMES.map((t) => (
             <button
@@ -162,14 +169,14 @@ export function TryOnSettingsControls({
                 : 'border-dashed border-input text-muted-foreground'
             }`}
           >
-            Custom
+            {c.custom}
           </span>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="button_label">Button label</Label>
+          <Label htmlFor="button_label">{c.buttonLabel}</Label>
           <Input
             id="button_label"
             value={s.buttonLabel}
@@ -178,18 +185,18 @@ export function TryOnSettingsControls({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="button_label_ar">Button label (Arabic)</Label>
+          <Label htmlFor="button_label_ar">{c.buttonLabelAr}</Label>
           <Input
             id="button_label_ar"
             dir="rtl"
             value={s.buttonLabelAr ?? ''}
             maxLength={40}
-            placeholder="Leave empty to reuse the English label"
+            placeholder={c.reuseOtherLanguage}
             onChange={(e) => onChange('buttonLabelAr', e.target.value || null)}
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="catalog_label">Catalog pill label</Label>
+          <Label htmlFor="catalog_label">{c.catalogLabel}</Label>
           <Input
             id="catalog_label"
             value={s.catalogLabel}
@@ -198,13 +205,13 @@ export function TryOnSettingsControls({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="catalog_label_ar">Catalog pill label (Arabic)</Label>
+          <Label htmlFor="catalog_label_ar">{c.catalogLabelAr}</Label>
           <Input
             id="catalog_label_ar"
             dir="rtl"
             value={s.catalogLabelAr ?? ''}
             maxLength={24}
-            placeholder="Leave empty to reuse the English label"
+            placeholder={c.reuseOtherLanguage}
             onChange={(e) => onChange('catalogLabelAr', e.target.value || null)}
           />
         </div>
@@ -212,19 +219,19 @@ export function TryOnSettingsControls({
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="grid gap-2">
-          <Label htmlFor="accent_bg">Button color</Label>
+          <Label htmlFor="accent_bg">{c.buttonColor}</Label>
           <Input id="accent_bg" type="color" value={s.accentBg} className="h-10 p-1" onChange={(e) => onChange('accentBg', e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="accent_fg">Text color</Label>
+          <Label htmlFor="accent_fg">{c.textColor}</Label>
           <Input id="accent_fg" type="color" value={s.accentFg} className="h-10 p-1" onChange={(e) => onChange('accentFg', e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="icon_bg_from">Icon gradient start</Label>
+          <Label htmlFor="icon_bg_from">{c.iconGradientStart}</Label>
           <Input id="icon_bg_from" type="color" value={s.iconBgFrom} className="h-10 p-1" onChange={(e) => onChange('iconBgFrom', e.target.value)} />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="icon_bg_to">Icon gradient end</Label>
+          <Label htmlFor="icon_bg_to">{c.iconGradientEnd}</Label>
           <Input id="icon_bg_to" type="color" value={s.iconBgTo} className="h-10 p-1" onChange={(e) => onChange('iconBgTo', e.target.value)} />
         </div>
       </div>
@@ -238,7 +245,7 @@ export function TryOnSettingsControls({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="radius_px">Corner radius (px)</Label>
+          <Label htmlFor="radius_px">{c.cornerRadius}</Label>
           <Input
             id="radius_px"
             type="number"
@@ -249,15 +256,15 @@ export function TryOnSettingsControls({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="widget_theme">Try-on panel background</Label>
+          <Label htmlFor="widget_theme">{c.panelBackground}</Label>
           <select
             id="widget_theme"
             value={s.widgetTheme}
             onChange={(e) => onChange('widgetTheme', e.target.value === 'dark' ? 'dark' : 'light')}
             className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
+            <option value="light">{c.light}</option>
+            <option value="dark">{c.dark}</option>
           </select>
           <p className="text-xs text-muted-foreground">
             The surface behind the try-on journey, on product pages and in the catalog dialog.
@@ -267,7 +274,7 @@ export function TryOnSettingsControls({
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="loading_style">Loading animation</Label>
+        <Label htmlFor="loading_style">{c.loadingAnimation}</Label>
         <select
           id="loading_style"
           value={s.loadingStyle}
@@ -276,23 +283,23 @@ export function TryOnSettingsControls({
           }
           className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-xs"
         >
-          <option value="steps">Checklist steps</option>
-          <option value="pulse">Product photo pulse</option>
-          <option value="bar">Progress bar</option>
+          <option value="steps">{c.loadingSteps_}</option>
+          <option value="pulse">{c.loadingPulse}</option>
+          <option value="bar">{c.loadingBar}</option>
         </select>
       </div>
 
       <div className="grid gap-2">
-        <Label>Result screen buttons</Label>
+        <Label>{c.resultButtons}</Label>
         <p className="text-xs text-muted-foreground">
           What shoppers can do after seeing themselves in the product.
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
-            ['showAddToCart', 'Add to cart'],
-            ['showDownload', 'Download preview'],
-            ['showWhatsapp', 'Request order / WhatsApp'],
-            ['showTryAgain', 'Try with a different photo'],
+            ['showAddToCart', c.addToCart],
+            ['showDownload', c.downloadPreview],
+            ['showWhatsapp', c.requestWhatsapp],
+            ['showTryAgain', c.tryAnotherPhoto],
           ] as const).map(([key, label]) => (
             <label key={key} className="flex items-center gap-2 text-sm">
               <input
@@ -309,32 +316,32 @@ export function TryOnSettingsControls({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="disclaimer_text">Disclaimer under the result (empty = default)</Label>
+          <Label htmlFor="disclaimer_text">{c.disclaimer}</Label>
           <textarea
             id="disclaimer_text"
             rows={2}
             value={s.disclaimerText ?? ''}
             onChange={(e) => onChange('disclaimerText', e.target.value || null)}
-            placeholder="This preview is visual guidance only..."
+            placeholder={c.disclaimerPlaceholder}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="disclaimer_text_ar">Disclaimer (Arabic)</Label>
+          <Label htmlFor="disclaimer_text_ar">{c.disclaimerAr}</Label>
           <textarea
             id="disclaimer_text_ar"
             rows={2}
             dir="rtl"
             value={s.disclaimerTextAr ?? ''}
             onChange={(e) => onChange('disclaimerTextAr', e.target.value || null)}
-            placeholder="Leave both empty to use the built-in translated line"
+            placeholder={c.disclaimerArPlaceholder}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="loading_steps">Loading steps (one per line, empty = default)</Label>
+        <Label htmlFor="loading_steps">{c.loadingStepsLabel}</Label>
         <textarea
           id="loading_steps"
           rows={3}
