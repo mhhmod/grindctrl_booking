@@ -132,7 +132,7 @@ export function TryOnSettingsControls({
     <div className="grid gap-6">
       {/* Sticky so the preview stays in view while controls are tuned */}
       <div className="sticky top-0 z-10 -mx-6 border-b bg-background px-6 pb-4 pt-1">
-        <WidgetPreview s={s} />
+        <WidgetPreview s={s} copy={c} />
       </div>
 
       <div className="grid gap-2">
