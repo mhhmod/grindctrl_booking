@@ -46,6 +46,13 @@ export interface SettingsFormCopy {
   disclaimerAr: string;
   disclaimerArPlaceholder: string;
   loadingStepsLabel: string;
+  // Live preview
+  previewHeading: string;
+  previewTabButton: string;
+  previewTabCatalog: string;
+  previewTabUpload: string;
+  previewTabGenerating: string;
+  previewTabResults: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -91,6 +98,12 @@ const en: SettingsFormCopy = {
   disclaimerAr: 'Disclaimer (Arabic)',
   disclaimerArPlaceholder: 'Leave both empty to use the built-in translated line',
   loadingStepsLabel: 'Loading steps (one per line, empty = default)',
+  previewHeading: 'Live preview',
+  previewTabButton: 'Button',
+  previewTabCatalog: 'Catalog',
+  previewTabUpload: 'Upload',
+  previewTabGenerating: 'Generating',
+  previewTabResults: 'Results',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -135,6 +148,12 @@ const ar: SettingsFormCopy = {
   disclaimerAr: 'التنويه (بالعربية)',
   disclaimerArPlaceholder: 'اترك الحقلين فارغين لاستخدام النص المترجم المدمج',
   loadingStepsLabel: 'خطوات التحميل (سطر لكل خطوة، فارغ = الافتراضي)',
+  previewHeading: 'معاينة مباشرة',
+  previewTabButton: 'الزر',
+  previewTabCatalog: 'الكتالوج',
+  previewTabUpload: 'الرفع',
+  previewTabGenerating: 'الإنشاء',
+  previewTabResults: 'النتيجة',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',
