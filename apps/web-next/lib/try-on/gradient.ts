@@ -19,11 +19,24 @@ export const DEFAULT_GRADIENT_INTENSITY = 55;
 const FALLBACK: GradientStops = { from: '#3a3a3a', to: '#6b6b6b' };
 
 // How far the derived stop can rotate around the hue wheel, in degrees.
+// Chosen by eye — not derived from any colour theory, just what reads as
+// "a matching partner" rather than "a random hue" across test swatches.
 const HUE_ROTATION_DEG = 8;
 
 // Cap on derived lightness. 1.0 is pure white, which reads as "no gradient"
 // against light UI backgrounds, so stop just short of it.
 const MAX_LIGHTNESS = 0.97;
+
+// Symmetric floor for the darkening branch, so a near-black base doesn't
+// bottom out at pure black either.
+const MIN_LIGHTNESS = 1 - MAX_LIGHTNESS;
+
+// Above this lightness there isn't enough headroom left to lighten without
+// hitting MAX_LIGHTNESS partway through the intensity range, so those bases
+// darken instead. Deliberately NOT a 0.5 midpoint: a plain "#1a73e8" blue
+// (l ≈ 0.506) is common mid-range input and must keep lightening exactly as
+// before — only the pale end (cream/off-white territory) needs to flip.
+const LIGHTEN_UNTIL_L = 0.85;
 
 /* Parses "#rrggbb" or "rrggbb", any case, into lowercase "#rrggbb".
    Returns null for anything else so callers can fall back rather than
@@ -102,13 +115,22 @@ export function deriveGradient(baseHex: string, intensity: number): GradientStop
   const [r, g, b] = hexToRgb(from);
   const [h, s, l] = rgbToHsl(r, g, b);
 
-  // Lift lightness toward white across the REMAINING headroom (1 - l), not
-  // by a fixed amount. A fixed lift (e.g. l + 0.3) clips at 1.0 for pale
-  // brand colours, so a near-white base and its "lighter" partner would
-  // both round to the same hex — an invisible gradient. Lifting a fraction
-  // of the headroom always leaves visible daylight above the base, however
-  // close to white it already is.
-  const liftedL = Math.min(MAX_LIGHTNESS, l + (1 - l) * amount);
+  // Move lightness across whichever headroom the base actually has, not
+  // always toward white. Always-lighten was the original approach, but a
+  // fixed direction runs out of room for a pale base: once l is near
+  // MAX_LIGHTNESS, (1 - l) is tiny, so every intensity above ~25 saturates
+  // the cap and collapses to the same hex — the slider goes dead exactly
+  // for the common case of white/cream/off-white brand colours.
+  //
+  // Instead, pick the direction with room in it: lighten toward white when
+  // the base is dark (headroom = 1 - l), darken toward black when the base
+  // is already light (headroom = l). Either way the distance moved is a
+  // fraction of the ACTUAL headroom, so the slider stays live across the
+  // full 0..100 range regardless of how pale or how dark the base is.
+  const liftedL =
+    l < LIGHTEN_UNTIL_L
+      ? Math.min(MAX_LIGHTNESS, l + (1 - l) * amount)
+      : Math.max(MIN_LIGHTNESS, l - l * amount);
 
   // Saturation eases off as lightness rises, otherwise a dark, saturated
   // base (which has plenty of headroom) drags its lightened partner into a

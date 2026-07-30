@@ -33,10 +33,30 @@ describe('deriveGradient', () => {
 
   it('never returns a second stop that has blown out to white', () => {
     // A near-white brand colour must still produce a visible gradient
-    // rather than two identical stops.
-    const { from, to } = deriveGradient('#f5f5f5', 100);
-    expect(to).toMatch(HEX);
-    expect(to).not.toBe(from);
+    // rather than two identical, or barely-different, stops.
+    const LIGHTNESS_FLOOR = 0.08;
+
+    for (const base of ['#f5f5f5', '#0a0a0a']) {
+      const { from, to } = deriveGradient(base, 100);
+      expect(to, base).toMatch(HEX);
+      expect(Math.abs(lightness(to) - lightness(from)), base).toBeGreaterThan(
+        LIGHTNESS_FLOOR,
+      );
+    }
+  });
+
+  it('keeps the slider live across the full range for extreme bases', () => {
+    // The regression: a near-white (or near-black) base used to saturate a
+    // fixed-direction lift, so every intensity above ~25 collapsed to the
+    // same hex. Distance at 100 must exceed distance at 20, not just differ.
+    const delta = (base: string, intensity: number) => {
+      const { from, to } = deriveGradient(base, intensity);
+      return Math.abs(lightness(to) - lightness(from));
+    };
+
+    for (const base of ['#f5f5f5', '#0a0a0a']) {
+      expect(delta(base, 100), base).toBeGreaterThan(delta(base, 20));
+    }
   });
 
   it('accepts hex with or without the hash, any case', () => {
