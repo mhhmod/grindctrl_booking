@@ -5,6 +5,8 @@ import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
 import { getDashboardRouteMeta } from '@/lib/dashboard/route-meta';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
+import { getRequestLocale } from '@/lib/auth/locale';
+import { getDir } from '@/lib/landing/landing-i18n';
 import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 
@@ -22,18 +24,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   const workspaceBundle = await getWorkspaceBundle(clerkUserId);
-  const routeMeta = getDashboardRouteMeta(pathname);
+  /* Same gc-locale cookie the marketing site and storefront demo use, so a
+     language chosen anywhere carries into the dashboard. */
+  const locale = await getRequestLocale();
+  const routeMeta = getDashboardRouteMeta(pathname, locale);
   const permissions = resolveDashboardPermissions({ role: workspaceBundle.role });
-  const navItems = resolveDashboardNavItems({ pathname, permissions });
+  const navItems = resolveDashboardNavItems({ pathname, permissions, locale });
 
   return (
-    <DashboardShell
-      navItems={navItems}
-      breadcrumbs={routeMeta.breadcrumbs}
-      title={routeMeta.title}
-      description={routeMeta.description}
-    >
-      {children}
-    </DashboardShell>
+    <div dir={getDir(locale)} lang={locale}>
+      <DashboardShell
+        navItems={navItems}
+        breadcrumbs={routeMeta.breadcrumbs}
+        title={routeMeta.title}
+        description={routeMeta.description}
+      >
+        {children}
+      </DashboardShell>
+    </div>
   );
 }

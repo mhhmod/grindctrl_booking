@@ -1,6 +1,8 @@
 import { DashboardSquare01Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
 import type { IconGlyph } from '@/components/icons';
 import { normalizeDashboardPathname } from '@/lib/dashboard/route-meta';
+import { getDashboardCopy } from '@/lib/dashboard/dashboard-i18n';
+import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/lib/landing/landing-i18n';
 import type { DashboardPermissionKey, DashboardPermissionSet } from '@/lib/rbac/dashboard-policy';
 
 export type DashboardNavItem = {
@@ -59,14 +61,20 @@ function isDashboardNavItemActive(pathname: string, itemHref: string) {
 export function resolveDashboardNavItems({
   pathname,
   permissions,
+  locale = DEFAULT_SITE_LOCALE,
 }: {
   pathname: string;
   permissions: DashboardPermissionSet;
+  locale?: SiteLocale;
 }): DashboardResolvedNavItem[] {
   const normalizedPathname = normalizeDashboardPathname(pathname);
+  const copy = getDashboardCopy(locale);
 
   return DASHBOARD_NAV_ITEMS.filter((item) => permissions[item.permissionKey]).map((item) => ({
     ...item,
+    /* Nav labels come from the same per-route dictionary as the page title,
+       so a tab and the page it opens can never disagree. */
+    label: copy.routes[item.href]?.title ?? item.label,
     isActive: isDashboardNavItemActive(normalizedPathname, item.href),
   }));
 }

@@ -8,6 +8,16 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+/* The page resolves the operator's language from the locale cookie, and
+   cookies() has no request scope when the component is rendered directly. */
+let cookieLocale: string | undefined;
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) =>
+      name === 'gc-locale' && cookieLocale ? { name, value: cookieLocale } : undefined,
+  }),
+}));
+
 vi.mock('@/lib/shopify/shops', () => ({
   requireManagedTryOnShop: vi.fn(async (shop: unknown) => String(shop ?? 'default')),
   listManagedTryOnShops: vi.fn(async () => [

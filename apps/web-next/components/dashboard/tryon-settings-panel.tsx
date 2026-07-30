@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useCallback, useState, useTransition } from 'react';
+import type { TryOnLocale } from '@/lib/try-on/i18n';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,10 +26,13 @@ export function TryOnSettingsPanel({
   shops,
   selectedShop,
   settings,
+  locale = 'en',
 }: {
   shops: ManagedShopOption[];
   selectedShop: string;
   settings: TryOnWidgetSettings;
+  /* The dashboard operator's language, from the shared gc-locale cookie. */
+  locale?: TryOnLocale;
 }) {
   const router = useRouter();
   const [isNavigating, startNavigation] = useTransition();
@@ -114,6 +118,7 @@ export function TryOnSettingsPanel({
       </div>
 
       <TryOnSettingsControls
+        locale={locale}
         value={s}
         onChange={set}
         loadingStepsText={loadingStepsText}

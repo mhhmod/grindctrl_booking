@@ -1,3 +1,6 @@
+import { getDashboardCopy } from '@/lib/dashboard/dashboard-i18n';
+import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/lib/landing/landing-i18n';
+
 export type DashboardBreadcrumbItem = {
   label: string;
   href?: string;
@@ -104,13 +107,17 @@ function toTitleCase(segment: string) {
     .join(' ');
 }
 
-function buildBreadcrumbs(pathname: string, title: string): DashboardBreadcrumbItem[] {
+function buildBreadcrumbs(
+  pathname: string,
+  title: string,
+  homeLabel: string,
+): DashboardBreadcrumbItem[] {
   if (pathname === DASHBOARD_HOME_PATH) {
-    return [{ label: 'Dashboard', href: DASHBOARD_HOME_PATH }];
+    return [{ label: homeLabel, href: DASHBOARD_HOME_PATH }];
   }
 
   return [
-    { label: 'Dashboard', href: DASHBOARD_HOME_PATH },
+    { label: homeLabel, href: DASHBOARD_HOME_PATH },
     { label: title },
   ];
 }
@@ -129,17 +136,27 @@ export function normalizeDashboardPathname(pathname: string) {
   return withoutTrailingSlash;
 }
 
-export function getDashboardRouteMeta(pathname: string): DashboardRouteMeta {
+export function getDashboardRouteMeta(
+  pathname: string,
+  locale: SiteLocale = DEFAULT_SITE_LOCALE,
+): DashboardRouteMeta {
   const normalizedPathname = normalizeDashboardPathname(pathname);
+  const copy = getDashboardCopy(locale);
 
   const match = DASHBOARD_ROUTE_DEFINITIONS.find((route) => normalizedPathname === route.pathname || normalizedPathname.startsWith(`${route.pathname}/`));
 
   if (match) {
+    /* The English route table stays the source of truth for which routes
+       exist; the dictionary only supplies wording. A route with no
+       translation yet falls back to its English text rather than a blank. */
+    const translated = copy.routes[match.pathname];
+    const title = translated?.title ?? match.title;
+
     return {
       pathname: normalizedPathname,
-      title: match.title,
-      description: match.description,
-      breadcrumbs: buildBreadcrumbs(match.pathname, match.title),
+      title,
+      description: translated?.description ?? match.description,
+      breadcrumbs: buildBreadcrumbs(match.pathname, title, copy.home),
     };
   }
 
@@ -150,6 +167,6 @@ export function getDashboardRouteMeta(pathname: string): DashboardRouteMeta {
     pathname: normalizedPathname,
     title: fallbackTitle,
     description: 'Workspace data for this dashboard section.',
-    breadcrumbs: buildBreadcrumbs(normalizedPathname, fallbackTitle),
+    breadcrumbs: buildBreadcrumbs(normalizedPathname, fallbackTitle, copy.home),
   };
 }

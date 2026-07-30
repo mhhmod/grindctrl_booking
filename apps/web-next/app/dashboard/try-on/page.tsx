@@ -9,6 +9,7 @@ import { getTryOnSettings } from '@/lib/try-on/settings';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
@@ -25,6 +26,7 @@ export default async function DashboardTryOnPage({
   searchParams: Promise<{ shop?: string }>;
 }) {
   const params = await searchParams;
+  const pageLocale = await getRequestLocale();
   const shops = await listManagedTryOnShops();
 
   /* Only a shop we already know about may be selected; anything else falls
@@ -145,6 +147,7 @@ export default async function DashboardTryOnPage({
         </CardHeader>
         <CardContent>
           <TryOnSettingsPanel
+            locale={pageLocale}
             shops={shops.map((shop) => ({
               domain: shop.domain,
               status: shop.status,
