@@ -9,6 +9,10 @@ export type SettingsRow = Row;
 export type TryOnSettings = {
   shop: string;
   buttonLabel: string;
+  /* Arabic variants of the strings the merchant writes. null or blank means
+     "not translated": the widget falls back to the default-language value
+     rather than rendering an empty control. */
+  buttonLabelAr: string | null;
   accentBg: string;
   accentFg: string;
   radiusPx: number;
@@ -20,6 +24,7 @@ export type TryOnSettings = {
   loadingStyle: 'steps' | 'pulse' | 'bar';
   /** Catalog pill: label and element sizing (px). */
   catalogLabel: string;
+  catalogLabelAr: string | null;
   catalogIconPx: number;
   catalogFontPx: number;
   catalogPadPx: number;
@@ -32,6 +37,7 @@ export type TryOnSettings = {
   showTryAgain: boolean;
   /** null = built-in localized disclaimer. */
   disclaimerText: string | null;
+  disclaimerTextAr: string | null;
   /** null → use the built-in localized loading steps */
   loadingSteps: string[] | null;
 };
@@ -39,6 +45,7 @@ export type TryOnSettings = {
 export const DEFAULT_SETTINGS: TryOnSettings = {
   shop: 'default',
   buttonLabel: 'Try it on with AI',
+  buttonLabelAr: 'جرّبها بالذكاء الاصطناعي',
   accentBg: '#2a2826',
   accentFg: '#f0ede9',
   radiusPx: 999,
@@ -47,6 +54,7 @@ export const DEFAULT_SETTINGS: TryOnSettings = {
   iconBgTo: '#ffd76e',
   loadingStyle: 'steps',
   catalogLabel: 'Try on',
+  catalogLabelAr: 'جرّب',
   catalogIconPx: 14,
   catalogFontPx: 12,
   catalogPadPx: 6,
@@ -56,6 +64,7 @@ export const DEFAULT_SETTINGS: TryOnSettings = {
   showAddToCart: true,
   showTryAgain: true,
   disclaimerText: null,
+  disclaimerTextAr: null,
   loadingSteps: null,
 };
 
@@ -69,6 +78,7 @@ function getServiceClient() {
 type Row = {
   shop: string;
   button_label: string | null;
+  button_label_ar: string | null;
   accent_bg: string | null;
   accent_fg: string | null;
   radius_px: number | null;
@@ -77,6 +87,7 @@ type Row = {
   icon_bg_to: string | null;
   loading_style: string | null;
   catalog_label: string | null;
+  catalog_label_ar: string | null;
   catalog_icon_px: number | null;
   catalog_font_px: number | null;
   catalog_pad_px: number | null;
@@ -86,6 +97,7 @@ type Row = {
   show_add_to_cart: boolean | null;
   show_try_again: boolean | null;
   disclaimer_text: string | null;
+  disclaimer_text_ar: string | null;
   loading_steps: string[] | null;
 };
 
@@ -94,6 +106,7 @@ export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettin
   return {
     shop: row.shop,
     buttonLabel: row.button_label ?? base.buttonLabel,
+    buttonLabelAr: row.button_label_ar ?? base.buttonLabelAr,
     accentBg: row.accent_bg ?? base.accentBg,
     accentFg: row.accent_fg ?? base.accentFg,
     radiusPx: row.radius_px ?? base.radiusPx,
@@ -112,6 +125,7 @@ export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettin
         ? row.loading_style
         : base.loadingStyle,
     catalogLabel: row.catalog_label ?? base.catalogLabel,
+    catalogLabelAr: row.catalog_label_ar ?? base.catalogLabelAr,
     catalogIconPx: row.catalog_icon_px ?? base.catalogIconPx,
     catalogFontPx: row.catalog_font_px ?? base.catalogFontPx,
     catalogPadPx: row.catalog_pad_px ?? base.catalogPadPx,
@@ -121,6 +135,7 @@ export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettin
     showAddToCart: row.show_add_to_cart ?? base.showAddToCart,
     showTryAgain: row.show_try_again ?? base.showTryAgain,
     disclaimerText: row.disclaimer_text ?? base.disclaimerText,
+    disclaimerTextAr: row.disclaimer_text_ar ?? base.disclaimerTextAr,
     loadingSteps: row.loading_steps ?? base.loadingSteps,
   };
 }
@@ -143,7 +158,7 @@ async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
   const { data, error } = await supabase
     .from('tryon_settings')
-    .select('shop, button_label, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text')
+    .select('shop, button_label, button_label_ar, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_label_ar, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text, disclaimer_text_ar')
     .in('shop', shops);
 
   if (error || !data) return DEFAULT_SETTINGS;
@@ -155,6 +170,7 @@ async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
 
 const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
   buttonLabel: 'button_label',
+  buttonLabelAr: 'button_label_ar',
   accentBg: 'accent_bg',
   accentFg: 'accent_fg',
   radiusPx: 'radius_px',
@@ -163,6 +179,7 @@ const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
   iconBgTo: 'icon_bg_to',
   loadingStyle: 'loading_style',
   catalogLabel: 'catalog_label',
+  catalogLabelAr: 'catalog_label_ar',
   catalogIconPx: 'catalog_icon_px',
   catalogFontPx: 'catalog_font_px',
   catalogPadPx: 'catalog_pad_px',
@@ -172,6 +189,7 @@ const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
   showAddToCart: 'show_add_to_cart',
   showTryAgain: 'show_try_again',
   disclaimerText: 'disclaimer_text',
+  disclaimerTextAr: 'disclaimer_text_ar',
   loadingSteps: 'loading_steps',
 };
 

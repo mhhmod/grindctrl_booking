@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
   await recordTryOnShopSeen(session.shop);
   const body = (await request.json()) as {
     buttonLabel?: string;
+    buttonLabelAr?: string | null;
     accentBg?: string;
     accentFg?: string;
     radiusPx?: number;
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest) {
     iconBgTo?: string;
     loadingStyle?: string;
     catalogLabel?: string;
+    catalogLabelAr?: string | null;
     catalogIconPx?: number;
     catalogFontPx?: number;
     catalogPadPx?: number;
@@ -65,6 +67,7 @@ export async function POST(request: NextRequest) {
     showAddToCart?: boolean;
     showTryAgain?: boolean;
     disclaimerText?: string | null;
+    disclaimerTextAr?: string | null;
     loadingSteps?: string[] | null;
   };
 
@@ -75,6 +78,9 @@ export async function POST(request: NextRequest) {
   const radius = Number(body.radiusPx);
   const ok = await saveTryOnSettings(session.shop, {
     buttonLabel: body.buttonLabel?.trim() || undefined,
+    /* null rather than undefined: undefined leaves the stored value alone,
+       but clearing the Arabic field has to actually clear it. */
+    buttonLabelAr: body.buttonLabelAr?.trim() || null,
     accentBg: body.accentBg?.trim() || undefined,
     accentFg: body.accentFg?.trim() || undefined,
     radiusPx: Number.isFinite(radius) ? Math.max(0, Math.min(999, radius)) : undefined,
@@ -85,6 +91,7 @@ export async function POST(request: NextRequest) {
       ? body.loadingStyle
       : 'steps') as 'steps' | 'pulse' | 'bar',
     catalogLabel: body.catalogLabel?.trim().slice(0, 24) || 'Try on',
+    catalogLabelAr: body.catalogLabelAr?.trim().slice(0, 24) || null,
     catalogIconPx: clamp(body.catalogIconPx, 10, 32, 14),
     catalogFontPx: clamp(body.catalogFontPx, 9, 20, 12),
     catalogPadPx: clamp(body.catalogPadPx, 2, 16, 6),
@@ -96,6 +103,10 @@ export async function POST(request: NextRequest) {
     disclaimerText:
       typeof body.disclaimerText === 'string'
         ? body.disclaimerText.slice(0, 300).trim() || null
+        : null,
+    disclaimerTextAr:
+      typeof body.disclaimerTextAr === 'string'
+        ? body.disclaimerTextAr.slice(0, 300).trim() || null
         : null,
     loadingSteps:
       Array.isArray(body.loadingSteps) && body.loadingSteps.length

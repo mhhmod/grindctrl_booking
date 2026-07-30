@@ -6,6 +6,7 @@ function row(overrides: Partial<SettingsRow> = {}): SettingsRow {
   return {
     shop: 'store.myshopify.com',
     button_label: null,
+    button_label_ar: null,
     accent_bg: null,
     accent_fg: null,
     radius_px: null,
@@ -14,6 +15,7 @@ function row(overrides: Partial<SettingsRow> = {}): SettingsRow {
     icon_bg_to: null,
     loading_style: null,
     catalog_label: null,
+    catalog_label_ar: null,
     catalog_icon_px: null,
     catalog_font_px: null,
     catalog_pad_px: null,
@@ -23,6 +25,7 @@ function row(overrides: Partial<SettingsRow> = {}): SettingsRow {
     show_add_to_cart: null,
     show_try_again: null,
     disclaimer_text: null,
+    disclaimer_text_ar: null,
     loading_steps: null,
     ...overrides,
   };

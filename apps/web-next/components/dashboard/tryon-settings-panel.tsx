@@ -54,7 +54,9 @@ export function TryOnSettingsPanel({
       const fd = new FormData();
       fd.set('shop', selectedShop);
       fd.set('button_label', s.buttonLabel);
+      fd.set('button_label_ar', s.buttonLabelAr ?? '');
       fd.set('catalog_label', s.catalogLabel);
+      fd.set('catalog_label_ar', s.catalogLabelAr ?? '');
       fd.set('accent_bg', s.accentBg);
       fd.set('accent_fg', s.accentFg);
       fd.set('icon_bg_from', s.iconBgFrom);
@@ -71,6 +73,7 @@ export function TryOnSettingsPanel({
       if (s.showAddToCart) fd.set('show_add_to_cart', 'on');
       if (s.showTryAgain) fd.set('show_try_again', 'on');
       fd.set('disclaimer_text', s.disclaimerText ?? '');
+      fd.set('disclaimer_text_ar', s.disclaimerTextAr ?? '');
       fd.set('loading_steps', loadingStepsText);
 
       await saveTryOnSettingsAction(fd);

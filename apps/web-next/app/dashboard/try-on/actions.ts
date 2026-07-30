@@ -19,6 +19,9 @@ export async function saveTryOnSettingsAction(formData: FormData) {
 
   await saveTryOnSettings(shop, {
     buttonLabel: String(formData.get('button_label') || '').trim() || undefined,
+    /* null rather than undefined: undefined means "leave as is", but a
+       merchant clearing the Arabic field must actually clear it. */
+    buttonLabelAr: String(formData.get('button_label_ar') || '').trim() || null,
     accentBg: String(formData.get('accent_bg') || '').trim() || undefined,
     accentFg: String(formData.get('accent_fg') || '').trim() || undefined,
     radiusPx: Number.isFinite(radius) ? Math.max(0, Math.min(999, radius)) : undefined,
@@ -29,6 +32,7 @@ export async function saveTryOnSettingsAction(formData: FormData) {
       ? String(formData.get('loading_style'))
       : 'steps') as 'steps' | 'pulse' | 'bar',
     catalogLabel: String(formData.get('catalog_label') || '').trim().slice(0, 24) || 'Try on',
+    catalogLabelAr: String(formData.get('catalog_label_ar') || '').trim().slice(0, 24) || null,
     catalogIconPx: clamp(formData.get('catalog_icon_px'), 10, 32, 14),
     catalogFontPx: clamp(formData.get('catalog_font_px'), 9, 20, 12),
     catalogPadPx: clamp(formData.get('catalog_pad_px'), 2, 16, 6),
@@ -38,6 +42,7 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     showAddToCart: formData.get('show_add_to_cart') === 'on',
     showTryAgain: formData.get('show_try_again') === 'on',
     disclaimerText: String(formData.get('disclaimer_text') || '').trim() || null,
+    disclaimerTextAr: String(formData.get('disclaimer_text_ar') || '').trim() || null,
     loadingSteps,
   });
 

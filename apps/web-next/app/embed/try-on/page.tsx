@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
 import { toAppearanceTokens } from '@/lib/try-on/appearance';
+import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
@@ -68,6 +69,10 @@ export default async function EmbedTryOnPage({
      the same setting. See lib/try-on/appearance.ts for the radius policy. */
   const tokenOverrides = toAppearanceTokens(settings) as CSSProperties;
 
+  /* The merchant's own strings follow the shopper's language, same rule the
+     storefront config route uses. */
+  const merchantCopy = pickMerchantCopy(settings, initialLocale);
+
   return (
     <TryOnLocaleProvider
       initialLocale={initialLocale}
@@ -88,7 +93,7 @@ export default async function EmbedTryOnPage({
                 showWhatsapp: settings.showWhatsapp,
                 showAddToCart: settings.showAddToCart,
                 showTryAgain: settings.showTryAgain,
-                disclaimerText: settings.disclaimerText,
+                disclaimerText: merchantCopy.disclaimerText,
               },
             }}
           />

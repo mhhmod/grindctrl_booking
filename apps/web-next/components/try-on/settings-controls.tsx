@@ -12,6 +12,9 @@ import { WidgetPreview } from '@/components/try-on/widget-preview';
 
 export type TryOnWidgetSettings = {
   buttonLabel: string;
+  /* Arabic variants. Blank means "not translated": the widget falls back to
+     the default-language string rather than rendering an empty control. */
+  buttonLabelAr: string | null;
   accentBg: string;
   accentFg: string;
   radiusPx: number;
@@ -20,6 +23,7 @@ export type TryOnWidgetSettings = {
   iconBgTo: string;
   loadingStyle: 'steps' | 'pulse' | 'bar';
   catalogLabel: string;
+  catalogLabelAr: string | null;
   catalogIconPx: number;
   catalogFontPx: number;
   catalogPadPx: number;
@@ -29,6 +33,7 @@ export type TryOnWidgetSettings = {
   showAddToCart: boolean;
   showTryAgain: boolean;
   disclaimerText: string | null;
+  disclaimerTextAr: string | null;
   loadingSteps: string[] | null;
 };
 
@@ -173,12 +178,34 @@ export function TryOnSettingsControls({
           />
         </div>
         <div className="grid gap-2">
+          <Label htmlFor="button_label_ar">Button label (Arabic)</Label>
+          <Input
+            id="button_label_ar"
+            dir="rtl"
+            value={s.buttonLabelAr ?? ''}
+            maxLength={40}
+            placeholder="Leave empty to reuse the English label"
+            onChange={(e) => onChange('buttonLabelAr', e.target.value || null)}
+          />
+        </div>
+        <div className="grid gap-2">
           <Label htmlFor="catalog_label">Catalog pill label</Label>
           <Input
             id="catalog_label"
             value={s.catalogLabel}
             maxLength={24}
             onChange={(e) => onChange('catalogLabel', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="catalog_label_ar">Catalog pill label (Arabic)</Label>
+          <Input
+            id="catalog_label_ar"
+            dir="rtl"
+            value={s.catalogLabelAr ?? ''}
+            maxLength={24}
+            placeholder="Leave empty to reuse the English label"
+            onChange={(e) => onChange('catalogLabelAr', e.target.value || null)}
           />
         </div>
       </div>
@@ -280,16 +307,30 @@ export function TryOnSettingsControls({
         </div>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="disclaimer_text">Disclaimer under the result (empty = default)</Label>
-        <textarea
-          id="disclaimer_text"
-          rows={2}
-          value={s.disclaimerText ?? ''}
-          onChange={(e) => onChange('disclaimerText', e.target.value || null)}
-          placeholder="This preview is visual guidance only..."
-          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-2">
+          <Label htmlFor="disclaimer_text">Disclaimer under the result (empty = default)</Label>
+          <textarea
+            id="disclaimer_text"
+            rows={2}
+            value={s.disclaimerText ?? ''}
+            onChange={(e) => onChange('disclaimerText', e.target.value || null)}
+            placeholder="This preview is visual guidance only..."
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="disclaimer_text_ar">Disclaimer (Arabic)</Label>
+          <textarea
+            id="disclaimer_text_ar"
+            rows={2}
+            dir="rtl"
+            value={s.disclaimerTextAr ?? ''}
+            onChange={(e) => onChange('disclaimerTextAr', e.target.value || null)}
+            placeholder="Leave both empty to use the built-in translated line"
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+        </div>
       </div>
 
       <div className="grid gap-2">
