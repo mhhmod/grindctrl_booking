@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WidgetPreview } from '@/components/try-on/widget-preview';
+import { GradientField } from '@/components/try-on/gradient-field';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
@@ -217,7 +218,7 @@ export function TryOnSettingsControls({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="grid gap-2">
           <Label htmlFor="accent_bg">{c.buttonColor}</Label>
           <Input id="accent_bg" type="color" value={s.accentBg} className="h-10 p-1" onChange={(e) => onChange('accentBg', e.target.value)} />
@@ -226,15 +227,17 @@ export function TryOnSettingsControls({
           <Label htmlFor="accent_fg">{c.textColor}</Label>
           <Input id="accent_fg" type="color" value={s.accentFg} className="h-10 p-1" onChange={(e) => onChange('accentFg', e.target.value)} />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="icon_bg_from">{c.iconGradientStart}</Label>
-          <Input id="icon_bg_from" type="color" value={s.iconBgFrom} className="h-10 p-1" onChange={(e) => onChange('iconBgFrom', e.target.value)} />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="icon_bg_to">{c.iconGradientEnd}</Label>
-          <Input id="icon_bg_to" type="color" value={s.iconBgTo} className="h-10 p-1" onChange={(e) => onChange('iconBgTo', e.target.value)} />
-        </div>
       </div>
+
+      <GradientField
+        from={s.iconBgFrom}
+        to={s.iconBgTo}
+        copy={c}
+        onChange={(next) => {
+          onChange('iconBgFrom', next.from);
+          onChange('iconBgTo', next.to);
+        }}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Range id="button_icon_px" label="Button icon size" value={s.buttonIconPx} min={18} max={40} onChange={(v) => onChange('buttonIconPx', v)} />
