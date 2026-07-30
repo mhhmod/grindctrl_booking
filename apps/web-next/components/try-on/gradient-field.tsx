@@ -26,6 +26,11 @@ type Panel = 'my-colour' | 'advanced' | null;
 
 const sameHex = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 
+const panelButtonClass = (active: boolean) =>
+  `flex h-11 items-center rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
+    active ? 'border-foreground bg-foreground/5 font-medium' : 'border-input hover:bg-muted'
+  }`;
+
 export function GradientField({
   from,
   to,
@@ -38,7 +43,10 @@ export function GradientField({
   onChange: (next: GradientStops) => void;
 }) {
   const [panel, setPanel] = React.useState<Panel>(null);
-  const [baseColour, setBaseColour] = React.useState(() => normalizeHex(from) ?? from);
+  // Intensity has no corresponding prop and isn't meant to persist across
+  // selection changes, so it stays local. The base colour is NOT mirrored
+  // into state here — it always reads from `from` (see below) so a preset
+  // click or an Advanced edit is never clobbered by a stale local copy.
   const [intensity, setIntensity] = React.useState(DEFAULT_GRADIENT_INTENSITY);
 
   const togglePanel = (next: Exclude<Panel, null>) => {
@@ -46,7 +54,6 @@ export function GradientField({
   };
 
   const applyMyColour = (nextBase: string, nextIntensity: number) => {
-    setBaseColour(nextBase);
     setIntensity(nextIntensity);
     onChange(deriveGradient(nextBase, nextIntensity));
   };
@@ -62,6 +69,7 @@ export function GradientField({
             <button
               key={`${preset.from}-${preset.to}`}
               type="button"
+              // Hex codes, not prose — not translatable, don't move to copy.
               aria-label={`${preset.from} → ${preset.to}`}
               aria-pressed={selected}
               onClick={() => onChange(preset)}
@@ -79,9 +87,7 @@ export function GradientField({
           type="button"
           onClick={() => togglePanel('my-colour')}
           aria-expanded={panel === 'my-colour'}
-          className={`flex h-11 items-center rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-            panel === 'my-colour' ? 'border-foreground bg-foreground/5 font-medium' : 'border-input hover:bg-muted'
-          }`}
+          className={panelButtonClass(panel === 'my-colour')}
         >
           {copy.gradientUseMyColour}
         </button>
@@ -89,9 +95,7 @@ export function GradientField({
           type="button"
           onClick={() => togglePanel('advanced')}
           aria-expanded={panel === 'advanced'}
-          className={`flex h-11 items-center rounded-full border px-3.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 ${
-            panel === 'advanced' ? 'border-foreground bg-foreground/5 font-medium' : 'border-input hover:bg-muted'
-          }`}
+          className={panelButtonClass(panel === 'advanced')}
         >
           {copy.gradientAdvanced}
         </button>
@@ -104,7 +108,7 @@ export function GradientField({
             <Input
               id="gradient_base_colour"
               type="color"
-              value={baseColour}
+              value={normalizeHex(from) ?? from}
               className="h-11 p-1"
               onChange={(e) => applyMyColour(e.target.value, intensity)}
             />
@@ -122,7 +126,7 @@ export function GradientField({
               min={0}
               max={100}
               value={intensity}
-              onChange={(e) => applyMyColour(baseColour, Number(e.target.value))}
+              onChange={(e) => applyMyColour(from, Number(e.target.value))}
               className="h-11 w-full cursor-pointer appearance-none rounded-full bg-muted accent-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
