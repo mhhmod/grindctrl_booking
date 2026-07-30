@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
-import { GeminiMark, ShopifyMark } from '@/components/brand-marks';
+import { BRAND_MARKS } from '@/components/brand-marks';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
@@ -311,11 +311,6 @@ function BeforeAfterSlider({
     </figure>
   );
 }
-
-const BRAND_MARKS: Record<string, ((props: { className?: string; style?: React.CSSProperties }) => React.JSX.Element) | undefined> = {
-  Shopify: ShopifyMark,
-  Gemini: GeminiMark,
-};
 
 export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
   const { locale, t } = useLandingLocale();
@@ -727,20 +722,51 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
 
         {/* Other services */}
         <section className="bg-muted/30" aria-labelledby="other-services-title">
-          <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-7 px-4 py-10 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8 lg:py-12">
-            <div className="min-w-0 flex max-w-2xl flex-col gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.otherEyebrow}
-              </p>
-              <h2 id="other-services-title" className="text-2xl font-bold tracking-tight">{t.otherTitle}</h2>
-              <p className="text-sm leading-relaxed text-muted-foreground">{t.otherBody}</p>
+          <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-9 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+            <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
+              <div className="min-w-0 flex flex-col gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  {t.otherEyebrow}
+                </p>
+                <h2
+                  id="other-services-title"
+                  className="text-[26px] font-bold leading-[1.14] tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.08]"
+                >
+                  {t.otherTitle}
+                </h2>
+                <p className="text-base leading-[1.65] text-muted-foreground">{t.otherBody}</p>
+              </div>
+
+              {/* A list, not another card triplet: these are capabilities of
+                  one service, so they read better stacked than boxed. */}
+              <ul className="min-w-0 flex flex-col gap-3 lg:pt-9">
+                {t.otherItems.map((item) => (
+                  <li key={item} className="flex min-w-0 items-start gap-2.5">
+                    <span className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true">
+                      <Icon icon={CheckmarkCircle02Icon} />
+                    </span>
+                    <span className="min-w-0 text-[15px] leading-[1.55]">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="flex min-w-0 flex-wrap gap-2">
-              {t.otherItems.map((item) => (
-                <Badge key={item} variant="secondary" className="rounded-full px-3.5 py-1.5 text-[13px]">
-                  {item}
-                </Badge>
-              ))}
+
+            {/* The tools this actually runs on. Same chip treatment as the
+                try-on integrations strip so the page reads as one system. */}
+            <div className="flex min-w-0 flex-wrap gap-2.5 border-t border-border pt-7">
+              {t.opsStack.map((name) => {
+                const Mark = BRAND_MARKS[name];
+                return (
+                  <Badge
+                    key={name}
+                    variant="outline"
+                    className="gc-integration-chip inline-flex items-center gap-1.5 rounded-full border-border bg-background px-3.5 text-[13px] font-medium"
+                  >
+                    {Mark ? <Mark className="shrink-0" /> : null}
+                    {name}
+                  </Badge>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -775,9 +801,9 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <BrandLogo size="sm" textClassName="text-xs" />
           <p className="text-xs">{t.footerTagline}</p>
           <div className="flex items-center gap-5 text-xs">
-            <Link href="/" className="transition-colors hover:text-foreground">{t.footerHome}</Link>
-            <Link href={DEMO_URL} className="transition-colors hover:text-foreground">{t.footerDemo}</Link>
-            <Link href="/pricing" className="transition-colors hover:text-foreground">{t.footerPricing}</Link>
+            <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
+            <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
+            <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
           </div>
         </div>
       </footer>

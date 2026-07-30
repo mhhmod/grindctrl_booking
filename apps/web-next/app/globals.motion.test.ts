@@ -1,0 +1,73 @@
+/* Guards the prefers-reduced-motion contract.
+
+   The setting means "reduce motion", not "remove all feedback". Windows
+   Settings > Accessibility > Visual effects > Animation effects: Off makes
+   Chrome and Edge report `reduce`, so this path is what a real slice of
+   users see every day, not an edge case. A previous version disabled every
+   animation AND every transition on effectively every element, which made
+   the product read as broken rather than calm.
+
+   These assertions are on the stylesheet text because the rules are static
+   CSS: there is no component to render that would prove the cascade. */
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const css = readFileSync(join(__dirname, 'globals.css'), 'utf8');
+
+function reducedMotionBlock(): string {
+  const start = css.indexOf('@media (prefers-reduced-motion: reduce)');
+  expect(start, 'no prefers-reduced-motion block found').toBeGreaterThan(-1);
+
+  // Walk braces from the block's opening one so we capture exactly this block.
+  const open = css.indexOf('{', start);
+  let depth = 0;
+  for (let i = open; i < css.length; i += 1) {
+    if (css[i] === '{') depth += 1;
+    if (css[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return css.slice(start, i + 1);
+    }
+  }
+  throw new Error('unbalanced braces in the reduced-motion block');
+}
+
+describe('prefers-reduced-motion', () => {
+  const block = reducedMotionBlock();
+
+  it('does not collapse every transition to nothing', () => {
+    // 0.01ms is the blanket-kill idiom. It strips hover and focus feedback
+    // across the whole UI, which is what made the site feel dead.
+    expect(block).not.toMatch(/transition-duration:\s*0\.01ms/);
+  });
+
+  it('keeps colour and opacity feedback on interactive surfaces', () => {
+    expect(block).toMatch(/transition-property:[^;]*opacity/);
+    expect(block).toMatch(/transition-property:[^;]*background-color/);
+  });
+
+  it('does not keep transform in the surviving transition set', () => {
+    const props = block.match(/transition-property:[^;]*/g) ?? [];
+    expect(props.length).toBeGreaterThan(0);
+    for (const p of props) expect(p).not.toMatch(/transform/);
+  });
+
+  it('leaves entrance-animated content visible instead of stuck hidden', () => {
+    // These classes start at opacity 0 and animate in. If the animation is
+    // cancelled without pinning opacity, the content never appears at all.
+    for (const cls of ['gc-fade-in-up', 'gc-step-appear', 'gc-scroll-reveal']) {
+      // [\s\S] instead of the s flag: this file compiles under the app's
+      // TS target, which predates dotAll.
+      const rule = block.match(new RegExp(`\\.${cls}[^{]*\\{[^}]*\\}`));
+      expect(rule, `${cls} is not handled under reduced motion`).not.toBeNull();
+      expect(rule![0], `${cls} must be pinned visible`).toMatch(
+        /opacity:\s*1/,
+      );
+    }
+  });
+
+  it('stops the ambient background from drifting', () => {
+    expect(block).toMatch(/\.gc-aurora span[^{]*\{[^}]*animation:\s*none/);
+  });
+});

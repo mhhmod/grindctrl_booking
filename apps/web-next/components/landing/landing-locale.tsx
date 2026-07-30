@@ -79,7 +79,7 @@ export function LandingLocaleToggle({ className }: { className?: string }) {
       onClick={toggleLocale}
       id="landing-locale-toggle"
       className={cn(
-        'h-9 rounded-full border border-border bg-card/70 px-2.5 text-xs font-semibold backdrop-blur transition-colors hover:bg-muted sm:px-3',
+        'gc-tap h-9 rounded-full border border-border bg-card/70 px-2.5 text-xs font-semibold backdrop-blur transition-colors hover:bg-muted sm:px-3',
         className,
       )}
     >

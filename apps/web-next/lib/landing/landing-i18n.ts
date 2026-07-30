@@ -104,6 +104,8 @@ interface LandingDict {
   otherTitle: string;
   otherBody: string;
   otherItems: string[];
+  /* Tools the automation work actually runs on. Rendered as brand chips. */
+  opsStack: string[];
 
   ctaTitle: string;
   ctaBody: string;
@@ -252,15 +254,29 @@ const en: LandingDict = {
     'Gemini',
   ],
 
-  otherEyebrow: 'Beyond try-on',
-  otherTitle: 'The rest of the AI your store runs on.',
+  otherEyebrow: 'AI operations',
+  otherTitle: 'Try-on sells the product. The rest of the AI runs the business.',
   otherBody:
-    'Once try-on is live, the same team builds the systems around it: answering shoppers, chasing leads, and removing the manual work someone repeats every day.',
+    'Try-on is the storefront. Behind it we build and run the operations layer: shopper support that answers in Arabic and English, leads captured and routed the moment they land, orders and follow-up handled without anyone retyping them, and reporting that arrives on its own. Same team, same dashboard.',
   otherItems: [
-    'AI customer support',
-    'Lead capture and routing',
-    'Document workflows',
-    'Operations automation',
+    'AI customer support across WhatsApp, Instagram, and web chat',
+    'Lead capture, scoring, and routing into your CRM',
+    'Order and follow-up automation',
+    'Document and back-office workflows',
+    'Reporting that builds itself',
+  ],
+  opsStack: [
+    'WhatsApp',
+    'Instagram',
+    'Telegram',
+    'Slack',
+    'Notion',
+    'Zapier',
+    'n8n',
+    'Gemini',
+    'Microsoft',
+    'Supabase',
+    'Vercel',
   ],
 
   ctaTitle: 'Give shoppers a reason to feel sure before checkout.',
@@ -411,15 +427,29 @@ const ar: LandingDict = {
     'Gemini',
   ],
 
-  otherEyebrow: 'ما بعد التجربة الافتراضية',
-  otherTitle: 'باقي أنظمة الذكاء الاصطناعي التي يعمل بها متجرك.',
+  otherEyebrow: 'تشغيل بالذكاء الاصطناعي',
+  otherTitle: 'التجربة الافتراضية تبيع المنتج. وباقي الذكاء الاصطناعي يدير العمل.',
   otherBody:
-    'بعد تشغيل التجربة الافتراضية، يبني الفريق نفسه الأنظمة المحيطة بها: الرد على العملاء، ومتابعة العملاء المحتملين، وإلغاء العمل اليدوي المتكرر كل يوم.',
+    'التجربة الافتراضية هي الواجهة. وخلفها نبني ونشغّل طبقة العمليات: خدمة عملاء ترد بالعربية والإنجليزية، وعملاء محتملون يُلتقطون ويُوجّهون فور وصولهم، وطلبات ومتابعة تُدار دون إعادة إدخال يدوي، وتقارير تصل من تلقاء نفسها. الفريق نفسه واللوحة نفسها.',
   otherItems: [
-    'دعم العملاء بالذكاء الاصطناعي',
-    'جمع وتوجيه العملاء المحتملين',
-    'أتمتة المستندات',
-    'أتمتة العمليات',
+    'دعم عملاء بالذكاء الاصطناعي عبر واتساب وإنستغرام والدردشة',
+    'جمع العملاء المحتملين وتقييمهم وتوجيههم إلى نظامك',
+    'أتمتة الطلبات والمتابعة',
+    'أتمتة المستندات والأعمال الخلفية',
+    'تقارير تُبنى تلقائيًا',
+  ],
+  opsStack: [
+    'WhatsApp',
+    'Instagram',
+    'Telegram',
+    'Slack',
+    'Notion',
+    'Zapier',
+    'n8n',
+    'Gemini',
+    'Microsoft',
+    'Supabase',
+    'Vercel',
   ],
 
   ctaTitle: 'امنح عملاءك سببًا للثقة قبل إتمام الشراء.',

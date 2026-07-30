@@ -31,7 +31,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}
       className={cn(
-        'h-9 rounded-full border border-border bg-card/80 px-2.5 text-xs font-semibold shadow-sm shadow-black/5 backdrop-blur transition-all hover:bg-muted dark:bg-white/[0.04] dark:hover:bg-white/[0.08]',
+        'gc-tap h-9 rounded-full border border-border bg-card/80 px-2.5 text-xs font-semibold shadow-sm shadow-black/5 backdrop-blur transition-all hover:bg-muted dark:bg-white/[0.04] dark:hover:bg-white/[0.08]',
         className,
       )}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}

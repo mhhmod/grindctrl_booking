@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
+import { toAppearanceTokens } from '@/lib/try-on/appearance';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
@@ -62,12 +63,10 @@ export default async function EmbedTryOnPage({
      localStorage, which a third-party iframe may not have. */
   const themeClass = settings.widgetTheme === 'dark' ? 'dark' : 'light';
 
-  /* Config → design tokens: shadcn primitives pick these up directly. */
-  const tokenOverrides = {
-    '--primary': settings.accentBg,
-    '--primary-foreground': settings.accentFg,
-    '--radius': `${Math.min(settings.radiusPx, 24)}px`,
-  } as CSSProperties;
+  /* Config → design tokens: shadcn primitives pick these up directly.
+     Shared with the dashboard preview so both render the same shape from
+     the same setting. See lib/try-on/appearance.ts for the radius policy. */
+  const tokenOverrides = toAppearanceTokens(settings) as CSSProperties;
 
   return (
     <TryOnLocaleProvider
@@ -75,7 +74,7 @@ export default async function EmbedTryOnPage({
       className={`${themeClass} min-h-dvh bg-background text-foreground`}
     >
       <EmbedFrameBridge />
-      <main className="px-4 py-6 sm:px-6" style={tokenOverrides}>
+      <main className="gc-widget-surface px-4 py-6 sm:px-6" style={tokenOverrides}>
         {shopProduct ? (
           <TryOnDemo
             productId={productHandle}

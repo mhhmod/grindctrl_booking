@@ -428,6 +428,37 @@
    important rule would lose to a layered one. components sorts before
    utilities, so this wins. */
 @layer components {
+  /* Merchant radius applies to buttons too.
+
+     Tailwind's rounded-full is a hardcoded 9999px, so it ignored --radius
+     entirely: a merchant setting 8px got square-ish cards and pill buttons,
+     which read as "the setting did not save". Scoped to the widget surface
+     so the marketing site keeps its own pill buttons, and limited to real
+     controls so avatars and icon badges stay circular.
+
+     !important because rounded-full is a utility, and utilities outrank
+     components for normal declarations. */
+  .gc-widget-surface :where(button, a, [role='button']).rounded-full {
+    border-radius: var(--gc-control-radius, 9999px) !important;
+  }
+}
+
+@layer components {
+  /* Touch tap targets. Text-sized links (footer nav) and compact icon
+     buttons (locale, theme) render 16px to 36px tall, well under the 44px
+     minimum, which is why they feel like they miss on a phone. This grows
+     the hit box only on touch devices and leaves the type size alone, so
+     the desktop design is untouched. */
+  @media (pointer: coarse) {
+    .gc-tap {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+    }
+  }
+}
+
+@layer components {
   /* Important as well: Badge's own h-5 is a utility, and utilities beat
      components for normal declarations. Without this the 18px mark would be
      clipped by a 20px pill that also sets overflow-hidden. */
@@ -731,18 +762,22 @@
 
 /* Reduced motion: disable all gc animations */
 @media (prefers-reduced-motion: reduce) {
+  /* Reduce motion, do not strip the interface of feedback. Windows
+     Accessibility > Visual effects > Animation effects: Off lands users here,
+     so this is a mainstream path, not an edge case. Travel and looping go;
+     colour and opacity stay, because a UI with no state feedback at all
+     reads as broken rather than calm. */
+
+  /* Anything that loops, drifts, or travels: off. */
   .gc-float,
   .gc-pulse-glow,
   .gc-signal-flow,
   .gc-scan-line,
-  .gc-fade-in-up,
   .gc-grid-pulse,
   .gc-node-ping,
-  .gc-step-appear,
   .gc-node-pulse,
   .gc-soft-glow,
   .gc-ambient-glow,
-  .gc-result-reveal,
   .gc-trail-line::before,
   .gc-trail::before,
   .gc-template-progress::after,
@@ -751,31 +786,41 @@
   .gc-animated *,
   :where(body, header, section, article, div, span, button, textarea, input, a, svg) {
     animation: none !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 
-  .gc-aurora span {
+  /* Transitions survive, restricted to properties that move nothing and
+     shortened so they register without feeling animated. Transform is
+     deliberately absent from the list. */
+  :where(body, header, section, article, div, span, button, textarea, input, a, svg) {
+    transition-property: opacity, background-color, border-color, color, fill, stroke, box-shadow !important;
+    transition-duration: 120ms !important;
+  }
+
+  /* Entrance animations resolve straight to their finished state. These
+     classes start at opacity 0, so cancelling the animation without pinning
+     opacity would leave the content permanently invisible. */
+  .gc-fade-in-up,
+  .gc-step-appear,
+  .gc-result-reveal,
+  .gc-scroll-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .gc-aurora span,
+  .gc-how-sequence::after {
     animation: none !important;
     transform: none !important;
   }
 
+  /* No hover travel anywhere. */
   .gc-glass:hover,
-  .gc-card-hover:hover {
-    transform: none;
-  }
-
-  .gc-how-sequence::after {
-    transform: none !important;
-  }
-
-  .gc-hover-reveal .gc-reveal-caption {
-    transform: none;
-    transition: none;
-  }
-
+  .gc-card-hover:hover,
+  .gc-hover-reveal .gc-reveal-caption,
   .gc-hover-reveal:hover .gc-reveal-media img,
   .gc-hover-reveal:focus-within .gc-reveal-media img {
-    transform: none;
+    transform: none !important;
   }
 }

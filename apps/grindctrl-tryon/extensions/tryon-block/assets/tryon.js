@@ -23,7 +23,11 @@
         }
         if (cfg.accentBg) btn.style.background = cfg.accentBg;
         if (cfg.accentFg) btn.style.color = cfg.accentFg;
-        if (typeof cfg.radiusPx === 'number') btn.style.borderRadius = cfg.radiusPx + 'px';
+        // Same ceiling as the catalog pill and the embed panel's control
+        // radius, so one setting produces one shape everywhere.
+        if (typeof cfg.radiusPx === 'number') {
+          btn.style.borderRadius = Math.max(0, Math.min(cfg.radiusPx, 999)) + 'px';
+        }
         if (typeof cfg.buttonIconPx === 'number') {
           btn.style.setProperty('--gc-ic-size', cfg.buttonIconPx + 'px');
         }
