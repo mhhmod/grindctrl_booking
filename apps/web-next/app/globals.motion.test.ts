@@ -71,3 +71,33 @@ describe('prefers-reduced-motion', () => {
     expect(block).toMatch(/\.gc-aurora span[^{]*\{[^}]*animation:\s*none/);
   });
 });
+
+describe('ambient background cost', () => {
+  // The aurora is full-viewport and always on, so it is the one effect that
+  // can tax every scroll on every page. These guard the two mistakes that
+  // made it expensive the first time.
+  // Match the .gc-aurora rule bodies specifically. Slicing a range of the
+  // file swept in unrelated rules and reported false failures.
+  const auroraRules = (css.match(/\.gc-aurora[^{]*\{[^}]*\}/g) ?? []).join('\n');
+
+  it('has aurora rules to check', () => {
+    expect(auroraRules.length).toBeGreaterThan(0);
+  });
+
+  it('does not blur the drifting layers', () => {
+    // A CSS blur forces re-rasterization whenever the layer's size or scale
+    // changes. A radial-gradient gives the same soft edge for free.
+    expect(auroraRules).not.toMatch(/filter:\s*blur/);
+  });
+
+  it('uses a gradient for the soft edge', () => {
+    expect(auroraRules).toMatch(/radial-gradient/);
+  });
+
+  it('never animates scale on the ambient layers', () => {
+    // Scaling is what triggered the re-raster. Translation is composited.
+    const keyframes = css.match(/@keyframes gc-aurora-[a-c][^}]*\}[^}]*\}/g) ?? [];
+    expect(keyframes.length).toBeGreaterThan(0);
+    for (const k of keyframes) expect(k).not.toMatch(/scale\(/);
+  });
+});
