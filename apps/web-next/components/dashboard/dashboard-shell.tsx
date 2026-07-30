@@ -1,8 +1,10 @@
 import React from 'react';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { BrandLogo } from '@/components/brand-logo';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
+import { DashboardLocaleToggle } from '@/components/dashboard/dashboard-locale-toggle';
 import {
   SidebarProvider,
   Sidebar,
@@ -22,16 +24,25 @@ export function DashboardShell({
   title,
   description,
   children,
+  locale = 'en',
 }: {
   navItems: DashboardResolvedNavItem[];
   breadcrumbs: DashboardBreadcrumbItem[];
   title: string;
   description: string;
   children: React.ReactNode;
+  /* The sidebar pins itself with `fixed` and a PHYSICAL left/right offset,
+     while the spacer that reserves its width sits in normal flow and follows
+     the writing direction. In Arabic those two disagree: the spacer moves to
+     the right, the fixed panel stays on the left, so the page shows an empty
+     column on one side and a sidebar sitting on top of the content on the
+     other. Flipping `side` is what keeps them together. */
+  locale?: SiteLocale;
 }) {
+  const side = locale === 'ar' ? 'right' : 'left';
   return (
       <SidebarProvider defaultOpen>
-        <Sidebar>
+        <Sidebar side={side}>
         <SidebarHeader className="p-2">
           <Link href="/" className="flex h-10 items-center gap-2 rounded-lg px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <BrandLogo size="sm" subtitle="Operations Platform" />
@@ -78,6 +89,7 @@ export function DashboardShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+              <DashboardLocaleToggle locale={locale} />
               <ThemeToggle />
               <UserButton afterSignOutUrl="/" />
             </div>

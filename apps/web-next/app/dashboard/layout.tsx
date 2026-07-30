@@ -34,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div dir={getDir(locale)} lang={locale}>
       <DashboardShell
+        locale={locale}
         navItems={navItems}
         breadcrumbs={routeMeta.breadcrumbs}
         title={routeMeta.title}
