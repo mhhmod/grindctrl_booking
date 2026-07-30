@@ -19,3 +19,6 @@ Thumbs.db
 nul
 tsconfig.tsbuildinfo
 .playwright-mcp/
+
+# Brainstorming session mockups (superpowers visual companion)
+.superpowers/
