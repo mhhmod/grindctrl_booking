@@ -85,4 +85,33 @@ describe('deriveGradient', () => {
     expect(DEFAULT_GRADIENT_INTENSITY).toBeGreaterThanOrEqual(0);
     expect(DEFAULT_GRADIENT_INTENSITY).toBeLessThanOrEqual(100);
   });
+
+  it('has no contrast cliff around the lighten/darken flip point', () => {
+    // Regression: switching direction used to also multiply the amount of
+    // travel (headroom-scaled), so a one-RGB-step change in the base could
+    // jump from "barely visible" to "high contrast". Neighbouring bases
+    // across the flip must produce near-identical amounts of contrast.
+    const bases = ['#d6d6d6', '#d8d8d8', '#d9d9d9', '#dbdbdb'];
+    const deltas = bases.map((base) => {
+      const { from, to } = deriveGradient(base, DEFAULT_GRADIENT_INTENSITY);
+      return Math.abs(lightness(to) - lightness(from));
+    });
+
+    for (let i = 0; i < deltas.length - 1; i++) {
+      expect(
+        Math.abs(deltas[i] - deltas[i + 1]),
+        `${bases[i]} vs ${bases[i + 1]}`,
+      ).toBeLessThan(0.1);
+    }
+  });
+
+  it('keeps the default intensity moderate, not maxed out, for a pale base', () => {
+    // Regression: the direction fix alone overcorrected into "always use
+    // full travel", turning white into solid medium grey behind a small
+    // icon. The default should read as a light tint, not a hard swap.
+    const { from, to } = deriveGradient('#f5f5f5', DEFAULT_GRADIENT_INTENSITY);
+    const delta = Math.abs(lightness(to) - lightness(from));
+    expect(delta).toBeGreaterThan(0.08);
+    expect(delta).toBeLessThan(0.45);
+  });
 });

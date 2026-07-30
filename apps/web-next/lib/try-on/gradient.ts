@@ -31,12 +31,14 @@ const MAX_LIGHTNESS = 0.97;
 // bottom out at pure black either.
 const MIN_LIGHTNESS = 1 - MAX_LIGHTNESS;
 
-// Above this lightness there isn't enough headroom left to lighten without
-// hitting MAX_LIGHTNESS partway through the intensity range, so those bases
-// darken instead. Deliberately NOT a 0.5 midpoint: a plain "#1a73e8" blue
-// (l ≈ 0.506) is common mid-range input and must keep lightening exactly as
-// before — only the pale end (cream/off-white territory) needs to flip.
-const LIGHTEN_UNTIL_L = 0.85;
+// The lightness distance travelled at full (100) intensity. A single fixed
+// travel — rather than scaling by the base's own headroom — is what keeps
+// the two directions the same size. Scaling by headroom (the previous
+// approach) moved by (1 - l) when lightening but by l when darkening; those
+// diverge hard near the flip point (0.15 vs 0.85 at l = 0.85, a ~6x jump),
+// which showed up as a one-RGB-step cliff in output. A flat travel means
+// switching direction never changes the amount of contrast, only its sign.
+const MAX_TRAVEL = 0.45;
 
 /* Parses "#rrggbb" or "rrggbb", any case, into lowercase "#rrggbb".
    Returns null for anything else so callers can fall back rather than
@@ -115,22 +117,31 @@ export function deriveGradient(baseHex: string, intensity: number): GradientStop
   const [r, g, b] = hexToRgb(from);
   const [h, s, l] = rgbToHsl(r, g, b);
 
-  // Move lightness across whichever headroom the base actually has, not
-  // always toward white. Always-lighten was the original approach, but a
-  // fixed direction runs out of room for a pale base: once l is near
-  // MAX_LIGHTNESS, (1 - l) is tiny, so every intensity above ~25 saturates
-  // the cap and collapses to the same hex — the slider goes dead exactly
-  // for the common case of white/cream/off-white brand colours.
-  //
-  // Instead, pick the direction with room in it: lighten toward white when
-  // the base is dark (headroom = 1 - l), darken toward black when the base
-  // is already light (headroom = l). Either way the distance moved is a
-  // fraction of the ACTUAL headroom, so the slider stays live across the
-  // full 0..100 range regardless of how pale or how dark the base is.
-  const liftedL =
-    l < LIGHTEN_UNTIL_L
-      ? Math.min(MAX_LIGHTNESS, l + (1 - l) * amount)
-      : Math.max(MIN_LIGHTNESS, l - l * amount);
+  // Decide how far to travel FIRST, then pick a direction with room for it.
+  // Always-lighten (the original approach) runs out of room for a pale
+  // base: once l is near MAX_LIGHTNESS the cap saturates and every
+  // intensity past ~25 collapses to the same hex. Scaling the travel by
+  // the base's own headroom (the first attempt at a fix) traded that bug
+  // for a worse one: lighten moved by (1 - l) but darken moved by l, so the
+  // two directions were wildly different sizes near the flip point — a
+  // one-RGB-step change in input could jump from "barely visible" to
+  // "high contrast". A single desired travel, shared by both directions,
+  // removes that cliff — switching direction changes the sign, never the
+  // amount of contrast.
+  const desired = MAX_TRAVEL * amount;
+  const roomUp = MAX_LIGHTNESS - l;
+  const roomDown = l - MIN_LIGHTNESS;
+
+  let liftedL: number;
+  if (roomUp >= desired) {
+    liftedL = l + desired; // lighten — preferred when both directions fit
+  } else if (roomDown >= desired) {
+    liftedL = l - desired; // otherwise darken
+  } else {
+    // Neither direction has the full desired travel (base sits right next
+    // to a cap): go as far as the larger of the two rooms allows.
+    liftedL = roomUp >= roomDown ? l + roomUp : l - roomDown;
+  }
 
   // Saturation eases off as lightness rises, otherwise a dark, saturated
   // base (which has plenty of headroom) drags its lightened partner into a
