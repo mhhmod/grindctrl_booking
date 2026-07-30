@@ -23,6 +23,11 @@ export interface SettingsFormCopy {
   textColor: string;
   iconGradientStart: string;
   iconGradientEnd: string;
+  gradientPresets: string;
+  gradientUseMyColour: string;
+  gradientBaseColour: string;
+  gradientIntensity: string;
+  gradientAdvanced: string;
   cornerRadius: string;
   panelBackground: string;
   light: string;
@@ -41,6 +46,21 @@ export interface SettingsFormCopy {
   disclaimerAr: string;
   disclaimerArPlaceholder: string;
   loadingStepsLabel: string;
+  // Live preview
+  previewHeading: string;
+  previewTabButton: string;
+  previewTabCatalog: string;
+  previewTabUpload: string;
+  previewTabGenerating: string;
+  previewTabResults: string;
+  previewCaptionProduct: string;
+  previewCaptionButtonExpanded: string;
+  previewCaptionButtonCollapsed: string;
+  previewCaptionCatalog: string;
+  previewCaptionCatalogHint: string;
+  previewCaptionUpload: string;
+  previewCaptionGenerating: string;
+  previewCaptionResults: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -63,6 +83,11 @@ const en: SettingsFormCopy = {
   textColor: 'Text color',
   iconGradientStart: 'Icon gradient start',
   iconGradientEnd: 'Icon gradient end',
+  gradientPresets: 'Icon gradient',
+  gradientUseMyColour: 'Use my colour',
+  gradientBaseColour: 'Brand colour',
+  gradientIntensity: 'Gradient strength',
+  gradientAdvanced: 'Advanced: pick both colours',
   cornerRadius: 'Corner radius (px)',
   panelBackground: 'Try-on panel background',
   light: 'Light',
@@ -81,6 +106,21 @@ const en: SettingsFormCopy = {
   disclaimerAr: 'Disclaimer (Arabic)',
   disclaimerArPlaceholder: 'Leave both empty to use the built-in translated line',
   loadingStepsLabel: 'Loading steps (one per line, empty = default)',
+  previewHeading: 'Live preview',
+  previewTabButton: 'Button',
+  previewTabCatalog: 'Catalog',
+  previewTabUpload: 'Upload',
+  previewTabGenerating: 'Generating',
+  previewTabResults: 'Results',
+  previewCaptionProduct: 'The product being viewed',
+  previewCaptionButtonExpanded:
+    'This is the journey shoppers get on the product page. Click the button again to collapse.',
+  previewCaptionButtonCollapsed: 'Click the button to see the journey shoppers get.',
+  previewCaptionCatalog: 'The catalog dialog runs the same journey, from the same settings.',
+  previewCaptionCatalogHint: 'Click a Try on pill to open the catalog dialog.',
+  previewCaptionUpload: 'The upload step shoppers see after opening the widget.',
+  previewCaptionGenerating: 'What shoppers see while their look renders.',
+  previewCaptionResults: 'The result screen, with only the buttons enabled below.',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -102,6 +142,11 @@ const ar: SettingsFormCopy = {
   textColor: 'لون النص',
   iconGradientStart: 'بداية تدرّج الأيقونة',
   iconGradientEnd: 'نهاية تدرّج الأيقونة',
+  gradientPresets: 'تدرّج الأيقونة',
+  gradientUseMyColour: 'استخدم لوني',
+  gradientBaseColour: 'لون العلامة',
+  gradientIntensity: 'قوة التدرّج',
+  gradientAdvanced: 'خيارات متقدمة: اختر اللونين',
   cornerRadius: 'استدارة الحواف (بكسل)',
   panelBackground: 'خلفية لوحة التجربة',
   light: 'فاتح',
@@ -120,6 +165,21 @@ const ar: SettingsFormCopy = {
   disclaimerAr: 'التنويه (بالعربية)',
   disclaimerArPlaceholder: 'اترك الحقلين فارغين لاستخدام النص المترجم المدمج',
   loadingStepsLabel: 'خطوات التحميل (سطر لكل خطوة، فارغ = الافتراضي)',
+  previewHeading: 'معاينة مباشرة',
+  previewTabButton: 'الزر',
+  previewTabCatalog: 'الكتالوج',
+  previewTabUpload: 'الرفع',
+  previewTabGenerating: 'الإنشاء',
+  previewTabResults: 'النتيجة',
+  previewCaptionProduct: 'المنتج المعروض',
+  previewCaptionButtonExpanded:
+    'هذه هي الرحلة التي يمر بها المتسوقون في صفحة المنتج. اضغط الزر مرة أخرى لطيّها.',
+  previewCaptionButtonCollapsed: 'اضغط الزر لمشاهدة الرحلة التي يمر بها المتسوقون.',
+  previewCaptionCatalog: 'نافذة الكتالوج تعرض نفس الرحلة، بنفس الإعدادات.',
+  previewCaptionCatalogHint: 'اضغط على زر «جرّب» لفتح نافذة الكتالوج.',
+  previewCaptionUpload: 'خطوة رفع الصورة كما يراها المتسوقون بعد فتح الأداة.',
+  previewCaptionGenerating: 'ما يراه المتسوقون أثناء إنشاء نتيجتهم.',
+  previewCaptionResults: 'شاشة النتيجة، مع الأزرار المفعّلة فقط أدناه.',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',

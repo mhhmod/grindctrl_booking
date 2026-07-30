@@ -2,10 +2,12 @@
 
 import * as React from 'react';
 import { useId, useState } from 'react';
+import type { SettingsFormCopy } from '@/lib/try-on/settings-copy';
 
-/* Interactive preview of every shopper-facing surface: the product-page
-   button, the journey it expands into, and the catalog card pill with its
-   dialog. Colors are the embed's own tokens, so what merchants see here is
+/* Interactive preview of every shopper-facing surface the settings form
+   configures: the product-page button, the journey it expands into, the
+   catalog card pill with its dialog, the loading animation, and the result
+   screen. Colors are the embed's own tokens, so what merchants see here is
    what ships. Used by the Shopify embedded admin and the GrindCTRL dashboard. */
 
 export type WidgetPreviewSettings = {
@@ -21,6 +23,13 @@ export type WidgetPreviewSettings = {
   catalogFontPx: number;
   catalogPadPx: number;
   buttonIconPx: number;
+  loadingStyle: 'steps' | 'pulse' | 'bar';
+  loadingSteps: string[] | null;
+  showDownload: boolean;
+  showWhatsapp: boolean;
+  showAddToCart: boolean;
+  showTryAgain: boolean;
+  disclaimerText: string | null;
 };
 
 /* Mirrors app/globals.css :root / .dark token values exactly. */
@@ -42,6 +51,10 @@ const TOKENS = {
     border: 'oklch(0.26 0.006 66)',
   },
 };
+
+/* ponytail: illustrative filler for the loading checklist when the merchant
+   hasn't set custom steps. Preview-only, never shipped shopper copy. */
+const DEFAULT_LOADING_STEPS = ['Reading your photo', 'Fitting the garment', 'Rendering your look'];
 
 function ScanIcon() {
   const clipId = useId().replace(/:/g, '');
@@ -87,7 +100,15 @@ function IconBadge({ s, px }: { s: WidgetPreviewSettings; px: number }) {
   );
 }
 
-function JourneyMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['light'] }) {
+function JourneyMock({
+  s,
+  t,
+  copy,
+}: {
+  s: WidgetPreviewSettings;
+  t: (typeof TOKENS)['light'];
+  copy: SettingsFormCopy;
+}) {
   return (
     <div
       className="pv-reveal rounded-xl border p-4"
@@ -106,7 +127,7 @@ function JourneyMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['l
           <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: t.mutedFg }}>
             Your store
           </p>
-          <p className="truncate text-sm font-bold">The product being viewed</p>
+          <p className="truncate text-sm font-bold">{copy.previewCaptionProduct}</p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: t.mutedFg }}>
             Image and name come from your store automatically.
           </p>
@@ -132,36 +153,160 @@ function JourneyMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['l
   );
 }
 
-export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
-  const [view, setView] = useState<'product' | 'catalog'>('product');
+/* The loading screen shoppers see while the render runs. Shape depends on
+   loadingStyle; the steps list falls back to illustrative filler when the
+   merchant hasn't customized it. */
+function GeneratingMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['light'] }) {
+  const steps = s.loadingSteps && s.loadingSteps.length > 0 ? s.loadingSteps : DEFAULT_LOADING_STEPS;
+
+  return (
+    <div
+      className="pv-reveal rounded-xl border p-4"
+      style={{ background: t.card, borderColor: t.border, color: t.fg }}
+    >
+      {s.loadingStyle === 'pulse' ? (
+        <div
+          className="pv-pulse mx-auto flex h-28 w-24 items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
+          style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
+        >
+          Product
+          <br />
+          photo
+        </div>
+      ) : s.loadingStyle === 'bar' ? (
+        <div className="grid gap-2 py-6">
+          <div className="h-2.5 w-full overflow-hidden rounded-full" style={{ background: t.muted }}>
+            <div
+              className="h-full rounded-full"
+              style={{ width: '62%', background: s.accentBg }}
+            />
+          </div>
+        </div>
+      ) : (
+        <ol className="grid gap-2">
+          {steps.map((step, i) => (
+            <li
+              key={`${step}-${i}`}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium"
+              style={
+                i === 0
+                  ? { background: s.accentBg, color: s.accentFg }
+                  : { background: t.muted, color: t.mutedFg }
+              }
+            >
+              <span
+                className="inline-flex size-5 flex-none items-center justify-center rounded-full text-[10px] font-bold"
+                style={
+                  i === 0
+                    ? { background: 'rgba(255,255,255,0.28)', color: s.accentFg }
+                    : { background: t.border, color: t.mutedFg }
+                }
+              >
+                {i + 1}
+              </span>
+              <span className="min-w-0 truncate">{step}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+/* The result screen: rendered photo plus only the action buttons the
+   merchant has enabled, in the storefront's fixed order. */
+function ResultsMock({ s, t, copy }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['light']; copy: SettingsFormCopy }) {
+  const actions: Array<{ key: string; show: boolean; label: string }> = [
+    { key: 'cart', show: s.showAddToCart, label: copy.addToCart },
+    { key: 'download', show: s.showDownload, label: copy.downloadPreview },
+    { key: 'whatsapp', show: s.showWhatsapp, label: copy.requestWhatsapp },
+    { key: 'again', show: s.showTryAgain, label: copy.tryAnotherPhoto },
+  ];
+  const radius = `${Math.min(s.radiusPx, 20)}px`;
+
+  return (
+    <div
+      className="pv-reveal rounded-xl border p-4"
+      style={{ background: t.card, borderColor: t.border, color: t.fg }}
+    >
+      <div
+        className="mx-auto flex h-32 w-full max-w-[220px] items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
+        style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
+      >
+        Result
+        <br />
+        photo
+      </div>
+      <div className="mt-3 grid gap-2">
+        {actions
+          .filter((a) => a.show)
+          .map((a, i) => (
+            <div
+              key={a.key}
+              className="flex items-center justify-center px-4 py-2.5 text-center text-xs font-semibold"
+              style={
+                i === 0
+                  ? { background: s.accentBg, color: s.accentFg, borderRadius: radius }
+                  : { background: t.muted, color: t.fg, borderRadius: radius, border: `1px solid ${t.border}` }
+              }
+            >
+              {a.label}
+            </div>
+          ))}
+      </div>
+      {s.disclaimerText ? (
+        <p className="mt-3 text-center text-[11px] leading-relaxed" style={{ color: t.mutedFg }}>
+          {s.disclaimerText}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type PreviewTab = 'button' | 'catalog' | 'upload' | 'generating' | 'results';
+
+export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: SettingsFormCopy }) {
+  const [tab, setTab] = useState<PreviewTab>('button');
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const dark = s.widgetTheme === 'dark';
   const t = dark ? TOKENS.dark : TOKENS.light;
 
+  const tabs: Array<{ id: PreviewTab; label: string }> = [
+    { id: 'button', label: copy.previewTabButton },
+    { id: 'catalog', label: copy.previewTabCatalog },
+    { id: 'upload', label: copy.previewTabUpload },
+    { id: 'generating', label: copy.previewTabGenerating },
+    { id: 'results', label: copy.previewTabResults },
+  ];
+
   return (
     <div className="grid gap-2">
-      {/* Controls: which surface, and what the shopper theme is */}
+      {/* Controls: which screen, and what the shopper theme is */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex rounded-lg border border-input p-0.5" role="tablist">
-          {(['product', 'catalog'] as const).map((v) => (
+        <div
+          className="inline-flex flex-wrap rounded-lg border border-input p-0.5"
+          role="tablist"
+          aria-label={copy.previewHeading}
+        >
+          {tabs.map(({ id, label }) => (
             <button
-              key={v}
+              key={id}
               type="button"
               role="tab"
-              aria-selected={view === v}
+              aria-selected={tab === id}
               onClick={() => {
-                setView(v);
+                setTab(id);
                 setExpanded(false);
                 setDialogOpen(false);
               }}
-              className={`min-h-10 rounded-md px-3.5 py-1 text-xs font-medium transition-colors ${
-                view === v
+              className={`min-h-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                tab === id
                   ? 'bg-foreground text-background'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {v === 'product' ? 'Product page' : 'Catalog'}
+              {label}
             </button>
           ))}
         </div>
@@ -173,6 +318,7 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
       <div
         className="relative overflow-hidden rounded-lg border p-5 sm:p-6"
         style={{ background: t.bg, borderColor: t.border }}
+        role="tabpanel"
       >
         <style>{`
           @keyframes pv-pan { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
@@ -196,6 +342,7 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: none; }
           }
+          @keyframes pv-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
           .pv-scan { animation: pv-scan 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
           .pv-spark { animation: pv-spark 2.6s ease-out infinite; transform-origin: 20.5px 4.9px; }
           .pv-badge { position: relative; }
@@ -210,14 +357,15 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
           .pv-reveal { animation: pv-reveal 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
           .pv-press { transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease; }
           .pv-press:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+          .pv-pulse { animation: pv-pulse 1.6s ease-in-out infinite; }
           @media (prefers-reduced-motion: reduce) {
-            .pv-scan, .pv-spark, .pv-reveal { animation: none; opacity: 1; transform: none; }
+            .pv-scan, .pv-spark, .pv-reveal, .pv-pulse { animation: none; opacity: 1; transform: none; }
             .pv-badge::after { animation: none; opacity: 0; }
             .pv-press:hover { transform: none; }
           }
         `}</style>
 
-        {view === 'product' ? (
+        {tab === 'button' ? (
           <div className="mx-auto grid w-full max-w-md gap-3">
             <button
               type="button"
@@ -235,10 +383,14 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
               </span>
               {s.buttonLabel || 'Try it on with AI'}
             </button>
-            {expanded ? <JourneyMock s={s} t={t} /> : null}
+            {expanded ? <JourneyMock s={s} t={t} copy={copy} /> : null}
           </div>
-        ) : (
+        ) : null}
+
+        {tab === 'catalog' ? (
           <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3">
+            {/* ponytail: illustrative stand-in for the merchant's own catalog
+                product names, not shipped copy — do not translate. */}
             {['Catalog product', 'Another product'].map((name) => (
               <div key={name} className="min-w-0">
                 <div
@@ -267,6 +419,9 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
                     >
                       <ScanIcon />
                     </span>
+                    {/* ponytail: fallback mirrors the widget's own stored
+                        default, not preview-only copy — do not add a
+                        translated key for it here. */}
                     {s.catalogLabel || 'Try on'}
                   </button>
                 </div>
@@ -294,22 +449,46 @@ export function WidgetPreview({ s }: { s: WidgetPreviewSettings }) {
                   >
                     ×
                   </button>
-                  <JourneyMock s={s} t={t} />
+                  <JourneyMock s={s} t={t} copy={copy} />
                 </div>
               </div>
             ) : null}
           </div>
-        )}
+        ) : null}
+
+        {tab === 'upload' ? (
+          <div className="mx-auto w-full max-w-md">
+            <JourneyMock s={s} t={t} copy={copy} />
+          </div>
+        ) : null}
+
+        {tab === 'generating' ? (
+          <div className="mx-auto w-full max-w-md">
+            <GeneratingMock s={s} t={t} />
+          </div>
+        ) : null}
+
+        {tab === 'results' ? (
+          <div className="mx-auto w-full max-w-md">
+            <ResultsMock s={s} t={t} copy={copy} />
+          </div>
+        ) : null}
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {view === 'product'
+        {tab === 'button'
           ? expanded
-            ? 'This is the journey shoppers get on the product page. Click the button again to collapse.'
-            : 'Click the button to see the journey shoppers get.'
-          : dialogOpen
-            ? 'The catalog dialog runs the same journey, from the same settings.'
-            : 'Click a Try on pill to open the catalog dialog.'}
+            ? copy.previewCaptionButtonExpanded
+            : copy.previewCaptionButtonCollapsed
+          : tab === 'catalog'
+            ? dialogOpen
+              ? copy.previewCaptionCatalog
+              : copy.previewCaptionCatalogHint
+            : tab === 'upload'
+              ? copy.previewCaptionUpload
+              : tab === 'generating'
+                ? copy.previewCaptionGenerating
+                : copy.previewCaptionResults}
       </p>
     </div>
   );
