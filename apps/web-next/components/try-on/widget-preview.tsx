@@ -100,7 +100,15 @@ function IconBadge({ s, px }: { s: WidgetPreviewSettings; px: number }) {
   );
 }
 
-function JourneyMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['light'] }) {
+function JourneyMock({
+  s,
+  t,
+  copy,
+}: {
+  s: WidgetPreviewSettings;
+  t: (typeof TOKENS)['light'];
+  copy: SettingsFormCopy;
+}) {
   return (
     <div
       className="pv-reveal rounded-xl border p-4"
@@ -119,7 +127,7 @@ function JourneyMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['l
           <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: t.mutedFg }}>
             Your store
           </p>
-          <p className="truncate text-sm font-bold">The product being viewed</p>
+          <p className="truncate text-sm font-bold">{copy.previewCaptionProduct}</p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: t.mutedFg }}>
             Image and name come from your store automatically.
           </p>
@@ -375,12 +383,14 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
               </span>
               {s.buttonLabel || 'Try it on with AI'}
             </button>
-            {expanded ? <JourneyMock s={s} t={t} /> : null}
+            {expanded ? <JourneyMock s={s} t={t} copy={copy} /> : null}
           </div>
         ) : null}
 
         {tab === 'catalog' ? (
           <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-3">
+            {/* ponytail: illustrative stand-in for the merchant's own catalog
+                product names, not shipped copy — do not translate. */}
             {['Catalog product', 'Another product'].map((name) => (
               <div key={name} className="min-w-0">
                 <div
@@ -409,6 +419,9 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
                     >
                       <ScanIcon />
                     </span>
+                    {/* ponytail: fallback mirrors the widget's own stored
+                        default, not preview-only copy — do not add a
+                        translated key for it here. */}
                     {s.catalogLabel || 'Try on'}
                   </button>
                 </div>
@@ -436,7 +449,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
                   >
                     ×
                   </button>
-                  <JourneyMock s={s} t={t} />
+                  <JourneyMock s={s} t={t} copy={copy} />
                 </div>
               </div>
             ) : null}
@@ -445,7 +458,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
 
         {tab === 'upload' ? (
           <div className="mx-auto w-full max-w-md">
-            <JourneyMock s={s} t={t} />
+            <JourneyMock s={s} t={t} copy={copy} />
           </div>
         ) : null}
 
@@ -465,17 +478,17 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
       <p className="text-xs text-muted-foreground">
         {tab === 'button'
           ? expanded
-            ? 'This is the journey shoppers get on the product page. Click the button again to collapse.'
-            : 'Click the button to see the journey shoppers get.'
+            ? copy.previewCaptionButtonExpanded
+            : copy.previewCaptionButtonCollapsed
           : tab === 'catalog'
             ? dialogOpen
-              ? 'The catalog dialog runs the same journey, from the same settings.'
-              : 'Click a Try on pill to open the catalog dialog.'
+              ? copy.previewCaptionCatalog
+              : copy.previewCaptionCatalogHint
             : tab === 'upload'
-              ? 'The upload step shoppers see after opening the widget.'
+              ? copy.previewCaptionUpload
               : tab === 'generating'
-                ? 'What shoppers see while their look renders.'
-                : 'The result screen, with only the buttons enabled below.'}
+                ? copy.previewCaptionGenerating
+                : copy.previewCaptionResults}
       </p>
     </div>
   );

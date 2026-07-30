@@ -53,6 +53,14 @@ export interface SettingsFormCopy {
   previewTabUpload: string;
   previewTabGenerating: string;
   previewTabResults: string;
+  previewCaptionProduct: string;
+  previewCaptionButtonExpanded: string;
+  previewCaptionButtonCollapsed: string;
+  previewCaptionCatalog: string;
+  previewCaptionCatalogHint: string;
+  previewCaptionUpload: string;
+  previewCaptionGenerating: string;
+  previewCaptionResults: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -104,6 +112,15 @@ const en: SettingsFormCopy = {
   previewTabUpload: 'Upload',
   previewTabGenerating: 'Generating',
   previewTabResults: 'Results',
+  previewCaptionProduct: 'The product being viewed',
+  previewCaptionButtonExpanded:
+    'This is the journey shoppers get on the product page. Click the button again to collapse.',
+  previewCaptionButtonCollapsed: 'Click the button to see the journey shoppers get.',
+  previewCaptionCatalog: 'The catalog dialog runs the same journey, from the same settings.',
+  previewCaptionCatalogHint: 'Click a Try on pill to open the catalog dialog.',
+  previewCaptionUpload: 'The upload step shoppers see after opening the widget.',
+  previewCaptionGenerating: 'What shoppers see while their look renders.',
+  previewCaptionResults: 'The result screen, with only the buttons enabled below.',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -154,6 +171,15 @@ const ar: SettingsFormCopy = {
   previewTabUpload: 'الرفع',
   previewTabGenerating: 'الإنشاء',
   previewTabResults: 'النتيجة',
+  previewCaptionProduct: 'المنتج المعروض',
+  previewCaptionButtonExpanded:
+    'هذه هي الرحلة التي يمر بها المتسوقون في صفحة المنتج. اضغط الزر مرة أخرى لطيّها.',
+  previewCaptionButtonCollapsed: 'اضغط الزر لمشاهدة الرحلة التي يمر بها المتسوقون.',
+  previewCaptionCatalog: 'نافذة الكتالوج تعرض نفس الرحلة، بنفس الإعدادات.',
+  previewCaptionCatalogHint: 'اضغط على زر «جرّب» لفتح نافذة الكتالوج.',
+  previewCaptionUpload: 'خطوة رفع الصورة كما يراها المتسوقون بعد فتح الأداة.',
+  previewCaptionGenerating: 'ما يراه المتسوقون أثناء إنشاء نتيجتهم.',
+  previewCaptionResults: 'شاشة النتيجة، مع الأزرار المفعّلة فقط أدناه.',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',
