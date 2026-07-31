@@ -484,7 +484,10 @@
 }
 
 @keyframes gc-tryon-reveal {
-  0%, 36%   { clip-path: inset(0 100% 0 0); }
+  /* Holds until 40%, two points after the garment finishes settling at 38%.
+     At 36% the wipe started while the garment's easing tail was still
+     resolving, so the two reads overlapped by ~130ms. */
+  0%, 40%   { clip-path: inset(0 100% 0 0); }
   54%, 88%  { clip-path: inset(0 0 0 0); }
   97%, 100% { clip-path: inset(0 100% 0 0); }
 }
