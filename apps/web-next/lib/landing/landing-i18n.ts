@@ -30,6 +30,7 @@ interface LandingDict {
   navPricing: string;
   signIn: string;
   bookCall: string;
+  menu: string;
 
   heroBadge: string;
   heroTitle: string;
@@ -118,6 +119,7 @@ const en: LandingDict = {
   navPricing: 'Pricing',
   signIn: 'Sign in',
   bookCall: 'Book a call',
+  menu: 'Menu',
 
   heroBadge: 'AI systems for online stores, built and run for you',
   heroTitle: 'Let shoppers see it on themselves before they buy.',
@@ -281,6 +283,7 @@ const ar: LandingDict = {
   navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
+  menu: 'القائمة',
 
   heroBadge: 'أنظمة ذكاء اصطناعي للمتاجر الإلكترونية، نبنيها ونشغّلها لك',
   heroTitle: 'دع عملاءك يرون القطعة عليهم قبل الشراء.',

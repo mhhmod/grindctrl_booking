@@ -18,6 +18,7 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { SiteHeader } from '@/components/landing/site-header';
 import { StepMarker } from '@/components/landing/step-marker';
 import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
 import { BOOKING_URL } from '@/lib/booking';
@@ -148,41 +149,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
     <>
       <AmbientBackground />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" aria-label={t.brandHome} className="min-w-0 rounded-lg">
-            <BrandLogo textClassName="hidden sm:block" />
-          </Link>
-
-          <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-            <a href="#how" className="transition-colors hover:text-foreground">{t.navHow}</a>
-            <a href="#demo" className="transition-colors hover:text-foreground">{t.navDemo}</a>
-            <a href="#benefits" className="transition-colors hover:text-foreground">{t.navBenefits}</a>
-            <a href="#pricing" className="transition-colors hover:text-foreground">{t.navPricing}</a>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <LandingLocaleToggle />
-            <ThemeToggle />
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden rounded-full px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
-            >
-              <Link href="/sign-in">{t.signIn}</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className="hidden rounded-full px-4 font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0 lg:inline-flex"
-            >
-              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{t.bookCall}</a>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader locale={locale} t={t} />
 
       <main>
         {/* Hero */}
@@ -620,6 +587,11 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
             <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
             <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
+          </div>
+          {/* Language and theme left the top bar; the footer is their second route. */}
+          <div className="flex items-center gap-2">
+            <LandingLocaleToggle />
+            <ThemeToggle />
           </div>
         </div>
       </footer>
