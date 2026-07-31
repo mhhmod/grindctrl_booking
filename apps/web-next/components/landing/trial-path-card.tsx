@@ -1,21 +1,24 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ArrowRight, Compass, Rocket, Sparkles } from 'lucide-react';
 import { trialPathSteps } from '@/lib/landing/trial-preview-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Eyebrow } from '@/components/landing/eyebrow';
+import { useLandingLocale } from '@/components/landing/landing-locale';
 
 const icons = [Sparkles, Compass, Rocket];
 
 export function TrialPathCard() {
+  const { locale } = useLandingLocale();
   return (
     <Card className="rounded-3xl border-white/10 bg-card/70">
       <CardContent className="p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-sm">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Trial path
-            </p>
+            <Eyebrow locale={locale}>Trial path</Eyebrow>
             <h3 className="mt-2 text-lg font-semibold">Free guided preview to production workflow.</h3>
             <p className="mt-2 text-sm leading-[1.6] text-muted-foreground">
               Move from useful preview to connected workspace, then into custom implementation when the workflow proves value.
@@ -31,9 +34,7 @@ export function TrialPathCard() {
                   className="min-h-[88px] rounded-2xl border border-white/10 bg-white/[0.03] p-4"
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      {item.step}
-                    </span>
+                    <Eyebrow locale={locale}>{item.step}</Eyebrow>
                     <Icon className="size-5 text-primary" />
                   </div>
                   <p className="text-sm font-semibold">{item.title}</p>

@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Eyebrow } from '@/components/landing/eyebrow';
+import { useLandingLocale } from '@/components/landing/landing-locale';
 
 const inputNodes = [
   { label: 'Text request', icon: MessageSquare },
@@ -74,6 +76,7 @@ function WorkflowNode({
 }
 
 export function HeroWorkflowPreview() {
+  const { locale } = useLandingLocale();
   return (
     <Card className="gc-soft-glow gc-landing-card relative min-h-[520px] overflow-hidden rounded-3xl border p-4 backdrop-blur sm:p-6">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_76%_18%,rgba(96,165,250,0.16),transparent_32%),radial-gradient(circle_at_28%_72%,rgba(168,85,247,0.12),transparent_36%)]" />
@@ -81,9 +84,7 @@ export function HeroWorkflowPreview() {
       <div className="relative flex h-full min-h-[488px] flex-col gap-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              GRINDCTRL
-            </p>
+            <Eyebrow locale={locale}>GRINDCTRL</Eyebrow>
             <h2 className="mt-1 text-base font-semibold text-foreground">
               Live workflow preview
             </h2>
@@ -95,9 +96,7 @@ export function HeroWorkflowPreview() {
 
         <div className="grid flex-1 gap-4 lg:grid-cols-[1fr_0.82fr_1fr]">
           <div className="space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Inputs
-            </p>
+            <Eyebrow locale={locale}>Inputs</Eyebrow>
             {inputNodes.map((node, index) => (
               <WorkflowNode key={node.label} {...node} index={index} side="input" />
             ))}
@@ -123,9 +122,7 @@ export function HeroWorkflowPreview() {
           </div>
 
           <div className="space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Actions
-            </p>
+            <Eyebrow locale={locale}>Actions</Eyebrow>
             {outputNodes.map((node, index) => (
               <WorkflowNode key={node.label} {...node} index={index + inputNodes.length} side="output" />
             ))}

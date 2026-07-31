@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import {
@@ -24,6 +26,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Eyebrow } from '@/components/landing/eyebrow';
+import { useLandingLocale } from '@/components/landing/landing-locale';
 import { TrialPathCard } from '@/components/landing/trial-path-card';
 
 const inputNodes = [
@@ -116,11 +120,10 @@ function SectionHeading({
   title: string;
   body: string;
 }) {
+  const { locale } = useLandingLocale();
   return (
     <div className="mb-10 max-w-3xl space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        {eyebrow}
-      </p>
+      <Eyebrow locale={locale}>{eyebrow}</Eyebrow>
       <h2 className="text-[30px] font-bold leading-[1.1] tracking-normal sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
         {title}
       </h2>
@@ -217,6 +220,7 @@ function OperationsPreview() {
 }
 
 export function LandingAfterPlaygroundSections() {
+  const { locale } = useLandingLocale();
   return (
     <>
       <section id="capabilities" className="border-b border-white/10">
@@ -326,9 +330,7 @@ export function LandingAfterPlaygroundSections() {
           <Card className="rounded-3xl border-white/10 bg-card/80">
             <CardContent className="flex flex-col items-center gap-6 p-8 text-center sm:p-12">
               <div className="max-w-2xl space-y-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Start here
-                </p>
+                <Eyebrow locale={locale}>Start here</Eyebrow>
                 <h2 className="text-[30px] font-bold leading-[1.1] sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
                   Preview your first AI workflow today.
                 </h2>

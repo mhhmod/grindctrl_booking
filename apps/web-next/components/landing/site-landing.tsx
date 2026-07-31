@@ -18,6 +18,7 @@ import { BRAND_MARKS } from '@/components/brand-marks';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
+import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
@@ -90,11 +91,10 @@ function SectionHeading({
   title: string;
   body?: string;
 }) {
+  const { locale } = useLandingLocale();
   return (
     <div className="mb-10 flex max-w-3xl flex-col gap-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        {eyebrow}
-      </p>
+      <Eyebrow locale={locale}>{eyebrow}</Eyebrow>
       <h2 id={id} className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
         {title}
       </h2>
@@ -437,9 +437,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-16 sm:px-6 lg:px-8 lg:pb-32 lg:pt-24">
             <div className="gc-scroll-reveal grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:items-end lg:gap-16">
               <div className="min-w-0 flex flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.howEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.howEyebrow}</Eyebrow>
                 <h2 id="how-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
                   {t.howTitle}
                 </h2>
@@ -527,16 +525,12 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <div className="min-w-0">
               <div className="grid min-w-0 border-y border-border sm:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-3 py-7 sm:pe-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {t.returnBenefitLabel}
-                  </p>
+                  <Eyebrow locale={locale}>{t.returnBenefitLabel}</Eyebrow>
                   <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.returnBenefitTitle}</h3>
                   <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.returnBenefitBody}</p>
                 </div>
                 <div className="flex min-w-0 flex-col gap-3 border-t border-border py-7 sm:border-s sm:border-t-0 sm:ps-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {t.confidenceBenefitLabel}
-                  </p>
+                  <Eyebrow locale={locale}>{t.confidenceBenefitLabel}</Eyebrow>
                   <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.confidenceBenefitTitle}</h3>
                   <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.confidenceBenefitBody}</p>
                 </div>
@@ -612,9 +606,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         <section id="proof" aria-labelledby="proof-title">
           <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-16 lg:px-8 lg:py-28">
             <div className="min-w-0 flex flex-col items-start gap-5 lg:ps-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.proofEyebrow}
-              </p>
+              <Eyebrow locale={locale}>{t.proofEyebrow}</Eyebrow>
               <h2 id="proof-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
                 {t.proofTitle}
               </h2>
@@ -690,9 +682,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
             <div className="flex min-w-0 flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0 flex max-w-2xl flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.integrationsEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.integrationsEyebrow}</Eyebrow>
                 <h2 id="integrations-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
                   {t.integrationsTitle}
                 </h2>
@@ -725,9 +715,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-9 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
             <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
               <div className="min-w-0 flex flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.otherEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.otherEyebrow}</Eyebrow>
                 <h2
                   id="other-services-title"
                   className="text-[26px] font-bold leading-[1.14] tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.08]"

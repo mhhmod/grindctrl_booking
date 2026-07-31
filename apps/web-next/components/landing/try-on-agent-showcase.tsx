@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import {
@@ -13,6 +15,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Eyebrow } from '@/components/landing/eyebrow';
+import { useLandingLocale } from '@/components/landing/landing-locale';
 
 const workflowSteps = [
   { label: 'Product selected', detail: 'Premium Ringer Tee', icon: Shirt },
@@ -49,6 +53,7 @@ const valueCards = [
 ];
 
 export function TryOnAgentShowcase() {
+  const { locale } = useLandingLocale();
   return (
     <section id="try-on-agent" className="border-b border-white/10 bg-muted/10">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)] lg:px-8 lg:py-24">
@@ -94,9 +99,7 @@ export function TryOnAgentShowcase() {
             <CardContent className="grid gap-5 p-4 sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Try-On workflow
-                  </p>
+                  <Eyebrow locale={locale}>Try-On workflow</Eyebrow>
                   <h3 className="mt-1 text-lg font-semibold">Visual preview to sales follow-up</h3>
                 </div>
                 <Badge variant="outline" className="rounded-full border-white/10">
@@ -131,9 +134,7 @@ export function TryOnAgentShowcase() {
                 <div className="gc-landing-panel rounded-2xl border p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        Product
-                      </p>
+                      <Eyebrow locale={locale}>Product</Eyebrow>
                       <h4 className="mt-1 font-semibold">Premium Ringer Tee</h4>
                     </div>
                     <Store className="size-5 text-primary" />

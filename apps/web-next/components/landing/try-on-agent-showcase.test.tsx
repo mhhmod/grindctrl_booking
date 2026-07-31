@@ -1,11 +1,16 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { TryOnAgentShowcase } from '@/components/landing/try-on-agent-showcase';
 
 describe('TryOnAgentShowcase', () => {
   it('renders the try-on product story, workflow, state note, and CTA links', () => {
-    render(<TryOnAgentShowcase />);
+    render(
+      <LandingLocaleProvider>
+        <TryOnAgentShowcase />
+      </LandingLocaleProvider>,
+    );
 
     expect(screen.getByText('AI visual sales for fashion')).toBeInTheDocument();
     expect(screen.getByRole('heading', {
