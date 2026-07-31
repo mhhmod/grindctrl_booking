@@ -165,7 +165,14 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <div className="order-1 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:justify-end lg:gap-6">
               <Badge
                 variant="secondary"
-                className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]"
+                /* This is a full sentence, not a one-word badge. Badge is
+                   h-5 whitespace-nowrap by default, so it ran ~54px past a
+                   320px viewport; h-auto + whitespace-normal lets it wrap.
+                   Typography follows the same locale rule as Eyebrow —
+                   letter-spacing breaks Arabic letter-joining. */
+                className={`gc-fade-in-up h-auto whitespace-normal rounded-full px-3 py-1 text-start text-[11px] font-semibold ${
+                  locale === 'ar' ? 'text-xs' : 'uppercase tracking-[0.16em]'
+                }`}
               >
                 {t.heroBadge}
               </Badge>
