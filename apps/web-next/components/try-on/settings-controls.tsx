@@ -275,10 +275,7 @@ export function TryOnSettingsControls({
             <option value="light">{c.light}</option>
             <option value="dark">{c.dark}</option>
           </select>
-          <p className="text-xs text-muted-foreground">
-            The surface behind the try-on journey, on product pages and in the catalog dialog.
-            The preview above shows it.
-          </p>
+          <p className="text-xs text-muted-foreground">{c.widgetThemeHint}</p>
         </div>
       </div>
 
