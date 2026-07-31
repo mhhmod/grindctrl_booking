@@ -474,6 +474,27 @@
   100% { transform: translateX(110%); opacity: 0; }
 }
 
+/* Try-on reveal. Passive by design: the previous slider was only discoverable
+   by dragging a handle, so most visitors never saw the result at all. Pure
+   keyframes — nothing on the main thread, no library. */
+@keyframes gc-tryon-garment {
+  0%, 6%    { transform: translate(-58%, 6%) scale(.62) rotate(-8deg); opacity: 0; }
+  16%       { opacity: 1; }
+  38%, 100% { transform: none; opacity: 1; }
+}
+
+@keyframes gc-tryon-reveal {
+  0%, 36%   { clip-path: inset(0 100% 0 0); }
+  54%, 88%  { clip-path: inset(0 0 0 0); }
+  97%, 100% { clip-path: inset(0 100% 0 0); }
+}
+
+@keyframes gc-tryon-caption {
+  0%, 44%   { opacity: 0; transform: translateY(6px); }
+  58%, 88%  { opacity: 1; transform: none; }
+  96%, 100% { opacity: 0; }
+}
+
 .gc-float { animation: gc-float 4s ease-in-out infinite; }
 .gc-pulse-glow { animation: gc-pulse-glow 3s ease-in-out infinite; }
 .gc-signal-flow { animation: gc-signal-flow 3s ease-in-out infinite; }
@@ -486,6 +507,9 @@
 .gc-soft-glow { animation: gc-soft-glow 12s ease-in-out infinite; }
 .gc-ambient-glow { animation: gc-ambient-drift 10s ease-in-out infinite; will-change: transform, opacity; }
 .gc-result-reveal { animation: gc-result-reveal 280ms ease-out both; }
+.gc-tryon-garment { animation: gc-tryon-garment 6.5s cubic-bezier(.6,0,.3,1) infinite; }
+.gc-tryon-reveal { animation: gc-tryon-reveal 6.5s cubic-bezier(.65,0,.35,1) infinite; }
+.gc-tryon-caption { animation: gc-tryon-caption 6.5s ease-out infinite; }
 
 .gc-compare-frame {
   cursor: ew-resize;
@@ -776,6 +800,22 @@
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* The try-on reveal settles on the finished state rather than freezing
+     mid-wipe — a reduced-motion visitor should see the worn result and the
+     caption, which is the point of the section. Note these live on <img> and
+     <figcaption>, which the blanket :where() rule above does not cover. */
+  .gc-tryon-garment,
+  .gc-tryon-reveal,
+  .gc-tryon-caption {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .gc-tryon-reveal {
+    clip-path: inset(0 0 0 0);
   }
 
   .gc-aurora span,
