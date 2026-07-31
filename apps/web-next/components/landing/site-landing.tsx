@@ -7,7 +7,7 @@ import {
   ArrowRight02Icon,
   CheckmarkCircle02Icon,
 } from '@hugeicons/core-free-icons';
-import { Shirt, ImageUp, ShoppingBag } from 'lucide-react';
+import { Shirt, ImageUp, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -26,9 +26,10 @@ import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 const DEMO_URL = '/try-on';
 
 /* Literal depictions of each step: an actual garment, an actual photo upload,
-   an actual bag. Same family so stroke weight stays consistent across all
-   three — mixing weights is how this treatment falls apart. */
-const stepIcons = [Shirt, ImageUp, ShoppingBag];
+   an actual cart — the copy says "add it to cart" / "السلة" in both locales, so
+   the icon names the same object the sentence does. Same family so stroke
+   weight stays consistent; mixing weights is how this treatment falls apart. */
+const stepIcons = [Shirt, ImageUp, ShoppingCart];
 
 /* Testimonial quotes and photos are placeholders pending real client
    sign-off. Keep this false until verified quotes are approved. */
