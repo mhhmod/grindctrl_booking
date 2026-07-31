@@ -37,15 +37,6 @@ interface LandingDict {
   heroPrimary: string;
   heroSecondary: string;
   heroChips: string[];
-  heroPreviewLabel: string;
-  heroPreviewType: string;
-  heroBeforeLabel: string;
-  heroAfterLabel: string;
-  heroPhotoInput: string;
-  heroResultLabel: string;
-  heroPreviewNote: string;
-  heroProductAlt: string;
-  heroResultAlt: string;
   heroRevealCaption: string;
   heroRevealAlt: string;
 
@@ -139,16 +130,6 @@ const en: LandingDict = {
     'Managed setup',
     'Arabic and English',
   ],
-  heroPreviewLabel: 'Example preview',
-  heroPreviewType: 'Before and after',
-  heroBeforeLabel: 'Selected garment',
-  heroAfterLabel: 'Result',
-  heroPhotoInput: '+ shopper photo',
-  heroResultLabel: 'Preview on the shopper',
-  heroPreviewNote:
-    'Example preview using a sample shopper photo. Results are visual guidance, not an exact sizing guarantee.',
-  heroProductAlt: 'Cream ringer T-shirt before virtual try-on',
-  heroResultAlt: 'Example shopper wearing the cream ringer T-shirt after virtual try-on',
   heroRevealCaption: 'See it on before you buy',
   heroRevealAlt:
     'A cream ringer T-shirt appears on a shopper, showing how the garment looks when worn.',
@@ -312,16 +293,6 @@ const ar: LandingDict = {
     'إعداد وإدارة بالكامل',
     'العربية والإنجليزية',
   ],
-  heroPreviewLabel: 'معاينة توضيحية',
-  heroPreviewType: 'قبل وبعد',
-  heroBeforeLabel: 'القطعة المختارة',
-  heroAfterLabel: 'النتيجة',
-  heroPhotoInput: '+ صورة العميل',
-  heroResultLabel: 'معاينة على العميل',
-  heroPreviewNote:
-    'مثال توضيحي باستخدام صورة عميل تجريبية. النتيجة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.',
-  heroProductAlt: 'تيشيرت رينجر كريمي قبل التجربة الافتراضية',
-  heroResultAlt: 'مثال لعميل يرتدي تيشيرت رينجر الكريمي بعد التجربة الافتراضية',
   heroRevealCaption: 'شاهدها عليك قبل الشراء',
   heroRevealAlt: 'تيشيرت رينجر كريمي يظهر على العميل ليوضح شكل القطعة أثناء ارتدائها.',
 
