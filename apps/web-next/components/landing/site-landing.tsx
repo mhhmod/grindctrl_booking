@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Fragment, useRef, useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -19,8 +19,8 @@ import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 import { StepMarker } from '@/components/landing/step-marker';
+import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
 import { BOOKING_URL } from '@/lib/booking';
-import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 
 const DEMO_URL = '/try-on';
@@ -140,181 +140,6 @@ function formatPlanPrice(
   }
 }
 
-function BeforeAfterSlider({
-  locale,
-  t,
-}: {
-  locale: SiteLocale;
-  t: LandingTranslator;
-}) {
-  const [reveal, setReveal] = useState(58);
-  const activePointerRef = useRef<number | null>(null);
-  const handleRef = useRef<HTMLButtonElement>(null);
-  const hiddenPercent = 100 - reveal;
-  const resultClip = locale === 'ar'
-    ? `inset(0 0 0 ${hiddenPercent}%)`
-    : `inset(0 ${hiddenPercent}% 0 0)`;
-
-  function clamp(value: number) {
-    return Math.min(100, Math.max(0, value));
-  }
-
-  function updateFromClientX(clientX: number, element: HTMLDivElement) {
-    const bounds = element.getBoundingClientRect();
-    if (bounds.width === 0) return;
-
-    const physicalPercent = clamp(((clientX - bounds.left) / bounds.width) * 100);
-    const logicalPercent = locale === 'ar' ? 100 - physicalPercent : physicalPercent;
-    setReveal(Math.round(clamp(logicalPercent)));
-  }
-
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-
-    activePointerRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    handleRef.current?.focus({ preventScroll: true });
-    updateFromClientX(event.clientX, event.currentTarget);
-  }
-
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-    updateFromClientX(event.clientX, event.currentTarget);
-  }
-
-  function finishPointer(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-
-    updateFromClientX(event.clientX, event.currentTarget);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerRef.current = null;
-  }
-
-  function cancelPointer(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerRef.current = null;
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
-    const step = event.shiftKey ? 10 : 2;
-    let next = reveal;
-
-    switch (event.key) {
-      case 'ArrowRight':
-        next += locale === 'ar' ? -step : step;
-        break;
-      case 'ArrowLeft':
-        next += locale === 'ar' ? step : -step;
-        break;
-      case 'ArrowUp':
-        next += step;
-        break;
-      case 'ArrowDown':
-        next -= step;
-        break;
-      case 'Home':
-        next = 0;
-        break;
-      case 'End':
-        next = 100;
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-    setReveal(clamp(next));
-  }
-
-  return (
-    <figure className="gc-fade-in-up min-w-0 lg:self-center" style={{ animationDelay: '0.1s' }}>
-      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <Badge variant="outline" className="rounded-full bg-background/80 px-3 py-1">
-          {t.heroPreviewLabel}
-        </Badge>
-        <span className="text-xs text-muted-foreground">{t.heroPreviewType}</span>
-      </div>
-
-      <div
-        className="gc-compare-frame relative isolate aspect-square min-w-0 touch-none select-none overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--gc-landing-shadow)]"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishPointer}
-        onPointerCancel={cancelPointer}
-      >
-        <Image
-          src="/try-on/premium-ringer-tee.png"
-          alt={t.heroProductAlt}
-          fill
-          priority
-          draggable={false}
-          sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
-          className="pointer-events-none object-cover"
-        />
-
-        <div
-          className="pointer-events-none absolute inset-0 will-change-[clip-path]"
-          style={{ clipPath: resultClip }}
-        >
-          <Image
-            src="/try-on/mock-result.png"
-            alt={t.heroResultAlt}
-            fill
-            priority
-            draggable={false}
-            sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
-            className="object-cover"
-          />
-        </div>
-
-        <span className="pointer-events-none absolute start-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
-          {t.heroAfterLabel}
-        </span>
-        <span className="pointer-events-none absolute end-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
-          {t.heroBeforeLabel}
-        </span>
-
-        <span
-          className="gc-compare-divider pointer-events-none absolute inset-block-0 z-10 w-px"
-          style={{ insetInlineStart: `${reveal}%` }}
-          aria-hidden="true"
-        />
-        <button
-          ref={handleRef}
-          type="button"
-          role="slider"
-          aria-label={t.heroSliderLabel}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={reveal}
-          aria-valuetext={t.heroSliderValue(reveal)}
-          aria-orientation="horizontal"
-          onKeyDown={handleKeyDown}
-          className="gc-compare-handle absolute z-20 grid size-12 cursor-ew-resize place-items-center rounded-full border border-border bg-background text-foreground shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          style={{
-            insetInlineStart: `clamp(1.5rem, ${reveal}%, calc(100% - 1.5rem))`,
-          }}
-        >
-          <span className="flex items-center gap-1" aria-hidden="true">
-            <span className="h-4 w-px rounded-full bg-current/55" />
-            <span className="h-4 w-px rounded-full bg-current/55" />
-          </span>
-        </button>
-      </div>
-
-      <figcaption className="mt-3 flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-medium text-foreground">{t.heroSliderHint}</span>
-        <span>{t.heroPreviewNote}</span>
-      </figcaption>
-    </figure>
-  );
-}
-
 export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
   const { locale, t } = useLandingLocale();
   const sortedPlans = [...plans].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -387,7 +212,12 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             </div>
 
             <div className="order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-              <BeforeAfterSlider locale={locale} t={t} />
+              <TryOnRevealFigure
+                caption={t.heroRevealCaption}
+                alt={t.heroRevealAlt}
+                productSrc="/try-on/premium-ringer-tee.png"
+                resultSrc="/try-on/mock-result.png"
+              />
             </div>
 
             <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">
