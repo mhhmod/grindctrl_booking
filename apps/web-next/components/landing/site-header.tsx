@@ -101,9 +101,12 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
 
               <Separator className="my-4" />
 
+              {/* Both toggles are h-9 (36px) by default, which is under the
+                  44px touch floor. They were incidental controls in a desktop
+                  bar before; here they are primary menu items. */}
               <div className="flex items-center gap-2">
                 <LandingLocaleToggle className="min-h-11" />
-                <ThemeToggle />
+                <ThemeToggle className="min-h-11" />
               </div>
             </SheetContent>
           </Sheet>
