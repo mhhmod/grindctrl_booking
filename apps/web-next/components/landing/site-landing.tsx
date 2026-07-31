@@ -6,10 +6,8 @@ import Link from 'next/link';
 import {
   ArrowRight02Icon,
   CheckmarkCircle02Icon,
-  ClothesIcon,
-  ImageUploadIcon,
-  ShoppingBagCheckIcon,
 } from '@hugeicons/core-free-icons';
+import { Shirt, ImageUp, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,13 +18,17 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { StepMarker } from '@/components/landing/step-marker';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 
 const DEMO_URL = '/try-on';
 
-const stepIcons = [ClothesIcon, ImageUploadIcon, ShoppingBagCheckIcon];
+/* Literal depictions of each step: an actual garment, an actual photo upload,
+   an actual bag. Same family so stroke weight stays consistent across all
+   three — mixing weights is how this treatment falls apart. */
+const stepIcons = [Shirt, ImageUp, ShoppingBag];
 
 /* Testimonial quotes and photos are placeholders pending real client
    sign-off. Keep this false until verified quotes are approved. */
@@ -453,13 +455,8 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                   key={step.title}
                   className="gc-how-step relative z-10 min-w-0 ps-16 md:ps-0 md:pt-16"
                 >
-                  <div className="absolute start-0 top-0 flex flex-col items-center gap-2 md:w-full md:flex-row md:justify-between md:gap-3">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background shadow-sm">
-                      <Icon icon={stepIcons[i] ?? ClothesIcon} size={20} />
-                    </span>
-                    <span className="text-xs font-semibold tabular-nums text-muted-foreground">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
+                  <div className="absolute start-0 top-0">
+                    <StepMarker index={i} icon={stepIcons[i] ?? Shirt} />
                   </div>
                   <h3 className="text-lg font-semibold">{step.title}</h3>
                   <p className="mt-2 text-[15px] leading-[1.65] text-muted-foreground">{step.body}</p>
