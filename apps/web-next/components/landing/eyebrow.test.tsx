@@ -23,6 +23,17 @@ describe('Eyebrow', () => {
     expect(el.className).not.toContain('tracking-');
   });
 
+  /* Pins the deliberate size bump: text-xs (12px) must win over the base
+     text-[11px] via twMerge. Guards against class-ordering changes silently
+     flipping this back to 11px. */
+  it('bumps Arabic to text-xs, overriding the base text-[11px]', () => {
+    render(<Eyebrow locale="ar">كيف تعمل</Eyebrow>);
+
+    const el = screen.getByText('كيف تعمل');
+    expect(el.className).toContain('text-xs');
+    expect(el.className).not.toContain('text-[11px]');
+  });
+
   it('allows callers to add classes without losing the base ones', () => {
     render(<Eyebrow locale="en" className="mb-4">Pricing</Eyebrow>);
 

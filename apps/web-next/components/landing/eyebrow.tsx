@@ -19,7 +19,11 @@ export function Eyebrow({
       className={cn(
         'text-[11px] font-semibold text-muted-foreground',
         /* Tracking reduced from 0.22em to 0.16em even in English: the original
-           value overflowed at 320px on the longest labels. */
+           value overflowed at 320px on the longest labels.
+           Arabic: drops uppercase/tracking (see class comment above) AND
+           deliberately bumps size to text-xs (12px), overriding the base
+           text-[11px] via twMerge — slightly larger type reads better without
+           the crutch of letter-spacing on Arabic script. */
         locale === 'ar' ? 'text-xs' : 'uppercase tracking-[0.16em]',
         className,
       )}
