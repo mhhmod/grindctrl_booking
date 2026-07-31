@@ -1,6 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { TryGrindctrlSandbox } from '@/components/landing/try-grindctrl-sandbox';
 import { LANDING_PREVIEW_STORAGE_KEY } from '@/lib/trial/landing-preview-handoff';
 
@@ -47,7 +48,11 @@ describe('TryGrindctrlSandbox', () => {
   });
 
   it('generates a local workflow preview and shows trial CTAs after value', async () => {
-    render(<TryGrindctrlSandbox />);
+    render(
+      <LandingLocaleProvider>
+        <TryGrindctrlSandbox />
+      </LandingLocaleProvider>,
+    );
 
     expect(screen.queryByText(/^Unlock the full workflow$/i)).not.toBeInTheDocument();
 
@@ -75,7 +80,11 @@ describe('TryGrindctrlSandbox', () => {
   });
 
   it('supports voice lead capture through the sandbox API helper', async () => {
-    render(<TryGrindctrlSandbox />);
+    render(
+      <LandingLocaleProvider>
+        <TryGrindctrlSandbox />
+      </LandingLocaleProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /voice lead capture/i }));
     fireEvent.change(screen.getByLabelText(/voice transcript/i), {
@@ -88,7 +97,11 @@ describe('TryGrindctrlSandbox', () => {
   });
 
   it('supports voice audio upload from the recorder panel', async () => {
-    render(<TryGrindctrlSandbox />);
+    render(
+      <LandingLocaleProvider>
+        <TryGrindctrlSandbox />
+      </LandingLocaleProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /voice lead capture/i }));
     const input = screen.getByLabelText(/upload voice file/i) as HTMLInputElement;
@@ -102,7 +115,11 @@ describe('TryGrindctrlSandbox', () => {
   });
 
   it('supports file and image intake with a preview upload', async () => {
-    render(<TryGrindctrlSandbox />);
+    render(
+      <LandingLocaleProvider>
+        <TryGrindctrlSandbox />
+      </LandingLocaleProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: /file\/image intake/i }));
     const input = screen.getByLabelText(/upload file or image/i) as HTMLInputElement;
@@ -116,7 +133,11 @@ describe('TryGrindctrlSandbox', () => {
   });
 
   it('blocks the fourth guided preview locally', async () => {
-    render(<TryGrindctrlSandbox />);
+    render(
+      <LandingLocaleProvider>
+        <TryGrindctrlSandbox />
+      </LandingLocaleProvider>,
+    );
 
     const prompt = screen.getByLabelText(/process description/i);
     const generate = screen.getByRole('button', { name: /generate workflow preview/i });

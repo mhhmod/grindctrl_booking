@@ -32,6 +32,7 @@ export interface SettingsFormCopy {
   panelBackground: string;
   light: string;
   dark: string;
+  widgetThemeHint: string;
   loadingAnimation: string;
   loadingSteps_: string;
   loadingPulse: string;
@@ -92,6 +93,10 @@ const en: SettingsFormCopy = {
   panelBackground: 'Try-on panel background',
   light: 'Light',
   dark: 'Dark',
+  /* Deliberately says neither "above" nor "beside": the preview sits above the
+     controls in a narrow container and beside them in a wide one. */
+  widgetThemeHint:
+    'The surface behind the try-on journey, on product pages and in the catalog dialog. The preview reflects it.',
   loadingAnimation: 'Loading animation',
   loadingSteps_: 'Checklist steps',
   loadingPulse: 'Product photo pulse',
@@ -151,6 +156,8 @@ const ar: SettingsFormCopy = {
   panelBackground: 'خلفية لوحة التجربة',
   light: 'فاتح',
   dark: 'داكن',
+  widgetThemeHint:
+    'الخلفية التي تظهر خلف تجربة القياس، في صفحات المنتجات وفي نافذة الكتالوج. المعاينة تعكسها.',
   loadingAnimation: 'حركة التحميل',
   loadingSteps_: 'خطوات متسلسلة',
   loadingPulse: 'نبض صورة المنتج',

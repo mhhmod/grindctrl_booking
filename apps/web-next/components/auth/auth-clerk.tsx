@@ -3,6 +3,7 @@
 import React from 'react';
 import { SignIn, SignUp } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
+import { POST_SIGN_UP_PATH } from '@/lib/auth/redirect';
 import { useTheme } from 'next-themes';
 
 /* Clerk variables need concrete parseable colors (it derives shades),
@@ -63,14 +64,18 @@ function useClerkAppearance() {
   };
 }
 
-export function AuthSignIn() {
+export function AuthSignIn({ redirectTo }: { redirectTo: string }) {
   const appearance = useClerkAppearance();
   return (
     <SignIn
       path="/sign-in"
       routing="path"
       signUpUrl="/sign-up"
-      fallbackRedirectUrl="/dashboard/overview"
+      /* force, not fallback: fallbackRedirectUrl only applies when the flow
+         carries no redirect_url of its own and otherwise defaults to "/", so
+         an OAuth callback dropped users on the marketing page. The caller has
+         already resolved and validated the destination. */
+      forceRedirectUrl={redirectTo}
       appearance={appearance}
     />
   );
@@ -83,9 +88,10 @@ export function AuthSignUp() {
       path="/sign-up"
       routing="path"
       signInUrl="/sign-in"
-      /* New accounts land on onboarding. Existing users who already completed
-         it get bounced straight through to the dashboard by the page itself. */
-      fallbackRedirectUrl="/onboarding"
+      /* New accounts land on onboarding; the onboarding page forwards anyone
+         who has already finished it. Forced for the same reason as sign-in:
+         a fallback loses the OAuth callback. */
+      forceRedirectUrl={POST_SIGN_UP_PATH}
       appearance={appearance}
     />
   );

@@ -30,6 +30,7 @@ interface LandingDict {
   navPricing: string;
   signIn: string;
   bookCall: string;
+  menu: string;
 
   heroBadge: string;
   heroTitle: string;
@@ -37,18 +38,8 @@ interface LandingDict {
   heroPrimary: string;
   heroSecondary: string;
   heroChips: string[];
-  heroPreviewLabel: string;
-  heroPreviewType: string;
-  heroBeforeLabel: string;
-  heroAfterLabel: string;
-  heroPhotoInput: string;
-  heroResultLabel: string;
-  heroPreviewNote: string;
-  heroProductAlt: string;
-  heroResultAlt: string;
-  heroSliderLabel: string;
-  heroSliderHint: string;
-  heroSliderValue: (value: number) => string;
+  heroRevealCaption: string;
+  heroRevealAlt: string;
 
   howEyebrow: string;
   howTitle: string;
@@ -128,6 +119,7 @@ const en: LandingDict = {
   navPricing: 'Pricing',
   signIn: 'Sign in',
   bookCall: 'Book a call',
+  menu: 'Menu',
 
   heroBadge: 'AI systems for online stores, built and run for you',
   heroTitle: 'Let shoppers see it on themselves before they buy.',
@@ -140,19 +132,9 @@ const en: LandingDict = {
     'Managed setup',
     'Arabic and English',
   ],
-  heroPreviewLabel: 'Example preview',
-  heroPreviewType: 'Before and after',
-  heroBeforeLabel: 'Selected garment',
-  heroAfterLabel: 'Result',
-  heroPhotoInput: '+ shopper photo',
-  heroResultLabel: 'Preview on the shopper',
-  heroPreviewNote:
-    'Example preview using a sample shopper photo. Results are visual guidance, not an exact sizing guarantee.',
-  heroProductAlt: 'Cream ringer T-shirt before virtual try-on',
-  heroResultAlt: 'Example shopper wearing the cream ringer T-shirt after virtual try-on',
-  heroSliderLabel: 'Reveal the virtual try-on result',
-  heroSliderHint: 'Drag the handle or use the arrow keys.',
-  heroSliderValue: (value) => `${value}% of the result revealed`,
+  heroRevealCaption: 'See it on before you buy',
+  heroRevealAlt:
+    'A cream ringer T-shirt appears on a shopper, showing how the garment looks when worn.',
 
   howEyebrow: 'How it works',
   howTitle: 'From product page to a more confident cart.',
@@ -301,6 +283,7 @@ const ar: LandingDict = {
   navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
+  menu: 'القائمة',
 
   heroBadge: 'أنظمة ذكاء اصطناعي للمتاجر الإلكترونية، نبنيها ونشغّلها لك',
   heroTitle: 'دع عملاءك يرون القطعة عليهم قبل الشراء.',
@@ -313,19 +296,8 @@ const ar: LandingDict = {
     'إعداد وإدارة بالكامل',
     'العربية والإنجليزية',
   ],
-  heroPreviewLabel: 'معاينة توضيحية',
-  heroPreviewType: 'قبل وبعد',
-  heroBeforeLabel: 'القطعة المختارة',
-  heroAfterLabel: 'النتيجة',
-  heroPhotoInput: '+ صورة العميل',
-  heroResultLabel: 'معاينة على العميل',
-  heroPreviewNote:
-    'مثال توضيحي باستخدام صورة عميل تجريبية. النتيجة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.',
-  heroProductAlt: 'تيشيرت رينجر كريمي قبل التجربة الافتراضية',
-  heroResultAlt: 'مثال لعميل يرتدي تيشيرت رينجر الكريمي بعد التجربة الافتراضية',
-  heroSliderLabel: 'اكشف نتيجة التجربة الافتراضية',
-  heroSliderHint: 'اسحب المؤشر أو استخدم مفاتيح الأسهم.',
-  heroSliderValue: (value) => `تم كشف ${value}٪ من النتيجة`,
+  heroRevealCaption: 'شاهدها عليك قبل الشراء',
+  heroRevealAlt: 'تيشيرت رينجر كريمي يظهر على العميل ليوضح شكل القطعة أثناء ارتدائها.',
 
   howEyebrow: 'كيف تعمل',
   howTitle: 'من صفحة المنتج إلى سلة شراء بثقة أكبر.',

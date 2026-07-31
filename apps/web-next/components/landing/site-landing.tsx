@@ -1,15 +1,13 @@
 'use client';
 
-import React, { Fragment, useRef, useState } from 'react';
+import React, { Fragment, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight02Icon,
   CheckmarkCircle02Icon,
-  ClothesIcon,
-  ImageUploadIcon,
-  ShoppingBagCheckIcon,
 } from '@hugeicons/core-free-icons';
+import { Shirt, ImageUp, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -18,14 +16,21 @@ import { BRAND_MARKS } from '@/components/brand-marks';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
+import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { SiteHeader } from '@/components/landing/site-header';
+import { StepMarker } from '@/components/landing/step-marker';
+import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
 import { BOOKING_URL } from '@/lib/booking';
-import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 
 const DEMO_URL = '/try-on';
 
-const stepIcons = [ClothesIcon, ImageUploadIcon, ShoppingBagCheckIcon];
+/* Literal depictions of each step: an actual garment, an actual photo upload,
+   an actual cart — the copy says "add it to cart" / "السلة" in both locales, so
+   the icon names the same object the sentence does. Same family so stroke
+   weight stays consistent; mixing weights is how this treatment falls apart. */
+const stepIcons = [Shirt, ImageUp, ShoppingCart];
 
 /* Testimonial quotes and photos are placeholders pending real client
    sign-off. Keep this false until verified quotes are approved. */
@@ -90,11 +95,10 @@ function SectionHeading({
   title: string;
   body?: string;
 }) {
+  const { locale } = useLandingLocale();
   return (
     <div className="mb-10 flex max-w-3xl flex-col gap-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-        {eyebrow}
-      </p>
+      <Eyebrow locale={locale}>{eyebrow}</Eyebrow>
       <h2 id={id} className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
         {title}
       </h2>
@@ -137,181 +141,6 @@ function formatPlanPrice(
   }
 }
 
-function BeforeAfterSlider({
-  locale,
-  t,
-}: {
-  locale: SiteLocale;
-  t: LandingTranslator;
-}) {
-  const [reveal, setReveal] = useState(58);
-  const activePointerRef = useRef<number | null>(null);
-  const handleRef = useRef<HTMLButtonElement>(null);
-  const hiddenPercent = 100 - reveal;
-  const resultClip = locale === 'ar'
-    ? `inset(0 0 0 ${hiddenPercent}%)`
-    : `inset(0 ${hiddenPercent}% 0 0)`;
-
-  function clamp(value: number) {
-    return Math.min(100, Math.max(0, value));
-  }
-
-  function updateFromClientX(clientX: number, element: HTMLDivElement) {
-    const bounds = element.getBoundingClientRect();
-    if (bounds.width === 0) return;
-
-    const physicalPercent = clamp(((clientX - bounds.left) / bounds.width) * 100);
-    const logicalPercent = locale === 'ar' ? 100 - physicalPercent : physicalPercent;
-    setReveal(Math.round(clamp(logicalPercent)));
-  }
-
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-
-    activePointerRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    handleRef.current?.focus({ preventScroll: true });
-    updateFromClientX(event.clientX, event.currentTarget);
-  }
-
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-    updateFromClientX(event.clientX, event.currentTarget);
-  }
-
-  function finishPointer(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-
-    updateFromClientX(event.clientX, event.currentTarget);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerRef.current = null;
-  }
-
-  function cancelPointer(event: React.PointerEvent<HTMLDivElement>) {
-    if (activePointerRef.current !== event.pointerId) return;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    activePointerRef.current = null;
-  }
-
-  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
-    const step = event.shiftKey ? 10 : 2;
-    let next = reveal;
-
-    switch (event.key) {
-      case 'ArrowRight':
-        next += locale === 'ar' ? -step : step;
-        break;
-      case 'ArrowLeft':
-        next += locale === 'ar' ? step : -step;
-        break;
-      case 'ArrowUp':
-        next += step;
-        break;
-      case 'ArrowDown':
-        next -= step;
-        break;
-      case 'Home':
-        next = 0;
-        break;
-      case 'End':
-        next = 100;
-        break;
-      default:
-        return;
-    }
-
-    event.preventDefault();
-    setReveal(clamp(next));
-  }
-
-  return (
-    <figure className="gc-fade-in-up min-w-0 lg:self-center" style={{ animationDelay: '0.1s' }}>
-      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <Badge variant="outline" className="rounded-full bg-background/80 px-3 py-1">
-          {t.heroPreviewLabel}
-        </Badge>
-        <span className="text-xs text-muted-foreground">{t.heroPreviewType}</span>
-      </div>
-
-      <div
-        className="gc-compare-frame relative isolate aspect-square min-w-0 touch-none select-none overflow-hidden rounded-3xl border border-border bg-card shadow-[var(--gc-landing-shadow)]"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishPointer}
-        onPointerCancel={cancelPointer}
-      >
-        <Image
-          src="/try-on/premium-ringer-tee.png"
-          alt={t.heroProductAlt}
-          fill
-          priority
-          draggable={false}
-          sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
-          className="pointer-events-none object-cover"
-        />
-
-        <div
-          className="pointer-events-none absolute inset-0 will-change-[clip-path]"
-          style={{ clipPath: resultClip }}
-        >
-          <Image
-            src="/try-on/mock-result.png"
-            alt={t.heroResultAlt}
-            fill
-            priority
-            draggable={false}
-            sizes="(max-width: 1024px) calc(100vw - 2rem), 560px"
-            className="object-cover"
-          />
-        </div>
-
-        <span className="pointer-events-none absolute start-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
-          {t.heroAfterLabel}
-        </span>
-        <span className="pointer-events-none absolute end-3 top-3 rounded-full bg-background/90 px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
-          {t.heroBeforeLabel}
-        </span>
-
-        <span
-          className="gc-compare-divider pointer-events-none absolute inset-block-0 z-10 w-px"
-          style={{ insetInlineStart: `${reveal}%` }}
-          aria-hidden="true"
-        />
-        <button
-          ref={handleRef}
-          type="button"
-          role="slider"
-          aria-label={t.heroSliderLabel}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={reveal}
-          aria-valuetext={t.heroSliderValue(reveal)}
-          aria-orientation="horizontal"
-          onKeyDown={handleKeyDown}
-          className="gc-compare-handle absolute z-20 grid size-12 cursor-ew-resize place-items-center rounded-full border border-border bg-background text-foreground shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          style={{
-            insetInlineStart: `clamp(1.5rem, ${reveal}%, calc(100% - 1.5rem))`,
-          }}
-        >
-          <span className="flex items-center gap-1" aria-hidden="true">
-            <span className="h-4 w-px rounded-full bg-current/55" />
-            <span className="h-4 w-px rounded-full bg-current/55" />
-          </span>
-        </button>
-      </div>
-
-      <figcaption className="mt-3 flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-medium text-foreground">{t.heroSliderHint}</span>
-        <span>{t.heroPreviewNote}</span>
-      </figcaption>
-    </figure>
-  );
-}
-
 export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
   const { locale, t } = useLandingLocale();
   const sortedPlans = [...plans].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -320,41 +149,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
     <>
       <AmbientBackground />
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" aria-label={t.brandHome} className="min-w-0 rounded-lg">
-            <BrandLogo textClassName="hidden sm:block" />
-          </Link>
-
-          <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-            <a href="#how" className="transition-colors hover:text-foreground">{t.navHow}</a>
-            <a href="#demo" className="transition-colors hover:text-foreground">{t.navDemo}</a>
-            <a href="#benefits" className="transition-colors hover:text-foreground">{t.navBenefits}</a>
-            <a href="#pricing" className="transition-colors hover:text-foreground">{t.navPricing}</a>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <LandingLocaleToggle />
-            <ThemeToggle />
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden rounded-full px-3 text-sm font-semibold text-muted-foreground hover:text-foreground sm:inline-flex"
-            >
-              <Link href="/sign-in">{t.signIn}</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className="hidden rounded-full px-4 font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0 lg:inline-flex"
-            >
-              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{t.bookCall}</a>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SiteHeader locale={locale} t={t} />
 
       <main>
         {/* Hero */}
@@ -370,7 +165,14 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <div className="order-1 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:justify-end lg:gap-6">
               <Badge
                 variant="secondary"
-                className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]"
+                /* This is a full sentence, not a one-word badge. Badge is
+                   h-5 whitespace-nowrap by default, so it ran ~54px past a
+                   320px viewport; h-auto + whitespace-normal lets it wrap.
+                   Typography follows the same locale rule as Eyebrow —
+                   letter-spacing breaks Arabic letter-joining. */
+                className={`gc-fade-in-up h-auto whitespace-normal rounded-full px-3 py-1 text-start text-[11px] font-semibold ${
+                  locale === 'ar' ? 'text-xs' : 'uppercase tracking-[0.16em]'
+                }`}
               >
                 {t.heroBadge}
               </Badge>
@@ -384,7 +186,12 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             </div>
 
             <div className="order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-              <BeforeAfterSlider locale={locale} t={t} />
+              <TryOnRevealFigure
+                caption={t.heroRevealCaption}
+                alt={t.heroRevealAlt}
+                productSrc="/try-on/premium-ringer-tee.png"
+                resultSrc="/try-on/mock-result.png"
+              />
             </div>
 
             <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">
@@ -437,9 +244,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="mx-auto w-full max-w-7xl px-4 pb-20 pt-16 sm:px-6 lg:px-8 lg:pb-32 lg:pt-24">
             <div className="gc-scroll-reveal grid min-w-0 gap-5 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:items-end lg:gap-16">
               <div className="min-w-0 flex flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.howEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.howEyebrow}</Eyebrow>
                 <h2 id="how-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
                   {t.howTitle}
                 </h2>
@@ -455,13 +260,8 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
                   key={step.title}
                   className="gc-how-step relative z-10 min-w-0 ps-16 md:ps-0 md:pt-16"
                 >
-                  <div className="absolute start-0 top-0 flex flex-col items-center gap-2 md:w-full md:flex-row md:justify-between md:gap-3">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background shadow-sm">
-                      <Icon icon={stepIcons[i] ?? ClothesIcon} size={20} />
-                    </span>
-                    <span className="text-xs font-semibold tabular-nums text-muted-foreground">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
+                  <div className="absolute start-0 top-0">
+                    <StepMarker index={i} icon={stepIcons[i] ?? Shirt} />
                   </div>
                   <h3 className="text-lg font-semibold">{step.title}</h3>
                   <p className="mt-2 text-[15px] leading-[1.65] text-muted-foreground">{step.body}</p>
@@ -527,16 +327,12 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <div className="min-w-0">
               <div className="grid min-w-0 border-y border-border sm:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-3 py-7 sm:pe-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {t.returnBenefitLabel}
-                  </p>
+                  <Eyebrow locale={locale}>{t.returnBenefitLabel}</Eyebrow>
                   <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.returnBenefitTitle}</h3>
                   <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.returnBenefitBody}</p>
                 </div>
                 <div className="flex min-w-0 flex-col gap-3 border-t border-border py-7 sm:border-s sm:border-t-0 sm:ps-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    {t.confidenceBenefitLabel}
-                  </p>
+                  <Eyebrow locale={locale}>{t.confidenceBenefitLabel}</Eyebrow>
                   <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.confidenceBenefitTitle}</h3>
                   <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.confidenceBenefitBody}</p>
                 </div>
@@ -612,9 +408,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
         <section id="proof" aria-labelledby="proof-title">
           <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 items-center gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-16 lg:px-8 lg:py-28">
             <div className="min-w-0 flex flex-col items-start gap-5 lg:ps-6">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.proofEyebrow}
-              </p>
+              <Eyebrow locale={locale}>{t.proofEyebrow}</Eyebrow>
               <h2 id="proof-title" className="text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
                 {t.proofTitle}
               </h2>
@@ -690,9 +484,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
             <div className="flex min-w-0 flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0 flex max-w-2xl flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.integrationsEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.integrationsEyebrow}</Eyebrow>
                 <h2 id="integrations-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
                   {t.integrationsTitle}
                 </h2>
@@ -725,9 +517,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-9 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
             <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
               <div className="min-w-0 flex flex-col gap-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  {t.otherEyebrow}
-                </p>
+                <Eyebrow locale={locale}>{t.otherEyebrow}</Eyebrow>
                 <h2
                   id="other-services-title"
                   className="text-[26px] font-bold leading-[1.14] tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.08]"
@@ -804,6 +594,11 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
             <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
             <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
+          </div>
+          {/* Language and theme left the top bar; the footer is their second route. */}
+          <div className="flex items-center gap-2">
+            <LandingLocaleToggle />
+            <ThemeToggle />
           </div>
         </div>
       </footer>
