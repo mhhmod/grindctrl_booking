@@ -131,8 +131,16 @@ export function TryOnSettingsControls({
   return (
     /* Container, not viewport: one of the two mounts is a Shopify iframe where
        `lg:` measures the iframe and `vh` measures a box that may not scroll.
-       48rem is where a label and its input still sit side by side. */
-    <div className="@container grid gap-6 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] @3xl:items-start">
+       48rem is where a label and its input still sit side by side.
+
+       The @container marker MUST sit on an outer wrapper. A container query
+       resolves against the nearest ANCESTOR container, so an element can never
+       answer its own @3xl query. Putting both on one div left the grid at a
+       single column while the preview's @3xl:sticky — being a descendant —
+       still applied, which pinned a tall preview over the controls and rebuilt
+       the exact bug this was meant to remove. */
+    <div className="@container">
+      <div className="grid gap-6 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] @3xl:items-start">
       {/* Below 48rem this is ordinary content and scrolls away. At or above it,
           the preview has its own column and cannot cover controls that are no
           longer beneath it. */}
@@ -355,6 +363,7 @@ export function TryOnSettingsControls({
           onChange={(e) => onLoadingStepsTextChange(e.target.value)}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
+      </div>
       </div>
       </div>
     </div>

@@ -472,25 +472,29 @@
 /* Try-on reveal. Passive by design: the previous slider was only discoverable
    by dragging a handle, so most visitors never saw the result at all. Pure
    keyframes — nothing on the main thread, no library. */
+/* Timing note: the worn result is the payoff, so it holds for most of the
+   loop. The first cut gave it 54%-88% and left the bare garment on screen for
+   roughly two thirds of every cycle — long enough that people reported seeing
+   "only the T-shirt" and never the after. Setup is now brisk and the result
+   sits still. */
 @keyframes gc-tryon-garment {
-  0%, 6%    { transform: translate(-58%, 6%) scale(.62) rotate(-8deg); opacity: 0; }
-  16%       { opacity: 1; }
-  38%, 100% { transform: none; opacity: 1; }
+  0%, 4%    { transform: translate(-58%, 6%) scale(.62) rotate(-8deg); opacity: 0; }
+  12%       { opacity: 1; }
+  26%, 100% { transform: none; opacity: 1; }
 }
 
 @keyframes gc-tryon-reveal {
-  /* Holds until 40%, two points after the garment finishes settling at 38%.
-     At 36% the wipe started while the garment's easing tail was still
-     resolving, so the two reads overlapped by ~130ms. */
-  0%, 40%   { clip-path: inset(0 100% 0 0); }
-  54%, 88%  { clip-path: inset(0 0 0 0); }
-  97%, 100% { clip-path: inset(0 100% 0 0); }
+  /* Holds until 28%, two points after the garment settles at 26%, so the wipe
+     never starts while the garment's easing tail is still resolving. */
+  0%, 28%   { clip-path: inset(0 100% 0 0); }
+  42%, 94%  { clip-path: inset(0 0 0 0); }
+  99%, 100% { clip-path: inset(0 100% 0 0); }
 }
 
 @keyframes gc-tryon-caption {
-  0%, 44%   { opacity: 0; transform: translateY(6px); }
-  58%, 88%  { opacity: 1; transform: none; }
-  96%, 100% { opacity: 0; }
+  0%, 34%   { opacity: 0; transform: translateY(6px); }
+  46%, 94%  { opacity: 1; transform: none; }
+  99%, 100% { opacity: 0; }
 }
 
 .gc-float { animation: gc-float 4s ease-in-out infinite; }

@@ -18,4 +18,22 @@ describe('TryOnSettingsControls preview pinning', () => {
     expect(source).toContain('@container');
     expect(source).toContain('@3xl:sticky');
   });
+
+  /* The first version of this fix put `@container` and `@3xl:grid-cols-*` on
+     the SAME element. A container query resolves against the nearest ANCESTOR
+     container, so that element could not answer its own query: the grid stayed
+     one column while the preview's `@3xl:sticky` — a descendant, so it did
+     match — pinned a tall preview over the controls. That rebuilt the exact
+     defect being fixed, and the assertions above all still passed, because
+     every string was present. This checks the relationship, not the strings. */
+  it('declares the container on an ancestor of the elements that query it', async () => {
+    const source = await readFile('components/try-on/settings-controls.tsx', 'utf8');
+
+    const classAttributes = [...source.matchAll(/className="([^"]*)"/g)].map((m) => m[1]);
+    const selfQuerying = classAttributes.filter(
+      (value) => value.includes('@container') && /@\w+:/.test(value),
+    );
+
+    expect(selfQuerying).toEqual([]);
+  });
 });
