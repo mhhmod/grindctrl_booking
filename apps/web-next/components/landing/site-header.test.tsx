@@ -31,6 +31,16 @@ describe('SiteHeader', () => {
     expect(cta.className).not.toContain('hidden');
   });
 
+  /* Regression guard: the menu button is `lg:hidden`, so when sign-in lived
+     only inside the sheet there was no route to it at all above `lg`. This
+     link is the desktop route, and it must survive future header edits. */
+  it('keeps a sign-in route outside the menu, for widths where the menu is hidden', () => {
+    const t = renderHeader();
+
+    const signIn = screen.getByRole('link', { name: t.signIn });
+    expect(signIn.className).toContain('lg:inline-flex');
+  });
+
   it('exposes nav, sign in, language and theme once the menu is open', async () => {
     const t = renderHeader();
     fireEvent.click(screen.getByRole('button', { name: t.menu }));

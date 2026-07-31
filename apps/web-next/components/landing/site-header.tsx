@@ -38,6 +38,18 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* Shown from `lg` up, exactly where the menu button hides. Sign-in
+              otherwise lives only in the sheet, which would leave desktop with
+              no route to it at all. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hidden min-h-11 rounded-full px-3 text-sm font-semibold text-muted-foreground hover:text-foreground lg:inline-flex"
+          >
+            <Link href="/sign-in">{t.signIn}</Link>
+          </Button>
+
           <Button
             asChild
             size="sm"
