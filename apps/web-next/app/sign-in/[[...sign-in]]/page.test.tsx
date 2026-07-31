@@ -38,7 +38,7 @@ describe('SignInPage', () => {
   it('shows the env-missing alert when Clerk is not configured', async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-    render(await SignInPage());
+    render(await SignInPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText('Clerk environment variables are missing')).toBeInTheDocument();
     expect(screen.queryByTestId('clerk-sign-in')).not.toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('SignInPage', () => {
   it('renders Clerk sign-in when the publishable key is configured', async () => {
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
 
-    render(await SignInPage());
+    render(await SignInPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByTestId('clerk-sign-in')).toBeInTheDocument();
     expect(screen.queryByText('Clerk environment variables are missing')).not.toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('SignInPage', () => {
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
     cookieLocale = 'ar';
 
-    const { container } = render(await SignInPage());
+    const { container } = render(await SignInPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole('heading', { name: 'أهلًا بعودتك' })).toBeInTheDocument();
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
