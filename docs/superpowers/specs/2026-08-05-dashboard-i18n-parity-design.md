@@ -117,6 +117,11 @@ Plan *names* are deliberately not allowlisted. If "Launch" should stay English i
 the Arabic UI it must be an explicit dictionary value saying so, not an accident
 of nobody translating it.
 
+Resolved since: plan names translate — مجاني, انطلاق, خدمة كاملة. See
+`2026-08-05-plan-currency-localization-design.md`. Keeping them out of the
+allowlist is therefore load-bearing: an untranslated plan name must fail this
+gate rather than pass as permitted Latin.
+
 ### Gate, part two — scoped source scan
 
 A test reading `app/dashboard/try-on/page.tsx` and failing on JSX text children
