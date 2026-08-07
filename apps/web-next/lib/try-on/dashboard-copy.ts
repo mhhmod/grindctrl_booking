@@ -42,6 +42,13 @@ export interface TryOnDashboardCopy {
   shopifyAppBody: string;
   openShopifyApp: string;
 
+  statusInstalled: string;
+  statusUninstalled: string;
+  statusQueued: string;
+  statusProcessing: string;
+  statusCompleted: string;
+  statusFailed: string;
+
   editing: string;
 }
 
@@ -86,6 +93,13 @@ const en: TryOnDashboardCopy = {
     'Merchants install and configure from their own admin. This is what they open.',
   openShopifyApp: 'Open the Shopify app',
 
+  statusInstalled: 'Installed',
+  statusUninstalled: 'Uninstalled',
+  statusQueued: 'Queued',
+  statusProcessing: 'Processing',
+  statusCompleted: 'Completed',
+  statusFailed: 'Failed',
+
   editing: 'Editing',
 };
 
@@ -129,9 +143,46 @@ const ar: TryOnDashboardCopy = {
   shopifyAppBody: 'يقوم التجار بالتثبيت والضبط من لوحاتهم الخاصة. هذا ما يفتحونه.',
   openShopifyApp: 'افتح تطبيق شوبيفاي',
 
+  statusInstalled: 'مثبَّت',
+  statusUninstalled: 'غير مثبَّت',
+  statusQueued: 'في الانتظار',
+  statusProcessing: 'قيد المعالجة',
+  statusCompleted: 'مكتمل',
+  statusFailed: 'فشل',
+
   editing: 'التعديل على',
 };
 
 export function getTryOnDashboardCopy(locale: SiteLocale): TryOnDashboardCopy {
   return locale === 'ar' ? ar : en;
+}
+
+/* Status badges render a database value, so they need translating at the
+   point of display rather than in a dictionary lookup the page does inline.
+
+   tryon_shops.status is 'installed' | 'uninstalled' (the TryOnShopStatus
+   union, and the only two values its writers set). tryon_jobs.status is
+   fixed by a CHECK constraint to 'processing' | 'completed' | 'failed';
+   'queued' is declared by TryOnJobStatus but the constraint rejects it
+   today, so it is mapped here in case the constraint is relaxed.
+
+   Anything unmapped falls through to the raw value: a status we have not
+   seen should show up as visible English, never as an empty badge. */
+export function statusLabel(c: TryOnDashboardCopy, status: string): string {
+  switch (status) {
+    case 'installed':
+      return c.statusInstalled;
+    case 'uninstalled':
+      return c.statusUninstalled;
+    case 'queued':
+      return c.statusQueued;
+    case 'processing':
+      return c.statusProcessing;
+    case 'completed':
+      return c.statusCompleted;
+    case 'failed':
+      return c.statusFailed;
+    default:
+      return status;
+  }
 }

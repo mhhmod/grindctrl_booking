@@ -10,7 +10,7 @@ import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { getRequestLocale } from '@/lib/auth/locale';
-import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
+import { getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
@@ -29,6 +29,12 @@ export default async function DashboardTryOnPage({
   const params = await searchParams;
   const pageLocale = await getRequestLocale();
   const c = getTryOnDashboardCopy(pageLocale);
+
+  /* Arabic month and day names, but Latin digits: a column of dates is read
+     by comparing it down the page, and Arabic-Indic digits make that harder.
+     Dropping -u-nu-latn switches them back. */
+  const dateLocale = pageLocale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US';
+
   const shops = await listManagedTryOnShops();
 
   /* Only a shop we already know about may be selected; anything else falls
@@ -100,12 +106,14 @@ export default async function DashboardTryOnPage({
                     <TableCell className="font-medium">{shop.domain}</TableCell>
                     <TableCell>
                       <Badge variant={shop.status === 'installed' ? 'secondary' : 'destructive'}>
-                        {shop.status}
+                        {statusLabel(c, shop.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">{shop.jobCount}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {shop.lastJobAt ? new Date(shop.lastJobAt).toLocaleString() : c.noneYet}
+                      {shop.lastJobAt
+                        ? new Date(shop.lastJobAt).toLocaleString(dateLocale)
+                        : c.noneYet}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -175,7 +183,7 @@ export default async function DashboardTryOnPage({
                     <TableCell className="font-medium">{job.product_id}</TableCell>
                     <TableCell className="text-muted-foreground">{job.shop ?? c.demoShop}</TableCell>
                     <TableCell>
-                      <Badge variant={statusTone(job.status)}>{job.status}</Badge>
+                      <Badge variant={statusTone(job.status)}>{statusLabel(c, job.status)}</Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
                       ${(job.cost_usd ?? 0).toFixed(4)}
@@ -184,7 +192,7 @@ export default async function DashboardTryOnPage({
                       {job.duration_ms ? `${(job.duration_ms / 1000).toFixed(1)}s` : c.noData}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(job.created_at).toLocaleString()}
+                      {new Date(job.created_at).toLocaleString(dateLocale)}
                     </TableCell>
                   </TableRow>
                 ))}
