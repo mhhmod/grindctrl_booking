@@ -29,8 +29,16 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
    transfer, Instapay), so every action here records what the owner already
    collected: the note carries the payment reference into the ledger. */
 
+/* ponytail: not currency formatting, just a floor — the else-branch used to
+   emit no marker at all, so a non-USD plan rendered as a bare "150.00" in the
+   selector the owner activates from. Falling back to the ISO code costs one
+   line and changes nothing that renders today, since every catalog row is
+   USD. Intl.NumberFormat is the real answer, but it needs a locale, restates
+   the USD output, and collides with this branch's deliberate Latin-digit
+   choice — all decisions that belong to the per-country pricing work. */
 function money(minor: number, currency: string): string {
-  return `${currency === 'USD' ? '$' : ''}${(minor / 100).toFixed(2)}`;
+  const amount = (minor / 100).toFixed(2);
+  return currency === 'USD' ? `$${amount}` : `${amount} ${currency}`;
 }
 
 function statusTone(status: ShopEntitlement['status']) {
@@ -146,7 +154,13 @@ export function ShopPlanControl({
         </span>
         {state.pendingPlanKey && (
           <span className="text-sm text-muted-foreground">
-            {c.downgradesTo(state.pendingPlanKey)}
+            {/* The catalog name, not the slug: the badge above already shows
+                planName, and a raw plan_key reads as debug output in either
+                language. Falls back to the slug so an unlisted plan still
+                names itself. */}
+            {c.downgradesTo(
+              plans.find((p) => p.planKey === state.pendingPlanKey)?.name ?? state.pendingPlanKey,
+            )}
           </span>
         )}
       </div>

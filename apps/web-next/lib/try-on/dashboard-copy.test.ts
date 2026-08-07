@@ -60,6 +60,14 @@ describe('getTryOnDashboardCopy', () => {
     expect(ar.bannerRenewalDue(2)).toContain('يومين');
     expect(ar.bannerRenewalDue(5)).toContain('5 أيام');
     expect(ar.bannerRenewalDue(15)).toContain('15 يوماً');
+    /* Reachable, not theoretical: daysRemaining is clamped at 0 and a
+       subscription on its final day still routes to a day-count banner.
+       'يوماً' contains 'يوم', so the bare form has to be asserted by
+       excluding the suffixed one. */
+    expect(ar.bannerRenewalDue(0)).toContain('0 يوم');
+    expect(ar.bannerRenewalDue(0)).not.toContain('يوماً');
+    expect(ar.bannerRenewalDue(100)).toContain('100 يوم');
+    expect(ar.bannerRenewalDue(100)).not.toContain('يوماً');
   });
 });
 

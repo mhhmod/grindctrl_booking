@@ -42,6 +42,9 @@ export interface SettingsFormCopy {
   loadingPulse: string;
   loadingBar: string;
   resultButtons: string;
+  resultButtonsHint: string;
+  /** Glued to a slider value: `18px`. Not a standalone word. */
+  pxSuffix: string;
   addToCart: string;
   downloadPreview: string;
   requestWhatsapp: string;
@@ -110,6 +113,8 @@ const en: SettingsFormCopy = {
   loadingPulse: 'Product photo pulse',
   loadingBar: 'Progress bar',
   resultButtons: 'Result screen buttons',
+  resultButtonsHint: 'What shoppers can do after seeing themselves in the product.',
+  pxSuffix: 'px',
   addToCart: 'Add to cart',
   downloadPreview: 'Download preview',
   requestWhatsapp: 'Request order / WhatsApp',
@@ -175,6 +180,9 @@ const ar: SettingsFormCopy = {
   loadingPulse: 'نبض صورة المنتج',
   loadingBar: 'شريط تقدم',
   resultButtons: 'أزرار شاشة النتيجة',
+  resultButtonsHint: 'ما يمكن للمتسوقين فعله بعد رؤية أنفسهم بالمنتج.',
+  /* A whole word, not an abbreviation, so it carries its own space. */
+  pxSuffix: ' بكسل',
   addToCart: 'أضف إلى السلة',
   downloadPreview: 'تنزيل المعاينة',
   requestWhatsapp: 'طلب عبر واتساب',

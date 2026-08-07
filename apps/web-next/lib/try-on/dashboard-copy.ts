@@ -122,10 +122,14 @@ export interface TryOnDashboardCopy {
   actionFailed: string;
 }
 
-/* Arabic counts a noun five different ways. Intl.PluralRules already knows
-   which category a number falls into, so the dictionary only has to supply
-   the five words — and for one and two the numeral is dropped, because MSA
-   carries the count in the noun itself. */
+/* CLDR sorts Arabic counts into six categories, and Intl.PluralRules already
+   knows which one a number falls into, so this only has to supply the forms.
+   For one and two the numeral is dropped, because MSA carries the count in
+   the noun itself.
+
+   Four arms cover all six: zero (0) and other (100, 101, …) both take the
+   bare singular, so they share the default. Anything routed to default that
+   is neither still reads correctly. */
 const arPlural = new Intl.PluralRules('ar-EG');
 
 function arDays(n: number): string {
@@ -136,8 +140,10 @@ function arDays(n: number): string {
       return 'يومين';
     case 'few':
       return `${n} أيام`;
-    default:
+    case 'many':
       return `${n} يوماً`;
+    default:
+      return `${n} يوم`;
   }
 }
 

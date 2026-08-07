@@ -80,6 +80,7 @@ function Range({
   value,
   min,
   max,
+  unit,
   onChange,
 }: {
   id: string;
@@ -87,6 +88,8 @@ function Range({
   value: number;
   min: number;
   max: number;
+  /* Glued to the value, so it has to be translated with the rest. */
+  unit: string;
   onChange: (v: number) => void;
 }) {
   return (
@@ -95,7 +98,10 @@ function Range({
         <Label htmlFor={id} className="text-sm">
           {label}
         </Label>
-        <span className="tabular-nums text-xs text-muted-foreground">{value}px</span>
+        <span className="tabular-nums text-xs text-muted-foreground">
+          {value}
+          {unit}
+        </span>
       </div>
       <input
         id={id}
@@ -254,10 +260,10 @@ export function TryOnSettingsControls({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Range id="button_icon_px" label={c.buttonIconSize} value={s.buttonIconPx} min={18} max={40} onChange={(v) => onChange('buttonIconPx', v)} />
-        <Range id="catalog_icon_px" label={c.catalogIconSize} value={s.catalogIconPx} min={10} max={32} onChange={(v) => onChange('catalogIconPx', v)} />
-        <Range id="catalog_font_px" label={c.catalogLabelSize} value={s.catalogFontPx} min={9} max={20} onChange={(v) => onChange('catalogFontPx', v)} />
-        <Range id="catalog_pad_px" label={c.catalogPillPadding} value={s.catalogPadPx} min={2} max={16} onChange={(v) => onChange('catalogPadPx', v)} />
+        <Range id="button_icon_px" label={c.buttonIconSize} unit={c.pxSuffix} value={s.buttonIconPx} min={18} max={40} onChange={(v) => onChange('buttonIconPx', v)} />
+        <Range id="catalog_icon_px" label={c.catalogIconSize} unit={c.pxSuffix} value={s.catalogIconPx} min={10} max={32} onChange={(v) => onChange('catalogIconPx', v)} />
+        <Range id="catalog_font_px" label={c.catalogLabelSize} unit={c.pxSuffix} value={s.catalogFontPx} min={9} max={20} onChange={(v) => onChange('catalogFontPx', v)} />
+        <Range id="catalog_pad_px" label={c.catalogPillPadding} unit={c.pxSuffix} value={s.catalogPadPx} min={2} max={16} onChange={(v) => onChange('catalogPadPx', v)} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -305,9 +311,7 @@ export function TryOnSettingsControls({
 
       <div className="grid gap-2">
         <Label>{c.resultButtons}</Label>
-        <p className="text-xs text-muted-foreground">
-          What shoppers can do after seeing themselves in the product.
-        </p>
+        <p className="text-xs text-muted-foreground">{c.resultButtonsHint}</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {([
             ['showAddToCart', c.addToCart],
