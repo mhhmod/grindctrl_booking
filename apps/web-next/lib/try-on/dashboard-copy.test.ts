@@ -30,6 +30,17 @@ describe('getTryOnDashboardCopy', () => {
   });
 });
 
+/* A unit glued to a number reads as part of the value, not as copy, so it
+   survives review and never reaches a dictionary on its own. The suffix has
+   to live in the dictionary for the no-Latin sweep above to see it at all;
+   this asserts the specific case directly. */
+describe('units glued to numbers', () => {
+  it('gives the seconds suffix a non-Latin form in Arabic', () => {
+    expect(getTryOnDashboardCopy('ar').secondsSuffix).not.toMatch(/[A-Za-z]/);
+    expect(getTryOnDashboardCopy('en').secondsSuffix).toBe('s');
+  });
+});
+
 /* Status badges print a database value. The source scan that guards the page
    cannot catch these — they are expressions, not literals — so the mapping is
    only as good as this test. */

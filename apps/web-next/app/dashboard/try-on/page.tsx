@@ -62,7 +62,7 @@ export default async function DashboardTryOnPage({
     { label: c.recentGenerations, value: String(jobs.length) },
     {
       label: c.avgGenerationTime,
-      value: completed.length ? `${avgSeconds.toFixed(1)}s` : c.noDataYet,
+      value: completed.length ? `${avgSeconds.toFixed(1)}${c.secondsSuffix}` : c.noDataYet,
     },
     { label: c.providerSpend, value: `$${totalCost.toFixed(2)}` },
   ];
@@ -189,7 +189,9 @@ export default async function DashboardTryOnPage({
                       ${(job.cost_usd ?? 0).toFixed(4)}
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
-                      {job.duration_ms ? `${(job.duration_ms / 1000).toFixed(1)}s` : c.noData}
+                      {job.duration_ms
+                        ? `${(job.duration_ms / 1000).toFixed(1)}${c.secondsSuffix}`
+                        : c.noData}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(job.created_at).toLocaleString(dateLocale)}

@@ -42,6 +42,9 @@ export interface TryOnDashboardCopy {
   shopifyAppBody: string;
   openShopifyApp: string;
 
+  /** Glued to a number: `3.4s`. Not a standalone word. */
+  secondsSuffix: string;
+
   statusInstalled: string;
   statusUninstalled: string;
   statusQueued: string;
@@ -93,6 +96,8 @@ const en: TryOnDashboardCopy = {
     'Merchants install and configure from their own admin. This is what they open.',
   openShopifyApp: 'Open the Shopify app',
 
+  secondsSuffix: 's',
+
   statusInstalled: 'Installed',
   statusUninstalled: 'Uninstalled',
   statusQueued: 'Queued',
@@ -142,6 +147,8 @@ const ar: TryOnDashboardCopy = {
   shopifyApp: 'تطبيق شوبيفاي',
   shopifyAppBody: 'يقوم التجار بالتثبيت والضبط من لوحاتهم الخاصة. هذا ما يفتحونه.',
   openShopifyApp: 'افتح تطبيق شوبيفاي',
+
+  secondsSuffix: 'ث',
 
   statusInstalled: 'مثبَّت',
   statusUninstalled: 'غير مثبَّت',
