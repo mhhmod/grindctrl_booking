@@ -254,10 +254,10 @@ export function TryOnSettingsControls({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Range id="button_icon_px" label="Button icon size" value={s.buttonIconPx} min={18} max={40} onChange={(v) => onChange('buttonIconPx', v)} />
-        <Range id="catalog_icon_px" label="Catalog icon size" value={s.catalogIconPx} min={10} max={32} onChange={(v) => onChange('catalogIconPx', v)} />
-        <Range id="catalog_font_px" label="Catalog label size" value={s.catalogFontPx} min={9} max={20} onChange={(v) => onChange('catalogFontPx', v)} />
-        <Range id="catalog_pad_px" label="Catalog pill padding" value={s.catalogPadPx} min={2} max={16} onChange={(v) => onChange('catalogPadPx', v)} />
+        <Range id="button_icon_px" label={c.buttonIconSize} value={s.buttonIconPx} min={18} max={40} onChange={(v) => onChange('buttonIconPx', v)} />
+        <Range id="catalog_icon_px" label={c.catalogIconSize} value={s.catalogIconPx} min={10} max={32} onChange={(v) => onChange('catalogIconPx', v)} />
+        <Range id="catalog_font_px" label={c.catalogLabelSize} value={s.catalogFontPx} min={9} max={20} onChange={(v) => onChange('catalogFontPx', v)} />
+        <Range id="catalog_pad_px" label={c.catalogPillPadding} value={s.catalogPadPx} min={2} max={16} onChange={(v) => onChange('catalogPadPx', v)} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

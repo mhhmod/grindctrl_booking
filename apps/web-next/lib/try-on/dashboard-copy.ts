@@ -52,7 +52,93 @@ export interface TryOnDashboardCopy {
   statusCompleted: string;
   statusFailed: string;
 
+  /* ── Settings panel ── */
   editing: string;
+  globalDefaultsOption: string;
+  /** Glued to a shop domain inside an <option>. Not a standalone word. */
+  uninstalledSuffix: string;
+  defaultsHelp: string;
+  overridesHelp: (shop: string) => string;
+  saveSettings: string;
+  saving: string;
+  savedLive: string;
+  saveFailed: string;
+
+  /* ── Plan control ── */
+  plansBelongToShop: string;
+  noPlan: string;
+  planStatusActive: string;
+  planStatusGrace: string;
+  planStatusExpired: string;
+  planStatusCancelled: string;
+  planStatusNone: string;
+
+  periodEnds: (date: string) => string;
+  notActivated: string;
+  downgradesTo: (planKey: string) => string;
+
+  bannerExpired: string;
+  bannerCancelled: string;
+  bannerGrace: (days: number) => string;
+  bannerUrgent: (days: number) => string;
+  bannerRenewalDue: (days: number) => string;
+  bannerExhausted: string;
+  bannerCritical: (renders: number) => string;
+  bannerLow: (renders: number) => string;
+
+  planRendersLeft: (remaining: number, included: number) => string;
+  plusFromTopUps: (renders: number) => string;
+  rendersUsedAria: (percent: number) => string;
+
+  paymentReference: string;
+  /* An example of what to type, not a fixed format. Instapay is a product
+     name and stays Latin; the month and currency are what the owner would
+     actually write in their own language. */
+  paymentReferencePlaceholder: string;
+  paymentReferenceHelp: string;
+
+  planLabel: string;
+  topUpPackLabel: string;
+  /** `${name}, ${price} for ${renders}` — name and price come from the catalog. */
+  catalogOption: (name: string, price: string, renders: number) => string;
+
+  activate: string;
+  activateOrUpgrade: string;
+  renew: string;
+  renewUnavailable: string;
+  scheduleDowngrade: string;
+  addTopUp: string;
+  topUpUnavailable: string;
+
+  /* Action names are interpolated into actionInProgress and actionApplied,
+     so each locale owns its own sentence shape around them. */
+  actionActivation: string;
+  actionRenewal: string;
+  actionDowngrade: string;
+  actionTopUp: string;
+  actionInProgress: (action: string) => string;
+  actionApplied: (action: string) => string;
+  actionReplayed: string;
+  actionFailed: string;
+}
+
+/* Arabic counts a noun five different ways. Intl.PluralRules already knows
+   which category a number falls into, so the dictionary only has to supply
+   the five words — and for one and two the numeral is dropped, because MSA
+   carries the count in the noun itself. */
+const arPlural = new Intl.PluralRules('ar-EG');
+
+function arDays(n: number): string {
+  switch (arPlural.select(n)) {
+    case 'one':
+      return 'يوم واحد';
+    case 'two':
+      return 'يومين';
+    case 'few':
+      return `${n} أيام`;
+    default:
+      return `${n} يوماً`;
+  }
 }
 
 const en: TryOnDashboardCopy = {
@@ -106,6 +192,69 @@ const en: TryOnDashboardCopy = {
   statusFailed: 'Failed',
 
   editing: 'Editing',
+  globalDefaultsOption: 'Global defaults (every shop without its own settings)',
+  uninstalledSuffix: ' (uninstalled)',
+  defaultsHelp:
+    'These values apply to every shop that has not overridden them. A merchant saving in their Shopify admin overrides them for that shop only.',
+  overridesHelp: (shop) =>
+    `Overrides the global defaults for ${shop}. This is the same record the merchant edits in their Shopify admin.`,
+  saveSettings: 'Save settings',
+  saving: 'Saving…',
+  savedLive: 'Saved, live within a minute.',
+  saveFailed: 'Could not save. Try again.',
+
+  plansBelongToShop:
+    'Plans belong to a shop. Pick a merchant shop above to see and change what it is entitled to.',
+  noPlan: 'No plan',
+  planStatusActive: 'Active',
+  planStatusGrace: 'Grace',
+  planStatusExpired: 'Expired',
+  planStatusCancelled: 'Cancelled',
+  planStatusNone: 'No subscription',
+
+  periodEnds: (date) => `Period ends ${date}`,
+  notActivated: 'Not activated',
+  downgradesTo: (planKey) => `Downgrades to ${planKey} next period`,
+
+  bannerExpired: 'Expired. Generation is stopped until this shop is renewed.',
+  bannerCancelled: 'Cancelled. Generation is stopped.',
+  bannerGrace: (days) =>
+    `In grace for ${days} more day${days === 1 ? '' : 's'}. Collect payment before it stops.`,
+  bannerUrgent: (days) => `Renews in ${days} day${days === 1 ? '' : 's'}. Invoice now.`,
+  bannerRenewalDue: (days) => `Renews in ${days} day${days === 1 ? '' : 's'}.`,
+  bannerExhausted: 'Out of credits. A top-up or renewal is needed.',
+  bannerCritical: (renders) => `Almost out: ${renders} renders left.`,
+  bannerLow: (renders) => `Running low: ${renders} renders left.`,
+
+  planRendersLeft: (remaining, included) => `${remaining} of ${included} plan renders left`,
+  plusFromTopUps: (renders) => `plus ${renders} from top-ups`,
+  rendersUsedAria: (percent) => `${percent}% of plan renders used`,
+
+  paymentReference: 'Payment reference',
+  paymentReferencePlaceholder: 'Instapay 14 Jul, 15 USD',
+  paymentReferenceHelp:
+    'Stored with the ledger entry so any future question about this shop has an answer.',
+
+  planLabel: 'Plan',
+  topUpPackLabel: 'Top-up pack',
+  catalogOption: (name, price, renders) => `${name}, ${price} for ${renders}`,
+
+  activate: 'Activate',
+  activateOrUpgrade: 'Activate or upgrade',
+  renew: 'Renew',
+  renewUnavailable: 'Renewal opens at the period boundary',
+  scheduleDowngrade: 'Schedule downgrade',
+  addTopUp: 'Add top-up',
+  topUpUnavailable: 'Top-ups need an active or grace subscription',
+
+  actionActivation: 'Activation',
+  actionRenewal: 'Renewal',
+  actionDowngrade: 'Downgrade',
+  actionTopUp: 'Top-up',
+  actionInProgress: (action) => `${action} in progress…`,
+  actionApplied: (action) => `${action} applied. The merchant sees it immediately.`,
+  actionReplayed: 'Already applied. Nothing changed.',
+  actionFailed: 'The action failed.',
 };
 
 const ar: TryOnDashboardCopy = {
@@ -157,11 +306,88 @@ const ar: TryOnDashboardCopy = {
   statusCompleted: 'مكتمل',
   statusFailed: 'فشل',
 
-  editing: 'التعديل على',
+  /* Not 'التعديل على': that is a dangling preposition, and this label stands
+     alone above the select rather than running into the shop name. */
+  editing: 'نطاق التعديل',
+  globalDefaultsOption: 'الإعدادات الافتراضية العامة (كل متجر بلا إعدادات خاصة)',
+  uninstalledSuffix: ' (غير مثبَّت)',
+  defaultsHelp:
+    'تنطبق هذه القيم على كل متجر لم يتجاوزها بإعدادات خاصة. وعندما يحفظ التاجر إعداداته في لوحة شوبيفاي، فإنها تتجاوزها لمتجره وحده.',
+  overridesHelp: (shop) =>
+    `يتجاوز الإعدادات الافتراضية العامة لمتجر ${shop}. وهذا هو السجل نفسه الذي يعدّله التاجر في لوحة شوبيفاي.`,
+  saveSettings: 'حفظ الإعدادات',
+  saving: 'جارٍ الحفظ…',
+  savedLive: 'تم الحفظ، ويظهر خلال دقيقة.',
+  saveFailed: 'تعذّر الحفظ. حاول مرة أخرى.',
+
+  plansBelongToShop:
+    'ترتبط الخطط بمتجر بعينه. اختر متجر تاجر من الأعلى لعرض صلاحياته وتغييرها.',
+  noPlan: 'لا توجد خطة',
+  planStatusActive: 'نشط',
+  planStatusGrace: 'مهلة سماح',
+  planStatusExpired: 'منتهٍ',
+  planStatusCancelled: 'ملغى',
+  planStatusNone: 'بلا اشتراك',
+
+  periodEnds: (date) => `تنتهي الفترة في ${date}`,
+  notActivated: 'غير مُفعَّل',
+  downgradesTo: (planKey) => `يُخفَّض إلى ${planKey} في الفترة القادمة`,
+
+  bannerExpired: 'انتهت الصلاحية. توقّف التوليد حتى يُجدَّد هذا المتجر.',
+  bannerCancelled: 'تم الإلغاء. توقّف التوليد.',
+  bannerGrace: (days) => `مهلة سماح لمدة ${arDays(days)}. حصّل الدفع قبل أن يتوقف.`,
+  bannerUrgent: (days) => `يتجدد خلال ${arDays(days)}. أرسل الفاتورة الآن.`,
+  bannerRenewalDue: (days) => `يتجدد خلال ${arDays(days)}.`,
+  bannerExhausted: 'نفد الرصيد. يلزم شحن إضافي أو تجديد.',
+  /* Arabic agrees the noun with the count, so a running total is written as a
+     label and a number instead of a counted noun. */
+  bannerCritical: (renders) => `أوشك الرصيد على النفاد. المتبقي: ${renders}.`,
+  bannerLow: (renders) => `الرصيد منخفض. المتبقي: ${renders}.`,
+
+  planRendersLeft: (remaining, included) =>
+    `المتبقي من عمليات الخطة: ${remaining} من ${included}`,
+  plusFromTopUps: (renders) => `بالإضافة إلى ${renders} من الشحن الإضافي`,
+  rendersUsedAria: (percent) => `تم استخدام ${percent}% من عمليات الخطة`,
+
+  paymentReference: 'مرجع الدفع',
+  paymentReferencePlaceholder: 'Instapay 14 يوليو، 15 دولار',
+  paymentReferenceHelp: 'يُحفظ مع قيد السجل ليكون لأي سؤال لاحق عن هذا المتجر إجابة.',
+
+  planLabel: 'الخطة',
+  topUpPackLabel: 'باقة شحن إضافي',
+  catalogOption: (name, price, renders) => `${name}، ${price} مقابل ${renders}`,
+
+  activate: 'تفعيل',
+  activateOrUpgrade: 'تفعيل أو ترقية',
+  renew: 'تجديد',
+  renewUnavailable: 'يتاح التجديد عند نهاية الفترة',
+  scheduleDowngrade: 'جدولة الخفض',
+  addTopUp: 'إضافة شحن',
+  topUpUnavailable: 'يتطلب الشحن الإضافي اشتراكاً نشطاً أو في مهلة السماح',
+
+  actionActivation: 'التفعيل',
+  actionRenewal: 'التجديد',
+  actionDowngrade: 'خفض الخطة',
+  actionTopUp: 'شحن الرصيد',
+  actionInProgress: (action) => `جارٍ ${action}…`,
+  actionApplied: (action) => `تم ${action}. يراه التاجر فوراً.`,
+  actionReplayed: 'مطبَّق بالفعل. لم يتغير شيء.',
+  actionFailed: 'فشل الإجراء.',
 };
 
 export function getTryOnDashboardCopy(locale: SiteLocale): TryOnDashboardCopy {
   return locale === 'ar' ? ar : en;
+}
+
+/* A BCP-47 tag for toLocaleString/toLocaleDateString, deliberately not a
+   dictionary value: it is an identifier, not copy, and the Arabic dictionary
+   is swept for Latin letters.
+
+   Arabic month and day names, but Latin digits: a column of dates is read by
+   comparing it down the page, and Arabic-Indic digits make that harder.
+   Dropping -u-nu-latn switches them back. */
+export function getDateLocale(locale: SiteLocale): string {
+  return locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US';
 }
 
 /* Status badges render a database value, so they need translating at the
@@ -189,6 +415,27 @@ export function statusLabel(c: TryOnDashboardCopy, status: string): string {
       return c.statusCompleted;
     case 'failed':
       return c.statusFailed;
+    default:
+      return status;
+  }
+}
+
+/* Kept apart from statusLabel because it maps a different enum:
+   tryon_subscriptions.status (the SubscriptionStatus union), which the plan
+   badge renders raw. Same fall-through rule — an unknown status shows up as
+   visible English rather than an empty badge. */
+export function planStatusLabel(c: TryOnDashboardCopy, status: string): string {
+  switch (status) {
+    case 'active':
+      return c.planStatusActive;
+    case 'grace':
+      return c.planStatusGrace;
+    case 'expired':
+      return c.planStatusExpired;
+    case 'cancelled':
+      return c.planStatusCancelled;
+    case 'none':
+      return c.planStatusNone;
     default:
       return status;
   }

@@ -10,7 +10,7 @@ import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { getRequestLocale } from '@/lib/auth/locale';
-import { getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
+import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
@@ -29,11 +29,7 @@ export default async function DashboardTryOnPage({
   const params = await searchParams;
   const pageLocale = await getRequestLocale();
   const c = getTryOnDashboardCopy(pageLocale);
-
-  /* Arabic month and day names, but Latin digits: a column of dates is read
-     by comparing it down the page, and Arabic-Indic digits make that harder.
-     Dropping -u-nu-latn switches them back. */
-  const dateLocale = pageLocale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US';
+  const dateLocale = getDateLocale(pageLocale);
 
   const shops = await listManagedTryOnShops();
 
@@ -130,6 +126,7 @@ export default async function DashboardTryOnPage({
         </CardHeader>
         <CardContent>
           <ShopPlanControl
+            locale={pageLocale}
             shop={selectedShop}
             state={planState}
             plans={catalog.plans}

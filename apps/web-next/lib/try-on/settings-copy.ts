@@ -28,6 +28,10 @@ export interface SettingsFormCopy {
   gradientBaseColour: string;
   gradientIntensity: string;
   gradientAdvanced: string;
+  buttonIconSize: string;
+  catalogIconSize: string;
+  catalogLabelSize: string;
+  catalogPillPadding: string;
   cornerRadius: string;
   panelBackground: string;
   light: string;
@@ -89,6 +93,10 @@ const en: SettingsFormCopy = {
   gradientBaseColour: 'Brand colour',
   gradientIntensity: 'Gradient strength',
   gradientAdvanced: 'Advanced: pick both colours',
+  buttonIconSize: 'Button icon size',
+  catalogIconSize: 'Catalog icon size',
+  catalogLabelSize: 'Catalog label size',
+  catalogPillPadding: 'Catalog pill padding',
   cornerRadius: 'Corner radius (px)',
   panelBackground: 'Try-on panel background',
   light: 'Light',
@@ -152,6 +160,10 @@ const ar: SettingsFormCopy = {
   gradientBaseColour: 'لون العلامة',
   gradientIntensity: 'قوة التدرّج',
   gradientAdvanced: 'خيارات متقدمة: اختر اللونين',
+  buttonIconSize: 'حجم أيقونة الزر',
+  catalogIconSize: 'حجم أيقونة الكتالوج',
+  catalogLabelSize: 'حجم نص الكتالوج',
+  catalogPillPadding: 'حشو زر الكتالوج',
   cornerRadius: 'استدارة الحواف (بكسل)',
   panelBackground: 'خلفية لوحة التجربة',
   light: 'فاتح',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getTryOnDashboardCopy,
+  planStatusLabel,
   statusLabel,
   type TryOnDashboardCopy,
 } from '@/lib/try-on/dashboard-copy';
@@ -21,12 +22,44 @@ describe('getTryOnDashboardCopy', () => {
   });
 
   /* The whole point of the module: no English may survive into the Arabic
-     dictionary. Latin letters here mean somebody pasted the English value. */
+     dictionary. Latin letters here mean somebody pasted the English value.
+
+     Some entries are functions, because Arabic and English put an interpolated
+     value in different places in the sentence. Those are called with numbers
+     for every parameter, so anything Latin in the result came from the
+     sentence frame — which is the part being guarded — and not from the
+     caller's data. */
+  const LATIN_ALLOWED = new Set<keyof TryOnDashboardCopy>(['paymentReferencePlaceholder']);
+
   it('has no Latin letters anywhere in the Arabic dictionary', () => {
-    const values = Object.values(getTryOnDashboardCopy('ar')) as string[];
-    for (const value of values) {
-      expect(value, `Latin text in Arabic copy: ${value}`).not.toMatch(/[A-Za-z]/);
+    for (const [key, value] of Object.entries(getTryOnDashboardCopy('ar'))) {
+      if (LATIN_ALLOWED.has(key as keyof TryOnDashboardCopy)) continue;
+      const rendered =
+        typeof value === 'function'
+          ? (value as (...args: number[]) => string)(
+              ...Array.from({ length: value.length }, (_, i) => i + 1),
+            )
+          : (value as string);
+      expect(rendered, `Latin text in Arabic copy at ${key}: ${rendered}`).not.toMatch(/[A-Za-z]/);
     }
+  });
+
+  /* The one allowed exception, kept narrow: Instapay is a product name, so it
+     stays Latin, but nothing else in that example may. */
+  it('allows only the brand name in the Arabic payment reference example', () => {
+    const example = getTryOnDashboardCopy('ar').paymentReferencePlaceholder;
+    expect(example).toContain('Instapay');
+    expect(example.replace('Instapay', '')).not.toMatch(/[A-Za-z]/);
+  });
+
+  /* Arabic agrees a noun with its count in five different ways, so a day
+     count assembled as `${n} days` is wrong for most values of n. */
+  it('counts days correctly in Arabic', () => {
+    const ar = getTryOnDashboardCopy('ar');
+    expect(ar.bannerRenewalDue(1)).toContain('يوم واحد');
+    expect(ar.bannerRenewalDue(2)).toContain('يومين');
+    expect(ar.bannerRenewalDue(5)).toContain('5 أيام');
+    expect(ar.bannerRenewalDue(15)).toContain('15 يوماً');
   });
 });
 
@@ -72,5 +105,26 @@ describe('statusLabel', () => {
     expect(statusLabel(getTryOnDashboardCopy('ar'), 'refunded')).toBe('refunded');
     expect(statusLabel(getTryOnDashboardCopy('en'), 'refunded')).toBe('refunded');
     expect(statusLabel(getTryOnDashboardCopy('ar'), '')).toBe('');
+  });
+});
+
+/* The plan badge prints tryon_subscriptions.status raw, the same expression
+   shape statusLabel guards for shops and jobs. A different enum, so a
+   different mapping, and the same reason it cannot be caught by a source
+   scan. */
+describe('planStatusLabel', () => {
+  const known = ['active', 'grace', 'expired', 'cancelled', 'none'];
+
+  it('translates every subscription status in both languages', () => {
+    const en = getTryOnDashboardCopy('en');
+    const ar = getTryOnDashboardCopy('ar');
+    for (const status of known) {
+      expect(planStatusLabel(en, status), `English ${status}`).not.toBe(status);
+      expect(planStatusLabel(ar, status), `Arabic ${status}`).not.toMatch(/[A-Za-z]/);
+    }
+  });
+
+  it('falls back to the raw value for an unknown status', () => {
+    expect(planStatusLabel(getTryOnDashboardCopy('ar'), 'paused')).toBe('paused');
   });
 });

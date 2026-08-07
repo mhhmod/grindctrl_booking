@@ -17,6 +17,13 @@ import type {
   PlanCatalogItem,
   ShopEntitlement,
 } from '@/lib/try-on/entitlement';
+import {
+  getDateLocale,
+  getTryOnDashboardCopy,
+  planStatusLabel,
+  type TryOnDashboardCopy,
+} from '@/lib/try-on/dashboard-copy';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 /* Owner-side plan control. Payment happens outside the product (bank
    transfer, Instapay), so every action here records what the owner already
@@ -33,24 +40,24 @@ function statusTone(status: ShopEntitlement['status']) {
 }
 
 /* Plain sentences, because the owner reads this while deciding who to invoice. */
-function bannerLine(state: ShopEntitlement): string | null {
+function bannerLine(c: TryOnDashboardCopy, state: ShopEntitlement): string | null {
   switch (state.bannerState) {
     case 'expired':
-      return 'Expired. Generation is stopped until this shop is renewed.';
+      return c.bannerExpired;
     case 'cancelled':
-      return 'Cancelled. Generation is stopped.';
+      return c.bannerCancelled;
     case 'grace':
-      return `In grace for ${state.daysRemaining} more day${state.daysRemaining === 1 ? '' : 's'}. Collect payment before it stops.`;
+      return c.bannerGrace(state.daysRemaining);
     case 'urgent':
-      return `Renews in ${state.daysRemaining} day${state.daysRemaining === 1 ? '' : 's'}. Invoice now.`;
+      return c.bannerUrgent(state.daysRemaining);
     case 'renewal_due':
-      return `Renews in ${state.daysRemaining} days.`;
+      return c.bannerRenewalDue(state.daysRemaining);
     case 'exhausted':
-      return 'Out of credits. A top-up or renewal is needed.';
+      return c.bannerExhausted;
     case 'critical':
-      return `Almost out: ${state.totalCreditsRemaining} renders left.`;
+      return c.bannerCritical(state.totalCreditsRemaining);
     case 'low':
-      return `Running low: ${state.totalCreditsRemaining} renders left.`;
+      return c.bannerLow(state.totalCreditsRemaining);
     default:
       return null;
   }
@@ -61,50 +68,52 @@ export function ShopPlanControl({
   state,
   plans,
   packs,
+  locale = 'en',
 }: {
   shop: string;
   state: ShopEntitlement;
   plans: PlanCatalogItem[];
   packs: CreditPackCatalogItem[];
+  /* The dashboard operator's language, from the shared gc-locale cookie. */
+  locale?: SiteLocale;
 }) {
+  const c = getTryOnDashboardCopy(locale);
   const [planKey, setPlanKey] = useState(state.planKey ?? plans[0]?.planKey ?? '');
   const [packKey, setPackKey] = useState(packs[0]?.packKey ?? '');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
 
+  /* `action` arrives already translated, so it reads correctly inside both the
+     progress line and the success line, whichever shape the locale uses. */
   const run = useCallback(
-    async (label: string, fn: () => Promise<{ replayed: boolean }>) => {
-      setBusy(label);
+    async (action: string, fn: () => Promise<{ replayed: boolean }>) => {
+      setBusy(action);
       setFeedback(null);
       try {
         const result = await fn();
         setFeedback({
           tone: 'ok',
-          text: result.replayed
-            ? 'Already applied. Nothing changed.'
-            : `${label} applied. The merchant sees it immediately.`,
+          text: result.replayed ? c.actionReplayed : c.actionApplied(action),
         });
         setNote('');
       } catch (error) {
+        /* ponytail: server errors surface in English. They come from Postgres
+           and lib/try-on/entitlement.ts, so translating them belongs with
+           those messages, not here. */
         setFeedback({
           tone: 'error',
-          text: error instanceof Error ? error.message : 'The action failed.',
+          text: error instanceof Error ? error.message : c.actionFailed,
         });
       } finally {
         setBusy(null);
       }
     },
-    [],
+    [c],
   );
 
   if (shop === 'default') {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Plans belong to a shop. Pick a merchant shop above to see and change what it is
-        entitled to.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{c.plansBelongToShop}</p>;
   }
 
   const usedPct =
@@ -116,7 +125,7 @@ export function ShopPlanControl({
           ),
         )
       : 0;
-  const banner = bannerLine(state);
+  const banner = bannerLine(c, state);
   const currentPlan = plans.find((p) => p.planKey === state.planKey);
   const targetPlan = plans.find((p) => p.planKey === planKey);
   const isDowngrade =
@@ -127,17 +136,17 @@ export function ShopPlanControl({
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">{state.planName ?? 'No plan'}</span>
-          <Badge variant={statusTone(state.status)}>{state.status}</Badge>
+          <span className="text-lg font-semibold">{state.planName ?? c.noPlan}</span>
+          <Badge variant={statusTone(state.status)}>{planStatusLabel(c, state.status)}</Badge>
         </div>
         <span className="text-sm text-muted-foreground">
           {state.currentPeriodEnd
-            ? `Period ends ${new Date(state.currentPeriodEnd).toLocaleDateString()}`
-            : 'Not activated'}
+            ? c.periodEnds(new Date(state.currentPeriodEnd).toLocaleDateString(getDateLocale(locale)))
+            : c.notActivated}
         </span>
         {state.pendingPlanKey && (
           <span className="text-sm text-muted-foreground">
-            Downgrades to {state.pendingPlanKey} next period
+            {c.downgradesTo(state.pendingPlanKey)}
           </span>
         )}
       </div>
@@ -158,41 +167,37 @@ export function ShopPlanControl({
 
       <div className="grid gap-2">
         <div className="flex items-baseline justify-between text-sm">
-          <span>
-            {state.planCreditsRemaining} of {state.rendersIncluded} plan renders left
-          </span>
+          <span>{c.planRendersLeft(state.planCreditsRemaining, state.rendersIncluded)}</span>
           {state.topUpCreditsRemaining > 0 && (
             <span className="text-muted-foreground">
-              plus {state.topUpCreditsRemaining} from top-ups
+              {c.plusFromTopUps(state.topUpCreditsRemaining)}
             </span>
           )}
         </div>
         <div
           className="h-2 w-full overflow-hidden rounded-full bg-muted"
           role="img"
-          aria-label={`${usedPct}% of plan renders used`}
+          aria-label={c.rendersUsedAria(usedPct)}
         >
           <div className="h-full rounded-full bg-foreground/70" style={{ width: `${usedPct}%` }} />
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="plan_note">Payment reference</Label>
+        <Label htmlFor="plan_note">{c.paymentReference}</Label>
         <Input
           id="plan_note"
           value={note}
           maxLength={200}
-          placeholder="Instapay 14 Jul, 15 USD"
+          placeholder={c.paymentReferencePlaceholder}
           onChange={(e) => setNote(e.target.value)}
         />
-        <p className="text-xs text-muted-foreground">
-          Stored with the ledger entry so any future question about this shop has an answer.
-        </p>
+        <p className="text-xs text-muted-foreground">{c.paymentReferenceHelp}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="plan_select">Plan</Label>
+          <Label htmlFor="plan_select">{c.planLabel}</Label>
           <select
             id="plan_select"
             value={planKey}
@@ -201,7 +206,11 @@ export function ShopPlanControl({
           >
             {plans.map((plan) => (
               <option key={plan.planKey} value={plan.planKey}>
-                {plan.name}, {money(plan.priceMinor, plan.currency)} for {plan.rendersIncluded}
+                {c.catalogOption(
+                  plan.name,
+                  money(plan.priceMinor, plan.currency),
+                  plan.rendersIncluded,
+                )}
               </option>
             ))}
           </select>
@@ -211,24 +220,26 @@ export function ShopPlanControl({
               size="sm" className="h-10 sm:h-8"
               disabled={busy !== null || !planKey || isDowngrade}
               onClick={() =>
-                run('Activation', () =>
+                run(c.actionActivation, () =>
                   activatePlan({ shop, planKey, note, actionKey: crypto.randomUUID() }),
                 )
               }
             >
-              {state.status === 'none' ? 'Activate' : 'Activate or upgrade'}
+              {state.status === 'none' ? c.activate : c.activateOrUpgrade}
             </Button>
             <Button
               type="button"
               size="sm" className="h-10 sm:h-8"
               variant="outline"
               disabled={busy !== null || !canRenew}
-              title={canRenew ? undefined : 'Renewal opens at the period boundary'}
+              title={canRenew ? undefined : c.renewUnavailable}
               onClick={() =>
-                run('Renewal', () => renewPlan({ shop, note, actionKey: crypto.randomUUID() }))
+                run(c.actionRenewal, () =>
+                  renewPlan({ shop, note, actionKey: crypto.randomUUID() }),
+                )
               }
             >
-              Renew
+              {c.renew}
             </Button>
             {isDowngrade && (
               <Button
@@ -237,19 +248,19 @@ export function ShopPlanControl({
                 variant="outline"
                 disabled={busy !== null}
                 onClick={() =>
-                  run('Downgrade', () =>
+                  run(c.actionDowngrade, () =>
                     scheduleDowngrade({ shop, planKey, actionKey: crypto.randomUUID() }),
                   )
                 }
               >
-                Schedule downgrade
+                {c.scheduleDowngrade}
               </Button>
             )}
           </div>
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="pack_select">Top-up pack</Label>
+          <Label htmlFor="pack_select">{c.topUpPackLabel}</Label>
           <select
             id="pack_select"
             value={packKey}
@@ -258,7 +269,7 @@ export function ShopPlanControl({
           >
             {packs.map((pack) => (
               <option key={pack.packKey} value={pack.packKey}>
-                {pack.name}, {money(pack.priceMinor, pack.currency)} for {pack.renders}
+                {c.catalogOption(pack.name, money(pack.priceMinor, pack.currency), pack.renders)}
               </option>
             ))}
           </select>
@@ -268,19 +279,19 @@ export function ShopPlanControl({
             variant="outline"
             className="h-10 w-fit sm:h-8"
             disabled={busy !== null || !packKey || !state.available}
-            title={state.available ? undefined : 'Top-ups need an active or grace subscription'}
+            title={state.available ? undefined : c.topUpUnavailable}
             onClick={() =>
-              run('Top-up', () =>
+              run(c.actionTopUp, () =>
                 applyTopUp({ shop, packKey, note, actionKey: crypto.randomUUID() }),
               )
             }
           >
-            Add top-up
+            {c.addTopUp}
           </Button>
         </div>
       </div>
 
-      {busy && <p className="text-sm text-muted-foreground">{busy} in progress…</p>}
+      {busy && <p className="text-sm text-muted-foreground">{c.actionInProgress(busy)}</p>}
       {feedback && (
         <p className={`text-sm ${feedback.tone === 'ok' ? 'text-muted-foreground' : 'text-destructive'}`}>
           {feedback.text}

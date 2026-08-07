@@ -11,6 +11,7 @@ import {
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
 import { saveTryOnSettingsAction } from '@/app/dashboard/try-on/actions';
+import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 
 export type ManagedShopOption = {
   domain: string;
@@ -88,11 +89,12 @@ export function TryOnSettingsPanel({
   }, [s, loadingStepsText, selectedShop]);
 
   const isDefault = selectedShop === 'default';
+  const c = getTryOnDashboardCopy(locale);
 
   return (
     <div className="grid gap-6">
       <div className="grid gap-2">
-        <Label htmlFor="shop_select">Editing</Label>
+        <Label htmlFor="shop_select">{c.editing}</Label>
         <select
           id="shop_select"
           value={selectedShop}
@@ -102,18 +104,16 @@ export function TryOnSettingsPanel({
           }
           className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
         >
-          <option value="default">Global defaults (every shop without its own settings)</option>
+          <option value="default">{c.globalDefaultsOption}</option>
           {shops.map((shop) => (
             <option key={shop.domain} value={shop.domain}>
               {shop.domain}
-              {shop.status === 'uninstalled' ? ' (uninstalled)' : ''}
+              {shop.status === 'uninstalled' ? c.uninstalledSuffix : ''}
             </option>
           ))}
         </select>
         <p className="text-xs text-muted-foreground">
-          {isDefault
-            ? 'These values apply to every shop that has not overridden them. A merchant saving in their Shopify admin overrides them for that shop only.'
-            : `Overrides the global defaults for ${selectedShop}. This is the same record the merchant edits in their Shopify admin.`}
+          {isDefault ? c.defaultsHelp : c.overridesHelp(selectedShop)}
         </p>
       </div>
 
@@ -127,13 +127,13 @@ export function TryOnSettingsPanel({
 
       <div className="flex items-center gap-3">
         <Button type="button" onClick={save} disabled={status === 'saving' || isNavigating}>
-          {status === 'saving' ? 'Saving…' : 'Save settings'}
+          {status === 'saving' ? c.saving : c.saveSettings}
         </Button>
         {status === 'saved' && (
-          <span className="text-sm text-muted-foreground">Saved, live within a minute.</span>
+          <span className="text-sm text-muted-foreground">{c.savedLive}</span>
         )}
         {status === 'error' && (
-          <span className="text-sm text-destructive">Could not save. Try again.</span>
+          <span className="text-sm text-destructive">{c.saveFailed}</span>
         )}
       </div>
     </div>
