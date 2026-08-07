@@ -311,7 +311,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          Shopper view, {dark ? 'dark' : 'light'} panel
+          {dark ? copy.previewShopperViewDark : copy.previewShopperViewLight}
         </span>
       </div>
 

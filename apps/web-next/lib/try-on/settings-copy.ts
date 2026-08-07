@@ -69,6 +69,11 @@ export interface SettingsFormCopy {
   previewCaptionUpload: string;
   previewCaptionGenerating: string;
   previewCaptionResults: string;
+  /* Two flat strings rather than one with the theme interpolated: Arabic
+     agrees the adjective with the noun (لوحة is feminine), so a shared
+     sentence would need a gender table to stay correct. */
+  previewShopperViewLight: string;
+  previewShopperViewDark: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -139,6 +144,8 @@ const en: SettingsFormCopy = {
   previewCaptionUpload: 'The upload step shoppers see after opening the widget.',
   previewCaptionGenerating: 'What shoppers see while their look renders.',
   previewCaptionResults: 'The result screen, with only the buttons enabled below.',
+  previewShopperViewLight: 'Shopper view, light panel',
+  previewShopperViewDark: 'Shopper view, dark panel',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -207,6 +214,8 @@ const ar: SettingsFormCopy = {
   previewCaptionUpload: 'خطوة رفع الصورة كما يراها المتسوقون بعد فتح الأداة.',
   previewCaptionGenerating: 'ما يراه المتسوقون أثناء إنشاء نتيجتهم.',
   previewCaptionResults: 'شاشة النتيجة، مع الأزرار المفعّلة فقط أدناه.',
+  previewShopperViewLight: 'عرض المتسوق، لوحة فاتحة',
+  previewShopperViewDark: 'عرض المتسوق، لوحة داكنة',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',
