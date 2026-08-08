@@ -54,7 +54,12 @@ const TOKENS = {
 
 /* ponytail: illustrative filler for the loading checklist when the merchant
    hasn't set custom steps. Preview-only, never shipped shopper copy. */
-const DEFAULT_LOADING_STEPS = ['Reading your photo', 'Fitting the garment', 'Rendering your look'];
+/* Shown only when the merchant has written no steps of their own. Derived from
+   copy rather than a module constant so the fallback follows the language like
+   everything else here — a hardcoded array cannot. */
+function defaultLoadingSteps(copy: SettingsFormCopy): string[] {
+  return [copy.previewLoadingReading, copy.previewLoadingFitting, copy.previewLoadingRendering];
+}
 
 function ScanIcon() {
   const clipId = useId().replace(/:/g, '');
@@ -119,17 +124,15 @@ function JourneyMock({
           className="flex h-20 w-16 flex-none items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
           style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
         >
-          Product
-          <br />
-          photo
+          {copy.previewProductPhoto}
         </div>
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: t.mutedFg }}>
-            Your store
-          </p>
+            {copy.previewYourStore}
+</p>
           <p className="truncate text-sm font-bold">{copy.previewCaptionProduct}</p>
           <p className="mt-1 text-xs leading-relaxed" style={{ color: t.mutedFg }}>
-            Image and name come from your store automatically.
+            {copy.previewStoreAutoNote}
           </p>
         </div>
       </div>
@@ -137,7 +140,7 @@ function JourneyMock({
         className="mt-3 rounded-lg border border-dashed px-4 py-4 text-center text-xs"
         style={{ borderColor: t.border, color: t.mutedFg }}
       >
-        Upload your photo
+        {copy.previewUploadPrompt}
       </div>
       <div
         className="mt-3 flex items-center justify-center px-4 py-2.5 text-xs font-semibold"
@@ -147,7 +150,7 @@ function JourneyMock({
           borderRadius: `${Math.min(s.radiusPx, 20)}px`,
         }}
       >
-        Generate my look
+        {copy.previewGenerateCta}
       </div>
     </div>
   );
@@ -156,8 +159,17 @@ function JourneyMock({
 /* The loading screen shoppers see while the render runs. Shape depends on
    loadingStyle; the steps list falls back to illustrative filler when the
    merchant hasn't customized it. */
-function GeneratingMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)['light'] }) {
-  const steps = s.loadingSteps && s.loadingSteps.length > 0 ? s.loadingSteps : DEFAULT_LOADING_STEPS;
+function GeneratingMock({
+  s,
+  t,
+  copy,
+}: {
+  s: WidgetPreviewSettings;
+  t: (typeof TOKENS)['light'];
+  copy: SettingsFormCopy;
+}) {
+  const steps =
+    s.loadingSteps && s.loadingSteps.length > 0 ? s.loadingSteps : defaultLoadingSteps(copy);
 
   return (
     <div
@@ -169,9 +181,7 @@ function GeneratingMock({ s, t }: { s: WidgetPreviewSettings; t: (typeof TOKENS)
           className="pv-pulse mx-auto flex h-28 w-24 items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
           style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
         >
-          Product
-          <br />
-          photo
+          {copy.previewProductPhoto}
         </div>
       ) : s.loadingStyle === 'bar' ? (
         <div className="grid gap-2 py-6">
@@ -233,9 +243,7 @@ function ResultsMock({ s, t, copy }: { s: WidgetPreviewSettings; t: (typeof TOKE
         className="mx-auto flex h-32 w-full max-w-[220px] items-center justify-center rounded-lg border text-center text-[10px] leading-tight"
         style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
       >
-        Result
-        <br />
-        photo
+        {copy.previewResultPhoto}
       </div>
       <div className="mt-3 grid gap-2">
         {actions
@@ -311,7 +319,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          Shopper view, {dark ? 'dark' : 'light'} panel
+          {dark ? copy.previewShopperViewDark : copy.previewShopperViewLight}
         </span>
       </div>
 
@@ -397,7 +405,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
                   className="relative flex aspect-[3/4] items-center justify-center rounded-lg border text-[10px]"
                   style={{ background: t.muted, borderColor: t.border, color: t.mutedFg }}
                 >
-                  Product image
+                  {copy.previewProductImage}
                   <button
                     type="button"
                     onClick={() => setDialogOpen(true)}
@@ -443,7 +451,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
                   <button
                     type="button"
                     onClick={() => setDialogOpen(false)}
-                    aria-label="Close preview dialog"
+                    aria-label={copy.previewCloseDialog}
                     className="absolute end-2 top-2 z-10 grid size-7 place-items-center rounded-full text-sm"
                     style={{ background: 'rgba(42,40,38,0.75)', color: '#f0ede9' }}
                   >
@@ -464,7 +472,7 @@ export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: Set
 
         {tab === 'generating' ? (
           <div className="mx-auto w-full max-w-md">
-            <GeneratingMock s={s} t={t} />
+            <GeneratingMock s={s} t={t} copy={copy} />
           </div>
         ) : null}
 

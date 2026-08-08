@@ -28,6 +28,10 @@ export interface SettingsFormCopy {
   gradientBaseColour: string;
   gradientIntensity: string;
   gradientAdvanced: string;
+  buttonIconSize: string;
+  catalogIconSize: string;
+  catalogLabelSize: string;
+  catalogPillPadding: string;
   cornerRadius: string;
   panelBackground: string;
   light: string;
@@ -38,6 +42,9 @@ export interface SettingsFormCopy {
   loadingPulse: string;
   loadingBar: string;
   resultButtons: string;
+  resultButtonsHint: string;
+  /** Glued to a slider value: `18px`. Not a standalone word. */
+  pxSuffix: string;
   addToCart: string;
   downloadPreview: string;
   requestWhatsapp: string;
@@ -62,6 +69,27 @@ export interface SettingsFormCopy {
   previewCaptionUpload: string;
   previewCaptionGenerating: string;
   previewCaptionResults: string;
+  /* Two flat strings rather than one with the theme interpolated: Arabic
+     agrees the adjective with the noun (لوحة is feminine), so a shared
+     sentence would need a gender table to stay correct. */
+  previewShopperViewLight: string;
+  previewShopperViewDark: string;
+  /* Chrome inside the preview mock. The merchant is the reader here, not the
+     shopper — but a merchant reading Arabic should not find English inside the
+     thing that shows them their own settings. */
+  previewProductPhoto: string;
+  previewResultPhoto: string;
+  previewYourStore: string;
+  previewStoreAutoNote: string;
+  previewUploadPrompt: string;
+  previewGenerateCta: string;
+  previewProductImage: string;
+  previewCloseDialog: string;
+  /* Shown only when the merchant has written no loading steps of their own, so
+     these are what an Arabic SHOPPER reads by default, not the merchant. */
+  previewLoadingReading: string;
+  previewLoadingFitting: string;
+  previewLoadingRendering: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -89,6 +117,10 @@ const en: SettingsFormCopy = {
   gradientBaseColour: 'Brand colour',
   gradientIntensity: 'Gradient strength',
   gradientAdvanced: 'Advanced: pick both colours',
+  buttonIconSize: 'Button icon size',
+  catalogIconSize: 'Catalog icon size',
+  catalogLabelSize: 'Catalog label size',
+  catalogPillPadding: 'Catalog pill padding',
   cornerRadius: 'Corner radius (px)',
   panelBackground: 'Try-on panel background',
   light: 'Light',
@@ -102,6 +134,8 @@ const en: SettingsFormCopy = {
   loadingPulse: 'Product photo pulse',
   loadingBar: 'Progress bar',
   resultButtons: 'Result screen buttons',
+  resultButtonsHint: 'What shoppers can do after seeing themselves in the product.',
+  pxSuffix: 'px',
   addToCart: 'Add to cart',
   downloadPreview: 'Download preview',
   requestWhatsapp: 'Request order / WhatsApp',
@@ -126,6 +160,19 @@ const en: SettingsFormCopy = {
   previewCaptionUpload: 'The upload step shoppers see after opening the widget.',
   previewCaptionGenerating: 'What shoppers see while their look renders.',
   previewCaptionResults: 'The result screen, with only the buttons enabled below.',
+  previewShopperViewLight: 'Shopper view, light panel',
+  previewShopperViewDark: 'Shopper view, dark panel',
+  previewProductPhoto: 'Product photo',
+  previewResultPhoto: 'Result photo',
+  previewYourStore: 'Your store',
+  previewStoreAutoNote: 'Image and name come from your store automatically.',
+  previewUploadPrompt: 'Upload your photo',
+  previewGenerateCta: 'Generate my look',
+  previewProductImage: 'Product image',
+  previewCloseDialog: 'Close preview dialog',
+  previewLoadingReading: 'Reading your photo',
+  previewLoadingFitting: 'Fitting the garment',
+  previewLoadingRendering: 'Rendering your look',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -152,6 +199,10 @@ const ar: SettingsFormCopy = {
   gradientBaseColour: 'لون العلامة',
   gradientIntensity: 'قوة التدرّج',
   gradientAdvanced: 'خيارات متقدمة: اختر اللونين',
+  buttonIconSize: 'حجم أيقونة الزر',
+  catalogIconSize: 'حجم أيقونة الكتالوج',
+  catalogLabelSize: 'حجم نص الكتالوج',
+  catalogPillPadding: 'حشو زر الكتالوج',
   cornerRadius: 'استدارة الحواف (بكسل)',
   panelBackground: 'خلفية لوحة التجربة',
   light: 'فاتح',
@@ -163,6 +214,9 @@ const ar: SettingsFormCopy = {
   loadingPulse: 'نبض صورة المنتج',
   loadingBar: 'شريط تقدم',
   resultButtons: 'أزرار شاشة النتيجة',
+  resultButtonsHint: 'ما يمكن للمتسوقين فعله بعد رؤية أنفسهم بالمنتج.',
+  /* A whole word, not an abbreviation, so it carries its own space. */
+  pxSuffix: ' بكسل',
   addToCart: 'أضف إلى السلة',
   downloadPreview: 'تنزيل المعاينة',
   requestWhatsapp: 'طلب عبر واتساب',
@@ -187,6 +241,19 @@ const ar: SettingsFormCopy = {
   previewCaptionUpload: 'خطوة رفع الصورة كما يراها المتسوقون بعد فتح الأداة.',
   previewCaptionGenerating: 'ما يراه المتسوقون أثناء إنشاء نتيجتهم.',
   previewCaptionResults: 'شاشة النتيجة، مع الأزرار المفعّلة فقط أدناه.',
+  previewShopperViewLight: 'عرض المتسوق، لوحة فاتحة',
+  previewShopperViewDark: 'عرض المتسوق، لوحة داكنة',
+  previewProductPhoto: 'صورة المنتج',
+  previewResultPhoto: 'صورة النتيجة',
+  previewYourStore: 'متجرك',
+  previewStoreAutoNote: 'الصورة والاسم يأتيان من متجرك تلقائيًا.',
+  previewUploadPrompt: 'ارفع صورتك',
+  previewGenerateCta: 'أنشئ إطلالتي',
+  previewProductImage: 'صورة المنتج',
+  previewCloseDialog: 'إغلاق نافذة المعاينة',
+  previewLoadingReading: 'نقرأ صورتك',
+  previewLoadingFitting: 'نضبط مقاس القطعة',
+  previewLoadingRendering: 'نُجهّز إطلالتك',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',

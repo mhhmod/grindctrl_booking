@@ -10,6 +10,7 @@ import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
@@ -27,6 +28,9 @@ export default async function DashboardTryOnPage({
 }) {
   const params = await searchParams;
   const pageLocale = await getRequestLocale();
+  const c = getTryOnDashboardCopy(pageLocale);
+  const dateLocale = getDateLocale(pageLocale);
+
   const shops = await listManagedTryOnShops();
 
   /* Only a shop we already know about may be selected; anything else falls
@@ -50,13 +54,13 @@ export default async function DashboardTryOnPage({
   const installed = shops.filter((shop) => shop.status === 'installed');
 
   const kpis = [
-    { label: 'Installed shops', value: String(installed.length) },
-    { label: 'Recent generations', value: String(jobs.length) },
+    { label: c.installedShops, value: String(installed.length) },
+    { label: c.recentGenerations, value: String(jobs.length) },
     {
-      label: 'Avg generation time',
-      value: completed.length ? `${avgSeconds.toFixed(1)}s` : 'No data yet',
+      label: c.avgGenerationTime,
+      value: completed.length ? `${avgSeconds.toFixed(1)}${c.secondsSuffix}` : c.noDataYet,
     },
-    { label: 'Provider spend (recent)', value: `$${totalCost.toFixed(2)}` },
+    { label: c.providerSpend, value: `$${totalCost.toFixed(2)}` },
   ];
 
   return (
@@ -76,26 +80,20 @@ export default async function DashboardTryOnPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Merchant shops</CardTitle>
-          <CardDescription>
-            A shop appears the first time its admin opens the app, and drops to uninstalled
-            when Shopify tells us it was removed.
-          </CardDescription>
+          <CardTitle>{c.merchantShops}</CardTitle>
+          <CardDescription>{c.merchantShopsBody}</CardDescription>
         </CardHeader>
         <CardContent>
           {shops.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No shop has opened the app yet. Once a merchant opens it from their Shopify
-              admin, they appear here and can be configured individually.
-            </p>
+            <p className="text-sm text-muted-foreground">{c.noShopsYet}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Shop</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-end">Generations</TableHead>
-                  <TableHead>Last generation</TableHead>
+                  <TableHead>{c.columnShop}</TableHead>
+                  <TableHead>{c.columnStatus}</TableHead>
+                  <TableHead className="text-end">{c.columnGenerations}</TableHead>
+                  <TableHead>{c.columnLastGeneration}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -104,12 +102,14 @@ export default async function DashboardTryOnPage({
                     <TableCell className="font-medium">{shop.domain}</TableCell>
                     <TableCell>
                       <Badge variant={shop.status === 'installed' ? 'secondary' : 'destructive'}>
-                        {shop.status}
+                        {statusLabel(c, shop.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">{shop.jobCount}</TableCell>
                     <TableCell className="text-muted-foreground">
-                      {shop.lastJobAt ? new Date(shop.lastJobAt).toLocaleString() : 'None yet'}
+                      {shop.lastJobAt
+                        ? new Date(shop.lastJobAt).toLocaleString(dateLocale)
+                        : c.noneYet}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -121,14 +121,12 @@ export default async function DashboardTryOnPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Plan and credits</CardTitle>
-          <CardDescription>
-            Payment is collected outside the app, so activating here is what grants credits.
-            Every action is recorded in the ledger with its payment reference.
-          </CardDescription>
+          <CardTitle>{c.planAndCredits}</CardTitle>
+          <CardDescription>{c.planAndCreditsBody}</CardDescription>
         </CardHeader>
         <CardContent>
           <ShopPlanControl
+            locale={pageLocale}
             shop={selectedShop}
             state={planState}
             plans={catalog.plans}
@@ -139,11 +137,8 @@ export default async function DashboardTryOnPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Appearance and journey</CardTitle>
-          <CardDescription>
-            The same controls the merchant sees in their Shopify admin, writing to the same
-            record. Changes go live within a minute.
-          </CardDescription>
+          <CardTitle>{c.appearance}</CardTitle>
+          <CardDescription>{c.appearanceBody}</CardDescription>
         </CardHeader>
         <CardContent>
           <TryOnSettingsPanel
@@ -161,43 +156,42 @@ export default async function DashboardTryOnPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent generations</CardTitle>
-          <CardDescription>The last 25 live jobs, newest first, with what each cost.</CardDescription>
+          <CardTitle>{c.recentGenerations}</CardTitle>
+          <CardDescription>{c.recentGenerationsBody}</CardDescription>
         </CardHeader>
         <CardContent>
           {jobs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No generations yet. Run a try-on from a storefront and it lands here with its
-              cost and timing.
-            </p>
+            <p className="text-sm text-muted-foreground">{c.noGenerationsYet}</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Shop</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-end">Cost</TableHead>
-                  <TableHead className="text-end">Time</TableHead>
-                  <TableHead>When</TableHead>
+                  <TableHead>{c.columnProduct}</TableHead>
+                  <TableHead>{c.columnShop}</TableHead>
+                  <TableHead>{c.columnStatus}</TableHead>
+                  <TableHead className="text-end">{c.columnCost}</TableHead>
+                  <TableHead className="text-end">{c.columnTime}</TableHead>
+                  <TableHead>{c.columnWhen}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {jobs.map((job) => (
                   <TableRow key={job.id}>
                     <TableCell className="font-medium">{job.product_id}</TableCell>
-                    <TableCell className="text-muted-foreground">{job.shop ?? 'Demo'}</TableCell>
+                    <TableCell className="text-muted-foreground">{job.shop ?? c.demoShop}</TableCell>
                     <TableCell>
-                      <Badge variant={statusTone(job.status)}>{job.status}</Badge>
+                      <Badge variant={statusTone(job.status)}>{statusLabel(c, job.status)}</Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
                       ${(job.cost_usd ?? 0).toFixed(4)}
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
-                      {job.duration_ms ? `${(job.duration_ms / 1000).toFixed(1)}s` : 'No data'}
+                      {job.duration_ms
+                        ? `${(job.duration_ms / 1000).toFixed(1)}${c.secondsSuffix}`
+                        : c.noData}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(job.created_at).toLocaleString()}
+                      {new Date(job.created_at).toLocaleString(dateLocale)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -209,10 +203,8 @@ export default async function DashboardTryOnPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Shopify app</CardTitle>
-          <CardDescription>
-            Merchants install and configure from their own admin. This is what they open.
-          </CardDescription>
+          <CardTitle>{c.shopifyApp}</CardTitle>
+          <CardDescription>{c.shopifyAppBody}</CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline" size="sm">
@@ -220,7 +212,7 @@ export default async function DashboardTryOnPage({
               href="https://admin.shopify.com/store/grindctrl/apps/grindctrl-tryon"
               target="_blank"
             >
-              Open the Shopify app
+              {c.openShopifyApp}
             </Link>
           </Button>
         </CardContent>
