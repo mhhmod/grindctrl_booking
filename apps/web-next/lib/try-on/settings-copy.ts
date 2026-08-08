@@ -74,6 +74,22 @@ export interface SettingsFormCopy {
      sentence would need a gender table to stay correct. */
   previewShopperViewLight: string;
   previewShopperViewDark: string;
+  /* Chrome inside the preview mock. The merchant is the reader here, not the
+     shopper — but a merchant reading Arabic should not find English inside the
+     thing that shows them their own settings. */
+  previewProductPhoto: string;
+  previewResultPhoto: string;
+  previewYourStore: string;
+  previewStoreAutoNote: string;
+  previewUploadPrompt: string;
+  previewGenerateCta: string;
+  previewProductImage: string;
+  previewCloseDialog: string;
+  /* Shown only when the merchant has written no loading steps of their own, so
+     these are what an Arabic SHOPPER reads by default, not the merchant. */
+  previewLoadingReading: string;
+  previewLoadingFitting: string;
+  previewLoadingRendering: string;
   // Shopify embedded admin chrome
   productPages: string;
   catalogPages: string;
@@ -146,6 +162,17 @@ const en: SettingsFormCopy = {
   previewCaptionResults: 'The result screen, with only the buttons enabled below.',
   previewShopperViewLight: 'Shopper view, light panel',
   previewShopperViewDark: 'Shopper view, dark panel',
+  previewProductPhoto: 'Product photo',
+  previewResultPhoto: 'Result photo',
+  previewYourStore: 'Your store',
+  previewStoreAutoNote: 'Image and name come from your store automatically.',
+  previewUploadPrompt: 'Upload your photo',
+  previewGenerateCta: 'Generate my look',
+  previewProductImage: 'Product image',
+  previewCloseDialog: 'Close preview dialog',
+  previewLoadingReading: 'Reading your photo',
+  previewLoadingFitting: 'Fitting the garment',
+  previewLoadingRendering: 'Rendering your look',
   productPages: 'Product pages',
   catalogPages: 'Catalog pages',
   appearance: 'Appearance',
@@ -216,6 +243,17 @@ const ar: SettingsFormCopy = {
   previewCaptionResults: 'شاشة النتيجة، مع الأزرار المفعّلة فقط أدناه.',
   previewShopperViewLight: 'عرض المتسوق، لوحة فاتحة',
   previewShopperViewDark: 'عرض المتسوق، لوحة داكنة',
+  previewProductPhoto: 'صورة المنتج',
+  previewResultPhoto: 'صورة النتيجة',
+  previewYourStore: 'متجرك',
+  previewStoreAutoNote: 'الصورة والاسم يأتيان من متجرك تلقائيًا.',
+  previewUploadPrompt: 'ارفع صورتك',
+  previewGenerateCta: 'أنشئ إطلالتي',
+  previewProductImage: 'صورة المنتج',
+  previewCloseDialog: 'إغلاق نافذة المعاينة',
+  previewLoadingReading: 'نقرأ صورتك',
+  previewLoadingFitting: 'نضبط مقاس القطعة',
+  previewLoadingRendering: 'نُجهّز إطلالتك',
   productPages: 'صفحات المنتجات',
   catalogPages: 'صفحات الكتالوج',
   appearance: 'المظهر',
