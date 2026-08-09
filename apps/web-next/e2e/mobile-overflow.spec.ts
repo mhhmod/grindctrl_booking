@@ -3,16 +3,25 @@ import { test, expect } from '@playwright/test';
 const WIDTHS = [320, 360, 390, 430];
 const LOCALES = ['en', 'ar'] as const;
 
+/* Both public pages. /pricing was missed the first time round and kept the
+   tracking-[0.22em] eyebrow the landing pass removed, so it went untested with
+   the very defect this sweep exists to catch. */
+const PAGES = [
+  { name: 'landing', path: '/' },
+  { name: 'pricing', path: '/pricing' },
+] as const;
+
+for (const { name, path } of PAGES) {
 for (const locale of LOCALES) {
   for (const width of WIDTHS) {
-    test(`landing has no horizontal overflow at ${width}px in ${locale}`, async ({ page, context }) => {
+    test(`${name} has no horizontal overflow at ${width}px in ${locale}`, async ({ page, context }) => {
       /* Locale comes only from this cookie (SITE_LOCALE_COOKIE), read server
          side in app/page.tsx. There is no ?lang= param. */
       await context.addCookies([
         { name: 'gc-locale', value: locale, url: 'http://localhost:3100' },
       ]);
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await page.goto(path);
       /* Not networkidle — Next dev holds an HMR connection open, so it never
          settles. Fonts are what actually move text widths, so wait for those. */
       await page.evaluate(() => document.fonts.ready);
@@ -66,7 +75,8 @@ for (const locale of LOCALES) {
           });
       }, 1);
 
-      expect(overflowing, `text overflowing the ${width}px viewport`).toEqual([]);
+      expect(overflowing, `text overflowing the ${width}px viewport on ${path}`).toEqual([]);
     });
   }
+}
 }
