@@ -231,10 +231,10 @@
 /* Arabic typography: use the Arabic face and undo Latin-only treatments.
    Letter-spacing and uppercase break connected Arabic script, so reset
    them within the landing when the active locale is Arabic. */
-.gc-landing-root:lang(ar) {
+:lang(ar) {
   font-family: var(--font-arabic);
 }
-.gc-landing-root:lang(ar) * {
+:lang(ar) * {
   letter-spacing: normal;
   text-transform: none;
 }

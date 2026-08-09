@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 import { GcSpotlight } from '@/components/gc-spotlight';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { getDir } from '@/lib/landing/landing-i18n';
 
 export const metadata: Metadata = {
   title: 'GRINDCTRL — AI Implementation & Automation',
@@ -27,7 +28,18 @@ export default async function RootLayout({children}: {children: React.ReactNode}
   const locale = await getRequestLocale();
 
   return (
-    <html lang="en" className={cn("font-sans")} suppressHydrationWarning>
+    /* lang and dir belong on <html>, not on a wrapper div. Anything rendered
+       through a portal — the mobile menu, dialogs, toasts — mounts on <body>
+       and escapes any wrapper, so it was inheriting English and LTR while the
+       page was Arabic: the menu rendered Arabic in a Latin-only font, laid out
+       left to right. Setting it here is the only place everything inherits
+       from, and it also tells screen readers the truth about the page. */
+    <html
+      lang={locale}
+      dir={getDir(locale)}
+      className={cn('font-sans')}
+      suppressHydrationWarning
+    >
       <body suppressHydrationWarning>
         <ThemeProvider>
           <GcSpotlight />

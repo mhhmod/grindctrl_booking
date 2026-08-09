@@ -12,12 +12,19 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 
+/* Pricing is a ROUTE, not an anchor. It used to be '#pricing', which scrolled
+   to a section of the landing page and never opened /pricing — so the pricing
+   page was unreachable from the navigation on any device. */
 const navLinks = [
   { href: '#how', key: 'navHow' },
   { href: '#demo', key: 'navDemo' },
   { href: '#benefits', key: 'navBenefits' },
-  { href: '#pricing', key: 'navPricing' },
+  { href: '/pricing', key: 'navPricing' },
 ] as const;
+
+function isRoute(href: string) {
+  return href.startsWith('/');
+}
 
 export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTranslator }) {
   const [open, setOpen] = useState(false);
@@ -30,11 +37,21 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-          {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
-              {t[link.key]}
-            </a>
-          ))}
+          {navLinks.map((link) =>
+            isRoute(link.href) ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="transition-colors hover:text-foreground"
+              >
+                {t[link.key]}
+              </Link>
+            ) : (
+              <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
+                {t[link.key]}
+              </a>
+            ),
+          )}
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -80,16 +97,29 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
               <SheetTitle className="mb-4">{t.menu}</SheetTitle>
 
               <nav className="flex flex-col">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t[link.key]}
-                  </a>
-                ))}
+                {navLinks.map((link) => {
+                  const cls =
+                    'flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground';
+                  return isRoute(link.href) ? (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className={cls}
+                    >
+                      {t[link.key]}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className={cls}
+                    >
+                      {t[link.key]}
+                    </a>
+                  );
+                })}
                 <Link
                   href="/sign-in"
                   onClick={() => setOpen(false)}
