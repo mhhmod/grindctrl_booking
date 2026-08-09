@@ -362,10 +362,13 @@ const ar: LandingDict = {
   pricingTitle: 'ابدأ بحجم صغير ثم توسع مع الطلب.',
   pricingBody:
     'تتضمن كل خطة عددًا شهريًا من المعاينات. وتضيف خطة الإدارة الكاملة الإعداد والمتابعة المستمرة.',
+  /* Named in Arabic, not transliterated. خدمة كاملة ("full service") rather
+     than a literal rendering of done-for-you, because it is what a merchant
+     would actually say. MSA, matching the rest of this dictionary. */
   pricingPlanNames: {
-    'free-v1': 'Free',
-    'launch-v1': 'Launch',
-    'dfy-v1': 'Done-for-you',
+    'free-v1': 'مجاني',
+    'launch-v1': 'انطلاق',
+    'dfy-v1': 'خدمة كاملة',
   },
   pricingRenderLine: (renders) => `${renders} معاينة شهريًا.`,
   pricingManagedLine: (renders) =>
