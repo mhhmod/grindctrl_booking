@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import posthog from 'posthog-js';
 import Image from 'next/image';
 import {
   Sparkles,
@@ -150,6 +151,11 @@ export function TryOnDemo({
         message: genData.message,
         createdAt: new Date().toISOString(),
         meta: genData.meta,
+      });
+      posthog.capture('try_on_generation_completed', {
+        product_id: genData.productId,
+        shop_mode: Boolean(shopProduct),
+        status: genData.status,
       });
       setStep('result');
     } catch (err) {

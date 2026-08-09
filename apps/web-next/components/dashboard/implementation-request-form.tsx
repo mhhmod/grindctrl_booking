@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useSyncExternalStore } from 'react';
+import posthog from 'posthog-js';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,6 +94,13 @@ export function ImplementationRequestForm() {
               return;
             }
 
+            posthog.capture('implementation_request_prepared', {
+              channel_count: selectedChannels.length,
+              tool_count: selectedTools.length,
+              primary_use_case: primaryUseCase,
+              urgency,
+              has_saved_preview: Boolean(preview),
+            });
             setSubmitted(true);
           }}
           data-testid="implementation-request-form"

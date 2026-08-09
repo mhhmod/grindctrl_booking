@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import posthog from 'posthog-js';
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import type { DomainsState } from '@/app/dashboard/domains/state';
@@ -134,6 +135,7 @@ function DomainsManagerInner({
       setStatusDrafts(Object.fromEntries(nextState.domains.map((domain) => [domain.id, domain.verification_status])));
       setInlineError(nextState.fieldError);
       if (nextState.messageType === 'success') {
+        posthog.capture('domain_added');
         setDomainDraft('');
       }
       setPendingAction(null);
@@ -297,6 +299,9 @@ function DomainsManagerInner({
                               setState(nextState);
                               setStatusDrafts(Object.fromEntries(nextState.domains.map((entry) => [entry.id, entry.verification_status])));
                               setInlineError(nextState.fieldError);
+                              if (nextState.messageType === 'success') {
+                                posthog.capture('domain_status_updated', { status: nextStatus });
+                              }
                               setPendingAction(null);
                             });
                           }}
@@ -345,6 +350,9 @@ function DomainsManagerInner({
                                 setState(nextState);
                                 setStatusDrafts(Object.fromEntries(nextState.domains.map((entry) => [entry.id, entry.verification_status])));
                                 setInlineError(nextState.fieldError);
+                                if (nextState.messageType === 'success') {
+                                  posthog.capture('domain_removed');
+                                }
                                 setPendingAction(null);
                               });
                             }}

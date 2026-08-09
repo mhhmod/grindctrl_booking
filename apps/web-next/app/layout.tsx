@@ -10,7 +10,7 @@ import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
-import { GcSpotlight } from '@/components/gc-spotlight';
+import { GcSpotlight, PostHogUserIdentification } from '@/components/gc-spotlight';
 import { getRequestLocale } from '@/lib/auth/locale';
 
 export const metadata: Metadata = {
@@ -32,7 +32,10 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <ThemeProvider>
           <GcSpotlight />
           {clerkConfigured ? (
-            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>{children}</ClerkProvider>
+            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>
+              <PostHogUserIdentification />
+              {children}
+            </ClerkProvider>
           ) : (
             children
           )}

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import posthog from 'posthog-js';
 import { useCallback, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,11 @@ export function ShopPlanControl({
           tone: 'ok',
           text: result.replayed ? c.actionReplayed : c.actionApplied(action),
         });
+        posthog.capture('shop_plan_action_completed', {
+          action,
+          replayed: result.replayed,
+          plan_status: state.status,
+        });
         setNote('');
       } catch (error) {
         /* ponytail: server errors surface in English. They come from Postgres
@@ -117,7 +123,7 @@ export function ShopPlanControl({
         setBusy(null);
       }
     },
-    [c],
+    [c, state.status],
   );
 
   if (shop === 'default') {

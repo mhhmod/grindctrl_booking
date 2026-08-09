@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import posthog from 'posthog-js';
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import type { IntentsState, IntentEditorValues } from '@/app/dashboard/intents/state';
@@ -256,6 +257,9 @@ function IntentsManagerInner({
       setPendingAction(null);
 
       if (nextState.messageType === 'success') {
+        posthog.capture(editingIntentId ? 'widget_intent_updated' : 'widget_intent_created', {
+          action_type: values.actionType,
+        });
         setEditingIntentId(null);
         setValues({ ...initialValues, sortOrder: String(nextState.intents.length) });
       }
@@ -497,6 +501,9 @@ function IntentsManagerInner({
                               const nextState = await reorderIntentAction(formData);
                               setState(nextState);
                               setInlineError(nextState.fieldError);
+                              if (nextState.messageType === 'success') {
+                                posthog.capture('widget_intent_reordered', { direction: 'up' });
+                              }
                               setPendingAction(null);
                             });
                           }}
@@ -518,6 +525,9 @@ function IntentsManagerInner({
                               const nextState = await reorderIntentAction(formData);
                               setState(nextState);
                               setInlineError(nextState.fieldError);
+                              if (nextState.messageType === 'success') {
+                                posthog.capture('widget_intent_reordered', { direction: 'down' });
+                              }
                               setPendingAction(null);
                             });
                           }}
@@ -535,6 +545,9 @@ function IntentsManagerInner({
                               const nextState = await deleteIntentAction(formData);
                               setState(nextState);
                               setInlineError(nextState.fieldError);
+                              if (nextState.messageType === 'success') {
+                                posthog.capture('widget_intent_deleted');
+                              }
                               if (editingIntentId === intent.id) {
                                 setEditingIntentId(null);
                                 setValues(initialValues);
