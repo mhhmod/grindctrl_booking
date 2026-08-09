@@ -6,6 +6,7 @@ import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { CurrencyToggle } from '@/components/pricing/currency-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { BOOKING_URL } from '@/lib/booking';
+import type { Currency } from '@/lib/pricing/currency';
 import type {
   PublicCreditPackCatalogItem,
   PublicEntitlementCatalog,
@@ -154,7 +156,13 @@ function PlanCard({
   );
 }
 
-export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCatalog }) {
+export function PricingPageContent({
+  catalog,
+  currency,
+}: {
+  catalog: PublicEntitlementCatalog;
+  currency: Currency;
+}) {
   const { locale } = useLandingLocale();
   const t = getPricingCopy(locale);
   const sortedPlans = [...catalog.plans].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -276,6 +284,12 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
               <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
                 {t.plansBody}
               </p>
+            </div>
+
+            {/* Sits with the prices rather than in a page header, so somebody
+                who scrolled straight to the plans can still correct it. */}
+            <div className="mb-6 flex justify-start">
+              <CurrencyToggle currency={currency} />
             </div>
 
             <div className="grid min-w-0 gap-5 lg:grid-cols-3 lg:items-stretch">
