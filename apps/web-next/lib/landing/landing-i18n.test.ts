@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getPricingCopy } from '@/components/pricing/pricing-copy';
 import { getLandingDictionary } from '@/lib/landing/landing-i18n';
 
 describe('Arabic landing dictionary', () => {
@@ -30,4 +31,27 @@ describe('Arabic landing dictionary', () => {
     expect(en.pricingPlanNames['launch-v1']).toBe('Launch');
     expect(en.pricingPlanNames['dfy-v1']).toBe('Done-for-you');
   });
+});
+
+/* Two copy sources name the same three plans: this dictionary feeds the pricing
+   section on the home page, pricing-copy.ts feeds the /pricing page. They were
+   already out of step once — landing had English while pricing had Arabic — and
+   fixing that by hand introduced a second Arabic name for one plan.
+
+   One plan with two names is worse than one plan in the wrong language, because
+   nobody notices it. This is the guard. */
+describe('the two plan-name sources agree', () => {
+  for (const locale of ['en', 'ar'] as const) {
+    it(`names every plan identically in ${locale}`, () => {
+      const landing = getLandingDictionary(locale).pricingPlanNames;
+      const pricing = getPricingCopy(locale).plans;
+
+      for (const key of Object.keys(landing)) {
+        expect(
+          pricing[key]?.name,
+          `plan ${key} is "${landing[key]}" on the home page but "${pricing[key]?.name}" on /pricing`,
+        ).toBe(landing[key]);
+      }
+    });
+  }
 });
