@@ -6,6 +6,8 @@ import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { Eyebrow } from '@/components/landing/eyebrow';
+import { CurrencyToggle } from '@/components/pricing/currency-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { BOOKING_URL } from '@/lib/booking';
+import type { Currency } from '@/lib/pricing/currency';
 import type {
   PublicCreditPackCatalogItem,
   PublicEntitlementCatalog,
@@ -154,7 +157,13 @@ function PlanCard({
   );
 }
 
-export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCatalog }) {
+export function PricingPageContent({
+  catalog,
+  currency,
+}: {
+  catalog: PublicEntitlementCatalog;
+  currency: Currency;
+}) {
   const { locale } = useLandingLocale();
   const t = getPricingCopy(locale);
   const sortedPlans = [...catalog.plans].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -267,15 +276,19 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
         <section className="border-b border-border">
           <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
             <div className="mb-10 max-w-3xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.plansEyebrow}
-              </p>
+              <Eyebrow locale={locale}>{t.plansEyebrow}</Eyebrow>
               <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
                 {t.plansTitle}
               </h2>
               <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
                 {t.plansBody}
               </p>
+            </div>
+
+            {/* Sits with the prices rather than in a page header, so somebody
+                who scrolled straight to the plans can still correct it. */}
+            <div className="mb-6 flex justify-start">
+              <CurrencyToggle currency={currency} />
             </div>
 
             <div className="grid min-w-0 gap-5 lg:grid-cols-3 lg:items-stretch">
@@ -295,9 +308,7 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
         <section className="border-b border-border bg-muted/20">
           <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-16 lg:px-8 lg:py-24">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.packsEyebrow}
-              </p>
+              <Eyebrow locale={locale}>{t.packsEyebrow}</Eyebrow>
               <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
                 {t.packsTitle}
               </h2>
@@ -348,9 +359,7 @@ export function PricingPageContent({ catalog }: { catalog: PublicEntitlementCata
         <section className="border-b border-border">
           <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:gap-16 lg:px-8 lg:py-24">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                {t.faqEyebrow}
-              </p>
+              <Eyebrow locale={locale}>{t.faqEyebrow}</Eyebrow>
               <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
                 {t.faqTitle}
               </h2>

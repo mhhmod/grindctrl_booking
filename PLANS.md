@@ -41,6 +41,34 @@ Done-for-you includes service, not just renders: GrindCTRL configures the
 merchant's theme, tunes the widget to their brand, and does a monthly check-in.
 That line is part of the offer and should appear wherever the plan is described.
 
+## EGP catalog (added 8 August 2026)
+
+Egyptian visitors are priced in EGP. These are real catalog rows, not a live
+conversion: margins here are computed against provider costs quoted in USD, and
+a rate that moved daily would drift the displayed price and quietly erode them.
+
+| Key | Price | Renders | Model |
+|---|---|---|---|
+| launch-v1-egp | EGP 750 | 300 | lite |
+| dfy-v1-egp | EGP 2,950 | 450 | flash |
+| pack-lite-v1-egp | EGP 250 | 80 | lite |
+| pack-flash-v1-egp | EGP 500 | 75 | flash |
+
+Set at **50 EGP/USD**, the mid-market rate on 8 August 2026, with no rounding —
+each is the exact USD price converted. Renders and model tier are identical to
+the USD rows; only the price differs.
+
+There is deliberately **no free-v1-egp**. Zero costs the same in every currency,
+and the database enforces this: `tryon_plans_one_active_free` permits exactly one
+active free plan. The pricing page keeps the single free row visible whatever
+currency is active.
+
+**When to revisit.** These hold the margins in the table above only while the
+rate is near 50. At 60 EGP/USD, Launch at 750 is worth $12.50 and the 40 percent
+worst-case margin is gone. Treat a sustained move past roughly 55 as the trigger
+to price new rows — per the versioning policy above, that means launch-v2-egp,
+not an edit to these.
+
 Market position these numbers buy (verified July 2026): Launch at $0.050 per
 render is the cheapest per-render subscription in the Shopify try-on category
 (competitor entry plans run $0.13 to $0.20; the cheapest scale overage is

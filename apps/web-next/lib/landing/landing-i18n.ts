@@ -362,10 +362,14 @@ const ar: LandingDict = {
   pricingTitle: 'ابدأ بحجم صغير ثم توسع مع الطلب.',
   pricingBody:
     'تتضمن كل خطة عددًا شهريًا من المعاينات. وتضيف خطة الإدارة الكاملة الإعداد والمتابعة المستمرة.',
+  /* Must stay identical to the names in components/pricing/pricing-copy.ts.
+     This dictionary feeds the pricing section on the home page; that one feeds
+     the /pricing page. Two Arabic names for one plan is worse than the English
+     they replaced, so these are copied from there rather than reinvented. */
   pricingPlanNames: {
-    'free-v1': 'Free',
-    'launch-v1': 'Launch',
-    'dfy-v1': 'Done-for-you',
+    'free-v1': 'مجاني',
+    'launch-v1': 'انطلاق',
+    'dfy-v1': 'خدمة متكاملة',
   },
   pricingRenderLine: (renders) => `${renders} معاينة شهريًا.`,
   pricingManagedLine: (renders) =>
