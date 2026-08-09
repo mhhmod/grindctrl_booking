@@ -43,6 +43,17 @@ export function resolveCurrency({
   return DEFAULT_CURRENCY;
 }
 
+/* Which currency a row should be FORMATTED in, which is not always the one it
+   is stored in. The free plan is a single row kept across every currency (see
+   plansForCurrency), so formatting it with its own USD would print "$0" beside
+   "EGP 750" — two currencies on one pricing page. Zero is zero. */
+export function displayCurrencyFor(
+  row: { currency: string; isFree?: boolean },
+  active: Currency,
+): string {
+  return row.isFree ? active : row.currency;
+}
+
 export function plansForCurrency<T extends { currency: string; isFree?: boolean }>(
   rows: T[],
   currency: Currency,

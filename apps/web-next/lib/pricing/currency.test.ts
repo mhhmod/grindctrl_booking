@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { plansForCurrency, resolveCurrency } from '@/lib/pricing/currency';
+import {
+  displayCurrencyFor,
+  plansForCurrency,
+  resolveCurrency,
+} from '@/lib/pricing/currency';
 
 describe('resolveCurrency', () => {
   it('honours an explicit cookie over the detected country', () => {
@@ -90,5 +94,25 @@ describe('plansForCurrency', () => {
 
   it('returns nothing when there is nothing to return', () => {
     expect(plansForCurrency([], 'USD')).toEqual([]);
+  });
+});
+
+/* Shipped once without this and it showed: the free plan rendered "$0" next to
+   "EGP 750" on the same page. */
+describe('displayCurrencyFor', () => {
+  it('formats the free plan in the currency the visitor is being priced in', () => {
+    expect(displayCurrencyFor({ currency: 'USD', isFree: true }, 'EGP')).toBe('EGP');
+    expect(displayCurrencyFor({ currency: 'USD', isFree: true }, 'USD')).toBe('USD');
+  });
+
+  it('leaves paid rows in the currency they are priced in', () => {
+    expect(displayCurrencyFor({ currency: 'EGP', isFree: false }, 'EGP')).toBe('EGP');
+    /* A USD row surviving into an EGP view via the fallback must still say USD —
+       relabelling 15 USD as 15 EGP would misprice it by 50x. */
+    expect(displayCurrencyFor({ currency: 'USD', isFree: false }, 'EGP')).toBe('USD');
+  });
+
+  it('treats a row with no isFree field as paid', () => {
+    expect(displayCurrencyFor({ currency: 'USD' }, 'EGP')).toBe('USD');
   });
 });

@@ -21,7 +21,10 @@ export type PricingCopy = {
   tryDemo: string;
   marketLabel: string;
   marketLead: string;
-  marketTail: (renders: string) => string;
+  /* Takes the formatted price rather than baking one in: this sentence sits on
+     a page that can be priced in EGP, and a hardcoded "$15" put dollars back on
+     it. */
+  marketTail: (renders: string, price: string) => string;
   plansEyebrow: string;
   plansTitle: string;
   plansBody: string;
@@ -61,7 +64,7 @@ const en: PricingCopy = {
   tryDemo: 'Try the live demo',
   marketLabel: 'Market position',
   marketLead: 'Entry plans from other Shopify try-on apps typically include 100 to 150 try-ons a month.',
-  marketTail: (renders) => `Launch includes ${renders} for $15.`,
+  marketTail: (renders, price) => `Launch includes ${renders} for ${price}.`,
   plansEyebrow: 'Monthly plans',
   plansTitle: 'Pick the level of support your store needs.',
   plansBody:
@@ -156,7 +159,7 @@ const ar: PricingCopy = {
   tryDemo: 'جرّب النسخة المباشرة',
   marketLabel: 'موقعنا في السوق',
   marketLead: 'تتضمن الخطط الأساسية في تطبيقات تجربة الملابس الأخرى على Shopify من 100 إلى 150 تجربة شهريًا.',
-  marketTail: (renders) => `بينما تتضمن خطة انطلاق ${renders} مقابل 15 دولارًا.`,
+  marketTail: (renders, price) => `بينما تتضمن خطة انطلاق ${renders} مقابل ${price}.`,
   plansEyebrow: 'الخطط الشهرية',
   plansTitle: 'اختر مستوى الدعم المناسب لمتجرك.',
   plansBody:

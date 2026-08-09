@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { BOOKING_URL } from '@/lib/booking';
-import type { Currency } from '@/lib/pricing/currency';
+import { displayCurrencyFor, type Currency } from '@/lib/pricing/currency';
 import type {
   PublicCreditPackCatalogItem,
   PublicEntitlementCatalog,
@@ -75,11 +75,13 @@ function PlanCard({
   t,
   locale,
   index,
+  currency,
 }: {
   plan: PublicPlanCatalogItem;
   t: PricingCopy;
   locale: 'en' | 'ar';
   index: number;
+  currency: Currency;
 }) {
   const copy = t.plans[getPlanCopyKey(plan.planKey)];
   const name = locale === 'ar' && copy ? copy.name : plan.name;
@@ -87,7 +89,12 @@ function PlanCard({
     ? copy?.description ?? plan.description
     : plan.description ?? copy?.description;
   const recommended = getPlanCopyKey(plan.planKey) === 'launch-v1';
-  const price = formatCurrency(plan.priceMinor / 100, plan.currency, locale, 0);
+  const price = formatCurrency(
+    plan.priceMinor / 100,
+    displayCurrencyFor(plan, currency),
+    locale,
+    0,
+  );
   const benefits = [
     t.tryOnsPerMonth(formatNumber(plan.rendersIncluded, locale)),
     isPremiumPlan(plan) ? t.premiumQuality : t.standardQuality,
@@ -174,6 +181,16 @@ export function PricingPageContent({
   const launchRenders = launchPlan ? launchPlan.rendersIncluded.toLocaleString(
     locale === 'ar' ? 'ar-EG' : 'en-US',
   ) : null;
+  /* Priced from the same row the card shows, so this sentence cannot drift from
+     the plan it describes or from the currency the page is in. */
+  const launchPrice = launchPlan
+    ? formatCurrency(
+        launchPlan.priceMinor / 100,
+        displayCurrencyFor(launchPlan, currency),
+        locale,
+        0,
+      )
+    : null;
 
   return (
     <>
@@ -262,10 +279,12 @@ export function PricingPageContent({
               </p>
               <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
                 {t.marketLead}
-                {launchRenders ? (
+                {launchRenders && launchPrice ? (
                   <>
                     {' '}
-                    <span className="text-muted-foreground">{t.marketTail(launchRenders)}</span>
+                    <span className="text-muted-foreground">
+                      {t.marketTail(launchRenders, launchPrice)}
+                    </span>
                   </>
                 ) : null}
               </p>
@@ -299,6 +318,7 @@ export function PricingPageContent({
                   t={t}
                   locale={locale}
                   index={index}
+                  currency={currency}
                 />
               ))}
             </div>
