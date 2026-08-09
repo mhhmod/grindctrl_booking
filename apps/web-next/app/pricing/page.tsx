@@ -3,6 +3,7 @@ import { cookies, headers } from 'next/headers';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { PricingPageContent } from '@/components/pricing/pricing-page-content';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { regionFromAcceptLanguage } from '@/lib/landing/accept-language';
 import { CURRENCY_COOKIE, plansForCurrency, resolveCurrency } from '@/lib/pricing/currency';
 import { clientIpFromHeader, countryFromIp } from '@/lib/pricing/geo';
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
@@ -26,12 +27,19 @@ export default async function PricingPage() {
 
   /* Currency is resolved on the server because the price has to be right in the
      first paint — a page that renders USD and then swaps to EGP is worse than
-     one that guesses once. Detection is inert until the GeoLite2 database is
-     supplied (see lib/pricing/geo.ts), and returns null until then, so this
-     resolves to USD unless the visitor has chosen otherwise. */
-  const country = await countryFromIp(
+     one that guesses once.
+
+     Two country signals, strongest first. The IP lookup is accurate but inert
+     until the GeoLite2 database is on the server (see lib/pricing/geo.ts). The
+     region subtag of Accept-Language — the EG in ar-EG — is weaker, because it
+     describes how the device is configured rather than where it is, but it
+     needs no database and works today. Without the fallback, currency would
+     not adapt at all until that file exists. */
+  const ipCountry = await countryFromIp(
     clientIpFromHeader(headerList.get('x-forwarded-for')),
   );
+  const country = ipCountry ?? regionFromAcceptLanguage(headerList.get('accept-language'));
+
   const currency = resolveCurrency({
     cookie: cookieStore.get(CURRENCY_COOKIE)?.value ?? null,
     country,
