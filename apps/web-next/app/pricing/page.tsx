@@ -2,12 +2,7 @@ import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { PricingPageContent } from '@/components/pricing/pricing-page-content';
-import {
-  DEFAULT_SITE_LOCALE,
-  isSiteLocale,
-  SITE_LOCALE_COOKIE,
-  type SiteLocale,
-} from '@/lib/landing/landing-i18n';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { CURRENCY_COOKIE, plansForCurrency, resolveCurrency } from '@/lib/pricing/currency';
 import { clientIpFromHeader, countryFromIp } from '@/lib/pricing/geo';
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
@@ -25,10 +20,9 @@ export default async function PricingPage() {
     listPublicPlanCatalog(),
   ]);
 
-  const cookieLocale = cookieStore.get(SITE_LOCALE_COOKIE)?.value;
-  const initialLocale: SiteLocale = isSiteLocale(cookieLocale)
-    ? cookieLocale
-    : DEFAULT_SITE_LOCALE;
+  /* Same central resolver as every other page, so the pricing page adapts to
+     the browser's language on a first visit instead of defaulting to English. */
+  const initialLocale = await getRequestLocale();
 
   /* Currency is resolved on the server because the price has to be right in the
      first paint — a page that renders USD and then swaps to EGP is worse than

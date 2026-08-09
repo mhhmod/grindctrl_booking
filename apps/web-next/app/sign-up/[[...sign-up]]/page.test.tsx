@@ -9,10 +9,17 @@ vi.mock('@clerk/nextjs', () => ({
 /* The page resolves its language from the locale cookie, so the test controls
    that cookie directly. */
 let cookieLocale: string | undefined;
+/* getRequestLocale falls back to Accept-Language when no cookie is set, so the
+   mock has to supply headers as well as cookies. */
+let acceptLanguage: string | undefined;
 vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) =>
       name === 'gc-locale' && cookieLocale ? { name, value: cookieLocale } : undefined,
+  }),
+  headers: async () => ({
+    get: (name: string) =>
+      name.toLowerCase() === 'accept-language' ? (acceptLanguage ?? null) : null,
   }),
 }));
 
