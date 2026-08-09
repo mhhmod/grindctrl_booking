@@ -34,34 +34,57 @@ describe('resolveCurrency', () => {
   });
 });
 
+/* Mirrors production: one free plan, no EGP twin. The database enforces that
+   with tryon_plans_one_active_free — an attempt to insert a second active free
+   plan is rejected, which is how this rule was discovered. */
 const ROWS = [
-  { planKey: 'launch-v1', currency: 'USD' },
-  { planKey: 'dfy-v1', currency: 'USD' },
-  { planKey: 'launch-v1-egp', currency: 'EGP' },
-  { planKey: 'dfy-v1-egp', currency: 'EGP' },
+  { planKey: 'free-v1', currency: 'USD', isFree: true },
+  { planKey: 'launch-v1', currency: 'USD', isFree: false },
+  { planKey: 'dfy-v1', currency: 'USD', isFree: false },
+  { planKey: 'launch-v1-egp', currency: 'EGP', isFree: false },
+  { planKey: 'dfy-v1-egp', currency: 'EGP', isFree: false },
 ];
 
 describe('plansForCurrency', () => {
-  it('returns only rows in the active currency', () => {
+  it('returns the paid rows in the active currency', () => {
     expect(plansForCurrency(ROWS, 'EGP').map((r) => r.planKey)).toEqual([
+      'free-v1',
       'launch-v1-egp',
       'dfy-v1-egp',
     ]);
   });
 
-  it('never mixes currencies in one list', () => {
-    const currencies = new Set(plansForCurrency(ROWS, 'USD').map((r) => r.currency));
-    expect(currencies).toEqual(new Set(['USD']));
+  /* Zero costs the same in every currency, and there is only ever one free row.
+     Dropping it by currency would leave the EGP page with no free tier. */
+  it('keeps the free plan whatever currency is active', () => {
+    expect(plansForCurrency(ROWS, 'EGP').map((r) => r.planKey)).toContain('free-v1');
+    expect(plansForCurrency(ROWS, 'USD').map((r) => r.planKey)).toContain('free-v1');
   });
 
-  /* The state this ships in until the EGP rows exist. Without this fallback an
-     Egyptian visitor would get an empty pricing page rather than a USD one. */
-  it('falls back to USD rows when the active currency has none', () => {
+  it('never mixes paid currencies in one list', () => {
+    const paid = plansForCurrency(ROWS, 'USD').filter((r) => !r.isFree);
+    expect(new Set(paid.map((r) => r.currency))).toEqual(new Set(['USD']));
+  });
+
+  it('falls back to USD when the active currency has no paid rows', () => {
     const usdOnly = ROWS.filter((r) => r.currency === 'USD');
 
     expect(plansForCurrency(usdOnly, 'EGP').map((r) => r.planKey)).toEqual([
+      'free-v1',
       'launch-v1',
       'dfy-v1',
+    ]);
+  });
+
+  /* Packs carry no isFree field at all; undefined must read as paid. */
+  it('treats rows without an isFree field as paid', () => {
+    const packs = [
+      { packKey: 'pack-lite-v1', currency: 'USD' },
+      { packKey: 'pack-lite-v1-egp', currency: 'EGP' },
+    ];
+
+    expect(plansForCurrency(packs, 'EGP').map((p) => p.packKey)).toEqual([
+      'pack-lite-v1-egp',
     ]);
   });
 

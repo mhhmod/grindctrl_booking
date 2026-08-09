@@ -43,14 +43,23 @@ export function resolveCurrency({
   return DEFAULT_CURRENCY;
 }
 
-export function plansForCurrency<T extends { currency: string }>(
+export function plansForCurrency<T extends { currency: string; isFree?: boolean }>(
   rows: T[],
   currency: Currency,
 ): T[] {
-  const matching = rows.filter((row) => row.currency === currency);
-  if (matching.length) return matching;
+  /* A free plan costs nothing in every currency, so it is never duplicated per
+     currency — and the database enforces that: tryon_plans_one_active_free
+     permits exactly one active free plan. Filtering it out by currency would
+     drop the free tier from the EGP page entirely, so it is always kept.
 
-  /* No rows in the active currency — which is exactly the state until the EGP
-     rows are added. Show the USD ones rather than an empty pricing page. */
-  return rows.filter((row) => row.currency === DEFAULT_CURRENCY);
+     Packs have no isFree field; undefined is falsy, so they are all treated as
+     paid, which is correct. */
+  const free = rows.filter((row) => row.isFree);
+  const paid = rows.filter((row) => !row.isFree && row.currency === currency);
+
+  if (paid.length) return [...free, ...paid];
+
+  /* Nothing paid in the active currency. Fall back to the default rather than
+     rendering a page with only a free plan on it. */
+  return rows.filter((row) => row.isFree || row.currency === DEFAULT_CURRENCY);
 }
