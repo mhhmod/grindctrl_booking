@@ -59,6 +59,24 @@ for (const locale of LOCALES) {
             if (style.visibility === 'hidden' || style.display === 'none') return false;
             const r = el.getBoundingClientRect();
             if (r.width === 0 || r.height === 0) return false;
+
+            /* Skip anything clipped by a SCOPED clipper inside the page — a
+               marquee lays its track wider than the screen on purpose and
+               relies on its own viewport to clip it, so those chips are
+               off-screen by design and never widen the page.
+
+               The walk stops at .gc-landing-root, which itself carries
+               overflow-x-hidden. Walking past it would skip every element on
+               the page and leave this assertion permanently green — which is
+               precisely the failure mode this whole sweep exists to avoid. */
+            for (
+              let p = el.parentElement;
+              p && p !== document.body && !p.classList.contains('gc-landing-root');
+              p = p.parentElement
+            ) {
+              const ps = getComputedStyle(p);
+              if (ps.overflowX === 'hidden' || ps.overflowX === 'clip') return false;
+            }
             // Box escapes the viewport (shrink-to-fit elements like Badge).
             if (r.right > viewport + slack || r.left < -slack) return true;
             /* Or the text spills out of its own box — a block-level element

@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
 import { BRAND_MARKS } from '@/components/brand-marks';
 import { AmbientBackground } from '@/components/landing/ambient-background';
+import { CollaborationsMarquee } from '@/components/landing/collaborations-marquee';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
@@ -419,32 +420,18 @@ export function SiteLanding() {
         {/* Integrations */}
         <section aria-labelledby="integrations-title">
           <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
-            <div className="flex min-w-0 flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-              <div className="min-w-0 flex max-w-2xl flex-col gap-3">
-                <Eyebrow locale={locale}>{t.integrationsEyebrow}</Eyebrow>
-                <h2 id="integrations-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
-                  {t.integrationsTitle}
-                </h2>
-              </div>
-              <div className="flex min-w-0 flex-wrap gap-2.5">
-                {t.integrations.map((name) => {
-                  /* Shopify and Gemini are real products, so they carry their
-                     own mark. The rest are surfaces, not brands, and stay
-                     text-only. Matching on the untranslated brand name works
-                     because both stay Latin script in the Arabic copy too. */
-                  const Mark = BRAND_MARKS[name];
-                  return (
-                    <Badge
-                      key={name}
-                      variant="outline"
-                      className="gc-integration-chip inline-flex items-center gap-1.5 rounded-full border-border bg-background px-3.5 text-[13px] font-medium"
-                    >
-                      {Mark ? <Mark className="shrink-0" /> : null}
-                      {name}
-                    </Badge>
-                  );
-                })}
-              </div>
+            <div className="min-w-0 flex max-w-2xl flex-col gap-3">
+              <Eyebrow locale={locale}>{t.integrationsEyebrow}</Eyebrow>
+              <h2 id="integrations-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
+                {t.integrationsTitle}
+              </h2>
+            </div>
+
+            {/* Full width rather than sharing a row with the heading: twelve
+                partners wrapped into a flex pile on a phone and read as a wall
+                of pills. Moving rows show the same names in less height. */}
+            <div className="mt-8">
+              <CollaborationsMarquee />
             </div>
           </div>
         </section>
