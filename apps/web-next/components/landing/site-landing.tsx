@@ -593,7 +593,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           {/* Language and theme left the top bar; the footer is their second route. */}
           <div className="flex items-center gap-2">
             <LandingLocaleToggle />
-            <ThemeToggle />
+            <ThemeToggle locale={locale} />
           </div>
         </div>
       </footer>

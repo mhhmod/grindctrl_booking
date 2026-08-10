@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { LandingLocaleToggle } from '@/components/landing/landing-locale';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 
@@ -93,8 +93,25 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
               side={locale === 'ar' ? 'left' : 'right'}
               aria-describedby={undefined}
               className="gap-0 p-6"
+              /* The primitive's own close button is 32px and hardcoded to the
+                 English "Close". Suppressed in favour of one that clears the
+                 44px touch target and speaks the visitor's language. */
+              showCloseButton={false}
             >
-              <SheetTitle className="mb-4">{t.menu}</SheetTitle>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <SheetTitle>{t.menu}</SheetTitle>
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t.closeMenu}
+                    className="-me-2 size-11 rounded-full p-0"
+                  >
+                    <X className="size-5" aria-hidden="true" />
+                  </Button>
+                </SheetClose>
+              </div>
 
               <nav className="flex flex-col">
                 {navLinks.map((link) => {
@@ -136,7 +153,7 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
                   bar before; here they are primary menu items. */}
               <div className="flex items-center gap-2">
                 <LandingLocaleToggle className="min-h-11" />
-                <ThemeToggle className="min-h-11" />
+                <ThemeToggle className="min-h-11" locale={locale} />
               </div>
             </SheetContent>
           </Sheet>
