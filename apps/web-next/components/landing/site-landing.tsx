@@ -186,12 +186,7 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
             </div>
 
             <div className="order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-              <TryOnRevealFigure
-                caption={t.heroRevealCaption}
-                alt={t.heroRevealAlt}
-                productSrc="/try-on/premium-ringer-tee.png"
-                resultSrc="/try-on/mock-result.png"
-              />
+              <TryOnRevealFigure caption={t.heroRevealCaption} alt={t.heroRevealAlt} />
             </div>
 
             <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">

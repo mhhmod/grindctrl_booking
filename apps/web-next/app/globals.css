@@ -469,6 +469,52 @@
   100% { transform: translateX(110%); opacity: 0; }
 }
 
+/* Try-on scan choreography.
+
+   Mirrors the animation on the Shopify try-on button, which is the motif this
+   product should lead with: a beam sweeps down a ghosted silhouette, a ring
+   pulses outward, a sparkle winks, and the badge's gradient pans behind it.
+   The previous version drifted a garment onto a figure, which read as a
+   clothing brand rather than as AI doing something to your photo.
+
+   Timings are taken from extensions/tryon-block/assets/tryon.css so the two
+   surfaces feel like one product: 2.6s for the scan cycle, 5s for the pan. */
+@keyframes gc-scan-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* translateY is in SVG user units here, not pixels — the viewBox is 24 wide,
+   so 17 sweeps the beam from the top of the head to the base of the shoulders
+   whatever size the badge renders at. A px value would fly off the canvas. */
+@keyframes gc-scan-beam {
+  0%        { transform: translateY(0); opacity: 0; }
+  12%       { opacity: 1; }
+  58%       { transform: translateY(17px); opacity: 1; }
+  72%, 100% { transform: translateY(17px); opacity: 0; }
+}
+
+@keyframes gc-scan-ring {
+  0%        { transform: scale(1); opacity: 0.7; }
+  75%, 100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes gc-scan-spark {
+  0%, 55%   { opacity: 0; transform: scale(0.3); }
+  66%       { opacity: 1; transform: scale(1.1); }
+  74%       { transform: scale(1); }
+  88%, 100% { opacity: 0; transform: scale(0.3); }
+}
+
+.gc-scan-badge  { animation: gc-scan-pan 5s ease-in-out infinite; }
+.gc-scan-beam   { animation: gc-scan-beam 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.gc-scan-ring   { animation: gc-scan-ring 2.6s ease-out infinite; }
+.gc-scan-spark  { animation: gc-scan-spark 2.6s ease-out infinite; transform-origin: 20.5px 4.9px; }
+
+/* Reduced-motion handling for these lives in the single consolidated block at
+   the end of this file. A second @media block here would split the rule set in
+   two, and globals.motion.test.ts reads the first one it finds. */
+
 /* Try-on reveal. Passive by design: the previous slider was only discoverable
    by dragging a handle, so most visitors never saw the result at all. Pure
    keyframes — nothing on the main thread, no library. */
@@ -477,25 +523,10 @@
    roughly two thirds of every cycle — long enough that people reported seeing
    "only the T-shirt" and never the after. Setup is now brisk and the result
    sits still. */
-@keyframes gc-tryon-garment {
-  0%, 4%    { transform: translate(-58%, 6%) scale(.62) rotate(-8deg); opacity: 0; }
-  12%       { opacity: 1; }
-  26%, 100% { transform: none; opacity: 1; }
-}
-
-@keyframes gc-tryon-reveal {
-  /* Holds until 28%, two points after the garment settles at 26%, so the wipe
-     never starts while the garment's easing tail is still resolving. */
-  0%, 28%   { clip-path: inset(0 100% 0 0); }
-  42%, 94%  { clip-path: inset(0 0 0 0); }
-  99%, 100% { clip-path: inset(0 100% 0 0); }
-}
-
-@keyframes gc-tryon-caption {
-  0%, 34%   { opacity: 0; transform: translateY(6px); }
-  46%, 94%  { opacity: 1; transform: none; }
-  99%, 100% { opacity: 0; }
-}
+/* The garment drift-and-wipe keyframes are gone with the component that used
+   them. They led with the garment, which read as a clothing brand; the scan
+   choreography above leads with what the product does to a photo, and matches
+   the Shopify button a merchant installs. */
 
 .gc-float { animation: gc-float 4s ease-in-out infinite; }
 .gc-pulse-glow { animation: gc-pulse-glow 3s ease-in-out infinite; }
@@ -789,16 +820,28 @@
      mid-wipe — a reduced-motion visitor should see the worn result and the
      caption, which is the point of the section. Note these live on <img> and
      <figcaption>, which the blanket :where() rule above does not cover. */
-  .gc-tryon-garment,
-  .gc-tryon-reveal,
-  .gc-tryon-caption {
+  /* The scan choreography settles rather than freezing mid-sweep: the beam
+     retires, the ring rests, the silhouette and sparkle stay lit. These sit on
+     <span> and SVG elements, which the blanket :where() rule above does not
+     cover. */
+  .gc-scan-badge,
+  .gc-scan-beam,
+  .gc-scan-ring,
+  .gc-scan-spark {
     animation: none !important;
-    opacity: 1 !important;
     transform: none !important;
   }
 
-  .gc-tryon-reveal {
-    clip-path: inset(0 0 0 0);
+  .gc-scan-beam {
+    opacity: 0 !important;
+  }
+
+  .gc-scan-ring {
+    opacity: 0.35 !important;
+  }
+
+  .gc-scan-spark {
+    opacity: 1 !important;
   }
 
   .gc-aurora span,
