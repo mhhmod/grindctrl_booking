@@ -5,7 +5,7 @@ import { PricingPageContent } from '@/components/pricing/pricing-page-content';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { regionFromAcceptLanguage } from '@/lib/landing/accept-language';
 import { CURRENCY_COOKIE, plansForCurrency, resolveCurrency } from '@/lib/pricing/currency';
-import { clientIpFromHeader, countryFromIp } from '@/lib/pricing/geo';
+import { clientIpFromHeader, countryFromIp, countryFromIpApi } from '@/lib/pricing/geo';
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
 export const metadata: Metadata = {
@@ -35,10 +35,16 @@ export default async function PricingPage() {
      describes how the device is configured rather than where it is, but it
      needs no database and works today. Without the fallback, currency would
      not adapt at all until that file exists. */
-  const ipCountry = await countryFromIp(
-    clientIpFromHeader(headerList.get('x-forwarded-for')),
-  );
-  const country = ipCountry ?? regionFromAcceptLanguage(headerList.get('accept-language'));
+  const clientIp = clientIpFromHeader(headerList.get('x-forwarded-for'));
+
+  /* Local database first — it sees no third party and costs no network call.
+     Remote lookup second, because most browsers send a bare "ar" or "en" with
+     no region, so the header alone could not place an Egyptian visitor at all.
+     Header region last, as a free hint when both are unavailable. */
+  const country =
+    (await countryFromIp(clientIp)) ??
+    (await countryFromIpApi(clientIp)) ??
+    regionFromAcceptLanguage(headerList.get('accept-language'));
 
   const currency = resolveCurrency({
     cookie: cookieStore.get(CURRENCY_COOKIE)?.value ?? null,

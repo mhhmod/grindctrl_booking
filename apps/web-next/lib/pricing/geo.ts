@@ -59,3 +59,65 @@ export async function countryFromIp(ip: string | null): Promise<string | null> {
     return null;
   }
 }
+
+/* Addresses no geo service can place: loopback, RFC1918 private ranges, and
+   the CGNAT block. Behind Traefik these appear when the chain is misread, and
+   asking a remote service about 10.0.0.1 wastes a call to learn nothing. */
+export function isPrivateIp(ip: string): boolean {
+  if (ip === '::1' || ip.startsWith('127.') || ip.startsWith('169.254.')) return true;
+  if (ip.startsWith('10.') || ip.startsWith('192.168.')) return true;
+
+  const octets = ip.split('.').map(Number);
+  if (octets.length === 4 && octets.every((n) => Number.isInteger(n))) {
+    if (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) return true;
+    if (octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127) return true;
+  }
+
+  /* IPv6 unique-local. */
+  return /^f[cd]/i.test(ip);
+}
+
+const COUNTRY_TTL_MS = 24 * 60 * 60 * 1000;
+const countryCache = new Map<string, { country: string | null; at: number }>();
+
+/* Remote IP lookup, used only when the local database is unavailable.
+
+   Chosen with the owner after the header-based fallback proved too weak: most
+   browsers send a bare "ar" or "en" with no region, so Accept-Language could
+   not place an Egyptian visitor at all.
+
+   The tradeoff, stated plainly: this service sees visitor IP addresses. The
+   local GeoLite2 database does not, and takes priority whenever it is present
+   — drop the file in and this stops being called.
+
+   Hard timeout because this runs during server render. A slow third party must
+   degrade to USD, never hold the page. Results cache for a day so repeat
+   visitors cost nothing. */
+export async function countryFromIpApi(ip: string | null): Promise<string | null> {
+  if (!ip || isPrivateIp(ip)) return null;
+
+  const hit = countryCache.get(ip);
+  if (hit && Date.now() - hit.at < COUNTRY_TTL_MS) return hit.country;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 1500);
+
+    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}?fields=success,country_code`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    }).finally(() => clearTimeout(timer));
+
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as { success?: boolean; country_code?: string };
+    const country = data.success && data.country_code ? data.country_code.toUpperCase() : null;
+
+    countryCache.set(ip, { country, at: Date.now() });
+    return country;
+  } catch {
+    /* Timeout, abort, DNS failure, rate limit, malformed JSON — all the same
+       answer: we do not know, so the caller falls back. */
+    return null;
+  }
+}
