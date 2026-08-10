@@ -2,22 +2,29 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { LandingLocaleToggle } from '@/components/landing/landing-locale';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 
+/* Pricing is a ROUTE, not an anchor. It used to be '#pricing', which scrolled
+   to a section of the landing page and never opened /pricing — so the pricing
+   page was unreachable from the navigation on any device. */
 const navLinks = [
   { href: '#how', key: 'navHow' },
   { href: '#demo', key: 'navDemo' },
   { href: '#benefits', key: 'navBenefits' },
-  { href: '#pricing', key: 'navPricing' },
+  { href: '/pricing', key: 'navPricing' },
 ] as const;
+
+function isRoute(href: string) {
+  return href.startsWith('/');
+}
 
 export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTranslator }) {
   const [open, setOpen] = useState(false);
@@ -30,11 +37,21 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-          {navLinks.map((link) => (
-            <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
-              {t[link.key]}
-            </a>
-          ))}
+          {navLinks.map((link) =>
+            isRoute(link.href) ? (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="transition-colors hover:text-foreground"
+              >
+                {t[link.key]}
+              </Link>
+            ) : (
+              <a key={link.href} href={link.href} className="transition-colors hover:text-foreground">
+                {t[link.key]}
+              </a>
+            ),
+          )}
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -76,20 +93,50 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
               side={locale === 'ar' ? 'left' : 'right'}
               aria-describedby={undefined}
               className="gap-0 p-6"
+              /* The primitive's own close button is 32px and hardcoded to the
+                 English "Close". Suppressed in favour of one that clears the
+                 44px touch target and speaks the visitor's language. */
+              showCloseButton={false}
             >
-              <SheetTitle className="mb-4">{t.menu}</SheetTitle>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <SheetTitle>{t.menu}</SheetTitle>
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t.closeMenu}
+                    className="-me-2 size-11 rounded-full p-0"
+                  >
+                    <X className="size-5" aria-hidden="true" />
+                  </Button>
+                </SheetClose>
+              </div>
 
               <nav className="flex flex-col">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {t[link.key]}
-                  </a>
-                ))}
+                {navLinks.map((link) => {
+                  const cls =
+                    'flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground';
+                  return isRoute(link.href) ? (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className={cls}
+                    >
+                      {t[link.key]}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className={cls}
+                    >
+                      {t[link.key]}
+                    </a>
+                  );
+                })}
                 <Link
                   href="/sign-in"
                   onClick={() => setOpen(false)}
@@ -106,7 +153,7 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
                   bar before; here they are primary menu items. */}
               <div className="flex items-center gap-2">
                 <LandingLocaleToggle className="min-h-11" />
-                <ThemeToggle className="min-h-11" />
+                <ThemeToggle className="min-h-11" locale={locale} />
               </div>
             </SheetContent>
           </Sheet>

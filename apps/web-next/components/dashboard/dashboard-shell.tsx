@@ -90,7 +90,7 @@ export function DashboardShell({
 
             <div className="flex shrink-0 items-center gap-2">
               <DashboardLocaleToggle locale={locale} />
-              <ThemeToggle />
+              <ThemeToggle locale={locale} />
               <UserButton afterSignOutUrl="/" />
             </div>
           </div>

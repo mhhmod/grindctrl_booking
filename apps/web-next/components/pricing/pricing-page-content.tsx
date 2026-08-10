@@ -230,7 +230,10 @@ export function PricingPageContent({
             className="gc-hero-grid-warm pointer-events-none absolute inset-0 -z-10"
             aria-hidden="true"
           />
-          <div className="mx-auto grid w-full max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(18rem,0.88fr)] lg:items-end lg:gap-16 lg:px-8 lg:py-24">
+          {/* Tight on a phone: this hero ran 778px tall, which pushed the first
+              price 1.57 screens down a page whose whole job is showing prices.
+              Desktop spacing is unchanged. */}
+          <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:gap-10 sm:py-12 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(18rem,0.88fr)] lg:items-end lg:gap-16 lg:px-8 lg:py-24">
             <div className="min-w-0">
               <Badge
                 variant="secondary"
@@ -239,7 +242,7 @@ export function PricingPageContent({
                 {t.eyebrow}
               </Badge>
               <h1
-                className="gc-fade-in-up mt-6 max-w-4xl text-[clamp(2.35rem,7vw,4.8rem)] font-bold leading-[1.02] tracking-tight"
+                className="gc-fade-in-up mt-4 max-w-4xl text-[clamp(1.75rem,6vw,4.8rem)] font-bold leading-[1.05] tracking-tight sm:mt-6"
                 style={{ animationDelay: '0.05s' }}
               >
                 {t.title}
@@ -270,31 +273,12 @@ export function PricingPageContent({
               </div>
             </div>
 
-            <aside
-              className="gc-fade-in-up min-w-0 border-y border-border py-7"
-              style={{ animationDelay: '0.13s' }}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                {t.marketLabel}
-              </p>
-              <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
-                {t.marketLead}
-                {launchRenders && launchPrice ? (
-                  <>
-                    {' '}
-                    <span className="text-muted-foreground">
-                      {t.marketTail(launchRenders, launchPrice)}
-                    </span>
-                  </>
-                ) : null}
-              </p>
-            </aside>
           </div>
         </section>
 
         <section className="border-b border-border">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div className="mb-10 max-w-3xl">
+          <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8 lg:py-24">
+            <div className="mb-6 max-w-3xl sm:mb-10">
               <Eyebrow locale={locale}>{t.plansEyebrow}</Eyebrow>
               <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
                 {t.plansTitle}
@@ -322,6 +306,25 @@ export function PricingPageContent({
                 />
               ))}
             </div>
+
+            {/* Moved out of the hero. It is an argument ABOUT the prices, and it
+                was sitting above them — 186px of comparison a phone visitor had
+                to scroll past before seeing a single number. It lands better
+                once you have seen what it is comparing. */}
+            <aside className="mt-10 border-t border-border pt-7">
+              <Eyebrow locale={locale}>{t.marketLabel}</Eyebrow>
+              <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
+                {t.marketLead}
+                {launchRenders && launchPrice ? (
+                  <>
+                    {' '}
+                    <span className="text-muted-foreground">
+                      {t.marketTail(launchRenders, launchPrice)}
+                    </span>
+                  </>
+                ) : null}
+              </p>
+            </aside>
           </div>
         </section>
 

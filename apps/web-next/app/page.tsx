@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
-import { cookies } from 'next/headers';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { SiteLanding } from '@/components/landing/site-landing';
-import {
-  DEFAULT_SITE_LOCALE,
-  isSiteLocale,
-  SITE_LOCALE_COOKIE,
-  type SiteLocale,
-} from '@/lib/landing/landing-i18n';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
 export const metadata: Metadata = {
@@ -17,12 +11,12 @@ export const metadata: Metadata = {
 };
 
 export default async function LandingPage() {
-  const [cookieStore, catalog] = await Promise.all([
-    cookies(),
+  /* Resolved centrally so this page adapts to the browser's language on a
+     first visit, rather than defaulting every new visitor to English. */
+  const [initialLocale, catalog] = await Promise.all([
+    getRequestLocale(),
     listPublicPlanCatalog(),
   ]);
-  const cookieLocale = cookieStore.get(SITE_LOCALE_COOKIE)?.value;
-  const initialLocale: SiteLocale = isSiteLocale(cookieLocale) ? cookieLocale : DEFAULT_SITE_LOCALE;
 
   return (
     <LandingLocaleProvider
