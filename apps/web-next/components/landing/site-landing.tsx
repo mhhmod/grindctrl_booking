@@ -117,33 +117,11 @@ function ArrowIcon() {
   );
 }
 
-function getPlanCopyKey(planKey: string): string {
-  if (planKey.startsWith('free-')) return 'free-v1';
-  if (planKey.startsWith('launch-')) return 'launch-v1';
-  if (planKey.startsWith('dfy-')) return 'dfy-v1';
-  return planKey;
-}
+/* getPlanCopyKey and formatPlanPrice went with the pricing teaser. The pricing
+   page has its own, and they are the ones that resolve currency per visitor. */
 
-function formatPlanPrice(
-  priceMinor: number,
-  currency: string,
-  locale: 'en' | 'ar',
-): string {
-  try {
-    return new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(priceMinor / 100);
-  } catch {
-    return `${currency} ${Math.round(priceMinor / 100)}`;
-  }
-}
-
-export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
+export function SiteLanding() {
   const { locale, t } = useLandingLocale();
-  const sortedPlans = [...plans].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
     <>
@@ -355,49 +333,13 @@ export function SiteLanding({ plans }: { plans: PublicPlanCatalogItem[] }) {
           </div>
         </section>
 
-        {/* Pricing teaser */}
-        <section id="pricing" className="scroll-mt-20 bg-muted/30" aria-labelledby="pricing-title">
-          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.62fr)_minmax(0,1.38fr)] lg:gap-16 lg:px-8 lg:py-24">
-            <div className="min-w-0">
-              <SectionHeading id="pricing-title" eyebrow={t.pricingEyebrow} title={t.pricingTitle} body={t.pricingBody} />
-            </div>
+        {/* Pricing lives on /pricing only.
 
-            <div className="min-w-0">
-              {/* The pricing page owns the full comparison. This teaser uses the public plan catalog. */}
-              <div className="overflow-hidden border-y border-border">
-                {sortedPlans.map((plan, i) => {
-                  const copyKey = getPlanCopyKey(plan.planKey);
-                  const name = t.pricingPlanNames[copyKey] ?? plan.name;
-                  const line = copyKey === 'dfy-v1'
-                    ? t.pricingManagedLine(plan.rendersIncluded)
-                    : t.pricingRenderLine(plan.rendersIncluded);
-
-                  return (
-                    <Fragment key={plan.planKey}>
-                      {i > 0 ? <Separator /> : null}
-                      <div className="grid min-w-0 gap-2 py-5 sm:grid-cols-[minmax(0,0.72fr)_auto_minmax(0,1.35fr)] sm:items-center sm:gap-6 sm:py-6">
-                        <h3 className="min-w-0 text-lg font-semibold">{name}</h3>
-                        <p className="text-xl font-bold tabular-nums sm:text-end">
-                          {formatPlanPrice(plan.priceMinor, plan.currency, locale)}
-                        </p>
-                        <p className="min-w-0 text-sm leading-relaxed text-muted-foreground">{line}</p>
-                      </div>
-                    </Fragment>
-                  );
-                })}
-              </div>
-              <div className="mt-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm leading-relaxed text-muted-foreground">{t.pricingNote}</p>
-                <Button asChild variant="outline" className="rounded-full px-5 font-semibold">
-                  <Link href="/pricing">
-                    {t.pricingLink}
-                    <ArrowIcon />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
+            This teaser rendered the raw catalog, which after EGP rows were
+            added meant every plan twice — USD and EGP stacked on one page with
+            no currency resolution. The pricing page resolves currency per
+            visitor; the home page has no business quoting numbers it cannot
+            adapt. Nav links straight to /pricing. */}
 
         {/* Product proof */}
         <section id="proof" aria-labelledby="proof-title">

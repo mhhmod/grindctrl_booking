@@ -8,46 +8,13 @@ vi.mock('@/components/dashboard/theme-toggle', () => ({
   ThemeToggle: () => <button type="button">Theme</button>,
 }));
 
-const plans = [
-  {
-    planKey: 'free-v1',
-    name: 'Free',
-    description: null,
-    priceMinor: 0,
-    currency: 'USD',
-    rendersIncluded: 20,
-    modelKey: 'lite',
-    isFree: true,
-    sortOrder: 10,
-  },
-  {
-    planKey: 'launch-v1',
-    name: 'Launch',
-    description: null,
-    priceMinor: 1500,
-    currency: 'USD',
-    rendersIncluded: 300,
-    modelKey: 'lite',
-    isFree: false,
-    sortOrder: 20,
-  },
-  {
-    planKey: 'dfy-v1',
-    name: 'Done-for-you',
-    description: null,
-    priceMinor: 5900,
-    currency: 'USD',
-    rendersIncluded: 450,
-    modelKey: 'flash',
-    isFree: false,
-    sortOrder: 30,
-  },
-];
-
+/* The plan fixture went with the pricing teaser. The landing page no longer
+   takes a catalog: it quotes no prices, so it cannot show a currency it has
+   not resolved. /pricing owns that. */
 function renderLanding(initialLocale: 'en' | 'ar' = 'en') {
   return render(
     <LandingLocaleProvider initialLocale={initialLocale}>
-      <SiteLanding plans={plans} />
+      <SiteLanding />
     </LandingLocaleProvider>,
   );
 }
