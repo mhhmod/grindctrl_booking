@@ -2,22 +2,12 @@
 
 import React from 'react';
 import { BRAND_MARKS } from '@/components/brand-marks';
+import { InfiniteSlider } from '@/components/ui/infinite-slider';
 
-/* The collaborations strip.
-
-   Built from the brand marks this repo already ships rather than the
-   react-bits GridMotion the owner suggested. That component reads
-   window.innerWidth at render scope with no 'use client', so it 500s a
-   server-rendered page; it drives motion from mousemove only, so it is inert
-   on touch; and it pulls 6.4MB of gsap to move a row of logos.
-
-   This is CSS only. It runs on a phone, costs no dependency, and takes its
-   colours from the theme instead of a hardcoded purple.
-
-   Two rows travelling opposite ways read as motion without anything moving
-   fast enough to be hard to look at. Each row's content is duplicated so the
-   translation can loop seamlessly — the copy is aria-hidden so a screen reader
-   hears each partner once. */
+/* The collaborations strip, same twelve brand marks as before, now animated
+   by the motion-primitives InfiniteSlider (framer-motion) instead of a
+   hand-rolled CSS keyframe track. Two rows travelling opposite ways read as
+   motion without anything moving fast enough to be hard to look at. */
 
 const ROW_ONE = ['Shopify', 'WhatsApp', 'Instagram', 'Telegram', 'Zapier', 'Make'] as const;
 const ROW_TWO = ['n8n', 'Gemini', 'Claude', 'Notion', 'HubSpot', 'Supabase'] as const;
@@ -37,24 +27,19 @@ function Chip({ name }: { name: string }) {
 
 function Row({ names, reverse }: { names: readonly string[]; reverse?: boolean }) {
   return (
-    /* dir="ltr" is load-bearing, not cosmetic. Under RTL the flex track lays
-       out from the right, so the duplicated half runs off the LEFT edge — the
-       overflow sweep caught chips at x=-45 through -398 on the Arabic landing
-       page. Pinning the conveyor to LTR makes the geometry identical in both
+    /* dir="ltr" is load-bearing, not cosmetic. InfiniteSlider's track is a
+       flex row with flexDirection set inline, which still follows the
+       ambient text direction — under RTL that lays the track out from the
+       right and the translateX() math runs the duplicated half off the left
+       edge (the overflow sweep caught this on the old CSS marquee too).
+       Pinning the conveyor to LTR makes the geometry identical in both
        languages. The names inside are Latin brands either way. */
-    <div className="gc-marquee-viewport" dir="ltr">
-      <div className={`gc-marquee-track ${reverse ? 'gc-marquee-track--reverse' : ''}`}>
+    <div dir="ltr">
+      <InfiniteSlider gap={10} duration={38} durationOnHover={120} reverse={reverse}>
         {names.map((name) => (
           <Chip key={name} name={name} />
         ))}
-        {/* Seamless loop needs a second copy; hidden from assistive tech so the
-            list is not read twice. */}
-        <span className="contents" aria-hidden="true">
-          {names.map((name) => (
-            <Chip key={`dup-${name}`} name={name} />
-          ))}
-        </span>
-      </div>
+      </InfiniteSlider>
     </div>
   );
 }

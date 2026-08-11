@@ -506,43 +506,6 @@
   88%, 100% { opacity: 0; transform: scale(0.3); }
 }
 
-/* Collaborations marquee.
-
-   Translating -50% works because the track holds the chip list twice, so the
-   halfway point is pixel-identical to the start and the loop has no seam.
-
-   Direction is deliberately NOT flipped for RTL: the strip is a conveyor of
-   logos, not text, and mirroring it would make the two rows converge oddly
-   against the reading direction rather than reading as continuous travel. */
-@keyframes gc-marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-.gc-marquee-viewport {
-  overflow: hidden;
-  /* Contains the animation so a translating track cannot widen the page —
-     the overflow sweep at 320px would catch it otherwise. */
-  contain: paint;
-}
-
-.gc-marquee-track {
-  display: flex;
-  width: max-content;
-  gap: 0.625rem;
-  animation: gc-marquee 38s linear infinite;
-}
-
-.gc-marquee-track--reverse {
-  animation-direction: reverse;
-}
-
-/* Let someone stop it to read a name. */
-.gc-marquee-viewport:hover .gc-marquee-track,
-.gc-marquee-viewport:focus-within .gc-marquee-track {
-  animation-play-state: paused;
-}
-
 .gc-scan-badge  { animation: gc-scan-pan 5s ease-in-out infinite; }
 .gc-scan-beam   { animation: gc-scan-beam 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
 .gc-scan-ring   { animation: gc-scan-ring 2.6s ease-out infinite; }
@@ -881,13 +844,9 @@
     opacity: 1 !important;
   }
 
-  /* Marquee stops entirely. A conveyor of logos is decoration, and continuous
-     horizontal travel is exactly what reduced-motion is asking us not to do.
-     The chips stay readable in place. */
-  .gc-marquee-track {
-    animation: none !important;
-    transform: none !important;
-  }
+  /* The collaborations marquee is JS-driven (InfiniteSlider) and checks
+     useReducedMotion() itself rather than a CSS rule here — see
+     components/ui/infinite-slider.tsx. */
 
   .gc-aurora span,
   .gc-how-sequence::after {
