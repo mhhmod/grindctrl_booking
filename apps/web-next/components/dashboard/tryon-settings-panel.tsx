@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import posthog from 'posthog-js';
 import { useCallback, useState, useTransition } from 'react';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 import { useRouter } from 'next/navigation';
@@ -51,6 +52,8 @@ export function TryOnSettingsPanel({
     [],
   );
 
+  const isDefault = selectedShop === 'default';
+
   const save = useCallback(async () => {
     setStatus('saving');
     try {
@@ -82,13 +85,16 @@ export function TryOnSettingsPanel({
       fd.set('loading_steps', loadingStepsText);
 
       await saveTryOnSettingsAction(fd);
+      posthog.capture('try_on_settings_saved', {
+        scope: isDefault ? 'default' : 'shop',
+        loading_style: s.loadingStyle,
+        widget_theme: s.widgetTheme,
+      });
       setStatus('saved');
     } catch {
       setStatus('error');
     }
-  }, [s, loadingStepsText, selectedShop]);
-
-  const isDefault = selectedShop === 'default';
+  }, [s, loadingStepsText, selectedShop, isDefault]);
   const c = getTryOnDashboardCopy(locale);
 
   return (

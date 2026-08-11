@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import posthog from 'posthog-js';
 import {
   CheckCircle2,
   FileImage,
@@ -287,6 +288,11 @@ export function TryGrindctrlSandbox() {
             extractedEntities: envelope.result.extractedEntities,
             decision: envelope.result.decision,
             recommendedAction: envelope.result.recommendedAction,
+          });
+          posthog.capture('landing_sandbox_preview_generated', {
+            mode: envelope.meta.mode,
+            runtime: envelope.meta.runtime,
+            workflow_slug: envelope.result.workflowSlug,
           });
         }
 

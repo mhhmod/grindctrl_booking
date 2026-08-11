@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import posthog from 'posthog-js';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,10 @@ export function AuthGateModal({ actionLabel, onClose }: AuthGateModalProps) {
 
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Button asChild size="sm" className="h-11 w-full rounded-xl sm:w-auto">
-            <Link href="/sign-up">
+            <Link
+              href="/sign-up"
+              onClick={() => posthog.capture('landing_workflow_unlock_requested', { action: actionLabel, destination: 'sign_up' })}
+            >
               Start 14-day trial
               <ArrowRight className="ms-1 size-4" />
             </Link>
