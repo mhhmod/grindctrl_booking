@@ -3,15 +3,23 @@ import { test, expect } from '@playwright/test';
 const WIDTHS = [320, 360, 390, 430];
 const LOCALES = ['en', 'ar'] as const;
 
-/* Both public pages. /pricing was missed the first time round and kept the
+/* Every public page. /pricing was missed the first time round and kept the
    tracking-[0.22em] eyebrow the landing pass removed, so it went untested with
-   the very defect this sweep exists to catch. */
+   the very defect this sweep exists to catch — /try-on and /sign-in are here
+   so that mistake doesn't repeat for them.
+
+   rootSelector: landing/pricing set dir+lang on an inner .gc-landing-root div,
+   not <html>. /try-on and /sign-in don't have that wrapper, but both read the
+   same gc-locale cookie as the root layout, which does set dir+lang on <html>
+   — so <html> is the correct, and only necessary, selector for those two. */
 const PAGES = [
-  { name: 'landing', path: '/' },
-  { name: 'pricing', path: '/pricing' },
+  { name: 'landing', path: '/', rootSelector: '.gc-landing-root' },
+  { name: 'pricing', path: '/pricing', rootSelector: '.gc-landing-root' },
+  { name: 'try-on', path: '/try-on', rootSelector: 'html' },
+  { name: 'sign-in', path: '/sign-in', rootSelector: 'html' },
 ] as const;
 
-for (const { name, path } of PAGES) {
+for (const { name, path, rootSelector } of PAGES) {
 for (const locale of LOCALES) {
   for (const width of WIDTHS) {
     test(`${name} has no horizontal overflow at ${width}px in ${locale}`, async ({ page, context }) => {
@@ -28,8 +36,8 @@ for (const locale of LOCALES) {
 
       /* Prove the locale actually applied — otherwise this silently tests
          English twice and the Arabic case, the one most likely to overflow,
-         goes unchecked. dir lives on the landing root div, not <html>. */
-      const root = page.locator('.gc-landing-root');
+         goes unchecked. */
+      const root = page.locator(rootSelector);
       await expect(root).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
       await expect(root).toHaveAttribute('lang', locale);
 

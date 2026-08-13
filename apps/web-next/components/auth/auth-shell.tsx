@@ -54,7 +54,14 @@ export function AuthShell({
             <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">{subtitle}</p>
           </div>
 
-          <div className="[&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-card]:w-full">
+          {/* min-h reserves the form's approximate footprint before Clerk's
+              JS bundle finishes loading and clerk.js initialises client-side
+              — without it this div collapses to zero height and the visitor
+              sees a hard empty gap for a few seconds instead of a stable
+              loading state. Paired with the skeleton in ClerkLoading
+              (components/auth/auth-clerk.tsx) so that gap has content in it,
+              not just reserved space. */}
+          <div className="min-h-[420px] [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-card]:w-full">
             {children}
           </div>
 

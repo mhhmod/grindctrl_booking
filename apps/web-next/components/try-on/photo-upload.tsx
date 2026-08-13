@@ -84,7 +84,7 @@ export function PhotoUpload({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
-            alt="Your uploaded photo"
+            alt={t.photoLabel}
             className="aspect-[3/4] w-full object-cover"
           />
           {!disabled && (

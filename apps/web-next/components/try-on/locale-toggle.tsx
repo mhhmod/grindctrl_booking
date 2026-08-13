@@ -22,7 +22,7 @@ export function LocaleToggle({ className }: { className?: string }) {
       id="tryon-locale-toggle"
     >
       <Languages className="size-4" aria-hidden="true" />
-      <span>{t.langSwitchTo}</span>
+      <span className="hidden sm:inline">{t.langSwitchTo}</span>
     </Button>
   );
 }

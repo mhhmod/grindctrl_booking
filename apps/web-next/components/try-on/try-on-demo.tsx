@@ -184,7 +184,7 @@ export function TryOnDemo({
           </div>
         ) : null}
 
-        <div className="flex-1 space-y-3 text-center sm:text-start">
+        <div className="min-w-0 flex-1 space-y-3 text-center sm:text-start">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">
             {product.category}
           </p>
@@ -203,7 +203,10 @@ export function TryOnDemo({
       </div>
 
       {/* ─── Flow area ─── */}
-      <div className="gc-fade-in-up min-h-[420px] rounded-2xl border p-6 sm:p-8 gc-landing-card" style={{ animationDelay: '0.1s' }}>
+      {/* Shorter minimum on mobile: 420px on a short viewport (or with the
+          keyboard open during upload) forced scroll for no reason — this
+          just needs to be tall enough that switching steps doesn't jump. */}
+      <div className="gc-fade-in-up min-h-[280px] rounded-2xl border p-6 sm:min-h-[420px] sm:p-8 gc-landing-card" style={{ animationDelay: '0.1s' }}>
         {/* Step: Upload */}
         {step === 'upload' && (
           <div className="space-y-6">
@@ -241,7 +244,7 @@ export function TryOnDemo({
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={photoDataUrl}
-                  alt="Your uploaded photo"
+                  alt={t.photoLabel}
                   className="size-20 shrink-0 rounded-lg border object-cover"
                 />
               )}

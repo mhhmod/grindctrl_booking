@@ -2,7 +2,6 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
-import { getDashboardRouteMeta } from '@/lib/dashboard/route-meta';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
@@ -27,19 +26,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   /* Same gc-locale cookie the marketing site and storefront demo use, so a
      language chosen anywhere carries into the dashboard. */
   const locale = await getRequestLocale();
-  const routeMeta = getDashboardRouteMeta(pathname, locale);
   const permissions = resolveDashboardPermissions({ role: workspaceBundle.role });
   const navItems = resolveDashboardNavItems({ pathname, permissions, locale });
 
   return (
     <div dir={getDir(locale)} lang={locale}>
-      <DashboardShell
-        locale={locale}
-        navItems={navItems}
-        breadcrumbs={routeMeta.breadcrumbs}
-        title={routeMeta.title}
-        description={routeMeta.description}
-      >
+      <DashboardShell locale={locale} navItems={navItems}>
         {children}
       </DashboardShell>
     </div>

@@ -81,7 +81,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
         <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-xl border bg-muted/20 shadow-sm">
           <Image
             src={job.resultImageUrl}
-            alt={`Try-on preview of ${productName}`}
+            alt={t.resultPreviewAlt(productName)}
             width={400}
             height={533}
             className="aspect-[3/4] w-full object-cover"

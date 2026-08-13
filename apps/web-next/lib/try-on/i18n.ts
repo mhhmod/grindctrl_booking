@@ -73,6 +73,7 @@ interface TryOnDict {
 
   demoBadge: string;
   previewLabel: string;
+  resultPreviewAlt: (product: string) => string;
   download: string;
   whatsapp: string;
   whatsappMsg: (product: string) => string;
@@ -147,6 +148,7 @@ const en: TryOnDict = {
 
   demoBadge: 'Demo Preview',
   previewLabel: 'Try-On Preview',
+  resultPreviewAlt: (product) => `Try-on preview of ${product}`,
   download: 'Download preview',
   whatsapp: 'Request order / WhatsApp',
   whatsappMsg: (product) => `I'd like to order the ${product}! Here's my try-on preview.`,
@@ -223,6 +225,7 @@ const ar: TryOnDict = {
 
   demoBadge: 'معاينة تجريبية',
   previewLabel: 'معاينة التجربة',
+  resultPreviewAlt: (product) => `معاينة تجربة ${product}`,
   download: 'تنزيل المعاينة',
   whatsapp: 'اطلب الآن / واتساب',
   whatsappMsg: (product) => `أرغب في طلب ${product}! إليك معاينة التجربة الخاصة بي.`,

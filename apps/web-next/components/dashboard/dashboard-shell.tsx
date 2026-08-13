@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import Link from 'next/link';
@@ -16,20 +18,14 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { DashboardSidebarNav } from '@/components/dashboard/nav-link';
 import type { DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
-import type { DashboardBreadcrumbItem } from '@/lib/dashboard/route-meta';
+import { useDashboardRouteMeta } from '@/lib/dashboard/use-route-meta';
 
 export function DashboardShell({
   navItems,
-  breadcrumbs,
-  title,
-  description,
   children,
   locale = 'en',
 }: {
   navItems: DashboardResolvedNavItem[];
-  breadcrumbs: DashboardBreadcrumbItem[];
-  title: string;
-  description: string;
   children: React.ReactNode;
   /* The sidebar pins itself with `fixed` and a PHYSICAL left/right offset,
      while the spacer that reserves its width sits in normal flow and follows
@@ -40,6 +36,9 @@ export function DashboardShell({
   locale?: SiteLocale;
 }) {
   const side = locale === 'ar' ? 'right' : 'left';
+  /* Live pathname, not a title/breadcrumbs prop resolved once by the server
+     layout — see lib/dashboard/use-route-meta.ts for why that goes stale. */
+  const { title, description, breadcrumbs } = useDashboardRouteMeta(locale);
   return (
       <SidebarProvider defaultOpen>
         <Sidebar side={side}>

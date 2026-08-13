@@ -4,6 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@clerk/nextjs', () => ({
   SignUp: () => <div data-testid="clerk-sign-up">Clerk SignUp</div>,
+  /* auth-clerk.tsx renders these around SignIn/SignUp so the form doesn't
+     flash in from empty space. Real Clerk toggles between them by load
+     state; the mock always takes the "loaded" branch so existing assertions
+     against the SignUp testid keep working unchanged. */
+  ClerkLoaded: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ClerkLoading: () => null,
 }));
 
 /* The page resolves its language from the locale cookie, so the test controls

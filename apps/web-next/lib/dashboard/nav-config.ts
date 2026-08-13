@@ -50,7 +50,7 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   },
 ];
 
-function isDashboardNavItemActive(pathname: string, itemHref: string) {
+export function isDashboardNavItemActive(pathname: string, itemHref: string) {
   if (pathname === '/dashboard' && itemHref === '/dashboard/overview') {
     return true;
   }

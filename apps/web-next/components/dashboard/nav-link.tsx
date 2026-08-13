@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Icon } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -10,7 +11,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import type { DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
+import { isDashboardNavItemActive, type DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
+import { normalizeDashboardPathname } from '@/lib/dashboard/route-meta';
 
 export function DashboardSidebarNav({
   navItems,
@@ -18,6 +20,9 @@ export function DashboardSidebarNav({
   navItems: DashboardResolvedNavItem[];
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
+  /* Live pathname, not item.isActive (resolved once by the server layout —
+     see lib/dashboard/use-route-meta.ts for why that goes stale). */
+  const pathname = normalizeDashboardPathname(usePathname() ?? '');
 
   return (
     <SidebarMenu>
@@ -31,7 +36,7 @@ export function DashboardSidebarNav({
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={item.isActive}
+                isActive={isDashboardNavItemActive(pathname, item.href)}
                 size="sm"
                 className="h-11 md:h-8"
               >

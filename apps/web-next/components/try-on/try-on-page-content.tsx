@@ -7,9 +7,10 @@ import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { TryOnDemo } from '@/components/try-on/try-on-demo';
 import { LocaleToggle } from '@/components/try-on/locale-toggle';
 import { useTryOnLocale } from '@/components/try-on/locale-provider';
+import { cn } from '@/lib/utils';
 
 export function TryOnPageContent() {
-  const { t } = useTryOnLocale();
+  const { t, locale } = useTryOnLocale();
 
   return (
     <>
@@ -18,17 +19,22 @@ export function TryOnPageContent() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            /* min-w-0: without it this flex child never shrinks below its
+               content's natural width, which blocks BrandLogo's own
+               `truncate` from ever engaging — the header pushed the
+               language/theme controls out of the viewport on a phone,
+               worse with the longer Arabic heroBadge subtitle. */
+            className="min-w-0 rounded-lg text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label={t.brandHome}
           >
             <BrandLogo subtitle={t.heroBadge} />
           </Link>
 
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             {/* The language switch is the header's one loud control: Arabic
                 visitors must find it without hunting. */}
             <LocaleToggle className="border-foreground/25 px-3 text-sm" />
-            <ThemeToggle />
+            <ThemeToggle locale={locale} />
             <Link
               href="/"
               className="hidden h-9 items-center gap-1.5 rounded-xl px-3 text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
@@ -44,7 +50,18 @@ export function TryOnPageContent() {
       <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-20">
         {/* Hero section */}
         <div className="gc-fade-in-up mx-auto mb-12 max-w-2xl space-y-4 text-center">
-          <div className="mx-auto mb-4 inline-flex h-7 items-center rounded-full bg-primary/10 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          <div
+            className={cn(
+              /* py- not a fixed h-: the Arabic string below runs noticeably
+                 longer than the English one and a fixed height clips it on
+                 narrow phones instead of letting the pill grow. */
+              'mx-auto mb-4 inline-flex items-center rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary',
+              /* Same rule as components/landing/eyebrow.tsx: letter-spacing
+                 breaks Arabic letter-joining, so uppercase+tracking is
+                 English-only. */
+              locale === 'ar' ? 'text-xs' : 'uppercase tracking-[0.2em]',
+            )}
+          >
             {t.heroBadge}
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">

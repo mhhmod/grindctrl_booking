@@ -37,7 +37,9 @@ export function ThemeToggle({
   const copy = THEME_COPY[locale] ?? THEME_COPY.en;
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
-  const isDark = mounted ? resolvedTheme !== 'light' : true;
+  /* Pre-mount guess must match ThemeProvider's defaultTheme (light) or the
+     icon flips right after hydration on every load. */
+  const isDark = mounted ? resolvedTheme !== 'light' : false;
 
   return (
     <Button
