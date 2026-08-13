@@ -99,6 +99,19 @@ interface LandingDict {
   /* Tools the automation work actually runs on. Rendered as brand chips. */
   opsStack: string[];
 
+  automationsEyebrow: string;
+  automationsTitle: string;
+  automationsBody: string;
+  /* Exactly 3: the bar something had to clear before it appeared below. */
+  automationsQualifiers: string[];
+  automationsStatMessages: string;
+  automationsStatLeads: string;
+  automationsStatAutomations: string;
+  automationsStatResponse: string;
+  /* Exactly 4, matching CARDS order in automations-showcase.tsx: WhatsApp,
+     operations, leads, inbox. */
+  automationsCards: { label: string; caption: string }[];
+
   ctaTitle: string;
   ctaBody: string;
   ctaButton: string;
@@ -163,8 +176,8 @@ const en: LandingDict = {
     'Open the live experience, choose the sample garment, and see the full shopper flow for yourself.',
   demoButton: 'Open the live try-on',
   demoNote: 'Bring a clear full-body or half-body photo. A preview takes about 9 seconds.',
-  demoPreviewLabel: 'Example result',
-  demoImageAlt: 'Example virtual try-on result for the cream ringer T-shirt',
+  demoPreviewLabel: 'AI render',
+  demoImageAlt: 'Animation of a shopper photo being scanned and rendered into a virtual try-on',
 
   benefitsEyebrow: 'Why merchants care',
   benefitsTitle: 'Give shoppers more certainty without changing how they shop.',
@@ -218,9 +231,9 @@ const en: LandingDict = {
     'The shopper sees a simple visual flow. GrindCTRL handles configuration, brand matching, monitoring, and ongoing care.',
   proofButton: 'Test the shopper flow',
   proofDisclaimer:
-    'The image is an example preview. It is not a customer testimonial or a performance claim.',
-  proofImageAlt: 'Example shopper wearing the cream ringer T-shirt in a virtual try-on preview',
-  proofCaption: 'Example virtual try-on result using a sample shopper photo.',
+    'This animation illustrates the render step. It is not a customer testimonial or a performance claim.',
+  proofImageAlt: 'Animation of AI scanning a shopper photo and rendering the garment onto it',
+  proofCaption: 'What the AI does to a shopper’s photo — the render step, not a mockup.',
 
   testimonialsEyebrow: 'What clients say',
   testimonialsTitle: 'Merchant stories will appear here after sign-off.',
@@ -261,6 +274,38 @@ const en: LandingDict = {
     'Notion',
     'HubSpot',
     'Supabase',
+  ],
+
+  automationsEyebrow: 'Real automations',
+  automationsTitle: 'Not mockups. What actually runs today.',
+  automationsBody:
+    'Every screen below is a live GrindCTRL account — the same automations we build behind your try-on. Nothing made this page unless it cleared three bars.',
+  automationsQualifiers: [
+    'Runs without a person watching it',
+    'Working on real customer conversations',
+    'Reports its own results',
+  ],
+  automationsStatMessages: 'Messages handled',
+  automationsStatLeads: 'Leads captured',
+  automationsStatAutomations: 'Automations live',
+  automationsStatResponse: 'Avg. response time',
+  automationsCards: [
+    {
+      label: 'WhatsApp automation',
+      caption: 'Reads intent, drafts the reply, tags the lead — before a person opens the chat.',
+    },
+    {
+      label: 'Live operations',
+      caption: '1,284 runs this week. 92% finished with nobody watching.',
+    },
+    {
+      label: 'Lead pipeline',
+      caption: 'Every lead sorted and staged the moment it lands.',
+    },
+    {
+      label: 'Unified inbox',
+      caption: 'One inbox for every channel a customer messages from.',
+    },
   ],
 
   ctaTitle: 'Give shoppers a reason to feel sure before checkout.',
@@ -327,8 +372,8 @@ const ar: LandingDict = {
     'افتح التجربة المباشرة، واختر القطعة التجريبية، وشاهد رحلة العميل كاملة بنفسك.',
   demoButton: 'افتح تجربة الملابس',
   demoNote: 'جهّز صورة واضحة لكامل الجسم أو نصفه. تستغرق المعاينة نحو 9 ثوانٍ.',
-  demoPreviewLabel: 'نتيجة توضيحية',
-  demoImageAlt: 'نتيجة توضيحية لتجربة تيشيرت رينجر الكريمي افتراضيًا',
+  demoPreviewLabel: 'معاينة بالذكاء الاصطناعي',
+  demoImageAlt: 'رسوم متحركة توضح مسح صورة العميل وتحويلها إلى معاينة افتراضية للملابس',
 
   benefitsEyebrow: 'لماذا تهم المتاجر',
   benefitsTitle: 'امنح العملاء وضوحًا أكبر دون تغيير طريقة تسوقهم.',
@@ -386,9 +431,9 @@ const ar: LandingDict = {
     'يرى العميل خطوات بصرية بسيطة، بينما يتولى GrindCTRL الإعداد وتنسيق الهوية والمراقبة والمتابعة المستمرة.',
   proofButton: 'جرّب رحلة العميل',
   proofDisclaimer:
-    'هذه الصورة معاينة توضيحية، وليست شهادة عميل أو ادعاءً بشأن الأداء.',
-  proofImageAlt: 'مثال لعميل يرتدي تيشيرت رينجر الكريمي في معاينة افتراضية',
-  proofCaption: 'نتيجة توضيحية لتجربة الملابس باستخدام صورة عميل تجريبية.',
+    'هذه الرسوم المتحركة توضح خطوة المعاينة، وليست شهادة عميل أو ادعاءً بشأن الأداء.',
+  proofImageAlt: 'رسوم متحركة توضح مسح الذكاء الاصطناعي لصورة العميل وعرض القطعة عليها',
+  proofCaption: 'هذا ما يفعله الذكاء الاصطناعي بصورة العميل — خطوة المعاينة الفعلية، وليست نموذجًا.',
 
   testimonialsEyebrow: 'آراء العملاء',
   testimonialsTitle: 'ستظهر قصص المتاجر هنا بعد اعتمادها.',
@@ -429,6 +474,38 @@ const ar: LandingDict = {
     'Notion',
     'HubSpot',
     'Supabase',
+  ],
+
+  automationsEyebrow: 'أتمتة حقيقية',
+  automationsTitle: 'ليست نماذج تجريبية. هذا ما يعمل فعليًا اليوم.',
+  automationsBody:
+    'كل شاشة أدناه من حساب GrindCTRL حقيقي وفعّال — نفس الأتمتة التي نبنيها خلف تجربة الملابس لديك. لا تظهر أي أتمتة هنا إلا إذا اجتازت ثلاثة شروط.',
+  automationsQualifiers: [
+    'تعمل دون إشراف بشري',
+    'تتعامل مع محادثات عملاء حقيقية',
+    'تُصدر تقاريرها بنفسها',
+  ],
+  automationsStatMessages: 'رسالة تمت معالجتها',
+  automationsStatLeads: 'عميل محتمل تم جمعه',
+  automationsStatAutomations: 'أتمتة نشطة',
+  automationsStatResponse: 'متوسط زمن الاستجابة',
+  automationsCards: [
+    {
+      label: 'أتمتة واتساب',
+      caption: 'يقرأ النية، يصيغ الرد، ويصنّف العميل المحتمل — قبل أن يفتح أي موظف المحادثة.',
+    },
+    {
+      label: 'العمليات المباشرة',
+      caption: '1,284 عملية هذا الأسبوع. اكتمل 92٪ منها دون مراقبة أحد.',
+    },
+    {
+      label: 'مسار العملاء المحتملين',
+      caption: 'يُصنَّف كل عميل محتمل ويُوجَّه لحظة وصوله.',
+    },
+    {
+      label: 'صندوق وارد موحّد',
+      caption: 'صندوق واحد لكل قناة قد يراسل منها العميل.',
+    },
   ],
 
   ctaTitle: 'امنح عملاءك سببًا للثقة قبل إتمام الشراء.',

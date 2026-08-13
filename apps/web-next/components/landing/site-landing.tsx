@@ -13,7 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
 import { BRAND_MARKS } from '@/components/brand-marks';
+import { AiVisionFigure } from '@/components/landing/ai-vision-figure';
 import { AmbientBackground } from '@/components/landing/ambient-background';
+import { AutomationsShowcase } from '@/components/landing/automations-showcase';
 import { CollaborationsMarquee } from '@/components/landing/collaborations-marquee';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
@@ -271,17 +273,12 @@ export function SiteLanding() {
                 <p className="text-xs leading-relaxed text-muted-foreground">{t.demoNote}</p>
               </div>
               <div className="relative min-w-0">
-                <Image
-                  src="/try-on/mock-result.png"
+                <AiVisionFigure
+                  size="compact"
                   alt={t.demoImageAlt}
-                  width={1024}
-                  height={1024}
-                  sizes="(max-width: 1024px) 100vw, 430px"
-                  className="h-auto max-w-full rounded-3xl border border-border shadow-[var(--gc-landing-shadow)]"
+                  previewLabel={t.demoPreviewLabel}
+                  className="shadow-[var(--gc-landing-shadow)]"
                 />
-                <Badge className="absolute end-3 top-3 rounded-full sm:end-5 sm:top-5">
-                  {t.demoPreviewLabel}
-                </Badge>
               </div>
           </div>
         </section>
@@ -359,19 +356,13 @@ export function SiteLanding() {
               </Button>
               <p className="text-xs leading-relaxed text-muted-foreground">{t.proofDisclaimer}</p>
             </div>
-            <figure className="gc-landing-card gc-card-hover min-w-0 overflow-hidden rounded-3xl border lg:order-first">
-              <Image
-                src="/try-on/mock-result.png"
+            <div className="min-w-0 lg:order-first">
+              <AiVisionFigure
                 alt={t.proofImageAlt}
-                width={1024}
-                height={1024}
-                sizes="(max-width: 1024px) 100vw, 640px"
-                className="h-auto max-w-full"
+                caption={t.proofCaption}
+                className="gc-card-hover"
               />
-              <figcaption className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-                {t.proofCaption}
-              </figcaption>
-            </figure>
+            </div>
           </div>
         </section>
 
@@ -463,6 +454,26 @@ export function SiteLanding() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div className="min-w-0">
+              <Eyebrow locale={locale}>{t.automationsEyebrow}</Eyebrow>
+              <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{t.automationsTitle}</h3>
+              <p className="mt-2 max-w-2xl text-[15px] leading-[1.65] text-muted-foreground">
+                {t.automationsBody}
+              </p>
+              <div className="mt-7">
+                <AutomationsShowcase
+                  qualifiers={t.automationsQualifiers}
+                  statLabels={{
+                    automationsStatMessages: t.automationsStatMessages,
+                    automationsStatLeads: t.automationsStatLeads,
+                    automationsStatAutomations: t.automationsStatAutomations,
+                    automationsStatResponse: t.automationsStatResponse,
+                  }}
+                  cards={t.automationsCards}
+                />
+              </div>
             </div>
 
             {/* The tools this actually runs on. Same chip treatment as the
