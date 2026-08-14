@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJob } from '@/lib/try-on/service';
+import { clientIp, publicApiRatelimit, rateLimitedResponse } from '@/lib/ratelimit';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -22,9 +23,12 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
  * Polls the status of a try-on generation job.
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> },
 ) {
+  const limit = await publicApiRatelimit.limit(clientIp(request));
+  if (!limit.success) return rateLimitedResponse(limit.reset);
+
   const { jobId } = await params;
 
   if (!jobId) {

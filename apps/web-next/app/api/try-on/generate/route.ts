@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
 import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
-import { checkRateLimit } from '@/lib/try-on/rate-limit';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
@@ -52,14 +52,14 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
 export async function POST(request: NextRequest) {
   try {
     /* Real generations cost provider money: rate-limit per client IP. */
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const limit = checkRateLimit(ip);
-    if (!limit.ok) {
+    const ip = clientIp(request);
+    const limit = await publicApiRatelimit.limit(ip);
+    if (!limit.success) {
       const message = 'Too many try-on requests. Please try again in a few minutes.';
+      const retryAfterSec = Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000));
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
-        { status: 429, headers: { 'Retry-After': String(limit.retryAfterSec ?? 60) } },
+        { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
       );
     }
 
