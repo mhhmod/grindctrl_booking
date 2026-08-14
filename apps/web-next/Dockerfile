@@ -5,6 +5,8 @@ RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app/apps/web-next
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/apps/web-next/node_modules ./node_modules
 COPY apps/web-next ./
 RUN npm run build
