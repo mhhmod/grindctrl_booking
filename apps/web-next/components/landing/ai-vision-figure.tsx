@@ -10,28 +10,37 @@ if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
-/* What this replaces: a stock photo of a man in a T-shirt, captioned "example
-   result" — no AI, no scan, no try-on visible in the frame, just a product
-   shot. This draws the thing itself: a viewfinder locks onto a figure, and
-   the figure renders in.
+/* What this replaces: a stock photo of a man in a T-shirt — no AI, no scan,
+   no try-on visible in the frame. Two SVG versions came before this one:
 
-   First version drew the head as a separate circle sitting above a separate
-   torso shape, with a floating spark icon and faint grid lines. Screenshotted
-   at rest it read as three unrelated pieces rather than one coherent figure —
-   "the combination of shapes is weird, not unified". This version is a
-   SINGLE closed path (head flows into shoulders flows into torso, no seam),
-   with the garment suggested by contour lines drawn on that one shape rather
-   than a second shape overlapping it, and nothing floating separately from
-   the figure. One shape, one accent, one frame.
+   v1 drew the head as a separate circle floating above a separate torso
+   shape, with a floating spark icon — read as disconnected pieces, not one
+   figure.
 
-   pathLength="1" on every stroked path keeps the draw-in animation
-   unit-agnostic regardless of viewBox geometry. GSAP plays the sequence once
-   on scroll-in; under prefers-reduced-motion it skips straight to the
-   finished state. Entrance motion is y-only, never x — an x-axis offset
-   reads as "from the left" in LTR and silently reverses under RTL, the exact
-   bug the collaborations marquee needed a dir="ltr" patch for. */
+   v2 fixed that (one continuous path, no seam) but added a viewfinder frame,
+   a scan beam, garment contour lines, and an accent dot — eight animated
+   pieces in total. Feedback on it: "more symmetric, more elegant, cheaper,
+   humanized, not geometric, simple."
+
+   This version is ONE path — a plain bust silhouette, not scanning-drone
+   chrome — with every coordinate computed as a mirror pair around x=160, so
+   symmetry is guaranteed by the numbers rather than eyeballed. Three moving
+   parts: the silhouette fills in, a soft glow breathes behind it, one ring
+   pulses outward once. No brackets, no beam, no contour lines, no floating
+   accent — the shape itself is the point.
+
+   pathLength isn't needed here (no stroke-dasharray draw-in this time).
+   GSAP plays once on scroll-in; prefers-reduced-motion skips straight to
+   the finished state. Motion is y/scale/opacity only, never x — an x-axis
+   offset reads as "from the left" in LTR and reverses under RTL. */
 
 type Size = 'compact' | 'card';
+
+/* Every x-coordinate below is 160 ± the same offset as its mirror twin.
+   Head circle: center (160,110) r=54, kappa*r ≈ 29.83 → control x 130.17/189.83.
+   Body: shoulder points 121.5/198.5 (∓38.5), base corners 24/296 (∓136). */
+const FIGURE_PATH =
+  'M160 56C189.83 56 214 80.17 214 110C214 124.85 208.07 138.3 198.5 148.15C253 162 296 210 296 380L24 380C24 210 67 162 121.5 148.15C111.93 138.3 106 124.85 106 110C106 80.17 130.17 56 160 56Z';
 
 export function AiVisionFigure({
   caption,
@@ -47,54 +56,47 @@ export function AiVisionFigure({
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const beamClipRef = useRef<SVGRectElement>(null);
-  const bracketsRef = useRef<SVGGElement>(null);
   const figureRef = useRef<SVGPathElement>(null);
-  const contourRef = useRef<SVGGElement>(null);
   const glowRef = useRef<SVGCircleElement>(null);
-  const accentRef = useRef<SVGCircleElement>(null);
+  const pulseRef = useRef<SVGCircleElement>(null);
 
   useGSAP(
     () => {
       const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       // End state up front, so a reduced-motion visitor sees the finished
-      // render immediately rather than a stuck wireframe.
-      gsap.set(bracketsRef.current?.querySelectorAll('path') ?? [], { strokeDashoffset: 0 });
+      // render immediately rather than a stuck outline.
       gsap.set(figureRef.current, { fillOpacity: 1 });
-      gsap.set(contourRef.current, { opacity: 1 });
-      gsap.set(glowRef.current, { opacity: 0.45 });
-      gsap.set(accentRef.current, { opacity: 1, scale: 1, transformOrigin: '50% 50%' });
-      gsap.set(beamClipRef.current, { yPercent: -140 });
+      gsap.set(glowRef.current, { opacity: 0.4, scale: 1, transformOrigin: '50% 50%' });
+      gsap.set(pulseRef.current, { opacity: 0 });
 
       if (reduced) return;
 
-      gsap.set(bracketsRef.current?.querySelectorAll('path') ?? [], { strokeDashoffset: 1 });
       gsap.set(figureRef.current, { fillOpacity: 0 });
-      gsap.set(contourRef.current, { opacity: 0 });
-      gsap.set(glowRef.current, { opacity: 0 });
-      gsap.set(accentRef.current, { opacity: 0, scale: 0.3, transformOrigin: '50% 50%' });
+      gsap.set(glowRef.current, { opacity: 0, scale: 0.85, transformOrigin: '50% 50%' });
 
       const tl = gsap.timeline({
         scrollTrigger: { trigger: rootRef.current, start: 'top 78%', once: true },
         defaults: { ease: 'power2.out' },
       });
 
-      tl.to(bracketsRef.current?.querySelectorAll('path') ?? [], {
-        strokeDashoffset: 0,
-        duration: 0.55,
-        stagger: 0.07,
-      })
+      tl.to(glowRef.current, { opacity: 0.4, scale: 1, duration: 0.8 })
+        .to(figureRef.current, { fillOpacity: 1, duration: 0.7 }, '<0.15')
         .fromTo(
-          beamClipRef.current,
-          { yPercent: -140 },
-          { yPercent: 260, duration: 1, ease: 'power1.inOut' },
+          pulseRef.current,
+          { opacity: 0.5, scale: 0.7, transformOrigin: '50% 50%' },
+          { opacity: 0, scale: 1.6, duration: 1.1, ease: 'power1.out' },
           '<0.1',
         )
-        .to(figureRef.current, { fillOpacity: 1, duration: 0.65 }, '<0.3')
-        .to(glowRef.current, { opacity: 0.45, duration: 0.7 }, '<')
-        .to(contourRef.current, { opacity: 1, duration: 0.4 }, '-=0.2')
-        .to(accentRef.current, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(3)' }, '-=0.15');
+        // Gentle continuous breathing once the reveal settles — elegant, not busy.
+        .to(glowRef.current, {
+          opacity: 0.55,
+          scale: 1.04,
+          duration: 2.6,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+        });
     },
     { scope: rootRef },
   );
@@ -120,72 +122,23 @@ export function AiVisionFigure({
 
       <svg viewBox="0 0 320 400" className="absolute inset-0 size-full" aria-hidden="true">
         <defs>
-          <clipPath id="gc-vision-figure-clip">
-            <path d="M160 68c34 0 56 24 56 61 0 22-8 38-21 49 36 10 65 41 71 87v112H74V265c6-46 35-77 71-87-13-11-21-27-21-49 0-37 22-61 56-61Z" />
-          </clipPath>
           <linearGradient id="gc-vision-figure-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.85" />
-            <stop offset="45%" stopColor="var(--primary)" stopOpacity="0.62" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.4" />
-          </linearGradient>
-          <linearGradient id="gc-vision-beam" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0" />
-            <stop offset="45%" stopColor="white" stopOpacity="0.8" />
-            <stop offset="55%" stopColor="white" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.88" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.55" />
           </linearGradient>
         </defs>
 
-        {/* Soft depth glow, seated behind the figure. */}
-        <circle ref={glowRef} cx="160" cy="230" r="132" fill="var(--primary)" opacity="0" style={{ filter: 'blur(56px)' }} />
+        {/* Soft depth glow, centred on the figure — breathes gently once settled. */}
+        <circle ref={glowRef} cx="160" cy="200" r="140" fill="var(--primary)" opacity="0" style={{ filter: 'blur(60px)' }} />
 
-        {/* Ghosted outline: always visible at rest, gives the scan something
-            to land on. One continuous path — head, shoulders and torso share
-            a single outline, so it never reads as separate shapes. */}
-        <path
-          d="M160 68c34 0 56 24 56 61 0 22-8 38-21 49 36 10 65 41 71 87v112H74V265c6-46 35-77 71-87-13-11-21-27-21-49 0-37 22-61 56-61Z"
-          fill="none"
-          stroke="var(--foreground)"
-          strokeOpacity="0.22"
-          strokeWidth="2"
-        />
+        {/* Single outward pulse on reveal, then gone — the only "scan" cue. */}
+        <circle ref={pulseRef} cx="160" cy="200" r="150" fill="none" stroke="var(--primary)" strokeWidth="2" opacity="0" />
 
-        {/* The same path, filled — this is the "render" the scan produces.
-            No second overlapping shape; only fillOpacity changes. */}
-        <path
-          ref={figureRef}
-          d="M160 68c34 0 56 24 56 61 0 22-8 38-21 49 36 10 65 41 71 87v112H74V265c6-46 35-77 71-87-13-11-21-27-21-49 0-37 22-61 56-61Z"
-          fill="url(#gc-vision-figure-fill)"
-          fillOpacity="0"
-        />
+        {/* Ghosted outline, always visible at rest. */}
+        <path d={FIGURE_PATH} fill="none" stroke="var(--foreground)" strokeOpacity="0.22" strokeWidth="2" />
 
-        {/* Garment contour: a crew neckline and a hem line traced on the
-            figure, not a separate shape competing with it. */}
-        <g ref={contourRef} fill="none" stroke="var(--background)" strokeOpacity="0.75" strokeWidth="2" strokeLinecap="round">
-          <path d="M118 190c14 12 30 18 42 18s28-6 42-18" />
-          <path d="M87 372h146" strokeOpacity="0.35" />
-        </g>
-
-        {/* Scan beam, clipped to the figure so it lights the person rather
-            than sweeping the whole card. */}
-        <g clipPath="url(#gc-vision-figure-clip)">
-          <rect ref={beamClipRef} x="0" y="-80" width="320" height="110" fill="url(#gc-vision-beam)" />
-        </g>
-
-        {/* Single accent: a small mark at the neckline, where the render
-            "locks in" — not a spark floating in a corner unrelated to
-            anything else on the card. */}
-        <circle ref={accentRef} cx="160" cy="196" r="5" fill="var(--primary)" opacity="0" />
-        <circle cx="160" cy="196" r="9" fill="none" stroke="var(--primary)" strokeOpacity="0.4" strokeWidth="1.5" />
-
-        {/* Viewfinder brackets, tight around the figure rather than the
-            whole card — reads as "locked onto this", not decoration. */}
-        <g ref={bracketsRef} stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" fill="none">
-          <path pathLength="1" strokeDasharray="1" d="M44 78V58a6 6 0 0 1 6-6h20" />
-          <path pathLength="1" strokeDasharray="1" d="M250 52h20a6 6 0 0 1 6 6v20" />
-          <path pathLength="1" strokeDasharray="1" d="M276 342v20a6 6 0 0 1-6 6h-20" />
-          <path pathLength="1" strokeDasharray="1" d="M70 368H50a6 6 0 0 1-6-6v-20" />
-        </g>
+        {/* The render itself — same path, filled. No second shape, no seam. */}
+        <path ref={figureRef} d={FIGURE_PATH} fill="url(#gc-vision-figure-fill)" fillOpacity="0" />
       </svg>
 
       {caption ? (
