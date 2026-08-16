@@ -158,9 +158,16 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
 
   return (
     <div className={cn('flex h-full min-h-0 flex-col rounded-2xl border bg-card shadow-sm', className)} dir={dir}>
-      <div className="flex items-center justify-between gap-2 border-b px-4 py-2.5">
+      {/* flex-wrap, not a hand-tuned narrow-viewport spacing budget: with
+          voice-reply on, this row can hold 6 controls (2 toggle pairs +
+          language picker + close) — at 320-360px that's more than the
+          controls' own minimum touch-target sizes leave room for on one
+          line. Wrapping to a second row is the standard, unsurprising
+          degradation (confirmed no overflow from 320px up); squeezing
+          the icons any smaller would cut into real tap-target size. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-b px-4 py-2.5">
         <p className="text-sm font-semibold text-foreground">GrindCTRL AI</p>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-end gap-1.5">
           <ModeToggle
             voiceInput={voiceInput}
             voiceOutput={voiceOutput}

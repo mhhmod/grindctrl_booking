@@ -46,7 +46,24 @@ export function AssistantLauncher({ client, initialLocale }: { client?: Assistan
     <AssistantLocaleProvider initialLocale={initialLocale}>
       <LauncherButton open={open} onClick={() => setOpen((v) => !v)} />
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" showCloseButton={false} className="flex w-full flex-col p-0 sm:max-w-sm">
+        {/* Plain `w-full` here loses to the primitive's own baked-in
+            `data-[side=right]:w-3/4` — same specificity bucket in
+            tailwind-merge only dedupes utilities sharing the exact same
+            variant prefix, so the override has to be written with that
+            prefix too, or it's silently dropped. Confirmed live: without
+            this, the sheet renders at 75% width on phones (281px of 375px)
+            regardless of the plain w-full/sm:max-w-sm passed here.
+            max-w-md (not the original max-w-sm) above the sm breakpoint:
+            at 384px (max-w-sm) the header's controls still wrap to a
+            second line even with the whole screen to spare on tablet/
+            desktop — 448px is confirmed enough room for them to stay on
+            one line there, while still reading as a compact side panel,
+            not a full-bleed one. */}
+        <SheetContent
+          side="right"
+          showCloseButton={false}
+          className="flex w-full flex-col p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md"
+        >
           <SheetHeader className="sr-only">
             <SheetTitle>GrindCTRL AI</SheetTitle>
           </SheetHeader>
