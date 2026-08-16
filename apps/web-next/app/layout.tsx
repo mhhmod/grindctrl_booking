@@ -5,12 +5,15 @@ import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@fontsource/ibm-plex-sans-arabic/700.css';
+import { headers } from 'next/headers';
 import { ClerkProvider } from '@clerk/nextjs';
 import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 import { GcSpotlight } from '@/components/gc-spotlight';
+import { AssistantLauncher } from '@/components/assistant/launcher';
+import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 
@@ -26,6 +29,8 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      of the site resolved from the shared locale cookie. It only accepts this
      at the provider, not per component. */
   const locale = await getRequestLocale();
+  const pathname = (await headers()).get('x-pathname');
+  const launcher = showLauncherFor(pathname) ? <AssistantLauncher /> : null;
 
   return (
     /* lang and dir belong on <html>, not on a wrapper div. Anything rendered
@@ -44,9 +49,15 @@ export default async function RootLayout({children}: {children: React.ReactNode}
         <ThemeProvider>
           <GcSpotlight />
           {clerkConfigured ? (
-            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>{children}</ClerkProvider>
+            <ClerkProvider localization={locale === 'ar' ? arSA : enUS}>
+              {children}
+              {launcher}
+            </ClerkProvider>
           ) : (
-            children
+            <>
+              {children}
+              {launcher}
+            </>
           )}
         </ThemeProvider>
       </body>

@@ -23,7 +23,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
    stays readable" path real users with the OS setting on hit, keeps tests
    deterministic, and matches dashboard-shell.test.tsx's existing per-file
    matchMedia mock, which still overrides this for its own tests. */
-if (typeof window.matchMedia === 'undefined') {
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query: string) => ({

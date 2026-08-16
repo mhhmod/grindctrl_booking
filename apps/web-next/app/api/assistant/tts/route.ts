@@ -1,0 +1,91 @@
+import { NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { resolveTenant } from '@/lib/assistant/tenant';
+import { checkBudget } from '@/lib/assistant/rate-limit-gate';
+import { store } from '@/lib/assistant/store-instance';
+import { chunkForTts } from '@/lib/assistant/tts-chunker';
+import { getGroqClient, withGroqCall, TTS_MODEL_EN } from '@/lib/assistant/groq-client';
+
+const SESSION_COOKIE = 'gc_assistant_sid';
+const encoder = new TextEncoder();
+
+function sseEvent(event: string, data: unknown): Uint8Array {
+  return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+
+/**
+ * POST /api/assistant/tts
+ * SSE. Sentence-chunks the input (<=200 chars/chunk, Groq's Orpheus limit)
+ * and emits one `chunk` event per chunk as it's synthesized, so the client
+ * can start playback before the whole reply finishes — the pipelining that
+ * hides latency despite Groq's TTS being non-streaming per call. Unlike
+ * chat/stt, the real cost (chunk count, character count) is known before
+ * calling Groq, so the budget check uses exact numbers, not an estimate.
+ */
+export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
+  const tenant = resolveTenant(userId, existingSessionId);
+
+  const body = (await request.json()) as { text?: string };
+  const text = body.text ?? '';
+  const chunks = chunkForTts(text);
+
+  const gate =
+    chunks.length > 0
+      ? (checkBudget(store, tenant.tenantId, tenant.tier, 'tts:requests', chunks.length) ??
+        checkBudget(store, tenant.tenantId, tenant.tier, 'tts:characters', text.length))
+      : null;
+
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      if (gate) {
+        controller.enqueue(
+          sseEvent('rate_limited', {
+            resetSeconds: gate.resetSeconds,
+            message: gate.message,
+            signInCta: gate.signInCta,
+          }),
+        );
+        controller.close();
+        return;
+      }
+
+      if (chunks.length === 0) {
+        controller.enqueue(sseEvent('done', {}));
+        controller.close();
+        return;
+      }
+
+      try {
+        const client = getGroqClient();
+        for (let index = 0; index < chunks.length; index++) {
+          const audio = await withGroqCall('audio.speech', () =>
+            client.audio.speech.create({ model: TTS_MODEL_EN, voice: 'Autumn', input: chunks[index] }),
+          );
+          const arrayBuffer = await audio.arrayBuffer();
+          const audioBase64 = Buffer.from(arrayBuffer).toString('base64');
+          controller.enqueue(sseEvent('chunk', { index, audioBase64 }));
+        }
+        controller.enqueue(sseEvent('done', {}));
+      } catch {
+        controller.enqueue(
+          sseEvent('error', {
+            type: 'provider_unavailable',
+            message: "We're having trouble reaching the AI right now.",
+          }),
+        );
+      }
+
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  });
+}
