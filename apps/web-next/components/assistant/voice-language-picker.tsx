@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import type { AssistantLocale } from '@/lib/assistant/i18n';
@@ -25,6 +25,7 @@ export function VoiceLanguagePicker({ value, onChange }: VoiceLanguagePickerProp
   const cancelClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
   };
+  useEffect(() => cancelClose, []);
   const scheduleClose = () => {
     cancelClose();
     closeTimer.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
@@ -45,7 +46,7 @@ export function VoiceLanguagePicker({ value, onChange }: VoiceLanguagePickerProp
             setOpen(true);
           }}
           onMouseLeave={scheduleClose}
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {value.toUpperCase()}
         </button>
