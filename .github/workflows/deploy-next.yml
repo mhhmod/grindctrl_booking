@@ -66,11 +66,19 @@ jobs:
       # This key is restricted server-side (authorized_keys `command=`)
       # to only run /root/grindctrl-next/deploy-next.sh — it cannot run
       # arbitrary commands even if this secret ever leaked.
+      #
+      # command_timeout bounds the SSH command, not just auth — this step
+      # is really "docker pull a several-hundred-MB image over this VPS's
+      # bandwidth", which measured well over 5m on the first pull (the
+      # image is currently one large ~628MB layer, so most deploys re-pull
+      # most of it). 5m was sized for a fast git-pull-and-restart, a
+      # premise that stopped holding once the deploy step started actually
+      # transferring the image instead of just restarting a container.
       - name: Pull the built image and restart the container
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          command_timeout: 5m
+          command_timeout: 15m
           script: /root/grindctrl-next/deploy-next.sh
