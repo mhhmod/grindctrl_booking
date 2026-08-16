@@ -42,6 +42,7 @@ interface AssistantDict {
 
   playVoiceMessage: string;
   pauseVoiceMessage: string;
+  voiceReplyLoading: string;
   voiceLanguagePickerLabel: string;
   /** Self-demonyms — always "English" / "العربية" regardless of the
    *  surrounding UI language, same as how a language picker labels its own
@@ -94,6 +95,7 @@ const en: AssistantDict = {
 
   playVoiceMessage: 'Play voice message',
   pauseVoiceMessage: 'Pause voice message',
+  voiceReplyLoading: 'Preparing voice reply…',
   voiceLanguagePickerLabel: 'Choose voice language',
   voiceLanguageEnglish: 'English',
   voiceLanguageArabic: 'العربية',
@@ -141,6 +143,7 @@ const ar: AssistantDict = {
 
   playVoiceMessage: 'تشغيل الرسالة الصوتية',
   pauseVoiceMessage: 'إيقاف الرسالة الصوتية',
+  voiceReplyLoading: 'جارٍ تحضير الرد الصوتي…',
   voiceLanguagePickerLabel: 'اختيار لغة الصوت',
   voiceLanguageEnglish: 'English',
   voiceLanguageArabic: 'العربية',

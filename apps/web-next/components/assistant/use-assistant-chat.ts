@@ -7,7 +7,12 @@ export interface DisplayMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  audio?: { chunks: string[] };
+  /** 'pending' as soon as a voice reply is known to be coming (so the UI
+   *  can show something other than silence during the TTS round-trip),
+   *  'ready' once real audio has arrived. undefined means no voice reply
+   *  was ever requested for this message, or it failed (see chat-window's
+   *  voiceError, which handles that case separately). */
+  audio?: { status: 'pending' } | { status: 'ready'; chunks: string[] };
 }
 
 type Status = 'idle' | 'sending';
@@ -23,8 +28,8 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
   const [rateLimited, setRateLimited] = useState<RateLimitedInfo | null>(null);
   const [providerError, setProviderError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const setMessageAudio = useCallback((messageId: string, chunks: string[]) => {
-    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, audio: { chunks } } : m)));
+  const setMessageAudio = useCallback((messageId: string, audio: DisplayMessage['audio']) => {
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, audio } : m)));
   }, []);
   const messagesRef = useRef<DisplayMessage[]>([]);
   messagesRef.current = messages;

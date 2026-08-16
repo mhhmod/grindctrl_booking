@@ -75,6 +75,11 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       // the visitor has switched voice output back off.
       setVoiceError(null);
       if (!voiceOutputRef.current) return;
+      // Marked pending before the TTS call even starts — the round-trip
+      // (chunking + a real Groq call) reliably takes long enough that
+      // showing nothing here read as "the reply is text-only," not "voice
+      // is on its way."
+      setMessageAudio(messageId, { status: 'pending' });
       const chunks: string[] = [];
       const result = await client.streamTts(
         text,
@@ -92,13 +97,14 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         // idled with zero feedback), so it gets its own calm, accurate
         // message rather than reusing the alarming "AI unreachable" one.
         else setVoiceError(t.voiceReplyUnavailable);
+        setMessageAudio(messageId, undefined);
         return;
       }
 
       // Playback itself now lives in VoiceMessagePlayer, keyed off this —
       // handleAssistantReply's job ends at getting the audio and attaching
       // it to the right message.
-      setMessageAudio(messageId, chunks);
+      setMessageAudio(messageId, { status: 'ready', chunks });
     },
     [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, effectiveVoiceLocale, t],
   );
@@ -125,7 +131,13 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         setMicState('idle');
         return;
       }
-      const result = await client.transcribeAudio(blob, locale);
+      // Was plain `locale` (the site's text language) — but visitors read
+      // the voice-language picker as "this is the language for talking to
+      // it," not just what it speaks back. Confirmed live: picking AR
+      // there while the site itself loaded in English still hinted
+      // Whisper toward English, and a wrong hint measurably degrades
+      // transcription rather than just doing nothing.
+      const result = await client.transcribeAudio(blob, effectiveVoiceLocale);
       refreshBudgets();
 
       if (!result.ok) {
@@ -142,7 +154,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       setMicState('idle');
       void sendText(result.transcript);
     }
-  }, [recorder, client, sendText, t, refreshBudgets, setRateLimited, locale]);
+  }, [recorder, client, sendText, t, refreshBudgets, setRateLimited, effectiveVoiceLocale]);
 
   // Reflect a genuine mic-permission failure as the error state.
   const effectiveMicState: MicState = recorder.state === 'error' && micState !== 'error' ? 'error' : micState;

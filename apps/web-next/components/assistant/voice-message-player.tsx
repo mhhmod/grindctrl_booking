@@ -55,3 +55,23 @@ export function VoiceMessagePlayer({ chunks }: VoiceMessagePlayerProps) {
     </div>
   );
 }
+
+/** Shown in place of VoiceMessagePlayer while a voice reply's TTS call is
+ *  still in flight — without it, the gap between the text reply landing
+ *  and audio actually arriving read as "this reply has no voice," not
+ *  "voice is on its way." Same bouncing-dot language as the chat's own
+ *  "thinking" indicator, so it reads as one consistent "still working"
+ *  vocabulary rather than a second, different loading style. */
+export function VoiceReplyLoading() {
+  const { t } = useAssistantLocale();
+  return (
+    <div className="mt-2 flex items-center gap-2 border-t border-foreground/10 pt-2" role="status">
+      <div className="flex items-center gap-1">
+        <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.3s]" />
+        <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.15s]" />
+        <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60" />
+      </div>
+      <span className="text-xs text-muted-foreground">{t.voiceReplyLoading}</span>
+    </div>
+  );
+}

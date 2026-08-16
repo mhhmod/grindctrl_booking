@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { VoiceMessagePlayer } from './voice-message-player';
+import { VoiceMessagePlayer, VoiceReplyLoading } from './voice-message-player';
 import { AssistantLocaleProvider } from './locale-provider';
 
 function renderPlayer(chunks: string[]) {
@@ -29,5 +29,17 @@ describe('VoiceMessagePlayer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pause voice message' }));
 
     expect(screen.getByRole('button', { name: 'Play voice message' })).toBeInTheDocument();
+  });
+});
+
+describe('VoiceReplyLoading', () => {
+  it('shows a status announcing the voice reply is on its way', () => {
+    render(
+      <AssistantLocaleProvider initialLocale="en">
+        <VoiceReplyLoading />
+      </AssistantLocaleProvider>,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Preparing voice reply…');
   });
 });

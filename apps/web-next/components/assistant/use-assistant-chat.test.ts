@@ -121,7 +121,7 @@ describe('useAssistantChat', () => {
     expect(onAssistantReply).toHaveBeenCalledWith('Hi there!', assistantId);
   });
 
-  it('attaches audio chunks to the matching message via setMessageAudio', async () => {
+  it('attaches ready audio to the matching message via setMessageAudio', async () => {
     const client = makeClient();
     const { result } = renderHook(() => useAssistantChat(client));
     await waitFor(() => expect(result.current.budgets).not.toBeNull());
@@ -132,11 +132,28 @@ describe('useAssistantChat', () => {
     const assistantId = result.current.messages[1].id;
 
     act(() => {
-      result.current.setMessageAudio(assistantId, ['AA==', 'BB==']);
+      result.current.setMessageAudio(assistantId, { status: 'ready', chunks: ['AA==', 'BB=='] });
     });
 
-    expect(result.current.messages[1].audio).toEqual({ chunks: ['AA==', 'BB=='] });
+    expect(result.current.messages[1].audio).toEqual({ status: 'ready', chunks: ['AA==', 'BB=='] });
     expect(result.current.messages[0].audio).toBeUndefined();
+  });
+
+  it('can mark a message as pending audio, then clear it back to no audio', async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useAssistantChat(client));
+    await waitFor(() => expect(result.current.budgets).not.toBeNull());
+
+    await act(async () => {
+      await result.current.sendText('Hello');
+    });
+    const assistantId = result.current.messages[1].id;
+
+    act(() => result.current.setMessageAudio(assistantId, { status: 'pending' }));
+    expect(result.current.messages[1].audio).toEqual({ status: 'pending' });
+
+    act(() => result.current.setMessageAudio(assistantId, undefined));
+    expect(result.current.messages[1].audio).toBeUndefined();
   });
 
   it('does not call onAssistantReply when the send was rate-limited', async () => {

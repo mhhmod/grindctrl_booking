@@ -1,11 +1,36 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { linkifyMessage } from '@/lib/assistant/linkify';
 import type { DisplayMessage } from './use-assistant-chat';
 import { useAssistantLocale } from './locale-provider';
-import { VoiceMessagePlayer } from './voice-message-player';
+import { VoiceMessagePlayer, VoiceReplyLoading } from './voice-message-player';
+
+/** Renders a reply as plain text mixed with real, tappable links — a bare
+ *  URL or /try-on sitting inert in the text (unclickable, easy to mistake
+ *  for a broken/fake link) is exactly what linkifyMessage exists to fix. */
+function MessageText({ text }: { text: string }) {
+  return (
+    <>
+      {linkifyMessage(text).map((segment, index) => {
+        if (segment.type === 'text') return <React.Fragment key={index}>{segment.value}</React.Fragment>;
+        const linkClassName = 'underline underline-offset-2 hover:opacity-80';
+        return segment.external ? (
+          <a key={index} href={segment.href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
+            {segment.label}
+          </a>
+        ) : (
+          <Link key={index} href={segment.href} className={linkClassName}>
+            {segment.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
 
 interface MessageListProps {
   messages: DisplayMessage[];
@@ -71,8 +96,9 @@ export function MessageList({ messages, thinking, onSuggestionClick }: MessageLi
                 : 'rounded-tl-sm bg-muted text-foreground',
             )}
           >
-            {message.content || ' '}
-            {message.audio && <VoiceMessagePlayer chunks={message.audio.chunks} />}
+            <MessageText text={message.content || ' '} />
+            {message.audio?.status === 'pending' && <VoiceReplyLoading />}
+            {message.audio?.status === 'ready' && <VoiceMessagePlayer chunks={message.audio.chunks} />}
           </div>
         </div>
       ))}
