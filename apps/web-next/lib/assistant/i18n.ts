@@ -40,6 +40,17 @@ interface AssistantDict {
   retry: string;
   voiceReplyUnavailable: string;
 
+  playVoiceMessage: string;
+  pauseVoiceMessage: string;
+  voiceLanguagePickerLabel: string;
+  /** Self-demonyms — always "English" / "العربية" regardless of the
+   *  surrounding UI language, same as how a language picker labels its own
+   *  options in every language app. Still routed through i18n.ts (not
+   *  hardcoded in the component) so every user-facing string stays
+   *  discoverable in one place. */
+  voiceLanguageEnglish: string;
+  voiceLanguageArabic: string;
+
   badInputNoAudio: string;
   badInputTooShort: string;
   badInputUnsupportedFormat: string;
@@ -81,6 +92,12 @@ const en: AssistantDict = {
   retry: 'Try again',
   voiceReplyUnavailable: "Voice reply isn't available right now — showing text instead.",
 
+  playVoiceMessage: 'Play voice message',
+  pauseVoiceMessage: 'Pause voice message',
+  voiceLanguagePickerLabel: 'Choose voice language',
+  voiceLanguageEnglish: 'English',
+  voiceLanguageArabic: 'العربية',
+
   badInputNoAudio: "We didn't catch that — try speaking again.",
   badInputTooShort: 'That was too short to hear. Try again.',
   badInputUnsupportedFormat: "Your browser's recording format isn't supported here.",
@@ -121,6 +138,12 @@ const ar: AssistantDict = {
   providerErrorBody: 'عادةً ما تُحل هذه المشكلة سريعًا.',
   retry: 'إعادة المحاولة',
   voiceReplyUnavailable: 'الرد الصوتي غير متاح الآن — سيظهر كنص بدلاً من ذلك.',
+
+  playVoiceMessage: 'تشغيل الرسالة الصوتية',
+  pauseVoiceMessage: 'إيقاف الرسالة الصوتية',
+  voiceLanguagePickerLabel: 'اختيار لغة الصوت',
+  voiceLanguageEnglish: 'English',
+  voiceLanguageArabic: 'العربية',
 
   badInputNoAudio: 'لم نلتقط ذلك — حاول التحدث مرة أخرى.',
   badInputTooShort: 'كان ذلك قصيرًا جدًا. حاول مرة أخرى.',
