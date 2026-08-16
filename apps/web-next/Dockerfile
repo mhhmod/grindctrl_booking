@@ -15,6 +15,14 @@ FROM node:20-alpine AS runner
 WORKDIR /app/apps/web-next
 ENV NODE_ENV=production
 ENV PORT=3000
-COPY --from=builder /app/apps/web-next ./
+ENV HOSTNAME=0.0.0.0
+# next.config.ts sets output: 'standalone', which traces and copies only the
+# production node_modules subset a request actually needs into .next/standalone
+# — a fraction of the full dev node_modules the old `COPY .../web-next ./` +
+# `next start` combination shipped. Static assets and public/ are deliberately
+# left out of that trace (Next's own docs) and copied in separately below.
+COPY --from=builder /app/apps/web-next/public ./public
+COPY --from=builder /app/apps/web-next/.next/standalone ./
+COPY --from=builder /app/apps/web-next/.next/static ./.next/static
 EXPOSE 3000
-CMD ["npm", "run", "start", "--", "-H", "0.0.0.0", "-p", "3000"]
+CMD ["node", "server.js"]
