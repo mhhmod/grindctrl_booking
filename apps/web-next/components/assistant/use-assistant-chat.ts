@@ -7,6 +7,7 @@ export interface DisplayMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  audio?: { chunks: string[] };
 }
 
 type Status = 'idle' | 'sending';
@@ -15,13 +16,16 @@ function newId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
 
-export function useAssistantChat(client: AssistantClient, onAssistantReply?: (text: string) => void) {
+export function useAssistantChat(client: AssistantClient, onAssistantReply?: (text: string, messageId: string) => void) {
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [budgets, setBudgets] = useState<{ chat: BudgetInfo; voice: BudgetInfo } | null>(null);
   const [rateLimited, setRateLimited] = useState<RateLimitedInfo | null>(null);
   const [providerError, setProviderError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const setMessageAudio = useCallback((messageId: string, chunks: string[]) => {
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, audio: { chunks } } : m)));
+  }, []);
   const messagesRef = useRef<DisplayMessage[]>([]);
   messagesRef.current = messages;
 
@@ -66,7 +70,7 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
         if (result.kind === 'rate_limited') setRateLimited(result.info);
         else setProviderError(result.message);
       } else if (fullReply.trim()) {
-        onAssistantReply?.(fullReply.trim());
+        onAssistantReply?.(fullReply.trim(), assistantId);
       }
 
       setStatus('idle');
@@ -93,5 +97,9 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
      *  reply as broken. This is deliberately a quieter, distinct message. */
     voiceError,
     setVoiceError,
+    /** Attaches TTS audio to the specific message it was synthesized for —
+     *  playback now lives inside VoiceMessagePlayer, keyed off this, rather
+     *  than being played fire-and-forget from chat-window.tsx. */
+    setMessageAudio,
   };
 }

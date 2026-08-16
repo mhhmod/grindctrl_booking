@@ -107,7 +107,7 @@ describe('useAssistantChat', () => {
     expect(result.current.providerError).toBeNull();
   });
 
-  it('calls onAssistantReply with the full assembled text once streaming completes', async () => {
+  it('calls onAssistantReply with the full assembled text and the message id once streaming completes', async () => {
     const client = makeClient();
     const onAssistantReply = vi.fn();
     const { result } = renderHook(() => useAssistantChat(client, onAssistantReply));
@@ -117,7 +117,26 @@ describe('useAssistantChat', () => {
       await result.current.sendText('Hello');
     });
 
-    expect(onAssistantReply).toHaveBeenCalledWith('Hi there!');
+    const assistantId = result.current.messages[1].id;
+    expect(onAssistantReply).toHaveBeenCalledWith('Hi there!', assistantId);
+  });
+
+  it('attaches audio chunks to the matching message via setMessageAudio', async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useAssistantChat(client));
+    await waitFor(() => expect(result.current.budgets).not.toBeNull());
+
+    await act(async () => {
+      await result.current.sendText('Hello');
+    });
+    const assistantId = result.current.messages[1].id;
+
+    act(() => {
+      result.current.setMessageAudio(assistantId, ['AA==', 'BB==']);
+    });
+
+    expect(result.current.messages[1].audio).toEqual({ chunks: ['AA==', 'BB=='] });
+    expect(result.current.messages[0].audio).toBeUndefined();
   });
 
   it('does not call onAssistantReply when the send was rate-limited', async () => {
