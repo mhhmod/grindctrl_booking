@@ -1,0 +1,71 @@
+name: TEMP - Test standalone Dockerfile
+# Throwaway verification workflow — build + inspect + smoke-test the
+# standalone-output Dockerfile fix on a real Docker daemon (none available
+# locally on this machine) without ever touching main or the VPS. Deleted
+# before this branch merges.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase image name
+        id: image
+        run: echo "name=$(echo 'ghcr.io/${{ github.repository }}-web-next' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web-next/Dockerfile
+          push: true
+          load: false
+          tags: ${{ steps.image.outputs.name }}:test-standalone
+          build-args: |
+            SENTRY_RELEASE=test-standalone
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Pull built image and inspect layout + size
+        run: |
+          docker pull ${{ steps.image.outputs.name }}:test-standalone
+          echo "--- image size ---"
+          docker image inspect ${{ steps.image.outputs.name }}:test-standalone --format 'Size: {{.Size}} bytes ({{ div .Size 1048576 }} MB)'
+          echo "--- layer sizes ---"
+          docker history ${{ steps.image.outputs.name }}:test-standalone --format '{{.Size}}\t{{.CreatedBy}}' --no-trunc | head -20
+          echo "--- filesystem layout ---"
+          docker run --rm --entrypoint sh ${{ steps.image.outputs.name }}:test-standalone -c "pwd && ls -la && echo '--- .next ---' && ls -la .next 2>/dev/null && echo '--- find server.js ---' && find / -maxdepth 6 -name server.js 2>/dev/null"
+
+      - name: Smoke test — actually run it and hit real routes
+        run: |
+          docker run -d --name smoke -p 3000:3000 ${{ steps.image.outputs.name }}:test-standalone
+          sleep 6
+          echo "--- container logs ---"
+          docker logs smoke
+          echo "--- HTTP checks ---"
+          curl -sS -o /dev/null -w "GET / -> HTTP %{http_code}\n" http://localhost:3000/ --max-time 15
+          curl -sS -o /dev/null -w "GET /assistant -> HTTP %{http_code}\n" http://localhost:3000/assistant --max-time 15
+          curl -sS -o /dev/null -w "GET /icon.svg -> HTTP %{http_code}\n" http://localhost:3000/icon.svg --max-time 15
+          curl -sS -o /dev/null -w "GET /brand/logo.svg -> HTTP %{http_code}\n" http://localhost:3000/brand/logo.svg --max-time 15
+          STATIC_CHUNK=$(curl -sS http://localhost:3000/ --max-time 15 | grep -o '/_next/static/[^"]*\.js' | head -1)
+          echo "First static chunk found: $STATIC_CHUNK"
+          if [ -n "$STATIC_CHUNK" ]; then
+            curl -sS -o /dev/null -w "GET $STATIC_CHUNK -> HTTP %{http_code}\n" "http://localhost:3000$STATIC_CHUNK" --max-time 15
+          fi
+          docker logs smoke
+          docker stop smoke
