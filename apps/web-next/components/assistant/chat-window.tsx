@@ -2,6 +2,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Send, X } from 'lucide-react';
+import { VoiceLanguagePicker } from './voice-language-picker';
+import type { AssistantLocale } from '@/lib/assistant/i18n';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { AssistantClient } from '@/lib/assistant/client';
@@ -30,26 +32,6 @@ interface ChatWindowProps {
   onClose?: () => void;
 }
 
-function playAudioChunksSequentially(base64Chunks: string[]): Promise<void> {
-  return base64Chunks.reduce<Promise<void>>(
-    (chain, base64) =>
-      chain.then(
-        () =>
-          new Promise<void>((resolve) => {
-            if (!base64) {
-              resolve();
-              return;
-            }
-            const audio = new Audio(`data:audio/wav;base64,${base64}`);
-            audio.onended = () => resolve();
-            audio.onerror = () => resolve();
-            audio.play().catch(() => resolve());
-          }),
-      ),
-    Promise.resolve(),
-  );
-}
-
 /** The unified window: text and voice share the same message history and
  *  the same two toggles (how you send, how you receive) — switching either
  *  mid-conversation never loses context, since both read/write the same
@@ -65,6 +47,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
   const [micError, setMicError] = useState<string | undefined>(undefined);
   const voiceOutputRef = useRef(voiceOutput);
   voiceOutputRef.current = voiceOutput;
+  const [voiceLanguageOverride, setVoiceLanguageOverride] = useState<AssistantLocale | null>(null);
 
   const {
     messages,
@@ -77,24 +60,24 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
     setRateLimited,
     voiceError,
     setVoiceError,
-  } = useAssistantChat(client, (text) => handleAssistantReplyRef.current(text));
+    setMessageAudio,
+  } = useAssistantChat(client, (text, messageId) => handleAssistantReplyRef.current(text, messageId));
   const recorder = useVoiceRecorder();
 
   const handleAssistantReply = useCallback(
-    async (text: string) => {
+    async (text: string, messageId: string) => {
       // Cleared unconditionally, not after the voiceOutput check below — a
       // stale error from a prior voice-on turn must not keep showing once
       // the visitor has switched voice output back off.
       setVoiceError(null);
       if (!voiceOutputRef.current) return;
-      setMicState('speaking');
       const chunks: string[] = [];
       const result = await client.streamTts(
         text,
         (audioBase64) => {
           chunks.push(audioBase64);
         },
-        locale,
+        voiceLanguageOverride ?? locale,
       );
       refreshBudgets();
 
@@ -105,14 +88,15 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         // idled with zero feedback), so it gets its own calm, accurate
         // message rather than reusing the alarming "AI unreachable" one.
         else setVoiceError(t.voiceReplyUnavailable);
-        setMicState('idle');
         return;
       }
 
-      await playAudioChunksSequentially(chunks);
-      setMicState('idle');
+      // Playback itself now lives in VoiceMessagePlayer, keyed off this —
+      // handleAssistantReply's job ends at getting the audio and attaching
+      // it to the right message.
+      setMessageAudio(messageId, chunks);
     },
-    [client, refreshBudgets, setRateLimited, setVoiceError, locale, t],
+    [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, voiceLanguageOverride, locale, t],
   );
   const handleAssistantReplyRef = useRef(handleAssistantReply);
   handleAssistantReplyRef.current = handleAssistantReply;
@@ -180,6 +164,9 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
             onVoiceOutputChange={setVoiceOutput}
             disabled={status === 'sending' || effectiveMicState !== 'idle'}
           />
+          {voiceOutput && (
+            <VoiceLanguagePicker value={voiceLanguageOverride ?? locale} onChange={setVoiceLanguageOverride} />
+          )}
           {onClose && (
             <>
               <span className="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
