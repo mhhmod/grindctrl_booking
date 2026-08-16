@@ -28,8 +28,12 @@ export function chunkForTts(text: string): string[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
 
+  // ؟ is Arabic's own question mark (U+061F) — Arabic sentences ending in it
+  // never matched the ASCII-only [.!?] boundary, so a multi-sentence Arabic
+  // reply fell through as one "sentence" and got cut mid-phrase by the
+  // word-boundary fallback below instead of splitting cleanly between ideas.
   const sentences = trimmed
-    .split(/(?<=[.!?])\s+/)
+    .split(/(?<=[.!?؟])\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
 

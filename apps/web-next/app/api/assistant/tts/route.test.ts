@@ -16,12 +16,12 @@ vi.mock('@/lib/assistant/groq-client', async (importOriginal) => {
 
 import { POST } from './route';
 
-function makeRequest(text: string, cookieHeader?: string) {
+function makeRequest(text: string, cookieHeader?: string, locale?: string) {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (cookieHeader) headers.cookie = cookieHeader;
   return new NextRequest('http://localhost/api/assistant/tts', {
     method: 'POST',
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, locale }),
     headers,
   });
 }
@@ -78,6 +78,28 @@ describe('POST /api/assistant/tts', () => {
     expect(chunkEvents.length).toBeGreaterThanOrEqual(1);
     expect((chunkEvents[0].data as { index: number }).index).toBe(0);
     expect((chunkEvents[0].data as { audioBase64: string }).audioBase64).toBeTruthy();
+  });
+
+  it('uses the English Orpheus model and voice when no locale is given', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    speechMock.mockResolvedValue(fakeAudioResponse('wav'));
+
+    await POST(makeRequest('Hello there.', 'gc_assistant_sid=sess_en'));
+
+    expect(speechMock).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'canopylabs/orpheus-v1-english', voice: 'Autumn' }),
+    );
+  });
+
+  it('switches to the Arabic Orpheus model and a valid Arabic voice when locale is ar', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    speechMock.mockResolvedValue(fakeAudioResponse('wav'));
+
+    await POST(makeRequest('مرحبا بك.', 'gc_assistant_sid=sess_ar', 'ar'));
+
+    expect(speechMock).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'canopylabs/orpheus-arabic-saudi', voice: 'Noura' }),
+    );
   });
 
   it('emits done with no chunks for empty text, without calling Groq', async () => {

@@ -16,9 +16,10 @@ vi.mock('@/lib/assistant/groq-client', async (importOriginal) => {
 
 import { POST } from './route';
 
-function makeRequest(audio: Blob | null, cookieHeader?: string) {
+function makeRequest(audio: Blob | null, cookieHeader?: string, locale?: string) {
   const form = new FormData();
   if (audio) form.set('audio', audio, 'clip.webm');
+  if (locale) form.set('locale', locale);
   const headers: Record<string, string> = {};
   if (cookieHeader) headers.cookie = cookieHeader;
   return new NextRequest('http://localhost/api/assistant/stt', { method: 'POST', body: form, headers });
@@ -68,6 +69,17 @@ describe('POST /api/assistant/stt', () => {
 
     expect(response.status).toBe(200);
     expect(body.transcript).toBe('try on the blue shirt');
+  });
+
+  it('passes the locale to Groq as a language hint, defaulting to English', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    transcribeMock.mockResolvedValue({ text: 'hi' });
+
+    await POST(makeRequest(new Blob(['audio']), 'gc_assistant_sid=sess_e'));
+    expect(transcribeMock).toHaveBeenCalledWith(expect.objectContaining({ language: 'en' }));
+
+    await POST(makeRequest(new Blob(['audio']), 'gc_assistant_sid=sess_f', 'ar'));
+    expect(transcribeMock).toHaveBeenCalledWith(expect.objectContaining({ language: 'ar' }));
   });
 
   it('reports provider_unavailable distinctly when Groq fails', async () => {

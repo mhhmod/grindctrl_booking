@@ -25,6 +25,7 @@ interface AssistantDict {
   pushToTalkToggle: string;
 
   emptyState: string;
+  suggestions: string[];
   thinking: string;
 
   budgetChatLabel: (remaining: number) => string;
@@ -37,6 +38,7 @@ interface AssistantDict {
   providerErrorTitle: string;
   providerErrorBody: string;
   retry: string;
+  voiceReplyUnavailable: string;
 
   badInputNoAudio: string;
   badInputTooShort: string;
@@ -64,6 +66,7 @@ const en: AssistantDict = {
   pushToTalkToggle: 'Push-to-talk',
 
   emptyState: 'Ask me anything, by typing or speaking.',
+  suggestions: ['What can virtual try-on do for my store?', 'How much does it cost?', "I'd like to book a call"],
   thinking: 'Thinking…',
 
   budgetChatLabel: (n) => `${n} message${n === 1 ? '' : 's'} left`,
@@ -76,6 +79,7 @@ const en: AssistantDict = {
   providerErrorTitle: 'Having trouble reaching the AI',
   providerErrorBody: 'This usually clears up quickly.',
   retry: 'Try again',
+  voiceReplyUnavailable: "Voice reply isn't available right now — showing text instead.",
 
   badInputNoAudio: "We didn't catch that — try speaking again.",
   badInputTooShort: 'That was too short to hear. Try again.',
@@ -103,6 +107,7 @@ const ar: AssistantDict = {
   pushToTalkToggle: 'اضغط للتحدث',
 
   emptyState: 'اسألني أي شيء، بالكتابة أو بالصوت.',
+  suggestions: ['ماذا يقدّم التجربة الافتراضية لمتجري؟', 'كم تكلفة الخدمة؟', 'أرغب في حجز مكالمة'],
   thinking: 'جارٍ التفكير…',
 
   budgetChatLabel: (n) => `تبقّت ${n} رسالة`,
@@ -115,6 +120,7 @@ const ar: AssistantDict = {
   providerErrorTitle: 'تعذّر الوصول إلى الذكاء الاصطناعي',
   providerErrorBody: 'عادةً ما تُحل هذه المشكلة سريعًا.',
   retry: 'إعادة المحاولة',
+  voiceReplyUnavailable: 'الرد الصوتي غير متاح الآن — سيظهر كنص بدلاً من ذلك.',
 
   badInputNoAudio: 'لم نلتقط ذلك — حاول التحدث مرة أخرى.',
   badInputTooShort: 'كان ذلك قصيرًا جدًا. حاول مرة أخرى.',

@@ -21,6 +21,7 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
   const [budgets, setBudgets] = useState<{ chat: BudgetInfo; voice: BudgetInfo } | null>(null);
   const [rateLimited, setRateLimited] = useState<RateLimitedInfo | null>(null);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const messagesRef = useRef<DisplayMessage[]>([]);
   messagesRef.current = messages;
 
@@ -86,5 +87,11 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
      *  independently of chat — routed into the same banner state so every
      *  mode shows the identical fallback, not a mode-specific one. */
     setRateLimited,
+    /** Separate from providerError: a TTS failure means the chat reply
+     *  already succeeded and is on screen as text — reusing providerError's
+     *  "trouble reaching the AI" wording would misreport a fully-working
+     *  reply as broken. This is deliberately a quieter, distinct message. */
+    voiceError,
+    setVoiceError,
   };
 }

@@ -8,6 +8,7 @@ import type {
   TtsChunkHandler,
   TtsStreamResult,
 } from './client';
+import type { AssistantLocale } from './i18n';
 import { SseFrameParser, type SseFrame } from './sse-parser';
 
 async function consumeSseStream<T>(response: Response, handleFrame: (frame: SseFrame) => T | undefined): Promise<T> {
@@ -71,9 +72,10 @@ export function createRealAssistantClient(): AssistantClient {
       ) as Promise<ChatStreamResult>;
     },
 
-    async transcribeAudio(blob: Blob): Promise<SttResult> {
+    async transcribeAudio(blob: Blob, locale?: AssistantLocale): Promise<SttResult> {
       const form = new FormData();
       form.set('audio', blob, 'clip.webm');
+      if (locale) form.set('locale', locale);
       const res = await fetch('/api/assistant/stt', { method: 'POST', body: form });
       const body = await res.json();
 
@@ -89,11 +91,11 @@ export function createRealAssistantClient(): AssistantClient {
       return { ok: false, kind: 'provider_unavailable', message: body.message ?? 'Unavailable' };
     },
 
-    async streamTts(text: string, onChunk: TtsChunkHandler): Promise<TtsStreamResult> {
+    async streamTts(text: string, onChunk: TtsChunkHandler, locale?: AssistantLocale): Promise<TtsStreamResult> {
       const res = await fetch('/api/assistant/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, locale }),
       });
       return consumeSseStream(res, (frame) =>
         handleChatOrTtsFrame(frame, (f) => {

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { AssistantClient } from '@/lib/assistant/client';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { ChatWindow } from './chat-window';
 import { AssistantLocaleProvider } from './locale-provider';
 import { useAssistantLocale } from './locale-provider';
@@ -25,20 +26,32 @@ function LauncherButton({ open, onClick }: { open: boolean; onClick: () => void 
 /** Site-wide floating entry point — mounts the same ChatWindow used at
  *  /assistant, just inside an overlay sheet instead of a full page. `client`
  *  is optional for the same reason ChatWindow's is: a server-rendered
- *  layout can't hand this component a function-bearing client prop. */
-export function AssistantLauncher({ client }: { client?: AssistantClient }) {
+ *  layout can't hand this component a function-bearing client prop.
+ *
+ *  `initialLocale` matters more here than it looks: without it,
+ *  AssistantLocaleProvider falls back to reading the locale cookie itself,
+ *  which only works client-side — during SSR `document` is undefined, so
+ *  the server always renders the English/LTR button. React's hydration
+ *  diffing does NOT patch up a mismatched `dir`/`lang`/`aria-label` after
+ *  the fact ("This won't be patched up", per its own warning), so on an
+ *  Arabic page the site-wide launcher stayed stuck in English forever,
+ *  not just for one frame. RootLayout already resolves the request locale
+ *  server-side for the <html> tag, so it's passed straight through here
+ *  instead of re-guessing it — the same pattern /assistant's own page
+ *  already uses correctly. */
+export function AssistantLauncher({ client, initialLocale }: { client?: AssistantClient; initialLocale?: SiteLocale }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <AssistantLocaleProvider>
+    <AssistantLocaleProvider initialLocale={initialLocale}>
       <LauncherButton open={open} onClick={() => setOpen((v) => !v)} />
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-sm">
+        <SheetContent side="right" showCloseButton={false} className="flex w-full flex-col p-0 sm:max-w-sm">
           <SheetHeader className="sr-only">
             <SheetTitle>GrindCTRL AI</SheetTitle>
           </SheetHeader>
           <div className="flex min-h-0 flex-1 p-3">
-            <ChatWindow client={client} className="w-full" />
+            <ChatWindow client={client} className="w-full" onClose={() => setOpen(false)} />
           </div>
         </SheetContent>
       </Sheet>

@@ -4,7 +4,7 @@ import { resolveTenant } from '@/lib/assistant/tenant';
 import { checkBudget } from '@/lib/assistant/rate-limit-gate';
 import { store } from '@/lib/assistant/store-instance';
 import { chunkForTts } from '@/lib/assistant/tts-chunker';
-import { getGroqClient, withGroqCall, TTS_MODEL_EN } from '@/lib/assistant/groq-client';
+import { getGroqClient, withGroqCall, TTS_MODEL_EN, TTS_MODEL_AR } from '@/lib/assistant/groq-client';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 const encoder = new TextEncoder();
@@ -27,9 +27,14 @@ export async function POST(request: NextRequest) {
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
   const tenant = resolveTenant(userId, existingSessionId);
 
-  const body = (await request.json()) as { text?: string };
+  const body = (await request.json()) as { text?: string; locale?: string };
   const text = body.text ?? '';
   const chunks = chunkForTts(text);
+  // Each Orpheus model has its own, non-overlapping voice roster (confirmed
+  // against console.groq.com/docs/text-to-speech/orpheus) — "Autumn" is
+  // English-only and errors on the Arabic model, so the voice has to switch
+  // together with the model, not just the model alone.
+  const { model, voice } = body.locale === 'ar' ? { model: TTS_MODEL_AR, voice: 'Noura' } : { model: TTS_MODEL_EN, voice: 'Autumn' };
 
   const gate =
     chunks.length > 0
@@ -61,7 +66,7 @@ export async function POST(request: NextRequest) {
         const client = getGroqClient();
         for (let index = 0; index < chunks.length; index++) {
           const audio = await withGroqCall('audio.speech', () =>
-            client.audio.speech.create({ model: TTS_MODEL_EN, voice: 'Autumn', input: chunks[index] }),
+            client.audio.speech.create({ model, voice, input: chunks[index] }),
           );
           const arrayBuffer = await audio.arrayBuffer();
           const audioBase64 = Buffer.from(arrayBuffer).toString('base64');

@@ -42,4 +42,14 @@ describe('chunkForTts', () => {
     expect(chunkForTts('')).toEqual([]);
     expect(chunkForTts('   ')).toEqual([]);
   });
+
+  it('splits Arabic sentences on the Arabic question mark (؟), not just ASCII punctuation', () => {
+    const sentenceA = 'م'.repeat(120) + '؟';
+    const sentenceB = 'ن'.repeat(120) + '.';
+
+    const chunks = chunkForTts(`${sentenceA} ${sentenceB}`);
+
+    expect(chunks).toEqual([sentenceA, sentenceB]);
+    for (const chunk of chunks) expect(chunk.length).toBeLessThanOrEqual(LIMIT);
+  });
 });

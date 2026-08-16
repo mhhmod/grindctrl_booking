@@ -5,6 +5,7 @@ import { checkBudget } from '@/lib/assistant/rate-limit-gate';
 import { store } from '@/lib/assistant/store-instance';
 import { TURN_COST } from '@/lib/assistant/rate-limiter';
 import { getGroqClient, withGroqCall, CHAT_MODEL } from '@/lib/assistant/groq-client';
+import { SYSTEM_PROMPT } from '@/lib/assistant/system-prompt';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 const encoder = new TextEncoder();
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
           client.chat.completions.create({
             model: CHAT_MODEL,
             stream: true,
-            messages: [...history, { role: 'user', content: message }],
+            messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history, { role: 'user', content: message }],
           }),
         );
 

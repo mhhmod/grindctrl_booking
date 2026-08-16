@@ -82,6 +82,20 @@ describe('POST /api/assistant/chat', () => {
     expect(events[3].event).toBe('done');
   });
 
+  it('prepends the GrindCTRL system prompt ahead of history and the new message', async () => {
+    authMock.mockResolvedValue({ userId: null });
+    createMock.mockReturnValue(fakeCompletion(['ok']));
+
+    await POST(makeRequest({ message: 'hi', history: [{ role: 'user', content: 'earlier' }] }, 'gc_assistant_sid=sess_sys'));
+
+    const call = createMock.mock.calls[0][0] as { messages: { role: string; content: string }[] };
+    expect(call.messages[0]).toEqual({ role: 'system', content: expect.stringContaining('GrindCTRL') });
+    expect(call.messages.slice(1)).toEqual([
+      { role: 'user', content: 'earlier' },
+      { role: 'user', content: 'hi' },
+    ]);
+  });
+
   it('emits a distinct error event when Groq is unavailable, not rate_limited', async () => {
     authMock.mockResolvedValue({ userId: null });
     createMock.mockImplementation(() => {

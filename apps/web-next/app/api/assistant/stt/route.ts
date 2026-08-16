@@ -39,6 +39,11 @@ export async function POST(request: NextRequest) {
   if (!(audio instanceof Blob) || audio.size === 0) {
     return NextResponse.json({ error: 'bad_input', reason: 'No audio was received.' }, { status: 400 });
   }
+  const locale = formData.get('locale');
+  // A hint, not a hard constraint — Whisper still auto-detects if the
+  // visitor speaks the other language, this just improves accuracy for the
+  // common case of them speaking whichever language the UI is already in.
+  const language = locale === 'ar' ? 'ar' : 'en';
 
   const requestsGate = checkBudget(store, tenant.tenantId, tenant.tier, 'stt:requests', TURN_COST['stt:requests']);
   if (requestsGate) return rateLimitedResponse(requestsGate);
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
   try {
     const client = getGroqClient();
     const transcription = await withGroqCall('audio.transcriptions', () =>
-      client.audio.transcriptions.create({ file: audio, model: STT_MODEL }),
+      client.audio.transcriptions.create({ file: audio, model: STT_MODEL, language }),
     );
     return NextResponse.json({ transcript: transcription.text });
   } catch {

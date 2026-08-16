@@ -9,13 +9,14 @@ import { useAssistantLocale } from './locale-provider';
 interface MessageListProps {
   messages: DisplayMessage[];
   thinking?: boolean;
+  onSuggestionClick?: (text: string) => void;
 }
 
 /** Every message renders the same way regardless of whether it started as
  *  voice or text — the brief's "consistent" requirement — since by the
  *  time a message reaches here it's already just text (a transcript for
  *  voice input, the reply text for spoken output). */
-export function MessageList({ messages, thinking }: MessageListProps) {
+export function MessageList({ messages, thinking, onSuggestionClick }: MessageListProps) {
   const { t } = useAssistantLocale();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -25,8 +26,22 @@ export function MessageList({ messages, thinking }: MessageListProps) {
 
   if (messages.length === 0 && !thinking) {
     return (
-      <div className="flex flex-1 items-center justify-center px-6 py-10 text-center text-sm text-muted-foreground">
-        {t.emptyState}
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-10 text-center">
+        <p className="text-sm text-muted-foreground">{t.emptyState}</p>
+        {onSuggestionClick && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {t.suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => onSuggestionClick(suggestion)}
+                className="rounded-full border bg-background px-3.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

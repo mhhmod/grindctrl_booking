@@ -30,7 +30,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      at the provider, not per component. */
   const locale = await getRequestLocale();
   const pathname = (await headers()).get('x-pathname');
-  const launcher = showLauncherFor(pathname) ? <AssistantLauncher /> : null;
+  const launcher = showLauncherFor(pathname) ? <AssistantLauncher initialLocale={locale} /> : null;
 
   return (
     /* lang and dir belong on <html>, not on a wrapper div. Anything rendered

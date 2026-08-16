@@ -1,3 +1,5 @@
+import type { AssistantLocale } from './i18n';
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -44,6 +46,10 @@ export type TtsStreamResult =
 export interface AssistantClient {
   fetchSession(): Promise<SessionInfo>;
   streamChat(message: string, history: ChatMessage[], onToken: (text: string) => void): Promise<ChatStreamResult>;
-  transcribeAudio(blob: Blob): Promise<SttResult>;
-  streamTts(text: string, onChunk: TtsChunkHandler): Promise<TtsStreamResult>;
+  /** locale improves Whisper's transcription accuracy — it's a hint, not a
+   *  hard constraint, since a visitor can still speak the other language. */
+  transcribeAudio(blob: Blob, locale?: AssistantLocale): Promise<SttResult>;
+  /** locale picks the matching Orpheus voice model (English vs Arabic) —
+   *  unlike chat, TTS has no way to detect the reply's language itself. */
+  streamTts(text: string, onChunk: TtsChunkHandler, locale?: AssistantLocale): Promise<TtsStreamResult>;
 }

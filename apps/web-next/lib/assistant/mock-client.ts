@@ -56,7 +56,7 @@ export function createMockAssistantClient(
       return { ok: true };
     },
 
-    async transcribeAudio(_blob: Blob): Promise<SttResult> {
+    async transcribeAudio(_blob: Blob, _locale?: 'en' | 'ar'): Promise<SttResult> {
       await delay(400);
       if (voiceRemaining <= 0) {
         return { ok: false, kind: 'rate_limited', info: { resetSeconds: 3_600, message: '', signInCta: true } };
@@ -64,7 +64,7 @@ export function createMockAssistantClient(
       return { ok: true, transcript: 'Show me the blue jacket in a medium.' };
     },
 
-    async streamTts(_text: string, onChunk: TtsChunkHandler): Promise<TtsStreamResult> {
+    async streamTts(_text: string, onChunk: TtsChunkHandler, _locale?: 'en' | 'ar'): Promise<TtsStreamResult> {
       if (voiceRemaining <= 0) {
         return { ok: false, kind: 'rate_limited', info: { resetSeconds: 3_600, message: '', signInCta: true } };
       }

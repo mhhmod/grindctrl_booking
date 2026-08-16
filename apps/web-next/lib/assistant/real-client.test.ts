@@ -108,6 +108,29 @@ describe('createRealAssistantClient', () => {
     });
   });
 
+  it('transcribeAudio includes the locale in the form data when given', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ transcript: 'مرحبا' })));
+    const client = createRealAssistantClient();
+
+    await client.transcribeAudio(new Blob(['audio']), 'ar');
+
+    const call = fetchMock.mock.calls[0][1] as RequestInit;
+    const form = call.body as FormData;
+    expect(form.get('locale')).toBe('ar');
+  });
+
+  it('streamTts includes the locale in the request body when given', async () => {
+    fetchMock.mockResolvedValue(sseResponse(['event: done\ndata: {}\n\n']));
+    const client = createRealAssistantClient();
+
+    await client.streamTts('hello', () => {}, 'ar');
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/assistant/tts',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ text: 'hello', locale: 'ar' }) }),
+    );
+  });
+
   it('streamTts posts the text and reports each chunk with its index', async () => {
     fetchMock.mockResolvedValue(
       sseResponse(['event: chunk\ndata: {"index":0,"audioBase64":"AA"}\n\n', 'event: done\ndata: {}\n\n']),
