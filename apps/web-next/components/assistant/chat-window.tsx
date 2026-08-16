@@ -48,6 +48,10 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
   const voiceOutputRef = useRef(voiceOutput);
   voiceOutputRef.current = voiceOutput;
   const [voiceLanguageOverride, setVoiceLanguageOverride] = useState<AssistantLocale | null>(null);
+  // Explicit override wins; otherwise the voice follows whichever language
+  // the visitor already has the site in. Used both for the actual TTS call
+  // and for what the picker itself displays as "currently selected."
+  const effectiveVoiceLocale = voiceLanguageOverride ?? locale;
 
   const {
     messages,
@@ -77,7 +81,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         (audioBase64) => {
           chunks.push(audioBase64);
         },
-        voiceLanguageOverride ?? locale,
+        effectiveVoiceLocale,
       );
       refreshBudgets();
 
@@ -96,7 +100,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       // it to the right message.
       setMessageAudio(messageId, chunks);
     },
-    [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, voiceLanguageOverride, locale, t],
+    [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, effectiveVoiceLocale, t],
   );
   const handleAssistantReplyRef = useRef(handleAssistantReply);
   handleAssistantReplyRef.current = handleAssistantReply;
@@ -164,9 +168,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
             onVoiceOutputChange={setVoiceOutput}
             disabled={status === 'sending' || effectiveMicState !== 'idle'}
           />
-          {voiceOutput && (
-            <VoiceLanguagePicker value={voiceLanguageOverride ?? locale} onChange={setVoiceLanguageOverride} />
-          )}
+          {voiceOutput && <VoiceLanguagePicker value={effectiveVoiceLocale} onChange={setVoiceLanguageOverride} />}
           {onClose && (
             <>
               <span className="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
