@@ -31,10 +31,12 @@ export async function POST(request: NextRequest) {
   const text = body.text ?? '';
   const chunks = chunkForTts(text);
   // Each Orpheus model has its own, non-overlapping voice roster (confirmed
-  // against console.groq.com/docs/text-to-speech/orpheus) — "Autumn" is
+  // against console.groq.com/docs/text-to-speech/orpheus) — "autumn" is
   // English-only and errors on the Arabic model, so the voice has to switch
-  // together with the model, not just the model alone.
-  const { model, voice } = body.locale === 'ar' ? { model: TTS_MODEL_AR, voice: 'Noura' } : { model: TTS_MODEL_EN, voice: 'Autumn' };
+  // together with the model, not just the model alone. Voice names must be
+  // lowercase — the API rejects the docs page's display-cased "Autumn"/
+  // "Noura" with a 400 (confirmed live against the real endpoint).
+  const { model, voice } = body.locale === 'ar' ? { model: TTS_MODEL_AR, voice: 'noura' } : { model: TTS_MODEL_EN, voice: 'autumn' };
 
   const gate =
     chunks.length > 0
@@ -65,8 +67,11 @@ export async function POST(request: NextRequest) {
       try {
         const client = getGroqClient();
         for (let index = 0; index < chunks.length; index++) {
+          // response_format has no working default on Groq's endpoint — it
+          // 400s without it (confirmed live) despite the SDK marking it
+          // optional. wav is also the only format Orpheus actually supports.
           const audio = await withGroqCall('audio.speech', () =>
-            client.audio.speech.create({ model, voice, input: chunks[index] }),
+            client.audio.speech.create({ model, voice, input: chunks[index], response_format: 'wav' }),
           );
           const arrayBuffer = await audio.arrayBuffer();
           const audioBase64 = Buffer.from(arrayBuffer).toString('base64');

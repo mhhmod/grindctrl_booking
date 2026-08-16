@@ -87,7 +87,7 @@ describe('POST /api/assistant/tts', () => {
     await POST(makeRequest('Hello there.', 'gc_assistant_sid=sess_en'));
 
     expect(speechMock).toHaveBeenCalledWith(
-      expect.objectContaining({ model: 'canopylabs/orpheus-v1-english', voice: 'Autumn' }),
+      expect.objectContaining({ model: 'canopylabs/orpheus-v1-english', voice: 'autumn', response_format: 'wav' }),
     );
   });
 
@@ -98,7 +98,7 @@ describe('POST /api/assistant/tts', () => {
     await POST(makeRequest('مرحبا بك.', 'gc_assistant_sid=sess_ar', 'ar'));
 
     expect(speechMock).toHaveBeenCalledWith(
-      expect.objectContaining({ model: 'canopylabs/orpheus-arabic-saudi', voice: 'Noura' }),
+      expect.objectContaining({ model: 'canopylabs/orpheus-arabic-saudi', voice: 'noura', response_format: 'wav' }),
     );
   });
 
