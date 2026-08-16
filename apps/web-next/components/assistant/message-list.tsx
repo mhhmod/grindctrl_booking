@@ -5,6 +5,7 @@ import { Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DisplayMessage } from './use-assistant-chat';
 import { useAssistantLocale } from './locale-provider';
+import { VoiceMessagePlayer } from './voice-message-player';
 
 interface MessageListProps {
   messages: DisplayMessage[];
@@ -70,7 +71,8 @@ export function MessageList({ messages, thinking, onSuggestionClick }: MessageLi
                 : 'rounded-tl-sm bg-muted text-foreground',
             )}
           >
-            {message.content || ' '}
+            {message.content || ' '}
+            {message.audio && <VoiceMessagePlayer chunks={message.audio.chunks} />}
           </div>
         </div>
       ))}
