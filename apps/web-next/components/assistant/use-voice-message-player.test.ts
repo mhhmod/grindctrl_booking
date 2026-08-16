@@ -59,6 +59,19 @@ describe('useVoiceMessagePlayer', () => {
     expect(result.current.totalSeconds).toBe(5);
   });
 
+  it('sums elapsed time across chunk boundaries as playback progresses', () => {
+    const { result } = renderHook(() => useVoiceMessagePlayer(['AA==', 'BB==']));
+
+    act(() => {
+      Object.defineProperty(createdAudios[0], 'duration', { value: 3, configurable: true });
+      createdAudios[0].dispatchEvent(new Event('loadedmetadata'));
+      Object.defineProperty(createdAudios[1], 'currentTime', { value: 1.5, configurable: true });
+      createdAudios[1].dispatchEvent(new Event('timeupdate'));
+    });
+
+    expect(result.current.elapsedSeconds).toBe(4.5);
+  });
+
   it('advances to the next chunk when one ends, and reports done after the last', () => {
     const { result } = renderHook(() => useVoiceMessagePlayer(['AA==', 'BB==']));
 
