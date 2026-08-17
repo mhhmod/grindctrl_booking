@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { AssistantClient } from '@/lib/assistant/client';
 import { createRealAssistantClient } from '@/lib/assistant/real-client';
+import { toSpeechText } from '@/lib/assistant/speech-text';
 import { useAssistantChat } from './use-assistant-chat';
 import { useVoiceRecorder } from './use-voice-recorder';
 import { MessageList } from './message-list';
@@ -81,8 +82,12 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       // is on its way."
       setMessageAudio(messageId, { status: 'pending' });
       const chunks: string[] = [];
+      // The visible reply keeps its real URLs/paths (MessageText still
+      // needs them to build real links) — only the copy handed to TTS
+      // swaps them for a short spoken phrase, since Groq reads a raw URL
+      // out as a garbled string of syllables rather than as a link.
       const result = await client.streamTts(
-        text,
+        toSpeechText(text, effectiveVoiceLocale),
         (audioBase64) => {
           chunks.push(audioBase64);
         },
@@ -208,6 +213,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         messages={messages}
         thinking={status === 'sending' && effectiveMicState === 'idle'}
         onSuggestionClick={handleSuggestionClick}
+        onInternalNavigate={onClose}
       />
 
       {providerError && (
@@ -223,7 +229,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
         </div>
       )}
 
-      <RateLimitBanner budgets={budgets} rateLimited={rateLimited} redirectPath={redirectPath} />
+      <RateLimitBanner budgets={budgets} rateLimited={rateLimited} redirectPath={redirectPath} onInternalNavigate={onClose} />
 
       <div className="border-t p-3">
         {voiceInput ? (

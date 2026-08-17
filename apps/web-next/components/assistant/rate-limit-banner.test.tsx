@@ -1,5 +1,5 @@
 import React, { type ComponentProps } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RateLimitBanner } from './rate-limit-banner';
 import { AssistantLocaleProvider } from './locale-provider';
@@ -64,5 +64,19 @@ describe('RateLimitBanner', () => {
     });
 
     expect(screen.queryByRole('link', { name: 'Sign in for more' })).not.toBeInTheDocument();
+  });
+
+  it('calls onInternalNavigate when the sign-in link is clicked, so the launcher Sheet closes', () => {
+    const onInternalNavigate = vi.fn();
+    renderBanner({
+      budgets: { chat: { remaining: 0, resetSeconds: 5 }, voice: { remaining: 3, resetSeconds: 0 } },
+      rateLimited: { resetSeconds: 5, message: '', signInCta: true },
+      redirectPath: '/assistant',
+      onInternalNavigate,
+    });
+
+    fireEvent.click(screen.getByRole('link', { name: 'Sign in for more' }));
+
+    expect(onInternalNavigate).toHaveBeenCalledTimes(1);
   });
 });

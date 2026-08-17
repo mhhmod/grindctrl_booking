@@ -12,7 +12,7 @@ import { VoiceMessagePlayer, VoiceReplyLoading } from './voice-message-player';
 /** Renders a reply as plain text mixed with real, tappable links — a bare
  *  URL or /try-on sitting inert in the text (unclickable, easy to mistake
  *  for a broken/fake link) is exactly what linkifyMessage exists to fix. */
-function MessageText({ text }: { text: string }) {
+function MessageText({ text, onInternalNavigate }: { text: string; onInternalNavigate?: () => void }) {
   return (
     <>
       {linkifyMessage(text).map((segment, index) => {
@@ -55,7 +55,12 @@ function MessageText({ text }: { text: string }) {
             {segment.label}
           </a>
         ) : (
-          <Link key={index} href={segment.href} dir={dir} className={linkClassName}>
+          // onClick: this is a same-tab SPA navigation, but inside the
+          // launcher it's rendered inside a fixed overlay Sheet that has no
+          // idea navigation just happened — without this, the Sheet stayed
+          // open on top of the very page the visitor just asked to go to,
+          // so the destination was there but invisible behind it.
+          <Link key={index} href={segment.href} dir={dir} className={linkClassName} onClick={onInternalNavigate}>
             {segment.label}
           </Link>
         );
@@ -68,13 +73,17 @@ interface MessageListProps {
   messages: DisplayMessage[];
   thinking?: boolean;
   onSuggestionClick?: (text: string) => void;
+  /** Passed straight through to reply links — see MessageText's onClick
+   *  comment. Undefined on the standalone /assistant page, which has no
+   *  overlay to close. */
+  onInternalNavigate?: () => void;
 }
 
 /** Every message renders the same way regardless of whether it started as
  *  voice or text — the brief's "consistent" requirement — since by the
  *  time a message reaches here it's already just text (a transcript for
  *  voice input, the reply text for spoken output). */
-export function MessageList({ messages, thinking, onSuggestionClick }: MessageListProps) {
+export function MessageList({ messages, thinking, onSuggestionClick, onInternalNavigate }: MessageListProps) {
   const { t } = useAssistantLocale();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -128,7 +137,7 @@ export function MessageList({ messages, thinking, onSuggestionClick }: MessageLi
                 : 'rounded-tl-sm bg-muted text-foreground',
             )}
           >
-            <MessageText text={message.content || ' '} />
+            <MessageText text={message.content || ' '} onInternalNavigate={onInternalNavigate} />
             {message.audio?.status === 'pending' && <VoiceReplyLoading />}
             {message.audio?.status === 'ready' && <VoiceMessagePlayer chunks={message.audio.chunks} />}
           </div>

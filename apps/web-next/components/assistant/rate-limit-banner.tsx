@@ -12,6 +12,11 @@ interface RateLimitBannerProps {
   budgets: { chat: BudgetInfo; voice: BudgetInfo } | null;
   rateLimited: RateLimitedInfo | null;
   redirectPath: string;
+  /** Closes the launcher's overlay Sheet before the sign-in navigation
+   *  happens — otherwise the Sheet stays open on top of /sign-in, same
+   *  issue as reply links (see message-list.tsx). Undefined on the
+   *  standalone /assistant page. */
+  onInternalNavigate?: () => void;
 }
 
 const LOW_BUDGET_THRESHOLD = 2;
@@ -35,7 +40,7 @@ function useCountdown(seconds: number | null): number {
 /** Calm ambient indicator while budget is healthy; a distinct, non-alarming
  *  banner with a live countdown and (for anon visitors) a sign-in CTA once
  *  the limit is actually hit — the limit should never come as a surprise. */
-export function RateLimitBanner({ budgets, rateLimited, redirectPath }: RateLimitBannerProps) {
+export function RateLimitBanner({ budgets, rateLimited, redirectPath, onInternalNavigate }: RateLimitBannerProps) {
   const { t } = useAssistantLocale();
   const countdown = useCountdown(rateLimited?.resetSeconds ?? null);
 
@@ -57,7 +62,9 @@ export function RateLimitBanner({ budgets, rateLimited, redirectPath }: RateLimi
         </div>
         {rateLimited.signInCta && (
           <Button asChild size="sm" className="h-9 w-full shrink-0 rounded-xl sm:w-auto">
-            <Link href={`/sign-in?redirect_url=${encodeURIComponent(redirectPath)}`}>{t.signInCta}</Link>
+            <Link href={`/sign-in?redirect_url=${encodeURIComponent(redirectPath)}`} onClick={onInternalNavigate}>
+              {t.signInCta}
+            </Link>
           </Button>
         )}
       </div>
