@@ -57,7 +57,14 @@ export function VoiceMessagePlayer({ chunks }: VoiceMessagePlayerProps) {
           layout — the bars stay purely decorative (aria-hidden) while the
           input carries the real interaction and a11y semantics. */}
       <div className="relative -my-2.5 flex-1 py-2.5">
-        <div className="flex items-end gap-0.5" aria-hidden="true">
+        {/* justify-between: a plain flex row packs these 7 fixed-width bars
+            at the start and leaves the rest of the (flex-1-stretched)
+            container empty — confirmed live: the bars occupied only 29px of
+            a 158px-wide track, leaving the seek thumb to visibly float,
+            disconnected, over dead space whenever its value put it past
+            that 29px. Spreading the bars across the full track width keeps
+            them visually anchored to wherever the thumb actually is. */}
+        <div className="flex items-end justify-between gap-0.5" aria-hidden="true">
           {BAR_HEIGHTS.map((height, index) => {
             const played = index / BAR_HEIGHTS.length < progressFraction;
             return (

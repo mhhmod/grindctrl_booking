@@ -23,7 +23,14 @@ function MessageText({ text }: { text: string }) {
         // a replacement would trade "ugly stuck highlight" for "nothing
         // visibly happens when tapped," on the exact elements this was meant
         // to fix.
-        const linkClassName = 'underline underline-offset-2 hover:opacity-80 active:opacity-60';
+        // break-all: a URL is one unbreakable "word" (no spaces) — without
+        // it, a long link has nowhere to wrap and instead overflows the
+        // 80%-width bubble outright (confirmed live: a booking link measured
+        // 311px inside a 247px bubble, rendering 21px off the left edge of
+        // the viewport). Matches this codebase's existing convention of
+        // always pairing dir="ltr" with break-all for URL/identifier content
+        // (see e.g. dashboard/intents-manager.tsx, overview-page-content.tsx).
+        const linkClassName = 'underline underline-offset-2 hover:opacity-80 active:opacity-60 break-all';
         // A URL/path is always LTR content, but rendered plain inside an
         // Arabic (RTL) reply it's still subject to the surrounding paragraph's
         // bidi algorithm — punctuation like the slashes and dots in a URL are
