@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>GrindCTRL Chat Launcher Concepts, Round 3</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: oklch(0.945 0.007 75);
+      --paper: oklch(0.965 0.007 78);
+      --ink: oklch(0.235 0.006 60);
+      --muted: oklch(0.5 0.008 66);
+      --line: oklch(0.86 0.009 76);
+      --soft: oklch(0.905 0.008 76);
+      --button-size: 56px;
+      --outer-size: calc(var(--button-size) * 1.5);
+      --edge-gap: 16px;
+      --system-size: calc((var(--edge-gap) + (var(--button-size) / 2)) * 2);
+      --study-scale: 2;
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-width: 320px;
+      overflow-x: clip;
+      background: var(--page);
+      color: var(--ink);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: clip;
+      background: var(--page);
+    }
+
+    button { font: inherit; }
+
+    .page {
+      width: min(1440px, 100%);
+      margin-inline: auto;
+      padding: 42px clamp(16px, 3vw, 42px) 64px;
+    }
+
+    .page-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 28px;
+      padding-block-end: 26px;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .eyebrow,
+    .concept-index,
+    .stage-label,
+    .size-label,
+    .motion-state,
+    .rest-label,
+    th {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 760;
+      letter-spacing: 0.11em;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 17ch;
+      margin: 8px 0 0;
+      font-size: clamp(2.15rem, 4.4vw, 4rem);
+      font-weight: 740;
+      letter-spacing: -0.045em;
+      line-height: 0.98;
+    }
+
+    .intro {
+      max-width: 66ch;
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.58;
+    }
+
+    .motion-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      white-space: nowrap;
+    }
+
+    .motion-state::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: oklch(0.5 0.008 66);
+      box-shadow: 0 0 0 3px oklch(0.5 0.008 66 / 14%);
+      content: "";
+    }
+
+    .motion-state__reduced { display: none; }
+
+    .concept-list {
+      display: grid;
+      gap: 20px;
+      margin-block-start: 20px;
+    }
+
+    .concept {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+    }
+
+    .concept-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      padding: 22px 24px 19px;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .concept h2 {
+      margin: 14px 0 6px;
+      font-size: 1.35rem;
+      font-weight: 730;
+      letter-spacing: -0.025em;
+      line-height: 1.12;
+    }
+
+    .concept-description {
+      max-width: 70ch;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .footprint-tag {
+      display: grid;
+      justify-items: end;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .footprint-tag strong {
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 740;
+    }
+
+    .theme-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stage {
+      --stage-bg: oklch(0.945 0.007 75);
+      --stage-ink: oklch(0.235 0.006 60);
+      --fab: oklch(0.235 0.006 60);
+      --fab-ink: oklch(0.945 0.007 75);
+      --a: oklch(0.3 0.006 68);
+      --b: oklch(0.46 0.007 70);
+      --c: oklch(0.64 0.008 74);
+      --d: oklch(0.82 0.008 78);
+      --faint: oklch(0.945 0.007 75 / 18%);
+      min-width: 0;
+      padding: 18px;
+      background: var(--stage-bg);
+      color: var(--stage-ink);
+    }
+
+    .stage + .stage { border-inline-start: 1px solid var(--line); }
+
+    .stage--dark {
+      color-scheme: dark;
+      --stage-bg: oklch(0.135 0.004 70);
+      --stage-ink: oklch(0.94 0.008 78);
+      --fab: oklch(0.94 0.008 78);
+      --fab-ink: oklch(0.205 0.006 64);
+      --a: oklch(0.86 0.008 78);
+      --b: oklch(0.7 0.008 74);
+      --c: oklch(0.52 0.007 70);
+      --d: oklch(0.34 0.006 66);
+      --faint: oklch(0.205 0.006 64 / 16%);
+    }
+
+    .stage-label { color: currentColor; opacity: 0.72; }
+
+    .specimens {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: center;
+      gap: clamp(18px, 3vw, 34px);
+      margin-block-start: 16px;
+    }
+
+    .specimen {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .specimen-canvas {
+      position: relative;
+      display: grid;
+      width: var(--system-size);
+      height: var(--system-size);
+      place-items: center;
+    }
+
+    .specimen-canvas--true {
+      border-block-end: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+      border-inline-end: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+    }
+
+    .specimen-canvas--study {
+      width: calc(var(--system-size) * var(--study-scale));
+      height: calc(var(--system-size) * var(--study-scale));
+    }
+
+    .specimen-canvas--study .composition {
+      transform: scale(var(--study-scale));
+    }
+
+    .size-label {
+      color: currentColor;
+      opacity: 0.58;
+      letter-spacing: 0.08em;
+    }
+
+    .composition {
+      position: relative;
+      width: var(--system-size);
+      height: var(--system-size);
+      flex: 0 0 auto;
+      transform-origin: center;
+    }
+
+    .ambient {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      display: block;
+      width: var(--outer-size);
+      height: var(--outer-size);
+      overflow: hidden;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    .ambient,
+    .ambient *,
+    .ambient::before,
+    .ambient::after {
+      pointer-events: none;
+    }
+
+    .launcher {
+      position: absolute;
+      z-index: 3;
+      inset-inline-end: var(--edge-gap);
+      bottom: var(--edge-gap);
+      display: grid;
+      width: var(--button-size);
+      height: var(--button-size);
+      place-items: center;
+      padding: 0;
+      overflow: hidden;
+      isolation: isolate;
+      border: 0;
+      border-radius: 50%;
+      background: var(--fab);
+      box-shadow:
+        0 10px 24px -8px oklch(0.135 0.004 70 / 52%),
+        inset 0 0 0 1px color-mix(in oklch, var(--fab-ink) 14%, transparent);
+      color: var(--fab-ink);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .launcher::after {
+      position: absolute;
+      inset: 2px;
+      border: 1px solid color-mix(in oklch, currentColor 12%, transparent);
+      border-radius: inherit;
+      pointer-events: none;
+      content: "";
+    }
+
+    .launcher:focus-visible {
+      outline: 3px solid oklch(0.55 0.008 66);
+      outline-offset: 3px;
+    }
+
+    .chat-mark {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      width: 28px;
+      height: 20px;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border-radius: 9px 9px 9px 4px;
+      background: currentColor;
+      filter: drop-shadow(0 2px 4px color-mix(in oklch, var(--fab) 45%, transparent));
+      pointer-events: none;
+    }
+
+    .chat-mark::after {
+      position: absolute;
+      inset-inline-start: 3px;
+      bottom: -5px;
+      width: 9px;
+      height: 7px;
+      background: currentColor;
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+      content: "";
+    }
+
+    .typing-dot {
+      position: relative;
+      z-index: 1;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--fab);
+      animation: typing-life 1.8s ease-in-out infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: -1.2s; }
+    .typing-dot:nth-child(3) { animation-delay: -0.6s; }
+
+    @keyframes typing-life {
+      0%, 100% { transform: translateY(1px) scale(0.72); opacity: 0.48; }
+      50% { transform: translateY(-1px) scale(1.08); opacity: 1; }
+    }
+
+    /* 01: Conversation Orbit, shared 84px outer field. */
+
+    .ambient--orbit::before {
+      position: absolute;
+      inset: 14%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 68% 68%, color-mix(in oklch, var(--b) 15%, transparent), transparent 54%);
+      content: "";
+    }
+
+    .orbit-loop {
+      position: absolute;
+      border: 1.5px solid transparent;
+      border-block-start-color: var(--tone);
+      border-inline-start-color: color-mix(in oklch, var(--tone) 52%, transparent);
+      border-radius: 50%;
+      transform: rotate(var(--rest-rotation));
+      animation: orbit-turn var(--duration) linear infinite;
+    }
+
+    .orbit-loop::after {
+      position: absolute;
+      top: 8%;
+      inset-inline-start: 15%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--tone);
+      box-shadow: 0 0 10px 2px color-mix(in oklch, var(--tone) 66%, transparent);
+      content: "";
+    }
+
+    .orbit-loop--a { --tone: var(--a); --duration: 6.8s; --rest-rotation: 18deg; inset: 7%; }
+    .orbit-loop--b { --tone: var(--b); --duration: 9.7s; --rest-rotation: 118deg; inset: 18%; animation-direction: reverse; }
+    .orbit-loop--c { --tone: var(--c); --duration: 12.4s; --rest-rotation: 232deg; inset: 29%; }
+
+    .orbit-spark {
+      position: absolute;
+      inset-inline-start: 12%;
+      top: 16%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--d);
+      box-shadow: 0 0 9px 2px color-mix(in oklch, var(--d) 72%, transparent);
+      animation: orbit-spark 4.3s ease-in-out infinite;
+    }
+
+    @keyframes orbit-turn { to { transform: rotate(calc(var(--rest-rotation) + 360deg)); } }
+
+    @keyframes orbit-spark {
+      0%, 100% { transform: translate(0, 0) scale(0.65); opacity: 0.38; }
+      50% { transform: translate(13px, -5px) scale(1.22); opacity: 1; }
+    }
+
+    /* 02: Voice Wake, shared 84px outer field. */
+
+    .wake-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      transform: translate(-16px, -15px);
+    }
+
+    .wake-path {
+      fill: none;
+      stroke: var(--tone);
+      stroke-linecap: round;
+      stroke-width: 1.7;
+      stroke-dasharray: 7 6 1 6;
+      animation: wake-flow var(--duration) linear infinite;
+    }
+
+    .wake-path--a { --tone: var(--a); --duration: 3.4s; }
+    .wake-path--b { --tone: var(--b); --duration: 4.7s; stroke-width: 1.3; animation-direction: reverse; }
+    .wake-path--c { --tone: var(--c); --duration: 6.1s; stroke-width: 1; }
+
+    .wake-particle {
+      position: absolute;
+      top: 0;
+      inset-inline-start: 0;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--tone);
+      box-shadow: 0 0 9px 2px color-mix(in oklch, var(--tone) 68%, transparent);
+      offset-distance: var(--rest-distance);
+      offset-rotate: 0deg;
+      animation: wake-travel var(--duration) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    }
+
+    .wake-particle--a {
+      --tone: var(--a); --duration: 4.2s; --rest-distance: 72%;
+      offset-path: path("M 5 11 C 15 21 22 30 34 36 C 39 39 40 41 42 42");
+    }
+
+    .wake-particle--b {
+      --tone: var(--d); --duration: 5.5s; --rest-distance: 48%;
+      offset-path: path("M 3 27 C 15 27 24 39 34 42 C 38 43 40 44 42 44");
+      animation-delay: -2.7s;
+    }
+
+    [dir="rtl"] .ambient--wake { transform: translate(-50%, -50%) scaleX(-1); }
+
+    @keyframes wake-flow { to { stroke-dashoffset: -40; } }
+
+    @keyframes wake-travel {
+      0% { offset-distance: 0%; transform: scale(0.55); opacity: 0; }
+      12%, 86% { opacity: 1; }
+      100% { offset-distance: 100%; transform: scale(1.08); opacity: 0; }
+    }
+
+    /* 03: Magnetic Presence, shared 84px outer field. */
+
+    .ambient--magnetic::before {
+      position: absolute;
+      inset: 9%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 68% 68%, color-mix(in oklch, var(--c) 14%, transparent), transparent 58%);
+      content: "";
+    }
+
+    .flux-loop {
+      position: absolute;
+      border: 1px solid color-mix(in oklch, var(--tone) 72%, transparent);
+      border-radius: var(--radius-a) var(--radius-b) var(--radius-a) var(--radius-b);
+      transform: rotate(var(--rest-rotation)) scale(var(--rest-x), var(--rest-y));
+      animation: flux-torsion var(--duration) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    }
+
+    .flux-loop--a { --tone: var(--a); --radius-a: 48%; --radius-b: 52%; --rest-rotation: 12deg; --rest-x: 1; --rest-y: .78; --duration: 7.2s; inset: 7%; }
+    .flux-loop--b { --tone: var(--b); --radius-a: 56%; --radius-b: 44%; --rest-rotation: 68deg; --rest-x: .82; --rest-y: 1; --duration: 9.1s; inset: 15%; animation-direction: reverse; }
+    .flux-loop--c { --tone: var(--c); --radius-a: 42%; --radius-b: 58%; --rest-rotation: 132deg; --rest-x: 1.08; --rest-y: .66; --duration: 11.8s; inset: 24%; }
+    .flux-loop--d { --tone: var(--d); --radius-a: 52%; --radius-b: 48%; --rest-rotation: 208deg; --rest-x: .72; --rest-y: 1.1; --duration: 13.6s; inset: 32%; animation-direction: reverse; }
+
+    .flux-node {
+      position: absolute;
+      inset-inline-start: 14%;
+      bottom: 29%;
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--fab-ink);
+      border-radius: 50%;
+      background: var(--a);
+      box-shadow: 0 0 12px 2px color-mix(in oklch, var(--a) 55%, transparent);
+      animation: flux-node 5.4s ease-in-out infinite;
+    }
+
+    @keyframes flux-torsion {
+      0%, 100% { transform: rotate(var(--rest-rotation)) scale(var(--rest-x), var(--rest-y)); }
+      50% { transform: rotate(calc(var(--rest-rotation) + 42deg)) scale(var(--rest-y), var(--rest-x)); }
+    }
+
+    @keyframes flux-node {
+      0%, 100% { transform: translate(0, 0) scale(0.7); opacity: 0.45; }
+      50% { transform: translate(17px, -18px) scale(1.2); opacity: 1; }
+    }
+
+    /* 04: Signal Crown, shared 84px outer field. */
+
+    .ambient--crown::before {
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in oklch, var(--b) 14%, transparent), transparent 68%);
+      content: "";
+    }
+
+    .crown-ray {
+      position: absolute;
+      left: calc(50% - 3.5px);
+      bottom: 50%;
+      width: 7px;
+      height: 38px;
+      border: 1px solid color-mix(in oklch, var(--tone) 52%, transparent);
+      border-radius: 999px;
+      background: linear-gradient(to top, color-mix(in oklch, var(--tone) 76%, transparent), transparent 82%);
+      box-shadow: 0 0 12px -3px color-mix(in oklch, var(--tone) 64%, transparent);
+      transform: rotate(var(--angle)) translateY(-2px) scaleY(var(--rest-scale));
+      transform-origin: 50% 100%;
+      opacity: var(--rest-opacity);
+      animation: crown-articulate var(--duration) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+      animation-delay: var(--delay);
+    }
+
+    .crown-ray:nth-child(1) { --angle: -80deg; --tone: var(--a); --duration: 6.8s; --delay: -1.2s; --rest-scale: .64; --rest-opacity: .48; }
+    .crown-ray:nth-child(2) { --angle: -62deg; --tone: var(--b); --duration: 7.7s; --delay: -2.4s; --rest-scale: .82; --rest-opacity: .58; }
+    .crown-ray:nth-child(3) { --angle: -44deg; --tone: var(--c); --duration: 8.9s; --delay: -3.6s; --rest-scale: .72; --rest-opacity: .68; }
+    .crown-ray:nth-child(4) { --angle: -26deg; --tone: var(--d); --duration: 10.1s; --delay: -4.8s; --rest-scale: .94; --rest-opacity: .78; }
+    .crown-ray:nth-child(5) { --angle: -8deg; --tone: var(--a); --duration: 11.3s; --delay: -6s; --rest-scale: .76; --rest-opacity: .7; }
+    .crown-ray:nth-child(6) { --angle: 10deg; --tone: var(--b); --duration: 12.7s; --delay: -7.2s; --rest-scale: .58; --rest-opacity: .56; }
+    .crown-ray:nth-child(7) { --angle: 28deg; --tone: var(--c); --duration: 14.2s; --delay: -8.4s; --rest-scale: .48; --rest-opacity: .42; }
+
+    [dir="rtl"] .ambient--crown { transform: translate(-50%, -50%) scaleX(-1); }
+
+    @keyframes crown-articulate {
+      0%, 100% { transform: rotate(var(--angle)) translateY(-2px) scaleY(var(--rest-scale)); opacity: var(--rest-opacity); }
+      46% { transform: rotate(calc(var(--angle) + 8deg)) translateY(-5px) scaleY(1.08); opacity: 1; }
+      72% { transform: rotate(calc(var(--angle) - 5deg)) translateY(-1px) scaleY(.72); opacity: .62; }
+    }
+
+    /* 05: Live Focus, shared 84px outer field. */
+
+    .focus-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 64px;
+      height: 64px;
+      margin: -32px 0 0 -32px;
+      transform: rotate(var(--rest-rotation));
+      animation: focus-lock var(--duration) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    }
+
+    .focus-frame--a { --tone: var(--a); --duration: 7.4s; --rest-rotation: 0deg; }
+    .focus-frame--b { --tone: var(--b); --duration: 10.6s; --rest-rotation: 45deg; width: 48px; height: 48px; margin: -24px 0 0 -24px; animation-direction: reverse; }
+
+    .focus-bracket {
+      position: absolute;
+      width: 17px;
+      height: 17px;
+      border-color: var(--tone);
+      border-style: solid;
+      filter: drop-shadow(0 0 4px color-mix(in oklch, var(--tone) 62%, transparent));
+    }
+
+    .focus-bracket:nth-child(1) { inset: 0 auto auto 0; border-width: 1.5px 0 0 1.5px; }
+    .focus-bracket:nth-child(2) { inset: 0 0 auto auto; border-width: 1.5px 1.5px 0 0; }
+    .focus-bracket:nth-child(3) { inset: auto auto 0 0; border-width: 0 0 1.5px 1.5px; }
+    .focus-bracket:nth-child(4) { inset: auto 0 0 auto; border-width: 0 1.5px 1.5px 0; }
+
+    .focus-scan {
+      position: absolute;
+      inset-inline-start: 12%;
+      top: 19%;
+      width: 54%;
+      height: 1px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--c), var(--fab-ink), transparent);
+      box-shadow: 0 0 8px var(--c);
+      transform: translateY(10px) rotate(-28deg);
+      transform-origin: right center;
+      animation: focus-scan 4.2s ease-in-out infinite;
+    }
+
+    .focus-bead {
+      position: absolute;
+      inset-inline-start: 15%;
+      bottom: 20%;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--d);
+      box-shadow: 0 0 10px 2px color-mix(in oklch, var(--d) 70%, transparent);
+      animation: focus-bead 5.1s ease-in-out infinite;
+    }
+
+    @keyframes focus-lock {
+      0%, 100% { transform: rotate(var(--rest-rotation)) scale(.84); opacity: .58; }
+      48% { transform: rotate(calc(var(--rest-rotation) + 90deg)) scale(1.06); opacity: 1; }
+      74% { transform: rotate(calc(var(--rest-rotation) + 135deg)) scale(.92); opacity: .76; }
+    }
+
+    @keyframes focus-scan {
+      0%, 100% { transform: translateY(8px) rotate(-28deg) scaleX(.34); opacity: .24; }
+      50% { transform: translate(24px, 38px) rotate(-28deg) scaleX(1.12); opacity: .94; }
+    }
+
+    @keyframes focus-bead {
+      0%, 100% { transform: translate(0, 0) scale(.65); opacity: .36; }
+      50% { transform: translate(22px, -25px) scale(1.18); opacity: 1; }
+    }
+
+    .reduced-demo {
+      --stage-bg: oklch(0.945 0.007 75);
+      --stage-ink: oklch(0.235 0.006 60);
+      --fab: oklch(0.235 0.006 60);
+      --fab-ink: oklch(0.945 0.007 75);
+      --a: oklch(0.3 0.006 68);
+      --b: oklch(0.46 0.007 70);
+      --c: oklch(0.64 0.008 74);
+      --d: oklch(0.82 0.008 78);
+      --faint: oklch(0.945 0.007 75 / 18%);
+      display: flex;
+      min-height: 158px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 11px 22px;
+      border-block-start: 1px solid var(--line);
+      background: var(--stage-bg);
+      color: var(--stage-ink);
+    }
+
+    .reduced-copy {
+      display: grid;
+      gap: 5px;
+    }
+
+    .reduced-copy small {
+      max-width: 56ch;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.45;
+    }
+
+    .motion-resting *,
+    .motion-resting *::before,
+    .motion-resting *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    .motion-resting .typing-dot { transform: none; opacity: .78; }
+
+    .notes {
+      margin-block-start: 40px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+    }
+
+    .notes-header {
+      padding: 22px 24px 18px;
+      border-block-end: 1px solid var(--line);
+    }
+
+    .notes h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: -0.025em;
+    }
+
+    .notes p {
+      max-width: 78ch;
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.55;
+    }
+
+    .notes-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      min-width: 1280px;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+      text-align: start;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-block-end: 1px solid var(--line);
+      vertical-align: top;
+      text-align: start;
+    }
+
+    th { background: oklch(0.965 0.007 78); }
+    tbody tr:last-child td { border-block-end: 0; }
+    td:first-child { font-weight: 730; white-space: nowrap; }
+
+    code {
+      padding: .1em .35em;
+      border-radius: 5px;
+      background: var(--soft);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: .94em;
+    }
+
+    @media (max-width: 980px) {
+      .theme-pair { grid-template-columns: 1fr; }
+      .stage + .stage { border-inline-start: 0; border-block-start: 1px solid var(--line); }
+    }
+
+    @media (max-width: 720px) {
+      .page { padding-block-start: 28px; }
+      .page-header,
+      .concept-header { grid-template-columns: 1fr; align-items: start; }
+      .motion-state { justify-self: start; }
+      .footprint-tag { justify-items: start; }
+    }
+
+    @media (max-width: 600px) {
+      .page { padding-inline: 12px; }
+      .concept-header { padding: 19px 18px 17px; }
+      .stage { padding: 16px 12px 18px; }
+      .specimens { flex-direction: column; align-items: center; gap: 20px; }
+      .reduced-demo { align-items: start; padding: 16px; }
+    }
+
+    @media (max-width: 360px) {
+      .reduced-demo { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .motion-state::before { background: oklch(0.5 0.008 66); box-shadow: none; }
+      .motion-state__active { display: none; }
+      .motion-state__reduced { display: inline; }
+
+      .composition *,
+      .composition *::before,
+      .composition *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .typing-dot { transform: none; opacity: .78; }
+      .wake-particle--a { offset-distance: 72%; opacity: .9; }
+      .wake-particle--b { offset-distance: 48%; opacity: .8; }
+      .crown-ray { transform: rotate(var(--angle)) translateY(-2px) scaleY(var(--rest-scale)); opacity: var(--rest-opacity); }
+      .focus-frame { transform: rotate(var(--rest-rotation)); opacity: .82; }
+      .focus-scan { transform: translate(18px, 26px) rotate(-28deg) scaleX(.86); opacity: .66; }
+      .focus-bead { transform: translate(11px, -12px); opacity: .8; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">GrindCTRL AI assistant, round 3</p>
+        <h1>Chat at the calm centre</h1>
+        <p class="intro">Five launcher systems keep the speech bubble instantly legible while the space around it carries the eye-catching motion. Every true-size specimen is arranged exactly like the production corner: 16px from the logical end and bottom edges.</p>
+      </div>
+      <div class="motion-state" aria-live="polite"><span class="motion-state__active">Outer motion active</span><span class="motion-state__reduced">Reduced-motion rest states</span></div>
+    </header>
+
+    <section class="concept-list" aria-label="Five chat launcher animation concepts">
+      <article class="concept orbit">
+        <header class="concept-header"><div><p class="concept-index">Concept 01</p><h2>Conversation Orbit</h2><p class="concept-description">Three off-axis communication orbits and luminous satellites circle a fixed typing bubble, making the assistant feel present before the visitor reaches for it.</p></div><div class="footprint-tag"><strong>84px outer field</strong><span>Shared 1.5× system</span></div></header>
+        <div class="theme-pair">
+          <section class="stage stage--light" aria-label="Conversation Orbit on light surface"><p class="stage-label">Light surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--orbit" aria-hidden="true"><span class="orbit-loop orbit-loop--a"></span><span class="orbit-loop orbit-loop--b"></span><span class="orbit-loop orbit-loop--c"></span><span class="orbit-spark"></span></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Conversation Orbit preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--orbit" aria-hidden="true"><span class="orbit-loop orbit-loop--a"></span><span class="orbit-loop orbit-loop--b"></span><span class="orbit-loop orbit-loop--c"></span><span class="orbit-spark"></span></span><button class="launcher" type="button" aria-label="Enlarged Conversation Orbit preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+          <section class="stage stage--dark" aria-label="Conversation Orbit on dark surface"><p class="stage-label">Dark surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--orbit" aria-hidden="true"><span class="orbit-loop orbit-loop--a"></span><span class="orbit-loop orbit-loop--b"></span><span class="orbit-loop orbit-loop--c"></span><span class="orbit-spark"></span></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Conversation Orbit dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--orbit" aria-hidden="true"><span class="orbit-loop orbit-loop--a"></span><span class="orbit-loop orbit-loop--b"></span><span class="orbit-loop orbit-loop--c"></span><span class="orbit-spark"></span></span><button class="launcher" type="button" aria-label="Enlarged Conversation Orbit dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+        </div>
+        <div class="reduced-demo"><div class="reduced-copy"><p class="rest-label">Reduced-motion resting state</p><small>The three orbit arcs and satellites hold as a composed communication field; the speech bubble and typing dots remain fully legible.</small></div><div class="composition motion-resting"><span class="ambient ambient--orbit" aria-hidden="true"><span class="orbit-loop orbit-loop--a"></span><span class="orbit-loop orbit-loop--b"></span><span class="orbit-loop orbit-loop--c"></span><span class="orbit-spark"></span></span><button class="launcher" type="button" aria-label="Static Conversation Orbit preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div>
+      </article>
+
+      <article class="concept wake">
+        <header class="concept-header"><div><p class="concept-index">Concept 02</p><h2>Voice Wake</h2><p class="concept-description">Braided voice ribbons and travelling phoneme lights stream toward a fixed chat bubble, making spoken input the secondary read without sacrificing chat recognition.</p></div><div class="footprint-tag"><strong>84px outer field</strong><span>Shared 1.5× system</span></div></header>
+        <div class="theme-pair">
+          <section class="stage stage--light" aria-label="Voice Wake on light surface"><p class="stage-label">Light surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--wake" aria-hidden="true"><svg class="wake-svg" viewBox="0 0 136 136"><path class="wake-path wake-path--a" d="M8 18 C25 34 35 48 56 58 C76 68 80 84 94 92"></path><path class="wake-path wake-path--b" d="M4 43 C24 44 38 64 57 70 C76 76 80 92 96 99"></path><path class="wake-path wake-path--c" d="M19 7 C31 27 49 32 65 48 C78 61 87 73 95 87"></path></svg><i class="wake-particle wake-particle--a"></i><i class="wake-particle wake-particle--b"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Voice Wake preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--wake" aria-hidden="true"><svg class="wake-svg" viewBox="0 0 136 136"><path class="wake-path wake-path--a" d="M8 18 C25 34 35 48 56 58 C76 68 80 84 94 92"></path><path class="wake-path wake-path--b" d="M4 43 C24 44 38 64 57 70 C76 76 80 92 96 99"></path><path class="wake-path wake-path--c" d="M19 7 C31 27 49 32 65 48 C78 61 87 73 95 87"></path></svg><i class="wake-particle wake-particle--a"></i><i class="wake-particle wake-particle--b"></i></span><button class="launcher" type="button" aria-label="Enlarged Voice Wake preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+          <section class="stage stage--dark" aria-label="Voice Wake on dark surface"><p class="stage-label">Dark surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--wake" aria-hidden="true"><svg class="wake-svg" viewBox="0 0 136 136"><path class="wake-path wake-path--a" d="M8 18 C25 34 35 48 56 58 C76 68 80 84 94 92"></path><path class="wake-path wake-path--b" d="M4 43 C24 44 38 64 57 70 C76 76 80 92 96 99"></path><path class="wake-path wake-path--c" d="M19 7 C31 27 49 32 65 48 C78 61 87 73 95 87"></path></svg><i class="wake-particle wake-particle--a"></i><i class="wake-particle wake-particle--b"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Voice Wake dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--wake" aria-hidden="true"><svg class="wake-svg" viewBox="0 0 136 136"><path class="wake-path wake-path--a" d="M8 18 C25 34 35 48 56 58 C76 68 80 84 94 92"></path><path class="wake-path wake-path--b" d="M4 43 C24 44 38 64 57 70 C76 76 80 92 96 99"></path><path class="wake-path wake-path--c" d="M19 7 C31 27 49 32 65 48 C78 61 87 73 95 87"></path></svg><i class="wake-particle wake-particle--a"></i><i class="wake-particle wake-particle--b"></i></span><button class="launcher" type="button" aria-label="Enlarged Voice Wake dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+        </div>
+        <div class="reduced-demo"><div class="reduced-copy"><p class="rest-label">Reduced-motion resting state</p><small>The three voice ribbons and two phoneme lights freeze in a clear inward path that terminates at the stable chat mark.</small></div><div class="composition motion-resting"><span class="ambient ambient--wake" aria-hidden="true"><svg class="wake-svg" viewBox="0 0 136 136"><path class="wake-path wake-path--a" d="M8 18 C25 34 35 48 56 58 C76 68 80 84 94 92"></path><path class="wake-path wake-path--b" d="M4 43 C24 44 38 64 57 70 C76 76 80 92 96 99"></path><path class="wake-path wake-path--c" d="M19 7 C31 27 49 32 65 48 C78 61 87 73 95 87"></path></svg><i class="wake-particle wake-particle--a"></i><i class="wake-particle wake-particle--b"></i></span><button class="launcher" type="button" aria-label="Static Voice Wake preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div>
+      </article>
+
+      <article class="concept magnetic">
+        <header class="concept-header"><div><p class="concept-index">Concept 03</p><h2>Magnetic Presence</h2><p class="concept-description">Four elastic field lines continuously torque around the stable chat button as if the assistant is bending nearby light and pulling the visitor's attention inward.</p></div><div class="footprint-tag"><strong>84px outer field</strong><span>Shared 1.5× system</span></div></header>
+        <div class="theme-pair">
+          <section class="stage stage--light" aria-label="Magnetic Presence on light surface"><p class="stage-label">Light surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--magnetic" aria-hidden="true"><i class="flux-loop flux-loop--a"></i><i class="flux-loop flux-loop--b"></i><i class="flux-loop flux-loop--c"></i><i class="flux-loop flux-loop--d"></i><i class="flux-node"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Magnetic Presence preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--magnetic" aria-hidden="true"><i class="flux-loop flux-loop--a"></i><i class="flux-loop flux-loop--b"></i><i class="flux-loop flux-loop--c"></i><i class="flux-loop flux-loop--d"></i><i class="flux-node"></i></span><button class="launcher" type="button" aria-label="Enlarged Magnetic Presence preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+          <section class="stage stage--dark" aria-label="Magnetic Presence on dark surface"><p class="stage-label">Dark surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--magnetic" aria-hidden="true"><i class="flux-loop flux-loop--a"></i><i class="flux-loop flux-loop--b"></i><i class="flux-loop flux-loop--c"></i><i class="flux-loop flux-loop--d"></i><i class="flux-node"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Magnetic Presence dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--magnetic" aria-hidden="true"><i class="flux-loop flux-loop--a"></i><i class="flux-loop flux-loop--b"></i><i class="flux-loop flux-loop--c"></i><i class="flux-loop flux-loop--d"></i><i class="flux-node"></i></span><button class="launcher" type="button" aria-label="Enlarged Magnetic Presence dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+        </div>
+        <div class="reduced-demo"><div class="reduced-copy"><p class="rest-label">Reduced-motion resting state</p><small>The field lines stop at four different torsion angles, preserving depth around the stable speech bubble without any implied motion.</small></div><div class="composition motion-resting"><span class="ambient ambient--magnetic" aria-hidden="true"><i class="flux-loop flux-loop--a"></i><i class="flux-loop flux-loop--b"></i><i class="flux-loop flux-loop--c"></i><i class="flux-loop flux-loop--d"></i><i class="flux-node"></i></span><button class="launcher" type="button" aria-label="Static Magnetic Presence preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div>
+      </article>
+
+      <article class="concept crown">
+        <header class="concept-header"><div><p class="concept-index">Concept 04</p><h2>Signal Crown</h2><p class="concept-description">Seven translucent signal vanes continuously fan open behind the fixed bubble, turning bilingual voice and text capability into a bold outer acoustic crown.</p></div><div class="footprint-tag"><strong>84px outer field</strong><span>Shared 1.5× system</span></div></header>
+        <div class="theme-pair">
+          <section class="stage stage--light" aria-label="Signal Crown on light surface"><p class="stage-label">Light surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--crown" aria-hidden="true"><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Signal Crown preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--crown" aria-hidden="true"><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i></span><button class="launcher" type="button" aria-label="Enlarged Signal Crown preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+          <section class="stage stage--dark" aria-label="Signal Crown on dark surface"><p class="stage-label">Dark surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--crown" aria-hidden="true"><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Signal Crown dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--crown" aria-hidden="true"><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i></span><button class="launcher" type="button" aria-label="Enlarged Signal Crown dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+        </div>
+        <div class="reduced-demo"><div class="reduced-copy"><p class="rest-label">Reduced-motion resting state</p><small>The seven vanes hold at graduated lengths and angles, leaving a static acoustic crown that never competes with the chat mark.</small></div><div class="composition motion-resting"><span class="ambient ambient--crown" aria-hidden="true"><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i><i class="crown-ray"></i></span><button class="launcher" type="button" aria-label="Static Signal Crown preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div>
+      </article>
+
+      <article class="concept focus">
+        <header class="concept-header"><div><p class="concept-index">Concept 05</p><h2>Live Focus</h2><p class="concept-description">Two precision frames, a travelling scan line, and a luminous lock point continuously acquire the stable chat bubble like an always-available AI control surface.</p></div><div class="footprint-tag"><strong>84px outer field</strong><span>Shared 1.5× system</span></div></header>
+        <div class="theme-pair">
+          <section class="stage stage--light" aria-label="Live Focus on light surface"><p class="stage-label">Light surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--focus" aria-hidden="true"><span class="focus-frame focus-frame--a"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><span class="focus-frame focus-frame--b"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><i class="focus-scan"></i><i class="focus-bead"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Live Focus preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--focus" aria-hidden="true"><span class="focus-frame focus-frame--a"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><span class="focus-frame focus-frame--b"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><i class="focus-scan"></i><i class="focus-bead"></i></span><button class="launcher" type="button" aria-label="Enlarged Live Focus preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+          <section class="stage stage--dark" aria-label="Live Focus on dark surface"><p class="stage-label">Dark surface</p><div class="specimens">
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--true"><div class="composition"><span class="ambient ambient--focus" aria-hidden="true"><span class="focus-frame focus-frame--a"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><span class="focus-frame focus-frame--b"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><i class="focus-scan"></i><i class="focus-bead"></i></span><button class="launcher" type="button" aria-label="Open GrindCTRL chat assistant, Live Focus dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">56px, corner fit</span></div>
+            <div class="specimen"><div class="specimen-canvas specimen-canvas--study"><div class="composition"><span class="ambient ambient--focus" aria-hidden="true"><span class="focus-frame focus-frame--a"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><span class="focus-frame focus-frame--b"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><i class="focus-scan"></i><i class="focus-bead"></i></span><button class="launcher" type="button" aria-label="Enlarged Live Focus dark preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div><span class="size-label">112px study</span></div>
+          </div></section>
+        </div>
+        <div class="reduced-demo"><div class="reduced-copy"><p class="rest-label">Reduced-motion resting state</p><small>The two focus frames settle at offset angles with the scan line parked across the field, while the central speech bubble remains dominant.</small></div><div class="composition motion-resting"><span class="ambient ambient--focus" aria-hidden="true"><span class="focus-frame focus-frame--a"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><span class="focus-frame focus-frame--b"><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i><i class="focus-bracket"></i></span><i class="focus-scan"></i><i class="focus-bead"></i></span><button class="launcher" type="button" aria-label="Static Live Focus preview"><span class="chat-mark" aria-hidden="true"><i class="typing-dot"></i><i class="typing-dot"></i><i class="typing-dot"></i></span></button></div></div>
+      </article>
+    </section>
+
+    <section class="notes" aria-labelledby="notes-title">
+      <header class="notes-header"><h2 id="notes-title">Implementation notes</h2><p>All five concepts use one shared system: a 56px button, an 84px outer field (1.5× the button), and an 88px fixed placement box. The button sits at <code>bottom: 16px</code> and logical <code>end: 16px</code>; both its centre and the outer field's centre resolve to <code>44px 44px</code>, leaving 2px of field clearance against each viewport edge.</p></header>
+      <div class="notes-scroll"><table><thead><tr><th>Concept</th><th>Technique</th><th>Chat centre</th><th>Outer attention hook</th><th>RTL</th><th>Perf</th><th>Total footprint</th><th>Corner behavior</th><th>Risk</th><th>React port</th></tr></thead><tbody>
+        <tr><td>Conversation Orbit</td><td>CSS partial-border ellipses, satellites, transform and opacity loops. No SVG or JS.</td><td>A solid speech bubble with three restrained typing dots stays fixed at every keyframe.</td><td>Three off-axis orbital bodies move at 6.8s, 9.7s, and 12.4s, with a fourth drifting spark.</td><td>Radial composition; logical button placement and no semantic direction.</td><td>Low. Four tiny compositor layers plus static borders.</td><td>84px outer field; 88px placement box.</td><td>The centered 84px field leaves 2px of clearance at both adjacent viewport edges; its internal orbits remain clipped only to the deliberate circular field.</td><td>Partial borders can alias at unusual Windows scale factors.</td><td>Easy to moderate; seven decorative spans and four keyframes.</td></tr>
+        <tr><td>Voice Wake</td><td>Three inline SVG Bézier strokes, CSS dash flow, and two offset-path particles. No JS.</td><td>The fixed high-contrast bubble reads as chat before the secondary voice trails register.</td><td>Three braided audio ribbons and two phoneme lights travel toward the button continuously.</td><td>Directional; the centered ambient layer mirrors with <code>translate(-50%, -50%) scaleX(-1)</code> under RTL.</td><td>Low to medium. Tiny SVG paint plus two compositor particles.</td><td>84px outer field; 88px placement box.</td><td>The translated wake converges on the shared centre while the 84px field keeps every visible ribbon inside the 2px corner clearance.</td><td><code>offset-path</code> should be checked on the oldest supported Safari.</td><td>Moderate; one SVG, two particles, and one RTL selector.</td></tr>
+        <tr><td>Magnetic Presence</td><td>Four CSS elliptical field lines with independent torsion cycles plus one moving node.</td><td>The stable filled bubble and typing dots remain optically heavier than every field line.</td><td>The field continually bends and reorients, making the button appear to distort nearby light.</td><td>Radial composition; no mirroring is required.</td><td>Low. Five small transform and opacity layers.</td><td>84px outer field; 88px placement box.</td><td>All four symmetric field lines share the button's 44px centre, with 2px remaining before either adjacent viewport edge.</td><td>Fine elliptical borders need device-pixel-ratio tuning after porting.</td><td>Easy; pure CSS spans and shared color variables.</td></tr>
+        <tr><td>Signal Crown</td><td>Seven CSS vanes with independent transform, opacity, and gradient material layers.</td><td>The fixed bubble sits above the vanes with a stronger silhouette and unbroken typing state.</td><td>Seven signal vanes fan, retract, and change phase to create a large acoustic gesture outside the icon.</td><td>Directional; the centered crown mirrors as one layer in RTL without changing its centre.</td><td>Low. Seven small compositor layers and static gradients.</td><td>84px outer field; 88px placement box.</td><td>The shortened vanes articulate inside the shared 84px field; mirroring keeps the same 2px clearance at right or left corners.</td><td>The tonal balance must stay subordinate to the chat silhouette.</td><td>Moderate; repetitive spans can be mapped from a small configuration array.</td></tr>
+        <tr><td>Live Focus</td><td>Two bracket frames, a scan beam, and a lock bead using CSS transforms and opacity.</td><td>The stable speech bubble is the acquisition target and never rotates, scales, or dissolves.</td><td>Precision frames continuously acquire the bubble while the scan beam crosses the outer field.</td><td>Radial frame behavior; logical button placement is sufficient.</td><td>Low. Four compositor groups with no SVG paint.</td><td>84px outer field; 88px placement box.</td><td>Both focus frames rotate around the shared 44px centre, so the full acquisition field retains 2px of corner clearance.</td><td>The technical register may feel more operational than conversational on softer marketing pages.</td><td>Moderate; nested bracket spans but no browser-specific APIs.</td></tr>
+      </tbody></table></div>
+    </section>
+  </main>
+</body>
+</html>
