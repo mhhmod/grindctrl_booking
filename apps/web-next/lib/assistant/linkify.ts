@@ -17,7 +17,9 @@ export type MessageSegment = TextSegment | LinkSegment;
 const ABSOLUTE_URL = /https?:\/\/[^\s<>"']+/g;
 // Trailing punctuation almost always belongs to the sentence, not the URL —
 // "visit https://x.com." shouldn't turn the period into part of the link.
-const TRAILING_PUNCTUATION = /[.,!?;:)\]}'"]+$/;
+// Includes Arabic question mark/comma/semicolon (؟،؛) since replies are as
+// often Arabic as English (see system-prompt.ts's LANGUAGE section).
+const TRAILING_PUNCTUATION = /[.,!?;:)\]}'"؟،؛]+$/;
 
 /* The system prompt is only ever told to mention these two relative paths
    (see system-prompt.ts) — matching that exact, known set is simpler and

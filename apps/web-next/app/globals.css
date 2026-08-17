@@ -31,6 +31,16 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
+  /* Mobile Chrome/Safari paint a translucent gray-blue box over a tapped
+     element and leave it there until the next unrelated tap — with no
+     visible :active/:focus style of our own to replace it, a tapped link
+     reads as "stuck highlighted" rather than "was tapped." We already
+     provide our own focus-visible ring above, so the browser's default
+     adds nothing but that stuck-highlight look. */
+  :where(a, button, input, select, textarea, [role='button'], [tabindex]) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   a {
     @apply transition-colors;
   }

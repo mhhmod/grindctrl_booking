@@ -17,9 +17,16 @@ interface VoiceMessagePlayerProps {
 const BAR_HEIGHTS = [6, 12, 8, 14, 5, 10, 7];
 
 /** Renders inside an assistant message bubble once that message has audio
- *  attached (see use-assistant-chat.ts's setMessageAudio). The play icon
- *  intentionally never mirrors in RTL — like any media transport control,
- *  it represents playback direction (forward in time), not text direction. */
+ *  attached (see use-assistant-chat.ts's setMessageAudio). The whole row —
+ *  button, progress, elapsed time — is forced dir="ltr" and never mirrors in
+ *  RTL: like any media transport control (see YouTube/WhatsApp/Telegram, all
+ *  unmirrored even fully Arabic-localized), it represents playback direction
+ *  (forward in time), not text direction, so "drag right = seek forward"
+ *  must hold regardless of page language. Confirmed this needed forcing, not
+ *  just assuming — without it the ambient RTL context actually did reorder
+ *  the row (button and time swap sides), which is not what the equivalent
+ *  icon-mirroring rule for other directional icons (rtl:-scale-x-100,
+ *  used e.g. in try-on-page-content.tsx) would suggest a user expects here. */
 export function VoiceMessagePlayer({ chunks }: VoiceMessagePlayerProps) {
   const { t } = useAssistantLocale();
   const { status, elapsedSeconds, totalSeconds, toggle, seek } = useVoiceMessagePlayer(chunks);
@@ -32,7 +39,7 @@ export function VoiceMessagePlayer({ chunks }: VoiceMessagePlayerProps) {
   const progressFraction = canSeek ? Math.min(1, elapsedSeconds / totalSeconds) : 0;
 
   return (
-    <div className="mt-2 flex items-center gap-2 border-t border-foreground/10 pt-2">
+    <div dir="ltr" className="mt-2 flex items-center gap-2 border-t border-foreground/10 pt-2">
       <button
         type="button"
         onClick={toggle}
@@ -78,8 +85,8 @@ export function VoiceMessagePlayer({ chunks }: VoiceMessagePlayerProps) {
           className={cn(
             'absolute inset-0 h-full w-full cursor-pointer appearance-none bg-transparent disabled:cursor-default',
             '[&::-webkit-slider-runnable-track]:bg-transparent [&::-moz-range-track]:bg-transparent',
-            '[&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-background',
-            '[&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-foreground [&::-moz-range-thumb]:ring-2 [&::-moz-range-thumb]:ring-background',
+            '[&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-background',
+            '[&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-foreground [&::-moz-range-thumb]:shadow-sm [&::-moz-range-thumb]:ring-2 [&::-moz-range-thumb]:ring-background',
           )}
         />
       </div>

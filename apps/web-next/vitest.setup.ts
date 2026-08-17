@@ -39,6 +39,14 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   });
 }
 
+// jsdom has no scroll layout, so it doesn't implement scrollIntoView at all —
+// any component that auto-scrolls on new content (e.g. a chat log) throws
+// the instant a test renders it, unrelated to whatever that test is actually
+// checking.
+if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView === 'undefined') {
+  Element.prototype.scrollIntoView = () => {};
+}
+
 afterEach(() => {
   cleanup();
 });

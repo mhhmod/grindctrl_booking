@@ -30,6 +30,15 @@ describe('VoiceMessagePlayer', () => {
 
     expect(screen.getByRole('button', { name: 'Play voice message' })).toBeInTheDocument();
   });
+
+  it('forces the transport row to LTR so it never mirrors under an RTL page', () => {
+    renderPlayer(['AA==']);
+
+    expect(screen.getByRole('button', { name: 'Pause voice message' }).closest('[dir]')).toHaveAttribute(
+      'dir',
+      'ltr',
+    );
+  });
 });
 
 describe('VoiceMessagePlayer seeking', () => {

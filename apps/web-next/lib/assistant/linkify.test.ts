@@ -76,6 +76,16 @@ describe('linkifyMessage', () => {
     ]);
   });
 
+  it('strips a trailing Arabic question mark from an absolute URL', () => {
+    const segments = linkifyMessage('احجز عبر https://calendar.app.google/abc123؟');
+
+    expect(segments).toEqual([
+      { type: 'text', value: 'احجز عبر ' },
+      { type: 'link', href: 'https://calendar.app.google/abc123', label: 'https://calendar.app.google/abc123', external: true },
+      { type: 'text', value: '؟' },
+    ]);
+  });
+
   it('refuses to linkify an unsafe href scheme, keeping the visible label as plain text', () => {
     expect(linkifyMessage('Click <a href="javascript:alert(1)">here</a>.')).toEqual([
       { type: 'text', value: 'Click ' },

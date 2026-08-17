@@ -17,13 +17,38 @@ function MessageText({ text }: { text: string }) {
     <>
       {linkifyMessage(text).map((segment, index) => {
         if (segment.type === 'text') return <React.Fragment key={index}>{segment.value}</React.Fragment>;
-        const linkClassName = 'underline underline-offset-2 hover:opacity-80';
+        // active: added because globals.css now zeroes out the browser's own
+        // tap-highlight box sitewide (see its comment) — these links relied
+        // on that default as their only tap feedback, so removing it without
+        // a replacement would trade "ugly stuck highlight" for "nothing
+        // visibly happens when tapped," on the exact elements this was meant
+        // to fix.
+        const linkClassName = 'underline underline-offset-2 hover:opacity-80 active:opacity-60';
+        // A URL/path is always LTR content, but rendered plain inside an
+        // Arabic (RTL) reply it's still subject to the surrounding paragraph's
+        // bidi algorithm — punctuation like the slashes and dots in a URL are
+        // direction-neutral, so their visual order can flip depending on what
+        // sits next to them. `dir="ltr"` isolates the link as its own bidi run
+        // (per the HTML spec's UA rendering rules for the dir attribute), so
+        // it always reads left-to-right regardless of the paragraph around it.
+        // Only applied when the visible label IS that URL/path — the label
+        // can instead be arbitrary (e.g. Arabic) text when linkifyHtmlAnchors
+        // unwraps a model-emitted <a href> with its own label, and forcing
+        // ltr on genuinely RTL label text would be wrong.
+        const dir = segment.label === segment.href ? 'ltr' : undefined;
         return segment.external ? (
-          <a key={index} href={segment.href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
+          <a
+            key={index}
+            href={segment.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            dir={dir}
+            className={linkClassName}
+          >
             {segment.label}
           </a>
         ) : (
-          <Link key={index} href={segment.href} className={linkClassName}>
+          <Link key={index} href={segment.href} dir={dir} className={linkClassName}>
             {segment.label}
           </Link>
         );
@@ -61,7 +86,7 @@ export function MessageList({ messages, thinking, onSuggestionClick }: MessageLi
                 key={suggestion}
                 type="button"
                 onClick={() => onSuggestionClick(suggestion)}
-                className="rounded-full border bg-background px-3.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted"
+                className="rounded-full border bg-background px-3.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted active:bg-muted"
               >
                 {suggestion}
               </button>
