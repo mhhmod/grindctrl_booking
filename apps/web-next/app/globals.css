@@ -521,6 +521,134 @@
 .gc-scan-ring   { animation: gc-scan-ring 2.6s ease-out infinite; }
 .gc-scan-spark  { animation: gc-scan-spark 2.6s ease-out infinite; transform-origin: 20.5px 4.9px; }
 
+/* ─── Assistant Launcher Animations ─── */
+
+/* The chat mark's three "typing" dots — the one piece of motion inside the
+   button itself, present in every state so it never reads as inert. */
+@keyframes gc-launcher-typing {
+  0%, 100% { transform: translateY(1px) scale(0.72); opacity: 0.55; }
+  50% { transform: translateY(-1px) scale(1.08); opacity: 1; }
+}
+
+/* Motion DNA: three broken flow-ribbons distilled from GrindCTRL's own logo
+   curvature (public/brand/logo.svg's left curl, diagonal crossing, and lower
+   counter-sweep) rather than a generic circle — chosen over a plain badge or
+   a watermarked copy of the logo after a full side-by-side comparison, see
+   docs/launcher-concepts.html's "Motion DNA" strategy. Colour is
+   var(--foreground) at varying opacity, not a new hue, so it stays inside
+   the same warm cream/charcoal family as the rest of the site in both
+   themes. Only rendered while the launcher is closed (see launcher.tsx). */
+@keyframes gc-launcher-dna-breathe {
+  0% { transform: rotate(-2deg) scale(0.97); }
+  54% { transform: rotate(1.5deg) scale(1.025); }
+  100% { transform: rotate(-0.5deg) scale(0.99); }
+}
+
+@keyframes gc-launcher-dna-flow {
+  to { stroke-dashoffset: -72; }
+}
+
+@keyframes gc-launcher-dna-particle {
+  0% { offset-distance: 0%; transform: scale(0.55); opacity: 0; }
+  12%, 86% { opacity: 0.92; }
+  100% { offset-distance: 100%; transform: scale(1.08); opacity: 0; }
+}
+
+.gc-launcher-chat-mark {
+  display: flex;
+  width: 28px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 9px 9px 9px 4px;
+  background: currentColor;
+  filter: drop-shadow(0 2px 4px color-mix(in oklch, var(--primary) 45%, transparent));
+}
+
+.gc-launcher-chat-tail {
+  position: absolute;
+  inset-inline-start: 3px;
+  bottom: -5px;
+  width: 9px;
+  height: 7px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.gc-launcher-typing-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: gc-launcher-typing 1.8s ease-in-out infinite;
+}
+
+.gc-launcher-typing-dot:nth-child(2) { animation-delay: -1.2s; }
+.gc-launcher-typing-dot:nth-child(3) { animation-delay: -0.6s; }
+
+.gc-launcher-dna-svg {
+  animation: gc-launcher-dna-breathe 10.6s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+}
+
+.gc-launcher-dna-track {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-linecap: round;
+  animation: gc-launcher-dna-flow linear infinite;
+}
+
+.gc-launcher-dna-track--a {
+  stroke-width: 1.7px;
+  stroke-dasharray: 18 5 3 7;
+  stroke-opacity: 0.85;
+  animation-duration: 6.8s;
+}
+
+.gc-launcher-dna-track--b {
+  stroke-width: 1.25px;
+  stroke-dasharray: 10 4 22 6;
+  stroke-opacity: 0.55;
+  animation-duration: 9.7s;
+  animation-direction: reverse;
+}
+
+.gc-launcher-dna-track--c {
+  stroke-width: 1.05px;
+  stroke-dasharray: 5 5 26 7;
+  stroke-opacity: 0.35;
+  animation-duration: 12.4s;
+}
+
+.gc-launcher-dna-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--foreground);
+  offset-rotate: 0deg;
+  animation-name: gc-launcher-dna-particle;
+  animation-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+  animation-iteration-count: infinite;
+}
+
+.gc-launcher-dna-particle--a {
+  offset-path: path("M 7 27 C 13 8 36 8 54 18 C 64 24 72 24 79 18");
+  offset-distance: 62%;
+  opacity: 0.85;
+  animation-duration: 7.1s;
+}
+
+.gc-launcher-dna-particle--b {
+  offset-path: path("M 10 62 C 28 76 55 73 70 57 C 80 46 80 34 74 27");
+  offset-distance: 36%;
+  opacity: 0.5;
+  animation-duration: 9.3s;
+  animation-direction: reverse;
+}
+
 /* Reduced-motion handling for these lives in the single consolidated block at
    the end of this file. A second @media block here would split the rule set in
    two, and globals.motion.test.ts reads the first one it finds. */
@@ -801,6 +929,10 @@
   .gc-how-sequence::after,
   .gc-animated,
   .gc-animated *,
+  /* <path> isn't in the tag list below, so the DNA ribbons need naming
+     explicitly — everything else new (svg, span, button) is already
+     covered by tag name. */
+  .gc-launcher-dna-track,
   :where(body, header, section, article, div, span, button, textarea, input, a, svg) {
     animation: none !important;
     scroll-behavior: auto !important;
