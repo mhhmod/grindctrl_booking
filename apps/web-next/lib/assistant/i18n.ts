@@ -42,6 +42,7 @@ interface AssistantDict {
 
   playVoiceMessage: string;
   pauseVoiceMessage: string;
+  seekVoiceMessage: string;
   voiceReplyLoading: string;
   voiceLanguagePickerLabel: string;
   /** Self-demonyms — always "English" / "العربية" regardless of the
@@ -95,6 +96,7 @@ const en: AssistantDict = {
 
   playVoiceMessage: 'Play voice message',
   pauseVoiceMessage: 'Pause voice message',
+  seekVoiceMessage: 'Seek voice message',
   voiceReplyLoading: 'Preparing voice reply…',
   voiceLanguagePickerLabel: 'Choose voice language',
   voiceLanguageEnglish: 'English',
@@ -143,6 +145,7 @@ const ar: AssistantDict = {
 
   playVoiceMessage: 'تشغيل الرسالة الصوتية',
   pauseVoiceMessage: 'إيقاف الرسالة الصوتية',
+  seekVoiceMessage: 'تحريك موضع الرسالة الصوتية',
   voiceReplyLoading: 'جارٍ تحضير الرد الصوتي…',
   voiceLanguagePickerLabel: 'اختيار لغة الصوت',
   voiceLanguageEnglish: 'English',

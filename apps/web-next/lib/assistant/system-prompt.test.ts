@@ -15,4 +15,9 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/try-on/i);
     expect(SYSTEM_PROMPT).toMatch(/Shopify/i);
   });
+
+  it('forbids HTML and markdown link syntax, requiring bare addresses instead', () => {
+    expect(SYSTEM_PROMPT).toMatch(/never HTML tags/i);
+    expect(SYSTEM_PROMPT).toMatch(/never markdown/i);
+  });
 });

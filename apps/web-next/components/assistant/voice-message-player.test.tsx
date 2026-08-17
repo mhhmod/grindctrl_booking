@@ -1,6 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VoiceMessagePlayer, VoiceReplyLoading } from './voice-message-player';
 import { AssistantLocaleProvider } from './locale-provider';
 
@@ -29,6 +29,43 @@ describe('VoiceMessagePlayer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pause voice message' }));
 
     expect(screen.getByRole('button', { name: 'Play voice message' })).toBeInTheDocument();
+  });
+});
+
+describe('VoiceMessagePlayer seeking', () => {
+  let createdAudios: HTMLAudioElement[];
+  const OriginalAudio = window.Audio;
+
+  beforeEach(() => {
+    HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
+    HTMLMediaElement.prototype.pause = vi.fn();
+    createdAudios = [];
+    window.Audio = vi.fn((src?: string) => {
+      const audio = new OriginalAudio(src);
+      createdAudios.push(audio);
+      return audio;
+    }) as unknown as typeof Audio;
+  });
+
+  afterEach(() => {
+    window.Audio = OriginalAudio;
+    vi.restoreAllMocks();
+  });
+
+  it('disables the seek slider until duration is known, then seeks on change', () => {
+    renderPlayer(['AA==']);
+
+    const slider = screen.getByRole('slider', { name: 'Seek voice message' });
+    expect(slider).toBeDisabled();
+
+    act(() => {
+      Object.defineProperty(createdAudios[0], 'duration', { value: 8, configurable: true });
+      createdAudios[0].dispatchEvent(new Event('loadedmetadata'));
+    });
+
+    expect(slider).toBeEnabled();
+    fireEvent.change(slider, { target: { value: '5' } });
+    expect(createdAudios[0].currentTime).toBe(5);
   });
 });
 

@@ -28,10 +28,48 @@ const INTERNAL_PATHS: { path: string; pattern: RegExp }[] = [
   { path: '/pricing', pattern: /\/pricing\b/g },
 ];
 
+// The system prompt now says "never HTML" (see system-prompt.ts's FORMAT
+// section), but that's a request, not a guarantee — models slip. This is the
+// second layer: if a literal <a href="...">label</a> makes it through anyway,
+// unwrap it into a real link instead of leaving dead tag soup on screen.
+const HTML_ANCHOR = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+const HTML_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'" };
+
+function decodeHtmlEntities(str: string): string {
+  return str.replace(/&(amp|lt|gt|quot|#39);/g, (_, entity) => HTML_ENTITIES[entity]);
+}
+
 function splitTrailingPunctuation(url: string): { href: string; trailing: string } {
   const match = url.match(TRAILING_PUNCTUATION);
   if (!match) return { href: url, trailing: '' };
   return { href: url.slice(0, url.length - match[0].length), trailing: match[0] };
+}
+
+/** Only accepts an absolute http(s) URL or a same-site root-relative path —
+ *  never `javascript:`, `data:`, or protocol-relative `//host` hrefs. A
+ *  reply's text ultimately traces back to a visitor's own message, so an
+ *  href the model echoed back is untrusted input, not just malformed markup. */
+function classifyHref(href: string): { external: boolean } | null {
+  if (/^https?:\/\//i.test(href)) return { external: true };
+  if (href.startsWith('/') && !href.startsWith('//')) return { external: false };
+  return null;
+}
+
+function linkifyHtmlAnchors(text: string): MessageSegment[] {
+  const segments: MessageSegment[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  HTML_ANCHOR.lastIndex = 0;
+  while ((match = HTML_ANCHOR.exec(text))) {
+    if (match.index > lastIndex) segments.push({ type: 'text', value: text.slice(lastIndex, match.index) });
+    const href = decodeHtmlEntities(match[1]);
+    const label = decodeHtmlEntities(match[2]).trim() || href;
+    const classified = classifyHref(href);
+    segments.push(classified ? { type: 'link', href, label, external: classified.external } : { type: 'text', value: label });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) segments.push({ type: 'text', value: text.slice(lastIndex) });
+  return segments.length > 0 ? segments : [{ type: 'text', value: text }];
 }
 
 function linkifyInternalPaths(text: string): MessageSegment[] {
@@ -52,11 +90,7 @@ function linkifyInternalPaths(text: string): MessageSegment[] {
   return segments;
 }
 
-/** Splits assistant reply text into plain-text and link segments, so real
- *  URLs (the booking link) and the two paths the assistant is ever told to
- *  mention (/try-on, /pricing) render as actual clickable links instead of
- *  inert text a visitor can't tap. */
-export function linkifyMessage(text: string): MessageSegment[] {
+function linkifyPlainText(text: string): MessageSegment[] {
   const urls = text.match(ABSOLUTE_URL) ?? [];
   const pieces = text.split(ABSOLUTE_URL);
 
@@ -71,4 +105,16 @@ export function linkifyMessage(text: string): MessageSegment[] {
   });
 
   return segments.filter((s) => !(s.type === 'text' && s.value === ''));
+}
+
+/** Splits assistant reply text into plain-text and link segments, so real
+ *  URLs (the booking link) and the two paths the assistant is ever told to
+ *  mention (/try-on, /pricing) render as actual clickable links instead of
+ *  inert text a visitor can't tap. Literal <a href> HTML the model wasn't
+ *  supposed to emit (see linkifyHtmlAnchors) is unwrapped first so it never
+ *  reaches the plain-text pass as tag soup. */
+export function linkifyMessage(text: string): MessageSegment[] {
+  return linkifyHtmlAnchors(text).flatMap((segment) =>
+    segment.type === 'link' ? [segment] : linkifyPlainText(segment.value),
+  );
 }

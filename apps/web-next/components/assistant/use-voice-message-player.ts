@@ -9,6 +9,7 @@ interface VoiceMessagePlayerState {
   elapsedSeconds: number;
   totalSeconds: number;
   toggle: () => void;
+  seek: (targetSeconds: number) => void;
 }
 
 /** Plays a sequence of base64 WAV chunks (Groq's Orpheus TTS is chunked at
@@ -93,5 +94,42 @@ export function useVoiceMessagePlayer(chunks: string[]): VoiceMessagePlayerState
     audios[indexRef.current]?.play().catch(() => setStatus('done'));
   }, [status]);
 
-  return { status, elapsedSeconds, totalSeconds, toggle };
+  // Maps an absolute target position back to (chunk index, offset within that
+  // chunk) — the chained-chunk equivalent of setting `audio.currentTime`.
+  // Paused stays paused (only the position moves); playing/done resume
+  // playback from the new spot, since a `done` player is only reachable by
+  // dragging backward off the end.
+  const seek = useCallback(
+    (targetSeconds: number) => {
+      const audios = audiosRef.current;
+      const durations = durationsRef.current;
+      if (audios.length === 0) return;
+
+      const total = durations.reduce((sum, d) => sum + d, 0);
+      const clamped = Math.max(0, Math.min(targetSeconds, total));
+
+      let remaining = clamped;
+      let targetIndex = durations.length - 1;
+      for (let i = 0; i < durations.length; i++) {
+        if (remaining < durations[i] || i === durations.length - 1) {
+          targetIndex = i;
+          break;
+        }
+        remaining -= durations[i];
+      }
+
+      audios[indexRef.current]?.pause();
+      indexRef.current = targetIndex;
+      audios[targetIndex].currentTime = remaining;
+      setElapsedSeconds(clamped);
+
+      if (status !== 'paused') {
+        setStatus('playing');
+        audios[targetIndex].play().catch(() => setStatus('done'));
+      }
+    },
+    [status],
+  );
+
+  return { status, elapsedSeconds, totalSeconds, toggle, seek };
 }
