@@ -21,6 +21,7 @@ import {
   siAirtable,
   siAnthropic,
   siClaude,
+  siFacebook,
   siGithub,
   siGooglegemini,
   siHubspot,
@@ -81,6 +82,7 @@ export const AnthropicMark = makeMark(siAnthropic);
 export const MetaMark = makeMark(siMeta);
 export const WhatsAppMark = makeMark(siWhatsapp);
 export const InstagramMark = makeMark(siInstagram);
+export const FacebookMark = makeMark(siFacebook);
 export const TelegramMark = makeMark(siTelegram);
 export const TikTokMark = makeMark(siTiktok);
 export const ZapierMark = makeMark(siZapier);
@@ -107,6 +109,7 @@ export const BRAND_MARKS: Record<string, ((props: MarkProps) => React.JSX.Elemen
   Meta: MetaMark,
   WhatsApp: WhatsAppMark,
   Instagram: InstagramMark,
+  Facebook: FacebookMark,
   Telegram: TelegramMark,
   TikTok: TikTokMark,
   Zapier: ZapierMark,

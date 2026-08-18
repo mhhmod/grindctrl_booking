@@ -83,6 +83,17 @@ interface LandingDict {
   proofImageAlt: string;
   proofCaption: string;
 
+  /* Render receipt card (replaces the old AiVisionFigure in #proof). */
+  renderReceiptKicker: string;
+  renderReceiptTitle: string;
+  renderReceiptAlt: string;
+  renderReceiptSourcePhotoLabel: string;
+  renderReceiptSourcePhotoValue: string;
+  renderReceiptSourceProductLabel: string;
+  renderReceiptSourceProductValue: string;
+  renderReceiptLine: string;
+  renderReceiptBadge: string;
+
   testimonialsEyebrow: string;
   testimonialsTitle: string;
   testimonialsBody: string;
@@ -98,6 +109,27 @@ interface LandingDict {
   otherItems: string[];
   /* Tools the automation work actually runs on. Rendered as brand chips. */
   opsStack: string[];
+
+  /* Ops chain card, sits beside the otherItems list. */
+  opsChainKicker: string;
+  opsChainTitle: string;
+  opsChainAlt: string;
+  opsChainLiveLabel: string;
+  /* Exactly 4: Capture, Act, Check, Log. title carries the "01 · " prefix. */
+  opsChainSteps: Item[];
+  opsChainFootStrong: string;
+  opsChainFootRest: string;
+
+  /* Messaging channels card, sits beside the ops chain card. */
+  messagingKicker: string;
+  messagingTitle: string;
+  messagingAlt: string;
+  messagingReplyLabel: string;
+  messagingReplyText: string;
+  messagingStatusReplied: string;
+  messagingStatusDetail: string;
+  messagingFootStrong: string;
+  messagingFootRest: string;
 
   automationsEyebrow: string;
   automationsTitle: string;
@@ -235,6 +267,17 @@ const en: LandingDict = {
   proofImageAlt: 'Animation of AI scanning a shopper photo and rendering the garment onto it',
   proofCaption: 'What the AI does to a shopper’s photo — the render step, not a mockup.',
 
+  renderReceiptKicker: 'Render provenance',
+  renderReceiptTitle: 'The result keeps its receipt.',
+  renderReceiptAlt:
+    'A customer photo and the selected product converge into a stable AI portrait with a matched render receipt.',
+  renderReceiptSourcePhotoLabel: 'Source 01',
+  renderReceiptSourcePhotoValue: 'Your photo',
+  renderReceiptSourceProductLabel: 'Source 02',
+  renderReceiptSourceProductValue: 'Selected product',
+  renderReceiptLine: 'Source + product matched',
+  renderReceiptBadge: 'AI render',
+
   testimonialsEyebrow: 'What clients say',
   testimonialsTitle: 'Merchant stories will appear here after sign-off.',
   testimonialsBody: 'This section stays hidden until verified customer quotes are approved.',
@@ -275,6 +318,31 @@ const en: LandingDict = {
     'HubSpot',
     'Supabase',
   ],
+
+  opsChainKicker: 'Managed operations',
+  opsChainTitle: 'Nothing disappears into a black box.',
+  opsChainAlt:
+    'A continuous operations path captures a request, runs the automation, checks the outcome, and logs it to the dashboard.',
+  opsChainLiveLabel: 'Control live',
+  opsChainSteps: [
+    { title: '01 · Capture', body: 'Request received' },
+    { title: '02 · Act', body: 'Automation runs' },
+    { title: '03 · Check', body: 'Outcome verified' },
+    { title: '04 · Log', body: 'Dashboard updated' },
+  ],
+  opsChainFootStrong: 'Handled end to end.',
+  opsChainFootRest: 'Visible to you.',
+
+  messagingKicker: 'One operating voice',
+  messagingTitle: 'Every inbox follows the same rules.',
+  messagingAlt:
+    'One governed AI response is delivered consistently across WhatsApp, Instagram, and Facebook.',
+  messagingReplyLabel: 'AI reply · approved tone',
+  messagingReplyText: 'Yes, it is available. Would you like me to reserve it for you?',
+  messagingStatusReplied: 'Replied',
+  messagingStatusDetail: 'Tone checked',
+  messagingFootStrong: 'Same rules. Same tone.',
+  messagingFootRest: 'Every channel.',
 
   automationsEyebrow: 'Real automations',
   automationsTitle: 'Not mockups. What actually runs today.',
@@ -435,6 +503,17 @@ const ar: LandingDict = {
   proofImageAlt: 'رسوم متحركة توضح مسح الذكاء الاصطناعي لصورة العميل وعرض القطعة عليها',
   proofCaption: 'هذا ما يفعله الذكاء الاصطناعي بصورة العميل — خطوة المعاينة الفعلية، وليست نموذجًا.',
 
+  renderReceiptKicker: 'مصدر النتيجة',
+  renderReceiptTitle: 'لكل نتيجة إيصالها.',
+  renderReceiptAlt:
+    'صورة العميل والمنتج المختار يندمجان في معاينة ذكاء اصطناعي مستقرة، مع إيصال يوثّق تطابقهما.',
+  renderReceiptSourcePhotoLabel: 'المصدر 1',
+  renderReceiptSourcePhotoValue: 'صورتك',
+  renderReceiptSourceProductLabel: 'المصدر 2',
+  renderReceiptSourceProductValue: 'المنتج المختار',
+  renderReceiptLine: 'تطابق المصدر والمنتج',
+  renderReceiptBadge: 'معاينة بالذكاء الاصطناعي',
+
   testimonialsEyebrow: 'آراء العملاء',
   testimonialsTitle: 'ستظهر قصص المتاجر هنا بعد اعتمادها.',
   testimonialsBody: 'يبقى هذا القسم مخفيًا حتى اعتماد اقتباسات موثقة من العملاء.',
@@ -475,6 +554,31 @@ const ar: LandingDict = {
     'HubSpot',
     'Supabase',
   ],
+
+  opsChainKicker: 'عمليات مُدارة',
+  opsChainTitle: 'لا شيء يختفي في صندوق أسود.',
+  opsChainAlt:
+    'مسار عمليات متواصل يستقبل الطلب، يشغّل الأتمتة، يتحقق من النتيجة، ثم يسجّلها في لوحة التحكم.',
+  opsChainLiveLabel: 'التحكم مباشر',
+  opsChainSteps: [
+    { title: '01 · استقبال', body: 'تم استلام الطلب' },
+    { title: '02 · تنفيذ', body: 'الأتمتة تعمل' },
+    { title: '03 · تحقق', body: 'تم التأكد من النتيجة' },
+    { title: '04 · تسجيل', body: 'تم تحديث اللوحة' },
+  ],
+  opsChainFootStrong: 'تُدار من البداية للنهاية.',
+  opsChainFootRest: 'وتظهر لك بالكامل.',
+
+  messagingKicker: 'صوت واحد موحّد',
+  messagingTitle: 'كل صندوق وارد يتبع القواعد نفسها.',
+  messagingAlt:
+    'رد واحد من الذكاء الاصطناعي يصل بثبات عبر واتساب وإنستغرام وفيسبوك.',
+  messagingReplyLabel: 'رد الذكاء الاصطناعي · بأسلوب معتمد',
+  messagingReplyText: 'نعم، متوفر. هل تحب أن أحجزه لك؟',
+  messagingStatusReplied: 'تم الرد',
+  messagingStatusDetail: 'تم ضبط الأسلوب',
+  messagingFootStrong: 'القواعد نفسها. الأسلوب نفسه.',
+  messagingFootRest: 'في كل قناة.',
 
   automationsEyebrow: 'أتمتة حقيقية',
   automationsTitle: 'ليست نماذج تجريبية. هذا ما يعمل فعليًا اليوم.',

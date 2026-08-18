@@ -13,9 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
 import { BRAND_MARKS } from '@/components/brand-marks';
+import { AiOperationsChain } from '@/components/landing/ai-operations-chain';
 import { AiVisionFigure } from '@/components/landing/ai-vision-figure';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { AutomationsShowcase } from '@/components/landing/automations-showcase';
+import { MessagingChannels } from '@/components/landing/messaging-channels';
+import { RenderReceiptFigure } from '@/components/landing/render-receipt-figure';
 import { CollaborationsMarquee } from '@/components/landing/collaborations-marquee';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
@@ -273,12 +276,7 @@ export function SiteLanding() {
                 <p className="text-xs leading-relaxed text-muted-foreground">{t.demoNote}</p>
               </div>
               <div className="relative min-w-0">
-                <AiVisionFigure
-                  size="compact"
-                  alt={t.demoImageAlt}
-                  previewLabel={t.demoPreviewLabel}
-                  className="shadow-[var(--gc-landing-shadow)]"
-                />
+                <RenderReceiptFigure className="shadow-[var(--gc-landing-shadow)]" />
               </div>
           </div>
         </section>
@@ -442,18 +440,29 @@ export function SiteLanding() {
                 <p className="text-base leading-[1.65] text-muted-foreground">{t.otherBody}</p>
               </div>
 
-              {/* A list, not another card triplet: these are capabilities of
-                  one service, so they read better stacked than boxed. */}
-              <ul className="min-w-0 flex flex-col gap-3 lg:pt-9">
-                {t.otherItems.map((item) => (
-                  <li key={item} className="flex min-w-0 items-start gap-2.5">
-                    <span className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true">
-                      <Icon icon={CheckmarkCircle02Icon} />
-                    </span>
-                    <span className="min-w-0 text-[15px] leading-[1.55]">{item}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="min-w-0 flex flex-col gap-8">
+                {/* The two claims above made concrete: the operations path
+                    stays visible end to end, and the same voice answers on
+                    every channel. Side by side on wide screens, stacked on
+                    phones, same 4:3 card either way. */}
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+                  <AiOperationsChain className="mx-auto sm:mx-0" />
+                  <MessagingChannels className="mx-auto sm:mx-0" />
+                </div>
+
+                {/* A list, not another card triplet: these are capabilities
+                    of one service, so they read better stacked than boxed. */}
+                <ul className="min-w-0 flex flex-col gap-3">
+                  {t.otherItems.map((item) => (
+                    <li key={item} className="flex min-w-0 items-start gap-2.5">
+                      <span className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true">
+                        <Icon icon={CheckmarkCircle02Icon} />
+                      </span>
+                      <span className="min-w-0 text-[15px] leading-[1.55]">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             <div className="min-w-0">
