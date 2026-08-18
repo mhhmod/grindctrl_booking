@@ -1084,6 +1084,25 @@
 .gcpv-receipt small { color: var(--muted-foreground); font-size: 8px; line-height: 1.25; letter-spacing: 0.12em; text-align: end; text-transform: uppercase; }
 .gcpv-card:dir(rtl) .gcpv-flow-space { transform: scaleX(-1); }
 .gcpv-card:lang(ar) :is(.gcpv-kicker, .gcpv-source small, .gcpv-receipt span, .gcpv-receipt small) { letter-spacing: 0; text-transform: none; }
+/* Same issue as the messaging card at <=360px: the source badge (which sits
+   deliberately low, overlapping the portrait's lower edge by design) was
+   landing on the receipt line below it. A little more card height plus a
+   smaller badge clears it -- verified at a 288px card width, not assumed. */
+@container (max-width: 360px) {
+  .gcpv-source { inset-block-start: 56%; min-block-size: 40px; padding: 6px 9px; }
+  .gcpv-source small { margin-block-end: 2px; }
+}
+
+/* aspect-ratio can't be overridden by a container query on the element that
+   is itself the query container (self-referential -- browsers ignore it for
+   sizing properties, confirmed: the container-query version of this rule
+   silently never applied). A width media query works because it isn't
+   self-referential; the card's own width tracks the viewport closely enough
+   in this single-column mobile layout for the threshold to line up with the
+   container-query one above. */
+@media (max-width: 400px) {
+  .gcmv-card, .gcpv-card { min-height: 256px; }
+}
 .gcpv-card, .gcpv-card * { animation-play-state: paused; }
 .gcpv-card.in-view, .gcpv-card.in-view * { animation-play-state: running; }
 @keyframes gcpv-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -1106,8 +1125,8 @@
 .gccs-head { position: absolute; z-index: 4; inset-block-start: 6.4%; inset-inline: var(--gccs-pad); display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .gccs-head > div { min-width: 0; }
 .gccs-head p { margin: 0; }
-.gccs-kicker { margin-block-end: 5px !important; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
-.gccs-title { max-inline-size: 275px; font-size: 17px; line-height: 1.2; font-weight: 650; letter-spacing: -0.02em; }
+.gccs-kicker { margin-block-end: 3px !important; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
+.gccs-title { max-inline-size: 275px; font-size: 17px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em; }
 .gccs-live { display: flex; flex: none; align-items: center; gap: 7px; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase; }
 .gccs-live i { display: block; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--card-foreground); box-shadow: 0 0 12px color-mix(in oklch, var(--card-foreground) 50%, transparent); }
 .gccs-route { position: absolute; z-index: 1; inset: 0; direction: ltr; transform-origin: center; }
@@ -1122,13 +1141,16 @@
 .gccs-stage small, .gccs-stage strong { display: block; }
 .gccs-stage small { margin-block-end: 2px; color: var(--muted-foreground); font-size: 8px; line-height: 1.15; letter-spacing: 0.13em; text-transform: uppercase; transition: color 220ms ease; }
 .gccs-stage strong { font-size: 11px; line-height: 1.15; font-weight: 600; overflow-wrap: anywhere; }
-.gccs-one { inset-block-start: 40%; inset-inline-start: 6.1%; width: clamp(100px, 29.5cqw, 130px); }
-/* Measured against real rendered text (Arabic glyph metrics run taller than
-   the estimate this was first tuned against): each two-line label is closer
-   to 12-14% of the card's height, not ~8%. That put checkpoint 2's node
-   inside its own label box too, just less obviously than checkpoint 4's.
-   Both now sit well clear above their node instead of barely clipping it. */
-.gccs-two { inset-block-start: 14%; inset-inline-start: 39%; width: clamp(100px, 28cqw, 123px); }
+.gccs-one { inset-block-start: 42%; inset-inline-start: 6.1%; width: clamp(100px, 29.5cqw, 130px); }
+/* This checkpoint is genuinely boxed in: the header sits right above it,
+   its own node sits right below (~112px/34% in a 330px-tall card), and the
+   gap between the two is ~41px against a ~24px-tall label -- there isn't
+   room for generous margins, only correct ones. Verified against real
+   getBoundingClientRect() output at 440px width, not estimated: this value
+   clears both the header and the node by a real (if modest) margin. My
+   previous attempt here moved it TO 14%, which put it inside the header --
+   confirmed by the same kind of measurement that caught it. */
+.gccs-two { inset-block-start: 25%; inset-inline-start: 39%; width: clamp(100px, 28cqw, 123px); }
 .gccs-three { inset-block-start: 54.5%; inset-inline-end: 6.4%; width: clamp(100px, 28cqw, 123px); text-align: end; }
 .gccs-four { inset-block-start: 60%; inset-inline-start: 6.1%; width: clamp(100px, 29.5cqw, 130px); }
 .gccs-foot { position: absolute; z-index: 4; inset-inline-end: var(--gccs-pad); inset-block-end: 6.4%; max-inline-size: 62%; color: var(--muted-foreground); font-size: 9px; line-height: 1.3; letter-spacing: 0.09em; text-align: end; }
@@ -1201,6 +1223,22 @@
 .gcmv-foot strong { color: var(--card-foreground); }
 .gcmv-card:dir(rtl) .gcmv-route { transform: scaleX(-1); }
 .gcmv-card:lang(ar) :is(.gcmv-kicker, .gcmv-reply small, .gcmv-channel strong, .gcmv-foot) { letter-spacing: 0; text-transform: none; }
+/* At <=360px, shrinking the channel row alone isn't enough: measured at a
+   320px viewport (288px card), the four stacked blocks -- head, reply,
+   channels, footer -- add up to more content height than a 4:3 card has at
+   all, even with zero gaps between them. No amount of repositioning fixes
+   that; the card itself has to grow taller here. aspect-ratio 9/8 clears
+   it with real (verified, not assumed) margin at 288px width. */
+@container (max-width: 360px) {
+  .gcmv-reply { inset-block-start: 32%; }
+  .gcmv-channels { inset-block-start: 68%; }
+  .gcmv-foot { inset-block-end: 1%; }
+  .gcmv-channel { padding: 3px 3px; }
+  .gcmv-icon { width: 22px; height: 22px; margin-block-end: 2px; }
+  .gcmv-icon svg { width: 18px; height: 18px; }
+  .gcmv-channel strong { font-size: 7px; margin-block-end: 2px; }
+  .gcmv-channel small { min-block-size: 8px; font-size: 7px; }
+}
 .gcmv-card, .gcmv-card * { animation-play-state: paused; }
 .gcmv-card.in-view, .gcmv-card.in-view * { animation-play-state: running; }
 @keyframes gcmv-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

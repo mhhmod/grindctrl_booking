@@ -14,7 +14,6 @@ import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
 import { BRAND_MARKS } from '@/components/brand-marks';
 import { AiOperationsChain } from '@/components/landing/ai-operations-chain';
-import { AiVisionFigure } from '@/components/landing/ai-vision-figure';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { AutomationsShowcase } from '@/components/landing/automations-showcase';
 import { MessagingChannels } from '@/components/landing/messaging-channels';
@@ -355,11 +354,7 @@ export function SiteLanding() {
               <p className="text-xs leading-relaxed text-muted-foreground">{t.proofDisclaimer}</p>
             </div>
             <div className="min-w-0 lg:order-first">
-              <AiVisionFigure
-                alt={t.proofImageAlt}
-                caption={t.proofCaption}
-                className="gc-card-hover"
-              />
+              <RenderReceiptFigure />
             </div>
           </div>
         </section>
@@ -440,15 +435,17 @@ export function SiteLanding() {
                 <p className="text-base leading-[1.65] text-muted-foreground">{t.otherBody}</p>
               </div>
 
-              <div className="min-w-0 flex flex-col gap-8">
+              <div className="min-w-0 flex flex-col gap-6">
                 {/* The two claims above made concrete: the operations path
                     stays visible end to end, and the same voice answers on
-                    every channel. Side by side on wide screens, stacked on
-                    phones, same 4:3 card either way. */}
-                <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-                  <AiOperationsChain className="mx-auto sm:mx-0" />
-                  <MessagingChannels className="mx-auto sm:mx-0" />
-                </div>
+                    every channel. Stacked, not side by side: this column is
+                    already half the page at desktop, and squeezing two 4:3
+                    cards into half of that shrank them to illegible-text
+                    territory. Full column width each reads clearly at every
+                    breakpoint instead of only on phones, where the side-by-side
+                    version happened to fall back to stacking anyway. */}
+                <AiOperationsChain className="mx-auto sm:mx-0" />
+                <MessagingChannels className="mx-auto sm:mx-0" />
 
                 {/* A list, not another card triplet: these are capabilities
                     of one service, so they read better stacked than boxed. */}
