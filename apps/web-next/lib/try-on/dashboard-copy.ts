@@ -156,9 +156,8 @@ const en: TryOnDashboardCopy = {
 
   merchantShops: 'Merchant shops',
   merchantShopsBody:
-    'A shop appears the first time its admin opens the app, and drops to uninstalled when Shopify tells us it was removed.',
-  noShopsYet:
-    'No shop has opened the app yet. Once a merchant opens it from their Shopify admin, they appear here and can be configured individually.',
+    'A shop appears here once it is connected to your account, and drops to uninstalled when Shopify tells us it was removed.',
+  noShopsYet: 'No shop is linked to your account yet. Once one is connected, it will appear here.',
   columnShop: 'Shop',
   columnStatus: 'Status',
   columnGenerations: 'Generations',
@@ -272,9 +271,8 @@ const ar: TryOnDashboardCopy = {
 
   merchantShops: 'متاجر التجار',
   merchantShopsBody:
-    'يظهر المتجر أول مرة يفتح فيها مسؤوله التطبيق، ويتحول إلى غير مثبَّت عندما تخبرنا شوبيفاي بإزالته.',
-  noShopsYet:
-    'لم يفتح أي متجر التطبيق بعد. بمجرد أن يفتحه تاجر من لوحة شوبيفاي الخاصة به، سيظهر هنا ويمكن ضبطه بشكل منفصل.',
+    'يظهر المتجر هنا بعد ربطه بحسابك، ويتحول إلى غير مثبَّت عندما تخبرنا شوبيفاي بإزالته.',
+  noShopsYet: 'لا يوجد متجر مرتبط بحسابك بعد. بمجرد ربط متجر، سيظهر هنا.',
   columnShop: 'المتجر',
   columnStatus: 'الحالة',
   columnGenerations: 'عمليات التوليد',

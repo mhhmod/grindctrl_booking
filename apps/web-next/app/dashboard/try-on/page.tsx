@@ -32,6 +32,8 @@ export default async function DashboardTryOnPage({
   const dateLocale = getDateLocale(pageLocale);
 
   const shops = await listManagedTryOnShops();
+  const hasShops = shops.length > 0;
+  const shopDomains = shops.map((shop) => shop.domain);
 
   /* Only a shop we already know about may be selected; anything else falls
      back to the global defaults row. The save action re-checks server-side. */
@@ -39,12 +41,14 @@ export default async function DashboardTryOnPage({
   const selectedShop =
     requested && shops.some((shop) => shop.domain === requested) ? requested : 'default';
 
-  const [jobs, settings, catalog, planState] = await Promise.all([
-    listRecentTryOnJobs(25),
-    getTryOnSettings(selectedShop),
-    listPlansCatalog(),
-    getShopPlanState(selectedShop),
-  ]);
+  const jobs = await listRecentTryOnJobs(shopDomains, 25);
+  /* The global defaults row ('default') is shared, public-demo config -- a
+     caller with no linked shop has nothing of their own to configure, so
+     these calls (and the cards that render them) are skipped entirely
+     rather than exposing that shared row to every new sign-up. */
+  const [settings, catalog, planState] = hasShops
+    ? await Promise.all([getTryOnSettings(selectedShop), listPlansCatalog(), getShopPlanState(selectedShop)])
+    : [null, null, null];
 
   const completed = jobs.filter((j) => j.status === 'completed');
   const totalCost = jobs.reduce((sum, j) => sum + (j.cost_usd ?? 0), 0);
@@ -119,40 +123,44 @@ export default async function DashboardTryOnPage({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{c.planAndCredits}</CardTitle>
-          <CardDescription>{c.planAndCreditsBody}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ShopPlanControl
-            locale={pageLocale}
-            shop={selectedShop}
-            state={planState}
-            plans={catalog.plans}
-            packs={catalog.packs}
-          />
-        </CardContent>
-      </Card>
+      {hasShops && catalog && planState && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{c.planAndCredits}</CardTitle>
+            <CardDescription>{c.planAndCreditsBody}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ShopPlanControl
+              locale={pageLocale}
+              shop={selectedShop}
+              state={planState}
+              plans={catalog.plans}
+              packs={catalog.packs}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{c.appearance}</CardTitle>
-          <CardDescription>{c.appearanceBody}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TryOnSettingsPanel
-            locale={pageLocale}
-            shops={shops.map((shop) => ({
-              domain: shop.domain,
-              status: shop.status,
-              jobCount: shop.jobCount,
-            }))}
-            selectedShop={selectedShop}
-            settings={settings}
-          />
-        </CardContent>
-      </Card>
+      {hasShops && settings && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{c.appearance}</CardTitle>
+            <CardDescription>{c.appearanceBody}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TryOnSettingsPanel
+              locale={pageLocale}
+              shops={shops.map((shop) => ({
+                domain: shop.domain,
+                status: shop.status,
+                jobCount: shop.jobCount,
+              }))}
+              selectedShop={selectedShop}
+              settings={settings}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -201,22 +209,24 @@ export default async function DashboardTryOnPage({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{c.shopifyApp}</CardTitle>
-          <CardDescription>{c.shopifyAppBody}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline" size="sm">
-            <Link
-              href="https://admin.shopify.com/store/grindctrl/apps/grindctrl-tryon"
-              target="_blank"
-            >
-              {c.openShopifyApp}
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+      {hasShops && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{c.shopifyApp}</CardTitle>
+            <CardDescription>{c.shopifyAppBody}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" size="sm">
+              <Link
+                href="https://admin.shopify.com/store/grindctrl/apps/grindctrl-tryon"
+                target="_blank"
+              >
+                {c.openShopifyApp}
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </section>
   );
 }

@@ -83,13 +83,22 @@ export type TryOnJobRow = {
   created_at: string;
 };
 
-export async function listRecentTryOnJobs(limit = 20): Promise<TryOnJobRow[]> {
+/** shopDomains: the caller's own owned shops (from listManagedTryOnShops).
+ *  Empty means "owns nothing yet" -- returns no rows rather than every
+ *  tenant's jobs. */
+export async function listRecentTryOnJobs(
+  shopDomains: readonly string[],
+  limit = 20,
+): Promise<TryOnJobRow[]> {
+  if (shopDomains.length === 0) return [];
+
   const supabase = getServiceClient();
   if (!supabase) return [];
 
   const { data, error } = await supabase
     .from('tryon_jobs')
     .select('id, product_id, shop, status, provider, cost_usd, duration_ms, message, created_at')
+    .in('shop', shopDomains)
     .order('created_at', { ascending: false })
     .limit(limit);
 

@@ -104,6 +104,8 @@ vi.mock('@/lib/try-on/persistence', () => ({
 }));
 
 import DashboardTryOnPage from '@/app/dashboard/try-on/page';
+import { listManagedTryOnShops } from '@/lib/shopify/shops';
+import { getShopPlanState, listPlansCatalog } from './plan-actions';
 
 async function renderPage(shop?: string) {
   render(await DashboardTryOnPage({ searchParams: Promise.resolve({ shop }) }));
@@ -150,5 +152,26 @@ describe('DashboardTryOnPage', () => {
     await renderPage('attacker.myshopify.com');
 
     expect(screen.getByLabelText('Editing')).toHaveValue('default');
+  });
+});
+
+describe('DashboardTryOnPage with no shop connected', () => {
+  // The regression this guards: a caller who owns nothing must never see
+  // another tenant's shop data or the shared demo config's edit controls.
+  it('shows an honest empty state and never touches shop-scoped config', async () => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([]);
+    // Earlier tests in this file already called these; clear so "not
+    // called" below reflects this render, not accumulated history.
+    vi.mocked(listPlansCatalog).mockClear();
+    vi.mocked(getShopPlanState).mockClear();
+
+    await renderPage();
+
+    expect(screen.getByText('No shop is linked to your account yet. Once one is connected, it will appear here.')).toBeInTheDocument();
+    expect(screen.queryByText('Plan and credits')).not.toBeInTheDocument();
+    expect(screen.queryByText('Appearance and journey')).not.toBeInTheDocument();
+    expect(screen.queryByText('Shopify app')).not.toBeInTheDocument();
+    expect(listPlansCatalog).not.toHaveBeenCalled();
+    expect(getShopPlanState).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import 'server-only';
 
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
+import { listManagedTryOnShops } from '@/lib/shopify/shops';
 
 export type TryOnOverview = {
   totals: {
@@ -195,26 +196,32 @@ export async function getTryOnOverview(): Promise<TryOnOverview> {
 
   const now = new Date();
   const emptyOverview = () => computeOverview([], [], now);
-  const supabase = getServiceClient();
-  if (!supabase) return emptyOverview();
 
   try {
+    // The owned-shop list is the single source of truth for "what can this
+    // caller see" -- reusing it here (instead of a second unfiltered
+    // tryon_shops query) means this function inherits shops.ts's ownership
+    // scoping instead of needing its own copy of the same filter.
+    const shops = await listManagedTryOnShops();
+    const domains = shops.map((shop) => shop.domain);
+    if (domains.length === 0) return emptyOverview();
+
+    const supabase = getServiceClient();
+    if (!supabase) return emptyOverview();
+
     const since = new Date(startOfUtcDay(now) - 13 * DAY_MS).toISOString();
-    const [jobsResult, shopsResult] = await Promise.all([
-      supabase
-        .from('tryon_jobs')
-        .select('id, product_id, shop, status, cost_usd, duration_ms, message, created_at')
-        .gte('created_at', since)
-        .lte('created_at', now.toISOString()),
-      supabase.from('tryon_shops').select('shop_domain, status'),
-    ]);
+    const jobsResult = await supabase
+      .from('tryon_jobs')
+      .select('id, product_id, shop, status, cost_usd, duration_ms, message, created_at')
+      .in('shop', domains)
+      .gte('created_at', since)
+      .lte('created_at', now.toISOString());
 
     if (jobsResult.error) throw jobsResult.error;
-    if (shopsResult.error) throw shopsResult.error;
 
     return computeOverview(
       (jobsResult.data ?? []) as TryOnOverviewJob[],
-      (shopsResult.data ?? []) as TryOnOverviewShop[],
+      shops.map((shop) => ({ shop_domain: shop.domain, status: shop.status }) satisfies TryOnOverviewShop),
       now,
     );
   } catch (error) {

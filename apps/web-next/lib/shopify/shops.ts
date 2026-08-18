@@ -36,9 +36,10 @@ function getServiceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-async function requireDashboardOwner() {
+async function requireDashboardOwner(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');
+  return userId;
 }
 
 export async function recordTryOnShopSeen(shop: unknown): Promise<boolean> {
@@ -107,7 +108,7 @@ export async function markTryOnShopUninstalled(shop: unknown): Promise<boolean> 
 }
 
 export async function requireManagedTryOnShop(selectedShop: unknown): Promise<string> {
-  await requireDashboardOwner();
+  const clerkUserId = await requireDashboardOwner();
   if (selectedShop === 'default') return 'default';
 
   const domain = normalizeShopDomain(selectedShop);
@@ -119,6 +120,7 @@ export async function requireManagedTryOnShop(selectedShop: unknown): Promise<st
     .select('shop_domain')
     .eq('shop_domain', domain)
     .eq('status', 'installed')
+    .eq('owner_clerk_user_id', clerkUserId)
     .maybeSingle();
 
   if (error) throw new Error(`Shop authorization failed: ${error.message}`);
@@ -126,12 +128,13 @@ export async function requireManagedTryOnShop(selectedShop: unknown): Promise<st
 }
 
 export async function listManagedTryOnShops(): Promise<ManagedTryOnShop[]> {
-  await requireDashboardOwner();
+  const clerkUserId = await requireDashboardOwner();
 
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('tryon_shops')
     .select('shop_domain, status, installed_at, uninstalled_at, last_seen_at')
+    .eq('owner_clerk_user_id', clerkUserId)
     .order('last_seen_at', { ascending: false });
 
   if (error) throw new Error(`Unable to list Shopify shops: ${error.message}`);
