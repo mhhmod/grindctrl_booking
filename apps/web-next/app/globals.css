@@ -1005,3 +1005,24 @@
     transform: none !important;
   }
 }
+
+/* Try-on generation: a vertical scan, one outward ring, and a restrained
+   breath. Progress width itself is controlled by real request milestones in
+   TryOnDemo; none of these keyframes imply completion. */
+@keyframes gc-tryon-processing-scan {
+  0%, 10% { transform: translate3d(0, -105%, 0); opacity: 0; }
+  20% { opacity: 0.88; }
+  70% { transform: translate3d(0, 105%, 0); opacity: 0.72; }
+  82%, 100% { transform: translate3d(0, 105%, 0); opacity: 0; }
+}
+
+@keyframes gc-tryon-processing-ring {
+  0%, 46% { transform: scale(0.84); opacity: 0; }
+  54% { opacity: 0.48; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+@keyframes gc-tryon-processing-breathe {
+  0%, 100% { transform: scale(0.985); opacity: 0.86; }
+  50% { transform: scale(1); opacity: 1; }
+}

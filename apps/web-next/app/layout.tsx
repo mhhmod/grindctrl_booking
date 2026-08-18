@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@fontsource/ibm-plex-sans-arabic/700.css';
 import { headers } from 'next/headers';
 import { ClerkProvider } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
 import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
 import { cn } from "@/lib/utils";
@@ -30,7 +31,10 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      at the provider, not per component. */
   const locale = await getRequestLocale();
   const pathname = (await headers()).get('x-pathname');
-  const launcher = showLauncherFor(pathname) ? <AssistantLauncher initialLocale={locale} /> : null;
+  const { userId } = clerkConfigured ? await auth() : { userId: null };
+  const launcher = showLauncherFor(pathname, Boolean(userId)) ? (
+    <AssistantLauncher initialLocale={locale} />
+  ) : null;
 
   return (
     /* lang and dir belong on <html>, not on a wrapper div. Anything rendered

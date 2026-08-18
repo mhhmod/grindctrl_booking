@@ -4,20 +4,23 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { getTryOnOverview } from '@/lib/dashboard/overview-data';
+import { getOverviewCopy, type OverviewCopy } from '@/lib/dashboard/overview-copy';
+import { getDateLocale } from '@/lib/try-on/dashboard-copy';
 
 export const dynamic = 'force-dynamic';
 
 /* Week-over-week movement, spoken plainly instead of a bare percentage. */
-function trend(current: number, previous: number): string {
-  if (previous === 0) return current > 0 ? 'new this week' : 'quiet';
+function trend(c: OverviewCopy, current: number, previous: number): string {
+  if (previous === 0) return current > 0 ? c.trendNewThisWeek : c.trendQuiet;
   const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) return 'level with last week';
-  return pct > 0 ? `up ${pct}% on last week` : `down ${Math.abs(pct)}% on last week`;
+  if (pct === 0) return c.trendLevel;
+  return pct > 0 ? c.trendUp(pct) : c.trendDown(Math.abs(pct));
 }
 
-function formatDay(day: string): string {
-  return new Date(`${day}T00:00:00Z`).toLocaleDateString(undefined, {
+function formatDay(day: string, dateLocale: string): string {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString(dateLocale, {
     month: 'short',
     day: 'numeric',
     timeZone: 'UTC',
@@ -25,7 +28,9 @@ function formatDay(day: string): string {
 }
 
 export default async function DashboardOverviewPage() {
-  const overview = await getTryOnOverview();
+  const [locale, overview] = await Promise.all([getRequestLocale(), getTryOnOverview()]);
+  const c = getOverviewCopy(locale);
+  const dateLocale = getDateLocale(locale);
   const { totals, byShop, dailySeries, recentFailures } = overview;
 
   const maxDailyJobs = Math.max(1, ...dailySeries.map((d) => d.jobs));
@@ -36,58 +41,58 @@ export default async function DashboardOverviewPage() {
     <section className="grid min-w-0 gap-6">
       <div className="flex justify-end">
         <Button asChild size="sm" variant="outline">
-          <Link href="/dashboard/try-on">Manage try-on</Link>
+          <Link href="/dashboard/try-on">{c.manageTryOn}</Link>
         </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Generations, 7 days</CardDescription>
+            <CardDescription>{c.generations7d}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-1">
             <p className="text-xl font-semibold text-foreground">{totals.jobsLast7d}</p>
             <p className="text-xs text-muted-foreground">
-              {trend(totals.jobsLast7d, totals.jobsPrev7d)}
+              {trend(c, totals.jobsLast7d, totals.jobsPrev7d)}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Provider spend, 7 days</CardDescription>
+            <CardDescription>{c.providerSpend7d}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-1">
             <p className="text-xl font-semibold text-foreground">
               ${totals.spendLast7dUsd.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {trend(totals.spendLast7dUsd, totals.spendPrev7dUsd)}
+              {trend(c, totals.spendLast7dUsd, totals.spendPrev7dUsd)}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Success rate, 7 days</CardDescription>
+            <CardDescription>{c.successRate7d}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-1">
             <p className="text-xl font-semibold text-foreground">
-              {successRate === null ? 'No jobs yet' : `${successRate}%`}
+              {successRate === null ? c.noJobsYet : `${successRate}%`}
             </p>
             <p className="text-xs text-muted-foreground">
-              {totals.failedLast7d > 0 ? `${totals.failedLast7d} failed` : 'no failures'}
+              {totals.failedLast7d > 0 ? c.failedCount(totals.failedLast7d) : c.noFailures}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Installed shops</CardDescription>
+            <CardDescription>{c.installedShopsCard}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-1">
             <p className="text-xl font-semibold text-foreground">{totals.installedShops}</p>
             <p className="text-xs text-muted-foreground">
               {totals.avgDurationMsLast7d
-                ? `avg render ${(totals.avgDurationMsLast7d / 1000).toFixed(1)}s`
-                : 'no renders this week'}
+                ? c.avgRender((totals.avgDurationMsLast7d / 1000).toFixed(1))
+                : c.noRendersThisWeek}
             </p>
           </CardContent>
         </Card>
@@ -95,15 +100,15 @@ export default async function DashboardOverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Last 14 days</CardTitle>
-          <CardDescription>Generations per day, all shops and the public demo.</CardDescription>
+          <CardTitle>{c.last14Days}</CardTitle>
+          <CardDescription>{c.last14DaysBody}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Fixed-height columns so a quiet fortnight still reads as a timeline */}
           <div
             className="flex h-28 items-end gap-1.5"
             role="img"
-            aria-label="Generations per day, last 14 days"
+            aria-label={c.dailyChartAriaLabel}
           >
             {dailySeries.map((d) => (
               <div key={d.day} className="group relative flex h-full flex-1 flex-col justify-end">
@@ -118,8 +123,8 @@ export default async function DashboardOverviewPage() {
             ))}
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-            <span>{formatDay(dailySeries[0]?.day ?? '')}</span>
-            <span>{formatDay(dailySeries[dailySeries.length - 1]?.day ?? '')}</span>
+            <span>{formatDay(dailySeries[0]?.day ?? '', dateLocale)}</span>
+            <span>{formatDay(dailySeries[dailySeries.length - 1]?.day ?? '', dateLocale)}</span>
           </div>
         </CardContent>
       </Card>
@@ -127,22 +132,20 @@ export default async function DashboardOverviewPage() {
       <div className="grid gap-4 xl:grid-cols-[3fr_2fr]">
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Shops this week</CardTitle>
-            <CardDescription>Who is generating, and what it costs.</CardDescription>
+            <CardTitle>{c.shopsThisWeek}</CardTitle>
+            <CardDescription>{c.shopsThisWeekBody}</CardDescription>
           </CardHeader>
           <CardContent>
             {byShop.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No merchant shops yet. Install the app on a store and it appears here.
-              </p>
+              <p className="text-sm text-muted-foreground">{c.noMerchantShopsYet}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Shop</TableHead>
-                    <TableHead className="text-end">Jobs 7d</TableHead>
-                    <TableHead className="text-end">Spend 7d</TableHead>
-                    <TableHead>Last activity</TableHead>
+                    <TableHead>{c.columnShop}</TableHead>
+                    <TableHead className="text-end">{c.columnJobs7d}</TableHead>
+                    <TableHead className="text-end">{c.columnSpend7d}</TableHead>
+                    <TableHead>{c.columnLastActivity}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -152,7 +155,7 @@ export default async function DashboardOverviewPage() {
                         <span className="inline-flex items-center gap-2">
                           {shop.domain}
                           {shop.status === 'uninstalled' && (
-                            <Badge variant="destructive">uninstalled</Badge>
+                            <Badge variant="destructive">{c.uninstalledBadge}</Badge>
                           )}
                         </span>
                       </TableCell>
@@ -161,7 +164,9 @@ export default async function DashboardOverviewPage() {
                         ${shop.spendLast7dUsd.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {shop.lastJobAt ? new Date(shop.lastJobAt).toLocaleString() : 'None yet'}
+                        {shop.lastJobAt
+                          ? new Date(shop.lastJobAt).toLocaleString(dateLocale)
+                          : c.noneYet}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -173,14 +178,12 @@ export default async function DashboardOverviewPage() {
 
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Recent failures</CardTitle>
-            <CardDescription>The last five failed generations, newest first.</CardDescription>
+            <CardTitle>{c.recentFailures}</CardTitle>
+            <CardDescription>{c.recentFailuresBody}</CardDescription>
           </CardHeader>
           <CardContent>
             {recentFailures.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing failed recently. When a generation fails, the reason lands here.
-              </p>
+              <p className="text-sm text-muted-foreground">{c.nothingFailedRecently}</p>
             ) : (
               <ul className="grid gap-3">
                 {recentFailures.map((failure) => (
@@ -189,11 +192,12 @@ export default async function DashboardOverviewPage() {
                       {failure.productId}
                       <span className="text-muted-foreground">
                         {' '}
-                        · {failure.shop ?? 'demo'} · {new Date(failure.createdAt).toLocaleString()}
+                        · {failure.shop ?? c.demoShop} ·{' '}
+                        {new Date(failure.createdAt).toLocaleString(dateLocale)}
                       </span>
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {failure.message ?? 'No message recorded'}
+                      {failure.message ?? c.noMessageRecorded}
                     </span>
                   </li>
                 ))}
