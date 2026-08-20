@@ -31,7 +31,16 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      at the provider, not per component. */
   const locale = await getRequestLocale();
   const pathname = (await headers()).get('x-pathname');
-  const { userId } = clerkConfigured ? await auth() : { userId: null };
+  /* auth() throws if clerkMiddleware() didn't run for this request — and
+     middleware.ts's matcher deliberately excludes /embed/* (see its own
+     comment: cookie-less third-party iframe context). That exclusion is the
+     exact same matcher that leaves x-pathname unset, so `pathname === null`
+     is already the correct signal for "middleware did not run here" — no
+     new check needed. Without this guard, auth() crashed the whole root
+     layout on every /embed/* request (Server Component render error,
+     surfaced to visitors as the generic Next.js error page), which broke
+     the merchant-facing try-on widget in production. */
+  const { userId } = clerkConfigured && pathname !== null ? await auth() : { userId: null };
   const launcher = showLauncherFor(pathname, Boolean(userId)) ? (
     <AssistantLauncher initialLocale={locale} />
   ) : null;
