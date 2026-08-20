@@ -16,5 +16,11 @@ export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    /* Was installed for analytics only -- its error tracking dashboard
+       existed but had zero issues in it, because nothing was opting client
+       exceptions into it. Sentry already captures these (that's the
+       primary path); this is a second, independent record in case Sentry
+       config ever drifts. */
+    capture_exceptions: true,
   });
 }
