@@ -82,3 +82,41 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           command_timeout: 15m
           script: /root/grindctrl-next/deploy-next.sh
+
+      # Added after a real incident: a Server Component throw in the root
+      # layout (auth() called on a path middleware never runs for) took
+      # down every /embed/* request and the merchant-facing try-on widget
+      # with it, silently, for about a day before anyone noticed. This
+      # would have caught it within a minute of that deploy instead.
+      # First hits the container may still be restarting, so it retries
+      # briefly before treating a failure as real; a route that's still
+      # 5xx after that window is genuinely broken, not just slow to start.
+      - name: Smoke check the live site
+        run: |
+          check() {
+            local path="$1"
+            local url="https://grindctrl.cloud${path}"
+            local attempt
+            for attempt in 1 2 3 4 5 6; do
+              status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo "000")
+              if [ "$status" -lt 500 ]; then
+                echo "OK   $status  $path"
+                return 0
+              fi
+              echo "wait $status  $path (attempt $attempt/6)"
+              sleep 5
+            done
+            echo "FAIL $status  $path"
+            return 1
+          }
+
+          failed=0
+          check "/" || failed=1
+          check "/try-on" || failed=1
+          check "/embed/try-on?shop=grindctrl.myshopify.com&product=short-tshirt" || failed=1
+          check "/favicon.ico" || failed=1
+
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more routes returned a 5xx after the restart window — deploy is live but broken."
+            exit 1
+          fi
