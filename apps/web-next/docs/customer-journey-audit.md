@@ -4,12 +4,12 @@
 
 | Journey step | Current status | Files | Missing | Risk |
 | --- | --- | --- | --- | --- |
-| Landing | Implemented with positioning + guided sandbox entry | `app/page.tsx`, `components/landing/try-grindctrl-sandbox.tsx` | None for preview mode | Messaging drift if dashboard labels diverge |
-| Guided preview | Implemented (workflow / voice / file preview) | `components/landing/try-grindctrl-sandbox.tsx`, `lib/landing-sandbox/*` | None for UI preview | Live-mode dependency on backend availability |
-| n8n trial inflow bridge | Partial, behind sandbox service contracts | `app/api/landing-sandbox/route.ts`, `lib/landing-sandbox/service.ts` | Full production persistence flow | n8n outage fallback must stay explicit |
+| Landing | Implemented as a link-out landing page — no embedded sandbox | `app/page.tsx`, `components/landing/site-landing.tsx` | None | CTA fragmentation across pages (see landing-cta-audit) |
+| Guided preview | Removed. The embedded sandbox (`try-grindctrl-sandbox.tsx`, `lib/landing-sandbox/*`, `app/api/landing-sandbox/route.ts`) was replaced by a link-out to `/try-on` in the landing rebuild (each inline render cost a credit and ~9s per visitor) and the orphaned code was deleted | `components/try-on/try-on-page-content.tsx` | — | — |
+| n8n trial inflow bridge | Removed with the sandbox stack above | — | — | — |
 | Sign up/sign in | Implemented with Clerk routes | `app/sign-in/*`, `app/sign-up/*` | None for review | Local env misconfiguration blocks auth tests |
 | Dashboard entry | Implemented redirect to `/dashboard/overview` | `app/dashboard/page.tsx`, `app/dashboard/layout.tsx` | None | Header pathname alias consistency |
-| Saved preview handoff | Implemented localStorage handoff + sanitization | `lib/trial/landing-preview-handoff.ts`, `components/dashboard/trial-preview-handoff-card.tsx` | DB persistence phase | Local-only data can be lost per browser |
+| Saved preview handoff | Reader implemented, no writer since the sandbox that produced handoff data was removed | `lib/trial/landing-preview-handoff.ts` (read by `components/dashboard/workflow-preview-history.tsx`, `components/dashboard/implementation-request-form.tsx`) | A live producer, or remove the reader too | Dead unless a new write path is added |
 | Trial workspace | Implemented reviewer-oriented overview cards | `app/dashboard/overview/page.tsx`, `components/dashboard/trial-workspace-*.tsx` | Workspace sync for persistent checklist state | Reviewer may assume persistence exists |
 | AI agents | Implemented preview catalog + detail | `app/dashboard/agents/page.tsx`, `components/dashboard/agent-*.tsx`, `lib/dashboard/agent-catalog.ts` | Live config wiring | Must not imply channel is connected |
 | Conversations/messages | Implemented unified preview inbox UI | `app/dashboard/conversations/page.tsx`, `app/dashboard/messages/page.tsx`, `components/dashboard/conversation-inbox-preview.tsx` | Live read/write contracts | No send action now (intentional) |

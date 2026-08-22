@@ -26,6 +26,7 @@ import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/land
 import { SiteHeader } from '@/components/landing/site-header';
 import { StepMarker } from '@/components/landing/step-marker';
 import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
+import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 
@@ -188,7 +189,12 @@ export function SiteLanding() {
                   size="lg"
                   className="h-12 rounded-full px-6 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'hero' })}
+                  >
                     {t.heroPrimary}
                     <ArrowIcon />
                   </a>
@@ -199,7 +205,12 @@ export function SiteLanding() {
                   size="lg"
                   className="h-12 rounded-full border-border px-6 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <Link href={DEMO_URL}>{t.heroSecondary}</Link>
+                  <Link
+                    href={DEMO_URL}
+                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'hero' })}
+                  >
+                    {t.heroSecondary}
+                  </Link>
                 </Button>
               </div>
               <div
@@ -267,7 +278,10 @@ export function SiteLanding() {
                   size="lg"
                   className="h-12 rounded-full px-6 font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <Link href={DEMO_URL}>
+                  <Link
+                    href={DEMO_URL}
+                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'demo' })}
+                  >
                     {t.demoButton}
                     <ArrowIcon />
                   </Link>
@@ -345,8 +359,11 @@ export function SiteLanding() {
                 {t.proofTitle}
               </h2>
               <p className="text-base leading-[1.7] text-muted-foreground sm:text-lg">{t.proofBody}</p>
-              <Button asChild variant="outline" className="rounded-full px-5 font-semibold">
-                <Link href={DEMO_URL}>
+              <Button asChild variant="outline" size="lg" className="h-12 rounded-full px-5 font-semibold">
+                <Link
+                  href={DEMO_URL}
+                  onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'proof' })}
+                >
                   {t.proofButton}
                   <ArrowIcon />
                 </Link>
@@ -517,7 +534,12 @@ export function SiteLanding() {
                 size="lg"
                 className="h-12 rounded-full px-7 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
               >
-                <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'final_cta' })}
+                >
                   {t.ctaButton}
                   <ArrowIcon />
                 </a>

@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import { displayCurrencyFor, type Currency } from '@/lib/pricing/currency';
 import type {
@@ -64,6 +65,10 @@ function getPackCopyKey(packKey: string): string {
 
 function isPremiumPlan(plan: PublicPlanCatalogItem): boolean {
   return getPlanCopyKey(plan.planKey) === 'dfy-v1';
+}
+
+function isFreePlan(plan: PublicPlanCatalogItem): boolean {
+  return getPlanCopyKey(plan.planKey) === 'free-v1';
 }
 
 function isPremiumPack(pack: PublicCreditPackCatalogItem): boolean {
@@ -153,11 +158,29 @@ function PlanCard({
           asChild
           variant={recommended ? 'default' : 'outline'}
           size="lg"
-          className="w-full rounded-full"
+          className="h-12 w-full rounded-full"
         >
-          <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
-            {t.choosePlan(name)}
-          </a>
+          {/* Free is the one plan with no billing conversation to have — it
+              routes to the real self-serve signup instead of the booking
+              link every other plan needs, since payment is arranged
+              directly for those (see merchant-plan-card.tsx). */}
+          {isFreePlan(plan) ? (
+            <Link
+              href="/sign-up"
+              onClick={() => trackClick('plan_cta_clicked', { plan: getPlanCopyKey(plan.planKey) })}
+            >
+              {t.choosePlan(name)}
+            </Link>
+          ) : (
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackClick('plan_cta_clicked', { plan: getPlanCopyKey(plan.planKey) })}
+            >
+              {t.bookCallForPlan(name)}
+            </a>
+          )}
         </Button>
       </CardFooter>
     </Card>
@@ -219,6 +242,14 @@ export function PricingPageContent({
             >
               <Link href="/try-on">{t.liveDemo}</Link>
             </Button>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="min-h-11 rounded-full px-3 text-muted-foreground"
+            >
+              <Link href="/sign-in">{t.signIn}</Link>
+            </Button>
             <LandingLocaleToggle className="bg-background backdrop-blur-none" />
           </nav>
         </div>
@@ -258,7 +289,12 @@ export function PricingPageContent({
                 style={{ animationDelay: '0.17s' }}
               >
                 <Button asChild size="lg" className="h-12 rounded-full px-6 font-semibold">
-                  <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_hero' })}
+                  >
                     {t.bookCall}
                   </a>
                 </Button>
@@ -268,7 +304,12 @@ export function PricingPageContent({
                   size="lg"
                   className="h-12 rounded-full border-border px-6 font-semibold"
                 >
-                  <Link href="/try-on">{t.tryDemo}</Link>
+                  <Link
+                    href="/try-on"
+                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_hero' })}
+                  >
+                    {t.tryDemo}
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -366,12 +407,27 @@ export function PricingPageContent({
                         <span>{t.validFor(formatNumber(pack.validityDays, locale))}</span>
                       </p>
                     </div>
-                    <p className="min-w-0 sm:text-end">
-                      <span className="block break-words text-2xl font-bold tracking-tight">
-                        {formatCurrency(pack.priceMinor / 100, pack.currency, locale, 0)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{t.oneTime}</span>
-                    </p>
+                    <div className="flex min-w-0 flex-col items-start gap-3 sm:items-end">
+                      <p className="min-w-0 sm:text-end">
+                        <span className="block break-words text-2xl font-bold tracking-tight">
+                          {formatCurrency(pack.priceMinor / 100, pack.currency, locale, 0)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{t.oneTime}</span>
+                      </p>
+                      {/* Packs are bought from inside the dashboard (see
+                          app/dashboard/try-on/plan-actions.ts), not here —
+                          this priced card had nothing to click before. */}
+                      <Button asChild variant="outline" size="sm" className="rounded-full px-4">
+                        <a
+                          href={BOOKING_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackClick('pack_cta_clicked', { pack: getPackCopyKey(pack.packKey) })}
+                        >
+                          {t.askAboutPack}
+                        </a>
+                      </Button>
+                    </div>
                   </article>
                 );
               })}
@@ -422,7 +478,12 @@ export function PricingPageContent({
               </div>
               <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
                 <Button asChild size="lg" className="h-12 rounded-full px-6 font-semibold">
-                  <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_closing' })}
+                  >
                     {t.bookCall}
                   </a>
                 </Button>
@@ -432,7 +493,12 @@ export function PricingPageContent({
                   size="lg"
                   className="h-12 rounded-full border-border px-6 font-semibold"
                 >
-                  <Link href="/try-on">{t.tryDemo}</Link>
+                  <Link
+                    href="/try-on"
+                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_closing' })}
+                  >
+                    {t.tryDemo}
+                  </Link>
                 </Button>
               </div>
             </div>

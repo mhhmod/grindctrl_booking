@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { LogIn, Menu, X } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { LandingLocaleToggle } from '@/components/landing/landing-locale';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 
@@ -67,12 +68,35 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
             <Link href="/sign-in">{t.signIn}</Link>
           </Button>
 
+          {/* Below `lg` the text button above is hidden and the sheet is the
+              only other route to sign-in — a returning user has to open the
+              menu just to log in. This icon gives them a one-tap route
+              without fighting the header for space at 375px. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            aria-label={t.signIn}
+            className="min-h-11 rounded-full px-2.5 text-muted-foreground hover:text-foreground lg:hidden"
+          >
+            <Link href="/sign-in">
+              <LogIn className="size-4.5" aria-hidden="true" />
+            </Link>
+          </Button>
+
           <Button
             asChild
             size="sm"
             className="min-h-11 rounded-full px-4 font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
           >
-            <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{t.bookCall}</a>
+            <a
+              href={BOOKING_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'header' })}
+            >
+              {t.bookCall}
+            </a>
           </Button>
 
           <Sheet open={open} onOpenChange={setOpen}>

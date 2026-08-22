@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Download, MessageCircle, ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { trackClick } from '@/lib/analytics';
 import type { TryOnJob } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
 
@@ -124,7 +125,11 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
           )
         ) : (
           <Button asChild size="lg" className="h-12 w-full gap-2 rounded-xl text-base">
-            <Link href="/sign-up" id="tryon-trial-btn">
+            <Link
+              href="/sign-up"
+              id="tryon-trial-btn"
+              onClick={() => trackClick('cta_clicked', { cta: 'start_trial', section: 'try_on_result' })}
+            >
               {t.trial}
               <ArrowRight className="size-4 rtl:-scale-x-100" />
             </Link>

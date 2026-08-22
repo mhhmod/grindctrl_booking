@@ -37,8 +37,19 @@ describe('SiteHeader', () => {
   it('keeps a sign-in route outside the menu, for widths where the menu is hidden', () => {
     const t = renderHeader();
 
-    const signIn = screen.getByRole('link', { name: t.signIn });
-    expect(signIn.className).toContain('lg:inline-flex');
+    const signInLinks = screen.getAllByRole('link', { name: t.signIn });
+    expect(signInLinks.some((link) => link.className.includes('lg:inline-flex'))).toBe(true);
+  });
+
+  /* Below `lg` the text link above is hidden and the sheet was the only
+     other route — a returning user had to open the menu just to sign in.
+     This icon-only link gives mobile/tablet the same one-tap reachability
+     desktop already has. */
+  it('keeps a sign-in route outside the menu below lg too', () => {
+    const t = renderHeader();
+
+    const signInLinks = screen.getAllByRole('link', { name: t.signIn });
+    expect(signInLinks.some((link) => link.className.includes('lg:hidden'))).toBe(true);
   });
 
   it('exposes nav, sign in, language and theme once the menu is open', async () => {

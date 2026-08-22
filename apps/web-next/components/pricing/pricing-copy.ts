@@ -14,6 +14,7 @@ export type PricingCopy = {
   brandHome: string;
   home: string;
   liveDemo: string;
+  signIn: string;
   eyebrow: string;
   title: string;
   intro: string;
@@ -34,6 +35,7 @@ export type PricingCopy = {
   standardQuality: string;
   premiumQuality: string;
   choosePlan: (name: string) => string;
+  bookCallForPlan: (name: string) => string;
   plans: Record<string, PlanCopy>;
   packsEyebrow: string;
   packsTitle: string;
@@ -43,6 +45,7 @@ export type PricingCopy = {
   validFor: (days: string) => string;
   premium: string;
   packs: Record<string, PackCopy>;
+  askAboutPack: string;
   faqEyebrow: string;
   faqTitle: string;
   faq: Array<{ question: string; answer: string }>;
@@ -56,6 +59,7 @@ const en: PricingCopy = {
   brandHome: 'GRINDCTRL home',
   home: 'Home',
   liveDemo: 'Live demo',
+  signIn: 'Sign in',
   eyebrow: 'AI Try-On pricing',
   title: 'More shopper confidence, priced for real usage.',
   intro:
@@ -75,6 +79,7 @@ const en: PricingCopy = {
   standardQuality: 'Standard image quality',
   premiumQuality: 'Premium image quality',
   choosePlan: (name) => `Choose ${name}`,
+  bookCallForPlan: (name) => `Book a call about ${name}`,
   plans: {
     'free-v1': {
       name: 'Free',
@@ -108,6 +113,7 @@ const en: PricingCopy = {
     'pack-lite-v1': { name: 'Boost 80' },
     'pack-flash-v1': { name: 'Boost 75 Pro' },
   },
+  askAboutPack: 'Ask about this pack',
   faqEyebrow: 'Questions',
   faqTitle: 'Straight answers before you start.',
   faq: [
@@ -151,6 +157,7 @@ const ar: PricingCopy = {
   brandHome: 'الصفحة الرئيسية لـ GRINDCTRL',
   home: 'الرئيسية',
   liveDemo: 'تجربة مباشرة',
+  signIn: 'تسجيل الدخول',
   eyebrow: 'أسعار تجربة الملابس بالذكاء الاصطناعي',
   title: 'ثقة أكبر للمتسوق، بسعر يناسب الاستخدام الحقيقي.',
   intro:
@@ -170,6 +177,7 @@ const ar: PricingCopy = {
   standardQuality: 'جودة صور قياسية',
   premiumQuality: 'جودة صور مميزة',
   choosePlan: (name) => `اختر ${name}`,
+  bookCallForPlan: (name) => `احجز مكالمة عن ${name}`,
   plans: {
     'free-v1': {
       name: 'مجاني',
@@ -203,6 +211,7 @@ const ar: PricingCopy = {
     'pack-lite-v1': { name: 'Boost 80' },
     'pack-flash-v1': { name: 'Boost 75 Pro' },
   },
+  askAboutPack: 'اسأل عن هذه الحزمة',
   faqEyebrow: 'الأسئلة',
   faqTitle: 'إجابات واضحة قبل أن تبدأ.',
   faq: [
