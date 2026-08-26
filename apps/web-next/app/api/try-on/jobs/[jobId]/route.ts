@@ -26,7 +26,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> },
 ) {
-  const limit = await publicApiRatelimit.limit(clientIp(request));
+  const limit = await publicApiRatelimit.limit(clientIp(request) ?? 'unknown');
   if (!limit.success) return rateLimitedResponse(limit.reset);
 
   const { jobId } = await params;

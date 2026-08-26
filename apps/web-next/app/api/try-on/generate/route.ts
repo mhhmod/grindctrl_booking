@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+﻿import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
 import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
@@ -51,8 +51,9 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
  */
 export async function POST(request: NextRequest) {
   try {
-    /* Real generations cost provider money: rate-limit per client IP. */
-    const ip = clientIp(request);
+    /* Real generations cost provider money: rate-limit per client network.
+       No trusted proxy header at all → one shared bucket (fail closed). */
+    const ip = clientIp(request) ?? 'unknown';
     const limit = await publicApiRatelimit.limit(ip);
     if (!limit.success) {
       const message = 'Too many try-on requests. Please try again in a few minutes.';
@@ -85,21 +86,21 @@ export async function POST(request: NextRequest) {
       (typeof body.photoData === 'string' && body.photoData.length > 0);
     const usesMockPhoto = body.useMockPhoto === true || photoSource === 'mock';
 
-    // ── Validate session ──
+    // â”€â”€ Validate session â”€â”€
     const sv = validateSessionId(sessionId);
     if (!sv.ok) {
       const res: TryOnJobApiResponse = { ok: false, message: sv.error, error: sv.error };
       return NextResponse.json(res, { status: 400 });
     }
 
-    // ── Validate product ──
+    // â”€â”€ Validate product â”€â”€
     const pv = validateProductId(productId);
     if (!pv.ok) {
       const res: TryOnJobApiResponse = { ok: false, message: pv.error, error: pv.error };
       return NextResponse.json(res, { status: 400 });
     }
 
-    // ── Validate photo source / explicit mock path ──
+    // â”€â”€ Validate photo source / explicit mock path â”€â”€
     if (!usesMockPhoto && !hasPhotoReference) {
       const message =
         'A customer photo reference is required, unless useMockPhoto is true for demo preview.';
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    // ── Validate photo payload (live mode requires the actual image) ──
+    // â”€â”€ Validate photo payload (live mode requires the actual image) â”€â”€
     const photoData = body.photoData;
     if (photoData !== undefined) {
       if (
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Optional store-product garment (Shopify CDN only; SSRF guard) ──
+    // â”€â”€ Optional store-product garment (Shopify CDN only; SSRF guard) â”€â”€
     const garmentUrl = typeof body.garmentUrl === 'string' ? body.garmentUrl : undefined;
     if (garmentUrl && !isAllowedGarmentUrl(garmentUrl)) {
       const message = 'Garment image must come from the Shopify CDN.';
@@ -201,8 +202,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    const message =
-      error instanceof Error ? error.message : 'Unable to generate try-on preview.';
+    /* Log the real cause server-side; never echo internal error strings
+       (paths, provider messages) back to an anonymous caller. */
+    console.error('try-on generate failed:', error);
+    const message = 'Unable to generate try-on preview right now. Please try again.';
     const res: TryOnJobApiResponse = { ok: false, message, error: message };
     return NextResponse.json(res, { status: 500 });
   }

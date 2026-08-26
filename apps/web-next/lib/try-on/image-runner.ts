@@ -47,7 +47,11 @@ async function loadGarmentDataUrl(productId: string, garmentUrl?: string): Promi
     if (!isAllowedGarmentUrl(garmentUrl)) {
       throw new Error('Garment image must come from the Shopify CDN.');
     }
-    const res = await fetch(garmentUrl);
+    const res = await fetch(garmentUrl, {
+    // Bound the fetch so a slow/stalled remote host can't hold a request
+    // slot indefinitely; Shopify's CDN answers well inside this window.
+    signal: AbortSignal.timeout(20_000),
+  });
     if (!res.ok) throw new Error(`Garment image fetch failed (HTTP ${res.status}).`);
     const mime = res.headers.get('content-type')?.split(';')[0] ?? '';
     if (!/^image\/(jpeg|png|webp)$/.test(mime)) {

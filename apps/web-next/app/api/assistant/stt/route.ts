@@ -6,6 +6,7 @@ import { store } from '@/lib/assistant/store-instance';
 import { TURN_COST } from '@/lib/assistant/rate-limiter';
 import { getGroqClient, withGroqCall, STT_MODEL } from '@/lib/assistant/groq-client';
 import { RateLimitedError } from '@/lib/assistant/errors';
+import { clientIp } from '@/lib/ratelimit';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 
@@ -26,7 +27,7 @@ function rateLimitedResponse(gate: RateLimitedError) {
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
-  const tenant = resolveTenant(userId, existingSessionId);
+  const tenant = resolveTenant(userId, existingSessionId, clientIp(request));
 
   let formData: FormData;
   try {

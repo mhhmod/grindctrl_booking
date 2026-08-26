@@ -83,7 +83,7 @@ export function InstallPageContent({
           <CardContent>
             <ul className="grid gap-2 text-sm">
               <li className="rounded-lg border bg-muted/10 px-3 py-2">Uses the public embed key from the selected widget site</li>
-              <li className="rounded-lg border bg-muted/10 px-3 py-2">Loads the existing versioned loader from `cdn.grindctrl.com`</li>
+              <li className="rounded-lg border bg-muted/10 px-3 py-2">Loads the versioned loader from <code>grindctrl.cloud/widget/v1</code></li>
               <li className="rounded-lg border bg-muted/10 px-3 py-2">Keeps the public widget runtime separate from the React app</li>
             </ul>
           </CardContent>

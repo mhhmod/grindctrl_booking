@@ -1,4 +1,4 @@
-// @vitest-environment node
+﻿// @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,9 +16,10 @@ vi.mock('@/lib/assistant/groq-client', async (importOriginal) => {
 
 import { POST } from './route';
 
-function makeRequest(text: string, cookieHeader?: string, locale?: string) {
+function makeRequest(text: string, cookieHeader?: string, locale?: string, ip?: string) {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (cookieHeader) headers.cookie = cookieHeader;
+  if (ip) headers['x-forwarded-for'] = ip;
   return new NextRequest('http://localhost/api/assistant/tts', {
     method: 'POST',
     body: JSON.stringify({ text, locale }),
@@ -95,7 +96,7 @@ describe('POST /api/assistant/tts', () => {
     authMock.mockResolvedValue({ userId: null });
     speechMock.mockResolvedValue(fakeAudioResponse('wav'));
 
-    await POST(makeRequest('مرحبا بك.', 'gc_assistant_sid=sess_ar', 'ar'));
+    await POST(makeRequest('Ù…Ø±Ø­Ø¨Ø§ Ø¨Ùƒ.', 'gc_assistant_sid=sess_ar', 'ar'));
 
     expect(speechMock).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'canopylabs/orpheus-arabic-saudi', voice: 'noura', response_format: 'wav' }),

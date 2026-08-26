@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   output: 'standalone',
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },
@@ -17,7 +18,38 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    /* Baseline hardening applied to every route. Deliberately NOT included
+       here: any Content-Security-Policy frame-ancestors value — the embed
+       must stay framable by Shopify storefronts and the /shopify/* admin
+       pages by Shopify's own domains, and Next would emit BOTH this header
+       and the path-specific ones (browsers then apply every directive, so a
+       global 'self' would break embedding). Framing stays governed by the
+       path-specific CSP rules below. */
+    const baseline = [
+      {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains',
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      /* The assistant voice recorder uses the microphone on our own origin;
+         camera and geolocation have no known first-party use today. */
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(self), geolocation=()',
+      },
+    ];
     return [
+      {
+        source: '/:path*',
+        headers: baseline,
+      },
       {
         /* Embedded Shopify admin pages render inside the Shopify admin iframe. */
         source: '/shopify/:path*',

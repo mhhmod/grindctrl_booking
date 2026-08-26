@@ -6,22 +6,55 @@ import { store } from '@/lib/assistant/store-instance';
 import { TURN_COST } from '@/lib/assistant/rate-limiter';
 import { getGroqClient, withGroqCall, CHAT_MODEL } from '@/lib/assistant/groq-client';
 import { SYSTEM_PROMPT } from '@/lib/assistant/system-prompt';
+import { clientIp } from '@/lib/ratelimit';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 const encoder = new TextEncoder();
 
-function sseEvent(event: string, data: unknown): Uint8Array {
-  return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-}
+/* The budget pre-check charges a flat per-turn estimate, so an unbounded
+   client-supplied history would let one request carry arbitrarily many
+   billed tokens. These caps keep the worst-case amplification per turn
+   bounded while leaving plenty of room for a real conversation. */
+const MAX_MESSAGE_CHARS = 4_000;
+const MAX_HISTORY_MESSAGES = 20;
+const MAX_HISTORY_TOTAL_CHARS = 24_000;
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
 
-interface ChatBody {
-  message: string;
-  history?: ChatMessage[];
+function sanitizeHistory(history: unknown): ChatMessage[] {
+  if (!Array.isArray(history)) return [];
+  const clean: ChatMessage[] = [];
+  for (const entry of history) {
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      ((entry as ChatMessage).role !== 'user' && (entry as ChatMessage).role !== 'assistant') ||
+      typeof (entry as ChatMessage).content !== 'string'
+    ) {
+      continue;
+    }
+    clean.push({
+      role: (entry as ChatMessage).role,
+      content: ((entry as ChatMessage).content as string).slice(0, MAX_MESSAGE_CHARS),
+    });
+  }
+  const recent = clean.slice(-MAX_HISTORY_MESSAGES);
+  // Keep the most recent messages that fit under the total character budget.
+  const kept: ChatMessage[] = [];
+  let total = 0;
+  for (let i = recent.length - 1; i >= 0; i -= 1) {
+    total += recent[i].content.length;
+    if (total > MAX_HISTORY_TOTAL_CHARS) break;
+    kept.unshift(recent[i]);
+  }
+  return kept;
+}
+
+function sseEvent(event: string, data: unknown): Uint8Array {
+  return encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
 /**
@@ -36,11 +69,12 @@ interface ChatBody {
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
-  const tenant = resolveTenant(userId, existingSessionId);
+  const tenant = resolveTenant(userId, existingSessionId, clientIp(request));
 
-  const body = (await request.json()) as ChatBody;
-  const message = body.message ?? '';
-  const history = body.history ?? [];
+  const body = (await request.json()) as { message?: unknown; history?: unknown };
+  const message =
+    typeof body.message === 'string' ? body.message.slice(0, MAX_MESSAGE_CHARS) : '';
+  const history = sanitizeHistory(body.history);
 
   const gate = checkBudget(store, tenant.tenantId, tenant.tier, 'chat:tokens', TURN_COST['chat:tokens']);
 

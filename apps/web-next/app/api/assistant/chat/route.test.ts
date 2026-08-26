@@ -1,4 +1,4 @@
-// @vitest-environment node
+﻿// @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,9 +16,10 @@ vi.mock('@/lib/assistant/groq-client', async (importOriginal) => {
 
 import { POST } from './route';
 
-function makeRequest(body: unknown, cookieHeader?: string) {
+function makeRequest(body: unknown, cookieHeader?: string, ip?: string) {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   if (cookieHeader) headers.cookie = cookieHeader;
+  if (ip) headers['x-forwarded-for'] = ip;
   return new NextRequest('http://localhost/api/assistant/chat', {
     method: 'POST',
     body: JSON.stringify(body),
@@ -54,11 +55,11 @@ describe('POST /api/assistant/chat', () => {
     // Exhaust the anon chat budget first via a real request.
     createMock.mockReturnValue(fakeCompletion(['hi']));
     for (let i = 0; i < 8; i++) {
-      await POST(makeRequest({ message: 'hello', history: [] }, 'gc_assistant_sid=sess_a'));
+      await POST(makeRequest({ message: 'hello', history: [] }, 'gc_assistant_sid=sess_a', '203.0.113.10'));
     }
     createMock.mockReset();
 
-    const response = await POST(makeRequest({ message: 'one more', history: [] }, 'gc_assistant_sid=sess_a'));
+    const response = await POST(makeRequest({ message: 'one more', history: [] }, 'gc_assistant_sid=sess_a', '203.0.113.10'));
     const events = await readSseEvents(response);
 
     expect(events).toHaveLength(1);
@@ -71,7 +72,7 @@ describe('POST /api/assistant/chat', () => {
     authMock.mockResolvedValue({ userId: null });
     createMock.mockReturnValue(fakeCompletion(['Hel', 'lo', '!']));
 
-    const response = await POST(makeRequest({ message: 'hi', history: [] }, 'gc_assistant_sid=sess_b'));
+    const response = await POST(makeRequest({ message: 'hi', history: [] }, 'gc_assistant_sid=sess_b', '203.0.113.11'));
     const events = await readSseEvents(response);
 
     expect(events.slice(0, 3)).toEqual([
@@ -86,7 +87,7 @@ describe('POST /api/assistant/chat', () => {
     authMock.mockResolvedValue({ userId: null });
     createMock.mockReturnValue(fakeCompletion(['ok']));
 
-    await POST(makeRequest({ message: 'hi', history: [{ role: 'user', content: 'earlier' }] }, 'gc_assistant_sid=sess_sys'));
+    await POST(makeRequest({ message: 'hi', history: [{ role: 'user', content: 'earlier' }] }, 'gc_assistant_sid=sess_sys', '203.0.113.12'));
 
     const call = createMock.mock.calls[0][0] as { messages: { role: string; content: string }[] };
     expect(call.messages[0]).toEqual({ role: 'system', content: expect.stringContaining('GrindCTRL') });
@@ -102,7 +103,7 @@ describe('POST /api/assistant/chat', () => {
       throw new Error('network exploded');
     });
 
-    const response = await POST(makeRequest({ message: 'hi', history: [] }, 'gc_assistant_sid=sess_c'));
+    const response = await POST(makeRequest({ message: 'hi', history: [] }, 'gc_assistant_sid=sess_c', '203.0.113.13'));
     const events = await readSseEvents(response);
 
     expect(events).toHaveLength(1);

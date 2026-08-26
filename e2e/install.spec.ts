@@ -1,4 +1,4 @@
-import { test, expect, SEL, waitForShoelace } from './fixtures';
+﻿import { test, expect, SEL, waitForShoelace } from './fixtures';
 
 test.describe('Install Widget Page', () => {
   test('code snippets, mockup, and plan tiers render correctly', async ({ page }) => {
@@ -18,13 +18,13 @@ test.describe('Install Widget Page', () => {
     await expect(snippet).toBeVisible();
     await expect(snippet).toContainText('window.GrindctrlSupport = window.GrindctrlSupport || [];');
     await expect(snippet).toContainText('window.GrindctrlSupport.push({');
-    await expect(snippet).toContainText('https://cdn.grindctrl.com/widget/v1/loader.js');
+    await expect(snippet).toContainText('https://grindctrl.cloud/widget/v1/loader.js');
 
     // Secondary official variant
     const cspSnippet = page.locator('#install-snippet-csp');
     await expect(cspSnippet).toBeVisible();
     await expect(cspSnippet).toContainText('data-gc-embed-key="YOUR_EMBED_KEY"');
-    await expect(cspSnippet).toContainText('https://cdn.grindctrl.com/widget/v1/loader.js');
+    await expect(cspSnippet).toContainText('https://grindctrl.cloud/widget/v1/loader.js');
 
     // Copy button exists and is clickable
     const copyBtn = page.locator('[onclick="copyInstallSnippet()"]');

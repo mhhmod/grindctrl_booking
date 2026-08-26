@@ -56,6 +56,9 @@ jobs:
             ${{ steps.image.outputs.name }}:${{ github.sha }}
           build-args: |
             SENTRY_RELEASE=${{ github.sha }}
+            NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -114,9 +117,39 @@ jobs:
           check "/" || failed=1
           check "/try-on" || failed=1
           check "/embed/try-on?shop=grindctrl.myshopify.com&product=short-tshirt" || failed=1
+          check "/widget/v1/loader.js" || failed=1
           check "/favicon.ico" || failed=1
 
           if [ "$failed" -ne 0 ]; then
             echo "One or more routes returned a 5xx after the restart window — deploy is live but broken."
             exit 1
           fi
+
+      # Client-side Sentry/PostHog only work if their public keys were inlined
+      # at BUILD time (NEXT_PUBLIC_* semantics). This catches the silent
+      # failure mode where secrets exist but never reach the Docker build:
+      # the site works fine, no console errors — and browser exceptions go
+      # nowhere. Checks the main-app chunk for both markers.
+      - name: Verify client monitoring keys were baked into the bundle
+        run: |
+          html=$(curl -s --max-time 20 "https://grindctrl.cloud/")
+          chunk=$(printf '%s' "$html" | grep -o '/_next/static/chunks/main-app-[a-z0-9]*\.js' | head -n 1)
+          if [ -z "$chunk" ]; then
+            echo "FAIL could not locate the main-app chunk in the homepage HTML"
+            exit 1
+          fi
+          bundle=$(curl -s --max-time 30 "https://grindctrl.cloud$chunk")
+          ok=0
+          if printf '%s' "$bundle" | grep -q 'phc_'; then
+            echo "OK   PostHog key inlined"
+          else
+            echo "FAIL PostHog key missing from $chunk (is NEXT_PUBLIC_POSTHOG_KEY set as an Actions secret?)"
+            ok=1
+          fi
+          if printf '%s' "$bundle" | grep -Eq 'https://[a-f0-9]{16,}@o[0-9]+\.ingest'; then
+            echo "OK   Sentry DSN inlined"
+          else
+            echo "FAIL Sentry DSN missing from $chunk (is NEXT_PUBLIC_SENTRY_DSN set as an Actions secret?)"
+            ok=1
+          fi
+          exit $ok

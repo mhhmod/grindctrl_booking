@@ -1,4 +1,4 @@
-// @vitest-environment node
+﻿// @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -29,7 +29,7 @@ describe('GET /api/assistant/session', () => {
     expect(body.budgets.voice.remaining).toBe(3);
 
     const setCookie = response.cookies.get('gc_assistant_sid');
-    expect(setCookie?.value).toBe(body.tenantId);
+    expect(body.tenantId).toBe(`sid:${setCookie?.value}`);
   });
 
   it('reuses an existing anon session cookie without minting a new one', async () => {
@@ -38,7 +38,7 @@ describe('GET /api/assistant/session', () => {
     const response = await GET(makeRequest('gc_assistant_sid=sess_existing'));
     const body = await response.json();
 
-    expect(body.tenantId).toBe('sess_existing');
+    expect(body.tenantId).toBe('sid:sess_existing');
     expect(response.cookies.get('gc_assistant_sid')).toBeUndefined();
   });
 

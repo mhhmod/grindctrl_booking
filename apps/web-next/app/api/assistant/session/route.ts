@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { resolveTenant } from '@/lib/assistant/tenant';
 import { getBudgetSummary } from '@/lib/assistant/rate-limiter';
 import { store } from '@/lib/assistant/store-instance';
+import { clientIp } from '@/lib/ratelimit';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { userId } = await auth();
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
 
-  const tenant = resolveTenant(userId, existingSessionId);
+  const tenant = resolveTenant(userId, existingSessionId, clientIp(request));
   const budgets = getBudgetSummary(store, tenant.tenantId, tenant.tier);
 
   const response = NextResponse.json({

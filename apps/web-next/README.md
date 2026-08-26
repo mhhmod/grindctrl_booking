@@ -1,4 +1,4 @@
-# GRINDCTRL Next Dashboard
+﻿# GRINDCTRL Next Dashboard
 
 This app is the in-repo Next.js dashboard shell for GRINDCTRL. It lives alongside the existing static site and widget runtime and only replaces dashboard UI surfaces as parity is reached.
 
@@ -26,4 +26,4 @@ This app is the in-repo Next.js dashboard shell for GRINDCTRL. It lives alongsid
 - User role lookup: `dashboard_get_user_role`
 - Site updates: `dashboard_update_widget_site`
 - Domain/intents/leads listing: existing `dashboard_*` RPCs
-- Install contract: `https://cdn.grindctrl.com/widget/v1/loader.js`
+- Install contract: `https://grindctrl.cloud/widget/v1/loader.js` (served from this app's public/widget/v1)

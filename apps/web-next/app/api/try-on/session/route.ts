@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { createSession } from '@/lib/try-on/service';
 import { validateProductId } from '@/lib/try-on/validator';
 import { clientIp, publicApiRatelimit, rateLimitedResponse } from '@/lib/ratelimit';
@@ -11,7 +11,7 @@ import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
  */
 export async function POST(request: NextRequest) {
   try {
-    const limit = await publicApiRatelimit.limit(clientIp(request));
+    const limit = await publicApiRatelimit.limit(clientIp(request) ?? 'unknown');
     if (!limit.success) return rateLimitedResponse(limit.reset);
 
     const body = (await request.json()) as { productId?: string; shop?: unknown };

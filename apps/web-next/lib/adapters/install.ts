@@ -1,6 +1,6 @@
 import type { WidgetDomain, WidgetInstallVerification } from '@/lib/types';
 
-const LOADER_URL = 'https://cdn.grindctrl.com/widget/v1/loader.js';
+const LOADER_URL = 'https://grindctrl.cloud/widget/v1/loader.js';
 export const ACTIVE_INSTALL_WINDOW_MS = 30 * 60 * 1000;
 
 export type InstallStatus = 'never_seen' | 'active' | 'stale';

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+﻿import { randomUUID } from 'node:crypto';
 import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource, TryOnSession } from './types';
 import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
@@ -11,10 +11,43 @@ import { validateProductId, validateSessionId } from './validator';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 const DEFAULT_MODEL = 'google/gemini-3.1-flash-image';
+
+/* In-memory job results back the polling endpoint between generation and
+   render. Entries hold the full base64 result image, so the map MUST stay
+   bounded: TTL covers the poll window (generation ~10s + client rendering),
+   and the cap guards against burst traffic between TTL sweeps. Persistent
+   credit state lives in Supabase RPCs, so eviction here never affects
+   billing â€” only a poller that waited longer than TTL sees "not found". */
+const JOB_TTL_MS = 30 * 60 * 1000;
+const JOB_STORE_MAX = 1000;
 const jobStore = new Map<string, TryOnJob>();
 
 function createJobId(): string {
   return `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function storeJob(job: TryOnJob, now: number = Date.now()): void {
+  for (const [id, existing] of jobStore) {
+    const createdAt = Date.parse(existing.createdAt);
+    if (!Number.isFinite(createdAt) || now - createdAt > JOB_TTL_MS) {
+      jobStore.delete(id);
+    }
+  }
+  while (jobStore.size >= JOB_STORE_MAX) {
+    let oldestId: string | null = null;
+    let oldestTime = Infinity;
+    for (const [id, existing] of jobStore) {
+      const t = Date.parse(existing.createdAt);
+      const time = Number.isFinite(t) ? t : 0;
+      if (time < oldestTime) {
+        oldestTime = time;
+        oldestId = id;
+      }
+    }
+    if (oldestId === null) break;
+    jobStore.delete(oldestId);
+  }
+  jobStore.set(job.jobId, job);
 }
 
 export function getTryOnMode(): TryOnMode {
@@ -93,7 +126,7 @@ export async function generateTryOn(
           costEstimate: reservation.costUsd ?? 0,
         },
       };
-      jobStore.set(job.jobId, job);
+      storeJob(job);
       return job;
     }
 
@@ -121,7 +154,7 @@ export async function generateTryOn(
         meta: { runtime: 'live', provider: modelKey, costEstimate: 0 },
       };
       await finalizeTryOnJob(failedJob, Date.now() - startedAt);
-      jobStore.set(failedJob.jobId, failedJob);
+      storeJob(failedJob);
       throw error;
     }
 
@@ -157,8 +190,7 @@ export async function generateTryOn(
   } else {
     job = await runMockGeneration(sessionId, productId, normalizedShop);
   }
-
-  jobStore.set(job.jobId, job);
+  storeJob(job);
   if (mode === 'live' && !billableLiveJob) {
     await persistTryOnJob(job, Date.now() - startedAt).catch(() => {});
   }

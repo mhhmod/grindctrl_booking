@@ -6,18 +6,55 @@ import { Redis } from '@upstash/redis';
    would be a way to run up the OpenRouter bill for free. Not wired to
    anything requiring auth — those already have
    a real identity to rate-limit or ban by, this is specifically for the
-   surface a script can hit anonymously. */
-export const publicApiRatelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '10 s'),
-  analytics: true,
-  prefix: 'gc-ratelimit',
-});
+   surface a script can hit anonymously.
 
-export function clientIp(req: Request): string {
+   Construction is guarded: Redis.fromEnv() throws when the Upstash env vars
+   are missing, and a module-load crash here would take every importing
+   route down with it. A missing limiter fails OPEN with a loud error log
+   instead — degraded protection beats an app-wide outage, and the missing
+   env vars are exactly the kind of thing .env.example + this log surface. */
+function createPublicApiRatelimit(): Ratelimit | null {
+  try {
+    return new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(10, '10 s'),
+      analytics: true,
+      prefix: 'gc-ratelimit',
+    });
+  } catch (error) {
+    console.error(
+      '[ratelimit] Upstash limiter unavailable — public API rate limiting is DISABLED. ' +
+        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN. Cause:',
+      error instanceof Error ? error.message : error,
+    );
+    return null;
+  }
+}
+
+const limiter = createPublicApiRatelimit();
+
+export const publicApiRatelimit = {
+  async limit(id: string): Promise<{ success: boolean; reset: number }> {
+    if (!limiter) return { success: true, reset: Date.now() + 60_000 };
+    return limiter.limit(id);
+  },
+};
+
+/* Identity of the requesting network for rate-limit keying. Prefers the
+   RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the
+   left side, so the last entry is the one OUR infrastructure added — a
+   client cannot spoof it without sitting inside our own network. Taking
+   the first (leftmost) entry would let any caller rotate fake IPs and void
+   the limit. Returns null when no trusted header exists; callers decide
+   their own fallback (a shared bucket, never a client-supplied one). */
+export function clientIp(req: Request): string | null {
   const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return req.headers.get('x-real-ip') ?? '127.0.0.1';
+  if (forwarded) {
+    const entries = forwarded.split(',').map((part) => part.trim()).filter(Boolean);
+    const rightmost = entries[entries.length - 1];
+    if (rightmost) return rightmost;
+  }
+  return req.headers.get('x-real-ip')?.trim() || null;
 }
 
 export function rateLimitedResponse(reset: number): Response {

@@ -261,7 +261,7 @@ function buildCanonicalInstallSnippet(embedKey) {
     '    }',
     '  });',
     '</script>',
-    '<script async src="https://cdn.grindctrl.com/widget/v1/loader.js"></script>'
+    '<script async src="https://grindctrl.cloud/widget/v1/loader.js"></script>'
   ].join('\n');
 }
 
@@ -270,7 +270,7 @@ function buildCspInstallSnippet(embedKey) {
   return [
     '<script',
     '  async',
-    '  src="https://cdn.grindctrl.com/widget/v1/loader.js"',
+    '  src="https://grindctrl.cloud/widget/v1/loader.js"',
     `  data-gc-embed-key="${key}">`,
     '</script>'
   ].join('\n');

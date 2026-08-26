@@ -1,9 +1,15 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import type { ComponentProps } from 'react';
 import { InstallPageContent } from '@/components/dashboard/install-page-content';
 
-const baseProps = {
+/* Typed against the component's own props (instead of `as const`) so array
+   fixtures stay mutable where the component expects mutable arrays while
+   string literals are still narrowed by contextual typing. */
+type InstallPageContentProps = ComponentProps<typeof InstallPageContent>;
+
+const baseProps: InstallPageContentProps = {
   site: {
     id: 'site_1',
     workspace_id: 'workspace_1',
@@ -12,6 +18,8 @@ const baseProps = {
     status: 'active',
     settings_json: {},
   },
+  domains: [],
+  verificationState: { status: 'success', verification: null, message: null },
   allowLocalhost: true,
   canonicalSnippet: '<script>\nwindow.GrindctrlSupport = window.GrindctrlSupport || [];\nwindow.GrindctrlSupport.push({ embedKey: \'gc_live_real_embed\' });\n</script>',
   cspSnippet: '<script data-gc-embed-key="gc_live_real_embed"></script>',
@@ -30,7 +38,7 @@ const baseProps = {
     },
     message: null,
   },
-} as const;
+};
 
 describe('InstallPageContent', () => {
   it('renders the real embed key and canonical snippet for the selected site', () => {

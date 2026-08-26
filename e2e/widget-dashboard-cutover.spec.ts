@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 function expectedCanonicalSnippet(embedKey: string) {
   const key = String(embedKey);
@@ -17,7 +17,7 @@ function expectedCanonicalSnippet(embedKey: string) {
     '    }',
     '  });',
     '</script>',
-    '<script async src="https://cdn.grindctrl.com/widget/v1/loader.js"></script>',
+    '<script async src="https://grindctrl.cloud/widget/v1/loader.js"></script>',
   ].join('\n');
 }
 
@@ -26,7 +26,7 @@ function expectedCspSnippet(embedKey: string) {
   return [
     '<script',
     '  async',
-    '  src="https://cdn.grindctrl.com/widget/v1/loader.js"',
+    '  src="https://grindctrl.cloud/widget/v1/loader.js"',
     `  data-gc-embed-key="${key}">`,
     '</script>',
   ].join('\n');

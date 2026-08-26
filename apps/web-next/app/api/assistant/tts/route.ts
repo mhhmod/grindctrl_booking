@@ -5,6 +5,7 @@ import { checkBudget } from '@/lib/assistant/rate-limit-gate';
 import { store } from '@/lib/assistant/store-instance';
 import { chunkForTts } from '@/lib/assistant/tts-chunker';
 import { getGroqClient, withGroqCall, TTS_MODEL_EN, TTS_MODEL_AR } from '@/lib/assistant/groq-client';
+import { clientIp } from '@/lib/ratelimit';
 
 const SESSION_COOKIE = 'gc_assistant_sid';
 const encoder = new TextEncoder();
@@ -25,7 +26,7 @@ function sseEvent(event: string, data: unknown): Uint8Array {
 export async function POST(request: NextRequest) {
   const { userId } = await auth();
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
-  const tenant = resolveTenant(userId, existingSessionId);
+  const tenant = resolveTenant(userId, existingSessionId, clientIp(request));
 
   const body = (await request.json()) as { text?: string; locale?: string };
   const text = body.text ?? '';

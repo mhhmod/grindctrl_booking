@@ -5,7 +5,10 @@ import posthog from 'posthog-js';
    tag, no provider. Runs before the app renders. */
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 1,
+  /* 10% of navigations traced: enough spans to debug slow routes without
+     paying full-sample cost as traffic grows. Errors are always captured
+     regardless of this rate. */
+  tracesSampleRate: 0.1,
   integrations: [Sentry.browserTracingIntegration()],
   debug: false,
 });

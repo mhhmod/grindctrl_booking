@@ -7,6 +7,17 @@ FROM node:20-alpine AS builder
 WORKDIR /app/apps/web-next
 ARG SENTRY_RELEASE
 ENV SENTRY_RELEASE=$SENTRY_RELEASE
+# Client-side config MUST be present at build time: Next inlines
+# NEXT_PUBLIC_* into bundles during `next build`. Values passed at runtime
+# are invisible to the browser, so missing build args silently disable
+# client Sentry/PostHog (see deploy-next.yml, which supplies these from
+# GitHub Actions secrets).
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 COPY --from=deps /app/apps/web-next/node_modules ./node_modules
 COPY apps/web-next ./
 RUN npm run build
