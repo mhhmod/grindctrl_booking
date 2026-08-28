@@ -119,6 +119,11 @@ jobs:
           check "/embed/try-on?shop=grindctrl.myshopify.com&product=short-tshirt" || failed=1
           check "/widget/v1/loader.js" || failed=1
           check "/favicon.ico" || failed=1
+          # Support Messenger: the loader every storefront pulls, and the
+          # iframe surface it opens. Both must survive a deploy — a 5xx here
+          # is a support channel down on every installed store.
+          check "/widget/v1/messenger.js" || failed=1
+          check "/embed/messenger?key=gc_smoke_check&origin=https://grindctrl.cloud" || failed=1
 
           if [ "$failed" -ne 0 ]; then
             echo "One or more routes returned a 5xx after the restart window — deploy is live but broken."
