@@ -1,0 +1,44 @@
+{% comment %}
+  GRINDCTRL Support Messenger — app embed block.
+
+  Renders the tiny loader script. No theme CSS/JS is touched; the launcher
+  lives in its own shadow root and the messenger opens inside an iframe.
+
+  The shop's permanent domain is the only identifier the merchant needs —
+  there is no key to paste. GRINDCTRL resolves the store's configuration
+  from it server-side.
+
+  Customer claims are rendered SERVER-SIDE by Liquid only when a customer is
+  logged in. They travel to GRINDCTRL through the Shopify App Proxy, which
+  signs every parameter — the browser can never forge identity.
+{% endcomment %}
+
+{% unless block.settings.disable_on_this_page %}
+  <script
+    async
+    src="https://grindctrl.cloud/widget/v1/messenger.js"
+    data-shop="{{ shop.permanent_domain }}"
+    data-locale="{{ request.locale.iso_code | slice: 0, 2 }}"
+    {% if customer %}
+      data-customer-id="{{ customer.id }}"
+      data-customer-email="{{ customer.email }}"
+      data-customer-name="{{ customer.first_name }} {{ customer.last_name }}"
+    {% endif %}
+  ></script>
+{% endunless %}
+
+{% schema %}
+{
+  "name": "GRINDCTRL Support Messenger",
+  "target": "body",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "disable_on_this_page",
+      "label": "Hide the messenger",
+      "info": "Turn this on to temporarily hide support chat without uninstalling.",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

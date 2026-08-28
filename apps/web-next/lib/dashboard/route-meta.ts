@@ -63,6 +63,11 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Settings, plans, and generation history for every merchant store.',
   },
   {
+    pathname: '/dashboard/messenger',
+    title: 'Messenger',
+    description: 'Support Messenger for your stores: appearance, AI, behaviour, installation.',
+  },
+  {
     pathname: '/dashboard/install',
     title: 'Widget / Embed',
     description: 'Install snippet, verification concept, and widget preview panel.',

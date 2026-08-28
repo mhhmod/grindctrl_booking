@@ -17,7 +17,9 @@ export default defineConfig({
      chromium` if this ever has to run somewhere without Chrome (e.g. CI). */
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], channel: 'chrome' } }],
   webServer: {
-    command: 'npm run dev -- --port 3100',
+    /* `npx next dev` rather than `npm run dev --`: the npm shim crashes
+       (exit 0xC0000409) when Playwright spawns it on Windows. */
+    command: 'npx next dev --port 3100',
     cwd: './apps/web-next',
     port: 3100,
     reuseExistingServer: true,

@@ -10,7 +10,9 @@ export type DashboardPermissionKey =
   | 'canViewIntegrations'
   | 'canViewAnalytics'
   | 'canViewSettings'
-  | 'canViewImplementation';
+  | 'canViewImplementation'
+  | 'canViewMessenger';
+
 
 export type DashboardPermissionSet = Record<DashboardPermissionKey, boolean>;
 
@@ -48,6 +50,7 @@ export function getDefaultDashboardPermissions(): DashboardPermissionSet {
     canViewAnalytics: true,
     canViewSettings: true,
     canViewImplementation: true,
+    canViewMessenger: true,
   };
 }
 

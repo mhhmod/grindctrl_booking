@@ -14,6 +14,15 @@ import { Redis } from '@upstash/redis';
    instead — degraded protection beats an app-wide outage, and the missing
    env vars are exactly the kind of thing .env.example + this log surface. */
 function createPublicApiRatelimit(): Ratelimit | null {
+  /* Redis.fromEnv() only warns when vars are missing, producing a client
+     that throws per-call. Check explicitly: fail OPEN with the loud error
+     below rather than crashing every importing route at boot. */
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    console.error(
+      '[ratelimit] UPSTASH_REDIS_REST_URL/TOKEN missing — public API rate limiting is DISABLED.',
+    );
+    return null;
+  }
   try {
     return new Ratelimit({
       redis: Redis.fromEnv(),
@@ -23,8 +32,7 @@ function createPublicApiRatelimit(): Ratelimit | null {
     });
   } catch (error) {
     console.error(
-      '[ratelimit] Upstash limiter unavailable — public API rate limiting is DISABLED. ' +
-        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN. Cause:',
+      '[ratelimit] Upstash limiter unavailable — public API rate limiting is DISABLED. Cause:',
       error instanceof Error ? error.message : error,
     );
     return null;

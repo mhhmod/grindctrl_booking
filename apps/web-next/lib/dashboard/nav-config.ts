@@ -1,4 +1,4 @@
-import { DashboardSquare01Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
+import { DashboardSquare01Icon, Message01Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
 import type { IconGlyph } from '@/components/icons';
 import { normalizeDashboardPathname } from '@/lib/dashboard/route-meta';
 import { getDashboardCopy } from '@/lib/dashboard/dashboard-i18n';
@@ -46,6 +46,13 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'Try-On',
     icon: MagicWand01Icon,
     permissionKey: 'canViewAgents',
+    group: 'core',
+  },
+  {
+    href: '/dashboard/messenger',
+    label: 'Messenger',
+    icon: Message01Icon,
+    permissionKey: 'canViewMessenger',
     group: 'core',
   },
 ];

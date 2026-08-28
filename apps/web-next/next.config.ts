@@ -69,8 +69,13 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             /* Any HTTPS parent may frame the embed: Shopify's editor chain
                and client custom-domain storefronts aren't enumerable, and
-               the widget exposes no framing-sensitive actions. */
-            value: 'frame-ancestors https:',
+               the widget exposes no framing-sensitive actions.
+               Loopback is allowed too — without it no http:// dev storefront
+               (or the e2e suite) can ever open the messenger, and a page on
+               the visitor's own loopback is not a threat the CSP can help
+               with. Origin authorization still runs server-side and still
+               requires the site's security.allow_localhost flag. */
+            value: 'frame-ancestors https: http://localhost:* http://127.0.0.1:*',
           },
         ],
       },
