@@ -40,30 +40,43 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
   if (existing.error) throw new Error(`profile lookup failed: ${existing.error.message}`);
   if (existing.data) return existing.data as ProfileRow;
 
+  /* Read-then-insert is not atomic, and a first visit renders this page more
+     than once concurrently — both reads miss, both insert, one dies on
+     profiles_clerk_user_id_key. `on conflict do nothing` makes the write
+     itself safe; ignoreDuplicates (rather than a real upsert) is deliberate,
+     because an upsert would overwrite a known email with the noreply
+     placeholder on every later visit. */
   const insert = await supabase
     .from('profiles')
-    .insert({ clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}@users.noreply.clerk.dev` })
+    .upsert(
+      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}@users.noreply.clerk.dev` },
+      { onConflict: 'clerk_user_id', ignoreDuplicates: true },
+    );
+  if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
+
+  // Whoever won the race, the row is committed by now.
+  const settled = await supabase
+    .from('profiles')
     .select('id, clerk_user_id, email')
-    .single();
-  if (insert.error) {
-    // Concurrent first visit: another request created it first.
-    const raced = await supabase
-      .from('profiles')
-      .select('id, clerk_user_id, email')
-      .eq('clerk_user_id', clerkUserId)
-      .maybeSingle();
-    if (raced.data) return raced.data as ProfileRow;
-    throw new Error(`profile create failed: ${insert.error.message}`);
-  }
-  return insert.data as ProfileRow;
+    .eq('clerk_user_id', clerkUserId)
+    .maybeSingle();
+  if (settled.error) throw new Error(`profile lookup failed: ${settled.error.message}`);
+  if (!settled.data) throw new Error('profile create failed: row missing after insert');
+  return settled.data as ProfileRow;
 }
 
+/* Oldest-first everywhere, deliberately: workspaces has no unique key on
+   owner_profile_id, so a concurrent first visit can leave two rows behind.
+   An unordered limit(1) would then hop between them from request to request
+   and a merchant's sites would appear to come and go. Oldest wins, which is
+   also what the bootstrap_workspace RPC picks. */
 async function ensureWorkspace(profileId: string, clerkUserId: string): Promise<string> {
   const supabase = getMessengerServiceClient();
   const existing = await supabase
     .from('workspaces')
     .select('id')
     .eq('owner_profile_id', profileId)
+    .order('created_at', { ascending: true })
     .limit(1)
     .maybeSingle();
   if (existing.error) throw new Error(`workspace lookup failed: ${existing.error.message}`);
@@ -82,13 +95,24 @@ async function ensureWorkspace(profileId: string, clerkUserId: string): Promise<
       .from('workspaces')
       .select('id')
       .eq('owner_profile_id', profileId)
+      .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
     if (raced.data) return raced.data.id as string;
     throw new Error(`workspace create failed: ${insert.error.message}`);
   }
-  // handle_new_workspace_owner trigger adds owner membership automatically.
-  return insert.data.id as string;
+  /* Re-read rather than trusting our own insert: a concurrent render may
+     have committed an earlier workspace, and both requests must agree on
+     which one is the merchant's. handle_new_workspace_owner adds the owner
+     membership on whichever rows were created. */
+  const settled = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_profile_id', profileId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (settled.data?.id as string) ?? (insert.data.id as string);
 }
 
 export interface MessengerSiteView extends WidgetSiteRow {
