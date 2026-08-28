@@ -64,8 +64,8 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   },
   {
     pathname: '/dashboard/messenger',
-    title: 'Messenger',
-    description: 'Support Messenger for your stores: appearance, AI, behaviour, installation.',
+    title: 'Store Chat',
+    description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
   },
   {
     pathname: '/dashboard/install',

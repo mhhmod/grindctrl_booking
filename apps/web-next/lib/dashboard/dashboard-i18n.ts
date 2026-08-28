@@ -56,8 +56,8 @@ const en: DashboardCopy = {
       description: 'Settings, plans, and generation history for every merchant store.',
     },
     '/dashboard/messenger': {
-      title: 'Messenger',
-      description: 'Support Messenger for your stores: appearance, AI, behaviour, installation.',
+      title: 'Store Chat',
+      description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
     },
     '/dashboard/install': {
       title: 'Widget / Embed',
@@ -120,8 +120,8 @@ const ar: DashboardCopy = {
       description: 'الإعدادات والخطط وسجل الإنشاء لكل متجر.',
     },
     '/dashboard/messenger': {
-      title: 'الماسنجر',
-      description: 'ماسنجر الدعم لمتجرك: المظهر، الذكاء الاصطناعي، السلوك، والتثبيت.',
+      title: 'دردشة المتجر',
+      description: 'صندوق الدردشة في متجرك: المظهر، الذكاء الاصطناعي، السلوك، والتثبيت.',
     },
     '/dashboard/install': {
       title: 'الأداة والتضمين',

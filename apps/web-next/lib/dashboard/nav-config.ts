@@ -50,7 +50,7 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   },
   {
     href: '/dashboard/messenger',
-    label: 'Messenger',
+    label: 'Store Chat',
     icon: Message01Icon,
     permissionKey: 'canViewMessenger',
     group: 'core',

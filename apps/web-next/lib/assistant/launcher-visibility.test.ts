@@ -5,7 +5,6 @@ describe('showLauncherFor', () => {
   it('shows on ordinary pages when logged out', () => {
     expect(showLauncherFor('/', false)).toBe(true);
     expect(showLauncherFor('/try-on', false)).toBe(true);
-    expect(showLauncherFor('/dashboard/overview', false)).toBe(true);
     expect(showLauncherFor('/sign-in', false)).toBe(true);
   });
 
@@ -27,9 +26,12 @@ describe('showLauncherFor', () => {
     expect(showLauncherFor('/try-on', true)).toBe(false);
   });
 
-  it('still shows inside the dashboard when signed in', () => {
-    expect(showLauncherFor('/dashboard/overview', true)).toBe(true);
-    expect(showLauncherFor('/dashboard/try-on', true)).toBe(true);
+  /* The dashboard is the merchant's own workspace: the site assistant has
+     no business floating over it, signed in or not. */
+  it('never shows inside the dashboard', () => {
+    expect(showLauncherFor('/dashboard/overview', true)).toBe(false);
+    expect(showLauncherFor('/dashboard/try-on', true)).toBe(false);
+    expect(showLauncherFor('/dashboard/messenger', false)).toBe(false);
   });
 
   it('still shows on sign-in/sign-up even if a session cookie lingers', () => {

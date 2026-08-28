@@ -21,6 +21,11 @@ function isLandingFamily(pathname: string): boolean {
 export function showLauncherFor(pathname: string | null, isLoggedIn: boolean): boolean {
   if (!pathname) return false;
   if (pathname.startsWith('/assistant') || pathname.startsWith('/embed')) return false;
+  /* The dashboard is the merchant's workspace, not a page we are selling to
+     them on. A floating marketing assistant there sits on top of their own
+     work — and, being the site assistant, it answers in the site's language
+     about GRINDCTRL rather than about their store, which reads as a bug. */
+  if (pathname.startsWith('/dashboard')) return false;
   if (isLoggedIn && isLandingFamily(pathname)) return false;
   return true;
 }

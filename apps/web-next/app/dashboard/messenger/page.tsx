@@ -9,26 +9,12 @@ import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
+import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
-import { MessengerOverview } from '@/components/dashboard/messenger/overview';
-import { AppearanceEditor } from '@/components/dashboard/messenger/appearance-editor';
-import { BehaviourEditor } from '@/components/dashboard/messenger/behaviour-editor';
-import { AiKnowledgeEditor } from '@/components/dashboard/messenger/ai-knowledge-editor';
-import { ConversationsPanel } from '@/components/dashboard/messenger/conversations-panel';
-import { InstallCard } from '@/components/dashboard/messenger/install-card';
 
 export const dynamic = 'force-dynamic';
 
-const TABS = [
-  { id: 'overview', labelKey: 'overview' },
-  { id: 'appearance', labelKey: 'appearance' },
-  { id: 'ai', labelKey: 'aiKnowledge' },
-  { id: 'behaviour', labelKey: 'behaviour' },
-  { id: 'conversations', labelKey: 'conversations' },
-  { id: 'installation', labelKey: 'installation' },
-] as const;
-
-type TabId = (typeof TABS)[number]['id'];
+const TAB_IDS = ['overview', 'appearance', 'ai', 'behaviour', 'conversations', 'installation'] as const;
 
 const TAB_COPY = {
   en: {
@@ -95,31 +81,37 @@ export default async function MessengerPage({
     new Date(),
   );
 
-  const tab: TabId = TABS.some((candidate) => candidate.id === params.tab)
-    ? (params.tab as TabId)
+  const tab: MessengerTabId = (TAB_IDS as readonly string[]).includes(params.tab ?? '')
+    ? (params.tab as MessengerTabId)
     : 'overview';
 
+  /* One parallel pass for every panel. Tabs switch in the client now, so
+     fetching per-tab would only move the wait to each click; these are small
+     scoped reads and settle together in about the time the slowest takes. */
   let stats: Awaited<ReturnType<typeof getOverviewStats>> | null = null;
   let conversations: Awaited<ReturnType<typeof listConversationsForSite>> = [];
   let knowledge: Awaited<ReturnType<typeof listKnowledge>> = [];
   let storeDetectedAt: string | null = null;
 
-  try {
-    if (tab === 'overview') stats = await getOverviewStats(selected.id);
-    if (tab === 'conversations') conversations = await listConversationsForSite(selected.id);
-    if (tab === 'ai') knowledge = await listKnowledge(selected.id);
-    if (selected.domain) {
-      const shops = await listManagedTryOnShops();
-      const match = shops.find((shop) => shop.domain === selected.domain);
-      storeDetectedAt =
-        match && match.status === 'installed' && match.lastSeenAt ? match.lastSeenAt : null;
-    }
-  } catch (error) {
-    console.error('[messenger] dashboard data failed:', error instanceof Error ? error.message : error);
-  }
+  const [statsRes, conversationsRes, knowledgeRes, shopsRes] = await Promise.allSettled([
+    getOverviewStats(selected.id),
+    listConversationsForSite(selected.id),
+    listKnowledge(selected.id),
+    selected.domain ? listManagedTryOnShops() : Promise.resolve([]),
+  ]);
 
-  function tabHref(id: TabId): string {
-    return `/dashboard/messenger?${new URLSearchParams({ site: selected.id, tab: id }).toString()}`;
+  if (statsRes.status === 'fulfilled') stats = statsRes.value;
+  if (conversationsRes.status === 'fulfilled') conversations = conversationsRes.value;
+  if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
+  if (shopsRes.status === 'fulfilled' && selected.domain) {
+    const match = shopsRes.value.find((shop) => shop.domain === selected.domain);
+    storeDetectedAt = match && match.status === 'installed' && match.lastSeenAt ? match.lastSeenAt : null;
+  }
+  for (const failed of [statsRes, conversationsRes, knowledgeRes, shopsRes]) {
+    if (failed.status === 'rejected') {
+      // One slow or broken panel must not take the whole section down.
+      console.error('[messenger] dashboard data failed:', failed.reason);
+    }
   }
 
   return (
@@ -150,91 +142,30 @@ export default async function MessengerPage({
         )}
       </div>
 
-      <nav aria-label={locale === 'ar' ? 'أقسام الماسنجر' : 'Messenger sections'} className="min-w-0">
-        <ul className="flex flex-wrap gap-1 border-b border-border pb-px">
-          {TABS.map((entry) => (
-            <li key={entry.id}>
-              <Link
-                href={tabHref(entry.id)}
-                aria-current={tab === entry.id ? 'page' : undefined}
-                className={`inline-flex rounded-t-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                  tab === entry.id
-                    ? 'border-b-2 border-primary font-semibold text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {copy[entry.labelKey]}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {tab === 'overview' && (
-        <MessengerOverview
-          locale={locale}
-          siteName={selected.name}
-          active={selected.status === 'active'}
-          aiEnabled={config.ai.enabled}
-          detectedAt={storeDetectedAt}
-          version={selected.settings_version}
-          stats={stats}
-        />
-      )}
-
-      {tab === 'appearance' && (
-        <AppearanceEditor
-          locale={locale}
-          siteId={selected.id}
-          initial={config.appearance}
-          publishedPayload={payload}
-        />
-      )}
-      {tab === 'behaviour' && (
-        <BehaviourEditor
-          locale={locale}
-          siteId={selected.id}
-          initial={config.behaviour}
-          publishedPayload={payload}
-        />
-      )}
-      {tab === 'ai' && (
-        <AiKnowledgeEditor
-          locale={locale}
-          siteId={selected.id}
-          ai={config.ai}
-          knowledge={knowledge}
-          publishedPayload={payload}
-        />
-      )}
-
-      {tab === 'conversations' && (
-        <ConversationsPanel
-          locale={locale}
-          siteId={selected.id}
-          conversations={conversations.map((c) => ({
-            id: c.id,
-            status: c.status,
-            startedAt: c.started_at,
-            lastMessageAt: c.last_message_at,
-            visitorEmail: c.visitor_email,
-            visitorName: c.visitor_name,
-            handoffReason: c.handoff_reason,
-          }))}
-        />
-      )}
-
-      {tab === 'installation' && (
-        <InstallCard
-          locale={locale}
-          siteId={selected.id}
-          embedKey={selected.embed_key}
-          domain={selected.domain}
-          active={selected.status === 'active'}
-          detectedAt={storeDetectedAt}
-          version={selected.settings_version}
-        />
-      )}
+      <MessengerTabs
+        locale={locale}
+        initialTab={tab}
+        siteId={selected.id}
+        siteName={selected.name}
+        domain={selected.domain}
+        embedKey={selected.embed_key}
+        active={selected.status === 'active'}
+        version={selected.settings_version}
+        detectedAt={storeDetectedAt}
+        config={config}
+        payload={payload}
+        stats={stats}
+        conversations={conversations.map((c) => ({
+          id: c.id,
+          status: c.status,
+          startedAt: c.started_at,
+          lastMessageAt: c.last_message_at,
+          visitorEmail: c.visitor_email,
+          visitorName: c.visitor_name,
+          handoffReason: c.handoff_reason,
+        }))}
+        knowledge={knowledge}
+      />
     </section>
   );
 }

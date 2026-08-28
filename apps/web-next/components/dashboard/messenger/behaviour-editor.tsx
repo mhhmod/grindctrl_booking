@@ -50,7 +50,7 @@ const COPY = {
   },
   ar: {
     title: 'السلوك',
-    subtitle: 'كيف يرحّب الماسنجر ومتى يظهر.',
+    subtitle: 'كيف ترحّب دردشة المتجر ومتى تظهر.',
     welcome: 'شاشة الترحيب',
     welcomeTitle: 'العنوان',
     welcomeSub: 'الوصف',

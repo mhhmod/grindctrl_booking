@@ -38,7 +38,7 @@ describe('dashboard navigation config', () => {
 
   // The dashboard advertises only what the service actually sells: see the
   // acceptance criteria in nav-config.ts before adding to this list.
-  it('ships exactly Overview, Try-On, and Messenger by default', () => {
+  it('ships exactly Overview, Try-On, and Store Chat by default', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/overview',
       permissions: getDefaultDashboardPermissions(),
@@ -49,7 +49,7 @@ describe('dashboard navigation config', () => {
       '/dashboard/try-on',
       '/dashboard/messenger',
     ]);
-    expect(items.map((item) => item.label)).toEqual(['Overview', 'Try-On', 'Messenger']);
+    expect(items.map((item) => item.label)).toEqual(['Overview', 'Try-On', 'Store Chat']);
   });
 
   it('assigns group hints to nav items', () => {

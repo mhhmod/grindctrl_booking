@@ -88,11 +88,23 @@ describe('AppearanceEditor', () => {
     expect(screen.queryByText('Draft saved')).not.toBeInTheDocument();
   });
 
-  it('renders Arabic copy and keeps the live preview in sync with edits', async () => {
+  it('previews the launcher first, then the panel, both in Arabic', async () => {
     renderEditor('ar');
 
     expect(screen.getByText('المظهر')).toBeInTheDocument();
-    // The preview renders the real shopper panel, so its Arabic welcome shows.
+
+    /* Closed is the default, because that is the state whose settings this
+       editor configures — the launcher used to be invisible here. */
+    const launcher = screen.getByRole('button', { name: 'الدعم' });
+    expect(launcher).toBeInTheDocument();
+    expect(launcher).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('مرحباً')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(launcher);
+    });
+
+    // Opening mounts the real shopper panel, in Arabic.
     expect(screen.getAllByText('مرحباً').length).toBeGreaterThan(0);
   });
 });

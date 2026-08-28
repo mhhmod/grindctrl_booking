@@ -15,7 +15,7 @@ type Stats = {
 
 const COPY = {
   en: {
-    status: 'Messenger',
+    status: 'Store Chat',
     liveOnStore: 'Live on your store',
     configuredOnly: 'Configured — not detected yet',
     off: 'Off',
@@ -25,17 +25,20 @@ const COPY = {
     detection: 'Storefront',
     detected: 'Installed & seen recently',
     notDetected: 'Enable it in your Shopify theme to go live',
+    notDetectedShort: 'Not detected yet',
+    configVersion: 'Config version',
+    configVersionNote: 'Published settings your store is serving',
     conversations: 'Conversations · 7 days',
     aiResolved: 'Closed by AI',
     handedOff: 'Needed your team',
     openNow: 'Open right now',
     firstResponse: 'Median first reply (7d)',
     seconds: 's',
-    noData: 'No conversations yet. Once Messenger is live, shopper questions will appear here.',
+    noData: 'No conversations yet. Once Store Chat is live, shopper questions will appear here.',
     goToInstall: 'Go to Installation',
   },
   ar: {
-    status: 'الماسنجر',
+    status: 'دردشة المتجر',
     liveOnStore: 'يعمل على متجرك',
     configuredOnly: 'تم الإعداد — لم يُكتشف بعد',
     off: 'متوقف',
@@ -45,13 +48,16 @@ const COPY = {
     detection: 'المتجر',
     detected: 'مثبَّت ومرصد مؤخراً',
     notDetected: 'فعّله من قالب متجرك على Shopify للبدء',
+    notDetectedShort: 'لم يُكتشف بعد',
+    configVersion: 'إصدار الإعدادات',
+    configVersionNote: 'الإعدادات المنشورة التي يعرضها متجرك',
     conversations: 'المحادثات · ٧ أيام',
     aiResolved: 'أُغلقت بالذكاء الاصطناعي',
     handedOff: 'احتاجت فريقك',
     openNow: 'مفتوحة الآن',
     firstResponse: 'وسيط أول رد (٧ أيام)',
     seconds: ' ث',
-    noData: 'لا محادثات بعد. بعد تفعيل الماسنجر ستظهر أسئلة العملاء هنا.',
+    noData: 'لا محادثات بعد. بعد تفعيل دردشة المتجر ستظهر أسئلة العملاء هنا.',
     goToInstall: 'انتقل إلى التثبيت',
   },
 };
@@ -79,22 +85,32 @@ export function MessengerOverview({
   return (
     <section className="grid min-w-0 gap-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Every card reads the same way: label, one short state word, then
+            the detail. The status card used to put the store domain where
+            the others put a glyph, so a long domain wrapped under the status
+            dot and threw the whole row's alignment out. */}
         <Signal
           label={t.status}
-          value={siteName}
+          value={active ? (detected ? t.liveOnStore : t.configuredOnly) : t.off}
           state={active ? (detected ? 'good' : 'warn') : 'off'}
-          note={active ? (detected ? t.liveOnStore : t.configuredOnly) : t.off}
+          note={siteName}
         />
-        <Signal label={t.detection} value={detected ? '✓' : '—'} state={detected ? 'good' : active ? 'warn' : 'off'} note={detected ? t.detected : active ? t.notDetected : ''} />
+        <Signal
+          label={t.detection}
+          value={detected ? t.detected : active ? t.notDetectedShort : t.off}
+          state={detected ? 'good' : active ? 'warn' : 'off'}
+          note={detected ? '' : active ? t.notDetected : ''}
+        />
         <Signal
           label={t.ai}
-          value={aiEnabled ? '✓' : '—'}
+          value={aiEnabled ? t.aiOn : t.aiOff}
           state={aiEnabled ? 'good' : 'off'}
-          note={aiEnabled ? t.aiOn : t.aiOff}
+          note={''}
         />
         <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">{locale === 'ar' ? 'إصدار الإعدادات' : 'Config version'}</p>
-          <p className="mt-1 text-lg font-semibold">v{version}</p>
+          <p className="text-xs text-muted-foreground">{t.configVersion}</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums">v{version}</p>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.configVersionNote}</p>
         </div>
       </div>
 
@@ -136,13 +152,19 @@ function Signal({
         ? 'text-amber-600 dark:text-amber-400'
         : 'text-muted-foreground';
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="min-w-0 rounded-xl border border-border bg-card p-4">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 flex items-center gap-2 text-lg font-semibold ${tone}`}>
-        <span aria-hidden="true" className="inline-block size-2 rounded-full bg-current" />
-        {value}
+      {/* items-start + shrink-0, so a value that wraps to a second line does
+          not drag the dot down or indent under it. */}
+      <p className={`mt-1 flex items-start gap-2 text-base font-semibold ${tone}`}>
+        <span aria-hidden="true" className="mt-[0.45em] inline-block size-2 shrink-0 rounded-full bg-current" />
+        <span className="min-w-0 break-words">{value}</span>
       </p>
-      {note && <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{note}</p>}
+      {note && (
+        <p className="mt-1 truncate text-[11px] leading-snug text-muted-foreground" title={note}>
+          {note}
+        </p>
+      )}
     </div>
   );
 }
