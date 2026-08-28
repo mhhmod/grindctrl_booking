@@ -476,24 +476,43 @@ end;
 $$;
 
 -- ── Grants ──
-grant execute on function public.get_user_workspace(text) to anon, authenticated;
-grant execute on function public.dashboard_get_user_role(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_create_widget_site(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_update_widget_site(text, uuid, text, text, jsonb) to anon, authenticated;
-grant execute on function public.dashboard_delete_widget_site(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_regenerate_embed_key(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_list_domains(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_add_domain(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_update_domain_status(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_remove_domain(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_list_intents(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_create_intent(text, uuid, text, text, text, text, text, integer) to anon, authenticated;
-grant execute on function public.dashboard_update_intent(text, uuid, text, text, text, text, text, integer) to anon, authenticated;
-grant execute on function public.dashboard_delete_intent(text, uuid) to anon, authenticated;
-grant execute on function public.dashboard_list_leads(text, uuid, uuid) to anon, authenticated;
+grant execute on function public.get_user_workspace(text) to service_role;
+grant execute on function public.dashboard_get_user_role(text, uuid) to service_role;
+grant execute on function public.dashboard_create_widget_site(text, uuid, text) to service_role;
+grant execute on function public.dashboard_update_widget_site(text, uuid, text, text, jsonb) to service_role;
+grant execute on function public.dashboard_delete_widget_site(text, uuid) to service_role;
+grant execute on function public.dashboard_regenerate_embed_key(text, uuid) to service_role;
+grant execute on function public.dashboard_list_domains(text, uuid) to service_role;
+grant execute on function public.dashboard_add_domain(text, uuid, text) to service_role;
+grant execute on function public.dashboard_update_domain_status(text, uuid, text) to service_role;
+grant execute on function public.dashboard_remove_domain(text, uuid) to service_role;
+grant execute on function public.dashboard_list_intents(text, uuid) to service_role;
+grant execute on function public.dashboard_create_intent(text, uuid, text, text, text, text, text, integer) to service_role;
+grant execute on function public.dashboard_update_intent(text, uuid, text, text, text, text, text, integer) to service_role;
+grant execute on function public.dashboard_delete_intent(text, uuid) to service_role;
+grant execute on function public.dashboard_list_leads(text, uuid, uuid) to service_role;
 
 -- Security: lead insertion is handled by Edge Functions only.
 -- Ensure this legacy RPC is not callable by browser roles.
 revoke execute on function public.submit_widget_lead(uuid, uuid, text, text, text, text, text) from public, anon, authenticated;
+
+-- Security: these functions take the caller identity as an unverified
+-- parameter, so they are callable by service_role only. Every caller goes
+-- through lib/adapters/rpc.ts, which runs server-side after Clerk auth.
+revoke execute on function public.get_user_workspace(text) from public, anon, authenticated;
+revoke execute on function public.dashboard_get_user_role(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_create_widget_site(text, uuid, text) from public, anon, authenticated;
+revoke execute on function public.dashboard_update_widget_site(text, uuid, text, text, jsonb) from public, anon, authenticated;
+revoke execute on function public.dashboard_delete_widget_site(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_regenerate_embed_key(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_list_domains(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_add_domain(text, uuid, text) from public, anon, authenticated;
+revoke execute on function public.dashboard_update_domain_status(text, uuid, text) from public, anon, authenticated;
+revoke execute on function public.dashboard_remove_domain(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_list_intents(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_create_intent(text, uuid, text, text, text, text, text, integer) from public, anon, authenticated;
+revoke execute on function public.dashboard_update_intent(text, uuid, text, text, text, text, text, integer) from public, anon, authenticated;
+revoke execute on function public.dashboard_delete_intent(text, uuid) from public, anon, authenticated;
+revoke execute on function public.dashboard_list_leads(text, uuid, uuid) from public, anon, authenticated;
 
 commit;

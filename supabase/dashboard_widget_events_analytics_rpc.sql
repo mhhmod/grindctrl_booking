@@ -297,8 +297,15 @@ begin
 end;
 $$;
 
-grant execute on function public.dashboard_widget_events_timeseries(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_widget_events_breakdown(text, uuid, text) to anon, authenticated;
-grant execute on function public.dashboard_widget_funnel_summary(text, uuid, text) to anon, authenticated;
+grant execute on function public.dashboard_widget_events_timeseries(text, uuid, text) to service_role;
+grant execute on function public.dashboard_widget_events_breakdown(text, uuid, text) to service_role;
+grant execute on function public.dashboard_widget_funnel_summary(text, uuid, text) to service_role;
+
+-- Security: these functions take the caller identity as an unverified
+-- parameter, so they are callable by service_role only. Every caller goes
+-- through lib/adapters/rpc.ts, which runs server-side after Clerk auth.
+revoke execute on function public.dashboard_widget_events_timeseries(text, uuid, text) from public, anon, authenticated;
+revoke execute on function public.dashboard_widget_events_breakdown(text, uuid, text) from public, anon, authenticated;
+revoke execute on function public.dashboard_widget_funnel_summary(text, uuid, text) from public, anon, authenticated;
 
 commit;

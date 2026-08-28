@@ -28,6 +28,11 @@ begin
 end;
 $$;
 
-grant execute on function public.dashboard_get_install_verification(text, uuid) to anon, authenticated;
+grant execute on function public.dashboard_get_install_verification(text, uuid) to service_role;
+
+-- Security: these functions take the caller identity as an unverified
+-- parameter, so they are callable by service_role only. Every caller goes
+-- through lib/adapters/rpc.ts, which runs server-side after Clerk auth.
+revoke execute on function public.dashboard_get_install_verification(text, uuid) from public, anon, authenticated;
 
 commit;

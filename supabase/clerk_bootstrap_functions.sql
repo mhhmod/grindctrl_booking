@@ -199,9 +199,17 @@ $$;
 -- The security definer ensures they run with function-owner privileges,
 -- not the caller's privileges, so RLS is safely bypassed only for these
 -- specific operations. search_path = public prevents injection.
-grant execute on function public.bootstrap_profile(text, text, text, text, text) to anon, authenticated;
-grant execute on function public.bootstrap_workspace(uuid, text, text) to anon, authenticated;
-grant execute on function public.bootstrap_user(text, text, text, text, text) to anon, authenticated;
-grant execute on function public.get_user_workspace(text) to anon, authenticated;
+grant execute on function public.bootstrap_profile(text, text, text, text, text) to service_role;
+grant execute on function public.bootstrap_workspace(uuid, text, text) to service_role;
+grant execute on function public.bootstrap_user(text, text, text, text, text) to service_role;
+grant execute on function public.get_user_workspace(text) to service_role;
+
+-- Security: these functions take the caller identity as an unverified
+-- parameter, so they are callable by service_role only. Every caller goes
+-- through lib/adapters/rpc.ts, which runs server-side after Clerk auth.
+revoke execute on function public.bootstrap_profile(text, text, text, text, text) from public, anon, authenticated;
+revoke execute on function public.bootstrap_workspace(uuid, text, text) from public, anon, authenticated;
+revoke execute on function public.bootstrap_user(text, text, text, text, text) from public, anon, authenticated;
+revoke execute on function public.get_user_workspace(text) from public, anon, authenticated;
 
 commit;
