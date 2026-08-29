@@ -23,9 +23,33 @@ export async function GET(request: NextRequest) {
   }
 
   const clientId = process.env.SHOPIFY_API_KEY?.trim();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (!clientId || !appUrl) {
-    console.error('[shopify] oauth start: SHOPIFY_API_KEY or NEXT_PUBLIC_APP_URL is not set');
+  if (!clientId) {
+    console.error('[shopify] oauth start: SHOPIFY_API_KEY is not set');
+    return NextResponse.json({ error: 'oauth_not_configured' }, { status: 503 });
+  }
+
+  /* The callback MUST come back to the host that is about to be handed the
+     state cookie. This app is served on more than one hostname (the
+     marketing domain and the dashboard subdomain), and NEXT_PUBLIC_APP_URL
+     names only one of them — starting the flow from the other one produced
+     a redirect_uri on a host that never received the cookie, so every
+     callback failed the state check.
+
+     The Host header is client-controlled, hence the suffix check: an
+     unrecognised host falls back to the configured app URL. Shopify's own
+     redirect_uri whitelist is the second gate; this is the first. */
+  const requestOrigin = request.nextUrl.origin;
+  const originHost = (() => {
+    try {
+      return new URL(requestOrigin).hostname;
+    } catch {
+      return '';
+    }
+  })();
+  const trusted = originHost === 'grindctrl.cloud' || originHost.endsWith('.grindctrl.cloud');
+  const base = (trusted ? requestOrigin : process.env.NEXT_PUBLIC_APP_URL?.trim() ?? '').replace(/\/+$/, '');
+  if (!base) {
+    console.error('[shopify] oauth start: no trusted origin and NEXT_PUBLIC_APP_URL is not set');
     return NextResponse.json({ error: 'oauth_not_configured' }, { status: 503 });
   }
 
@@ -34,7 +58,7 @@ export async function GET(request: NextRequest) {
     buildAuthorizeUrl({
       shopDomain,
       clientId,
-      redirectUri: `${appUrl.replace(/\/+$/, '')}/api/shopify/oauth/callback`,
+      redirectUri: `${base}/api/shopify/oauth/callback`,
       state,
     }),
   );

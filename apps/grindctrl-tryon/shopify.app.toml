@@ -26,9 +26,13 @@ api_version = "2026-10"
   topics = [ "app/scopes_update" ]
 
 [auth]
+# Both hostnames serve the same app. OAuth must return to whichever one
+# the merchant started from, because the CSRF state cookie is bound to that
+# host — a callback on the other domain never receives it.
 redirect_urls = [
   "https://grindctrl.cloud/shopify/app",
-  "https://grindctrl.cloud/api/shopify/oauth/callback"
+  "https://grindctrl.cloud/api/shopify/oauth/callback",
+  "https://dashboard.grindctrl.cloud/api/shopify/oauth/callback"
 ]
 
 [build]
