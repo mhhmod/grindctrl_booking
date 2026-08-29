@@ -76,11 +76,35 @@ export interface MessengerNotifications {
   recipients: string[];
 }
 
+/** Asking a shopper for an email is only defensible at a moment where a
+ *  reply is genuinely owed, so both triggers are handoff-or-offline. */
+export interface MessengerContactCapture {
+  enabled: boolean;
+  askOutsideHours: boolean;
+}
+
+/** Off by default: uploading photos into a merchant's storage is a
+ *  deliberate opt-in, not something a store inherits on upgrade. */
+export interface MessengerAttachments {
+  enabled: boolean;
+  /** Vision triage runs per upload; disabling keeps uploads working. */
+  triageEnabled: boolean;
+}
+
+/** Off by default: this one hands shopper-supplied identifiers to the
+ *  merchant's real order data, so the merchant opts in explicitly. */
+export interface MessengerOrderLookup {
+  enabled: boolean;
+}
+
 export interface MessengerConfig {
   appearance: MessengerAppearance;
   behaviour: MessengerBehaviour;
   ai: MessengerAi;
   notifications: MessengerNotifications;
+  contactCapture: MessengerContactCapture;
+  attachments: MessengerAttachments;
+  orderLookup: MessengerOrderLookup;
 }
 
 export type MessengerSettingsRow = {
@@ -151,6 +175,15 @@ export interface ConversationRecord {
       verified: boolean;
     } | null;
     last_page_url?: string | null;
+    /** Set the moment the contact block is offered, so it is offered once
+     *  per conversation whether the shopper answers, skips, or ignores it. */
+    contact_prompted_at?: string;
+    /** Email the shopper typed into the contact block (unverified — it is a
+     *  reply-to hint for staff, never an identity claim). */
+    contact_email?: string;
+    /** Lifetime order-lookup attempts. Counted on attempts, not successes,
+     *  so guessing order numbers is what exhausts the budget. */
+    order_lookup_attempts?: number;
   };
 }
 
@@ -169,5 +202,8 @@ export interface MessageRecord {
     locale?: MessengerLocale;
     escalated?: boolean;
     feedback?: 'up' | 'down';
+    /** Present on the message an image was posted with. The URL is minted
+     *  per-view and never stored — see attachments.ts. */
+    attachment?: { id: string; mime: string; bytes: number };
   };
 }

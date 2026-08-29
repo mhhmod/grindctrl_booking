@@ -11,7 +11,9 @@ import {
   getVisitor,
   listMessages,
   recordEvent,
+  updateConversationMetadata,
 } from '@/lib/messenger/conversations';
+import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify } from '@/lib/messenger/escalate';
 import { verifyShopperToken } from '@/lib/messenger/identity';
 import {
@@ -112,6 +114,36 @@ export async function POST(request: NextRequest) {
     const conversation = await getConversationForVisitor(conversationId, visitor.id);
     if (!conversation) return bad('bad_conversation', 403);
 
+    const withinHours = isWithinAvailabilityHours(site.config.behaviour, new Date());
+
+    /* "Where should we reply?" is offered at most once per conversation, and
+       only at a moment where a reply is genuinely owed later — a handoff, or
+       a message sent while the store is closed. Recording the prompt is what
+       makes it once-only, so it happens here rather than when the shopper
+       answers: a shopper who ignores the block must not be asked again. */
+    async function contactPrompt(justEscalated: boolean): Promise<true | undefined> {
+      if (
+        !shouldAskForContact({
+          config: site!.config.contactCapture,
+          alreadyPrompted: Boolean(conversation!.metadata.contact_prompted_at),
+          knownEmail: conversation!.metadata.identity?.email || visitor!.user_email || null,
+          justEscalated,
+          withinHours,
+        })
+      ) {
+        return undefined;
+      }
+      try {
+        conversation!.metadata.contact_prompted_at = new Date().toISOString();
+        await updateConversationMetadata(conversation!.id, conversation!.metadata);
+        return true;
+      } catch {
+        // Failing to record the prompt means we cannot promise "once", so
+        // don't ask at all rather than risk asking on every later turn.
+        return undefined;
+      }
+    }
+
     // Identity refresh (token may have just been issued by the proxy).
     let identityName: string | null = conversation.metadata.identity?.name ?? null;
     let verifiedCustomer = conversation.metadata.identity?.verified === true;
@@ -165,20 +197,29 @@ export async function POST(request: NextRequest) {
           metadata: { author: 'system', escalated: true },
         });
         void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'shopper_requested_human' } }).catch(() => {});
-        return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(ack.message), status: transitioned.status });
+        return NextResponse.json({
+          userMessage: toWire(userMessage),
+          reply: toWire(ack.message),
+          status: transitioned.status,
+          askContact: await contactPrompt(true),
+        });
       }
     }
 
     // 3) AI gate: enabled + published + within hours + still owns the mic.
-    const aiEnabled = site.config.ai.enabled && isWithinAvailabilityHours(site.config.behaviour, new Date());
+    const aiEnabled = site.config.ai.enabled && withinHours;
     const ownsMic = conversation.status === 'open';
 
     if (!aiEnabled || !ownsMic) {
-      if (conversation.status === 'handoff_requested') {
-        return NextResponse.json({ userMessage: toWire(userMessage), reply: null, status: conversation.status });
-      }
-      // Closed or unavailable: accept the message silently for the record.
-      return NextResponse.json({ userMessage: toWire(userMessage), reply: null, status: conversation.status });
+      // Closed, handed off, or outside business hours: accept the message
+      // for the record. Out-of-hours is exactly when an address is worth
+      // asking for, since the reply is arriving hours from now.
+      return NextResponse.json({
+        userMessage: toWire(userMessage),
+        reply: null,
+        status: conversation.status,
+        askContact: await contactPrompt(false),
+      });
     }
 
     // 4) Grounded generation.
@@ -263,6 +304,7 @@ export async function POST(request: NextRequest) {
           userMessage: toWire(userMessage),
           reply: toWire(saved.message),
           status: transitioned.status,
+          askContact: await contactPrompt(true),
         });
       }
       return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });

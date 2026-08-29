@@ -124,6 +124,9 @@ export interface PublicMessengerPayload {
   active: boolean;
   available: boolean;
   aiEnabled: boolean;
+  /** Whether the panel renders the attach-photo control at all. The upload
+   *  route re-checks the same flag — this only decides what is drawn. */
+  attachmentsEnabled: boolean;
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
     MessengerConfig['behaviour'],
@@ -158,6 +161,7 @@ export function toPublicPayload(
     active,
     available: active && isWithinAvailabilityHours(site.config.behaviour, now),
     aiEnabled: active && site.config.ai.enabled,
+    attachmentsEnabled: active && site.config.attachments.enabled,
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,

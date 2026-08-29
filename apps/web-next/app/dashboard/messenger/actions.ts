@@ -23,7 +23,18 @@ import {
   setKnowledgeStatus,
   reSyncKnowledge,
 } from '@/lib/messenger/knowledge';
-import { resolveMessengerConfig } from '@/lib/messenger/config';
+import {
+  listConversationAttachments,
+  signAttachmentUrls,
+  type TriageResult,
+} from '@/lib/messenger/attachments';
+import {
+  CONFIG_SECTIONS,
+  MESSENGER_SECTION_NAMES,
+  resolveMessengerConfig,
+  toSettingsSections,
+  type MessengerSection,
+} from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
@@ -49,13 +60,15 @@ function fail(error: unknown): ActionResult {
  *  atomically in one UPDATE. */
 export async function saveDraftSection(
   siteId: string,
-  section: 'appearance' | 'behaviour' | 'ai',
+  section: MessengerSection,
   payload: object,
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
-    if (section !== 'appearance' && section !== 'behaviour' && section !== 'ai') {
+    // Section name arrives from the client, so it is checked against the
+    // registry rather than trusted to be one of the declared union members.
+    if (!MESSENGER_SECTION_NAMES.includes(section)) {
       return { ok: false, error: 'Unknown section.' };
     }
     const record = payload as Record<string, unknown>;
@@ -95,11 +108,12 @@ export async function publishConfig(siteId: string): Promise<ActionResult> {
       ...(draft as Record<string, unknown>),
     };
     const resolved = resolveMessengerConfig(merged);
+    /* Every section, from one list. Enumerating three of them by hand is
+       what made a notifications draft publish as a no-op: the draft was
+       merged into `resolved` and then not written back out. */
     const nextSettings: Record<string, unknown> = {
       ...(site.settings_json as Record<string, unknown>),
-      messenger_appearance: resolved.appearance,
-      messenger_behaviour: resolved.behaviour,
-      messenger_ai: resolved.ai,
+      ...toSettingsSections(resolved),
     };
 
     /* Optimistic concurrency on the version we read: two tabs publishing at
@@ -173,17 +187,10 @@ export async function setMessengerEnabled(siteId: string, enabled: boolean): Pro
 }
 
 function sectionToKey(
-  section: 'appearance' | 'behaviour' | 'ai',
+  section: MessengerSection,
   payload: Record<string, unknown>,
 ): Record<string, unknown> {
-  switch (section) {
-    case 'appearance':
-      return { messenger_appearance: payload };
-    case 'behaviour':
-      return { messenger_behaviour: payload };
-    case 'ai':
-      return { messenger_ai: payload };
-  }
+  return { [CONFIG_SECTIONS[section]]: payload };
 }
 
 /* ── Knowledge ───────────────────────────────────────────────────────── */
@@ -269,13 +276,33 @@ export async function fetchConversationMessages(
   siteId: string,
   conversationId: string,
 ): Promise<
-  | { ok: true; status: string; messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string }> }
+  | {
+      ok: true;
+      status: string;
+      messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string }>;
+      /** messageId -> viewable image. URLs expire in five minutes and are
+       *  minted per request, after ownedConversation() proved this staff
+       *  member owns the site the attachment belongs to. */
+      attachments: Record<string, { url: string; mime: string; triage: TriageResult | null }>;
+    }
   | { ok: false }
 > {
   try {
     const { conversation } = await ownedConversation(siteId, conversationId);
     const { listMessages } = await import('@/lib/messenger/conversations');
-    const messages = await listMessages(conversation.id, { limit: 200 });
+    const [messages, rows] = await Promise.all([
+      listMessages(conversation.id, { limit: 200 }),
+      listConversationAttachments(conversation.id),
+    ]);
+
+    const linked = rows.filter((row) => row.message_id);
+    const signed = await signAttachmentUrls(linked.map((row) => row.storage_path));
+    const attachments: Record<string, { url: string; mime: string; triage: TriageResult | null }> = {};
+    for (const row of linked) {
+      const url = signed[row.storage_path];
+      if (url) attachments[row.message_id as string] = { url, mime: row.mime, triage: row.triage };
+    }
+
     return {
       ok: true,
       status: conversation.status,
@@ -286,6 +313,7 @@ export async function fetchConversationMessages(
         createdAt: m.created_at,
         author: m.metadata.author ?? (m.role === 'assistant' ? 'ai' : undefined),
       })),
+      attachments,
     };
   } catch (error) {
     console.error('[messenger] fetchConversationMessages:', error instanceof Error ? error.message : error);

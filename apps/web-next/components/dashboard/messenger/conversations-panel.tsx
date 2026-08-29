@@ -37,6 +37,12 @@ const COPY = {
     daysAgo: (n: number) => `${n}d ago`,
     anonymous: 'Anonymous shopper',
     errorRetry: 'Something went wrong — try again.',
+    photoAlt: 'Photo sent by the shopper',
+    triageDamaged: 'Looks damaged',
+    triageWrongItem: 'Looks like the wrong item',
+    triageWrongSize: 'Looks like a size problem',
+    triageUnclear: 'Not clear from the photo',
+    triageNotAnIssue: 'Nothing obviously wrong',
   },
   ar: {
     title: 'المحادثات',
@@ -59,6 +65,12 @@ const COPY = {
     daysAgo: (n: number) => `قبل ${n} ي`,
     anonymous: 'عميل زائر',
     errorRetry: 'حدث خطأ — حاول مجدداً.',
+    photoAlt: 'صورة أرسلها العميل',
+    triageDamaged: 'يبدو تالفاً',
+    triageWrongItem: 'يبدو منتجاً خاطئاً',
+    triageWrongSize: 'يبدو أن المقاس غير مناسب',
+    triageUnclear: 'غير واضح من الصورة',
+    triageNotAnIssue: 'لا يوجد خطأ ظاهر',
   },
 };
 
@@ -78,6 +90,22 @@ interface WireMessage {
   content: string;
   createdAt: string;
   author?: string;
+}
+
+interface WireAttachment {
+  url: string;
+  mime: string;
+  triage: { description: string; category: string; confidence: number } | null;
+}
+
+/* The model classifies; a human decides. The label is a hedge on purpose —
+   staff should read it as a hint next to the photo, never as a verdict. */
+function triageLabel(category: string, t: (typeof COPY)['en']): string {
+  if (category === 'damaged') return t.triageDamaged;
+  if (category === 'wrong_item') return t.triageWrongItem;
+  if (category === 'wrong_size') return t.triageWrongSize;
+  if (category === 'not_an_issue') return t.triageNotAnIssue;
+  return t.triageUnclear;
 }
 
 function relativeTime(iso: string | null, t: (typeof COPY)['en']): string {
@@ -103,6 +131,7 @@ export function ConversationsPanel({
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
   const [messages, setMessages] = useState<WireMessage[]>([]);
+  const [attachments, setAttachments] = useState<Record<string, WireAttachment>>({});
   const [status, setStatus] = useState<string>('');
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -121,6 +150,7 @@ export function ConversationsPanel({
     if (seq !== loadSeq.current) return;
     if (result.ok) {
       setMessages(result.messages);
+      setAttachments(result.attachments);
       setStatus(result.status);
       setError(null);
     } else {
@@ -252,6 +282,24 @@ export function ConversationsPanel({
                       : 'bg-primary text-primary-foreground'
                   }`}
                 >
+                  {attachments[message.id] && (
+                    <figure className="mb-1.5">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- expiring signed URL, not an optimizable asset */}
+                      <img
+                        src={attachments[message.id].url}
+                        alt={t.photoAlt}
+                        className="max-h-64 w-full rounded-lg object-contain"
+                      />
+                      {attachments[message.id].triage && (
+                        <figcaption className="mt-1 text-[10px] opacity-80">
+                          {triageLabel(attachments[message.id].triage!.category, t)}
+                          {attachments[message.id].triage!.confidence >= 0.4
+                            ? ` — ${attachments[message.id].triage!.description}`
+                            : ''}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )}
                   {message.content}
                   <span className="mt-0.5 block text-[10px] opacity-70">
                     {message.role === 'assistant'

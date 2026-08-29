@@ -80,16 +80,50 @@ export async function upsertVisitor(input: {
   return { id: res.data.id as string };
 }
 
-export async function getVisitor(siteId: string, anonymousId: string): Promise<{ id: string } | null> {
+export async function getVisitor(
+  siteId: string,
+  anonymousId: string,
+): Promise<{ id: string; user_email: string | null } | null> {
   const supabase = getMessengerServiceClient();
   const res = await supabase
     .from('widget_visitors')
-    .select('id')
+    .select('id, user_email')
     .eq('widget_site_id', siteId)
     .eq('anonymous_id', anonymousId)
     .maybeSingle();
   if (res.error) throw new Error(`visitor lookup failed: ${res.error.message}`);
-  return res.data ? { id: res.data.id as string } : null;
+  return res.data
+    ? { id: res.data.id as string, user_email: (res.data.user_email as string | null) ?? null }
+    : null;
+}
+
+/** Records a shopper-supplied reply-to address. Never overwrites an address
+ *  that came from a verified Shopify login: a typed one is a hint, and the
+ *  verified one is the account of record. */
+export async function setVisitorEmail(visitorId: string, email: string): Promise<void> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_visitors')
+    .update({ user_email: email.slice(0, CONTACT_FIELD_MAX) })
+    .eq('id', visitorId)
+    .is('user_email', null);
+  if (res.error) throw new Error(`visitor email update failed: ${res.error.message}`);
+}
+
+/** Read-modify-write of the conversation metadata blob. Callers hold the
+ *  record they just read, so the merge is theirs to compose; this only
+ *  persists it. Last write wins — every field written through here is a
+ *  hint or a counter, never an authorization. */
+export async function updateConversationMetadata(
+  conversationId: string,
+  metadata: ConversationRecord['metadata'],
+): Promise<void> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .update({ metadata })
+    .eq('id', conversationId);
+  if (res.error) throw new Error(`conversation metadata update failed: ${res.error.message}`);
 }
 
 /* ── Conversations ────────────────────────────────────────────────────── */
