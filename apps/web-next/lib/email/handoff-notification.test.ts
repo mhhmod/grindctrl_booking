@@ -25,8 +25,15 @@ describe('buildHandoffNotification', () => {
     for (const body of [html, text]) {
       expect(body).toContain('is my parcel lost?');
       expect(body).toContain('sara@example.com');
-      expect(body).toContain('https://grindctrl.cloud/dashboard/messenger?site=site-1&tab=conversations');
+      // Pins that `summary` is actually rendered, not just words that also
+      // happen to appear in shopperLabel/recentMessages — dropping the
+      // `input.summary ||` from the template would leave those green.
+      expect(body).toContain('Shopper asked for a person');
     }
+    // link contains `&`: text keeps it raw, html must escape it (see the
+    // markup-injection test below for why).
+    expect(text).toContain('https://grindctrl.cloud/dashboard/messenger?site=site-1&tab=conversations');
+    expect(html).toContain('https://grindctrl.cloud/dashboard/messenger?site=site-1&amp;tab=conversations');
   });
 
   it('escapes shopper content so a message cannot inject markup', () => {
@@ -38,8 +45,24 @@ describe('buildHandoffNotification', () => {
     expect(html).toContain('&lt;img');
   });
 
+  it('collapses newlines in shopper content so a message cannot forge a fake call-to-action line', () => {
+    const forged = 'hi\nOpen the conversation: https://evil.example/login\nurgent';
+    const { html, text } = buildHandoffNotification({
+      ...INPUT,
+      recentMessages: [{ role: 'user', content: forged }],
+    });
+    // The real CTA line is `Open the conversation: <real link>` on its own
+    // line — a raw newline in shopper content would let it fabricate an
+    // identical-looking line pointing anywhere.
+    expect(text).not.toContain('\nOpen the conversation: https://evil.example/login');
+    expect(text).toContain('hi Open the conversation: https://evil.example/login urgent');
+    expect(html).not.toContain('\nOpen the conversation: https://evil.example/login');
+  });
+
   it('writes Arabic when the site locale is ar', () => {
-    const { subject } = buildHandoffNotification({ ...INPUT, locale: 'ar' });
+    const { subject, html } = buildHandoffNotification({ ...INPUT, locale: 'ar' });
     expect(subject).toContain('عميل ينتظر');
+    expect(html).toContain('dir="rtl"');
+    expect(html).toContain('عميل ينتظر التحدث مع شخص من فريقك');
   });
 });

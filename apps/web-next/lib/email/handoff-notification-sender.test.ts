@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ponytail: typed param only so `mock.calls[0][0]` isn't an empty tuple under strict tsc — no behavior change.
 const sendMail = vi.hoisted(() => vi.fn(async (_message: Record<string, unknown>) => ({ messageId: 'mid-1' })));
+const createTransport = vi.hoisted(() => vi.fn((_options: Record<string, unknown>) => ({ sendMail })));
 vi.mock('nodemailer', () => ({
-  default: { createTransport: () => ({ sendMail }) },
+  default: { createTransport },
 }));
 
 import { sendHandoffNotification } from './handoff-notification-sender';
@@ -31,12 +32,16 @@ afterEach(() => {
 });
 
 describe('sendHandoffNotification', () => {
-  it('sends one message addressed to every recipient', async () => {
+  it('addresses recipients via Bcc, not a visible To list', async () => {
     await sendHandoffNotification(INPUT);
 
     expect(sendMail).toHaveBeenCalledTimes(1);
     const message = sendMail.mock.calls[0][0];
-    expect(message.to).toEqual(['owner@store.com']);
+    // A visible To array discloses every recipient's address to every other
+    // recipient (and to Reply-All). To must be the sending address only;
+    // real recipients belong in Bcc, which nodemailer strips from the wire.
+    expect(message.to).toBe('bot@grindctrl.cloud');
+    expect(message.bcc).toEqual(['owner@store.com']);
     expect(message.subject).toContain('Sara’s Store');
     expect(message.html).toContain('can I return this?');
   });
@@ -55,5 +60,21 @@ describe('sendHandoffNotification', () => {
   it('sends nothing when there are no recipients', async () => {
     await expect(sendHandoffNotification({ ...INPUT, to: [] })).resolves.toEqual({ sent: false });
     expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it('never rejects even when the input is malformed, e.g. missing recentMessages', async () => {
+    // Input is sourced from DB rows / merchant JSON — the TS type is not a
+    // runtime guarantee. buildHandoffNotification() throws on undefined
+    // recentMessages; that must be caught, not left to reject the caller
+    // that just finished a real handoff.
+    const malformed = { ...INPUT, recentMessages: undefined } as unknown as typeof INPUT;
+    await expect(sendHandoffNotification(malformed)).resolves.toEqual({ sent: false });
+  });
+
+  it('falls back to port 587 when TRYON_EMAIL_SMTP_PORT is not a number', async () => {
+    process.env.TRYON_EMAIL_SMTP_PORT = 'not-a-number';
+    await sendHandoffNotification(INPUT);
+    expect(createTransport.mock.calls[0][0].port).toBe(587);
+    delete process.env.TRYON_EMAIL_SMTP_PORT;
   });
 });

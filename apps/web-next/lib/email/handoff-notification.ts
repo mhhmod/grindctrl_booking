@@ -45,6 +45,15 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;');
 }
 
+/* Shopper content is untrusted. Left raw, a newline in a message lets a
+   shopper forge a fake "Open the conversation" line above the real CTA in
+   the newline-delimited text body — a phishing vector against the
+   merchant. Collapse whitespace and cap length everywhere shopper text is
+   interpolated. */
+function clip(value: string, max = 400): string {
+  return value.replace(/\s+/g, ' ').slice(0, max);
+}
+
 function speaker(role: 'user' | 'assistant' | 'system', locale: MessengerLocale): string {
   if (role === 'user') return locale === 'ar' ? 'العميل' : 'Shopper';
   if (role === 'assistant') return locale === 'ar' ? 'المساعد' : 'Assistant';
@@ -65,10 +74,10 @@ export function buildHandoffNotification(input: HandoffNotificationInput): {
     t.heading,
     '',
     `${t.shopper}: ${input.shopperLabel}`,
-    `${t.why}: ${input.summary || input.reason}`,
+    `${t.why}: ${clip(input.summary || input.reason)}`,
     '',
     t.recent,
-    ...messages.map((m) => `- ${speaker(m.role, input.locale)}: ${m.content}`),
+    ...messages.map((m) => `- ${speaker(m.role, input.locale)}: ${clip(m.content)}`),
     '',
     `${t.cta}: ${link}`,
     '',
@@ -81,9 +90,9 @@ export function buildHandoffNotification(input: HandoffNotificationInput): {
 <p style="margin:0 0 16px"><strong>${escapeHtml(t.why)}:</strong> ${escapeHtml(input.summary || input.reason)}</p>
 <p style="margin:0 0 6px;font-weight:600">${escapeHtml(t.recent)}</p>
 <ul style="margin:0 0 20px;padding-inline-start:18px">
-${messages.map((m) => `<li><strong>${escapeHtml(speaker(m.role, input.locale))}:</strong> ${escapeHtml(m.content)}</li>`).join('\n')}
+${messages.map((m) => `<li><strong>${escapeHtml(speaker(m.role, input.locale))}:</strong> ${escapeHtml(clip(m.content))}</li>`).join('\n')}
 </ul>
-<p style="margin:0 0 20px"><a href="${link}" style="background:#2a2826;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none">${escapeHtml(t.cta)}</a></p>
+<p style="margin:0 0 20px"><a href="${escapeHtml(link)}" style="background:#2a2826;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none">${escapeHtml(t.cta)}</a></p>
 <p style="margin:0;font-size:12px;color:#78716c">${escapeHtml(t.footer)}</p>
 </body></html>`;
 

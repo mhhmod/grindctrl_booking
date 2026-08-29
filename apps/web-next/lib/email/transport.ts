@@ -9,7 +9,7 @@ export function getSmtpTransport(): nodemailer.Transporter | null {
   const pass = process.env.TRYON_EMAIL_SMTP_APP_PASSWORD?.trim();
   if (!user || !pass) return null;
 
-  const port = Number(process.env.TRYON_EMAIL_SMTP_PORT || 587);
+  const port = Number(process.env.TRYON_EMAIL_SMTP_PORT) || 587;
   return nodemailer.createTransport({
     host: process.env.TRYON_EMAIL_SMTP_HOST?.trim() || 'smtp.gmail.com',
     port,
