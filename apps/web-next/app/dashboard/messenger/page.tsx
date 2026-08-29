@@ -55,7 +55,8 @@ export default async function MessengerPage({
   /* Clerk holds the address the merchant actually reads; the profiles row
      is only a mirror. Notifications are unsendable without this. */
   const clerkUser = await currentUser();
-  const merchantEmail = clerkUser?.primaryEmailAddress?.emailAddress ?? null;
+  const merchantEmail =
+    clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
 
   let sites = await listMessengerSites(userId, merchantEmail);
   if (sites.length === 0) {

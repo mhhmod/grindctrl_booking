@@ -50,8 +50,9 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
        holds a placeholder nobody can receive mail at. Upgrade it the first
        time a real one arrives — and never the other way round, or a later
        visit would wipe a working address. */
-    if (email && isPlaceholderEmail(row.email) && email !== row.email) {
-      await supabase.from('profiles').update({ email }).eq('id', row.id);
+    if (email && !isPlaceholderEmail(email) && isPlaceholderEmail(row.email)) {
+      const updated = await supabase.from('profiles').update({ email }).eq('id', row.id);
+      if (updated.error) throw new Error(`profile email upgrade failed: ${updated.error.message}`);
       return { ...row, email };
     }
     return row;

@@ -161,4 +161,17 @@ describe('provisioning', () => {
 
     expect(tables.profiles.rows[0].email).toBe('owner@store.com');
   });
+
+  it('leaves a real stored email alone when a different real one arrives', async () => {
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@store.com' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await listMessengerSites('user_1', 'b@store.com');
+
+    expect(tables.profiles.rows[0].email).toBe('a@store.com');
+  });
 });
