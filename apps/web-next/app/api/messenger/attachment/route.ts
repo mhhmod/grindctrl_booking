@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           siteId: site.id,
           conversationId: conversation.id,
           eventName: 'attachment_triage_failed',
-          payload: { reason: reason.slice(0, 300) },
+          payload: { reason: reason.slice(0, 1000) },
         }).catch(() => {});
       }
     }

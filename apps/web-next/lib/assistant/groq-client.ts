@@ -33,7 +33,11 @@ export const VISION_MODEL_CANDIDATES: string[] = [
  *  on `error.message` alone never matched and the caller gave up on the
  *  first candidate — which is exactly what production did. */
 export function isModelNotFound(error: unknown): boolean {
-  return /model_not_found|does not exist or you do not have access/i.test(
+  /* Groq says this three different ways: 404 model_not_found for one that
+     never existed, and 400 "decommissioned" / "no longer supported" for one
+     it retired. All three mean the same thing to a caller holding a list of
+     candidates — try the next name. */
+  return /model_not_found|does not exist or you do not have access|decommissioned|no longer supported/i.test(
     describeProviderError(error),
   );
 }

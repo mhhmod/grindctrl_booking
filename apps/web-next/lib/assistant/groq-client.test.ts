@@ -21,6 +21,15 @@ describe('isModelNotFound', () => {
     expect(isModelNotFound(new Error(GROQ_404))).toBe(true);
   });
 
+  it('treats a decommissioned model the same as a missing one', () => {
+    // Groq returns 400 "decommissioned" for a model it retired and 404
+    // model_not_found for one that never existed. To a caller holding a
+    // candidate list both mean: try the next name.
+    const decommissioned =
+      '400 {"error":{"message":"The model `llama-3.2-90b-vision-preview` has been decommissioned and is no longer supported."}}';
+    expect(isModelNotFound(new ProviderUnavailableError(undefined, { cause: new Error(decommissioned) }))).toBe(true);
+  });
+
   it('is false for the errors every candidate would share', () => {
     for (const message of ['401 invalid api key', '429 rate limit exceeded', '400 image too large']) {
       expect(isModelNotFound(new ProviderUnavailableError(undefined, { cause: new Error(message) }))).toBe(false);
