@@ -2,7 +2,10 @@ import 'server-only';
 
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from './db';
+import { isPlaceholderEmail, PLACEHOLDER_EMAIL_SUFFIX } from './emails';
 import type { WidgetSiteRow } from './types';
+
+export { isPlaceholderEmail };
 
 /* Lazy provisioning of the existing profiles -> workspaces -> widget_sites
    foundation. The dashboard's original workspace RPC was never provisioned
@@ -28,12 +31,6 @@ export async function requireClerkUser(): Promise<{ userId: string; email: strin
   const { userId } = await auth();
   if (!userId) throw new UnauthorizedError();
   return { userId, email: null };
-}
-
-const PLACEHOLDER_EMAIL_SUFFIX = '@users.noreply.clerk.dev';
-
-export function isPlaceholderEmail(email: string | null | undefined): boolean {
-  return !email || email.endsWith(PLACEHOLDER_EMAIL_SUFFIX);
 }
 
 async function ensureProfile(clerkUserId: string, email: string | null): Promise<ProfileRow> {

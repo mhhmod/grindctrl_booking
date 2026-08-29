@@ -200,7 +200,9 @@ function normalizeAi(raw: unknown): MessengerAi {
 }
 
 const RECIPIENT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const MAX_RECIPIENTS = 5;
+/** Shared with notify.ts's workspace-member fallback: this is an alert, not
+ *  a mailing list, whichever recipient source fills the slot. */
+export const MAX_RECIPIENTS = 5;
 
 function normalizeNotifications(raw: unknown): MessengerNotifications {
   const source = asRecord(raw);

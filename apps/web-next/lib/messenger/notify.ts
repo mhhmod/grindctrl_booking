@@ -1,9 +1,16 @@
 import 'server-only';
 
 import { getMessengerServiceClient } from './db';
-import { claimHandoffNotification, listMessages, recordEvent } from './conversations';
+import {
+  claimHandoffNotification,
+  listMessages,
+  recordEvent,
+  releaseHandoffNotification,
+} from './conversations';
 import { sendHandoffNotification } from '@/lib/email/handoff-notification-sender';
-import { isPlaceholderEmail } from './provisioning';
+import { hasSmtpConfigured } from '@/lib/email/transport';
+import { isPlaceholderEmail } from './emails';
+import { MAX_RECIPIENTS } from './config';
 import type { MessengerLocale, MessengerNotifications } from './types';
 
 /* Handoff notifier. Called right after a conversation transitions to
@@ -13,7 +20,6 @@ import type { MessengerLocale, MessengerNotifications } from './types';
    logs). Wiring this into the escalation path is a separate change. */
 
 const HOURLY_SITE_CAP = 10;
-const MAX_RECIPIENTS = 5;
 
 export interface NotifyHandoffInput {
   site: {
@@ -32,8 +38,8 @@ export interface NotifyHandoffInput {
 }
 
 /** Workspace owners/admins with a real (non-placeholder) address, used when
- *  the merchant hasn't configured explicit recipients. Caps at 5 — this is
- *  an alert, not a mailing list. */
+ *  the merchant hasn't configured explicit recipients. Caps at MAX_RECIPIENTS
+ *  — this is an alert, not a mailing list. */
 async function resolveRecipients(workspaceId: string): Promise<string[]> {
   const supabase = getMessengerServiceClient();
   const res = await supabase
@@ -43,14 +49,11 @@ async function resolveRecipients(workspaceId: string): Promise<string[]> {
     .in('role', ['owner', 'admin']);
   if (res.error) return [];
 
+  // workspace_members.profile_id is a single NOT NULL FK, so PostgREST
+  // embeds profiles as one object (or null), never an array.
   const addresses = new Set<string>();
-  for (const row of (res.data ?? []) as Array<{ profiles: unknown }>) {
-    // A to-one embed normally comes back as an object, but this codebase has
-    // at least one spot (listConversationsForSite's widget_visitors embed)
-    // that treats the same shape of embed as an array — normalize both so
-    // this doesn't silently resolve zero recipients if that's the real shape.
-    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    const email = (profile as { email?: string | null } | null)?.email;
+  for (const row of (res.data ?? []) as Array<{ profiles: { email?: string | null } | null }>) {
+    const email = row.profiles?.email?.trim().toLowerCase();
     if (email && !isPlaceholderEmail(email)) addresses.add(email);
     if (addresses.size >= MAX_RECIPIENTS) break;
   }
@@ -84,15 +87,33 @@ function shopperLabel(conversation: NotifyHandoffInput['conversation'], locale: 
  *  the caller has already escalated the conversation regardless of whether
  *  this succeeds.
  *
- *  Order matters: recipients and the hourly cap are checked BEFORE the
- *  claim, and the claim is taken LAST. Both of those are recoverable —
- *  a merchant with no recipients configured yet, or a site over its cap,
- *  should still be notifiable on a later call — so neither may spend the
- *  once-per-handoff claim. */
+ *  Order, deliberately: emailOnHandoff → SMTP configured → recipients →
+ *  hourly cap → claim LAST → send. Everything before the claim is a
+ *  recoverable reason to bail — a deploy missing SMTP env vars, a merchant
+ *  with no recipients configured yet, or a site over its cap should all
+ *  still be notifiable on a later call — so none of those may spend the
+ *  once-per-handoff claim.
+ *
+ *  Once claimed, a failed send (`sent: false` — SMTP rejected it, or the
+ *  transport threw) must ALSO not permanently burn the claim, or the
+ *  merchant is never notified again even after the problem is fixed. So we
+ *  release the claim before recording handoff_notify_failed, putting that
+ *  failure back in the same "try again later" state as the pre-claim
+ *  bails. */
 export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
   try {
     const { site, conversation } = input;
     if (!site.notifications.emailOnHandoff) return;
+
+    if (!hasSmtpConfigured()) {
+      await recordEvent({
+        siteId: site.id,
+        conversationId: conversation.id,
+        eventName: 'handoff_notify_skipped',
+        payload: { reason: 'smtp_not_configured' },
+      });
+      return;
+    }
 
     const recipients =
       site.notifications.recipients.length > 0
@@ -120,8 +141,12 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
     const claimed = await claimHandoffNotification(conversation.id);
     if (!claimed) return;
 
-    const recentMessages = (await listMessages(conversation.id, { limit: 6 }))
-      .slice(-3)
+    // {limit: 3, newestFirst: true} + reverse(): the three most RECENT
+    // messages, back in chronological order. Plain {limit: 3} would give the
+    // three OLDEST — the opening of the chat — under an email heading that
+    // says "Last few messages".
+    const recentMessages = (await listMessages(conversation.id, { limit: 3, newestFirst: true }))
+      .reverse()
       .map((m) => ({ role: m.role, content: m.content.slice(0, 400) }));
 
     const { sent } = await sendHandoffNotification({
@@ -135,10 +160,20 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
       recentMessages,
     });
 
+    if (!sent) {
+      await releaseHandoffNotification(conversation.id);
+      await recordEvent({
+        siteId: site.id,
+        conversationId: conversation.id,
+        eventName: 'handoff_notify_failed',
+      });
+      return;
+    }
+
     await recordEvent({
       siteId: site.id,
       conversationId: conversation.id,
-      eventName: sent ? 'handoff_notified' : 'handoff_notify_failed',
+      eventName: 'handoff_notified',
     });
   } catch (error) {
     console.error('[messenger] notifyHandoff failed:', error instanceof Error ? error.message : error);
