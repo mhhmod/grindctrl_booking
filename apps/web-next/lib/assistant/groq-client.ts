@@ -1,5 +1,5 @@
 import Groq from 'groq-sdk';
-import { ProviderUnavailableError } from './errors';
+import { describeProviderError, ProviderUnavailableError } from './errors';
 
 /* Groq's model lineup changes often — confirmed live against console.groq.com
    as of this build. llama-3.1-8b-instant / llama-3.3-70b-versatile are
@@ -26,10 +26,16 @@ export const VISION_MODEL_CANDIDATES: string[] = [
 
 /** True for the one error worth trying a different model over. Anything
  *  else — auth, rate limit, a malformed image — repeats identically on
- *  every candidate and must not cost four requests to discover. */
+ *  every candidate and must not cost four requests to discover.
+ *
+ *  Reads the CAUSE, not just the message: withGroqCall replaces the
+ *  provider's message with a generic shopper-facing sentence, so matching
+ *  on `error.message` alone never matched and the caller gave up on the
+ *  first candidate — which is exactly what production did. */
 export function isModelNotFound(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error);
-  return /model_not_found|does not exist or you do not have access/i.test(message);
+  return /model_not_found|does not exist or you do not have access/i.test(
+    describeProviderError(error),
+  );
 }
 
 /** Model ids this API key can actually use. Only called to explain a total
