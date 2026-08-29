@@ -35,6 +35,7 @@ function mapConversation(row: Record<string, unknown>): ConversationRecord {
     assigned_profile_id: (row.assigned_profile_id as string | null) ?? null,
     handoff_reason: (row.handoff_reason as string | null) ?? null,
     handoff_summary: (row.handoff_summary as string | null) ?? null,
+    handoff_notified_at: isoOrNull(row.handoff_notified_at),
     metadata: (row.metadata as ConversationRecord['metadata']) ?? {},
   };
 }

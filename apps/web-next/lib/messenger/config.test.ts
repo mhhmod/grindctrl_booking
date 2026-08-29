@@ -71,3 +71,37 @@ describe('mergeDraftOverPublished', () => {
     expect(config.appearance.position).toBe('bottom-left');
   });
 });
+
+describe('notification settings', () => {
+  it('defaults to emailing on handoff with no explicit recipients', () => {
+    const config = resolveMessengerConfig({});
+    expect(config.notifications.emailOnHandoff).toBe(true);
+    expect(config.notifications.recipients).toEqual([]);
+  });
+
+  it('keeps only well-formed recipient addresses, capped at five', () => {
+    const config = resolveMessengerConfig({
+      messenger_notifications: {
+        emailOnHandoff: false,
+        recipients: [
+          '  Owner@Example.com ',
+          'not-an-email',
+          '',
+          'a@b.co',
+          'c@d.co',
+          'e@f.co',
+          'g@h.co',
+          'i@j.co',
+        ],
+      },
+    });
+    expect(config.notifications.emailOnHandoff).toBe(false);
+    expect(config.notifications.recipients).toEqual([
+      'owner@example.com',
+      'a@b.co',
+      'c@d.co',
+      'e@f.co',
+      'g@h.co',
+    ]);
+  });
+});

@@ -7,6 +7,7 @@ import type {
   MessengerAppearance,
   MessengerBehaviour,
   MessengerConfig,
+  MessengerNotifications,
 } from './types';
 
 /* Normalization + defaults for the merchant-facing messenger configuration
@@ -65,6 +66,10 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     instructions: '',
     languageMode: 'auto',
     escalationEnabled: true,
+  },
+  notifications: {
+    emailOnHandoff: true,
+    recipients: [],
   },
 };
 
@@ -194,6 +199,22 @@ function normalizeAi(raw: unknown): MessengerAi {
   };
 }
 
+const RECIPIENT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const MAX_RECIPIENTS = 5;
+
+function resolveNotifications(raw: unknown): MessengerNotifications {
+  const source = (raw ?? {}) as Record<string, unknown>;
+  const recipients = Array.isArray(source.recipients) ? source.recipients : [];
+  return {
+    emailOnHandoff: source.emailOnHandoff !== false,
+    recipients: recipients
+      .filter((entry): entry is string => typeof entry === 'string')
+      .map((entry) => entry.trim().toLowerCase())
+      .filter((entry) => entry.length <= 200 && RECIPIENT_RE.test(entry))
+      .slice(0, MAX_RECIPIENTS),
+  };
+}
+
 /** Published config resolver — total function, never throws, never returns
  *  partial objects to the storefront. */
 export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
@@ -202,6 +223,7 @@ export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
     appearance: normalizeAppearance(root.messenger_appearance),
     behaviour: normalizeBehaviour(root.messenger_behaviour),
     ai: normalizeAi(root.messenger_ai),
+    notifications: resolveNotifications(root.messenger_notifications),
   };
 }
 

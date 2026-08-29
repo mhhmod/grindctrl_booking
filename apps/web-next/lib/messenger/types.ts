@@ -70,10 +70,17 @@ export interface MessengerAi {
   escalationEnabled: boolean;
 }
 
+export interface MessengerNotifications {
+  emailOnHandoff: boolean;
+  /** Overrides the workspace-member recipients when non-empty. */
+  recipients: string[];
+}
+
 export interface MessengerConfig {
   appearance: MessengerAppearance;
   behaviour: MessengerBehaviour;
   ai: MessengerAi;
+  notifications: MessengerNotifications;
 }
 
 export type MessengerSettingsRow = {
@@ -134,6 +141,7 @@ export interface ConversationRecord {
   assigned_profile_id: string | null;
   handoff_reason: string | null;
   handoff_summary: string | null;
+  handoff_notified_at: string | null;
   metadata: {
     shopper_locale?: MessengerLocale;
     identity?: {
