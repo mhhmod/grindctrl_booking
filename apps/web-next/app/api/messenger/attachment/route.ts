@@ -12,6 +12,7 @@ import {
 import { inspectAttachment, MAX_ATTACHMENT_BYTES } from '@/lib/messenger/image';
 import { triageAttachment, triageNote } from '@/lib/messenger/triage';
 import { pickLocalized } from '@/lib/messenger/ai';
+import { describeProviderError } from '@/lib/assistant/errors';
 import type { MessengerLocale } from '@/lib/messenger/types';
 
 /* POST /api/messenger/attachment  (multipart)
@@ -149,11 +150,18 @@ export async function POST(request: NextRequest) {
           };
         }
       } catch (error) {
-        console.error('[messenger] triage failed:', error instanceof Error ? error.message : error);
+        const reason = describeProviderError(error);
+        console.error('[messenger] triage failed:', reason);
+        /* The reason goes in the payload, not just the container log: this
+           fails for boring, findable causes (a retired vision model, a
+           missing key, a rate limit) and an empty event turns each one into
+           an afternoon. Capped, and the message never carries a credential —
+           the provider wrapper reports status and model, not auth. */
         void recordEvent({
           siteId: site.id,
           conversationId: conversation.id,
           eventName: 'attachment_triage_failed',
+          payload: { reason: reason.slice(0, 300) },
         }).catch(() => {});
       }
     }

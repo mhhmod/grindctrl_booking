@@ -34,6 +34,8 @@ export async function withGroqCall<T>(label: string, fn: () => Promise<T>): Prom
     return result;
   } catch (err) {
     console.error(`[groq] ${label} failed after ${Date.now() - start}ms:`, err);
-    throw new ProviderUnavailableError();
+    // Keep the cause. Without it every provider failure — retired model,
+    // missing key, rate limit — surfaces as the same opaque sentence.
+    throw new ProviderUnavailableError(undefined, { cause: err });
   }
 }
