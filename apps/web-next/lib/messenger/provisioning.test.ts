@@ -18,6 +18,12 @@ interface TableState {
   rows: Row[];
   /** Rows that a *concurrent* request commits between our read and write. */
   appearOnWrite?: Row[];
+  /** Rows the winner has inserted but which this connection cannot see yet.
+   *  They become visible after `hiddenForReads` more reads — which is what
+   *  production did: the row's transaction had started (created_at 22:20:10.224)
+   *  but the loser's follow-up read at .978 still came back empty. */
+  hiddenRows?: Row[];
+  hiddenForReads?: number;
 }
 
 function stubClient(tables: Record<string, TableState>) {
@@ -55,6 +61,9 @@ function stubClient(tables: Record<string, TableState>) {
       },
       upsert: (row: Row) => {
         calls.push(`${table}.upsert`);
+        // The winner holds the unique-index slot, so ON CONFLICT DO NOTHING
+        // writes nothing and reports success — the exact production shape.
+        if (state.hiddenRows?.length) return Promise.resolve({ data: null, error: null });
         // A racing request already committed its row: on conflict do nothing.
         if (state.appearOnWrite?.length) {
           state.rows.push(...state.appearOnWrite);
@@ -65,6 +74,15 @@ function stubClient(tables: Record<string, TableState>) {
         return Promise.resolve({ data: null, error: null });
       },
       maybeSingle: () => {
+        // A row committed by a concurrent writer becomes visible only once
+        // this connection's snapshot catches up.
+        if (state.hiddenRows?.length) {
+          if ((state.hiddenForReads ?? 0) > 0) state.hiddenForReads! -= 1;
+          else {
+            state.rows.push(...state.hiddenRows);
+            state.hiddenRows = [];
+          }
+        }
         const match = state.rows.find((r) => filters.every(([c, v]) => r[c] === v));
         filters = [];
         return Promise.resolve({ data: match ?? null, error: null });
@@ -115,6 +133,44 @@ describe('provisioning', () => {
     const mine = tables.profiles.rows.filter((r) => r.clerk_user_id === 'user_1');
     expect(mine).toHaveLength(1);
     expect(mine[0].id).toBe('p-racer');
+  });
+
+  it('waits for a concurrent insert this connection cannot see yet', async () => {
+    /* Production, 2026-08-29 22:20:10: two renders of /dashboard/messenger
+       raced on a brand-new Clerk user (Next prefetches the route while
+       navigating to it). The winner inserted; the loser's ON CONFLICT DO
+       NOTHING wrote nothing, and its follow-up read did not observe the
+       winner's commit. ensureProfile threw 'row missing after insert' and
+       the whole dashboard page 500'd on the user's first ever visit.
+
+       The old code read exactly once and gave up. */
+    const { client } = stubClient({
+      profiles: {
+        rows: [],
+        hiddenRows: [{ id: 'p-winner', clerk_user_id: 'user_1', email: 'winner@example.com' }],
+        hiddenForReads: 2,
+      },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-winner', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(listMessengerSites('user_1')).resolves.toEqual([]);
+  });
+
+  it('still gives up rather than hanging when the row never appears', async () => {
+    const { client } = stubClient({
+      profiles: {
+        rows: [],
+        hiddenRows: [{ id: 'p-never', clerk_user_id: 'user_1', email: 'x@y.z' }],
+        hiddenForReads: 99,
+      },
+      workspaces: { rows: [] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(listMessengerSites('user_1')).rejects.toThrow(/row missing after insert/);
   });
 
   it('reuses the existing profile and workspace without writing again', async () => {

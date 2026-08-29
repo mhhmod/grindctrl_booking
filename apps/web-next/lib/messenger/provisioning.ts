@@ -14,6 +14,12 @@ export { isPlaceholderEmail };
    Everything downstream (RLS policies, analytics RPCs, Install page data)
    already understands this shape, which is precisely why we reuse it. */
 
+/* Three attempts at ~150ms of total added latency, and only on the racing
+   path — a first visit that collides with itself. Every later visit takes
+   the `existing` branch and never reaches the loop. */
+const PROFILE_CREATE_ATTEMPTS = 3;
+const PROFILE_RETRY_BASE_MS = 50;
+
 export class UnauthorizedError extends Error {
   constructor() {
     super('Unauthorized');
@@ -60,24 +66,42 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
      profiles_clerk_user_id_key. `on conflict do nothing` makes the write
      itself safe; ignoreDuplicates (rather than a real upsert) is deliberate,
      because an upsert would overwrite a known email with the noreply
-     placeholder on every later visit. */
-  const insert = await supabase
-    .from('profiles')
-    .upsert(
-      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
-      { onConflict: 'clerk_user_id', ignoreDuplicates: true },
-    );
-  if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
+     placeholder on every later visit.
 
-  // Whoever won the race, the row is committed by now.
-  const settled = await supabase
-    .from('profiles')
-    .select('id, clerk_user_id, email')
-    .eq('clerk_user_id', clerkUserId)
-    .maybeSingle();
-  if (settled.error) throw new Error(`profile lookup failed: ${settled.error.message}`);
-  if (!settled.data) throw new Error('profile create failed: row missing after insert');
-  return settled.data as ProfileRow;
+     What that still leaves: DO NOTHING reports success *without writing*
+     when a concurrent request holds the unique-index slot, and the winner's
+     row is not guaranteed to be visible to this connection the moment our
+     statement returns. This code used to read once and assume it was —
+     "whoever won the race, the row is committed by now" — which threw and
+     500'd the entire dashboard on a user's first ever visit. It happened in
+     production at 2026-08-29 22:20:10, where the winning row's transaction
+     had started at .224 and the loser's read at .978 still came back empty;
+     Next prefetching this route while navigating to it supplies the second
+     request. Retrying the write as well as the read also covers the case
+     where the winner rolled back, which re-reading alone would never fix. */
+  for (let attempt = 0; attempt < PROFILE_CREATE_ATTEMPTS; attempt += 1) {
+    const insert = await supabase
+      .from('profiles')
+      .upsert(
+        { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
+        { onConflict: 'clerk_user_id', ignoreDuplicates: true },
+      );
+    if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
+
+    const settled = await supabase
+      .from('profiles')
+      .select('id, clerk_user_id, email')
+      .eq('clerk_user_id', clerkUserId)
+      .maybeSingle();
+    if (settled.error) throw new Error(`profile lookup failed: ${settled.error.message}`);
+    if (settled.data) return settled.data as ProfileRow;
+
+    // Bounded: a page that hangs is worse than one that reports a failure.
+    if (attempt < PROFILE_CREATE_ATTEMPTS - 1) {
+      await new Promise((resolve) => setTimeout(resolve, PROFILE_RETRY_BASE_MS * (attempt + 1)));
+    }
+  }
+  throw new Error('profile create failed: row missing after insert');
 }
 
 /* Oldest-first everywhere, deliberately: workspaces has no unique key on
