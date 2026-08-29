@@ -30,6 +30,12 @@ export async function requireClerkUser(): Promise<{ userId: string; email: strin
   return { userId, email: null };
 }
 
+const PLACEHOLDER_EMAIL_SUFFIX = '@users.noreply.clerk.dev';
+
+export function isPlaceholderEmail(email: string | null | undefined): boolean {
+  return !email || email.endsWith(PLACEHOLDER_EMAIL_SUFFIX);
+}
+
 async function ensureProfile(clerkUserId: string, email: string | null): Promise<ProfileRow> {
   const supabase = getMessengerServiceClient();
   const existing = await supabase
@@ -38,7 +44,18 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
     .eq('clerk_user_id', clerkUserId)
     .maybeSingle();
   if (existing.error) throw new Error(`profile lookup failed: ${existing.error.message}`);
-  if (existing.data) return existing.data as ProfileRow;
+  if (existing.data) {
+    const row = existing.data as ProfileRow;
+    /* Provisioning ran before any real address was available, so the row
+       holds a placeholder nobody can receive mail at. Upgrade it the first
+       time a real one arrives — and never the other way round, or a later
+       visit would wipe a working address. */
+    if (email && isPlaceholderEmail(row.email) && email !== row.email) {
+      await supabase.from('profiles').update({ email }).eq('id', row.id);
+      return { ...row, email };
+    }
+    return row;
+  }
 
   /* Read-then-insert is not atomic, and a first visit renders this page more
      than once concurrently — both reads miss, both insert, one dies on
@@ -49,7 +66,7 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
   const insert = await supabase
     .from('profiles')
     .upsert(
-      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}@users.noreply.clerk.dev` },
+      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
       { onConflict: 'clerk_user_id', ignoreDuplicates: true },
     );
   if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);

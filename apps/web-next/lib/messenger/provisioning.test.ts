@@ -40,6 +40,19 @@ function stubClient(tables: Record<string, TableState>) {
         state.rows.push({ id: `${table}-${state.rows.length + 1}`, ...row });
         return api;
       },
+      update: (patch: Row) => {
+        calls.push(`${table}.update`);
+        // Mirrors real supabase-js: .update() only becomes a filter builder
+        // once a verb is chained onto it, so the match happens in .eq().
+        return {
+          eq: (col: string, val: unknown) => {
+            for (const row of state.rows) {
+              if (row[col] === val) Object.assign(row, patch);
+            }
+            return Promise.resolve({ data: null, error: null });
+          },
+        };
+      },
       upsert: (row: Row) => {
         calls.push(`${table}.upsert`);
         // A racing request already committed its row: on conflict do nothing.
@@ -117,5 +130,35 @@ describe('provisioning', () => {
     expect(calls).not.toContain('profiles.insert');
     expect(calls).not.toContain('profiles.upsert');
     expect(calls).not.toContain('workspaces.insert');
+  });
+
+  it('upgrades a placeholder email once a real one is known', async () => {
+    const { client, tables } = stubClient({
+      profiles: {
+        rows: [
+          { id: 'p-1', clerk_user_id: 'user_1', email: 'user_1@users.noreply.clerk.dev' },
+        ],
+      },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await listMessengerSites('user_1', 'owner@store.com');
+
+    expect(tables.profiles.rows[0].email).toBe('owner@store.com');
+  });
+
+  it('never downgrades a real email back to the placeholder', async () => {
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'owner@store.com' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await listMessengerSites('user_1', null);
+
+    expect(tables.profiles.rows[0].email).toBe('owner@store.com');
   });
 });
