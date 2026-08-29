@@ -120,6 +120,7 @@ export function MessengerTabs({
           <SupportDeskSettings
             locale={locale}
             siteId={siteId}
+            shopDomain={domain && domain.endsWith('.myshopify.com') ? domain : null}
             notifications={config.notifications}
             contactCapture={config.contactCapture}
             attachments={config.attachments}

@@ -23,7 +23,11 @@ const mocks = vi.hoisted(() => ({
   escalateAndNotify: vi.fn(),
   detectExplicitHandoffRequest: vi.fn(),
   generateAssistantReply: vi.fn(),
+  phraseOrderAnswer: vi.fn(),
   getActiveKnowledge: vi.fn(async () => []),
+  updateConversationMetadata: vi.fn(async () => {}),
+  recordAudit: vi.fn(async () => {}),
+  lookupOrder: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -50,7 +54,13 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     listMessages: mocks.listMessages,
     recordEvent: mocks.recordEvent,
     requestHandoff: mocks.requestHandoff,
+    updateConversationMetadata: mocks.updateConversationMetadata,
+    recordAudit: mocks.recordAudit,
   };
+});
+vi.mock('@/lib/messenger/orders', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/messenger/orders')>();
+  return { ...actual, lookupOrder: mocks.lookupOrder };
 });
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
 vi.mock('@/lib/messenger/ai', async (importOriginal) => {
@@ -59,6 +69,7 @@ vi.mock('@/lib/messenger/ai', async (importOriginal) => {
     ...actual,
     detectExplicitHandoffRequest: mocks.detectExplicitHandoffRequest,
     generateAssistantReply: mocks.generateAssistantReply,
+    phraseOrderAnswer: mocks.phraseOrderAnswer,
   };
 });
 vi.mock('@/lib/messenger/knowledge', async (importOriginal) => {
@@ -80,8 +91,17 @@ const SITE = {
     ...resolveMessengerConfig({}),
     ai: { enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', escalationEnabled: true },
   },
+  domain: null,
   security: { allow_localhost: false },
   patterns: [],
+};
+
+/* Same store, with order lookup switched on and a real myshopify domain to
+   read from. Both are required — the capability is off without either. */
+const ORDER_SITE = {
+  ...SITE,
+  domain: 'demo.myshopify.com',
+  config: { ...SITE.config, orderLookup: { enabled: true } },
 };
 
 const CONVERSATION = {
@@ -128,6 +148,108 @@ beforeEach(() => {
   mocks.detectExplicitHandoffRequest.mockReturnValue(false);
   mocks.claimAiTurn.mockResolvedValue(true);
   mocks.escalateAndNotify.mockResolvedValue(null);
+  mocks.updateConversationMetadata.mockResolvedValue(undefined);
+  mocks.recordAudit.mockResolvedValue(undefined);
+});
+
+const ACTION = (payload: object) => `<<GC_ACTION>>${JSON.stringify(payload)}`;
+
+function stubTurn(raw: string) {
+  mocks.appendMessage.mockImplementation(async (input: Record<string, unknown>) => ({
+    message: {
+      id: input.role === 'user' ? 'm-user' : 'm-reply',
+      role: input.role,
+      content: input.content,
+      created_at: new Date().toISOString(),
+      metadata: input.metadata ?? {},
+    },
+    replayed: false,
+  }));
+  mocks.generateAssistantReply.mockResolvedValue({ reply: raw, escalate: false, raw });
+}
+
+describe('POST /api/messenger/send — order lookup action seam', () => {
+  it('executes a lookup and answers from the facts, never from the raw payload', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.lookupOrder.mockResolvedValue({
+      ok: true,
+      facts: { order_number: '1234', order_date: '2026-08-01', fulfillment_status: 'fulfilled', payment_state: 'paid', line_items: [], tracking: null, destination: null },
+    });
+    mocks.phraseOrderAnswer.mockResolvedValue('Order 1234 shipped on 1 August.');
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.reply.content).toBe('Order 1234 shipped on 1 August.');
+    // The action line must never reach a shopper-visible message.
+    expect(data.reply.content).not.toContain('GC_ACTION');
+    expect(mocks.phraseOrderAnswer).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-derives identity server-side and ignores a customer id the model invented', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1', email: 'a@b.com', customer_id: '999' }));
+    mocks.lookupOrder.mockResolvedValue({ ok: false, reason: 'not_found' });
+
+    await POST(makeRequest(validBody));
+    // Conversation metadata carries no verified identity, so the executor
+    // must be told there is none — whatever the model wrote.
+    expect(mocks.lookupOrder.mock.calls[0][0].verifiedCustomerId).toBeNull();
+    expect(JSON.stringify(mocks.lookupOrder.mock.calls[0][0])).not.toContain('999');
+  });
+
+  it('gives every denial the same sentence, whatever actually went wrong', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    const replies: string[] = [];
+    for (const reason of ['not_found', 'email_mismatch', 'missing_proof']) {
+      stubTurn(ACTION({ action: 'lookup_order', order_number: '1', email: 'a@b.com' }));
+      mocks.lookupOrder.mockResolvedValue({ ok: false, reason });
+      const data = await (await POST(makeRequest(validBody))).json();
+      replies.push(data.reply.content);
+    }
+    expect(new Set(replies).size).toBe(1);
+    // And it never names which check failed.
+    expect(replies[0]).not.toMatch(/email|mismatch|not found/i);
+  });
+
+  it('never runs a lookup for a store that has not enabled it', async () => {
+    mocks.loadPublicSite.mockResolvedValue(SITE); // orderLookup off, no domain
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1', email: 'a@b.com' }));
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect(mocks.lookupOrder).not.toHaveBeenCalled();
+    expect(mocks.recordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'ai_action_rejected' }),
+    );
+  });
+
+  it('spends an attempt per try and refuses past the lifetime budget', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    mocks.getConversationForVisitor.mockResolvedValue({
+      ...CONVERSATION,
+      metadata: { order_lookup_attempts: 5 },
+    });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1', email: 'a@b.com' }));
+
+    await POST(makeRequest(validBody));
+    // Sixth attempt: counted, and never sent to Shopify.
+    expect(mocks.updateConversationMetadata).toHaveBeenCalledWith(
+      'conv-1',
+      expect.objectContaining({ order_lookup_attempts: 6 }),
+    );
+    expect(mocks.lookupOrder).not.toHaveBeenCalled();
+  });
+
+  it('rejects a turn carrying two actions rather than running the first', async () => {
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    stubTurn(`${ACTION({ action: 'lookup_order', order_number: '1' })} ${ACTION({ action: 'lookup_order', order_number: '2' })}`);
+    await POST(makeRequest(validBody));
+    expect(mocks.lookupOrder).not.toHaveBeenCalled();
+    expect(mocks.recordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'ai_action_rejected' }),
+    );
+  });
 });
 
 describe('POST /api/messenger/send', () => {
@@ -204,7 +326,7 @@ describe('POST /api/messenger/send', () => {
         message: { id: 'a2', role: 'assistant', content: 'Ships in 2 days.', created_at: new Date().toISOString(), metadata: { author: 'ai' } },
         replayed: false,
       });
-    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Ships in 2 days.', escalate: false });
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Ships in 2 days.', escalate: false, raw: 'Ships in 2 days.' });
 
     const res = await POST(makeRequest(validBody));
     const data = await res.json();
@@ -234,7 +356,7 @@ describe('POST /api/messenger/send', () => {
        while the model is thinking. Nothing generated may be stored. */
     const userMsg = { id: 'u4', role: 'user', content: 'How long is shipping?', created_at: new Date().toISOString(), metadata: {} };
     mocks.appendMessage.mockResolvedValue({ message: userMsg, replayed: false });
-    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Ships in 2 days.', escalate: false });
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Ships in 2 days.', escalate: false, raw: 'Ships in 2 days.' });
     mocks.claimAiTurn.mockResolvedValue(false);
     mocks.getConversationForVisitor
       .mockResolvedValueOnce(CONVERSATION)

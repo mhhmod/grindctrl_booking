@@ -16,6 +16,26 @@
 --   * Attachment retention (90 days) is enforced in application
 --     code, opportunistically. No scheduled sweep exists.
 --
+-- New server environment variables this migration goes with:
+--
+--   SHOPIFY_TOKEN_ENC_KEY   REQUIRED for order lookup. 32 random bytes,
+--                           base64. Generate with:
+--                             openssl rand -base64 32
+--                           Without it the OAuth callback refuses to store
+--                           a token rather than writing one in the clear.
+--   SHOPIFY_API_KEY         REQUIRED for order lookup. The app's client_id
+--                           from shopify.app.toml. SHOPIFY_API_SECRET is
+--                           already set and is reused for the exchange.
+--   GROQ_VISION_MODEL       Optional. Overrides the attachment-triage model
+--                           without a deploy; defaults to
+--                           meta-llama/llama-4-scout-17b-16e-instruct.
+--
+-- Rotating SHOPIFY_TOKEN_ENC_KEY invalidates every stored token: they
+-- decrypt to nothing, getShopToken returns null, and each merchant has to
+-- authorize again. There is no re-encryption path, deliberately — a key
+-- rotation should force re-consent rather than quietly re-wrap old
+-- credentials.
+--
 -- This file is a manual delta migration, matching house style.
 -- ============================================================
 

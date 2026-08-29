@@ -37,7 +37,11 @@ const COPY = {
     orders: 'Order lookup',
     ordersEnabled: 'Let the assistant look up order status and tracking',
     ordersHelp:
-      'Requires connecting your Shopify store with order permission. Shoppers must be signed in, or give an order number and the matching email. Read-only — the assistant can never change an order.',
+      'Shoppers must be signed in, or give an order number and the matching email. Read-only — the assistant can never change an order.',
+    ordersConnect: 'Grant order access',
+    ordersConnectHelp:
+      'Opens Shopify to approve order access for this store. Existing installs must approve again, because reading orders is a new permission.',
+    ordersNoStore: 'Connect a Shopify store first — order lookup needs one to read from.',
     save: 'Save draft',
     saving: 'Saving…',
     saved: 'Draft saved',
@@ -62,7 +66,11 @@ const COPY = {
     orders: 'الاستعلام عن الطلبات',
     ordersEnabled: 'السماح للمساعد بالاطلاع على حالة الطلب والشحن',
     ordersHelp:
-      'يتطلب ربط متجر Shopify مع صلاحية الطلبات. يجب أن يكون العميل مسجّل الدخول، أو يعطي رقم الطلب والبريد المطابق. للقراءة فقط — لا يمكن للمساعد تعديل أي طلب.',
+      'يجب أن يكون العميل مسجّل الدخول، أو يعطي رقم الطلب والبريد المطابق. للقراءة فقط — لا يمكن للمساعد تعديل أي طلب.',
+    ordersConnect: 'منح صلاحية الطلبات',
+    ordersConnectHelp:
+      'يفتح Shopify للموافقة على صلاحية الطلبات لهذا المتجر. يجب على المتاجر المثبّتة مسبقاً الموافقة مجدداً، لأن قراءة الطلبات صلاحية جديدة.',
+    ordersNoStore: 'اربط متجر Shopify أولاً — الاستعلام عن الطلبات يحتاج متجراً ليقرأ منه.',
     save: 'حفظ المسودة',
     saving: 'جارٍ الحفظ…',
     saved: 'تم حفظ المسودة',
@@ -98,6 +106,7 @@ function Check({
 export function SupportDeskSettings({
   locale,
   siteId,
+  shopDomain,
   notifications,
   contactCapture,
   attachments,
@@ -105,6 +114,9 @@ export function SupportDeskSettings({
 }: {
   locale: 'en' | 'ar';
   siteId: string;
+  /** The connected myshopify domain, when there is one. Order lookup has
+   *  nothing to read from without it. */
+  shopDomain: string | null;
   notifications: MessengerNotifications;
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
@@ -203,10 +215,28 @@ export function SupportDeskSettings({
 
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.orders}</h4>
-        <Check checked={orders.enabled} onChange={(v) => setOrders({ enabled: v })}>
+        <Check
+          checked={orders.enabled}
+          disabled={!shopDomain}
+          onChange={(v) => setOrders({ enabled: v })}
+        >
           {t.ordersEnabled}
         </Check>
-        <p className="text-xs text-muted-foreground">{t.ordersHelp}</p>
+        <p className="text-xs text-muted-foreground">{shopDomain ? t.ordersHelp : t.ordersNoStore}</p>
+        {shopDomain && (
+          <div className="grid gap-1">
+            {/* A plain link, not a fetch: this is a top-level navigation to
+                Shopify's consent screen, and the state cookie the route sets
+                only comes back on one. */}
+            <a
+              href={`/api/shopify/oauth/start?shop=${encodeURIComponent(shopDomain)}`}
+              className="w-fit rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+            >
+              {t.ordersConnect}
+            </a>
+            <p className="text-xs text-muted-foreground">{t.ordersConnectHelp}</p>
+          </div>
+        )}
       </section>
 
       <div className="flex items-center gap-3">

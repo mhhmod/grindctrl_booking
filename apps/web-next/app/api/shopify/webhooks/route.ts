@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { markTryOnShopUninstalled, recordTryOnShopSeen } from '@/lib/shopify/shops';
+import { deleteShopToken } from '@/lib/shopify/tokens';
 
 /* Mandatory Shopify webhooks receiver (app/uninstalled, scopes_update).
    Settings survive reinstalls; only the shop lifecycle record changes. */
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest) {
 
   if (topic === 'app/uninstalled') {
     recorded = await markTryOnShopUninstalled(shop);
+    // A token we can no longer use is a credential we should no longer
+    // hold. Failing to drop it must not fail the webhook, or Shopify
+    // retries an uninstall we already processed.
+    await deleteShopToken(String(shop ?? ''));
   } else if (topic === 'app/scopes_update') {
     recorded = await recordTryOnShopSeen(shop);
   }

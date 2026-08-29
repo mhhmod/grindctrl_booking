@@ -10,9 +10,12 @@ import {
   getConversationForVisitor,
   getVisitor,
   listMessages,
+  recordAudit,
   recordEvent,
   updateConversationMetadata,
 } from '@/lib/messenger/conversations';
+import { parseModelTurn } from '@/lib/messenger/actions';
+import { lookupOrder, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify } from '@/lib/messenger/escalate';
 import { verifyShopperToken } from '@/lib/messenger/identity';
@@ -20,6 +23,7 @@ import {
   buildSystemPrompt,
   detectExplicitHandoffRequest,
   generateAssistantReply,
+  phraseOrderAnswer,
   detectLocale,
   pickLocalized,
 } from '@/lib/messenger/ai';
@@ -59,6 +63,31 @@ const sessionLimiter = redis
       analytics: false,
     })
   : null;
+
+/* Order lookups are counted per IP as well as per conversation: a new
+   conversation is one localStorage clear away, so a per-conversation budget
+   alone would not slow down someone guessing order numbers. Counted on
+   attempts, not successes — guessing is what spends it. */
+const orderLookupLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, '1 h'),
+      prefix: 'gc-msgr-order',
+      analytics: false,
+    })
+  : null;
+
+/* Every denial reads the same, whatever went wrong. Wrong order number,
+   wrong email, another store's order, budget exhausted — one sentence, so
+   the chat cannot be used to discover which orders or addresses exist. */
+const ORDER_DENIED = {
+  en: "I couldn't find an order matching those details. If you'd like, I can bring in the team.",
+  ar: 'لم أتمكن من العثور على طلب مطابق لهذه التفاصيل. يمكنني توصيلك بالفريق إذا أردت.',
+};
+const ORDER_UNAVAILABLE = {
+  en: "I couldn't reach the store's order system just now. The team can check it for you.",
+  ar: 'تعذّر الوصول إلى نظام الطلبات الآن. يمكن للفريق التحقق منه نيابةً عنك.',
+};
 
 export async function POST(request: NextRequest) {
   const ipLimit = await publicApiRatelimit.limit(`ms:${clientIp(request) ?? 'unknown'}`);
@@ -115,6 +144,14 @@ export async function POST(request: NextRequest) {
     if (!conversation) return bad('bad_conversation', 403);
 
     const withinHours = isWithinAvailabilityHours(site.config.behaviour, new Date());
+
+    /* Order lookup needs a real Shopify store to address. A site with no
+       connected domain, or one pointing at something that is not a
+       myshopify domain, simply does not get the capability — and the model
+       is never told it exists, so it cannot offer what we would refuse. */
+    const orderShopDomain =
+      site.domain && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(site.domain) ? site.domain : null;
+    const orderLookupAvailable = site.config.orderLookup.enabled && Boolean(orderShopDomain);
 
     /* "Where should we reply?" is offered at most once per conversation, and
        only at a moment where a reply is genuinely owed later — a handoff, or
@@ -247,6 +284,7 @@ export async function POST(request: NextRequest) {
                   verifiedCustomer: true,
                 }
               : undefined,
+          orderLookupEnabled: orderLookupAvailable,
         }),
         history,
         userMessage: text,
@@ -275,7 +313,123 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (result.escalate && site.config.ai.escalationEnabled) {
+    /* ── The action seam ──────────────────────────────────────────────
+       The model may have asked for an order lookup instead of answering.
+       Authorization is re-derived here, not read from what it wrote: the
+       customer id comes from the conversation's verified identity, and the
+       model's own arguments are only ever the shopper's claimed proof. */
+    // `raw` is the source of truth; `reply` only ever has the HANDOFF
+    // sentinel stripped, so it is a safe fallback if raw ever arrives empty.
+    /* A turn that also asked for a human loses its action: the escalation
+       branch below wins. Reaching a person is the more important of the two
+       and dropping it to run a lookup would strand the shopper. */
+    const escalating = result.escalate && site.config.ai.escalationEnabled;
+    const turn = escalating
+      ? ({ kind: 'prose', text: result.reply } as const)
+      : parseModelTurn(result.raw || result.reply);
+
+    if (turn.kind === 'rejected' || (turn.kind === 'action' && !orderLookupAvailable)) {
+      const reason = turn.kind === 'rejected' ? turn.reason : 'capability_disabled';
+      void recordAudit({
+        siteId: site.id,
+        action: 'ai_action_rejected',
+        detail: { conversation_id: conversation.id, reason },
+      }).catch(() => {});
+      const saved = await appendMessage({
+        conversationId: conversation.id,
+        role: 'assistant',
+        content: pickLocalized(ORDER_UNAVAILABLE, locale),
+        metadata: { author: 'ai', locale },
+      });
+      return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+    }
+
+    if (turn.kind === 'action' && orderShopDomain) {
+      const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
+      const ipLookupLimit = orderLookupLimiter
+        ? await orderLookupLimiter.limit(`${key}:${clientIp(request) ?? 'unknown'}`)
+        : { success: true };
+
+      // Attempts are spent before the lookup runs, so a wrong guess costs
+      // the same as a right one. Persisted regardless of the outcome.
+      conversation.metadata.order_lookup_attempts = attempts;
+      await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
+
+      const overBudget = attempts > ORDER_LOOKUP_LIFETIME_LIMIT || !ipLookupLimit.success;
+      const outcome = overBudget
+        ? ({ ok: false, reason: 'rate_limited' } as const)
+        : await lookupOrder({
+            shopDomain: orderShopDomain,
+            // Server-derived. A model that invents a customer id cannot
+            // reach this argument — there is no field for it in the schema.
+            verifiedCustomerId:
+              verifiedCustomer && conversation.metadata.identity?.customer_id
+                ? conversation.metadata.identity.customer_id
+                : null,
+            orderNumber: turn.action.orderNumber,
+            email: turn.action.email,
+          });
+
+      if (outcome.ok) {
+        void recordAudit({
+          siteId: site.id,
+          action: 'order_lookup_performed',
+          detail: { conversation_id: conversation.id, order_number: outcome.facts.order_number },
+        }).catch(() => {});
+        let answer: string;
+        try {
+          answer = await phraseOrderAnswer({
+            prompt: buildSystemPrompt({
+              storeName: site.name,
+              assistantName: pickLocalized(site.config.appearance.launcherLabel, locale),
+              ai: site.config.ai,
+              locale,
+              knowledge,
+            }),
+            history,
+            userMessage: text,
+            facts: outcome.facts,
+          });
+        } catch {
+          answer = pickLocalized(ORDER_UNAVAILABLE, locale);
+        }
+        const saved = await appendMessage({
+          conversationId: conversation.id,
+          role: 'assistant',
+          content: answer,
+          metadata: { author: 'ai', locale },
+        });
+        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'order_lookup_performed' }).catch(() => {});
+        return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      }
+
+      void recordAudit({
+        siteId: site.id,
+        action: 'order_lookup_denied',
+        // The precise reason is recorded here and nowhere the shopper can
+        // see it. That asymmetry is the point.
+        detail: { conversation_id: conversation.id, reason: outcome.reason, attempts },
+      }).catch(() => {});
+      const unavailable =
+        outcome.reason === 'not_configured' ||
+        outcome.reason === 'no_scope' ||
+        outcome.reason === 'provider_error';
+      const saved = await appendMessage({
+        conversationId: conversation.id,
+        role: 'assistant',
+        content: pickLocalized(unavailable ? ORDER_UNAVAILABLE : ORDER_DENIED, locale),
+        metadata: { author: 'ai', locale },
+      });
+      void recordEvent({
+        siteId: site.id,
+        conversationId: conversation.id,
+        eventName: 'order_lookup_denied',
+        payload: { reason: outcome.reason },
+      }).catch(() => {});
+      return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+    }
+
+    if (escalating) {
       const transitioned = await escalateAndNotify(
         conversation.id,
         'assistant_escalated',

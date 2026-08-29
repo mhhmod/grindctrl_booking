@@ -2,6 +2,8 @@ import 'server-only';
 
 import { getGroqClient, withGroqCall, CHAT_MODEL } from '@/lib/assistant/groq-client';
 import { getActiveKnowledge, type KnowledgeEntry } from './knowledge';
+import { ACTION_SENTINEL } from './actions';
+import type { OrderFacts } from './orders';
 import type { MessengerAi, MessengerLocale } from './types';
 
 /* The support agent's brain. Design invariants:
@@ -66,6 +68,28 @@ export interface PromptInput {
   knowledge: KnowledgeEntry[];
   /** Verified claims only when identity was cryptographically confirmed. */
   identity?: { customerId?: string | null; name?: string | null; email?: string | null; verifiedCustomer: boolean };
+  /** Teaches the action line. Off means the model is never told the action
+   *  exists, so it cannot ask for something the server would refuse. */
+  orderLookupEnabled?: boolean;
+}
+
+/* The action seam, described to the model. Note what it does NOT include:
+   any field for who the shopper is. Identity is re-derived server-side from
+   the conversation record and the proxy-signed token, so an invented
+   customer id has nowhere to go. */
+function orderLookupInstructions(verified: boolean): string {
+  return [
+    'ORDER LOOKUP:',
+    'You can look up one order for this shopper. To do it, reply with ONLY this line',
+    'and nothing else — no greeting, no explanation, no text before or after:',
+    `${ACTION_SENTINEL}{"action":"lookup_order","order_number":"1234","email":"shopper@example.com"}`,
+    verified
+      ? '- This shopper is signed in, so order_number and email are both optional. Omit them to fetch their most recent order.'
+      : '- This shopper is NOT signed in. You must have BOTH an order number and the email used on the order before emitting the line. If you are missing either, ask for it in plain prose instead.',
+    '- Use it only when the shopper is asking about a specific order they placed.',
+    '- Emit it at most once per reply. Never invent an order number or an email.',
+    '- Do not state or promise anything about the order before the lookup returns.',
+  ].join('\n');
 }
 
 export function buildSystemPrompt(input: PromptInput): string {
@@ -97,6 +121,9 @@ export function buildSystemPrompt(input: PromptInput): string {
       .filter(Boolean)
       .join('\n'),
   );
+  if (input.orderLookupEnabled) {
+    parts.push(orderLookupInstructions(input.identity?.verifiedCustomer === true));
+  }
   const knowledge = knowledgeBlock(input.knowledge);
   if (knowledge) parts.push(knowledge);
   if (input.ai.instructions.trim()) {
@@ -119,6 +146,9 @@ export interface HistoryTurn {
 export interface AssistantResult {
   reply: string;
   escalate: boolean;
+  /** Untouched model output, for the action parser. `reply` has had the
+   *  handoff sentinel stripped and is what a shopper would see. */
+  raw: string;
 }
 
 export async function generateAssistantReply(input: {
@@ -149,7 +179,51 @@ export async function generateAssistantReply(input: {
     .replaceAll(HANDOFF_SENTINEL, '')
     .trim()
     .slice(0, 2000);
-  return { reply: reply || fallbackReply(), escalate };
+  return { reply: reply || fallbackReply(), escalate, raw };
+}
+
+/* The second half of an action turn: the server has already decided what is
+   true, and this only phrases it. Facts arrive as a labelled block the model
+   may read and may not extend — the same untrusted-data framing the store
+   knowledge block uses, for the same reason. */
+export async function phraseOrderAnswer(input: {
+  prompt: string;
+  history: HistoryTurn[];
+  userMessage: string;
+  facts: OrderFacts;
+}): Promise<string> {
+  const client = getGroqClient();
+  const completion = await withGroqCall('messenger.order-answer', () =>
+    client.chat.completions.create({
+      model: CHAT_MODEL,
+      temperature: 0.2,
+      max_tokens: 300,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            input.prompt,
+            'VERIFIED ORDER FACTS (retrieved by the store system for this shopper — the only order',
+            'information you may state. Do not add, estimate, or infer anything beyond these fields,',
+            'and never mention field names, JSON, or that you performed a lookup):',
+            '<<<',
+            JSON.stringify(input.facts),
+            '>>>',
+            'Answer the question using these facts in 1-4 sentences of plain text.',
+            'If the facts do not answer what they asked, say what you do know and offer the team.',
+          ].join('\n'),
+        },
+        ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
+          role: turn.role,
+          content: turn.content.slice(0, MESSAGE_CAP),
+        })),
+        { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
+      ],
+    }),
+  );
+  const text = (completion.choices?.[0]?.message?.content ?? '').toString().trim();
+  // Never let the action line survive into a shopper-visible message.
+  return text.replaceAll(ACTION_SENTINEL, '').trim().slice(0, 2000) || fallbackReply();
 }
 
 const MESSAGE_CAP = 2000;

@@ -1,7 +1,7 @@
 # Store Chat — support desk completion
 
 **Date:** 2026-08-29
-**Status:** Approved design, not yet implemented
+**Status:** Implemented. All four capabilities shipped 2026-08-29; see `supabase/messenger_support_desk.sql` for the schema and the new env vars. Deviations from this document are noted inline in the code they affect (JPEG segment filtering keeps the ICC profile; OAuth `state` is a signed cookie rather than a stored row; no `widget_leads` row is created because no lead-capture flag exists to enable it).
 **Scope:** Four capabilities that turn Store Chat from a chat widget into a working support desk: merchant notification, AI order lookup, shopper contact capture, and attachments with AI triage.
 
 ---
