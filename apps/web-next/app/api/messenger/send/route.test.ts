@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   listMessages: vi.fn(async (): Promise<Array<Record<string, unknown>>> => []),
   recordEvent: vi.fn(async () => {}),
   requestHandoff: vi.fn(),
+  escalateAndNotify: vi.fn(),
   detectExplicitHandoffRequest: vi.fn(),
   generateAssistantReply: vi.fn(),
   getActiveKnowledge: vi.fn(async () => []),
@@ -51,6 +52,7 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     requestHandoff: mocks.requestHandoff,
   };
 });
+vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
 vi.mock('@/lib/messenger/ai', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messenger/ai')>();
   return {
@@ -73,6 +75,7 @@ const SITE = {
   embed_key: 'gc_test_key',
   status: 'active',
   settings_version: 3,
+  workspace_id: 'ws-1',
   config: {
     ...resolveMessengerConfig({}),
     ai: { enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', escalationEnabled: true },
@@ -124,6 +127,7 @@ beforeEach(() => {
   mocks.listMessages.mockResolvedValue([]);
   mocks.detectExplicitHandoffRequest.mockReturnValue(false);
   mocks.claimAiTurn.mockResolvedValue(true);
+  mocks.escalateAndNotify.mockResolvedValue(null);
 });
 
 describe('POST /api/messenger/send', () => {
@@ -161,18 +165,35 @@ describe('POST /api/messenger/send', () => {
         message: { id: 's1', role: 'system', content: 'Connecting you…', created_at: new Date().toISOString(), metadata: { escalated: true } },
         replayed: false,
       });
-    mocks.requestHandoff.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    mocks.escalateAndNotify.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
 
     const res = await POST(makeRequest(body));
     const data = await res.json();
 
     expect(data.status).toBe('handoff_requested');
-    expect(mocks.requestHandoff).toHaveBeenCalledWith(
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(
       CONVERSATION.id,
       'shopper_requested_human',
       expect.stringContaining('talk to someone'),
+      expect.objectContaining({ id: SITE.id, workspace_id: SITE.workspace_id }),
     );
     expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+  });
+
+  it('escalates through the notifying wrapper, not requestHandoff directly', async () => {
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    mocks.escalateAndNotify.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    mocks.appendMessage.mockResolvedValue({
+      message: { id: 'u5', role: 'user', content: 'get me a human', created_at: new Date().toISOString(), metadata: {} },
+      replayed: false,
+    });
+
+    const res = await POST(makeRequest({ ...validBody, text: 'get me a human' }));
+    const data = await res.json();
+
+    expect(data.status).toBe('handoff_requested');
+    expect(mocks.escalateAndNotify).toHaveBeenCalledTimes(1);
+    expect(mocks.requestHandoff).not.toHaveBeenCalled();
   });
 
   it('stores the grounded AI reply with author=ai while the conversation is open', async () => {

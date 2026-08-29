@@ -7,6 +7,7 @@ import type {
   MessengerAppearance,
   MessengerBehaviour,
   MessengerConfig,
+  MessengerNotifications,
 } from './types';
 
 /* Normalization + defaults for the merchant-facing messenger configuration
@@ -65,6 +66,10 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     instructions: '',
     languageMode: 'auto',
     escalationEnabled: true,
+  },
+  notifications: {
+    emailOnHandoff: true,
+    recipients: [],
   },
 };
 
@@ -194,6 +199,26 @@ function normalizeAi(raw: unknown): MessengerAi {
   };
 }
 
+const RECIPIENT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+/** Shared with notify.ts's workspace-member fallback: this is an alert, not
+ *  a mailing list, whichever recipient source fills the slot. */
+export const MAX_RECIPIENTS = 5;
+
+function normalizeNotifications(raw: unknown): MessengerNotifications {
+  const source = asRecord(raw);
+  const recipients = Array.isArray(source.recipients) ? source.recipients : [];
+  const seen = new Set<string>();
+  for (const entry of recipients) {
+    if (typeof entry !== 'string') continue;
+    const trimmed = entry.trim().toLowerCase();
+    if (trimmed.length <= 200 && RECIPIENT_RE.test(trimmed)) seen.add(trimmed);
+  }
+  return {
+    emailOnHandoff: source.emailOnHandoff !== false,
+    recipients: [...seen].slice(0, MAX_RECIPIENTS),
+  };
+}
+
 /** Published config resolver — total function, never throws, never returns
  *  partial objects to the storefront. */
 export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
@@ -202,11 +227,12 @@ export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
     appearance: normalizeAppearance(root.messenger_appearance),
     behaviour: normalizeBehaviour(root.messenger_behaviour),
     ai: normalizeAi(root.messenger_ai),
+    notifications: normalizeNotifications(root.messenger_notifications),
   };
 }
 
-/** Draft shape uses the same three sections; unresolved values fall through
- *  to defaults identically, so preview and publish cannot diverge. */
+/** Draft shape uses the same sections as published; unresolved values fall
+ *  through to defaults identically, so preview and publish cannot diverge. */
 export function mergeDraftOverPublished(
   published: unknown,
   draft: unknown,
@@ -216,18 +242,21 @@ export function mergeDraftOverPublished(
   if (!hasDraft) return { config: resolveMessengerConfig(published), hasDraft };
 
   const publishedRoot = asRecord(published);
+  // Every section merges section-wise (partial edits shouldn't wipe sibling fields).
   const merged = {
-    messenger_appearance: asRecord(draftRoot.messenger_appearance),
+    messenger_appearance: {
+      ...asRecord(publishedRoot.messenger_appearance),
+      ...asRecord(draftRoot.messenger_appearance),
+    },
     messenger_behaviour: {
       ...asRecord(publishedRoot.messenger_behaviour),
       ...asRecord(draftRoot.messenger_behaviour),
     },
     messenger_ai: { ...asRecord(publishedRoot.messenger_ai), ...asRecord(draftRoot.messenger_ai) },
-  };
-  // Appearance merges section-wise too (partial color edits shouldn't wipe icons).
-  merged.messenger_appearance = {
-    ...asRecord(publishedRoot.messenger_appearance),
-    ...asRecord(draftRoot.messenger_appearance),
+    messenger_notifications: {
+      ...asRecord(publishedRoot.messenger_notifications),
+      ...asRecord(draftRoot.messenger_notifications),
+    },
   };
   return { config: resolveMessengerConfig(merged), hasDraft };
 }

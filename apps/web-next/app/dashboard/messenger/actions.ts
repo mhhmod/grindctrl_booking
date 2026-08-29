@@ -11,7 +11,6 @@ import {
 import {
   appendMessage,
   recordAudit,
-  requestHandoff,
   returnConversationToAi,
   takeOverConversation,
   closeConversation,

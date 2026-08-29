@@ -35,6 +35,7 @@ function mapConversation(row: Record<string, unknown>): ConversationRecord {
     assigned_profile_id: (row.assigned_profile_id as string | null) ?? null,
     handoff_reason: (row.handoff_reason as string | null) ?? null,
     handoff_summary: (row.handoff_summary as string | null) ?? null,
+    handoff_notified_at: isoOrNull(row.handoff_notified_at),
     metadata: (row.metadata as ConversationRecord['metadata']) ?? {},
   };
 }
@@ -162,7 +163,11 @@ export async function listConversationsForSite(
     .limit(limit);
   if (rows.error) throw new Error(`conversation list failed: ${rows.error.message}`);
   return ((rows.data ?? []) as Array<Record<string, unknown>>).map((row) => {
-    const visitor = (row.widget_visitors as Array<Record<string, unknown>> | null)?.[0];
+    // widget_conversations.visitor_id is a single NOT NULL FK, so the embed
+    // is a single object (or null), never an array — indexing [0] into an
+    // object silently yields undefined, which is why this used to always
+    // resolve visitor_email/visitor_name to null.
+    const visitor = row.widget_visitors as Record<string, unknown> | null;
     return {
       ...mapConversation(row),
       visitor_email: (visitor?.user_email as string | undefined) ?? null,
@@ -220,14 +225,14 @@ export async function appendMessage(input: {
 
 export async function listMessages(
   conversationId: string,
-  options?: { afterIso?: string | null; limit?: number },
+  options?: { afterIso?: string | null; limit?: number; newestFirst?: boolean },
 ): Promise<MessageRecord[]> {
   const supabase = getMessengerServiceClient();
   let query = supabase
     .from('widget_messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: !options?.newestFirst })
     .limit(Math.min(options?.limit ?? 100, 200));
   if (options?.afterIso) query = query.gt('created_at', options.afterIso);
   const rows = await query;
@@ -253,6 +258,7 @@ async function guardedTransition(
     assigned_profile_id: string | null;
     handoff_reason: string | null;
     handoff_summary: string | null;
+    handoff_notified_at: string | null;
   }>,
 ): Promise<ConversationRecord | null> {
   const supabase = getMessengerServiceClient();
@@ -291,6 +297,48 @@ export async function requestHandoff(
   });
 }
 
+/** Claims the right to notify about this handoff. Returns false if someone
+ *  already claimed it — the guard is the WHERE clause, so two concurrent
+ *  transitions cannot both send an email. */
+export async function claimHandoffNotification(conversationId: string): Promise<boolean> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .update({ handoff_notified_at: new Date().toISOString() })
+    .eq('id', conversationId)
+    .is('handoff_notified_at', null)
+    .select('id');
+  if (res.error) throw new Error(`notification claim failed: ${res.error.message}`);
+  return (res.data ?? []).length > 0;
+}
+
+/** Reverses a claim after a failed send. Without this, a transient SMTP
+ *  error (or a misconfigured deploy) permanently burns the once-per-handoff
+ *  claim — handoff_notified_at stays set, so the .is(..., null) guard can
+ *  never pass again and the merchant is never notified even after the
+ *  underlying problem is fixed. */
+export async function releaseHandoffNotification(conversationId: string): Promise<void> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .update({ handoff_notified_at: null })
+    .eq('id', conversationId);
+  if (res.error) console.error('[messenger] notification release failed:', res.error.message);
+}
+
+/** Conversations waiting on a human, for the sidebar badge. */
+export async function countAwaitingHandoff(siteIds: string[]): Promise<number> {
+  if (siteIds.length === 0) return 0;
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .select('id', { count: 'exact', head: true })
+    .in('widget_site_id', siteIds)
+    .eq('status', 'handoff_requested');
+  if (res.error) return 0; // A badge must never take the dashboard down.
+  return res.count ?? 0;
+}
+
 export async function takeOverConversation(
   conversationId: string,
   profileId: string,
@@ -305,6 +353,11 @@ export async function returnConversationToAi(conversationId: string): Promise<Co
   return guardedTransition(conversationId, ['handoff_active'], {
     status: 'open',
     assigned_profile_id: null,
+    // A conversation handed back to the AI can escalate again later, and
+    // that later escalation deserves its own alert — without clearing this,
+    // claimHandoffNotification's .is(..., null) guard stays permanently
+    // false and the merchant is never notified of the re-escalation.
+    handoff_notified_at: null,
   });
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { currentUser } from '@clerk/nextjs/server';
 import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { ensureMessengerSite, listMessengerSites } from '@/lib/messenger/provisioning';
@@ -51,7 +52,13 @@ export default async function MessengerPage({
   const locale = await getRequestLocale();
   const copy = TAB_COPY[locale === 'ar' ? 'ar' : 'en'];
 
-  let sites = await listMessengerSites(userId);
+  /* Clerk holds the address the merchant actually reads; the profiles row
+     is only a mirror. Notifications are unsendable without this. */
+  const clerkUser = await currentUser();
+  const merchantEmail =
+    clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
+
+  let sites = await listMessengerSites(userId, merchantEmail);
   if (sites.length === 0) {
     // First visit: give the merchant a site to configure immediately. If a
     // Shopify store is already connected via Try-On, mirror its domain so

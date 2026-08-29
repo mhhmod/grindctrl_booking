@@ -2,7 +2,10 @@ import 'server-only';
 
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from './db';
+import { isPlaceholderEmail, PLACEHOLDER_EMAIL_SUFFIX } from './emails';
 import type { WidgetSiteRow } from './types';
+
+export { isPlaceholderEmail };
 
 /* Lazy provisioning of the existing profiles -> workspaces -> widget_sites
    foundation. The dashboard's original workspace RPC was never provisioned
@@ -38,7 +41,19 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
     .eq('clerk_user_id', clerkUserId)
     .maybeSingle();
   if (existing.error) throw new Error(`profile lookup failed: ${existing.error.message}`);
-  if (existing.data) return existing.data as ProfileRow;
+  if (existing.data) {
+    const row = existing.data as ProfileRow;
+    /* Provisioning ran before any real address was available, so the row
+       holds a placeholder nobody can receive mail at. Upgrade it the first
+       time a real one arrives — and never the other way round, or a later
+       visit would wipe a working address. */
+    if (email && !isPlaceholderEmail(email) && isPlaceholderEmail(row.email)) {
+      const updated = await supabase.from('profiles').update({ email }).eq('id', row.id);
+      if (updated.error) throw new Error(`profile email upgrade failed: ${updated.error.message}`);
+      return { ...row, email };
+    }
+    return row;
+  }
 
   /* Read-then-insert is not atomic, and a first visit renders this page more
      than once concurrently — both reads miss, both insert, one dies on
@@ -49,7 +64,7 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
   const insert = await supabase
     .from('profiles')
     .upsert(
-      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}@users.noreply.clerk.dev` },
+      { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
       { onConflict: 'clerk_user_id', ignoreDuplicates: true },
     );
   if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
@@ -149,6 +164,40 @@ export async function listMessengerSites(clerkUserId: string, email?: string | n
     .order('created_at', { ascending: true });
   if (rows.error) throw new Error(`site list failed: ${rows.error.message}`);
   return ((rows.data ?? []) as Array<Record<string, unknown>>).map(toView);
+}
+
+/** Site ids for the sidebar badge count — read-only, never provisions.
+ *  listMessengerSites() calls ensureProfile/ensureWorkspace, which INSERT a
+ *  profile and workspace row the first time they're missing. That's fine
+ *  when the merchant is actually opening Store Chat, but the badge runs on
+ *  every dashboard navigation (e.g. Try-On), and a user who has never opened
+ *  Store Chat must not get a workspace provisioned as a side effect of
+ *  looking at an unrelated page. No profile/workspace yet just means no
+ *  sites yet, so short-circuit to []. */
+export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise<string[]> {
+  const supabase = getMessengerServiceClient();
+  const profile = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('clerk_user_id', clerkUserId)
+    .maybeSingle();
+  if (profile.error || !profile.data) return [];
+
+  const workspace = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_profile_id', profile.data.id as string)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (workspace.error || !workspace.data) return [];
+
+  const sites = await supabase
+    .from('widget_sites')
+    .select('id')
+    .eq('workspace_id', workspace.data.id as string);
+  if (sites.error) return [];
+  return ((sites.data ?? []) as Array<{ id: string }>).map((row) => row.id);
 }
 
 /** Creates (once) a site for a store domain within the caller's workspace.

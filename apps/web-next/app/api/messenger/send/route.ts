@@ -11,8 +11,8 @@ import {
   getVisitor,
   listMessages,
   recordEvent,
-  requestHandoff,
 } from '@/lib/messenger/conversations';
+import { escalateAndNotify } from '@/lib/messenger/escalate';
 import { verifyShopperToken } from '@/lib/messenger/identity';
 import {
   buildSystemPrompt,
@@ -91,6 +91,17 @@ export async function POST(request: NextRequest) {
     if (!site || site.status !== 'active') return bad('not_found', 404);
     if (!originAllowed(site, origin)) return bad('origin_not_allowed', 403);
 
+    /* The merchant reads this alert, not the shopper, so it is deliberately
+       NOT the shopper's locale. A storefront request cannot know the
+       merchant's dashboard language; English until that is stored per site. */
+    const notifySite = {
+      id: site.id,
+      name: site.name,
+      workspace_id: site.workspace_id,
+      locale: 'en' as const,
+      notifications: site.config.notifications,
+    };
+
     if (sessionLimiter) {
       const sessionLimit = await sessionLimiter.limit(`${key}:${anonymousId}`);
       if (!sessionLimit.success) return bad('rate_limited', 429);
@@ -140,7 +151,7 @@ export async function POST(request: NextRequest) {
     if (detectExplicitHandoffRequest(text)) {
       const summary = `Shopper asked for a person. Last message: "${text.slice(0, 160)}"`;
       const transitioned = site.config.ai.escalationEnabled
-        ? await requestHandoff(conversation.id, 'shopper_requested_human', summary)
+        ? await escalateAndNotify(conversation.id, 'shopper_requested_human', summary, notifySite)
         : null;
       if (transitioned) {
         const ack = await appendMessage({
@@ -224,10 +235,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (result.escalate && site.config.ai.escalationEnabled) {
-      const transitioned = await requestHandoff(
+      const transitioned = await escalateAndNotify(
         conversation.id,
         'assistant_escalated',
         `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
+        notifySite,
       );
       const saved = await appendMessage({
         conversationId: conversation.id,

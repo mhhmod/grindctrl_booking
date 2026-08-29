@@ -52,6 +52,51 @@ describe('resolveMessengerConfig', () => {
       resolveMessengerConfig({ messenger_ai: { enabled: 'yes' }, messenger_appearance: [] }),
     ).not.toThrow();
   });
+
+  describe('notification settings', () => {
+    it('defaults to emailing on handoff with no explicit recipients', () => {
+      const config = resolveMessengerConfig({});
+      expect(config.notifications.emailOnHandoff).toBe(true);
+      expect(config.notifications.recipients).toEqual([]);
+    });
+
+    it('keeps only well-formed recipient addresses, capped at five', () => {
+      const config = resolveMessengerConfig({
+        messenger_notifications: {
+          emailOnHandoff: false,
+          recipients: [
+            '  Owner@Example.com ',
+            'not-an-email',
+            '',
+            'a@b.co',
+            'c@d.co',
+            'e@f.co',
+            'g@h.co',
+            'i@j.co',
+          ],
+        },
+      });
+      expect(config.notifications.emailOnHandoff).toBe(false);
+      expect(config.notifications.recipients).toEqual([
+        'owner@example.com',
+        'a@b.co',
+        'c@d.co',
+        'e@f.co',
+        'g@h.co',
+      ]);
+    });
+
+    it('drops duplicate recipients before applying the cap', () => {
+      const config = resolveMessengerConfig({
+        messenger_notifications: {
+          recipients: ['a@b.co', 'A@B.co', ' a@b.co ', 'c@d.co', 'e@f.co', 'g@h.co', 'real@x.co'],
+        },
+      });
+      expect(config.notifications.recipients).toEqual([
+        'a@b.co', 'c@d.co', 'e@f.co', 'g@h.co', 'real@x.co',
+      ]);
+    });
+  });
 });
 
 describe('mergeDraftOverPublished', () => {
@@ -69,5 +114,23 @@ describe('mergeDraftOverPublished', () => {
     expect(hasDraft).toBe(true);
     expect(config.appearance.accentColor).toBe('#ff0000');
     expect(config.appearance.position).toBe('bottom-left');
+  });
+
+  it('keeps published notification settings when an unrelated draft exists', () => {
+    const { config } = mergeDraftOverPublished(
+      { messenger_notifications: { emailOnHandoff: false, recipients: ['owner@store.com'] } },
+      { messenger_appearance: { accentColor: '#ff0055' } },
+    );
+    expect(config.notifications.emailOnHandoff).toBe(false);
+    expect(config.notifications.recipients).toEqual(['owner@store.com']);
+  });
+
+  it('lets a draft override individual notification fields, keeping the rest published', () => {
+    const { config } = mergeDraftOverPublished(
+      { messenger_notifications: { emailOnHandoff: false, recipients: ['keep@store.com'] } },
+      { messenger_notifications: { emailOnHandoff: true } },
+    );
+    expect(config.notifications.emailOnHandoff).toBe(true);
+    expect(config.notifications.recipients).toEqual(['keep@store.com']);
   });
 });

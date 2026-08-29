@@ -16,10 +16,13 @@ export type DashboardRouteCopy = { title: string; description: string };
 export interface DashboardCopy {
   home: string;
   routes: Record<string, DashboardRouteCopy>;
+  /** Sidebar badge aria-label for a nav item's waiting count. */
+  navBadgeWaiting: (count: number) => string;
 }
 
 const en: DashboardCopy = {
   home: 'Dashboard',
+  navBadgeWaiting: (count) => `${count} waiting for a human`,
   routes: {
     '/dashboard/overview': {
       title: 'Overview',
@@ -85,6 +88,7 @@ const en: DashboardCopy = {
 
 const ar: DashboardCopy = {
   home: 'لوحة التحكم',
+  navBadgeWaiting: (count) => `${count} بانتظار الرد`,
   routes: {
     '/dashboard/overview': {
       title: 'نظرة عامة',
