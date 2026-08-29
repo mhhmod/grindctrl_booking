@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { storeShopToken } from '@/lib/shopify/tokens';
-import { OAUTH_STATE_COOKIE, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
+import { OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
 
 /* GET /api/shopify/oauth/callback
    Completes authorization and stores the offline Admin token, encrypted.
@@ -21,7 +21,18 @@ function failure(appUrl: string, reason: string): NextResponse {
 }
 
 export async function GET(request: NextRequest) {
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://grindctrl.cloud').replace(/\/+$/, '');
+  /* Send the merchant back to the host they started on, not to whatever
+     NEXT_PUBLIC_APP_URL happens to say — on this VPS it names a hostname
+     that 404s, so a successful connect would have ended on a dead page.
+     The callback only reaches this host because it was the redirect_uri, so
+     the request's own forwarded host is the right answer. */
+  const appUrl =
+    resolveCallbackBase({
+      forwardedHost: request.headers.get('x-forwarded-host'),
+      host: request.headers.get('host'),
+      forwardedProto: request.headers.get('x-forwarded-proto'),
+      fallbackAppUrl: 'https://grindctrl.cloud',
+    }) ?? 'https://grindctrl.cloud';
   const secret = process.env.SHOPIFY_API_SECRET?.trim();
   const clientId = process.env.SHOPIFY_API_KEY?.trim();
   if (!secret || !clientId) return failure(appUrl, 'oauth is not configured');
