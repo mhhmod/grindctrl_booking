@@ -292,6 +292,34 @@ export async function requestHandoff(
   });
 }
 
+/** Claims the right to notify about this handoff. Returns false if someone
+ *  already claimed it — the guard is the WHERE clause, so two concurrent
+ *  transitions cannot both send an email. */
+export async function claimHandoffNotification(conversationId: string): Promise<boolean> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .update({ handoff_notified_at: new Date().toISOString() })
+    .eq('id', conversationId)
+    .is('handoff_notified_at', null)
+    .select('id');
+  if (res.error) throw new Error(`notification claim failed: ${res.error.message}`);
+  return (res.data ?? []).length > 0;
+}
+
+/** Conversations waiting on a human, for the sidebar badge. */
+export async function countAwaitingHandoff(siteIds: string[]): Promise<number> {
+  if (siteIds.length === 0) return 0;
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_conversations')
+    .select('id', { count: 'exact', head: true })
+    .in('widget_site_id', siteIds)
+    .eq('status', 'handoff_requested');
+  if (res.error) return 0; // A badge must never take the dashboard down.
+  return res.count ?? 0;
+}
+
 export async function takeOverConversation(
   conversationId: string,
   profileId: string,
