@@ -1,12 +1,12 @@
 import 'server-only';
 
+import { isModelNotFound } from '@/lib/assistant/errors';
 import {
-  getGroqClient,
-  withGroqCall,
-  isModelNotFound,
-  listAvailableModels,
+  listAvailableVisionModels,
+  visionComplete,
+  VisionNotConfiguredError,
   VISION_MODEL_CANDIDATES,
-} from '@/lib/assistant/groq-client';
+} from './vision-client';
 import type { TriageResult } from './attachments';
 import type { AttachmentMime } from './image';
 
@@ -105,27 +105,15 @@ export async function triageAttachment(input: {
   bytes: Buffer;
   mime: AttachmentMime;
 }): Promise<TriageResult | null> {
-  const client = getGroqClient();
   const dataUrl = `data:${input.mime};base64,${input.bytes.toString('base64')}`;
 
   const call = (model: string) =>
-    withGroqCall(`messenger.triage[${model}]`, () =>
-      client.chat.completions.create({
-        model,
-        temperature: 0,
-        max_tokens: 300,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Classify this photo.' },
-              { type: 'image_url', image_url: { url: dataUrl } },
-            ],
-          },
-        ],
-      }),
-    );
+    visionComplete({
+      model,
+      systemPrompt: SYSTEM_PROMPT,
+      userText: 'Classify this photo.',
+      dataUrl,
+    });
 
   /* Returns the first model that answers, or null when every one of them
      is gone. Any OTHER error is re-thrown immediately: auth failures, rate
@@ -134,10 +122,12 @@ export async function triageAttachment(input: {
   async function firstThatAnswers(models: string[]): Promise<TriageResult | null | undefined> {
     for (const model of models) {
       try {
-        const completion = await call(model);
+        const text = await call(model);
         resolvedModel = model;
-        return parseTriage((completion.choices?.[0]?.message?.content ?? '').toString());
+        return parseTriage(text);
       } catch (error) {
+        // No key at all is not a model problem; stop rather than retrying.
+        if (error instanceof VisionNotConfiguredError) throw error;
         if (!isModelNotFound(error)) throw error;
       }
     }
@@ -155,7 +145,7 @@ export async function triageAttachment(input: {
     resolvedModel = null;
     const retry = await firstThatAnswers(VISION_MODEL_CANDIDATES.filter((model) => model !== cached));
     if (retry !== undefined) return retry;
-    throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableModels());
+    throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableVisionModels());
   }
 
   const hit = await firstThatAnswers(VISION_MODEL_CANDIDATES);
@@ -163,7 +153,7 @@ export async function triageAttachment(input: {
 
   // Every candidate is gone. Say which models this key CAN use, so fixing
   // it is an env change rather than another guess at Groq's lineup.
-  throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableModels());
+  throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableVisionModels());
 }
 
 /** The line written into the transcript. Low confidence says so rather than

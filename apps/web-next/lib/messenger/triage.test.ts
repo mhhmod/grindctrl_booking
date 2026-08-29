@@ -2,17 +2,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const create = vi.hoisted(() => vi.fn());
-const listAvailableModels = vi.hoisted(() => vi.fn(async () => ['chat-only-model']));
+const listAvailableVisionModels = vi.hoisted(() => vi.fn(async () => ['some/vision-model']));
 
-vi.mock('@/lib/assistant/groq-client', () => ({
-  getGroqClient: () => ({ chat: { completions: { create } } }),
-  // Pass-through: the real wrapper only logs and re-wraps.
-  withGroqCall: (_label: string, fn: () => Promise<unknown>) => fn(),
-  isModelNotFound: (error: unknown) =>
-    /model_not_found|does not exist or you do not have access/i.test(
-      error instanceof Error ? error.message : String(error),
-    ),
-  listAvailableModels,
+vi.mock('./vision-client', () => ({
+  // The candidate loop is what these tests exercise; the transport is not.
+  visionComplete: (input: { model: string }) => create(input),
+  listAvailableVisionModels,
+  VisionNotConfiguredError: class VisionNotConfiguredError extends Error {},
   VISION_MODEL_CANDIDATES: ['model-a', 'model-b'],
 }));
 
@@ -25,9 +21,7 @@ import {
   __resetVisionModelCacheForTests,
 } from './triage';
 
-const GOOD = {
-  choices: [{ message: { content: '{"description":"a torn sleeve","category":"damaged","confidence":0.9}' } }],
-};
+const GOOD = '{"description":"a torn sleeve","category":"damaged","confidence":0.9}';
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
 
 function modelNotFound(model: string) {
@@ -36,7 +30,7 @@ function modelNotFound(model: string) {
 
 beforeEach(() => {
   create.mockReset();
-  listAvailableModels.mockClear();
+  listAvailableVisionModels.mockClear();
   // Module-level cache; without this the previous test's winner leaks in.
   __resetVisionModelCacheForTests();
 });
@@ -70,7 +64,7 @@ describe('triageAttachment model selection', () => {
   it('names the models the key CAN use once every candidate is gone', async () => {
     create.mockRejectedValue(modelNotFound('whatever'));
     await expect(triageAttachment({ bytes: PNG, mime: 'image/png' })).rejects.toThrow(NoVisionModelError);
-    expect(listAvailableModels).toHaveBeenCalled();
+    expect(listAvailableVisionModels).toHaveBeenCalled();
   });
 
   it('re-probes the list when the cached model is retired mid-process', async () => {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { isModelNotFound, VISION_MODEL_CANDIDATES } from './groq-client';
-import { describeProviderError, ProviderUnavailableError } from './errors';
+import { describeProviderError, isModelNotFound, ProviderUnavailableError } from './errors';
+import { VISION_MODEL_CANDIDATES } from '@/lib/messenger/vision-client';
 
 const GROQ_404 =
   '404 {"error":{"message":"The model `meta-llama/llama-4-scout-17b-16e-instruct` does not exist or you do not have access to it.","type":"invalid_request_error","code":"model_not_found"}}';
@@ -19,6 +19,12 @@ describe('isModelNotFound', () => {
 
   it('matches an unwrapped provider error too', () => {
     expect(isModelNotFound(new Error(GROQ_404))).toBe(true);
+  });
+
+  it("matches OpenRouter's phrasing as well as Groq's", () => {
+    // Different vendors, same meaning to a caller holding a candidate list.
+    const noEndpoints = '404 {"error":{"message":"No endpoints found for some/model."}}';
+    expect(isModelNotFound(new ProviderUnavailableError(undefined, { cause: new Error(noEndpoints) }))).toBe(true);
   });
 
   it('treats a decommissioned model the same as a missing one', () => {

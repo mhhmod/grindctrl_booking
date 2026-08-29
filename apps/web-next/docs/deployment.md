@@ -70,8 +70,10 @@ TRYON_EMAIL_SMTP_APP_PASSWORD="16-char Google app password"
 SHOPIFY_TOKEN_ENC_KEY="32 random bytes, base64"
 SHOPIFY_API_KEY="client_id from apps/grindctrl-tryon/shopify.app.toml"
 
-# Optional: overrides the attachment-triage vision model without a deploy
-# GROQ_VISION_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
+# Attachment triage reads photos through OpenRouter, not Groq — this Groq
+# account has no multimodal model on it. OPENROUTER_API_KEY is already set
+# for Try-On and is reused. Optional override:
+# STORE_CHAT_VISION_MODEL="google/gemini-2.5-flash-lite"
 ```
 
 > **`NEXT_PUBLIC_APP_URL` must be `https://grindctrl.cloud`.** It is what
