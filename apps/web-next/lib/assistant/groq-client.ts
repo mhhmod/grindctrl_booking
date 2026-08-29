@@ -6,6 +6,10 @@ import { ProviderUnavailableError } from './errors';
    scheduled for shutdown; do not reintroduce them without re-checking
    console.groq.com/docs/deprecations. */
 export const CHAT_MODEL = 'openai/gpt-oss-20b';
+/** Image understanding (attachment triage). Overridable without a deploy
+ *  because Groq rotates vision models faster than the chat lineup. */
+export const VISION_MODEL =
+  process.env.GROQ_VISION_MODEL?.trim() || 'meta-llama/llama-4-scout-17b-16e-instruct';
 export const STT_MODEL = 'whisper-large-v3-turbo';
 export const TTS_MODEL_EN = 'canopylabs/orpheus-v1-english';
 export const TTS_MODEL_AR = 'canopylabs/orpheus-arabic-saudi';

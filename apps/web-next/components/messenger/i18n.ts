@@ -19,6 +19,21 @@ export interface PanelCopy {
   unavailableTitle: string;
   unavailableBody: string;
   offlineNote: string;
+  /* Contact capture */
+  contactTitle: string;
+  contactLabel: string;
+  contactPlaceholder: string;
+  contactSend: string;
+  contactSkip: string;
+  contactThanks: string;
+  contactInvalid: string;
+  /* Attachments */
+  attachAria: string;
+  attachUploading: string;
+  attachTooLarge: string;
+  attachBadType: string;
+  attachFailed: string;
+  attachImageAlt: string;
 }
 
 const EN: PanelCopy = {
@@ -37,6 +52,19 @@ const EN: PanelCopy = {
   unavailableTitle: 'Support is resting',
   unavailableBody: 'Please check back a little later.',
   offlineNote: 'We are away right now — leave a message and the team will reply.',
+  contactTitle: 'Where should we reply?',
+  contactLabel: 'Your email address',
+  contactPlaceholder: 'you@example.com',
+  contactSend: 'Send',
+  contactSkip: 'Not now',
+  contactThanks: 'Thanks — we will reply to you there.',
+  contactInvalid: 'Please enter a valid email address.',
+  attachAria: 'Attach a photo',
+  attachUploading: 'Uploading photo…',
+  attachTooLarge: 'That image is too large (5 MB max).',
+  attachBadType: 'Only JPEG, PNG, or WebP images can be attached.',
+  attachFailed: 'The photo could not be sent.',
+  attachImageAlt: 'Photo you sent',
 };
 
 const AR: PanelCopy = {
@@ -55,6 +83,19 @@ const AR: PanelCopy = {
   unavailableTitle: 'الدعم غير متاح حالياً',
   unavailableBody: 'يرجى المحاولة مرة أخرى بعد قليل.',
   offlineNote: 'نحن خارج أوقات العمل الآن — اترك رسالة وسيرد عليك الفريق.',
+  contactTitle: 'أين نرد عليك؟',
+  contactLabel: 'بريدك الإلكتروني',
+  contactPlaceholder: 'you@example.com',
+  contactSend: 'إرسال',
+  contactSkip: 'ليس الآن',
+  contactThanks: 'شكراً — سنرد عليك هناك.',
+  contactInvalid: 'يرجى إدخال بريد إلكتروني صحيح.',
+  attachAria: 'إرفاق صورة',
+  attachUploading: 'جارٍ رفع الصورة…',
+  attachTooLarge: 'حجم الصورة كبير جداً (٥ ميجابايت كحد أقصى).',
+  attachBadType: 'يمكن إرفاق صور JPEG أو PNG أو WebP فقط.',
+  attachFailed: 'تعذّر إرسال الصورة.',
+  attachImageAlt: 'الصورة التي أرسلتها',
 };
 
 export function getPanelCopy(locale: MessengerLocale): PanelCopy {

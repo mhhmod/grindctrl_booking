@@ -5,9 +5,12 @@ import type {
   LocalizedText,
   MessengerAi,
   MessengerAppearance,
+  MessengerAttachments,
   MessengerBehaviour,
   MessengerConfig,
+  MessengerContactCapture,
   MessengerNotifications,
+  MessengerOrderLookup,
 } from './types';
 
 /* Normalization + defaults for the merchant-facing messenger configuration
@@ -70,6 +73,20 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
   notifications: {
     emailOnHandoff: true,
     recipients: [],
+  },
+  /* On by default: it only fires where a reply is already owed. */
+  contactCapture: {
+    enabled: true,
+    askOutsideHours: true,
+  },
+  /* Off by default: both of these reach data or storage a merchant should
+     opt into deliberately rather than inherit on upgrade. */
+  attachments: {
+    enabled: false,
+    triageEnabled: true,
+  },
+  orderLookup: {
+    enabled: false,
   },
 };
 
@@ -219,6 +236,29 @@ function normalizeNotifications(raw: unknown): MessengerNotifications {
   };
 }
 
+function normalizeContactCapture(raw: unknown): MessengerContactCapture {
+  const r = asRecord(raw);
+  return {
+    enabled: r.enabled !== false,
+    askOutsideHours: r.askOutsideHours !== false,
+  };
+}
+
+function normalizeAttachments(raw: unknown): MessengerAttachments {
+  const r = asRecord(raw);
+  return {
+    // Opt-in, so an absent key means off — the inverse of the `!== false`
+    // reading used by the on-by-default flags above.
+    enabled: r.enabled === true,
+    triageEnabled: r.triageEnabled !== false,
+  };
+}
+
+function normalizeOrderLookup(raw: unknown): MessengerOrderLookup {
+  const r = asRecord(raw);
+  return { enabled: r.enabled === true };
+}
+
 /** Published config resolver — total function, never throws, never returns
  *  partial objects to the storefront. */
 export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
@@ -228,7 +268,38 @@ export function resolveMessengerConfig(settingsJson: unknown): MessengerConfig {
     behaviour: normalizeBehaviour(root.messenger_behaviour),
     ai: normalizeAi(root.messenger_ai),
     notifications: normalizeNotifications(root.messenger_notifications),
+    contactCapture: normalizeContactCapture(root.messenger_contact_capture),
+    attachments: normalizeAttachments(root.messenger_attachments),
+    orderLookup: normalizeOrderLookup(root.messenger_order_lookup),
   };
+}
+
+/* One place naming the sections. Listing them by hand in three files is
+   what let messenger_notifications sit unmerged on draft merge AND get
+   dropped on publish: a section absent from one list looks like a setting
+   that silently refuses to save. */
+export const CONFIG_SECTIONS = {
+  appearance: 'messenger_appearance',
+  behaviour: 'messenger_behaviour',
+  ai: 'messenger_ai',
+  notifications: 'messenger_notifications',
+  contactCapture: 'messenger_contact_capture',
+  attachments: 'messenger_attachments',
+  orderLookup: 'messenger_order_lookup',
+} as const;
+
+export type MessengerSection = keyof typeof CONFIG_SECTIONS;
+
+export const MESSENGER_SECTION_NAMES = Object.keys(CONFIG_SECTIONS) as MessengerSection[];
+
+const CONFIG_SECTION_KEYS = Object.values(CONFIG_SECTIONS);
+
+/** The settings_json shape for a resolved config — used on publish so every
+ *  section lands, including ones no editor has been built for yet. */
+export function toSettingsSections(config: MessengerConfig): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const name of MESSENGER_SECTION_NAMES) out[CONFIG_SECTIONS[name]] = config[name];
+  return out;
 }
 
 /** Draft shape uses the same sections as published; unresolved values fall
@@ -243,20 +314,9 @@ export function mergeDraftOverPublished(
 
   const publishedRoot = asRecord(published);
   // Every section merges section-wise (partial edits shouldn't wipe sibling fields).
-  const merged = {
-    messenger_appearance: {
-      ...asRecord(publishedRoot.messenger_appearance),
-      ...asRecord(draftRoot.messenger_appearance),
-    },
-    messenger_behaviour: {
-      ...asRecord(publishedRoot.messenger_behaviour),
-      ...asRecord(draftRoot.messenger_behaviour),
-    },
-    messenger_ai: { ...asRecord(publishedRoot.messenger_ai), ...asRecord(draftRoot.messenger_ai) },
-    messenger_notifications: {
-      ...asRecord(publishedRoot.messenger_notifications),
-      ...asRecord(draftRoot.messenger_notifications),
-    },
-  };
+  const merged: Record<string, unknown> = {};
+  for (const section of CONFIG_SECTION_KEYS) {
+    merged[section] = { ...asRecord(publishedRoot[section]), ...asRecord(draftRoot[section]) };
+  }
   return { config: resolveMessengerConfig(merged), hasDraft };
 }

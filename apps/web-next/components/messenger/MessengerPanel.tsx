@@ -25,6 +25,15 @@ interface WireMessage {
   failed?: boolean;
 }
 
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+
+/* Same shape rule as lib/messenger/contact.ts. Duplicated rather than
+   imported because that module is bundled for the server; this copy only
+   decides whether to bother with a round trip, and the server's answer is
+   the one that counts. */
+const CONTACT_EMAIL_RE = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/;
+
 function detectInitialLocale(explicit: string | null): MessengerLocale {
   if (explicit === 'ar' || explicit === 'en') return explicit;
   const nav = typeof navigator !== 'undefined' ? navigator.language : 'en';
@@ -85,6 +94,29 @@ export function MessengerPanel({
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  /* Contact capture — offered by the server at most once per conversation. */
+  const [askContact, setAskContact] = useState(false);
+  const [contactDraft, setContactDraft] = useState('');
+  const [contactState, setContactState] = useState<'idle' | 'sending' | 'done' | 'invalid'>('idle');
+
+  /* Attachments. The shopper sees their own photo from a local object URL:
+     they already have the bytes, so there is no reason to hand a storefront
+     a signed URL into the merchant's private bucket. */
+  const [uploading, setUploading] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
+  const [localImages, setLocalImages] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  /* Revoked only on unmount. Keying the cleanup on the state would revoke
+     the previous URLs every time a new photo is added — including the ones
+     still on screen. */
+  const objectUrlsRef = useRef<string[]>([]);
+  useEffect(
+    () => () => {
+      for (const url of objectUrlsRef.current) URL.revokeObjectURL(url);
+    },
+    [],
+  );
 
   const origin = useMemo(
     () =>
@@ -232,7 +264,13 @@ export function MessengerPanel({
         }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { userMessage?: WireMessage; reply?: WireMessage | null; status?: string; error?: string }
+        | {
+            userMessage?: WireMessage;
+            reply?: WireMessage | null;
+            status?: string;
+            error?: string;
+            askContact?: boolean;
+          }
         | null;
       if (!res.ok || !data?.userMessage) throw new Error(data?.error ?? 'send_failed');
 
@@ -241,6 +279,7 @@ export function MessengerPanel({
       );
       if (data.reply) setMessages((prev) => [...prev, data.reply!]);
       if (data.status) setStatus(data.status);
+      if (data.askContact) setAskContact(true);
     } catch {
       setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? { ...m, pending: false, failed: true } : m)));
     } finally {
@@ -262,6 +301,72 @@ export function MessengerPanel({
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }
+
+  async function submitContact(event: React.FormEvent) {
+    event.preventDefault();
+    const email = contactDraft.trim();
+    if (!CONTACT_EMAIL_RE.test(email) || email.length > 200) {
+      setContactState('invalid');
+      return;
+    }
+    setContactState('sending');
+    try {
+      const res = await fetch('/api/messenger/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin,
+          anonymousId: anonId,
+          conversationId,
+          email,
+        }),
+      });
+      if (!res.ok) throw new Error('contact_failed');
+      setContactState('done');
+    } catch {
+      setContactState('invalid');
+    }
+  }
+
+  async function uploadPhoto(file: File) {
+    if (variant === 'preview' || !anonId || !conversationId) return;
+    setAttachError(null);
+    // Both of these are re-checked server-side against the actual bytes;
+    // rejecting here just saves the shopper a pointless upload.
+    if (file.size > MAX_ATTACHMENT_BYTES) return setAttachError(t.attachTooLarge);
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return setAttachError(t.attachBadType);
+
+    setUploading(true);
+    const form = new FormData();
+    form.append('key', config.key);
+    form.append('origin', effectiveOrigin ?? '');
+    form.append('anonymousId', anonId);
+    form.append('conversationId', conversationId);
+    form.append('clientKey', crypto.randomUUID());
+    form.append('locale', locale);
+    form.append('file', file);
+
+    try {
+      const res = await fetch('/api/messenger/attachment', { method: 'POST', body: form });
+      const data = (await res.json().catch(() => null)) as
+        | { userMessage?: WireMessage; note?: WireMessage | null }
+        | null;
+      if (!res.ok || !data?.userMessage) throw new Error('upload_failed');
+
+      const objectUrl = URL.createObjectURL(file);
+      objectUrlsRef.current.push(objectUrl);
+      setLocalImages((prev) => ({ ...prev, [data.userMessage!.id]: objectUrl }));
+      setMessages((prev) => [...prev, data.userMessage!, ...(data.note ? [data.note] : [])]);
+    } catch {
+      setAttachError(t.attachFailed);
+    } finally {
+      setUploading(false);
+      // Same file twice in a row fires no change event unless the input is
+      // cleared, and re-sending the same photo is a normal thing to do.
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   async function giveFeedback(rating: 'up' | 'down') {
@@ -361,6 +466,14 @@ export function MessengerPanel({
                 }
                 style={mine ? { backgroundColor: accent } : undefined}
               >
+                {localImages[m.id] ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- object URL, no loader involved
+                  <img
+                    src={localImages[m.id]}
+                    alt={t.attachImageAlt}
+                    className="mb-1 max-h-56 w-full rounded-lg object-cover"
+                  />
+                ) : null}
                 {m.content}
                 {m.pending && <span className="ms-2 inline-block animate-pulse">…</span>}
                 {m.failed && (
@@ -404,6 +517,63 @@ export function MessengerPanel({
           </p>
         )}
 
+        {/* Inline, never a modal: the composer stays usable and skipping
+            costs nothing. Asked at most once, decided by the server. */}
+        {askContact && (
+          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3">
+            {contactState === 'done' ? (
+              <p className="text-center text-[11px] text-muted-foreground" role="status">
+                {t.contactThanks}
+              </p>
+            ) : (
+              <form onSubmit={submitContact} className="grid gap-2">
+                <p className="text-xs font-semibold">{t.contactTitle}</p>
+                <label htmlFor="gc-msgr-contact" className="sr-only">
+                  {t.contactLabel}
+                </label>
+                <input
+                  id="gc-msgr-contact"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  dir="ltr"
+                  value={contactDraft}
+                  onChange={(e) => {
+                    setContactDraft(e.target.value.slice(0, 200));
+                    if (contactState === 'invalid') setContactState('idle');
+                  }}
+                  placeholder={t.contactPlaceholder}
+                  aria-invalid={contactState === 'invalid'}
+                  aria-describedby={contactState === 'invalid' ? 'gc-msgr-contact-error' : undefined}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                />
+                {contactState === 'invalid' && (
+                  <p id="gc-msgr-contact-error" className="text-[11px] text-destructive" role="alert">
+                    {t.contactInvalid}
+                  </p>
+                )}
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAskContact(false)}
+                    className="rounded-full px-3 py-1.5 text-[11px] text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                  >
+                    {t.contactSkip}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={contactState === 'sending'}
+                    className="rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+                    style={{ backgroundColor: accent }}
+                  >
+                    {t.contactSend}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
         {status === 'closed' && lastIsOurs && (
           <div className="mx-auto w-fit rounded-full border border-border px-3 py-1.5 text-[11px] text-muted-foreground">
             {feedbackGiven ? (
@@ -445,6 +615,29 @@ export function MessengerPanel({
           <label htmlFor="gc-msgr-input" className="sr-only">
             {placeholder}
           </label>
+          {config.attachmentsEnabled && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadPhoto(file);
+                }}
+              />
+              <button
+                type="button"
+                aria-label={t.attachAria}
+                disabled={booting || uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex size-[42px] shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-40"
+              >
+                <PaperclipIcon />
+              </button>
+            </>
+          )}
           <textarea
             id="gc-msgr-input"
             ref={inputRef}
@@ -474,6 +667,14 @@ export function MessengerPanel({
             <SendIcon />
           </button>
         </form>
+        {(uploading || attachError) && (
+          <p
+            className={`mt-2 text-center text-[11px] ${attachError ? 'text-destructive' : 'text-muted-foreground'}`}
+            role="status"
+          >
+            {attachError ?? t.attachUploading}
+          </p>
+        )}
         <p className="mt-2 text-center text-[10px] text-muted-foreground">{t.poweredBy}</p>
       </footer>
     </div>
@@ -488,6 +689,18 @@ function pickLocalizedSafe(value: { en: string; ar: string }, locale: MessengerL
 function initialOf(name: string): string {
   const trimmed = name.trim();
   return trimmed ? trimmed[0].toUpperCase() : '?';
+}
+
+function PaperclipIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path
+        d="M21.44 11.05 12.25 20.24a5.5 5.5 0 0 1-7.78-7.78l8.49-8.49a3.67 3.67 0 0 1 5.19 5.19l-8.49 8.48a1.83 1.83 0 0 1-2.6-2.59l7.79-7.78"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 }
 
 function SendIcon() {

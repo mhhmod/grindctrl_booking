@@ -17,6 +17,9 @@ export interface ResolvedPublicSite {
   status: string;
   settings_version: number;
   workspace_id: string;
+  /** The store's own domain, when one is connected. Order lookup needs it
+   *  to address the right Shopify Admin API; null is a normal state. */
+  domain: string | null;
   config: MessengerConfig;
   security: { allow_localhost: boolean };
   patterns: DomainPatternRow[];
@@ -26,7 +29,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
   const supabase = getMessengerServiceClient();
   const siteRes = await supabase
     .from('widget_sites')
-    .select('id, name, embed_key, status, settings_json, settings_version, workspace_id')
+    .select('id, name, embed_key, status, settings_json, settings_version, workspace_id, domain')
     .eq('embed_key', embedKey)
     .maybeSingle();
   if (siteRes.error || !siteRes.data) return null;
@@ -47,6 +50,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
     status: row.status as string,
     settings_version: (row.settings_version as number) ?? 1,
     workspace_id: row.workspace_id as string,
+    domain: (row.domain as string | null) ?? null,
     config: resolveMessengerConfig(settings),
     security: { allow_localhost: securityRaw.allow_localhost === true },
     patterns: ((domainsRes.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
@@ -124,6 +128,9 @@ export interface PublicMessengerPayload {
   active: boolean;
   available: boolean;
   aiEnabled: boolean;
+  /** Whether the panel renders the attach-photo control at all. The upload
+   *  route re-checks the same flag — this only decides what is drawn. */
+  attachmentsEnabled: boolean;
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
     MessengerConfig['behaviour'],
@@ -158,6 +165,7 @@ export function toPublicPayload(
     active,
     available: active && isWithinAvailabilityHours(site.config.behaviour, now),
     aiEnabled: active && site.config.ai.enabled,
+    attachmentsEnabled: active && site.config.attachments.enabled,
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,
