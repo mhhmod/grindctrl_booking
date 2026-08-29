@@ -8,6 +8,8 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
+import { countAwaitingHandoff } from '@/lib/messenger/conversations';
+import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
@@ -27,7 +29,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
      language chosen anywhere carries into the dashboard. */
   const locale = await getRequestLocale();
   const permissions = resolveDashboardPermissions({ role: workspaceBundle.role });
-  const navItems = resolveDashboardNavItems({ pathname, permissions, locale });
+
+  /* Cheap, read-only, indexed lookups; a failure must never take the shell
+     down, so the whole thing falls back to no badge. Skipped entirely when
+     the role can't see Store Chat, and listMessengerSiteIdsReadOnly (unlike
+     listMessengerSites) never provisions a profile/workspace as a side
+     effect of an unrelated page load — see its docstring. */
+  let awaitingHandoff = 0;
+  if (permissions.canViewMessenger) {
+    try {
+      const siteIds = await listMessengerSiteIdsReadOnly(clerkUserId);
+      awaitingHandoff = await countAwaitingHandoff(siteIds);
+    } catch {
+      awaitingHandoff = 0;
+    }
+  }
+
+  const navItems = resolveDashboardNavItems({
+    pathname,
+    permissions,
+    locale,
+    badges: { '/dashboard/messenger': awaitingHandoff },
+  });
 
   return (
     <div dir={getDir(locale)} lang={locale}>

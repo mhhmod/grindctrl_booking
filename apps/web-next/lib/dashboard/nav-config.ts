@@ -15,6 +15,8 @@ export type DashboardNavItem = {
 
 export type DashboardResolvedNavItem = DashboardNavItem & {
   isActive: boolean;
+  /** Omitted entirely at zero — a "0" badge is noise, not information. */
+  badgeCount?: number;
 };
 
 /**
@@ -69,10 +71,13 @@ export function resolveDashboardNavItems({
   pathname,
   permissions,
   locale = DEFAULT_SITE_LOCALE,
+  badges = {},
 }: {
   pathname: string;
   permissions: DashboardPermissionSet;
   locale?: SiteLocale;
+  /** Waiting-count per href, e.g. conversations awaiting a human. */
+  badges?: Record<string, number>;
 }): DashboardResolvedNavItem[] {
   const normalizedPathname = normalizeDashboardPathname(pathname);
   const copy = getDashboardCopy(locale);
@@ -83,5 +88,6 @@ export function resolveDashboardNavItems({
        so a tab and the page it opens can never disagree. */
     label: copy.routes[item.href]?.title ?? item.label,
     isActive: isDashboardNavItemActive(normalizedPathname, item.href),
+    badgeCount: badges[item.href] && badges[item.href] > 0 ? badges[item.href] : undefined,
   }));
 }

@@ -51,7 +51,7 @@ export function DashboardShell({
         <Separator />
 
         <SidebarContent className="p-2">
-          <DashboardSidebarNav navItems={navItems} />
+          <DashboardSidebarNav navItems={navItems} locale={locale} />
         </SidebarContent>
       </Sidebar>
 

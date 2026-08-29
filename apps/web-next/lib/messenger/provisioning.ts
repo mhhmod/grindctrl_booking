@@ -166,6 +166,40 @@ export async function listMessengerSites(clerkUserId: string, email?: string | n
   return ((rows.data ?? []) as Array<Record<string, unknown>>).map(toView);
 }
 
+/** Site ids for the sidebar badge count — read-only, never provisions.
+ *  listMessengerSites() calls ensureProfile/ensureWorkspace, which INSERT a
+ *  profile and workspace row the first time they're missing. That's fine
+ *  when the merchant is actually opening Store Chat, but the badge runs on
+ *  every dashboard navigation (e.g. Try-On), and a user who has never opened
+ *  Store Chat must not get a workspace provisioned as a side effect of
+ *  looking at an unrelated page. No profile/workspace yet just means no
+ *  sites yet, so short-circuit to []. */
+export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise<string[]> {
+  const supabase = getMessengerServiceClient();
+  const profile = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('clerk_user_id', clerkUserId)
+    .maybeSingle();
+  if (profile.error || !profile.data) return [];
+
+  const workspace = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_profile_id', profile.data.id as string)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (workspace.error || !workspace.data) return [];
+
+  const sites = await supabase
+    .from('widget_sites')
+    .select('id')
+    .eq('workspace_id', workspace.data.id as string);
+  if (sites.error) return [];
+  return ((sites.data ?? []) as Array<{ id: string }>).map((row) => row.id);
+}
+
 /** Creates (once) a site for a store domain within the caller's workspace.
  *  A null domain is a real state — the merchant has no store connected yet —
  *  and must stay null rather than being stamped with a sentinel string that

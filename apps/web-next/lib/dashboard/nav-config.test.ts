@@ -60,4 +60,24 @@ describe('dashboard navigation config', () => {
 
     expect(items.every((item) => item.group === 'core')).toBe(true);
   });
+
+  it('puts a waiting-conversation count on Store Chat only', () => {
+    const items = resolveDashboardNavItems({
+      pathname: '/dashboard/overview',
+      permissions: getDefaultDashboardPermissions(),
+      badges: { '/dashboard/messenger': 3 },
+    });
+    const storeChat = items.find((item) => item.href === '/dashboard/messenger');
+    expect(storeChat?.badgeCount).toBe(3);
+    expect(items.find((item) => item.href === '/dashboard/overview')?.badgeCount).toBeUndefined();
+  });
+
+  it('drops a zero badge rather than rendering a 0', () => {
+    const items = resolveDashboardNavItems({
+      pathname: '/dashboard/overview',
+      permissions: getDefaultDashboardPermissions(),
+      badges: { '/dashboard/messenger': 0 },
+    });
+    expect(items.find((item) => item.href === '/dashboard/messenger')?.badgeCount).toBeUndefined();
+  });
 });
