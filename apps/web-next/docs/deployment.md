@@ -21,7 +21,7 @@ grindctrl.cloud  (Hostinger DNS → VPS IP)
       ├── Auth routes (/sign-in, /sign-up) — Clerk
       └── Dashboard (/dashboard/**) — Clerk-protected
             │
-            └── Supabase (egvdxshlbcqndrcnzcdn)
+            └── Supabase (prsusuwxbzaekynonifl)
                   workspace/widget data layer (RLS)
 ```
 
@@ -54,7 +54,9 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_live_xxxxx"
 CLERK_SECRET_KEY="sk_live_xxxxx"
 
 # Supabase (production project)
-NEXT_PUBLIC_SUPABASE_URL="https://egvdxshlbcqndrcnzcdn.supabase.co"
+# Project prsusuwxbzaekynonifl is the live one (confirmed against the
+# running container). egvdxshlbcqndrcnzcdn appears in older docs and is stale.
+NEXT_PUBLIC_SUPABASE_URL="https://prsusuwxbzaekynonifl.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
 
 # Outgoing mail — Store Chat handoff alerts and Try-On campaigns share
