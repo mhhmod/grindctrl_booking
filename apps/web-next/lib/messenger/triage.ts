@@ -1,6 +1,12 @@
 import 'server-only';
 
-import { getGroqClient, withGroqCall, VISION_MODEL } from '@/lib/assistant/groq-client';
+import {
+  getGroqClient,
+  withGroqCall,
+  isModelNotFound,
+  listAvailableModels,
+  VISION_MODEL_CANDIDATES,
+} from '@/lib/assistant/groq-client';
 import type { TriageResult } from './attachments';
 import type { AttachmentMime } from './image';
 
@@ -74,6 +80,27 @@ export function parseTriage(raw: string): TriageResult | null {
   return { description, category, confidence };
 }
 
+/* Remembered for the life of the process once a candidate answers, so the
+   probing cost is paid at most once per deploy rather than per upload. */
+let resolvedModel: string | null = null;
+
+/** Test seam, mirroring setMessengerServiceClientForTests in db.ts. */
+export function __resetVisionModelCacheForTests(): void {
+  resolvedModel = null;
+}
+
+export class NoVisionModelError extends Error {
+  constructor(tried: string[], available: string[]) {
+    super(
+      `No usable vision model. Tried: ${tried.join(', ')}. ` +
+        (available.length
+          ? `This API key can use: ${available.slice(0, 40).join(', ')}. Set GROQ_VISION_MODEL to one of them.`
+          : 'Could not list the models this API key can use.'),
+    );
+    this.name = 'NoVisionModelError';
+  }
+}
+
 export async function triageAttachment(input: {
   bytes: Buffer;
   mime: AttachmentMime;
@@ -81,25 +108,62 @@ export async function triageAttachment(input: {
   const client = getGroqClient();
   const dataUrl = `data:${input.mime};base64,${input.bytes.toString('base64')}`;
 
-  const completion = await withGroqCall('messenger.triage', () =>
-    client.chat.completions.create({
-      model: VISION_MODEL,
-      temperature: 0,
-      max_tokens: 300,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Classify this photo.' },
-            { type: 'image_url', image_url: { url: dataUrl } },
-          ],
-        },
-      ],
-    }),
-  );
+  const call = (model: string) =>
+    withGroqCall(`messenger.triage[${model}]`, () =>
+      client.chat.completions.create({
+        model,
+        temperature: 0,
+        max_tokens: 300,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Classify this photo.' },
+              { type: 'image_url', image_url: { url: dataUrl } },
+            ],
+          },
+        ],
+      }),
+    );
 
-  return parseTriage((completion.choices?.[0]?.message?.content ?? '').toString());
+  /* Returns the first model that answers, or null when every one of them
+     is gone. Any OTHER error is re-thrown immediately: auth failures, rate
+     limits and malformed images fail identically on every candidate, so
+     trying the rest just spends four round trips to learn the same thing. */
+  async function firstThatAnswers(models: string[]): Promise<TriageResult | null | undefined> {
+    for (const model of models) {
+      try {
+        const completion = await call(model);
+        resolvedModel = model;
+        return parseTriage((completion.choices?.[0]?.message?.content ?? '').toString());
+      } catch (error) {
+        if (!isModelNotFound(error)) throw error;
+      }
+    }
+    return undefined; // every candidate returned model_not_found
+  }
+
+  /* A cached model can be retired while this process is still running —
+     which is exactly how the pinned model failed in the first place. Drop
+     the cache and re-probe the full list rather than failing for the rest
+     of the deploy. */
+  if (resolvedModel) {
+    const cached = resolvedModel;
+    const hit = await firstThatAnswers([cached]);
+    if (hit !== undefined) return hit;
+    resolvedModel = null;
+    const retry = await firstThatAnswers(VISION_MODEL_CANDIDATES.filter((model) => model !== cached));
+    if (retry !== undefined) return retry;
+    throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableModels());
+  }
+
+  const hit = await firstThatAnswers(VISION_MODEL_CANDIDATES);
+  if (hit !== undefined) return hit;
+
+  // Every candidate is gone. Say which models this key CAN use, so fixing
+  // it is an env change rather than another guess at Groq's lineup.
+  throw new NoVisionModelError(VISION_MODEL_CANDIDATES, await listAvailableModels());
 }
 
 /** The line written into the transcript. Low confidence says so rather than
