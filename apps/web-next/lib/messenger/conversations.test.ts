@@ -8,6 +8,7 @@ import {
   listConversationsForSite,
   listMessages,
   recordEvent,
+  returnConversationToAi,
 } from './conversations';
 
 /* A storefront can hold a conversation id that no longer exists. The event
@@ -147,6 +148,24 @@ describe('claimHandoffNotification', () => {
     setMessengerServiceClientForTests(client);
 
     await expect(claimHandoffNotification('conv-1')).rejects.toThrow('notification claim failed');
+  });
+});
+
+/* Regression: handoff_notified_at is set once by claimHandoffNotification
+   and nothing ever cleared it, so a conversation returned to the AI and then
+   re-escalated found the claim permanently burned — requestHandoff would
+   succeed, but claimHandoffNotification would report "already claimed" and
+   the merchant would never hear about the second handoff. Returning to the
+   AI must reset the claim so a later escalation gets its own alert. */
+describe('returnConversationToAi', () => {
+  it('resets handoff_notified_at so a later re-escalation can notify again', async () => {
+    const { client, calls } = stubQueryClient({ data: [{ id: 'conv-1', status: 'open' }], error: null });
+    setMessengerServiceClientForTests(client);
+
+    await returnConversationToAi('conv-1');
+
+    const updateCall = calls.find(([method]) => method === 'update');
+    expect(updateCall?.[1][0]).toMatchObject({ handoff_notified_at: null });
   });
 });
 

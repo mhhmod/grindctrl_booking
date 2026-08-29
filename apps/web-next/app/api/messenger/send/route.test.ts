@@ -172,7 +172,7 @@ describe('POST /api/messenger/send', () => {
 
     expect(data.status).toBe('handoff_requested');
     expect(mocks.escalateAndNotify).toHaveBeenCalledWith(
-      CONVERSATION,
+      CONVERSATION.id,
       'shopper_requested_human',
       expect.stringContaining('talk to someone'),
       expect.objectContaining({ id: SITE.id, workspace_id: SITE.workspace_id }),

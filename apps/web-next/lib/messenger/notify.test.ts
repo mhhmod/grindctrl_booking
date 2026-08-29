@@ -175,13 +175,20 @@ describe('notifyHandoff', () => {
     ]);
   });
 
-  it('sends nothing when the claim is lost to a concurrent request', async () => {
+  it('sends nothing when the claim is lost to a concurrent request, but records why', async () => {
     mocks.claimHandoffNotification.mockResolvedValue(false);
 
     await notifyHandoff(makeInput());
 
     expect(mocks.sendHandoffNotification).not.toHaveBeenCalled();
-    expect(mocks.recordEvent).not.toHaveBeenCalled();
+    expect(mocks.recordEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        siteId: 'site-1',
+        conversationId: 'conv-1',
+        eventName: 'handoff_notify_skipped',
+        payload: expect.objectContaining({ reason: 'already_claimed' }),
+      }),
+    );
   });
 
   it('releases the claim and records handoff_notify_failed when the send fails', async () => {

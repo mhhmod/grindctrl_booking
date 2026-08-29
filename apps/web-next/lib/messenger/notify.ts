@@ -139,7 +139,18 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
     }
 
     const claimed = await claimHandoffNotification(conversation.id);
-    if (!claimed) return;
+    if (!claimed) {
+      // Not silent: without an event, a re-escalation that loses the claim
+      // race (or one that lands on a conversation whose notified_at was
+      // never reset) leaves nothing to debug from.
+      await recordEvent({
+        siteId: site.id,
+        conversationId: conversation.id,
+        eventName: 'handoff_notify_skipped',
+        payload: { reason: 'already_claimed' },
+      });
+      return;
+    }
 
     // {limit: 3, newestFirst: true} + reverse(): the three most RECENT
     // messages, back in chronological order. Plain {limit: 3} would give the

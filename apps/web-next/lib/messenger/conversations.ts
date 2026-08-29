@@ -258,6 +258,7 @@ async function guardedTransition(
     assigned_profile_id: string | null;
     handoff_reason: string | null;
     handoff_summary: string | null;
+    handoff_notified_at: string | null;
   }>,
 ): Promise<ConversationRecord | null> {
   const supabase = getMessengerServiceClient();
@@ -352,6 +353,11 @@ export async function returnConversationToAi(conversationId: string): Promise<Co
   return guardedTransition(conversationId, ['handoff_active'], {
     status: 'open',
     assigned_profile_id: null,
+    // A conversation handed back to the AI can escalate again later, and
+    // that later escalation deserves its own alert — without clearing this,
+    // claimHandoffNotification's .is(..., null) guard stays permanently
+    // false and the merchant is never notified of the re-escalation.
+    handoff_notified_at: null,
   });
 }
 

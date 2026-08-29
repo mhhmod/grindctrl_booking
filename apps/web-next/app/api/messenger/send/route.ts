@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
     if (detectExplicitHandoffRequest(text)) {
       const summary = `Shopper asked for a person. Last message: "${text.slice(0, 160)}"`;
       const transitioned = site.config.ai.escalationEnabled
-        ? await escalateAndNotify(conversation, 'shopper_requested_human', summary, notifySite)
+        ? await escalateAndNotify(conversation.id, 'shopper_requested_human', summary, notifySite)
         : null;
       if (transitioned) {
         const ack = await appendMessage({
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest) {
 
     if (result.escalate && site.config.ai.escalationEnabled) {
       const transitioned = await escalateAndNotify(
-        conversation,
+        conversation.id,
         'assistant_escalated',
         `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
         notifySite,
