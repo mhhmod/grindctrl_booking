@@ -1,7 +1,0 @@
-api_version = "2026-10"
-
-[[extensions]]
-type = "theme"
-name = "GRINDCTRL Support Messenger"
-handle = "grindctrl-messenger"
-uid = "be31662f-1857-4cec-9c6a-7e4815f4a4b2"

@@ -1,5 +1,9 @@
 {
   "try_on": {
     "name": "GrindCTRL Try-On"
+  },
+  "messenger": {
+    "name": "GRINDCTRL Store Chat",
+    "description": "AI-powered support chat for your shoppers. Toggle on to install."
   }
 }
