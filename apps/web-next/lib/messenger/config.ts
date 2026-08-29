@@ -245,6 +245,10 @@ export function mergeDraftOverPublished(
       ...asRecord(draftRoot.messenger_behaviour),
     },
     messenger_ai: { ...asRecord(publishedRoot.messenger_ai), ...asRecord(draftRoot.messenger_ai) },
+    messenger_notifications: {
+      ...asRecord(publishedRoot.messenger_notifications),
+      ...asRecord(draftRoot.messenger_notifications),
+    },
   };
   // Appearance merges section-wise too (partial color edits shouldn't wipe icons).
   merged.messenger_appearance = {

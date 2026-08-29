@@ -70,6 +70,15 @@ describe('mergeDraftOverPublished', () => {
     expect(config.appearance.accentColor).toBe('#ff0000');
     expect(config.appearance.position).toBe('bottom-left');
   });
+
+  it('keeps published notification settings when an unrelated draft exists', () => {
+    const { config } = mergeDraftOverPublished(
+      { messenger_notifications: { emailOnHandoff: false, recipients: ['owner@store.com'] } },
+      { messenger_appearance: { accentColor: '#ff0055' } },
+    );
+    expect(config.notifications.emailOnHandoff).toBe(false);
+    expect(config.notifications.recipients).toEqual(['owner@store.com']);
+  });
 });
 
 describe('notification settings', () => {
