@@ -56,7 +56,34 @@ CLERK_SECRET_KEY="sk_live_xxxxx"
 # Supabase (production project)
 NEXT_PUBLIC_SUPABASE_URL="https://egvdxshlbcqndrcnzcdn.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-production-anon-key"
+
+# Outgoing mail — Store Chat handoff alerts and Try-On campaigns share
+# one mailbox. SMTP_USER is the FULL MAILBOX ADDRESS: it is both the SMTP
+# login and the From header, so a display name or the label given to a
+# Google app password will not work. The app refuses to send and logs
+# loudly if it is not an address.
+TRYON_EMAIL_SMTP_USER="grindctrlnow@gmail.com"
+TRYON_EMAIL_SMTP_APP_PASSWORD="16-char Google app password"
+
+# Store Chat order lookup (optional — the feature stays off without them)
+# Generate the encryption key with: openssl rand -base64 32
+SHOPIFY_TOKEN_ENC_KEY="32 random bytes, base64"
+SHOPIFY_API_KEY="client_id from apps/grindctrl-tryon/shopify.app.toml"
+
+# Optional: overrides the attachment-triage vision model without a deploy
+# GROQ_VISION_MODEL="meta-llama/llama-4-scout-17b-16e-instruct"
 ```
+
+> **`NEXT_PUBLIC_APP_URL` must be `https://grindctrl.cloud`.** It is what
+> `sitemap.ts` advertises to search engines and what the Shopify OAuth
+> callback falls back to. Pointing it at a hostname that does not serve this
+> app publishes a sitemap full of dead URLs.
+
+> **Rotating `SHOPIFY_TOKEN_ENC_KEY` invalidates every stored Shopify
+> token.** They decrypt to nothing, the app treats them as absent, and each
+> merchant has to authorize again. There is no re-encryption path — that is
+> deliberate: a key rotation should force re-consent rather than quietly
+> re-wrap old credentials.
 
 > **IMPORTANT:** Use `pk_live_` and `sk_live_` Clerk keys for production.
 > The `.env.example` shows `pk_test_` — that is for local development only.

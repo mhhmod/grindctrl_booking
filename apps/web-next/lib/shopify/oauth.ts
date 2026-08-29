@@ -58,6 +58,44 @@ export function statesMatch(fromCookie: string | undefined, fromQuery: string | 
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+/** Hosts this app is served on. A callback has to come back to the host
+ *  that was handed the state cookie, and the cookie is bound to whichever
+ *  host answered the start request. */
+const TRUSTED_HOST_SUFFIX = '.grindctrl.cloud';
+const TRUSTED_HOST_APEX = 'grindctrl.cloud';
+
+/** Works out the origin the OAuth callback must return to.
+ *
+ *  NOT `request.nextUrl.origin`: behind this deployment's Nginx proxy that
+ *  resolves to the internal localhost origin, so the check silently fell
+ *  through to the configured app URL — which names only one of the two
+ *  hostnames the app answers on. The forwarded headers are the only place
+ *  the real host appears.
+ *
+ *  Those headers are client-supplied, hence the allowlist. An unrecognised
+ *  host uses the configured app URL instead; Shopify's own redirect_uri
+ *  whitelist is the second gate. */
+export function resolveCallbackBase(input: {
+  forwardedHost: string | null;
+  host: string | null;
+  forwardedProto: string | null;
+  fallbackAppUrl: string | null;
+}): string | null {
+  // A proxy chain appends, so the first entry is the original client-facing host.
+  const rawHost = (input.forwardedHost ?? input.host ?? '').split(',')[0]?.trim() ?? '';
+  const hostname = rawHost.replace(/:\d+$/, '').toLowerCase();
+  const trusted = hostname === TRUSTED_HOST_APEX || hostname.endsWith(TRUSTED_HOST_SUFFIX);
+
+  if (trusted) {
+    const proto = (input.forwardedProto ?? '').split(',')[0]?.trim() || 'https';
+    // http would send a Secure cookie nowhere; the app is https-only anyway.
+    return `${proto === 'http' ? 'https' : proto}://${rawHost.split(',')[0].trim()}`;
+  }
+
+  const fallback = input.fallbackAppUrl?.trim().replace(/\/+$/, '');
+  return fallback || null;
+}
+
 export function buildAuthorizeUrl(input: {
   shopDomain: string;
   clientId: string;

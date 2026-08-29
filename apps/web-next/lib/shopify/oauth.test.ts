@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { APP_SCOPES, buildAuthorizeUrl, statesMatch, verifyOAuthHmac } from './oauth';
+import { APP_SCOPES, buildAuthorizeUrl, resolveCallbackBase, statesMatch, verifyOAuthHmac } from './oauth';
 
 const SECRET = 'shpss_test_secret';
 
@@ -78,5 +78,62 @@ describe('buildAuthorizeUrl', () => {
 
   it('requests read_orders, which is what forces re-consent', () => {
     expect(APP_SCOPES.split(',')).toContain('read_orders');
+  });
+});
+
+describe('resolveCallbackBase', () => {
+  const FALLBACK = 'https://configured.grindctrl.cloud/';
+
+  it('returns the host that will receive the state cookie', () => {
+    // The bug this exists for: the callback landing on a different host
+    // than the one the HttpOnly cookie was bound to, so state never matched.
+    expect(
+      resolveCallbackBase({
+        forwardedHost: 'grindctrl.cloud',
+        host: 'localhost:3000',
+        forwardedProto: 'https',
+        fallbackAppUrl: FALLBACK,
+      }),
+    ).toBe('https://grindctrl.cloud');
+  });
+
+  it('falls back to the host header when nothing was forwarded', () => {
+    expect(
+      resolveCallbackBase({ forwardedHost: null, host: 'dashboard.grindctrl.cloud', forwardedProto: null, fallbackAppUrl: FALLBACK }),
+    ).toBe('https://dashboard.grindctrl.cloud');
+  });
+
+  it('takes the first entry of a proxy chain, which is the client-facing host', () => {
+    expect(
+      resolveCallbackBase({
+        forwardedHost: 'grindctrl.cloud, internal.lan',
+        host: null,
+        forwardedProto: 'https, http',
+        fallbackAppUrl: FALLBACK,
+      }),
+    ).toBe('https://grindctrl.cloud');
+  });
+
+  it('ignores a spoofed host and uses the configured app URL', () => {
+    // Forwarded headers are client-supplied. A trailing slash on the
+    // fallback would produce a double slash in the redirect_uri.
+    expect(
+      resolveCallbackBase({ forwardedHost: 'evil.example.com', host: null, forwardedProto: 'https', fallbackAppUrl: FALLBACK }),
+    ).toBe('https://configured.grindctrl.cloud');
+    expect(
+      resolveCallbackBase({ forwardedHost: 'grindctrl.cloud.evil.com', host: null, forwardedProto: 'https', fallbackAppUrl: FALLBACK }),
+    ).toBe('https://configured.grindctrl.cloud');
+  });
+
+  it('never emits http, which would send a Secure cookie nowhere', () => {
+    expect(
+      resolveCallbackBase({ forwardedHost: 'grindctrl.cloud', host: null, forwardedProto: 'http', fallbackAppUrl: FALLBACK }),
+    ).toBe('https://grindctrl.cloud');
+  });
+
+  it('returns null when there is nothing trustworthy and nothing configured', () => {
+    expect(
+      resolveCallbackBase({ forwardedHost: null, host: null, forwardedProto: null, fallbackAppUrl: null }),
+    ).toBeNull();
   });
 });

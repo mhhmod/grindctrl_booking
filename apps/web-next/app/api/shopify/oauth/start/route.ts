@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import {
   buildAuthorizeUrl,
+  resolveCallbackBase,
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_TTL_SECONDS,
 } from '@/lib/shopify/oauth';
@@ -29,27 +30,16 @@ export async function GET(request: NextRequest) {
   }
 
   /* The callback MUST come back to the host that is about to be handed the
-     state cookie. This app is served on more than one hostname (the
-     marketing domain and the dashboard subdomain), and NEXT_PUBLIC_APP_URL
-     names only one of them — starting the flow from the other one produced
-     a redirect_uri on a host that never received the cookie, so every
-     callback failed the state check.
-
-     The Host header is client-controlled, hence the suffix check: an
-     unrecognised host falls back to the configured app URL. Shopify's own
-     redirect_uri whitelist is the second gate; this is the first. */
-  const requestOrigin = request.nextUrl.origin;
-  const originHost = (() => {
-    try {
-      return new URL(requestOrigin).hostname;
-    } catch {
-      return '';
-    }
-  })();
-  const trusted = originHost === 'grindctrl.cloud' || originHost.endsWith('.grindctrl.cloud');
-  const base = (trusted ? requestOrigin : process.env.NEXT_PUBLIC_APP_URL?.trim() ?? '').replace(/\/+$/, '');
+     state cookie — see resolveCallbackBase for why the forwarded headers,
+     and not nextUrl.origin, are what answer that. */
+  const base = resolveCallbackBase({
+    forwardedHost: request.headers.get('x-forwarded-host'),
+    host: request.headers.get('host'),
+    forwardedProto: request.headers.get('x-forwarded-proto'),
+    fallbackAppUrl: process.env.NEXT_PUBLIC_APP_URL ?? null,
+  });
   if (!base) {
-    console.error('[shopify] oauth start: no trusted origin and NEXT_PUBLIC_APP_URL is not set');
+    console.error('[shopify] oauth start: untrusted host and NEXT_PUBLIC_APP_URL is not set');
     return NextResponse.json({ error: 'oauth_not_configured' }, { status: 503 });
   }
 
