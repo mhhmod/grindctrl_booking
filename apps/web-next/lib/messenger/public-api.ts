@@ -16,6 +16,7 @@ export interface ResolvedPublicSite {
   embed_key: string;
   status: string;
   settings_version: number;
+  workspace_id: string;
   config: MessengerConfig;
   security: { allow_localhost: boolean };
   patterns: DomainPatternRow[];
@@ -25,7 +26,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
   const supabase = getMessengerServiceClient();
   const siteRes = await supabase
     .from('widget_sites')
-    .select('id, name, embed_key, status, settings_json, settings_version')
+    .select('id, name, embed_key, status, settings_json, settings_version, workspace_id')
     .eq('embed_key', embedKey)
     .maybeSingle();
   if (siteRes.error || !siteRes.data) return null;
@@ -45,6 +46,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
     embed_key: row.embed_key as string,
     status: row.status as string,
     settings_version: (row.settings_version as number) ?? 1,
+    workspace_id: row.workspace_id as string,
     config: resolveMessengerConfig(settings),
     security: { allow_localhost: securityRaw.allow_localhost === true },
     patterns: ((domainsRes.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
