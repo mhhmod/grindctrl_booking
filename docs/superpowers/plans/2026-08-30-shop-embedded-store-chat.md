@@ -2759,3 +2759,267 @@ All 12 tasks shipped on `feat/shop-embedded-store-chat`, implemented mostly by C
 **Known limitation, unchanged from the design doc:** the actor-identity gap for shop-owned conversations after a claim (the reason `/thread` and `conversations-panel.tsx` are deferred to Phase 3) is still open. Phase 3 needs to decide how a claimed store's embedded Conversations tab identifies its actor once the synthetic `shop-<domain>` profile it was provisioned under has been deleted.
 
 **Pre-existing gap surfaced, not introduced, by this phase:** a final integration review found that `publishConfig`/`publishConfigForSite` has no caller in either UI surface — not the dashboard (verified: no component under `components/dashboard/messenger/` calls `publishConfig`, on `main`, before this branch), and now not the embedded app either (`MessengerHostActions` deliberately mirrors what the five editors actually call, and none of them call it). The `POST /api/shopify/store-chat/publish` route built in Task 6 is therefore reachable and tested but has nothing driving it from any UI, same as the dashboard's own `publishConfig` server action today. This is a real product gap — a merchant who saves a draft currently has no button, in either surface, that ever publishes it — but it predates this phase and fixing it means designing an actual Publish control (dashboard first, most likely), which is new UI/UX work outside a Phase 2 refactor's scope. Flagged for separate follow-up, not fixed here.
+
+Confirmed with the user afterward: build the Publish control now (Task 13, below), and for Phase 3, attribute a claimed store's embedded takeover to the store itself rather than blocking on per-staff identity (see Task 13's sibling plan for Phase 3).
+
+---
+
+## Task 13: Publish control in the Overview tab
+
+**Files:**
+- Modify: `apps/web-next/lib/messenger/dashboard-actions-contract.ts`
+- Modify: `apps/web-next/components/dashboard/messenger/overview.tsx`
+- Create: `apps/web-next/components/dashboard/messenger/overview.test.tsx`
+- Modify: `apps/web-next/components/dashboard/messenger/messenger-tabs.tsx`
+- Modify: `apps/web-next/app/dashboard/messenger/page.tsx`
+- Modify: `apps/web-next/components/shopify/store-chat-actions.ts`
+- Modify: `apps/web-next/components/shopify/store-chat-embedded.tsx`
+- Modify: `apps/web-next/components/shopify/store-chat-embedded.test.tsx`
+
+`publishConfig` (dashboard) and `POST /api/shopify/store-chat/publish` (embedded) already exist and are tested — this task only adds the UI affordance and the one missing contract method, in the Overview tab so both surfaces get it from the same component, same as every other tab.
+
+- [ ] **Step 1: Add `publishConfig` to the shared contract**
+
+In `apps/web-next/lib/messenger/dashboard-actions-contract.ts`, add one line to the interface:
+
+```ts
+export interface MessengerHostActions {
+  saveDraftSection(siteId: string, section: MessengerSection, payload: object): Promise<ActionResult>;
+  publishConfig(siteId: string): Promise<ActionResult>;
+  setMessengerEnabled(siteId: string, enabled: boolean): Promise<ActionResult>;
+  addKnowledge(formData: FormData): Promise<ActionResult>;
+  updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
+  deleteKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
+  syncKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
+}
+```
+
+`app/dashboard/messenger/actions.ts` already exports `publishConfig(siteId: string): Promise<ActionResult>` with this exact signature (Task 2), so `import * as messengerActions from './actions'` satisfies the widened interface with no dashboard-side change.
+
+- [ ] **Step 2: Write the failing test for `MessengerOverview`**
+
+```tsx
+// apps/web-next/components/dashboard/messenger/overview.test.tsx
+import React from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { MessengerOverview } from './overview';
+
+const publishConfig = vi.fn();
+
+function renderOverview(hasDraft: boolean) {
+  return render(
+    <MessengerOverview
+      locale="en"
+      siteId="site-1"
+      siteName="Demo store"
+      active
+      aiEnabled={false}
+      detectedAt={null}
+      version={3}
+      stats={null}
+      hasDraft={hasDraft}
+      actions={{ publishConfig }}
+    />,
+  );
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  publishConfig.mockResolvedValue({ ok: true, message: 'Published — live on your store within a minute.' });
+});
+
+describe('MessengerOverview publish control', () => {
+  it('shows no Publish button when there is nothing to publish', () => {
+    renderOverview(false);
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
+  });
+
+  it('publishes the site and shows the server\'s success message', async () => {
+    renderOverview(true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    });
+
+    expect(publishConfig).toHaveBeenCalledWith('site-1');
+    expect(await screen.findByText('Published — live on your store within a minute.')).toBeInTheDocument();
+  });
+
+  it('shows a failed publish as an alert, never as success', async () => {
+    publishConfig.mockResolvedValue({ ok: false, error: 'Someone else published while you were editing. Refresh and try again.' });
+    renderOverview(true);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    });
+
+    const note = await screen.findByRole('alert');
+    expect(note).toHaveTextContent('Someone else published while you were editing. Refresh and try again.');
+    expect(note.className).toContain('text-destructive');
+  });
+});
+```
+
+- [ ] **Step 3: Run test to verify it fails**
+
+Run: `npx vitest run components/dashboard/messenger/overview.test.tsx`
+Expected: FAIL — `MessengerOverview` doesn't accept `siteId`, `hasDraft`, or `actions` yet.
+
+- [ ] **Step 4: Add the Publish control to `overview.tsx`**
+
+Add to the imports:
+
+```ts
+import { useState, useTransition } from 'react';
+import { Button } from '@/components/ui/button';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
+```
+
+Add to `COPY.en`: `publish: 'Publish', publishing: 'Publishing…', published: 'Published',`
+Add to `COPY.ar`: `publish: 'نشر', publishing: 'جارٍ النشر…', published: 'تم النشر',`
+
+Replace the function signature:
+
+```tsx
+export function MessengerOverview({
+  locale,
+  siteId,
+  siteName,
+  active,
+  aiEnabled,
+  detectedAt,
+  version,
+  stats,
+  hasDraft,
+  actions,
+}: {
+  locale: string;
+  siteId: string;
+  siteName: string;
+  active: boolean;
+  aiEnabled: boolean;
+  detectedAt: string | null;
+  version: number;
+  stats: Stats;
+  hasDraft: boolean;
+  actions: Pick<MessengerHostActions, 'publishConfig'>;
+}) {
+  const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const detected = Boolean(detectedAt);
+  const [pending, startTransition] = useTransition();
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function publish() {
+    setNote(null);
+    startTransition(async () => {
+      const result = await actions.publishConfig(siteId);
+      setNote(result.ok ? { ok: true, text: result.message ?? t.published } : { ok: false, text: result.error });
+    });
+  }
+```
+
+Replace the "Config version" card:
+
+```tsx
+        <div className="rounded-xl border border-border bg-card p-4">
+          <p className="text-xs text-muted-foreground">{t.configVersion}</p>
+          <p className="mt-1 text-lg font-semibold tabular-nums">v{version}</p>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.configVersionNote}</p>
+          {/* Kept visible once `note` is set even after a successful publish
+              flips hasDraft to false upstream — otherwise the confirmation
+              would vanish the instant the parent re-renders with fresh data. */}
+          {(hasDraft || note) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {hasDraft && (
+                <Button type="button" size="sm" disabled={pending} onClick={publish}>
+                  {pending ? t.publishing : t.publish}
+                </Button>
+              )}
+              {note && (
+                <span
+                  role={note.ok ? 'status' : 'alert'}
+                  className={`text-xs ${note.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+                >
+                  {note.text}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+```
+
+- [ ] **Step 5: Run test to verify it passes**
+
+Run: `npx vitest run components/dashboard/messenger/overview.test.tsx`
+Expected: PASS, 3/3.
+
+- [ ] **Step 6: Wire `hasDraft` and `actions` through `messenger-tabs.tsx`**
+
+Add `hasDraft: boolean;` to the props type (next to `showConversationsTab?: boolean;`) and to the destructure (next to `showConversationsTab = true,`).
+
+Replace the `overview` render block:
+
+```tsx
+      {tab === 'overview' && (
+        <MessengerOverview
+          locale={locale}
+          siteId={siteId}
+          siteName={siteName}
+          active={active}
+          aiEnabled={config.ai.enabled}
+          detectedAt={detectedAt}
+          version={version}
+          stats={stats}
+          hasDraft={hasDraft}
+          actions={actions}
+        />
+      )}
+```
+
+- [ ] **Step 7: Pass `hasDraft` from the dashboard page**
+
+In `apps/web-next/app/dashboard/messenger/page.tsx`, the `<MessengerTabs>` element already has every other prop from the same `{ config, hasDraft }` destructure — add one line:
+
+```tsx
+        knowledge={knowledge}
+        actions={messengerActions}
+        hasDraft={hasDraft}
+      />
+```
+
+- [ ] **Step 8: Implement `publishConfig` in the embedded fetch adapter**
+
+In `apps/web-next/components/shopify/store-chat-actions.ts`, add one method to the returned object (the publish route reads nothing from the body, so an empty object is enough):
+
+```ts
+      publishConfig: (_siteId) => postJson('/api/shopify/store-chat/publish', {}),
+```
+
+- [ ] **Step 9: Wrap it in `StoreChatEmbedded` and pass `hasDraft` through**
+
+In `apps/web-next/components/shopify/store-chat-embedded.tsx`, add to the `actions` `useMemo` object (alongside the other five wrapped methods):
+
+```ts
+      publishConfig: async (siteId) => {
+        const result = await rawActions.publishConfig(siteId);
+        if (result.ok) void loadState();
+        return result;
+      },
+```
+
+Add `hasDraft={state.site.hasDraft}` to the `<MessengerTabs>` element (the fetched `state.site.hasDraft` already exists — Task 8's `/state` route returns it — it just wasn't threaded through yet).
+
+In `apps/web-next/components/shopify/store-chat-embedded.test.tsx`, add `publishConfig: vi.fn()` to the mocked `useStoreChatActions()` return object (required now that `MessengerHostActions` has the new method).
+
+- [ ] **Step 10: Run the full messenger + shopify component suite and typecheck**
+
+Run: `npx vitest run components/dashboard/messenger components/shopify app/dashboard/messenger` && `npx tsc --noEmit`
+Expected: all pass, no type errors.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add lib/messenger/dashboard-actions-contract.ts components/dashboard/messenger/overview.tsx components/dashboard/messenger/overview.test.tsx components/dashboard/messenger/messenger-tabs.tsx app/dashboard/messenger/page.tsx components/shopify/store-chat-actions.ts components/shopify/store-chat-embedded.tsx components/shopify/store-chat-embedded.test.tsx
+git commit -m "feat(messenger): add a Publish control to the Overview tab, wired to both surfaces"
+```
