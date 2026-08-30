@@ -60,6 +60,7 @@ export function MessengerTabs({
   conversations,
   knowledge,
   actions,
+  hasDraft,
   showConversationsTab = true,
 }: {
   locale: MessengerLocale;
@@ -77,6 +78,7 @@ export function MessengerTabs({
   conversations: ConversationListItem[];
   knowledge: KnowledgeEntry[];
   actions: MessengerHostActions;
+  hasDraft: boolean;
   /** The embedded Shopify shell doesn't render Conversations yet — see
    *  Phase 2's scope note. Defaults to true so the dashboard is unaffected. */
   showConversationsTab?: boolean;
@@ -113,12 +115,15 @@ export function MessengerTabs({
       {tab === 'overview' && (
         <MessengerOverview
           locale={locale}
+          siteId={siteId}
           siteName={siteName}
           active={active}
           aiEnabled={config.ai.enabled}
           detectedAt={detectedAt}
           version={version}
           stats={stats}
+          hasDraft={hasDraft}
+          actions={actions}
         />
       )}
       {tab === 'appearance' && (

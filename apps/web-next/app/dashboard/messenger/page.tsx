@@ -203,6 +203,7 @@ export default async function MessengerPage({
         }))}
         knowledge={knowledge}
         actions={messengerActions}
+        hasDraft={hasDraft}
       />
     </section>
   );

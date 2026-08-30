@@ -8,6 +8,7 @@ import type { MessengerSection } from './config';
  *  Same components either way — this interface is the only seam. */
 export interface MessengerHostActions {
   saveDraftSection(siteId: string, section: MessengerSection, payload: object): Promise<ActionResult>;
+  publishConfig(siteId: string): Promise<ActionResult>;
   setMessengerEnabled(siteId: string, enabled: boolean): Promise<ActionResult>;
   addKnowledge(formData: FormData): Promise<ActionResult>;
   updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
