@@ -62,12 +62,19 @@ export function PreviewFrame({
         dir={locale === 'ar' ? 'rtl' : 'ltr'}
         className={
           device === 'mobile'
-            ? 'relative mx-auto h-[520px] w-[300px] overflow-hidden rounded-[28px] border-[6px] border-zinc-700 bg-background shadow-xl'
-            : 'relative h-[480px] overflow-hidden rounded-xl border border-border bg-background'
+            ? 'relative mx-auto h-[608px] w-[300px] overflow-hidden rounded-[28px] border-[6px] border-zinc-700 bg-background shadow-xl'
+            : 'relative h-[568px] overflow-hidden rounded-xl border border-border bg-background'
         }
       >
         {open ? (
-          <MessengerPanel config={{ ...payload }} variant="preview" locale={locale} />
+          /* 88px reserved at the bottom, matching the real widget's own
+             iframe placement (public/widget/v1/messenger.js: iframe sits at
+             bottom:88px against a bottom:20px launcher) — without this the
+             panel filled the whole box edge-to-edge and its footer ran
+             straight into the launcher sitting on top of it at z-10. */
+          <div className="absolute inset-x-0 top-0 bottom-[88px]">
+            <MessengerPanel config={{ ...payload }} variant="preview" locale={locale} />
+          </div>
         ) : (
           /* A quiet stand-in for the merchant's page, so the launcher is
              judged against a page rather than floating in a void. */
