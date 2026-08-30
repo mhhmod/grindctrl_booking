@@ -93,7 +93,7 @@ describe('ClaimPage', () => {
     expect(requireDashboardUser).toHaveBeenCalledWith('/claim?token=good-token');
   });
 
-  it('adopts the store and redirects to the dashboard on success — the redirect is not swallowed', async () => {
+  it('adopts the store and redirects to the dashboard on success', async () => {
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
@@ -101,9 +101,12 @@ describe('ClaimPage', () => {
       throw Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT' });
     });
 
-    // If redirect() were wrapped in the same try as ensureMessengerSite and
-    // the catch didn't rethrow, this control-flow throw would be swallowed
-    // and the promise below would resolve instead of reject.
+    // The happy path end to end: adopts with the claimed shop, then hands
+    // off to /dashboard/messenger. This does NOT pin redirect() being
+    // outside the try — the catch below rethrows any non-ownership error
+    // regardless of where redirect() sits, so that placement can't be
+    // told apart by a black-box test; "does not swallow an unrelated
+    // error" below already covers the rethrow behaviour this exercises.
     await expect(
       ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) }),
     ).rejects.toThrow('NEXT_REDIRECT');
@@ -123,6 +126,28 @@ describe('ClaimPage', () => {
 
     expect(screen.getByRole('heading', { name: /already connected/i })).toBeInTheDocument();
     expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('adopts the TOKEN\'s shop, ignoring a shop in the query string', async () => {
+    vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
+    vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+    vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
+    redirectMock.mockImplementation(() => {
+      throw Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT' });
+    });
+
+    // Mirrors the mint-side test in route.test.ts: the shop that gets
+    // adopted must be the one proven by the claim token, never one an
+    // attacker can put in the URL — even though today's page doesn't read
+    // searchParams.shop at all, this guards against that regressing.
+    await expect(
+      ClaimPage({
+        searchParams: Promise.resolve({ token: 'good', shop: 'evil.myshopify.com' }),
+      }),
+    ).rejects.toThrow('NEXT_REDIRECT');
+
+    expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
+    expect(ensureMessengerSite).not.toHaveBeenCalledWith('user_1', 'evil.myshopify.com', expect.anything());
   });
 
   it('does not swallow an unrelated error as "already connected"', async () => {

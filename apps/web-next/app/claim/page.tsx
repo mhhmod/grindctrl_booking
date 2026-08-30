@@ -31,14 +31,17 @@ const COPY = {
     expiredTitle: 'This link has expired',
     expiredBody: 'Reopen GRINDCTRL from your Shopify admin and choose "Claim this store" again.',
     takenTitle: 'This store is already connected',
-    takenBody:
-      "It's already connected to another GRINDCTRL account. Disconnect it there, or contact support if that doesn't sound right.",
+    // No disconnect/unclaim path exists anywhere in the app (shopProfileId
+    // is only ever written, never reverted — see shop-tenancy.ts) —
+    // "disconnect it there" would send a locked-out merchant looking for a
+    // button that does not exist. Point at support instead.
+    takenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
   },
   ar: {
     expiredTitle: 'انتهت صلاحية هذا الرابط',
     expiredBody: 'أعد فتح GRINDCTRL من لوحة تحكم Shopify واختر "المطالبة بهذا المتجر" مرة أخرى.',
     takenTitle: 'هذا المتجر متصل بالفعل',
-    takenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. افصله من هناك، أو تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
+    takenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
   },
 } as const;
 
@@ -78,6 +81,12 @@ export default async function ClaimPage({
 
   const userId = await requireDashboardUser(`/claim?token=${encodeURIComponent(token)}`);
 
+  // Known limitation, not covered by this token: verifySessionToken (see
+  // lib/shopify/session-token.ts) checks aud, dest, and exp, but never sub
+  // or a staff role. Any staff account that can open this store's embedded
+  // app can mint a claim and redeem it into their own Clerk account — and
+  // since there is no disconnect/unclaim path (see the copy above), there
+  // is currently no undo.
   try {
     await ensureMessengerSite(userId, claim.shop, claim.shop);
   } catch (error) {

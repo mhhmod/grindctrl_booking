@@ -30,8 +30,10 @@ const TAB_COPY = {
     off: 'Off',
     hasDraft: 'Unpublished changes',
     storeTakenTitle: 'This store is already connected',
-    storeTakenBody:
-      "It's already connected to another GRINDCTRL account. Disconnect it there, or contact support if that doesn't sound right.",
+    // See the matching comment in app/claim/page.tsx: there is no
+    // disconnect/unclaim path in the app, so don't send a merchant looking
+    // for one.
+    storeTakenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
   },
   ar: {
     overview: 'نظرة عامة',
@@ -44,7 +46,7 @@ const TAB_COPY = {
     off: 'متوقف',
     hasDraft: 'تغييرات غير منشورة',
     storeTakenTitle: 'هذا المتجر متصل بالفعل',
-    storeTakenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. افصله من هناك، أو تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
+    storeTakenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
   },
 } as const;
 

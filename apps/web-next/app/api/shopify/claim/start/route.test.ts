@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 /* GET /api/shopify/claim/start mints a short-lived claim token for the shop
@@ -27,6 +27,12 @@ vi.mock('@/lib/shopify/claim-token', async () => {
   return { ...actual, signClaimToken: (...args: unknown[]) => signClaimTokenMock(...args) };
 });
 
+const rateLimitMock = vi.fn();
+vi.mock('@/lib/ratelimit', () => ({
+  publicApiRatelimit: { limit: (...args: unknown[]) => rateLimitMock(...args) },
+  clientIp: () => 'test-ip',
+}));
+
 import { GET } from './route';
 
 function req(url: string, headers?: Record<string, string>) {
@@ -34,6 +40,11 @@ function req(url: string, headers?: Record<string, string>) {
 }
 
 describe('GET /api/shopify/claim/start', () => {
+  beforeEach(() => {
+    // Every test not specifically about the limiter needs it open by default.
+    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+  });
+
   afterEach(() => {
     vi.resetAllMocks();
     delete process.env.SHOPIFY_API_SECRET;
@@ -129,6 +140,32 @@ describe('GET /api/shopify/claim/start', () => {
 
     expect(response.status).toBe(503);
     expect(body).toEqual({ error: 'not_configured' });
+    expect(verifySessionTokenMock).not.toHaveBeenCalled();
+    expect(ensureShopOwnedSiteMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 when SHOPIFY_API_SECRET is whitespace-only, not a 401', async () => {
+    process.env.SHOPIFY_API_SECRET = '   ';
+    const response = await GET(
+      req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({ error: 'not_configured' });
+  });
+
+  it('returns 429 and never provisions when the caller is rate-limited', async () => {
+    process.env.SHOPIFY_API_SECRET = 'secret';
+    rateLimitMock.mockResolvedValue({ success: false, reset: Date.now() + 30_000 });
+
+    const response = await GET(
+      req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(429);
+    expect(body).toEqual({ error: 'rate_limited' });
     expect(verifySessionTokenMock).not.toHaveBeenCalled();
     expect(ensureShopOwnedSiteMock).not.toHaveBeenCalled();
   });
