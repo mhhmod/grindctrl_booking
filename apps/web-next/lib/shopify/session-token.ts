@@ -5,6 +5,7 @@
 import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { NextRequest } from 'next/server';
 
 const CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 
@@ -54,6 +55,16 @@ export function verifySessionToken(token: string): VerifiedSession | null {
   if (!shop || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) return null;
 
   return { shop };
+}
+
+/** Every Shopify-embedded route handler authenticates the same way: a
+ *  Bearer session token from App Bridge's idToken(). One place to get the
+ *  prefix-stripping right, instead of every route re-deriving it. */
+export function authenticateShopifyRequest(request: NextRequest): VerifiedSession | null {
+  const header = request.headers.get('authorization') ?? '';
+  const token = header.replace(/^bearer\s+/i, '').trim();
+  if (!token) return null;
+  return verifySessionToken(token);
 }
 
 export const SHOPIFY_CLIENT_ID = CLIENT_ID;
