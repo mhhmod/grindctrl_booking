@@ -155,7 +155,7 @@ export function ConversationsPanel({
     } else {
       setError(t.errorRetry);
     }
-  }, [siteId, selectedId, t.errorRetry]);
+  }, [siteId, selectedId, t.errorRetry, actions]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async loader; state settles after awaits
