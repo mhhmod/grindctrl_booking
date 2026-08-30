@@ -24,7 +24,11 @@ export default clerkMiddleware(async (auth, req) => {
 });
 
 export const config = {
-  /* Embed + storefront-facing APIs are cookie-less third-party contexts:
-     Clerk's handshake can redirect them (blank iframes). Keep them out. */
-  matcher: ['/((?!_next|embed|api/try-on|api/shopify|.*\\..*).*)', '/'],
+  /* Embed, the embedded Shopify admin app, and storefront-facing APIs are
+     cookie-less third-party contexts: Clerk's handshake can redirect them
+     (blank iframes, or Shopify's admin refusing the resulting navigation).
+     Keep them out. `shopify` covers the app page tree
+     (app/shopify/app/[[...rest]]); `api/shopify` covers its route handlers
+     — two different prefixes, both needed. */
+  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|.*\\..*).*)', '/'],
 };
