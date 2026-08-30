@@ -1674,6 +1674,15 @@ describe('POST /api/shopify/store-chat/knowledge', () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ ok: false, error: 'Could not reach that page. Check the URL and try again.' });
   });
+
+  it('genericizes an error that does not match the friendly-message pattern, never leaking raw infra text', async () => {
+    addManualKnowledgeMock.mockRejectedValue(
+      new Error('knowledge create failed: duplicate key value violates unique constraint "messenger_knowledge_pkey"'),
+    );
+    const res = await POST(req({ op: 'add', title: 'x', content: 'y' }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+  });
 });
 ```
 
@@ -1743,7 +1752,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: false, error: 'Unknown operation.' }, { status: 400 });
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Action failed. Please try again.';
+    // Same filter actions.ts's addKnowledge/syncKnowledge apply: only the
+    // fetch-a-URL failure messages are safe and useful to a merchant.
+    // Anything else (a raw Postgres/Supabase error, for instance) must not
+    // reach an untrusted client verbatim — genericize it instead.
+    const raw = error instanceof Error ? error.message : '';
+    const message = /https|URL|page|readable/i.test(raw) ? raw : 'Action failed. Please try again.';
     return NextResponse.json({ ok: false, error: message }, { status: 400 });
   }
 }
@@ -1752,7 +1766,7 @@ export async function POST(request: NextRequest) {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run app/api/shopify/store-chat/knowledge/route.test.ts`
-Expected: PASS, 8/8.
+Expected: PASS, 9/9.
 
 - [ ] **Step 5: Commit**
 
