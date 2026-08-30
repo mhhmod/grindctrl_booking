@@ -117,6 +117,28 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
+      takeoverConversation: async (siteId, conversationId) => {
+        const result = await rawActions.takeoverConversation(siteId, conversationId);
+        if (result.ok) void loadState();
+        return result;
+      },
+      releaseConversation: async (siteId, conversationId) => {
+        const result = await rawActions.releaseConversation(siteId, conversationId);
+        if (result.ok) void loadState();
+        return result;
+      },
+      closeConversationAction: async (siteId, conversationId) => {
+        const result = await rawActions.closeConversationAction(siteId, conversationId);
+        if (result.ok) void loadState();
+        return result;
+      },
+      staffReply: async (siteId, conversationId, text) => {
+        const result = await rawActions.staffReply(siteId, conversationId, text);
+        if (result.ok) void loadState();
+        return result;
+      },
+      // Pure read — no state to refresh.
+      fetchConversationMessages: rawActions.fetchConversationMessages,
     }),
     [rawActions, loadState],
   );
@@ -144,7 +166,6 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
       knowledge={state.knowledge}
       actions={actions}
       hasDraft={state.site.hasDraft}
-      showConversationsTab={false}
     />
   );
 }

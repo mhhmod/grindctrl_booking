@@ -16,6 +16,11 @@ vi.mock('@/components/shopify/store-chat-actions', () => ({
     updateKnowledgeStatus: vi.fn(),
     deleteKnowledge: vi.fn(),
     syncKnowledge: vi.fn(),
+    takeoverConversation: vi.fn(),
+    releaseConversation: vi.fn(),
+    closeConversationAction: vi.fn(),
+    staffReply: vi.fn(),
+    fetchConversationMessages: vi.fn().mockResolvedValue({ ok: true, status: 'open', messages: [], attachments: {} }),
   }),
 }));
 
@@ -58,6 +63,13 @@ const STATE_RESPONSE = {
 };
 
 describe('StoreChatEmbedded', () => {
+  it('renders the Conversations tab in the embedded shell', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(STATE_RESPONSE) });
+    render(<StoreChatEmbedded locale="en" />);
+    await screen.findByText('Demo store');
+    expect(screen.getByRole('button', { name: 'Conversations' })).toBeInTheDocument();
+  });
+
   it('fetches /state with a Bearer token and renders the overview once loaded', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(STATE_RESPONSE) });
 
