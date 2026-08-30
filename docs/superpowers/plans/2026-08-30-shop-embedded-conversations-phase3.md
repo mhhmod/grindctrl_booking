@@ -662,7 +662,7 @@ Add to the returned object inside `useStoreChatActions`:
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run components/shopify/store-chat-actions.test.ts`
-Expected: PASS, 9/9.
+Expected: PASS, 8/8 (4 pre-existing plus the 4 added in Step 1).
 
 - [ ] **Step 5: Commit**
 
@@ -771,6 +771,18 @@ git commit -m "feat(shopify): turn on the Conversations tab in the embedded app"
 - [ ] `npm run build` — succeeds.
 - [ ] Confirm no route under `app/api/shopify/store-chat/*` imports `requireOwnedSite` or anything from `@clerk/nextjs/server`.
 - [ ] Confirm `getConversationForSite` is the only cross-tenant guard the new route relies on — grep the route for any place a client-supplied id reaches a query without first passing through it.
+
+## What execution changed
+
+All four tasks shipped on `feat/embedded-conversations`, implemented via Codex CLI (one task per dispatch), each diff independently re-verified before commit. Final state: **799/799 tests** (up from 782 before this phase), `tsc --noEmit` clean, `next lint` unchanged at the same 4 pre-existing `components/assistant/*` errors, production build succeeds (all 6 `/api/shopify/store-chat/*` routes present, including the new `thread` route), and a manual browser check confirmed the Conversations tab button now renders in the embedded shell and degrades to the same graceful "could not load" state as every other tab outside a real Shopify iframe.
+
+Two small defects found and fixed during execution, neither a Codex mistake:
+
+1. **This plan's own test count was wrong.** Task 16's Step 4 said "PASS, 9/9"; the file actually ends up with 8 (4 pre-existing + 4 added). Codex caught the discrepancy itself, correctly implemented the 4 tests exactly as specified rather than padding to hit the wrong number, and flagged it in its report. Fixed in the plan.
+
+2. **Task 14 introduced a `react-hooks/exhaustive-deps` warning** in `conversations-panel.tsx`: the `load` callback started calling `actions.fetchConversationMessages` but its dependency array wasn't updated to include `actions`. Harmless in practice — every `actions` value that reaches this component (the dashboard's `messengerActions` module namespace, the embedded `useMemo`-stabilized wrapper) is referentially stable across renders — but a stale-closure risk is a stale-closure risk regardless of whether anything currently triggers it. Not caught until Task 17's lint gate, since earlier tasks in this phase weren't individually lint-checked (a gap in my own per-task verification, not the plan's). Fixed directly.
+
+Also confirmed empirically, not just asserted: every downstream use inside the new `/thread` route (`appendMessage`, `recordAudit`) references `conversation.id` — the value returned by `getConversationForSite`'s server-side lookup — never `body.conversationId`, the client-supplied one. The client-supplied id is used exactly once, as the lookup key that either resolves to a conversation scoped to the token-verified site or returns nothing; nothing downstream can act on an unscoped id.
 
 ## Known, non-blocking follow-up
 

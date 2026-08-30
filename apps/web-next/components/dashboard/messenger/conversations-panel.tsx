@@ -4,13 +4,7 @@ import React, { useCallback, useEffect, useRef, useState, useTransition } from '
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from './textarea';
-import {
-  closeConversationAction,
-  fetchConversationMessages,
-  releaseConversation,
-  staffReply,
-  takeoverConversation,
-} from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Focused staff view: list + one thread. Progressive disclosure — customer
    details stay one click away in the store admin, not crammed here. */
@@ -123,10 +117,15 @@ export function ConversationsPanel({
   locale,
   siteId,
   conversations,
+  actions,
 }: {
   locale: 'en' | 'ar';
   siteId: string;
   conversations: ConversationListItem[];
+  actions: Pick<
+    MessengerHostActions,
+    'fetchConversationMessages' | 'staffReply' | 'takeoverConversation' | 'releaseConversation' | 'closeConversationAction'
+  >;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
@@ -146,7 +145,7 @@ export function ConversationsPanel({
   const load = useCallback(async () => {
     if (!selectedId) return;
     const seq = (loadSeq.current += 1);
-    const result = await fetchConversationMessages(siteId, selectedId);
+    const result = await actions.fetchConversationMessages(siteId, selectedId);
     if (seq !== loadSeq.current) return;
     if (result.ok) {
       setMessages(result.messages);
@@ -156,7 +155,7 @@ export function ConversationsPanel({
     } else {
       setError(t.errorRetry);
     }
-  }, [siteId, selectedId, t.errorRetry]);
+  }, [siteId, selectedId, t.errorRetry, actions]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async loader; state settles after awaits
@@ -178,7 +177,7 @@ export function ConversationsPanel({
     const text = draft.trim();
     if (!text || !selectedId) return;
     act(async () => {
-      const result = await staffReply(siteId, selectedId, text);
+      const result = await actions.staffReply(siteId, selectedId, text);
       if (result.ok) setDraft('');
       else setError(result.error);
     });
@@ -248,17 +247,17 @@ export function ConversationsPanel({
           </div>
           <div className="flex gap-2">
             {(status === 'open' || status === 'handoff_requested') && selectedId && (
-              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => takeoverConversation(siteId, selectedId))}>
+              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
                 {t.takeOver}
               </Button>
             )}
             {status === 'handoff_active' && (
-              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => releaseConversation(siteId, selectedId))}>
+              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.releaseConversation(siteId, selectedId))}>
                 {t.returnToAi}
               </Button>
             )}
             {status !== 'closed' && selectedId && (
-              <Button size="sm" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => closeConversationAction(siteId, selectedId))}>
+              <Button size="sm" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => actions.closeConversationAction(siteId, selectedId))}>
                 {t.resolve}
               </Button>
             )}

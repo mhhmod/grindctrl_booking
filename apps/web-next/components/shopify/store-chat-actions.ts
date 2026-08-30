@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
 import type { ActionResult } from '@/lib/messenger/actions-core';
-import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
+import type { FetchMessagesResult, MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { MessengerSection } from '@/lib/messenger/config';
 
 async function postJson(path: string, body: unknown): Promise<ActionResult> {
@@ -20,6 +20,20 @@ async function postJson(path: string, body: unknown): Promise<ActionResult> {
   }
 }
 
+async function postThreadRead(conversationId: string): Promise<FetchMessagesResult | { ok: false }> {
+  try {
+    const token = await getShopifySessionToken();
+    const res = await fetch('/api/shopify/store-chat/thread', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ op: 'messages', conversationId }),
+    });
+    return (await res.json()) as FetchMessagesResult | { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
 /** Fetch-backed twin of app/dashboard/messenger/actions.ts, scoped by the
  *  embedded app's verified shop session instead of a Clerk cookie. Every
  *  method's `siteId` argument is ignored on purpose: the routes behind
@@ -33,6 +47,15 @@ export function useStoreChatActions(): MessengerHostActions {
       publishConfig: (_siteId) => postJson('/api/shopify/store-chat/publish', {}),
       setMessengerEnabled: (_siteId, enabled: boolean) =>
         postJson('/api/shopify/store-chat/enable', { enabled }),
+      fetchConversationMessages: (_siteId, conversationId: string) => postThreadRead(conversationId),
+      staffReply: (_siteId, conversationId: string, text: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'reply', conversationId, text }),
+      takeoverConversation: (_siteId, conversationId: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'takeover', conversationId }),
+      releaseConversation: (_siteId, conversationId: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'release', conversationId }),
+      closeConversationAction: (_siteId, conversationId: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'close', conversationId }),
       addKnowledge: (formData: FormData) => {
         const url = String(formData.get('url') ?? '').trim();
         const body = url

@@ -72,4 +72,49 @@ describe('useStoreChatActions', () => {
       error: 'Action failed. Please try again.',
     });
   });
+
+  it('fetchConversationMessages posts op=messages and returns the parsed body', async () => {
+    fetchMock.mockResolvedValue({ json: () => Promise.resolve({ ok: true, status: 'open', messages: [], attachments: {} }) });
+    const { result } = renderHook(() => useStoreChatActions());
+    const res = await result.current.fetchConversationMessages('client-side-site-id', 'conv-1');
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/shopify/store-chat/thread',
+      expect.objectContaining({ body: JSON.stringify({ op: 'messages', conversationId: 'conv-1' }) }),
+    );
+    expect(res).toEqual({ ok: true, status: 'open', messages: [], attachments: {} });
+  });
+
+  it('staffReply posts op=reply with the text', async () => {
+    const { result } = renderHook(() => useStoreChatActions());
+    await result.current.staffReply('site-id', 'conv-1', 'On it!');
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/shopify/store-chat/thread',
+      expect.objectContaining({ body: JSON.stringify({ op: 'reply', conversationId: 'conv-1', text: 'On it!' }) }),
+    );
+  });
+
+  it('takeoverConversation, releaseConversation, and closeConversationAction post their matching op', async () => {
+    const { result } = renderHook(() => useStoreChatActions());
+    await result.current.takeoverConversation('site-id', 'conv-1');
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/shopify/store-chat/thread',
+      expect.objectContaining({ body: JSON.stringify({ op: 'takeover', conversationId: 'conv-1' }) }),
+    );
+    await result.current.releaseConversation('site-id', 'conv-1');
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/shopify/store-chat/thread',
+      expect.objectContaining({ body: JSON.stringify({ op: 'release', conversationId: 'conv-1' }) }),
+    );
+    await result.current.closeConversationAction('site-id', 'conv-1');
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      '/api/shopify/store-chat/thread',
+      expect.objectContaining({ body: JSON.stringify({ op: 'close', conversationId: 'conv-1' }) }),
+    );
+  });
+
+  it('fetchConversationMessages returns a bare failure, matching the dashboard shape, when fetch itself rejects', async () => {
+    fetchMock.mockRejectedValue(new Error('network down'));
+    const { result } = renderHook(() => useStoreChatActions());
+    await expect(result.current.fetchConversationMessages('site-id', 'conv-1')).resolves.toEqual({ ok: false });
+  });
 });
