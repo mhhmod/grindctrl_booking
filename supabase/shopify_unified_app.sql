@@ -32,17 +32,23 @@ create unique index if not exists uq_widget_sites_domain
 
 -- The index keys on lower(domain), but every lookup compares the column
 -- directly (.eq('domain', …) through PostgREST — expressions are not
--- addressable there). A mixed-case row would therefore be invisible to the
--- lookup AND rejected by the index, surfacing as a raw duplicate-key error
--- instead of an adoption. Keeping the column canonical makes the two agree
--- by construction rather than by every caller remembering to lower-case.
+-- addressable there). A non-canonical row would therefore be invisible to
+-- the lookup AND rejected by the index, surfacing as a raw duplicate-key
+-- error instead of an adoption.
+--
+-- btrim as well as lower, deliberately: lower() does not trim, so a plain
+-- lower-case check would still admit ' demo.myshopify.com', which hashes to
+-- a DIFFERENT index key than the trimmed form — so it does not collide, and
+-- every reader (which normalises with .trim().toLowerCase()) can never find
+-- it again. That row is a second configuration for one storefront, which is
+-- the exact failure this migration exists to make impossible.
 alter table public.widget_sites
-  add constraint widget_sites_domain_lowercase_check
-  check (domain is null or domain = lower(domain));
+  add constraint widget_sites_domain_canonical_check
+  check (domain is null or domain = btrim(lower(domain)));
 
 commit;
 
 -- Rollback:
 -- alter table public.widget_sites
---   drop constraint if exists widget_sites_domain_lowercase_check;
+--   drop constraint if exists widget_sites_domain_canonical_check;
 -- drop index if exists public.uq_widget_sites_domain;
