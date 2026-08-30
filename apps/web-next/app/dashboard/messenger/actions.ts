@@ -28,14 +28,9 @@ import {
   signAttachmentUrls,
   type TriageResult,
 } from '@/lib/messenger/attachments';
-import {
-  CONFIG_SECTIONS,
-  MESSENGER_SECTION_NAMES,
-  resolveMessengerConfig,
-  toSettingsSections,
-  type MessengerSection,
-} from '@/lib/messenger/config';
+import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
+import { saveDraftSectionForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -66,29 +61,9 @@ export async function saveDraftSection(
   try {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
-    // Section name arrives from the client, so it is checked against the
-    // registry rather than trusted to be one of the declared union members.
-    if (!MESSENGER_SECTION_NAMES.includes(section)) {
-      return { ok: false, error: 'Unknown section.' };
-    }
-    const record = payload as Record<string, unknown>;
-    // Validate through the resolver first so drafts can never poison config.
-    const probe = resolveMessengerConfig({
-      ...(site.settings_json as Record<string, unknown>),
-      ...sectionToKey(section, record),
-    });
-    void probe;
-
-    const supabase = getMessengerServiceClient();
-    const existingDraft = (site.settings_draft ?? {}) as Record<string, unknown>;
-    const nextDraft = { ...existingDraft, ...sectionToKey(section, record) };
-    const res = await supabase
-      .from('widget_sites')
-      .update({ settings_draft: nextDraft })
-      .eq('id', site.id);
-    if (res.error) throw new Error(res.error.message);
-    revalidatePath('/dashboard/messenger');
-    return { ok: true };
+    const result = await saveDraftSectionForSite(site, section, payload);
+    if (result.ok) revalidatePath('/dashboard/messenger');
+    return result;
   } catch (error) {
     return fail(error);
   }
@@ -98,52 +73,9 @@ export async function publishConfig(siteId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
-    const draft = site.settings_draft;
-    if (!draft || Object.keys(draft).length === 0) {
-      return { ok: false, error: 'Nothing to publish yet.' };
-    }
-    // Resolve once more against published so partial drafts land complete.
-    const merged = {
-      ...(site.settings_json as Record<string, unknown>),
-      ...(draft as Record<string, unknown>),
-    };
-    const resolved = resolveMessengerConfig(merged);
-    /* Every section, from one list. Enumerating three of them by hand is
-       what made a notifications draft publish as a no-op: the draft was
-       merged into `resolved` and then not written back out. */
-    const nextSettings: Record<string, unknown> = {
-      ...(site.settings_json as Record<string, unknown>),
-      ...toSettingsSections(resolved),
-    };
-
-    /* Optimistic concurrency on the version we read: two tabs publishing at
-       once would otherwise both write version+1, so the second silently
-       overwrites the first — and since storefronts cache by version, the
-       lost publish looks like nothing happened. */
-    const supabase = getMessengerServiceClient();
-    const res = await supabase
-      .from('widget_sites')
-      .update({
-        settings_json: nextSettings,
-        settings_version: site.settings_version + 1,
-        settings_draft: null,
-      })
-      .eq('id', site.id)
-      .eq('settings_version', site.settings_version)
-      .select('id');
-    if (res.error) throw new Error(res.error.message);
-    if ((res.data ?? []).length === 0) {
-      return { ok: false, error: 'Someone else published while you were editing. Refresh and try again.' };
-    }
-
-    await recordAudit({
-      siteId,
-      actorClerkUserId: userId,
-      action: 'config_published',
-      detail: { version: site.settings_version + 1 },
-    });
-    revalidatePath('/dashboard/messenger');
-    return { ok: true, message: 'Published — live on your store within a minute.' };
+    const result = await publishConfigForSite(site, userId);
+    if (result.ok) revalidatePath('/dashboard/messenger');
+    return result;
   } catch (error) {
     return fail(error);
   }
@@ -168,29 +100,12 @@ export async function setMessengerEnabled(siteId: string, enabled: boolean): Pro
   try {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
-    const supabase = getMessengerServiceClient();
-    const res = await supabase
-      .from('widget_sites')
-      .update({ status: enabled ? 'active' : 'draft' })
-      .eq('id', site.id);
-    if (res.error) throw new Error(res.error.message);
-    await recordAudit({
-      siteId,
-      actorClerkUserId: userId,
-      action: enabled ? 'messenger_enabled' : 'messenger_disabled',
-    });
-    revalidatePath('/dashboard/messenger');
-    return { ok: true };
+    const result = await setMessengerEnabledForSite(site, userId, enabled);
+    if (result.ok) revalidatePath('/dashboard/messenger');
+    return result;
   } catch (error) {
     return fail(error);
   }
-}
-
-function sectionToKey(
-  section: MessengerSection,
-  payload: Record<string, unknown>,
-): Record<string, unknown> {
-  return { [CONFIG_SECTIONS[section]]: payload };
 }
 
 /* ── Knowledge ───────────────────────────────────────────────────────── */
