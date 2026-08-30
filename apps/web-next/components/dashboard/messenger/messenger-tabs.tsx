@@ -155,7 +155,7 @@ export function MessengerTabs({
         />
       )}
       {showConversationsTab && tab === 'conversations' && (
-        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} />
+        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} actions={actions} />
       )}
       {tab === 'installation' && (
         <InstallCard
