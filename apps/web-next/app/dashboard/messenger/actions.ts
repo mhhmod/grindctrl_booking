@@ -31,8 +31,9 @@ import {
 import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import { saveDraftSectionForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
+import type { ActionResult } from '@/lib/messenger/actions-core';
 
-export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
+export type { ActionResult };
 
 async function currentUser(): Promise<string> {
   const { userId } = await auth();

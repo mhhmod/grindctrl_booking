@@ -17,7 +17,13 @@ import type { MessengerSiteView } from './provisioning';
    shop-domain proof. Everything AFTER that point — validating the payload,
    writing widget_sites, recording the audit trail — is identical, so it
    lives here once. Every function takes a `site` its caller has already
-   resolved and authorized; none of them re-check ownership. */
+   resolved and authorized; none of them re-check ownership.
+
+   Infrastructure failures throw rather than returning `{ ok: false }`.
+   Every caller must catch the throw and must not surface the raw
+   `error.message` (Postgres/Supabase internals) to an untrusted client; map
+   it to a generic message instead, as actions.ts's local `fail()` helper does
+   for the dashboard. */
 
 export type ActionResult = { ok: true; message?: string } | { ok: false; error: string };
 
@@ -25,6 +31,9 @@ function sectionToKey(section: MessengerSection, payload: Record<string, unknown
   return { [CONFIG_SECTIONS[section]]: payload };
 }
 
+/** `payload` must be the complete section object — publish performs a
+ *  section-level replace, not a field-wise merge, so a partial payload
+ *  here will reset the missing fields to defaults on publish. */
 export async function saveDraftSectionForSite(
   site: MessengerSiteView,
   section: MessengerSection,
@@ -36,12 +45,6 @@ export async function saveDraftSectionForSite(
     return { ok: false, error: 'Unknown section.' };
   }
   const record = payload as Record<string, unknown>;
-  // Validate through the resolver first so drafts can never poison config.
-  const probe = resolveMessengerConfig({
-    ...(site.settings_json as Record<string, unknown>),
-    ...sectionToKey(section, record),
-  });
-  void probe;
 
   const supabase = getMessengerServiceClient();
   const existingDraft = (site.settings_draft ?? {}) as Record<string, unknown>;

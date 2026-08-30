@@ -75,18 +75,19 @@ describe('publishConfigForSite', () => {
   it('refuses to publish an empty draft', async () => {
     const result = await publishConfigForSite(site({ settings_draft: null }), 'actor-1');
     expect(result).toEqual({ ok: false, error: 'Nothing to publish yet.' });
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it('reports a concurrent publish instead of overwriting it silently', async () => {
-    updateMock.mockReturnValue(chain({ data: [], error: null }));
-    const result = await publishConfigForSite(
-      site({ settings_draft: { messenger_ai: { enabled: true } } }),
-      'actor-1',
-    );
+    const updateChain = chain({ data: [], error: null });
+    updateMock.mockReturnValue(updateChain);
+    const currentSite = site({ settings_draft: { messenger_ai: { enabled: true } } });
+    const result = await publishConfigForSite(currentSite, 'actor-1');
     expect(result).toEqual({
       ok: false,
       error: 'Someone else published while you were editing. Refresh and try again.',
     });
+    expect(updateChain.eq).toHaveBeenCalledWith('settings_version', currentSite.settings_version);
     expect(recordAuditMock).not.toHaveBeenCalled();
   });
 
@@ -97,6 +98,9 @@ describe('publishConfigForSite', () => {
       'actor-1',
     );
     expect(result).toEqual({ ok: true, message: 'Published — live on your store within a minute.' });
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ settings_version: 4, settings_draft: null }),
+    );
     expect(recordAuditMock).toHaveBeenCalledWith(
       expect.objectContaining({ siteId: 'site-1', actorClerkUserId: 'actor-1', action: 'config_published' }),
     );
@@ -111,6 +115,16 @@ describe('setMessengerEnabledForSite', () => {
     expect(updateMock).toHaveBeenCalledWith({ status: 'active' });
     expect(recordAuditMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'messenger_enabled' }),
+    );
+  });
+
+  it('disables messenger and records the matching audit action', async () => {
+    updateMock.mockReturnValue(chain({ error: null }));
+    const result = await setMessengerEnabledForSite(site(), 'actor-1', false);
+    expect(result).toEqual({ ok: true });
+    expect(updateMock).toHaveBeenCalledWith({ status: 'draft' });
+    expect(recordAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'messenger_disabled' }),
     );
   });
 });
