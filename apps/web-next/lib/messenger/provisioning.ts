@@ -3,6 +3,7 @@ import 'server-only';
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from './db';
 import { isPlaceholderEmail, PLACEHOLDER_EMAIL_SUFFIX } from './emails';
+import { canonicalShopDomain, findSiteByDomain, isShopProfileId, StoreOwnedByAnotherAccountError } from './shop-tenancy';
 import type { WidgetSiteRow } from './types';
 
 export { isPlaceholderEmail };
@@ -233,6 +234,12 @@ export async function ensureMessengerSite(
   domain: string | null,
   displayName?: string,
 ): Promise<MessengerSiteView> {
+  // REQUIRED, not cosmetic: uq_widget_sites_domain and
+  // widget_sites_domain_canonical_check reject anything but the canonical
+  // form, so every reference to `domain` below must use this value, not the
+  // raw argument.
+  domain = domain ? canonicalShopDomain(domain) : domain;
+
   const supabase = getMessengerServiceClient();
   const sites = await listMessengerSites(clerkUserId);
   const found = domain
@@ -242,6 +249,36 @@ export async function ensureMessengerSite(
 
   const profile = await ensureProfile(clerkUserId, null);
   const workspaceId = await ensureWorkspace(profile.id, clerkUserId);
+
+  /* Before creating anything, ask whether this STORE already has a config
+     somewhere — not merely in the caller's workspace. It usually will: the
+     embedded Shopify app provisions one on first open under a synthetic
+     shop profile. Skipping this check is exactly how one storefront ended
+     up able to have two configs with two embed keys, one live and one being
+     edited. uq_widget_sites_domain now makes the second insert fail
+     outright, so this is also what turns a raw constraint violation into an
+     answer the merchant can act on. */
+  if (domain) {
+    const existing = await findSiteByDomain(domain);
+    if (existing && existing.workspace_id !== workspaceId) {
+      // A store parked under a synthetic shop profile belongs to whoever
+      // proves they run it. A store held by a real account does not — and
+      // an owner we cannot identify is not an invitation either.
+      if (!existing.ownerClerkUserId || !isShopProfileId(existing.ownerClerkUserId)) {
+        throw new StoreOwnedByAnotherAccountError(domain);
+      }
+      const adopted = await supabase
+        .from('widget_sites')
+        .update({ workspace_id: workspaceId, created_by_profile_id: profile.id })
+        .eq('id', existing.id);
+      if (adopted.error) throw new Error(`site adoption failed: ${adopted.error.message}`);
+
+      const refreshed = await listMessengerSites(clerkUserId);
+      const mine = refreshed.find((site) => site.id === existing.id);
+      if (mine) return mine;
+    }
+  }
+
   const inserted = await supabase
     .from('widget_sites')
     .insert({

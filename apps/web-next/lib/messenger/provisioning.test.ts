@@ -5,7 +5,13 @@ import { setMessengerServiceClientForTests } from './db';
 
 vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn(async () => ({ userId: 'user_1' })) }));
 
-import { listMessengerSites } from './provisioning';
+const findSiteByDomain = vi.hoisted(() => vi.fn());
+vi.mock('./shop-tenancy', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./shop-tenancy')>();
+  return { ...actual, findSiteByDomain };
+});
+
+import { ensureMessengerSite, listMessengerSites } from './provisioning';
 
 /* First visit renders this page more than once concurrently. The original
    read-then-insert died on profiles_clerk_user_id_key when the second render
@@ -108,7 +114,10 @@ function stubClient(tables: Record<string, TableState>) {
   };
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  findSiteByDomain.mockResolvedValue(null);
+});
 afterEach(() => setMessengerServiceClientForTests(null));
 
 describe('provisioning', () => {
@@ -229,5 +238,112 @@ describe('provisioning', () => {
     await listMessengerSites('user_1', 'b@store.com');
 
     expect(tables.profiles.rows[0].email).toBe('a@store.com');
+  });
+
+  it('adopts a store already provisioned by the embedded Shopify app', async () => {
+    /* The merchant configured Store Chat inside Shopify first (owned by the
+       synthetic shop profile), then signed up on the web. They must land on
+       the SAME config, not a fresh one with a second embed key. */
+    findSiteByDomain.mockResolvedValue({
+      id: 's-shop',
+      workspace_id: 'w-shop',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'shop:demo.myshopify.com',
+    });
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [
+          {
+            id: 's-shop',
+            workspace_id: 'w-shop',
+            domain: 'demo.myshopify.com',
+            name: 'demo.myshopify.com',
+            embed_key: 'gc_existing',
+            status: 'active',
+            settings_json: {},
+            settings_version: 3,
+            settings_draft: null,
+          },
+        ],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    const site = await ensureMessengerSite('user_1', 'demo.myshopify.com');
+
+    expect(site.id).toBe('s-shop');
+    expect(site.embed_key).toBe('gc_existing');
+    // Transferred, not duplicated.
+    expect(tables.widget_sites.rows).toHaveLength(1);
+    expect(tables.widget_sites.rows[0].workspace_id).toBe('w-1');
+  });
+
+  it('refuses a store owned by a different real account', async () => {
+    findSiteByDomain.mockResolvedValue({
+      id: 's-theirs',
+      workspace_id: 'w-2',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'user_2',
+    });
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [
+          {
+            id: 's-theirs',
+            workspace_id: 'w-2',
+            domain: 'demo.myshopify.com',
+            name: 'demo.myshopify.com',
+            embed_key: 'gc_theirs',
+            status: 'active',
+            settings_json: {},
+            settings_version: 1,
+            settings_draft: null,
+          },
+        ],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(ensureMessengerSite('user_1', 'demo.myshopify.com')).rejects.toThrow(
+      /already connected to another GRINDCTRL account/,
+    );
+    // Untouched.
+    expect(tables.widget_sites.rows[0].workspace_id).toBe('w-2');
+  });
+
+  it('refuses when the owner cannot be identified', async () => {
+    // Fail closed: an unknown owner is not an invitation to take the store.
+    findSiteByDomain.mockResolvedValue({
+      id: 's-x', workspace_id: 'w-9', domain: 'demo.myshopify.com', ownerClerkUserId: null,
+    });
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(ensureMessengerSite('user_1', 'demo.myshopify.com')).rejects.toThrow(
+      /already connected to another GRINDCTRL account/,
+    );
+  });
+
+  it('canonicalises the domain before writing, because the DB now rejects anything else', async () => {
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await ensureMessengerSite('user_1', '  Demo.MyShopify.com  ');
+
+    expect(tables.widget_sites.rows[0].domain).toBe('demo.myshopify.com');
+    // And the lookup was asked about the canonical form, not the raw input.
+    expect(findSiteByDomain).toHaveBeenCalledWith('demo.myshopify.com');
   });
 });
