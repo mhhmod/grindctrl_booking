@@ -66,9 +66,10 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
 
   useEffect(() => {
     let cancelled = false;
-    loadState().then((ok) => {
+    (async () => {
+      const ok = await loadState();
       if (!cancelled && !ok) setFailed(true);
-    });
+    })();
     return () => {
       cancelled = true;
     };
@@ -83,6 +84,11 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
     () => ({
       saveDraftSection: async (siteId, section, payload) => {
         const result = await rawActions.saveDraftSection(siteId, section, payload);
+        if (result.ok) void loadState();
+        return result;
+      },
+      publishConfig: async (siteId) => {
+        const result = await rawActions.publishConfig(siteId);
         if (result.ok) void loadState();
         return result;
       },
@@ -137,6 +143,7 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
       conversations={state.conversations}
       knowledge={state.knowledge}
       actions={actions}
+      hasDraft={state.site.hasDraft}
       showConversationsTab={false}
     />
   );

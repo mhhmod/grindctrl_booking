@@ -10,6 +10,7 @@ vi.mock('@/lib/shopify/app-bridge-client', () => ({
 vi.mock('@/components/shopify/store-chat-actions', () => ({
   useStoreChatActions: () => ({
     saveDraftSection: vi.fn(),
+    publishConfig: vi.fn(),
     setMessengerEnabled: setMessengerEnabledMock,
     addKnowledge: vi.fn(),
     updateKnowledgeStatus: vi.fn(),

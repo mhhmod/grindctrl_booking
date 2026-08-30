@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useTransition } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Overview: only signals that answer "is this healthy and is it working".
    Deliberately Configured-vs-Detected honest — a database flag alone never
@@ -28,6 +30,7 @@ const COPY = {
     notDetectedShort: 'Not detected yet',
     configVersion: 'Config version',
     configVersionNote: 'Published settings your store is serving',
+    publish: 'Publish', publishing: 'Publishing…', published: 'Published',
     conversations: 'Conversations · 7 days',
     aiResolved: 'Closed by AI',
     handedOff: 'Needed your team',
@@ -51,6 +54,7 @@ const COPY = {
     notDetectedShort: 'لم يُكتشف بعد',
     configVersion: 'إصدار الإعدادات',
     configVersionNote: 'الإعدادات المنشورة التي يعرضها متجرك',
+    publish: 'نشر', publishing: 'جارٍ النشر…', published: 'تم النشر',
     conversations: 'المحادثات · ٧ أيام',
     aiResolved: 'أُغلقت بالذكاء الاصطناعي',
     handedOff: 'احتاجت فريقك',
@@ -64,23 +68,39 @@ const COPY = {
 
 export function MessengerOverview({
   locale,
+  siteId,
   siteName,
   active,
   aiEnabled,
   detectedAt,
   version,
   stats,
+  hasDraft,
+  actions,
 }: {
   locale: string;
+  siteId: string;
   siteName: string;
   active: boolean;
   aiEnabled: boolean;
   detectedAt: string | null;
   version: number;
   stats: Stats;
+  hasDraft: boolean;
+  actions: Pick<MessengerHostActions, 'publishConfig'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const detected = Boolean(detectedAt);
+  const [pending, startTransition] = useTransition();
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function publish() {
+    setNote(null);
+    startTransition(async () => {
+      const result = await actions.publishConfig(siteId);
+      setNote(result.ok ? { ok: true, text: result.message ?? t.published } : { ok: false, text: result.error });
+    });
+  }
 
   return (
     <section className="grid min-w-0 gap-4">
@@ -111,6 +131,26 @@ export function MessengerOverview({
           <p className="text-xs text-muted-foreground">{t.configVersion}</p>
           <p className="mt-1 text-lg font-semibold tabular-nums">v{version}</p>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{t.configVersionNote}</p>
+          {/* Kept visible once `note` is set even after a successful publish
+              flips hasDraft to false upstream — otherwise the confirmation
+              would vanish the instant the parent re-renders with fresh data. */}
+          {(hasDraft || note) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {hasDraft && (
+                <Button type="button" size="sm" disabled={pending} onClick={publish}>
+                  {pending ? t.publishing : t.publish}
+                </Button>
+              )}
+              {note && (
+                <span
+                  role={note.ok ? 'status' : 'alert'}
+                  className={`text-xs ${note.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+                >
+                  {note.text}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
