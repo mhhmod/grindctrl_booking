@@ -120,20 +120,20 @@ export async function addKnowledge(formData: FormData): Promise<ActionResult> {
     const url = String(formData.get('url') ?? '').trim();
 
     if (!siteId) return { ok: false, error: 'Missing site.' };
+    const site = await requireOwnedSite(userId, siteId);
     if (url) {
-      await addUrlKnowledge({ clerkUserId: userId, siteId, url });
+      await addUrlKnowledge({ site, actorClerkUserId: userId, url });
       revalidatePath('/dashboard/messenger');
       return { ok: true, message: 'Page added to knowledge.' };
     }
     if (!title || !content) return { ok: false, error: 'Title and content are required.' };
-    await addManualKnowledge({ clerkUserId: userId, siteId, title, content });
+    await addManualKnowledge({ site, actorClerkUserId: userId, title, content });
     revalidatePath('/dashboard/messenger');
     return { ok: true, message: 'Added to knowledge.' };
   } catch (error) {
     const raw = error instanceof Error ? error.message : '';
     // Friendly copy for expected fetch failures surfaced by URL import.
-    const friendly =
-      /https|URL|page|readable/i.test(raw) ? raw : undefined;
+    const friendly = /https|URL|page|readable/i.test(raw) ? raw : undefined;
     return fail(friendly ? new Error(friendly) : error);
   }
 }
@@ -145,7 +145,8 @@ export async function updateKnowledgeStatus(
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    await setKnowledgeStatus({ clerkUserId: userId, siteId, entryId, status });
+    const site = await requireOwnedSite(userId, siteId);
+    await setKnowledgeStatus({ site, entryId, status });
     revalidatePath('/dashboard/messenger');
     return { ok: true };
   } catch (error) {
@@ -156,7 +157,8 @@ export async function updateKnowledgeStatus(
 export async function deleteKnowledge(siteId: string, entryId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    await removeKnowledge({ clerkUserId: userId, siteId, entryId });
+    const site = await requireOwnedSite(userId, siteId);
+    await removeKnowledge({ site, actorClerkUserId: userId, entryId });
     revalidatePath('/dashboard/messenger');
     return { ok: true };
   } catch (error) {
@@ -167,7 +169,8 @@ export async function deleteKnowledge(siteId: string, entryId: string): Promise<
 export async function syncKnowledge(siteId: string, entryId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    await reSyncKnowledge({ clerkUserId: userId, siteId, entryId });
+    const site = await requireOwnedSite(userId, siteId);
+    await reSyncKnowledge({ site, entryId });
     revalidatePath('/dashboard/messenger');
     return { ok: true, message: 'Re-synced.' };
   } catch (error) {
