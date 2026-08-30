@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
-import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
+import { ShopifyAppShell } from '@/components/shopify/app-shell';
 import { SHOPIFY_CLIENT_ID } from '@/lib/shopify/session-token';
 import { DEFAULT_TRYON_LOCALE, getDir, isTryOnLocale, type TryOnLocale } from '@/lib/try-on/i18n';
 
 export const metadata: Metadata = {
-  title: 'GrindCTRL Try-On',
+  title: 'GRINDCTRL',
   robots: { index: false },
 };
 
 /* Embedded Shopify admin (Next.js): App Bridge script + session-token
-   authenticated settings UI. Replaces the former React Router app. */
+   authenticated app shell, with Try-On and Store Chat as separate tabs
+   under one GRINDCTRL header. */
 export default async function ShopifyAdminPage({
   searchParams,
 }: {
@@ -29,9 +30,8 @@ export default async function ShopifyAdminPage({
           next/script beforeInteractive only works in the root layout. */}
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
-      {/* The settings UI owns its own light/dark shell (merchant-toggleable). */}
-      <main dir={getDir(locale)} lang={locale}>
-        <ShopifyAdminSettings locale={locale} />
+      <main dir={getDir(locale)} lang={locale} className="min-h-dvh bg-background text-foreground">
+        <ShopifyAppShell locale={locale} />
       </main>
     </>
   );

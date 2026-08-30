@@ -1,9 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
-import { Moon, Sun } from 'lucide-react';
-import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -26,10 +23,6 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'error'>(
     'loading',
   );
-  /* Shopify's own admin theme isn't readable from an embedded app, so this
-     page carries its own toggle (next-themes handles persistence). */
-  const { resolvedTheme, setTheme } = useTheme();
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -88,19 +81,15 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     }
   }, [s, loadingStepsText]);
 
-  const shell = (children: React.ReactNode) => (
-    <div className="min-h-dvh bg-background text-foreground">{children}</div>
-  );
-
   if (status === 'loading') {
-    return shell(<p className="p-6 text-sm text-muted-foreground">Loading settings…</p>);
+    return <p className="p-6 text-sm text-muted-foreground">Loading settings…</p>;
   }
 
   if (!s) {
-    return shell(
+    return (
       <p className="p-6 text-sm text-destructive">
         Could not load settings. Open this page from your Shopify admin.
-      </p>,
+      </p>
     );
   }
 
@@ -111,24 +100,8 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     ? `https://${shop}/admin/themes/current/editor?context=apps&activateAppId=${APP_CLIENT_ID}/tryon-catalog`
     : '#';
 
-  return shell(
+  return (
     <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
-      <header className="flex items-center justify-between gap-3 px-1 pt-1">
-        <BrandLogo size="sm" subtitle="AI try-on, managed for you" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          aria-label="Switch between light and dark"
-          title="Switch between light and dark"
-        >
-          {/* CSS-swapped so the icon needs no client-only state */}
-          <Sun className="hidden size-4 dark:block" />
-          <Moon className="size-4 dark:hidden" />
-        </Button>
-      </header>
-
       {plan && <MerchantPlanCard plan={plan} shop={shop} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -195,6 +168,6 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
           </div>
         </CardContent>
       </Card>
-    </div>,
+    </div>
   );
 }
