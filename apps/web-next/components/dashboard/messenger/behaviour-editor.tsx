@@ -8,7 +8,7 @@ import { Textarea } from './textarea';
 import { PillToggle } from './appearance-editor';
 import { PreviewFrame } from './preview-frame';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
-import { saveDraftSection } from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { MessengerBehaviour, MessengerLocale } from '@/lib/messenger/types';
 
 /* Behaviour: greeting, welcome copy, proactive nudge, availability,
@@ -97,11 +97,13 @@ export function BehaviourEditor({
   siteId,
   initial,
   publishedPayload,
+  actions,
 }: {
   locale: MessengerLocale;
   siteId: string;
   initial: MessengerBehaviour;
   publishedPayload: PublicMessengerPayload;
+  actions: Pick<MessengerHostActions, 'saveDraftSection'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [value, setValue] = useState<MessengerBehaviour>(initial);
@@ -140,7 +142,7 @@ export function BehaviourEditor({
 
   function save() {
     startTransition(async () => {
-      const result = await saveDraftSection(siteId, 'behaviour', value);
+      const result = await actions.saveDraftSection(siteId, 'behaviour', value);
       setSavedNote(result.ok ? { ok: true, text: t.saved } : { ok: false, text: result.error });
     });
   }
