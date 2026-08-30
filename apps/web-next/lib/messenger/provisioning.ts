@@ -110,7 +110,7 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
    An unordered limit(1) would then hop between them from request to request
    and a merchant's sites would appear to come and go. Oldest wins, which is
    also what the bootstrap_workspace RPC picks. */
-async function ensureWorkspace(profileId: string, clerkUserId: string): Promise<string> {
+async function ensureWorkspace(profileId: string): Promise<string> {
   const supabase = getMessengerServiceClient();
   const existing = await supabase
     .from('workspaces')
@@ -122,9 +122,12 @@ async function ensureWorkspace(profileId: string, clerkUserId: string): Promise<
   if (existing.error) throw new Error(`workspace lookup failed: ${existing.error.message}`);
   if (existing.data) return existing.data.id as string;
 
-  const slug = `gc-${clerkUserId.replace(/[^a-zA-Z0-9]/g, '').slice(-12).toLowerCase()}-${Date.now()
-    .toString(36)
-    .slice(-4)}`;
+  // A uniqueness token, not a user-facing handle: the profile id already is
+  // one, and deriving it from the clerk id collapsed to a single value for
+  // every shop on the platform (normalizeShopDomain guarantees every domain
+  // ends `.myshopify.com`, so the old clerkUserId-derived slug stripped to
+  // the same 'myshopifycom' tail for every store).
+  const slug = `gc-${profileId}`;
   const insert = await supabase
     .from('workspaces')
     .insert({ name: 'My workspace', slug, owner_profile_id: profileId })
@@ -174,11 +177,28 @@ function toView(row: Record<string, unknown>): MessengerSiteView {
   };
 }
 
+/** A single site by id, regardless of which workspace owns it — for callers
+ *  (like ensureShopOwnedSite) that were handed the id by findSiteByDomain
+ *  and don't need or want the owner-scoped listMessengerSites machinery. */
+export async function getSiteView(siteId: string): Promise<MessengerSiteView> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_sites')
+    .select(
+      'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
+    )
+    .eq('id', siteId)
+    .maybeSingle();
+  if (res.error) throw new Error(`site lookup failed: ${res.error.message}`);
+  if (!res.data) throw new Error(`site ${siteId} not found`);
+  return toView(res.data as unknown as Record<string, unknown>);
+}
+
 /** All widget sites inside workspaces owned by this Clerk user. */
 export async function listMessengerSites(clerkUserId: string, email?: string | null): Promise<MessengerSiteView[]> {
   const supabase = getMessengerServiceClient();
   const profile = await ensureProfile(clerkUserId, email ?? null);
-  const workspaceId = await ensureWorkspace(profile.id, clerkUserId);
+  const workspaceId = await ensureWorkspace(profile.id);
 
   const rows = await supabase
     .from('widget_sites')
@@ -225,6 +245,47 @@ export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise
   return ((sites.data ?? []) as Array<{ id: string }>).map((row) => row.id);
 }
 
+/** Adoptable when it is already this caller's, or parked under a synthetic
+ *  shop profile. Anything else is someone else's live storefront. Shared by
+ *  both the main adopt-or-refuse check and the insert-error race fallback
+ *  below — those two used to apply different rules, so a caller who lost the
+ *  insert race against their own concurrent request could be refused their
+ *  own store's site. */
+function mayAdopt(owner: string | null, clerkUserId: string): boolean {
+  return Boolean(owner) && (owner === clerkUserId || isShopProfileId(owner!));
+}
+
+/** Transfers an already-adoptable site into `workspaceId`. Compare-and-swap
+ *  on (id, workspace_id): adoption is the only thing that ever changes
+ *  workspace_id, so "still where I found it" means "still unclaimed since I
+ *  looked" — without this, a second adopter racing the first would
+ *  unconditionally steal a site the first adopter already won. Shared by the
+ *  main adopt-or-refuse check and the insert-error race fallback so both
+ *  paths transfer the same way instead of one silently refusing what the
+ *  other would have adopted. */
+async function adoptSite(
+  existing: { id: string; workspace_id: string },
+  workspaceId: string,
+  profileId: string,
+  domain: string,
+): Promise<MessengerSiteView> {
+  const supabase = getMessengerServiceClient();
+  const adopted = await supabase
+    .from('widget_sites')
+    .update({ workspace_id: workspaceId, created_by_profile_id: profileId })
+    .eq('id', existing.id)
+    .eq('workspace_id', existing.workspace_id)
+    .select(
+      'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
+    )
+    .maybeSingle();
+  if (adopted.error) throw new Error(`site adoption failed: ${adopted.error.message}`);
+  // Zero rows means someone else's adoption (or a deletion) claimed it
+  // between our read and our write — not a state we can silently retry.
+  if (!adopted.data) throw new StoreOwnedByAnotherAccountError(domain);
+  return toView(adopted.data as unknown as Record<string, unknown>);
+}
+
 /** Ensures a site exists for a store domain — adopting one another account
  *  already created (a synthetic shop profile, or a stray workspace of this
  *  same merchant's own — see the race note on ensureWorkspace above) rather
@@ -254,7 +315,7 @@ export async function ensureMessengerSite(
   if (found) return found;
 
   const profile = await ensureProfile(clerkUserId, null);
-  const workspaceId = await ensureWorkspace(profile.id, clerkUserId);
+  const workspaceId = await ensureWorkspace(profile.id);
 
   /* Before creating anything, ask whether this STORE already has a config
      somewhere — not merely in the caller's workspace. It usually will once
@@ -268,34 +329,15 @@ export async function ensureMessengerSite(
     const existing = await findSiteByDomain(domain);
     if (existing && existing.workspace_id !== workspaceId) {
       const owner = existing.ownerClerkUserId;
-      // Adoptable when parked under a synthetic shop profile, or when it is
-      // already this merchant's — ensureWorkspace's race (no unique key on
-      // owner_profile_id) can leave a site in a stray *second* workspace of
-      // the same account, and refusing there would lock the merchant out of
-      // their own store with no retry that could ever clear it. A store
-      // held by a different real account, or one we can't identify at all,
-      // is not adoptable.
-      if (!owner || (owner !== clerkUserId && !isShopProfileId(owner))) {
+      // ensureWorkspace's race (no unique key on owner_profile_id) can leave
+      // a site in a stray *second* workspace of the same account, and
+      // refusing there would lock the merchant out of their own store with
+      // no retry that could ever clear it. A store held by a different real
+      // account, or one we can't identify at all, is not adoptable.
+      if (!mayAdopt(owner, clerkUserId)) {
         throw new StoreOwnedByAnotherAccountError(domain);
       }
-      const adopted = await supabase
-        .from('widget_sites')
-        .update({ workspace_id: workspaceId, created_by_profile_id: profile.id })
-        .eq('id', existing.id)
-        // Compare-and-swap: adoption is the only thing that changes
-        // workspace_id, so "still where I found it" means "still unclaimed
-        // since I looked" — without this, a second adopter racing the first
-        // would unconditionally steal a site the first adopter already won.
-        .eq('workspace_id', existing.workspace_id)
-        .select(
-          'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
-        )
-        .maybeSingle();
-      if (adopted.error) throw new Error(`site adoption failed: ${adopted.error.message}`);
-      // Zero rows means someone else's adoption (or a deletion) claimed it
-      // between our read and our write — not a state we can silently retry.
-      if (!adopted.data) throw new StoreOwnedByAnotherAccountError(domain);
-      return toView(adopted.data as unknown as Record<string, unknown>);
+      return adoptSite(existing, workspaceId, profile.id, domain);
     }
   }
 
@@ -327,6 +369,14 @@ export async function ensureMessengerSite(
     if (domain) {
       const claimed = await findSiteByDomain(domain);
       if (claimed && claimed.workspace_id !== workspaceId) {
+        // Same adoptability rule as the main check above: a caller that lost
+        // the insert race against its OWN concurrent request (e.g. two first
+        // opens of an unclaimed shop, racing ensureWorkspace into two
+        // workspaces for the same profile) must adopt what it just lost the
+        // race for, not be told its own store belongs to someone else.
+        if (mayAdopt(claimed.ownerClerkUserId, clerkUserId)) {
+          return adoptSite(claimed, workspaceId, profile.id, domain);
+        }
         throw new StoreOwnedByAnotherAccountError(domain);
       }
     }

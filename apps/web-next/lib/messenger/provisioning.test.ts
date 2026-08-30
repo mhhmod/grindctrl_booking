@@ -295,7 +295,7 @@ describe('provisioning', () => {
       id: 's-shop',
       workspace_id: 'w-shop',
       domain: 'demo.myshopify.com',
-      ownerClerkUserId: 'shop:demo.myshopify.com',
+      ownerClerkUserId: 'shop-demo.myshopify.com',
     });
     const { client, tables } = stubClient({
       profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
@@ -455,7 +455,7 @@ describe('provisioning', () => {
   });
 
   it('scopes the adoption write to the exact row it read (compare-and-swap)', async () => {
-    /* Two accounts racing to adopt the same shop:-owned site: whichever
+    /* Two accounts racing to adopt the same shop-owned site: whichever
        update lands second must find nothing left to claim, not silently
        steal the first adopter's win. Filtering on id alone (or on domain,
        which is not even unique per row before adoption settles) can't tell
@@ -465,7 +465,7 @@ describe('provisioning', () => {
       id: 's-shop',
       workspace_id: 'w-shop',
       domain: 'demo.myshopify.com',
-      ownerClerkUserId: 'shop:demo.myshopify.com',
+      ownerClerkUserId: 'shop-demo.myshopify.com',
     });
     const { client, recorded } = stubClient({
       profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
@@ -506,7 +506,7 @@ describe('provisioning', () => {
       id: 's-shop',
       workspace_id: 'w-shop',
       domain: 'demo.myshopify.com',
-      ownerClerkUserId: 'shop:demo.myshopify.com',
+      ownerClerkUserId: 'shop-demo.myshopify.com',
     });
     const { client } = stubClient({
       profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },

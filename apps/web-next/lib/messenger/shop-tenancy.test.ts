@@ -39,8 +39,8 @@ afterEach(() => setMessengerServiceClientForTests(null));
 
 describe('shopProfileId', () => {
   it('namespaces a shop so it can never collide with a Clerk id', () => {
-    expect(shopProfileId('Demo.MyShopify.com')).toBe('shop:demo.myshopify.com');
-    expect(isShopProfileId('shop:demo.myshopify.com')).toBe(true);
+    expect(shopProfileId('Demo.MyShopify.com')).toBe('shop-demo.myshopify.com');
+    expect(isShopProfileId('shop-demo.myshopify.com')).toBe(true);
     expect(isShopProfileId('user_3GYaCA0XaJubUGLfz8fUvJW7Bop')).toBe(false);
   });
 });

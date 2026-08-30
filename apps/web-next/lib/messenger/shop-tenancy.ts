@@ -22,8 +22,12 @@ export function canonicalShopDomain(value: string): string {
 
 /** Synthetic profiles for stores with no account yet. `clerk_user_id` is
  *  free text with a unique index, and Clerk's own ids all begin `user_`,
- *  so this namespace cannot collide with a real one. */
-export const SHOP_PROFILE_PREFIX = 'shop:';
+ *  so this namespace cannot collide with a real one. A hyphen, not a colon:
+ *  ensureProfile builds `email = clerkUserId + '@users.noreply.clerk.dev'`,
+ *  and ':' is not valid RFC 5322 atext — harmless today because
+ *  isPlaceholderEmail filters this address out before any send, but a
+ *  landmine for a future path that sends without that guard. */
+export const SHOP_PROFILE_PREFIX = 'shop-';
 
 export function shopProfileId(shopDomain: string): string {
   return `${SHOP_PROFILE_PREFIX}${canonicalShopDomain(shopDomain)}`;
@@ -99,7 +103,9 @@ export async function findSiteByDomain(shopDomain: string): Promise<SiteOwner | 
   return toSiteOwner(res.data as unknown as SiteOwnerRow);
 }
 
-/** Raised where a merchant will read it, so the wording is the wording. */
+/** app/dashboard/messenger/page.tsx catches this by type and renders its own
+ *  localized copy — it never reads .message — so this string is only a
+ *  fallback for any other caller that lets the error escape unhandled. */
 export class StoreOwnedByAnotherAccountError extends Error {
   constructor(readonly domain: string) {
     super('This store is already connected to another GRINDCTRL account.');
