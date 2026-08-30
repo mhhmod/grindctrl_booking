@@ -19,6 +19,7 @@ import { ensureMessengerSite, listMessengerSites } from './provisioning';
    tests pin the conflict-safe behaviour. */
 
 type Row = Record<string, unknown>;
+type Recorded = Array<[string, unknown]>;
 
 interface TableState {
   rows: Row[];
@@ -34,6 +35,11 @@ interface TableState {
 
 function stubClient(tables: Record<string, TableState>) {
   const calls: string[] = [];
+  // .update().eq() filters, in call order — a col.eq() call that's dropped or
+  // retargeted (e.g. filtering on 'domain' instead of 'id') still leaves a
+  // stub that matches by coincidence; asserting the exact filter is the only
+  // way to catch that. See shop-tenancy.test.ts's stub for the original.
+  const recorded: Recorded = [];
 
   function builder(table: string) {
     const state = tables[table];
@@ -55,15 +61,29 @@ function stubClient(tables: Record<string, TableState>) {
       update: (patch: Row) => {
         calls.push(`${table}.update`);
         // Mirrors real supabase-js: .update() only becomes a filter builder
-        // once a verb is chained onto it, so the match happens in .eq().
-        return {
+        // once a verb is chained onto it, and the builder itself is thenable
+        // (a bare `.update().eq()` awaits fine) while also supporting
+        // `.select().maybeSingle()` for a compare-and-swap read-back.
+        const updateFilters: Array<[string, unknown]> = [];
+        const updateApi: Record<string, unknown> = {
           eq: (col: string, val: unknown) => {
-            for (const row of state.rows) {
-              if (row[col] === val) Object.assign(row, patch);
-            }
-            return Promise.resolve({ data: null, error: null });
+            updateFilters.push([col, val]);
+            recorded.push([col, val]);
+            return updateApi;
+          },
+          select: () => updateApi,
+          maybeSingle: () => {
+            const match = state.rows.find((r) => updateFilters.every(([c, v]) => r[c] === v));
+            if (match) Object.assign(match, patch);
+            return Promise.resolve({ data: match ? { ...match } : null, error: null });
+          },
+          then: (resolve: (v: unknown) => unknown) => {
+            const matched = state.rows.filter((r) => updateFilters.every(([c, v]) => r[c] === v));
+            for (const row of matched) Object.assign(row, patch);
+            return Promise.resolve({ data: null, error: null }).then(resolve);
           },
         };
+        return updateApi;
       },
       upsert: (row: Row) => {
         calls.push(`${table}.upsert`);
@@ -111,6 +131,7 @@ function stubClient(tables: Record<string, TableState>) {
     client: { from: (table: string) => builder(table) } as unknown as SupabaseClient,
     calls,
     tables,
+    recorded,
   };
 }
 
@@ -240,6 +261,32 @@ describe('provisioning', () => {
     expect(tables.profiles.rows[0].email).toBe('a@store.com');
   });
 
+  it('does not adopt-or-refuse a findSiteByDomain result already in the caller\'s own workspace', async () => {
+    /* Guards the branch's own gate condition, not just its consequences:
+       "already mine" is supposed to be handled entirely by the `found`
+       early-return above. If that workspace comparison were ever deleted,
+       this exact shape — findSiteByDomain answering with our own
+       workspace_id, but on a site the earlier `found` scan didn't happen to
+       catch — would run it through adopt-or-refuse anyway, and could throw
+       StoreOwnedByAnotherAccountError for a store the caller already owns. */
+    findSiteByDomain.mockResolvedValue({
+      id: 's-mine',
+      workspace_id: 'w-1',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'user_2', // would incorrectly refuse if the workspace guard were gone
+    });
+    const { client, calls } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(ensureMessengerSite('user_1', 'demo.myshopify.com')).resolves.toBeTruthy();
+    // No adoption write happened — the block was never entered.
+    expect(calls).not.toContain('widget_sites.update');
+  });
+
   it('adopts a store already provisioned by the embedded Shopify app', async () => {
     /* The merchant configured Store Chat inside Shopify first (owned by the
        synthetic shop profile), then signed up on the web. They must land on
@@ -345,5 +392,161 @@ describe('provisioning', () => {
     expect(tables.widget_sites.rows[0].domain).toBe('demo.myshopify.com');
     // And the lookup was asked about the canonical form, not the raw input.
     expect(findSiteByDomain).toHaveBeenCalledWith('demo.myshopify.com');
+  });
+
+  it('adopts (does not refuse) a site left in a stray second workspace of the same merchant', async () => {
+    /* workspaces has no unique key on owner_profile_id (see the race note on
+       ensureWorkspace), so a concurrent first visit can leave one merchant
+       with two workspaces. If a site landed in the newer one before
+       ensureWorkspace's oldest-first tiebreak settled on the older one,
+       refusing to touch it — because it's merely a *different workspace* —
+       would tell the merchant their own storefront belongs to someone else,
+       and no retry could ever clear that. Refusal must be keyed on owner. */
+    findSiteByDomain.mockResolvedValue({
+      id: 's-strayed',
+      workspace_id: 'w-stray',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'user_1',
+    });
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [
+          {
+            id: 's-strayed',
+            workspace_id: 'w-stray',
+            domain: 'demo.myshopify.com',
+            name: 'demo.myshopify.com',
+            embed_key: 'gc_stray',
+            status: 'active',
+            settings_json: {},
+            settings_version: 2,
+            settings_draft: null,
+          },
+        ],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    const site = await ensureMessengerSite('user_1', 'demo.myshopify.com');
+
+    expect(site.id).toBe('s-strayed');
+    expect(tables.widget_sites.rows).toHaveLength(1);
+    expect(tables.widget_sites.rows[0].workspace_id).toBe('w-1');
+  });
+
+  it('refuses when the owner is an empty string, not just null', async () => {
+    // '' is falsy but not null/undefined — a check that only special-cases
+    // null would let this through as if unowned.
+    findSiteByDomain.mockResolvedValue({
+      id: 's-x', workspace_id: 'w-9', domain: 'demo.myshopify.com', ownerClerkUserId: '',
+    });
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(ensureMessengerSite('user_1', 'demo.myshopify.com')).rejects.toThrow(
+      /already connected to another GRINDCTRL account/,
+    );
+  });
+
+  it('scopes the adoption write to the exact row it read (compare-and-swap)', async () => {
+    /* Two accounts racing to adopt the same shop:-owned site: whichever
+       update lands second must find nothing left to claim, not silently
+       steal the first adopter's win. Filtering on id alone (or on domain,
+       which is not even unique per row before adoption settles) can't tell
+       "still where I found it" from "already taken" — only pairing id with
+       the workspace_id read at the same moment can. */
+    findSiteByDomain.mockResolvedValue({
+      id: 's-shop',
+      workspace_id: 'w-shop',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'shop:demo.myshopify.com',
+    });
+    const { client, recorded } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [
+          {
+            id: 's-shop',
+            workspace_id: 'w-shop',
+            domain: 'demo.myshopify.com',
+            name: 'demo.myshopify.com',
+            embed_key: 'gc_existing',
+            status: 'active',
+            settings_json: {},
+            settings_version: 3,
+            settings_draft: null,
+          },
+        ],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await ensureMessengerSite('user_1', 'demo.myshopify.com');
+
+    // The compare-and-swap filters, in the exact order the code sends them:
+    // this row, and only if it's still where we read it from.
+    expect(recorded).toEqual([
+      ['id', 's-shop'],
+      ['workspace_id', 'w-shop'],
+    ]);
+  });
+
+  it('throws instead of silently taking a site a concurrent adopter already won', async () => {
+    // The row moved out from under us between the read and the write: the
+    // compare-and-swap .eq('workspace_id', ...) matches nothing, so the
+    // update reports success with zero rows rather than an error.
+    findSiteByDomain.mockResolvedValue({
+      id: 's-shop',
+      workspace_id: 'w-shop',
+      domain: 'demo.myshopify.com',
+      ownerClerkUserId: 'shop:demo.myshopify.com',
+    });
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: {
+        rows: [
+          {
+            // Already moved to w-other by a faster adopter — no longer w-shop.
+            id: 's-shop',
+            workspace_id: 'w-other',
+            domain: 'demo.myshopify.com',
+            name: 'demo.myshopify.com',
+            embed_key: 'gc_existing',
+            status: 'active',
+            settings_json: {},
+            settings_version: 3,
+            settings_draft: null,
+          },
+        ],
+      },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(ensureMessengerSite('user_1', 'demo.myshopify.com')).rejects.toThrow(
+      /already connected to another GRINDCTRL account/,
+    );
+  });
+
+  it('creates a domain-less site without consulting store-ownership lookups', async () => {
+    const { client, tables } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    const site = await ensureMessengerSite('user_1', null);
+
+    expect(site.domain).toBeNull();
+    expect(tables.widget_sites.rows).toHaveLength(1);
+    expect(findSiteByDomain).not.toHaveBeenCalled();
   });
 });

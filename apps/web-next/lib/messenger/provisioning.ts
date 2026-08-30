@@ -225,10 +225,13 @@ export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise
   return ((sites.data ?? []) as Array<{ id: string }>).map((row) => row.id);
 }
 
-/** Creates (once) a site for a store domain within the caller's workspace.
- *  A null domain is a real state — the merchant has no store connected yet —
- *  and must stay null rather than being stamped with a sentinel string that
- *  outlives the condition it described. */
+/** Ensures a site exists for a store domain — adopting one another account
+ *  already created (a synthetic shop profile, or a stray workspace of this
+ *  same merchant's own — see the race note on ensureWorkspace above) rather
+ *  than creating a duplicate, or refusing when a different real account
+ *  holds it. A null domain is a real state — the merchant has no store
+ *  connected yet — and must stay null rather than being stamped with a
+ *  sentinel string that outlives the condition it described. */
 export async function ensureMessengerSite(
   clerkUserId: string,
   domain: string | null,
@@ -237,8 +240,11 @@ export async function ensureMessengerSite(
   // REQUIRED, not cosmetic: uq_widget_sites_domain and
   // widget_sites_domain_canonical_check reject anything but the canonical
   // form, so every reference to `domain` below must use this value, not the
-  // raw argument.
-  domain = domain ? canonicalShopDomain(domain) : domain;
+  // raw argument. `|| null` also catches a whitespace-only input: it
+  // canonicalises to '', which is legal under the CHECK and a live key in
+  // the partial unique index (only NULL is exempt) — persisting it would
+  // silently claim the domain-less slot instead of leaving it null.
+  domain = domain ? canonicalShopDomain(domain) || null : null;
 
   const supabase = getMessengerServiceClient();
   const sites = await listMessengerSites(clerkUserId);
@@ -251,31 +257,45 @@ export async function ensureMessengerSite(
   const workspaceId = await ensureWorkspace(profile.id, clerkUserId);
 
   /* Before creating anything, ask whether this STORE already has a config
-     somewhere — not merely in the caller's workspace. It usually will: the
-     embedded Shopify app provisions one on first open under a synthetic
-     shop profile. Skipping this check is exactly how one storefront ended
-     up able to have two configs with two embed keys, one live and one being
-     edited. uq_widget_sites_domain now makes the second insert fail
-     outright, so this is also what turns a raw constraint violation into an
-     answer the merchant can act on. */
+     somewhere — not merely in the caller's workspace. It usually will once
+     the embedded Shopify app lands: it will provision one on first open
+     under a synthetic shop profile. Skipping this check is exactly how one
+     storefront ended up able to have two configs with two embed keys, one
+     live and one being edited. uq_widget_sites_domain now makes the second
+     insert fail outright, so this is also what turns a raw constraint
+     violation into an answer the merchant can act on. */
   if (domain) {
     const existing = await findSiteByDomain(domain);
     if (existing && existing.workspace_id !== workspaceId) {
-      // A store parked under a synthetic shop profile belongs to whoever
-      // proves they run it. A store held by a real account does not — and
-      // an owner we cannot identify is not an invitation either.
-      if (!existing.ownerClerkUserId || !isShopProfileId(existing.ownerClerkUserId)) {
+      const owner = existing.ownerClerkUserId;
+      // Adoptable when parked under a synthetic shop profile, or when it is
+      // already this merchant's — ensureWorkspace's race (no unique key on
+      // owner_profile_id) can leave a site in a stray *second* workspace of
+      // the same account, and refusing there would lock the merchant out of
+      // their own store with no retry that could ever clear it. A store
+      // held by a different real account, or one we can't identify at all,
+      // is not adoptable.
+      if (!owner || (owner !== clerkUserId && !isShopProfileId(owner))) {
         throw new StoreOwnedByAnotherAccountError(domain);
       }
       const adopted = await supabase
         .from('widget_sites')
         .update({ workspace_id: workspaceId, created_by_profile_id: profile.id })
-        .eq('id', existing.id);
+        .eq('id', existing.id)
+        // Compare-and-swap: adoption is the only thing that changes
+        // workspace_id, so "still where I found it" means "still unclaimed
+        // since I looked" — without this, a second adopter racing the first
+        // would unconditionally steal a site the first adopter already won.
+        .eq('workspace_id', existing.workspace_id)
+        .select(
+          'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
+        )
+        .maybeSingle();
       if (adopted.error) throw new Error(`site adoption failed: ${adopted.error.message}`);
-
-      const refreshed = await listMessengerSites(clerkUserId);
-      const mine = refreshed.find((site) => site.id === existing.id);
-      if (mine) return mine;
+      // Zero rows means someone else's adoption (or a deletion) claimed it
+      // between our read and our write — not a state we can silently retry.
+      if (!adopted.data) throw new StoreOwnedByAnotherAccountError(domain);
+      return toView(adopted.data as unknown as Record<string, unknown>);
     }
   }
 
@@ -294,9 +314,22 @@ export async function ensureMessengerSite(
     )
     .single();
   if (inserted.error) {
-    const raced = await listMessengerSites(clerkUserId);
-    const racedFound = raced.find((site) => (site.domain ?? '') === domain || site.name === domain);
+    const racedSites = await listMessengerSites(clerkUserId);
+    const racedFound = domain
+      ? racedSites.find((site) => site.domain === domain || site.name === domain)
+      : racedSites.find((site) => !site.domain);
     if (racedFound) return racedFound;
+    // The unique index can also be lost to a *different* Clerk user's insert
+    // racing ours with no pre-existing row for either of us to adopt.
+    // `racedSites` above is scoped to our own workspace and will never see
+    // that row — ask globally so this reaches the readable refusal instead
+    // of a raw 23505 unique-violation message.
+    if (domain) {
+      const claimed = await findSiteByDomain(domain);
+      if (claimed && claimed.workspace_id !== workspaceId) {
+        throw new StoreOwnedByAnotherAccountError(domain);
+      }
+    }
     throw new Error(`site create failed: ${inserted.error.message}`);
   }
   return toView(inserted.data as unknown as Record<string, unknown>);

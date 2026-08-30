@@ -70,7 +70,7 @@ function toSiteOwner(row: SiteOwnerRow): SiteOwner {
  *
  *  Comparing the column directly (instead of filtering on a lower(domain)
  *  expression PostgREST can't address) is safe because
- *  widget_sites_domain_lowercase_check now guarantees the stored value
+ *  widget_sites_domain_canonical_check now guarantees the stored value
  *  equals btrim(lower(domain)); canonicalShopDomain computes that same
  *  value on the read side, so a stored row and a lookup always agree.
  *
