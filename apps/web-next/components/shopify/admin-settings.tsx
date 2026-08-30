@@ -11,25 +11,11 @@ import {
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
 import { MerchantPlanCard, type MerchantPlan } from '@/components/shopify/merchant-plan-card';
+import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
-declare global {
-  interface Window {
-    shopify?: { idToken(): Promise<string> };
-  }
-}
-
 const APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
-
-async function withToken(): Promise<string> {
-  // App Bridge script loads sync, but wait up to 5s to be safe.
-  for (let i = 0; i < 50 && !window.shopify; i++) {
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  if (!window.shopify) throw new Error('App Bridge not ready');
-  return window.shopify.idToken();
-}
 
 export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }) {
   const c = getSettingsFormCopy(locale);
@@ -48,7 +34,7 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     let cancelled = false;
     (async () => {
       try {
-        const token = await withToken();
+        const token = await getShopifySessionToken();
         const res = await fetch('/api/shopify/admin/settings', {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -85,7 +71,7 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     if (!s) return;
     setStatus('saving');
     try {
-      const token = await withToken();
+      const token = await getShopifySessionToken();
       const res = await fetch('/api/shopify/admin/settings', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
