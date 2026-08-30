@@ -99,5 +99,9 @@ export function verifyClaimToken(secret: string, token: string): { shop: string 
   const normalized = normalizeShopDomain(payload.shop);
   if (!normalized || normalized !== payload.shop) return null;
 
-  return { shop: payload.shop };
+  // Return the normalized value, not payload.shop: they are provably equal
+  // here, but returning the raw field is what would turn a future canonical
+  // -check regression into an attacker-controlled shop identity flowing out
+  // of this function, instead of a rejected token.
+  return { shop: normalized };
 }

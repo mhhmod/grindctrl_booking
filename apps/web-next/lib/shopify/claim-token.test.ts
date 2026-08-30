@@ -17,6 +17,17 @@ const forge = (payload: unknown, secret: string = SECRET) => {
   return `${body}.${createHmac('sha256', secret).update(body, 'utf8').digest('base64url')}`;
 };
 
+// forge() goes through JSON.stringify, which can't produce non-finite
+// numbers (Infinity serializes to null) or omit keys present in the type.
+// forgeRaw signs literal JSON text instead, so tests can reach payload
+// shapes JS's own JSON.stringify would never let them build.
+const forgeRaw = (json: string) => {
+  const body = `${Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url')}.${Buffer.from(
+    json,
+  ).toString('base64url')}`;
+  return `${body}.${createHmac('sha256', SECRET).update(body, 'utf8').digest('base64url')}`;
+};
+
 afterEach(() => vi.useRealTimers());
 
 describe('claim token', () => {
@@ -83,6 +94,25 @@ describe('claim token', () => {
     ).toBeNull();
     expect(
       verifyClaimToken(SECRET, forge({ iss: 'grindctrl-shop-claim', shop: 123, exp })),
+    ).toBeNull();
+  });
+
+  it('pins the canonical shop form, a null payload, and a non-finite exp', () => {
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const ok = { iss: 'grindctrl-shop-claim', exp };
+    // A signature proves the secret, not the shop: reject anything mint
+    // would not have emitted verbatim.
+    expect(verifyClaimToken(SECRET, forge({ ...ok, shop: 'DEMO.myshopify.com' }))).toBeNull();
+    expect(verifyClaimToken(SECRET, forge({ ...ok, shop: 'store-.myshopify.com' }))).toBeNull();
+    expect(verifyClaimToken(SECRET, forge({ ...ok, shop: `${'a'.repeat(64)}.myshopify.com` }))).toBeNull();
+    // A signed null payload must return null, not throw.
+    expect(verifyClaimToken(SECRET, forge(null))).toBeNull();
+    // An absent or non-finite exp is an immortal token.
+    expect(
+      verifyClaimToken(SECRET, forgeRaw(`{"iss":"grindctrl-shop-claim","shop":"${SHOP}","exp":1e999}`)),
+    ).toBeNull();
+    expect(
+      verifyClaimToken(SECRET, forgeRaw(`{"iss":"grindctrl-shop-claim","shop":"${SHOP}"}`)),
     ).toBeNull();
   });
 
