@@ -1,6 +1,8 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { setMessengerEnabledMock } = vi.hoisted(() => ({ setMessengerEnabledMock: vi.fn() }));
 
 vi.mock('@/lib/shopify/app-bridge-client', () => ({
   getShopifySessionToken: () => Promise.resolve('tok-abc'),
@@ -8,7 +10,7 @@ vi.mock('@/lib/shopify/app-bridge-client', () => ({
 vi.mock('@/components/shopify/store-chat-actions', () => ({
   useStoreChatActions: () => ({
     saveDraftSection: vi.fn(),
-    setMessengerEnabled: vi.fn(),
+    setMessengerEnabled: setMessengerEnabledMock,
     addKnowledge: vi.fn(),
     updateKnowledgeStatus: vi.fn(),
     deleteKnowledge: vi.fn(),
@@ -73,5 +75,26 @@ describe('StoreChatEmbedded', () => {
     render(<StoreChatEmbedded locale="en" />);
 
     await waitFor(() => expect(screen.getByText(/could not load/i)).toBeInTheDocument());
+  });
+
+  it('re-pulls /state after a successful mutation, since there is no server revalidatePath here', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ ...STATE_RESPONSE, site: { ...STATE_RESPONSE.site, active: false } }),
+    });
+    setMessengerEnabledMock.mockResolvedValue({ ok: true });
+
+    render(<StoreChatEmbedded locale="en" />);
+    await screen.findByText('Demo store');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Installation' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Turn on Store Chat' }));
+
+    await waitFor(() => expect(setMessengerEnabledMock).toHaveBeenCalledWith('site-1', true));
+    // The mocked action doesn't hit fetch at all — only the follow-up
+    // loadState() call does, so a second /state call proves the wrapper
+    // actually re-pulled fresh data rather than trusting the stale prop.
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   });
 });

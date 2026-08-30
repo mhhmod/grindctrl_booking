@@ -122,4 +122,13 @@ describe('POST /api/shopify/store-chat/knowledge', () => {
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
   });
+
+  it('genericizes an infra error even when a column name coincidentally contains "url" as a substring', async () => {
+    addManualKnowledgeMock.mockRejectedValue(
+      new Error('knowledge create failed: null value in column "source_url" violates not-null constraint'),
+    );
+    const res = await POST(req({ op: 'add', title: 'x', content: 'y' }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+  });
 });

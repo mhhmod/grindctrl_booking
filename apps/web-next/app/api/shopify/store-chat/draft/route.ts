@@ -22,6 +22,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as { section?: MessengerSection; payload?: object };
-  const result = await saveDraftSectionForSite(site, body.section as MessengerSection, body.payload ?? {});
-  return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  try {
+    const result = await saveDraftSectionForSite(site, body.section as MessengerSection, body.payload ?? {});
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  } catch (error) {
+    // saveDraftSectionForSite throws raw infra errors by contract (see
+    // actions-core.ts) — never forward error.message to an untrusted client.
+    console.error('[store-chat draft] failed to save draft', error);
+    return NextResponse.json({ ok: false, error: 'Action failed. Please try again.' }, { status: 500 });
+  }
 }

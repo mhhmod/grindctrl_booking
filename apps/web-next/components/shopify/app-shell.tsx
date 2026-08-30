@@ -10,8 +10,8 @@ import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 const COPY = {
-  en: { tryOn: 'Try-On', storeChat: 'Store Chat', sections: 'GRINDCTRL sections' },
-  ar: { tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', sections: 'أقسام GRINDCTRL' },
+  en: { tryOn: 'Try-On', storeChat: 'Store Chat', sections: 'GRINDCTRL sections', themeToggle: 'Switch between light and dark' },
+  ar: { tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', sections: 'أقسام GRINDCTRL', themeToggle: 'التبديل بين الوضع الفاتح والداكن' },
 } as const;
 
 type ShellTab = 'try-on' | 'store-chat';
@@ -31,8 +31,8 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
           variant="ghost"
           size="icon"
           onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          aria-label="Switch between light and dark"
-          title="Switch between light and dark"
+          aria-label={t.themeToggle}
+          title={t.themeToggle}
         >
           <Sun className="hidden size-4 dark:block" />
           <Moon className="size-4 dark:hidden" />

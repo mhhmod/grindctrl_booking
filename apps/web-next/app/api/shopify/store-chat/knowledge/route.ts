@@ -60,7 +60,10 @@ export async function POST(request: NextRequest) {
     // Anything else (a raw Postgres/Supabase error, for instance) must not
     // reach an untrusted client verbatim — genericize it instead.
     const raw = error instanceof Error ? error.message : '';
-    const message = /https|URL|page|readable/i.test(raw) ? raw : 'Action failed. Please try again.';
+    // Word-boundary match: a plain substring test would let a raw Postgres
+    // error through whenever a column or constraint name merely contains
+    // "url" as part of a longer identifier (e.g. "source_url").
+    const message = /\b(https?|url|page|readable)\b/i.test(raw) ? raw : 'Action failed. Please try again.';
     return NextResponse.json({ ok: false, error: message }, { status: 400 });
   }
 }

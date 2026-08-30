@@ -55,4 +55,14 @@ describe('POST /api/shopify/store-chat/enable', () => {
     await POST(req({ enabled: 'yes' }));
     expect(setMessengerEnabledForSiteMock).toHaveBeenCalledWith({ id: 'site-real' }, 'shop-demo.myshopify.com', false);
   });
+
+  it('returns a generic 500 instead of leaking a raw infra error when the toggle itself throws', async () => {
+    authenticateMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real' });
+    setMessengerEnabledForSiteMock.mockRejectedValue(new Error('connection reset'));
+
+    const res = await POST(req({ enabled: true }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+  });
 });

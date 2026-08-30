@@ -17,6 +17,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as { enabled?: unknown };
-  const result = await setMessengerEnabledForSite(site, shopProfileId(session.shop), body.enabled === true);
-  return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  try {
+    const result = await setMessengerEnabledForSite(site, shopProfileId(session.shop), body.enabled === true);
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  } catch (error) {
+    // setMessengerEnabledForSite throws raw infra errors by contract (see
+    // actions-core.ts) — never forward error.message to an untrusted client.
+    console.error('[store-chat enable] failed to toggle status', error);
+    return NextResponse.json({ ok: false, error: 'Action failed. Please try again.' }, { status: 500 });
+  }
 }

@@ -17,10 +17,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'unavailable' }, { status: 503 });
   }
 
-  // The audit trail needs an actor. Before a claim, that IS the synthetic
-  // shop profile Phase 1 provisions — the same identity ensureShopOwnedSite
-  // just resolved `site` under. There is no other actor available from a
-  // verified-shop-domain request.
-  const result = await publishConfigForSite(site, shopProfileId(session.shop));
-  return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  try {
+    // The audit trail needs an actor. Before a claim, that IS the synthetic
+    // shop profile Phase 1 provisions — the same identity ensureShopOwnedSite
+    // just resolved `site` under. There is no other actor available from a
+    // verified-shop-domain request.
+    const result = await publishConfigForSite(site, shopProfileId(session.shop));
+    return NextResponse.json(result, { status: result.ok ? 200 : 400 });
+  } catch (error) {
+    // publishConfigForSite throws raw infra errors by contract (see
+    // actions-core.ts) — never forward error.message to an untrusted client.
+    console.error('[store-chat publish] failed to publish', error);
+    return NextResponse.json({ ok: false, error: 'Action failed. Please try again.' }, { status: 500 });
+  }
 }

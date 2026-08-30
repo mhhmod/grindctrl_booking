@@ -69,4 +69,14 @@ describe('POST /api/shopify/store-chat/draft', () => {
     const res = await POST(req({ section: 'appearance', payload: {} }));
     expect(res.status).toBe(503);
   });
+
+  it('returns a generic 500 instead of leaking a raw infra error when the save itself throws', async () => {
+    authenticateMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real' });
+    saveDraftSectionForSiteMock.mockRejectedValue(new Error('column "messenger_appearance" does not exist'));
+
+    const res = await POST(req({ section: 'appearance', payload: {} }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+  });
 });

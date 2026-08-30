@@ -56,4 +56,14 @@ describe('POST /api/shopify/store-chat/publish', () => {
     const res = await POST(req());
     expect(res.status).toBe(400);
   });
+
+  it('returns a generic 500 instead of leaking a raw infra error when publishing itself throws', async () => {
+    authenticateMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real' });
+    publishConfigForSiteMock.mockRejectedValue(new Error('deadlock detected'));
+
+    const res = await POST(req());
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+  });
 });

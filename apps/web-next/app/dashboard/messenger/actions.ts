@@ -133,7 +133,10 @@ export async function addKnowledge(formData: FormData): Promise<ActionResult> {
   } catch (error) {
     const raw = error instanceof Error ? error.message : '';
     // Friendly copy for expected fetch failures surfaced by URL import.
-    const friendly = /https|URL|page|readable/i.test(raw) ? raw : undefined;
+    // Word-boundary match: a plain substring test would let a raw Postgres
+    // error through whenever a column or constraint name merely contains
+    // "url" as part of a longer identifier (e.g. "source_url").
+    const friendly = /\b(https?|url|page|readable)\b/i.test(raw) ? raw : undefined;
     return fail(friendly ? new Error(friendly) : error);
   }
 }
@@ -175,7 +178,10 @@ export async function syncKnowledge(siteId: string, entryId: string): Promise<Ac
     return { ok: true, message: 'Re-synced.' };
   } catch (error) {
     const raw = error instanceof Error ? error.message : '';
-    const friendly = /https|URL|page|readable/i.test(raw) ? raw : undefined;
+    // Word-boundary match: a plain substring test would let a raw Postgres
+    // error through whenever a column or constraint name merely contains
+    // "url" as part of a longer identifier (e.g. "source_url").
+    const friendly = /\b(https?|url|page|readable)\b/i.test(raw) ? raw : undefined;
     return fail(friendly ? new Error(friendly) : error);
   }
 }
