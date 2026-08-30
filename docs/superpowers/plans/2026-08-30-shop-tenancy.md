@@ -876,3 +876,71 @@ Expected: a redirect or 200, and no new server errors.
 **Type consistency.** `shopProfileId`/`isShopProfileId`/`findSiteByDomain`/`ensureShopOwnedSite`/`StoreOwnedByAnotherAccountError` are used with the same names and signatures in Tasks 3–7. `MessengerSiteView` is the existing exported type from `provisioning.ts`. `verifySessionToken` returns `{ shop }`, matching Task 6's usage.
 
 **One import cycle to watch:** `shop-tenancy.ts` imports `ensureMessengerSite` from `provisioning.ts`, and Task 4 has `provisioning.ts` import `findSiteByDomain` from `shop-tenancy.ts`. ESM handles this cycle because both are used at call time, not module-evaluation time — but if the implementer hits `undefined is not a function`, the fix is to move `findSiteByDomain` and `isShopProfileId` into a third leaf module rather than to restructure the call graph.
+
+---
+
+## What execution changed
+
+Recorded rather than edited into the tasks above, so the difference between
+what was planned and what was learned stays visible. Every item below came
+from a review finding, not from a change of mind.
+
+**Task 1 — the constraint was not strong enough.** `lower()` does not trim.
+A plain lower-case CHECK still admitted `' demo.myshopify.com'`, which hashes
+to a different key than the trimmed form — so the unique index would not
+catch it, and every reader (which normalises with `.trim().toLowerCase()`)
+could never find it again. That row is a second configuration for one
+storefront: exactly the failure this phase exists to prevent. The constraint
+is `domain = btrim(lower(domain))`.
+
+**Task 3 — `SiteOwner` had to carry the owner.** The plan resolved
+`clerk_user_id` with two extra queries. One PostgREST embed
+(`workspaces!inner(profiles!inner(clerk_user_id))`) does it in one round
+trip. `findSiteByDomain` also now throws on a query error instead of
+returning null: conflating "the query failed" with "no such store" sent the
+caller into the create path, where the unique index produced a raw
+constraint violation instead of a refusal.
+
+**Task 4 — adoption keys on the OWNER, not the workspace.** The planned
+guard (`existing.workspace_id !== workspaceId`) refused whenever the site sat
+in a different workspace — including a *second workspace belonging to the
+same merchant*, which the first-visit race documented at `provisioning.ts`
+can produce. That would have told merchants their own storefront belonged to
+another account, permanently, with no retry that could succeed. The adoption
+UPDATE is also a compare-and-swap on `(id, workspace_id)`: without it, two
+accounts reaching the adopt branch meant the second unconditionally took the
+store from the first.
+
+**Task 5 — the function had the wrong verb, and its own module.**
+`ensureShopOwnedSite` insisted on *owning* the site, so once a merchant
+claimed their store, every later embedded-app open threw at that store's real
+owner. The embedded app is authenticated by shop domain, so the domain is the
+authority: read the site for that domain whoever owns it, and provision only
+when none exists. It also moved to `lib/messenger/shop-provisioning.ts` —
+putting it in `shop-tenancy.ts` would have imported `provisioning.ts`, which
+imports Clerk at module scope, making the Clerk-free leaf module Clerk-shaped
+and closing an import cycle. Two further defects surfaced: the workspace slug
+collapsed to `gc-myshopifycom-<4 chars of clock>` for *every* shop, because
+`normalizeShopDomain` guarantees the `.myshopify.com` suffix; and the `shop:`
+prefix produced an address with a colon in the local part, which is not valid
+`atext`.
+
+**Tasks 6 and 7 — the token's real escape route was analytics.** The mint
+route had no rate limit (the only externally-reachable route without one, and
+middleware excludes it), `/claim` had no error boundary, and the claim token
+travelled to PostHog and Sentry through `$current_url` — twice, because the
+sign-in round trip puts it in `redirect_url` as well.
+
+**Deliberately not built: single-use `jti` burn.** The ownership check is
+already the burn — after redemption `mayAdopt` refuses everyone else and the
+compare-and-swap closes the concurrent case. Before redemption it is a race,
+and a `SETNX` marks the winner without deciding it; whoever can mint can mint
+again regardless. With Redis fail-open (the choice `lib/ratelimit.ts` already
+makes), the check would be decoration. Scrubbing the URL addresses the actual
+exposure.
+
+**Known limitation, recorded in the code.** `verifySessionToken` checks
+`aud`, `dest` and `exp` but never `sub` or a staff role, so any staff user who
+can open the embedded app can claim the store into their own account — and
+there is no disconnect path. The merchant-facing copy points at support
+rather than promising a button that does not exist.
