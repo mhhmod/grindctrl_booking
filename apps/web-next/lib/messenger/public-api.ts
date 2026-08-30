@@ -3,6 +3,7 @@ import 'server-only';
 import { getMessengerServiceClient } from './db';
 import { decideOrigin, type DomainPatternRow } from './origins';
 import { resolveMessengerConfig } from './config';
+import { canonicalShopDomain } from './shop-tenancy';
 import type { MessengerConfig } from './types';
 import type { MessengerBehaviour } from './types';
 
@@ -68,7 +69,7 @@ export async function loadPublicSiteByDomain(shopDomain: string): Promise<Resolv
   const res = await supabase
     .from('widget_sites')
     .select('id, name, embed_key, status, settings_json, settings_version')
-    .eq('domain', shopDomain.toLowerCase())
+    .eq('domain', canonicalShopDomain(shopDomain))
     .limit(1)
     .maybeSingle();
   if (res.error || !res.data) return null;

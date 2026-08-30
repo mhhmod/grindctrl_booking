@@ -4,6 +4,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { ensureMessengerSite, listMessengerSites } from '@/lib/messenger/provisioning';
+import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import { getOverviewStats, listConversationsForSite } from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
@@ -28,6 +29,11 @@ const TAB_COPY = {
     live: 'Live',
     off: 'Off',
     hasDraft: 'Unpublished changes',
+    storeTakenTitle: 'This store is already connected',
+    // See the matching comment in app/claim/page.tsx: there is no
+    // disconnect/unclaim path in the app, so don't send a merchant looking
+    // for one.
+    storeTakenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
   },
   ar: {
     overview: 'نظرة عامة',
@@ -39,6 +45,8 @@ const TAB_COPY = {
     live: 'يعمل',
     off: 'متوقف',
     hasDraft: 'تغييرات غير منشورة',
+    storeTakenTitle: 'هذا المتجر متصل بالفعل',
+    storeTakenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
   },
 } as const;
 
@@ -71,7 +79,28 @@ export default async function MessengerPage({
     } catch {
       // Try-On lookup is optional here.
     }
-    sites = [await ensureMessengerSite(userId, domain, domain ?? undefined)];
+    try {
+      sites = [await ensureMessengerSite(userId, domain, domain ?? undefined)];
+    } catch (error) {
+      // A different real account already owns this store's config — not the
+      // transient failure error.tsx's generic "trying again usually works"
+      // copy implies, and not something a retry could ever fix. Say so here
+      // instead of letting it escape to that boundary and 500 forever.
+      if (error instanceof StoreOwnedByAnotherAccountError) {
+        return (
+          <section
+            dir={locale === 'ar' ? 'rtl' : 'ltr'}
+            className="grid min-w-0 place-items-center px-4 py-16"
+          >
+            <div className="grid max-w-md gap-2 text-center">
+              <h1 className="text-lg font-semibold">{copy.storeTakenTitle}</h1>
+              <p className="text-sm text-muted-foreground">{copy.storeTakenBody}</p>
+            </div>
+          </section>
+        );
+      }
+      throw error;
+    }
   }
 
   const selected = sites.find((site) => site.id === params.site) ?? sites[0];
