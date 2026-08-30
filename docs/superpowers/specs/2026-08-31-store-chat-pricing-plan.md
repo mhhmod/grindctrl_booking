@@ -30,22 +30,38 @@ Backed by real tables (`tryon_plans`, `tryon_subscriptions`, `tryon_credit_ledge
 
 ---
 
-## 2. Proposed plans
+## 2. Plans — re-audited
+
+I checked the first draft's numbers against real usage data before finalizing anything. **There is none**: `widget_conversations` has zero rows across the two `widget_sites` that exist — this product hasn't taken real chat traffic yet. So this section is a first-principles audit of the *logic*, not a data-backed validation — and I'm saying that plainly rather than presenting invented precision as verified fact.
+
+### What the first draft got wrong
+
+**100 free conversations/month doesn't create upgrade pressure for the actual target customer.** Reasoning through the funnel: a small, early-stage Shopify store — the store actually installing a $0-entry chat widget for the first time — typically runs somewhere in the 500–3,000 monthly-session range. Chat-engagement rates for a proactive widget usually land in the low single digits of visitors, and only a fraction of those send an actual message. That funnel puts most such stores at roughly 5–90 real conversations a month, comfortably under 100. A free tier sized above where most of the target market actually lives isn't generous, it's a tier nobody ever needs to leave — which defeats the tier's purpose. It also breaks consistency with Try-On, whose 20-render free tier is deliberately *tight*: an active store burns through it in days, which is why it converts.
+
+**Everything else in the first draft held up:**
+- The Growth→Pro ratio (5x) and the Free→Growth ratio (10x) are both reasonable, standard SaaS step sizes — the ratios weren't the problem, the free tier's absolute size was.
+- Unit economics have enormous headroom either way: `openai/gpt-oss-20b` on Groq costs a small fraction of a cent per reply, so even the tightest reasonable free tier costs nothing to actually serve. The free-tier ceiling is a conversion lever, not a cost-containment one — cost containment is what the attachment-storage gating is for, and that reasoning was already correct.
+- $15/$5 anchored to Try-On's Launch/Boost-80 price points remains the right call for cross-product consistency, and I confirmed Try-On's real USD→EGP peg (exactly 1:50, both live EGP rows checked) rather than guessing at an FX rate — Store Chat's EGP prices now use that same peg.
+
+### Revised numbers
 
 | Plan | Price/mo | Conversations/mo | Knowledge entries | Photo attachments | Branding | AI escalation to human |
 |---|---|---|---|---|---|---|
-| **Free** | $0 | 100 | 10 | off | "Powered by GRINDCTRL" | on |
-| **Growth** | $15/mo | 1,000 | 50 | on | none | on |
-| **Pro** | $39/mo | 5,000 | unlimited | on + AI photo triage | none, priority support | on |
-| Top-up: **+500 conversations** | $5 | — | — | — | — | — |
+| **Free** | $0 | **50** | 10 | off | "Powered by GRINDCTRL" | on |
+| **Growth** | $15/mo (750 EGP) | **500** | 50 | on | none | on |
+| **Pro** | $39/mo (1,950 EGP) | **2,500** | unlimited | on + AI photo triage | none, priority support | on |
+| Top-up | $5 (250 EGP) | **+250 conversations** | — | — | — | — |
 
-Reasoning, not just numbers:
-- **$15 Growth matches Try-On's Launch price exactly.** A merchant already paying $15/mo for Try-On sees a familiar number for Store Chat, not a second, unrelated price scale to learn. This is the "consistency, coherence, unification" ask made concrete.
-- **$5 top-up matches Try-On's cheapest pack ($5 Boost 80)** for the same reason — one psychological price point across both products.
-- **100 free conversations is generous on purpose.** Since the real cost is inference-cheap, the free tier isn't rationed for cost reasons — it's bounded so a store with genuine ongoing shopper volume has a reason to upgrade, while a store just trying the feature never hits the wall by accident.
-- **Photo attachments gated behind paid tiers**, not conversation count. Attachments carry real storage cost (90-day retention, per the existing triage code) and are the one place free-tier usage could genuinely run up a bill if unbounded — this is the actual cost-containment lever, not the conversation cap.
+Same 10x / 5x step sizes as before (so the tier *shape* is unchanged), applied to a free-tier anchor that sits inside the range where real target-market usage actually falls, not above it. Top-up halved to +250 to match — a top-up should read as "half a month more," not "a full month's allowance for less than the monthly price," which the original +500-for-$5 against a 500/mo Growth tier would have implied.
 
-**These are a starting proposal, not a decision I've made unilaterally.** The one thing I won't do is quietly pick a final number and ship it — tell me to adjust any of these and I will, before writing a line of implementation code.
+### One more gap: what happens at the ceiling
+
+The first draft specified the numbers but not the failure mode when a free or metered site hits its cap mid-month. A hard stop — AI simply stops replying — is the wrong default: it's a bad shopper experience that reflects on the merchant, and it's exactly the kind of thing that shows up as a 1-star Shopify App Store review with no chance to fix it before the damage is done. Proposed behavior, modeled on Try-On's `grace_days` mechanic rather than invented fresh:
+- **AI auto-reply turns off for new conversations once credits are exhausted; existing open conversations are unaffected.** A shopper starting a *new* thread sees the contact-capture flow instead (already built — `messenger_contact_capture`) so the merchant still gets the lead, just without automated AI handling.
+- **The merchant sees the same `low` → `critical` → `exhausted` banner progression Try-On already has**, not a surprise cutoff — this reuses `getBannerState`'s thresholds directly rather than a new one-off scheme.
+- No conversation or message data is ever blocked from being *read* — only new AI-handled conversations are gated. A merchant on a lapsed plan can still see and manually reply to everything through the dashboard.
+
+**These are still a proposal, not a unilateral decision.** Tell me to adjust any number and I will, before implementation starts.
 
 ---
 
@@ -98,7 +114,7 @@ Reuse, don't reinvent:
 
 ## 6. What I need from you before implementation starts
 
-1. **The three price points and two limits** (Free/Growth/Pro, $15/$39, 100/1,000/5,000) — confirm, or tell me what to change.
+1. **The three price points and limits** (Free/Growth/Pro, $15/$39, 50/500/2,500 conversations) — confirm, or tell me what to change.
 2. **Grandfathering**: existing sites start Free-metered immediately, or get a notice-then-grace period first?
 3. Anything in section 4's file list that should NOT happen (e.g., if you want this dashboard-only for now, embedded-app Plan card can come later).
 
