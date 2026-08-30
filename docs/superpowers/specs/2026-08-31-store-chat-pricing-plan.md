@@ -26,7 +26,7 @@ Backed by real tables (`tryon_plans`, `tryon_subscriptions`, `tryon_credit_ledge
 - `app/api/messenger/send/route.ts`: IP-based (`publicApiRatelimit`, 10 req/10s), per-visitor-session (8 messages/60s), and order-lookup brute-force protection (20 attempts/hour).
 - These stay exactly as they are. Nothing here needs touching — it's not what's missing.
 
-**Store Chat's real unit cost is low, and metering it 1:1 with Try-On's renders would be wrong.** The chat model is `openai/gpt-oss-20b` via Groq — an open-weight model on a very cheap inference host, not a proprietary frontier model. A single reply costs a small fraction of a cent, nothing like Try-On's per-render image-generation cost. Metering Store Chat like Try-On (expensive-unit-capped) would produce absurdly generous or absurdly stingy limits depending which axis you copy. The right metering axis for a support-chat product is **conversations per month** — a proxy for support-desk value delivered, the same axis every live-chat SaaS (Intercom, Crisp, Tidio) actually prices on, not raw inference cost.
+**Store Chat's real unit cost is low, and metering it 1:1 with Try-On's renders would be wrong.** The chat model is `openai/gpt-oss-120b` via Groq (upgraded from `gpt-oss-20b` post-audit — same conclusion holds at either size) — an open-weight model on a very cheap inference host, not a proprietary frontier model. Confirmed live pricing: $0.15/$0.60 per million input/output tokens. A single reply costs a small fraction of a cent, nothing like Try-On's per-render image-generation cost. Metering Store Chat like Try-On (expensive-unit-capped) would produce absurdly generous or absurdly stingy limits depending which axis you copy. The right metering axis for a support-chat product is **conversations per month** — a proxy for support-desk value delivered, the same axis every live-chat SaaS (Intercom, Crisp, Tidio) actually prices on, not raw inference cost.
 
 ---
 
@@ -40,7 +40,7 @@ I checked the first draft's numbers against real usage data before finalizing an
 
 **Everything else in the first draft held up:**
 - The Growth→Pro ratio (5x) and the Free→Growth ratio (10x) are both reasonable, standard SaaS step sizes — the ratios weren't the problem, the free tier's absolute size was.
-- Unit economics have enormous headroom either way: `openai/gpt-oss-20b` on Groq costs a small fraction of a cent per reply, so even the tightest reasonable free tier costs nothing to actually serve. The free-tier ceiling is a conversion lever, not a cost-containment one — cost containment is what the attachment-storage gating is for, and that reasoning was already correct.
+- Unit economics have enormous headroom either way: `openai/gpt-oss-120b` on Groq still costs a small fraction of a cent per reply, so even the tightest reasonable free tier costs nothing to actually serve. The free-tier ceiling is a conversion lever, not a cost-containment one — cost containment is what the attachment-storage gating is for, and that reasoning was already correct.
 - $15/$5 anchored to Try-On's Launch/Boost-80 price points remains the right call for cross-product consistency, and I confirmed Try-On's real USD→EGP peg (exactly 1:50, both live EGP rows checked) rather than guessing at an FX rate — Store Chat's EGP prices now use that same peg.
 
 ### Revised numbers
