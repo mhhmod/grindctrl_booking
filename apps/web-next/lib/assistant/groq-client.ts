@@ -4,8 +4,15 @@ import { ProviderUnavailableError } from './errors';
 /* Groq's model lineup changes often — confirmed live against console.groq.com
    as of this build. llama-3.1-8b-instant / llama-3.3-70b-versatile are
    scheduled for shutdown; do not reintroduce them without re-checking
-   console.groq.com/docs/deprecations. */
-export const CHAT_MODEL = 'openai/gpt-oss-20b';
+   console.groq.com/docs/deprecations.
+
+   gpt-oss-120b over gpt-oss-20b: same family and 131k context, so this is a
+   same-prompt-format swap, not a migration. 120b lists explicit tool-calling
+   support where 20b's is unlisted, and at $0.15/$0.60 per M tokens (2x 20b's
+   $0.075/$0.30 — confirmed live, not estimated) the absolute cost per reply
+   is still a fraction of a cent at this app's message volumes, so the
+   quality gain costs nothing that matters against subscription revenue. */
+export const CHAT_MODEL = 'openai/gpt-oss-120b';
 export const STT_MODEL = 'whisper-large-v3-turbo';
 export const TTS_MODEL_EN = 'canopylabs/orpheus-v1-english';
 export const TTS_MODEL_AR = 'canopylabs/orpheus-arabic-saudi';
