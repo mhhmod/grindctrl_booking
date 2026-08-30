@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySessionToken } from '@/lib/shopify/session-token';
+import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
 import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
@@ -7,11 +7,7 @@ import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitle
 /* Embedded-admin settings API: authenticated by Shopify session token
    (Bearer, from App Bridge idToken()). The shop comes from the token,
    never from the request body. */
-function authenticate(request: NextRequest) {
-  const header = request.headers.get('authorization') ?? '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  return verifySessionToken(token);
-}
+const authenticate = authenticateShopifyRequest;
 
 export async function GET(request: NextRequest) {
   const session = authenticate(request);

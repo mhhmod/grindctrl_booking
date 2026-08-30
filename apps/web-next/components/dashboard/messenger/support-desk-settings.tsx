@@ -4,7 +4,7 @@ import React, { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from './textarea';
-import { saveDraftSection } from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type {
   MessengerAttachments,
   MessengerContactCapture,
@@ -111,6 +111,7 @@ export function SupportDeskSettings({
   contactCapture,
   attachments,
   orderLookup,
+  actions,
 }: {
   locale: 'en' | 'ar';
   siteId: string;
@@ -121,6 +122,7 @@ export function SupportDeskSettings({
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
   orderLookup: MessengerOrderLookup;
+  actions: Pick<MessengerHostActions, 'saveDraftSection'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [notify, setNotify] = useState(notifications);
@@ -140,16 +142,16 @@ export function SupportDeskSettings({
     setNote(null);
     startTransition(async () => {
       const results = await Promise.all([
-        saveDraftSection(siteId, 'notifications', {
+        actions.saveDraftSection(siteId, 'notifications', {
           ...notify,
           recipients: recipientsText
             .split('\n')
             .map((line) => line.trim())
             .filter(Boolean),
         }),
-        saveDraftSection(siteId, 'contactCapture', contact),
-        saveDraftSection(siteId, 'attachments', attach),
-        saveDraftSection(siteId, 'orderLookup', orders),
+        actions.saveDraftSection(siteId, 'contactCapture', contact),
+        actions.saveDraftSection(siteId, 'attachments', attach),
+        actions.saveDraftSection(siteId, 'orderLookup', orders),
       ]);
       const failed = results.find((result) => !result.ok);
       setNote(failed ? { ok: false, text: t.failed } : { ok: true, text: t.saved });

@@ -13,6 +13,7 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
+import * as messengerActions from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -201,6 +202,7 @@ export default async function MessengerPage({
           handoffReason: c.handoff_reason,
         }))}
         knowledge={knowledge}
+        actions={messengerActions}
       />
     </section>
   );

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PreviewFrame } from './preview-frame';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
-import { saveDraftSection } from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type {
   LauncherIcon,
   MessengerAppearance,
@@ -77,11 +77,13 @@ export function AppearanceEditor({
   siteId,
   initial,
   publishedPayload,
+  actions,
 }: {
   locale: MessengerLocale;
   siteId: string;
   initial: MessengerAppearance;
   publishedPayload: PublicMessengerPayload;
+  actions: Pick<MessengerHostActions, 'saveDraftSection'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [value, setValue] = useState<MessengerAppearance>(initial);
@@ -102,7 +104,7 @@ export function AppearanceEditor({
 
   function save() {
     startTransition(async () => {
-      const result = await saveDraftSection(siteId, 'appearance', value);
+      const result = await actions.saveDraftSection(siteId, 'appearance', value);
       setSavedNote(result.ok ? { ok: true, text: t.saved } : { ok: false, text: result.error });
     });
   }

@@ -9,13 +9,7 @@ import { Textarea } from './textarea';
 import { PillToggle } from './appearance-editor';
 import { PreviewFrame } from './preview-frame';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
-import {
-  addKnowledge,
-  deleteKnowledge,
-  saveDraftSection,
-  syncKnowledge,
-  updateKnowledgeStatus,
-} from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { AssistantTone, MessengerAi, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 
@@ -91,12 +85,17 @@ export function AiKnowledgeEditor({
   ai,
   knowledge,
   publishedPayload,
+  actions,
 }: {
   locale: MessengerLocale;
   siteId: string;
   ai: MessengerAi;
   knowledge: KnowledgeEntry[];
   publishedPayload: PublicMessengerPayload;
+  actions: Pick<
+    MessengerHostActions,
+    'saveDraftSection' | 'addKnowledge' | 'updateKnowledgeStatus' | 'deleteKnowledge' | 'syncKnowledge'
+  >;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [value, setValue] = useState<MessengerAi>(ai);
@@ -120,7 +119,7 @@ export function AiKnowledgeEditor({
 
   function submitKnowledge(formData: FormData) {
     startForm(async () => {
-      const result = await addKnowledge(formData);
+      const result = await actions.addKnowledge(formData);
       setFormNote(result.ok ? result.message ?? t.add : result.error);
     });
   }
@@ -133,7 +132,7 @@ export function AiKnowledgeEditor({
           onSubmit={(e) => {
             e.preventDefault();
             startFormTransition(async () => {
-              const result = await saveDraftSection(siteId, 'ai', value);
+              const result = await actions.saveDraftSection(siteId, 'ai', value);
               setSavedNote(
                 result.ok
                   ? { ok: true, text: locale === 'ar' ? 'تم حفظ المسودة' : 'Draft saved' }
@@ -270,7 +269,7 @@ export function AiKnowledgeEditor({
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <MiniAction
-                      onClick={() => startForm(() => void updateKnowledgeStatus(siteId, entry.id, entry.status === 'active' ? 'disabled' : 'active').then(() => setFormNote(null)))}
+                      onClick={() => startForm(() => void actions.updateKnowledgeStatus(siteId, entry.id, entry.status === 'active' ? 'disabled' : 'active').then(() => setFormNote(null)))}
                     >
                       {entry.status === 'active' ? t.pause : t.resume}
                     </MiniAction>
@@ -278,7 +277,7 @@ export function AiKnowledgeEditor({
                       <MiniAction
                         onClick={() =>
                           startForm(async () => {
-                            const r = await syncKnowledge(siteId, entry.id);
+                            const r = await actions.syncKnowledge(siteId, entry.id);
                             setFormNote(r.ok ? r.message ?? '' : r.error);
                           })
                         }
@@ -288,7 +287,7 @@ export function AiKnowledgeEditor({
                     )}
                     <MiniAction
                       destructive
-                      onClick={() => startForm(() => void deleteKnowledge(siteId, entry.id))}
+                      onClick={() => startForm(() => void actions.deleteKnowledge(siteId, entry.id))}
                     >
                       {t.remove}
                     </MiniAction>

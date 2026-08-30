@@ -4,7 +4,7 @@ import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { setMessengerEnabled } from '@/app/dashboard/messenger/actions';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Installation: honest status (Configured vs Detected), the one-step Shopify
    enable flow, a universal script for other platforms, and a quiet
@@ -69,6 +69,7 @@ export function InstallCard({
   active,
   detectedAt,
   version,
+  actions,
 }: {
   locale: string;
   siteId: string;
@@ -77,6 +78,7 @@ export function InstallCard({
   active: boolean;
   detectedAt: string | null;
   version: number;
+  actions: Pick<MessengerHostActions, 'setMessengerEnabled'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [pending, startTransition] = useTransition();
@@ -121,7 +123,7 @@ export function InstallCard({
               <p className="text-xs text-muted-foreground">{t.connectHint}</p>
             )}
             {!active && (
-              <Button size="sm" disabled={pending} onClick={() => startTransition(() => void setMessengerEnabled(siteId, true))}>
+              <Button size="sm" disabled={pending} onClick={() => startTransition(() => void actions.setMessengerEnabled(siteId, true))}>
                 {pending ? t.toggling : t.toggleOn}
               </Button>
             )}

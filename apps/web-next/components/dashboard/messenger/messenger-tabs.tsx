@@ -11,6 +11,7 @@ import { InstallCard } from './install-card';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerConfig, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Tabs switch in the client. They used to be links to ?tab=…, so every
    click paid a full server render of a force-dynamic page — several
@@ -58,6 +59,8 @@ export function MessengerTabs({
   stats,
   conversations,
   knowledge,
+  actions,
+  showConversationsTab = true,
 }: {
   locale: MessengerLocale;
   initialTab: MessengerTabId;
@@ -73,15 +76,22 @@ export function MessengerTabs({
   stats: React.ComponentProps<typeof MessengerOverview>['stats'];
   conversations: ConversationListItem[];
   knowledge: KnowledgeEntry[];
+  actions: MessengerHostActions;
+  /** The embedded Shopify shell doesn't render Conversations yet — see
+   *  Phase 2's scope note. Defaults to true so the dashboard is unaffected. */
+  showConversationsTab?: boolean;
 }) {
-  const [tab, setTab] = useState<MessengerTabId>(initialTab);
+  const visibleTabs = showConversationsTab ? TABS : TABS.filter((id) => id !== 'conversations');
+  const [tab, setTab] = useState<MessengerTabId>(
+    initialTab === 'conversations' && !showConversationsTab ? 'overview' : initialTab,
+  );
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
 
   return (
     <>
       <nav aria-label={t.sections} className="min-w-0">
         <ul className="flex flex-wrap gap-1 border-b border-border pb-px">
-          {TABS.map((id) => (
+          {visibleTabs.map((id) => (
             <li key={id}>
               <button
                 type="button"
@@ -112,11 +122,11 @@ export function MessengerTabs({
         />
       )}
       {tab === 'appearance' && (
-        <AppearanceEditor locale={locale} siteId={siteId} initial={config.appearance} publishedPayload={payload} />
+        <AppearanceEditor locale={locale} siteId={siteId} initial={config.appearance} publishedPayload={payload} actions={actions} />
       )}
       {tab === 'behaviour' && (
         <div className="grid min-w-0 gap-6">
-          <BehaviourEditor locale={locale} siteId={siteId} initial={config.behaviour} publishedPayload={payload} />
+          <BehaviourEditor locale={locale} siteId={siteId} initial={config.behaviour} publishedPayload={payload} actions={actions} />
           <SupportDeskSettings
             locale={locale}
             siteId={siteId}
@@ -125,6 +135,7 @@ export function MessengerTabs({
             contactCapture={config.contactCapture}
             attachments={config.attachments}
             orderLookup={config.orderLookup}
+            actions={actions}
           />
         </div>
       )}
@@ -135,9 +146,10 @@ export function MessengerTabs({
           ai={config.ai}
           knowledge={knowledge}
           publishedPayload={payload}
+          actions={actions}
         />
       )}
-      {tab === 'conversations' && (
+      {showConversationsTab && tab === 'conversations' && (
         <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} />
       )}
       {tab === 'installation' && (
@@ -149,6 +161,7 @@ export function MessengerTabs({
           active={active}
           detectedAt={detectedAt}
           version={version}
+          actions={actions}
         />
       )}
     </>

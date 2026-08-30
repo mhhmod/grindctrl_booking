@@ -4,8 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerAppearance } from '@/lib/messenger/types';
 
-const { saveDraftSection } = vi.hoisted(() => ({ saveDraftSection: vi.fn() }));
-vi.mock('@/app/dashboard/messenger/actions', () => ({ saveDraftSection }));
+const saveDraftSection = vi.fn();
 
 import { AppearanceEditor } from './appearance-editor';
 
@@ -46,7 +45,13 @@ const PAYLOAD: PublicMessengerPayload = {
 
 function renderEditor(locale: 'en' | 'ar' = 'en') {
   return render(
-    <AppearanceEditor locale={locale} siteId="site-1" initial={APPEARANCE} publishedPayload={PAYLOAD} />,
+    <AppearanceEditor
+      locale={locale}
+      siteId="site-1"
+      initial={APPEARANCE}
+      publishedPayload={PAYLOAD}
+      actions={{ saveDraftSection }}
+    />,
   );
 }
 

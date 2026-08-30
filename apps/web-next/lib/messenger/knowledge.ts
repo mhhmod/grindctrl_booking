@@ -3,8 +3,8 @@ import 'server-only';
 import { auth } from '@clerk/nextjs/server';
 import { isPrivateIp } from '@/lib/pricing/geo';
 import { getMessengerServiceClient } from './db';
-import { requireOwnedSite } from './provisioning';
 import { recordAudit } from './conversations';
+import type { MessengerSiteView } from './provisioning';
 
 export interface KnowledgeEntry {
   id: string;
@@ -62,17 +62,16 @@ export async function getActiveKnowledge(siteId: string): Promise<KnowledgeEntry
 }
 
 export async function addManualKnowledge(input: {
-  clerkUserId: string;
-  siteId: string;
+  site: MessengerSiteView;
+  actorClerkUserId: string;
   title: string;
   content: string;
 }): Promise<KnowledgeEntry> {
-  await requireOwnedSite(input.clerkUserId, input.siteId);
   const supabase = getMessengerServiceClient();
   const res = await supabase
     .from('messenger_knowledge')
     .insert({
-      widget_site_id: input.siteId,
+      widget_site_id: input.site.id,
       title: input.title.trim().slice(0, 200),
       content: input.content.trim().slice(0, 20_000),
       source: 'manual',
@@ -82,8 +81,8 @@ export async function addManualKnowledge(input: {
     .single();
   if (res.error) throw new Error(`knowledge create failed: ${res.error.message}`);
   await recordAudit({
-    siteId: input.siteId,
-    actorClerkUserId: input.clerkUserId,
+    siteId: input.site.id,
+    actorClerkUserId: input.actorClerkUserId,
     action: 'knowledge_added',
     detail: { id: res.data.id, source: 'manual' },
   });
@@ -168,37 +167,33 @@ export async function fetchUrlKnowledge(url: string): Promise<{ title: string; c
 }
 
 export async function addUrlKnowledge(input: {
-  clerkUserId: string;
-  siteId: string;
+  site: MessengerSiteView;
+  actorClerkUserId: string;
   url: string;
 }): Promise<KnowledgeEntry> {
-  await requireOwnedSite(input.clerkUserId, input.siteId);
   const { title, content } = await fetchUrlKnowledge(input.url);
-  return addManualKnowledge({
-    clerkUserId: input.clerkUserId,
-    siteId: input.siteId,
+  const entry = await addManualKnowledge({
+    site: input.site,
+    actorClerkUserId: input.actorClerkUserId,
     title,
     content,
-  }).then(async (entry) => {
-    const supabase = getMessengerServiceClient();
-    await supabase
-      .from('messenger_knowledge')
-      .update({ source: 'url', source_url: input.url.slice(0, 500), last_synced_at: new Date().toISOString() })
-      .eq('id', entry.id);
-    return { ...entry, source: 'url' as const, source_url: input.url.slice(0, 500) };
   });
+  const supabase = getMessengerServiceClient();
+  await supabase
+    .from('messenger_knowledge')
+    .update({ source: 'url', source_url: input.url.slice(0, 500), last_synced_at: new Date().toISOString() })
+    .eq('id', entry.id);
+  return { ...entry, source: 'url' as const, source_url: input.url.slice(0, 500) };
 }
 
 /** Re-fetches an existing url-source entry in place. */
-export async function reSyncKnowledge(input: { clerkUserId: string; siteId: string; entryId: string }): Promise<void> {
-  const owned = await requireOwnedSite(input.clerkUserId, input.siteId);
-  void owned;
+export async function reSyncKnowledge(input: { site: MessengerSiteView; entryId: string }): Promise<void> {
   const supabase = getMessengerServiceClient();
   const current = await supabase
     .from('messenger_knowledge')
     .select('*')
     .eq('id', input.entryId)
-    .eq('widget_site_id', input.siteId)
+    .eq('widget_site_id', input.site.id)
     .maybeSingle();
   if (!current.data) throw new Error('Knowledge entry not found.');
   const entry = mapEntry(current.data as unknown as Record<string, unknown>);
@@ -212,27 +207,28 @@ export async function reSyncKnowledge(input: { clerkUserId: string; siteId: stri
 }
 
 export async function setKnowledgeStatus(input: {
-  clerkUserId: string;
-  siteId: string;
+  site: MessengerSiteView;
   entryId: string;
   status: 'active' | 'disabled';
 }): Promise<void> {
-  await requireOwnedSite(input.clerkUserId, input.siteId);
   const supabase = getMessengerServiceClient();
   await supabase
     .from('messenger_knowledge')
     .update({ status: input.status })
     .eq('id', input.entryId)
-    .eq('widget_site_id', input.siteId);
+    .eq('widget_site_id', input.site.id);
 }
 
-export async function removeKnowledge(input: { clerkUserId: string; siteId: string; entryId: string }): Promise<void> {
-  await requireOwnedSite(input.clerkUserId, input.siteId);
+export async function removeKnowledge(input: {
+  site: MessengerSiteView;
+  actorClerkUserId: string;
+  entryId: string;
+}): Promise<void> {
   const supabase = getMessengerServiceClient();
-  await supabase.from('messenger_knowledge').delete().eq('id', input.entryId).eq('widget_site_id', input.siteId);
+  await supabase.from('messenger_knowledge').delete().eq('id', input.entryId).eq('widget_site_id', input.site.id);
   await recordAudit({
-    siteId: input.siteId,
-    actorClerkUserId: input.clerkUserId,
+    siteId: input.site.id,
+    actorClerkUserId: input.actorClerkUserId,
     action: 'knowledge_removed',
     detail: { id: input.entryId },
   });
