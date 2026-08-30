@@ -662,7 +662,7 @@ Add to the returned object inside `useStoreChatActions`:
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run components/shopify/store-chat-actions.test.ts`
-Expected: PASS, 9/9.
+Expected: PASS, 8/8 (4 pre-existing plus the 4 added in Step 1).
 
 - [ ] **Step 5: Commit**
 
