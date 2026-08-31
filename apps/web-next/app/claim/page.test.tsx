@@ -14,6 +14,10 @@ vi.mock('next/navigation', () => ({
   redirect: (...args: unknown[]) => redirectMock(...args),
 }));
 
+vi.mock('@clerk/nextjs/server', () => ({
+  currentUser: vi.fn(),
+}));
+
 vi.mock('@/lib/auth/dashboard', () => ({
   requireDashboardUser: vi.fn(),
 }));
@@ -26,20 +30,31 @@ vi.mock('@/lib/shopify/claim-token', () => ({
   verifyClaimToken: vi.fn(),
 }));
 
+vi.mock('@/lib/shopify/shop-owner', () => ({
+  getShopOwnerEmail: vi.fn(),
+}));
+
 vi.mock('@/lib/messenger/provisioning', () => ({
   ensureMessengerSite: vi.fn(),
 }));
 
 import ClaimPage from '@/app/claim/page';
+import { currentUser } from '@clerk/nextjs/server';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { verifyClaimToken } from '@/lib/shopify/claim-token';
+import { getShopOwnerEmail } from '@/lib/shopify/shop-owner';
 import { ensureMessengerSite } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 
 describe('ClaimPage', () => {
   beforeEach(() => {
     vi.mocked(getRequestLocale).mockResolvedValue('en');
+    vi.mocked(currentUser).mockResolvedValue({
+      primaryEmailAddress: { emailAddress: 'owner@example.com' },
+      emailAddresses: [],
+    } as never);
+    vi.mocked(getShopOwnerEmail).mockResolvedValue('OWNER@example.com');
   });
 
   afterEach(() => {
@@ -54,6 +69,7 @@ describe('ClaimPage', () => {
 
     expect(screen.getByRole('heading', { name: /expired/i })).toBeInTheDocument();
     expect(requireDashboardUser).not.toHaveBeenCalled();
+    expect(getShopOwnerEmail).not.toHaveBeenCalled();
     expect(ensureMessengerSite).not.toHaveBeenCalled();
   });
 
@@ -93,7 +109,7 @@ describe('ClaimPage', () => {
     expect(requireDashboardUser).toHaveBeenCalledWith('/claim?token=good-token');
   });
 
-  it('adopts the store and redirects to the dashboard on success', async () => {
+  it('adopts the store when owner emails match case-insensitively and redirects', async () => {
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
@@ -112,6 +128,7 @@ describe('ClaimPage', () => {
     ).rejects.toThrow('NEXT_REDIRECT');
 
     expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
+    expect(getShopOwnerEmail).toHaveBeenCalledWith('demo.myshopify.com');
     expect(redirectMock).toHaveBeenCalledWith('/dashboard/messenger');
     expect(redirectMock).toHaveBeenCalledTimes(1);
   });
@@ -126,6 +143,47 @@ describe('ClaimPage', () => {
 
     expect(screen.getByRole('heading', { name: /already connected/i })).toBeInTheDocument();
     expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks the claim before adoption when the owner emails do not match', async () => {
+    vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
+    vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+    vi.mocked(getShopOwnerEmail).mockResolvedValue('different@example.com');
+
+    const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
+    render(result);
+
+    expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
+    expect(screen.getByText(/contact support/i)).toBeInTheDocument();
+    expect(ensureMessengerSite).not.toHaveBeenCalled();
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it('fails closed before adoption when Shopify cannot verify the owner email', async () => {
+    vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
+    vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+    vi.mocked(getShopOwnerEmail).mockResolvedValue(null);
+
+    const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
+    render(result);
+
+    expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
+    expect(ensureMessengerSite).not.toHaveBeenCalled();
+  });
+
+  it('fails closed before adoption when the Clerk account has no email', async () => {
+    vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
+    vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
+    vi.mocked(currentUser).mockResolvedValue({
+      primaryEmailAddress: null,
+      emailAddresses: [],
+    } as never);
+
+    const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
+    render(result);
+
+    expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
+    expect(ensureMessengerSite).not.toHaveBeenCalled();
   });
 
   it('adopts the TOKEN\'s shop, ignoring a shop in the query string', async () => {

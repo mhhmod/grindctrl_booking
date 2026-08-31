@@ -6,12 +6,13 @@ import { Moon, Sun } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
+import { AutoClaim, startShopifyClaim } from '@/components/shopify/auto-claim';
 import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 const COPY = {
-  en: { tryOn: 'Try-On', storeChat: 'Store Chat', sections: 'GRINDCTRL sections', themeToggle: 'Switch between light and dark' },
-  ar: { tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', sections: 'أقسام GRINDCTRL', themeToggle: 'التبديل بين الوضع الفاتح والداكن' },
+  en: { tryOn: 'Try-On', storeChat: 'Store Chat', sections: 'GRINDCTRL sections', themeToggle: 'Switch between light and dark', claimStore: 'Claim this store' },
+  ar: { tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', sections: 'أقسام GRINDCTRL', themeToggle: 'التبديل بين الوضع الفاتح والداكن', claimStore: 'المطالبة بهذا المتجر' },
 } as const;
 
 type ShellTab = 'try-on' | 'store-chat';
@@ -24,19 +25,33 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
 
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
+      <AutoClaim locale={locale} />
       <header className="flex items-center justify-between gap-3 px-1 pt-1">
         <BrandLogo size="sm" />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-          aria-label={t.themeToggle}
-          title={t.themeToggle}
-        >
-          <Sun className="hidden size-4 dark:block" />
-          <Moon className="size-4 dark:hidden" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-auto px-2 py-1 text-xs text-muted-foreground"
+            onClick={() => {
+              void startShopifyClaim().catch(() => {});
+            }}
+          >
+            {t.claimStore}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+            aria-label={t.themeToggle}
+            title={t.themeToggle}
+          >
+            <Sun className="hidden size-4 dark:block" />
+            <Moon className="size-4 dark:hidden" />
+          </Button>
+        </div>
       </header>
 
       <nav aria-label={t.sections} className="min-w-0">

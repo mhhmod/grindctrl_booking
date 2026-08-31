@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/shopify/session-token';
 import { signClaimToken } from '@/lib/shopify/claim-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
+import { findSiteByDomain, isShopProfileId } from '@/lib/messenger/shop-tenancy';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 
 /* GET /api/shopify/claim/start
@@ -47,6 +48,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[shopify] claim start: failed to provision shop-owned site', error);
     return NextResponse.json({ error: 'unavailable' }, { status: 503 });
+  }
+
+  const site = await findSiteByDomain(session.shop);
+  if (!site?.ownerClerkUserId) {
+    return NextResponse.json({ error: 'unavailable' }, { status: 503 });
+  }
+  if (!isShopProfileId(site.ownerClerkUserId)) {
+    return NextResponse.json({ alreadyLinked: true });
   }
 
   return NextResponse.json({ token: signClaimToken(secret, session.shop) });

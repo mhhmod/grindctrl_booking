@@ -1,10 +1,12 @@
 import React from 'react';
+import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { ensureMessengerSite } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { verifyClaimToken } from '@/lib/shopify/claim-token';
+import { getShopOwnerEmail } from '@/lib/shopify/shop-owner';
 
 /* Redeem side of the claim flow — see app/api/shopify/claim/start/route.ts
    for the mint side. Order matters:
@@ -36,12 +38,16 @@ const COPY = {
     // "disconnect it there" would send a locked-out merchant looking for a
     // button that does not exist. Point at support instead.
     takenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
+    ownerTitle: "We couldn't verify you're the store owner",
+    ownerBody: "This store's Shopify contact email doesn't match your GRINDCTRL account. Contact support if you believe this is your store.",
   },
   ar: {
     expiredTitle: 'انتهت صلاحية هذا الرابط',
     expiredBody: 'أعد فتح GRINDCTRL من لوحة تحكم Shopify واختر "المطالبة بهذا المتجر" مرة أخرى.',
     takenTitle: 'هذا المتجر متصل بالفعل',
     takenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
+    ownerTitle: 'لم نتمكن من التحقق من أنك مالك المتجر',
+    ownerBody: 'البريد الإلكتروني للتواصل في Shopify لهذا المتجر لا يطابق حسابك في GRINDCTRL. تواصل مع الدعم إذا كنت تعتقد أن هذا متجرك.',
   },
 } as const;
 
@@ -80,13 +86,14 @@ export default async function ClaimPage({
   }
 
   const userId = await requireDashboardUser(`/claim?token=${encodeURIComponent(token)}`);
+  const clerkUser = await currentUser();
+  const merchantEmail =
+    clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
+  const ownerEmail = await getShopOwnerEmail(claim.shop);
+  if (!ownerEmail || !merchantEmail || ownerEmail.toLowerCase() !== merchantEmail.toLowerCase()) {
+    return <MessagePage locale={locale} title={copy.ownerTitle} body={copy.ownerBody} />;
+  }
 
-  // Known limitation, not covered by this token: verifySessionToken (see
-  // lib/shopify/session-token.ts) checks aud, dest, and exp, but never sub
-  // or a staff role. Any staff account that can open this store's embedded
-  // app can mint a claim and redeem it into their own Clerk account — and
-  // since there is no disconnect/unclaim path (see the copy above), there
-  // is currently no undo.
   try {
     await ensureMessengerSite(userId, claim.shop, claim.shop);
   } catch (error) {

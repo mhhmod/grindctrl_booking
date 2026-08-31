@@ -19,6 +19,12 @@ vi.mock('@/lib/messenger/shop-provisioning', () => ({
   ensureShopOwnedSite: (...args: unknown[]) => ensureShopOwnedSiteMock(...args),
 }));
 
+const findSiteByDomainMock = vi.fn();
+vi.mock('@/lib/messenger/shop-tenancy', () => ({
+  findSiteByDomain: (...args: unknown[]) => findSiteByDomainMock(...args),
+  isShopProfileId: (clerkUserId: string) => clerkUserId.startsWith('shop-'),
+}));
+
 const signClaimTokenMock = vi.fn();
 vi.mock('@/lib/shopify/claim-token', async () => {
   const actual = await vi.importActual<typeof import('@/lib/shopify/claim-token')>(
@@ -43,6 +49,10 @@ describe('GET /api/shopify/claim/start', () => {
   beforeEach(() => {
     // Every test not specifically about the limiter needs it open by default.
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    findSiteByDomainMock.mockResolvedValue({
+      id: 'site-1',
+      ownerClerkUserId: 'shop-demo.myshopify.com',
+    });
   });
 
   afterEach(() => {
@@ -96,7 +106,40 @@ describe('GET /api/shopify/claim/start', () => {
     // proven by the session token, never the one an attacker can put in a URL.
     expect(ensureShopOwnedSiteMock).toHaveBeenCalledWith('demo.myshopify.com');
     expect(ensureShopOwnedSiteMock).not.toHaveBeenCalledWith('evil.myshopify.com');
+    expect(findSiteByDomainMock).toHaveBeenCalledWith('demo.myshopify.com');
     expect(signClaimTokenMock).toHaveBeenCalledWith('secret', 'demo.myshopify.com');
+  });
+
+  it('returns alreadyLinked without minting when a real Clerk account owns the site', async () => {
+    process.env.SHOPIFY_API_SECRET = 'secret';
+    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
+    findSiteByDomainMock.mockResolvedValue({ id: 'site-1', ownerClerkUserId: 'user_123' });
+
+    const response = await GET(
+      req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ alreadyLinked: true });
+    expect(signClaimTokenMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 without minting when the provisioned site owner cannot be resolved', async () => {
+    process.env.SHOPIFY_API_SECRET = 'secret';
+    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
+    findSiteByDomainMock.mockResolvedValue(null);
+
+    const response = await GET(
+      req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(body).toEqual({ error: 'unavailable' });
+    expect(signClaimTokenMock).not.toHaveBeenCalled();
   });
 
   it('strips a lowercase "bearer " prefix too', async () => {
@@ -128,6 +171,7 @@ describe('GET /api/shopify/claim/start', () => {
     expect(body).toEqual({ error: 'unavailable' });
     expect(body.token).toBeUndefined();
     expect(signClaimTokenMock).not.toHaveBeenCalled();
+    expect(findSiteByDomainMock).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 
