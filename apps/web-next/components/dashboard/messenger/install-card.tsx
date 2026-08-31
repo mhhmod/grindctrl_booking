@@ -105,8 +105,8 @@ export function InstallCard({
         </span>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-border p-4">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <div className="min-w-0 rounded-xl border border-border p-4">
           <h3 className="text-sm font-semibold">{t.shopifyTitle}</h3>
           <ol className="mt-2 grid list-decimal gap-1 ps-5 text-sm text-muted-foreground">
             <li>{t.shopifyStep1}</li>
@@ -130,7 +130,7 @@ export function InstallCard({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border p-4">
+        <div className="min-w-0 rounded-xl border border-border p-4">
           <h3 className="text-sm font-semibold">{t.scriptTitle}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{t.scriptNote}</p>
           <pre className="mt-2 overflow-x-auto rounded-lg bg-muted/60 p-3 text-[11px] leading-relaxed" dir="ltr">
@@ -170,9 +170,9 @@ export function InstallCard({
         </dl>
       </details>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="min-w-0 text-xs text-muted-foreground">
         <Badge variant="outline" className="me-2">key</Badge>
-        <code dir="ltr" className="font-mono">{embedKey}</code>
+        <code dir="ltr" className="font-mono break-all">{embedKey}</code>
       </p>
     </section>
   );

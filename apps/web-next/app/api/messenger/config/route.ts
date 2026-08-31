@@ -15,18 +15,20 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const key = request.nextUrl.searchParams.get('key') ?? '';
+  const shopParam = request.nextUrl.searchParams.get('shop');
   const origin = request.nextUrl.searchParams.get('origin');
 
-  if (!/^[a-z0-9_]{6,80}$/i.test(key)) {
+  if (shopParam && !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shopParam)) {
+    return NextResponse.json({ error: 'bad_shop' }, { status: 400 });
+  }
+
+  if (!shopParam && !/^[a-z0-9_]{6,80}$/i.test(key)) {
     return NextResponse.json({ error: 'bad_key' }, { status: 400 });
   }
 
   try {
-    const shopParam = request.nextUrl.searchParams.get('shop');
     const site = shopParam
-      ? /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shopParam)
-        ? await loadPublicSiteByDomain(shopParam)
-        : null
+      ? await loadPublicSiteByDomain(shopParam)
       : await loadPublicSite(key);
     if (!site) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 

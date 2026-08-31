@@ -23,7 +23,7 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
+    <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
       <header className="flex items-center justify-between gap-3 px-1 pt-1">
         <BrandLogo size="sm" />
         <Button
