@@ -162,6 +162,13 @@ export interface MessengerSiteView extends WidgetSiteRow {
   hasDraft: boolean;
 }
 
+export function shouldEnsureMessengerSite(
+  sites: Array<Pick<MessengerSiteView, 'domain'>>,
+  domain: string | null,
+): boolean {
+  return sites.length === 0 || Boolean(domain && !sites.some((site) => site.domain === domain));
+}
+
 function toView(row: Record<string, unknown>): MessengerSiteView {
   return {
     id: row.id as string,
@@ -286,6 +293,44 @@ async function adoptSite(
   return toView(adopted.data as unknown as Record<string, unknown>);
 }
 
+async function reconcileDomainlessOrphans(workspaceId: string, keepSiteId: string): Promise<void> {
+  const supabase = getMessengerServiceClient();
+  const orphans = await supabase
+    .from('widget_sites')
+    .select('id, settings_json, settings_draft')
+    .eq('workspace_id', workspaceId)
+    .is('domain', null)
+    .neq('id', keepSiteId);
+  if (orphans.error) throw new Error(`orphan lookup failed: ${orphans.error.message}`);
+
+  for (const orphan of (orphans.data ?? []) as Array<{
+    id: string;
+    settings_json: unknown;
+    settings_draft: unknown;
+  }>) {
+    const settingsEmpty = !orphan.settings_json || Object.keys(orphan.settings_json as object).length === 0;
+    const draftEmpty = !orphan.settings_draft || Object.keys(orphan.settings_draft as object).length === 0;
+    if (!settingsEmpty || !draftEmpty) {
+      console.warn(`[messenger] orphan ${orphan.id} has settings/draft — leaving for manual review`);
+      continue;
+    }
+
+    const [conversations, knowledge] = await Promise.all([
+      supabase.from('widget_conversations').select('id', { count: 'exact', head: true }).eq('widget_site_id', orphan.id),
+      supabase.from('messenger_knowledge').select('id', { count: 'exact', head: true }).eq('widget_site_id', orphan.id),
+    ]);
+    if ((conversations.count ?? 0) > 0 || (knowledge.count ?? 0) > 0) {
+      console.warn(`[messenger] orphan ${orphan.id} has conversation/knowledge history — leaving for manual review`);
+      continue;
+    }
+
+    const deleted = await supabase.from('widget_sites').delete().eq('id', orphan.id).eq('workspace_id', workspaceId);
+    if (deleted.error) {
+      console.warn(`[messenger] orphan ${orphan.id} delete failed: ${deleted.error.message}`);
+    }
+  }
+}
+
 /** Ensures a site exists for a store domain — adopting one another account
  *  already created (a synthetic shop profile, or a stray workspace of this
  *  same merchant's own — see the race note on ensureWorkspace above) rather
@@ -337,7 +382,32 @@ export async function ensureMessengerSite(
       if (!mayAdopt(owner, clerkUserId)) {
         throw new StoreOwnedByAnotherAccountError(domain);
       }
-      return adoptSite(existing, workspaceId, profile.id, domain);
+      const adopted = await adoptSite(existing, workspaceId, profile.id, domain);
+      try {
+        await reconcileDomainlessOrphans(workspaceId, adopted.id);
+      } catch (error) {
+        // A reconcile failure must never turn a successful adopt into a user-visible error.
+        console.warn('[messenger] orphan reconcile failed:', error instanceof Error ? error.message : error);
+      }
+      return adopted;
+    }
+  }
+
+  if (domain) {
+    const orphan = sites.find((site) => !site.domain);
+    if (orphan) {
+      const attached = await supabase
+        .from('widget_sites')
+        .update({ domain })
+        .eq('id', orphan.id)
+        .is('domain', null)
+        .select(
+          'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
+        )
+        .maybeSingle();
+      if (attached.error) throw new Error(`domain attach failed: ${attached.error.message}`);
+      if (attached.data) return toView(attached.data as unknown as Record<string, unknown>);
+      // CAS lost the race (a concurrent caller attached first) — fall through to the existing insert path below.
     }
   }
 
@@ -375,7 +445,14 @@ export async function ensureMessengerSite(
         // workspaces for the same profile) must adopt what it just lost the
         // race for, not be told its own store belongs to someone else.
         if (mayAdopt(claimed.ownerClerkUserId, clerkUserId)) {
-          return adoptSite(claimed, workspaceId, profile.id, domain);
+          const adopted = await adoptSite(claimed, workspaceId, profile.id, domain);
+          try {
+            await reconcileDomainlessOrphans(workspaceId, adopted.id);
+          } catch (error) {
+            // A reconcile failure must never turn a successful adopt into a user-visible error.
+            console.warn('[messenger] orphan reconcile failed:', error instanceof Error ? error.message : error);
+          }
+          return adopted;
         }
         throw new StoreOwnedByAnotherAccountError(domain);
       }

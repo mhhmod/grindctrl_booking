@@ -3,7 +3,11 @@ import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
 import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
-import { ensureMessengerSite, listMessengerSites } from '@/lib/messenger/provisioning';
+import {
+  ensureMessengerSite,
+  listMessengerSites,
+  shouldEnsureMessengerSite,
+} from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import { getOverviewStats, listConversationsForSite } from '@/lib/messenger/conversations';
@@ -68,20 +72,20 @@ export default async function MessengerPage({
     clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
 
   let sites = await listMessengerSites(userId, merchantEmail);
-  if (sites.length === 0) {
-    // First visit: give the merchant a site to configure immediately. If a
-    // Shopify store is already connected via Try-On, mirror its domain so
-    // installation detection works out of the box.
-    let domain: string | null = null;
+  // Give a first-time merchant a site immediately, and revisit provisioning
+  // when Try-On later learns a domain that none of the existing sites has yet.
+  let domain: string | null = null;
+  try {
+    const shops = await listManagedTryOnShops();
+    const installed = shops.find((shop) => shop.status === 'installed');
+    domain = installed?.domain ?? null;
+  } catch {
+    // Try-On lookup is optional here.
+  }
+  if (shouldEnsureMessengerSite(sites, domain)) {
     try {
-      const shops = await listManagedTryOnShops();
-      const installed = shops.find((shop) => shop.status === 'installed');
-      domain = installed?.domain ?? null;
-    } catch {
-      // Try-On lookup is optional here.
-    }
-    try {
-      sites = [await ensureMessengerSite(userId, domain, domain ?? undefined)];
+      await ensureMessengerSite(userId, domain, domain ?? undefined);
+      sites = await listMessengerSites(userId, merchantEmail);
     } catch (error) {
       // A different real account already owns this store's config — not the
       // transient failure error.tsx's generic "trying again usually works"
@@ -104,7 +108,8 @@ export default async function MessengerPage({
     }
   }
 
-  const selected = sites.find((site) => site.id === params.site) ?? sites[0];
+  const selected =
+    sites.find((site) => site.id === params.site) ?? sites.find((site) => site.domain) ?? sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
 
   const payload: PublicMessengerPayload = toPublicPayload(
