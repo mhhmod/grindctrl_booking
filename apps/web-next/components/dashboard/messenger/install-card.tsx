@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Installation: honest status (Configured vs Detected), the one-step Shopify
@@ -19,7 +20,12 @@ const COPY = {
     statusOff: 'Off',
     shopifyTitle: 'Shopify',
     shopifyStep1: 'Open your theme editor → App embeds.',
-    shopifyStep2: 'Toggle “GRINDCTRL Support Messenger” on and save.',
+    /* Must match the block's own schema name in
+       apps/grindctrl-tryon/extensions/tryon-block/blocks/messenger.liquid
+       exactly. It said "GRINDCTRL Support Messenger" while the theme editor
+       listed "GRINDCTRL Store Chat", so following this step to the letter
+       found nothing and the widget looked impossible to enable. */
+    shopifyStep2: 'Toggle “GRINDCTRL Store Chat” on and save.',
     openThemeEditor: 'Enable in Shopify',
     scriptTitle: 'Other platforms',
     scriptNote: 'Paste this just before </body>. Works on any website.',
@@ -43,7 +49,8 @@ const COPY = {
     statusOff: 'متوقف',
     shopifyTitle: 'شوبيفاي',
     shopifyStep1: 'افتح محرر القالب ← App embeds.',
-    shopifyStep2: 'فعّل “GRINDCTRL Support Messenger” واحفظ.',
+    // The block name is not translated: the theme editor shows it in English.
+    shopifyStep2: 'فعّل “GRINDCTRL Store Chat” واحفظ.',
     openThemeEditor: 'التفعيل من شوبيفاي',
     scriptTitle: 'منصات أخرى',
     scriptNote: 'الصق هذا الكود قبل نهاية الصفحة. يعمل على أي موقع.',
@@ -115,7 +122,13 @@ export function InstallCard({
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {domain ? (
               <Button asChild size="sm" variant="outline">
-                <Link href={`https://admin.shopify.com/store/${domain.replace(/\.myshopify\.com$/, '')}/themes`}>
+                {/* Lands on the current theme's App embeds panel with this
+                    block pre-selected, instead of the generic theme LIST the
+                    merchant then had to navigate out of themselves. Same
+                    activateAppId=<client-id>/<block-handle> deep link Try-On
+                    already uses (components/shopify/admin-settings.tsx); the
+                    handle is the block filename, messenger.liquid. */}
+                <Link href={appEmbedActivationUrl(domain, 'messenger')}>
                   {t.openThemeEditor}
                 </Link>
               </Button>
