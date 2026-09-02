@@ -311,10 +311,50 @@ It is **not currently used** by the deploy pipeline but can be used for:
 
 ---
 
+## Deploy must not depend on VPS git credentials
+
+CI builds the image and pushes it to ghcr.io. The VPS only needs to *pull that
+image and restart the container* — it does not need the source tree to ship
+code. But `deploy-next.sh` still begins with:
+
+```bash
+git fetch origin main
+git reset --hard origin/main
+```
+
+Under `set -euo pipefail`, an expired HTTPS credential turns that into a hard
+deploy failure even though the image is ready. This has already happened once
+(2026-09-02) and will recur every time the token expires, because a PAT on an
+HTTPS remote always eventually does.
+
+Make the sync non-fatal so a credential problem degrades to a warning instead
+of blocking the release. Run once on the VPS:
+
+```bash
+cp -n /root/grindctrl-next/deploy-next.sh /root/grindctrl-next/deploy-next.sh.bak
+sed -i '/^[[:space:]]*git fetch/{/||/!s/$/ || echo "warn: git sync skipped (credential unavailable)"/}; /^[[:space:]]*git reset --hard/{/||/!s/$/ || true/}' /root/grindctrl-next/deploy-next.sh
+bash -n /root/grindctrl-next/deploy-next.sh && echo "syntax OK"
+```
+
+It is idempotent (lines already containing `||` are skipped) and keeps a
+`.bak`. To remove the dependency permanently instead, delete those two lines —
+nothing in the image build reads the VPS working tree.
+
+If you would rather keep the sync working, switch the remote to a deploy key so
+there is no expiring token:
+
+```bash
+git -C /root/grindctrl-booking remote set-url origin git@github.com:mhhmod/grindctrl_booking.git
+```
+
+---
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
+| `could not read Username for 'https://github.com'` in the deploy step | The VPS git credential expired. `deploy-next.sh` starts with `git fetch origin main`, which needs a credential that a PAT-based HTTPS remote loses on expiry. The image itself is already built and pushed by CI, so this git sync is not what ships the code. | Make the sync non-fatal (see **Deploy must not depend on VPS git credentials** below). Re-running the job does not help — it is reproducible, not a flake. |
+| Deploy is green but production serves old code | The container did not actually restart. Every smoke-checked route answers 200 from the previous container, so route checks alone cannot detect this. | The `Verify the running container is this commit` step now catches it by comparing `/api/health`'s `release` against the deployed SHA. Check that `deploy-next.sh` pulls the new image *and* recreates the container. |
 | `Deploy script not found` in CI | `/root/grindctrl-next/deploy-next.sh` missing | Create the script (see above) |
 | Site shows GitHub Pages content | DNS still points to GitHub Pages | Update DNS A records |
 | 502 Bad Gateway | Next.js not running on port 3000 | `pm2 restart grindctrl-web` or check logs |

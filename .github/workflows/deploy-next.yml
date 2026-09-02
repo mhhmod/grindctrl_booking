@@ -86,6 +86,31 @@ jobs:
           command_timeout: 15m
           script: /root/grindctrl-next/deploy-next.sh
 
+      # Added after a deploy reported success while production kept serving the
+      # previous build. Every smoke-checked route answers 200 from the OLD
+      # container too, so "no 5xx" proves the site is up, not that this commit
+      # shipped. SENTRY_RELEASE is baked into the image at build time as the
+      # commit SHA, so the running container is the only honest source for
+      # which code is actually live. Retries because the container may still be
+      # restarting; a mismatch after the window means the restart did not take.
+      - name: Verify the running container is this commit
+        run: |
+          expected="${{ github.sha }}"
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            body=$(curl -s --max-time 15 "https://grindctrl.cloud/api/health" || echo '')
+            actual=$(printf '%s' "$body" | sed -n 's/.*"release" *: *"\([^"]*\)".*/\1/p')
+            if [ "$actual" = "$expected" ]; then
+              echo "OK   live release matches $expected"
+              exit 0
+            fi
+            echo "wait live release='${actual:-unreachable}' expected='$expected' (attempt $attempt/10)"
+            sleep 10
+          done
+          echo "FAIL production is not serving this commit."
+          echo "The deploy step reported success but the container still runs older code."
+          echo "Check that deploy-next.sh actually pulled the new image and recreated the container."
+          exit 1
+
       # Added after a real incident: a Server Component throw in the root
       # layout (auth() called on a path middleware never runs for) took
       # down every /embed/* request and the merchant-facing try-on widget
