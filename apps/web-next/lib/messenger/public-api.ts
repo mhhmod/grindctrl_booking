@@ -80,7 +80,12 @@ export function originAllowed(
   site: ResolvedPublicSite,
   origin: string | null | undefined,
 ): boolean {
-  return decideOrigin({ origin, patterns: site.patterns, security: site.security }).allowed;
+  return decideOrigin({
+    origin,
+    patterns: site.patterns,
+    security: site.security,
+    siteDomain: site.domain,
+  }).allowed;
 }
 
 /** Business-hours check in the merchant's configured timezone. */

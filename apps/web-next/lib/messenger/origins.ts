@@ -44,6 +44,8 @@ export function decideOrigin(input: {
   origin: string | null | undefined;
   patterns: readonly DomainPatternRow[];
   security: SiteSecuritySettings | null | undefined;
+  /** The site's own connected store domain, when it has one. */
+  siteDomain?: string | null;
 }): OriginDecision {
   if (!input.origin) return { allowed: false, reason: 'unverified_origin' };
 
@@ -67,6 +69,20 @@ export function decideOrigin(input: {
     return input.security?.allow_localhost === true
       ? { allowed: true }
       : { allowed: false, reason: 'unverified_origin' };
+  }
+
+  /* A store's own connected domain is its storefront, so it needs no separate
+     verified widget_domains row. Requiring one meant a freshly installed
+     Shopify store — which starts with zero domain rows — served the block
+     correctly and then had its config refused with origin_not_allowed, so the
+     launcher never rendered and the merchant saw "nothing in the store at
+     all". This is not a widening of trust: widget_sites.domain is bound by a
+     unique index and set only through the owner-verified claim/provisioning
+     path, so matching it proves the request came from the very store the site
+     belongs to. Custom storefront domains are a different claim and still
+     require explicit verification below. */
+  if (input.siteDomain && hostname === normalizeHost(input.siteDomain)) {
+    return { allowed: true };
   }
 
   const verified = input.patterns.some(

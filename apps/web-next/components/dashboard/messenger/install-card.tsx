@@ -128,7 +128,19 @@ export function InstallCard({
                     activateAppId=<client-id>/<block-handle> deep link Try-On
                     already uses (components/shopify/admin-settings.tsx); the
                     handle is the block filename, messenger.liquid. */}
-                <Link href={appEmbedActivationUrl(domain, 'messenger')}>
+                {/* target="_blank" is load-bearing, not cosmetic. This card
+                    also renders inside the embedded Shopify app, which is an
+                    iframe on admin.shopify.com; admin refuses to frame itself,
+                    so opening this deep link in-frame fails with
+                    "admin.shopify.com refused to connect" exactly when the
+                    merchant tries to switch Store Chat on. Try-On's equivalent
+                    links have always carried it, which is why that install
+                    worked and this one did not. */}
+                <Link
+                  href={appEmbedActivationUrl(domain, 'messenger')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t.openThemeEditor}
                 </Link>
               </Button>

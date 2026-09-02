@@ -49,4 +49,35 @@ describe('decideOrigin', () => {
     expect(decideOrigin({ origin: 'not a url', patterns: PATTERNS, security: {} }).allowed).toBe(false);
     expect(decideOrigin({ origin: null, patterns: PATTERNS, security: {} }).allowed).toBe(false);
   });
+
+  /* Regression: a freshly installed Shopify store has zero widget_domains
+     rows, so its own storefront was refused with origin_not_allowed and the
+     widget never rendered — the block was enabled and the store showed
+     nothing. The connected domain is bound by a unique index through the
+     owner-verified claim path, so it is the store itself, not an unverified
+     third party. */
+  it('allows the store its own connected domain with no verified domain rows', () => {
+    const site = { patterns: [], security: {}, siteDomain: 'grindctrl.myshopify.com' };
+
+    expect(decideOrigin({ ...site, origin: 'https://grindctrl.myshopify.com' }).allowed).toBe(true);
+    // Host comparison is normalized, not string equality on the origin.
+    expect(decideOrigin({ ...site, origin: 'https://GRINDCTRL.myshopify.com' }).allowed).toBe(true);
+  });
+
+  it('does not let the store domain become a wildcard for other origins', () => {
+    const site = { patterns: [], security: {}, siteDomain: 'grindctrl.myshopify.com' };
+
+    // A different shop, a lookalike suffix, and a subdomain are all still
+    // unverified — only the exact connected host is implied.
+    expect(decideOrigin({ ...site, origin: 'https://attacker.myshopify.com' }).allowed).toBe(false);
+    expect(decideOrigin({ ...site, origin: 'https://evil-grindctrl.myshopify.com' }).allowed).toBe(false);
+    expect(decideOrigin({ ...site, origin: 'https://x.grindctrl.myshopify.com' }).allowed).toBe(false);
+    expect(decideOrigin({ ...site, origin: 'https://grindctrl.myshopify.com.evil.com' }).allowed).toBe(false);
+  });
+
+  it('changes nothing for a site with no connected domain', () => {
+    expect(
+      decideOrigin({ origin: 'https://anything.com', patterns: [], security: {}, siteDomain: null }).allowed,
+    ).toBe(false);
+  });
 });

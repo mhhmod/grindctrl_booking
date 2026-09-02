@@ -49,4 +49,25 @@ describe('InstallCard overflow guards', () => {
     expect(embedKeyCode).toHaveClass('break-all');
     expect(embedKeyCode?.parentElement).toHaveClass('min-w-0');
   });
+
+  /* This card renders inside the embedded Shopify app, which is an iframe on
+     admin.shopify.com. A Shopify admin URL opened in that iframe is refused
+     ("admin.shopify.com refused to connect") because admin will not frame
+     itself, so the merchant sees a broken panel at the exact moment they try
+     to turn Store Chat on. Try-On's equivalent links already carry
+     target="_blank" (components/shopify/admin-settings.tsx) and work; this one
+     did not. Any link out to Shopify admin must leave the iframe. */
+  it('opens the theme-editor deep link outside the embedded app iframe', () => {
+    const { container } = renderInstallCard();
+
+    const adminLinks = Array.from(container.querySelectorAll('a')).filter((anchor) =>
+      /myshopify\.com\/admin\/|admin\.shopify\.com/.test(anchor.getAttribute('href') ?? ''),
+    );
+
+    expect(adminLinks.length).toBeGreaterThan(0);
+    for (const link of adminLinks) {
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link.getAttribute('rel') ?? '').toContain('noopener');
+    }
+  });
 });
