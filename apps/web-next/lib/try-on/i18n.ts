@@ -55,6 +55,10 @@ interface TryOnDict {
   generateBtn: string;
 
   generatingTitle: string;
+  preparingSession: string;
+  storefrontProofErrorTitle: string;
+  storefrontProofError: string;
+  refreshTryOn: string;
 
   noProductTitle: string;
   noProductDescription: string;
@@ -129,6 +133,11 @@ const en: TryOnDict = {
   generateBtn: 'Generate Try-On Preview',
 
   generatingTitle: 'Creating your preview',
+  preparingSession: 'Preparing secure try-on…',
+  storefrontProofErrorTitle: 'Try-on needs to be refreshed',
+  storefrontProofError:
+    'We could not verify this product session. Refresh try-on and try again.',
+  refreshTryOn: 'Refresh try-on',
 
   noProductTitle: 'No product selected',
   noProductDescription: 'Open try-on from a product page to preview that item.',
@@ -206,6 +215,11 @@ const ar: TryOnDict = {
   generateBtn: 'إنشاء معاينة التجربة',
 
   generatingTitle: 'جارٍ إنشاء معاينتك',
+  preparingSession: 'جارٍ تجهيز تجربة آمنة…',
+  storefrontProofErrorTitle: 'تحتاج تجربة المنتج إلى تحديث',
+  storefrontProofError:
+    'تعذّر التحقق من جلسة هذا المنتج. حدّث تجربة المنتج ثم حاول مرة أخرى.',
+  refreshTryOn: 'تحديث تجربة المنتج',
 
   noProductTitle: 'لم يتم تحديد منتج',
   noProductDescription: 'افتح ميزة التجربة من صفحة منتج لمعاينة هذا المنتج.',

@@ -107,9 +107,25 @@ export async function markTryOnShopUninstalled(shop: unknown): Promise<boolean> 
   }
 }
 
-export async function requireManagedTryOnShop(selectedShop: unknown): Promise<string> {
+/** The global 'default' settings row is internal platform configuration, not a
+ *  shop: lib/try-on/settings.ts merges it UNDERNEATH every merchant's own row,
+ *  so whoever writes it changes the inherited baseline for every other tenant.
+ *  Being signed in is authority over your OWN shops, never over that baseline,
+ *  so 'default' is refused unless a caller opts in — and only read paths
+ *  (the plan catalog, the neutral no-shop plan state) ever do. Defaulting to
+ *  refusal means a future caller is safe unless it deliberately says otherwise.
+ *  Writes must never opt in; see the matching guard in saveTryOnSettings. */
+export async function requireManagedTryOnShop(
+  selectedShop: unknown,
+  options: { allowGlobalDefault?: boolean } = {},
+): Promise<string> {
   const clerkUserId = await requireDashboardOwner();
-  if (selectedShop === 'default') return 'default';
+  if (selectedShop === 'default') {
+    // Same message as an unowned domain below: a merchant has no need to learn
+    // that a privileged internal row exists.
+    if (!options.allowGlobalDefault) throw new Error('Unknown Shopify shop');
+    return 'default';
+  }
 
   const domain = normalizeShopDomain(selectedShop);
   if (!domain) throw new Error('Unknown Shopify shop');

@@ -8,6 +8,75 @@
     return String(value || '').toLowerCase().split('-')[0] === 'ar' ? 'ar' : 'en';
   }
 
+  var COPY = {
+    en: {
+      unavailable: 'Try-on could not be verified for this product.',
+      retry: 'Retry try-on'
+    },
+    ar: {
+      unavailable: 'تعذّر التحقق من تجربة هذا المنتج.',
+      retry: 'إعادة محاولة التجربة'
+    }
+  };
+
+  function clearProofError(root) {
+    var existing = root.querySelector('.gc-tryon-error');
+    if (existing) existing.remove();
+  }
+
+  function showProofError(root, btn, locale) {
+    clearProofError(root);
+    var copy = COPY[locale] || COPY.en;
+    var status = document.createElement('div');
+    status.className = 'gc-tryon-error';
+    status.setAttribute('role', 'alert');
+    status.setAttribute('aria-live', 'assertive');
+    var message = document.createElement('span');
+    message.textContent = copy.unavailable;
+    var retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'gc-tryon-retry';
+    retry.textContent = copy.retry;
+    retry.addEventListener('click', function () {
+      clearProofError(root);
+      btn.click();
+    });
+    status.appendChild(message);
+    status.appendChild(retry);
+    root.appendChild(status);
+  }
+
+  function createStorefrontNonce() {
+    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return '';
+    var bytes = new Uint8Array(18);
+    window.crypto.getRandomValues(bytes);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function getStorefrontContext(root, nonce) {
+    var url =
+      '/apps/grindctrl/try-on-context?product=' +
+      encodeURIComponent(root.dataset.product || '') +
+      '&nonce=' +
+      encodeURIComponent(nonce);
+    if (root.dataset.variant) url += '&variant=' + encodeURIComponent(root.dataset.variant);
+
+    return fetch(url, {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    }).then(function (res) {
+      if (!res.ok) throw new Error('storefront_context_unavailable');
+      return res.json();
+    }).then(function (data) {
+      if (!data || typeof data.token !== 'string' || data.nonce !== nonce) {
+        throw new Error('invalid_storefront_context');
+      }
+      return data;
+    });
+  }
+
   function applyConfig(root, btn, locale) {
     fetch('/apps/grindctrl/config?locale=' + encodeURIComponent(locale), {
       credentials: 'same-origin',
@@ -57,6 +126,18 @@
         return;
       }
 
+      clearProofError(root);
+
+      var nonce = createStorefrontNonce();
+      if (!nonce) {
+        showProofError(root, btn, locale);
+        return;
+      }
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+
+      getStorefrontContext(root, nonce).then(function (storefrontContext) {
+
       var garment = root.dataset.garment || '';
       if (garment.indexOf('//') === 0) garment = 'https:' + garment;
       // Custom-domain stores serve images from their own host; rewrite to
@@ -82,7 +163,13 @@
         '&shop=' +
         encodeURIComponent(root.dataset.shop || '') +
         '&locale=' +
-        encodeURIComponent(locale);
+        encodeURIComponent(locale) +
+        '&variant=' +
+        encodeURIComponent(root.dataset.variant || '') +
+        '#storefrontContext=' +
+        encodeURIComponent(storefrontContext.token) +
+        '&storefrontNonce=' +
+        encodeURIComponent(nonce);
 
       var frame = document.createElement('iframe');
       frame.src = src;
@@ -108,6 +195,12 @@
           event.data.height <= 5000
         ) {
           frame.style.height = event.data.height + 'px';
+        }
+        if (event.data.type === 'grindctrl-tryon:refresh') {
+          frame.remove();
+          clearProofError(root);
+          btn.click();
+          return;
         }
         if (event.data.type === 'grindctrl-tryon:add-to-cart') {
           var fail = function (message) {
@@ -136,6 +229,14 @@
       });
 
       root.appendChild(frame);
+      }).catch(function () {
+        // Billing proof failed closed: do not open an iframe that could run
+        // an unbound paid generation.
+        showProofError(root, btn, locale);
+      }).then(function () {
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+      });
     });
   }
 

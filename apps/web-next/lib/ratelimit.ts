@@ -1,5 +1,9 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import {
+  TRYON_POLL_RATE_LIMIT_REQUESTS,
+  TRYON_POLL_RATE_LIMIT_WINDOW,
+} from '@/lib/try-on/poll-policy';
 
 /* Guards the public, unauthenticated, AI-cost-incurring routes: the try-on
    flow (session/generate/jobs/config). Every request to those without this
@@ -13,7 +17,10 @@ import { Redis } from '@upstash/redis';
    route down with it. A missing limiter fails OPEN with a loud error log
    instead — degraded protection beats an app-wide outage, and the missing
    env vars are exactly the kind of thing .env.example + this log surface. */
-function createPublicApiRatelimit(): Ratelimit | null {
+function createRatelimiters(): {
+  publicApi: Ratelimit | null;
+  tryOnPoll: Ratelimit | null;
+} {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. Check explicitly: fail OPEN with the loud error
      below rather than crashing every importing route at boot. */
@@ -21,32 +28,50 @@ function createPublicApiRatelimit(): Ratelimit | null {
     console.error(
       '[ratelimit] UPSTASH_REDIS_REST_URL/TOKEN missing — public API rate limiting is DISABLED.',
     );
-    return null;
+    return { publicApi: null, tryOnPoll: null };
   }
   try {
-    return new Ratelimit({
-      redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(10, '10 s'),
-      analytics: true,
-      prefix: 'gc-ratelimit',
-    });
+    const redis = Redis.fromEnv();
+    return {
+      publicApi: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '10 s'),
+        analytics: true,
+        prefix: 'gc-ratelimit',
+      }),
+      tryOnPoll: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(
+          TRYON_POLL_RATE_LIMIT_REQUESTS,
+          TRYON_POLL_RATE_LIMIT_WINDOW,
+        ),
+        analytics: true,
+        prefix: 'gc-ratelimit:tryon-poll',
+      }),
+    };
   } catch (error) {
     console.error(
       '[ratelimit] Upstash limiter unavailable — public API rate limiting is DISABLED. Cause:',
       error instanceof Error ? error.message : error,
     );
-    return null;
+    return { publicApi: null, tryOnPoll: null };
   }
 }
 
-const limiter = createPublicApiRatelimit();
+const limiters = createRatelimiters();
 
-export const publicApiRatelimit = {
-  async limit(id: string): Promise<{ success: boolean; reset: number }> {
-    if (!limiter) return { success: true, reset: Date.now() + 60_000 };
-    return limiter.limit(id);
-  },
-};
+function limiterFacade(limiter: Ratelimit | null) {
+  return {
+    configured: limiter !== null,
+    async limit(id: string): Promise<{ success: boolean; reset: number }> {
+      if (!limiter) return { success: true, reset: Date.now() + 60_000 };
+      return limiter.limit(id);
+    },
+  };
+}
+
+export const publicApiRatelimit = limiterFacade(limiters.publicApi);
+export const tryOnPollRatelimit = limiterFacade(limiters.tryOnPoll);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

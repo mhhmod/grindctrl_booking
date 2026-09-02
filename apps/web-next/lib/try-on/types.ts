@@ -17,10 +17,22 @@ export interface TryOnProduct {
 
 /** Session payload returned by POST /api/try-on/session */
 export interface TryOnSession {
+  /** Short-lived signed generation capability (kept under the legacy field name). */
   sessionId: string;
   productId: string;
   shop: string | null;
+  variantId: string | null;
+  /** Authoritative Shopify Admin product image for storefront sessions. */
+  garmentUrl: string | null;
+  nonce: string;
   createdAt: string;
+  expiresAt: string;
+}
+
+/** One idempotent server-signed generation attempt. */
+export interface TryOnAttempt {
+  attemptId: string;
+  expiresAt: string;
 }
 
 /**
@@ -33,9 +45,13 @@ export type TryOnPhotoSource = 'upload' | 'mock';
 /** Generate request body (client → server) */
 export interface TryOnGenerateRequest {
   sessionId: string;
+  /** Server-signed attempt; retries reuse it, new user actions replace it. */
+  attemptId: string;
   productId: string;
-  shop?: string | null;
-  requestKey?: string;
+  /** Required for storefront sessions and checked against the signed capability. */
+  storefrontNonce?: string;
+  /** Optional caller assertion; when present it must match the signed capability. */
+  variantId?: string | null;
   /**
    * Required. Indicates how the customer photo was supplied.
    * The API rejects requests that omit this field so that callers
@@ -83,7 +99,12 @@ export interface TryOnApiResponse<T = unknown> {
 /** API envelope returned by try-on job endpoints. */
 export interface TryOnJobApiResponse {
   ok: boolean;
-  code?: 'TRYON_UNAVAILABLE';
+  code?:
+    | 'TRYON_UNAVAILABLE'
+    | 'TRYON_FINALIZATION_PENDING'
+    | 'TRYON_RESULT_UNAVAILABLE'
+    | 'TRYON_RESULT_SCHEMA_NOT_READY'
+    | 'TRYON_RESULT_PERSISTENCE_FAILED';
   jobId?: string;
   status?: TryOnJobStatus;
   resultImageUrl?: string;

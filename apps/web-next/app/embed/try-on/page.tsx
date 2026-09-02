@@ -33,6 +33,7 @@ export default async function EmbedTryOnPage({
     locale?: string;
     garment?: string;
     title?: string;
+    variant?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -84,6 +85,7 @@ export default async function EmbedTryOnPage({
           <TryOnDemo
             productId={productHandle}
             shop={shop ?? undefined}
+            variantId={params.variant}
             shopProduct={shopProduct}
             overrides={{
               loadingSteps: settings.loadingSteps ?? undefined,

@@ -197,6 +197,15 @@ export async function saveTryOnSettings(
   shop: string,
   values: Partial<Omit<TryOnSettings, 'shop'>>,
 ): Promise<boolean> {
+  /* Defense in depth behind requireManagedTryOnShop's opt-in: this is the only
+     function that writes tryon_settings, so refusing the global row here means
+     no future caller can edit every merchant's inherited baseline by reaching
+     the writer directly. Changing platform defaults is an operator action, not
+     a merchant one. */
+  if (shop === 'default') {
+    throw new Error('Global Try-On defaults are not editable from merchant surfaces.');
+  }
+
   const supabase = getServiceClient();
   if (!supabase) return false;
 

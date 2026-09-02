@@ -1,9 +1,14 @@
 import * as Sentry from '@sentry/nextjs';
 import posthog, { type BeforeSendFn } from 'posthog-js';
 import { scrubUrl } from '@/lib/analytics/scrub-url';
+import { bootstrapStorefrontProof } from '@/lib/try-on/storefront-bootstrap';
 
 /* Next.js 15.3+ loads this file automatically on the client — no <Script>
    tag, no provider. Runs before the app renders. */
+
+// This must precede both SDK initializers. It scrubs the capability from the
+// live URL/history and keeps it only in short-lived module memory for exchange.
+bootstrapStorefrontProof();
 
 /* The claim flow (see lib/analytics/scrub-url.ts) puts a short-lived bearer
    token in the URL, twice — once as /claim?token=..., again as /sign-in's

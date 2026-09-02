@@ -9,7 +9,13 @@
    Isomorphic (no 'server-only'): instrumentation-client.ts runs in the
    browser. */
 
-const SCRUBBED_PARAMS = ['token', 'redirect_url'];
+const SCRUBBED_PARAMS = [
+  'token',
+  'redirect_url',
+  'storefrontContext',
+  'storefrontNonce',
+];
+const SCRUBBED_FRAGMENT_PARAMS = ['storefrontContext', 'storefrontNonce'];
 
 // Only used to parse a relative string (e.g. a bare pathname) through the
 // same URL API as an absolute one; never appears in the returned value.
@@ -30,6 +36,21 @@ export function scrubUrl(input: string): string {
     if (url.searchParams.has(param)) {
       url.searchParams.delete(param);
       changed = true;
+    }
+  }
+  if (url.hash) {
+    const fragment = new URLSearchParams(url.hash.slice(1));
+    let fragmentChanged = false;
+    for (const param of SCRUBBED_FRAGMENT_PARAMS) {
+      if (fragment.has(param)) {
+        fragment.delete(param);
+        changed = true;
+        fragmentChanged = true;
+      }
+    }
+    if (fragmentChanged) {
+      const nextFragment = fragment.toString();
+      url.hash = nextFragment ? `#${nextFragment}` : '';
     }
   }
   if (!changed) return input;

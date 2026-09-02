@@ -9,6 +9,50 @@
     String((script && script.dataset.gcLocale) || '').toLowerCase().split('-')[0] === 'ar'
       ? 'ar'
       : 'en';
+  var COPY = {
+    en: {
+      dialog: 'Try on',
+      close: 'Close',
+      loading: 'Loading try-on…',
+      unavailable: 'Try-on could not be verified for this product.',
+      retry: 'Retry try-on'
+    },
+    ar: {
+      dialog: 'تجربة المنتج',
+      close: 'إغلاق',
+      loading: 'جارٍ تحميل تجربة المنتج…',
+      unavailable: 'تعذّر التحقق من تجربة هذا المنتج.',
+      retry: 'إعادة محاولة التجربة'
+    }
+  };
+  var copy = COPY[LOCALE] || COPY.en;
+
+  function createStorefrontNonce() {
+    if (!window.crypto || typeof window.crypto.getRandomValues !== 'function') return '';
+    var bytes = new Uint8Array(18);
+    window.crypto.getRandomValues(bytes);
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function getStorefrontContext(product, nonce) {
+    return fetch(
+      '/apps/grindctrl/try-on-context?product=' +
+        encodeURIComponent(product) +
+        '&nonce=' +
+        encodeURIComponent(nonce),
+      { credentials: 'same-origin', headers: { Accept: 'application/json' } }
+    ).then(function (res) {
+      if (!res.ok) throw new Error('storefront_context_unavailable');
+      return res.json();
+    }).then(function (data) {
+      if (!data || typeof data.token !== 'string' || data.nonce !== nonce) {
+        throw new Error('invalid_storefront_context');
+      }
+      return data;
+    });
+  }
 
   var cfg = null;
   var cfgPromise = fetch('/apps/grindctrl/config?locale=' + LOCALE, {
@@ -56,7 +100,7 @@
     'padding:16px;background:rgba(20,18,16,.6);opacity:1!important;visibility:visible!important;}' +
     '.gc-cat-overlay--open{display:flex!important;}' +
     '.gc-cat-lock{overflow:hidden;}' +
-    '.gc-cat-dialog{position:relative;width:100%;max-width:560px;max-height:90dvh;overflow:hidden;' +
+    '.gc-cat-dialog{position:relative;width:100%;max-width:560px;min-height:180px;max-height:90dvh;overflow:hidden;' +
     'border-radius:16px;background:var(--gc-cat-surface,oklch(0.945 0.007 75));' +
     'box-shadow:0 24px 64px rgba(0,0,0,.35);}' +
     '.gc-cat-close{position:absolute;top:8px;inset-inline-end:8px;z-index:2;width:32px;height:32px;' +
@@ -66,7 +110,10 @@
     '@keyframes gc-cat-pulse{0%,100%{opacity:.35}50%{opacity:.6}}' +
     '.gc-cat-loading{position:absolute;inset:0;display:grid;place-items:center;z-index:0;' +
     'font:600 13px/1 system-ui,sans-serif;color:var(--gc-cat-ink,#8a8378);' +
-    'animation:gc-cat-pulse 1.4s ease-in-out infinite;}';
+    'animation:gc-cat-pulse 1.4s ease-in-out infinite;padding:32px;text-align:center;}' +
+    '.gc-cat-retry{border:1px solid currentColor;border-radius:999px;background:transparent;' +
+    'color:inherit;cursor:pointer;font:inherit;padding:7px 12px;margin-top:10px;}' +
+    '.gc-cat-retry:focus-visible{outline:2px solid currentColor;outline-offset:2px;}';
 
   function injectStyles() {
     if (document.getElementById('gc-cat-styles')) return;
@@ -108,15 +155,41 @@
   var overlay = null;
   var frame = null;
   var currentHandle = '';
+  var currentTitle = '';
+  var currentGarment = '';
+
+  function showDialogError(loading, handle, title, garment) {
+    loading.style.display = 'grid';
+    loading.style.animation = 'none';
+    loading.setAttribute('role', 'alert');
+    loading.setAttribute('aria-live', 'assertive');
+    loading.textContent = '';
+    var message = document.createElement('span');
+    message.textContent = copy.unavailable;
+    var retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'gc-cat-retry';
+    retry.textContent = copy.retry;
+    retry.addEventListener('click', function () {
+      openDialog(handle, title, garment);
+    });
+    var content = document.createElement('div');
+    content.appendChild(message);
+    content.appendChild(document.createElement('br'));
+    content.appendChild(retry);
+    loading.appendChild(content);
+  }
 
   function openDialog(handle, title, garment) {
     currentHandle = handle;
+    currentTitle = title;
+    currentGarment = garment;
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.className = 'gc-cat-overlay';
       overlay.innerHTML =
-        '<div class="gc-cat-dialog" role="dialog" aria-modal="true" aria-label="Try on">' +
-        '<button type="button" class="gc-cat-close" aria-label="Close">&times;</button>' +
+        '<div class="gc-cat-dialog" role="dialog" aria-modal="true" aria-label="' + copy.dialog + '">' +
+        '<button type="button" class="gc-cat-close" aria-label="' + copy.close + '">&times;</button>' +
         '</div>';
       document.body.appendChild(overlay);
       overlay.addEventListener('click', function (e) {
@@ -133,27 +206,49 @@
     if (!loading) {
       loading = document.createElement('div');
       loading.className = 'gc-cat-loading';
-      loading.textContent = 'Loading try-on…';
+      loading.setAttribute('role', 'status');
+      loading.setAttribute('aria-live', 'polite');
+      loading.textContent = copy.loading;
       dialog.appendChild(loading);
     }
+    loading.style.animation = '';
+    loading.setAttribute('role', 'status');
+    loading.setAttribute('aria-live', 'polite');
+    loading.textContent = copy.loading;
     loading.style.display = '';
     if (frame) frame.remove();
-    frame = document.createElement('iframe');
-    frame.className = 'gc-cat-frame';
-    frame.title = 'GrindCTRL Try-On';
-    frame.src =
-      EMBED_ORIGIN +
-      '/embed/try-on?product=' + encodeURIComponent(handle) +
-      '&title=' + encodeURIComponent(title || '') +
-      '&garment=' + encodeURIComponent(garment || '') +
-      '&shop=' + encodeURIComponent(SHOP) +
-      '&locale=' + encodeURIComponent(LOCALE);
-    frame.addEventListener('load', function () { loading.style.display = 'none'; });
-    dialog.appendChild(frame);
     overlay.classList.add('gc-cat-overlay--open');
     document.documentElement.classList.add('gc-cat-lock');
     var close = overlay.querySelector('.gc-cat-close');
     if (close) close.focus();
+
+    var nonce = createStorefrontNonce();
+    if (!nonce) {
+      showDialogError(loading, handle, title, garment);
+      return;
+    }
+    getStorefrontContext(handle, nonce).then(function (storefrontContext) {
+      frame = document.createElement('iframe');
+      frame.className = 'gc-cat-frame';
+      frame.title = 'GrindCTRL Try-On';
+      frame.src =
+        EMBED_ORIGIN +
+        '/embed/try-on?product=' + encodeURIComponent(handle) +
+        '&title=' + encodeURIComponent(title || '') +
+        '&garment=' + encodeURIComponent(garment || '') +
+        '&shop=' + encodeURIComponent(SHOP) +
+        '&locale=' + encodeURIComponent(LOCALE) +
+        '#storefrontContext=' + encodeURIComponent(storefrontContext.token) +
+        '&storefrontNonce=' + encodeURIComponent(nonce);
+      frame.addEventListener('load', function () { loading.style.display = 'none'; });
+      dialog.appendChild(frame);
+      frame.addEventListener('error', function () {
+        if (frame) { frame.remove(); frame = null; }
+        showDialogError(loading, handle, title, garment);
+      });
+    }).catch(function () {
+      showDialogError(loading, handle, title, garment);
+    });
   }
 
   function closeDialog() {
@@ -166,6 +261,11 @@
   function onMessage(event) {
     if (!frame || event.source !== frame.contentWindow || event.origin !== EMBED_ORIGIN) return;
     var data = event.data || {};
+    if (data.type === 'grindctrl-tryon:refresh') {
+      if (frame) { frame.remove(); frame = null; }
+      openDialog(currentHandle, currentTitle, currentGarment);
+      return;
+    }
     if (data.type === 'grindctrl-tryon:add-to-cart') {
       var fail = function (message) {
         frame.contentWindow.postMessage(

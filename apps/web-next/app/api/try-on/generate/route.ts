@@ -1,11 +1,26 @@
 ﻿import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { generateTryOn, getTryOnMode } from '@/lib/try-on/service';
+import {
+  generateTryOn,
+  getTryOnMode,
+  TryOnFinalizationPendingError,
+  TryOnResultPersistenceError,
+  TryOnResultSchemaNotReadyError,
+  TryOnResultUnavailableError,
+} from '@/lib/try-on/service';
 import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
+import {
+  normalizeVariantId,
+  verifyTryOnAttempt,
+  verifyTryOnSession,
+} from '@/lib/try-on/storefront-context';
+import {
+  legacyStorefrontCompatEnabled,
+  warnLegacyStorefrontCompat,
+} from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import type {
   TryOnJob,
@@ -18,8 +33,6 @@ const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
 /* Base64 inflates bytes by ~4/3; allow the 8MB file cap plus data-URL header. */
 const MAX_PHOTO_DATA_LENGTH = Math.ceil((TRYON_FILE_CONFIG.maxSizeBytes * 4) / 3) + 64;
 const PHOTO_DATA_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,/;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
 function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
   return {
     ok: true,
@@ -37,9 +50,10 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
  * Triggers a try-on generation job.
  *
  * Body: {
- *   sessionId: string,
+ *   sessionId: string, // short-lived signed capability
  *   productId: string,
- *   shop?: string,
+ *   storefrontNonce?: string,
+ *   variantId?: string,
  *   photoSource?: 'upload' | 'mock',
  *   photoReference?: string,
  *   useMockPhoto?: boolean
@@ -66,7 +80,10 @@ export async function POST(request: NextRequest) {
 
     const body = (await request.json()) as {
       sessionId?: string;
+      attemptId?: unknown;
       productId?: string;
+      storefrontNonce?: unknown;
+      variantId?: unknown;
       shop?: unknown;
       requestKey?: unknown;
       photoSource?: string;
@@ -86,6 +103,14 @@ export async function POST(request: NextRequest) {
       (typeof body.photoData === 'string' && body.photoData.length > 0);
     const usesMockPhoto = body.useMockPhoto === true || photoSource === 'mock';
 
+    if (body.requestKey !== undefined) {
+      const message = 'Client billing overrides are not allowed.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+
     // â”€â”€ Validate session â”€â”€
     const sv = validateSessionId(sessionId);
     if (!sv.ok) {
@@ -98,6 +123,101 @@ export async function POST(request: NextRequest) {
     if (!pv.ok) {
       const res: TryOnJobApiResponse = { ok: false, message: pv.error, error: pv.error };
       return NextResponse.json(res, { status: 400 });
+    }
+
+    const secret = process.env.SHOPIFY_API_SECRET?.trim();
+    if (!secret) {
+      const message = 'Try-on is not configured.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 503 },
+      );
+    }
+
+    const rawVariantId = body.variantId;
+    const variantId = normalizeVariantId(rawVariantId);
+    if (rawVariantId !== undefined && rawVariantId !== null && rawVariantId !== '' && !variantId) {
+      const message = 'Invalid storefront variant.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+    const storefrontNonce = typeof body.storefrontNonce === 'string'
+      ? body.storefrontNonce
+      : undefined;
+    const sessionAuthorization = verifyTryOnSession(secret, sessionId, {
+      productId,
+      variantId: rawVariantId === undefined ? undefined : variantId,
+      nonce: storefrontNonce,
+    });
+    if (!sessionAuthorization) {
+      const message = 'Invalid or expired try-on session.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 401 },
+      );
+    }
+    if (
+      sessionAuthorization.purpose === 'legacy-compat' &&
+      !legacyStorefrontCompatEnabled()
+    ) {
+      const message = 'Legacy compatibility is not enabled.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 401 },
+      );
+    }
+    if (
+      sessionAuthorization.purpose === 'legacy-compat' &&
+      !publicApiRatelimit.configured
+    ) {
+      const message = 'Legacy compatibility is temporarily unavailable.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 503 },
+      );
+    }
+
+    const attemptId = typeof body.attemptId === 'string' ? body.attemptId : '';
+    const compatibilityRequest =
+      !attemptId &&
+      sessionAuthorization.purpose === 'legacy-compat' &&
+      legacyStorefrontCompatEnabled();
+    let authorization = attemptId
+      ? verifyTryOnAttempt(secret, attemptId, sessionAuthorization)
+      : null;
+    if (attemptId && body.shop !== undefined) {
+      const message = 'Client billing overrides are not allowed.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 400 },
+      );
+    }
+    if (compatibilityRequest) {
+      // Old clients echo the returned `shop` field, which is now null. Any
+      // non-null shop remains a forbidden authority injection.
+      if (body.shop !== undefined && body.shop !== null) {
+        const message = 'Legacy compatibility sessions cannot select a billing shop.';
+        return NextResponse.json(
+          { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+          { status: 401 },
+        );
+      }
+      authorization = sessionAuthorization;
+      warnLegacyStorefrontCompat('generation_non_billable', null);
+    }
+    if (
+      !authorization ||
+      (authorization.purpose === 'storefront' &&
+        !storefrontNonce &&
+        !compatibilityRequest)
+    ) {
+      const message = 'Invalid or missing generation attempt.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 401 },
+      );
     }
 
     // â”€â”€ Validate photo source / explicit mock path â”€â”€
@@ -155,33 +275,69 @@ export async function POST(request: NextRequest) {
     }
     const productName =
       typeof body.productName === 'string' ? body.productName.slice(0, 120) : undefined;
-    if (body.requestKey !== undefined &&
-      (typeof body.requestKey !== 'string' || !UUID_RE.test(body.requestKey))) {
-      const message = 'requestKey must be a UUID.';
+
+    if (authorization.purpose === 'public-demo' && garmentUrl) {
+      const message = 'Public demo sessions cannot select a storefront garment.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
         { status: 400 },
       );
     }
-    const normalizedShop = normalizeShopDomain(body.shop);
-    const requestKey = normalizedShop
-      ? (body.requestKey as string | undefined) ?? randomUUID()
-      : (body.requestKey as string | undefined);
+    if (
+      (authorization.purpose === 'storefront' || authorization.purpose === 'legacy-compat') &&
+      (!garmentUrl || garmentUrl !== authorization.canonicalGarmentUrl)
+    ) {
+      const message = 'Garment does not match the verified storefront product.';
+      return NextResponse.json(
+        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
+        { status: 401 },
+      );
+    }
 
     const job = await generateTryOn(
-      sessionId,
-      productId,
+      authorization,
       resolvedPhotoSource,
       photoData,
-      garmentUrl,
+      authorization.purpose === 'storefront' || authorization.purpose === 'legacy-compat'
+        ? authorization.canonicalGarmentUrl ?? undefined
+        : undefined,
       productName,
-      normalizedShop,
-      requestKey,
     );
 
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    if (
+      error instanceof TryOnFinalizationPendingError ||
+      error instanceof TryOnResultUnavailableError ||
+      error instanceof TryOnResultSchemaNotReadyError ||
+      error instanceof TryOnResultPersistenceError
+    ) {
+      if (
+        error instanceof TryOnResultSchemaNotReadyError ||
+        error instanceof TryOnResultPersistenceError
+      ) {
+        console.error('[try-on] result_persistence_failed', {
+          reason: error.code,
+          jobId: error.jobId,
+        });
+      }
+      return NextResponse.json(
+        {
+          ok: false,
+          code: error.code,
+          jobId: error.jobId,
+          message: error.message,
+          error: error.message,
+        } satisfies TryOnJobApiResponse,
+        {
+          status:
+            error instanceof TryOnResultUnavailableError
+              ? 409
+              : 503,
+        },
+      );
+    }
     if (error instanceof TryOnUnavailableError) {
       return NextResponse.json(
         {
@@ -204,7 +360,10 @@ export async function POST(request: NextRequest) {
 
     /* Log the real cause server-side; never echo internal error strings
        (paths, provider messages) back to an anonymous caller. */
-    console.error('try-on generate failed:', error);
+    console.error('[try-on] generation_failed', {
+      correlationId: randomUUID(),
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+    });
     const message = 'Unable to generate try-on preview right now. Please try again.';
     const res: TryOnJobApiResponse = { ok: false, message, error: message };
     return NextResponse.json(res, { status: 500 });

@@ -16,7 +16,9 @@ export type OwnerPlanActionResult = OwnerMutationResult & {
 };
 
 export async function listPlansCatalog() {
-  await requireManagedTryOnShop('default');
+  // Read-only: this needs "is a signed-in dashboard user", not authority over
+  // the global row, so it opts in deliberately rather than by accident.
+  await requireManagedTryOnShop('default', { allowGlobalDefault: true });
   return listEntitlementCatalog();
 }
 
@@ -47,7 +49,9 @@ const NO_SHOP_PLAN_STATE: ShopEntitlement = {
 };
 
 export async function getShopPlanState(shop: unknown): Promise<ShopEntitlement> {
-  const domain = await requireManagedTryOnShop(shop);
+  // Read-only: the global-defaults view resolves to a neutral, empty plan
+  // state below and never reaches a per-shop entitlement.
+  const domain = await requireManagedTryOnShop(shop, { allowGlobalDefault: true });
   if (domain === 'default') return NO_SHOP_PLAN_STATE;
   await runDailyReconciliation();
   return getShopEntitlement(domain);

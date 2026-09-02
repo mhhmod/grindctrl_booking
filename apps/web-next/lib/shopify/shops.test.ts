@@ -67,9 +67,29 @@ describe('requireManagedTryOnShop', () => {
     await expect(requireManagedTryOnShop('grindctrl.myshopify.com')).rejects.toThrow('Unauthorized');
   });
 
-  it('returns the shared demo row without touching the database', async () => {
-    await expect(requireManagedTryOnShop('default')).resolves.toBe('default');
+  /* The global 'default' row is internal configuration: lib/try-on/settings.ts
+     merges it UNDER every shop's own row, so whoever writes it changes the
+     inherited baseline for every other merchant on the platform. Being signed
+     in is not authority over other tenants, so callers must opt in explicitly
+     and only read paths ever do. */
+  it('refuses the global default row for a caller that did not opt in', async () => {
+    await expect(requireManagedTryOnShop('default')).rejects.toThrow('Unknown Shopify shop');
     expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('returns the global default row only for an explicit opt-in read', async () => {
+    await expect(
+      requireManagedTryOnShop('default', { allowGlobalDefault: true }),
+    ).resolves.toBe('default');
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it('still requires a signed-in caller even for an opt-in default read', async () => {
+    mockAuth.mockResolvedValue({ userId: null });
+
+    await expect(
+      requireManagedTryOnShop('default', { allowGlobalDefault: true }),
+    ).rejects.toThrow('Unauthorized');
   });
 
   it('scopes the lookup to the caller by filtering on owner_clerk_user_id', async () => {

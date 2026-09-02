@@ -23,6 +23,22 @@ describe('scrubUrl', () => {
     expect(scrubUrl('/claim?token=abc123')).toBe('/claim');
   });
 
+  it('removes storefront capability material from a fragment', () => {
+    expect(
+      scrubUrl(
+        'https://app.example.com/embed/try-on?product=tee#storefrontContext=header.payload.signature&storefrontNonce=abcdefghijklmnopqrstuvwx&panel=upload',
+      ),
+    ).toBe('https://app.example.com/embed/try-on?product=tee#panel=upload');
+  });
+
+  it('removes an all-secret storefront fragment completely', () => {
+    expect(
+      scrubUrl(
+        '/embed/try-on#storefrontContext=header.payload.signature&storefrontNonce=abcdefghijklmnopqrstuvwx',
+      ),
+    ).toBe('/embed/try-on');
+  });
+
   it('returns a non-URL string unchanged', () => {
     expect(scrubUrl('not a url at all')).toBe('not a url at all');
   });

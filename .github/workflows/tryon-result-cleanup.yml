@@ -1,0 +1,45 @@
+name: Try-On Result Cleanup
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A delayed or missed GitHub schedule is safe: each run consumes the oldest
+# bounded expiry backlog, and the next run retries both failed rows and
+# orphaned objects. Never cancel a cleanup already in flight.
+concurrency:
+  group: tryon-result-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run bounded private result cleanup
+        env:
+          TRYON_CLEANUP_URL: ${{ secrets.TRYON_CLEANUP_URL }}
+          TRYON_CLEANUP_SECRET: ${{ secrets.TRYON_CLEANUP_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${TRYON_CLEANUP_URL:?Missing TRYON_CLEANUP_URL GitHub secret}"
+          : "${TRYON_CLEANUP_SECRET:?Missing TRYON_CLEANUP_SECRET GitHub secret}"
+
+          status="$(curl --silent --show-error \
+            --output cleanup-response.json \
+            --write-out '%{http_code}' \
+            --max-time 60 \
+            --request POST \
+            --header "Authorization: Bearer ${TRYON_CLEANUP_SECRET}" \
+            --header 'Content-Type: application/json' \
+            "${TRYON_CLEANUP_URL}")"
+
+          if [[ "${status}" -lt 200 || "${status}" -ge 300 ]]; then
+            echo "Try-on cleanup endpoint returned HTTP ${status}."
+            exit 1
+          fi
