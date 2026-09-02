@@ -11,7 +11,12 @@ vi.mock('./shop-tenancy', async (importOriginal) => {
   return { ...actual, findSiteByDomain };
 });
 
-import { ensureMessengerSite, listMessengerSites, shouldEnsureMessengerSite } from './provisioning';
+import {
+  ensureMessengerSite,
+  listMessengerSites,
+  resolveProvisionedSites,
+  shouldEnsureMessengerSite,
+} from './provisioning';
 
 /* First visit renders this page more than once concurrently. The original
    read-then-insert died on profiles_clerk_user_id_key when the second render
@@ -856,5 +861,21 @@ describe('provisioning', () => {
     expect(shouldEnsureMessengerSite([{ domain: null }], 'demo.myshopify.com')).toBe(true);
     expect(shouldEnsureMessengerSite([{ domain: 'demo.myshopify.com' }], 'demo.myshopify.com')).toBe(false);
     expect(shouldEnsureMessengerSite([{ domain: null }], null)).toBe(false);
+  });
+
+  /* Regression: the dashboard re-lists after provisioning so a newly attached
+     domain appears, but that re-list resolves the workspace again and can
+     return nothing for the row just created (ensureWorkspace has no unique key
+     on owner_profile_id, so a concurrent first visit leaves a second
+     workspace). The page then read settings_json off undefined and 500'd in
+     production. Provisioning must never hand back an empty list. */
+  it('never returns an empty site list after provisioning', () => {
+    type SiteFixture = { id: string; domain: string | null };
+    const ensured: SiteFixture = { id: 'ensured', domain: null };
+    const refreshed: SiteFixture[] = [{ id: 'refreshed', domain: 'demo.myshopify.com' }];
+
+    expect(resolveProvisionedSites(refreshed, ensured)).toEqual(refreshed);
+    expect(resolveProvisionedSites([], ensured)).toEqual([ensured]);
+    expect(resolveProvisionedSites([], ensured)).not.toHaveLength(0);
   });
 });

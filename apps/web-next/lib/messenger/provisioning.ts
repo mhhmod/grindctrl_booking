@@ -169,6 +169,18 @@ export function shouldEnsureMessengerSite(
   return sites.length === 0 || Boolean(domain && !sites.some((site) => site.domain === domain));
 }
 
+/** After provisioning, the caller re-lists so a domain just attached to an
+ *  existing row shows up. That re-list resolves the workspace again, and
+ *  ensureWorkspace has no unique key on owner_profile_id, so a concurrent
+ *  first visit can leave a second workspace behind and the re-list can come
+ *  back empty for the row that was just created. The dashboard then rendered
+ *  `sites[0].settings_json` on undefined and 500'd. Keeping the provisioned
+ *  row as the floor makes "non-empty after provisioning" a property of one
+ *  tested function instead of an assumption each caller has to remember. */
+export function resolveProvisionedSites<T>(refreshed: readonly T[], ensured: T): T[] {
+  return refreshed.length > 0 ? [...refreshed] : [ensured];
+}
+
 function toView(row: Record<string, unknown>): MessengerSiteView {
   return {
     id: row.id as string,

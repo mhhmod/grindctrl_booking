@@ -6,6 +6,7 @@ import { requireDashboardUser } from '@/lib/auth/dashboard';
 import {
   ensureMessengerSite,
   listMessengerSites,
+  resolveProvisionedSites,
   shouldEnsureMessengerSite,
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
@@ -84,8 +85,18 @@ export default async function MessengerPage({
   }
   if (shouldEnsureMessengerSite(sites, domain)) {
     try {
-      await ensureMessengerSite(userId, domain, domain ?? undefined);
-      sites = await listMessengerSites(userId, merchantEmail);
+      const ensured = await ensureMessengerSite(userId, domain, domain ?? undefined);
+      /* The refetch is what surfaces a domain ensureMessengerSite just attached
+         to an existing row, so it has to happen. But it resolves the workspace
+         again, and ensureWorkspace has no unique key on owner_profile_id — a
+         concurrent first visit can leave a second workspace behind and the
+         refetch then comes back empty for the row we just created. That
+         crashed this page in production (`selected.settings_json` on
+         undefined) the first time it raced. Falling back to the row
+         ensureMessengerSite returned restores the guarantee the previous
+         `sites = [await ensureMessengerSite(...)]` had: after this block,
+         sites is never empty. */
+      sites = resolveProvisionedSites(await listMessengerSites(userId, merchantEmail), ensured);
     } catch (error) {
       // A different real account already owns this store's config — not the
       // transient failure error.tsx's generic "trying again usually works"
