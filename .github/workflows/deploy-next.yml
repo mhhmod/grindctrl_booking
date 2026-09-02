@@ -77,7 +77,28 @@ jobs:
       # most of it). 5m was sized for a fast git-pull-and-restart, a
       # premise that stopped holding once the deploy step started actually
       # transferring the image instead of just restarting a container.
+      #
+      # Reaching this VPS from a GitHub runner fails intermittently — usually
+      # `dial tcp ***:22: i/o timeout`, occasionally mid-session — and it has
+      # cost several red deploys whose only fix was pressing re-run. The
+      # deploy script is idempotent (docker pull + compose up -d, and the repo
+      # sync it starts with is non-fatal), so a second attempt is safe and
+      # strictly better than a human noticing and re-running by hand.
+      # continue-on-error keeps the first failure from ending the job, and the
+      # retry below is a real step, so a genuine outage still fails the deploy.
       - name: Pull the built image and restart the container
+        id: deploy_attempt
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 15m
+          script: /root/grindctrl-next/deploy-next.sh
+
+      - name: Retry the deploy once (SSH to this VPS times out intermittently)
+        if: steps.deploy_attempt.outcome == 'failure'
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
