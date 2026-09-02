@@ -27,6 +27,13 @@ WORKDIR /app/apps/web-next
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# ARG is scoped per stage, so the builder's SENTRY_RELEASE above never reached
+# the runtime image: server-side Sentry events shipped untagged, and nothing
+# running in production could report which commit it was. Re-declare it here so
+# the container knows its own release (surfaced by /api/health, which the deploy
+# workflow asserts against the SHA it just pushed).
+ARG SENTRY_RELEASE
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 # next.config.ts sets output: 'standalone', which traces and copies only the
 # production node_modules subset a request actually needs into .next/standalone
 # — a fraction of the full dev node_modules the old `COPY .../web-next ./` +
