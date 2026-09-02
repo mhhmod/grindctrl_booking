@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import posthog, { type BeforeSendFn } from 'posthog-js';
 import { scrubUrl } from '@/lib/analytics/scrub-url';
+import { isForeignScriptEvent } from '@/lib/analytics/foreign-frames';
 import { bootstrapStorefrontProof } from '@/lib/try-on/storefront-bootstrap';
 
 /* Next.js 15.3+ loads this file automatically on the client — no <Script>
@@ -22,6 +23,15 @@ function scrubEventUrl<T extends { request?: { url?: string } }>(event: T): T {
   return event;
 }
 
+/* Errors thrown by a shopper's browser extensions reach the same global
+   handlers this SDK installs, so they arrive looking like ours. Dropping the
+   ones whose frames are entirely foreign keeps the issue stream readable —
+   see lib/analytics/foreign-frames.ts for why the test is conservative. */
+function scrubAndFilterErrorEvent<T extends { request?: { url?: string } }>(event: T): T | null {
+  if (isForeignScriptEvent(event)) return null;
+  return scrubEventUrl(event);
+}
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   /* 10% of navigations traced: enough spans to debug slow routes without
@@ -30,7 +40,7 @@ Sentry.init({
   tracesSampleRate: 0.1,
   integrations: [Sentry.browserTracingIntegration()],
   debug: false,
-  beforeSend: scrubEventUrl,
+  beforeSend: scrubAndFilterErrorEvent,
   beforeSendTransaction: scrubEventUrl,
 });
 
