@@ -161,6 +161,42 @@ describe('GET /api/messenger/config', () => {
     );
   });
 
+  /* The widget fetches this cross-origin from the storefront. Without CORS the
+     browser throws the response away even on a 200, the loader falls back to a
+     cache that is empty on a first visit, and the launcher is never built — an
+     installed, correctly configured block that renders nothing. Vary matters
+     just as much: the response is `public` and cacheable, so a shared cache
+     must not serve one store's Access-Control-Allow-Origin to another. */
+  it('lets the storefront actually read the config cross-origin', async () => {
+    mocks.loadPublicSiteByDomain.mockResolvedValue(SITE);
+
+    const response = await GET(
+      new NextRequest(
+        new Request(
+          'https://app.example.com/api/messenger/config?shop=grindctrl.myshopify.com',
+          { headers: { origin: 'https://grindctrl.myshopify.com' } },
+        ),
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
+      'https://grindctrl.myshopify.com',
+    );
+    expect(response.headers.get('Vary')).toContain('Origin');
+  });
+
+  it('does not hand out a wildcard when there is no browser origin', async () => {
+    mocks.loadPublicSiteByDomain.mockResolvedValue(SITE);
+
+    const response = await GET(
+      req('https://app.example.com/api/messenger/config?shop=grindctrl.myshopify.com'),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+  });
+
   it('returns 404 when key resolution finds no site', async () => {
     mocks.loadPublicSite.mockResolvedValue(null);
 

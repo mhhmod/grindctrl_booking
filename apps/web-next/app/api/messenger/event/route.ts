@@ -20,6 +20,34 @@ const ALLOWED_EVENTS = new Set([
   'conversation_feedback',
 ]);
 
+/* Same cross-origin story as /config: the loader posts this from the
+   storefront. A JSON POST is not a "simple" request, so the browser sends a
+   preflight first and drops the real call if it is not answered. Telemetry
+   failing is not fatal, but it fails loudly in the console on every page view
+   and buries anything worth reading. */
+function corsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin');
+  return { Vary: 'Origin', ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}) };
+}
+
+export function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin');
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Vary: 'Origin',
+      ...(origin
+        ? {
+            'Access-Control-Allow-Origin': origin,
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'content-type',
+            'Access-Control-Max-Age': '86400',
+          }
+        : {}),
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   const limit = await publicApiRatelimit.limit(`me:${clientIp(request) ?? 'unknown'}`);
   if (!limit.success) return NextResponse.json({ ok: false }, { status: 429 });
@@ -58,9 +86,10 @@ export async function POST(request: NextRequest) {
       eventName: name,
       payload: {},
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: corsHeaders(request) });
   } catch (error) {
     console.error('[messenger] event failed:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ ok: false }, { status: 200 }); // never block storefront on telemetry
+    // Never block a storefront on telemetry.
+    return NextResponse.json({ ok: false }, { status: 200, headers: corsHeaders(request) });
   }
 }

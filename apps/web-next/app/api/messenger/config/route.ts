@@ -48,9 +48,27 @@ export async function GET(request: NextRequest) {
     const payload = toPublicPayload(site, new Date());
     void recordEvent({ siteId: site.id, eventName: 'config_served', payload: { v: payload.v } }).catch(() => {});
 
+    /* The widget fetches this from the merchant's storefront, so the response
+       is cross-origin and the browser discards it unless it says so — status
+       200 is not enough. Without this the loader's fetch rejected, fell back
+       to a localStorage config that does not exist on a first visit, and
+       returned before building the launcher: the block was installed and
+       correctly configured, and the storefront showed nothing, silently.
+
+       Echo the specific caller rather than "*": that is what originAllowed
+       just approved, and it keeps the response scoped to that store. Vary is
+       not optional here — this response is `public` and cacheable, so without
+       it a shared cache could hand one store's response, and its
+       Access-Control-Allow-Origin, to another. */
+    const cors: Record<string, string> = headerOrigin
+      ? { 'Access-Control-Allow-Origin': headerOrigin }
+      : {};
+
     return NextResponse.json(payload, {
       headers: {
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+        Vary: 'Origin',
+        ...cors,
       },
     });
   } catch (error) {
