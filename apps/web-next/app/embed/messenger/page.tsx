@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerPanel } from '@/components/messenger/MessengerPanel';
 
@@ -27,11 +28,32 @@ export default async function EmbedMessengerPage({
   const params = await searchParams;
   const key = typeof params.key === 'string' ? params.key : '';
 
+  /* This is a top-level iframe navigation, so there is no Origin header to
+     read — but the browser does send Referer, naming the storefront page that
+     framed us, and page script cannot forge it. That makes it the honest
+     signal here; the ?origin= param is chosen by the caller and stays
+     untrusted, so it can still match an explicitly verified domain pattern
+     but can never stand in for the store's own domain. */
+  const referer = (await headers()).get('referer');
+  let refererOrigin: string | null = null;
+  if (referer) {
+    try {
+      refererOrigin = new URL(referer).origin;
+    } catch {
+      refererOrigin = null;
+    }
+  }
+  const origin = refererOrigin ?? params.origin ?? null;
+
   let payload = null;
   if (/^[a-z0-9_]{6,80}$/i.test(key)) {
     try {
       const site = await loadPublicSite(key);
-      if (site && site.status === 'active' && originAllowed(site, params.origin ?? null)) {
+      if (
+        site &&
+        site.status === 'active' &&
+        originAllowed(site, origin, { trusted: refererOrigin !== null })
+      ) {
         payload = toPublicPayload(site, new Date());
       }
     } catch (error) {
