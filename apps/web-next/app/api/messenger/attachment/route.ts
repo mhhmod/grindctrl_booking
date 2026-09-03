@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     const session = await resolveShopperSession({
       key: form.get('key'),
       origin: form.get('origin'),
+      originToken: form.get('originToken'),
       anonymousId: form.get('anonymousId'),
       conversationId: form.get('conversationId'),
     });

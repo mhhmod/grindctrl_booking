@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
-import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
+import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
   ensureOpenConversation,
   getVisitor,
@@ -36,7 +36,10 @@ export async function POST(request: NextRequest) {
   }
 
   const key = typeof body.key === 'string' ? body.key : '';
-  const origin = typeof body.origin === 'string' ? body.origin : null;
+  const { origin, trusted: originTrusted } = provenOrigin(
+    typeof body.key === 'string' ? body.key : '',
+    body,
+  );
   const localeHint = LOCALES.includes(body.locale as MessengerLocale)
     ? (body.locale as MessengerLocale)
     : null;
@@ -53,7 +56,9 @@ export async function POST(request: NextRequest) {
   try {
     const site = await loadPublicSite(key);
     if (!site || site.status === 'disabled') return bad('not_found', 404);
-    if (!originAllowed(site, origin)) return bad('origin_not_allowed', 403);
+    if (!originAllowed(site, origin, { trusted: originTrusted })) {
+      return bad('origin_not_allowed', 403);
+    }
 
     // Anonymous identity: server-issued on first bootstrap when absent.
     const anonymousId =

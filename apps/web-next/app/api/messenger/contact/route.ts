@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
     const session = await resolveShopperSession({
       key: body.key,
       origin: body.origin,
+      originToken: body.originToken,
       anonymousId: body.anonymousId,
       conversationId: body.conversationId,
     });

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
-import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
+import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
   MESSAGE_MAX_LENGTH,
   appendMessage,
@@ -101,7 +101,10 @@ export async function POST(request: NextRequest) {
   }
 
   const key = typeof body.key === 'string' ? body.key : '';
-  const origin = typeof body.origin === 'string' ? body.origin : null;
+  const { origin, trusted: originTrusted } = provenOrigin(
+    typeof body.key === 'string' ? body.key : '',
+    body,
+  );
   const anonymousId = typeof body.anonymousId === 'string' ? body.anonymousId : '';
   const conversationId = typeof body.conversationId === 'string' ? body.conversationId : '';
   const text = typeof body.text === 'string' ? body.text.trim() : '';
@@ -120,7 +123,9 @@ export async function POST(request: NextRequest) {
   try {
     const site = await loadPublicSite(key);
     if (!site || site.status !== 'active') return bad('not_found', 404);
-    if (!originAllowed(site, origin)) return bad('origin_not_allowed', 403);
+    if (!originAllowed(site, origin, { trusted: originTrusted })) {
+      return bad('origin_not_allowed', 403);
+    }
 
     /* The merchant reads this alert, not the shopper, so it is deliberately
        NOT the shopper's locale. A storefront request cannot know the

@@ -4,6 +4,7 @@ import { getMessengerServiceClient } from './db';
 import { decideOrigin, type DomainPatternRow } from './origins';
 import { resolveMessengerConfig } from './config';
 import { canonicalShopDomain } from './shop-tenancy';
+import { verifyOriginToken } from './identity';
 import type { MessengerConfig } from './types';
 import type { MessengerBehaviour } from './types';
 
@@ -91,6 +92,41 @@ export function originAllowed(
        domain. A caller-supplied value still has to match a verified pattern. */
     siteDomain: options?.trusted ? site.domain : null,
   }).allowed;
+}
+
+/* What a storefront request has actually PROVEN about where it is running.
+
+   The messenger panel lives in an iframe served from this app, so its calls
+   to /api/messenger/* are same-origin: the browser's Origin header names US,
+   never the store. The panel therefore cannot prove its storefront with a
+   header, and the origin it puts in the request body is a value the caller
+   chose — worth reading, worth nothing as authorization.
+
+   The proof comes from the embed page, which verified the storefront against
+   the unforgeable Referer at render time and minted a signed token saying so.
+   A valid token is the only thing here that earns `trusted`; anything else
+   still has to match an explicitly verified domain pattern. */
+export function provenOrigin(
+  key: string,
+  source: { headerOrigin?: string | null; origin?: unknown; originToken?: unknown },
+): { origin: string | null; trusted: boolean } {
+  /* Token first, and deliberately so. The panel's fetch IS same-origin, so
+     its Origin header says grindctrl.cloud — a real browser-set header that
+     names entirely the wrong site. Preferring the header here would hand
+     every panel request our own domain and fail every check. The loader,
+     which runs on the storefront itself, is the cross-origin case the header
+     was made for, and it carries no token. */
+  const verified = verifyOriginToken(
+    process.env.SHOPIFY_API_SECRET ?? '',
+    source.originToken,
+    key,
+  );
+  if (verified) return { origin: verified, trusted: true };
+  if (source.headerOrigin) return { origin: source.headerOrigin, trusted: true };
+  return {
+    origin: typeof source.origin === 'string' ? source.origin : null,
+    trusted: false,
+  };
 }
 
 /** Business-hours check in the merchant's configured timezone. */

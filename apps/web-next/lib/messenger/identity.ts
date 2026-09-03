@@ -151,3 +151,81 @@ export function verifyShopperToken(
 }
 
 export const MESSENGER_TOKEN_TTL_SECONDS = TOKEN_TTL_SECONDS;
+
+/* ---- Storefront origin proof -------------------------------------------
+
+   The panel runs in an iframe served from OUR origin, so every call it makes
+   to /api/messenger/* is same-origin: the browser's Origin header says
+   grindctrl.cloud and cannot name the store the shopper is actually on. The
+   panel therefore used to report its own page origin in the request body —
+   a value chosen by the caller, which proves nothing and which a stolen
+   embed key could set to any store it liked.
+
+   The one place that CAN establish the storefront honestly is the embed page
+   itself: it is a top-level iframe navigation, so the browser sends Referer,
+   and page script cannot forge it. So we verify there, once, and mint this
+   token as the proof. Every subsequent API call presents the token instead
+   of an origin, and the server recovers the origin from a signature only it
+   can produce.
+
+   Bound to the embed key so a token minted for one store cannot be replayed
+   against another, and short-lived so a leaked one expires with the session. */
+
+const ORIGIN_AUDIENCE = 'messenger-origin';
+const ORIGIN_TOKEN_TTL_SECONDS = 60 * 60 * 12;
+
+export function signOriginToken(
+  secret: string,
+  claims: { key: string; origin: string },
+): string | null {
+  if (!secret) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64UrlEncode(Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })));
+  const payload = base64UrlEncode(
+    Buffer.from(
+      JSON.stringify({
+        iss: ISSUER,
+        aud: ORIGIN_AUDIENCE,
+        iat: now,
+        exp: now + ORIGIN_TOKEN_TTL_SECONDS,
+        key: claims.key,
+        org: claims.origin,
+      }),
+    ),
+  );
+  const encoded = `${header}.${payload}`;
+  return `${encoded}.${base64UrlEncode(hmacSha256(secret, encoded))}`;
+}
+
+/** Returns the server-verified storefront origin, or null if the token is
+ *  absent, malformed, expired, or minted for a different embed key. */
+export function verifyOriginToken(
+  secret: string,
+  token: unknown,
+  expectedKey: string,
+): string | null {
+  if (!secret || typeof token !== 'string') return null;
+  const pieces = token.split('.');
+  if (pieces.length !== 3) return null;
+  const [h, p, s] = pieces;
+
+  const expectedSig = base64UrlEncode(hmacSha256(secret, `${h}.${p}`));
+  const provided = Buffer.from(s);
+  const expected = Buffer.from(expectedSig);
+  if (provided.length !== expected.length || !timingSafeEqual(provided, expected)) return null;
+
+  let payload: { iss?: string; aud?: string; exp?: number; key?: string; org?: string };
+  try {
+    payload = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
+  } catch {
+    return null;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.iss !== ISSUER || payload.aud !== ORIGIN_AUDIENCE) return null;
+  if (typeof payload.exp !== 'number' || payload.exp < now - 30) return null;
+  if (payload.key !== expectedKey) return null;
+  return typeof payload.org === 'string' && payload.org ? payload.org : null;
+}
+
+export const MESSENGER_ORIGIN_TOKEN_TTL_SECONDS = ORIGIN_TOKEN_TTL_SECONDS;

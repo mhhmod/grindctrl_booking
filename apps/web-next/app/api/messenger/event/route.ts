@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
-import { loadPublicSite, loadPublicSiteByDomain, originAllowed } from '@/lib/messenger/public-api';
+import {
+  loadPublicSite,
+  loadPublicSiteByDomain,
+  originAllowed,
+  provenOrigin,
+} from '@/lib/messenger/public-api';
 import { recordEvent } from '@/lib/messenger/conversations';
 
 /* POST /api/messenger/event
@@ -61,7 +66,14 @@ export async function POST(request: NextRequest) {
 
   const key = typeof body.key === 'string' ? body.key : '';
   const shop = typeof body.shop === 'string' ? body.shop : null;
-  const origin = typeof body.origin === 'string' ? body.origin : null;
+  /* Both callers land here: the loader, which runs on the storefront and so
+     is cross-origin (real Origin header, no token), and the panel, which is
+     same-origin and carries the token instead. */
+  const { origin, trusted: originTrusted } = provenOrigin(key, {
+    headerOrigin: request.headers.get('origin'),
+    origin: body.origin,
+    originToken: body.originToken,
+  });
   const name = typeof body.name === 'string' ? body.name : '';
   const conversationId =
     typeof body.conversationId === 'string' && /^[0-9a-f-]{36}$/i.test(body.conversationId)
@@ -78,7 +90,9 @@ export async function POST(request: NextRequest) {
         ? await loadPublicSiteByDomain(shop)
         : null
       : await loadPublicSite(key);
-    if (!site || !originAllowed(site, origin)) return NextResponse.json({ ok: false }, { status: 403 });
+    if (!site || !originAllowed(site, origin, { trusted: originTrusted })) {
+      return NextResponse.json({ ok: false }, { status: 403 });
+    }
 
     await recordEvent({
       siteId: site.id,

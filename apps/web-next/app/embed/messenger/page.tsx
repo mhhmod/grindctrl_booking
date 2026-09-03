@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerPanel } from '@/components/messenger/MessengerPanel';
+import { signOriginToken } from '@/lib/messenger/identity';
 
 /* The GRINDCTRL Support Messenger, embedded via iframe from merchant stores.
    Loaded lazily by /widget/v1/messenger.js only when the shopper opens the
@@ -46,6 +47,13 @@ export default async function EmbedMessengerPage({
   const origin = refererOrigin ?? params.origin ?? null;
 
   let payload = null;
+  /* This page is the one place in the whole storefront flow that can prove
+     which store framed us, because it is the only top-level navigation and
+     so the only request carrying a Referer. Everything the panel does after
+     this is a same-origin fetch whose Origin header names US, not the store.
+     So we mint that proof here, once, and the panel presents it instead of
+     asserting an origin the server would have no reason to believe. */
+  let originToken: string | null = null;
   if (/^[a-z0-9_]{6,80}$/i.test(key)) {
     try {
       const site = await loadPublicSite(key);
@@ -55,6 +63,13 @@ export default async function EmbedMessengerPage({
         originAllowed(site, origin, { trusted: refererOrigin !== null })
       ) {
         payload = toPublicPayload(site, new Date());
+        originToken =
+          refererOrigin === null
+            ? null
+            : signOriginToken(process.env.SHOPIFY_API_SECRET ?? '', {
+                key: site.embed_key,
+                origin: refererOrigin,
+              });
       }
     } catch (error) {
       console.error('[messenger] embed load failed:', error instanceof Error ? error.message : error);
@@ -71,6 +86,6 @@ export default async function EmbedMessengerPage({
   }
 
   return (
-    <MessengerPanel config={payload} />
+    <MessengerPanel config={payload} originToken={originToken} />
   );
 }

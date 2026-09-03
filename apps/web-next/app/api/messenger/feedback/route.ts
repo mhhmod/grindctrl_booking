@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
-import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
+import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
   getConversationForVisitor,
   getVisitor,
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
 
   const key = typeof body.key === 'string' ? body.key : '';
-  const origin = typeof body.origin === 'string' ? body.origin : null;
+  const { origin, trusted: originTrusted } = provenOrigin(key, body);
   const anonymousId = typeof body.anonymousId === 'string' ? body.anonymousId : '';
   const conversationId = typeof body.conversationId === 'string' ? body.conversationId : '';
   const rating = body.rating === 'up' || body.rating === 'down' ? body.rating : null;
@@ -44,7 +44,9 @@ export async function POST(request: NextRequest) {
   try {
     const site = await loadPublicSite(key);
     if (!site || site.status !== 'active') return NextResponse.json({ ok: false }, { status: 404 });
-    if (!originAllowed(site, origin)) return NextResponse.json({ ok: false }, { status: 403 });
+    if (!originAllowed(site, origin, { trusted: originTrusted })) {
+      return NextResponse.json({ ok: false }, { status: 403 });
+    }
 
     const visitor = await getVisitor(site.id, anonymousId);
     if (!visitor) return NextResponse.json({ ok: false }, { status: 403 });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
-import { loadPublicSite, originAllowed } from '@/lib/messenger/public-api';
+import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import { getConversationForVisitor, getVisitor, listMessages } from '@/lib/messenger/conversations';
 
 /* GET /api/messenger/sync?key&anonId&conversationId&after=<iso>&origin
@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
 
   const params = request.nextUrl.searchParams;
   const key = params.get('key') ?? '';
-  const origin = params.get('origin');
+  const { origin, trusted: originTrusted } = provenOrigin(key, {
+    origin: params.get('origin'),
+    originToken: params.get('originToken'),
+  });
   const anonymousId = params.get('anonId') ?? '';
   const conversationId = params.get('conversationId') ?? '';
   const after = params.get('after');
@@ -33,7 +36,9 @@ export async function GET(request: NextRequest) {
   try {
     const site = await loadPublicSite(key);
     if (!site || site.status !== 'active') return NextResponse.json({ error: 'not_found' }, { status: 404 });
-    if (!originAllowed(site, origin)) return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
+    if (!originAllowed(site, origin, { trusted: originTrusted })) {
+      return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
+    }
 
     const visitor = await getVisitor(site.id, anonymousId);
     if (!visitor) return NextResponse.json({ messages: [], status: null });

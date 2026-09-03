@@ -50,9 +50,16 @@ export function MessengerPanel({
   config,
   variant = 'live',
   locale: localeOverride,
+  originToken,
 }: {
   config: PublicMessengerPayload;
   variant?: 'live' | 'preview';
+  /** Signed proof of the storefront this panel was framed by, minted by the
+   *  embed page after it verified the Referer. The panel cannot establish
+   *  its own storefront — its fetches are same-origin with this app — so it
+   *  carries this instead of asserting an origin the server has no reason to
+   *  believe. Absent in the dashboard preview, which makes no network calls. */
+  originToken?: string | null;
   /** Dashboard preview only. The live panel has no parent to ask, so it
    *  reads the iframe URL; rendered inline that URL is the dashboard's and
    *  carries no locale, which left the preview stuck in English while its
@@ -160,6 +167,7 @@ export function MessengerPanel({
           body: JSON.stringify({
             key: config.key,
             origin: effectiveOrigin,
+            originToken,
             anonymousId: storedAnon ?? undefined,
             conversationId: storedConv ?? undefined,
             shopperToken: shopperToken ?? undefined,
@@ -188,7 +196,7 @@ export function MessengerPanel({
     return () => {
       cancelled = true;
     };
-  }, [config.key, effectiveOrigin, variant]);
+  }, [config.key, effectiveOrigin, originToken, variant]);
 
   /* Reconnect sync on focus/visible — cheap recovery after sleep/offline. */
   useEffect(() => {
@@ -198,7 +206,9 @@ export function MessengerPanel({
       fetch(
         `/api/messenger/sync?key=${encodeURIComponent(config.key)}&origin=${encodeURIComponent(
           effectiveOrigin ?? '',
-        )}&anonId=${anonId}&conversationId=${conversationId}${last ? `&after=${encodeURIComponent(last)}` : ''}`,
+        )}&originToken=${encodeURIComponent(originToken ?? '')}&anonId=${anonId}&conversationId=${conversationId}${
+          last ? `&after=${encodeURIComponent(last)}` : ''
+        }`,
       )
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
@@ -221,7 +231,7 @@ export function MessengerPanel({
       document.removeEventListener('visibilitychange', sync);
       window.removeEventListener('focus', sync);
     };
-  }, [config.key, conversationId, anonId, messages, effectiveOrigin]);
+  }, [config.key, conversationId, anonId, messages, effectiveOrigin, originToken]);
 
   useEffect(scrollToEnd, [messages.length, typing, scrollToEnd]);
 
@@ -255,6 +265,7 @@ export function MessengerPanel({
         body: JSON.stringify({
           key: config.key,
           origin: effectiveOrigin,
+          originToken,
           anonymousId: anonId,
           conversationId,
           text,
@@ -318,6 +329,7 @@ export function MessengerPanel({
         body: JSON.stringify({
           key: config.key,
           origin: effectiveOrigin,
+          originToken,
           anonymousId: anonId,
           conversationId,
           email,
@@ -342,6 +354,7 @@ export function MessengerPanel({
     const form = new FormData();
     form.append('key', config.key);
     form.append('origin', effectiveOrigin ?? '');
+    form.append('originToken', originToken ?? '');
     form.append('anonymousId', anonId);
     form.append('conversationId', conversationId);
     form.append('clientKey', crypto.randomUUID());
@@ -378,6 +391,7 @@ export function MessengerPanel({
       body: JSON.stringify({
         key: config.key,
         origin: effectiveOrigin,
+        originToken,
         anonymousId: anonId,
         conversationId,
         rating,

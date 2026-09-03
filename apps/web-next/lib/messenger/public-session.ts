@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { loadPublicSite, originAllowed, type ResolvedPublicSite } from './public-api';
+import { loadPublicSite, originAllowed, provenOrigin, type ResolvedPublicSite } from './public-api';
 import { getConversationForVisitor, getVisitor } from './conversations';
 import type { ConversationRecord } from './types';
 
@@ -32,11 +32,13 @@ export type SessionResult =
 export async function resolveShopperSession(input: {
   key: unknown;
   origin: unknown;
+  /** Signed proof of the storefront, minted by the embed page. */
+  originToken?: unknown;
   anonymousId: unknown;
   conversationId: unknown;
 }): Promise<SessionResult> {
   const key = typeof input.key === 'string' ? input.key : '';
-  const origin = typeof input.origin === 'string' ? input.origin : null;
+  const { origin, trusted: originTrusted } = provenOrigin(key, input);
   const anonymousId = typeof input.anonymousId === 'string' ? input.anonymousId : '';
   const conversationId = typeof input.conversationId === 'string' ? input.conversationId : '';
 
@@ -46,7 +48,9 @@ export async function resolveShopperSession(input: {
 
   const site = await loadPublicSite(key);
   if (!site || site.status !== 'active') return { ok: false, code: 'not_found', status: 404 };
-  if (!originAllowed(site, origin)) return { ok: false, code: 'origin_not_allowed', status: 403 };
+  if (!originAllowed(site, origin, { trusted: originTrusted })) {
+    return { ok: false, code: 'origin_not_allowed', status: 403 };
+  }
 
   /* Scoped by site id, so an embed key for store A cannot address a visitor
      of store B even with that visitor's anonymous id in hand. */
