@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { notFound } from 'next/navigation';
 import { MessengerOverview } from '@/components/dashboard/messenger/overview';
 import { PublishBar } from '@/components/dashboard/messenger/publish-bar';
+import { MessageText } from '@/components/messenger/message-text';
 
 /* Dev-only mirror of the Store Chat Overview and the publish bar with mock
    data, so their layout and states can be checked in a browser without the
@@ -19,6 +20,12 @@ const STATS = {
   openNow: 2,
   medianFirstResponseSeconds7d: 41,
 };
+
+const SAMPLE_REPLY = `Here are the direct links to our collections:
+- All Tees: https://grindctrl.myshopify.com/collections/tees
+- Graphic Tees: https://grindctrl.myshopify.com/collections/graphic-tees
+- Kids Tees: https://grindctrl.myshopify.com/collections/kids-tees
+Feel free to explore, and let me know if you would like more details.`;
 
 const CASES = [
   {
@@ -80,6 +87,21 @@ function StoreChatCheck() {
           />
         </section>
       ))}
+
+      {/* The exact reply that rendered as one unbroken paragraph of inert
+          text, at the narrowest width the panel ever gets. */}
+      <section className="grid min-w-0 gap-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">
+          Message bubble — links and line breaks
+        </h2>
+        <div className="w-[320px] max-w-full rounded-xl border border-border p-3">
+          <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm">
+            <MessageText
+              text={SAMPLE_REPLY}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Mirrors the real shell: the bar shares one block with tall content,
           which is what gives `sticky` room to travel. */}

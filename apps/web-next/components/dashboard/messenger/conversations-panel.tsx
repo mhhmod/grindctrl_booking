@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from './textarea';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
+import { MessageText } from '@/components/messenger/message-text';
 
 /* Focused staff view: list + one thread. Progressive disclosure — customer
    details stay one click away in the store admin, not crammed here. */
@@ -275,7 +276,7 @@ export function ConversationsPanel({
             ) : (
               <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
+                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm ${
                     message.role === 'user'
                       ? 'bg-muted'
                       : 'bg-primary text-primary-foreground'
@@ -299,7 +300,7 @@ export function ConversationsPanel({
                       )}
                     </figure>
                   )}
-                  {message.content}
+                  <MessageText text={message.content} />
                   <span className="mt-0.5 block text-[10px] opacity-70">
                     {message.role === 'assistant'
                       ? message.author === 'human'

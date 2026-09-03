@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerLocale } from '@/lib/messenger/types';
 import { getPanelCopy } from './i18n';
+import { MessageText } from './message-text';
 
 /* The shopper-facing messenger surface. Rendered inside an iframe on
    grindctrl.cloud/embed/messenger so merchant theme CSS can never reach it.
@@ -498,8 +499,8 @@ export function MessengerPanel({
               <div
                 className={
                   mine
-                    ? 'max-w-[85%] rounded-2xl rounded-ee-md px-3.5 py-2 text-sm text-white'
-                    : 'max-w-[85%] rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm'
+                    ? 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-ee-md px-3.5 py-2 text-sm text-white'
+                    : 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm'
                 }
                 style={mine ? { backgroundColor: accent } : undefined}
               >
@@ -511,7 +512,7 @@ export function MessengerPanel({
                     className="mb-1 max-h-56 w-full rounded-lg object-cover"
                   />
                 ) : null}
-                {m.content}
+                <MessageText text={m.content} />
                 {m.pending && <span className="ms-2 inline-block animate-pulse">…</span>}
                 {m.failed && (
                   <span className="mt-1 flex items-center gap-2 text-[11px] opacity-90">
