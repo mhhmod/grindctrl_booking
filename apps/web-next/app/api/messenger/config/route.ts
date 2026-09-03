@@ -16,7 +16,15 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const key = request.nextUrl.searchParams.get('key') ?? '';
   const shopParam = request.nextUrl.searchParams.get('shop');
-  const origin = request.nextUrl.searchParams.get('origin');
+  /* The browser sets Origin on a cross-origin request and page script cannot
+     forge it; the ?origin= query param is chosen by whoever made the call and
+     proves nothing. The widget always runs on the storefront and calls this
+     app, so the header is present on every real request. Prefer it, and keep
+     the param only as a hint for the pattern check below — never as the basis
+     for the implied own-domain allowance. */
+  const headerOrigin = request.headers.get('origin');
+  const claimedOrigin = request.nextUrl.searchParams.get('origin');
+  const origin = headerOrigin ?? claimedOrigin;
 
   if (shopParam && !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shopParam)) {
     return NextResponse.json({ error: 'bad_shop' }, { status: 400 });
@@ -32,7 +40,7 @@ export async function GET(request: NextRequest) {
       : await loadPublicSite(key);
     if (!site) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
-    if (!originAllowed(site, origin)) {
+    if (!originAllowed(site, origin, { trusted: headerOrigin !== null })) {
       // Do not reveal whether the key exists on foreign origins.
       return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
     }

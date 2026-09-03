@@ -109,7 +109,11 @@ describe('GET /api/messenger/config', () => {
 
     expect(response.status).toBe(403);
     expect(body).toEqual({ error: 'origin_not_allowed' });
-    expect(mocks.originAllowed).toHaveBeenCalledWith(SITE, 'https://evil.example.com');
+    expect(mocks.originAllowed).toHaveBeenCalledWith(SITE, 'https://evil.example.com', {
+      // A query-param origin is untrusted, so it can never stand in for the
+      // store's own domain — only a browser-set Origin header can.
+      trusted: false,
+    });
   });
 
   it('returns 403 when the origin is not allowed for a shop-resolved site', async () => {
@@ -125,7 +129,36 @@ describe('GET /api/messenger/config', () => {
 
     expect(response.status).toBe(403);
     expect(body).toEqual({ error: 'origin_not_allowed' });
-    expect(mocks.originAllowed).toHaveBeenCalledWith(SITE, 'https://evil.example.com');
+    expect(mocks.originAllowed).toHaveBeenCalledWith(SITE, 'https://evil.example.com', {
+      // A query-param origin is untrusted, so it can never stand in for the
+      // store's own domain — only a browser-set Origin header can.
+      trusted: false,
+    });
+  });
+
+  /* The ?origin= value is chosen by whoever makes the call, so it can claim to
+     be the merchant's storefront. The Origin header is set by the browser and
+     page script cannot forge it on a cross-origin request. Authorization must
+     use the header, and a caller-supplied value must never be treated as
+     trusted. */
+  it('authorizes on the browser Origin header and ignores a conflicting query param', async () => {
+    mocks.loadPublicSiteByDomain.mockResolvedValue(SITE);
+
+    const response = await GET(
+      new NextRequest(
+        new Request(
+          'https://app.example.com/api/messenger/config?shop=grindctrl.myshopify.com&origin=https%3A%2F%2Fspoofed.example.com',
+          { headers: { origin: 'https://grindctrl.myshopify.com' } },
+        ),
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.originAllowed).toHaveBeenCalledWith(
+      SITE,
+      'https://grindctrl.myshopify.com',
+      { trusted: true },
+    );
   });
 
   it('returns 404 when key resolution finds no site', async () => {

@@ -79,12 +79,17 @@ export async function loadPublicSiteByDomain(shopDomain: string): Promise<Resolv
 export function originAllowed(
   site: ResolvedPublicSite,
   origin: string | null | undefined,
+  /** `trusted` means the value came from the request's Origin header, which a
+   *  page cannot forge, rather than from a caller-chosen query parameter. */
+  options?: { trusted?: boolean },
 ): boolean {
   return decideOrigin({
     origin,
     patterns: site.patterns,
     security: site.security,
-    siteDomain: site.domain,
+    /* Only an origin the browser vouched for can stand in for the store's own
+       domain. A caller-supplied value still has to match a verified pattern. */
+    siteDomain: options?.trusted ? site.domain : null,
   }).allowed;
 }
 
