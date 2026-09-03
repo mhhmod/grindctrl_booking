@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   appendMessage: vi.fn(),
   claimAiTurn: vi.fn(async () => true),
   getConversationForVisitor: vi.fn(),
+  ensureOpenConversation: vi.fn(),
   getVisitor: vi.fn(),
   listMessages: vi.fn(async (): Promise<Array<Record<string, unknown>>> => []),
   recordEvent: vi.fn(async () => {}),
@@ -50,6 +51,7 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     appendMessage: mocks.appendMessage,
     claimAiTurn: mocks.claimAiTurn,
     getConversationForVisitor: mocks.getConversationForVisitor,
+    ensureOpenConversation: mocks.ensureOpenConversation,
     getVisitor: mocks.getVisitor,
     listMessages: mocks.listMessages,
     recordEvent: mocks.recordEvent,
@@ -144,6 +146,7 @@ beforeEach(() => {
   mocks.loadPublicSite.mockResolvedValue(SITE);
   mocks.getVisitor.mockResolvedValue({ id: 'v1' });
   mocks.getConversationForVisitor.mockResolvedValue(CONVERSATION);
+  mocks.ensureOpenConversation.mockResolvedValue({ ...CONVERSATION, id: 'conv-2', status: 'open' });
   mocks.listMessages.mockResolvedValue([]);
   mocks.detectExplicitHandoffRequest.mockReturnValue(false);
   mocks.claimAiTurn.mockResolvedValue(true);
@@ -396,5 +399,70 @@ describe('POST /api/messenger/send', () => {
       expect(res.status).toBe(400);
     }
     expect(mocks.appendMessage).not.toHaveBeenCalled();
+  });
+});
+
+/* A merchant marking a conversation resolved must not silently mute the
+   shopper. Before this, a message sent into a closed thread was accepted with
+   a 200 and stored where nothing could answer it — aiMayAnswer requires
+   status 'open', and a resolved conversation is not flagged for the team
+   either. The shopper watched their message send and waited for a reply
+   nobody was ever asked to write. */
+describe('POST /api/messenger/send — after the merchant resolves', () => {
+  it('starts a new conversation instead of writing into the closed one', async () => {
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, status: 'closed' });
+    mocks.generateAssistantReply.mockResolvedValue({
+      ok: true,
+      reply: 'Happy to help with that.',
+      escalate: false,
+    });
+    mocks.appendMessage.mockImplementation(async (input: Record<string, unknown>) => ({
+      message: {
+        id: `m-${String(input.role)}`,
+        role: input.role,
+        content: input.content,
+        created_at: new Date().toISOString(),
+        metadata: input.metadata ?? {},
+      },
+      replayed: false,
+    }));
+
+    const response = await POST(makeRequest(validBody));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mocks.ensureOpenConversation).toHaveBeenCalledWith('site-1', 'v1');
+
+    // The client is told which conversation it is now on; without this every
+    // later send and every sync keeps addressing the dead thread.
+    expect(body.conversationId).toBe('conv-2');
+
+    // And the shopper actually gets an answer.
+    expect(body.reply?.content).toBe('Happy to help with that.');
+
+    // Nothing was written into the resolved conversation.
+    for (const call of mocks.appendMessage.mock.calls) {
+      expect((call[0] as { conversationId: string }).conversationId).toBe('conv-2');
+    }
+  });
+
+  it('leaves an open conversation alone', async () => {
+    mocks.generateAssistantReply.mockResolvedValue({ ok: true, reply: 'Sure.', escalate: false });
+    mocks.appendMessage.mockImplementation(async (input: Record<string, unknown>) => ({
+      message: {
+        id: `m-${String(input.role)}`,
+        role: input.role,
+        content: input.content,
+        created_at: new Date().toISOString(),
+        metadata: input.metadata ?? {},
+      },
+      replayed: false,
+    }));
+
+    const response = await POST(makeRequest(validBody));
+    const body = await response.json();
+
+    expect(mocks.ensureOpenConversation).not.toHaveBeenCalled();
+    expect(body.conversationId).toBe('conv-1');
   });
 });

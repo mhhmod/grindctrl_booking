@@ -14,6 +14,9 @@ const ANON_KEY = (key: string) => `gc_msgr_${key}_anon`;
 const CONV_KEY = (key: string) => `gc_msgr_${key}_conv`;
 const TOKEN_KEY = (key: string) => `gc_msgr_${key}_shopper_token`;
 
+/* Matches what /api/messenger/sync documents and is rate-limited for. */
+const SYNC_INTERVAL_MS = 15_000;
+
 interface WireMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -225,9 +228,19 @@ export function MessengerPanel({
         })
         .catch(() => {});
     }
+    /* The events alone were never enough. This panel is an iframe, and a
+       shopper who has asked a question and is waiting for an answer switches
+       nothing and clicks nothing: visibilitychange does not fire because the
+       tab stays visible, and focus does not fire because focus never leaves.
+       So a reply typed by the merchant sat in the database until the shopper
+       happened to tab away and back. Poll while visible — the interval this
+       endpoint was documented and rate-limited for, and which was simply
+       never written. */
+    const timer = window.setInterval(sync, SYNC_INTERVAL_MS);
     document.addEventListener('visibilitychange', sync);
     window.addEventListener('focus', sync);
     return () => {
+      window.clearInterval(timer);
       document.removeEventListener('visibilitychange', sync);
       window.removeEventListener('focus', sync);
     };
@@ -276,6 +289,7 @@ export function MessengerPanel({
       });
       const data = (await res.json().catch(() => null)) as
         | {
+            conversationId?: string;
             userMessage?: WireMessage;
             reply?: WireMessage | null;
             status?: string;
@@ -284,6 +298,15 @@ export function MessengerPanel({
           }
         | null;
       if (!res.ok || !data?.userMessage) throw new Error(data?.error ?? 'send_failed');
+
+      /* The server revives a conversation the merchant resolved by starting a
+         fresh one, so this message may not belong to the thread we sent it
+         from. Adopt the id it reports — otherwise every later send, and every
+         sync, keeps addressing the dead thread. */
+      if (data.conversationId && data.conversationId !== conversationId) {
+        setConversationId(data.conversationId);
+        localStorage.setItem(CONV_KEY(config.key), data.conversationId);
+      }
 
       setMessages((prev) =>
         prev.map((m) => (m.id === optimistic.id ? { ...data.userMessage!, pending: false } : m)),

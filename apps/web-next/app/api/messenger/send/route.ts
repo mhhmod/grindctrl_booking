@@ -7,6 +7,7 @@ import {
   MESSAGE_MAX_LENGTH,
   appendMessage,
   claimAiTurn,
+  ensureOpenConversation,
   getConversationForVisitor,
   getVisitor,
   listMessages,
@@ -145,8 +146,29 @@ export async function POST(request: NextRequest) {
 
     const visitor = await getVisitor(site.id, anonymousId);
     if (!visitor) return bad('bad_session');
-    const conversation = await getConversationForVisitor(conversationId, visitor.id);
+    let conversation = await getConversationForVisitor(conversationId, visitor.id);
     if (!conversation) return bad('bad_conversation', 403);
+
+    /* A shopper writing into a thread the merchant already resolved is
+       starting a new conversation, not continuing a finished one.
+
+       Without this the message was accepted with a 200 and appended to the
+       closed thread, where nothing could ever answer it: aiMayAnswer requires
+       status 'open', and a resolved conversation is not flagged for the team
+       either. The shopper saw their message delivered and waited for a reply
+       that no one would ever be asked to write. Reviving here rather than in
+       the client keeps a stale conversation id in one browser's localStorage
+       from being able to strand a shopper the same way. */
+    if (conversation.status === 'closed') {
+      conversation = await ensureOpenConversation(site.id, visitor.id);
+    }
+
+    /* The conversation can therefore change mid-request, so every successful
+       response states which one the client should now be on. */
+    const conv = () => conversation;
+    function ok(body: Record<string, unknown>) {
+      return NextResponse.json({ conversationId: conv().id, ...body });
+    }
 
     const withinHours = isWithinAvailabilityHours(site.config.behaviour, new Date());
 
@@ -218,7 +240,7 @@ export async function POST(request: NextRequest) {
       // the caller converges without re-running the model.
       const existing = await listMessages(conversation.id, { afterIso: new Date(Date.now() - 120_000).toISOString(), limit: 10 });
       const priorReply = [...existing].reverse().find((m) => m.role === 'assistant' && m.created_at >= userMessage.created_at);
-      return NextResponse.json({ userMessage: toWire(userMessage), reply: priorReply ? toWire(priorReply) : null });
+      return ok({ userMessage: toWire(userMessage), reply: priorReply ? toWire(priorReply) : null });
     }
 
     // 2) Explicit "I want a human" short-circuits the model entirely.
@@ -239,7 +261,7 @@ export async function POST(request: NextRequest) {
           metadata: { author: 'system', escalated: true },
         });
         void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'shopper_requested_human' } }).catch(() => {});
-        return NextResponse.json({
+        return ok({
           userMessage: toWire(userMessage),
           reply: toWire(ack.message),
           status: transitioned.status,
@@ -256,7 +278,7 @@ export async function POST(request: NextRequest) {
       // Closed, handed off, or outside business hours: accept the message
       // for the record. Out-of-hours is exactly when an address is worth
       // asking for, since the reply is arriving hours from now.
-      return NextResponse.json({
+      return ok({
         userMessage: toWire(userMessage),
         reply: null,
         status: conversation.status,
@@ -311,7 +333,7 @@ export async function POST(request: NextRequest) {
         payload: { reason: 'human_took_over_mid_turn' },
       }).catch(() => {});
       const current = await getConversationForVisitor(conversation.id, visitor.id);
-      return NextResponse.json({
+      return ok({
         userMessage: toWire(userMessage),
         reply: null,
         status: current?.status ?? 'handoff_active',
@@ -346,7 +368,7 @@ export async function POST(request: NextRequest) {
         content: pickLocalized(ORDER_UNAVAILABLE, locale),
         metadata: { author: 'ai', locale },
       });
-      return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
     }
 
     if (turn.kind === 'action' && orderShopDomain) {
@@ -405,7 +427,7 @@ export async function POST(request: NextRequest) {
           metadata: { author: 'ai', locale },
         });
         void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'order_lookup_performed' }).catch(() => {});
-        return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+        return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
       }
 
       void recordAudit({
@@ -431,7 +453,7 @@ export async function POST(request: NextRequest) {
         eventName: 'order_lookup_denied',
         payload: { reason: outcome.reason },
       }).catch(() => {});
-      return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
     }
 
     if (escalating) {
@@ -459,14 +481,14 @@ export async function POST(request: NextRequest) {
           metadata: { author: 'system', escalated: true },
         });
         void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_escalated' } }).catch(() => {});
-        return NextResponse.json({
+        return ok({
           userMessage: toWire(userMessage),
           reply: toWire(saved.message),
           status: transitioned.status,
           askContact: await contactPrompt(true),
         });
       }
-      return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
     }
 
     const saved = await appendMessage({
@@ -476,7 +498,7 @@ export async function POST(request: NextRequest) {
       metadata: { author: 'ai', locale },
     });
     void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_replied' }).catch(() => {});
-    return NextResponse.json({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+    return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
   } catch (error) {
     console.error('[messenger] send failed:', error instanceof Error ? error.message : error);
     return bad('unavailable', 503);
