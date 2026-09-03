@@ -66,7 +66,7 @@ describe('StoreChatEmbedded', () => {
   it('renders the Conversations tab in the embedded shell', async () => {
     fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(STATE_RESPONSE) });
     render(<StoreChatEmbedded locale="en" />);
-    await screen.findByText('Demo store');
+    await screen.findByText(/demo\.myshopify\.com/);
     expect(screen.getByRole('button', { name: 'Conversations' })).toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe('StoreChatEmbedded', () => {
 
     render(<StoreChatEmbedded locale="en" />);
 
-    expect(await screen.findByText('Demo store')).toBeInTheDocument();
+    expect(await screen.findByText(/demo\.myshopify\.com/)).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/shopify/store-chat/state',
       expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer tok-abc' }) }),
@@ -98,7 +98,7 @@ describe('StoreChatEmbedded', () => {
     setMessengerEnabledMock.mockResolvedValue({ ok: true });
 
     render(<StoreChatEmbedded locale="en" />);
-    await screen.findByText('Demo store');
+    await screen.findByText(/demo\.myshopify\.com/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Installation' }));

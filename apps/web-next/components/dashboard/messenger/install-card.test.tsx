@@ -6,13 +6,13 @@ import { InstallCard } from './install-card';
 const EMBED_KEY = 'gc_521d5a81_1f8e3392_b06c804d';
 const SNIPPET = `<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="${EMBED_KEY}"></script>`;
 
-function renderInstallCard() {
+function renderInstallCard(domain: string | null = 'grindctrl.myshopify.com') {
   return render(
     <InstallCard
       locale="en"
       siteId="site-1"
       embedKey={EMBED_KEY}
-      domain="grindctrl.myshopify.com"
+      domain={domain}
       active
       detectedAt="2026-08-30T10:00:00.000Z"
       version={3}
@@ -30,12 +30,34 @@ describe('InstallCard overflow guards', () => {
     expect(snippetCode).toHaveTextContent(SNIPPET);
 
     const shopifyCard = screen.getByRole('heading', { name: 'Shopify' }).parentElement;
-    const otherPlatformsCard = screen.getByRole('heading', { name: 'Other platforms' }).parentElement;
+    // On a Shopify store the snippet is collapsed behind a summary rather
+    // than presented as a second heading of equal standing — see below.
+    const otherPlatformsCard = screen.getByText('Other platforms').parentElement;
     const installMethodsGrid = shopifyCard?.parentElement;
 
     expect(installMethodsGrid).toHaveClass('min-w-0');
     expect(shopifyCard).toHaveClass('min-w-0');
     expect(otherPlatformsCard).toHaveClass('min-w-0');
+  });
+
+  /* Two install panels side by side made a Shopify merchant decide which of
+     them applied to them before they could do anything, on the one screen
+     that should have a single obvious next action. The snippet stays
+     available — collapsed, and still rendered, so copy still works. */
+  it('collapses the manual snippet on a Shopify store', () => {
+    renderInstallCard('grindctrl.myshopify.com');
+
+    const summary = screen.getByText('Other platforms');
+    expect(summary.tagName).toBe('SUMMARY');
+    expect(summary.closest('details')).toBeInTheDocument();
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+  });
+
+  it('leaves the manual snippet expanded when there is no Shopify store to install into', () => {
+    renderInstallCard(null);
+
+    const heading = screen.getByRole('heading', { name: 'Other platforms' });
+    expect(heading.closest('details')).toBeNull();
   });
 
   it('allows the displayed embed key and its row to shrink safely', () => {

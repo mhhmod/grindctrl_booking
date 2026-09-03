@@ -8,6 +8,7 @@ import { SupportDeskSettings } from './support-desk-settings';
 import { AiKnowledgeEditor } from './ai-knowledge-editor';
 import { ConversationsPanel, type ConversationListItem } from './conversations-panel';
 import { InstallCard } from './install-card';
+import { PublishBar } from './publish-bar';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerConfig, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
@@ -112,18 +113,24 @@ export function MessengerTabs({
         </ul>
       </nav>
 
+      {/* One block holding the panel and the publish bar, deliberately. The
+          page section around us is a CSS grid, and a grid item's containing
+          block is its own grid area — a `sticky` bar placed there has exactly
+          its own height to travel in, so it never sticks to anything. Inside
+          this wrapper it can travel the full height of the panel, which is
+          what makes it reachable from the middle of a long editor. */}
+      <div className="relative min-w-0">
       {tab === 'overview' && (
         <MessengerOverview
           locale={locale}
-          siteId={siteId}
           siteName={siteName}
+          domain={domain}
           active={active}
           aiEnabled={config.ai.enabled}
           detectedAt={detectedAt}
           version={version}
           stats={stats}
-          hasDraft={hasDraft}
-          actions={actions}
+          onOpenTab={setTab}
         />
       )}
       {tab === 'appearance' && (
@@ -169,6 +176,9 @@ export function MessengerTabs({
           actions={actions}
         />
       )}
+
+        <PublishBar locale={locale} siteId={siteId} hasDraft={hasDraft} actions={actions} />
+      </div>
     </>
   );
 }

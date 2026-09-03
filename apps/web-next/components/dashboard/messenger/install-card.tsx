@@ -93,6 +93,31 @@ export function InstallCard({
 
   const snippet = `<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="${embedKey}"></script>`;
 
+  const isShopifyStore = Boolean(domain && domain.endsWith('.myshopify.com'));
+
+  const scriptBlock = (
+    <>
+      <p className="text-xs text-muted-foreground">{t.scriptNote}</p>
+      <pre
+        className="mt-2 overflow-x-auto rounded-lg bg-muted/60 p-3 text-[11px] leading-relaxed"
+        dir="ltr"
+      >
+        <code>{snippet}</code>
+      </pre>
+      <button
+        type="button"
+        onClick={() => {
+          void navigator.clipboard.writeText(snippet);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="mt-2 rounded-full border border-border px-3 py-1 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+      >
+        {copied ? t.copied : t.copy}
+      </button>
+    </>
+  );
+
   const status = active
     ? detectedAt
       ? { label: t.statusLive, tone: 'bg-emerald-500' }
@@ -112,7 +137,7 @@ export function InstallCard({
         </span>
       </header>
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+      <div className={`grid min-w-0 gap-4 ${isShopifyStore ? '' : 'lg:grid-cols-2'}`}>
         <div className="min-w-0 rounded-xl border border-border p-4">
           <h3 className="text-sm font-semibold">{t.shopifyTitle}</h3>
           <ol className="mt-2 grid list-decimal gap-1 ps-5 text-sm text-muted-foreground">
@@ -155,24 +180,24 @@ export function InstallCard({
           </div>
         </div>
 
-        <div className="min-w-0 rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold">{t.scriptTitle}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{t.scriptNote}</p>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-muted/60 p-3 text-[11px] leading-relaxed" dir="ltr">
-            <code>{snippet}</code>
-          </pre>
-          <button
-            type="button"
-            onClick={() => {
-              void navigator.clipboard.writeText(snippet);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            className="mt-2 rounded-full border border-border px-3 py-1 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-          >
-            {copied ? t.copied : t.copy}
-          </button>
-        </div>
+        {/* The manual snippet is the fallback, not an alternative. Shown
+            beside the Shopify card it read as a second option of equal
+            standing, so a Shopify merchant had to work out which of two
+            installs applied to them before they could start — on the one
+            screen where there should be exactly one obvious next action.
+            Collapsed, not removed: a merchant on a non-Shopify storefront,
+            or one debugging a theme, still needs it, and it opens in place. */}
+        {isShopifyStore ? (
+          <details className="min-w-0 rounded-xl border border-border p-4">
+            <summary className="cursor-pointer text-sm font-semibold">{t.scriptTitle}</summary>
+            <div className="mt-3">{scriptBlock}</div>
+          </details>
+        ) : (
+          <div className="min-w-0 rounded-xl border border-border p-4">
+            <h3 className="text-sm font-semibold">{t.scriptTitle}</h3>
+            <div className="mt-1">{scriptBlock}</div>
+          </div>
+        )}
       </div>
 
       <details className="rounded-xl border border-border p-4">

@@ -1,59 +1,79 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { MessengerOverview } from './overview';
 
-const publishConfig = vi.fn();
+/* What this screen owes a merchant is a straight answer and a way to act on
+   it. The publish control that used to live here has moved to PublishBar —
+   see publish-bar.test.tsx. */
 
-function renderOverview(hasDraft: boolean) {
-  return render(
-    <MessengerOverview
-      locale="en"
-      siteId="site-1"
-      siteName="Demo store"
-      active
-      aiEnabled={false}
-      detectedAt={null}
-      version={3}
-      stats={null}
-      hasDraft={hasDraft}
-      actions={{ publishConfig }}
-    />,
-  );
+type Props = React.ComponentProps<typeof MessengerOverview>;
+
+function renderOverview(overrides: Partial<Props> = {}) {
+  const props: Props = {
+    locale: 'en',
+    siteName: 'Demo store',
+    domain: 'demo.myshopify.com',
+    active: true,
+    aiEnabled: false,
+    detectedAt: null,
+    version: 3,
+    stats: null,
+    ...overrides,
+  };
+  return render(<MessengerOverview {...props} />);
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  publishConfig.mockResolvedValue({ ok: true, message: 'Published — live on your store within a minute.' });
+describe('MessengerOverview status', () => {
+  it('names the actual store rather than talking about a "storefront"', () => {
+    renderOverview();
+    expect(screen.getByText(/demo\.myshopify\.com/)).toBeInTheDocument();
+    expect(screen.queryByText(/storefront/i)).not.toBeInTheDocument();
+  });
+
+  it('tells a set-up-but-unseen store what the remaining step is', () => {
+    renderOverview({ active: true, detectedAt: null });
+    expect(screen.getByRole('heading', { name: 'One step left' })).toBeInTheDocument();
+  });
+
+  it('confirms a live store and says when it was last seen', () => {
+    renderOverview({ active: true, detectedAt: '2026-09-01T10:00:00.000Z' });
+    expect(screen.getByRole('heading', { name: 'Store Chat is live' })).toBeInTheDocument();
+    expect(screen.getByText(/Last seen on your store/)).toBeInTheDocument();
+  });
+
+  it('reports an off site as off, not as merely undetected', () => {
+    renderOverview({ active: false, detectedAt: null });
+    expect(screen.getByRole('heading', { name: 'Store Chat is turned off' })).toBeInTheDocument();
+  });
+
+  it('falls back to the site name when no domain is connected yet', () => {
+    renderOverview({ domain: null });
+    expect(screen.getByText(/Demo store/)).toBeInTheDocument();
+  });
 });
 
-describe('MessengerOverview publish control', () => {
-  it('shows no Publish button when there is nothing to publish', () => {
-    renderOverview(false);
-    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument();
+describe('MessengerOverview shortcuts', () => {
+  it('sends an unfinished install straight to the Installation tab', () => {
+    const onOpenTab = vi.fn();
+    renderOverview({ active: true, detectedAt: null, onOpenTab });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show me how' }));
+    expect(onOpenTab).toHaveBeenCalledWith('installation');
   });
 
-  it('publishes the site and shows the server\'s success message', async () => {
-    renderOverview(true);
+  /* "Off" is the state a merchant is most likely to be stuck in and least
+     likely to connect to a specific tab, so it gets a button too. */
+  it('offers a way out of the AI-is-off dead end', () => {
+    const onOpenTab = vi.fn();
+    renderOverview({ aiEnabled: false, onOpenTab });
 
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
-    });
-
-    expect(publishConfig).toHaveBeenCalledWith('site-1');
-    expect(await screen.findByText('Published — live on your store within a minute.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Turn on AI replies' }));
+    expect(onOpenTab).toHaveBeenCalledWith('ai');
   });
 
-  it('shows a failed publish as an alert, never as success', async () => {
-    publishConfig.mockResolvedValue({ ok: false, error: 'Someone else published while you were editing. Refresh and try again.' });
-    renderOverview(true);
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
-    });
-
-    const note = await screen.findByRole('alert');
-    expect(note).toHaveTextContent('Someone else published while you were editing. Refresh and try again.');
-    expect(note.className).toContain('text-destructive');
+  it('offers no AI shortcut once AI is already on', () => {
+    renderOverview({ aiEnabled: true, onOpenTab: vi.fn() });
+    expect(screen.queryByRole('button', { name: 'Turn on AI replies' })).not.toBeInTheDocument();
   });
 });
