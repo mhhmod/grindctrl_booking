@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import { globSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { signOriginToken, verifyOriginToken } from './identity';
@@ -64,15 +63,26 @@ describe('origin proof token', () => {
 describe('originAllowed call sites', () => {
   it('always decide trust explicitly', () => {
     const root = process.cwd();
-    const files = globSync(['app/**/*.{ts,tsx}', 'lib/**/*.{ts,tsx}'], { cwd: root })
-      .filter((f) => !f.includes('.test.'));
+
+    function sources(dir: string): string[] {
+      const out: string[] = [];
+      for (const entry of readdirSync(path.join(root, dir), { withFileTypes: true })) {
+        const rel = `${dir}/${entry.name}`;
+        if (entry.isDirectory()) out.push(...sources(rel));
+        else if (/\.tsx?$/.test(entry.name) && !entry.name.includes('.test.')) out.push(rel);
+      }
+      return out;
+    }
+
+    const files = [...sources('app'), ...sources('lib')];
+    expect(files.length).toBeGreaterThan(50);
 
     const offenders: string[] = [];
     for (const file of files) {
       const src = readFileSync(path.join(root, file), 'utf8');
-      // Match the call and everything up to its closing paren on the same
-      // statement; a compliant call names `trusted` inside it.
-      for (const m of src.matchAll(/originAllowed\(([^;]*?)\)\s*[),;{]/gs)) {
+      // The call plus everything up to the end of its statement; a compliant
+      // call names `trusted` somewhere inside it.
+      for (const m of src.matchAll(/originAllowed\(([^;]*?)\)\s*[),;{]/g)) {
         if (!m[1].includes('trusted')) offenders.push(`${file}: ${m[0].trim().slice(0, 80)}`);
       }
     }

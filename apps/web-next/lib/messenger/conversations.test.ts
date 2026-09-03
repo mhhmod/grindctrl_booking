@@ -5,6 +5,7 @@ import { setMessengerServiceClientForTests } from './db';
 import {
   claimHandoffNotification,
   countAwaitingHandoff,
+  getWidgetLastSeenAt,
   listConversationsForSite,
   listMessages,
   recordEvent,
@@ -69,6 +70,10 @@ function stubQueryClient(result: Record<string, unknown>) {
       gt: (...args: unknown[]) => {
         calls.push(['gt', args]);
         return b;
+      },
+      maybeSingle: (...args: unknown[]) => {
+        calls.push(['maybeSingle', args]);
+        return Promise.resolve(result);
       },
       then: (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve),
     };
@@ -241,5 +246,48 @@ describe('listConversationsForSite', () => {
 
     expect(result.visitor_email).toBe('shopper@example.com');
     expect(result.visitor_name).toBe('Sara');
+  });
+});
+
+/* Overview asked the wrong system whether the widget was installed. "Has
+   Store Chat loaded on your store yet?" was answered by the TRY-ON app's
+   install table via listManagedTryOnShops() — a different product's record,
+   keyed on the Clerk owner, updated by Try-On activity and OAuth, and
+   knowing nothing about whether this widget ever ran. Overview could print
+   "One step left — it has not loaded yet" directly above "7 conversations, 4
+   open right now", and the embedded Shopify app said it permanently: that
+   lookup needs a Clerk session, the iframe has none, so it threw every time
+   and detection stayed null forever. */
+describe('getWidgetLastSeenAt', () => {
+  it('answers from this site\'s own loader events', async () => {
+    const { client, calls } = stubQueryClient({
+      data: { created_at: '2026-09-03T22:38:38.814Z' },
+      error: null,
+    });
+    setMessengerServiceClientForTests(client);
+
+    const seen = await getWidgetLastSeenAt('site-1');
+
+    expect(seen).toBe('2026-09-03T22:38:38.814Z');
+    // Scoped to this site, and to the event the storefront loader emits once
+    // it has actually booted on a page.
+    expect(calls).toContainEqual(['eq', ['widget_site_id', 'site-1']]);
+    expect(calls).toContainEqual(['eq', ['event_name', 'loader_initialized']]);
+    expect(calls).toContainEqual(['order', ['created_at', { ascending: false }]]);
+  });
+
+  it('reports not-yet-seen when the loader has never run', async () => {
+    const { client } = stubQueryClient({ data: null, error: null });
+    setMessengerServiceClientForTests(client);
+
+    expect(await getWidgetLastSeenAt('site-1')).toBeNull();
+  });
+
+  it('reports not-yet-seen rather than throwing when the lookup fails', async () => {
+    // Detection is a status hint; it must never take the dashboard down.
+    const { client } = stubQueryClient({ data: null, error: { message: 'boom' } });
+    setMessengerServiceClientForTests(client);
+
+    expect(await getWidgetLastSeenAt('site-1')).toBeNull();
   });
 });

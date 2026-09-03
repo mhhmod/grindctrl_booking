@@ -42,6 +42,7 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     launcherCustomIconUrl: null,
     launcherLabel: DEFAULT_LAUNCHER_LABEL.en,
     launcherSizePx: 56,
+    languageMode: 'auto',
     position: 'bottom-right',
     radiusStyle: 'soft',
     themeMode: 'auto',
@@ -146,6 +147,10 @@ function normalizeAppearance(raw: unknown): MessengerAppearance {
     launcherCustomIconUrl: customUrl,
     launcherLabel: normalizeLocalized(r.launcherLabel, MESSENGER_DEFAULTS.appearance.launcherLabel),
     launcherSizePx: clampInt(r.launcherSizePx, 44, 72, MESSENGER_DEFAULTS.appearance.launcherSizePx),
+    languageMode:
+      r.languageMode === 'en' || r.languageMode === 'ar'
+        ? r.languageMode
+        : MESSENGER_DEFAULTS.appearance.languageMode,
     position: r.position === 'bottom-left' ? 'bottom-left' : MESSENGER_DEFAULTS.appearance.position,
     radiusStyle:
       r.radiusStyle === 'rounded' || r.radiusStyle === 'sharp'

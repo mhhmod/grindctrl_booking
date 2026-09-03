@@ -8,14 +8,14 @@ const {
   getOverviewStatsMock,
   listConversationsForSiteMock,
   listKnowledgeMock,
-  listManagedTryOnShopsMock,
+  getWidgetLastSeenAtMock,
 } = vi.hoisted(() => ({
   authenticateMock: vi.fn(),
   ensureShopOwnedSiteMock: vi.fn(),
   getOverviewStatsMock: vi.fn(),
   listConversationsForSiteMock: vi.fn(),
   listKnowledgeMock: vi.fn(),
-  listManagedTryOnShopsMock: vi.fn(),
+  getWidgetLastSeenAtMock: vi.fn(),
 }));
 
 vi.mock('@/lib/shopify/session-token', () => ({ authenticateShopifyRequest: authenticateMock }));
@@ -23,9 +23,9 @@ vi.mock('@/lib/messenger/shop-provisioning', () => ({ ensureShopOwnedSite: ensur
 vi.mock('@/lib/messenger/conversations', () => ({
   getOverviewStats: getOverviewStatsMock,
   listConversationsForSite: listConversationsForSiteMock,
+  getWidgetLastSeenAt: getWidgetLastSeenAtMock,
 }));
 vi.mock('@/lib/messenger/knowledge', () => ({ listKnowledge: listKnowledgeMock }));
-vi.mock('@/lib/shopify/shops', () => ({ listManagedTryOnShops: listManagedTryOnShopsMock }));
 
 import { GET } from './route';
 
@@ -42,7 +42,7 @@ beforeEach(() => {
   getOverviewStatsMock.mockResolvedValue({ totalConversations: 0 });
   listConversationsForSiteMock.mockResolvedValue([]);
   listKnowledgeMock.mockResolvedValue([]);
-  listManagedTryOnShopsMock.mockResolvedValue([]);
+  getWidgetLastSeenAtMock.mockResolvedValue(null);
 });
 
 describe('GET /api/shopify/store-chat/state', () => {

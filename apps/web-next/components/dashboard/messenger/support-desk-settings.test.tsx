@@ -78,3 +78,46 @@ describe('SupportDeskSettings — grant order access', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 });
+
+/* The panel offered "Grant order access" and then said nothing at all about
+   whether access had ever been granted. The only way to find out was to press
+   it again and watch what happened. */
+describe('SupportDeskSettings — order access state', () => {
+  it('says plainly that access has not been approved yet', () => {
+    render(
+      <SupportDeskSettings
+        locale="en"
+        siteId="site-1"
+        shopDomain="grindctrl.myshopify.com"
+        ordersAuthorized={false}
+        notifications={{ recipients: [], emailOnHandoff: false } as never}
+        contactCapture={{ enabled: false, askOutsideHours: false } as never}
+        attachments={{ enabled: false, triageEnabled: false } as never}
+        orderLookup={{ enabled: false } as never}
+        actions={ACTIONS as never}
+      />,
+    );
+
+    expect(screen.getByText(/Not approved yet/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Grant order access' })).toBeInTheDocument();
+  });
+
+  it('confirms approval and offers re-approval rather than a fresh grant', () => {
+    render(
+      <SupportDeskSettings
+        locale="en"
+        siteId="site-1"
+        shopDomain="grindctrl.myshopify.com"
+        ordersAuthorized
+        notifications={{ recipients: [], emailOnHandoff: false } as never}
+        contactCapture={{ enabled: false, askOutsideHours: false } as never}
+        attachments={{ enabled: false, triageEnabled: false } as never}
+        orderLookup={{ enabled: false } as never}
+        actions={ACTIONS as never}
+      />,
+    );
+
+    expect(screen.getByText('Approved for this store')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Re-approve order access' })).toBeInTheDocument();
+  });
+});

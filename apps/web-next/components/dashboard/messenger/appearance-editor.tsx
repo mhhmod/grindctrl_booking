@@ -35,6 +35,11 @@ const COPY = {
     posBr: 'Bottom right',
     posBl: 'Bottom left',
     size: 'Launcher size',
+    language: 'Widget language',
+    languageAuto: 'Follow the shopper',
+    languageAutoHelp: "Arabic for an Arabic browser, English otherwise.",
+    languageEn: 'Always English',
+    languageAr: 'Always Arabic',
     radius: 'Corners',
     radii: { soft: 'Soft', rounded: 'Round', sharp: 'Sharp' },
     theme: 'Theme',
@@ -61,6 +66,11 @@ const COPY = {
     posBr: 'أسفل اليمين',
     posBl: 'أسفل اليسار',
     size: 'حجم الزر',
+    language: 'لغة الأداة',
+    languageAuto: 'حسب لغة العميل',
+    languageAutoHelp: 'العربية لمتصفح عربي، والإنجليزية لغير ذلك.',
+    languageEn: 'الإنجليزية دائماً',
+    languageAr: 'العربية دائماً',
     radius: 'الزوايا',
     radii: { soft: 'ناعمة', rounded: 'دائرية', sharp: 'حادة' },
     theme: 'الثيم',
@@ -206,6 +216,32 @@ export function AppearanceEditor({
                   {t.posBl}
                 </PillToggle>
               </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{t.language}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                <PillToggle
+                  active={value.languageMode === 'auto'}
+                  onClick={() => patch({ languageMode: 'auto' })}
+                >
+                  {t.languageAuto}
+                </PillToggle>
+                <PillToggle
+                  active={value.languageMode === 'en'}
+                  onClick={() => patch({ languageMode: 'en' })}
+                >
+                  {t.languageEn}
+                </PillToggle>
+                <PillToggle
+                  active={value.languageMode === 'ar'}
+                  onClick={() => patch({ languageMode: 'ar' })}
+                >
+                  {t.languageAr}
+                </PillToggle>
+              </div>
+              {value.languageMode === 'auto' && (
+                <p className="text-xs text-muted-foreground">{t.languageAutoHelp}</p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="size">{`${t.size} · ${value.launcherSizePx}px`}</Label>

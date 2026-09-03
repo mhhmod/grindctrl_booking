@@ -409,6 +409,34 @@ export function aiMayAnswer(conversation: ConversationRecord): boolean {
 
 /* ── Events / feedback / audit ────────────────────────────────────────── */
 
+/* When this site's widget was last seen running on a storefront.
+
+   "Has Store Chat loaded on your store yet?" used to be answered by
+   listManagedTryOnShops() — the TRY-ON app's install table, keyed on the
+   Clerk owner and touched by Try-On activity and OAuth. It knows nothing
+   about whether this widget ever ran. So Overview could report "One step
+   left — it has not loaded yet" directly above "7 conversations, 4 open
+   right now", and in the embedded Shopify app it said that permanently:
+   there is no Clerk session in that iframe, so the lookup threw and
+   detection silently stayed null forever.
+
+   The honest signal was already being collected. loader_initialized is
+   emitted by the storefront loader once it has actually booted on a page,
+   and it is recorded against this site. Ask that. */
+export async function getWidgetLastSeenAt(siteId: string): Promise<string | null> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_events')
+    .select('created_at')
+    .eq('widget_site_id', siteId)
+    .eq('event_name', 'loader_initialized')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (res.error || !res.data) return null;
+  return (res.data as { created_at: string }).created_at;
+}
+
 export async function recordEvent(input: {
   siteId: string;
   conversationId?: string | null;

@@ -53,6 +53,21 @@ export async function storeShopToken(input: {
   if (res.error) throw new Error(`shop token store failed: ${res.error.message}`);
 }
 
+/* Whether this store has granted order access, without decrypting the token.
+   The Support Desk panel offered "Grant order access" with no way of knowing
+   whether it had ever been granted, so the merchant could only find out by
+   pressing it again and watching what happened. */
+export async function hasShopOrderAccess(shopDomain: string): Promise<boolean> {
+  const domain = normalizeShopDomain(shopDomain);
+  if (!domain) return false;
+  const res = await getServiceClient()
+    .from('shopify_shop_tokens')
+    .select('shop_domain')
+    .eq('shop_domain', domain)
+    .maybeSingle();
+  return !res.error && Boolean(res.data);
+}
+
 /** Null means "this store has not authorized order access", which every
  *  caller must treat as a normal state rather than an error. */
 export async function getShopToken(shopDomain: string): Promise<{ accessToken: string; scopes: string } | null> {

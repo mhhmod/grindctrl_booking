@@ -33,6 +33,10 @@ export interface MessengerAppearance {
   launcherCustomIconUrl: string | null;
   launcherLabel: LocalizedText;
   launcherSizePx: number;
+  /** Which language the storefront widget speaks. 'auto' follows the
+   *  shopper's browser, which is right for a bilingual store and wrong for
+   *  one that only ever serves Arabic — hence the override. */
+  languageMode: 'auto' | 'en' | 'ar';
   position: LauncherPosition;
   radiusStyle: 'soft' | 'rounded' | 'sharp';
   themeMode: 'light' | 'dark' | 'auto';

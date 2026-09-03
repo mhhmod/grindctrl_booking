@@ -11,9 +11,14 @@ import {
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
-import { getOverviewStats, listConversationsForSite } from '@/lib/messenger/conversations';
+import {
+  getOverviewStats,
+  getWidgetLastSeenAt,
+  listConversationsForSite,
+} from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
+import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
@@ -146,21 +151,21 @@ export default async function MessengerPage({
   let knowledge: Awaited<ReturnType<typeof listKnowledge>> = [];
   let storeDetectedAt: string | null = null;
 
-  const [statsRes, conversationsRes, knowledgeRes, shopsRes] = await Promise.allSettled([
-    getOverviewStats(selected.id),
-    listConversationsForSite(selected.id),
-    listKnowledge(selected.id),
-    selected.domain ? listManagedTryOnShops() : Promise.resolve([]),
-  ]);
+  const [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes] =
+    await Promise.allSettled([
+      getOverviewStats(selected.id),
+      listConversationsForSite(selected.id),
+      listKnowledge(selected.id),
+      getWidgetLastSeenAt(selected.id),
+      selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
+    ]);
 
   if (statsRes.status === 'fulfilled') stats = statsRes.value;
   if (conversationsRes.status === 'fulfilled') conversations = conversationsRes.value;
   if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
-  if (shopsRes.status === 'fulfilled' && selected.domain) {
-    const match = shopsRes.value.find((shop) => shop.domain === selected.domain);
-    storeDetectedAt = match && match.status === 'installed' && match.lastSeenAt ? match.lastSeenAt : null;
-  }
-  for (const failed of [statsRes, conversationsRes, knowledgeRes, shopsRes]) {
+  if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
+  const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
+  for (const failed of [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
       // One slow or broken panel must not take the whole section down.
       console.error('[messenger] dashboard data failed:', failed.reason);
@@ -205,6 +210,7 @@ export default async function MessengerPage({
         active={selected.status === 'active'}
         version={selected.settings_version}
         detectedAt={storeDetectedAt}
+        ordersAuthorized={ordersAuthorized}
         config={config}
         payload={payload}
         stats={stats}

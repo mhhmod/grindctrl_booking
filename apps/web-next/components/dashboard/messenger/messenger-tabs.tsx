@@ -55,6 +55,7 @@ export function MessengerTabs({
   active,
   version,
   detectedAt,
+  ordersAuthorized = false,
   config,
   payload,
   stats,
@@ -73,6 +74,8 @@ export function MessengerTabs({
   active: boolean;
   version: number;
   detectedAt: string | null;
+  /** Whether this store has approved the order-read scope. */
+  ordersAuthorized?: boolean;
   config: MessengerConfig;
   payload: PublicMessengerPayload;
   stats: React.ComponentProps<typeof MessengerOverview>['stats'];
@@ -143,6 +146,7 @@ export function MessengerTabs({
             locale={locale}
             siteId={siteId}
             shopDomain={domain && domain.endsWith('.myshopify.com') ? domain : null}
+            ordersAuthorized={ordersAuthorized}
             notifications={config.notifications}
             contactCapture={config.contactCapture}
             attachments={config.attachments}

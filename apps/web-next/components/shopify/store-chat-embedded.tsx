@@ -19,6 +19,7 @@ interface StoreChatState {
     version: number;
     hasDraft: boolean;
     detectedAt: string | null;
+    ordersAuthorized: boolean;
   };
   config: MessengerConfig;
   payload: PublicMessengerPayload;
@@ -159,6 +160,7 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
       active={state.site.active}
       version={state.site.version}
       detectedAt={state.site.detectedAt}
+      ordersAuthorized={state.site.ordersAuthorized}
       config={state.config}
       payload={state.payload}
       stats={state.stats as React.ComponentProps<typeof MessengerTabs>['stats']}

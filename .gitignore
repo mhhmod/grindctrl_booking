@@ -22,3 +22,9 @@ tsconfig.tsbuildinfo
 
 # Brainstorming session mockups (superpowers visual companion)
 .superpowers/
+
+# Local Claude settings and their timestamped backups. settings.local.json
+# holds machine-local credentials; a .bak of it once reached a commit and
+# GitHub push protection caught a live Apify token in it.
+**/.claude/settings.local.json
+**/.claude/*.bak-*

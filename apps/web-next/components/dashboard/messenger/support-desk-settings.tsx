@@ -40,6 +40,9 @@ const COPY = {
     ordersHelp:
       'Shoppers must be signed in, or give an order number and the matching email. Read-only — the assistant can never change an order.',
     ordersConnect: 'Grant order access',
+    ordersAuthorized: 'Approved for this store',
+    ordersNotAuthorized: 'Not approved yet — order lookup stays off until you approve it',
+    ordersReconnect: 'Re-approve order access',
     ordersGranted: 'Order access granted — Store Chat can now look up orders for this store.',
     ordersRefused: 'Order access was not granted. Nothing changed — you can try again.',
     ordersConnectHelp:
@@ -71,6 +74,9 @@ const COPY = {
     ordersHelp:
       'يجب أن يكون العميل مسجّل الدخول، أو يعطي رقم الطلب والبريد المطابق. للقراءة فقط — لا يمكن للمساعد تعديل أي طلب.',
     ordersConnect: 'منح صلاحية الطلبات',
+    ordersAuthorized: 'تمت الموافقة لهذا المتجر',
+    ordersNotAuthorized: 'لم تتم الموافقة بعد — البحث عن الطلبات معطّل حتى توافق',
+    ordersReconnect: 'إعادة منح صلاحية الطلبات',
     ordersGranted: 'تم منح صلاحية الطلبات — يمكن لدردشة المتجر الآن الاطلاع على الطلبات.',
     ordersRefused: 'لم تُمنح صلاحية الطلبات. لم يتغير شيء — يمكنك المحاولة مرة أخرى.',
     ordersConnectHelp:
@@ -87,15 +93,24 @@ function Check({
   checked,
   onChange,
   children,
+  help,
+  nested,
   disabled,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   children: React.ReactNode;
+  /** Sits directly under the control it explains. Section-level help stranded
+   *  at the bottom of a group made the reader match sentences to checkboxes. */
+  help?: string;
+  /** Depends on the option above it. Indent plus a rule says so; the old
+   *  50% opacity at the same indent just looked broken. */
+  nested?: boolean;
   disabled?: boolean;
 }) {
   return (
-    <label className={`flex items-start gap-2 text-sm ${disabled ? 'opacity-50' : ''}`}>
+    <div className={nested ? 'ms-1.5 border-s border-border ps-3' : ''}>
+    <label className={`flex items-start gap-2 text-sm ${disabled ? 'opacity-60' : ''}`}>
       <input
         type="checkbox"
         checked={checked}
@@ -105,6 +120,12 @@ function Check({
       />
       <span className="min-w-0">{children}</span>
     </label>
+    {help && (
+      <p className={`ms-6 mt-0.5 text-xs text-muted-foreground ${disabled ? 'opacity-60' : ''}`}>
+        {help}
+      </p>
+    )}
+    </div>
   );
 }
 
@@ -112,6 +133,7 @@ export function SupportDeskSettings({
   locale,
   siteId,
   shopDomain,
+  ordersAuthorized = false,
   notifications,
   contactCapture,
   attachments,
@@ -123,6 +145,10 @@ export function SupportDeskSettings({
   /** The connected myshopify domain, when there is one. Order lookup has
    *  nothing to read from without it. */
   shopDomain: string | null;
+  /** Whether this store has actually approved order access. The panel used to
+   *  offer the grant with no way of knowing whether it had ever been given,
+   *  so a merchant could only find out by pressing it again. */
+  ordersAuthorized?: boolean;
   notifications: MessengerNotifications;
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
@@ -202,6 +228,7 @@ export function SupportDeskSettings({
         <Check
           checked={contact.askOutsideHours}
           disabled={!contact.enabled}
+          nested
           onChange={(v) => setContact({ ...contact, askOutsideHours: v })}
         >
           {t.contactOutside}
@@ -211,17 +238,21 @@ export function SupportDeskSettings({
 
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.attachments}</h4>
-        <Check checked={attach.enabled} onChange={(v) => setAttach({ ...attach, enabled: v })}>
+        <Check
+          checked={attach.enabled}
+          help={t.attachmentsHelp}
+          onChange={(v) => setAttach({ ...attach, enabled: v })}
+        >
           {t.attachmentsEnabled}
         </Check>
         <Check
           checked={attach.triageEnabled}
           disabled={!attach.enabled}
+          nested
           onChange={(v) => setAttach({ ...attach, triageEnabled: v })}
         >
           {t.triageEnabled}
         </Check>
-        <p className="text-xs text-muted-foreground">{t.attachmentsHelp}</p>
       </section>
 
       <section className="grid gap-2 rounded-xl border border-border p-4">
@@ -229,11 +260,28 @@ export function SupportDeskSettings({
         <Check
           checked={orders.enabled}
           disabled={!shopDomain}
+          help={shopDomain ? t.ordersHelp : t.ordersNoStore}
           onChange={(v) => setOrders({ enabled: v })}
         >
           {t.ordersEnabled}
         </Check>
-        <p className="text-xs text-muted-foreground">{shopDomain ? t.ordersHelp : t.ordersNoStore}</p>
+        {shopDomain && (
+          <p
+            className={`flex items-center gap-1.5 text-xs font-medium ${
+              ordersAuthorized
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-amber-600 dark:text-amber-400'
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block size-1.5 shrink-0 rounded-full ${
+                ordersAuthorized ? 'bg-emerald-500' : 'bg-amber-500'
+              }`}
+            />
+            {ordersAuthorized ? t.ordersAuthorized : t.ordersNotAuthorized}
+          </p>
+        )}
         {shopDomain && (
           <div className="grid gap-1">
             {/* A plain link, not a fetch: this is a top-level navigation to
@@ -269,7 +317,7 @@ export function SupportDeskSettings({
               }}
               className="w-fit rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
             >
-              {t.ordersConnect}
+              {ordersAuthorized ? t.ordersReconnect : t.ordersConnect}
             </a>
             <p className="text-xs text-muted-foreground">{t.ordersConnectHelp}</p>
             {grantOutcome === 'connected' && (

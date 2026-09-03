@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
-import { getOverviewStats, listConversationsForSite } from '@/lib/messenger/conversations';
+import {
+  getOverviewStats,
+  getWidgetLastSeenAt,
+  listConversationsForSite,
+} from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
-import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { toPublicPayload } from '@/lib/messenger/public-api';
+import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 
 /* Embedded equivalent of app/dashboard/messenger/page.tsx's data assembly —
    same shape, resolved by verified shop domain instead of Clerk session +
@@ -31,22 +35,25 @@ export async function GET(request: NextRequest) {
     new Date(),
   );
 
-  const [statsRes, conversationsRes, knowledgeRes, shopsRes] = await Promise.allSettled([
+  const [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes] = await Promise.allSettled([
     getOverviewStats(site.id),
     listConversationsForSite(site.id),
     listKnowledge(site.id),
-    listManagedTryOnShops(),
+    getWidgetLastSeenAt(site.id),
+    site.domain ? hasShopOrderAccess(site.domain) : Promise.resolve(false),
   ]);
 
   const stats = statsRes.status === 'fulfilled' ? statsRes.value : null;
   const conversations = conversationsRes.status === 'fulfilled' ? conversationsRes.value : [];
   const knowledge = knowledgeRes.status === 'fulfilled' ? knowledgeRes.value : [];
-  let detectedAt: string | null = null;
-  if (shopsRes.status === 'fulfilled' && site.domain) {
-    const match = shopsRes.value.find((shop) => shop.domain === site.domain);
-    detectedAt = match && match.status === 'installed' && match.lastSeenAt ? match.lastSeenAt : null;
-  }
-  for (const failed of [statsRes, conversationsRes, knowledgeRes, shopsRes]) {
+  /* Was listManagedTryOnShops(), which calls requireDashboardOwner(). There
+     is no Clerk session inside the embedded Shopify iframe, so that lookup
+     always threw here and detection was permanently null — the embedded app
+     told every merchant "One step left" no matter what their store was
+     doing. This asks the site's own loader events instead, which need no
+     Clerk identity because the session token already proved the shop. */
+  const detectedAt = detectedRes.status === 'fulfilled' ? detectedRes.value : null;
+  for (const failed of [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
       console.error('[store-chat state] a panel failed:', failed.reason);
     }
@@ -62,6 +69,7 @@ export async function GET(request: NextRequest) {
       version: site.settings_version,
       hasDraft,
       detectedAt,
+      ordersAuthorized: ordersRes.status === 'fulfilled' ? ordersRes.value : false,
     },
     config,
     payload,

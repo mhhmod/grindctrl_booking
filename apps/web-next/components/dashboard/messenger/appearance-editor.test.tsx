@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerAppearance } from '@/lib/messenger/types';
@@ -14,6 +14,7 @@ const APPEARANCE: MessengerAppearance = {
   launcherCustomIconUrl: null,
   launcherLabel: { en: 'Support', ar: 'الدعم' },
   launcherSizePx: 56,
+  languageMode: 'auto',
   position: 'bottom-right',
   radiusStyle: 'soft',
   themeMode: 'light',
@@ -112,5 +113,22 @@ describe('AppearanceEditor', () => {
 
     // Opening mounts the real shopper panel, in Arabic.
     expect(screen.getAllByText('مرحباً').length).toBeGreaterThan(0);
+  });
+});
+
+/* A store that only ever serves Arabic had no way to say so: the widget
+   followed whatever language the shopper's browser was set to, and there was
+   no control at all. */
+describe('AppearanceEditor language', () => {
+  it('lets the merchant pin the widget language', async () => {
+    renderEditor();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Always Arabic' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+
+    await waitFor(() => expect(saveDraftSection).toHaveBeenCalled());
+    const call = saveDraftSection.mock.calls[0] as [string, string, { languageMode: string }];
+    expect(call[1]).toBe('appearance');
+    expect(call[2].languageMode).toBe('ar');
   });
 });

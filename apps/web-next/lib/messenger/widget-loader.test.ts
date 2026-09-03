@@ -20,7 +20,8 @@ describe('storefront widget loader', () => {
     // on every store — visible as a launcher clipped in half.
     expect(loader).toContain(':host(.pos-br) .btn{right:20px}');
     expect(loader).toContain(':host(.pos-bl) .btn{left:20px}');
-    expect(loader).toContain(':host(.pos-br) .teaser{right:84px}');
+    // The teaser's offset moved inline once it had to clear a resizable
+    // launcher; the button's :host() rules are still the fix under test.
 
     expect(loader).not.toMatch(/(^|[^(]);?\.pos-br \.btn\{/);
     expect(loader).not.toMatch(/(^|[^(]);?\.pos-bl \.btn\{/);
@@ -47,5 +48,29 @@ describe('storefront widget loader', () => {
     // switched to the docked branch, which only sets bottom/right.
     expect(loader).toContain('frame.style.cssText = css');
     expect(loader).not.toContain("frame.style.cssText += ';inset:0");
+  });
+});
+
+/* Two settings the dashboard has always offered and the loader never read.
+   Both fail the same silent way: the control moves, the dashboard preview
+   updates, the merchant publishes, and the storefront is unchanged. */
+describe('storefront widget loader — settings it must actually honour', () => {
+  it('sizes the launcher from the merchant setting, not a hardcoded 56', () => {
+    expect(loader).toContain('appearance.launcherSizePx');
+    expect(loader).toContain("btn.style.height = size + 'px'");
+
+    // Everything anchored above the launcher has to move with it, or a 72px
+    // button ends up underneath the panel it opened.
+    expect(loader).toContain("(launcherSize() + 32)");
+    expect(loader).toContain('launcherSize() + 28');
+    expect(loader).not.toContain(':host(.pos-br) .teaser{right:84px}');
+  });
+
+  it('lets the merchant pin the widget language instead of following the browser', () => {
+    expect(loader).toContain('appearance.languageMode');
+    expect(loader).toContain('state.locale = resolveLocale(config)');
+    // A data-locale on the script tag is a deliberate per-page override and
+    // still outranks the stored setting.
+    expect(loader).toMatch(/function resolveLocale[\s\S]{0,200}LOCALE_HINT/);
   });
 });

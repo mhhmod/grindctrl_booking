@@ -18,6 +18,7 @@ const PAYLOAD: PublicMessengerPayload = {
     launcherCustomIconUrl: null,
     launcherLabel: { en: 'Support', ar: 'الدعم' },
     launcherSizePx: 56,
+  languageMode: 'auto',
     position: 'bottom-right',
     radiusStyle: 'soft',
     themeMode: 'light',

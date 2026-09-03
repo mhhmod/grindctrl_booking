@@ -113,9 +113,37 @@
     });
   }
 
+  /* The merchant's launcher size, honoured. The dashboard has always let it
+     be set, the preview has always reflected it, and the loader simply never
+     read appearance.launcherSizePx — the button was hardcoded to 48px tall
+     (56 when icon-only) in the stylesheet above. So the slider moved, the
+     preview changed, the merchant published, and their store looked exactly
+     the same. Clamped to the same 44-72 the server clamps to, so a hand-
+     edited config cannot produce a launcher that covers the page. */
+  function launcherSize() {
+    var px = state.config && state.config.appearance && state.config.appearance.launcherSizePx;
+    px = Number(px);
+    if (!isFinite(px)) return 56;
+    return Math.min(Math.max(Math.round(px), 44), 72);
+  }
+
   function detectLocale() {
     if (LOCALE_HINT === 'ar' || LOCALE_HINT === 'en') return LOCALE_HINT;
     try { return (navigator.language || 'en').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en'; } catch (e) { return 'en'; }
+  }
+
+  /* The merchant's choice outranks the browser's. state.locale is resolved at
+     load, before any config exists, so it can only be the browser guess; this
+     re-resolves once the config has arrived. A store that only ever serves
+     Arabic had no way to say so — the widget followed whatever language the
+     shopper's browser happened to be set to. An explicit data-locale on the
+     script tag still wins over both, because that is a deliberate per-page
+     override by whoever installed it. */
+  function resolveLocale(config) {
+    if (LOCALE_HINT === 'ar' || LOCALE_HINT === 'en') return LOCALE_HINT;
+    var mode = config && config.appearance && config.appearance.languageMode;
+    if (mode === 'ar' || mode === 'en') return mode;
+    return detectLocale();
   }
 
   function pick(localized) {
@@ -152,7 +180,7 @@
     '@media (prefers-reduced-motion:reduce){.btn{transition:none}}' +
     '.teaser{position:fixed;z-index:2147481990;max-width:min(280px,calc(100vw - 96px));background:#fff;color:#1c1917;border:1px solid rgba(0,0,0,.08);border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:13px;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.16);cursor:pointer;animation:pop .25s ease}' +
     '.teaser[dir="rtl"]{border-radius:14px 14px 14px 4px}' +
-    ':host(.pos-br) .teaser{right:84px}:host(.pos-bl) .teaser{left:84px}' +
+    ''  /* teaser offset is set inline from launcherSize() — see showTeaser */ +
     '@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}';
 
   function iconSvg(kind, customUrl) {
@@ -188,6 +216,11 @@
     btn.setAttribute('aria-label', label || (state.locale === 'ar' ? 'الدعم' : 'Support'));
     btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = iconSvg(state.config.appearance.launcherIcon, state.config.appearance.launcherCustomIconUrl);
+    var size = launcherSize();
+    btn.style.height = size + 'px';
+    // Icon-only is a circle, so width tracks height; a labelled pill keeps its
+    // intrinsic width and only grows taller.
+    if (iconOnly) btn.style.width = size + 'px';
     btn.addEventListener('click', function () { toggle(); });
     root.appendChild(btn);
 
@@ -224,6 +257,11 @@
     el.setAttribute('dir', state.locale === 'ar' ? 'rtl' : 'ltr');
     el.setAttribute('role', 'status');
     el.textContent = text;
+    /* Clears the launcher by its actual width. This used to be a flat 84px in
+       the stylesheet, which only lined up with the old fixed 56px button. */
+    var clear = launcherSize() + 28;
+    if (state.config.appearance.position === 'bottom-left') el.style.left = clear + 'px';
+    else el.style.right = clear + 'px';
     el.addEventListener('click', function () { markTeaserSeen(kind); open(); });
     state.teaserHost.appendChild(el);
     state.teaser = el;
@@ -284,7 +322,10 @@
       var posLeft = state.config && state.config.appearance.position === 'bottom-left';
       // top/left are reset explicitly so a previous full-bleed pass cannot
       // leave the panel anchored to the top-left corner as well.
-      css += 'top:auto;bottom:88px;' +
+      // 88px was 56 + 20 + 12: the old fixed launcher, its gutter, and a gap.
+      // With a resizable launcher those constants have to come from it, or a
+      // 72px button sits under the panel it opened.
+      css += 'top:auto;bottom:' + (launcherSize() + 32) + 'px;' +
         (posLeft ? 'left:20px;right:auto;' : 'right:20px;left:auto;') +
         'width:min(384px,calc(100vw - 40px));height:min(600px,calc(100dvh - 120px));' +
         'border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.24);';
@@ -405,6 +446,7 @@
     fetchConfig(function (config) {
       state.config = config;
       if (!config || !config.active || pageExcluded(config)) return;
+      state.locale = resolveLocale(config);
       buildLauncher();
       attachShopperToken();
       track('loader_initialized', {});
