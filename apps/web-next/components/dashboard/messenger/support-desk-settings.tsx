@@ -229,9 +229,35 @@ export function SupportDeskSettings({
           <div className="grid gap-1">
             {/* A plain link, not a fetch: this is a top-level navigation to
                 Shopify's consent screen, and the state cookie the route sets
-                only comes back on one. */}
+                only comes back on one.
+
+                And it has to be top-level in the literal sense. This panel
+                also renders inside the embedded Shopify app, which is an
+                iframe on admin.shopify.com, and following this href in-frame
+                lands on accounts.shopify.com — which refuses to be framed.
+                The merchant clicked "Grant order access" and got
+                "accounts.shopify.com refused to connect", with the whole app
+                replaced by an error page.
+
+                Escaping to the top window rather than target="_blank" keeps
+                the merchant in the one tab they started in: consent finishes
+                and Shopify returns them to the app. A new tab would leave
+                them stranded on our dashboard with the admin still open
+                behind it. Same escape the claim flow already uses, and a
+                click gives it the user gesture that lets a cross-origin
+                frame navigate its top. The href stays real so the standalone
+                dashboard — where there is no frame to escape — and a
+                middle-click both still work. */}
             <a
               href={`/api/shopify/oauth/start?shop=${encodeURIComponent(shopDomain)}`}
+              onClick={(event) => {
+                if (typeof window === 'undefined' || window.top === window.self) return;
+                event.preventDefault();
+                window.top!.location.href = new URL(
+                  event.currentTarget.getAttribute('href') ?? '',
+                  window.location.origin,
+                ).toString();
+              }}
               className="w-fit rounded-full border border-border px-3 py-1.5 text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
             >
               {t.ordersConnect}
