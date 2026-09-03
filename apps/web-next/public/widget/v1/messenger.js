@@ -142,12 +142,17 @@
     '.btn:focus-visible{outline:2px solid currentColor;outline-offset:3px}' +
     '.btn.icon-only{width:56px;height:56px;padding:0;justify-content:center}' +
     '.btn svg{display:block}' +
-    '.pos-br .btn{right:20px}.pos-bl .btn{left:20px}' +
+    /* :host(), not a bare descendant selector. `.pos-br` lives on the HOST
+       element, outside this shadow root, so `.pos-br .btn` could never match
+       from in here — the button kept right/left:auto, sat at its static
+       position inside a zero-width host, and hung ~36px off the edge of the
+       screen on every store. Same bug, same fix, for the teaser. */
+    ':host(.pos-br) .btn{right:20px}:host(.pos-bl) .btn{left:20px}' +
     '.bottom{bottom:20px}' +
     '@media (prefers-reduced-motion:reduce){.btn{transition:none}}' +
     '.teaser{position:fixed;z-index:2147481990;max-width:min(280px,calc(100vw - 96px));background:#fff;color:#1c1917;border:1px solid rgba(0,0,0,.08);border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:13px;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.16);cursor:pointer;animation:pop .25s ease}' +
     '.teaser[dir="rtl"]{border-radius:14px 14px 14px 4px}' +
-    '.pos-br .teaser{right:84px}.pos-bl .teaser{left:84px}' +
+    ':host(.pos-br) .teaser{right:84px}:host(.pos-bl) .teaser{left:84px}' +
     '@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}';
 
   function iconSvg(kind, customUrl) {
@@ -236,7 +241,12 @@
   }
 
   /* ── Messenger iframe ── */
-  function isSmallScreen() { return Math.min(window.innerWidth, window.innerHeight) <= 560; }
+  /* Width decides this, not min(width,height). Using the smaller edge meant a
+     wide-but-SHORT viewport — a Shopify theme-editor preview, a short desktop
+     window, any landscape phone — was treated as a small screen and got the
+     full-bleed layout, so the panel covered the whole page instead of docking
+     to the corner. Height is handled by the panel's own max-height instead. */
+  function isSmallScreen() { return window.innerWidth <= 560; }
 
   function buildIframe() {
     var effectiveKey = (state.config && state.config.key) || KEY;
@@ -248,23 +258,61 @@
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
     frame.title = state.locale === 'ar' ? 'محادثة الدعم' : 'Support chat';
     frame.allow = 'clipboard-write';
-    frame.style.cssText = 'position:fixed;z-index:2147482001;border:none;background:transparent;' +
-      'opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;color-scheme:normal;';
+    // sizeIframe writes the complete style, including the closed-state visuals.
     sizeIframe(frame);
     document.body.appendChild(frame);
     state.iframe = frame;
     setTimeout(function () { state.booted = true; }, 50);
   }
 
+  /* Writes the COMPLETE style every time instead of appending. The old
+     `cssText +=` could only ever run once safely: re-sizing appended a second
+     set of declarations, and the full-bleed branch's `inset:0` survived into
+     the docked branch (which sets only bottom/right), leaving the panel
+     stretched across the page. Re-sizing has to be idempotent for the resize
+     listener below to be safe. */
+  var FRAME_BASE = 'position:fixed;z-index:2147482001;border:none;background:transparent;' +
+    'transition:opacity .18s ease,transform .18s ease;color-scheme:normal;';
+
   function sizeIframe(frame) {
-    if (isSmallScreen()) {
-      frame.style.cssText += ';inset:0;width:100vw;height:100dvh;max-height:100dvh;';
+    var small = isSmallScreen();
+    var css = FRAME_BASE;
+
+    if (small) {
+      css += 'inset:0;width:100vw;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none;';
     } else {
-      var posLeft = state.config.appearance.position === 'bottom-left';
-      frame.style.cssText += ';bottom:88px;' + (posLeft ? 'left:20px;' : 'right:20px;') +
-        'width:min(384px,calc(100vw - 40px));height:min(600px,calc(100dvh - 120px));border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.24);transform:translateY(6px);';
+      var posLeft = state.config && state.config.appearance.position === 'bottom-left';
+      // top/left are reset explicitly so a previous full-bleed pass cannot
+      // leave the panel anchored to the top-left corner as well.
+      css += 'top:auto;bottom:88px;' +
+        (posLeft ? 'left:20px;right:auto;' : 'right:20px;left:auto;') +
+        'width:min(384px,calc(100vw - 40px));height:min(600px,calc(100dvh - 120px));' +
+        'border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.24);';
     }
+
+    // Rewriting cssText drops the open/closed visuals, so restate them.
+    css += state.open
+      ? 'opacity:1;pointer-events:auto;transform:none;'
+      : 'opacity:0;pointer-events:none;' + (small ? '' : 'transform:translateY(6px);');
+
+    frame.style.cssText = css;
   }
+
+  /* The panel was sized once, when it was first opened, and never again — so
+     rotating a phone, resizing a window, or opening it inside a preview pane
+     that later changes size left it at the wrong geometry for the rest of the
+     session. rAF-coalesced so a drag-resize does not thrash layout. */
+  var resizePending = false;
+  function handleViewportChange() {
+    if (!state.iframe || resizePending) return;
+    resizePending = true;
+    requestAnimationFrame(function () {
+      resizePending = false;
+      if (state.iframe) sizeIframe(state.iframe);
+    });
+  }
+  window.addEventListener('resize', handleViewportChange);
+  window.addEventListener('orientationchange', handleViewportChange);
 
   function open() {
     if (!state.config || !state.config.active || pageExcluded(state.config)) return;
