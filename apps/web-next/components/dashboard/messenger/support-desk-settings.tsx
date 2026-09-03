@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from './textarea';
@@ -39,6 +40,8 @@ const COPY = {
     ordersHelp:
       'Shoppers must be signed in, or give an order number and the matching email. Read-only — the assistant can never change an order.',
     ordersConnect: 'Grant order access',
+    ordersGranted: 'Order access granted — Store Chat can now look up orders for this store.',
+    ordersRefused: 'Order access was not granted. Nothing changed — you can try again.',
     ordersConnectHelp:
       'Opens Shopify to approve order access for this store. Existing installs must approve again, because reading orders is a new permission.',
     ordersNoStore: 'Connect a Shopify store first — order lookup needs one to read from.',
@@ -68,6 +71,8 @@ const COPY = {
     ordersHelp:
       'يجب أن يكون العميل مسجّل الدخول، أو يعطي رقم الطلب والبريد المطابق. للقراءة فقط — لا يمكن للمساعد تعديل أي طلب.',
     ordersConnect: 'منح صلاحية الطلبات',
+    ordersGranted: 'تم منح صلاحية الطلبات — يمكن لدردشة المتجر الآن الاطلاع على الطلبات.',
+    ordersRefused: 'لم تُمنح صلاحية الطلبات. لم يتغير شيء — يمكنك المحاولة مرة أخرى.',
     ordersConnectHelp:
       'يفتح Shopify للموافقة على صلاحية الطلبات لهذا المتجر. يجب على المتاجر المثبّتة مسبقاً الموافقة مجدداً، لأن قراءة الطلبات صلاحية جديدة.',
     ordersNoStore: 'اربط متجر Shopify أولاً — الاستعلام عن الطلبات يحتاج متجراً ليقرأ منه.',
@@ -125,6 +130,10 @@ export function SupportDeskSettings({
   actions: Pick<MessengerHostActions, 'saveDraftSection'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  /* Shopify sends the merchant back here after the consent screen. Saying
+     nothing was the old behaviour, and it left the one question they had —
+     did that work? — unanswered on a page that looked untouched. */
+  const grantOutcome = useSearchParams()?.get('orders') ?? null;
   const [notify, setNotify] = useState(notifications);
   const [contact, setContact] = useState(contactCapture);
   const [attach, setAttach] = useState(attachments);
@@ -263,6 +272,19 @@ export function SupportDeskSettings({
               {t.ordersConnect}
             </a>
             <p className="text-xs text-muted-foreground">{t.ordersConnectHelp}</p>
+            {grantOutcome === 'connected' && (
+              <p
+                role="status"
+                className="text-xs font-medium text-emerald-600 dark:text-emerald-400"
+              >
+                {t.ordersGranted}
+              </p>
+            )}
+            {grantOutcome === 'failed' && (
+              <p role="alert" className="text-xs font-medium text-destructive">
+                {t.ordersRefused}
+              </p>
+            )}
           </div>
         )}
       </section>

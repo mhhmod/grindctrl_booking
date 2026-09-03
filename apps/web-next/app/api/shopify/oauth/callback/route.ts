@@ -13,11 +13,24 @@ import { OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac }
 
 export const runtime = 'nodejs';
 
+/* Back to the button that started this. Exactly one thing links to
+   /api/shopify/oauth/start — "Grant order access" in Support Desk settings —
+   so this is where the merchant was and where the answer belongs.
+
+   It used to land on /dashboard/install, a design mock that is not in the
+   nav, ignores the result entirely, and hands out a placeholder site key
+   alongside a script URL that 404s. A merchant who granted order access was
+   shown installation instructions for something that does not exist, and was
+   never told whether the grant had worked. */
+function ordersReturn(appUrl: string, outcome: 'connected' | 'failed'): string {
+  return `${appUrl}/dashboard/messenger?tab=behaviour&orders=${outcome}`;
+}
+
 function failure(appUrl: string, reason: string): NextResponse {
   console.error('[shopify] oauth callback rejected:', reason);
   // Never echo the reason to the browser: a precise failure tells whoever
   // is probing which of the three checks they still need to defeat.
-  return NextResponse.redirect(`${appUrl}/dashboard/install?shopify=failed`);
+  return NextResponse.redirect(ordersReturn(appUrl, 'failed'));
 }
 
 export async function GET(request: NextRequest) {
@@ -77,7 +90,7 @@ export async function GET(request: NextRequest) {
 
   void recordTryOnShopSeen(shopDomain);
 
-  const response = NextResponse.redirect(`${appUrl}/dashboard/install?shopify=connected`);
+  const response = NextResponse.redirect(ordersReturn(appUrl, 'connected'));
   response.cookies.delete(OAUTH_STATE_COOKIE);
   return response;
 }
