@@ -32,6 +32,7 @@ interface StoreChatState {
     visitorEmail: string | null;
     visitorName: string | null;
     handoffReason: string | null;
+    unreadCount?: number;
   }>;
   knowledge: KnowledgeEntry[];
 }
@@ -85,6 +86,13 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
     () => ({
       saveDraftSection: async (siteId, section, payload) => {
         const result = await rawActions.saveDraftSection(siteId, section, payload);
+        if (result.ok) void loadState();
+        return result;
+      },
+      /* Re-pulls like the others: the unread badges in the list are computed
+         server-side, so the count only clears once /state comes back. */
+      markConversationRead: async (siteId, conversationId) => {
+        const result = await rawActions.markConversationRead(siteId, conversationId);
         if (result.ok) void loadState();
         return result;
       },

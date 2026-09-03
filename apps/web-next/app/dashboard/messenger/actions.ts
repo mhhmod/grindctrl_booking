@@ -15,6 +15,7 @@ import {
   takeOverConversation,
   closeConversation,
   getConversationForSite,
+  markConversationRead as markRead,
 } from '@/lib/messenger/conversations';
 import {
   addManualKnowledge,
@@ -277,6 +278,22 @@ export async function staffReply(
       action: 'conversation_taken_over',
       detail: { conversationId },
     });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function markConversationRead(
+  siteId: string,
+  conversationId: string,
+): Promise<ActionResult> {
+  try {
+    /* ownedConversation is the tenancy check: it is what stops a merchant
+       marking a conversation read on a site that is not theirs. */
+    const { conversation } = await ownedConversation(siteId, conversationId);
+    await markRead(conversationId, conversation.metadata);
     revalidatePath('/dashboard/messenger');
     return { ok: true };
   } catch (error) {

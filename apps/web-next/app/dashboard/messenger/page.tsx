@@ -12,6 +12,7 @@ import {
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
+  countUnreadByConversation,
   getOverviewStats,
   getWidgetLastSeenAt,
   listConversationsForSite,
@@ -162,6 +163,10 @@ export default async function MessengerPage({
 
   if (statsRes.status === 'fulfilled') stats = statsRes.value;
   if (conversationsRes.status === 'fulfilled') conversations = conversationsRes.value;
+  // One query for the whole page rather than one per row.
+  const unread = await countUnreadByConversation(conversations).catch(
+    (): Record<string, number> => ({}),
+  );
   if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
   if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
   const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
@@ -222,6 +227,7 @@ export default async function MessengerPage({
           visitorEmail: c.visitor_email,
           visitorName: c.visitor_name,
           handoffReason: c.handoff_reason,
+          unreadCount: unread[c.id] ?? 0,
         }))}
         knowledge={knowledge}
         actions={messengerActions}

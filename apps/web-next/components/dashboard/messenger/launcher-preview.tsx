@@ -3,13 +3,15 @@
 import React from 'react';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerLocale } from '@/lib/messenger/types';
+import { launcherRadius, launcherSizePx } from '@/lib/messenger/appearance-geometry';
 
 /* The closed-state launcher, as the shopper sees it.
  *
  * The shipped launcher is vanilla JS inside a shadow root
  * (public/widget/v1/messenger.js) so it cannot be imported here. This is a
- * deliberate mirror of that file's visual contract — pill with a label,
- * circle without, accent background, 20px from the corner. If the launcher
+ * deliberate mirror of that file's visual contract — an accent circle 20px
+ * from the corner, sized and rounded from the merchant's settings through
+ * lib/messenger/appearance-geometry, which the loader follows too. If the launcher
  * CSS there changes, change it here too; the panel below is the real
  * component and needs no such care. */
 
@@ -39,9 +41,11 @@ export function LauncherPreview({
     locale === 'ar'
       ? appearance.launcherLabel?.ar || appearance.launcherLabel?.en || ''
       : appearance.launcherLabel?.en || appearance.launcherLabel?.ar || '';
-  const iconOnly = !label;
   const accent = safeColor(appearance.accentColor);
-  const size = Math.min(Math.max(appearance.launcherSizePx ?? 56, 44), 72);
+  /* Shared with the storefront loader. The preview used to size only when
+     there was no label and hardcode a pill radius, so it agreed with the
+     store by coincidence at best. */
+  const size = launcherSizePx(appearance);
   const left = appearance.position === 'bottom-left';
 
   return (
@@ -55,13 +59,11 @@ export function LauncherPreview({
         background: accent,
         [left ? 'left' : 'right']: 20,
         bottom: 20,
-        height: iconOnly ? size : 48,
-        width: iconOnly ? size : undefined,
-        borderRadius: 999,
+        height: size,
+        width: size,
+        borderRadius: launcherRadius(appearance),
       }}
-      className={`absolute z-10 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none ${
-        iconOnly ? '' : 'px-[18px]'
-      }`}
+      className="absolute z-10 flex items-center justify-center gap-2 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 motion-reduce:transition-none"
     >
       {appearance.launcherCustomIconUrl ? (
         // eslint-disable-next-line @next/next/no-img-element -- merchant-supplied absolute URL, mirrors the storefront loader
@@ -94,7 +96,9 @@ export function LauncherPreview({
           )}
         </svg>
       )}
-      {!iconOnly && <span>{label}</span>}
+      {/* The storefront launcher never renders the label as text — it is the
+          aria-label only — so the preview must not either, or the merchant is
+          shown a pill that their store will never display. */}
     </button>
   );
 }

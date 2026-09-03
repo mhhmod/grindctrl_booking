@@ -153,6 +153,62 @@ export async function ensureOpenConversation(siteId: string, visitorId: string):
   return mapConversation(inserted.data as unknown as Record<string, unknown>);
 }
 
+/* Unread, from the merchant's side: shopper messages that arrived after the
+   last time this conversation was opened in the dashboard. The inbox had no
+   notion of read at all — every conversation looked identical whether it held
+   a question nobody had seen or one already answered, which is the first
+   thing an inbox has to tell you.
+
+   The read marker lives in widget_conversations.metadata, so this needs no
+   migration, and "never opened" (no marker) correctly counts every shopper
+   message as unread.
+
+   One query for the whole page of conversations rather than one per row: an
+   inbox renders 30 of these at a time. */
+export async function countUnreadByConversation(
+  conversations: ReadonlyArray<{ id: string; metadata: ConversationRecord['metadata'] }>,
+): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  if (conversations.length === 0) return counts;
+
+  const supabase = getMessengerServiceClient();
+  const ids = conversations.map((c) => c.id);
+  const res = await supabase
+    .from('widget_messages')
+    .select('conversation_id, created_at')
+    .in('conversation_id', ids)
+    .eq('role', 'user');
+
+  // A failed count must not blank the inbox; treat it as "nothing unread".
+  if (res.error) return counts;
+
+  const readAt = new Map<string, number>();
+  for (const conversation of conversations) {
+    const marker = conversation.metadata.agent_last_read_at;
+    readAt.set(conversation.id, typeof marker === 'string' ? Date.parse(marker) : 0);
+  }
+
+  for (const row of (res.data ?? []) as Array<{ conversation_id: string; created_at: string }>) {
+    const seenUpTo = readAt.get(row.conversation_id) ?? 0;
+    if (Date.parse(row.created_at) > seenUpTo) {
+      counts[row.conversation_id] = (counts[row.conversation_id] ?? 0) + 1;
+    }
+  }
+  return counts;
+}
+
+/** Records that the merchant has now seen this conversation. */
+export async function markConversationRead(
+  conversationId: string,
+  metadata: ConversationRecord['metadata'],
+): Promise<void> {
+  const supabase = getMessengerServiceClient();
+  await supabase
+    .from('widget_conversations')
+    .update({ metadata: { ...metadata, agent_last_read_at: new Date().toISOString() } })
+    .eq('id', conversationId);
+}
+
 export async function getConversationForSite(
   conversationId: string,
   siteId: string,

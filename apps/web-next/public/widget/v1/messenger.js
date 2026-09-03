@@ -120,6 +120,23 @@
      preview changed, the merchant published, and their store looked exactly
      the same. Clamped to the same 44-72 the server clamps to, so a hand-
      edited config cannot produce a launcher that covers the page. */
+  /* radiusStyle was never read by this loader at all: the launcher was a
+     hardcoded pill, the panel a hardcoded 16px, the teaser a hardcoded 14px.
+     Kept in step with lib/messenger/appearance-geometry.ts, which the
+     dashboard preview uses, so preview and storefront cannot disagree. */
+  function radiusStyle() {
+    var r = state.config && state.config.appearance && state.config.appearance.radiusStyle;
+    return r === 'rounded' || r === 'sharp' ? r : 'soft';
+  }
+  function launcherRadius() {
+    var r = radiusStyle();
+    return r === 'rounded' ? '18px' : r === 'sharp' ? '6px' : '999px';
+  }
+  function panelRadius() {
+    var r = radiusStyle();
+    return r === 'rounded' ? '14px' : r === 'sharp' ? '4px' : '20px';
+  }
+
   function launcherSize() {
     var px = state.config && state.config.appearance && state.config.appearance.launcherSizePx;
     px = Number(px);
@@ -209,18 +226,22 @@
     root.appendChild(style);
 
     var label = pick(state.config.appearance.launcherLabel);
-    var iconOnly = !label;
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn bottom icon-only';
     btn.setAttribute('aria-label', label || (state.locale === 'ar' ? 'الدعم' : 'Support'));
     btn.setAttribute('aria-expanded', 'false');
     btn.innerHTML = iconSvg(state.config.appearance.launcherIcon, state.config.appearance.launcherCustomIconUrl);
+    /* Both axes, unconditionally. The `.btn.icon-only` class below is applied
+       to every launcher and hardcodes 56x56, and the previous attempt gated
+       the width on a flag derived from launcherLabel — which most stores set,
+       so the width kept coming from the class and the button never changed.
+       The rendered button IS always icon-only: its content is the SVG, and
+       the label is only ever the aria-label. */
     var size = launcherSize();
     btn.style.height = size + 'px';
-    // Icon-only is a circle, so width tracks height; a labelled pill keeps its
-    // intrinsic width and only grows taller.
-    if (iconOnly) btn.style.width = size + 'px';
+    btn.style.width = size + 'px';
+    btn.style.borderRadius = launcherRadius();
     btn.addEventListener('click', function () { toggle(); });
     root.appendChild(btn);
 
@@ -259,6 +280,7 @@
     el.textContent = text;
     /* Clears the launcher by its actual width. This used to be a flat 84px in
        the stylesheet, which only lined up with the old fixed 56px button. */
+    el.style.borderRadius = panelRadius();
     var clear = launcherSize() + 28;
     if (state.config.appearance.position === 'bottom-left') el.style.left = clear + 'px';
     else el.style.right = clear + 'px';
@@ -328,7 +350,7 @@
       css += 'top:auto;bottom:' + (launcherSize() + 32) + 'px;' +
         (posLeft ? 'left:20px;right:auto;' : 'right:20px;left:auto;') +
         'width:min(384px,calc(100vw - 40px));height:min(600px,calc(100dvh - 120px));' +
-        'border-radius:16px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.24);';
+        'border-radius:' + panelRadius() + ';overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.24);';
     }
 
     // Rewriting cssText drops the open/closed visuals, so restate them.

@@ -31,6 +31,9 @@ const COPY = {
     hoursAgo: (n: number) => `${n}h ago`,
     daysAgo: (n: number) => `${n}d ago`,
     anonymous: 'Anonymous shopper',
+    unreadOne: 'unread',
+    unreadTotal: (n: number) => `${n} unread`,
+    allRead: 'All caught up',
     errorRetry: 'Something went wrong — try again.',
     photoAlt: 'Photo sent by the shopper',
     triageDamaged: 'Looks damaged',
@@ -59,6 +62,9 @@ const COPY = {
     hoursAgo: (n: number) => `قبل ${n} س`,
     daysAgo: (n: number) => `قبل ${n} ي`,
     anonymous: 'عميل زائر',
+    unreadOne: 'غير مقروء',
+    unreadTotal: (n: number) => `${n} غير مقروء`,
+    allRead: 'لا جديد',
     errorRetry: 'حدث خطأ — حاول مجدداً.',
     photoAlt: 'صورة أرسلها العميل',
     triageDamaged: 'يبدو تالفاً',
@@ -77,6 +83,9 @@ export interface ConversationListItem {
   visitorEmail: string | null;
   visitorName: string | null;
   handoffReason: string | null;
+  /** Shopper messages that arrived after this conversation was last opened
+   *  in the dashboard. Absent on hosts that have not sent it yet. */
+  unreadCount?: number;
 }
 
 interface WireMessage {
@@ -125,11 +134,17 @@ export function ConversationsPanel({
   conversations: ConversationListItem[];
   actions: Pick<
     MessengerHostActions,
-    'fetchConversationMessages' | 'staffReply' | 'takeoverConversation' | 'releaseConversation' | 'closeConversationAction'
+    | 'fetchConversationMessages'
+    | 'staffReply'
+    | 'takeoverConversation'
+    | 'releaseConversation'
+    | 'closeConversationAction'
+    | 'markConversationRead'
   >;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [attachments, setAttachments] = useState<Record<string, WireAttachment>>({});
   const [status, setStatus] = useState<string>('');
@@ -205,20 +220,49 @@ export function ConversationsPanel({
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* List */}
+      <div className="grid min-w-0 gap-2">
+      <p
+        role="status"
+        className={`text-xs font-medium ${
+          totalUnread > 0 ? 'text-foreground' : 'text-muted-foreground'
+        }`}
+      >
+        {totalUnread > 0 ? t.unreadTotal(totalUnread) : t.allRead}
+      </p>
       <ul className="grid max-h-[70vh] gap-2 overflow-y-auto" aria-label={t.title}>
         {conversations.map((conversation) => (
           <li key={conversation.id}>
             <button
               type="button"
-              onClick={() => setSelectedId(conversation.id)}
+              onClick={() => {
+                setSelectedId(conversation.id);
+                /* Opening it IS reading it. Fire and forget: the badge is a
+                   convenience, and a failed write must not block the thread
+                   from opening. The count clears on the next server read. */
+                if ((conversation.unreadCount ?? 0) > 0) {
+                  void actions.markConversationRead(siteId, conversation.id);
+                }
+              }}
               aria-current={selectedId === conversation.id ? 'true' : undefined}
               className={`w-full rounded-xl border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 ${
                 selectedId === conversation.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'
               }`}
             >
               <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-medium">
-                  {conversation.visitorName || conversation.visitorEmail || t.anonymous}
+                <span
+                  className={`flex min-w-0 items-center gap-1.5 truncate text-sm ${
+                    (conversation.unreadCount ?? 0) > 0 ? 'font-semibold' : 'font-medium'
+                  }`}
+                >
+                  {(conversation.unreadCount ?? 0) > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="inline-block size-2 shrink-0 rounded-full bg-primary"
+                    />
+                  )}
+                  <span className="truncate">
+                    {conversation.visitorName || conversation.visitorEmail || t.anonymous}
+                  </span>
                 </span>
                 <span className="shrink-0 text-[11px] text-muted-foreground">
                   {relativeTime(conversation.lastMessageAt ?? conversation.startedAt, t)}
@@ -228,6 +272,12 @@ export function ConversationsPanel({
                 <Badge variant={statusBadge(conversation.status).variant}>
                   {statusBadge(conversation.status).label}
                 </Badge>
+                {(conversation.unreadCount ?? 0) > 0 && (
+                  <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
+                    <span className="sr-only">{t.unreadOne}: </span>
+                    {conversation.unreadCount}
+                  </span>
+                )}
                 {conversation.handoffReason && (
                   <span className="truncate text-[11px] text-muted-foreground">{conversation.handoffReason}</span>
                 )}
@@ -236,6 +286,7 @@ export function ConversationsPanel({
           </li>
         ))}
       </ul>
+      </div>
 
       {/* Thread */}
       <section className="flex min-h-[420px] min-w-0 flex-col rounded-xl border border-border bg-card">

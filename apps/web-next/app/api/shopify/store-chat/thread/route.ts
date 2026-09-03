@@ -8,6 +8,7 @@ import {
   closeConversation,
   getConversationForSite,
   listMessages,
+  markConversationRead,
   recordAudit,
   returnConversationToAi,
   takeOverConversation,
@@ -18,6 +19,7 @@ type ThreadBody =
   | { op: 'messages'; conversationId: string }
   | { op: 'reply'; conversationId: string; text: string }
   | { op: 'takeover'; conversationId: string }
+  | { op: 'markRead'; conversationId: string }
   | { op: 'release'; conversationId: string }
   | { op: 'close'; conversationId: string };
 
@@ -112,6 +114,10 @@ export async function POST(request: NextRequest) {
           action: 'conversation_taken_over',
           detail: { conversationId: conversation.id },
         });
+        return NextResponse.json({ ok: true });
+      }
+      case 'markRead': {
+        await markConversationRead(conversation.id, conversation.metadata);
         return NextResponse.json({ ok: true });
       }
       case 'release': {

@@ -25,6 +25,8 @@ export interface MessengerHostActions {
   fetchConversationMessages(siteId: string, conversationId: string): Promise<FetchMessagesResult | { ok: false }>;
   staffReply(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
   takeoverConversation(siteId: string, conversationId: string): Promise<ActionResult>;
+  /** Marks a conversation as seen by the merchant. */
+  markConversationRead(siteId: string, conversationId: string): Promise<ActionResult>;
   releaseConversation(siteId: string, conversationId: string): Promise<ActionResult>;
   closeConversationAction(siteId: string, conversationId: string): Promise<ActionResult>;
 }

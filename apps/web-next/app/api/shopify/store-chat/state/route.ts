@@ -3,6 +3,7 @@ import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
+  countUnreadByConversation,
   getOverviewStats,
   getWidgetLastSeenAt,
   listConversationsForSite,
@@ -45,6 +46,9 @@ export async function GET(request: NextRequest) {
 
   const stats = statsRes.status === 'fulfilled' ? statsRes.value : null;
   const conversations = conversationsRes.status === 'fulfilled' ? conversationsRes.value : [];
+  const unread = await countUnreadByConversation(conversations).catch(
+    (): Record<string, number> => ({}),
+  );
   const knowledge = knowledgeRes.status === 'fulfilled' ? knowledgeRes.value : [];
   /* Was listManagedTryOnShops(), which calls requireDashboardOwner(). There
      is no Clerk session inside the embedded Shopify iframe, so that lookup
@@ -82,6 +86,7 @@ export async function GET(request: NextRequest) {
       visitorEmail: c.visitor_email,
       visitorName: c.visitor_name,
       handoffReason: c.handoff_reason,
+      unreadCount: unread[c.id] ?? 0,
     })),
     knowledge,
   });

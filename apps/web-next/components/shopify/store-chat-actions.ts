@@ -52,6 +52,8 @@ export function useStoreChatActions(): MessengerHostActions {
         postJson('/api/shopify/store-chat/thread', { op: 'reply', conversationId, text }),
       takeoverConversation: (_siteId, conversationId: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'takeover', conversationId }),
+      markConversationRead: (_siteId, conversationId: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'markRead', conversationId }),
       releaseConversation: (_siteId, conversationId: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'release', conversationId }),
       closeConversationAction: (_siteId, conversationId: string) =>

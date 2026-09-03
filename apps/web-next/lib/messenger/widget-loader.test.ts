@@ -74,3 +74,24 @@ describe('storefront widget loader — settings it must actually honour', () => 
     expect(loader).toMatch(/function resolveLocale[\s\S]{0,200}LOCALE_HINT/);
   });
 });
+
+/* The size fix shipped once and still did nothing. It set the height inline
+   but gated the WIDTH on an `iconOnly` flag derived from launcherLabel — and
+   most stores set a label, so the width kept coming from the `.btn.icon-only`
+   class, which hardcodes 56px. The button is always icon-only in practice:
+   its content is the SVG and the label is only ever an aria-label. */
+describe('storefront widget loader — launcher geometry', () => {
+  it('sizes both axes unconditionally, with no label-derived flag', () => {
+    expect(loader).toContain("btn.style.height = size + 'px'");
+    expect(loader).toContain("btn.style.width = size + 'px'");
+    expect(loader).not.toContain('var iconOnly');
+    expect(loader).not.toContain('if (iconOnly)');
+  });
+
+  it('reads the corner style the dashboard has always offered', () => {
+    expect(loader).toContain('appearance.radiusStyle');
+    expect(loader).toContain('btn.style.borderRadius = launcherRadius()');
+    expect(loader).toContain("'border-radius:' + panelRadius()");
+    expect(loader).not.toContain('border-radius:16px;overflow:hidden');
+  });
+});

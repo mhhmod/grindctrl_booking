@@ -8,6 +8,7 @@ const staffReply = vi.fn();
 const takeoverConversation = vi.fn();
 const releaseConversation = vi.fn();
 const closeConversationAction = vi.fn();
+const markConversationRead = vi.fn();
 
 const actions = {
   fetchConversationMessages,
@@ -15,6 +16,7 @@ const actions = {
   takeoverConversation,
   releaseConversation,
   closeConversationAction,
+  markConversationRead,
 };
 
 const CONVERSATIONS: ConversationListItem[] = [
@@ -73,5 +75,67 @@ describe('ConversationsPanel', () => {
     });
 
     expect(staffReply).toHaveBeenCalledWith('site-1', 'conv-1', 'Shipped yesterday!');
+  });
+});
+
+/* The inbox had no notion of read at all: a conversation holding a question
+   nobody had seen looked identical to one already answered. */
+describe('ConversationsPanel unread', () => {
+  const UNREAD: ConversationListItem[] = [
+    { ...CONVERSATIONS[0], id: 'conv-1', unreadCount: 3 },
+    {
+      id: 'conv-2',
+      status: 'open',
+      startedAt: '2026-08-30T09:00:00.000Z',
+      lastMessageAt: '2026-08-30T09:30:00.000Z',
+      visitorEmail: null,
+      visitorName: 'Read already',
+      handoffReason: null,
+      unreadCount: 0,
+    },
+  ];
+
+  it('shows a per-conversation count and a total', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={UNREAD}
+        actions={actions}
+      />,
+    );
+
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('3 unread')).toBeInTheDocument();
+  });
+
+  it('says so plainly when nothing is waiting', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={[{ ...CONVERSATIONS[0], unreadCount: 0 }]}
+        actions={actions}
+      />,
+    );
+
+    expect(screen.getByText('All caught up')).toBeInTheDocument();
+  });
+
+  it('marks a conversation read when it is opened, and only if it was unread', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={UNREAD}
+        actions={actions}
+      />,
+    );
+
+    fireEvent.click(screen.getByText('Read already'));
+    expect(markConversationRead).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText('shopper@example.com'));
+    expect(markConversationRead).toHaveBeenCalledWith('site-1', 'conv-1');
   });
 });

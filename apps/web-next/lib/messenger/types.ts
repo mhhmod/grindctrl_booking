@@ -179,6 +179,9 @@ export interface ConversationRecord {
       verified: boolean;
     } | null;
     last_page_url?: string | null;
+    /** When the merchant last opened this conversation in the dashboard.
+     *  Absent means never opened, so every shopper message counts unread. */
+    agent_last_read_at?: string | null;
     /** Set the moment the contact block is offered, so it is offered once
      *  per conversation whether the shopper answers, skips, or ignores it. */
     contact_prompted_at?: string;
