@@ -483,6 +483,31 @@ export async function requireOwnedSite(clerkUserId: string, siteId: string): Pro
 }
 
 /** Profile row id for assignment bookkeeping on conversations. */
+/* The profile a conversation should be assigned to for a given site.
+
+   The embedded app used getProfileId(shopProfileId(shop)) and assumed that
+   row always exists. It only exists for a store that installed the app
+   FIRST — a store whose site was created through the dashboard, and then
+   connected, has a real Clerk-owned profile and no shop- row at all. For
+   those stores getProfileId threw, the thread route caught it, and every
+   Take over and every staff reply in the embedded app came back as "Action
+   failed. Please try again." with nothing to say what had failed.
+
+   The workspace owner is the right answer for both shapes: for a shop-first
+   install it IS the shop profile, and for a dashboard-first store it is the
+   merchant who owns the site. Either way it exists, because a site cannot
+   have a workspace without one. */
+export async function getSiteAssigneeProfileId(workspaceId: string): Promise<string> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('workspaces')
+    .select('owner_profile_id')
+    .eq('id', workspaceId)
+    .maybeSingle();
+  if (res.error || !res.data) throw new Error('Workspace owner lookup failed.');
+  return (res.data as { owner_profile_id: string }).owner_profile_id;
+}
+
 export async function getProfileId(clerkUserId: string): Promise<string> {
   const supabase = getMessengerServiceClient();
   const res = await supabase

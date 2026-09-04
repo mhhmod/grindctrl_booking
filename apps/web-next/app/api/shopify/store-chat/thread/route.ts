@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { shopProfileId } from '@/lib/messenger/shop-tenancy';
-import { getProfileId } from '@/lib/messenger/provisioning';
+import { getSiteAssigneeProfileId } from '@/lib/messenger/provisioning';
 import {
   appendMessage,
   closeConversation,
@@ -30,10 +31,17 @@ type ThreadBody =
    never trusted from the request body — the same invariant every other
    Phase 2 route documents and enforces.
 
-   The audit actor is shopProfileId(shop): the store, not a specific person.
-   getProfileId resolves it whether or not the store has since been claimed —
-   that profile row is never deleted, only orphaned, on claim (see the note
-   at the top of this plan). */
+   The audit actor stays shopProfileId(shop): the store, not a specific
+   person, because an embedded session proves which shop is calling and never
+   which member of staff. That string is only ever recorded, so it needs no
+   profile row.
+
+   Assignment is a different question and must resolve to a profile that
+   exists. It used to look up the shop- profile, which only exists for a
+   store that installed the app before it had a dashboard account; a
+   dashboard-first store has a Clerk-owned profile and no shop- row, so the
+   lookup threw and every Take over and reply failed. The workspace owner
+   covers both shapes — see getSiteAssigneeProfileId. */
 export async function POST(request: NextRequest) {
   const session = authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
         const trimmed = body.text.trim().slice(0, 2000);
         if (!trimmed) return NextResponse.json({ ok: false, error: 'Message is empty.' }, { status: 400 });
         if (conversation.status === 'open') {
-          const taken = await takeOverConversation(conversation.id, await getProfileId(actorClerkUserId));
+          const taken = await takeOverConversation(conversation.id, await getSiteAssigneeProfileId(site.workspace_id));
           if (!taken) {
             return NextResponse.json({ ok: false, error: 'Conversation state changed. Refresh and retry.' }, { status: 400 });
           }
@@ -104,7 +112,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
       case 'takeover': {
-        const taken = await takeOverConversation(conversation.id, await getProfileId(actorClerkUserId));
+        const taken = await takeOverConversation(conversation.id, await getSiteAssigneeProfileId(site.workspace_id));
         if (!taken) {
           return NextResponse.json({ ok: false, error: 'Conversation is no longer available for takeover.' }, { status: 400 });
         }
@@ -136,6 +144,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: false, error: 'Unknown operation.' }, { status: 400 });
     }
   } catch (error) {
+    /* Reported, not just logged. Every merchant-facing failure here collapses
+       to one deliberately generic sentence — right for a client-facing route,
+       and useless for finding out what broke. A takeover that failed for days
+       left nothing in Sentry at all, because a caught error never reaches it,
+       so the only trace was a console line on the server nobody was reading. */
+    Sentry.captureException(error, {
+      tags: { surface: 'store-chat-embedded', op: String(body.op ?? 'unknown') },
+      extra: { siteId: site.id, shop: session.shop },
+    });
     console.error('[store-chat thread] operation failed', error);
     return NextResponse.json({ ok: false, error: 'Action failed. Please try again.' }, { status: 500 });
   }

@@ -12,7 +12,7 @@ const {
   takeOverConversationMock,
   returnConversationToAiMock,
   closeConversationMock,
-  getProfileIdMock,
+  getSiteAssigneeProfileIdMock,
   listConversationAttachmentsMock,
   signAttachmentUrlsMock,
 } = vi.hoisted(() => ({
@@ -25,7 +25,7 @@ const {
   takeOverConversationMock: vi.fn(),
   returnConversationToAiMock: vi.fn(),
   closeConversationMock: vi.fn(),
-  getProfileIdMock: vi.fn(),
+  getSiteAssigneeProfileIdMock: vi.fn(),
   listConversationAttachmentsMock: vi.fn(),
   signAttachmentUrlsMock: vi.fn(),
 }));
@@ -33,7 +33,9 @@ const {
 vi.mock('@/lib/shopify/session-token', () => ({ authenticateShopifyRequest: authenticateMock }));
 vi.mock('@/lib/messenger/shop-provisioning', () => ({ ensureShopOwnedSite: ensureShopOwnedSiteMock }));
 vi.mock('@/lib/messenger/shop-tenancy', () => ({ shopProfileId: (domain: string) => `shop-${domain}` }));
-vi.mock('@/lib/messenger/provisioning', () => ({ getProfileId: getProfileIdMock }));
+vi.mock('@/lib/messenger/provisioning', () => ({
+  getSiteAssigneeProfileId: getSiteAssigneeProfileIdMock,
+}));
 vi.mock('@/lib/messenger/conversations', () => ({
   getConversationForSite: getConversationForSiteMock,
   listMessages: listMessagesMock,
@@ -63,7 +65,7 @@ function req(body: unknown): NextRequest {
 beforeEach(() => {
   vi.resetAllMocks();
   authenticateMock.mockReturnValue({ shop: 'demo.myshopify.com' });
-  ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real' });
+  ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real', workspace_id: 'ws-1' });
   listConversationAttachmentsMock.mockResolvedValue([]);
   signAttachmentUrlsMock.mockResolvedValue({});
 });
@@ -100,14 +102,17 @@ describe('POST /api/shopify/store-chat/thread', () => {
 
   it('op=reply takes over an open conversation before appending, using the shop as actor', async () => {
     getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
-    getProfileIdMock.mockResolvedValue('profile-shop-1');
+    getSiteAssigneeProfileIdMock.mockResolvedValue('profile-owner-1');
     takeOverConversationMock.mockResolvedValue({ id: 'c-1', status: 'handoff_active' });
     appendMessageMock.mockResolvedValue({ message: {}, replayed: false });
 
     const res = await POST(req({ op: 'reply', conversationId: 'c-1', text: 'On it!' }));
 
-    expect(getProfileIdMock).toHaveBeenCalledWith('shop-demo.myshopify.com');
-    expect(takeOverConversationMock).toHaveBeenCalledWith('c-1', 'profile-shop-1');
+    /* Assignment resolves through the site's workspace, not a shop- profile.
+       A dashboard-first store has no shop- row, so the old lookup threw and
+       every reply and takeover in the embedded app failed. */
+    expect(getSiteAssigneeProfileIdMock).toHaveBeenCalledWith('ws-1');
+    expect(takeOverConversationMock).toHaveBeenCalledWith('c-1', 'profile-owner-1');
     expect(appendMessageMock).toHaveBeenCalledWith(
       expect.objectContaining({ conversationId: 'c-1', role: 'assistant', content: 'On it!' }),
     );
@@ -119,7 +124,7 @@ describe('POST /api/shopify/store-chat/thread', () => {
 
   it('op=takeover records the audit trail against the shop, not a person', async () => {
     getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
-    getProfileIdMock.mockResolvedValue('profile-shop-1');
+    getSiteAssigneeProfileIdMock.mockResolvedValue('profile-owner-1');
     takeOverConversationMock.mockResolvedValue({ id: 'c-1', status: 'handoff_active' });
 
     const res = await POST(req({ op: 'takeover', conversationId: 'c-1' }));
@@ -151,7 +156,7 @@ describe('POST /api/shopify/store-chat/thread', () => {
 
   it('returns a generic 500 instead of leaking a raw infra error when an op throws', async () => {
     getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
-    getProfileIdMock.mockRejectedValue(new Error('connection to profiles table reset'));
+    getSiteAssigneeProfileIdMock.mockRejectedValue(new Error('connection to profiles table reset'));
     const res = await POST(req({ op: 'takeover', conversationId: 'c-1' }));
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ ok: false, error: 'Action failed. Please try again.' });
