@@ -243,6 +243,9 @@
     btn.style.width = size + 'px';
     btn.style.borderRadius = launcherRadius();
     btn.addEventListener('click', function () { toggle(); });
+    btn.addEventListener('pointerenter', warmPanel);
+    btn.addEventListener('touchstart', warmPanel, { passive: true });
+    btn.addEventListener('focus', warmPanel);
     root.appendChild(btn);
 
     state.host = hostEl;
@@ -405,6 +408,32 @@
 
   function toggle() { state.open ? close() : open(); }
 
+  /* On a phone the panel is full-bleed, so it covers the launcher — the only
+     control that could close it. A shopper who opened the chat had no way
+     back to the store short of reloading the page. The panel now renders its
+     own close button and asks us to shut, over postMessage, because it lives
+     in an iframe on our origin and cannot reach this code directly.
+
+     Trust is established by identity, not by origin string: the message must
+     come from the very window we created. Nothing else on the page, and no
+     other frame, can forge that. */
+  window.addEventListener('message', function (event) {
+    if (!state.iframe || event.source !== state.iframe.contentWindow) return;
+    var data = event.data;
+    if (data && data.type === 'grindctrl-messenger:close') close();
+  });
+
+  /* Opening felt slow because the iframe was created by the click itself:
+     the shopper waited on a document fetch and a React hydration before
+     anything appeared. Warm it on the first sign of intent instead — hover,
+     the touch that precedes the tap, or keyboard focus — and on an idle
+     moment for shoppers who never touch it first. Cheap: this is the same
+     request the open would have made, just earlier. */
+  function warmPanel() {
+    if (state.iframe) return;
+    buildIframe();
+  }
+
   /* ── Identity ── */
   function identify(token) {
     if (typeof token !== 'string' || token.length > 4096) return;
@@ -472,6 +501,16 @@
       buildLauncher();
       attachShopperToken();
       track('loader_initialized', {});
+
+      /* Respect Save-Data and 2g: on a metered or slow connection an unused
+         preload is a real cost to the shopper, and the click-time fetch is
+         the lesser evil. */
+      var conn = navigator.connection;
+      var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
+      if (!frugal) {
+        var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
+        idle(function () { warmPanel(); }, { timeout: 6000 });
+      }
 
       if (config.available && config.aiEnabled) {
         if (config.behaviour.greetingEnabled) {

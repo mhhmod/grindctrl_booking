@@ -144,6 +144,15 @@ export function MessengerPanel({
     return fromQuery ?? (origin || window.location.origin);
   }, [origin]);
 
+  /* The panel cannot close itself: the loader created and positions the
+     iframe, so only it can hide it. postMessage is the one channel across
+     that boundary; the loader accepts the request only from this exact
+     window, so nothing else on the page can trigger it. */
+  const closePanel = useCallback(() => {
+    if (typeof window === 'undefined' || window.parent === window) return;
+    window.parent.postMessage({ type: 'grindctrl-messenger:close' }, '*');
+  }, []);
+
   const scrollToEnd = useCallback(() => {
     requestAnimationFrame(() => {
       const list = listRef.current;
@@ -461,7 +470,7 @@ export function MessengerPanel({
             initialOf(config.storeName)
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold leading-tight">{config.storeName}</p>
           <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
             <span
@@ -471,6 +480,35 @@ export function MessengerPanel({
             {config.available ? t.aiNotice : t.offlineNote}
           </p>
         </div>
+
+        {/* The only way out on a phone. The panel is full-bleed there, so it
+            covers the launcher — the control that closes it everywhere else —
+            and a shopper who opened the chat was stuck with it until they
+            reloaded the store. The loader owns the iframe, so ask it to close
+            rather than trying to hide ourselves. Rendered on every size: a
+            close button in the corner of a chat window is what people reach
+            for first regardless of screen. */}
+        {variant === 'live' && (
+          <button
+            type="button"
+            onClick={closePanel}
+            aria-label={t.close}
+            className="-me-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </header>
 
       {/* Thread */}

@@ -6,6 +6,7 @@ import type { MessengerLocale } from '@/lib/messenger/types';
 export interface PanelCopy {
   typing: string;
   sendAria: string;
+  close: string;
   messagePlaceholderFallback: string;
   poweredBy: string;
   aiNotice: string;
@@ -39,6 +40,7 @@ export interface PanelCopy {
 const EN: PanelCopy = {
   typing: 'Typing…',
   sendAria: 'Send message',
+  close: 'Close chat',
   messagePlaceholderFallback: 'Ask anything…',
   poweredBy: 'Powered by GRINDCTRL',
   aiNotice: 'Assistant may reply automatically',
@@ -70,6 +72,7 @@ const EN: PanelCopy = {
 const AR: PanelCopy = {
   typing: 'يكتب…',
   sendAria: 'إرسال الرسالة',
+  close: 'إغلاق المحادثة',
   messagePlaceholderFallback: 'اكتب سؤالك…',
   poweredBy: 'مدعوم من GRINDCTRL',
   aiNotice: 'قد يرد المساعد تلقائياً',

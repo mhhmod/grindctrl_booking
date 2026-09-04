@@ -95,3 +95,28 @@ describe('storefront widget loader — launcher geometry', () => {
     expect(loader).not.toContain('border-radius:16px;overflow:hidden');
   });
 });
+
+/* On a phone the panel is full-bleed and covers the launcher — the only
+   control that closed it. A shopper who opened the chat had no way back to
+   the store short of reloading it. */
+describe('storefront widget loader — closing and warm-up', () => {
+  it('accepts a close request only from the panel window it created', () => {
+    expect(loader).toContain("addEventListener('message'");
+    expect(loader).toContain("grindctrl-messenger:close");
+    // Identity, not an origin string: nothing else on the page can forge
+    // being the window we made.
+    expect(loader).toContain('event.source !== state.iframe.contentWindow');
+  });
+
+  it('builds the panel before the tap rather than during it', () => {
+    expect(loader).toContain('function warmPanel()');
+    expect(loader).toContain("btn.addEventListener('pointerenter', warmPanel)");
+    expect(loader).toContain("btn.addEventListener('touchstart', warmPanel");
+    expect(loader).toContain("btn.addEventListener('focus', warmPanel)");
+  });
+
+  it('does not spend a shopper\'s metered data on a panel they may never open', () => {
+    expect(loader).toContain('saveData');
+    expect(loader).toContain('effectiveType');
+  });
+});

@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessengerPanel } from './MessengerPanel';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
@@ -125,5 +125,34 @@ describe('MessengerPanel reply delivery', () => {
     });
 
     expect(String(syncCalls()[0]?.[0])).toContain('originToken=tok-abc');
+  });
+});
+
+/* The panel could not be dismissed on a phone: it is full-bleed there, so it
+   covers the launcher, which is the control that closes it on desktop. */
+describe('MessengerPanel close', () => {
+  it('asks the loader to close, since only the loader owns the iframe', async () => {
+    const parentPost = vi.fn();
+    const originalParent = window.parent;
+    Object.defineProperty(window, 'parent', {
+      configurable: true,
+      value: { postMessage: parentPost },
+    });
+
+    try {
+      await bootPanel();
+      fireEvent.click(screen.getByRole('button', { name: 'Close chat' }));
+      expect(parentPost).toHaveBeenCalledWith(
+        { type: 'grindctrl-messenger:close' },
+        '*',
+      );
+    } finally {
+      Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    }
+  });
+
+  it('offers no close button in the dashboard preview, which has no loader', async () => {
+    render(<MessengerPanel config={CONFIG} variant="preview" locale="en" />);
+    expect(screen.queryByRole('button', { name: 'Close chat' })).not.toBeInTheDocument();
   });
 });
