@@ -139,3 +139,36 @@ describe('ConversationsPanel unread', () => {
     expect(markConversationRead).toHaveBeenCalledWith('site-1', 'conv-1');
   });
 });
+
+/* The panel renders `attachments[message.id]` for every message. When a host
+   returns a result without that field the lookup throws during render, React
+   unmounts the panel, and the merchant is left with a blank Conversations tab
+   and nothing said about why — the worst possible failure for an inbox. */
+describe('ConversationsPanel resilience', () => {
+  it('still renders the thread when the host omits attachments entirely', async () => {
+    fetchConversationMessages.mockResolvedValue({
+      ok: true,
+      status: 'open',
+      messages: [
+        {
+          id: 'm1',
+          role: 'user',
+          content: 'Where is my order?',
+          createdAt: '2026-08-30T10:05:00.000Z',
+        },
+      ],
+      // attachments deliberately absent
+    });
+
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={CONVERSATIONS}
+        actions={actions}
+      />,
+    );
+
+    expect(await screen.findByText('Where is my order?')).toBeInTheDocument();
+  });
+});

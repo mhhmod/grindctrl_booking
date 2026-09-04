@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { MessengerOverview } from '@/components/dashboard/messenger/overview';
 import { PublishBar } from '@/components/dashboard/messenger/publish-bar';
 import { MessageText } from '@/components/messenger/message-text';
+import { ConversationsPanel, type ConversationListItem } from '@/components/dashboard/messenger/conversations-panel';
 
 /* Dev-only mirror of the Store Chat Overview and the publish bar with mock
    data, so their layout and states can be checked in a browser without the
@@ -26,6 +27,68 @@ const SAMPLE_REPLY = `Here are the direct links to our collections:
 - Graphic Tees: https://grindctrl.myshopify.com/collections/graphic-tees
 - Kids Tees: https://grindctrl.myshopify.com/collections/kids-tees
 Feel free to explore, and let me know if you would like more details.`;
+
+const CONVERSATIONS: ConversationListItem[] = [
+  {
+    id: 'c1',
+    status: 'handoff_requested',
+    startedAt: '2026-09-03T18:00:00.000Z',
+    lastMessageAt: '2026-09-04T10:00:00.000Z',
+    visitorEmail: 'm10sabry1505@gmail.com',
+    visitorName: null,
+    handoffReason: 'assistant_escalated',
+    unreadCount: 7,
+    preview: 'GIVE ME THE LINKS',
+  },
+  {
+    id: 'c2',
+    status: 'open',
+    startedAt: '2026-09-03T17:00:00.000Z',
+    lastMessageAt: '2026-09-04T09:00:00.000Z',
+    visitorEmail: null,
+    visitorName: null,
+    handoffReason: null,
+    unreadCount: 1,
+    preview: 'Do you ship to Egypt, and how long does delivery take?',
+  },
+  {
+    id: 'c3',
+    status: 'closed',
+    startedAt: '2026-09-02T12:00:00.000Z',
+    lastMessageAt: '2026-09-02T12:30:00.000Z',
+    visitorEmail: null,
+    visitorName: 'Sara',
+    handoffReason: null,
+    unreadCount: 0,
+    preview: 'Thanks, that answered it.',
+  },
+];
+
+const NOOP = async () => ({ ok: true as const });
+const CONVERSATION_ACTIONS = {
+  // A long thread, because that is the shape the merchant actually has and
+  // it is what drives the height of the grid row the list column sits in.
+  fetchConversationMessages: async () => ({
+    ok: true as const,
+    status: 'handoff_requested',
+    attachments: {},
+    messages: Array.from({ length: 14 }, (_, i) => ({
+      id: `m${i}`,
+      role: i % 2 === 0 ? 'user' : 'assistant',
+      content:
+        i % 2 === 0
+          ? 'WHAT PRODUCTS U HAVE'
+          : 'We carry a range of items including graphic tees, hoodies, caps, and accessories like stickers and phone cases. Feel free to browse our collections on the site.',
+      createdAt: new Date(Date.now() - (14 - i) * 60000).toISOString(),
+      author: i % 2 === 0 ? undefined : 'ai',
+    })),
+  }),
+  staffReply: NOOP,
+  takeoverConversation: NOOP,
+  releaseConversation: NOOP,
+  closeConversationAction: NOOP,
+  markConversationRead: NOOP,
+};
 
 const CASES = [
   {
@@ -87,6 +150,16 @@ function StoreChatCheck() {
           />
         </section>
       ))}
+
+      <section className="grid min-w-0 gap-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">Conversations list</h2>
+        <ConversationsPanel
+          locale="en"
+          siteId="site-1"
+          conversations={CONVERSATIONS}
+          actions={CONVERSATION_ACTIONS as never}
+        />
+      </section>
 
       {/* The exact reply that rendered as one unbroken paragraph of inert
           text, at the narrowest width the panel ever gets. */}

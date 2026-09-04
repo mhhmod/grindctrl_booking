@@ -182,7 +182,11 @@ export function ConversationsPanel({
     if (seq !== loadSeq.current) return;
     if (result.ok) {
       setMessages(result.messages);
-      setAttachments(result.attachments);
+      /* A host that omits this field must not take the tab down with it.
+         `attachments[message.id]` on undefined throws during render, React
+         unmounts the whole panel, and the merchant gets a blank Conversations
+         tab with nothing said about why. */
+      setAttachments(result.attachments ?? {});
       setStatus(result.status);
       setError(null);
     } else {
@@ -237,7 +241,7 @@ export function ConversationsPanel({
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* List */}
-      <div className="grid min-w-0 gap-2">
+      <div className="flex min-w-0 flex-col gap-2 self-start">
       <p
         role="status"
         className={`text-xs font-medium ${
@@ -246,7 +250,15 @@ export function ConversationsPanel({
       >
         {totalUnread > 0 ? t.unreadTotal(totalUnread) : t.allRead}
       </p>
-      <ul className="grid max-h-[70vh] gap-2 overflow-y-auto" aria-label={t.title}>
+      {/* self-start above plus max-h here: the list sizes to its own rows and
+          only scrolls once there are more than a screenful. As a stretched
+          grid item it took the thread column's height and then clipped its
+          own content inside it — 278px of rows shown through a 172px window,
+          with no scrollbar hint that anything was below. */}
+      <ul
+        className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto overscroll-contain pe-1"
+        aria-label={t.title}
+      >
         {conversations.map((conversation) => (
           <li key={conversation.id}>
             <button
