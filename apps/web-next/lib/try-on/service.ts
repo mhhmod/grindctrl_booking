@@ -15,6 +15,7 @@ import {
   TryOnFinalizationPendingError,
   TryOnResultUnavailableError,
 } from './result-errors';
+import { toShopperFailureMessage } from './shopper-errors';
 
 export {
   TryOnFinalizationPendingError,
@@ -175,6 +176,15 @@ export async function generateTryOn(
         productName,
       );
     } catch (error) {
+      /* The detail the shopper must not see is exactly the detail we need.
+         meta is returned to the storefront too, so it cannot go there either
+         — server logs only. */
+      console.error('[try-on] generation_failed_detail', {
+        jobId: reservedJobId,
+        shop,
+        provider: modelKey,
+        detail: error instanceof Error ? error.message : String(error),
+      });
       const failedJob: TryOnJob = {
         jobId: reservedJobId,
         sessionId,
@@ -183,7 +193,13 @@ export async function generateTryOn(
         requestKey,
         modelKey,
         status: 'failed',
-        message: error instanceof Error ? error.message : 'Image generation failed.',
+        /* The shopper sees this string. A provider's message must never reach
+           a storefront: ours arrived as "Insufficient credits. Add more using
+           https://openrouter.ai/settings/credits" and was rendered to a
+           merchant's customers, naming our vendor and linking our billing
+           page. The real text still reaches logs and Sentry below, where it
+           is actually useful. */
+        message: toShopperFailureMessage(error),
         createdAt: reservation.createdAt,
         meta: { runtime: 'live', provider: modelKey, costEstimate: 0 },
       };
@@ -224,7 +240,9 @@ export async function generateTryOn(
       const unpersistedJob: TryOnJob = {
         ...job,
         status: 'failed',
-        message: error instanceof Error ? error.message : 'Result could not be stored.',
+        // Same boundary: a storage failure is ours, not something to explain
+        // to a shopper in our own vocabulary.
+        message: toShopperFailureMessage(error),
         meta: { ...job.meta, costEstimate: 0 },
       };
       try {
