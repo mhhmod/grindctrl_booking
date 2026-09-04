@@ -33,6 +33,7 @@ interface StoreChatState {
     visitorName: string | null;
     handoffReason: string | null;
     unreadCount?: number;
+    preview?: string | null;
   }>;
   knowledge: KnowledgeEntry[];
 }
@@ -89,10 +90,14 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
-      /* Re-pulls like the others: the unread badges in the list are computed
-         server-side, so the count only clears once /state comes back. */
-      markConversationRead: async (siteId, conversationId) => {
-        const result = await rawActions.markConversationRead(siteId, conversationId);
+      /* The one action that does NOT re-pull /state. It fires on every
+         conversation click, the panel clears the badge locally, and pulling
+         the whole state payload back just to confirm it made opening a
+         conversation feel like it had stalled. */
+      markConversationRead: (siteId, conversationId) =>
+        rawActions.markConversationRead(siteId, conversationId),
+      saveDraftSections: async (siteId, sections) => {
+        const result = await rawActions.saveDraftSections(siteId, sections);
         if (result.ok) void loadState();
         return result;
       },

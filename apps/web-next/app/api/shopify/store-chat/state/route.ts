@@ -3,7 +3,8 @@ import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
-  countUnreadByConversation,
+  summarizeConversations,
+  type ConversationSummary,
   getOverviewStats,
   getWidgetLastSeenAt,
   listConversationsForSite,
@@ -46,8 +47,8 @@ export async function GET(request: NextRequest) {
 
   const stats = statsRes.status === 'fulfilled' ? statsRes.value : null;
   const conversations = conversationsRes.status === 'fulfilled' ? conversationsRes.value : [];
-  const unread = await countUnreadByConversation(conversations).catch(
-    (): Record<string, number> => ({}),
+  const summaries = await summarizeConversations(conversations).catch(
+    (): Record<string, ConversationSummary> => ({}),
   );
   const knowledge = knowledgeRes.status === 'fulfilled' ? knowledgeRes.value : [];
   /* Was listManagedTryOnShops(), which calls requireDashboardOwner(). There
@@ -86,7 +87,8 @@ export async function GET(request: NextRequest) {
       visitorEmail: c.visitor_email,
       visitorName: c.visitor_name,
       handoffReason: c.handoff_reason,
-      unreadCount: unread[c.id] ?? 0,
+      unreadCount: summaries[c.id]?.unread ?? 0,
+      preview: summaries[c.id]?.preview ?? null,
     })),
     knowledge,
   });

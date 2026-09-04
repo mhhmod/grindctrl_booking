@@ -153,7 +153,7 @@ export function SupportDeskSettings({
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
   orderLookup: MessengerOrderLookup;
-  actions: Pick<MessengerHostActions, 'saveDraftSection'>;
+  actions: Pick<MessengerHostActions, 'saveDraftSections'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   /* Shopify sends the merchant back here after the consent screen. Saying
@@ -176,20 +176,27 @@ export function SupportDeskSettings({
     event.preventDefault();
     setNote(null);
     startTransition(async () => {
-      const results = await Promise.all([
-        actions.saveDraftSection(siteId, 'notifications', {
-          ...notify,
-          recipients: recipientsText
-            .split('\n')
-            .map((line) => line.trim())
-            .filter(Boolean),
-        }),
-        actions.saveDraftSection(siteId, 'contactCapture', contact),
-        actions.saveDraftSection(siteId, 'attachments', attach),
-        actions.saveDraftSection(siteId, 'orderLookup', orders),
+      /* One write, not four concurrent ones. Each single-section save reads
+         settings_draft, merges its own section, and writes the whole object
+         back — so run together they overwrote each other and only the last
+         to land survived. That is why a ticked box came back unchecked after
+         a Save that reported success. */
+      const result = await actions.saveDraftSections(siteId, [
+        {
+          section: 'notifications',
+          payload: {
+            ...notify,
+            recipients: recipientsText
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean),
+          },
+        },
+        { section: 'contactCapture', payload: contact },
+        { section: 'attachments', payload: attach },
+        { section: 'orderLookup', payload: orders },
       ]);
-      const failed = results.find((result) => !result.ok);
-      setNote(failed ? { ok: false, text: t.failed } : { ok: true, text: t.saved });
+      setNote(result.ok ? { ok: true, text: t.saved } : { ok: false, text: t.failed });
     });
   }
 

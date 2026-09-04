@@ -86,6 +86,10 @@ export interface ConversationListItem {
   /** Shopper messages that arrived after this conversation was last opened
    *  in the dashboard. Absent on hosts that have not sent it yet. */
   unreadCount?: number;
+  /** First line of the newest message. A list of names and timestamps with
+   *  no content forces the merchant to open every row to find the one that
+   *  matters. */
+  preview?: string | null;
 }
 
 interface WireMessage {
@@ -110,6 +114,12 @@ function triageLabel(category: string, t: (typeof COPY)['en']): string {
   if (category === 'wrong_size') return t.triageWrongSize;
   if (category === 'not_an_issue') return t.triageNotAnIssue;
   return t.triageUnclear;
+}
+
+/** First character of a display name, for the row avatar. */
+function initialOf(name: string): string {
+  const trimmed = name.trim();
+  return trimmed ? trimmed[0].toUpperCase() : '?';
 }
 
 function relativeTime(iso: string | null, t: (typeof COPY)['en']): string {
@@ -144,7 +154,14 @@ export function ConversationsPanel({
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
-  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount ?? 0), 0);
+  /* Cleared locally the instant a conversation is opened. Waiting for the
+     server round trip and a revalidate meant the badge sat there for as long
+     as the whole page took to re-render, which read as the click not having
+     registered at all. */
+  const [readLocally, setReadLocally] = useState<Set<string>>(new Set());
+  const unreadFor = (c: ConversationListItem) =>
+    readLocally.has(c.id) ? 0 : c.unreadCount ?? 0;
+  const totalUnread = conversations.reduce((sum, c) => sum + unreadFor(c), 0);
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [attachments, setAttachments] = useState<Record<string, WireAttachment>>({});
   const [status, setStatus] = useState<string>('');
@@ -239,48 +256,77 @@ export function ConversationsPanel({
                 /* Opening it IS reading it. Fire and forget: the badge is a
                    convenience, and a failed write must not block the thread
                    from opening. The count clears on the next server read. */
-                if ((conversation.unreadCount ?? 0) > 0) {
+                if (unreadFor(conversation) > 0) {
+                  setReadLocally((prev) => new Set(prev).add(conversation.id));
                   void actions.markConversationRead(siteId, conversation.id);
                 }
               }}
               aria-current={selectedId === conversation.id ? 'true' : undefined}
               className={`w-full rounded-xl border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                selectedId === conversation.id ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'
+                selectedId === conversation.id
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-transparent bg-card hover:border-border hover:bg-accent/40'
               }`}
             >
-              <span className="flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-start gap-2.5">
+                {/* An initial, so rows are distinguishable at a glance rather
+                    than being four identical lines of "Anonymous shopper". */}
                 <span
-                  className={`flex min-w-0 items-center gap-1.5 truncate text-sm ${
-                    (conversation.unreadCount ?? 0) > 0 ? 'font-semibold' : 'font-medium'
+                  aria-hidden="true"
+                  className={`mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold ${
+                    unreadFor(conversation) > 0
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {(conversation.unreadCount ?? 0) > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className="inline-block size-2 shrink-0 rounded-full bg-primary"
-                    />
+                  {initialOf(
+                    conversation.visitorName || conversation.visitorEmail || t.anonymous,
                   )}
-                  <span className="truncate">
-                    {conversation.visitorName || conversation.visitorEmail || t.anonymous}
+                </span>
+
+                <span className="grid min-w-0 flex-1 gap-0.5">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span
+                      className={`truncate text-sm ${
+                        unreadFor(conversation) > 0 ? 'font-semibold' : 'font-medium'
+                      }`}
+                    >
+                      {conversation.visitorName || conversation.visitorEmail || t.anonymous}
+                    </span>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                      {relativeTime(conversation.lastMessageAt ?? conversation.startedAt, t)}
+                    </span>
+                  </span>
+
+                  {conversation.preview && (
+                    <span
+                      className={`truncate text-xs ${
+                        unreadFor(conversation) > 0
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      {conversation.preview}
+                    </span>
+                  )}
+
+                  <span className="mt-0.5 flex items-center gap-1.5">
+                    <Badge variant={statusBadge(conversation.status).variant}>
+                      {statusBadge(conversation.status).label}
+                    </Badge>
+                    {unreadFor(conversation) > 0 && (
+                      <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
+                        <span className="sr-only">{t.unreadOne}: </span>
+                        {unreadFor(conversation)}
+                      </span>
+                    )}
+                    {conversation.handoffReason && (
+                      <span className="truncate text-[11px] text-muted-foreground">
+                        {conversation.handoffReason}
+                      </span>
+                    )}
                   </span>
                 </span>
-                <span className="shrink-0 text-[11px] text-muted-foreground">
-                  {relativeTime(conversation.lastMessageAt ?? conversation.startedAt, t)}
-                </span>
-              </span>
-              <span className="mt-1 flex items-center gap-2">
-                <Badge variant={statusBadge(conversation.status).variant}>
-                  {statusBadge(conversation.status).label}
-                </Badge>
-                {(conversation.unreadCount ?? 0) > 0 && (
-                  <span className="shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-primary-foreground">
-                    <span className="sr-only">{t.unreadOne}: </span>
-                    {conversation.unreadCount}
-                  </span>
-                )}
-                {conversation.handoffReason && (
-                  <span className="truncate text-[11px] text-muted-foreground">{conversation.handoffReason}</span>
-                )}
               </span>
             </button>
           </li>

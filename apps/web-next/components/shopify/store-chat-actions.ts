@@ -44,6 +44,8 @@ export function useStoreChatActions(): MessengerHostActions {
     () => ({
       saveDraftSection: (_siteId, section: MessengerSection, payload: object) =>
         postJson('/api/shopify/store-chat/draft', { section, payload }),
+      saveDraftSections: (_siteId, sections) =>
+        postJson('/api/shopify/store-chat/draft', { sections }),
       publishConfig: (_siteId) => postJson('/api/shopify/store-chat/publish', {}),
       setMessengerEnabled: (_siteId, enabled: boolean) =>
         postJson('/api/shopify/store-chat/enable', { enabled }),

@@ -54,6 +54,45 @@ export async function saveDraftSectionForSite(
   return { ok: true };
 }
 
+/* Several sections in ONE read-modify-write.
+
+   Support Desk saved its four sections with Promise.all, and every
+   saveDraftSectionForSite call reads settings_draft, merges its own section
+   in, and writes the whole object back. Run concurrently against the same
+   starting snapshot, the last write wins and the other three sections are
+   lost — so a merchant could tick "Let shoppers attach a photo", press Save,
+   get a success message, and find the box unchecked again, because the
+   orderLookup write landed last and carried an older draft with it.
+
+   Nothing about that failure is visible: each individual call really did
+   succeed. Batching removes the race rather than papering over it with
+   sequential awaits, and collapses four round trips into one, which is also
+   the reason Save felt slow. */
+export async function saveDraftSectionsForSite(
+  site: MessengerSiteView,
+  sections: ReadonlyArray<{ section: MessengerSection; payload: object }>,
+): Promise<ActionResult> {
+  if (sections.length === 0) return { ok: true };
+  for (const entry of sections) {
+    if (!MESSENGER_SECTION_NAMES.includes(entry.section)) {
+      return { ok: false, error: 'Unknown section.' };
+    }
+  }
+
+  const supabase = getMessengerServiceClient();
+  const existingDraft = (site.settings_draft ?? {}) as Record<string, unknown>;
+  const nextDraft = sections.reduce<Record<string, unknown>>(
+    (draft, entry) => ({
+      ...draft,
+      ...sectionToKey(entry.section, entry.payload as Record<string, unknown>),
+    }),
+    { ...existingDraft },
+  );
+  const res = await supabase.from('widget_sites').update({ settings_draft: nextDraft }).eq('id', site.id);
+  if (res.error) throw new Error(res.error.message);
+  return { ok: true };
+}
+
 export async function publishConfigForSite(
   site: MessengerSiteView,
   actorClerkUserId: string,

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
-import { saveDraftSectionForSite } from '@/lib/messenger/actions-core';
+import {
+  saveDraftSectionForSite,
+  saveDraftSectionsForSite,
+} from '@/lib/messenger/actions-core';
 import type { MessengerSection } from '@/lib/messenger/config';
 
 /* Embedded equivalent of the dashboard's saveDraftSection server action.
@@ -21,9 +24,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'unavailable' }, { status: 503 });
   }
 
-  const body = (await request.json()) as { section?: MessengerSection; payload?: object };
+  const body = (await request.json()) as {
+    section?: MessengerSection;
+    payload?: object;
+    sections?: ReadonlyArray<{ section: MessengerSection; payload: object }>;
+  };
   try {
-    const result = await saveDraftSectionForSite(site, body.section as MessengerSection, body.payload ?? {});
+    // Batched form when the caller has several sections to write, so they
+    // cannot race each other over one settings_draft — see actions-core.
+    const result = Array.isArray(body.sections)
+      ? await saveDraftSectionsForSite(site, body.sections)
+      : await saveDraftSectionForSite(site, body.section as MessengerSection, body.payload ?? {});
     return NextResponse.json(result, { status: result.ok ? 200 : 400 });
   } catch (error) {
     // saveDraftSectionForSite throws raw infra errors by contract (see

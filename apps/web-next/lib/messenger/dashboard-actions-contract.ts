@@ -27,6 +27,12 @@ export interface MessengerHostActions {
   takeoverConversation(siteId: string, conversationId: string): Promise<ActionResult>;
   /** Marks a conversation as seen by the merchant. */
   markConversationRead(siteId: string, conversationId: string): Promise<ActionResult>;
+  /** Several sections in one write. Saving them as concurrent single-section
+   *  calls loses all but the last — they share one settings_draft object. */
+  saveDraftSections(
+    siteId: string,
+    sections: ReadonlyArray<{ section: MessengerSection; payload: object }>,
+  ): Promise<ActionResult>;
   releaseConversation(siteId: string, conversationId: string): Promise<ActionResult>;
   closeConversationAction(siteId: string, conversationId: string): Promise<ActionResult>;
 }

@@ -31,7 +31,7 @@ import {
 } from '@/lib/messenger/attachments';
 import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
-import { saveDraftSectionForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
+import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 import type { ActionResult } from '@/lib/messenger/actions-core';
 
 export type { ActionResult };
@@ -64,6 +64,21 @@ export async function saveDraftSection(
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await saveDraftSectionForSite(site, section, payload);
+    if (result.ok) revalidatePath('/dashboard/messenger');
+    return result;
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function saveDraftSections(
+  siteId: string,
+  sections: ReadonlyArray<{ section: MessengerSection; payload: object }>,
+): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId);
+    const result = await saveDraftSectionsForSite(site, sections);
     if (result.ok) revalidatePath('/dashboard/messenger');
     return result;
   } catch (error) {
@@ -294,7 +309,10 @@ export async function markConversationRead(
        marking a conversation read on a site that is not theirs. */
     const { conversation } = await ownedConversation(siteId, conversationId);
     await markRead(conversationId, conversation.metadata);
-    revalidatePath('/dashboard/messenger');
+    /* Deliberately no revalidatePath. This fires on every conversation click,
+       and this page is force-dynamic — revalidating re-runs the whole panel
+       load (stats, conversations, knowledge, detection, order access) just to
+       clear one badge the client has already cleared locally. */
     return { ok: true };
   } catch (error) {
     return fail(error);

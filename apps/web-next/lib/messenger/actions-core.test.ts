@@ -15,7 +15,12 @@ vi.mock('./db', () => ({
 }));
 vi.mock('./conversations', () => ({ recordAudit: recordAuditMock }));
 
-import { publishConfigForSite, saveDraftSectionForSite, setMessengerEnabledForSite } from './actions-core';
+import {
+  publishConfigForSite,
+  saveDraftSectionForSite,
+  saveDraftSectionsForSite,
+  setMessengerEnabledForSite,
+} from './actions-core';
 
 function site(overrides: Partial<MessengerSiteView> = {}): MessengerSiteView {
   return {
@@ -126,5 +131,48 @@ describe('setMessengerEnabledForSite', () => {
     expect(recordAuditMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'messenger_disabled' }),
     );
+  });
+});
+
+/* Support Desk saved its four sections as four concurrent single-section
+   calls. Each of those reads settings_draft, merges its own section in, and
+   writes the whole object back — so from one shared starting snapshot the
+   last write won and the other three sections were silently dropped. The
+   merchant ticked "Let shoppers attach a photo", pressed Save, got a success
+   message, and the box came back unchecked. */
+describe('saveDraftSectionsForSite', () => {
+  it('writes every section in one object, so none can overwrite another', async () => {
+    updateMock.mockReturnValue(chain({ error: null }));
+
+    const result = await saveDraftSectionsForSite(
+      site({ settings_draft: { messenger_appearance: { accentColor: '#000' } } }),
+      [
+        { section: 'attachments', payload: { enabled: true, triageEnabled: true } },
+        { section: 'orderLookup', payload: { enabled: true } },
+        { section: 'contactCapture', payload: { enabled: true, askOutsideHours: false } },
+      ],
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(updateMock).toHaveBeenCalledTimes(1);
+
+    const draft = updateMock.mock.calls[0][0].settings_draft as Record<string, unknown>;
+    expect(draft.messenger_attachments).toEqual({ enabled: true, triageEnabled: true });
+    expect(draft.messenger_order_lookup).toEqual({ enabled: true });
+    expect(draft.messenger_contact_capture).toEqual({ enabled: true, askOutsideHours: false });
+    // And an unrelated section already in the draft survives.
+    expect(draft.messenger_appearance).toEqual({ accentColor: '#000' });
+  });
+
+  it('refuses an unknown section rather than writing a partial batch', async () => {
+    updateMock.mockReturnValue(chain({ error: null }));
+
+    const result = await saveDraftSectionsForSite(site(), [
+      { section: 'attachments', payload: {} },
+      { section: 'not_a_section' as never, payload: {} },
+    ]);
+
+    expect(result).toEqual({ ok: false, error: 'Unknown section.' });
+    expect(updateMock).not.toHaveBeenCalled();
   });
 });

@@ -165,36 +165,59 @@ export async function ensureOpenConversation(siteId: string, visitorId: string):
 
    One query for the whole page of conversations rather than one per row: an
    inbox renders 30 of these at a time. */
-export async function countUnreadByConversation(
+export interface ConversationSummary {
+  unread: number;
+  /** First line of the newest message, whoever sent it. A list of names and
+   *  timestamps with no content forces the merchant to open every row to
+   *  find out which one matters. */
+  preview: string | null;
+}
+
+export async function summarizeConversations(
   conversations: ReadonlyArray<{ id: string; metadata: ConversationRecord['metadata'] }>,
-): Promise<Record<string, number>> {
-  const counts: Record<string, number> = {};
-  if (conversations.length === 0) return counts;
+): Promise<Record<string, ConversationSummary>> {
+  const summaries: Record<string, ConversationSummary> = {};
+  if (conversations.length === 0) return summaries;
 
   const supabase = getMessengerServiceClient();
   const ids = conversations.map((c) => c.id);
   const res = await supabase
     .from('widget_messages')
-    .select('conversation_id, created_at')
+    .select('conversation_id, created_at, role, content')
     .in('conversation_id', ids)
-    .eq('role', 'user');
+    .order('created_at', { ascending: true });
 
-  // A failed count must not blank the inbox; treat it as "nothing unread".
-  if (res.error) return counts;
+  // A failed summary must not blank the inbox; the rows still render.
+  if (res.error) return summaries;
 
   const readAt = new Map<string, number>();
   for (const conversation of conversations) {
+    summaries[conversation.id] = { unread: 0, preview: null };
     const marker = conversation.metadata.agent_last_read_at;
     readAt.set(conversation.id, typeof marker === 'string' ? Date.parse(marker) : 0);
   }
 
-  for (const row of (res.data ?? []) as Array<{ conversation_id: string; created_at: string }>) {
-    const seenUpTo = readAt.get(row.conversation_id) ?? 0;
-    if (Date.parse(row.created_at) > seenUpTo) {
-      counts[row.conversation_id] = (counts[row.conversation_id] ?? 0) + 1;
+  for (const row of (res.data ?? []) as Array<{
+    conversation_id: string;
+    created_at: string;
+    role: string;
+    content: string;
+  }>) {
+    const summary = summaries[row.conversation_id];
+    if (!summary) continue;
+
+    if (row.role !== 'system') {
+      const firstLine = (row.content ?? '').split('\n')[0].trim();
+      // Ascending order, so the last row seen for a conversation is newest.
+      if (firstLine) summary.preview = firstLine.slice(0, 140);
+    }
+
+    if (row.role === 'user') {
+      const seenUpTo = readAt.get(row.conversation_id) ?? 0;
+      if (Date.parse(row.created_at) > seenUpTo) summary.unread += 1;
     }
   }
-  return counts;
+  return summaries;
 }
 
 /** Records that the merchant has now seen this conversation. */
