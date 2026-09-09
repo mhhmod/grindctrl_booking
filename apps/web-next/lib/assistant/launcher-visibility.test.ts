@@ -5,7 +5,7 @@ describe('showLauncherFor', () => {
   it('shows on ordinary pages when logged out', () => {
     expect(showLauncherFor('/', false)).toBe(true);
     expect(showLauncherFor('/try-on', false)).toBe(true);
-    expect(showLauncherFor('/sign-in', false)).toBe(true);
+    expect(showLauncherFor('/contact', false)).toBe(true);
   });
 
   it('hides on the assistant page itself', () => {
@@ -34,7 +34,20 @@ describe('showLauncherFor', () => {
     expect(showLauncherFor('/dashboard/messenger', false)).toBe(false);
   });
 
-  it('still shows on sign-in/sign-up even if a session cookie lingers', () => {
-    expect(showLauncherFor('/sign-in', true)).toBe(true);
+  it.each([
+    '/sign-in',
+    '/sign-in/',
+    '/sign-in/factor-one',
+    '/sign-in/reset-password',
+    '/sign-up',
+    '/sign-up/verify-email-address',
+  ])('never covers the auth flow at %s, with or without a lingering session', (pathname) => {
+    expect(showLauncherFor(pathname, false)).toBe(false);
+    expect(showLauncherFor(pathname, true)).toBe(false);
+  });
+
+  it('does not mistake similarly named ordinary pages for auth routes', () => {
+    expect(showLauncherFor('/sign-in-help', false)).toBe(true);
+    expect(showLauncherFor('/sign-updates', false)).toBe(true);
   });
 });

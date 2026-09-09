@@ -20,10 +20,11 @@ describe('resolveTenant', () => {
     expect(result).toEqual({ tenantId: 'ip:203.0.113.10', tier: 'anon' });
   });
 
-  it('falls back to a sid-scoped key when no proxy IP header exists', () => {
+  it('shares a fail-closed bucket when no trusted network identity exists', () => {
     const result = resolveTenant(null, 'sess_existing');
 
-    expect(result).toEqual({ tenantId: 'sid:sess_existing', tier: 'anon' });
+    expect(result).toEqual({ tenantId: 'ip:unknown', tier: 'anon' });
+    expect(resolveTenant(null, 'rotated_cookie').tenantId).toBe('ip:unknown');
   });
 
   it('mints a fresh continuity cookie even when an IP is present', () => {
@@ -39,6 +40,6 @@ describe('resolveTenant', () => {
 
     expect(result.tier).toBe('anon');
     expect(result.newSessionId).toBeTruthy();
-    expect(result.tenantId).toBe(`sid:${result.newSessionId}`);
+    expect(result.tenantId).toBe('ip:unknown');
   });
 });

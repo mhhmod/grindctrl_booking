@@ -1,7 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useMemo } from 'react';
-import { DEFAULT_SITE_LOCALE, SITE_LOCALE_COOKIE, type SiteLocale } from '@/lib/landing/landing-i18n';
+import React, { createContext, useContext, useMemo, useSyncExternalStore } from 'react';
+import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/lib/landing/landing-i18n';
+import { readSiteLocale, subscribeSiteLocale } from '@/lib/landing/site-locale-store';
 import { getAssistantDictionary, getDir, type AssistantTranslator } from '@/lib/assistant/i18n';
 
 interface AssistantLocaleContextValue {
@@ -12,15 +13,9 @@ interface AssistantLocaleContextValue {
 
 const AssistantLocaleContext = createContext<AssistantLocaleContextValue | null>(null);
 
-function readSiteLocaleCookie(): SiteLocale {
-  if (typeof document === 'undefined') return DEFAULT_SITE_LOCALE;
-  const match = document.cookie.match(new RegExp(`(?:^|; )${SITE_LOCALE_COOKIE}=([^;]*)`));
-  return match?.[1] === 'ar' ? 'ar' : DEFAULT_SITE_LOCALE;
-}
-
-/** Reads the site-wide locale cookie once on mount — the assistant follows
- *  whichever language the visitor already picked elsewhere on the site
- *  rather than tracking its own preference. */
+/** Follows the shared cookie and explicit language changes. The server
+ * snapshot preserves hydration; a persistent layout must not freeze its
+ * initialLocale prop after the visitor changes language elsewhere. */
 export function AssistantLocaleProvider({
   initialLocale,
   children,
@@ -28,7 +23,12 @@ export function AssistantLocaleProvider({
   initialLocale?: SiteLocale;
   children: React.ReactNode;
 }) {
-  const locale = initialLocale ?? readSiteLocaleCookie();
+  const fallback = initialLocale ?? DEFAULT_SITE_LOCALE;
+  const locale = useSyncExternalStore(
+    subscribeSiteLocale,
+    () => readSiteLocale(fallback),
+    () => fallback,
+  );
 
   const value = useMemo<AssistantLocaleContextValue>(
     () => ({ locale, dir: getDir(locale), t: getAssistantDictionary(locale) }),

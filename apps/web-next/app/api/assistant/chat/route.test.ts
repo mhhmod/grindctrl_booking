@@ -1,5 +1,9 @@
 ﻿// @vitest-environment node
 import { NextRequest } from 'next/server';
+vi.mock('@/lib/assistant/store-instance', async () => {
+  const { InMemoryStore } = await import('@/lib/assistant/rate-limiter-store');
+  return { store: new InMemoryStore() };
+});
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const authMock = vi.fn();
@@ -18,6 +22,7 @@ import { POST } from './route';
 
 function makeRequest(body: unknown, cookieHeader?: string, ip?: string) {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
+  headers['x-real-ip'] = `test-network:${cookieHeader ?? 'default'}`;
   if (cookieHeader) headers.cookie = cookieHeader;
   if (ip) headers['x-forwarded-for'] = ip;
   return new NextRequest('http://localhost/api/assistant/chat', {
@@ -81,6 +86,37 @@ describe('POST /api/assistant/chat', () => {
       { event: 'token', data: { text: '!' } },
     ]);
     expect(events[3].event).toBe('done');
+    expect(createMock.mock.calls[0][1]).toEqual({ signal: expect.any(AbortSignal) });
+  });
+
+  it('logs terminal usage after consuming the stream, not at response headers', async () => {
+    authMock.mockResolvedValue({ userId: 'terminal-usage-test' });
+    const log = vi.spyOn(console, 'info').mockImplementation(() => {});
+    createMock.mockReturnValue((async function* () {
+      expect(log).not.toHaveBeenCalled();
+      yield { choices: [{ delta: { content: 'ok' } }] };
+      yield { choices: [], x_groq: { usage: { prompt_tokens: 20, completion_tokens: 2, total_tokens: 22 } } };
+    })());
+    await readSseEvents(await POST(makeRequest({ message: 'hi' })));
+    expect(log).toHaveBeenCalledWith('[groq] completion', expect.objectContaining({ totalTokens: 22 }));
+    log.mockRestore();
+  });
+
+  it('logs a stream failure after headers and never emits done', async () => {
+    authMock.mockResolvedValue({ userId: 'stream-failure-test' });
+    const log = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const failure = vi.spyOn(console, 'error').mockImplementation(() => {});
+    createMock.mockReturnValue((async function* () {
+      yield { choices: [{ delta: { content: 'partial' } }] };
+      throw new Error('private upstream detail');
+    })());
+    const events = await readSseEvents(await POST(makeRequest({ message: 'hi' })));
+    expect(events.map(event => event.event)).toEqual(['token', 'error']);
+    expect(log).not.toHaveBeenCalled();
+    expect(failure).toHaveBeenCalledWith('[groq] failure', expect.objectContaining({ operation: 'chat.completions' }));
+    expect(JSON.stringify(failure.mock.calls)).not.toContain('private');
+    log.mockRestore();
+    failure.mockRestore();
   });
 
   it('prepends the GrindCTRL system prompt ahead of history and the new message', async () => {

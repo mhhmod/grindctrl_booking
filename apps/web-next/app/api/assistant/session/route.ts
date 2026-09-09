@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { resolveTenant } from '@/lib/assistant/tenant';
-import { getBudgetSummary } from '@/lib/assistant/rate-limiter';
+import { getDistributedBudgetSummary } from '@/lib/assistant/distributed-budget';
 import { store } from '@/lib/assistant/store-instance';
 import { clientIp } from '@/lib/ratelimit';
 
@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
   const existingSessionId = request.cookies.get(SESSION_COOKIE)?.value;
 
   const tenant = resolveTenant(userId, existingSessionId, clientIp(request));
-  const budgets = getBudgetSummary(store, tenant.tenantId, tenant.tier);
+  const budgets = await getDistributedBudgetSummary(store, tenant.tenantId, tenant.tier).catch(() => null);
+  if (!budgets) return NextResponse.json(
+    { error: 'unavailable', message: 'Service temporarily unavailable. Please try again shortly.' },
+    { status: 503, headers: { 'Retry-After': '30', 'Cache-Control': 'no-store' } },
+  );
 
   const response = NextResponse.json({
     tenantId: tenant.tenantId,

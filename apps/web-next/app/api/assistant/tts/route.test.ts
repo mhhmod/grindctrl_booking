@@ -1,5 +1,9 @@
 ﻿// @vitest-environment node
 import { NextRequest } from 'next/server';
+vi.mock('@/lib/assistant/store-instance', async () => {
+  const { InMemoryStore } = await import('@/lib/assistant/rate-limiter-store');
+  return { store: new InMemoryStore() };
+});
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const authMock = vi.fn();
@@ -18,6 +22,7 @@ import { POST } from './route';
 
 function makeRequest(text: string, cookieHeader?: string, locale?: string, ip?: string) {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
+  headers['x-real-ip'] = `test-network:${cookieHeader ?? 'default'}`;
   if (cookieHeader) headers.cookie = cookieHeader;
   if (ip) headers['x-forwarded-for'] = ip;
   return new NextRequest('http://localhost/api/assistant/tts', {
@@ -40,7 +45,7 @@ async function readSseEvents(response: Response): Promise<{ event: string; data:
 }
 
 function fakeAudioResponse(bytes: string) {
-  return { arrayBuffer: async () => new TextEncoder().encode(bytes).buffer };
+  return new Response(bytes, { headers: { 'Content-Type': 'audio/wav' } });
 }
 
 describe('POST /api/assistant/tts', () => {
@@ -51,7 +56,7 @@ describe('POST /api/assistant/tts', () => {
 
   it('rejects with rate_limited and never calls Groq when over budget', async () => {
     authMock.mockResolvedValue({ userId: null });
-    speechMock.mockResolvedValue(fakeAudioResponse('wav'));
+    speechMock.mockImplementation(async () => fakeAudioResponse('wav'));
 
     for (let i = 0; i < 9; i++) {
       // anon tts:requests capacity is 9
@@ -89,6 +94,7 @@ describe('POST /api/assistant/tts', () => {
 
     expect(speechMock).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'canopylabs/orpheus-v1-english', voice: 'autumn', response_format: 'wav' }),
+      { signal: expect.any(AbortSignal) },
     );
   });
 
@@ -100,6 +106,7 @@ describe('POST /api/assistant/tts', () => {
 
     expect(speechMock).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'canopylabs/orpheus-arabic-saudi', voice: 'noura', response_format: 'wav' }),
+      { signal: expect.any(AbortSignal) },
     );
   });
 

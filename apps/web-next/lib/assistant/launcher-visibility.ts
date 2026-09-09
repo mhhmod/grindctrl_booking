@@ -21,6 +21,12 @@ function isLandingFamily(pathname: string): boolean {
 export function showLauncherFor(pathname: string | null, isLoggedIn: boolean): boolean {
   if (!pathname) return false;
   if (pathname.startsWith('/assistant') || pathname.startsWith('/embed')) return false;
+  /* Authentication is a focused flow. A floating chat control can cover
+     Clerk's Continue button on small screens, including nested MFA/reset
+     steps. Match path segments so unrelated similarly named pages survive. */
+  if (['/sign-in', '/sign-up'].some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
+    return false;
+  }
   /* The dashboard is the merchant's workspace, not a page we are selling to
      them on. A floating marketing assistant there sits on top of their own
      work — and, being the site assistant, it answers in the site's language

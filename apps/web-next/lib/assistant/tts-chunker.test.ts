@@ -4,6 +4,14 @@ import { chunkForTts } from './tts-chunker';
 const LIMIT = 200;
 
 describe('chunkForTts', () => {
+  it('bounds single long words and URLs without splitting Unicode surrogate pairs', () => {
+    for (const text of ['x'.repeat(601), 'x'.repeat(199) + '😀'.repeat(150)]) {
+      const chunks = chunkForTts(text);
+      expect(chunks.every((chunk) => chunk.length <= LIMIT)).toBe(true);
+      expect(chunks.join('')).toBe(text);
+      expect(chunks.some((chunk) => /[\uD800-\uDBFF]$/.test(chunk))).toBe(false);
+    }
+  });
   it('returns a single chunk for text well under the limit', () => {
     const chunks = chunkForTts('Hello there. How can I help you today?');
 

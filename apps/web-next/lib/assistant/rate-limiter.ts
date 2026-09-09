@@ -31,6 +31,11 @@ const TIERS: Record<Tier, Record<ResourceKey, BucketConfig>> = {
   },
 };
 
+/** Shared policy for both the local test adapter and distributed enforcement. */
+export function getResourceBudget(tier: Tier, resource: ResourceKey): Readonly<BucketConfig> {
+  return TIERS[tier][resource];
+}
+
 export interface DrawResult {
   allowed: boolean;
   remaining: number;

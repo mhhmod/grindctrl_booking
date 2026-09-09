@@ -56,6 +56,7 @@ export function createRealAssistantClient(): AssistantClient {
   return {
     async fetchSession(): Promise<SessionInfo> {
       const res = await fetch('/api/assistant/session');
+      if (!res.ok) throw new Error('Service temporarily unavailable. Please try again shortly.');
       return res.json();
     },
 

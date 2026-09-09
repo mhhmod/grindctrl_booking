@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AssistantClient, BudgetInfo, RateLimitedInfo } from '@/lib/assistant/client';
 
 export interface DisplayMessage {
@@ -32,7 +32,11 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
     setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, audio } : m)));
   }, []);
   const messagesRef = useRef<DisplayMessage[]>([]);
-  messagesRef.current = messages;
+  const onAssistantReplyRef = useRef(onAssistantReply);
+  useLayoutEffect(() => {
+    messagesRef.current = messages;
+    onAssistantReplyRef.current = onAssistantReply;
+  }, [messages, onAssistantReply]);
 
   const refreshBudgets = useCallback(() => {
     client.fetchSession().then((session) => setBudgets(session.budgets));
@@ -75,13 +79,13 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
         if (result.kind === 'rate_limited') setRateLimited(result.info);
         else setProviderError(result.message);
       } else if (fullReply.trim()) {
-        onAssistantReply?.(fullReply.trim(), assistantId);
+        onAssistantReplyRef.current?.(fullReply.trim(), assistantId);
       }
 
       setStatus('idle');
       refreshBudgets();
     },
-    [client, status, onAssistantReply, refreshBudgets],
+    [client, status, refreshBudgets],
   );
 
   return {

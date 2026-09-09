@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Send, X } from 'lucide-react';
 import { VoiceLanguagePicker } from './voice-language-picker';
 import type { AssistantLocale } from '@/lib/assistant/i18n';
@@ -46,8 +46,10 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
   const [inputValue, setInputValue] = useState('');
   const [micState, setMicState] = useState<MicState>('idle');
   const [micError, setMicError] = useState<string | undefined>(undefined);
-  const voiceOutputRef = useRef(voiceOutput);
-  voiceOutputRef.current = voiceOutput;
+  const handleAssistantReplyRef = useRef<((text: string, messageId: string) => Promise<void>) | null>(null);
+  const dispatchAssistantReply = useCallback((text: string, messageId: string) => {
+    void handleAssistantReplyRef.current?.(text, messageId);
+  }, []);
   const [voiceLanguageOverride, setVoiceLanguageOverride] = useState<AssistantLocale | null>(null);
   // Explicit override wins; otherwise the voice follows whichever language
   // the visitor already has the site in. Used both for the actual TTS call
@@ -66,7 +68,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
     voiceError,
     setVoiceError,
     setMessageAudio,
-  } = useAssistantChat(client, (text, messageId) => handleAssistantReplyRef.current(text, messageId));
+  } = useAssistantChat(client, dispatchAssistantReply);
   const recorder = useVoiceRecorder();
 
   const handleAssistantReply = useCallback(
@@ -75,7 +77,7 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       // stale error from a prior voice-on turn must not keep showing once
       // the visitor has switched voice output back off.
       setVoiceError(null);
-      if (!voiceOutputRef.current) return;
+      if (!voiceOutput) return;
       // Marked pending before the TTS call even starts — the round-trip
       // (chunking + a real Groq call) reliably takes long enough that
       // showing nothing here read as "the reply is text-only," not "voice
@@ -111,10 +113,13 @@ export function ChatWindow({ client: clientProp, redirectPath = '/assistant', cl
       // it to the right message.
       setMessageAudio(messageId, { status: 'ready', chunks });
     },
-    [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, effectiveVoiceLocale, t],
+    [client, refreshBudgets, setRateLimited, setVoiceError, setMessageAudio, effectiveVoiceLocale, t, voiceOutput],
   );
-  const handleAssistantReplyRef = useRef(handleAssistantReply);
-  handleAssistantReplyRef.current = handleAssistantReply;
+  useLayoutEffect(() => {
+    // Async replies use the latest committed locale/output choice, never a
+    // callback from an in-progress render that React may discard.
+    handleAssistantReplyRef.current = handleAssistantReply;
+  }, [handleAssistantReply]);
 
   const handleSend = useCallback(() => {
     if (!inputValue.trim()) return;
