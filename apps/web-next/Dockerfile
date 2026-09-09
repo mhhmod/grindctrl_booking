@@ -1,5 +1,9 @@
 # Supported LTS; digest verified against the official library/node manifest.
-ARG NODE_IMAGE=node:24.20.0-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+# 2026-09-10: bumped 24.20.0 -> 24.21.0 (same alpine 3.24 base, rebuilt same day)
+# to close Trivy findings the release-check gate caught: CVE-2026-14456
+# (libcrypto3/libssl3 QUIC DoS) and CVE-2026-14257/69152/69192/73566 in npm's
+# own bundled brace-expansion/ip-address/tar -- all fixed upstream, not app deps.
+ARG NODE_IMAGE=node:24.21.0-alpine@sha256:333f6b3eca25980d5682c26207665b93c9417786b21760b2764d5821d9704c8a
 FROM ${NODE_IMAGE} AS deps
 WORKDIR /app/apps/web-next
 COPY apps/web-next/package*.json ./
