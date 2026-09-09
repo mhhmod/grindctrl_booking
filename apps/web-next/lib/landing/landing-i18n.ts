@@ -99,6 +99,11 @@ interface LandingDict {
   testimonialsBody: string;
   testimonials: { quote: string; name: string; role: string; photo: string }[];
 
+  operationsEyebrow: string;
+  operationsTitle: string;
+  operationsBody: string;
+  operationsBeats: { title: string; body: string }[];
+
   integrationsEyebrow: string;
   integrationsTitle: string;
   integrations: string[];
@@ -282,6 +287,17 @@ const en: LandingDict = {
   testimonialsTitle: 'Merchant stories will appear here after sign-off.',
   testimonialsBody: 'This section stays hidden until verified customer quotes are approved.',
   testimonials: [],
+
+  operationsEyebrow: 'How it runs',
+  operationsTitle: 'A team runs this, not a black box.',
+  operationsBody: 'Every render is generated, checked, and shipped by people who use what they build.',
+  operationsBeats: [
+    { title: 'Why this exists', body: 'Shoppers guess how something will look on them. We built the system that lets them see it instead.' },
+    { title: 'Who runs it', body: 'A small team, not an anonymous platform. We use what we ship.' },
+    { title: 'How it works', body: "Every shop's renders, spend, and jobs run through one engineered pipeline." },
+    { title: 'What we watch', body: 'Job health and spend are tracked as they happen, not discovered later.' },
+    { title: 'What we check', body: 'Nothing reaches a storefront without a person reviewing it first.' },
+  ],
 
   integrationsEyebrow: 'Storefront fit',
   integrationsTitle: 'Made for the Shopify surfaces that matter.',
@@ -518,6 +534,17 @@ const ar: LandingDict = {
   testimonialsTitle: 'ستظهر قصص المتاجر هنا بعد اعتمادها.',
   testimonialsBody: 'يبقى هذا القسم مخفيًا حتى اعتماد اقتباسات موثقة من العملاء.',
   testimonials: [],
+
+  operationsEyebrow: 'كيف نعمل',
+  operationsTitle: 'يديرها فريق، لا نظام مُهمَل.',
+  operationsBody: 'كل معاينة تُنشأ وتُراجَع وتُسلَّم من أشخاص يستخدمون ما يبنونه.',
+  operationsBeats: [
+    { title: 'لماذا وُجدت', body: 'يخمّن المتسوقون شكل المنتج عليهم. بنينا نظامًا يريهم إياه مباشرة.' },
+    { title: 'من يديرها', body: 'فريق صغير، لا منصة مجهولة. نستخدم ما نقدّمه.' },
+    { title: 'كيف تعمل', body: 'كل معاينات المتجر وإنفاقه ومهامه تمر عبر خط عمل واحد مُصمَّم بعناية.' },
+    { title: 'ما نراقبه', body: 'نتابع سلامة المهام والإنفاق لحظة حدوثها، لا بعد فواتها.' },
+    { title: 'ما نتحقق منه', body: 'لا شيء يصل إلى واجهة المتجر قبل أن يراجعه شخص.' },
+  ],
 
   integrationsEyebrow: 'تكامل واجهة المتجر',
   integrationsTitle: 'مصممة لأهم نقاط التفاعل في Shopify.',

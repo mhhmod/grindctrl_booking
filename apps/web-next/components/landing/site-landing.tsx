@@ -17,6 +17,7 @@ import { AiOperationsChain } from '@/components/landing/ai-operations-chain';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { AutomationsShowcase } from '@/components/landing/automations-showcase';
 import { MessagingChannels } from '@/components/landing/messaging-channels';
+import { OperationsShowcase } from '@/components/landing/operations-showcase';
 import { RenderReceiptFigure } from '@/components/landing/render-receipt-figure';
 import { CollaborationsMarquee } from '@/components/landing/collaborations-marquee';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
@@ -376,6 +377,20 @@ export function SiteLanding() {
           </div>
         </section>
 
+        {/* Fills the trust-proof gap left by disabled testimonials below:
+            not quotes pending sign-off, but the real team and systems
+            behind every render. */}
+        <section id="operations" aria-labelledby="operations-title">
+          <div className="gc-scroll-reveal mx-auto w-full max-w-3xl px-4 pb-10 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
+            <Eyebrow locale={locale} className="justify-center">{t.operationsEyebrow}</Eyebrow>
+            <h2 id="operations-title" className="mt-4 text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
+              {t.operationsTitle}
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg">{t.operationsBody}</p>
+          </div>
+          <OperationsShowcase beats={t.operationsBeats} />
+        </section>
+
         {/* Testimonials remain disabled until the placeholder quotes are replaced. */}
         {ENABLE_TESTIMONIALS && t.testimonials.length > 0 && (
           <section id="clients" className="bg-muted/30" aria-labelledby="clients-title">
@@ -548,8 +563,9 @@ export function SiteLanding() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="px-4 py-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
+      {/* Reserve the 84px floating launcher's footprint plus a small gap at
+          the end of the page so locale/theme controls remain reachable. */}
+      <footer className="px-4 pb-24 pt-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <BrandLogo size="sm" textClassName="text-xs" />
           <p className="text-xs">{t.footerTagline}</p>
