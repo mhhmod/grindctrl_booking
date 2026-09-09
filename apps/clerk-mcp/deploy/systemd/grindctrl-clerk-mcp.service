@@ -1,0 +1,17 @@
+[Unit]
+Description=GRINDCTRL Clerk MCP
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/grindctrl-clerk-mcp
+EnvironmentFile=/etc/grindctrl-clerk-mcp.env
+ExecStart=/usr/bin/node /opt/grindctrl-clerk-mcp/server.js
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

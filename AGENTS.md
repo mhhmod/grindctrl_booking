@@ -99,6 +99,21 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - These reference repos are not package dependencies or MCP servers unless they expose a shadcn-compatible registry URL. Inspect and adapt patterns instead of copying whole files blindly.
 - For every non-trivial UI change: audit existing layout/components first, implement with shadcn-first primitives, then verify responsive behavior and RTL/LTR assumptions.
 
+### Landing sign-in regression guard
+
+- Keep a visibly labelled, localized Sign in entry in the landing header, accessible without opening the menu. Do not restore an icon-only sign-in squeezed beside the wordmark.
+- Preserve the mobile two-row allocation below 640px unless a replacement is verified at 320/343/375/390px in EN/AR and light/dark themes. Sign-in, booking and menu controls must remain separate, unclipped 44px touch targets.
+- Repeat the checks and read the known local-auth limitations in `docs/superpowers/checkpoints/2026-09-05-mobile-signin-ui.md` before changing this header. Unit tests alone are not browser proof.
+
+## Next application release guard (2026-09-05)
+
+- Continue from `docs/superpowers/checkpoints/2026-09-05-production-risk-closure.md`; a passing build is not approval to deploy or a completed ecosystem goal.
+- Keep provider/merchant/public routes on strict shared rate helpers. Missing Redis, timeout-success and malformed enforcement results must deny work; do not reintroduce per-process production quotas.
+- Verify Clerk identity and tenant/child-record ownership before service-role mutations. Manual credit grants additionally require the server-only platform operator allowlist; ordinary merchant ownership is insufficient.
+- Keep unknown provider spend unknown, including dashboard totals. A merchant credit refund does not prove a provider call was free.
+- Preserve assistant auth-route suppression, keyboard focus restoration and shared EN/AR locale notifications. Browser-test sign-in controls at narrow widths; do not claim a mocked or domain-blocked Clerk form was verified.
+- The current Next Docker/CI paths supersede historical pm2/reset instructions. Keep secrets/local build artifacts outside Docker context and require the release/scanning gates. Inspect actual VPS image selection and rollback before requesting production rollout approval.
+
 ## Limits and quotas (hardcoded in JS)
 
 - Anonymous session: 3 turns. Daily anonymous: 5. Daily authenticated: 10.
