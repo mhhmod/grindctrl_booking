@@ -6,6 +6,7 @@
    have. */
 
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import type { MerchantActionFailure } from '@/lib/request-rate-limit';
 
 export interface TryOnDashboardCopy {
   installedShops: string;
@@ -13,6 +14,8 @@ export interface TryOnDashboardCopy {
   avgGenerationTime: string;
   noDataYet: string;
   providerSpend: string;
+  costUnreported: string;
+  missingProviderCosts: (count: number) => string;
 
   merchantShops: string;
   merchantShopsBody: string;
@@ -25,6 +28,10 @@ export interface TryOnDashboardCopy {
 
   planAndCredits: string;
   planAndCreditsBody: string;
+  planAndCreditsOperatorBody: string;
+  managedServiceTitle: string;
+  managedServiceBody: string;
+  bookServiceCall: string;
 
   appearance: string;
   appearanceBody: string;
@@ -41,6 +48,7 @@ export interface TryOnDashboardCopy {
   shopifyApp: string;
   shopifyAppBody: string;
   openShopifyApp: string;
+  chooseShopForApp: string;
 
   /** Glued to a number: `3.4s`. Not a standalone word. */
   secondsSuffix: string;
@@ -82,6 +90,8 @@ export interface TryOnDashboardCopy {
   bannerGrace: (days: number) => string;
   bannerUrgent: (days: number) => string;
   bannerRenewalDue: (days: number) => string;
+  managedBannerGrace: (days: number) => string;
+  managedBannerRenewalDue: (days: number) => string;
   bannerExhausted: string;
   bannerCritical: (renders: number) => string;
   bannerLow: (renders: number) => string;
@@ -120,6 +130,9 @@ export interface TryOnDashboardCopy {
   actionApplied: (action: string) => string;
   actionReplayed: string;
   actionFailed: string;
+  actionRateLimited: (seconds: number) => string;
+  actionUnavailable: (seconds: number) => string;
+  actionForbidden: string;
 }
 
 /* CLDR sorts Arabic counts into six categories, and Intl.PluralRules already
@@ -152,7 +165,9 @@ const en: TryOnDashboardCopy = {
   recentGenerations: 'Recent generations',
   avgGenerationTime: 'Avg generation time',
   noDataYet: 'No data yet',
-  providerSpend: 'Provider spend (recent)',
+  providerSpend: 'Known provider spend (recent)',
+  costUnreported: 'Unreported',
+  missingProviderCosts: (count) => `Generations with unreported cost: ${count}. Total includes known costs only.`,
 
   merchantShops: 'Merchant shops',
   merchantShopsBody:
@@ -166,7 +181,12 @@ const en: TryOnDashboardCopy = {
 
   planAndCredits: 'Plan and credits',
   planAndCreditsBody:
+    'View your plan, available credits, and service status. Our team manages billing and credit changes.',
+  planAndCreditsOperatorBody:
     'Payment is collected outside the app, so activating here is what grants credits. Every action is recorded in the ledger with its payment reference.',
+  managedServiceTitle: 'Managed service',
+  managedServiceBody: 'For activation, renewal, top-ups, or plan changes, contact your account manager. Our team confirms payment and updates your credits.',
+  bookServiceCall: 'Book a service call',
 
   appearance: 'Appearance and journey',
   appearanceBody:
@@ -186,6 +206,7 @@ const en: TryOnDashboardCopy = {
   shopifyAppBody:
     'Merchants install and configure from their own admin. This is what they open.',
   openShopifyApp: 'Open the Shopify app',
+  chooseShopForApp: 'Choose one of your shops in the settings selector to open its Shopify app.',
 
   secondsSuffix: 's',
 
@@ -209,7 +230,7 @@ const en: TryOnDashboardCopy = {
   saveFailed: 'Could not save. Try again.',
 
   plansBelongToShop:
-    'Plans belong to a shop. Pick a merchant shop above to see and change what it is entitled to.',
+    'Select one of your shops in the settings selector to view its plan and credits.',
   noPlan: 'No plan',
   planStatusActive: 'Active',
   planStatusGrace: 'Grace',
@@ -227,6 +248,8 @@ const en: TryOnDashboardCopy = {
     `In grace for ${days} more day${days === 1 ? '' : 's'}. Collect payment before it stops.`,
   bannerUrgent: (days) => `Renews in ${days} day${days === 1 ? '' : 's'}. Invoice now.`,
   bannerRenewalDue: (days) => `Renews in ${days} day${days === 1 ? '' : 's'}.`,
+  managedBannerGrace: (days) => `Service is in a grace period for ${days} more day${days === 1 ? '' : 's'}. Contact your account manager to arrange renewal.`,
+  managedBannerRenewalDue: (days) => `Your plan period ends in ${days} day${days === 1 ? '' : 's'}. Contact your account manager about renewal.`,
   bannerExhausted: 'Out of credits. A top-up or renewal is needed.',
   bannerCritical: (renders) => `Almost out: ${renders} renders left.`,
   bannerLow: (renders) => `Running low: ${renders} renders left.`,
@@ -260,6 +283,9 @@ const en: TryOnDashboardCopy = {
   actionApplied: (action) => `${action} applied. The merchant sees it immediately.`,
   actionReplayed: 'Already applied. Nothing changed.',
   actionFailed: 'The action failed.',
+  actionRateLimited: (seconds) => `Too many changes at once. Try again in ${seconds} seconds.`,
+  actionUnavailable: (seconds) => `This change could not be confirmed. Wait ${seconds} seconds, then retry without changing the details.`,
+  actionForbidden: 'You do not have permission to make this change. Contact your account administrator.',
 };
 
 const ar: TryOnDashboardCopy = {
@@ -267,7 +293,9 @@ const ar: TryOnDashboardCopy = {
   recentGenerations: 'أحدث عمليات التوليد',
   avgGenerationTime: 'متوسط زمن التوليد',
   noDataYet: 'لا توجد بيانات بعد',
-  providerSpend: 'تكلفة المزود (الأخيرة)',
+  providerSpend: 'تكلفة المزود المعروفة (الأخيرة)',
+  costUnreported: 'لم تُبلّغ',
+  missingProviderCosts: (count) => `عمليات بتكلفة غير مُبلّغة: ${count}. يشمل الإجمالي التكاليف المعروفة فقط.`,
 
   merchantShops: 'متاجر التجار',
   merchantShopsBody:
@@ -281,7 +309,12 @@ const ar: TryOnDashboardCopy = {
 
   planAndCredits: 'الخطة والأرصدة',
   planAndCreditsBody:
+    'اطّلع على خطتك ورصيدك المتاح وحالة الخدمة. يتولى فريقنا الفوترة وتحديث الرصيد.',
+  planAndCreditsOperatorBody:
     'يتم تحصيل الدفع خارج التطبيق، لذا فإن التفعيل من هنا هو ما يمنح الأرصدة. كل إجراء يُسجَّل في السجل مع مرجع الدفع الخاص به.',
+  managedServiceTitle: 'خدمة مُدارة',
+  managedServiceBody: 'للتفعيل أو التجديد أو شحن الرصيد أو تغيير الخطة، تواصل مع مدير حسابك. يتولى فريقنا تأكيد الدفع وتحديث رصيدك.',
+  bookServiceCall: 'احجز مكالمة لمتابعة الخدمة',
 
   appearance: 'المظهر ورحلة العميل',
   appearanceBody:
@@ -300,6 +333,7 @@ const ar: TryOnDashboardCopy = {
   shopifyApp: 'تطبيق شوبيفاي',
   shopifyAppBody: 'يقوم التجار بالتثبيت والضبط من لوحاتهم الخاصة. هذا ما يفتحونه.',
   openShopifyApp: 'افتح تطبيق شوبيفاي',
+  chooseShopForApp: 'اختر أحد متاجرك من قائمة نطاق التعديل لفتح تطبيق شوبيفاي الخاص به.',
 
   secondsSuffix: 'ث',
 
@@ -325,7 +359,7 @@ const ar: TryOnDashboardCopy = {
   saveFailed: 'تعذّر الحفظ. حاول مرة أخرى.',
 
   plansBelongToShop:
-    'ترتبط الخطط بمتجر بعينه. اختر متجر تاجر من الأعلى لعرض صلاحياته وتغييرها.',
+    'اختر أحد متاجرك من قائمة نطاق التعديل لعرض خطته ورصيده.',
   noPlan: 'لا توجد خطة',
   planStatusActive: 'نشط',
   planStatusGrace: 'مهلة سماح',
@@ -342,6 +376,8 @@ const ar: TryOnDashboardCopy = {
   bannerGrace: (days) => `مهلة سماح لمدة ${arDays(days)}. حصّل الدفع قبل أن يتوقف.`,
   bannerUrgent: (days) => `يتجدد خلال ${arDays(days)}. أرسل الفاتورة الآن.`,
   bannerRenewalDue: (days) => `يتجدد خلال ${arDays(days)}.`,
+  managedBannerGrace: (days) => `الخدمة في مهلة سماح لمدة ${arDays(days)}. تواصل مع مدير حسابك لترتيب التجديد.`,
+  managedBannerRenewalDue: (days) => `تنتهي فترة خطتك خلال ${arDays(days)}. تواصل مع مدير حسابك بشأن التجديد.`,
   bannerExhausted: 'نفد الرصيد. يلزم شحن إضافي أو تجديد.',
   /* Arabic agrees the noun with the count, so a running total is written as a
      label and a number instead of a counted noun. */
@@ -377,10 +413,24 @@ const ar: TryOnDashboardCopy = {
   actionApplied: (action) => `تم ${action}. يراه التاجر فوراً.`,
   actionReplayed: 'مطبَّق بالفعل. لم يتغير شيء.',
   actionFailed: 'فشل الإجراء.',
+  actionRateLimited: (seconds) => `طلبات تغيير كثيرة. حاول مجدداً بعد ${seconds} ثانية.`,
+  actionUnavailable: (seconds) => `تعذّر تأكيد هذا التغيير. انتظر ${seconds} ثانية، ثم أعد المحاولة دون تغيير التفاصيل.`,
+  actionForbidden: 'ليس لديك إذن لإجراء هذا التغيير. تواصل مع مسؤول حسابك.',
 };
 
 export function getTryOnDashboardCopy(locale: SiteLocale): TryOnDashboardCopy {
   return locale === 'ar' ? ar : en;
+}
+
+/** Expected action failures cross the server boundary as codes, not raw
+ * provider/database text (which production Next also deliberately masks). */
+export function actionFailureLabel(c: TryOnDashboardCopy, failure: MerchantActionFailure): string {
+  const seconds = typeof failure.retryAfterSeconds === 'number' && Number.isFinite(failure.retryAfterSeconds)
+    ? Math.max(1, Math.ceil(failure.retryAfterSeconds)) : 30;
+  if (failure.code === 'rate_limited') return c.actionRateLimited(seconds);
+  if (failure.code === 'unavailable') return c.actionUnavailable(seconds);
+  if (failure.code === 'forbidden') return c.actionForbidden;
+  return c.actionFailed;
 }
 
 /* A BCP-47 tag for toLocaleString/toLocaleDateString, deliberately not a
