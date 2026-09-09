@@ -40,6 +40,19 @@ ENV HOSTNAME=0.0.0.0
 # workflow asserts against the SHA it just pushed).
 ARG SENTRY_RELEASE
 ENV SENTRY_RELEASE=$SENTRY_RELEASE
+# Alpine's own package repo publishes security fixes faster than the upstream
+# node:alpine image gets rebuilt (e.g. libssl3/libcrypto3 CVE-2026-14456 was
+# fixed in the v3.24 repo before any node:24-alpine build picked it up).
+# Pick those up at build time instead of waiting on an upstream image bump.
+RUN apk upgrade --no-cache
+# npm ships bundled inside every node:*-alpine image regardless of whether a
+# stage's own build steps use it. This stage never runs npm -- output:
+# standalone's CMD is `node server.js` directly -- so npm's vendored deps
+# (which is where CVE-2026-14257/69152/69192/73566 in brace-expansion/
+# ip-address/tar live) are dead weight here: unused attack surface the
+# release-check gate's Trivy scan correctly flags. Remove them; deps/builder
+# above still have their own npm for the actual build.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
 # next.config.ts sets output: 'standalone', which traces and copies only the
 # production node_modules subset a request actually needs into .next/standalone
 # — a fraction of the full dev node_modules the old `COPY .../web-next ./` +
