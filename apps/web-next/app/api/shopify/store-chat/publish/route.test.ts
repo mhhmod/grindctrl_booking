@@ -1,6 +1,10 @@
 // apps/web-next/app/api/shopify/store-chat/publish/route.test.ts
 // @vitest-environment node
 import { NextRequest } from 'next/server';
+vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
+  merchantRateLimitResponse: vi.fn(),
+}));
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { authenticateMock, ensureShopOwnedSiteMock, publishConfigForSiteMock } = vi.hoisted(() => ({

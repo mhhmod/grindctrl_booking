@@ -11,6 +11,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const authMock = vi.fn();
 vi.mock('@clerk/nextjs/server', () => ({ auth: () => authMock() }));
 
+const limitMock = vi.fn();
+vi.mock('@/lib/request-rate-limit', () => ({
+  merchantRateLimitResponse: (...args: unknown[]) => limitMock(...args),
+}));
+
 const listMessengerSiteIdsReadOnlyMock = vi.fn();
 vi.mock('@/lib/messenger/provisioning', () => ({
   listMessengerSiteIdsReadOnly: (...args: unknown[]) => listMessengerSiteIdsReadOnlyMock(...args),
@@ -37,6 +42,7 @@ describe('GET /api/dashboard/store-chat-waiting', () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({ count: 0 });
     expect(listMessengerSiteIdsReadOnlyMock).not.toHaveBeenCalled();
+    expect(limitMock).not.toHaveBeenCalled();
   });
 
   it('returns the count from the same helpers the layout uses', async () => {
@@ -50,6 +56,7 @@ describe('GET /api/dashboard/store-chat-waiting', () => {
     expect(body).toEqual({ count: 4 });
     expect(listMessengerSiteIdsReadOnlyMock).toHaveBeenCalledWith('user_1');
     expect(countAwaitingHandoffMock).toHaveBeenCalledWith(['site-1', 'site-2']);
+    expect(limitMock).toHaveBeenCalledWith('account:user_1', 'read');
   });
 
   it('returns 0 rather than throw when a helper rejects — a badge must never take the dashboard down', async () => {
@@ -61,5 +68,18 @@ describe('GET /api/dashboard/store-chat-waiting', () => {
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ count: 0 });
+  });
+
+  it.each([429, 503])('preserves %i and Retry-After without querying or fabricating a count', async (status) => {
+    authMock.mockResolvedValue({ userId: 'user_1' });
+    limitMock.mockResolvedValue(Response.json({ error: 'unavailable' }, {
+      status, headers: { 'Retry-After': '30', 'Cache-Control': 'no-store' },
+    }));
+    const response = await GET();
+    expect(response.status).toBe(status);
+    expect(response.headers.get('Retry-After')).toBe('30');
+    expect(await response.json()).not.toHaveProperty('count');
+    expect(listMessengerSiteIdsReadOnlyMock).not.toHaveBeenCalled();
+    expect(countAwaitingHandoffMock).not.toHaveBeenCalled();
   });
 });

@@ -97,7 +97,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     process.env.SHOPIFY_API_SECRET = SECRET;
     // Reinstall after the previous test's restoreAllMocks so this suite is
     // order-independent when run with the wider focused group.
-    rateLimitMock.mockResolvedValue({ success: true });
+    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     resolveStorefrontProductMock.mockResolvedValue(RESOLVED_PRODUCT);
     vi.spyOn(Date, 'now').mockReturnValue(NOW_SECONDS * 1000);
   });

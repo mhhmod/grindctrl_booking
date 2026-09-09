@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, recordAudit, recordEvent } from '@/lib/messenger/conversations';
 import {
@@ -42,8 +43,12 @@ function bad(code: string, status = 400) {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`ma:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return bad('rate_limited', 429);
+  try {
+    await requireRateLimit(publicApiRatelimit, `ma:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   const declared = Number(request.headers.get('content-length') ?? '0');
   if (Number.isFinite(declared) && declared > REQUEST_BYTES_CEILING) return bad('too_large', 413);

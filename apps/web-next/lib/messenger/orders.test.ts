@@ -36,7 +36,10 @@ const ORDER = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getShopToken.mockResolvedValue({ accessToken: 'tok', scopes: 'read_products,read_orders' });
+  // read_customers is required alongside read_orders for the verified-shopper
+  // path below, which queries customer(id: ...); most tests here exercise
+  // that path, so it is the default rather than something each one repeats.
+  getShopToken.mockResolvedValue({ accessToken: 'tok', scopes: 'read_products,read_orders,read_customers' });
 });
 
 describe('mapPaymentState', () => {
@@ -156,6 +159,22 @@ describe('lookupOrder — verified shopper', () => {
     const call = adminGraphql.mock.calls[0][0];
     expect(call.variables.id).toBe('gid://shopify/Customer/777');
     expect(call.variables.query).toBe('name:#4321');
+  });
+
+  /* customer(id: ...) reads more than orders can on its own, so read_orders
+     alone must not be enough to reach it — a store that granted only
+     read_orders must not have that silently widened to a customer lookup. */
+  it('refuses a verified lookup when the token lacks read_customers', async () => {
+    getShopToken.mockResolvedValue({ accessToken: 'tok', scopes: 'read_products,read_orders' });
+    expect(
+      await lookupOrder({
+        shopDomain: 'demo.myshopify.com',
+        verifiedCustomerId: '777',
+        orderNumber: null,
+        email: null,
+      }),
+    ).toEqual({ ok: false, reason: 'no_scope' });
+    expect(adminGraphql).not.toHaveBeenCalled();
   });
 });
 

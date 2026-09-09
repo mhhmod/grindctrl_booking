@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import {
   loadPublicSite,
   loadPublicSiteByDomain,
@@ -54,8 +55,15 @@ export function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`me:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return NextResponse.json({ ok: false }, { status: 429 });
+  try {
+    await requireRateLimit(publicApiRatelimit, `me:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (!(error instanceof RequestRateLimitError)) throw error;
+    const response = rateLimitErrorResponse(error);
+    for (const [name, value] of Object.entries(corsHeaders(request))) response.headers.set(name, value);
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+    return response;
+  }
 
   let body: Record<string, unknown>;
   try {

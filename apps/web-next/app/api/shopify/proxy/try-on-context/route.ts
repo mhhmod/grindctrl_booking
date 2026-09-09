@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import {
@@ -41,9 +42,11 @@ function freshProxyTimestamp(raw: string | null, nowSeconds: number): number | n
 }
 
 export async function GET(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`tc:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) {
-    return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  try {
+    await requireRateLimit(publicApiRatelimit, `tc:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
   }
 
   const secret = process.env.SHOPIFY_API_SECRET?.trim();

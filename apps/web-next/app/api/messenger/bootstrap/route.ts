@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
@@ -25,8 +26,12 @@ function bad(code: string, status = 400) {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`mb:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return bad('rate_limited', 429);
+  try {
+    await requireRateLimit(publicApiRatelimit, `mb:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -67,11 +72,12 @@ export async function POST(request: NextRequest) {
         : crypto.randomUUID().replace(/-/g, '');
 
     // Verified shopper identity (optional): short-lived JWT previously issued
-    // by the Shopify proxy route. Bound to this anonymous session id.
+    // by the Shopify proxy route. Bound to this session and the loaded site,
+    // never a shop supplied in the request body or an old metadata flag.
     let identity: { customerId: string; email: string; name: string } | null = null;
     const secret = process.env.SHOPIFY_API_SECRET;
     if (secret && typeof body.shopperToken === 'string') {
-      const claims = verifyShopperToken(secret, body.shopperToken, anonymousId);
+      const claims = verifyShopperToken(secret, body.shopperToken, anonymousId, site.domain);
       if (claims?.customerId) {
         identity = {
           customerId: claims.customerId,
@@ -105,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = getMessengerServiceClient();
     const patch: Record<string, unknown> = {};
-    if (identity && conversation.metadata.identity?.verified !== true) {
+    if (identity) {
       // Declared shape is snake_case (ConversationRecord.metadata.identity);
       // spreading the camelCase claims here silently wrote a key no reader
       // ever looked at, which is what defeated the binding check.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import {
   MESSAGE_MAX_LENGTH,
@@ -91,8 +92,12 @@ const ORDER_UNAVAILABLE = {
 };
 
 export async function POST(request: NextRequest) {
-  const ipLimit = await publicApiRatelimit.limit(`ms:${clientIp(request) ?? 'unknown'}`);
-  if (!ipLimit.success) return bad('rate_limited', 429);
+  try {
+    await requireRateLimit(publicApiRatelimit, `ms:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   let body: Record<string, unknown>;
   try {
@@ -139,10 +144,7 @@ export async function POST(request: NextRequest) {
       notifications: site.config.notifications,
     };
 
-    if (sessionLimiter) {
-      const sessionLimit = await sessionLimiter.limit(`${key}:${anonymousId}`);
-      if (!sessionLimit.success) return bad('rate_limited', 429);
-    }
+    await requireRateLimit(sessionLimiter, `${site.id}:${anonymousId}`);
 
     const visitor = await getVisitor(site.id, anonymousId);
     if (!visitor) return bad('bad_session');
@@ -213,7 +215,7 @@ export async function POST(request: NextRequest) {
     let verifiedCustomer = conversation.metadata.identity?.verified === true;
     const secret = process.env.SHOPIFY_API_SECRET;
     if (secret && shopperToken) {
-      const claims = verifyShopperToken(secret, shopperToken, anonymousId);
+      const claims = verifyShopperToken(secret, shopperToken, anonymousId, site.domain);
       const bound = conversation.metadata.identity?.customer_id ?? null;
       /* A token only ever confirms the customer this conversation is already
          bound to (or binds a previously anonymous one). A token for someone
@@ -373,16 +375,22 @@ export async function POST(request: NextRequest) {
 
     if (turn.kind === 'action' && orderShopDomain) {
       const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
-      const ipLookupLimit = orderLookupLimiter
-        ? await orderLookupLimiter.limit(`${key}:${clientIp(request) ?? 'unknown'}`)
-        : { success: true };
+      let lookupAllowed = false;
+      try {
+        await requireRateLimit(orderLookupLimiter, `${site.id}:${clientIp(request) ?? 'unknown'}`);
+        lookupAllowed = true;
+      } catch (error) {
+        if (!(error instanceof RequestRateLimitError)) throw error;
+        // Keep order-denial copy identical: never disclose order existence
+        // or execute a lookup when its anti-enumeration gate is unavailable.
+      }
 
       // Attempts are spent before the lookup runs, so a wrong guess costs
       // the same as a right one. Persisted regardless of the outcome.
       conversation.metadata.order_lookup_attempts = attempts;
       await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
 
-      const overBudget = attempts > ORDER_LOOKUP_LIFETIME_LIMIT || !ipLookupLimit.success;
+      const overBudget = attempts > ORDER_LOOKUP_LIFETIME_LIMIT || !lookupAllowed;
       const outcome = overBudget
         ? ({ ok: false, reason: 'rate_limited' } as const)
         : await lookupOrder({
@@ -500,6 +508,7 @@ export async function POST(request: NextRequest) {
     void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_replied' }).catch(() => {});
     return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
   } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     console.error('[messenger] send failed:', error instanceof Error ? error.message : error);
     return bad('unavailable', 503);
   }

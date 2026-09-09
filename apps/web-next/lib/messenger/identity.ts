@@ -1,19 +1,20 @@
 import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 /* Shopper identity for the Support Messenger.
 
    Browser-supplied customer ids/emails are NEVER trusted. Identity arrives
-   through the Shopify App Proxy: Liquid renders a link containing
-   customer claims as query params, Shopify signs the full query string with
-   the app secret, and our proxy endpoint verifies that HMAC server-side —
-   exactly how Shopify itself documents proxy request verification.
+   through Shopify's authoritative logged_in_customer_id parameter. The
+   proxy also signs arbitrary forwarded query parameters, so custom
+   customer_id/email/name fields are NOT verified claims.
 
    On success the shopper's browser receives a short-lived HS256 session JWT
    (signed with the same app secret, never exposed to storefront JS beyond
    the token itself). Messenger API calls present this token; the server
-   re-verifies signature + expiry + audience before attaching any identity. */
+   re-verifies signature + expiry + audience + shop + session before attaching
+   any identity. Legacy tokens without a shop claim are rejected. */
 
 const ISSUER = 'grindctrl-messenger';
 const AUDIENCE = 'messenger-api';
@@ -33,22 +34,23 @@ function hmacSha256(secret: string, data: string): Buffer {
   return createHmac('sha256', secret).update(data, 'utf8').digest();
 }
 
-/** Verifies Shopify's app-proxy `signature` parameter over every other query
- *  param (sorted, concatenated k=v, secret appended) per Shopify docs. */
+/** Shopify signs decoded, sorted k=v groups. Repeated values join with a
+ * comma, as in its official `extra=1&extra=2` example. A signature proves
+ * transport integrity, not authority of arbitrary shopper-supplied fields. */
 export function verifyShopifyProxySignature(
   params: URLSearchParams,
   secret: string,
 ): boolean {
   const signature = params.get('signature') ?? '';
-  if (!signature || !secret) return false;
+  if (!/^[a-f0-9]{64}$/.test(signature) || !secret) return false;
+  // Avoid first-value / joined-value ambiguity on security-sensitive claims.
+  if (['signature', 'shop', 'logged_in_customer_id', 'timestamp', 'sid']
+    .some((key) => params.getAll(key).length > 1)) return false;
 
-  const pairs: string[] = [];
-  for (const [key, value] of params.entries()) {
-    if (key === 'signature') continue;
-    // Shopify documents escaping of &/%/= in values for signature purposes.
-    pairs.push(`${key}=${value.replace(/&/g, '%26').replace(/=/g, '%3D')}`);
-  }
-  pairs.sort();
+  const pairs = [...new Set(params.keys())]
+    .filter((key) => key !== 'signature')
+    .map((key) => `${key}=${params.getAll(key).join(',')}`)
+    .sort();
 
   const digest = hmacSha256(secret, pairs.join(''));
   const provided = Buffer.from(signature, 'utf8');
@@ -57,23 +59,13 @@ export function verifyShopifyProxySignature(
   return timingSafeEqual(provided, expectedHex);
 }
 
-export type ProxyIdentityInput = {
-  customer_id?: string;
-  customer_email?: string;
-  customer_name?: string;
-};
-
-/** Validates the signed proxy payload shape and returns sanitized claims. */
+/** Call only after HMAC verification. Only Shopify's own login parameter
+ * proves identity. Optional email/name would require an authorized server
+ * lookup; dropping them is safer than treating signed browser data as PII. */
 export function extractProxyIdentity(params: URLSearchParams): VerifiedShopperIdentity | null {
-  const customerId = params.get('customer_id') ?? '';
-  if (!/^\d{1,20}$/.test(customerId)) return null;
-  const email = (params.get('customer_email') ?? '').trim();
-  const name = (params.get('customer_name') ?? '').trim();
-  return {
-    customerId,
-    email: email && email.length <= 200 ? email : null,
-    name: name && name.length <= 120 ? name : null,
-  };
+  const customerId = params.get('logged_in_customer_id') ?? '';
+  if (params.getAll('logged_in_customer_id').length !== 1 || !/^[1-9]\d{0,19}$/.test(customerId)) return null;
+  return { customerId, email: null, name: null };
 }
 
 interface JwtParts {
@@ -84,18 +76,22 @@ interface JwtParts {
     iat: number;
     exp: number;
     sid: string;
+    shop: string;
     sub: string | null;
     email: string | null;
     name: string | null;
   };
 }
 
-/** Issues the shopper session JWT bound to the visitor session id (`sid`)
- *  so tokens cannot be replayed across different browser sessions. */
+/** Issues a shopper JWT bound to both the visitor session and canonical shop. */
 export function signShopperToken(
   secret: string,
-  claims: { sessionId: string; identity: VerifiedShopperIdentity },
+  claims: { sessionId: string; shop: string; identity: VerifiedShopperIdentity },
 ): string {
+  const shop = normalizeShopDomain(claims.shop);
+  if (!secret || !shop || !/^[1-9]\d{0,19}$/.test(claims.identity.customerId ?? '')) {
+    throw new Error('Invalid shopper identity');
+  }
   const now = Math.floor(Date.now() / 1000);
   const parts: JwtParts = {
     header: { alg: 'HS256', typ: 'JWT' },
@@ -105,6 +101,7 @@ export function signShopperToken(
       iat: now,
       exp: now + TOKEN_TTL_SECONDS,
       sid: claims.sessionId,
+      shop,
       sub: claims.identity.customerId,
       email: claims.identity.email,
       name: claims.identity.name,
@@ -121,7 +118,10 @@ export function verifyShopperToken(
   secret: string,
   token: string,
   expectedSessionId: string,
+  expectedShop: unknown,
 ): VerifiedShopperIdentity | null {
+  const shop = normalizeShopDomain(expectedShop);
+  if (!secret || !shop || typeof token !== 'string' || token.length > 4096) return null;
   const pieces = token.split('.');
   if (pieces.length !== 3) return null;
   const [h, p, s] = pieces;
@@ -133,15 +133,20 @@ export function verifyShopperToken(
 
   let payload: JwtParts['payload'];
   try {
+    const header = JSON.parse(Buffer.from(h, 'base64url').toString('utf8'));
+    if (header?.alg !== 'HS256' || header?.typ !== 'JWT') return null;
     payload = JSON.parse(Buffer.from(p.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
   } catch {
     return null;
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (payload.iss !== ISSUER || payload.aud !== AUDIENCE) return null;
-  if (typeof payload.exp !== 'number' || payload.exp < now - 30) return null;
-  if (payload.sid !== expectedSessionId) return null;
+  if (!payload || payload.iss !== ISSUER || payload.aud !== AUDIENCE) return null;
+  if (!Number.isSafeInteger(payload.exp) || payload.exp < now - 30
+    || !Number.isSafeInteger(payload.iat) || payload.iat > now + 30
+    || payload.exp - payload.iat > TOKEN_TTL_SECONDS || payload.exp <= payload.iat) return null;
+  if (payload.sid !== expectedSessionId || payload.shop !== shop) return null;
+  if (typeof payload.sub !== 'string' || !/^[1-9]\d{0,19}$/.test(payload.sub)) return null;
 
   return {
     customerId: typeof payload.sub === 'string' ? payload.sub : null,

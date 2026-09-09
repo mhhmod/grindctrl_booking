@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import { getConversationForVisitor, getVisitor, listMessages } from '@/lib/messenger/conversations';
@@ -12,8 +13,12 @@ const ANON_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export async function GET(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`my:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  try {
+    await requireRateLimit(publicApiRatelimit, `my:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   const params = request.nextUrl.searchParams;
   const key = params.get('key') ?? '';

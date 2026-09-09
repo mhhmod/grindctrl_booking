@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { countAwaitingHandoff } from '@/lib/messenger/conversations';
 import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
+import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 
 /* GET /api/dashboard/store-chat-waiting
    Client-side refresh for the sidebar badge. app/dashboard/layout.tsx only
@@ -18,6 +19,9 @@ export async function GET() {
   try {
     const { userId } = await auth();
     if (!userId) return NextResponse.json({ count: 0 });
+
+    const denied = await merchantRateLimitResponse(`account:${userId}`, 'read');
+    if (denied) return denied;
 
     const siteIds = await listMessengerSiteIdsReadOnly(userId);
     const count = await countAwaitingHandoff(siteIds);

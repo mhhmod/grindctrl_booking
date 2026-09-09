@@ -1,5 +1,9 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
+vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
+  merchantRateLimitResponse: vi.fn(),
+}));
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { authenticateMock, ensureShopOwnedSiteMock, saveDraftSectionForSiteMock } = vi.hoisted(() => ({
