@@ -1,13 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
+vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
+  requireMerchantRateLimit: vi.fn(),
+}));
 
 const mocks = vi.hoisted(() => ({
+  auth: vi.fn(),
   requireManagedTryOnShop: vi.fn(),
   getShopEntitlement: vi.fn(),
   listEntitlementCatalog: vi.fn(),
-  runDailyReconciliation: vi.fn(),
+  reconcileShopSubscription: vi.fn(),
   runOwnerEntitlementMutation: vi.fn(),
   revalidatePath: vi.fn(),
 }));
+
+vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
+afterEach(() => { vi.unstubAllEnvs(); });
 
 vi.mock('@/lib/shopify/shops', () => ({
   requireManagedTryOnShop: mocks.requireManagedTryOnShop,
@@ -16,7 +25,7 @@ vi.mock('@/lib/shopify/shops', () => ({
 vi.mock('@/lib/try-on/entitlement', () => ({
   getShopEntitlement: mocks.getShopEntitlement,
   listEntitlementCatalog: mocks.listEntitlementCatalog,
-  runDailyReconciliation: mocks.runDailyReconciliation,
+  reconcileShopSubscription: mocks.reconcileShopSubscription,
   runOwnerEntitlementMutation: mocks.runOwnerEntitlementMutation,
 }));
 
@@ -32,18 +41,47 @@ import {
 } from './plan-actions';
 
 describe('try-on plan owner actions', () => {
+  it('denies mutation before entitlement work using the ownership-resolved domain', async () => {
+    vi.mocked(requireMerchantRateLimit).mockRejectedValueOnce(new RequestRateLimitError(429, 12));
+    await expect(renewPlan({ shop: 'forged.myshopify.com', note: 'test', actionKey: 'a' })).resolves.toMatchObject({ ok: false, code: 'rate_limited', retryAfterSeconds: 12 });
+    expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:store-one.myshopify.com');
+    expect(mocks.runOwnerEntitlementMutation).not.toHaveBeenCalled();
+  });
   const state = { shop: 'store-one.myshopify.com', status: 'active' };
   const mutation = { actionKey: 'action-key', replayed: false, ledgerEntryIds: ['ledger-1'] };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('TRYON_PLATFORM_OPERATOR_CLERK_IDS', 'user_operator');
+    mocks.auth.mockResolvedValue({ userId: 'user_operator' });
     mocks.requireManagedTryOnShop.mockImplementation(async (shop: unknown) =>
       shop === 'default' ? 'default' : 'store-one.myshopify.com',
     );
     mocks.getShopEntitlement.mockResolvedValue(state);
     mocks.listEntitlementCatalog.mockResolvedValue({ plans: [], packs: [] });
-    mocks.runDailyReconciliation.mockResolvedValue(1);
+    mocks.reconcileShopSubscription.mockResolvedValue(undefined);
     mocks.runOwnerEntitlementMutation.mockResolvedValue(mutation);
+  });
+
+  it('refuses ordinary shop owners and missing operator configuration before any RPC or limiter', async () => {
+    mocks.auth.mockResolvedValue({ userId: 'user_merchant' });
+    expect(await activatePlan({ shop: state.shop, planKey: 'launch-v1', note: 'self-grant', actionKey: 'a' }))
+      .toMatchObject({ ok: false, code: 'forbidden' });
+    mocks.auth.mockResolvedValue({ userId: 'user_operator' });
+    vi.stubEnv('TRYON_PLATFORM_OPERATOR_CLERK_IDS', '');
+    expect(await applyTopUp({ shop: state.shop, packKey: 'pack', note: '', actionKey: 'b' }))
+      .toMatchObject({ ok: false, code: 'forbidden' });
+    expect(mocks.requireManagedTryOnShop).not.toHaveBeenCalled();
+    expect(requireMerchantRateLimit).not.toHaveBeenCalled();
+    expect(mocks.runOwnerEntitlementMutation).not.toHaveBeenCalled();
+  });
+
+  it('still refuses a configured operator who does not own the requested shop', async () => {
+    mocks.requireManagedTryOnShop.mockRejectedValueOnce(new Error('Unknown Shopify shop'));
+    expect(await renewPlan({ shop: 'foreign.myshopify.com', note: '', actionKey: 'a' }))
+      .toMatchObject({ ok: false, code: 'forbidden' });
+    expect(requireMerchantRateLimit).not.toHaveBeenCalled();
+    expect(mocks.runOwnerEntitlementMutation).not.toHaveBeenCalled();
   });
 
   it('requires owner authorization for catalog and shop state reads', async () => {
@@ -61,7 +99,7 @@ describe('try-on plan owner actions', () => {
       'store-one.myshopify.com',
       { allowGlobalDefault: true },
     );
-    expect(mocks.runDailyReconciliation).toHaveBeenCalledOnce();
+    expect(mocks.reconcileShopSubscription).toHaveBeenCalledExactlyOnceWith('store-one.myshopify.com');
   });
 
   it('threads action keys through every owner mutation', async () => {

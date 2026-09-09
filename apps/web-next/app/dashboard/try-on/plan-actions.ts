@@ -2,18 +2,42 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireManagedTryOnShop } from '@/lib/shopify/shops';
+import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
+import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
 import {
   getShopEntitlement,
   listEntitlementCatalog,
-  runDailyReconciliation,
+  reconcileShopSubscription,
   runOwnerEntitlementMutation,
   type OwnerMutationResult,
   type ShopEntitlement,
 } from '@/lib/try-on/entitlement';
 
-export type OwnerPlanActionResult = OwnerMutationResult & {
+export type OwnerPlanActionResult = (OwnerMutationResult & {
+  ok: true;
   state: ShopEntitlement;
-};
+}) | MerchantActionFailure;
+
+async function runManualPlanAction(
+  shop: unknown,
+  name: Parameters<typeof runOwnerEntitlementMutation>[0],
+  params: Record<string, unknown> & { p_action_key: string },
+): Promise<OwnerPlanActionResult> {
+  try {
+    await requireTryOnPlatformOperator();
+    const domain = await requireManagedTryOnShop(shop);
+    await requireMerchantRateLimit(`shop:${domain}`);
+    const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
+    revalidatePath('/dashboard/try-on');
+    return { ...result, ok: true, state: await getShopEntitlement(domain) };
+  } catch (error) {
+    if (error instanceof PlatformOperatorRequiredError ||
+      (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
+      return { ok: false, code: 'forbidden', message: 'You do not have permission to perform this action.' };
+    }
+    return merchantActionFailure(error);
+  }
+}
 
 export async function listPlansCatalog() {
   // Read-only: this needs "is a signed-in dashboard user", not authority over
@@ -53,7 +77,8 @@ export async function getShopPlanState(shop: unknown): Promise<ShopEntitlement> 
   // state below and never reaches a per-shop entitlement.
   const domain = await requireManagedTryOnShop(shop, { allowGlobalDefault: true });
   if (domain === 'default') return NO_SHOP_PLAN_STATE;
-  await runDailyReconciliation();
+  await requireMerchantRateLimit(`shop:${domain}`, 'read');
+  await reconcileShopSubscription(domain);
   return getShopEntitlement(domain);
 }
 
@@ -63,15 +88,11 @@ export async function activatePlan(input: {
   note: string;
   actionKey: string;
 }): Promise<OwnerPlanActionResult> {
-  const domain = await requireManagedTryOnShop(input.shop);
-  const result = await runOwnerEntitlementMutation('activate_tryon_plan', {
-    p_shop_domain: domain,
+  return runManualPlanAction(input.shop, 'activate_tryon_plan', {
     p_plan_key: input.planKey,
     p_note: input.note,
     p_action_key: input.actionKey,
   });
-  revalidatePath('/dashboard/try-on');
-  return { ...result, state: await getShopEntitlement(domain) };
 }
 
 export async function renewPlan(input: {
@@ -79,14 +100,10 @@ export async function renewPlan(input: {
   note: string;
   actionKey: string;
 }): Promise<OwnerPlanActionResult> {
-  const domain = await requireManagedTryOnShop(input.shop);
-  const result = await runOwnerEntitlementMutation('renew_tryon_plan', {
-    p_shop_domain: domain,
+  return runManualPlanAction(input.shop, 'renew_tryon_plan', {
     p_note: input.note,
     p_action_key: input.actionKey,
   });
-  revalidatePath('/dashboard/try-on');
-  return { ...result, state: await getShopEntitlement(domain) };
 }
 
 export async function applyTopUp(input: {
@@ -95,15 +112,11 @@ export async function applyTopUp(input: {
   note: string;
   actionKey: string;
 }): Promise<OwnerPlanActionResult> {
-  const domain = await requireManagedTryOnShop(input.shop);
-  const result = await runOwnerEntitlementMutation('apply_tryon_top_up', {
-    p_shop_domain: domain,
+  return runManualPlanAction(input.shop, 'apply_tryon_top_up', {
     p_pack_key: input.packKey,
     p_note: input.note,
     p_action_key: input.actionKey,
   });
-  revalidatePath('/dashboard/try-on');
-  return { ...result, state: await getShopEntitlement(domain) };
 }
 
 export async function scheduleDowngrade(input: {
@@ -111,12 +124,8 @@ export async function scheduleDowngrade(input: {
   planKey: string;
   actionKey: string;
 }): Promise<OwnerPlanActionResult> {
-  const domain = await requireManagedTryOnShop(input.shop);
-  const result = await runOwnerEntitlementMutation('schedule_tryon_downgrade', {
-    p_shop_domain: domain,
+  return runManualPlanAction(input.shop, 'schedule_tryon_downgrade', {
     p_plan_key: input.planKey,
     p_action_key: input.actionKey,
   });
-  revalidatePath('/dashboard/try-on');
-  return { ...result, state: await getShopEntitlement(domain) };
 }

@@ -498,7 +498,7 @@ export async function finalizeCreditJob(input: {
   jobId: string;
   status: 'completed' | 'failed';
   provider?: string;
-  costUsd?: number;
+  costUsd?: number | null;
   durationMs?: number;
   message?: string;
 }): Promise<void> {
@@ -520,6 +520,11 @@ export async function refundCredit(jobId: string): Promise<void> {
   const { data, error } = await getServiceClient().rpc('refund_tryon_credit', { p_job_id: jobId });
   throwRpcError(error);
   if (data !== 'failed') throw new Error(`Try-on job was already finalized as ${String(data)}`);
+}
+
+export async function reconcileShopSubscription(shop: string): Promise<void> {
+  const { error } = await getServiceClient().rpc('reconcile_tryon_subscription', { p_shop_domain: shop });
+  throwRpcError(error);
 }
 
 export async function runDailyReconciliation(): Promise<number> {
