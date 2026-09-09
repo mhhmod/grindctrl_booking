@@ -1,0 +1,73 @@
+name: Next release checks
+
+on:
+  pull_request:
+    paths:
+      - 'apps/web-next/**'
+      - '.dockerignore'
+      - '.github/workflows/next-release-check.yml'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+      - name: Install locked dependencies
+        working-directory: apps/web-next
+        run: npm ci
+      - name: Dependency audit
+        working-directory: apps/web-next
+        run: npm audit --audit-level=moderate
+      - name: Unit and route contracts
+        working-directory: apps/web-next
+        run: npm test -- --maxWorkers=2
+      - name: Typecheck
+        working-directory: apps/web-next
+        run: npm run typecheck
+      - name: Lint
+        working-directory: apps/web-next
+        run: npm run lint
+      - name: Build candidate without production credentials or publishing
+        run: docker build --build-arg SENTRY_RELEASE=${{ github.sha }} -t grindctrl-release-check:${{ github.sha }} -f apps/web-next/Dockerfile .
+      - name: Scan candidate OS and runtime libraries
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: grindctrl-release-check:${{ github.sha }}
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          ignore-unfixed: false
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+      - name: Start isolated candidate and verify its exact release
+        env:
+          EXPECTED_RELEASE: ${{ github.sha }}
+        run: |
+          docker run --detach --name gc-release-candidate --memory=1g --cpus=2 -p 127.0.0.1:3101:3000 grindctrl-release-check:${{ github.sha }}
+          ready=0
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3101/api/health | node -e 'let s="";process.stdin.on("data",b=>s+=b).on("end",()=>{try{const j=JSON.parse(s);process.exit(j.ok===true&&j.release===process.env.EXPECTED_RELEASE?0:1)}catch{process.exit(1)}})'; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --max-time 20 http://127.0.0.1:3101/icon.svg -o /dev/null
+          curl --fail --silent --show-error --max-time 20 http://127.0.0.1:3101/widget/v1/messenger.js -o /dev/null
+          # Credential-free startup/static checks are not authenticated UI QA.
+          test "$(docker inspect --format '{{.Config.User}}' gc-release-candidate)" = node
+      - name: Remove only this job's disposable candidate
+        if: always()
+        run: docker rm --force gc-release-candidate || true

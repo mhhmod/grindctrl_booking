@@ -29,6 +29,7 @@ export const config = {
      (blank iframes, or Shopify's admin refusing the resulting navigation).
      Keep them out. `shopify` covers the app page tree
      (app/shopify/app/[[...rest]]); `api/shopify` covers its route handlers
-     — two different prefixes, both needed. */
-  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|.*\\..*).*)', '/'],
+     — two different prefixes, both needed. The exact, secret-free health
+     endpoint must remain available even when Clerk is unconfigured/down. */
+  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|api/health$|.*\\..*).*)', '/'],
 };

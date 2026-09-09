@@ -1,5 +1,6 @@
 import type {NextConfig} from 'next';
 import {withSentryConfig} from '@sentry/nextjs';
+import path from 'node:path';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -10,6 +11,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   output: 'standalone',
+  // Match the isolated Docker build, never infer the user's home lockfile.
+  outputFileTracingRoot: path.resolve(__dirname),
   poweredByHeader: false,
   images: {
     remotePatterns: [

@@ -6,6 +6,8 @@ on:
     paths:
       - "apps/web-next/**"
       - ".github/workflows/deploy-next.yml"
+      - ".github/workflows/next-release-check.yml"
+      - ".dockerignore"
 
 # Only one deploy in flight at a time. Without this, two pushes close
 # together each start their own SSH session on the VPS running the same
@@ -21,7 +23,13 @@ permissions:
   packages: write
 
 jobs:
+  release-checks:
+    uses: ./.github/workflows/next-release-check.yml
+    permissions:
+      contents: read
+
   build-and-push:
+    needs: release-checks
     runs-on: ubuntu-latest
     outputs:
       image: ghcr.io/${{ github.repository }}-web-next
@@ -47,6 +55,7 @@ jobs:
       # also means unchanged dependency/source layers are skipped on
       # repeat builds, not just cached npm packages.
       - uses: docker/build-push-action@v6
+        id: build
         with:
           context: .
           file: apps/web-next/Dockerfile
@@ -61,6 +70,19 @@ jobs:
             NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # The configured production build differs from the credential-free CI
+      # candidate. Scan THIS immutable digest before the deploy job can run.
+      - name: Scan exact published production candidate
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          ignore-unfixed: false
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
 
   deploy:
     needs: build-and-push
@@ -147,8 +169,8 @@ jobs:
             local url="https://grindctrl.cloud${path}"
             local attempt
             for attempt in 1 2 3 4 5 6; do
-              status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo "000")
-              if [ "$status" -lt 500 ]; then
+              status=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$url") || status="000"
+              if [ "$status" = "200" ]; then
                 echo "OK   $status  $path"
                 return 0
               fi
@@ -164,7 +186,7 @@ jobs:
           check "/try-on" || failed=1
           check "/embed/try-on?shop=grindctrl.myshopify.com&product=short-tshirt" || failed=1
           check "/widget/v1/loader.js" || failed=1
-          check "/favicon.ico" || failed=1
+          check "/icon.svg" || failed=1
           # Support Messenger: the loader every storefront pulls, and the
           # iframe surface it opens. Both must survive a deploy — a 5xx here
           # is a support channel down on every installed store.
@@ -172,7 +194,7 @@ jobs:
           check "/embed/messenger?key=gc_smoke_check&origin=https://grindctrl.cloud" || failed=1
 
           if [ "$failed" -ne 0 ]; then
-            echo "One or more routes returned a 5xx after the restart window — deploy is live but broken."
+            echo "One or more required routes did not return HTTP200 after the restart window."
             exit 1
           fi
 

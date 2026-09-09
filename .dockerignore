@@ -1,0 +1,17 @@
+# Never upload credentials, local dependencies or generated artifacts into build context.
+.git
+.audit-main
+.playwright-cli
+.mcp.json
+**/node_modules
+**/.next
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/.claude
+**/coverage
+**/playwright-report
+**/test-results
+output
+dist

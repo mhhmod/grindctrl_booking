@@ -34,10 +34,10 @@
     "gsap": "^3.15.0",
     "lucide-react": "^0.553.0",
     "maxmind": "^5.0.7",
-    "next": "^15.4.9",
+    "next": "^15.5.25",
     "next-themes": "^0.4.6",
     "nodemailer": "^9.0.3",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.23",
     "posthog-js": "^1.417.1",
     "radix-ui": "^1.4.3",
     "react": "^19.2.1",
@@ -63,6 +63,11 @@
     "jsdom": "^27.0.1",
     "tailwindcss": "4.1.11",
     "typescript": "5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.6"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.23"
+    }
   }
 }

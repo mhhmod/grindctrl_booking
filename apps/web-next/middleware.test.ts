@@ -13,6 +13,11 @@ const [pattern] = config.matcher;
 const matcher = new RegExp(`^${pattern}$`);
 
 describe('middleware matcher', () => {
+  it('exempts only the exact secret-free health endpoint from Clerk', () => {
+    expect(matcher.test('/api/health')).toBe(false);
+    expect(matcher.test('/api/health-private')).toBe(true);
+    expect(matcher.test('/api/health/admin')).toBe(true);
+  });
   it('excludes the embedded Shopify app page tree from Clerk', () => {
     expect(matcher.test('/shopify/app')).toBe(false);
     expect(matcher.test('/shopify/app/anything')).toBe(false);
