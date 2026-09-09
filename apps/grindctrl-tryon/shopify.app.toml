@@ -15,7 +15,7 @@ prefix = "apps"
 subpath = "grindctrl"
 
 [webhooks]
-api_version = "2026-10"
+api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   uri = "https://grindctrl.cloud/api/shopify/webhooks"

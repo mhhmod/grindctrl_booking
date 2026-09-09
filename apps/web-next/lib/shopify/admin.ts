@@ -5,7 +5,7 @@ import 'server-only';
    for orders. Version is pinned to the one shopify.app.toml declares for
    webhooks, so the two never drift apart. */
 
-export const SHOPIFY_ADMIN_API_VERSION = '2026-10';
+export const SHOPIFY_ADMIN_API_VERSION = '2026-07';
 
 const REQUEST_TIMEOUT_MS = 8_000;
 const MAX_RETRY_DELAY_MS = 3_000;
