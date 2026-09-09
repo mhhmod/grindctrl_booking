@@ -62,10 +62,10 @@ export async function hasShopOrderAccess(shopDomain: string): Promise<boolean> {
   if (!domain) return false;
   const res = await getServiceClient()
     .from('shopify_shop_tokens')
-    .select('shop_domain')
+    .select('scopes')
     .eq('shop_domain', domain)
     .maybeSingle();
-  return !res.error && Boolean(res.data);
+  return !res.error && typeof res.data?.scopes === 'string' && hasOrderScope(res.data.scopes);
 }
 
 /** Null means "this store has not authorized order access", which every
@@ -101,11 +101,20 @@ export async function getShopToken(shopDomain: string): Promise<{ accessToken: s
 
 /** Called on app/uninstalled. A token we can no longer use is a credential
  *  we should no longer hold. */
-export async function deleteShopToken(shopDomain: string): Promise<void> {
+export async function deleteShopToken(shopDomain: string): Promise<boolean> {
   const domain = normalizeShopDomain(shopDomain);
-  if (!domain) return;
-  const res = await getServiceClient().from('shopify_shop_tokens').delete().eq('shop_domain', domain);
-  if (res.error) console.error('[shopify] token delete failed:', res.error.message);
+  if (!domain) return false;
+  try {
+    const res = await getServiceClient().from('shopify_shop_tokens').delete().eq('shop_domain', domain);
+    if (res.error) throw new Error('Token deletion did not complete');
+    // A missing row is already clean; repeated deliveries are safe.
+    return true;
+  } catch {
+    // Database/provider errors can contain sensitive context. Keep the event
+    // useful for alerting without logging their payload or credential data.
+    console.error('[shopify] token delete failed');
+    return false;
+  }
 }
 
 /** Order lookup needs this scope specifically; holding a token from before
