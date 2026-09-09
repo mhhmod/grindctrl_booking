@@ -21,9 +21,14 @@ export { isPlaceholderEmail };
    read of it; the original 3-attempt/150ms budget here didn't cover that and
    the same race recurred in production. This budget comfortably covers it
    with margin. Every non-racing visit (the overwhelming majority) still
-   never reaches the loop at all. */
-const PROFILE_CREATE_ATTEMPTS = 6;
-const PROFILE_RETRY_BASE_MS = 150;
+   never reaches the loop at all. Shared with ensureWorkspace below, which
+   hits the identical class of race on workspaces_slug_key. */
+const PROVISIONING_RACE_ATTEMPTS = 6;
+const PROVISIONING_RETRY_BASE_MS = 150;
+
+async function retryDelay(attempt: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, PROVISIONING_RETRY_BASE_MS * (attempt + 1)));
+}
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -84,7 +89,7 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
      Next prefetching this route while navigating to it supplies the second
      request. Retrying the write as well as the read also covers the case
      where the winner rolled back, which re-reading alone would never fix. */
-  for (let attempt = 0; attempt < PROFILE_CREATE_ATTEMPTS; attempt += 1) {
+  for (let attempt = 0; attempt < PROVISIONING_RACE_ATTEMPTS; attempt += 1) {
     // Chaining select() onto the upsert means the connection that actually
     // wins the race gets its row back here, with no further read needed and
     // no race at all — the previous version always did a second round trip
@@ -111,9 +116,7 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
     if (settled.data) return settled.data as ProfileRow;
 
     // Bounded: a page that hangs is worse than one that reports a failure.
-    if (attempt < PROFILE_CREATE_ATTEMPTS - 1) {
-      await new Promise((resolve) => setTimeout(resolve, PROFILE_RETRY_BASE_MS * (attempt + 1)));
-    }
+    if (attempt < PROVISIONING_RACE_ATTEMPTS - 1) await retryDelay(attempt);
   }
   throw new Error('profile create failed: row missing after insert');
 }
@@ -147,14 +150,21 @@ async function ensureWorkspace(profileId: string): Promise<string> {
     .select('id')
     .single();
   if (insert.error) {
-    const raced = await supabase
-      .from('workspaces')
-      .select('id')
-      .eq('owner_profile_id', profileId)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (raced.data) return raced.data.id as string;
+    // Same visibility race as ensureProfile above (production,
+    // workspaces_slug_key: this connection's insert lost the race, but the
+    // winner's row was not yet visible to a single immediate re-read either)
+    // — retry with the same bounded backoff rather than one unretried read.
+    for (let attempt = 0; attempt < PROVISIONING_RACE_ATTEMPTS; attempt += 1) {
+      const raced = await supabase
+        .from('workspaces')
+        .select('id')
+        .eq('owner_profile_id', profileId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (raced.data) return raced.data.id as string;
+      if (attempt < PROVISIONING_RACE_ATTEMPTS - 1) await retryDelay(attempt);
+    }
     throw new Error(`workspace create failed: ${insert.error.message}`);
   }
   /* Re-read rather than trusting our own insert: a concurrent render may

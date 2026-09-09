@@ -304,6 +304,26 @@ describe('provisioning', () => {
     await expect(listMessengerSites('user_1')).rejects.toThrow(/row missing after insert/);
   });
 
+  it('retries the workspace race recovery instead of one unretried read (workspaces_slug_key, prod)', async () => {
+    // Production: two renders of a brand-new profile's first visit both try
+    // to insert 'gc-<profileId>' as the workspace slug. The loser's insert
+    // fails on workspaces_slug_key, and — same as the profile race above —
+    // the winner's row was not yet visible on the loser's very next read.
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: {
+        rows: [],
+        insertError: 'duplicate key value violates unique constraint "workspaces_slug_key"',
+        hiddenRows: [{ id: 'w-winner', owner_profile_id: 'p-1', created_at: '2026-01-01' }],
+        hiddenForReads: 2,
+      },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(listMessengerSites('user_1')).resolves.toEqual([]);
+  });
+
   it('returns its own row immediately on a clean, non-racing first insert', async () => {
     // No hiddenRows/appearOnWrite: nothing else is contending for this key.
     // The upsert's own .select() must carry the new row back in the same
