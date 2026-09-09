@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/ratelimit', () => ({
-  publicApiRatelimit: { limit: vi.fn().mockResolvedValue({ success: true }) },
+  publicApiRatelimit: { limit: vi.fn(async () => ({ success: true, reset: Date.now() + 10_000 })) },
   clientIp: () => 'test-ip',
   rateLimitedResponse: () => new Response(null, { status: 429 }),
 }));

@@ -58,7 +58,7 @@ describe('POST /api/try-on/session', () => {
     process.env.SHOPIFY_API_SECRET = SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     rateLimitState.configured = true;
-    rateLimitMock.mockResolvedValue({ success: true });
+    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     resolveStorefrontProductMock.mockResolvedValue({
       shop: 'proven.myshopify.com',
       handle: 'premium-ringer-tee',

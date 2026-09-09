@@ -86,7 +86,8 @@ export interface TryOnJob {
 export interface TryOnJobMeta {
   runtime: TryOnMode;
   provider: string;
-  costEstimate: number;
+  /** null means unreported/unknown provider cost, never a confirmed zero. */
+  costEstimate: number | null;
 }
 
 /** Normalized API envelope */

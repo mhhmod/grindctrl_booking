@@ -5,25 +5,26 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import type { TryOnJob } from './types';
 import { getProduct } from './products';
+import { readProviderBody } from '@/lib/provider-http';
+import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
+import { toShopperFailureMessage } from './shopper-errors';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
 const DEFAULT_MODEL = 'google/gemini-3.1-flash-image';
 
 /* Accepted upload formats for the live pipeline. HEIC/HEIF previews don't
    render in browsers anyway, so real uploads arrive as jpeg/png/webp. */
-const DATA_URL_RE = /^data:image\/(jpeg|png|webp);base64,/;
-
 export function parsePhotoDataUrl(photoData: string): { mime: string } | null {
-  const match = DATA_URL_RE.exec(photoData);
-  if (!match) return null;
-  const base64 = photoData.slice(photoData.indexOf(',') + 1);
-  if (base64.length === 0) return null;
-  return { mime: `image/${match[1]}` };
+  const parsed = decodeRasterDataUrl(photoData, 8 * 1024 * 1024);
+  return parsed ? { mime: parsed.mime } : null;
 }
 
 const MAX_GARMENT_BYTES = 8 * 1024 * 1024;
+export const IMAGE_PROVIDER_TIMEOUT_MS = 120_000;
+const MAX_PROVIDER_JSON_BYTES = Math.ceil(TRYON_RESULT_MAX_BYTES / 3) * 4 + 64 * 1024;
 
 /* Only Shopify-controlled image hosts are allowed as remote garment
    sources (SSRF guard): the shared CDN, or a *.myshopify.com shop
@@ -31,12 +32,9 @@ const MAX_GARMENT_BYTES = 8 * 1024 * 1024;
 export function isAllowedGarmentUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:') return false;
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port) return false;
     if (parsed.hostname === 'cdn.shopify.com') return true;
-    return (
-      /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(parsed.hostname) &&
-      parsed.pathname.startsWith('/cdn/')
-    );
+    return /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(parsed.hostname) && parsed.pathname.startsWith('/cdn/');
   } catch {
     return false;
   }
@@ -48,20 +46,19 @@ async function loadGarmentDataUrl(productId: string, garmentUrl?: string): Promi
       throw new Error('Garment image must come from the Shopify CDN.');
     }
     const res = await fetch(garmentUrl, {
-    // Bound the fetch so a slow/stalled remote host can't hold a request
-    // slot indefinitely; Shopify's CDN answers well inside this window.
-    signal: AbortSignal.timeout(20_000),
-  });
+      signal: AbortSignal.timeout(20_000),
+      redirect: 'error',
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error(`Garment image fetch failed (HTTP ${res.status}).`);
     const mime = res.headers.get('content-type')?.split(';')[0] ?? '';
     if (!/^image\/(jpeg|png|webp)$/.test(mime)) {
       throw new Error('Garment image must be jpeg, png, or webp.');
     }
-    const bytes = Buffer.from(await res.arrayBuffer());
-    if (bytes.length === 0 || bytes.length > MAX_GARMENT_BYTES) {
-      throw new Error('Garment image is empty or too large.');
-    }
-    return `data:${mime};base64,${bytes.toString('base64')}`;
+    const bytes = await readProviderBody(res, MAX_GARMENT_BYTES);
+    const dataUrl = `data:${mime};base64,${bytes.toString('base64')}`;
+    if (!decodeRasterDataUrl(dataUrl, MAX_GARMENT_BYTES)) throw new Error('Invalid garment image.');
+    return dataUrl;
   }
 
   const product = getProduct(productId);
@@ -87,22 +84,26 @@ export async function runImageGeneration(
 ): Promise<TryOnJob> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.TRYON_MODEL || DEFAULT_MODEL;
-  const jobId = `tryon_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const jobId = `tryon_${randomUUID()}`;
   const createdAt = new Date().toISOString();
+  let costEstimate: number | null = 0; // No provider attempt yet.
 
-  const fail = (message: string): TryOnJob => ({
-    jobId,
-    sessionId,
-    productId,
-    shop,
-    status: 'failed',
-    message,
-    createdAt,
-    meta: { runtime: 'live', provider: model, costEstimate: 0 },
-  });
+  const fail = (reason: string, status?: number): TryOnJob => {
+    console.warn('[try-on] provider_failure', { reason, status, jobId });
+    return {
+      jobId,
+      sessionId,
+      productId,
+      shop,
+      status: 'failed',
+      message: toShopperFailureMessage(status ? String(status) : reason),
+      createdAt,
+      meta: { runtime: 'live', provider: model, costEstimate },
+    };
+  };
 
   if (!apiKey) {
-    return fail('Live provider is not configured yet (missing OPENROUTER_API_KEY).');
+    return fail('provider_not_configured', 503);
   }
 
   if (!parsePhotoDataUrl(photoData)) {
@@ -114,59 +115,73 @@ export async function runImageGeneration(
   let garmentDataUrl: string;
   try {
     garmentDataUrl = await loadGarmentDataUrl(productId, garmentUrl);
-  } catch (err) {
-    return fail(err instanceof Error ? err.message : 'Could not load the garment image.');
+  } catch {
+    return fail('garment_unavailable');
   }
 
-  const res = await fetch(OPENROUTER_IMAGES_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      prompt:
-        `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
-        'This must look like the SAME photograph, retaken with the person wearing the new garment: ' +
-        "identical face, skin tone, hair, pose, body proportions, camera angle, background, and framing. " +
-        'Match the original photo\'s lighting direction, color temperature, grain, and sharpness so the garment blends seamlessly. ' +
-        'The garment must keep its true color, pattern, logo placement, and fabric texture, with natural drape, ' +
-        'realistic wrinkles, and correct fit for the person\'s build. ' +
-        'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
-      input_references: [
-        { type: 'image_url', image_url: { url: photoData } },
-        { type: 'image_url', image_url: { url: garmentDataUrl } },
-      ],
-      n: 1,
-    }),
-  });
+  costEstimate = null; // An attempted/ambiguous call is not proven free.
+  try {
+    const res = await fetch(OPENROUTER_IMAGES_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
+      redirect: 'error',
+      cache: 'no-store',
+      body: JSON.stringify({
+        model,
+        prompt:
+          `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
+          'This must look like the SAME photograph, retaken with the person wearing the new garment: ' +
+          'identical face, skin tone, hair, pose, body proportions, camera angle, background, and framing. ' +
+          "Match the original photo's lighting direction, color temperature, grain, and sharpness so the garment blends seamlessly. " +
+          'The garment must keep its true color, pattern, logo placement, and fabric texture, with natural drape, ' +
+          "realistic wrinkles, and correct fit for the person's build. " +
+          'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
+        input_references: [
+          { type: 'image_url', image_url: { url: photoData } },
+          { type: 'image_url', image_url: { url: garmentDataUrl } },
+        ],
+        n: 1,
+      }),
+    });
 
-  if (!res.ok) {
-    const errBody = (await res.json().catch(() => null)) as
-      | { error?: { message?: string } }
-      | null;
-    return fail(errBody?.error?.message || `Image generation failed (HTTP ${res.status}).`);
+    if (!res.ok) {
+      await res.body?.cancel();
+      return fail('provider_http_error', res.status);
+    }
+
+    const data = JSON.parse((await readProviderBody(res, MAX_PROVIDER_JSON_BYTES)).toString('utf8')) as {
+      data?: { b64_json?: unknown; media_type?: unknown }[];
+      usage?: { cost?: unknown };
+      error?: unknown;
+    };
+    if (!data || typeof data !== 'object' || data.error) return fail('provider_invalid_response');
+    const cost = data.usage?.cost;
+    costEstimate = typeof cost === 'number' && Number.isFinite(cost) && cost >= 0 ? cost : null;
+    const image = data.data?.[0];
+    if (typeof image?.b64_json !== 'string') {
+      return fail('provider_missing_image');
+    }
+    const resultImageUrl = `data:${image.media_type ?? 'image/png'};base64,${image.b64_json}`;
+    if (!decodeRasterDataUrl(resultImageUrl, TRYON_RESULT_MAX_BYTES)) return fail('provider_invalid_image');
+
+    return {
+      jobId,
+      sessionId,
+      productId,
+      shop,
+      status: 'completed',
+      resultImageUrl,
+      createdAt,
+      completedAt: new Date().toISOString(),
+      meta: { runtime: 'live', provider: model, costEstimate },
+    };
+  } catch (error) {
+    return fail(
+      error instanceof Error && /timeout|abort/i.test(error.name) ? 'provider_timeout' : 'provider_response_failure',
+    );
   }
-
-  const data = (await res.json()) as {
-    data?: { b64_json?: string; media_type?: string }[];
-    usage?: { cost?: number };
-  };
-  const image = data.data?.[0];
-  if (!image?.b64_json) {
-    return fail('Image generation returned no image.');
-  }
-
-  return {
-    jobId,
-    sessionId,
-    productId,
-    shop,
-    status: 'completed',
-    resultImageUrl: `data:${image.media_type ?? 'image/png'};base64,${image.b64_json}`,
-    createdAt,
-    completedAt: new Date().toISOString(),
-    meta: { runtime: 'live', provider: model, costEstimate: data.usage?.cost ?? 0 },
-  };
 }

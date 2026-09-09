@@ -15,6 +15,7 @@ import {
   type ShopEntitlement,
 } from './entitlement';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import type { VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnResultPersistenceError,
@@ -23,15 +24,11 @@ import {
 } from './result-errors';
 
 const RESULT_BUCKET = 'tryon-results';
-const RESULT_MAX_BYTES = 16 * 1024 * 1024;
 export const TRYON_RESULT_RETENTION_MS = 30 * 60 * 1000;
 export const TRYON_CLEANUP_BATCH_LIMIT = 50;
 export const TRYON_ORPHAN_SWEEP_LIMIT = 25;
 export const TRYON_ORPHAN_SAFETY_GRACE_MS = 15 * 60 * 1000;
 const MAX_SIGNED_URL_SECONDS = 5 * 60;
-const RESULT_DATA_URL_RE = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
-const RESULT_MAX_BASE64_CHARS = Math.ceil(RESULT_MAX_BYTES / 3) * 4;
-const RESULT_MAX_DATA_URL_CHARS = 'data:image/jpeg;base64,'.length + RESULT_MAX_BASE64_CHARS;
 const RESULT_PATH_RE = /^jobs\/[A-Za-z0-9_-]{1,160}\/result\.(?:jpg|png|webp)$/;
 const JOB_ID_RE = /^tryon_[A-Za-z0-9_-]{1,154}$/;
 
@@ -124,51 +121,15 @@ function decodeResultDataUrl(resultImageUrl: string, jobId: string): {
   mime: 'image/jpeg' | 'image/png' | 'image/webp';
   extension: 'jpg' | 'png' | 'webp';
 } {
-  if (resultImageUrl.length > RESULT_MAX_DATA_URL_CHARS) {
-    throw new TryOnResultPersistenceError(jobId);
-  }
-  const match = RESULT_DATA_URL_RE.exec(resultImageUrl);
-  if (!match) throw new TryOnResultPersistenceError(jobId);
-  const mime = match[1] as 'image/jpeg' | 'image/png' | 'image/webp';
-  const encoded = match[2];
-  if (encoded.length % 4 === 1) throw new TryOnResultPersistenceError(jobId);
-
-  const bytes = Buffer.from(encoded, 'base64');
-  const canonical = bytes.toString('base64').replace(/=+$/u, '');
-  if (
-    bytes.length === 0 ||
-    bytes.length > RESULT_MAX_BYTES ||
-    canonical !== encoded.replace(/=+$/u, '') ||
-    !matchesDeclaredImageType(bytes, mime)
-  ) {
-    throw new TryOnResultPersistenceError(jobId);
-  }
+  const decoded = decodeRasterDataUrl(resultImageUrl, TRYON_RESULT_MAX_BYTES);
+  if (!decoded) throw new TryOnResultPersistenceError(jobId);
+  const { bytes, mime } = decoded;
 
   return {
     bytes,
     mime,
     extension: mime === 'image/jpeg' ? 'jpg' : mime.slice('image/'.length) as 'png' | 'webp',
   };
-}
-
-function matchesDeclaredImageType(
-  bytes: Buffer,
-  mime: 'image/jpeg' | 'image/png' | 'image/webp',
-): boolean {
-  if (mime === 'image/jpeg') {
-    return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  }
-  if (mime === 'image/png') {
-    return (
-      bytes.length >= 8 &&
-      bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-    );
-  }
-  return (
-    bytes.length >= 12 &&
-    bytes.subarray(0, 4).toString('ascii') === 'RIFF' &&
-    bytes.subarray(8, 12).toString('ascii') === 'WEBP'
-  );
 }
 
 function durableRowMatchesJob(
@@ -331,7 +292,7 @@ export async function loadAuthorizedDurableTryOnJob(
     meta: {
       runtime: 'live',
       provider: row.provider ?? row.model_key ?? 'unknown',
-      costEstimate: Number(row.cost_usd ?? 0),
+      costEstimate: row.cost_usd == null ? null : Number(row.cost_usd),
     },
   };
 
