@@ -5,30 +5,31 @@ import {
   TRYON_POLL_RATE_LIMIT_WINDOW,
 } from '@/lib/try-on/poll-policy';
 
-/* Guards the public, unauthenticated, AI-cost-incurring routes: the try-on
-   flow (session/generate/jobs/config). Every request to those without this
-   would be a way to run up the OpenRouter bill for free. Not wired to
-   anything requiring auth — those already have
-   a real identity to rate-limit or ban by, this is specifically for the
-   surface a script can hit anonymously.
+/* Shared operational budgets for public traffic and authenticated merchant
+   controls. Public reads, token minting, writes and provider work MUST use
+   requireRateLimit from request-rate-limit.ts, never a raw success check:
+   missing configuration and Upstash timeout-success are not authorization.
+   Merchant callers additionally use verified account/shop identities.
 
-   Construction is guarded: Redis.fromEnv() throws when the Upstash env vars
-   are missing, and a module-load crash here would take every importing
-   route down with it. A missing limiter fails OPEN with a loud error log
-   instead — degraded protection beats an app-wide outage, and the missing
-   env vars are exactly the kind of thing .env.example + this log surface. */
+   Construction is guarded to avoid module-load crashes; the configured
+   flag tells strict callers to return a safe, retryable 503 before work.
+   Signed service webhooks, OAuth callbacks, health and OPTIONS preflight
+   deliberately retain their own protocol/auth controls instead of sharing
+   shopper buckets. There is no blanket middleware throttle. */
 function createRatelimiters(): {
   publicApi: Ratelimit | null;
   tryOnPoll: Ratelimit | null;
+  merchantRead: Ratelimit | null;
+  merchantWrite: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
-     that throws per-call. Check explicitly: fail OPEN with the loud error
-     below rather than crashing every importing route at boot. */
+     that throws per-call. The strict guard rejects this unconfigured facade
+     without crashing every importing route at boot. */
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     console.error(
-      '[ratelimit] UPSTASH_REDIS_REST_URL/TOKEN missing — public API rate limiting is DISABLED.',
+      '[ratelimit] Redis configuration missing — protected requests are unavailable.',
     );
-    return { publicApi: null, tryOnPoll: null };
+    return { publicApi: null, tryOnPoll: null, merchantRead: null, merchantWrite: null };
   }
   try {
     const redis = Redis.fromEnv();
@@ -48,13 +49,26 @@ function createRatelimiters(): {
         analytics: true,
         prefix: 'gc-ratelimit:tryon-poll',
       }),
+      // Operational abuse budgets, not paid-plan allowances. Keep reads
+      // separate so inbox polling cannot consume the merchant's save budget.
+      merchantRead: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(120, '60 s'),
+        prefix: 'gc-ratelimit:merchant-read',
+        analytics: false,
+      }),
+      merchantWrite: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(30, '60 s'),
+        prefix: 'gc-ratelimit:merchant-write',
+        analytics: false,
+      }),
     };
-  } catch (error) {
+  } catch {
     console.error(
-      '[ratelimit] Upstash limiter unavailable — public API rate limiting is DISABLED. Cause:',
-      error instanceof Error ? error.message : error,
+      '[ratelimit] Redis initialization failed — protected requests are unavailable.',
     );
-    return { publicApi: null, tryOnPoll: null };
+    return { publicApi: null, tryOnPoll: null, merchantRead: null, merchantWrite: null };
   }
 }
 
@@ -63,7 +77,7 @@ const limiters = createRatelimiters();
 function limiterFacade(limiter: Ratelimit | null) {
   return {
     configured: limiter !== null,
-    async limit(id: string): Promise<{ success: boolean; reset: number }> {
+    async limit(id: string): Promise<{ success: boolean; reset: number; reason?: string }> {
       if (!limiter) return { success: true, reset: Date.now() + 60_000 };
       return limiter.limit(id);
     },
@@ -72,6 +86,8 @@ function limiterFacade(limiter: Ratelimit | null) {
 
 export const publicApiRatelimit = limiterFacade(limiters.publicApi);
 export const tryOnPollRatelimit = limiterFacade(limiters.tryOnPoll);
+export const merchantReadRatelimit = limiterFacade(limiters.merchantRead);
+export const merchantWriteRatelimit = limiterFacade(limiters.merchantWrite);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the
