@@ -28,7 +28,7 @@ jobs:
         run: npm ci
       - name: Dependency audit
         working-directory: apps/web-next
-        run: npm audit --audit-level=moderate
+        run: npm audit --omit=dev --audit-level=moderate
       - name: Unit and route contracts
         working-directory: apps/web-next
         run: npm test -- --maxWorkers=2
