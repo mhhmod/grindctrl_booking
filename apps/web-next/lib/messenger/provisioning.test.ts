@@ -302,7 +302,7 @@ describe('provisioning', () => {
     setMessengerServiceClientForTests(client);
 
     await expect(listMessengerSites('user_1')).rejects.toThrow(/row missing after insert/);
-  });
+  }, 10_000); // The real retry budget's worst case (~6.75s) exceeds vitest's 5s default.
 
   it('retries the workspace race recovery instead of one unretried read (workspaces_slug_key, prod)', async () => {
     // Production: two renders of a brand-new profile's first visit both try

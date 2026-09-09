@@ -15,15 +15,18 @@ export { isPlaceholderEmail };
    Everything downstream (RLS policies, analytics RPCs, Install page data)
    already understands this shape, which is precisely why we reuse it. */
 
-/* Six attempts, ~2.25s of total added latency at worst — and only on the
-   truly racing path (see below). A prior incident (2026-08-29) measured a
-   ~754ms gap between a winning transaction's start and a losing connection's
-   read of it; the original 3-attempt/150ms budget here didn't cover that and
-   the same race recurred in production. This budget comfortably covers it
-   with margin. Every non-racing visit (the overwhelming majority) still
-   never reaches the loop at all. Shared with ensureWorkspace below, which
-   hits the identical class of race on workspaces_slug_key. */
-const PROVISIONING_RACE_ATTEMPTS = 6;
+/* Ten attempts, ~6.75s of total added latency at worst — and only on the
+   truly racing path (see below). Two prior incidents measured real
+   visibility gaps between a winning transaction and a losing connection's
+   read of it: ~754ms on 2026-08-29 (profiles), then ~2.7s on 2026-09-09
+   (workspaces_slug_key, JAVASCRIPT-NEXTJS-K) — the 6-attempt/2.25s budget
+   that was sized for the FIRST gap wasn't wide enough for the second. This
+   budget has real headroom over both observed gaps. Every non-racing visit
+   (the overwhelming majority) still never reaches the loop at all, and a
+   bounded multi-second wait on the rare racing path is still strictly
+   better than the crash it replaces. Shared with ensureWorkspace below,
+   which hits the identical class of race on workspaces_slug_key. */
+const PROVISIONING_RACE_ATTEMPTS = 10;
 const PROVISIONING_RETRY_BASE_MS = 150;
 
 async function retryDelay(attempt: number): Promise<void> {
