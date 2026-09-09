@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { isTryOnLocale, DEFAULT_TRYON_LOCALE, type TryOnLocale } from '@/lib/try-on/i18n';
@@ -43,6 +45,13 @@ function storeConfig(key: string, body: Record<string, unknown>): void {
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    await requireRateLimit(publicApiRatelimit, `pc:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
+
   /* Only well-formed myshopify domains may name a settings row; anything
      else resolves to the shared defaults without touching a per-shop key. */
   const rawShop = request.nextUrl.searchParams.get('shop');

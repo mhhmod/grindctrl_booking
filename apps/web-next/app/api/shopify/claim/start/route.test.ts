@@ -209,7 +209,14 @@ describe('GET /api/shopify/claim/start', () => {
     const body = await response.json();
 
     expect(response.status).toBe(429);
-    expect(body).toEqual({ error: 'rate_limited' });
+    expect(body).toEqual({
+      ok: false,
+      error: 'rate_limited',
+      message: expect.stringContaining('Too many requests'),
+      retryAfterSeconds: expect.any(Number),
+    });
+    expect(response.headers.get('Retry-After')).toBe(String(body.retryAfterSeconds));
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(verifySessionTokenMock).not.toHaveBeenCalled();
     expect(ensureShopOwnedSiteMock).not.toHaveBeenCalled();
   });

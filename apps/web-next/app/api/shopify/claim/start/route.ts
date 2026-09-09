@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifySessionToken } from '@/lib/shopify/session-token';
 import { signClaimToken } from '@/lib/shopify/claim-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
@@ -25,8 +26,12 @@ import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`cs:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+  try {
+    await requireRateLimit(publicApiRatelimit, `cs:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   // ?.trim(): a whitespace-only env value is truthy, and would otherwise
   // fail HMAC verification below with a 401 instead of this diagnostic 503.
