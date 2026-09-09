@@ -6,7 +6,8 @@ import { useTransition } from 'react';
 import { Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { SITE_LOCALE_COOKIE, type SiteLocale } from '@/lib/landing/landing-i18n';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { persistSiteLocale } from '@/lib/landing/site-locale-store';
 
 /* Language switch for the dashboard.
 
@@ -35,7 +36,7 @@ export function DashboardLocaleToggle({
   const label = next === 'ar' ? 'العربية' : 'English';
 
   function toggle() {
-    document.cookie = `${SITE_LOCALE_COOKIE}=${next};path=/;max-age=31536000;samesite=lax`;
+    persistSiteLocale(next);
     startTransition(() => router.refresh());
   }
 
