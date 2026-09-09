@@ -1,7 +1,5 @@
-import { InMemoryStore } from './rate-limiter-store';
+import { RedisBudgetStore } from './distributed-budget';
 
-/* One shared instance for the whole process, so every route handler draws
-   against the same budget for a given tenant. Swap for a Redis-backed store
-   here (same RateLimiterStore interface) the moment this runs on more than
-   one server instance. */
-export const store = new InMemoryStore();
+/* Process restarts and extra replicas must not refill a visitor's budget.
+   The in-memory adapter is retained only for deterministic unit tests. */
+export const store = new RedisBudgetStore();

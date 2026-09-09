@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getJob } from '@/lib/try-on/service';
-import { clientIp, rateLimitedResponse, tryOnPollRatelimit } from '@/lib/ratelimit';
+import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifyTryOnSession } from '@/lib/try-on/storefront-context';
 import { loadAuthorizedDurableTryOnJob } from '@/lib/try-on/persistence';
 import {
@@ -33,8 +34,12 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ jobId: string }> },
 ) {
-  const limit = await tryOnPollRatelimit.limit(clientIp(request) ?? 'unknown');
-  if (!limit.success) return rateLimitedResponse(limit.reset);
+  try {
+    await requireRateLimit(tryOnPollRatelimit, clientIp(request) ?? 'unknown');
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   const { jobId } = await params;
 

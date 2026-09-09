@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-17T13:29:52.8014368Z",
+  "title": "Design System: GrindCTRL Try-On Email Campaign",
+  "extensions": {
+    "colorMeta": {
+      "ink-black": { "role": "primary", "displayName": "Ink Black", "canonical": "#0D0C0B", "tonalRamp": ["#171614", "#2A2826", "#44413E", "#625E5A", "#85817C", "#ACA9A5", "#D2D0CD", "#F2F1EF"] },
+      "paper-white": { "role": "neutral", "displayName": "Paper White", "canonical": "#F7F7F5", "tonalRamp": ["#20201F", "#3B3B39", "#5B5B58", "#7D7D79", "#A0A09C", "#C2C2BE", "#E0E0DD", "#F7F7F5"] },
+      "rule-gray": { "role": "neutral", "displayName": "Rule Gray", "canonical": "#D8D8D4", "tonalRamp": ["#242423", "#414140", "#61615F", "#838380", "#A4A4A1", "#C1C1BE", "#D8D8D4", "#F3F3F1"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "One campaign idea per email." },
+      "headline": { "displayName": "Headline", "purpose": "Follow-up angle and proof framing." },
+      "body": { "displayName": "Body", "purpose": "Readable lead-facing message copy." },
+      "label": { "displayName": "Label", "purpose": "Short eyebrow labels only." }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      { "name": "email-mobile", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Reply DEMO Button",
+      "kind": "button",
+      "refersTo": "action-primary",
+      "description": "The only filled action in the campaign email.",
+      "html": "<a class=\"ds-action-primary\" href=\"mailto:grindctrlnow@gmail.com?subject=DEMO%20%E2%80%94%20GrindCTRL%20Try-On\">Reply DEMO</a>",
+      "css": ".ds-action-primary{display:inline-block;background:#0D0C0B;color:#FFFFFF;padding:16px 32px;border-radius:999px;font:700 16px/1.2 Arial,Helvetica,sans-serif;text-decoration:none}.ds-action-primary:hover{text-decoration:underline}.ds-action-primary:focus-visible{outline:2px solid #0D0C0B;outline-offset:3px}"
+    },
+    {
+      "name": "Live Demo Link",
+      "kind": "button",
+      "refersTo": "action-secondary",
+      "description": "A quieter secondary path for recipients who want to explore first.",
+      "html": "<a class=\"ds-action-secondary\" href=\"https://grindctrl.cloud/try-on\">Open the live demo</a>",
+      "css": ".ds-action-secondary{display:inline-block;background:#FFFFFF;color:#0D0C0B;border:1px solid #D8D8D4;padding:12px 20px;border-radius:999px;font:700 14px/1.2 Arial,Helvetica,sans-serif;text-decoration:none}.ds-action-secondary:hover{text-decoration:underline}.ds-action-secondary:focus-visible{outline:2px solid #0D0C0B;outline-offset:3px}"
+    },
+    {
+      "name": "Campaign Frame",
+      "kind": "custom",
+      "description": "The single structural container for the email.",
+      "html": "<div class=\"ds-campaign-frame\">Email content</div>",
+      "css": ".ds-campaign-frame{max-width:600px;margin:0 auto;background:#FFFFFF;color:#0D0C0B;border:1px solid #0D0C0B;font:400 17px/1.65 Arial,Helvetica,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Tailored Proof",
+    "overview": "The campaign feels like a precisely cut black garment placed on clean white paper. The interface is disciplined and monochrome; the approved product visual supplies fashion context and warmth. Every decision must survive real inbox constraints.",
+    "keyCharacteristics": ["Single 600px column", "Monochrome interface", "Original logo and approved image", "One primary and one secondary path", "Email-safe HTML with UTF-8 fallbacks"],
+    "rules": [
+      { "name": "The Monochrome Interface Rule", "body": "No accent color appears in email UI. The original campaign image may retain its approved palette.", "section": "colors" },
+      { "name": "The One Black Action Rule", "body": "Only Reply DEMO receives the filled black treatment.", "section": "colors" },
+      { "name": "The Inbox Font Rule", "body": "Remote web fonts are forbidden in the email.", "section": "typography" },
+      { "name": "The Structural Depth Rule", "body": "Use spacing or a one-pixel full-width rule instead of decorative shadows.", "section": "elevation" }
+    ],
+    "dos": ["Do use a 600px maximum width.", "Do use the original logo and campaign image.", "Do encode both MIME parts as UTF-8.", "Do verify major inbox clients before activation."],
+    "donts": ["Don't use generic SaaS campaign styling.", "Don't use excessive gold UI or ornamental serif typography.", "Don't ship mojibake, missing images, clipped layouts, or browser-only CSS.", "Don't use manipulative urgency or deceptive subject lines."]
+  }
+}

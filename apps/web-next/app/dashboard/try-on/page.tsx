@@ -8,11 +8,14 @@ import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
+import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
+import { formatProviderCost, summarizeProviderCosts } from '@/lib/dashboard/provider-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +34,7 @@ export default async function DashboardTryOnPage({
   const c = getTryOnDashboardCopy(pageLocale);
   const dateLocale = getDateLocale(pageLocale);
 
-  const shops = await listManagedTryOnShops();
+  const [shops, canManagePlan] = await Promise.all([listManagedTryOnShops(), isTryOnPlatformOperator()]);
   const hasShops = shops.length > 0;
   const shopDomains = shops.map((shop) => shop.domain);
 
@@ -40,6 +43,15 @@ export default async function DashboardTryOnPage({
   const requested = normalizeShopDomain(params.shop);
   const selectedShop =
     requested && shops.some((shop) => shop.domain === requested) ? requested : 'default';
+
+  // A presentation link is never a reason to accept a query-string tenant.
+  // The public client ID is verified in shopify.app.toml/app-identity.ts;
+  // Shopify's embedded-app URL supports /apps/{clientId}, no guessed handle.
+  const appShop = selectedShop !== 'default' ? selectedShop
+    : shops.length === 1 ? normalizeShopDomain(shops[0].domain) : null;
+  const shopifyAppUrl = appShop
+    ? ['https://admin.shopify.com/store', appShop.split('.')[0], 'apps', SHOPIFY_APP_CLIENT_ID].join('/')
+    : null;
 
   const jobs = await listRecentTryOnJobs(shopDomains, 25);
   /* The global defaults row ('default') is shared, public-demo config -- a
@@ -51,7 +63,7 @@ export default async function DashboardTryOnPage({
     : [null, null, null];
 
   const completed = jobs.filter((j) => j.status === 'completed');
-  const totalCost = jobs.reduce((sum, j) => sum + (j.cost_usd ?? 0), 0);
+  const { knownSpendUsd, missingCostCount } = summarizeProviderCosts(jobs.map((job) => job.cost_usd));
   const avgSeconds = completed.length
     ? completed.reduce((sum, j) => sum + (j.duration_ms ?? 0), 0) / completed.length / 1000
     : 0;
@@ -64,7 +76,11 @@ export default async function DashboardTryOnPage({
       label: c.avgGenerationTime,
       value: completed.length ? `${avgSeconds.toFixed(1)}${c.secondsSuffix}` : c.noDataYet,
     },
-    { label: c.providerSpend, value: `$${totalCost.toFixed(2)}` },
+    {
+      label: c.providerSpend,
+      value: formatProviderCost(knownSpendUsd, c.costUnreported),
+      note: missingCostCount > 0 ? c.missingProviderCosts(missingCostCount) : undefined,
+    },
   ];
 
   return (
@@ -77,6 +93,7 @@ export default async function DashboardTryOnPage({
             </CardHeader>
             <CardContent>
               <p className="text-xl font-semibold text-foreground">{kpi.value}</p>
+              {kpi.note && <p className="mt-1 text-xs text-muted-foreground">{kpi.note}</p>}
             </CardContent>
           </Card>
         ))}
@@ -127,11 +144,12 @@ export default async function DashboardTryOnPage({
         <Card>
           <CardHeader>
             <CardTitle>{c.planAndCredits}</CardTitle>
-            <CardDescription>{c.planAndCreditsBody}</CardDescription>
+            <CardDescription>{canManagePlan ? c.planAndCreditsOperatorBody : c.planAndCreditsBody}</CardDescription>
           </CardHeader>
           <CardContent>
             <ShopPlanControl
               locale={pageLocale}
+              canManagePlan={canManagePlan}
               shop={selectedShop}
               state={planState}
               plans={catalog.plans}
@@ -191,7 +209,7 @@ export default async function DashboardTryOnPage({
                       <Badge variant={statusTone(job.status)}>{statusLabel(c, job.status)}</Badge>
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
-                      ${(job.cost_usd ?? 0).toFixed(4)}
+                      {formatProviderCost(job.cost_usd, c.costUnreported, 4)}
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
                       {job.duration_ms
@@ -216,14 +234,15 @@ export default async function DashboardTryOnPage({
             <CardDescription>{c.shopifyAppBody}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" size="sm">
+            {shopifyAppUrl ? <Button asChild variant="outline" size="sm">
               <Link
-                href="https://admin.shopify.com/store/grindctrl/apps/grindctrl-tryon"
+                href={shopifyAppUrl}
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 {c.openShopifyApp}
               </Link>
-            </Button>
+            </Button> : <p className="text-sm text-muted-foreground">{c.chooseShopForApp}</p>}
           </CardContent>
         </Card>
       )}

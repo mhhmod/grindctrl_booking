@@ -188,6 +188,13 @@ describe('durable try-on result persistence', () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
+  it('preserves unknown provider cost on an authorized durable replay', async () => {
+    state.maybeSingleResults.push({ data: row({ status: 'failed', cost_usd: null }), error: null });
+    const result = await loadAuthorizedDurableTryOnJob(authorization(), JOB_ID, NOW);
+    expect(result?.meta.costEstimate).toBeNull();
+    expect(result?.status).toBe('failed');
+  });
+
   it('validates and uploads the provider result before binding its lifecycle row', async () => {
     state.maybeSingleResults.push(
       { data: row(), error: null },

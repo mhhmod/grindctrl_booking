@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
+import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { shopProfileId } from '@/lib/messenger/shop-tenancy';
 import {
@@ -20,6 +21,10 @@ type KnowledgeBody =
 export async function POST(request: NextRequest) {
   const session = authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  const limited = await merchantRateLimitResponse(
+    `shop:${session.shop}`, 'write',
+  );
+  if (limited) return limited;
 
   let site;
   try {

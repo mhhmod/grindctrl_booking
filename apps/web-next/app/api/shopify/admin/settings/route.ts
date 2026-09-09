@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
+import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
 import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
@@ -12,6 +13,8 @@ const authenticate = authenticateShopifyRequest;
 export async function GET(request: NextRequest) {
   const session = authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const limited = await merchantRateLimitResponse(`shop:${session.shop}`, 'read');
+  if (limited) return limited;
 
   await recordTryOnShopSeen(session.shop);
   await ensureFreeSubscription(session.shop);
@@ -40,6 +43,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const limited = await merchantRateLimitResponse(`shop:${session.shop}`);
+  if (limited) return limited;
 
   await recordTryOnShopSeen(session.shop);
   const body = (await request.json()) as {

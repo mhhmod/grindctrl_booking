@@ -2,6 +2,7 @@
 
 import type { LeadSettingsFormState } from '@/app/dashboard/leads/state';
 import { normalizeSettingsJson, updateWidgetSite } from '@/lib/adapters/widgetSites';
+import { authorizeDashboardAction } from '@/lib/dashboard/action-authorization';
 import type { JsonObject, SettingsJson } from '@/lib/types';
 import { getLeadSettingsViewModel, getLeadSettingsViewModelFromFormData, mergeLeadSettingsViewModel, type LeadSettingsViewModel } from '@/lib/view-models/leads';
 
@@ -10,6 +11,8 @@ export async function saveLeadSettingsAction(
   formData: FormData,
 ): Promise<LeadSettingsFormState> {
   const values = getLeadSettingsViewModelFromFormData(formData);
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { status: 'error', message: authorizationError, values };
 
   try {
     const nextSettings = mergeLeadSettingsViewModel(context.currentSettings, values);
@@ -26,10 +29,10 @@ export async function saveLeadSettingsAction(
       message: 'Lead capture settings saved to settings_json.',
       values: getLeadSettingsViewModel(normalizedSettings),
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unable to save lead capture settings.',
+      message: 'Unable to save lead capture settings. Please try again shortly.',
       values,
     };
   }

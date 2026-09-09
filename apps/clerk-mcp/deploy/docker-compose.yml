@@ -1,0 +1,28 @@
+services:
+  clerk-mcp:
+    build: .
+    container_name: grindctrl-clerk-mcp
+    env_file:
+      - /etc/grindctrl-clerk-mcp.env
+    restart: always
+    networks:
+      - root_default
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.clerk-mcp.entrypoints: websecure
+      traefik.http.routers.clerk-mcp.rule: Host(`mcp.grindctrl.cloud`) && PathPrefix(`/clerk`)
+      traefik.http.routers.clerk-mcp.tls: "true"
+      traefik.http.routers.clerk-mcp.tls.certresolver: mytlschallenge
+      traefik.http.routers.clerk-mcp.priority: "1000"
+      traefik.http.services.clerk-mcp.loadbalancer.server.port: "3031"
+
+      traefik.http.routers.clerk-mcp-health.entrypoints: websecure
+      traefik.http.routers.clerk-mcp-health.rule: Host(`mcp.grindctrl.cloud`) && Path(`/healthz`)
+      traefik.http.routers.clerk-mcp-health.tls: "true"
+      traefik.http.routers.clerk-mcp-health.tls.certresolver: mytlschallenge
+      traefik.http.routers.clerk-mcp-health.priority: "1001"
+      traefik.http.routers.clerk-mcp-health.service: clerk-mcp
+
+networks:
+  root_default:
+    external: true

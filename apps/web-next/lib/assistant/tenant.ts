@@ -15,8 +15,9 @@ export interface ResolvedTenant {
    decorative — so when the server can see an IP (rightmost x-forwarded-for
    entry added by our own proxy, or x-real-ip), THAT is the budget key and
    the cookie rides along only for continuity. When no proxy header exists
-   (direct dev access), we degrade to the cookie id; if neither exists,
-   everything shares one bucket — visible throttling beats silent bypass. */
+   (direct dev access), everything shares one bucket — visible throttling
+   beats silent bypass.
+   A continuity cookie is never authority for a fresh budget. */
 export function resolveTenant(
   clerkUserId: string | null,
   existingSessionId: string | undefined,
@@ -29,7 +30,7 @@ export function resolveTenant(
   const freshSessionId = randomUUID();
   const tenantId = clientIp
     ? `ip:${clientIp}`
-    : `sid:${existingSessionId ?? freshSessionId}`;
+    : 'ip:unknown';
 
   return {
     tenantId,

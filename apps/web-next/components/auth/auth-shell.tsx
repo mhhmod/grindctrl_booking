@@ -30,7 +30,7 @@ export function AuthShell({
     <main
       dir={getDir(locale)}
       lang={locale}
-      className="grid min-h-dvh bg-background text-foreground lg:grid-cols-[1fr_1.1fr]"
+      className="grid min-h-dvh grid-cols-1 bg-background text-foreground lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"
     >
       <section className="gc-auth-brand relative flex flex-col justify-between gap-6 overflow-hidden px-5 py-5 sm:px-8 lg:px-12 lg:py-12">
         <div className="pointer-events-none absolute inset-0 gc-hero-grid-warm" aria-hidden="true" />
@@ -47,8 +47,8 @@ export function AuthShell({
         <p className="relative text-sm leading-snug opacity-70 lg:hidden">{copy.brandTagline}</p>
       </section>
 
-      <section className="gc-auth-form-pane flex flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
-        <div className="mx-auto w-full max-w-md space-y-6">
+      <section className="gc-auth-form-pane flex min-w-0 flex-col justify-center px-4 py-10 sm:px-8 lg:py-12">
+        <div className="mx-auto flex w-full min-w-0 max-w-md flex-col gap-6">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
             <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">{subtitle}</p>
@@ -61,7 +61,10 @@ export function AuthShell({
               loading state. Paired with the skeleton in ClerkLoading
               (components/auth/auth-clerk.tsx) so that gap has content in it,
               not just reserved space. */}
-          <div className="min-h-[420px] [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-card]:w-full">
+          {/* Explicit zero-minimum grid tracks and shrinkable containers let
+              Clerk fit narrow screens instead of sizing the page to the
+              form's intrinsic width. Do not mask this with overflow-x-hidden. */}
+          <div className="min-h-[420px] min-w-0 max-w-full [&_.cl-rootBox]:mx-auto [&_.cl-rootBox]:w-full [&_.cl-rootBox]:max-w-full [&_.cl-cardBox]:max-w-full [&_.cl-card]:w-full [&_.cl-card]:max-w-full">
             {children}
           </div>
 

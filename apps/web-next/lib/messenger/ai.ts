@@ -157,7 +157,7 @@ export async function generateAssistantReply(input: {
   userMessage: string;
 }): Promise<AssistantResult> {
   const client = getGroqClient();
-  const completion = await withGroqCall('messenger.chat', () =>
+  const completion = await withGroqCall('messenger.chat', (signal) =>
     client.chat.completions.create({
       model: CHAT_MODEL,
       temperature: 0.3,
@@ -170,7 +170,7 @@ export async function generateAssistantReply(input: {
         })),
         { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
       ],
-    }),
+    }, { signal }),
   );
 
   const raw = (completion.choices?.[0]?.message?.content ?? '').toString().trim();
@@ -193,7 +193,7 @@ export async function phraseOrderAnswer(input: {
   facts: OrderFacts;
 }): Promise<string> {
   const client = getGroqClient();
-  const completion = await withGroqCall('messenger.order-answer', () =>
+  const completion = await withGroqCall('messenger.order-answer', (signal) =>
     client.chat.completions.create({
       model: CHAT_MODEL,
       temperature: 0.2,
@@ -219,7 +219,7 @@ export async function phraseOrderAnswer(input: {
         })),
         { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
       ],
-    }),
+    }, { signal }),
   );
   const text = (completion.choices?.[0]?.message?.content ?? '').toString().trim();
   // Never let the action line survive into a shopper-visible message.

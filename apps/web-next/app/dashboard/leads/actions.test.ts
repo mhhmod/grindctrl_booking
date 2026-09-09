@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/dashboard/action-authorization', () => ({ authorizeDashboardAction: vi.fn(async () => null) }));
+
 vi.mock('@/lib/adapters/widgetSites', async () => {
   const actual = await vi.importActual<typeof import('@/lib/adapters/widgetSites')>('@/lib/adapters/widgetSites');
   return {

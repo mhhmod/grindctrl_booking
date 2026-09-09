@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { validateProductId } from '@/lib/try-on/validator';
-import { clientIp, publicApiRatelimit, rateLimitedResponse } from '@/lib/ratelimit';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { getProduct } from '@/lib/try-on/products';
 import {
   createTryOnNonce,
@@ -36,8 +37,7 @@ import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
  */
 export async function POST(request: NextRequest) {
   try {
-    const limit = await publicApiRatelimit.limit(clientIp(request) ?? 'unknown');
-    if (!limit.success) return rateLimitedResponse(limit.reset);
+    await requireRateLimit(publicApiRatelimit, clientIp(request) ?? 'unknown');
 
     const body = (await request.json()) as {
       productId?: string;
@@ -183,6 +183,7 @@ export async function POST(request: NextRequest) {
     const res: TryOnApiResponse<TryOnSession> = { ok: true, data: session };
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (error instanceof SyntaxError) {
       const res: TryOnApiResponse = { ok: false, error: 'Invalid JSON payload.' };
       return NextResponse.json(res, { status: 400 });

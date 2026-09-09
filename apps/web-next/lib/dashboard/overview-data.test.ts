@@ -62,9 +62,9 @@ describe('computeOverview', () => {
     );
 
     expect(overview.dailySeries).toHaveLength(14);
-    expect(overview.dailySeries[0]).toEqual({ day: '2026-07-05', jobs: 0, spendUsd: 0 });
-    expect(overview.dailySeries[12]).toEqual({ day: '2026-07-17', jobs: 0, spendUsd: 0 });
-    expect(overview.dailySeries[13]).toEqual({ day: '2026-07-18', jobs: 1, spendUsd: 0.25 });
+    expect(overview.dailySeries[0]).toEqual({ day: '2026-07-05', jobs: 0, spendUsd: 0, missingCostJobs: 0 });
+    expect(overview.dailySeries[12]).toEqual({ day: '2026-07-17', jobs: 0, spendUsd: 0, missingCostJobs: 0 });
+    expect(overview.dailySeries[13]).toEqual({ day: '2026-07-18', jobs: 1, spendUsd: 0.25, missingCostJobs: 0 });
   });
 
   it('counts demo jobs in totals and series but never adds a demo shop row', () => {
@@ -85,6 +85,7 @@ describe('computeOverview', () => {
       domain: 'beta.myshopify.com',
       jobsLast7d: 0,
       spendLast7dUsd: 0,
+      missingCostJobsLast7d: 0,
       lastJobAt: null,
       status: 'installed',
     });
@@ -124,5 +125,38 @@ describe('computeOverview', () => {
       message: 'Failure 6',
       createdAt: '2026-07-16T08:00:00.000Z',
     });
+  });
+
+  it('separates partial known spend from missing costs across periods, days and shops', () => {
+    const overview = computeOverview([
+      job({ id: 'known', cost_usd: 0.2 }),
+      job({ id: 'zero', cost_usd: 0 }),
+      job({ id: 'unknown', cost_usd: null }),
+      job({ id: 'failed', status: 'failed', cost_usd: 0.3 }),
+      job({ id: 'other-shop', shop: 'beta.myshopify.com', cost_usd: null, created_at: '2026-07-17T08:00:00Z' }),
+      job({ id: 'previous', cost_usd: null, created_at: '2026-07-08T08:00:00Z' }),
+    ], shops, NOW);
+
+    expect(overview.totals).toMatchObject({
+      spendLast7dUsd: 0.5, missingCostJobsLast7d: 2,
+      spendPrev7dUsd: null, missingCostJobsPrev7d: 1,
+    });
+    expect(overview.byShop.find((shop) => shop.domain === 'alpha.myshopify.com'))
+      .toMatchObject({ spendLast7dUsd: 0.5, missingCostJobsLast7d: 1 });
+    expect(overview.byShop.find((shop) => shop.domain === 'beta.myshopify.com'))
+      .toMatchObject({ spendLast7dUsd: null, missingCostJobsLast7d: 1 });
+    expect(overview.dailySeries[12]).toMatchObject({ spendUsd: null, missingCostJobs: 1 });
+    expect(overview.dailySeries[13]).toMatchObject({ spendUsd: 0.5, missingCostJobs: 1 });
+  });
+
+  it('treats invalid costs as unknown without confusing a reported zero or an empty window', () => {
+    const overview = computeOverview([
+      job({ cost_usd: Number.NaN }), job({ cost_usd: -1 }), job({ cost_usd: Number.POSITIVE_INFINITY }),
+    ], shops, NOW);
+    expect(overview.totals).toMatchObject({ spendLast7dUsd: null, missingCostJobsLast7d: 3 });
+    expect(computeOverview([job({ cost_usd: 0 })], shops, NOW).totals)
+      .toMatchObject({ spendLast7dUsd: 0, missingCostJobsLast7d: 0 });
+    expect(computeOverview([], shops, NOW).totals)
+      .toMatchObject({ spendLast7dUsd: 0, missingCostJobsLast7d: 0 });
   });
 });

@@ -158,7 +158,7 @@ export async function generateTryOn(
         meta: {
           runtime: 'live',
           provider: reservation.provider ?? reservation.modelKey,
-          costEstimate: reservation.costUsd ?? 0,
+          costEstimate: reservation.costUsd,
         },
       };
       storeJob(job);
@@ -201,7 +201,7 @@ export async function generateTryOn(
            is actually useful. */
         message: toShopperFailureMessage(error),
         createdAt: reservation.createdAt,
-        meta: { runtime: 'live', provider: modelKey, costEstimate: 0 },
+        meta: { runtime: 'live', provider: modelKey, costEstimate: null },
       };
       await finalizeTryOnJob(failedJob, Date.now() - startedAt);
       storeJob(failedJob);
@@ -243,7 +243,8 @@ export async function generateTryOn(
         // Same boundary: a storage failure is ours, not something to explain
         // to a shopper in our own vocabulary.
         message: toShopperFailureMessage(error),
-        meta: { ...job.meta, costEstimate: 0 },
+        // Refunding the merchant does not reverse the provider's own bill.
+        meta: { ...job.meta },
       };
       try {
         await finalizeTryOnJob(unpersistedJob, Date.now() - startedAt);

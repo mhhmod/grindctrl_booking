@@ -2,6 +2,7 @@
 
 import type { DomainsState } from '@/app/dashboard/domains/state';
 import { addDomain, listDomains, removeDomain, updateDomainStatus } from '@/lib/adapters/domains';
+import { authorizeDashboardAction } from '@/lib/dashboard/action-authorization';
 import { DOMAIN_STATUS_OPTIONS, isValidDomainInput, normalizeDomainInput } from '@/lib/domains';
 
 async function buildSuccessState(clerkUserId: string, siteId: string, message: string): Promise<DomainsState> {
@@ -15,7 +16,7 @@ async function buildSuccessState(clerkUserId: string, siteId: string, message: s
 
 async function buildErrorState(clerkUserId: string, siteId: string, message: string, fieldError?: string | null): Promise<DomainsState> {
   return {
-    domains: await listDomains(clerkUserId, siteId),
+    domains: await listDomains(clerkUserId, siteId).catch(() => []),
     message,
     messageType: 'error',
     fieldError: fieldError ?? null,
@@ -23,6 +24,8 @@ async function buildErrorState(clerkUserId: string, siteId: string, message: str
 }
 
 export async function addDomainAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<DomainsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { domains: [], message: authorizationError, messageType: 'error', fieldError: null };
   const domain = normalizeDomainInput(String(formData.get('domain') ?? ''));
 
   if (!isValidDomainInput(domain)) {
@@ -31,13 +34,15 @@ export async function addDomainAction(context: { clerkUserId: string; siteId: st
 
   try {
     await addDomain(context.clerkUserId, context.siteId, domain);
-    return buildSuccessState(context.clerkUserId, context.siteId, `Added ${domain}.`);
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to add domain.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, `Added ${domain}.`);
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to add domain. Please refresh before trying again.');
   }
 }
 
 export async function updateDomainStatusAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<DomainsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { domains: [], message: authorizationError, messageType: 'error', fieldError: null };
   const domainId = String(formData.get('domainId') ?? '');
   const status = String(formData.get('status') ?? '');
 
@@ -46,14 +51,20 @@ export async function updateDomainStatusAction(context: { clerkUserId: string; s
   }
 
   try {
+    const domains = await listDomains(context.clerkUserId, context.siteId);
+    if (!domains.some((domain) => domain.id === domainId && domain.widget_site_id === context.siteId)) {
+      return { domains, message: 'Choose a domain belonging to this site.', messageType: 'error', fieldError: null };
+    }
     await updateDomainStatus(context.clerkUserId, domainId, status);
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Domain status updated.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to update domain status.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Domain status updated.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to update domain status. Please refresh before trying again.');
   }
 }
 
 export async function removeDomainAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<DomainsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { domains: [], message: authorizationError, messageType: 'error', fieldError: null };
   const domainId = String(formData.get('domainId') ?? '');
 
   if (!domainId) {
@@ -61,9 +72,13 @@ export async function removeDomainAction(context: { clerkUserId: string; siteId:
   }
 
   try {
+    const domains = await listDomains(context.clerkUserId, context.siteId);
+    if (!domains.some((domain) => domain.id === domainId && domain.widget_site_id === context.siteId)) {
+      return { domains, message: 'Choose a domain belonging to this site.', messageType: 'error', fieldError: null };
+    }
     await removeDomain(context.clerkUserId, domainId);
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Domain removed.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to remove domain.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Domain removed.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to remove domain. Please refresh before trying again.');
   }
 }

@@ -8,10 +8,10 @@ import {
   DEFAULT_SITE_LOCALE,
   getDir,
   getLandingDictionary,
-  SITE_LOCALE_COOKIE,
   type LandingTranslator,
   type SiteLocale,
 } from '@/lib/landing/landing-i18n';
+import { persistSiteLocale } from '@/lib/landing/site-locale-store';
 
 interface LandingLocaleContextValue {
   locale: SiteLocale;
@@ -21,11 +21,6 @@ interface LandingLocaleContextValue {
 }
 
 const LandingLocaleContext = createContext<LandingLocaleContextValue | null>(null);
-
-function persistLocale(locale: SiteLocale) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${SITE_LOCALE_COOKIE}=${locale};path=/;max-age=31536000;samesite=lax`;
-}
 
 export function LandingLocaleProvider({
   initialLocale = DEFAULT_SITE_LOCALE,
@@ -39,12 +34,11 @@ export function LandingLocaleProvider({
   const [locale, setLocale] = useState<SiteLocale>(initialLocale);
 
   const toggleLocale = useCallback(() => {
-    setLocale((prev) => {
-      const next: SiteLocale = prev === 'ar' ? 'en' : 'ar';
-      persistLocale(next);
-      return next;
-    });
-  }, []);
+    const next: SiteLocale = locale === 'ar' ? 'en' : 'ar';
+    setLocale(next);
+    // Notify sibling consumers outside the state updater/render phase.
+    persistSiteLocale(next);
+  }, [locale]);
 
   const value = useMemo<LandingLocaleContextValue>(
     () => ({ locale, dir: getDir(locale), t: getLandingDictionary(locale), toggleLocale }),

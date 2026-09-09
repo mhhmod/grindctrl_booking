@@ -3,6 +3,7 @@ import 'server-only';
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
+import { reportedCostUsd } from './provider-cost';
 
 export type TryOnOverview = {
   totals: {
@@ -11,18 +12,22 @@ export type TryOnOverview = {
     jobsPrev7d: number;
     completedLast7d: number;
     failedLast7d: number;
-    spendLast7dUsd: number;
-    spendPrev7dUsd: number;
+    /** Known spend only; null when a nonempty window has no reported costs. */
+    spendLast7dUsd: number | null;
+    spendPrev7dUsd: number | null;
+    missingCostJobsLast7d: number;
+    missingCostJobsPrev7d: number;
     avgDurationMsLast7d: number | null;
   };
   byShop: Array<{
     domain: string;
     jobsLast7d: number;
-    spendLast7dUsd: number;
+    spendLast7dUsd: number | null;
+    missingCostJobsLast7d: number;
     lastJobAt: string | null;
     status: 'installed' | 'uninstalled';
   }>;
-  dailySeries: Array<{ day: string; jobs: number; spendUsd: number }>;
+  dailySeries: Array<{ day: string; jobs: number; spendUsd: number | null; missingCostJobs: number }>;
   recentFailures: Array<{
     id: string;
     productId: string;
@@ -58,10 +63,6 @@ function dayKey(timestamp: number) {
   return new Date(timestamp).toISOString().slice(0, 10);
 }
 
-function numeric(value: number | null) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
-}
-
 export function computeOverview(
   jobs: readonly TryOnOverviewJob[],
   shops: readonly TryOnOverviewShop[],
@@ -76,6 +77,7 @@ export function computeOverview(
     day: dayKey(seriesStart + index * DAY_MS),
     jobs: 0,
     spendUsd: 0,
+    missingCostJobs: 0,
   }));
   const seriesByDay = new Map(dailySeries.map((entry) => [entry.day, entry]));
 
@@ -86,6 +88,7 @@ export function computeOverview(
         domain: shop.shop_domain,
         jobsLast7d: 0,
         spendLast7dUsd: 0,
+        missingCostJobsLast7d: 0,
         lastJobAt: null as string | null,
         status: shop.status,
       },
@@ -98,6 +101,8 @@ export function computeOverview(
   let failedLast7d = 0;
   let spendLast7dUsd = 0;
   let spendPrev7dUsd = 0;
+  let missingCostJobsLast7d = 0;
+  let missingCostJobsPrev7d = 0;
   let completedDurationTotal = 0;
   let completedDurationCount = 0;
 
@@ -112,16 +117,18 @@ export function computeOverview(
 
     if (timestamp < seriesStart || timestamp > nowTimestamp) continue;
 
-    const cost = numeric(job.cost_usd);
+    const cost = reportedCostUsd(job.cost_usd);
     const seriesEntry = seriesByDay.get(dayKey(timestamp));
     if (seriesEntry) {
       seriesEntry.jobs += 1;
-      seriesEntry.spendUsd += cost;
+      if (cost === null) seriesEntry.missingCostJobs += 1;
+      else seriesEntry.spendUsd += cost;
     }
 
     if (timestamp >= currentWindowStart) {
       jobsLast7d += 1;
-      spendLast7dUsd += cost;
+      if (cost === null) missingCostJobsLast7d += 1;
+      else spendLast7dUsd += cost;
       if (job.status === 'completed') {
         completedLast7d += 1;
         if (
@@ -137,11 +144,13 @@ export function computeOverview(
 
       if (shopOverview) {
         shopOverview.jobsLast7d += 1;
-        shopOverview.spendLast7dUsd += cost;
+        if (cost === null) shopOverview.missingCostJobsLast7d += 1;
+        else shopOverview.spendLast7dUsd += cost;
       }
     } else {
       jobsPrev7d += 1;
-      spendPrev7dUsd += cost;
+      if (cost === null) missingCostJobsPrev7d += 1;
+      else spendPrev7dUsd += cost;
     }
   }
 
@@ -165,15 +174,24 @@ export function computeOverview(
       jobsPrev7d,
       completedLast7d,
       failedLast7d,
-      spendLast7dUsd,
-      spendPrev7dUsd,
+      spendLast7dUsd: jobsLast7d > 0 && missingCostJobsLast7d === jobsLast7d ? null : spendLast7dUsd,
+      spendPrev7dUsd: jobsPrev7d > 0 && missingCostJobsPrev7d === jobsPrev7d ? null : spendPrev7dUsd,
+      missingCostJobsLast7d,
+      missingCostJobsPrev7d,
       avgDurationMsLast7d:
         completedDurationCount > 0 ? completedDurationTotal / completedDurationCount : null,
     },
-    byShop: [...shopsByDomain.values()].sort(
+    byShop: [...shopsByDomain.values()].map((shop) => ({
+      ...shop,
+      spendLast7dUsd: shop.jobsLast7d > 0 && shop.missingCostJobsLast7d === shop.jobsLast7d
+        ? null : shop.spendLast7dUsd,
+    })).sort(
       (left, right) => right.jobsLast7d - left.jobsLast7d || left.domain.localeCompare(right.domain),
     ),
-    dailySeries,
+    dailySeries: dailySeries.map((day) => ({
+      ...day,
+      spendUsd: day.jobs > 0 && day.missingCostJobs === day.jobs ? null : day.spendUsd,
+    })),
     recentFailures,
   };
 }

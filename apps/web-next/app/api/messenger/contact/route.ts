@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import {
@@ -19,8 +20,12 @@ import { normalizeContactEmail } from '@/lib/messenger/contact';
    order, never against this. */
 
 export async function POST(request: NextRequest) {
-  const limit = await publicApiRatelimit.limit(`mc:${clientIp(request) ?? 'unknown'}`);
-  if (!limit.success) return NextResponse.json({ ok: false }, { status: 429 });
+  try {
+    await requireRateLimit(publicApiRatelimit, `mc:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
 
   let body: Record<string, unknown>;
   try {

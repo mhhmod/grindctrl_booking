@@ -34,6 +34,70 @@ describe('useVoiceMessagePlayer', () => {
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
   });
 
+  it('does not restart audio for an equivalent chunks array', () => {
+    const { rerender } = renderHook(({ chunks }) => useVoiceMessagePlayer(chunks), {
+      initialProps: { chunks: ['AA=='] },
+    });
+    rerender({ chunks: ['AA=='] });
+    expect(createdAudios).toHaveLength(1);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+    expect(HTMLMediaElement.prototype.pause).not.toHaveBeenCalled();
+  });
+
+  it('resets replacement audio and ignores stale events from disposed chunks', () => {
+    const { result, rerender } = renderHook(({ chunks }) => useVoiceMessagePlayer(chunks), {
+      initialProps: { chunks: ['AA=='] },
+    });
+    const oldAudio = createdAudios[0];
+    act(() => {
+      Object.defineProperty(oldAudio, 'duration', { value: 9, configurable: true });
+      oldAudio.dispatchEvent(new Event('loadedmetadata'));
+      oldAudio.currentTime = 4;
+      oldAudio.dispatchEvent(new Event('timeupdate'));
+      result.current.toggle();
+    });
+    expect(result.current.status).toBe('paused');
+    rerender({ chunks: ['BB=='] });
+    expect(result.current).toMatchObject({ status: 'playing', elapsedSeconds: 0, totalSeconds: 0 });
+    expect(oldAudio.getAttribute('src')).toBe('');
+    const playCount = vi.mocked(HTMLMediaElement.prototype.play).mock.calls.length;
+    act(() => {
+      oldAudio.dispatchEvent(new Event('loadedmetadata'));
+      oldAudio.dispatchEvent(new Event('timeupdate'));
+      oldAudio.dispatchEvent(new Event('ended'));
+    });
+    expect(result.current).toMatchObject({ status: 'playing', elapsedSeconds: 0, totalSeconds: 0 });
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(playCount);
+  });
+
+  it('returns to idle on empty chunks and releases audio on unmount', () => {
+    const { result, rerender, unmount } = renderHook(({ chunks }) => useVoiceMessagePlayer(chunks), {
+      initialProps: { chunks: ['AA=='] },
+    });
+    rerender({ chunks: [] });
+    expect(result.current).toMatchObject({ status: 'idle', elapsedSeconds: 0, totalSeconds: 0 });
+    expect(createdAudios[0].getAttribute('src')).toBe('');
+    act(() => result.current.toggle());
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+    rerender({ chunks: ['BB=='] });
+    const activeAudio = createdAudios[1];
+    unmount();
+    expect(activeAudio.getAttribute('src')).toBe('');
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores an old autoplay rejection after chunks have been replaced', async () => {
+    let rejectOld!: (reason: Error) => void;
+    vi.mocked(HTMLMediaElement.prototype.play)
+      .mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { rejectOld = reject; }));
+    const { result, rerender } = renderHook(({ chunks }) => useVoiceMessagePlayer(chunks), {
+      initialProps: { chunks: ['AA=='] },
+    });
+    rerender({ chunks: ['BB=='] });
+    await act(async () => { rejectOld(new Error('Disposed playback')); });
+    expect(result.current.status).toBe('playing');
+  });
+
   it('pauses on toggle while playing, and resumes on toggle while paused', () => {
     const { result } = renderHook(() => useVoiceMessagePlayer(['AA==']));
 

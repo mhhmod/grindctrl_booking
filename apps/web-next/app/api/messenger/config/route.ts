@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import {
   loadPublicSite,
   loadPublicSiteByDomain,
@@ -14,6 +16,20 @@ import { recordEvent } from '@/lib/messenger/conversations';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  try {
+    await requireRateLimit(publicApiRatelimit, `mconfig:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (!(error instanceof RequestRateLimitError)) throw error;
+    const response = rateLimitErrorResponse(error);
+    const origin = request.headers.get('origin');
+    // Only the generic availability response is exposed before site lookup;
+    // successful config still requires the existing origin authorization.
+    if (origin) response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Vary', 'Origin');
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+    return response;
+  }
+
   const key = request.nextUrl.searchParams.get('key') ?? '';
   const shopParam = request.nextUrl.searchParams.get('shop');
   /* The browser sets Origin on a cross-origin request and page script cannot

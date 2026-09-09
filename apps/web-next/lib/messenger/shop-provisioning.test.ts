@@ -97,10 +97,30 @@ describe('ensureShopOwnedSite against real provisioning', () => {
           state.rows.push({ id: `${table}-${state.rows.length + 1}`, ...row });
           return api;
         },
-        upsert: (row: Row) => {
+        upsert: (row: Row, opts?: { onConflict?: string; ignoreDuplicates?: boolean }) => {
           calls.push(`${table}.upsert`);
-          state.rows.push({ id: `${table}-${state.rows.length + 1}`, ...row });
-          return Promise.resolve({ data: null, error: null });
+          // Mirrors real supabase-js/PostgREST: .select() chained onto .upsert()
+          // returns the row in the same round trip when this connection actually
+          // wrote it, and null when ON CONFLICT DO NOTHING skipped the write. A
+          // bare `await upsert(...)` (no .select()) still resolves via `then`.
+          const conflictCols = opts?.onConflict?.split(',') ?? [];
+          const existing = conflictCols.length
+            ? state.rows.find((r) => conflictCols.every((c) => r[c] === row[c]))
+            : undefined;
+          let resultData: Row | null;
+          if (existing) {
+            resultData = opts?.ignoreDuplicates ? null : (Object.assign(existing, row), existing);
+          } else {
+            resultData = { id: `${table}-${state.rows.length + 1}`, ...row };
+            state.rows.push(resultData);
+          }
+          const upsertApi: Record<string, unknown> = {
+            select: () => upsertApi,
+            maybeSingle: () => Promise.resolve({ data: resultData, error: null }),
+            then: (resolve: (v: unknown) => unknown) =>
+              Promise.resolve({ data: resultData, error: null }).then(resolve),
+          };
+          return upsertApi;
         },
         update: (patch: Row) => {
           calls.push(`${table}.update`);

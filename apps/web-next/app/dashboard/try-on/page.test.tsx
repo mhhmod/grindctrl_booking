@@ -1,6 +1,9 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const session = vi.hoisted(() => ({ auth: vi.fn() }));
+vi.mock('@clerk/nextjs/server', () => ({ auth: session.auth }));
 
 /* The page reads through Clerk + Supabase and the panel navigates on shop
    change; stub those edges so the test covers what the owner actually sees. */
@@ -106,12 +109,80 @@ vi.mock('@/lib/try-on/persistence', () => ({
 import DashboardTryOnPage from '@/app/dashboard/try-on/page';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
+import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
+import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
+import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
+
+beforeEach(() => {
+  cookieLocale = undefined;
+  acceptLanguage = undefined;
+  session.auth.mockReset().mockResolvedValue({ userId: 'user_merchant' });
+  vi.stubEnv('TRYON_PLATFORM_OPERATOR_CLERK_IDS', '');
+});
+afterEach(() => vi.unstubAllEnvs());
 
 async function renderPage(shop?: string) {
   render(await DashboardTryOnPage({ searchParams: Promise.resolve({ shop }) }));
 }
 
 describe('DashboardTryOnPage', () => {
+  it.each((['en', 'ar'] as const).flatMap((locale) =>
+    (['merchant', 'no-config', 'operator'] as const).map((role) => ({ locale, role })),
+  ))('derives $role plan-control visibility on the server in $locale', async ({ locale, role }) => {
+    cookieLocale = locale;
+    session.auth.mockResolvedValue({ userId: role === 'merchant' ? 'user_merchant' : 'user_operator' });
+    vi.stubEnv('TRYON_PLATFORM_OPERATOR_CLERK_IDS', role === 'no-config' ? '' : 'user_operator');
+    await renderPage('grindctrl.myshopify.com');
+    const c = getTryOnDashboardCopy(locale);
+    const card = screen.getByText(c.planAndCredits).closest('[data-slot="card"]') as HTMLElement;
+    expect(within(card).getByText(c.planRendersLeft(280, 300))).toBeInTheDocument();
+    expect(within(card).getByText(c.planStatusActive)).toBeInTheDocument();
+    if (role === 'operator') {
+      expect(within(card).getByLabelText(c.paymentReference)).toBeInTheDocument();
+      expect(within(card).getByRole('button', { name: c.activateOrUpgrade })).toBeInTheDocument();
+      expect(within(card).getByText(c.planAndCreditsOperatorBody)).toBeInTheDocument();
+    } else {
+      expect(within(card).queryByLabelText(c.paymentReference)).not.toBeInTheDocument();
+      expect(within(card).queryByRole('button')).not.toBeInTheDocument();
+      expect(within(card).getByText(c.managedServiceBody)).toBeInTheDocument();
+      expect(within(card).getByText(c.planAndCreditsBody)).toBeInTheDocument();
+    }
+  });
+
+  const ownedShop = (domain: string) => ({
+    domain, status: 'installed' as const, installedAt: '2026-01-01T00:00:00.000Z', uninstalledAt: null,
+    lastSeenAt: '2026-01-01T00:00:00.000Z', jobCount: 0, lastJobAt: null,
+  });
+
+  it('opens the selected owned store using the configured public app ID, not the GrindCTRL store', async () => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([
+      ownedShop('alpha.myshopify.com'), ownedShop('beta.myshopify.com'),
+    ]);
+    await renderPage('BETA.MYSHOPIFY.COM');
+    expect(screen.getByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp }))
+      .toHaveAttribute('href', 'https://admin.shopify.com/store/beta/apps/' + SHOPIFY_APP_CLIENT_ID);
+    expect(document.body.innerHTML).not.toContain('/store/grindctrl/apps/grindctrl-tryon');
+  });
+
+  it('uses a sole owned store when the global view has no selected shop', async () => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([ownedShop('alpha.myshopify.com')]);
+    await renderPage();
+    expect(screen.getByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp }))
+      .toHaveAttribute('href', 'https://admin.shopify.com/store/alpha/apps/' + SHOPIFY_APP_CLIENT_ID);
+  });
+
+  it.each(['en', 'ar'] as const)('asks for an owned shop in %s rather than linking an ambiguous or forged selection', async (locale) => {
+    cookieLocale = locale;
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([
+      ownedShop('alpha.myshopify.com'), ownedShop('beta.myshopify.com'),
+    ]);
+    await renderPage('attacker.myshopify.com');
+    const c = getTryOnDashboardCopy(locale);
+    expect(screen.queryByRole('link', { name: c.openShopifyApp })).not.toBeInTheDocument();
+    expect(screen.getByText(c.chooseShopForApp)).toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain('/store/attacker/');
+  });
+
   it('shows the installed shops and the shared settings controls', async () => {
     await renderPage();
 
@@ -152,6 +223,37 @@ describe('DashboardTryOnPage', () => {
     await renderPage('attacker.myshopify.com');
 
     expect(screen.getByLabelText('Editing')).toHaveValue('default');
+  });
+
+  it.each(['en', 'ar'] as const)('shows unknown costs honestly in %s rows and known totals', async (locale) => {
+    cookieLocale = locale;
+    vi.mocked(listRecentTryOnJobs).mockResolvedValueOnce([null, 0, 0.02].map((cost, index) => ({
+      id: `job-${index}`, product_id: `product-${index}`, shop: 'grindctrl.myshopify.com',
+      status: 'completed', provider: 'test', cost_usd: cost, duration_ms: 1000, message: null,
+      created_at: '2026-07-18T08:00:00Z',
+    })));
+    await renderPage();
+    const copy = getTryOnDashboardCopy(locale);
+    expect(screen.getByRole('cell', { name: copy.costUnreported })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '$0.0000' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '$0.0200' })).toBeInTheDocument();
+    const card = screen.getByText(copy.providerSpend).closest('[data-slot="card"]');
+    expect(card).not.toBeNull();
+    expect(within(card as HTMLElement).getByText('$0.02')).toBeInTheDocument();
+    expect(within(card as HTMLElement).getByText(copy.missingProviderCosts(1))).toBeInTheDocument();
+  });
+
+  it('does not show a zero total when every provider cost is missing', async () => {
+    vi.mocked(listRecentTryOnJobs).mockResolvedValueOnce([{
+      id: 'unknown', product_id: 'product', shop: 'grindctrl.myshopify.com',
+      status: 'failed', provider: 'test', cost_usd: null, duration_ms: 1000, message: null,
+      created_at: '2026-07-18T08:00:00Z',
+    }]);
+    await renderPage();
+    const copy = getTryOnDashboardCopy('en');
+    const card = screen.getByText(copy.providerSpend).closest('[data-slot="card"]');
+    expect(within(card as HTMLElement).getByText(copy.costUnreported)).toBeInTheDocument();
+    expect(within(card as HTMLElement).queryByText('$0.00')).not.toBeInTheDocument();
   });
 });
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clientIp, publicApiRatelimit, rateLimitedResponse } from '@/lib/ratelimit';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import {
   isTryOnNonce,
   normalizeVariantId,
@@ -14,8 +15,7 @@ import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
  * request deterministically returns the same attempt/request key. */
 export async function POST(request: NextRequest) {
   try {
-    const limit = await publicApiRatelimit.limit(clientIp(request) ?? 'unknown');
-    if (!limit.success) return rateLimitedResponse(limit.reset);
+    await requireRateLimit(publicApiRatelimit, clientIp(request) ?? 'unknown');
 
     const body = (await request.json()) as {
       sessionId?: unknown;
@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
       { status: 200, headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (error instanceof SyntaxError) {
       return NextResponse.json(
         { ok: false, error: 'Invalid JSON payload.' } satisfies TryOnApiResponse,

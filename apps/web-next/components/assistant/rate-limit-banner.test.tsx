@@ -16,6 +16,31 @@ describe('RateLimitBanner', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
+  it('restarts for a new limit with identical seconds, but not an unrelated rerender', () => {
+    const limit = { resetSeconds: 5, message: '', signInCta: false };
+    const view = (rateLimited: typeof limit | null) => (
+      <AssistantLocaleProvider initialLocale="en">
+        <RateLimitBanner budgets={null} rateLimited={rateLimited} redirectPath="/assistant" />
+      </AssistantLocaleProvider>
+    );
+    const { rerender, unmount } = render(view(limit));
+    act(() => { vi.advanceTimersByTime(3_000); });
+    expect(screen.getByText('0:02')).toBeInTheDocument();
+    rerender(view(limit));
+    expect(screen.getByText('0:02')).toBeInTheDocument();
+    rerender(view({ ...limit }));
+    expect(screen.getByText('0:05')).toBeInTheDocument();
+    act(() => { vi.advanceTimersByTime(8_000); });
+    expect(screen.getByText('0:00')).toBeInTheDocument();
+    rerender(view(null));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(vi.getTimerCount()).toBe(0);
+    rerender(view({ ...limit }));
+    expect(screen.getByText('0:05')).toBeInTheDocument();
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('renders nothing when budgets are healthy and not rate-limited', () => {
     renderBanner({
       budgets: { chat: { remaining: 8, resetSeconds: 0 }, voice: { remaining: 3, resetSeconds: 0 } },

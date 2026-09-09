@@ -3,11 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
 const mocks = vi.hoisted(() => ({
+  rateLimit: vi.fn(),
   loadPublicSite: vi.fn(),
   loadPublicSiteByDomain: vi.fn(),
   originAllowed: vi.fn(),
   toPublicPayload: vi.fn(),
   recordEvent: vi.fn(),
+}));
+
+vi.mock('@/lib/ratelimit', () => ({
+  clientIp: () => '203.0.113.9',
+  publicApiRatelimit: { configured: true, limit: mocks.rateLimit },
 }));
 
 vi.mock('@/lib/messenger/public-api', () => ({
@@ -33,6 +39,7 @@ function req(url: string) {
 describe('GET /api/messenger/config', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     mocks.originAllowed.mockReturnValue(true);
     mocks.toPublicPayload.mockReturnValue(PAYLOAD);
     mocks.recordEvent.mockResolvedValue(undefined);

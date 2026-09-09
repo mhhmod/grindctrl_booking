@@ -133,6 +133,11 @@ export async function lookupOrder(input: {
   if (!hasOrderScope(token.scopes)) return { ok: false, reason: 'no_scope' };
 
   const verified = Boolean(input.verifiedCustomerId);
+  // The customer(id) query requires read_customers as well as read_orders.
+  // Do not silently add permissions or fall back to a broader order query.
+  if (verified && !token.scopes.split(',').some((scope) => scope.trim() === 'read_customers')) {
+    return { ok: false, reason: 'no_scope' };
+  }
   if (!verified && (!input.orderNumber || !input.email)) {
     return { ok: false, reason: 'missing_proof' };
   }

@@ -1,5 +1,16 @@
 # GrindCTRL — Deployment Guide
 
+> **2026-09-05 safety notice:** Most pm2, Node18, secret-name and reset-based
+> deployment examples below are historical and conflict with the current
+> Docker/GHCR workflow. Do not execute them as the current runbook.
+> See `docs/superpowers/checkpoints/2026-09-05-production-risk-closure.md`
+> at repository root. Production remains NO-GO pending its gates. Current CI
+> uses a Node24 image, release checks, exact release SHA verification and a
+> container scan. Before rollout, inspect the actual VPS compose/service and
+> obtain approval for the exact candidate digest and rollback to the previous
+> known-good digest. No verified VPS rollback command is available in this
+> checkout; do not replace it with a guessed reset or pm2 command.
+
 > **Canonical production app:** `apps/web-next/` (Next.js 15)
 > **Domain:** `https://grindctrl.cloud`
 > **Hosting:** Hostinger VPS (standalone Node.js behind Nginx)

@@ -446,6 +446,8 @@ describe('try-on service', () => {
       expect(finalizeTryOnJobMock).toHaveBeenCalledTimes(1);
       expect(finalizeTryOnJobMock.mock.calls[0][0]).toMatchObject({
         status: 'failed',
+        // Refund the merchant reservation, but do not erase provider spend.
+        meta: { costEstimate: 0.01 },
       });
     });
 

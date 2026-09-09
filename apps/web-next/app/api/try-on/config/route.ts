@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 
 /* Public, non-sensitive styling config for the storefront block.
@@ -10,6 +12,18 @@ const CORS_HEADERS = {
 };
 
 export async function GET(request: NextRequest) {
+  try {
+    await requireRateLimit(publicApiRatelimit, `tconfig:${clientIp(request) ?? 'unknown'}`);
+  } catch (error) {
+    if (!(error instanceof RequestRateLimitError)) throw error;
+    const response = rateLimitErrorResponse(error);
+    response.headers.set('Access-Control-Allow-Origin', CORS_HEADERS['Access-Control-Allow-Origin']);
+    response.headers.set('Access-Control-Allow-Methods', CORS_HEADERS['Access-Control-Allow-Methods']);
+    response.headers.set('Access-Control-Expose-Headers', 'Retry-After');
+    // Do not copy successful config's public cache policy onto a denial.
+    return response;
+  }
+
   const shop = request.nextUrl.searchParams.get('shop');
   const settings = await getTryOnSettings(shop);
 

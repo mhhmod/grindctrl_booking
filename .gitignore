@@ -28,3 +28,9 @@ tsconfig.tsbuildinfo
 # GitHub push protection caught a live Apify token in it.
 **/.claude/settings.local.json
 **/.claude/*.bak-*
+
+# Ad-hoc manual verification evidence (screenshots, CLI session state) -
+# useful in the moment, not source, not meant to accumulate in history.
+.playwright-cli/
+/output/
+apps/web-next/*.png

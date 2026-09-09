@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import type { AssistantClient } from '@/lib/assistant/client';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { ChatWindow } from './chat-window';
 import { AssistantLocaleProvider } from './locale-provider';
 import { useAssistantLocale } from './locale-provider';
@@ -47,7 +49,7 @@ function LauncherMotionDna() {
   );
 }
 
-function LauncherButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+function LauncherButton({ open, onClick, buttonRef }: { open: boolean; onClick: () => void; buttonRef: React.Ref<HTMLButtonElement> }) {
   const { t } = useAssistantLocale();
   return (
     // 84px matches the DNA layer's own size, so it can just fill this box
@@ -59,6 +61,7 @@ function LauncherButton({ open, onClick }: { open: boolean; onClick: () => void 
     <div className="fixed bottom-[2px] end-[2px] z-40 size-[84px]">
       {!open && <LauncherMotionDna />}
       <button
+        ref={buttonRef}
         type="button"
         onClick={onClick}
         aria-label={open ? t.launcherClose : t.launcherOpen}
@@ -87,11 +90,22 @@ function LauncherButton({ open, onClick }: { open: boolean; onClick: () => void 
  *  instead of re-guessing it — the same pattern /assistant's own page
  *  already uses correctly. */
 export function AssistantLauncher({ client, initialLocale }: { client?: AssistantClient; initialLocale?: SiteLocale }) {
+  const pathname = usePathname();
+  /* RootLayout's server check handles the initial signed-in state, but
+     shared layouts persist during client navigation. Recheck route safety
+     here so clicking Sign in also unmounts an already-open assistant. */
+  if (!showLauncherFor(pathname, false)) return null;
+
+  return <LauncherSurface client={client} initialLocale={initialLocale} />;
+}
+
+function LauncherSurface({ client, initialLocale }: { client?: AssistantClient; initialLocale?: SiteLocale }) {
   const [open, setOpen] = useState(false);
+  const launcherRef = useRef<HTMLButtonElement>(null);
 
   return (
     <AssistantLocaleProvider initialLocale={initialLocale}>
-      <LauncherButton open={open} onClick={() => setOpen((v) => !v)} />
+      <LauncherButton open={open} onClick={() => setOpen((v) => !v)} buttonRef={launcherRef} />
       <Sheet open={open} onOpenChange={setOpen}>
         {/* Plain `w-full` here loses to the primitive's own baked-in
             `data-[side=right]:w-3/4` — same specificity bucket in
@@ -109,6 +123,13 @@ export function AssistantLauncher({ client, initialLocale }: { client?: Assistan
         <SheetContent
           side="right"
           showCloseButton={false}
+          aria-describedby={undefined}
+          onCloseAutoFocus={(event) => {
+            // The launcher sits outside Sheet, so Radix has no SheetTrigger
+            // to restore. Keep keyboard users at their original entry point.
+            event.preventDefault();
+            launcherRef.current?.focus();
+          }}
           className="flex w-full flex-col p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md"
         >
           <SheetHeader className="sr-only">

@@ -14,6 +14,15 @@ function splitLongSentence(sentence: string): string[] {
     } else {
       current = candidate;
     }
+    // A URL or unbroken word can itself exceed the provider limit. Word
+    // boundaries alone do not guarantee <=200 chars; preserve surrogate
+    // pairs while splitting this exceptional case into bounded chunks.
+    while (current.length > LIMIT) {
+      const lastCodeUnit = current.charCodeAt(LIMIT - 1);
+      const end = lastCodeUnit >= 0xd800 && lastCodeUnit <= 0xdbff ? LIMIT - 1 : LIMIT;
+      chunks.push(current.slice(0, end));
+      current = current.slice(end);
+    }
   }
   if (current) chunks.push(current);
 

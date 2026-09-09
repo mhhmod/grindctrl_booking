@@ -10,6 +10,7 @@ import {
 } from '@/lib/try-on/service';
 import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
+import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { validateProductId, validateSessionId } from '@/lib/try-on/validator';
 import {
@@ -68,15 +69,7 @@ export async function POST(request: NextRequest) {
     /* Real generations cost provider money: rate-limit per client network.
        No trusted proxy header at all → one shared bucket (fail closed). */
     const ip = clientIp(request) ?? 'unknown';
-    const limit = await publicApiRatelimit.limit(ip);
-    if (!limit.success) {
-      const message = 'Too many try-on requests. Please try again in a few minutes.';
-      const retryAfterSec = Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000));
-      return NextResponse.json(
-        { ok: false, message, error: message } satisfies TryOnJobApiResponse,
-        { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
-      );
-    }
+    await requireRateLimit(publicApiRatelimit, ip);
 
     const body = (await request.json()) as {
       sessionId?: string;
@@ -307,6 +300,7 @@ export async function POST(request: NextRequest) {
     const res = toJobResponse(job);
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (
       error instanceof TryOnFinalizationPendingError ||
       error instanceof TryOnResultUnavailableError ||

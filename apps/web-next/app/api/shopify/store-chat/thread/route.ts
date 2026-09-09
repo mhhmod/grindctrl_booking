@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
+import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { shopProfileId } from '@/lib/messenger/shop-tenancy';
 import { getSiteAssigneeProfileId } from '@/lib/messenger/provisioning';
@@ -45,6 +46,10 @@ type ThreadBody =
 export async function POST(request: NextRequest) {
   const session = authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  const limited = await merchantRateLimitResponse(
+    `shop:${session.shop}`, 'read',
+  );
+  if (limited) return limited;
 
   let site;
   try {
@@ -55,6 +60,10 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as ThreadBody;
+  if (body.op !== 'messages') {
+    const writeLimit = await merchantRateLimitResponse(`shop:${session.shop}`);
+    if (writeLimit) return writeLimit;
+  }
   const conversation = await getConversationForSite(body.conversationId, site.id);
   if (!conversation) return NextResponse.json({ ok: false, error: 'not_found' }, { status: 404 });
 

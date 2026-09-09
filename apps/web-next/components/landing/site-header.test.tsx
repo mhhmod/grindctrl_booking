@@ -1,8 +1,9 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { SiteHeader } from '@/components/landing/site-header';
+import { BOOKING_URL } from '@/lib/booking';
 import { getLandingDictionary, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 vi.mock('@/components/dashboard/theme-toggle', () => ({
@@ -25,32 +26,26 @@ describe('SiteHeader', () => {
     expect(screen.getByRole('button', { name: t.menu })).toBeInTheDocument();
   });
 
-  it('keeps the booking CTA reachable without opening the menu', () => {
-    const t = renderHeader();
-    const cta = screen.getByRole('link', { name: t.bookCall });
-    expect(cta.className).not.toContain('hidden');
-  });
+  it.each<SiteLocale>(['en', 'ar'])(
+    'keeps labeled sign-in and booking links outside the closed menu in %s',
+    (locale) => {
+      const t = renderHeader(locale);
+      const header = within(screen.getByRole('banner'));
+      const signIn = header.getByRole('link', { name: t.signIn });
+      const booking = header.getByRole('link', { name: t.bookCall });
 
-  /* Regression guard: the menu button is `lg:hidden`, so when sign-in lived
-     only inside the sheet there was no route to it at all above `lg`. This
-     link is the desktop route, and it must survive future header edits. */
-  it('keeps a sign-in route outside the menu, for widths where the menu is hidden', () => {
-    const t = renderHeader();
-
-    const signInLinks = screen.getAllByRole('link', { name: t.signIn });
-    expect(signInLinks.some((link) => link.className.includes('lg:inline-flex'))).toBe(true);
-  });
-
-  /* Below `lg` the text link above is hidden and the sheet was the only
-     other route — a returning user had to open the menu just to sign in.
-     This icon-only link gives mobile/tablet the same one-tap reachability
-     desktop already has. */
-  it('keeps a sign-in route outside the menu below lg too', () => {
-    const t = renderHeader();
-
-    const signInLinks = screen.getAllByRole('link', { name: t.signIn });
-    expect(signInLinks.some((link) => link.className.includes('lg:hidden'))).toBe(true);
-  });
+      // An accessible name alone let the old icon-only mobile link pass. The
+      // actual localized text must be present and visible in the closed header.
+      expect(signIn).toHaveTextContent(t.signIn);
+      expect(signIn).toBeVisible();
+      expect(signIn).toHaveAttribute('href', '/sign-in');
+      expect(booking).toHaveTextContent(t.bookCall);
+      expect(booking).toBeVisible();
+      expect(booking).toHaveAttribute('href', BOOKING_URL);
+      expect(booking).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    },
+  );
 
   it('exposes nav, sign in, language and theme once the menu is open', async () => {
     const t = renderHeader();
@@ -63,5 +58,34 @@ describe('SiteHeader', () => {
     }
     expect(sheet.getByRole('button', { name: t.langToggleLabel })).toBeInTheDocument();
     expect(sheet.getByRole('button', { name: 'Theme' })).toBeInTheDocument();
+  });
+
+  it.each<SiteLocale>(['en', 'ar'])(
+    'keeps the %s menu side, localized close control and focus return',
+    async (locale) => {
+      const t = renderHeader(locale);
+      const trigger = screen.getByRole('button', { name: t.menu });
+      trigger.focus();
+      fireEvent.click(trigger);
+
+      const dialog = await screen.findByRole('dialog', { name: t.menu });
+      expect(dialog).toHaveAttribute('data-side', locale === 'ar' ? 'left' : 'right');
+      fireEvent.click(within(dialog).getByRole('button', { name: t.closeMenu }));
+
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      await waitFor(() => expect(trigger).toHaveFocus());
+    },
+  );
+
+  it('closes the menu when its sign-in link is selected', async () => {
+    const t = renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: t.menu }));
+    const dialog = await screen.findByRole('dialog');
+    const signIn = within(dialog).getByRole('link', { name: t.signIn });
+    expect(signIn).toHaveAttribute('href', '/sign-in');
+    // jsdom cannot navigate; the browser check covers the destination page.
+    signIn.addEventListener('click', (event) => event.preventDefault(), { once: true });
+    fireEvent.click(signIn);
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

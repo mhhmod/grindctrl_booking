@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import {
-  requireOwnedSite,
+  requireOwnedSite as loadOwnedSite,
   getProfileId,
   UnauthorizedError,
 } from '@/lib/messenger/provisioning';
@@ -33,8 +33,18 @@ import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 import type { ActionResult } from '@/lib/messenger/actions-core';
+import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 
 export type { ActionResult };
+
+async function requireOwnedSite(userId: string, siteId: string, mode: 'read' | 'write' = 'write') {
+  const site = await loadOwnedSite(userId, siteId);
+  const identity = site.domain && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(site.domain)
+    ? `shop:${site.domain}`
+    : `account:${userId}`;
+  await requireMerchantRateLimit(identity, mode);
+  return site;
+}
 
 async function currentUser(): Promise<string> {
   const { userId } = await auth();
@@ -43,6 +53,7 @@ async function currentUser(): Promise<string> {
 }
 
 function fail(error: unknown): ActionResult {
+  if (error instanceof RequestRateLimitError) return { ok: false, error: error.message };
   const message = error instanceof Error ? error.message : 'Something went wrong.';
   if (error instanceof UnauthorizedError) return { ok: false, error: message };
   console.error('[messenger action]', message);
@@ -204,9 +215,9 @@ export async function syncKnowledge(siteId: string, entryId: string): Promise<Ac
 
 /* ── Staff conversation actions (human side of handoff) ──────────────── */
 
-async function ownedConversation(siteId: string, conversationId: string) {
+async function ownedConversation(siteId: string, conversationId: string, mode: 'read' | 'write' = 'write') {
   const userId = await currentUser();
-  const site = await requireOwnedSite(userId, siteId);
+  const site = await requireOwnedSite(userId, siteId, mode);
   const conversation = await getConversationForSite(conversationId, site.id);
   if (!conversation) throw new UnauthorizedError();
   return { userId, site, conversation };
@@ -229,7 +240,7 @@ export async function fetchConversationMessages(
   | { ok: false }
 > {
   try {
-    const { conversation } = await ownedConversation(siteId, conversationId);
+    const { conversation } = await ownedConversation(siteId, conversationId, 'read');
     const { listMessages } = await import('@/lib/messenger/conversations');
     const [messages, rows] = await Promise.all([
       listMessages(conversation.id, { limit: 200 }),

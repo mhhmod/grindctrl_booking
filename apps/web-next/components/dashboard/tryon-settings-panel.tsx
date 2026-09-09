@@ -11,7 +11,7 @@ import {
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
 import { saveTryOnSettingsAction } from '@/app/dashboard/try-on/actions';
-import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
+import { actionFailureLabel, getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 
 export type ManagedShopOption = {
   domain: string;
@@ -36,12 +36,14 @@ export function TryOnSettingsPanel({
   locale?: TryOnLocale;
 }) {
   const router = useRouter();
+  const c = getTryOnDashboardCopy(locale);
   const [isNavigating, startNavigation] = useTransition();
   const [s, setS] = useState<TryOnWidgetSettings>(settings);
   const [loadingStepsText, setLoadingStepsText] = useState(
     settings.loadingSteps?.join('\n') ?? '',
   );
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [failureText, setFailureText] = useState<string | null>(null);
 
   const set = useCallback(
     <K extends keyof TryOnWidgetSettings>(key: K, value: TryOnWidgetSettings[K]) => {
@@ -53,6 +55,7 @@ export function TryOnSettingsPanel({
 
   const save = useCallback(async () => {
     setStatus('saving');
+    setFailureText(null);
     try {
       // The action takes FormData (it also backs a plain form); build it here
       // so the controls can stay controlled state.
@@ -81,15 +84,19 @@ export function TryOnSettingsPanel({
       fd.set('disclaimer_text_ar', s.disclaimerTextAr ?? '');
       fd.set('loading_steps', loadingStepsText);
 
-      await saveTryOnSettingsAction(fd);
+      const result = await saveTryOnSettingsAction(fd);
+      if (!result || !result.ok) {
+        setFailureText(result ? actionFailureLabel(c, result) : c.saveFailed);
+        setStatus('error');
+        return;
+      }
       setStatus('saved');
     } catch {
       setStatus('error');
     }
-  }, [s, loadingStepsText, selectedShop]);
+  }, [s, loadingStepsText, selectedShop, c]);
 
   const isDefault = selectedShop === 'default';
-  const c = getTryOnDashboardCopy(locale);
 
   return (
     <div className="grid gap-6">
@@ -125,15 +132,15 @@ export function TryOnSettingsPanel({
         onLoadingStepsTextChange={setLoadingStepsText}
       />
 
-      <div className="flex items-center gap-3">
-        <Button type="button" onClick={save} disabled={status === 'saving' || isNavigating}>
+      <div className="flex flex-wrap items-start gap-3">
+        <Button className="shrink-0" type="button" onClick={save} disabled={status === 'saving' || isNavigating}>
           {status === 'saving' ? c.saving : c.saveSettings}
         </Button>
         {status === 'saved' && (
-          <span className="text-sm text-muted-foreground">{c.savedLive}</span>
+          <span role="status" className="text-sm text-muted-foreground">{c.savedLive}</span>
         )}
         {status === 'error' && (
-          <span className="text-sm text-destructive">{c.saveFailed}</span>
+          <span role="alert" className="basis-full text-sm text-destructive sm:basis-auto sm:flex-1">{failureText ?? c.saveFailed}</span>
         )}
       </div>
     </div>

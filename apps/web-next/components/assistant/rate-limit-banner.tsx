@@ -21,20 +21,26 @@ interface RateLimitBannerProps {
 
 const LOW_BUDGET_THRESHOLD = 2;
 
-function useCountdown(seconds: number | null): number {
-  const [remaining, setRemaining] = useState(seconds ?? 0);
+function useCountdown(limit: RateLimitedInfo | null): number {
+  const [countdown, setCountdown] = useState({ limit, remaining: limit?.resetSeconds ?? 0 });
+
+  // A new limit response is a new countdown even if resetSeconds matches.
+  // Adjust derived state before children commit, not via a cascading effect.
+  if (countdown.limit !== limit) {
+    setCountdown({ limit, remaining: limit?.resetSeconds ?? 0 });
+  }
 
   useEffect(() => {
-    setRemaining(seconds ?? 0);
-    if (!seconds) return;
+    if (!limit?.resetSeconds) return;
 
     const interval = setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
+      setCountdown((prev) => prev.limit === limit
+        ? { ...prev, remaining: Math.max(0, prev.remaining - 1) } : prev);
     }, 1_000);
     return () => clearInterval(interval);
-  }, [seconds]);
+  }, [limit]);
 
-  return remaining;
+  return countdown.remaining;
 }
 
 /** Calm ambient indicator while budget is healthy; a distinct, non-alarming
@@ -42,7 +48,7 @@ function useCountdown(seconds: number | null): number {
  *  the limit is actually hit — the limit should never come as a surprise. */
 export function RateLimitBanner({ budgets, rateLimited, redirectPath, onInternalNavigate }: RateLimitBannerProps) {
   const { t } = useAssistantLocale();
-  const countdown = useCountdown(rateLimited?.resetSeconds ?? null);
+  const countdown = useCountdown(rateLimited);
 
   if (rateLimited) {
     return (

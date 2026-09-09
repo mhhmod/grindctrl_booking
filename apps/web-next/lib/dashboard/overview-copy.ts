@@ -12,6 +12,11 @@ export interface OverviewCopy {
 
   generations7d: string;
   providerSpend7d: string;
+  costUnreported: string;
+  knownSpend: string;
+  missingProviderCosts: (count: number) => string;
+  missingPreviousProviderCosts: (count: number) => string;
+  spendComparisonUnavailable: string;
   successRate7d: string;
   installedShopsCard: string;
 
@@ -52,7 +57,12 @@ const en: OverviewCopy = {
   manageTryOn: 'Manage try-on',
 
   generations7d: 'Generations, 7 days',
-  providerSpend7d: 'Provider spend, 7 days',
+  providerSpend7d: 'Known provider spend, 7 days',
+  costUnreported: 'Unreported',
+  knownSpend: 'Known spend',
+  missingProviderCosts: (count) => `Generations with unreported cost: ${count}.`,
+  missingPreviousProviderCosts: (count) => `Previous week: ${count} generations with unreported cost.`,
+  spendComparisonUnavailable: 'Spend comparison unavailable: one or both weeks have unreported costs.',
   successRate7d: 'Success rate, 7 days',
   installedShopsCard: 'Installed shops',
 
@@ -77,7 +87,7 @@ const en: OverviewCopy = {
   noMerchantShopsYet: 'No merchant shops yet. Install the app on a store and it appears here.',
   columnShop: 'Shop',
   columnJobs7d: 'Jobs 7d',
-  columnSpend7d: 'Spend 7d',
+  columnSpend7d: 'Known spend 7d',
   columnLastActivity: 'Last activity',
   uninstalledBadge: 'uninstalled',
   noneYet: 'None yet',
@@ -93,7 +103,12 @@ const ar: OverviewCopy = {
   manageTryOn: 'إدارة التجربة الافتراضية',
 
   generations7d: 'عمليات التوليد، آخر ٧ أيام',
-  providerSpend7d: 'تكلفة المزود، آخر ٧ أيام',
+  providerSpend7d: 'تكلفة المزود المعروفة، آخر ٧ أيام',
+  costUnreported: 'لم تُبلّغ',
+  knownSpend: 'التكلفة المعروفة',
+  missingProviderCosts: (count) => `عمليات بتكلفة غير مُبلّغة: ${count}.`,
+  missingPreviousProviderCosts: (count) => `الأسبوع السابق — عمليات بتكلفة غير مُبلّغة: ${count}.`,
+  spendComparisonUnavailable: 'مقارنة التكلفة غير متاحة: توجد تكاليف غير مُبلّغة في أحد الأسبوعين أو كليهما.',
   successRate7d: 'معدل النجاح، آخر ٧ أيام',
   installedShopsCard: 'المتاجر المثبَّتة',
 
@@ -118,7 +133,7 @@ const ar: OverviewCopy = {
   noMerchantShopsYet: 'لا يوجد متجر تاجر بعد. ثبّت التطبيق على متجر وسيظهر هنا.',
   columnShop: 'المتجر',
   columnJobs7d: 'العمليات (٧ أيام)',
-  columnSpend7d: 'التكلفة (٧ أيام)',
+  columnSpend7d: 'التكلفة المعروفة (٧ أيام)',
   columnLastActivity: 'آخر نشاط',
   uninstalledBadge: 'غير مثبَّت',
   noneYet: 'لا شيء بعد',

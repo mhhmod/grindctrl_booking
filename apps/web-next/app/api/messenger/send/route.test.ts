@@ -8,6 +8,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
    grounded replies carrying the right metadata. */
 
 const mocks = vi.hoisted(() => ({
+  sessionLimit: vi.fn(async () => ({ success: true, reset: Date.now() + 60_000 })),
+  orderLimit: vi.fn(async () => ({ success: true, reset: Date.now() + 60_000 })),
   publicApiRatelimit: { limit: vi.fn(async () => ({ success: true, reset: Date.now() + 60_000 })) },
   clientIp: vi.fn(() => '203.0.113.5'),
   loadPublicSite: vi.fn(),
@@ -30,6 +32,22 @@ const mocks = vi.hoisted(() => ({
   recordAudit: vi.fn(async () => {}),
   lookupOrder: vi.fn(),
 }));
+
+vi.hoisted(() => {
+  process.env.UPSTASH_REDIS_REST_URL = 'https://test.invalid';
+  process.env.UPSTASH_REDIS_REST_TOKEN = 'test';
+});
+vi.mock('@upstash/redis', () => ({ Redis: { fromEnv: () => ({}) } }));
+vi.mock('@upstash/ratelimit', () => {
+  class Ratelimit {
+    static slidingWindow() { return {}; }
+    limit: typeof mocks.sessionLimit;
+    constructor(config: { prefix: string }) {
+      this.limit = config.prefix === 'gc-msgr-send' ? mocks.sessionLimit : mocks.orderLimit;
+    }
+  }
+  return { Ratelimit };
+});
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: mocks.publicApiRatelimit,

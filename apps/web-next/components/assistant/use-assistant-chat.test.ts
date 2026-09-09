@@ -23,6 +23,39 @@ function makeClient(overrides: Partial<AssistantClient> = {}): AssistantClient {
 }
 
 describe('useAssistantChat', () => {
+  it('uses the latest committed callback when a pending reply completes', async () => {
+    let resolveReply!: (value: ChatStreamResult) => void;
+    const reply = new Promise<ChatStreamResult>((resolve) => { resolveReply = resolve; });
+    const client = makeClient({ streamChat: vi.fn((_message, _history, onToken) => {
+      onToken('Current reply');
+      return reply;
+    }) });
+    const first = vi.fn();
+    const latest = vi.fn();
+    const { result, rerender } = renderHook(({ onReply }) => useAssistantChat(client, onReply), {
+      initialProps: { onReply: first },
+    });
+    await waitFor(() => expect(result.current.budgets).not.toBeNull());
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.sendText('Hello'); });
+    rerender({ onReply: latest });
+    await act(async () => { resolveReply({ ok: true }); await pending; });
+    expect(first).not.toHaveBeenCalled();
+    expect(latest).toHaveBeenCalledWith('Current reply', result.current.messages[1].id);
+  });
+
+  it('uses committed conversation history on a subsequent send without audio metadata', async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useAssistantChat(client));
+    await waitFor(() => expect(result.current.budgets).not.toBeNull());
+    await act(async () => { await result.current.sendText('First'); });
+    act(() => result.current.setMessageAudio(result.current.messages[1].id, { status: 'ready', chunks: ['AA=='] }));
+    await act(async () => { await result.current.sendText('Second'); });
+    expect(vi.mocked(client.streamChat).mock.calls[1][1]).toEqual([
+      { role: 'user', content: 'First' }, { role: 'assistant', content: 'Hi there!' },
+    ]);
+  });
+
   it('loads the session budgets on mount', async () => {
     const client = makeClient();
     const { result } = renderHook(() => useAssistantChat(client));
