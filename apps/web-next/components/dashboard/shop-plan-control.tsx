@@ -1,16 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { BOOKING_URL } from '@/lib/booking';
 import {
   activatePlan,
   applyTopUp,
   renewPlan,
   scheduleDowngrade,
+  type OwnerPlanActionResult,
 } from '@/app/dashboard/try-on/plan-actions';
 import type {
   CreditPackCatalogItem,
@@ -19,6 +22,7 @@ import type {
 } from '@/lib/try-on/entitlement';
 import {
   getDateLocale,
+  actionFailureLabel,
   getTryOnDashboardCopy,
   planStatusLabel,
   type TryOnDashboardCopy,
@@ -48,18 +52,18 @@ function statusTone(status: ShopEntitlement['status']) {
 }
 
 /* Plain sentences, because the owner reads this while deciding who to invoice. */
-function bannerLine(c: TryOnDashboardCopy, state: ShopEntitlement): string | null {
+function bannerLine(c: TryOnDashboardCopy, state: ShopEntitlement, canManagePlan: boolean): string | null {
   switch (state.bannerState) {
     case 'expired':
       return c.bannerExpired;
     case 'cancelled':
       return c.bannerCancelled;
     case 'grace':
-      return c.bannerGrace(state.daysRemaining);
+      return canManagePlan ? c.bannerGrace(state.daysRemaining) : c.managedBannerGrace(state.daysRemaining);
     case 'urgent':
-      return c.bannerUrgent(state.daysRemaining);
+      return canManagePlan ? c.bannerUrgent(state.daysRemaining) : c.managedBannerRenewalDue(state.daysRemaining);
     case 'renewal_due':
-      return c.bannerRenewalDue(state.daysRemaining);
+      return canManagePlan ? c.bannerRenewalDue(state.daysRemaining) : c.managedBannerRenewalDue(state.daysRemaining);
     case 'exhausted':
       return c.bannerExhausted;
     case 'critical':
@@ -77,6 +81,7 @@ export function ShopPlanControl({
   plans,
   packs,
   locale = 'en',
+  canManagePlan = false,
 }: {
   shop: string;
   state: ShopEntitlement;
@@ -84,6 +89,8 @@ export function ShopPlanControl({
   packs: CreditPackCatalogItem[];
   /* The dashboard operator's language, from the shared gc-locale cookie. */
   locale?: SiteLocale;
+  /** Display permission from the server; never a replacement for action authorization. */
+  canManagePlan?: boolean;
 }) {
   const c = getTryOnDashboardCopy(locale);
   const [planKey, setPlanKey] = useState(state.planKey ?? plans[0]?.planKey ?? '');
@@ -91,27 +98,35 @@ export function ShopPlanControl({
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
+  // An ambiguous reply can arrive after the ledger mutation succeeded.
+  // Retrying identical input must replay that mutation, not grant it again.
+  const attemptKeys = useRef(new Map<string, string>());
 
   /* `action` arrives already translated, so it reads correctly inside both the
      progress line and the success line, whichever shape the locale uses. */
   const run = useCallback(
-    async (action: string, fn: () => Promise<{ replayed: boolean }>) => {
+    async (action: string, identity: readonly string[], fn: (actionKey: string) => Promise<OwnerPlanActionResult>) => {
       setBusy(action);
       setFeedback(null);
+      const fingerprint = JSON.stringify(identity);
+      const actionKey = attemptKeys.current.get(fingerprint) ?? crypto.randomUUID();
+      attemptKeys.current.set(fingerprint, actionKey);
       try {
-        const result = await fn();
+        const result = await fn(actionKey);
+        if (!result || !result.ok) {
+          setFeedback({ tone: 'error', text: result ? actionFailureLabel(c, result) : c.actionFailed });
+          return;
+        }
+        attemptKeys.current.delete(fingerprint);
         setFeedback({
           tone: 'ok',
           text: result.replayed ? c.actionReplayed : c.actionApplied(action),
         });
         setNote('');
-      } catch (error) {
-        /* ponytail: server errors surface in English. They come from Postgres
-           and lib/try-on/entitlement.ts, so translating them belongs with
-           those messages, not here. */
+      } catch {
         setFeedback({
           tone: 'error',
-          text: error instanceof Error ? error.message : c.actionFailed,
+          text: c.actionFailed,
         });
       } finally {
         setBusy(null);
@@ -133,7 +148,7 @@ export function ShopPlanControl({
           ),
         )
       : 0;
-  const banner = bannerLine(c, state);
+  const banner = bannerLine(c, state, canManagePlan);
   const currentPlan = plans.find((p) => p.planKey === state.planKey);
   const targetPlan = plans.find((p) => p.planKey === planKey);
   const isDowngrade =
@@ -197,6 +212,17 @@ export function ShopPlanControl({
         </div>
       </div>
 
+      {!canManagePlan ? (
+        <Alert role="note">
+          <AlertTitle>{c.managedServiceTitle}</AlertTitle>
+          <AlertDescription className="grid gap-3">
+            <p>{c.managedServiceBody}</p>
+            <Button asChild variant="outline" size="sm" className="h-auto min-h-11 w-fit max-w-full whitespace-normal">
+              <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer">{c.bookServiceCall}</a>
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : <>
       <div className="grid gap-2">
         <Label htmlFor="plan_note">{c.paymentReference}</Label>
         <Input
@@ -234,8 +260,8 @@ export function ShopPlanControl({
               size="sm" className="h-10 sm:h-8"
               disabled={busy !== null || !planKey || isDowngrade}
               onClick={() =>
-                run(c.actionActivation, () =>
-                  activatePlan({ shop, planKey, note, actionKey: crypto.randomUUID() }),
+                run(c.actionActivation, ['activate', shop, planKey, note], (actionKey) =>
+                  activatePlan({ shop, planKey, note, actionKey }),
                 )
               }
             >
@@ -248,8 +274,8 @@ export function ShopPlanControl({
               disabled={busy !== null || !canRenew}
               title={canRenew ? undefined : c.renewUnavailable}
               onClick={() =>
-                run(c.actionRenewal, () =>
-                  renewPlan({ shop, note, actionKey: crypto.randomUUID() }),
+                run(c.actionRenewal, ['renew', shop, note], (actionKey) =>
+                  renewPlan({ shop, note, actionKey }),
                 )
               }
             >
@@ -262,8 +288,8 @@ export function ShopPlanControl({
                 variant="outline"
                 disabled={busy !== null}
                 onClick={() =>
-                  run(c.actionDowngrade, () =>
-                    scheduleDowngrade({ shop, planKey, actionKey: crypto.randomUUID() }),
+                  run(c.actionDowngrade, ['downgrade', shop, planKey], (actionKey) =>
+                    scheduleDowngrade({ shop, planKey, actionKey }),
                   )
                 }
               >
@@ -295,8 +321,8 @@ export function ShopPlanControl({
             disabled={busy !== null || !packKey || !state.available}
             title={state.available ? undefined : c.topUpUnavailable}
             onClick={() =>
-              run(c.actionTopUp, () =>
-                applyTopUp({ shop, packKey, note, actionKey: crypto.randomUUID() }),
+              run(c.actionTopUp, ['top-up', shop, packKey, note], (actionKey) =>
+                applyTopUp({ shop, packKey, note, actionKey }),
               )
             }
           >
@@ -305,12 +331,13 @@ export function ShopPlanControl({
         </div>
       </div>
 
-      {busy && <p className="text-sm text-muted-foreground">{c.actionInProgress(busy)}</p>}
+      {busy && <p role="status" className="text-sm text-muted-foreground">{c.actionInProgress(busy)}</p>}
       {feedback && (
-        <p className={`text-sm ${feedback.tone === 'ok' ? 'text-muted-foreground' : 'text-destructive'}`}>
+        <p role={feedback.tone === 'ok' ? 'status' : 'alert'} className={`text-sm ${feedback.tone === 'ok' ? 'text-muted-foreground' : 'text-destructive'}`}>
           {feedback.text}
         </p>
       )}
+      </>}
     </div>
   );
 }
