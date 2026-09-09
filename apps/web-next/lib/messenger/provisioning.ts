@@ -15,11 +15,15 @@ export { isPlaceholderEmail };
    Everything downstream (RLS policies, analytics RPCs, Install page data)
    already understands this shape, which is precisely why we reuse it. */
 
-/* Three attempts at ~150ms of total added latency, and only on the racing
-   path — a first visit that collides with itself. Every later visit takes
-   the `existing` branch and never reaches the loop. */
-const PROFILE_CREATE_ATTEMPTS = 3;
-const PROFILE_RETRY_BASE_MS = 50;
+/* Six attempts, ~2.25s of total added latency at worst — and only on the
+   truly racing path (see below). A prior incident (2026-08-29) measured a
+   ~754ms gap between a winning transaction's start and a losing connection's
+   read of it; the original 3-attempt/150ms budget here didn't cover that and
+   the same race recurred in production. This budget comfortably covers it
+   with margin. Every non-racing visit (the overwhelming majority) still
+   never reaches the loop at all. */
+const PROFILE_CREATE_ATTEMPTS = 6;
+const PROFILE_RETRY_BASE_MS = 150;
 
 export class UnauthorizedError extends Error {
   constructor() {
@@ -81,14 +85,23 @@ async function ensureProfile(clerkUserId: string, email: string | null): Promise
      request. Retrying the write as well as the read also covers the case
      where the winner rolled back, which re-reading alone would never fix. */
   for (let attempt = 0; attempt < PROFILE_CREATE_ATTEMPTS; attempt += 1) {
+    // Chaining select() onto the upsert means the connection that actually
+    // wins the race gets its row back here, with no further read needed and
+    // no race at all — the previous version always did a second round trip
+    // even when this request had just written the row itself.
     const insert = await supabase
       .from('profiles')
       .upsert(
         { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
         { onConflict: 'clerk_user_id', ignoreDuplicates: true },
-      );
+      )
+      .select('id, clerk_user_id, email')
+      .maybeSingle();
     if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
+    if (insert.data) return insert.data as ProfileRow;
 
+    // This connection lost the race (ignoreDuplicates skipped its own
+    // write) — only now does the winner's row need to become visible here.
     const settled = await supabase
       .from('profiles')
       .select('id, clerk_user_id, email')

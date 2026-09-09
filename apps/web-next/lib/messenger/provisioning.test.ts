@@ -160,17 +160,33 @@ function stubClient(tables: Record<string, TableState>) {
       },
       upsert: (row: Row) => {
         calls.push(`${table}.upsert`);
+        // Mirrors real supabase-js/PostgREST: .select() chained onto .upsert()
+        // returns the row in the same round trip when this connection actually
+        // wrote it, and null when ON CONFLICT DO NOTHING skipped the write —
+        // never a second network call. A bare `await upsert(...)` (no
+        // .select()) still resolves via `then` for callers that don't chain it.
+        let resultData: Row | null;
         // The winner holds the unique-index slot, so ON CONFLICT DO NOTHING
         // writes nothing and reports success — the exact production shape.
-        if (state.hiddenRows?.length) return Promise.resolve({ data: null, error: null });
-        // A racing request already committed its row: on conflict do nothing.
-        if (state.appearOnWrite?.length) {
+        if (state.hiddenRows?.length) {
+          resultData = null;
+        } else if (state.appearOnWrite?.length) {
+          // A racing request already committed its row: on conflict do nothing.
           state.rows.push(...state.appearOnWrite);
           state.appearOnWrite = [];
-          return Promise.resolve({ data: null, error: null });
+          resultData = null;
+        } else {
+          const inserted = { id: `${table}-${state.rows.length + 1}`, ...row };
+          state.rows.push(inserted);
+          resultData = inserted;
         }
-        state.rows.push({ id: `${table}-${state.rows.length + 1}`, ...row });
-        return Promise.resolve({ data: null, error: null });
+        const upsertApi: Record<string, unknown> = {
+          select: () => upsertApi,
+          maybeSingle: () => Promise.resolve({ data: resultData, error: null }),
+          then: (resolve: (v: unknown) => unknown) =>
+            Promise.resolve({ data: resultData, error: null }).then(resolve),
+        };
+        return upsertApi;
       },
       maybeSingle: () => {
         // A row committed by a concurrent writer becomes visible only once
@@ -286,6 +302,23 @@ describe('provisioning', () => {
     setMessengerServiceClientForTests(client);
 
     await expect(listMessengerSites('user_1')).rejects.toThrow(/row missing after insert/);
+  });
+
+  it('returns its own row immediately on a clean, non-racing first insert', async () => {
+    // No hiddenRows/appearOnWrite: nothing else is contending for this key.
+    // The upsert's own .select() must carry the new row back in the same
+    // round trip — the old code always issued a second read regardless.
+    const { client, tables } = stubClient({
+      profiles: { rows: [] },
+      workspaces: { rows: [] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await listMessengerSites('user_1');
+
+    const mine = tables.profiles.rows.filter((r) => r.clerk_user_id === 'user_1');
+    expect(mine).toHaveLength(1);
   });
 
   it('reuses the existing profile and workspace without writing again', async () => {
