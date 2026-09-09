@@ -1,5 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
+vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/request-rate-limit')>(),
+  requireMerchantRateLimit: vi.fn(),
+}));
 
 /* Server-action contracts for the Messenger control centre. The point of
    these tests is the authorization boundary: every mutation must prove the
@@ -91,6 +96,21 @@ beforeEach(() => {
 });
 
 describe('messenger server actions — authorization', () => {
+  it('blocks a limited owned shop before any mutation and gives actionable retry copy', async () => {
+    vi.mocked(requireMerchantRateLimit).mockRejectedValueOnce(new RequestRateLimitError(429, 12));
+    expect(await publishConfig(SITE.id)).toEqual({ ok: false, error: 'Too many requests. Please try again in 12 seconds.' });
+    expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('never charges a foreign shop bucket and fails closed on unavailable protection', async () => {
+    mocks.requireOwnedSite.mockRejectedValueOnce(new UnauthorizedError());
+    await publishConfig('foreign');
+    expect(requireMerchantRateLimit).not.toHaveBeenCalled();
+    vi.mocked(requireMerchantRateLimit).mockRejectedValueOnce(new RequestRateLimitError(503, 30));
+    expect(await publishConfig(SITE.id)).toEqual({ ok: false, error: 'Service temporarily unavailable. Please try again shortly.' });
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
   it('refuses every mutation when the caller is signed out', async () => {
     mocks.auth.mockResolvedValue({ userId: null });
 

@@ -8,6 +8,7 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { getTryOnOverview } from '@/lib/dashboard/overview-data';
 import { getOverviewCopy, type OverviewCopy } from '@/lib/dashboard/overview-copy';
 import { getDateLocale } from '@/lib/try-on/dashboard-copy';
+import { formatProviderCost } from '@/lib/dashboard/provider-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,11 +64,19 @@ export default async function DashboardOverviewPage() {
           </CardHeader>
           <CardContent className="grid gap-1">
             <p className="text-xl font-semibold text-foreground">
-              ${totals.spendLast7dUsd.toFixed(2)}
+              {formatProviderCost(totals.spendLast7dUsd, c.costUnreported)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {trend(c, totals.spendLast7dUsd, totals.spendPrev7dUsd)}
+              {totals.missingCostJobsLast7d > 0 || totals.missingCostJobsPrev7d > 0
+                ? c.spendComparisonUnavailable
+                : trend(c, totals.spendLast7dUsd ?? 0, totals.spendPrev7dUsd ?? 0)}
             </p>
+            {totals.missingCostJobsLast7d > 0 && (
+              <p className="text-xs text-muted-foreground">{c.missingProviderCosts(totals.missingCostJobsLast7d)}</p>
+            )}
+            {totals.missingCostJobsPrev7d > 0 && (
+              <p className="text-xs text-muted-foreground">{c.missingPreviousProviderCosts(totals.missingCostJobsPrev7d)}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -106,18 +115,19 @@ export default async function DashboardOverviewPage() {
         <CardContent>
           {/* Fixed-height columns so a quiet fortnight still reads as a timeline */}
           <div
-            className="flex h-28 items-end gap-1.5"
+            className="relative flex h-28 items-end gap-1.5"
             role="img"
             aria-label={c.dailyChartAriaLabel}
           >
             {dailySeries.map((d) => (
-              <div key={d.day} className="group relative flex h-full flex-1 flex-col justify-end">
+              <div key={d.day} className="group flex h-full flex-1 flex-col justify-end">
                 <div
                   className="rounded-t bg-foreground/70 transition-colors group-hover:bg-foreground"
                   style={{ height: `${Math.max(4, (d.jobs / maxDailyJobs) * 100)}%` }}
                 />
-                <span className="pointer-events-none absolute -top-6 start-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-foreground px-1.5 py-0.5 text-[10px] text-background group-hover:block rtl:translate-x-1/2">
-                  {d.jobs} · ${d.spendUsd.toFixed(2)}
+                <span className="pointer-events-none absolute bottom-full start-0 mb-1 hidden max-w-full whitespace-normal rounded bg-foreground px-1.5 py-0.5 text-[10px] text-background group-hover:block">
+                  {formatDay(d.day, dateLocale)} · {d.jobs} · {c.knownSpend}: {formatProviderCost(d.spendUsd, c.costUnreported)}
+                  {d.missingCostJobs > 0 && <span className="block">{c.missingProviderCosts(d.missingCostJobs)}</span>}
                 </span>
               </div>
             ))}
@@ -161,7 +171,12 @@ export default async function DashboardOverviewPage() {
                       </TableCell>
                       <TableCell className="text-end tabular-nums">{shop.jobsLast7d}</TableCell>
                       <TableCell className="text-end tabular-nums">
-                        ${shop.spendLast7dUsd.toFixed(2)}
+                        {formatProviderCost(shop.spendLast7dUsd, c.costUnreported)}
+                        {shop.missingCostJobsLast7d > 0 && (
+                          <span className="block whitespace-normal text-xs text-muted-foreground">
+                            {c.missingProviderCosts(shop.missingCostJobsLast7d)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {shop.lastJobAt

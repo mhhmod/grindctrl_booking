@@ -3,9 +3,12 @@
 import { revalidatePath } from 'next/cache';
 import { requireManagedTryOnShop } from '@/lib/shopify/shops';
 import { saveTryOnSettings } from '@/lib/try-on/settings';
+import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 
-export async function saveTryOnSettingsAction(formData: FormData) {
+export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok: true } | MerchantActionFailure> {
+  try {
   const shop = await requireManagedTryOnShop(formData.get('shop') ?? 'default');
+  await requireMerchantRateLimit(`shop:${shop}`);
   const loadingStepsRaw = String(formData.get('loading_steps') || '').trim();
   const loadingSteps = loadingStepsRaw
     ? loadingStepsRaw.split('\n').map((s) => s.trim()).filter(Boolean)
@@ -17,7 +20,7 @@ export async function saveTryOnSettingsAction(formData: FormData) {
   };
   const radius = Number(formData.get('radius_px'));
 
-  await saveTryOnSettings(shop, {
+  const saved = await saveTryOnSettings(shop, {
     buttonLabel: String(formData.get('button_label') || '').trim() || undefined,
     /* null rather than undefined: undefined means "leave as is", but a
        merchant clearing the Arabic field must actually clear it. */
@@ -45,6 +48,14 @@ export async function saveTryOnSettingsAction(formData: FormData) {
     disclaimerTextAr: String(formData.get('disclaimer_text_ar') || '').trim() || null,
     loadingSteps,
   });
+  if (!saved) return merchantActionFailure(null);
 
   revalidatePath('/dashboard/try-on');
+  return { ok: true };
+  } catch (error) {
+    if (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message)) {
+      return { ok: false, code: 'forbidden', message: 'You do not have permission to change this shop.' };
+    }
+    return merchantActionFailure(error);
+  }
 }

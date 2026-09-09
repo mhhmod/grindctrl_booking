@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import {
+  actionFailureLabel,
   getTryOnDashboardCopy,
   planStatusLabel,
   statusLabel,
   type TryOnDashboardCopy,
 } from '@/lib/try-on/dashboard-copy';
+
+describe('actionFailureLabel', () => {
+  it.each([undefined, NaN, Infinity])('uses a safe retry default for %s', (retryAfterSeconds) => {
+    const c = getTryOnDashboardCopy('en');
+    expect(actionFailureLabel(c, { ok: false, code: 'unavailable', message: 'private', retryAfterSeconds }))
+      .toBe(c.actionUnavailable(30));
+  });
+
+  it.each([[0, 1], [-20, 1], [2.4, 3]])('normalizes retry seconds %s to %s', (input, expected) => {
+    const c = getTryOnDashboardCopy('ar');
+    expect(actionFailureLabel(c, { ok: false, code: 'rate_limited', message: 'private', retryAfterSeconds: input }))
+      .toBe(c.actionRateLimited(expected));
+  });
+});
 
 /* Types already guarantee both dictionaries satisfy the interface at build
    time. This catches the case types cannot: a dictionary assembled or spread

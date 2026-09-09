@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/dashboard/action-authorization', () => ({ authorizeDashboardAction: vi.fn(async () => null) }));
+
 vi.mock('@/lib/adapters/domains', async () => {
   const actual = await vi.importActual<typeof import('@/lib/adapters/domains')>('@/lib/adapters/domains');
   return {
@@ -51,6 +53,7 @@ describe('domain actions', () => {
     });
     vi.mocked(removeDomain).mockResolvedValue(true);
     vi.mocked(listDomains)
+      .mockResolvedValueOnce([{ id: 'domain_1', widget_site_id: 'site_1', domain: 'example.com', verification_status: 'pending' }])
       .mockResolvedValueOnce([
         {
           id: 'domain_1',
@@ -59,6 +62,7 @@ describe('domain actions', () => {
           verification_status: 'verified',
         },
       ])
+      .mockResolvedValueOnce([{ id: 'domain_1', widget_site_id: 'site_1', domain: 'example.com', verification_status: 'verified' }])
       .mockResolvedValueOnce([]);
 
     const updateFormData = new FormData();

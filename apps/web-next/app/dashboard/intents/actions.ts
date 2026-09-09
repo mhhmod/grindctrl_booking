@@ -2,6 +2,7 @@
 
 import type { IntentEditorValues, IntentsState } from '@/app/dashboard/intents/state';
 import { createIntent, deleteIntent, listIntents, updateIntent } from '@/lib/adapters/intents';
+import { authorizeDashboardAction } from '@/lib/dashboard/action-authorization';
 import { INTENT_ACTION_OPTIONS } from '@/lib/intents';
 
 function getIntentValuesFromFormData(formData: FormData): IntentEditorValues {
@@ -48,7 +49,7 @@ async function buildSuccessState(clerkUserId: string, siteId: string, message: s
 
 async function buildErrorState(clerkUserId: string, siteId: string, message: string, fieldError?: string | null): Promise<IntentsState> {
   return {
-    intents: await listIntents(clerkUserId, siteId),
+    intents: await listIntents(clerkUserId, siteId).catch(() => []),
     message,
     messageType: 'error',
     fieldError: fieldError ?? null,
@@ -56,6 +57,8 @@ async function buildErrorState(clerkUserId: string, siteId: string, message: str
 }
 
 export async function createIntentAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<IntentsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { intents: [], message: authorizationError, messageType: 'error', fieldError: null };
   const values = getIntentValuesFromFormData(formData);
   const error = validateIntentValues(values);
 
@@ -72,13 +75,15 @@ export async function createIntentAction(context: { clerkUserId: string; siteId:
       externalUrl: values.actionType === 'external_link' ? values.externalUrl : null,
       sortOrder: Number(values.sortOrder),
     });
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Intent created.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to create intent.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Intent created.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to create intent. Please refresh before trying again.');
   }
 }
 
 export async function updateIntentAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<IntentsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { intents: [], message: authorizationError, messageType: 'error', fieldError: null };
   const intentId = String(formData.get('intentId') ?? '');
   const values = getIntentValuesFromFormData(formData);
   const error = !intentId ? 'Choose an intent to update.' : validateIntentValues(values);
@@ -88,6 +93,10 @@ export async function updateIntentAction(context: { clerkUserId: string; siteId:
   }
 
   try {
+    const intents = await listIntents(context.clerkUserId, context.siteId);
+    if (!intents.some((intent) => intent.id === intentId && intent.widget_site_id === context.siteId)) {
+      return { intents, message: 'Choose an intent belonging to this site.', messageType: 'error', fieldError: null };
+    }
     await updateIntent(context.clerkUserId, intentId, {
       label: values.label,
       icon: values.icon,
@@ -96,13 +105,15 @@ export async function updateIntentAction(context: { clerkUserId: string; siteId:
       externalUrl: values.actionType === 'external_link' ? values.externalUrl : '',
       sortOrder: Number(values.sortOrder),
     });
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Intent updated.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to update intent.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Intent updated.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to update intent. Please refresh before trying again.');
   }
 }
 
 export async function deleteIntentAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<IntentsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { intents: [], message: authorizationError, messageType: 'error', fieldError: null };
   const intentId = String(formData.get('intentId') ?? '');
 
   if (!intentId) {
@@ -110,17 +121,28 @@ export async function deleteIntentAction(context: { clerkUserId: string; siteId:
   }
 
   try {
+    const intents = await listIntents(context.clerkUserId, context.siteId);
+    if (!intents.some((intent) => intent.id === intentId && intent.widget_site_id === context.siteId)) {
+      return { intents, message: 'Choose an intent belonging to this site.', messageType: 'error', fieldError: null };
+    }
     await deleteIntent(context.clerkUserId, intentId);
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Intent deleted.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to delete intent.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Intent deleted.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to delete intent. Please refresh before trying again.');
   }
 }
 
 export async function reorderIntentAction(context: { clerkUserId: string; siteId: string }, formData: FormData): Promise<IntentsState> {
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { intents: [], message: authorizationError, messageType: 'error', fieldError: null };
   const intentId = String(formData.get('intentId') ?? '');
   const direction = String(formData.get('direction') ?? '');
-  const intents = await listIntents(context.clerkUserId, context.siteId);
+  let intents;
+  try {
+    intents = await listIntents(context.clerkUserId, context.siteId);
+  } catch {
+    return { intents: [], message: 'Unable to load intents. Please try again shortly.', messageType: 'error', fieldError: null };
+  }
   const index = intents.findIndex((intent) => intent.id === intentId);
 
   if (!intentId || !['up', 'down'].includes(direction) || index === -1) {
@@ -138,8 +160,8 @@ export async function reorderIntentAction(context: { clerkUserId: string; siteId
   try {
     await updateIntent(context.clerkUserId, current.id, { sortOrder: Number(target.sort_order ?? swapIndex) });
     await updateIntent(context.clerkUserId, target.id, { sortOrder: Number(current.sort_order ?? index) });
-    return buildSuccessState(context.clerkUserId, context.siteId, 'Intent order updated.');
-  } catch (error) {
-    return buildErrorState(context.clerkUserId, context.siteId, error instanceof Error ? error.message : 'Unable to reorder intents.');
+    return await buildSuccessState(context.clerkUserId, context.siteId, 'Intent order updated.');
+  } catch {
+    return buildErrorState(context.clerkUserId, context.siteId, 'Unable to reorder intents. Please refresh before trying again.');
   }
 }

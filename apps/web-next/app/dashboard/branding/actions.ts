@@ -2,6 +2,7 @@
 
 import type { BrandingFormState } from '@/app/dashboard/branding/state';
 import { normalizeSettingsJson, updateWidgetSite } from '@/lib/adapters/widgetSites';
+import { authorizeDashboardAction } from '@/lib/dashboard/action-authorization';
 import type { JsonObject, SettingsJson } from '@/lib/types';
 import { getBrandingViewModel, getBrandingViewModelFromFormData, mergeBrandingViewModel, type BrandingViewModel } from '@/lib/view-models/branding';
 
@@ -10,6 +11,8 @@ export async function saveBrandingAction(
   formData: FormData,
 ): Promise<BrandingFormState> {
   const values = getBrandingViewModelFromFormData(formData);
+  const authorizationError = await authorizeDashboardAction(context);
+  if (authorizationError) return { status: 'error', message: authorizationError, values };
 
   try {
     const nextSettings = mergeBrandingViewModel(context.currentSettings, values);
@@ -26,10 +29,10 @@ export async function saveBrandingAction(
       message: 'Branding saved to settings_json.',
       values: getBrandingViewModel(normalizedSettings),
     };
-  } catch (error) {
+  } catch {
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unable to save branding.',
+      message: 'Unable to save branding. Please try again shortly.',
       values,
     };
   }

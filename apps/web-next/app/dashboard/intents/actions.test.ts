@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+vi.mock('@/lib/dashboard/action-authorization', () => ({ authorizeDashboardAction: vi.fn(async () => null) }));
+
 vi.mock('@/lib/adapters/intents', async () => {
   const actual = await vi.importActual<typeof import('@/lib/adapters/intents')>('@/lib/adapters/intents');
   return {
@@ -19,6 +21,7 @@ describe('intent actions', () => {
     vi.mocked(createIntent).mockResolvedValue({ id: 'intent_1', widget_site_id: 'site_1', label: 'Talk to sales', action_type: 'send_message', sort_order: 0 });
     vi.mocked(updateIntent).mockResolvedValue({ id: 'intent_1', widget_site_id: 'site_1', label: 'Book a demo', action_type: 'external_link', sort_order: 2 });
     vi.mocked(listIntents)
+      .mockResolvedValueOnce([{ id: 'intent_1', widget_site_id: 'site_1', label: 'Talk to sales', action_type: 'send_message', sort_order: 0 }])
       .mockResolvedValueOnce([{ id: 'intent_1', widget_site_id: 'site_1', label: 'Talk to sales', action_type: 'send_message', sort_order: 0 }])
       .mockResolvedValueOnce([{ id: 'intent_1', widget_site_id: 'site_1', label: 'Book a demo', action_type: 'external_link', sort_order: 2 }]);
 
@@ -59,6 +62,7 @@ describe('intent actions', () => {
         { id: 'intent_2', widget_site_id: 'site_1', label: 'Second', action_type: 'send_message', sort_order: 0 },
         { id: 'intent_1', widget_site_id: 'site_1', label: 'First', action_type: 'send_message', sort_order: 1 },
       ])
+      .mockResolvedValueOnce([{ id: 'intent_1', widget_site_id: 'site_1', label: 'First', action_type: 'send_message', sort_order: 1 }])
       .mockResolvedValueOnce([]);
     vi.mocked(updateIntent).mockResolvedValue({ id: 'intent_1', widget_site_id: 'site_1', label: 'First', action_type: 'send_message', sort_order: 1 });
 
