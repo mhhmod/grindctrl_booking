@@ -2,9 +2,10 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { markTryOnShopUninstalled, recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { deleteShopToken } from '@/lib/shopify/tokens';
+import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
 
-/* Mandatory Shopify webhooks receiver (app/uninstalled, scopes_update).
-   Settings survive reinstalls; only the shop lifecycle record changes. */
+/* Shopify lifecycle receiver and durable mandatory privacy processing.
+   Settings survive lifecycle events; privacy requests use the gated processor. */
 export async function POST(request: NextRequest) {
   const secret = process.env.SHOPIFY_API_SECRET;
   const hmacHeader = request.headers.get('x-shopify-hmac-sha256') ?? '';
@@ -25,12 +26,38 @@ export async function POST(request: NextRequest) {
   const shop = request.headers.get('x-shopify-shop-domain');
   let recorded = true;
 
+  if (topic === 'customers/data_request' || topic === 'customers/redact' || topic === 'shop/redact') {
+    const webhookId = request.headers.get('x-shopify-webhook-id');
+    if (!webhookId?.trim() || !shop?.trim()) {
+      return NextResponse.json({ error: 'Missing privacy request headers' }, { status: 400 });
+    }
+    let payload: unknown;
+    try {
+      payload = JSON.parse(body);
+      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Invalid payload');
+    } catch {
+      return NextResponse.json({ error: 'Invalid privacy request payload' }, { status: 400 });
+    }
+    try {
+      await processShopifyPrivacyRequest({ webhookId, topic, shopDomain: shop, payload });
+      return NextResponse.json({ ok: true });
+    } catch {
+      // The processor rejects only before durable recording succeeds.
+      console.error('[shopify] privacy webhook recording unavailable', { topic });
+      return NextResponse.json(
+        { error: 'Privacy request recording unavailable' },
+        { status: 503, headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' } },
+      );
+    }
+  }
+
   if (topic === 'app/uninstalled') {
     recorded = await markTryOnShopUninstalled(shop);
     // A token we can no longer use is a credential we should no longer
-    // hold. Failing to drop it must not fail the webhook, or Shopify
-    // retries an uninstall we already processed.
-    await deleteShopToken(String(shop ?? ''));
+    // hold. Do not acknowledge a failed cleanup: Shopify must retry.
+    // Deleting an already-absent token is an idempotent success.
+    const tokenDeleted = await deleteShopToken(String(shop ?? ''));
+    recorded = recorded && tokenDeleted;
   } else if (topic === 'app/scopes_update') {
     recorded = await recordTryOnShopSeen(shop);
   }
