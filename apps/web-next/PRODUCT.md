@@ -3,7 +3,9 @@
 register: product
 
 ## What this is
-GrindCTRL Try-On: a done-for-you AI virtual try-on service for Shopify clothing stores. Shoppers upload a photo on a product page and see themselves wearing the actual product. Sold as a managed service (agency model), not self-serve SaaS.
+GrindCTRL Try-On: a done-for-you AI virtual try-on service for Shopify clothing stores. Shoppers upload a photo on a product page and see themselves wearing the actual product. Sold as self-serve SaaS through Shopify's own billing — merchants pick a plan and activate it themselves, no manual credit grants.
+
+**2026-09-09 update:** earlier production-readiness work confirmed "managed service, operator-only credit grants" as the launch model. That has since been reversed in favor of full self-service; this file reflects the current direction. Building it requires Shopify App Pricing (subscription creation, confirmation redirect, and Partner API billing reconciliation) — not yet implemented (see the production-readiness checkpoint's gate 2).
 
 ## Users
 - **Shoppers** (end users): on a merchant's product page, mobile-heavy, want a fast "how would this look on me" moment, then buy. English and Arabic.
