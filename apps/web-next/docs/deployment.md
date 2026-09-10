@@ -296,19 +296,33 @@ In the Hostinger DNS zone for `grindctrl.cloud`:
 
 ## Rollback
 
-If a deploy breaks production:
+**2026-09-10: the procedure below (pm2 + `git reset --hard` + local rebuild) is
+wrong for the current pipeline and must not be used.** Production does not run
+`npm run build` on the VPS or manage the process with pm2 directly — CI builds
+a Docker image, pushes it to `ghcr.io`, and `deploy-next.sh` pulls and restarts
+a container (see `deploy-next.yml`'s `build-and-push` and `deploy` jobs). A
+`git reset --hard` on the VPS changes files nothing reads; the running
+container is unaffected either way.
+
+What's verified from the CI workflow itself: `build-and-push` tags every image
+with both `:latest` and `:<git-sha>` in `ghcr.io/<repo>-web-next`, so every
+past deploy's exact image is still pullable by commit SHA. The correct
+rollback shape is:
 
 ```bash
-# On VPS
-cd /root/grindctrl-booking
-git log --oneline -5           # Find the last good commit
-git reset --hard <commit-sha>  # Revert to it
-
-cd apps/web-next
-npm ci
-npm run build
-pm2 restart grindctrl-web
+# On VPS — pull and run the previous known-good commit's image instead of latest
+docker pull ghcr.io/mhhmod/grindctrl_booking-web-next:<previous-good-sha>
+# then restart whatever currently runs the container (docker-compose service,
+# plain `docker run`, etc.) pointed at that tag instead of :latest
 ```
+
+**Not yet verified: the exact command that actually restarts the container on
+this VPS** (`deploy-next.sh`'s real current content, and whether it's a
+docker-compose service or a bare `docker run`) — this doc's own 2026-09-05
+banner already flags that no verified rollback command exists in this
+checkout. Read `/root/grindctrl-next/deploy-next.sh` on the VPS directly
+before a real incident, confirm the exact restart command against it, and
+paste the verified version here — don't guess one under pressure.
 
 ---
 
