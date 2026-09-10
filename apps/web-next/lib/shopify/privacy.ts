@@ -99,9 +99,12 @@ async function redactShop(client: ServiceClient, shop: string, siteId?: string):
     throwRpcError(result.error);
   }
   // These subsystems have no widget_sites FK. Zero affected rows is success.
-  // Ledger entries must be removed before jobs because job_id uses ON DELETE RESTRICT.
+  // Intentionally retain tryon_credit_ledger as GrindCTRL's merchant billing audit
+  // trail for accounting, tax, and legal retention obligations, not customer PII.
+  // Its tryon_credit_ledger_no_update_or_delete trigger calls
+  // reject_tryon_credit_ledger_mutation() to reject every DELETE and UPDATE.
+  // Exclusion is intentional retention, not an oversight; do not add it here.
   for (const [table, column] of [
-    ['tryon_credit_ledger', 'shop_domain'],
     ['tryon_jobs', 'shop'],
     ['tryon_settings', 'shop'],
     ['tryon_subscriptions', 'shop_domain'],

@@ -61,6 +61,10 @@ function query(table: string) {
       events.push(`${table}:${action}`);
       const error = errors[`${table}:${action}`]?.shift();
       if (error) return { data: null, error: { message: error } };
+      // Match the live tryon_credit_ledger_no_update_or_delete trigger.
+      if (table === 'tryon_credit_ledger' && (action === 'delete' || action === 'update')) {
+        return { data: null, error: { message: 'tryon_credit_ledger is append-only' } };
+      }
       const rows = tables[table] ??= [];
       let matches = rows.filter((row) => filters.every((filter) => filter(row)));
       if (action === 'upsert') {
@@ -71,11 +75,6 @@ function query(table: string) {
         }
       } else if (action === 'update') matches.forEach((row) => Object.assign(row, values));
       else if (action === 'delete') {
-        // Match tryon_credit_ledger.job_id's ON DELETE RESTRICT FK.
-        if (table === 'tryon_jobs' && (tables.tryon_credit_ledger ?? []).some((entry) =>
-          entry.job_id != null && matches.some((job) => job.id === entry.job_id))) {
-          return { data: null, error: { code: '23503', message: 'tryon_credit_ledger.job_id still references tryon_jobs.id' } };
-        }
         tables[table] = rows.filter((row) => !matches.includes(row));
       }
       else {
@@ -184,21 +183,30 @@ describe('durable Shopify privacy requests', () => {
     expect(tables.widget_visitors.map((row) => row.id)).toEqual(['different']);
   });
 
-  it('removes every shop attachment before deleting the site and cleans separate shop tables', async () => {
+  it('removes every shop attachment before deleting the site and cleans separate shop tables while retaining the ledger', async () => {
     tables.messenger_attachments = Array.from({ length: 5 }, (_, i) => ({ id: `attachment-${i}`, widget_site_id: 'site-1', storage_path: `site-1/${i}.png` }));
-    for (const table of ['tryon_jobs', 'tryon_credit_ledger', 'tryon_subscriptions', 'shopify_shop_tokens', 'tryon_shops']) {
-      const column = table === 'tryon_jobs' ? 'shop' : 'shop_domain';
+    const deletedTables = ['tryon_jobs', 'tryon_settings', 'tryon_subscriptions', 'shopify_shop_tokens', 'tryon_shops'];
+    for (const table of deletedTables) {
+      const column = table === 'tryon_jobs' || table === 'tryon_settings' ? 'shop' : 'shop_domain';
       tables[table] = [{ [column]: SHOP }, { [column]: 'other.myshopify.com' }];
     }
+    tables.tryon_credit_ledger = [{ shop_domain: SHOP }, { shop_domain: 'other.myshopify.com' }];
+    const ledgerBefore = structuredClone(tables.tryon_credit_ledger);
     await processShopifyPrivacyRequest({ ...INPUT, topic: 'shop/redact' });
     expect(remove.mock.calls.flatMap(([paths]) => paths)).toEqual(Array.from({ length: 5 }, (_, i) => `site-1/${i}.png`));
     expect(events.lastIndexOf('storage:remove')).toBeLessThan(events.indexOf('widget_sites:delete'));
     expect(tables.widget_sites).toEqual([{ id: 'site-other', domain: 'other.myshopify.com' }]);
-    for (const table of ['tryon_jobs', 'tryon_credit_ledger', 'tryon_subscriptions', 'shopify_shop_tokens', 'tryon_shops']) expect(tables[table]).toHaveLength(1);
+    for (const table of deletedTables) {
+      const column = table === 'tryon_jobs' || table === 'tryon_settings' ? 'shop' : 'shop_domain';
+      expect(tables[table]).toEqual([{ [column]: 'other.myshopify.com' }]);
+    }
+    expect(tables.tryon_credit_ledger).toEqual(ledgerBefore);
+    expect(events).not.toContain('tryon_credit_ledger:delete');
+    expect(events).not.toContain('tryon_credit_ledger:update');
     expect(recorded().status).toBe('completed');
   });
 
-  it('completes shop/redact when debit and refund ledger rows reference the shop jobs', async () => {
+  it('completes shop/redact while retaining debit and refund ledger rows unchanged', async () => {
     const otherJob = { id: 'job-other', shop: 'other.myshopify.com' };
     const otherDebit = { id: 'debit-other', shop_domain: 'other.myshopify.com', job_id: otherJob.id, entry_type: 'debit' };
     tables.tryon_jobs = [{ id: 'job-1', shop: SHOP }, otherJob];
@@ -207,12 +215,15 @@ describe('durable Shopify privacy requests', () => {
       { id: 'refund-1', shop_domain: SHOP, job_id: 'job-1', entry_type: 'refund', reverses_entry_id: 'debit-1' },
       otherDebit,
     ];
+    const ledgerBefore = structuredClone(tables.tryon_credit_ledger);
 
     await processShopifyPrivacyRequest({ ...INPUT, topic: 'shop/redact' });
 
     expect(recorded()).toMatchObject({ status: 'completed', attempts: 1, processed_at: expect.any(String), last_error: null });
     expect(tables.tryon_jobs).toEqual([otherJob]);
-    expect(tables.tryon_credit_ledger).toEqual([otherDebit]);
+    expect(tables.tryon_credit_ledger).toEqual(ledgerBefore);
+    expect(events).not.toContain('tryon_credit_ledger:delete');
+    expect(events).not.toContain('tryon_credit_ledger:update');
     expect(sendAlert).not.toHaveBeenCalled();
   });
 
