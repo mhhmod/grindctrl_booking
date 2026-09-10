@@ -99,9 +99,11 @@ async function redactShop(client: ServiceClient, shop: string, siteId?: string):
     throwRpcError(result.error);
   }
   // These subsystems have no widget_sites FK. Zero affected rows is success.
+  // Ledger entries must be removed before jobs because job_id uses ON DELETE RESTRICT.
   for (const [table, column] of [
-    ['tryon_jobs', 'shop'],
     ['tryon_credit_ledger', 'shop_domain'],
+    ['tryon_jobs', 'shop'],
+    ['tryon_settings', 'shop'],
     ['tryon_subscriptions', 'shop_domain'],
     ['shopify_shop_tokens', 'shop_domain'],
     ['tryon_shops', 'shop_domain'],

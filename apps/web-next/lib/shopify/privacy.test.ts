@@ -70,7 +70,14 @@ function query(table: string) {
           rows.push(row); matches = [row];
         }
       } else if (action === 'update') matches.forEach((row) => Object.assign(row, values));
-      else if (action === 'delete') tables[table] = rows.filter((row) => !matches.includes(row));
+      else if (action === 'delete') {
+        // Match tryon_credit_ledger.job_id's ON DELETE RESTRICT FK.
+        if (table === 'tryon_jobs' && (tables.tryon_credit_ledger ?? []).some((entry) =>
+          entry.job_id != null && matches.some((job) => job.id === entry.job_id))) {
+          return { data: null, error: { code: '23503', message: 'tryon_credit_ledger.job_id still references tryon_jobs.id' } };
+        }
+        tables[table] = rows.filter((row) => !matches.includes(row));
+      }
       else {
         selections.push({ table, columns });
         matches = matches.slice(start, end + 1);
@@ -189,6 +196,36 @@ describe('durable Shopify privacy requests', () => {
     expect(tables.widget_sites).toEqual([{ id: 'site-other', domain: 'other.myshopify.com' }]);
     for (const table of ['tryon_jobs', 'tryon_credit_ledger', 'tryon_subscriptions', 'shopify_shop_tokens', 'tryon_shops']) expect(tables[table]).toHaveLength(1);
     expect(recorded().status).toBe('completed');
+  });
+
+  it('completes shop/redact when debit and refund ledger rows reference the shop jobs', async () => {
+    const otherJob = { id: 'job-other', shop: 'other.myshopify.com' };
+    const otherDebit = { id: 'debit-other', shop_domain: 'other.myshopify.com', job_id: otherJob.id, entry_type: 'debit' };
+    tables.tryon_jobs = [{ id: 'job-1', shop: SHOP }, otherJob];
+    tables.tryon_credit_ledger = [
+      { id: 'debit-1', shop_domain: SHOP, job_id: 'job-1', entry_type: 'debit' },
+      { id: 'refund-1', shop_domain: SHOP, job_id: 'job-1', entry_type: 'refund', reverses_entry_id: 'debit-1' },
+      otherDebit,
+    ];
+
+    await processShopifyPrivacyRequest({ ...INPUT, topic: 'shop/redact' });
+
+    expect(recorded()).toMatchObject({ status: 'completed', attempts: 1, processed_at: expect.any(String), last_error: null });
+    expect(tables.tryon_jobs).toEqual([otherJob]);
+    expect(tables.tryon_credit_ledger).toEqual([otherDebit]);
+    expect(sendAlert).not.toHaveBeenCalled();
+  });
+
+  it('deletes only the redacted shop settings, even without a widget site', async () => {
+    tables.widget_sites = [];
+    const defaults = { shop: 'default', button_label: 'Try it on' };
+    const otherSettings = { shop: 'other.myshopify.com', button_label: 'Other shop' };
+    tables.tryon_settings = [defaults, { shop: SHOP, button_label: 'Demo shop' }, otherSettings];
+
+    await processShopifyPrivacyRequest({ ...INPUT, topic: 'shop/redact' });
+
+    expect(recorded().status).toBe('completed');
+    expect(tables.tryon_settings).toEqual([defaults, otherSettings]);
   });
 
   it.each(['customers/redact', 'shop/redact'] as const)('treats an already-absent %s target as success', async (topic) => {
