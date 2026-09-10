@@ -28,11 +28,13 @@ import type {
 import { cn } from '@/lib/utils';
 import { getPricingCopy, type PricingCopy } from './pricing-copy';
 
-function formatNumber(value: number, locale: 'en' | 'ar'): string {
-  return new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US').format(value);
+export function formatNumber(value: number, locale: 'en' | 'ar'): string {
+  return new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
+    numberingSystem: 'latn',
+  }).format(value);
 }
 
-function formatCurrency(
+export function formatCurrency(
   value: number,
   currency: string,
   locale: 'en' | 'ar',
@@ -40,6 +42,7 @@ function formatCurrency(
 ): string {
   try {
     return new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
+      numberingSystem: 'latn',
       style: 'currency',
       currency,
       minimumFractionDigits: fractionDigits,
@@ -203,6 +206,7 @@ export function PricingPageContent({
   );
   const launchRenders = launchPlan ? launchPlan.rendersIncluded.toLocaleString(
     locale === 'ar' ? 'ar-EG' : 'en-US',
+    { numberingSystem: 'latn' },
   ) : null;
   /* Priced from the same row the card shows, so this sentence cannot drift from
      the plan it describes or from the currency the page is in. */

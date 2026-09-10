@@ -4,6 +4,7 @@ import { getInitialIntentEditorValues, getInitialIntentsState } from '@/app/dash
 import { IntentsManager } from '@/components/dashboard/intents-manager';
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { listIntents } from '@/lib/adapters/intents';
 import { parseIntentsListQuery } from '@/lib/dashboard/intents-list-query';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
@@ -17,6 +18,7 @@ async function resolveSearchParams(searchParams?: Promise<SearchParams>) {
 }
 
 export default async function DashboardRoutingPage({ searchParams }: Props) {
+  const locale = await getRequestLocale();
   const params = await resolveSearchParams(searchParams);
   const clerkUserId = await requireDashboardUser('/dashboard/routing');
   const bundle = await getWorkspaceBundle(clerkUserId);
@@ -46,6 +48,7 @@ export default async function DashboardRoutingPage({ searchParams }: Props) {
         reorderIntentAction={reorderIntentAction.bind(null, context)}
         selectedSiteId={site.id}
         listQuery={listQuery}
+        locale={locale}
       />
     </div>
   );

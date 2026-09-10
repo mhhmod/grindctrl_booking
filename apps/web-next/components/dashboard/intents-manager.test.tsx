@@ -182,3 +182,27 @@ describe('IntentsManager', () => {
     await waitFor(() => expect(screen.getByText('dashboard_create_intent failed')).toBeInTheDocument());
   });
 });
+
+describe('IntentsManager locale copy', () => {
+  it.each([
+    ['en', 'Widget intents', 'Action guidance'],
+    ['ar', 'نوايا الأداة', 'إرشادات الإجراءات'],
+  ] as const)('renders %s copy', (locale, title, guidanceTitle) => {
+    render(
+      <IntentsManager
+        initialState={initialState}
+        initialValues={initialValues}
+        createIntentAction={vi.fn().mockResolvedValue(initialState)}
+        updateIntentAction={vi.fn().mockResolvedValue(initialState)}
+        deleteIntentAction={vi.fn().mockResolvedValue(initialState)}
+        reorderIntentAction={vi.fn().mockResolvedValue(initialState)}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
+        locale={locale}
+      />,
+    );
+
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(guidanceTitle)).toBeInTheDocument();
+  });
+});

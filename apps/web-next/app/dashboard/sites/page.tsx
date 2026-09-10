@@ -10,6 +10,7 @@ import { InstallPageContent } from '@/components/dashboard/install-page-content'
 import { SiteSelector } from '@/components/dashboard/site-selector';
 import { Button } from '@/components/ui/button';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
+import { getRequestLocale } from '@/lib/auth/locale';
 import { listDomains } from '@/lib/adapters/domains';
 import { buildCanonicalInstallSnippet, buildCspInstallSnippet } from '@/lib/adapters/install';
 import { getInstallVerification } from '@/lib/adapters/installVerification';
@@ -38,6 +39,7 @@ function normalizeTab(value: string | string[] | undefined): SitesTab {
 }
 
 export default async function DashboardSitesPage({ searchParams }: Props) {
+  const locale = await getRequestLocale();
   const params = await resolveSearchParams(searchParams);
   const tab = normalizeTab(params.tab);
   const clerkUserId = await requireDashboardUser('/dashboard/sites');
@@ -161,6 +163,7 @@ export default async function DashboardSitesPage({ searchParams }: Props) {
           allowLocalhost={settings.security.allow_localhost}
           selectedSiteId={site.id}
           listQuery={domainsQuery}
+          locale={locale}
         />
       ) : null}
     </div>

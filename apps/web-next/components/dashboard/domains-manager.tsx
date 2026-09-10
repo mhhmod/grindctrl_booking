@@ -12,16 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DOMAIN_STATUS_OPTIONS, getDomainStatusTone, isValidDomainInput, normalizeDomainInput } from '@/lib/domains';
 import { DOMAINS_PAGE_SIZE_OPTIONS, DOMAINS_SORT_OPTIONS, type DomainsListQuery, resolveDomainsList } from '@/lib/dashboard/domains-list-query';
+import { getDomainsCopy } from '@/lib/dashboard/domains-copy';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 const inputClassName = 'h-9 rounded-4xl';
 const selectClassName = 'h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
-
-const DOMAIN_SORT_LABELS: Record<(typeof DOMAINS_SORT_OPTIONS)[number], string> = {
-  domain_asc: 'Domain (A-Z)',
-  domain_desc: 'Domain (Z-A)',
-  status_asc: 'Status (A-Z)',
-  status_desc: 'Status (Z-A)',
-};
 
 export function DomainsManager({
   initialState,
@@ -31,6 +26,7 @@ export function DomainsManager({
   allowLocalhost,
   selectedSiteId,
   listQuery,
+  locale = 'en',
 }: {
   initialState: DomainsState;
   addDomainAction: (formData: FormData) => Promise<DomainsState>;
@@ -39,6 +35,7 @@ export function DomainsManager({
   allowLocalhost: boolean;
   selectedSiteId: string;
   listQuery: DomainsListQuery;
+  locale?: SiteLocale;
 }) {
   return (
     <DomainsManagerInner
@@ -50,6 +47,7 @@ export function DomainsManager({
       allowLocalhost={allowLocalhost}
       selectedSiteId={selectedSiteId}
       listQuery={listQuery}
+      locale={locale}
     />
   );
 }
@@ -62,6 +60,7 @@ function DomainsManagerInner({
   allowLocalhost,
   selectedSiteId,
   listQuery,
+  locale,
 }: {
   initialState: DomainsState;
   addDomainAction: (formData: FormData) => Promise<DomainsState>;
@@ -70,7 +69,9 @@ function DomainsManagerInner({
   allowLocalhost: boolean;
   selectedSiteId: string;
   listQuery: DomainsListQuery;
+  locale: SiteLocale;
 }) {
+  const c = getDomainsCopy(locale);
   const [state, setState] = useState(initialState);
   const [domainDraft, setDomainDraft] = useState('');
   const [inlineError, setInlineError] = useState<string | null>(initialState.fieldError);
@@ -119,7 +120,7 @@ function DomainsManagerInner({
   const submitAddDomain = () => {
     const normalized = normalizeDomainInput(domainDraft);
     if (!isValidDomainInput(normalized)) {
-      setInlineError('Enter a valid hostname like example.com.');
+      setInlineError(c.invalidHostname);
       return;
     }
 
@@ -148,20 +149,20 @@ function DomainsManagerInner({
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <CardTitle>Allowed domains</CardTitle>
-            <CardDescription>Manage the hostnames that can run the public widget for this site.</CardDescription>
+            <CardTitle>{c.allowedDomains}</CardTitle>
+            <CardDescription>{c.allowedDomainsDescription}</CardDescription>
           </div>
-          <Badge variant="secondary" className="shrink-0">Real backend contract</Badge>
+          <Badge variant="secondary" className="shrink-0">{c.realBackendContract}</Badge>
         </CardHeader>
 
         <CardContent>
           <div className="rounded-lg border bg-muted/10 p-4">
-            <Label htmlFor="domain">Add domain</Label>
+            <Label htmlFor="domain">{c.addDomain}</Label>
             <div className="mt-2 flex flex-col gap-3 sm:flex-row">
               <Input
                 id="domain"
                 name="domain"
-                placeholder="example.com"
+                placeholder={c.hostnamePlaceholder}
                 aria-invalid={inlineError ? 'true' : 'false'}
                 aria-describedby={inlineError ? 'domain-inline-error' : undefined}
                 className={inputClassName}
@@ -178,52 +179,52 @@ function DomainsManagerInner({
                 disabled={(isPending && pendingAction === 'add') || !domainDraftHasValue}
                 onClick={submitAddDomain}
               >
-                {isPending && pendingAction === 'add' ? 'Adding...' : 'Add domain'}
+                {isPending && pendingAction === 'add' ? c.adding : c.addDomain}
               </Button>
             </div>
-            <p className="mt-3 text-sm text-muted-foreground">Enter a bare hostname only. No protocol, port, path, or wildcard. `localhost` and `127.0.0.1` are treated as development hosts.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{c.hostnameHelp}</p>
             {inlineError ? <p id="domain-inline-error" className="mt-3 text-sm text-destructive">{inlineError}</p> : null}
           </div>
 
           <DashboardFormFeedback
             className="mt-4"
             isPending={isPending}
-            pendingMessage="Saving domain changes..."
+            pendingMessage={c.savingChanges}
             message={state.message}
             tone={state.messageType}
           />
 
           <form method="get" action="/dashboard/domains" className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_220px_120px_auto] md:items-end">
             <div className="space-y-2">
-              <Label htmlFor="domain-query">Search domains</Label>
-              <Input id="domain-query" name="q" defaultValue={listQuery.q} placeholder="Find by domain or status" />
+              <Label htmlFor="domain-query">{c.searchDomains}</Label>
+              <Input id="domain-query" name="q" defaultValue={listQuery.q} placeholder={c.searchPlaceholder} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="domain-status-filter">Status filter</Label>
+              <Label htmlFor="domain-status-filter">{c.statusFilter}</Label>
               <select id="domain-status-filter" name="status" className={selectClassName} defaultValue={listQuery.status}>
-                <option value="all">All statuses</option>
+                <option value="all">{c.allStatuses}</option>
                 {DOMAIN_STATUS_OPTIONS.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {c.statusLabels[status]}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="domain-sort">Sort by</Label>
+              <Label htmlFor="domain-sort">{c.sortBy}</Label>
               <select id="domain-sort" name="sort" className={selectClassName} defaultValue={listQuery.sort}>
                 {DOMAINS_SORT_OPTIONS.map((sort) => (
                   <option key={sort} value={sort}>
-                    {DOMAIN_SORT_LABELS[sort]}
+                    {c.sortLabels[sort]}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="domain-page-size">Rows</Label>
+              <Label htmlFor="domain-page-size">{c.rows}</Label>
               <select id="domain-page-size" name="pageSize" className={selectClassName} defaultValue={String(listQuery.pageSize)}>
                 {DOMAINS_PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size}>
@@ -234,9 +235,9 @@ function DomainsManagerInner({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="submit">Apply</Button>
+              <Button type="submit">{c.apply}</Button>
               <Button asChild type="button" variant="outline">
-                <Link href={buildDomainsHref({ q: '', status: 'all', sort: 'domain_asc', page: 1, pageSize: 10 })}>Clear</Link>
+                <Link href={buildDomainsHref({ q: '', status: 'all', sort: 'domain_asc', page: 1, pageSize: 10 })}>{c.clear}</Link>
               </Button>
             </div>
 
@@ -246,21 +247,14 @@ function DomainsManagerInner({
 
           {resolvedDomains.totalItems === 0 ? (
             <div className="mt-4 rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">{state.domains.length === 0 ? 'No domains configured yet.' : 'No domains match the current filters.'}</p>
-              <p className="mt-2 leading-6">{state.domains.length === 0 ? 'Add at least one production hostname before shipping the install snippet to customer sites.' : 'Try adjusting the search, status filter, or sorting.'}</p>
+              <p className="font-medium text-foreground">{state.domains.length === 0 ? c.noDomains : c.noMatches}</p>
+              <p className="mt-2 leading-6">{state.domains.length === 0 ? c.noDomainsHelp : c.noMatchesHelp}</p>
             </div>
           ) : (
             <>
               <div className="mt-4 flex flex-col gap-3 border-b pb-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                <p>
-                  Showing <span className="font-medium text-foreground">{resolvedDomains.startIndex}-{resolvedDomains.endIndex}</span> of{' '}
-                  <span className="font-medium text-foreground">{resolvedDomains.totalItems}</span> matched domains
-                  {resolvedDomains.totalItems !== state.domains.length ? ` (${state.domains.length} total)` : ''}.
-                </p>
-                <p>
-                  Page <span className="font-medium text-foreground">{resolvedDomains.page}</span> of{' '}
-                  <span className="font-medium text-foreground">{resolvedDomains.totalPages}</span>
-                </p>
+                <p>{c.resultsSummary(resolvedDomains.startIndex, resolvedDomains.endIndex, resolvedDomains.totalItems, state.domains.length)}</p>
+                <p>{c.pageSummary(resolvedDomains.page, resolvedDomains.totalPages)}</p>
               </div>
 
               <ul className="mt-4 grid gap-3">
@@ -274,7 +268,7 @@ function DomainsManagerInner({
                       <div>
                         <div className="text-sm font-medium text-foreground" dir="ltr">{domain.domain}</div>
                         <Badge variant="outline" className={`mt-2 capitalize ${getDomainStatusTone(domain.verification_status)}`}>
-                          {domain.verification_status}
+                          {c.statusLabels[domain.verification_status]}
                         </Badge>
                       </div>
 
@@ -302,7 +296,7 @@ function DomainsManagerInner({
                           }}
                         >
                           <input type="hidden" name="domainId" value={domain.id} />
-                          <Label htmlFor={`status-${domain.id}-select`}>Status</Label>
+                          <Label htmlFor={`status-${domain.id}-select`}>{c.status}</Label>
                           <select
                             id={`status-${domain.id}-select`}
                             name="status"
@@ -318,7 +312,7 @@ function DomainsManagerInner({
                           >
                             {DOMAIN_STATUS_OPTIONS.map((status) => (
                               <option key={status} value={status}>
-                                {status}
+                                {c.statusLabels[status]}
                               </option>
                             ))}
                           </select>
@@ -331,7 +325,7 @@ function DomainsManagerInner({
                             variant="outline"
                             disabled={(isPending && pendingAction === `status:${domain.id}`) || (statusDrafts[domain.id] ?? domain.verification_status) === domain.verification_status}
                           >
-                            {isPending && pendingAction === `status:${domain.id}` ? 'Saving...' : 'Save status'}
+                            {isPending && pendingAction === `status:${domain.id}` ? c.saving : c.saveStatus}
                           </Button>
 
                           <form
@@ -357,12 +351,12 @@ function DomainsManagerInner({
                             variant="destructive"
                             disabled={isPending && pendingAction === `remove:${domain.id}`}
                             onClick={(event) => {
-                              if (!window.confirm(`Remove ${domain.domain} from allowed domains?`)) {
+                              if (!window.confirm(c.removeConfirm(domain.domain))) {
                                 event.preventDefault();
                               }
                             }}
                           >
-                            {isPending && pendingAction === `remove:${domain.id}` ? 'Removing...' : 'Remove'}
+                            {isPending && pendingAction === `remove:${domain.id}` ? c.removing : c.remove}
                           </Button>
                         </div>
                       </div>
@@ -375,21 +369,21 @@ function DomainsManagerInner({
               <div className="mt-4 flex items-center justify-end gap-2">
                 {resolvedDomains.page > 1 ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={buildDomainsHref({ page: resolvedDomains.page - 1 })}>Previous</Link>
+                    <Link href={buildDomainsHref({ page: resolvedDomains.page - 1 })}>{c.previous}</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
-                    Previous
+                    {c.previous}
                   </Button>
                 )}
 
                 {resolvedDomains.page < resolvedDomains.totalPages ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={buildDomainsHref({ page: resolvedDomains.page + 1 })}>Next</Link>
+                    <Link href={buildDomainsHref({ page: resolvedDomains.page + 1 })}>{c.next}</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
-                    Next
+                    {c.next}
                   </Button>
                 )}
               </div>
@@ -401,27 +395,27 @@ function DomainsManagerInner({
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Install safety</CardTitle>
-            <CardDescription>Verified production domains control where the public widget should initialize. Pending or failed entries need follow-up before rollout.</CardDescription>
+            <CardTitle>{c.installSafety}</CardTitle>
+            <CardDescription>{c.installSafetyDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="grid gap-3 text-sm">
-              <li className="rounded-lg border bg-muted/10 p-4">Configured hostnames: {state.domains.length}</li>
-              <li className="rounded-lg border bg-muted/10 p-4">Verified hostnames: {state.domains.filter((domain) => domain.verification_status === 'verified').length}</li>
-              <li className="rounded-lg border bg-muted/10 p-4">Local development: {allowLocalhost ? 'localhost is currently allowed.' : 'localhost protection is disabled in settings_json.'}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.configuredHosts(state.domains.length)}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.verifiedHosts(state.domains.filter((domain) => domain.verification_status === 'verified').length)}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.localDevelopment(allowLocalhost)}</li>
             </ul>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Status guidance</CardTitle>
+            <CardTitle>{c.statusGuidance}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 text-sm">
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">Pending</span><p className="mt-2 text-muted-foreground">Use while a hostname is being prepared but should not yet be treated as production-safe.</p></div>
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">Verified</span><p className="mt-2 text-muted-foreground">Safe state for live installs. This is the target before sharing the snippet broadly.</p></div>
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">Failed or disabled</span><p className="mt-2 text-muted-foreground">Use when a hostname should stop being trusted or the validation/setup is incomplete.</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.pending}</span><p className="mt-2 text-muted-foreground">{c.pendingHelp}</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.verified}</span><p className="mt-2 text-muted-foreground">{c.verifiedHelp}</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.failedOrDisabled}</span><p className="mt-2 text-muted-foreground">{c.failedOrDisabledHelp}</p></div>
             </div>
           </CardContent>
         </Card>

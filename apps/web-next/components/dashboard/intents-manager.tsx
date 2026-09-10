@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import type { IntentsState, IntentEditorValues } from '@/app/dashboard/intents/state';
-import { getIntentActionLabel, getIntentTone, INTENT_ACTION_OPTIONS } from '@/lib/intents';
+import { getIntentTone, INTENT_ACTION_OPTIONS } from '@/lib/intents';
 import type { WidgetIntent } from '@/lib/types';
 import { INTENTS_PAGE_SIZE_OPTIONS, INTENTS_SORT_OPTIONS, type IntentsListQuery, resolveIntentsList } from '@/lib/dashboard/intents-list-query';
 import { Badge } from '@/components/ui/badge';
@@ -13,16 +13,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DashboardFormFeedback } from '@/components/dashboard/form-feedback';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getIntentsCopy, type IntentsCopy } from '@/lib/dashboard/intents-copy';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 const selectClassName = 'h-9 w-full rounded-4xl border border-input bg-input/30 px-3 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
 const textareaClassName = 'w-full min-h-28 resize-y rounded-2xl border border-input bg-input/30 px-3 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50';
 
-const INTENT_SORT_LABELS: Record<(typeof INTENTS_SORT_OPTIONS)[number], string> = {
-  priority_asc: 'Priority (low to high)',
-  priority_desc: 'Priority (high to low)',
-  label_asc: 'Label (A-Z)',
-  label_desc: 'Label (Z-A)',
-};
+function getLocalizedIntentActionLabel(c: IntentsCopy, actionType: string | null | undefined) {
+  if (actionType === 'external_link' || actionType === 'escalate') return c.actionLabels[actionType];
+  return c.actionLabels.send_message;
+}
 
 function toEditorValues(intent: WidgetIntent): IntentEditorValues {
   return {
@@ -39,7 +39,7 @@ function isIntentEditorValuesEqual(left: IntentEditorValues, right: IntentEditor
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function getIntentEditorValidation(values: IntentEditorValues) {
+function getIntentEditorValidation(values: IntentEditorValues, c: IntentsCopy) {
   const label = values.label.trim();
   const isActionTypeValid = INTENT_ACTION_OPTIONS.includes(values.actionType as (typeof INTENT_ACTION_OPTIONS)[number]);
   const messageTextInvalid = values.actionType === 'send_message' && !values.messageText.trim();
@@ -53,17 +53,17 @@ function getIntentEditorValidation(values: IntentEditorValues) {
   if (externalUrlRequired) {
     if (!externalUrl) {
       externalUrlInvalid = true;
-      externalUrlMessage = 'External link intents require a URL.';
+      externalUrlMessage = c.externalLinkRequiresUrl;
     } else {
       try {
         const parsed = new URL(externalUrl);
         if (!['http:', 'https:'].includes(parsed.protocol)) {
           externalUrlInvalid = true;
-          externalUrlMessage = 'External URL must use http or https.';
+          externalUrlMessage = c.externalUrlProtocol;
         }
       } catch {
         externalUrlInvalid = true;
-        externalUrlMessage = 'Enter a valid external URL.';
+        externalUrlMessage = c.invalidExternalUrl;
       }
     }
   }
@@ -78,21 +78,21 @@ function getIntentEditorValidation(values: IntentEditorValues) {
 
   if (!label) {
     return {
-      message: 'Intent label is required.',
+      message: c.labelRequired,
       invalidFields,
     };
   }
 
   if (!isActionTypeValid) {
     return {
-      message: 'Choose a valid action type.',
+      message: c.invalidActionType,
       invalidFields,
     };
   }
 
   if (messageTextInvalid) {
     return {
-      message: 'Send message intents require message text.',
+      message: c.messageTextRequired,
       invalidFields,
     };
   }
@@ -106,7 +106,7 @@ function getIntentEditorValidation(values: IntentEditorValues) {
 
   if (sortOrderInvalid) {
     return {
-      message: 'Sort order must be a number.',
+      message: c.invalidSortOrder,
       invalidFields,
     };
   }
@@ -126,6 +126,7 @@ export function IntentsManager({
   reorderIntentAction,
   selectedSiteId,
   listQuery,
+  locale = 'en',
 }: {
   initialState: IntentsState;
   initialValues: IntentEditorValues;
@@ -135,6 +136,7 @@ export function IntentsManager({
   reorderIntentAction: (formData: FormData) => Promise<IntentsState>;
   selectedSiteId: string;
   listQuery: IntentsListQuery;
+  locale?: SiteLocale;
 }) {
   return (
     <IntentsManagerInner
@@ -147,6 +149,7 @@ export function IntentsManager({
       reorderIntentAction={reorderIntentAction}
       selectedSiteId={selectedSiteId}
       listQuery={listQuery}
+      locale={locale}
     />
   );
 }
@@ -160,6 +163,7 @@ function IntentsManagerInner({
   reorderIntentAction,
   selectedSiteId,
   listQuery,
+  locale,
 }: {
   initialState: IntentsState;
   initialValues: IntentEditorValues;
@@ -169,7 +173,9 @@ function IntentsManagerInner({
   reorderIntentAction: (formData: FormData) => Promise<IntentsState>;
   selectedSiteId: string;
   listQuery: IntentsListQuery;
+  locale: SiteLocale;
 }) {
+  const c = getIntentsCopy(locale);
   const [state, setState] = useState(initialState);
   const [values, setValues] = useState(initialValues);
   const [editingIntentId, setEditingIntentId] = useState<string | null>(null);
@@ -180,7 +186,7 @@ function IntentsManagerInner({
   const resolvedIntents = useMemo(() => resolveIntentsList(state.intents, listQuery), [state.intents, listQuery]);
   const editingIntent = editingIntentId ? state.intents.find((intent) => intent.id === editingIntentId) ?? null : null;
   const editingBaseline = editingIntent ? toEditorValues(editingIntent) : initialValues;
-  const editorValidation = getIntentEditorValidation(values);
+  const editorValidation = getIntentEditorValidation(values, c);
   const editorValidationMessage = editorValidation.message;
   const isEditorDirty = !isIntentEditorValuesEqual(values, editingBaseline);
 
@@ -267,29 +273,29 @@ function IntentsManagerInner({
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <CardTitle>Widget intents</CardTitle>
-            <CardDescription>Configure the quick actions that help visitors get routed to the right outcome faster.</CardDescription>
+            <CardTitle>{c.widgetIntents}</CardTitle>
+            <CardDescription>{c.widgetIntentsDescription}</CardDescription>
           </div>
-          <Badge variant="secondary" className="shrink-0">Real backend contract</Badge>
+          <Badge variant="secondary" className="shrink-0">{c.realBackendContract}</Badge>
         </CardHeader>
 
         <CardContent>
           <div className="rounded-lg border bg-muted/10 p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-foreground">{editingIntentId ? 'Edit intent' : 'Create intent'}</p>
-                <p className="mt-1 text-sm text-muted-foreground">Uses the current widget intent RPCs only. No widget-site config authority is involved.</p>
+                <p className="text-sm font-medium text-foreground">{editingIntentId ? c.editIntent : c.createIntent}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{c.editorHelp}</p>
               </div>
               {editingIntentId ? (
                 <Button type="button" variant="outline" size="sm" onClick={resetEditor}>
-                  Cancel edit
+                  {c.cancelEdit}
                 </Button>
               ) : null}
             </div>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="intent-label">Label</Label>
+                <Label htmlFor="intent-label">{c.label}</Label>
                 <Input
                   id="intent-label"
                   aria-invalid={editorValidation.invalidFields.label ? 'true' : 'false'}
@@ -299,11 +305,11 @@ function IntentsManagerInner({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="intent-icon">Icon</Label>
+                <Label htmlFor="intent-icon">{c.icon}</Label>
                 <Input id="intent-icon" value={values.icon} onChange={(event) => setValues((current) => ({ ...current, icon: event.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="intent-action-type">Action type</Label>
+                <Label htmlFor="intent-action-type">{c.actionType}</Label>
                 <select
                   id="intent-action-type"
                   className={selectClassName}
@@ -314,13 +320,13 @@ function IntentsManagerInner({
                 >
                   {INTENT_ACTION_OPTIONS.map((actionType) => (
                     <option key={actionType} value={actionType}>
-                      {getIntentActionLabel(actionType)}
+                      {getLocalizedIntentActionLabel(c, actionType)}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="intent-sort-order">Sort order</Label>
+                <Label htmlFor="intent-sort-order">{c.sortOrder}</Label>
                 <Input
                   id="intent-sort-order"
                   inputMode="numeric"
@@ -331,7 +337,7 @@ function IntentsManagerInner({
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="intent-message-text">Message text</Label>
+                <Label htmlFor="intent-message-text">{c.messageText}</Label>
                 <textarea
                   id="intent-message-text"
                   className={textareaClassName}
@@ -342,7 +348,7 @@ function IntentsManagerInner({
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="intent-external-url">External URL</Label>
+                <Label htmlFor="intent-external-url">{c.externalUrl}</Label>
                 <Input
                   id="intent-external-url"
                   aria-invalid={editorValidation.invalidFields.externalUrl ? 'true' : 'false'}
@@ -356,7 +362,7 @@ function IntentsManagerInner({
             <DashboardFormFeedback
               className="mt-4"
               isPending={isPending}
-              pendingMessage="Saving intent changes..."
+              pendingMessage={c.savingChanges}
               message={state.message}
               tone={state.messageType}
             />
@@ -368,44 +374,44 @@ function IntentsManagerInner({
                 disabled={(isPending && (pendingAction === 'create' || pendingAction === 'update')) || !isEditorDirty || Boolean(editorValidationMessage)}
                 onClick={submitIntent}
               >
-                {isPending && pendingAction === 'create' ? 'Creating...' : null}
-                {isPending && pendingAction === 'update' ? 'Saving...' : null}
-                {!isPending ? (editingIntentId ? 'Save intent' : 'Create intent') : null}
+                {isPending && pendingAction === 'create' ? c.creating : null}
+                {isPending && pendingAction === 'update' ? c.saving : null}
+                {!isPending ? (editingIntentId ? c.saveIntent : c.createIntent) : null}
               </Button>
             </div>
           </div>
 
           <form method="get" action="/dashboard/intents" className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_220px_120px_auto] md:items-end">
             <div className="space-y-2">
-              <Label htmlFor="intent-query">Search intents</Label>
-              <Input id="intent-query" name="q" defaultValue={listQuery.q} placeholder="Find by label, action, message, or URL" />
+              <Label htmlFor="intent-query">{c.searchIntents}</Label>
+              <Input id="intent-query" name="q" defaultValue={listQuery.q} placeholder={c.searchPlaceholder} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="intent-action-filter">Action</Label>
+              <Label htmlFor="intent-action-filter">{c.action}</Label>
               <select id="intent-action-filter" name="action" className={selectClassName} defaultValue={listQuery.action}>
-                <option value="all">All actions</option>
+                <option value="all">{c.allActions}</option>
                 {INTENT_ACTION_OPTIONS.map((actionType) => (
                   <option key={actionType} value={actionType}>
-                    {getIntentActionLabel(actionType)}
+                    {getLocalizedIntentActionLabel(c, actionType)}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="intent-sort">Sort by</Label>
+              <Label htmlFor="intent-sort">{c.sortBy}</Label>
               <select id="intent-sort" name="sort" className={selectClassName} defaultValue={listQuery.sort}>
                 {INTENTS_SORT_OPTIONS.map((sort) => (
                   <option key={sort} value={sort}>
-                    {INTENT_SORT_LABELS[sort]}
+                    {c.sortLabels[sort]}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="intent-page-size">Rows</Label>
+              <Label htmlFor="intent-page-size">{c.rows}</Label>
               <select id="intent-page-size" name="pageSize" className={selectClassName} defaultValue={String(listQuery.pageSize)}>
                 {INTENTS_PAGE_SIZE_OPTIONS.map((size) => (
                   <option key={size} value={size}>
@@ -416,9 +422,9 @@ function IntentsManagerInner({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="submit">Apply</Button>
+              <Button type="submit">{c.apply}</Button>
               <Button asChild type="button" variant="outline">
-                <Link href={buildIntentsHref({ q: '', action: 'all', sort: 'priority_asc', page: 1, pageSize: 10 })}>Clear</Link>
+                <Link href={buildIntentsHref({ q: '', action: 'all', sort: 'priority_asc', page: 1, pageSize: 10 })}>{c.clear}</Link>
               </Button>
             </div>
 
@@ -428,21 +434,14 @@ function IntentsManagerInner({
 
           {resolvedIntents.totalItems === 0 ? (
             <div className="mt-4 rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">{state.intents.length === 0 ? 'No intents configured yet.' : 'No intents match the current filters.'}</p>
-              <p className="mt-2 leading-6">{state.intents.length === 0 ? 'Add your first quick action to help visitors reach the right workflow faster.' : 'Try adjusting the search, action filter, or sorting.'}</p>
+              <p className="font-medium text-foreground">{state.intents.length === 0 ? c.noIntents : c.noMatches}</p>
+              <p className="mt-2 leading-6">{state.intents.length === 0 ? c.noIntentsHelp : c.noMatchesHelp}</p>
             </div>
           ) : (
             <>
               <div className="mt-4 flex flex-col gap-3 border-b pb-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                <p>
-                  Showing <span className="font-medium text-foreground">{resolvedIntents.startIndex}-{resolvedIntents.endIndex}</span> of{' '}
-                  <span className="font-medium text-foreground">{resolvedIntents.totalItems}</span> matched intents
-                  {resolvedIntents.totalItems !== state.intents.length ? ` (${state.intents.length} total)` : ''}.
-                </p>
-                <p>
-                  Page <span className="font-medium text-foreground">{resolvedIntents.page}</span> of{' '}
-                  <span className="font-medium text-foreground">{resolvedIntents.totalPages}</span>
-                </p>
+                <p>{c.resultsSummary(resolvedIntents.startIndex, resolvedIntents.endIndex, resolvedIntents.totalItems, state.intents.length)}</p>
+                <p>{c.pageSummary(resolvedIntents.page, resolvedIntents.totalPages)}</p>
               </div>
 
               <ul className="mt-4 grid gap-3">
@@ -459,10 +458,10 @@ function IntentsManagerInner({
                           <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-muted text-sm text-muted-foreground">{intent.icon ?? 'chat'}</span>
                           <div className="min-w-0">
                             <div className="truncate text-sm font-medium text-foreground">{intent.label}</div>
-                            <div className="mt-1 text-sm text-muted-foreground">Priority {intent.sort_order ?? 0}</div>
+                            <div className="mt-1 text-sm text-muted-foreground">{c.priority(intent.sort_order ?? 0)}</div>
                           </div>
                           <Badge variant="outline" className={getIntentTone(intent.action_type)}>
-                            {getIntentActionLabel(intent.action_type)}
+                            {getLocalizedIntentActionLabel(c, intent.action_type)}
                           </Badge>
                         </div>
 
@@ -480,13 +479,13 @@ function IntentsManagerInner({
                             setInlineError(null);
                           }}
                         >
-                          Edit
+                          {c.edit}
                         </Button>
 
                         <Button
                           variant="outline"
                           size="sm"
-                          aria-label={`Move ${intent.label} up`}
+                          aria-label={c.moveUp(intent.label)}
                           disabled={moveUpDisabled || (isPending && pendingAction === `reorder:${intent.id}:up`)}
                           onClick={() => {
                             const formData = new FormData();
@@ -501,13 +500,13 @@ function IntentsManagerInner({
                             });
                           }}
                         >
-                          Up
+                          {c.up}
                         </Button>
 
                         <Button
                           variant="outline"
                           size="sm"
-                          aria-label={`Move ${intent.label} down`}
+                          aria-label={c.moveDown(intent.label)}
                           disabled={moveDownDisabled || (isPending && pendingAction === `reorder:${intent.id}:down`)}
                           onClick={() => {
                             const formData = new FormData();
@@ -522,7 +521,7 @@ function IntentsManagerInner({
                             });
                           }}
                         >
-                          Down
+                          {c.down}
                         </Button>
 
                         <form
@@ -552,12 +551,12 @@ function IntentsManagerInner({
                           size="sm"
                           disabled={isPending && pendingAction === `delete:${intent.id}`}
                           onClick={(event) => {
-                            if (!window.confirm(`Delete intent \"${intent.label}\"?`)) {
+                            if (!window.confirm(c.deleteConfirm(intent.label))) {
                               event.preventDefault();
                             }
                           }}
                         >
-                          {isPending && pendingAction === `delete:${intent.id}` ? 'Deleting...' : 'Delete'}
+                          {isPending && pendingAction === `delete:${intent.id}` ? c.deleting : c.delete}
                         </Button>
                       </div>
                     </div>
@@ -569,21 +568,21 @@ function IntentsManagerInner({
               <div className="mt-4 flex items-center justify-end gap-2">
                 {resolvedIntents.page > 1 ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={buildIntentsHref({ page: resolvedIntents.page - 1 })}>Previous</Link>
+                    <Link href={buildIntentsHref({ page: resolvedIntents.page - 1 })}>{c.previous}</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
-                    Previous
+                    {c.previous}
                   </Button>
                 )}
 
                 {resolvedIntents.page < resolvedIntents.totalPages ? (
                   <Button asChild variant="outline" size="sm">
-                    <Link href={buildIntentsHref({ page: resolvedIntents.page + 1 })}>Next</Link>
+                    <Link href={buildIntentsHref({ page: resolvedIntents.page + 1 })}>{c.next}</Link>
                   </Button>
                 ) : (
                   <Button variant="outline" size="sm" disabled>
-                    Next
+                    {c.next}
                   </Button>
                 )}
               </div>
@@ -595,26 +594,26 @@ function IntentsManagerInner({
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Intent summary</CardTitle>
+            <CardTitle>{c.intentSummary}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="grid gap-3 text-sm">
-              <li className="rounded-lg border bg-muted/10 p-4">Configured intents: {state.intents.length}</li>
-              <li className="rounded-lg border bg-muted/10 p-4">Message intents: {state.intents.filter((intent) => (intent.action_type ?? 'send_message') === 'send_message').length}</li>
-              <li className="rounded-lg border bg-muted/10 p-4">Escalation intents: {state.intents.filter((intent) => intent.action_type === 'escalate').length}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.configuredIntents(state.intents.length)}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.messageIntents(state.intents.filter((intent) => (intent.action_type ?? 'send_message') === 'send_message').length)}</li>
+              <li className="rounded-lg border bg-muted/10 p-4">{c.escalationIntents(state.intents.filter((intent) => intent.action_type === 'escalate').length)}</li>
             </ul>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Action guidance</CardTitle>
+            <CardTitle>{c.actionGuidance}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 text-sm">
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">Send message</span><p className="mt-2 text-muted-foreground">Use for quick prompts that should immediately seed the conversation.</p></div>
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">External link</span><p className="mt-2 text-muted-foreground">Use when the visitor should be sent to a booking page, help center, or external tool.</p></div>
-              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">Escalate</span><p className="mt-2 text-muted-foreground">Use for human handoff or higher-touch support routes handled by the current backend workflow.</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.actionLabels.send_message}</span><p className="mt-2 text-muted-foreground">{c.sendMessageHelp}</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.actionLabels.external_link}</span><p className="mt-2 text-muted-foreground">{c.externalLinkHelp}</p></div>
+              <div className="rounded-lg border bg-muted/10 p-4"><span className="font-medium text-foreground">{c.actionLabels.escalate}</span><p className="mt-2 text-muted-foreground">{c.escalateHelp}</p></div>
             </div>
           </CardContent>
         </Card>

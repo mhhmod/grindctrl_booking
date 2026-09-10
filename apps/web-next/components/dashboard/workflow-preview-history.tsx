@@ -4,6 +4,8 @@ import React, { useMemo, useSyncExternalStore } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LANDING_PREVIEW_STORAGE_KEY, readLandingPreviewHandoff } from '@/lib/trial/landing-preview-handoff';
+import { getWorkflowsCopy } from '@/lib/dashboard/dashboard-content-copy';
+import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 function readPreviewSnapshot() {
   if (typeof window === 'undefined') return null;
@@ -14,7 +16,8 @@ function readPreviewSnapshot() {
   }
 }
 
-export function WorkflowPreviewHistory() {
+export function WorkflowPreviewHistory({ locale = 'en' }: { locale?: SiteLocale }) {
+  const c = getWorkflowsCopy(locale);
   const snapshot = useSyncExternalStore(
     () => () => {},
     readPreviewSnapshot,
@@ -29,24 +32,24 @@ export function WorkflowPreviewHistory() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Latest trial preview</CardTitle>
-        <CardDescription>Read from local handoff storage only. No database history is fabricated.</CardDescription>
+        <CardTitle>{c.latestPreview}</CardTitle>
+        <CardDescription>{c.latestPreviewDescription}</CardDescription>
       </CardHeader>
       <CardContent>
         {!preview ? (
           <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
-            No saved preview yet. Run a guided preview from the landing playground to populate this section.
+            {c.noPreview}
           </div>
         ) : (
           <div className="grid gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="outline">{preview.mode}</Badge>
               <Badge variant="outline">{preview.workflowSlug}</Badge>
-              <Badge variant="secondary">{preview.confidence}% confidence</Badge>
+              <Badge variant="secondary">{c.confidence(preview.confidence)}</Badge>
             </div>
             <div className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">{preview.summary}</div>
-            <div className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">Recommended action: {preview.recommendedAction}</div>
-            <p className="text-xs text-muted-foreground">Captured at {new Date(preview.createdAt).toLocaleString()}</p>
+            <div className="rounded-xl border bg-muted/20 p-3 text-sm text-foreground">{c.recommendedAction(preview.recommendedAction)}</div>
+            <p className="text-xs text-muted-foreground">{c.capturedAt(new Date(preview.createdAt).toLocaleString(locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'))}</p>
           </div>
         )}
       </CardContent>

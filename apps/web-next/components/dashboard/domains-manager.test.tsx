@@ -114,3 +114,26 @@ describe('DomainsManager', () => {
     expect(screen.getByLabelText('Status')).toHaveValue('verified');
   });
 });
+
+describe('DomainsManager locale copy', () => {
+  it.each([
+    ['en', 'Allowed domains', 'Install safety'],
+    ['ar', 'النطاقات المسموح بها', 'أمان التثبيت'],
+  ] as const)('renders %s copy', (locale, title, safetyTitle) => {
+    render(
+      <DomainsManager
+        initialState={initialState}
+        addDomainAction={vi.fn().mockResolvedValue(initialState)}
+        updateDomainStatusAction={vi.fn().mockResolvedValue(initialState)}
+        removeDomainAction={vi.fn().mockResolvedValue(initialState)}
+        allowLocalhost={true}
+        selectedSiteId="site_1"
+        listQuery={defaultListQuery}
+        locale={locale}
+      />,
+    );
+
+    expect(screen.getByText(title)).toBeInTheDocument();
+    expect(screen.getByText(safetyTitle)).toBeInTheDocument();
+  });
+});
