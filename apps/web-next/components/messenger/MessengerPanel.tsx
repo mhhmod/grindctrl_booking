@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerLocale } from '@/lib/messenger/types';
 import { getPanelCopy } from './i18n';
@@ -42,6 +43,11 @@ function detectInitialLocale(explicit: string | null): MessengerLocale {
   if (explicit === 'ar' || explicit === 'en') return explicit;
   const nav = typeof navigator !== 'undefined' ? navigator.language : 'en';
   return nav.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+}
+
+/* Width cannot identify touch input: desktop chat also lives in a narrow iframe. */
+function hasCoarsePointer(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true;
 }
 
 function radiusFor(style: 'soft' | 'rounded' | 'sharp'): string {
@@ -98,6 +104,7 @@ export function MessengerPanel({
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [booting, setBooting] = useState(variant === 'preview' ? false : true);
   const [bootError, setBootError] = useState(false);
+  const [fullBleed, setFullBleed] = useState(false);
   const [typing, setTyping] = useState(false);
 
   /* Composer */
@@ -258,9 +265,34 @@ export function MessengerPanel({
 
   useEffect(scrollToEnd, [messages.length, typing, scrollToEnd]);
 
-  /* Focus the composer once booted so keyboard-only shoppers can type at once. */
+  /* The loader sees the storefront's visual viewport; this iframe only sees
+     its own layout viewport. It resizes our box before notifying us, including
+     on iOS keyboard scroll/resize events that never reach window.resize. */
   useEffect(() => {
-    if (!booting) inputRef.current?.focus();
+    if (variant !== 'live') return;
+    function onViewportMessage(event: MessageEvent) {
+      if (window.parent === window || event.source !== window.parent) return;
+      const data = event.data;
+      if (data?.type !== 'grindctrl-messenger:viewport' || typeof data.fullBleed !== 'boolean') return;
+      setFullBleed(data.fullBleed);
+      scrollToEnd();
+    }
+    window.addEventListener('message', onViewportMessage);
+    window.addEventListener('resize', scrollToEnd);
+    // Request the initial layout after hydration, when the listener is ready.
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'grindctrl-messenger:ready' }, '*');
+    }
+    return () => {
+      window.removeEventListener('message', onViewportMessage);
+      window.removeEventListener('resize', scrollToEnd);
+    };
+  }, [scrollToEnd, variant]);
+
+  /* Keep desktop keyboard focus, without opening a touch keyboard on boot
+     (the loader can also preload this panel before the shopper opens it). */
+  useEffect(() => {
+    if (!booting && !hasCoarsePointer()) inputRef.current?.focus();
   }, [booting]);
 
   async function send(overrideText?: string) {
@@ -475,7 +507,7 @@ export function MessengerPanel({
           <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
             <span
               aria-hidden="true"
-              className={`inline-block size-1.5 rounded-full ${config.available ? 'bg-emerald-500' : 'bg-zinc-400'}`}
+              className={`inline-block size-1.5 rounded-full ${config.available ? 'bg-primary' : 'bg-muted-foreground'}`}
             />
             {config.available ? t.aiNotice : t.offlineNote}
           </p>
@@ -493,7 +525,7 @@ export function MessengerPanel({
             type="button"
             onClick={closePanel}
             aria-label={t.close}
-            className="-me-1.5 flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={`-me-1.5 flex ${fullBleed ? 'size-11' : 'size-9'} shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
           >
             <svg
               width="18"
@@ -512,7 +544,13 @@ export function MessengerPanel({
       </header>
 
       {/* Thread */}
-      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4" role="log" aria-live="polite">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4" role="log" aria-live="polite" aria-busy={booting}>
+        {booting && (
+          <div aria-hidden="true" className="max-w-[85%] space-y-2 rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-3">
+            <Skeleton className="h-3 w-3/4 motion-reduce:animate-none" />
+            <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
+          </div>
+        )}
         {messages.length === 0 && !booting && (
           <div className="mx-auto max-w-[85%] pt-6 text-center">
             <p className="text-base font-semibold">{welcomeTitle}</p>
@@ -725,7 +763,8 @@ export function MessengerPanel({
               resizeInput();
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              // Touch Return inserts a newline; the explicit Send button submits.
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !hasCoarsePointer()) {
                 e.preventDefault();
                 void send();
               }

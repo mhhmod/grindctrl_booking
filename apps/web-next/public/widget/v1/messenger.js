@@ -342,7 +342,14 @@
     var css = FRAME_BASE;
 
     if (small) {
-      css += 'inset:0;width:100vw;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none;';
+      var viewport = window.visualViewport;
+      // iOS keyboards resize/pan the visual viewport without window.resize.
+      // Offsets are relative to the layout viewport used by position:fixed.
+      css += viewport
+        ? 'inset:auto;top:' + viewport.offsetTop + 'px;left:' + viewport.offsetLeft +
+          'px;width:' + viewport.width + 'px;height:' + viewport.height + 'px;'
+        : 'inset:0;width:100vw;height:100dvh;';
+      css += 'border-radius:0;box-shadow:none;';
     } else {
       var posLeft = state.config && state.config.appearance.position === 'bottom-left';
       // top/left are reset explicitly so a previous full-bleed pass cannot
@@ -362,6 +369,9 @@
       : 'opacity:0;pointer-events:none;' + (small ? '' : 'transform:translateY(6px);');
 
     frame.style.cssText = css;
+    if (frame.contentWindow) {
+      frame.contentWindow.postMessage({ type: 'grindctrl-messenger:viewport', fullBleed: small }, APP_ORIGIN);
+    }
   }
 
   /* The panel was sized once, when it was first opened, and never again — so
@@ -379,15 +389,17 @@
   }
   window.addEventListener('resize', handleViewportChange);
   window.addEventListener('orientationchange', handleViewportChange);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleViewportChange);
+    window.visualViewport.addEventListener('scroll', handleViewportChange);
+  }
 
   function open() {
     if (!state.config || !state.config.active || pageExcluded(state.config)) return;
     if (!state.iframe) buildIframe();
     if (state.teaser) { markTeaserSeen(state.teaserKind); removeTeaser(); }
     requestAnimationFrame(function () {
-      state.iframe.style.opacity = '1';
-      state.iframe.style.pointerEvents = 'auto';
-      state.iframe.style.transform = 'none';
+      sizeIframe(state.iframe);
     });
     state.open = true;
     if (state.launcherBtn) state.launcherBtn.setAttribute('aria-expanded', 'true');
@@ -421,6 +433,7 @@
     if (!state.iframe || event.source !== state.iframe.contentWindow) return;
     var data = event.data;
     if (data && data.type === 'grindctrl-messenger:close') close();
+    if (data && data.type === 'grindctrl-messenger:ready') handleViewportChange();
   });
 
   /* Opening felt slow because the iframe was created by the click itself:
