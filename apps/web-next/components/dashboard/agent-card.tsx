@@ -44,7 +44,7 @@ export function AgentCard({ agent, isSelected, locale = 'en' }: { agent: AgentCa
           <Link href="/dashboard/implementation">{c.requestImplementation}</Link>
         </Button>
         <Button asChild size="sm" variant="ghost">
-          <Link href="/dashboard/conversations">{c.viewConversations}</Link>
+          <Link href="/dashboard/messenger?tab=conversations">{c.viewConversations}</Link>
         </Button>
       </div>
     </article>

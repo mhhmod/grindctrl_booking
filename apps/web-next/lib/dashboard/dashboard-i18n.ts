@@ -33,14 +33,6 @@ const en: DashboardCopy = {
       description:
         'Preview and plan AI agents across website, social, voice, file, and CRM channels.',
     },
-    '/dashboard/conversations': {
-      title: 'Conversations',
-      description: 'Unified inbox preview for website and social channel conversations.',
-    },
-    '/dashboard/messages': {
-      title: 'Messages',
-      description: 'Message-level preview with AI suggestions and handoff readiness.',
-    },
     '/dashboard/leads': {
       title: 'Leads',
       description:
@@ -98,14 +90,6 @@ const ar: DashboardCopy = {
       title: 'وكلاء الذكاء الاصطناعي',
       description:
         'معاينة وتخطيط وكلاء الذكاء الاصطناعي عبر الموقع والتواصل الاجتماعي والصوت والملفات وأنظمة العملاء.',
-    },
-    '/dashboard/conversations': {
-      title: 'المحادثات',
-      description: 'معاينة موحّدة لمحادثات الموقع وقنوات التواصل الاجتماعي.',
-    },
-    '/dashboard/messages': {
-      title: 'الرسائل',
-      description: 'معاينة على مستوى الرسالة مع اقتراحات الذكاء الاصطناعي وجاهزية التحويل.',
     },
     '/dashboard/leads': {
       title: 'العملاء المحتملون',

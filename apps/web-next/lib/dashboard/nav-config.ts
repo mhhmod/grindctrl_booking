@@ -32,8 +32,7 @@ export type DashboardResolvedNavItem = DashboardNavItem & {
  *  4. It reads and writes the same source of truth as every other surface,
  *     so nothing can disagree with the Shopify admin.
  *
- * Routes for retired tabs still exist and are reachable by URL; they are
- * simply not advertised. Delete them once nothing references them.
+ * Retired demo routes should be deleted once they have no remaining consumers.
  */
 const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   {

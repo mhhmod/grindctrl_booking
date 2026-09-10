@@ -4,19 +4,15 @@ import { getDashboardRouteMeta, normalizeDashboardPathname } from '@/lib/dashboa
 describe('dashboard route metadata', () => {
   it('normalizes dashboard index and trailing slash paths', () => {
     expect(normalizeDashboardPathname('/dashboard')).toBe('/dashboard/overview');
-    expect(normalizeDashboardPathname('/dashboard/messages/')).toBe('/dashboard/messages');
+    expect(normalizeDashboardPathname('/dashboard/messenger/')).toBe('/dashboard/messenger');
   });
 
   it('returns metadata for core journey routes', () => {
     const agents = getDashboardRouteMeta('/dashboard/agents');
-    const conversations = getDashboardRouteMeta('/dashboard/conversations');
     const implementation = getDashboardRouteMeta('/dashboard/implementation');
 
     expect(agents.title).toBe('AI Agents');
     expect(agents.description).toContain('AI agents');
-
-    expect(conversations.title).toBe('Conversations');
-    expect(conversations.description).toContain('Unified inbox');
 
     expect(implementation.title).toBe('Implementation');
     expect(implementation.description).toContain('request form');
@@ -38,12 +34,15 @@ describe('dashboard route metadata', () => {
   });
 
   it('normalizes legacy route aliases to canonical routes', () => {
-    expect(normalizeDashboardPathname('/dashboard/inbox')).toBe('/dashboard/conversations');
     expect(normalizeDashboardPathname('/dashboard/sites')).toBe('/dashboard/install');
     expect(normalizeDashboardPathname('/dashboard/branding')).toBe('/dashboard/install');
     expect(normalizeDashboardPathname('/dashboard/domains')).toBe('/dashboard/install');
     expect(normalizeDashboardPathname('/dashboard/routing')).toBe('/dashboard/agents');
     expect(normalizeDashboardPathname('/dashboard/intents')).toBe('/dashboard/agents');
+  });
+
+  it('does not alias the retired inbox route', () => {
+    expect(normalizeDashboardPathname('/dashboard/inbox')).toBe('/dashboard/inbox');
   });
 
   it('builds a readable fallback for unknown dashboard sections', () => {

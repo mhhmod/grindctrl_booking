@@ -48,7 +48,7 @@ export function AgentDetailPreview({ agent, locale = 'en' }: { agent: AgentCatal
 
         <div className="flex flex-wrap gap-2">
           <Button asChild>
-            <Link href="/dashboard/conversations">{c.openPreviewInbox}</Link>
+            <Link href="/dashboard/messenger?tab=conversations">{c.openPreviewInbox}</Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/dashboard/implementation">{c.requestImplementation}</Link>

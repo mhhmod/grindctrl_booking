@@ -246,7 +246,7 @@ const agentsEn: AgentsCopy = {
   sampleResponse: 'Sample response / action',
   requiredIntegrations: 'Required integrations',
   nextStep: 'Next step',
-  openPreviewInbox: 'Open preview inbox',
+  openPreviewInbox: 'Open conversations',
 };
 
 const agentsAr: AgentsCopy = {
@@ -265,7 +265,7 @@ const agentsAr: AgentsCopy = {
   sampleResponse: 'مثال على الرد / الإجراء',
   requiredIntegrations: 'التكاملات المطلوبة',
   nextStep: 'الخطوة التالية',
-  openPreviewInbox: 'فتح صندوق المعاينة',
+  openPreviewInbox: 'فتح المحادثات',
 };
 
 const conversationsEn: ConversationsCopy = {

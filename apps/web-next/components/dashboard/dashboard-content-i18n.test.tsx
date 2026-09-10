@@ -38,18 +38,26 @@ describe('dashboard content locale copy', () => {
   });
 
   it.each([
-    ['en', 'Inputs', 'Configure preview', 'Sample trigger'],
-    ['ar', 'المدخلات', 'إعداد المعاينة', 'مثال على المشغّل'],
-  ] as const)('renders agent components in %s', (locale, inputs, configure, trigger) => {
+    ['en', 'Inputs', 'Configure preview', 'View conversations', 'Sample trigger', 'Open conversations'],
+    ['ar', 'المدخلات', 'إعداد المعاينة', 'عرض المحادثات', 'مثال على المشغّل', 'فتح المحادثات'],
+  ] as const)('renders agent components in %s', (locale, inputs, configure, conversations, trigger, openConversations) => {
     const { unmount } = render(
       <AgentCard agent={AGENT_CATALOG[0]} isSelected={false} locale={locale} />,
     );
     expect(screen.getByText(inputs)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: configure })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: conversations })).toHaveAttribute(
+      'href',
+      '/dashboard/messenger?tab=conversations',
+    );
     unmount();
 
     render(<AgentDetailPreview agent={AGENT_CATALOG[0]} locale={locale} />);
     expect(screen.getByText(trigger)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: openConversations })).toHaveAttribute(
+      'href',
+      '/dashboard/messenger?tab=conversations',
+    );
   });
 
   it.each([

@@ -33,16 +33,6 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Preview and plan AI agents across website, social, voice, file, and CRM channels.',
   },
   {
-    pathname: '/dashboard/conversations',
-    title: 'Conversations',
-    description: 'Unified inbox preview for website and social channel conversations.',
-  },
-  {
-    pathname: '/dashboard/messages',
-    title: 'Messages',
-    description: 'Message-level preview with AI suggestions and handoff readiness.',
-  },
-  {
     pathname: '/dashboard/leads',
     title: 'Leads',
     description: 'Preview lead qualification output from conversations, voice, forms, and files.',
@@ -95,7 +85,6 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
 ];
 
 const DASHBOARD_ROUTE_ALIASES: Record<string, string> = {
-  '/dashboard/inbox': '/dashboard/conversations',
   '/dashboard/sites': '/dashboard/install',
   '/dashboard/branding': '/dashboard/install',
   '/dashboard/domains': '/dashboard/install',
