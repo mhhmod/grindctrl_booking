@@ -13,7 +13,7 @@ import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { toShopperFailureMessage } from './shopper-errors';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
-const DEFAULT_MODEL = 'google/gemini-3.1-flash-image';
+const DEFAULT_MODEL = 'meta/muse-image';
 
 /* Accepted upload formats for the live pipeline. HEIC/HEIF previews don't
    render in browsers anyway, so real uploads arrive as jpeg/png/webp. */

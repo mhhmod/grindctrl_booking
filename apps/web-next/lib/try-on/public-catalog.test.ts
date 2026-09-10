@@ -35,8 +35,8 @@ describe('public try-on pricing catalog', () => {
   });
 
   it('calculates the paid price per delivered render', () => {
-    expect(calculatePerRenderPrice(1500, 300)).toBe(0.05);
-    expect(calculatePerRenderPrice(5900, 450)).toBeCloseTo(0.131111, 6);
+    expect(calculatePerRenderPrice(1500, 150)).toBe(0.1);
+    expect(calculatePerRenderPrice(4900, 650)).toBeCloseTo(0.075385, 6);
   });
 
   it('returns the public fallback catalog when Supabase env is missing', async () => {
@@ -44,17 +44,33 @@ describe('public try-on pricing catalog', () => {
 
     expect(createClientMock).not.toHaveBeenCalled();
     expect(catalog.plans.map((plan) => plan.planKey)).toEqual([
-      'free-v1',
+      'free-v2',
       'launch-v1',
-      'dfy-v1',
+      'launch-v1-egp',
+      'growth-v1',
+      'growth-v1-egp',
+      'pro-v1',
+      'pro-v1-egp',
     ]);
     expect(catalog.packs.map((pack) => pack.packKey)).toEqual([
       'pack-lite-v1',
       'pack-flash-v1',
     ]);
-    expect(catalog.plans[1]).toMatchObject({
-      priceMinor: 1500,
-      rendersIncluded: 300,
-    });
+    expect(catalog.plans.map(({ planKey, priceMinor, currency, rendersIncluded, modelKey }) => ({
+      planKey,
+      priceMinor,
+      currency,
+      rendersIncluded,
+      modelKey,
+    }))).toEqual([
+      { planKey: 'free-v2', priceMinor: 0, currency: 'USD', rendersIncluded: 15, modelKey: 'muse' },
+      { planKey: 'launch-v1', priceMinor: 1500, currency: 'USD', rendersIncluded: 150, modelKey: 'muse' },
+      { planKey: 'launch-v1-egp', priceMinor: 75000, currency: 'EGP', rendersIncluded: 150, modelKey: 'muse' },
+      { planKey: 'growth-v1', priceMinor: 2900, currency: 'USD', rendersIncluded: 350, modelKey: 'muse' },
+      { planKey: 'growth-v1-egp', priceMinor: 145000, currency: 'EGP', rendersIncluded: 350, modelKey: 'muse' },
+      { planKey: 'pro-v1', priceMinor: 4900, currency: 'USD', rendersIncluded: 650, modelKey: 'muse' },
+      { planKey: 'pro-v1-egp', priceMinor: 245000, currency: 'EGP', rendersIncluded: 650, modelKey: 'muse' },
+    ]);
+    expect(catalog.packs.every((pack) => pack.modelKey === 'muse')).toBe(true);
   });
 });

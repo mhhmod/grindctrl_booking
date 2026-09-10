@@ -23,40 +23,20 @@ function fixture(costs: Array<number | null>, previousCost: number | null = 0) {
   ], [{ shop_domain: 'alpha.myshopify.com', status: 'installed' }], new Date('2026-09-05T12:00:00Z'));
 }
 
-describe('DashboardOverviewPage provider cost evidence', () => {
-  it.each(['en', 'ar'] as const)('labels partial totals and missing costs in %s', async (locale) => {
+describe('DashboardOverviewPage provider cost privacy', () => {
+  it.each(['en', 'ar'] as const)('does not render provider spend in %s', async (locale) => {
     vi.mocked(getRequestLocale).mockResolvedValue(locale);
     vi.mocked(getTryOnOverview).mockResolvedValue(fixture([null, 0.25, 0]));
     render(await DashboardOverviewPage());
     const copy = getOverviewCopy(locale);
-    const spendCard = screen.getByText(copy.providerSpend7d).closest('[data-slot="card"]');
-    expect(within(spendCard as HTMLElement).getByText('$0.25')).toBeInTheDocument();
-    expect(within(spendCard as HTMLElement).getByText(copy.missingProviderCosts(1))).toBeInTheDocument();
-    expect(within(spendCard as HTMLElement).getByText(copy.spendComparisonUnavailable)).toBeInTheDocument();
-    const row = screen.getByRole('cell', { name: 'alpha.myshopify.com' }).closest('tr');
-    expect(within(row as HTMLElement).getByText(copy.missingProviderCosts(1))).toBeInTheDocument();
-  });
 
-  it('preserves all-unknown spend in the card, shop row and daily chart', async () => {
-    vi.mocked(getRequestLocale).mockResolvedValue('en');
-    vi.mocked(getTryOnOverview).mockResolvedValue(fixture([null]));
-    render(await DashboardOverviewPage());
-    const copy = getOverviewCopy('en');
-    const card = screen.getByText(copy.providerSpend7d).closest('[data-slot="card"]');
-    expect(within(card as HTMLElement).getByText(copy.costUnreported)).toBeInTheDocument();
-    expect(within(card as HTMLElement).queryByText('$0.00')).not.toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: /Unreported.*Generations with unreported cost: 1/ })).toBeInTheDocument();
-    expect(within(screen.getByRole('img', { name: copy.dailyChartAriaLabel })).getByText(/Known spend: Unreported/)).toBeInTheDocument();
-  });
-
-  it('suppresses an otherwise misleading spend trend when only the previous week is incomplete', async () => {
-    vi.mocked(getRequestLocale).mockResolvedValue('en');
-    vi.mocked(getTryOnOverview).mockResolvedValue(fixture([0.5], null));
-    render(await DashboardOverviewPage());
-    const copy = getOverviewCopy('en');
-    const card = screen.getByText(copy.providerSpend7d).closest('[data-slot="card"]');
-    expect(within(card as HTMLElement).getByText(copy.spendComparisonUnavailable)).toBeInTheDocument();
-    expect(within(card as HTMLElement).getByText(copy.missingPreviousProviderCosts(1))).toBeInTheDocument();
-    expect(within(card as HTMLElement).queryByText(copy.trendNewThisWeek)).not.toBeInTheDocument();
+    expect(screen.queryByText(copy.providerSpend7d)).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: copy.columnSpend7d })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('img', { name: copy.dailyChartAriaLabel })).queryByText(
+        new RegExp(copy.knownSpend),
+      ),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('$0.25')).not.toBeInTheDocument();
   });
 });

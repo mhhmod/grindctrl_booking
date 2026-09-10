@@ -225,7 +225,7 @@ describe('DashboardTryOnPage', () => {
     expect(screen.getByLabelText('Editing')).toHaveValue('default');
   });
 
-  it.each(['en', 'ar'] as const)('shows unknown costs honestly in %s rows and known totals', async (locale) => {
+  it.each(['en', 'ar'] as const)('does not render provider spend or per-job costs in %s', async (locale) => {
     cookieLocale = locale;
     vi.mocked(listRecentTryOnJobs).mockResolvedValueOnce([null, 0, 0.02].map((cost, index) => ({
       id: `job-${index}`, product_id: `product-${index}`, shop: 'grindctrl.myshopify.com',
@@ -234,26 +234,12 @@ describe('DashboardTryOnPage', () => {
     })));
     await renderPage();
     const copy = getTryOnDashboardCopy(locale);
-    expect(screen.getByRole('cell', { name: copy.costUnreported })).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: '$0.0000' })).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: '$0.0200' })).toBeInTheDocument();
-    const card = screen.getByText(copy.providerSpend).closest('[data-slot="card"]');
-    expect(card).not.toBeNull();
-    expect(within(card as HTMLElement).getByText('$0.02')).toBeInTheDocument();
-    expect(within(card as HTMLElement).getByText(copy.missingProviderCosts(1))).toBeInTheDocument();
-  });
 
-  it('does not show a zero total when every provider cost is missing', async () => {
-    vi.mocked(listRecentTryOnJobs).mockResolvedValueOnce([{
-      id: 'unknown', product_id: 'product', shop: 'grindctrl.myshopify.com',
-      status: 'failed', provider: 'test', cost_usd: null, duration_ms: 1000, message: null,
-      created_at: '2026-07-18T08:00:00Z',
-    }]);
-    await renderPage();
-    const copy = getTryOnDashboardCopy('en');
-    const card = screen.getByText(copy.providerSpend).closest('[data-slot="card"]');
-    expect(within(card as HTMLElement).getByText(copy.costUnreported)).toBeInTheDocument();
-    expect(within(card as HTMLElement).queryByText('$0.00')).not.toBeInTheDocument();
+    expect(screen.queryByText(copy.providerSpend)).not.toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: copy.columnCost })).not.toBeInTheDocument();
+    expect(screen.queryByRole('cell', { name: copy.costUnreported })).not.toBeInTheDocument();
+    expect(screen.queryByRole('cell', { name: '$0.0000' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('cell', { name: '$0.0200' })).not.toBeInTheDocument();
   });
 });
 

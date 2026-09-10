@@ -24,7 +24,7 @@ export {
   TryOnResultUnavailableError,
 } from './result-errors';
 
-const DEFAULT_MODEL = 'google/gemini-3.1-flash-image';
+const DEFAULT_MODEL = 'meta/muse-image';
 
 /* In-memory job results are the polling fast path between generation and
    render. Entries hold the full base64 result image, so the map MUST stay

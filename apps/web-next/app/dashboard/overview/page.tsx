@@ -8,7 +8,6 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { getTryOnOverview } from '@/lib/dashboard/overview-data';
 import { getOverviewCopy, type OverviewCopy } from '@/lib/dashboard/overview-copy';
 import { getDateLocale } from '@/lib/try-on/dashboard-copy';
-import { formatProviderCost } from '@/lib/dashboard/provider-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +45,7 @@ export default async function DashboardOverviewPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>{c.generations7d}</CardDescription>
@@ -56,27 +55,6 @@ export default async function DashboardOverviewPage() {
             <p className="text-xs text-muted-foreground">
               {trend(c, totals.jobsLast7d, totals.jobsPrev7d)}
             </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{c.providerSpend7d}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-1">
-            <p className="text-xl font-semibold text-foreground">
-              {formatProviderCost(totals.spendLast7dUsd, c.costUnreported)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {totals.missingCostJobsLast7d > 0 || totals.missingCostJobsPrev7d > 0
-                ? c.spendComparisonUnavailable
-                : trend(c, totals.spendLast7dUsd ?? 0, totals.spendPrev7dUsd ?? 0)}
-            </p>
-            {totals.missingCostJobsLast7d > 0 && (
-              <p className="text-xs text-muted-foreground">{c.missingProviderCosts(totals.missingCostJobsLast7d)}</p>
-            )}
-            {totals.missingCostJobsPrev7d > 0 && (
-              <p className="text-xs text-muted-foreground">{c.missingPreviousProviderCosts(totals.missingCostJobsPrev7d)}</p>
-            )}
           </CardContent>
         </Card>
         <Card>
@@ -126,8 +104,7 @@ export default async function DashboardOverviewPage() {
                   style={{ height: `${Math.max(4, (d.jobs / maxDailyJobs) * 100)}%` }}
                 />
                 <span className="pointer-events-none absolute bottom-full start-0 mb-1 hidden max-w-full whitespace-normal rounded bg-foreground px-1.5 py-0.5 text-[10px] text-background group-hover:block">
-                  {formatDay(d.day, dateLocale)} · {d.jobs} · {c.knownSpend}: {formatProviderCost(d.spendUsd, c.costUnreported)}
-                  {d.missingCostJobs > 0 && <span className="block">{c.missingProviderCosts(d.missingCostJobs)}</span>}
+                  {formatDay(d.day, dateLocale)} · {d.jobs}
                 </span>
               </div>
             ))}
@@ -154,7 +131,6 @@ export default async function DashboardOverviewPage() {
                   <TableRow>
                     <TableHead>{c.columnShop}</TableHead>
                     <TableHead className="text-end">{c.columnJobs7d}</TableHead>
-                    <TableHead className="text-end">{c.columnSpend7d}</TableHead>
                     <TableHead>{c.columnLastActivity}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -170,14 +146,6 @@ export default async function DashboardOverviewPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-end tabular-nums">{shop.jobsLast7d}</TableCell>
-                      <TableCell className="text-end tabular-nums">
-                        {formatProviderCost(shop.spendLast7dUsd, c.costUnreported)}
-                        {shop.missingCostJobsLast7d > 0 && (
-                          <span className="block whitespace-normal text-xs text-muted-foreground">
-                            {c.missingProviderCosts(shop.missingCostJobsLast7d)}
-                          </span>
-                        )}
-                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {shop.lastJobAt
                           ? new Date(shop.lastJobAt).toLocaleString(dateLocale)

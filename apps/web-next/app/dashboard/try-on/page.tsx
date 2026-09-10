@@ -16,7 +16,6 @@ import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { ConnectShopPanel } from '@/components/dashboard/connect-shop-panel';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
-import { formatProviderCost, summarizeProviderCosts } from '@/lib/dashboard/provider-cost';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,7 +63,6 @@ export default async function DashboardTryOnPage({
     : [null, null, null];
 
   const completed = jobs.filter((j) => j.status === 'completed');
-  const { knownSpendUsd, missingCostCount } = summarizeProviderCosts(jobs.map((job) => job.cost_usd));
   const avgSeconds = completed.length
     ? completed.reduce((sum, j) => sum + (j.duration_ms ?? 0), 0) / completed.length / 1000
     : 0;
@@ -77,16 +75,11 @@ export default async function DashboardTryOnPage({
       label: c.avgGenerationTime,
       value: completed.length ? `${avgSeconds.toFixed(1)}${c.secondsSuffix}` : c.noDataYet,
     },
-    {
-      label: c.providerSpend,
-      value: formatProviderCost(knownSpendUsd, c.costUnreported),
-      note: missingCostCount > 0 ? c.missingProviderCosts(missingCostCount) : undefined,
-    },
   ];
 
   return (
     <section className="grid min-w-0 gap-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {kpis.map((kpi) => (
           <Card key={kpi.label}>
             <CardHeader className="pb-2">
@@ -94,7 +87,6 @@ export default async function DashboardTryOnPage({
             </CardHeader>
             <CardContent>
               <p className="text-xl font-semibold text-foreground">{kpi.value}</p>
-              {kpi.note && <p className="mt-1 text-xs text-muted-foreground">{kpi.note}</p>}
             </CardContent>
           </Card>
         ))}
@@ -199,7 +191,6 @@ export default async function DashboardTryOnPage({
                   <TableHead>{c.columnProduct}</TableHead>
                   <TableHead>{c.columnShop}</TableHead>
                   <TableHead>{c.columnStatus}</TableHead>
-                  <TableHead className="text-end">{c.columnCost}</TableHead>
                   <TableHead className="text-end">{c.columnTime}</TableHead>
                   <TableHead>{c.columnWhen}</TableHead>
                 </TableRow>
@@ -211,9 +202,6 @@ export default async function DashboardTryOnPage({
                     <TableCell className="text-muted-foreground">{job.shop ?? c.demoShop}</TableCell>
                     <TableCell>
                       <Badge variant={statusTone(job.status)}>{statusLabel(c, job.status)}</Badge>
-                    </TableCell>
-                    <TableCell className="text-end tabular-nums">
-                      {formatProviderCost(job.cost_usd, c.costUnreported, 4)}
                     </TableCell>
                     <TableCell className="text-end tabular-nums">
                       {job.duration_ms
