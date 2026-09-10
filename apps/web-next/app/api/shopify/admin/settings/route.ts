@@ -4,6 +4,7 @@ import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
 import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
+import { isShopLinked } from '@/lib/shopify/shop-links';
 
 /* Embedded-admin settings API: authenticated by Shopify session token
    (Bearer, from App Bridge idToken()). The shop comes from the token,
@@ -18,9 +19,10 @@ export async function GET(request: NextRequest) {
 
   await recordTryOnShopSeen(session.shop);
   await ensureFreeSubscription(session.shop);
-  const [settings, entitlement] = await Promise.all([
+  const [settings, entitlement, linked] = await Promise.all([
     getTryOnSettings(session.shop),
     getShopEntitlement(session.shop),
+    isShopLinked(session.shop),
   ]);
   return NextResponse.json({
     shop: session.shop,
@@ -37,6 +39,7 @@ export async function GET(request: NextRequest) {
       daysRemaining: entitlement.daysRemaining,
       bannerState: entitlement.bannerState,
     },
+    linked,
   });
 }
 

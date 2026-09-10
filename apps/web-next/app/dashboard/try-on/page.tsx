@@ -14,6 +14,7 @@ import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel'
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
+import { ConnectShopPanel } from '@/components/dashboard/connect-shop-panel';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 import { formatProviderCost, summarizeProviderCosts } from '@/lib/dashboard/provider-cost';
 
@@ -106,7 +107,10 @@ export default async function DashboardTryOnPage({
         </CardHeader>
         <CardContent>
           {shops.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{c.noShopsYet}</p>
+            <div className="grid gap-4">
+              <p className="text-sm text-muted-foreground">{c.noShopsYet}</p>
+              <ConnectShopPanel locale={pageLocale} />
+            </div>
           ) : (
             <Table>
               <TableHeader>

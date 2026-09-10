@@ -98,6 +98,18 @@ export interface SettingsFormCopy {
   saveFailed: string;
   save: string;
   saving: string;
+  shopLinkTitle: string;
+  shopLinkDescription: string;
+  shopLinked: string;
+  shopLinkSuccess: string;
+  shopLinkCodeLabel: string;
+  shopLinkCodePlaceholder: string;
+  linkShop: string;
+  linkingShop: string;
+  shopLinkInvalid: string;
+  shopLinkExpired: string;
+  shopLinkAlreadyOwned: string;
+  shopLinkFailed: string;
 }
 
 const en: SettingsFormCopy = {
@@ -180,6 +192,18 @@ const en: SettingsFormCopy = {
   saveFailed: 'Could not save. Try again.',
   save: 'Save',
   saving: 'Saving...',
+  shopLinkTitle: 'Link to dashboard',
+  shopLinkDescription: 'Connect this Shopify store to your GrindCTRL dashboard account.',
+  shopLinked: 'Connected to your GrindCTRL dashboard account.',
+  shopLinkSuccess: 'Connected. Return to your GrindCTRL dashboard and refresh the page.',
+  shopLinkCodeLabel: 'Dashboard linking code',
+  shopLinkCodePlaceholder: 'ABCD-EFGH',
+  linkShop: 'Connect store',
+  linkingShop: 'Connecting…',
+  shopLinkInvalid: "That code doesn't match. Check it and try again.",
+  shopLinkExpired: 'This code has expired. Generate a new one from your dashboard.',
+  shopLinkAlreadyOwned: 'This store is already connected to a different account.',
+  shopLinkFailed: 'Could not connect the store. Try again.',
 };
 
 const ar: SettingsFormCopy = {
@@ -261,6 +285,18 @@ const ar: SettingsFormCopy = {
   saveFailed: 'تعذّر الحفظ. حاول مرة أخرى.',
   save: 'حفظ',
   saving: 'جارٍ الحفظ...',
+  shopLinkTitle: 'الربط بلوحة التحكم',
+  shopLinkDescription: 'اربط متجر شوبيفاي هذا بحسابك في لوحة تحكم جريند كنترول.',
+  shopLinked: 'متصل بحسابك في لوحة تحكم جريند كنترول.',
+  shopLinkSuccess: 'تم الاتصال. ارجع إلى لوحة تحكم جريند كنترول وحدّث الصفحة.',
+  shopLinkCodeLabel: 'رمز الربط من لوحة التحكم',
+  shopLinkCodePlaceholder: 'ABCD-EFGH',
+  linkShop: 'ربط المتجر',
+  linkingShop: 'جارٍ الربط…',
+  shopLinkInvalid: 'هذا الرمز غير مطابق. تحقّق منه وحاول مرة أخرى.',
+  shopLinkExpired: 'انتهت صلاحية هذا الرمز. أنشئ رمزاً جديداً من لوحة التحكم.',
+  shopLinkAlreadyOwned: 'هذا المتجر مرتبط بالفعل بحساب آخر.',
+  shopLinkFailed: 'تعذّر ربط المتجر. حاول مرة أخرى.',
 };
 
 export function getSettingsFormCopy(locale: TryOnLocale): SettingsFormCopy {

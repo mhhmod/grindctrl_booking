@@ -20,6 +20,13 @@ export interface TryOnDashboardCopy {
   merchantShops: string;
   merchantShopsBody: string;
   noShopsYet: string;
+  connectStore: string;
+  generatingShopLinkCode: string;
+  shopLinkCodeLabel: string;
+  shopLinkExpiresIn: (time: string) => string;
+  connectStoreInstructions: string;
+  generateNewShopLinkCode: string;
+  shopLinkCodeFailed: string;
   columnShop: string;
   columnStatus: string;
   columnGenerations: string;
@@ -173,6 +180,14 @@ const en: TryOnDashboardCopy = {
   merchantShopsBody:
     'A shop appears here once it is connected to your account, and drops to uninstalled when Shopify tells us it was removed.',
   noShopsYet: 'No shop is linked to your account yet. Once one is connected, it will appear here.',
+  connectStore: 'Connect a store',
+  generatingShopLinkCode: 'Generating code…',
+  shopLinkCodeLabel: 'Store linking code',
+  shopLinkExpiresIn: (time) => `Expires in ${time}`,
+  connectStoreInstructions:
+    'Open the GrindCTRL app from your Shopify admin, and enter this code where it asks you to link your account.',
+  generateNewShopLinkCode: 'Generate a new code',
+  shopLinkCodeFailed: 'Could not generate a code. Try again.',
   columnShop: 'Shop',
   columnStatus: 'Status',
   columnGenerations: 'Generations',
@@ -301,6 +316,14 @@ const ar: TryOnDashboardCopy = {
   merchantShopsBody:
     'يظهر المتجر هنا بعد ربطه بحسابك، ويتحول إلى غير مثبَّت عندما تخبرنا شوبيفاي بإزالته.',
   noShopsYet: 'لا يوجد متجر مرتبط بحسابك بعد. بمجرد ربط متجر، سيظهر هنا.',
+  connectStore: 'اربط متجراً',
+  generatingShopLinkCode: 'جارٍ إنشاء الرمز…',
+  shopLinkCodeLabel: 'رمز ربط المتجر',
+  shopLinkExpiresIn: (time) => `تنتهي صلاحيته خلال ${time}`,
+  connectStoreInstructions:
+    'افتح تطبيق جريند كنترول من لوحة تحكم شوبيفاي، ثم أدخل هذا الرمز عندما يطلب منك التطبيق ربط حسابك.',
+  generateNewShopLinkCode: 'أنشئ رمزاً جديداً',
+  shopLinkCodeFailed: 'تعذّر إنشاء الرمز. حاول مرة أخرى.',
   columnShop: 'المتجر',
   columnStatus: 'الحالة',
   columnGenerations: 'عمليات التوليد',
