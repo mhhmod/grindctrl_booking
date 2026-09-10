@@ -188,3 +188,26 @@ approved here. PR #11 is left open, unmerged, pending an explicit decision on th
 Gates 2, 4, 6 and 10 remain open, blocked on facts/decisions only the user can supply (operator
 identities, real test credentials, an authorized spend budget, and deploy sign-off respectively) —
 unchanged from the prior entry.
+
+## Final status — 2026-09-10
+
+| Gate | Status | Notes |
+|---|---|---|
+| 1 — Shopify privacy | **Closed** (`56536fa`, `a7cd400`) | Webhooks registered; `redactShop()` now succeeds end-to-end, including retaining `tryon_credit_ledger` as an intentional financial-record exception (verified live: an immutability trigger, not just an FK, blocks deleting it) |
+| 2 — Billing authority | **Deferred** | User: no billing provider yet, not decidable now. Not blocked-pending-input — intentionally parked until there's a provider to configure against |
+| 3 — API version | Closed (earlier today) | |
+| 4 — Authenticated browser evidence | Open | Needs a real Shopify dev store + Clerk test account; cannot be fabricated |
+| 5 — Live data/ops | Partial | RLS/ownership verified live. Backup retention window, on-call ownership, and an actual restore test remain — no tool here exposes Supabase backup/PITR status; needs the Dashboard directly |
+| 6 — Capacity/provider economics | **Deferred** | User: cannot decide a spend cap right now. Not proceeding with real paid benchmark calls without one |
+| 7 — Dependencies/build (CI/container) | Closed and deployed (PR #11) | |
+| 8 — Commercial claims | Clean | No unverified claims found on pricing/landing; stays a restraint, not a build task |
+| 9 — Entitlement read side effect | Closed (earlier today) | |
+| 10 — Deployment authority | Partial | Corrected a dangerously-wrong rollback runbook (`108884e`) that described a pm2/git-reset procedure incompatible with the actual Docker/GHCR pipeline. The real `deploy-next.sh` content and exact restart command still need reading directly on the VPS (no SSH access from here); the sign-off itself is the user's |
+
+Also closed this session, beyond the original 10 gates: i18n consistency across 9 live dashboard
+sections + pricing digit formatting (`89deefc`), the Sites/Branding/Leads → Store Chat/Messenger
+widget-system cutover (`9eac3bf`), and the "connect your store" flow that was the highest-impact
+finding from the ecosystem audit — previously zero product-facing way for a merchant to link their
+shop to their dashboard account (`03e06ae`).
+
+Nothing beyond the original gate-7 merge (PR #11) has been pushed to `origin/main` or deployed.
