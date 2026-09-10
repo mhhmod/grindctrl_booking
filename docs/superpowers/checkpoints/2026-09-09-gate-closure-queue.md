@@ -194,7 +194,7 @@ unchanged from the prior entry.
 | Gate | Status | Notes |
 |---|---|---|
 | 1 — Shopify privacy | **Closed** (`56536fa`, `a7cd400`) | Webhooks registered; `redactShop()` now succeeds end-to-end, including retaining `tryon_credit_ledger` as an intentional financial-record exception (verified live: an immutability trigger, not just an FK, blocks deleting it) |
-| 2 — Billing authority | **Deferred** | User: no billing provider yet, not decidable now. Not blocked-pending-input — intentionally parked until there's a provider to configure against |
+| 2 — Billing authority | **Closed — launch decision made 2026-09-11** | User: launch now with the current model — Free plan self-serve, Launch/Growth/Pro paid plans via the existing manual concierge flow (book a call, payment collected off-platform, GrindCTRL team activates the plan). Real Shopify App Pricing / self-serve paid checkout is intentionally deferred to a later phase, not a launch blocker. |
 | 3 — API version | Closed (earlier today) | |
 | 4 — Authenticated browser evidence | Open | Needs a real Shopify dev store + Clerk test account; cannot be fabricated |
 | 5 — Live data/ops | Partial | RLS/ownership verified live. Backup retention window, on-call ownership, and an actual restore test remain — no tool here exposes Supabase backup/PITR status; needs the Dashboard directly |
