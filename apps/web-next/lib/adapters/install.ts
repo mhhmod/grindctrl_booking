@@ -1,6 +1,6 @@
 import type { WidgetDomain, WidgetInstallVerification } from '@/lib/types';
 
-const LOADER_URL = 'https://grindctrl.cloud/widget/v1/loader.js';
+const MESSENGER_URL = 'https://grindctrl.cloud/widget/v1/messenger.js';
 export const ACTIVE_INSTALL_WINDOW_MS = 30 * 60 * 1000;
 
 export type InstallStatus = 'never_seen' | 'active' | 'stale';
@@ -14,35 +14,11 @@ export interface InstallDomainSafety {
 export function buildCanonicalInstallSnippet(embedKey: string) {
   const key = String(embedKey || 'gc_live_xxxxx');
 
-  return [
-    '<script>',
-    '  window.GrindctrlSupport = window.GrindctrlSupport || [];',
-    '  window.GrindctrlSupport.push({',
-    `    embedKey: '${key}',`,
-    '    user: {',
-    '      id: null,',
-    '      email: null,',
-    '      name: null',
-    '    },',
-    '    context: {',
-    '      custom: {}',
-    '    }',
-    '  });',
-    '</script>',
-    `<script async src="${LOADER_URL}"></script>`,
-  ].join('\n');
+  return `<script async src="${MESSENGER_URL}" data-key="${key}"></script>`;
 }
 
 export function buildCspInstallSnippet(embedKey: string) {
-  const key = String(embedKey || 'gc_live_xxxxx');
-
-  return [
-    '<script',
-    '  async',
-    `  src="${LOADER_URL}"`,
-    `  data-gc-embed-key="${key}">`,
-    '</script>',
-  ].join('\n');
+  return buildCanonicalInstallSnippet(embedKey);
 }
 
 export function getInstallStatus(verification: WidgetInstallVerification | null, now = new Date()): InstallStatus {
@@ -125,9 +101,10 @@ export function containsLegacyInstallPattern(snippet: string) {
     'cdn.example.com/widget.js',
     'GrindctrlSupport.init',
     'https://cdn.grindctrl.com/grindctrl-support.js',
+    'https://grindctrl.cloud/widget/v1/loader.js',
   ].some((value) => snippet.includes(value));
 }
 
 export const installContract = {
-  loaderUrl: LOADER_URL,
+  loaderUrl: MESSENGER_URL,
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { InstallCard } from './install-card';
 
 const EMBED_KEY = 'gc_521d5a81_1f8e3392_b06c804d';
@@ -28,6 +29,7 @@ describe('InstallCard overflow guards', () => {
     const snippetCode = container.querySelector('pre code');
     expect(snippetCode).toBeInTheDocument();
     expect(snippetCode).toHaveTextContent(SNIPPET);
+    expect(buildCanonicalInstallSnippet(EMBED_KEY)).toBe(SNIPPET);
 
     const shopifyCard = screen.getByRole('heading', { name: 'Shopify' }).parentElement;
     // On a Shopify store the snippet is collapsed behind a summary rather

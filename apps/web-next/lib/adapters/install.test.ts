@@ -2,18 +2,14 @@
 import { ACTIVE_INSTALL_WINDOW_MS, buildCanonicalInstallSnippet, buildCspInstallSnippet, containsLegacyInstallPattern, getInstallDomainSafety, getInstallStatus } from '@/lib/adapters/install';
 
 describe('install adapter', () => {
-  it('renders the canonical embed snippet with the real loader contract', () => {
+  it('renders the canonical Store Chat snippet', () => {
     const snippet = buildCanonicalInstallSnippet('gc_live_test_123');
-    expect(snippet).toContain("window.GrindctrlSupport = window.GrindctrlSupport || [];");
-    expect(snippet).toContain("window.GrindctrlSupport.push({");
-    expect(snippet).toContain("embedKey: 'gc_live_test_123'");
-    expect(snippet).toContain('https://grindctrl.cloud/widget/v1/loader.js');
+    expect(snippet).toBe('<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="gc_live_test_123"></script>');
   });
 
-  it('renders the CSP-friendly snippet with the embed key data attribute', () => {
+  it('uses the same external-script shape for the CSP-friendly snippet', () => {
     const snippet = buildCspInstallSnippet('gc_live_test_456');
-    expect(snippet).toContain('data-gc-embed-key="gc_live_test_456"');
-    expect(snippet).toContain('https://grindctrl.cloud/widget/v1/loader.js');
+    expect(snippet).toBe('<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="gc_live_test_456"></script>');
   });
 
   it('does not allow stale install snippet patterns in the primary contract', () => {

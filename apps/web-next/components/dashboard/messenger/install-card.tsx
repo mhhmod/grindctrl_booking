@@ -4,6 +4,7 @@ import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
@@ -91,7 +92,7 @@ export function InstallCard({
   const [pending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
 
-  const snippet = `<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="${embedKey}"></script>`;
+  const snippet = buildCanonicalInstallSnippet(embedKey);
 
   const isShopifyStore = Boolean(domain && domain.endsWith('.myshopify.com'));
 
