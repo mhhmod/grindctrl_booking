@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from './textarea';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import { MessageText } from '@/components/messenger/message-text';
@@ -13,6 +14,10 @@ import { MessageText } from '@/components/messenger/message-text';
 const COPY = {
   en: {
     title: 'Conversations',
+    back: 'Back to conversations',
+    loading: 'Loading conversation…',
+    loadOlder: 'Load older messages',
+    retry: 'Try again',
     subtitle: 'Shopper conversations from your storefront messenger.',
     empty: 'No conversations yet',
     emptyBody: 'When shoppers message you from the store, they will appear here.',
@@ -44,6 +49,10 @@ const COPY = {
   },
   ar: {
     title: 'المحادثات',
+    back: 'العودة إلى المحادثات',
+    loading: 'جارٍ تحميل المحادثة…',
+    loadOlder: 'تحميل الرسائل الأقدم',
+    retry: 'حاول مجدداً',
     subtitle: 'محادثات العملاء من ماسنجر متجرك.',
     empty: 'لا محادثات بعد',
     emptyBody: 'عندما يراسلك العملاء من المتجر ستظهر هنا.',
@@ -74,6 +83,8 @@ const COPY = {
     triageNotAnIssue: 'لا يوجد خطأ ظاهر',
   },
 };
+
+const MESSAGE_WINDOW = 50;
 
 export interface ConversationListItem {
   id: string;
@@ -154,6 +165,14 @@ export function ConversationsPanel({
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(MESSAGE_WINDOW);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const selectedRowRef = useRef<HTMLButtonElement | null>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const followLatest = useRef(true);
+  const olderScroll = useRef<{ height: number; top: number } | null>(null);
   /* Cleared locally the instant a conversation is opened. Waiting for the
      server round trip and a revalidate meant the badge sat there for as long
      as the whole page took to re-render, which read as the click not having
@@ -169,6 +188,49 @@ export function ConversationsPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  /* Measure the space below the host's wrapping tabs/header, rather than
+     guessing their height. The mobile view aligns below DashboardShell's
+     h-14 sticky header; visualViewport also accounts for the soft keyboard. */
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const viewport = window.visualViewport;
+    const measure = () => {
+      panel.style.setProperty('--inbox-top', `${Math.max(0, panel.getBoundingClientRect().top - (viewport?.offsetTop ?? 0))}px`);
+      panel.style.setProperty('--inbox-viewport', viewport ? `${viewport.height}px` : '100dvh');
+    };
+    if (window.matchMedia?.('(max-width: 1023px)').matches) {
+      panel.style.setProperty('--inbox-top', '0px');
+      panel.scrollIntoView({ block: 'start', behavior: 'instant' });
+      (mobileThreadOpen ? backRef.current : selectedRowRef.current)?.focus({ preventScroll: true });
+    }
+    measure();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    if (panel.parentElement?.parentElement) observer?.observe(panel.parentElement.parentElement);
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    viewport?.addEventListener('resize', measure);
+    viewport?.addEventListener('scroll', measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+      viewport?.removeEventListener('resize', measure);
+      viewport?.removeEventListener('scroll', measure);
+    };
+  }, [mobileThreadOpen, selectedId, conversations.length]);
+
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    if (!log) return;
+    if (olderScroll.current) {
+      log.scrollTop = olderScroll.current.top + log.scrollHeight - olderScroll.current.height;
+      olderScroll.current = null;
+    } else if (followLatest.current) {
+      log.scrollTop = log.scrollHeight;
+    }
+  }, [messages, visibleCount, mobileThreadOpen]);
+
   /* The 15s poll and the post-action refetch overlap. Without a sequence
      guard a slow earlier response can land last and put stale messages back
      on screen — right after a staff reply, which is exactly when it reads as
@@ -178,7 +240,7 @@ export function ConversationsPanel({
   const load = useCallback(async () => {
     if (!selectedId) return;
     const seq = (loadSeq.current += 1);
-    const result = await actions.fetchConversationMessages(siteId, selectedId);
+    const result = await actions.fetchConversationMessages(siteId, selectedId).catch(() => ({ ok: false as const }));
     if (seq !== loadSeq.current) return;
     if (result.ok) {
       setMessages(result.messages);
@@ -192,7 +254,7 @@ export function ConversationsPanel({
     } else {
       setError(t.errorRetry);
     }
-  }, [siteId, selectedId, t.errorRetry, actions]);
+  }, [siteId, selectedId, t.errorRetry, actions, setMessages, setAttachments, setStatus, setError]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async loader; state settles after awaits
@@ -200,7 +262,10 @@ export function ConversationsPanel({
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') void load();
     }, 15000);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      loadSeq.current += 1;
+    };
   }, [load]);
 
   function act(fn: () => Promise<unknown>) {
@@ -215,7 +280,10 @@ export function ConversationsPanel({
     if (!text || !selectedId) return;
     act(async () => {
       const result = await actions.staffReply(siteId, selectedId, text);
-      if (result.ok) setDraft('');
+      if (result.ok) {
+        setDraft('');
+        followLatest.current = true;
+      }
       else setError(result.error);
     });
   }
@@ -239,32 +307,50 @@ export function ConversationsPanel({
           : { label: t.aiActive, variant: 'secondary' as const };
 
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div
+      ref={panelRef}
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+      className="flex h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-1rem)] min-h-0 min-w-0 scroll-mt-14 flex-col gap-2"
+    >
+      {error && (
+        <div role="alert" className="flex max-h-[20%] shrink-0 items-center justify-between gap-2 overflow-y-auto rounded-xl border border-border bg-card px-3 py-2 text-xs text-destructive">
+          <p className="min-w-0 break-words">{error}</p>
+          <Button size="sm" variant="outline" className="min-h-11" onClick={() => void load()}>{t.retry}</Button>
+        </div>
+      )}
+      <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* List */}
-      <div className="flex min-w-0 flex-col gap-2 self-start">
+      <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col gap-2`}>
       <p
         role="status"
-        className={`text-xs font-medium ${
+        className={`shrink-0 text-xs font-medium ${
           totalUnread > 0 ? 'text-foreground' : 'text-muted-foreground'
         }`}
       >
         {totalUnread > 0 ? t.unreadTotal(totalUnread) : t.allRead}
       </p>
-      {/* self-start above plus max-h here: the list sizes to its own rows and
-          only scrolls once there are more than a screenful. As a stretched
-          grid item it took the thread column's height and then clipped its
-          own content inside it — 278px of rows shown through a 172px window,
-          with no scrollbar hint that anything was below. */}
       <ul
-        className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto overscroll-contain pe-1"
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pe-1"
         aria-label={t.title}
       >
         {conversations.map((conversation) => (
-          <li key={conversation.id}>
+          <li key={conversation.id} className="shrink-0">
             <button
               type="button"
-              onClick={() => {
-                setSelectedId(conversation.id);
+              onClick={(event) => {
+                selectedRowRef.current = event.currentTarget;
+                if (conversation.id !== selectedId) {
+                  loadSeq.current += 1;
+                  setSelectedId(conversation.id);
+                  setStatus('');
+                  setMessages([]);
+                  setAttachments({});
+                  setError(null);
+                  setVisibleCount(MESSAGE_WINDOW);
+                  olderScroll.current = null;
+                  followLatest.current = true;
+                }
+                setMobileThreadOpen(true);
                 /* Opening it IS reading it. Fire and forget: the badge is a
                    convenience, and a failed write must not block the thread
                    from opening. The count clears on the next server read. */
@@ -322,7 +408,7 @@ export function ConversationsPanel({
                     </span>
                   )}
 
-                  <span className="mt-0.5 flex items-center gap-1.5">
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                     <Badge variant={statusBadge(conversation.status).variant}>
                       {statusBadge(conversation.status).label}
                     </Badge>
@@ -347,37 +433,79 @@ export function ConversationsPanel({
       </div>
 
       {/* Thread */}
-      <section className="flex min-h-[420px] min-w-0 flex-col rounded-xl border border-border bg-card">
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+      <section className={`${mobileThreadOpen ? 'flex' : 'hidden lg:flex'} h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-border bg-card`} aria-label={t.title}>
+        <header className="flex max-h-[40%] shrink-0 flex-wrap items-center justify-between gap-2 overflow-y-auto overscroll-contain border-b border-border px-3 py-2 sm:px-4">
+          <div className="w-full lg:hidden">
+            <Button ref={backRef} variant="ghost" size="sm" className="min-h-11" onClick={() => setMobileThreadOpen(false)}>
+              <span className="inline-block rtl:rotate-180" aria-hidden="true">←</span>
+              {t.back}
+            </Button>
+          </div>
           <div className="min-w-0">
             {status === 'handoff_requested' && (
               <p className="text-xs text-amber-600 dark:text-amber-400">↪ {t.systemHandoff}</p>
             )}
-            <Badge variant={statusBadge(status).variant}>{statusBadge(status).label}</Badge>
+            {status ? (
+              <Badge variant={statusBadge(status).variant}>{statusBadge(status).label}</Badge>
+            ) : !error ? (
+              <div role="status" aria-label={t.loading}>
+                <Skeleton className="h-5 w-28" />
+                <span className="sr-only">{t.loading}</span>
+              </div>
+            ) : null}
           </div>
-          <div className="flex gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             {(status === 'open' || status === 'handoff_requested') && selectedId && (
-              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
+              <Button size="sm" className="min-h-11" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
                 {t.takeOver}
               </Button>
             )}
             {status === 'handoff_active' && (
-              <Button size="sm" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.releaseConversation(siteId, selectedId))}>
+              <Button size="sm" className="min-h-11" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.releaseConversation(siteId, selectedId))}>
                 {t.returnToAi}
               </Button>
             )}
-            {status !== 'closed' && selectedId && (
-              <Button size="sm" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => actions.closeConversationAction(siteId, selectedId))}>
+            {status && status !== 'closed' && selectedId && (
+              <Button size="sm" className="min-h-11" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => actions.closeConversationAction(siteId, selectedId))}>
                 {t.resolve}
               </Button>
             )}
           </div>
         </header>
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4" role="log" aria-live="polite">
-          {messages.map((message) =>
+        <div
+          ref={logRef}
+          className="min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3 sm:p-4"
+          role="log"
+          aria-label={t.title}
+          aria-live="polite"
+          aria-busy={!status && !error}
+          tabIndex={0}
+          onScroll={(event) => {
+            const log = event.currentTarget;
+            followLatest.current = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+          }}
+        >
+          {/* The host fetch contract has no history cursor. Keep its existing
+              payload, but only mount recent messages until staff asks for more. */}
+          {messages.length > visibleCount && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-h-11 w-full"
+              onClick={() => {
+                const log = logRef.current;
+                if (log) olderScroll.current = { height: log.scrollHeight, top: log.scrollTop };
+                followLatest.current = false;
+                setVisibleCount((count) => count + MESSAGE_WINDOW);
+              }}
+            >
+              {t.loadOlder}
+            </Button>
+          )}
+          {messages.slice(-visibleCount).map((message) =>
             message.role === 'system' ? (
-              <p key={message.id} className="text-center text-[11px] text-muted-foreground">
+              <p key={message.id} className="break-words text-center text-[11px] text-muted-foreground">
                 {message.role === 'system' && message.author === 'system' && message.content.length > 0
                   ? message.content
                   : ''}
@@ -385,7 +513,7 @@ export function ConversationsPanel({
             ) : (
               <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-start' : 'justify-end'}`}>
                 <div
-                  className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm ${
+                  className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2 text-sm sm:max-w-[80%] ${
                     message.role === 'user'
                       ? 'bg-muted'
                       : 'bg-primary text-primary-foreground'
@@ -424,13 +552,8 @@ export function ConversationsPanel({
           )}
         </div>
 
-        {status !== 'closed' && (
-          <footer className="border-t border-border p-3">
-            {error && (
-              <p role="alert" className="mb-2 text-xs text-destructive">
-                {error}
-              </p>
-            )}
+        {status && status !== 'closed' && (
+          <footer className="shrink-0 border-t border-border p-3">
             <form
               className="flex items-end gap-2"
               onSubmit={(e) => {
@@ -453,15 +576,16 @@ export function ConversationsPanel({
                   }
                 }}
                 placeholder={t.replyPh}
-                className="min-h-[40px]"
+                className="h-11 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto"
               />
-              <Button type="submit" size="sm" disabled={!draft.trim() || pending}>
+              <Button type="submit" size="sm" className="min-h-11 min-w-11" disabled={!draft.trim() || pending}>
                 {t.send}
               </Button>
             </form>
           </footer>
         )}
       </section>
+      </div>
     </div>
   );
 }
