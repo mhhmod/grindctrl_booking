@@ -46,6 +46,12 @@ const COPY = {
     resume: 'Resume',
     remove: 'Delete',
     resync: 'Re-sync',
+    syncedToday: 'Synced today',
+    syncedDaysAgo: (n: number) => `Synced ${n}d ago`,
+    updatedToday: 'Updated today',
+    updatedDaysAgo: (n: number) => `Updated ${n}d ago`,
+    staleSyncedDaysAgo: (n: number) => `Stale · synced ${n}d ago`,
+    staleNeverSynced: 'Stale · never synced',
     empty: 'No knowledge yet — add your first policy or FAQ so the AI can answer accurately.',
   },
   ar: {
@@ -75,9 +81,28 @@ const COPY = {
     resume: 'تفعيل',
     remove: 'حذف',
     resync: 'تحديث',
+    syncedToday: 'تمت المزامنة اليوم',
+    syncedDaysAgo: (n: number) => `تمت المزامنة قبل ${n} ي`,
+    updatedToday: 'تم التحديث اليوم',
+    updatedDaysAgo: (n: number) => `تم التحديث قبل ${n} ي`,
+    staleSyncedDaysAgo: (n: number) => `قديمة · تمت المزامنة قبل ${n} ي`,
+    staleNeverSynced: 'قديمة · لم تتم المزامنة أبداً',
     empty: 'لا معرفة بعد — أضف أول سياسة أو سؤال شائع ليجيب المساعد بدقة.',
   },
 };
+
+/* Day-level granularity is enough here: a knowledge source is re-synced on
+   the order of days, never by the minute — unlike the conversations inbox,
+   which needs minute/hour precision. */
+const STALE_AFTER_DAYS = 30;
+
+/** Whole days elapsed since an ISO timestamp, or null when missing/unparseable. */
+function daysSince(iso: string | null): number | null {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms)) return null;
+  return Math.max(0, Math.floor(ms / 86_400_000));
+}
 
 export function AiKnowledgeEditor({
   locale,
@@ -303,6 +328,7 @@ export function AiKnowledgeEditor({
                   {entry.source_url && (
                     <p className="mt-1 truncate text-[11px] text-muted-foreground">{entry.source_url}</p>
                   )}
+                  <SyncFreshness entry={entry} t={t} />
                 </li>
               ))}
             </ul>
@@ -314,6 +340,41 @@ export function AiKnowledgeEditor({
         <PreviewFrame payload={{ ...previewPayload, behaviour: { ...publishedPayload.behaviour } }} initialLocale={locale} />
       </aside>
     </div>
+  );
+}
+
+/* Only a url-sourced entry can drift from its source, so only it ever gets
+   the stale cue (or "never synced", which is the same risk with no signal
+   yet); a manually typed entry just shows a neutral last-updated line. */
+function SyncFreshness({ entry, t }: { entry: KnowledgeEntry; t: (typeof COPY)['en'] }) {
+  if (entry.source === 'url') {
+    const days = daysSince(entry.last_synced_at);
+    if (days === null) {
+      return (
+        <p className="mt-1">
+          <Badge variant="destructive">{t.staleNeverSynced}</Badge>
+        </p>
+      );
+    }
+    if (days > STALE_AFTER_DAYS) {
+      return (
+        <p className="mt-1">
+          <Badge variant="destructive">{t.staleSyncedDaysAgo(days)}</Badge>
+        </p>
+      );
+    }
+    return (
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        {days === 0 ? t.syncedToday : t.syncedDaysAgo(days)}
+      </p>
+    );
+  }
+  const days = daysSince(entry.updated_at);
+  if (days === null) return null;
+  return (
+    <p className="mt-1 text-[11px] text-muted-foreground">
+      {days === 0 ? t.updatedToday : t.updatedDaysAgo(days)}
+    </p>
   );
 }
 
