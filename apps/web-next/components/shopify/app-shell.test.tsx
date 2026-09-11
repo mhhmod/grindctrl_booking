@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* The "Claim this store" button used to swallow every outcome silently
    (already-linked, error, and even success all looked identical: nothing
@@ -13,17 +13,25 @@ vi.mock('next-themes', () => ({
 
 const startShopifyClaimMock = vi.fn();
 vi.mock('@/components/shopify/auto-claim', () => ({
-  AutoClaim: () => null,
+  // A visible marker, not null: the ordering test below needs to observe
+  // whether AutoClaim has actually mounted yet.
+  AutoClaim: () => <div data-testid="auto-claim-mounted" />,
   startShopifyClaim: (...args: unknown[]) => startShopifyClaimMock(...args),
 }));
 
-vi.mock('@/components/shopify/ensure-shop-token', () => ({ EnsureShopToken: () => null }));
+const ensureShopTokenMock = vi.fn();
+vi.mock('@/components/shopify/ensure-shop-token', () => ({
+  ensureShopToken: (...args: unknown[]) => ensureShopTokenMock(...args),
+}));
 vi.mock('@/components/shopify/admin-settings', () => ({ ShopifyAdminSettings: () => null }));
 vi.mock('@/components/shopify/store-chat-embedded', () => ({ StoreChatEmbedded: () => null }));
 
 import { ShopifyAppShell } from './app-shell';
 
 describe('ShopifyAppShell claim button', () => {
+  beforeEach(() => {
+    ensureShopTokenMock.mockResolvedValue(undefined);
+  });
   afterEach(() => {
     vi.clearAllMocks();
   });
@@ -74,5 +82,44 @@ describe('ShopifyAppShell claim button', () => {
       resolveClaim('navigated');
     });
     await waitFor(() => expect(button).not.toBeDisabled());
+  });
+});
+
+/* Regression: AutoClaim's automatic top-level redirect used to be able to
+   fire before EnsureShopToken's Admin-token write had finished, which could
+   turn a merchant's first, legitimate claim attempt into a false "not you"
+   error (app/claim/page.tsx needs that token to verify ownership). AutoClaim
+   must not mount until the token bootstrap has settled -- success or
+   failure, either way it's had its chance. */
+describe('ShopifyAppShell claim/token bootstrap ordering', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('does not mount AutoClaim until ensureShopToken settles', async () => {
+    let resolveToken: () => void = () => {};
+    ensureShopTokenMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveToken = resolve;
+      }),
+    );
+
+    render(<ShopifyAppShell locale="en" />);
+
+    expect(screen.queryByTestId('auto-claim-mounted')).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveToken();
+    });
+
+    expect(await screen.findByTestId('auto-claim-mounted')).toBeInTheDocument();
+  });
+
+  it('still mounts AutoClaim after a token-bootstrap failure, not just success', async () => {
+    ensureShopTokenMock.mockRejectedValue(new Error('token exchange failed'));
+
+    render(<ShopifyAppShell locale="en" />);
+
+    expect(await screen.findByTestId('auto-claim-mounted')).toBeInTheDocument();
   });
 });

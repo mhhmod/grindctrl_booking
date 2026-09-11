@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
 import { AutoClaim, startShopifyClaim } from '@/components/shopify/auto-claim';
-import { EnsureShopToken } from '@/components/shopify/ensure-shop-token';
+import { ensureShopToken } from '@/components/shopify/ensure-shop-token';
 import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
@@ -40,13 +40,26 @@ const SHELL_TABS: readonly ShellTab[] = ['try-on', 'store-chat'];
 export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const [tab, setTab] = useState<ShellTab>('try-on');
   const [claimState, setClaimState] = useState<ClaimButtonState>('idle');
+  /* AutoClaim's automatic redirect must not race EnsureShopToken's OAuth
+     token-exchange write: on a brand-new install, ownership verification
+     (app/claim/page.tsx) needs that token, and firing the redirect before
+     it finishes stored a plausible false "not you" for the merchant's very
+     first, legitimate attempt. Gating AutoClaim's mount on this settling
+     first (success or failure -- either way it's had its chance) removes
+     the race instead of hoping the timing works out. */
+  const [tokenBootstrapped, setTokenBootstrapped] = useState(false);
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const { resolvedTheme, setTheme } = useTheme();
 
+  useEffect(() => {
+    void ensureShopToken()
+      .catch(() => {})
+      .finally(() => setTokenBootstrapped(true));
+  }, []);
+
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
-      <AutoClaim locale={locale} />
-      <EnsureShopToken />
+      {tokenBootstrapped && <AutoClaim locale={locale} />}
       <header className="flex items-center justify-between gap-3 px-1 pt-1">
         <BrandLogo size="sm" />
         <div className="flex items-center gap-2">
