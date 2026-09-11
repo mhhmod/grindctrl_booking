@@ -155,11 +155,19 @@ describe('ClaimPage', () => {
 
     expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
     expect(screen.getByText(/contact support/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /connect with a code/i })).toHaveAttribute(
+      'href',
+      '/dashboard/try-on',
+    );
     expect(ensureMessengerSite).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
-  it('fails closed before adoption when Shopify cannot verify the owner email', async () => {
+  it('fails closed with a retry-first message (not a hard mismatch) when the owner email cannot be checked yet', async () => {
+    /* getShopOwnerEmail returning null means the Admin token isn't stored
+       yet (plausible seconds after a fresh install, see
+       components/shopify/ensure-shop-token.tsx), not necessarily a real
+       email mismatch -- this must not be folded into the "not you" copy. */
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(getShopOwnerEmail).mockResolvedValue(null);
@@ -167,7 +175,15 @@ describe('ClaimPage', () => {
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
     render(result);
 
-    expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /still connecting/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /try again/i })).toHaveAttribute(
+      'href',
+      '/claim?token=good-token',
+    );
+    expect(screen.getByRole('link', { name: /connect with a code/i })).toHaveAttribute(
+      'href',
+      '/dashboard/try-on',
+    );
     expect(ensureMessengerSite).not.toHaveBeenCalled();
   });
 

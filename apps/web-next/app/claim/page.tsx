@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
@@ -39,7 +40,15 @@ const COPY = {
     // button that does not exist. Point at support instead.
     takenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
     ownerTitle: "We couldn't verify you're the store owner",
-    ownerBody: "This store's Shopify contact email doesn't match your GRINDCTRL account. Contact support if you believe this is your store.",
+    ownerBody: "This store's Shopify contact email doesn't match your GRINDCTRL account. Contact support if you believe this is your store, or connect it yourself with a one-time code.",
+    // Distinct from ownerBody: this is what a freshly-installed store looks
+    // like for the first ~10-20 seconds, before the store's Shopify token
+    // finishes being stored — not necessarily a real mismatch.
+    notReadyTitle: "Still connecting your store",
+    notReadyBody: "This can take a few seconds right after installing the app. Try the link again, or connect your store yourself with a one-time code.",
+    tryAgain: 'Try again',
+    connectManually: 'Connect with a code instead',
+    contactSupport: 'Contact support',
   },
   ar: {
     expiredTitle: 'انتهت صلاحية هذا الرابط',
@@ -47,7 +56,12 @@ const COPY = {
     takenTitle: 'هذا المتجر متصل بالفعل',
     takenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
     ownerTitle: 'لم نتمكن من التحقق من أنك مالك المتجر',
-    ownerBody: 'البريد الإلكتروني للتواصل في Shopify لهذا المتجر لا يطابق حسابك في GRINDCTRL. تواصل مع الدعم إذا كنت تعتقد أن هذا متجرك.',
+    ownerBody: 'البريد الإلكتروني للتواصل في Shopify لهذا المتجر لا يطابق حسابك في GRINDCTRL. تواصل مع الدعم إذا كنت تعتقد أن هذا متجرك، أو اربطه بنفسك برمز لمرة واحدة.',
+    notReadyTitle: 'جارٍ ربط متجرك',
+    notReadyBody: 'قد يستغرق هذا بضع ثوانٍ بعد تثبيت التطبيق مباشرة. أعد المحاولة، أو اربط متجرك بنفسك برمز لمرة واحدة.',
+    tryAgain: 'أعد المحاولة',
+    connectManually: 'الربط برمز بدلاً من ذلك',
+    contactSupport: 'تواصل مع الدعم',
   },
 } as const;
 
@@ -55,16 +69,38 @@ function MessagePage({
   locale,
   title,
   body,
+  actions,
 }: {
   locale: 'en' | 'ar';
   title: string;
   body: string;
+  /** Real, working next steps — never a fabricated contact link. */
+  actions?: Array<{ label: string; href: string }>;
 }) {
   return (
     <section dir={locale === 'ar' ? 'rtl' : 'ltr'} lang={locale} className="grid min-w-0 place-items-center px-4 py-16">
-      <div className="grid max-w-md gap-2 text-center">
-        <h1 className="text-lg font-semibold">{title}</h1>
-        <p className="text-sm text-muted-foreground">{body}</p>
+      <div className="grid max-w-md gap-4 text-center">
+        <div className="grid gap-2">
+          <h1 className="text-lg font-semibold">{title}</h1>
+          <p className="text-sm text-muted-foreground">{body}</p>
+        </div>
+        {actions && actions.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {actions.map((action, i) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className={
+                  i === 0
+                    ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90'
+                    : 'text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline'
+                }
+              >
+                {action.label}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -90,8 +126,26 @@ export default async function ClaimPage({
   const merchantEmail =
     clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
   const ownerEmail = await getShopOwnerEmail(claim.shop);
-  if (!ownerEmail || !merchantEmail || ownerEmail.toLowerCase() !== merchantEmail.toLowerCase()) {
-    return <MessagePage locale={locale} title={copy.ownerTitle} body={copy.ownerBody} />;
+  const manualConnectAction = { label: copy.connectManually, href: '/dashboard/try-on' };
+  if (!ownerEmail) {
+    /* getShopOwnerEmail needs the shop's Admin API token, which is fetched
+       asynchronously right after install (see ensure-shop-token.tsx) and can
+       plausibly still be in flight seconds after a fresh install -- this is
+       not necessarily a real mismatch, so it gets its own retry-first
+       messaging instead of being folded into the "not you" case below. */
+    return (
+      <MessagePage
+        locale={locale}
+        title={copy.notReadyTitle}
+        body={copy.notReadyBody}
+        actions={[{ label: copy.tryAgain, href: `/claim?token=${encodeURIComponent(token)}` }, manualConnectAction]}
+      />
+    );
+  }
+  if (!merchantEmail || ownerEmail.toLowerCase() !== merchantEmail.toLowerCase()) {
+    return (
+      <MessagePage locale={locale} title={copy.ownerTitle} body={copy.ownerBody} actions={[manualConnectAction]} />
+    );
   }
 
   try {
