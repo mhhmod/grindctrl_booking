@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { CSSProperties } from 'react';
+import { cookies, headers } from 'next/headers';
 import { toAppearanceTokens } from '@/lib/try-on/appearance';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
@@ -8,10 +9,12 @@ import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
 import {
   DEFAULT_TRYON_LOCALE,
   getDictionary,
   isTryOnLocale,
+  TRYON_LOCALE_COOKIE,
   type TryOnLocale,
 } from '@/lib/try-on/i18n';
 
@@ -56,9 +59,20 @@ export default async function EmbedTryOnPage({
     : undefined;
   const settings = await getTryOnSettings(shop);
 
+  /* Same fallback chain as app/try-on/page.tsx (the standalone demo): an
+     explicit signal wins over a guess, and a shopper who set Arabic
+     site-wide must not silently see English just because this one embed
+     didn't get a ?locale= param from the theme block. The query param
+     stays highest priority here -- it is the merchant's own deliberate
+     per-block configuration, more specific than a browser-wide cookie. */
+  const cookieLocale = (await cookies()).get(TRYON_LOCALE_COOKIE)?.value;
+  const acceptLanguage = (await headers()).get('accept-language');
+  const browserLocale: TryOnLocale = localeFromAcceptLanguage(acceptLanguage) ?? DEFAULT_TRYON_LOCALE;
   const initialLocale: TryOnLocale = isTryOnLocale(params.locale)
     ? params.locale
-    : DEFAULT_TRYON_LOCALE;
+    : isTryOnLocale(cookieLocale)
+      ? cookieLocale
+      : browserLocale;
   const copy = getDictionary(initialLocale);
   /* Single source of truth: tryon_settings. Rendered server-side as a
      `light`/`dark` class so the panel never depends on next-themes or
