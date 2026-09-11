@@ -20,6 +20,8 @@ const STATS = {
   handedOff7d: 13,
   openNow: 2,
   medianFirstResponseSeconds7d: 41,
+  feedbackUp30d: 34,
+  feedbackDown30d: 4,
 };
 
 const SAMPLE_REPLY = `Here are the direct links to our collections:

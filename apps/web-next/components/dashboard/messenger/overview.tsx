@@ -19,6 +19,8 @@ type Stats = {
   handedOff7d: number;
   openNow: number;
   medianFirstResponseSeconds7d: number | null;
+  feedbackUp30d: number;
+  feedbackDown30d: number;
 } | null;
 
 const COPY = {
@@ -45,6 +47,7 @@ const COPY = {
     handedOff: 'Needed your team',
     openNow: 'Open right now',
     firstResponse: 'Median first reply (7d)',
+    satisfaction: 'Satisfaction · 30 days',
     seconds: 's',
     noData: 'No conversations yet. Once Store Chat is live, shopper questions land here.',
   },
@@ -71,6 +74,7 @@ const COPY = {
     handedOff: 'احتاجت فريقك',
     openNow: 'مفتوحة الآن',
     firstResponse: 'وسيط أول رد (٧ أيام)',
+    satisfaction: 'الرضا · ٣٠ يومًا',
     seconds: ' ث',
     noData: 'لا محادثات بعد. بعد تفعيل دردشة المتجر ستظهر أسئلة العملاء هنا.',
   },
@@ -141,7 +145,7 @@ export function MessengerOverview({
       </div>
 
       {stats && stats.conversations7d > 0 ? (
-        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <Metric label={t.conversations} value={stats.conversations7d} />
           <Metric label={t.aiResolved} value={stats.aiResolved7d} />
           <Metric label={t.handedOff} value={stats.handedOff7d} />
@@ -152,6 +156,14 @@ export function MessengerOverview({
               stats.medianFirstResponseSeconds7d === null
                 ? '—'
                 : `${stats.medianFirstResponseSeconds7d}${t.seconds}`
+            }
+          />
+          <Metric
+            label={t.satisfaction}
+            value={
+              stats.feedbackUp30d + stats.feedbackDown30d > 0
+                ? `${Math.round((stats.feedbackUp30d / (stats.feedbackUp30d + stats.feedbackDown30d)) * 100)}%`
+                : '—'
             }
           />
         </div>

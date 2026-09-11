@@ -77,3 +77,39 @@ describe('MessengerOverview shortcuts', () => {
     expect(screen.queryByRole('button', { name: 'Turn on AI replies' })).not.toBeInTheDocument();
   });
 });
+
+describe('MessengerOverview satisfaction', () => {
+  it('renders the rounded CSAT percentage when feedback exists', () => {
+    renderOverview({
+      stats: {
+        conversations7d: 10,
+        aiResolved7d: 5,
+        handedOff7d: 2,
+        openNow: 1,
+        medianFirstResponseSeconds7d: 12,
+        feedbackUp30d: 11,
+        feedbackDown30d: 1,
+      },
+    });
+    expect(screen.getByText('Satisfaction · 30 days')).toBeInTheDocument();
+    expect(screen.getByText('92%')).toBeInTheDocument();
+  });
+
+  it('shows no broken or misleading value when there is no feedback yet', () => {
+    renderOverview({
+      stats: {
+        conversations7d: 10,
+        aiResolved7d: 5,
+        handedOff7d: 2,
+        openNow: 1,
+        medianFirstResponseSeconds7d: 12,
+        feedbackUp30d: 0,
+        feedbackDown30d: 0,
+      },
+    });
+    expect(screen.getByText('Satisfaction · 30 days')).toBeInTheDocument();
+    expect(screen.queryByText(/NaN%/)).not.toBeInTheDocument();
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+});
