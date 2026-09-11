@@ -24,7 +24,7 @@ interface WireMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   createdAt: string;
-  author?: string;
+  author?: 'ai' | 'human' | 'system' | 'shopper';
   escalated?: boolean;
   pending?: boolean;
   failed?: boolean;
@@ -570,8 +570,16 @@ export function MessengerPanel({
             );
           }
           const mine = m.role === 'user';
+          /* metadata.author already distinguishes 'ai' from 'human' server-side
+             (staffReply sets it, the AI paths set it) — a shopper reading a
+             resolved thread previously had no way to tell them apart. */
+          const senderLabel =
+            !mine && m.author === 'human' ? t.humanSenderLabel : !mine && m.author === 'ai' ? t.aiSenderLabel : null;
           return (
-            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+            <div key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+              {senderLabel && (
+                <span className="mb-0.5 px-1 text-[10px] font-medium text-muted-foreground">{senderLabel}</span>
+              )}
               <div
                 className={
                   mine

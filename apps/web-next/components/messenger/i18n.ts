@@ -10,6 +10,8 @@ export interface PanelCopy {
   messagePlaceholderFallback: string;
   poweredBy: string;
   aiNotice: string;
+  aiSenderLabel: string;
+  humanSenderLabel: string;
   connectingTeam: string;
   teamReplied: string;
   resolved: string;
@@ -44,6 +46,8 @@ const EN: PanelCopy = {
   messagePlaceholderFallback: 'Ask anything…',
   poweredBy: 'Powered by GRINDCTRL',
   aiNotice: 'Assistant may reply automatically',
+  aiSenderLabel: 'Assistant',
+  humanSenderLabel: 'Team',
   connectingTeam: 'Connecting you with our team…',
   teamReplied: 'Our team joined the conversation',
   resolved: 'Conversation resolved',
@@ -76,6 +80,8 @@ const AR: PanelCopy = {
   messagePlaceholderFallback: 'اكتب سؤالك…',
   poweredBy: 'مدعوم من GRINDCTRL',
   aiNotice: 'قد يرد المساعد تلقائياً',
+  aiSenderLabel: 'المساعد',
+  humanSenderLabel: 'الفريق',
   connectingTeam: 'جارٍ توصيلك بفريقنا…',
   teamReplied: 'انضم فريقنا إلى المحادثة',
   resolved: 'تم حل المحادثة',

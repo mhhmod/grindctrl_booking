@@ -60,6 +60,22 @@ const MERCHANT_REPLY = {
   author: 'agent',
 };
 
+const HUMAN_REPLY = {
+  id: 'm-human-1',
+  role: 'assistant',
+  content: 'A real person typed this.',
+  createdAt: new Date().toISOString(),
+  author: 'human',
+};
+
+const AI_REPLY = {
+  id: 'm-ai-1',
+  role: 'assistant',
+  content: 'The assistant answered this.',
+  createdAt: new Date().toISOString(),
+  author: 'ai',
+};
+
 let fetchMock: ReturnType<typeof vi.fn>;
 
 function syncCalls() {
@@ -154,5 +170,46 @@ describe('MessengerPanel close', () => {
   it('offers no close button in the dashboard preview, which has no loader', async () => {
     render(<MessengerPanel config={CONFIG} variant="preview" locale="en" />);
     expect(screen.queryByRole('button', { name: 'Close chat' })).not.toBeInTheDocument();
+  });
+});
+
+/* metadata.author already distinguished a bot reply from a human one
+   server-side; the shopper-facing render never used it, so a shopper
+   reading a resolved thread could not tell a bot answer from a person's. */
+describe('MessengerPanel sender labels', () => {
+  it('labels a human reply distinctly from an AI reply', async () => {
+    fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.includes('/api/messenger/bootstrap')
+        ? { ...BOOTSTRAP, messages: [HUMAN_REPLY, AI_REPLY] }
+        : { status: 'open', messages: [] };
+      return { ok: true, json: () => Promise.resolve(body) } as unknown as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await bootPanel();
+
+    expect(screen.getByText('Team')).toBeInTheDocument();
+    expect(screen.getByText('Assistant')).toBeInTheDocument();
+  });
+
+  it('shows no sender label for the shopper\'s own messages', async () => {
+    fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.includes('/api/messenger/bootstrap')
+        ? {
+            ...BOOTSTRAP,
+            messages: [{ id: 'm-shopper-1', role: 'user', content: 'My own question', createdAt: new Date().toISOString() }],
+          }
+        : { status: 'open', messages: [] };
+      return { ok: true, json: () => Promise.resolve(body) } as unknown as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await bootPanel();
+
+    expect(screen.getByText('My own question')).toBeInTheDocument();
+    expect(screen.queryByText('Team')).not.toBeInTheDocument();
+    expect(screen.queryByText('Assistant')).not.toBeInTheDocument();
   });
 });
