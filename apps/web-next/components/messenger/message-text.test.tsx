@@ -86,4 +86,72 @@ describe('MessageText', () => {
     expect(screen.getByText('We carry graphic tees, hoodies and caps.')).toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
+
+  it('renders **bold** as a strong element', () => {
+    const { container } = render(<MessageText text="Our **Summer Sale** starts Friday." />);
+    const strong = container.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong).toHaveTextContent('Summer Sale');
+    // The markers themselves must not survive as text.
+    expect(container.textContent).not.toContain('**');
+  });
+
+  it('leaves an unmatched ** marker as plain text', () => {
+    const { container } = render(<MessageText text="Our **Summer Sale starts Friday." />);
+    expect(container.querySelector('strong')).toBeNull();
+    expect(container.textContent).toContain('Our **Summer Sale starts Friday.');
+  });
+
+  it('renders `inline code` as a code element', () => {
+    const { container } = render(<MessageText text="Use `SUMMER10` at checkout." />);
+    const code = container.querySelector('code');
+    expect(code).not.toBeNull();
+    expect(code).toHaveTextContent('SUMMER10');
+    expect(container.textContent).not.toContain('`');
+  });
+
+  it('renders a "- " line with a bullet marker instead of the literal dash', () => {
+    const { container } = render(<MessageText text="- Free shipping over $50" />);
+    expect(container.querySelector('strong')).toBeNull();
+    expect(container.textContent).toContain('Free shipping over $50');
+    expect(container.textContent).not.toContain('- Free shipping');
+    expect(container.textContent).toContain('•');
+  });
+
+  it('renders a "* " line as a bullet too', () => {
+    const { container } = render(<MessageText text="* Easy returns" />);
+    expect(container.textContent).toContain('Easy returns');
+    expect(container.textContent).toContain('•');
+  });
+
+  /* A reply routinely mixes emphasis and links on one line ("**Note:** see
+     https://..."), so the URL pass and the bold/code pass must compose
+     instead of one swallowing the other. */
+  it('keeps both the link and the bold text when one line has both', () => {
+    const { container } = render(
+      <MessageText text="**Note:** see https://example.com/collections for more" />,
+    );
+
+    const link = screen.getByRole('link', { name: 'https://example.com/collections' });
+    expect(link).toHaveAttribute('href', 'https://example.com/collections');
+
+    const strong = container.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong).toHaveTextContent('Note:');
+  });
+
+  it('renders a bullet line that also contains a link', () => {
+    render(<MessageText text="- All Tees: https://example.com/collections/tees" />);
+    expect(screen.getByRole('link', { name: 'https://example.com/collections/tees' })).toBeInTheDocument();
+    expect(screen.getByText(/All Tees:/)).toBeInTheDocument();
+  });
+
+  it('still renders raw HTML strings as inert text when markdown is present', () => {
+    const { container } = render(
+      <MessageText text={'**Sale** <img src=x onerror="alert(1)">'} />,
+    );
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('strong')).not.toBeNull();
+    expect(container.textContent).toContain('<img src=x onerror="alert(1)">');
+  });
 });
