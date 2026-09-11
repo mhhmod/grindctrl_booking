@@ -63,7 +63,6 @@ export function MessengerTabs({
   knowledge,
   actions,
   hasDraft,
-  showConversationsTab = true,
 }: {
   locale: MessengerLocale;
   initialTab: MessengerTabId;
@@ -83,21 +82,15 @@ export function MessengerTabs({
   knowledge: KnowledgeEntry[];
   actions: MessengerHostActions;
   hasDraft: boolean;
-  /** The embedded Shopify shell doesn't render Conversations yet — see
-   *  Phase 2's scope note. Defaults to true so the dashboard is unaffected. */
-  showConversationsTab?: boolean;
 }) {
-  const visibleTabs = showConversationsTab ? TABS : TABS.filter((id) => id !== 'conversations');
-  const [tab, setTab] = useState<MessengerTabId>(
-    initialTab === 'conversations' && !showConversationsTab ? 'overview' : initialTab,
-  );
+  const [tab, setTab] = useState<MessengerTabId>(initialTab);
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
 
   return (
     <>
       <nav aria-label={t.sections} className="min-w-0">
         <ul className="flex flex-wrap gap-1 border-b border-border pb-px">
-          {visibleTabs.map((id) => (
+          {TABS.map((id) => (
             <li key={id}>
               <button
                 type="button"
@@ -165,7 +158,7 @@ export function MessengerTabs({
           actions={actions}
         />
       )}
-      {showConversationsTab && tab === 'conversations' && (
+      {tab === 'conversations' && (
         <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} actions={actions} />
       )}
       {tab === 'installation' && (

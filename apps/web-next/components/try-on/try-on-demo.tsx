@@ -111,19 +111,26 @@ export async function pollTryOnJob(
   throw new Error(fallbackError);
 }
 
-const GENERATION_PHASE_PROGRESS: Record<GenerationPhase, number> = {
-  'session-requested': 25,
-  'session-created': 50,
-  'generation-requested': 75,
-  'result-received': 100,
-};
+/* Single ordered source of truth — progress percentage and loading-step
+   index both derive from one phase's position here, instead of two
+   hand-maintained per-phase tables that had to be kept in sync by hand. */
+const GENERATION_PHASES: readonly GenerationPhase[] = [
+  'session-requested',
+  'session-created',
+  'generation-requested',
+  'result-received',
+];
 
-const GENERATION_PHASE_STEP: Record<GenerationPhase, number> = {
-  'session-requested': 0,
-  'session-created': 1,
-  'generation-requested': 2,
-  'result-received': Number.POSITIVE_INFINITY,
-};
+function generationProgress(phase: GenerationPhase): number {
+  return ((GENERATION_PHASES.indexOf(phase) + 1) / GENERATION_PHASES.length) * 100;
+}
+
+/* 'result-received' clamps to the LAST configured loading step (merchants
+   can configure a custom step list of any length) rather than a literal
+   ordinal position, so it stays Infinity rather than joining the array. */
+function generationStepIndex(phase: GenerationPhase): number {
+  return phase === 'result-received' ? Number.POSITIVE_INFINITY : GENERATION_PHASES.indexOf(phase);
+}
 
 export type TryOnDemoOverrides = {
   generateLabel?: string;
@@ -182,7 +189,7 @@ export function TryOnDemo({
   const sessionInitStarted = useRef(false);
 
   const loadingStepIdx = Math.min(
-    GENERATION_PHASE_STEP[generationPhase],
+    generationStepIndex(generationPhase),
     loadingSteps.length - 1,
   );
   const currentLoadingLabel = loadingSteps[loadingStepIdx] ?? t.generatingTitle;
@@ -622,13 +629,13 @@ export function TryOnDemo({
                       role="progressbar"
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      aria-valuenow={GENERATION_PHASE_PROGRESS[generationPhase]}
+                      aria-valuenow={generationProgress(generationPhase)}
                       aria-valuetext={isSlowGeneration ? slowLoadingLabel : currentLoadingLabel}
                     >
                       <div
                         className="h-full rounded-full bg-primary shadow-[0_0_18px_color-mix(in_oklch,var(--primary)_55%,transparent)] transition-[width] duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
                         style={{
-                          width: `${GENERATION_PHASE_PROGRESS[generationPhase]}%`,
+                          width: `${generationProgress(generationPhase)}%`,
                         }}
                       />
                     </div>
