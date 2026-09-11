@@ -46,6 +46,9 @@ const COPY = {
     triageWrongSize: 'Looks like a size problem',
     triageUnclear: 'Not clear from the photo',
     triageNotAnIssue: 'Nothing obviously wrong',
+    handoffShopperAsked: 'Shopper asked for a human',
+    handoffAiHandedOff: 'AI handed this off',
+    handoffOther: 'Handed off to your team',
   },
   ar: {
     title: 'المحادثات',
@@ -81,8 +84,22 @@ const COPY = {
     triageWrongSize: 'يبدو أن المقاس غير مناسب',
     triageUnclear: 'غير واضح من الصورة',
     triageNotAnIssue: 'لا يوجد خطأ ظاهر',
+    handoffShopperAsked: 'طلب العميل التحدث مع موظف',
+    handoffAiHandedOff: 'حوّلها الذكاء الاصطناعي',
+    handoffOther: 'تم تحويلها إلى فريقك',
   },
 };
+
+/* handoff_reason is an internal code written by lib/messenger/escalate.ts's
+   two call sites (app/api/messenger/send/route.ts) — a moderator with no
+   technical background has no way to parse 'shopper_requested_human'.
+   Unknown/future codes fall back to a plain, still-useful label instead of
+   leaking another raw snake_case string. */
+function handoffReasonLabel(reason: string, t: (typeof COPY)['en']): string {
+  if (reason === 'shopper_requested_human') return t.handoffShopperAsked;
+  if (reason === 'assistant_escalated') return t.handoffAiHandedOff;
+  return t.handoffOther;
+}
 
 const MESSAGE_WINDOW = 50;
 
@@ -420,7 +437,7 @@ export function ConversationsPanel({
                     )}
                     {conversation.handoffReason && (
                       <span className="truncate text-[11px] text-muted-foreground">
-                        {conversation.handoffReason}
+                        {handoffReasonLabel(conversation.handoffReason, t)}
                       </span>
                     )}
                   </span>

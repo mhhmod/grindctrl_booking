@@ -78,6 +78,52 @@ describe('ConversationsPanel', () => {
   });
 });
 
+/* A moderator with no technical background cannot parse a raw handoff_reason
+   code like 'shopper_requested_human' — it must never render verbatim. */
+describe('ConversationsPanel handoff reason', () => {
+  it('shows a human-readable label for a known handoff reason, never the raw code', async () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={[{ ...CONVERSATIONS[0], handoffReason: 'shopper_requested_human' }]}
+        actions={actions}
+      />,
+    );
+
+    expect(await screen.findByText('Shopper asked for a human')).toBeInTheDocument();
+    expect(screen.queryByText('shopper_requested_human')).not.toBeInTheDocument();
+  });
+
+  it('shows a human-readable label for the AI-escalated reason', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={[{ ...CONVERSATIONS[0], handoffReason: 'assistant_escalated' }]}
+        actions={actions}
+      />,
+    );
+
+    expect(screen.getByText('AI handed this off')).toBeInTheDocument();
+    expect(screen.queryByText('assistant_escalated')).not.toBeInTheDocument();
+  });
+
+  it('falls back to a plain label instead of leaking an unrecognized code', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={[{ ...CONVERSATIONS[0], handoffReason: 'some_future_internal_code' }]}
+        actions={actions}
+      />,
+    );
+
+    expect(screen.getByText('Handed off to your team')).toBeInTheDocument();
+    expect(screen.queryByText('some_future_internal_code')).not.toBeInTheDocument();
+  });
+});
+
 /* The inbox had no notion of read at all: a conversation holding a question
    nobody had seen looked identical to one already answered. */
 describe('ConversationsPanel unread', () => {
