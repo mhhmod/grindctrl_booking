@@ -7,39 +7,78 @@ import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
 import { AutoClaim, startShopifyClaim } from '@/components/shopify/auto-claim';
+import { EnsureShopToken } from '@/components/shopify/ensure-shop-token';
 import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 const COPY = {
-  en: { tryOn: 'Try-On', storeChat: 'Store Chat', sections: 'GRINDCTRL sections', themeToggle: 'Switch between light and dark', claimStore: 'Claim this store' },
-  ar: { tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', sections: 'أقسام GRINDCTRL', themeToggle: 'التبديل بين الوضع الفاتح والداكن', claimStore: 'المطالبة بهذا المتجر' },
+  en: {
+    tryOn: 'Try-On',
+    storeChat: 'Store Chat',
+    sections: 'GRINDCTRL sections',
+    themeToggle: 'Switch between light and dark',
+    claimStore: 'Claim this store',
+    claimAlreadyConnected: 'Already connected',
+    claimError: 'Could not connect — try again',
+  },
+  ar: {
+    tryOn: 'التجربة الافتراضية',
+    storeChat: 'دردشة المتجر',
+    sections: 'أقسام GRINDCTRL',
+    themeToggle: 'التبديل بين الوضع الفاتح والداكن',
+    claimStore: 'المطالبة بهذا المتجر',
+    claimAlreadyConnected: 'متصل بالفعل',
+    claimError: 'تعذّر الاتصال — حاول مجدداً',
+  },
 } as const;
+
+type ClaimButtonState = 'idle' | 'loading' | 'already-connected' | 'error';
 
 type ShellTab = 'try-on' | 'store-chat';
 const SHELL_TABS: readonly ShellTab[] = ['try-on', 'store-chat'];
 
 export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const [tab, setTab] = useState<ShellTab>('try-on');
+  const [claimState, setClaimState] = useState<ClaimButtonState>('idle');
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
       <AutoClaim locale={locale} />
+      <EnsureShopToken />
       <header className="flex items-center justify-between gap-3 px-1 pt-1">
         <BrandLogo size="sm" />
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-auto px-2 py-1 text-xs text-muted-foreground"
-            onClick={() => {
-              void startShopifyClaim().catch(() => {});
-            }}
-          >
-            {t.claimStore}
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-auto px-2 py-1 text-xs text-muted-foreground"
+              disabled={claimState === 'loading'}
+              onClick={() => {
+                setClaimState('loading');
+                void startShopifyClaim()
+                  .then((outcome) => {
+                    setClaimState(outcome === 'already-linked' ? 'already-connected' : 'idle');
+                  })
+                  .catch(() => setClaimState('error'));
+              }}
+            >
+              {t.claimStore}
+            </Button>
+            {claimState === 'already-connected' && (
+              <span role="status" className="text-xs text-muted-foreground">
+                {t.claimAlreadyConnected}
+              </span>
+            )}
+            {claimState === 'error' && (
+              <span role="alert" className="text-xs text-destructive">
+                {t.claimError}
+              </span>
+            )}
+          </div>
           <Button
             type="button"
             variant="ghost"

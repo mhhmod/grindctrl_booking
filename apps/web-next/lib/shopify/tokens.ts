@@ -3,6 +3,7 @@ import 'server-only';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { decryptToken, encryptToken } from './token-crypto';
 import { normalizeShopDomain } from './shop-authorization';
+import { APP_SCOPES } from './oauth';
 
 /* Per-shop Shopify Admin API tokens (offline access).
 
@@ -124,4 +125,17 @@ export function hasOrderScope(scopes: string): boolean {
     .split(',')
     .map((scope) => scope.trim())
     .includes('read_orders');
+}
+
+/** Whether a stored token covers everything the app currently needs. A token
+ *  from before APP_SCOPES grew a new scope (e.g. a future addition) is not
+ *  sufficient just because a row exists for the shop. */
+export function hasRequiredScopes(scopes: string): boolean {
+  const granted = new Set(
+    scopes
+      .split(',')
+      .map((scope) => scope.trim())
+      .filter(Boolean),
+  );
+  return APP_SCOPES.split(',').every((scope) => granted.has(scope));
 }

@@ -12,7 +12,7 @@ describe('startShopifyClaim', () => {
     vi.clearAllMocks();
   });
 
-  it('does not navigate when the store is already linked', async () => {
+  it('does not navigate when the store is already linked, and reports that outcome', async () => {
     getShopifySessionToken.mockResolvedValue('session-token');
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ alreadyLinked: true }), {
@@ -21,9 +21,25 @@ describe('startShopifyClaim', () => {
     );
     const navigate = vi.fn();
 
-    await startShopifyClaim(navigate);
+    const outcome = await startShopifyClaim(navigate);
 
     expect(navigate).not.toHaveBeenCalled();
+    expect(outcome).toBe('already-linked');
+  });
+
+  it('reports "unavailable" without navigating when the server has no token to offer', async () => {
+    getShopifySessionToken.mockResolvedValue('session-token');
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'unavailable' }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    const navigate = vi.fn();
+
+    const outcome = await startShopifyClaim(navigate);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(outcome).toBe('unavailable');
   });
 
   it('mints a claim with the session token and navigates the top frame', async () => {
@@ -35,7 +51,7 @@ describe('startShopifyClaim', () => {
     );
     const navigate = vi.fn();
 
-    await startShopifyClaim(navigate);
+    const outcome = await startShopifyClaim(navigate);
 
     expect(fetchMock).toHaveBeenCalledWith('/api/shopify/claim/start', {
       headers: { authorization: 'Bearer session-token' },
@@ -43,5 +59,6 @@ describe('startShopifyClaim', () => {
     expect(navigate).toHaveBeenCalledWith(
       'https://grindctrl.cloud/claim?token=claim%20token%2Fwith%20symbols',
     );
+    expect(outcome).toBe('navigated');
   });
 });

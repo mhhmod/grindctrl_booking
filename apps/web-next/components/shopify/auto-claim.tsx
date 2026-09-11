@@ -9,18 +9,22 @@ function navigateTop(url: string): void {
   window.top!.location.href = url;
 }
 
+export type ClaimOutcome = 'navigated' | 'already-linked' | 'unavailable';
+
 /** Shared by the automatic attempt and the persistent manual fallback. */
-export async function startShopifyClaim(navigate: Navigate = navigateTop): Promise<void> {
+export async function startShopifyClaim(navigate: Navigate = navigateTop): Promise<ClaimOutcome> {
   const token = await getShopifySessionToken();
   const response = await fetch('/api/shopify/claim/start', {
     headers: { authorization: `Bearer ${token}` },
   });
   const body = (await response.json()) as { alreadyLinked?: boolean; token?: string };
 
-  if (body.alreadyLinked) return;
+  if (body.alreadyLinked) return 'already-linked';
   if (body.token) {
     navigate(`https://grindctrl.cloud/claim?token=${encodeURIComponent(body.token)}`);
+    return 'navigated';
   }
+  return 'unavailable';
 }
 
 export function AutoClaim(_props: { locale: 'en' | 'ar' }) {
