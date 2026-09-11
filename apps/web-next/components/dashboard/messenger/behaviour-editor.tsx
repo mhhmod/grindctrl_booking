@@ -36,7 +36,9 @@ const COPY = {
     availability: 'Availability',
     always: 'Always available',
     hours: 'Business hours',
-    timezone: 'Timezone (IANA)',
+    timezone: 'Timezone',
+    timezoneCurrent: 'Current selection',
+    timezoneOther: 'Other',
     days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     from: 'From',
     to: 'To',
@@ -68,7 +70,9 @@ const COPY = {
     availability: 'أوقات العمل',
     always: 'متاح دائماً',
     hours: 'ساعات العمل',
-    timezone: 'المنطقة الزمنية (IANA)',
+    timezone: 'المنطقة الزمنية',
+    timezoneCurrent: 'الاختيار الحالي',
+    timezoneOther: 'أخرى',
     days: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'],
     from: 'من',
     to: 'إلى',
@@ -91,6 +95,48 @@ function hhmmToMinutes(value: string, fallback: number): number {
   const [h, m] = value.split(':').map(Number);
   if (!Number.isFinite(h) || !Number.isFinite(m)) return fallback;
   return Math.max(0, Math.min(1440, h * 60 + m));
+}
+
+/* Native-picker data for the timezone <select>, built once at module scope:
+   every IANA zone the runtime reports via Intl.supportedValuesOf, sorted.
+   Grouping by continent/region prefix happens per render (memoized) so the
+   two synthetic bucket labels ("current selection", "other") can follow the
+   active locale like the rest of the COPY object. */
+function getSupportedTimeZones(): string[] {
+  try {
+    const supportedValuesOf = (
+      Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }
+    ).supportedValuesOf;
+    if (typeof supportedValuesOf === 'function') {
+      const zones = supportedValuesOf('timeZone');
+      if (Array.isArray(zones) && zones.length > 0) return [...zones].sort();
+    }
+  } catch {
+    /* Runtime without Intl.supportedValuesOf — fall through to fallback. */
+  }
+  return ['UTC'];
+}
+
+const SUPPORTED_TIMEZONES: string[] = getSupportedTimeZones();
+
+type TimezoneGroup = { label: string; zones: string[] };
+
+function groupTimezones(zones: string[], otherLabel: string): TimezoneGroup[] {
+  const byRegion = new Map<string, string[]>();
+  for (const zone of zones) {
+    const slash = zone.indexOf('/');
+    const region = slash === -1 ? otherLabel : zone.slice(0, slash);
+    const list = byRegion.get(region);
+    if (list) list.push(zone);
+    else byRegion.set(region, [zone]);
+  }
+  return [...byRegion.entries()]
+    .map(([label, groupZones]) => ({ label, zones: groupZones.sort() }))
+    .sort((a, b) => {
+      if (a.label === otherLabel) return 1;
+      if (b.label === otherLabel) return -1;
+      return a.label.localeCompare(b.label);
+    });
 }
 
 export function BehaviourEditor({
@@ -125,6 +171,18 @@ export function BehaviourEditor({
 
   const activeDays = new Set(value.availabilityHours.map((h) => h.day));
   const sortedHours = [...value.availabilityHours].sort((a, b) => a.day - b.day);
+
+  /* A saved zone may predate (or simply not be in) the runtime's
+     supportedValuesOf list — never drop it from the picker or force it to
+     change just from opening this screen; surface it in its own top group. */
+  const timezoneGroups = useMemo(() => {
+    const groups = groupTimezones(SUPPORTED_TIMEZONES, t.timezoneOther);
+    const current = value.availabilityTimezone;
+    if (current && !SUPPORTED_TIMEZONES.includes(current)) {
+      return [{ label: t.timezoneCurrent, zones: [current] }, ...groups];
+    }
+    return groups;
+  }, [t.timezoneOther, t.timezoneCurrent, value.availabilityTimezone]);
 
   function setHours(day: number, enabled: boolean) {
     const rest = value.availabilityHours.filter((h) => h.day !== day);
@@ -330,11 +388,22 @@ export function BehaviourEditor({
             <div className="grid gap-3">
               <div className="max-w-[280px]">
                 <Label htmlFor="tz">{t.timezone}</Label>
-                <Input
+                <select
                   id="tz"
                   value={value.availabilityTimezone}
                   onChange={(e) => patch({ availabilityTimezone: e.target.value })}
-                />
+                  className="h-9 w-full min-w-0 rounded-4xl border border-input bg-input/30 px-3 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+                >
+                  {timezoneGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.zones.map((zone) => (
+                        <option key={zone} value={zone}>
+                          {zone.replace(/_/g, ' ')}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {t.days.map((dayName, dayIndex) => (

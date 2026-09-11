@@ -56,12 +56,12 @@ const PAYLOAD: PublicMessengerPayload = {
   behaviour: BEHAVIOUR,
 };
 
-function renderEditor() {
+function renderEditor(overrides: Partial<MessengerBehaviour> = {}) {
   return render(
     <BehaviourEditor
       locale="en"
       siteId="site-1"
-      initial={BEHAVIOUR}
+      initial={{ ...BEHAVIOUR, ...overrides }}
       publishedPayload={PAYLOAD}
       actions={{ saveDraftSection }}
     />,
@@ -102,5 +102,31 @@ describe('BehaviourEditor availability hours', () => {
     // One From/To pair per enabled day (Mon, Sat) — not one shared pair.
     expect(screen.getAllByLabelText(/^From ·/)).toHaveLength(2);
     expect(screen.getAllByLabelText(/^To ·/)).toHaveLength(2);
+  });
+});
+
+describe('BehaviourEditor timezone picker', () => {
+  it('renders the configured availabilityTimezone selected, grouped by region', () => {
+    const { container } = renderEditor();
+
+    expect(screen.getByLabelText('Timezone')).toHaveValue('Asia/Riyadh');
+    expect(container.querySelector('optgroup[label="Asia"]')).not.toBeNull();
+  });
+
+  it('changing the selection patches the timezone like the other fields', () => {
+    renderEditor();
+
+    const select = screen.getByLabelText('Timezone');
+    fireEvent.change(select, { target: { value: 'Europe/Berlin' } });
+
+    expect(select).toHaveValue('Europe/Berlin');
+  });
+
+  it('keeps a saved value missing from Intl.supportedValuesOf selected instead of resetting it', () => {
+    const { container } = renderEditor({ availabilityTimezone: 'Custom/Zone' });
+
+    const select = screen.getByLabelText('Timezone');
+    expect(select).toHaveValue('Custom/Zone');
+    expect(container.querySelector('option[value="Custom/Zone"]')).not.toBeNull();
   });
 });
