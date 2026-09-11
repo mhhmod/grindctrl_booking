@@ -316,13 +316,23 @@ export async function POST(request: NextRequest) {
           jobId: error.jobId,
         });
       }
+      /* error.message here is internal ops language ("awaiting billing
+         reconciliation", "storage is not ready") -- never the shopper's to
+         see, same rule lib/try-on/shopper-errors.ts already enforces for
+         provider errors. This is a different failure category (persistence,
+         not the AI provider), so it gets its own safe copy rather than being
+         forced through that classifier's billing/busy/photo buckets. */
+      const safeMessage =
+        error instanceof TryOnResultUnavailableError
+          ? 'Your try-on result is no longer available. Please try again.'
+          : 'Unable to save your try-on result right now. Please try again.';
       return NextResponse.json(
         {
           ok: false,
           code: error.code,
           jobId: error.jobId,
-          message: error.message,
-          error: error.message,
+          message: safeMessage,
+          error: safeMessage,
         } satisfies TryOnJobApiResponse,
         {
           status:

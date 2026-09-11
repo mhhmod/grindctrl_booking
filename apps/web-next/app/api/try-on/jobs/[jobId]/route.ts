@@ -81,13 +81,20 @@ export async function GET(
         error instanceof TryOnResultPersistenceError
       ) {
         const status = error instanceof TryOnResultUnavailableError ? 409 : 503;
+        // error.message here is internal ops language ("storage is not
+        // ready"), never the shopper's to see -- same safe copy used in
+        // app/api/try-on/generate/route.ts for the identical error classes.
+        const safeMessage =
+          error instanceof TryOnResultUnavailableError
+            ? 'Your try-on result is no longer available. Please try again.'
+            : 'Unable to save your try-on result right now. Please try again.';
         return NextResponse.json(
           {
             ok: false,
             code: error.code,
             jobId: error.jobId,
-            message: error.message,
-            error: error.message,
+            message: safeMessage,
+            error: safeMessage,
           } satisfies TryOnJobApiResponse,
           { status },
         );
@@ -127,7 +134,7 @@ export async function GET(
       reason: 'completed_result_missing',
       jobId: job.jobId,
     });
-    const message = 'A completed try-on result needs reconciliation.';
+    const message = 'Your try-on result is no longer available. Please try again.';
     return NextResponse.json(
       {
         ok: false,
