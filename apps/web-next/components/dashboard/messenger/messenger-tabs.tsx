@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { MessengerOverview } from './overview';
 import { AppearanceEditor } from './appearance-editor';
 import { BehaviourEditor } from './behaviour-editor';
-import { SupportDeskSettings } from './support-desk-settings';
 import { AiKnowledgeEditor } from './ai-knowledge-editor';
 import { ConversationsPanel, type ConversationListItem } from './conversations-panel';
 import { InstallCard } from './install-card';
@@ -134,10 +133,11 @@ export function MessengerTabs({
       )}
       {tab === 'behaviour' && (
         <div className="grid min-w-0 gap-6">
-          <BehaviourEditor locale={locale} siteId={siteId} initial={config.behaviour} publishedPayload={payload} actions={actions} />
-          <SupportDeskSettings
+          <BehaviourEditor
             locale={locale}
             siteId={siteId}
+            initial={config.behaviour}
+            publishedPayload={payload}
             shopDomain={domain && domain.endsWith('.myshopify.com') ? domain : null}
             ordersAuthorized={ordersAuthorized}
             notifications={config.notifications}

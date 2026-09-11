@@ -7,9 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from './textarea';
 import { PillToggle } from './appearance-editor';
 import { PreviewFrame } from './preview-frame';
+import { SupportDeskSettings } from './support-desk-settings';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
-import type { MessengerBehaviour, MessengerLocale } from '@/lib/messenger/types';
+import type {
+  MessengerAttachments,
+  MessengerBehaviour,
+  MessengerContactCapture,
+  MessengerLocale,
+  MessengerNotifications,
+  MessengerOrderLookup,
+} from '@/lib/messenger/types';
 
 /* Behaviour: greeting, welcome copy, proactive nudge, availability,
    page targeting. Defaults are deliberately calm; proactive is OFF until a
@@ -144,16 +152,38 @@ export function BehaviourEditor({
   siteId,
   initial,
   publishedPayload,
+  shopDomain,
+  ordersAuthorized = false,
+  notifications,
+  contactCapture,
+  attachments,
+  orderLookup,
   actions,
 }: {
   locale: MessengerLocale;
   siteId: string;
   initial: MessengerBehaviour;
   publishedPayload: PublicMessengerPayload;
-  actions: Pick<MessengerHostActions, 'saveDraftSection'>;
+  /** The connected myshopify domain, when there is one. Passed through to
+   *  the support-desk sections for the order-lookup grant. */
+  shopDomain: string | null;
+  /** Whether this store has approved order access. Passed through. */
+  ordersAuthorized?: boolean;
+  notifications: MessengerNotifications;
+  contactCapture: MessengerContactCapture;
+  attachments: MessengerAttachments;
+  orderLookup: MessengerOrderLookup;
+  actions: Pick<MessengerHostActions, 'saveDraftSections'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [value, setValue] = useState<MessengerBehaviour>(initial);
+  /* Support-desk sections, lifted here so the whole Behaviour tab saves in
+     one atomic saveDraftSections call. Same payload shapes as before — only
+     the save button/call is unified. */
+  const [notify, setNotify] = useState(notifications);
+  const [contact, setContact] = useState(contactCapture);
+  const [attach, setAttach] = useState(attachments);
+  const [orders, setOrders] = useState(orderLookup);
   const [pending, startTransition] = useTransition();
   /* Outcome, not just text: an error rendered in success green reads as a
      save that worked. */
@@ -163,6 +193,25 @@ export function BehaviourEditor({
     setValue((prev) => ({ ...prev, ...partial }));
     setSavedNote(null);
   };
+
+  /* Any support-desk edit clears the note too: there is exactly one save
+     button and one note for the whole tab now. */
+  function handleNotify(next: MessengerNotifications) {
+    setNotify(next);
+    setSavedNote(null);
+  }
+  function handleContact(next: MessengerContactCapture) {
+    setContact(next);
+    setSavedNote(null);
+  }
+  function handleAttach(next: MessengerAttachments) {
+    setAttach(next);
+    setSavedNote(null);
+  }
+  function handleOrders(next: MessengerOrderLookup) {
+    setOrders(next);
+    setSavedNote(null);
+  }
 
   const previewPayload = useMemo<PublicMessengerPayload>(
     () => ({ ...publishedPayload, behaviour: { ...publishedPayload.behaviour, ...value } }),
@@ -207,7 +256,20 @@ export function BehaviourEditor({
 
   function save() {
     startTransition(async () => {
-      const result = await actions.saveDraftSection(siteId, 'behaviour', value);
+      /* One write for the whole tab, not concurrent single-section ones.
+         Each single-section save reads settings_draft, merges its own
+         section, and writes the whole object back — so run together they
+         overwrote each other and only the last to land survived. The
+         parent's lifted notifications.recipients is kept in sync with the
+         recipients textarea on every keystroke, so it is read directly
+         here. */
+      const result = await actions.saveDraftSections(siteId, [
+        { section: 'behaviour', payload: value },
+        { section: 'notifications', payload: notify },
+        { section: 'contactCapture', payload: contact },
+        { section: 'attachments', payload: attach },
+        { section: 'orderLookup', payload: orders },
+      ]);
       setSavedNote(result.ok ? { ok: true, text: t.saved } : { ok: false, text: result.error });
     });
   }
@@ -479,6 +541,20 @@ export function BehaviourEditor({
             </div>
           )}
         </section>
+
+        <SupportDeskSettings
+          locale={locale}
+          shopDomain={shopDomain}
+          ordersAuthorized={ordersAuthorized}
+          notifications={notify}
+          contactCapture={contact}
+          attachments={attach}
+          orderLookup={orders}
+          onNotificationsChange={handleNotify}
+          onContactCaptureChange={handleContact}
+          onAttachmentsChange={handleAttach}
+          onOrderLookupChange={handleOrders}
+        />
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={pending}>

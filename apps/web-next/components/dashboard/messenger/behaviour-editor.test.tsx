@@ -1,10 +1,16 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
-import type { MessengerBehaviour } from '@/lib/messenger/types';
+import type {
+  MessengerAttachments,
+  MessengerBehaviour,
+  MessengerContactCapture,
+  MessengerNotifications,
+  MessengerOrderLookup,
+} from '@/lib/messenger/types';
 
-const saveDraftSection = vi.fn();
+const saveDraftSections = vi.fn();
 
 import { BehaviourEditor } from './behaviour-editor';
 
@@ -56,21 +62,35 @@ const PAYLOAD: PublicMessengerPayload = {
   behaviour: BEHAVIOUR,
 };
 
-function renderEditor(overrides: Partial<MessengerBehaviour> = {}) {
+function renderEditor(
+  overrides: Partial<MessengerBehaviour> = {},
+  desk: {
+    notifications?: MessengerNotifications;
+    contactCapture?: MessengerContactCapture;
+    attachments?: MessengerAttachments;
+    orderLookup?: MessengerOrderLookup;
+    shopDomain?: string | null;
+  } = {},
+) {
   return render(
     <BehaviourEditor
       locale="en"
       siteId="site-1"
       initial={{ ...BEHAVIOUR, ...overrides }}
       publishedPayload={PAYLOAD}
-      actions={{ saveDraftSection }}
+      shopDomain={desk.shopDomain ?? 'grindctrl.myshopify.com'}
+      notifications={desk.notifications ?? { emailOnHandoff: true, recipients: ['owner@example.com'] }}
+      contactCapture={desk.contactCapture ?? { enabled: false, askOutsideHours: false }}
+      attachments={desk.attachments ?? { enabled: false, triageEnabled: false }}
+      orderLookup={desk.orderLookup ?? { enabled: false }}
+      actions={{ saveDraftSections }}
     />,
   );
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  saveDraftSection.mockResolvedValue({ ok: true });
+  saveDraftSections.mockResolvedValue({ ok: true });
 });
 
 describe('BehaviourEditor availability hours', () => {
@@ -128,5 +148,69 @@ describe('BehaviourEditor timezone picker', () => {
     const select = screen.getByLabelText('Timezone');
     expect(select).toHaveValue('Custom/Zone');
     expect(container.querySelector('option[value="Custom/Zone"]')).not.toBeNull();
+  });
+});
+
+/* The Behaviour tab used to be two separate <form>s with two save buttons
+   (behaviour + support desk). They now save together through one
+   saveDraftSections call — a merchant editing both must never walk away
+   with one half saved and the other silently lost. */
+describe('BehaviourEditor combined save', () => {
+  it('renders exactly one form with one save button', () => {
+    const { container } = renderEditor();
+
+    expect(container.querySelectorAll('form')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Save draft' })).toHaveLength(1);
+  });
+
+  it('submitting calls saveDraftSections once with all five sections correctly shaped', async () => {
+    renderEditor();
+
+    // Edit a behaviour field and a support-desk field, then save once.
+    fireEvent.change(screen.getByLabelText('Timezone'), { target: { value: 'Europe/Berlin' } });
+    fireEvent.click(screen.getByText('Ask a shopper where to reply when nobody can answer now'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+
+    await waitFor(() => expect(saveDraftSections).toHaveBeenCalledTimes(1));
+    const [siteId, sections] = saveDraftSections.mock.calls[0] as [
+      string,
+      Array<{ section: string; payload: unknown }>,
+    ];
+    expect(siteId).toBe('site-1');
+    expect(sections.map((s) => s.section)).toEqual([
+      'behaviour',
+      'notifications',
+      'contactCapture',
+      'attachments',
+      'orderLookup',
+    ]);
+    const bySection = Object.fromEntries(sections.map((s) => [s.section, s.payload]));
+    expect(bySection.behaviour).toMatchObject({ availabilityTimezone: 'Europe/Berlin' });
+    expect(bySection.notifications).toEqual({
+      emailOnHandoff: true,
+      recipients: ['owner@example.com'],
+    });
+    expect(bySection.contactCapture).toEqual({ enabled: true, askOutsideHours: false });
+    expect(bySection.attachments).toEqual({ enabled: false, triageEnabled: false });
+    expect(bySection.orderLookup).toEqual({ enabled: false });
+    expect(await screen.findByText('Draft saved')).toBeInTheDocument();
+  });
+
+  it('sends the recipients textarea value in the notifications payload', async () => {
+    renderEditor({}, { notifications: { emailOnHandoff: true, recipients: [] } });
+
+    const textarea = screen.getByLabelText('Send to these addresses instead (one per line)');
+    fireEvent.change(textarea, { target: { value: 'a@x.com\nb@y.com ' } });
+    // The raw typed text stays put under the cursor (trailing space kept).
+    expect(textarea).toHaveValue('a@x.com\nb@y.com ');
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+
+    await waitFor(() => expect(saveDraftSections).toHaveBeenCalledTimes(1));
+    const [, sections] = saveDraftSections.mock.calls[0] as [
+      string,
+      Array<{ section: string; payload: { recipients: string[] } }>,
+    ];
+    const notifications = sections.find((s) => s.section === 'notifications');
+    expect(notifications?.payload.recipients).toEqual(['a@x.com', 'b@y.com']);
   });
 });

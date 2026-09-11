@@ -12,23 +12,39 @@ import { SupportDeskSettings } from './support-desk-settings';
    Any navigation from this app to a Shopify-owned domain has to leave the
    iframe — the same defect that broke the theme-editor deep link. */
 
-const ACTIONS = {
-  saveDraftSection: vi.fn(async () => ({ ok: true as const })),
+const BASE_PROPS = {
+  locale: 'en' as const,
+  shopDomain: 'grindctrl.myshopify.com',
+  notifications: { recipients: [], emailOnHandoff: false },
+  contactCapture: { enabled: false, askOutsideHours: false },
+  attachments: { enabled: false, triageEnabled: false },
+  orderLookup: { enabled: false },
 };
 
-function renderPanel() {
-  return render(
+function renderPanel(
+  overrides: Partial<typeof BASE_PROPS & { ordersAuthorized?: boolean }> = {},
+) {
+  const props = { ...BASE_PROPS, ...overrides };
+  const onNotificationsChange = vi.fn();
+  const onContactCaptureChange = vi.fn();
+  const onAttachmentsChange = vi.fn();
+  const onOrderLookupChange = vi.fn();
+  const utils = render(
     <SupportDeskSettings
-      locale="en"
-      siteId="site-1"
-      shopDomain="grindctrl.myshopify.com"
-      notifications={{ recipients: [], handoffEmail: null, handoffEmailEnabled: false } as never}
-      contactCapture={{ enabled: false, askOutsideHours: false } as never}
-      attachments={{ enabled: false, triageEnabled: false } as never}
-      orderLookup={{ enabled: false } as never}
-      actions={ACTIONS as never}
+      {...props}
+      onNotificationsChange={onNotificationsChange}
+      onContactCaptureChange={onContactCaptureChange}
+      onAttachmentsChange={onAttachmentsChange}
+      onOrderLookupChange={onOrderLookupChange}
     />,
   );
+  return {
+    ...utils,
+    onNotificationsChange,
+    onContactCaptureChange,
+    onAttachmentsChange,
+    onOrderLookupChange,
+  };
 }
 
 afterEach(() => {
@@ -84,40 +100,52 @@ describe('SupportDeskSettings — grant order access', () => {
    it again and watch what happened. */
 describe('SupportDeskSettings — order access state', () => {
   it('says plainly that access has not been approved yet', () => {
-    render(
-      <SupportDeskSettings
-        locale="en"
-        siteId="site-1"
-        shopDomain="grindctrl.myshopify.com"
-        ordersAuthorized={false}
-        notifications={{ recipients: [], emailOnHandoff: false } as never}
-        contactCapture={{ enabled: false, askOutsideHours: false } as never}
-        attachments={{ enabled: false, triageEnabled: false } as never}
-        orderLookup={{ enabled: false } as never}
-        actions={ACTIONS as never}
-      />,
-    );
+    renderPanel({ ordersAuthorized: false });
 
     expect(screen.getByText(/Not approved yet/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Grant order access' })).toBeInTheDocument();
   });
 
   it('confirms approval and offers re-approval rather than a fresh grant', () => {
-    render(
-      <SupportDeskSettings
-        locale="en"
-        siteId="site-1"
-        shopDomain="grindctrl.myshopify.com"
-        ordersAuthorized
-        notifications={{ recipients: [], emailOnHandoff: false } as never}
-        contactCapture={{ enabled: false, askOutsideHours: false } as never}
-        attachments={{ enabled: false, triageEnabled: false } as never}
-        orderLookup={{ enabled: false } as never}
-        actions={ACTIONS as never}
-      />,
-    );
+    renderPanel({ ordersAuthorized: true });
 
     expect(screen.getByText('Approved for this store')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Re-approve order access' })).toBeInTheDocument();
+  });
+});
+
+/* The support-desk panel is presentational now: the Behaviour tab's single
+   form owns state and saving, so this component must render no <form> and
+   no save button of its own — edits flow up through onChange props. */
+describe('SupportDeskSettings — controlled component', () => {
+  it('renders no form and no save button of its own', () => {
+    const { container } = renderPanel();
+
+    expect(container.querySelectorAll('form')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
+  });
+
+  it('pushes checkbox edits up through onChange instead of saving itself', () => {
+    const { onContactCaptureChange } = renderPanel();
+
+    fireEvent.click(screen.getByText('Ask a shopper where to reply when nobody can answer now'));
+
+    expect(onContactCaptureChange).toHaveBeenCalledWith({ enabled: true, askOutsideHours: false });
+  });
+
+  it('keeps the raw recipients text visible while pushing the parsed array up', () => {
+    const { onNotificationsChange } = renderPanel({
+      notifications: { recipients: [], emailOnHandoff: true },
+    });
+
+    const textarea = screen.getByLabelText('Send to these addresses instead (one per line)');
+    fireEvent.change(textarea, { target: { value: 'half-typed@\n' } });
+
+    // Raw buffer stays under the cursor; parent gets the parsed array.
+    expect(textarea).toHaveValue('half-typed@\n');
+    expect(onNotificationsChange).toHaveBeenCalledWith({
+      emailOnHandoff: true,
+      recipients: ['half-typed@'],
+    });
   });
 });

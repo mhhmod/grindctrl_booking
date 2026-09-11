@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from './textarea';
-import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type {
   MessengerAttachments,
   MessengerContactCapture,
@@ -14,8 +12,12 @@ import type {
 } from '@/lib/messenger/types';
 
 /* The four support-desk switches, in one card inside the Behaviour tab.
-   Each is a separate settings section server-side, so saving here writes
-   four drafts in one click and Publish moves them together. */
+   Presentational on purpose: the Behaviour tab saves all five of its
+   sections (behaviour + these four) through ONE saveDraftSections call
+   owned by the parent form, because concurrent single-section saves on the
+   same settings_draft object silently overwrite each other. This component
+   holds no save mechanics of its own — just the section markup, driven by
+   controlled value+onChange props. */
 
 const COPY = {
   en: {
@@ -48,10 +50,6 @@ const COPY = {
     ordersConnectHelp:
       'Opens Shopify to approve order access for this store. Existing installs must approve again, because reading orders is a new permission.',
     ordersNoStore: 'Connect a Shopify store first — order lookup needs one to read from.',
-    save: 'Save draft',
-    saving: 'Saving…',
-    saved: 'Draft saved',
-    failed: 'Could not save. Try again.',
   },
   ar: {
     title: 'مكتب الدعم',
@@ -82,10 +80,6 @@ const COPY = {
     ordersConnectHelp:
       'يفتح Shopify للموافقة على صلاحية الطلبات لهذا المتجر. يجب على المتاجر المثبّتة مسبقاً الموافقة مجدداً، لأن قراءة الطلبات صلاحية جديدة.',
     ordersNoStore: 'اربط متجر Shopify أولاً — الاستعلام عن الطلبات يحتاج متجراً ليقرأ منه.',
-    save: 'حفظ المسودة',
-    saving: 'جارٍ الحفظ…',
-    saved: 'تم حفظ المسودة',
-    failed: 'تعذّر الحفظ. حاول مجدداً.',
   },
 };
 
@@ -131,17 +125,18 @@ function Check({
 
 export function SupportDeskSettings({
   locale,
-  siteId,
   shopDomain,
   ordersAuthorized = false,
   notifications,
   contactCapture,
   attachments,
   orderLookup,
-  actions,
+  onNotificationsChange,
+  onContactCaptureChange,
+  onAttachmentsChange,
+  onOrderLookupChange,
 }: {
   locale: 'en' | 'ar';
-  siteId: string;
   /** The connected myshopify domain, when there is one. Order lookup has
    *  nothing to read from without it. */
   shopDomain: string | null;
@@ -153,55 +148,40 @@ export function SupportDeskSettings({
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
   orderLookup: MessengerOrderLookup;
-  actions: Pick<MessengerHostActions, 'saveDraftSections'>;
+  onNotificationsChange: (next: MessengerNotifications) => void;
+  onContactCaptureChange: (next: MessengerContactCapture) => void;
+  onAttachmentsChange: (next: MessengerAttachments) => void;
+  onOrderLookupChange: (next: MessengerOrderLookup) => void;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   /* Shopify sends the merchant back here after the consent screen. Saying
      nothing was the old behaviour, and it left the one question they had —
      did that work? — unanswered on a page that looked untouched. */
   const grantOutcome = useSearchParams()?.get('orders') ?? null;
-  const [notify, setNotify] = useState(notifications);
-  const [contact, setContact] = useState(contactCapture);
-  const [attach, setAttach] = useState(attachments);
-  const [orders, setOrders] = useState(orderLookup);
-  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
-  const [pending, startTransition] = useTransition();
 
   /* Recipients are edited as text and normalised server-side; keeping the
      raw string in state means a half-typed address doesn't vanish under the
      cursor while the merchant is still typing it. */
   const [recipientsText, setRecipientsText] = useState(notifications.recipients.join('\n'));
 
-  function save(event: React.FormEvent) {
-    event.preventDefault();
-    setNote(null);
-    startTransition(async () => {
-      /* One write, not four concurrent ones. Each single-section save reads
-         settings_draft, merges its own section, and writes the whole object
-         back — so run together they overwrote each other and only the last
-         to land survived. That is why a ticked box came back unchecked after
-         a Save that reported success. */
-      const result = await actions.saveDraftSections(siteId, [
-        {
-          section: 'notifications',
-          payload: {
-            ...notify,
-            recipients: recipientsText
-              .split('\n')
-              .map((line) => line.trim())
-              .filter(Boolean),
-          },
-        },
-        { section: 'contactCapture', payload: contact },
-        { section: 'attachments', payload: attach },
-        { section: 'orderLookup', payload: orders },
-      ]);
-      setNote(result.ok ? { ok: true, text: t.saved } : { ok: false, text: t.failed });
+  /* The textarea owns the raw text for display, but every keystroke also
+     pushes the freshly parsed array up to the parent, so the parent's
+     lifted notifications.recipients is always current and the single save
+     reads it directly instead of reconstructing it at submit time from a
+     value it never saw. */
+  function handleRecipientsText(nextText: string) {
+    setRecipientsText(nextText);
+    onNotificationsChange({
+      ...notifications,
+      recipients: nextText
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean),
     });
   }
 
   return (
-    <form onSubmit={save} className="grid min-w-0 gap-5 rounded-2xl border border-border p-4 sm:p-5">
+    <div className="grid min-w-0 gap-5 rounded-2xl border border-border p-4 sm:p-5">
       <div>
         <h3 className="text-sm font-semibold">{t.title}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">{t.subtitle}</p>
@@ -209,10 +189,10 @@ export function SupportDeskSettings({
 
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.notifications}</h4>
-        <Check checked={notify.emailOnHandoff} onChange={(v) => setNotify({ ...notify, emailOnHandoff: v })}>
+        <Check checked={notifications.emailOnHandoff} onChange={(v) => onNotificationsChange({ ...notifications, emailOnHandoff: v })}>
           {t.emailOnHandoff}
         </Check>
-        {notify.emailOnHandoff && (
+        {notifications.emailOnHandoff && (
           <div className="grid gap-1">
             <Label htmlFor="notify-recipients">{t.recipientsLabel}</Label>
             <Textarea
@@ -220,7 +200,7 @@ export function SupportDeskSettings({
               rows={3}
               dir="ltr"
               value={recipientsText}
-              onChange={(e) => setRecipientsText(e.target.value)}
+              onChange={(e) => handleRecipientsText(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">{t.recipientsHelp}</p>
           </div>
@@ -229,14 +209,14 @@ export function SupportDeskSettings({
 
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.contact}</h4>
-        <Check checked={contact.enabled} onChange={(v) => setContact({ ...contact, enabled: v })}>
+        <Check checked={contactCapture.enabled} onChange={(v) => onContactCaptureChange({ ...contactCapture, enabled: v })}>
           {t.contactEnabled}
         </Check>
         <Check
-          checked={contact.askOutsideHours}
-          disabled={!contact.enabled}
+          checked={contactCapture.askOutsideHours}
+          disabled={!contactCapture.enabled}
           nested
-          onChange={(v) => setContact({ ...contact, askOutsideHours: v })}
+          onChange={(v) => onContactCaptureChange({ ...contactCapture, askOutsideHours: v })}
         >
           {t.contactOutside}
         </Check>
@@ -246,17 +226,17 @@ export function SupportDeskSettings({
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.attachments}</h4>
         <Check
-          checked={attach.enabled}
+          checked={attachments.enabled}
           help={t.attachmentsHelp}
-          onChange={(v) => setAttach({ ...attach, enabled: v })}
+          onChange={(v) => onAttachmentsChange({ ...attachments, enabled: v })}
         >
           {t.attachmentsEnabled}
         </Check>
         <Check
-          checked={attach.triageEnabled}
-          disabled={!attach.enabled}
+          checked={attachments.triageEnabled}
+          disabled={!attachments.enabled}
           nested
-          onChange={(v) => setAttach({ ...attach, triageEnabled: v })}
+          onChange={(v) => onAttachmentsChange({ ...attachments, triageEnabled: v })}
         >
           {t.triageEnabled}
         </Check>
@@ -265,10 +245,10 @@ export function SupportDeskSettings({
       <section className="grid gap-2 rounded-xl border border-border p-4">
         <h4 className="text-sm font-semibold">{t.orders}</h4>
         <Check
-          checked={orders.enabled}
+          checked={orderLookup.enabled}
           disabled={!shopDomain}
           help={shopDomain ? t.ordersHelp : t.ordersNoStore}
-          onChange={(v) => setOrders({ enabled: v })}
+          onChange={(v) => onOrderLookupChange({ enabled: v })}
         >
           {t.ordersEnabled}
         </Check>
@@ -343,20 +323,6 @@ export function SupportDeskSettings({
           </div>
         )}
       </section>
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? t.saving : t.save}
-        </Button>
-        {note && (
-          <span
-            role={note.ok ? 'status' : 'alert'}
-            className={`text-sm ${note.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
-          >
-            {note.text}
-          </span>
-        )}
-      </div>
-    </form>
+    </div>
   );
 }
