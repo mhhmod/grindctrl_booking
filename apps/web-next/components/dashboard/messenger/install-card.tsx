@@ -34,6 +34,7 @@ const COPY = {
     copied: 'Copied!',
     toggleOn: 'Turn on Store Chat',
     toggling: 'Working…',
+    testNow: 'Test it now',
     troubleshoot: 'Troubleshoot installation',
     lastSeen: 'Last storefront check',
     never: 'Never',
@@ -59,6 +60,7 @@ const COPY = {
     copied: 'تم النسخ!',
     toggleOn: 'تشغيل دردشة المتجر',
     toggling: 'جارٍ التنفيذ…',
+    testNow: 'جرّبه الآن',
     troubleshoot: 'فحص التثبيت',
     lastSeen: 'آخر ظهور في المتجر',
     never: 'أبداً',
@@ -132,10 +134,23 @@ export function InstallCard({
           <h2 className="text-lg font-semibold tracking-tight">{t.title}</h2>
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         </div>
-        <span className="flex items-center gap-2 text-sm">
-          <span aria-hidden="true" className={`inline-block size-2.5 rounded-full ${status.tone}`} />
-          {status.label}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-2 text-sm">
+            <span aria-hidden="true" className={`inline-block size-2.5 rounded-full ${status.tone}`} />
+            {status.label}
+          </span>
+          {domain ? (
+            <Button asChild size="sm" variant="link">
+              {/* Opens the merchant's own public storefront, not
+                  admin.shopify.com, so there is no iframe-framing concern —
+                  but target="_blank" still keeps the merchant on this
+                  dashboard tab instead of navigating away from it. */}
+              <Link href={`https://${domain}`} target="_blank" rel="noopener noreferrer">
+                {t.testNow}
+              </Link>
+            </Button>
+          ) : null}
+        </div>
       </header>
 
       <div className={`grid min-w-0 gap-4 ${isShopifyStore ? '' : 'lg:grid-cols-2'}`}>

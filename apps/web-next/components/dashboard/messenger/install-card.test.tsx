@@ -94,4 +94,19 @@ describe('InstallCard overflow guards', () => {
       expect(link.getAttribute('rel') ?? '').toContain('noopener');
     }
   });
+
+  it('links out to the live storefront to test the widget when a domain is connected', () => {
+    renderInstallCard('grindctrl.myshopify.com');
+
+    const testLink = screen.getByRole('link', { name: 'Test it now' });
+    expect(testLink).toHaveAttribute('href', 'https://grindctrl.myshopify.com');
+    expect(testLink).toHaveAttribute('target', '_blank');
+    expect(testLink.getAttribute('rel') ?? '').toContain('noopener');
+  });
+
+  it('hides the storefront test link when no domain is connected', () => {
+    renderInstallCard(null);
+
+    expect(screen.queryByRole('link', { name: 'Test it now' })).toBeNull();
+  });
 });
