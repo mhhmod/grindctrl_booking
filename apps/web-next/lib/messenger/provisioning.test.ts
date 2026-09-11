@@ -28,20 +28,15 @@ type Recorded = Array<[string, unknown]>;
 
 interface TableState {
   rows: Row[];
-  /** Rows that a *concurrent* request commits between our read and write. */
-  appearOnWrite?: Row[];
-  /** Rows the winner has inserted but which this connection cannot see yet.
-   *  They become visible after `hiddenForReads` more reads — which is what
-   *  production did: the row's transaction had started (created_at 22:20:10.224)
-   *  but the loser's follow-up read at .978 still came back empty. */
-  hiddenRows?: Row[];
-  hiddenForReads?: number;
   /** Force the next update(...).select().maybeSingle() CAS to return no row. */
   missNextUpdate?: boolean;
   /** Model a concurrent winner changing state while our CAS reports no row. */
   onUpdateMiss?: (rows: Row[], patch: Row) => void;
   /** Force insert(...).select().single() to return this database error. */
   insertError?: string;
+  /** Force the bootstrap_profile/bootstrap_workspace RPC for this table to
+   *  return this database error instead of touching rows. */
+  rpcError?: string;
 }
 
 function stubClient(tables: Record<string, TableState>) {
@@ -158,46 +153,7 @@ function stubClient(tables: Record<string, TableState>) {
         };
         return deleteApi;
       },
-      upsert: (row: Row) => {
-        calls.push(`${table}.upsert`);
-        // Mirrors real supabase-js/PostgREST: .select() chained onto .upsert()
-        // returns the row in the same round trip when this connection actually
-        // wrote it, and null when ON CONFLICT DO NOTHING skipped the write —
-        // never a second network call. A bare `await upsert(...)` (no
-        // .select()) still resolves via `then` for callers that don't chain it.
-        let resultData: Row | null;
-        // The winner holds the unique-index slot, so ON CONFLICT DO NOTHING
-        // writes nothing and reports success — the exact production shape.
-        if (state.hiddenRows?.length) {
-          resultData = null;
-        } else if (state.appearOnWrite?.length) {
-          // A racing request already committed its row: on conflict do nothing.
-          state.rows.push(...state.appearOnWrite);
-          state.appearOnWrite = [];
-          resultData = null;
-        } else {
-          const inserted = { id: `${table}-${state.rows.length + 1}`, ...row };
-          state.rows.push(inserted);
-          resultData = inserted;
-        }
-        const upsertApi: Record<string, unknown> = {
-          select: () => upsertApi,
-          maybeSingle: () => Promise.resolve({ data: resultData, error: null }),
-          then: (resolve: (v: unknown) => unknown) =>
-            Promise.resolve({ data: resultData, error: null }).then(resolve),
-        };
-        return upsertApi;
-      },
       maybeSingle: () => {
-        // A row committed by a concurrent writer becomes visible only once
-        // this connection's snapshot catches up.
-        if (state.hiddenRows?.length) {
-          if ((state.hiddenForReads ?? 0) > 0) state.hiddenForReads! -= 1;
-          else {
-            state.rows.push(...state.hiddenRows);
-            state.hiddenRows = [];
-          }
-        }
         const match = state.rows.find((row) => matches(row));
         resetRead();
         return Promise.resolve({ data: match ?? null, error: null });
@@ -227,8 +183,51 @@ function stubClient(tables: Record<string, TableState>) {
     return api;
   }
 
+  // Mirrors bootstrap_profile/bootstrap_workspace (supabase/clerk_bootstrap_functions.sql):
+  // one call, one atomic find-or-create, no separate read-then-write round trips
+  // for the calling code to race across.
+  function rpc(fn: string, params: Record<string, unknown>) {
+    calls.push(`rpc.${fn}`);
+    if (fn === 'bootstrap_profile') {
+      const state = tables.profiles;
+      if (state.rpcError) return Promise.resolve({ data: null, error: { message: state.rpcError } });
+      const clerkUserId = params.p_clerk_user_id as string;
+      const suffix = params.p_placeholder_suffix as string;
+      const incomingEmail = params.p_email as string;
+      const existing = state.rows.find((row) => row.clerk_user_id === clerkUserId);
+      if (existing) {
+        const existingIsPlaceholder = String(existing.email).endsWith(suffix);
+        const incomingIsPlaceholder = incomingEmail.endsWith(suffix);
+        if (!incomingIsPlaceholder && existingIsPlaceholder) existing.email = incomingEmail;
+        return Promise.resolve({ data: { ...existing }, error: null });
+      }
+      const inserted = { id: `profiles-${state.rows.length + 1}`, clerk_user_id: clerkUserId, email: incomingEmail };
+      state.rows.push(inserted);
+      return Promise.resolve({ data: inserted, error: null });
+    }
+    if (fn === 'bootstrap_workspace') {
+      const state = tables.workspaces;
+      if (state.rpcError) return Promise.resolve({ data: null, error: { message: state.rpcError } });
+      const ownerProfileId = params.p_owner_profile_id as string;
+      const slug = params.p_slug as string;
+      const [existing] = state.rows
+        .filter((row) => row.owner_profile_id === ownerProfileId)
+        .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+      if (existing) return Promise.resolve({ data: { id: existing.id }, error: null });
+      const inserted = {
+        id: `workspaces-${state.rows.length + 1}`,
+        owner_profile_id: ownerProfileId,
+        slug,
+        created_at: new Date().toISOString(),
+      };
+      state.rows.push(inserted);
+      return Promise.resolve({ data: { id: inserted.id }, error: null });
+    }
+    return Promise.resolve({ data: null, error: { message: `unmocked rpc: ${fn}` } });
+  }
+
   return {
-    client: { from: (table: string) => builder(table) } as unknown as SupabaseClient,
+    client: { from: (table: string) => builder(table), rpc } as unknown as SupabaseClient,
     calls,
     tables,
     recorded,
@@ -243,105 +242,33 @@ beforeEach(() => {
 afterEach(() => setMessengerServiceClientForTests(null));
 
 describe('provisioning', () => {
-  it('survives a concurrent first visit that creates the profile first', async () => {
-    const { client, tables } = stubClient({
-      profiles: {
-        rows: [],
-        // The other render commits this between our read and our write.
-        appearOnWrite: [{ id: 'p-racer', clerk_user_id: 'user_1', email: 'racer@example.com' }],
-      },
-      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-racer', created_at: '2026-01-01' }] },
-      widget_sites: { rows: [] },
-    });
-    setMessengerServiceClientForTests(client);
-
-    const sites = await listMessengerSites('user_1');
-
-    // Resolves the winner's row instead of throwing...
-    expect(sites).toEqual([]);
-    // ...and writes no second row. A plain insert here is what produced
-    // "duplicate key value violates profiles_clerk_user_id_key" in prod.
-    const mine = tables.profiles.rows.filter((r) => r.clerk_user_id === 'user_1');
-    expect(mine).toHaveLength(1);
-    expect(mine[0].id).toBe('p-racer');
-  });
-
-  it('waits for a concurrent insert this connection cannot see yet', async () => {
-    /* Production, 2026-08-29 22:20:10: two renders of /dashboard/messenger
-       raced on a brand-new Clerk user (Next prefetches the route while
-       navigating to it). The winner inserted; the loser's ON CONFLICT DO
-       NOTHING wrote nothing, and its follow-up read did not observe the
-       winner's commit. ensureProfile threw 'row missing after insert' and
-       the whole dashboard page 500'd on the user's first ever visit.
-
-       The old code read exactly once and gave up. */
-    const { client } = stubClient({
-      profiles: {
-        rows: [],
-        hiddenRows: [{ id: 'p-winner', clerk_user_id: 'user_1', email: 'winner@example.com' }],
-        hiddenForReads: 2,
-      },
-      workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-winner', created_at: '2026-01-01' }] },
-      widget_sites: { rows: [] },
-    });
-    setMessengerServiceClientForTests(client);
-
-    await expect(listMessengerSites('user_1')).resolves.toEqual([]);
-  });
-
-  it('still gives up rather than hanging when the row never appears', async () => {
-    const { client } = stubClient({
-      profiles: {
-        rows: [],
-        hiddenRows: [{ id: 'p-never', clerk_user_id: 'user_1', email: 'x@y.z' }],
-        hiddenForReads: 99,
-      },
-      workspaces: { rows: [] },
-      widget_sites: { rows: [] },
-    });
-    setMessengerServiceClientForTests(client);
-
-    await expect(listMessengerSites('user_1')).rejects.toThrow(/row missing after insert/);
-  }, 10_000); // The real retry budget's worst case (~6.75s) exceeds vitest's 5s default.
-
-  it('retries the workspace race recovery instead of one unretried read (workspaces_slug_key, prod)', async () => {
-    // Production: two renders of a brand-new profile's first visit both try
-    // to insert 'gc-<profileId>' as the workspace slug. The loser's insert
-    // fails on workspaces_slug_key, and — same as the profile race above —
-    // the winner's row was not yet visible on the loser's very next read.
-    const { client } = stubClient({
-      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
-      workspaces: {
-        rows: [],
-        insertError: 'duplicate key value violates unique constraint "workspaces_slug_key"',
-        hiddenRows: [{ id: 'w-winner', owner_profile_id: 'p-1', created_at: '2026-01-01' }],
-        hiddenForReads: 2,
-      },
-      widget_sites: { rows: [] },
-    });
-    setMessengerServiceClientForTests(client);
-
-    await expect(listMessengerSites('user_1')).resolves.toEqual([]);
-  });
-
-  it('returns its own row immediately on a clean, non-racing first insert', async () => {
-    // No hiddenRows/appearOnWrite: nothing else is contending for this key.
-    // The upsert's own .select() must carry the new row back in the same
-    // round trip — the old code always issued a second read regardless.
-    const { client, tables } = stubClient({
+  /* Production hit this twice: 2026-08-29 (profiles_clerk_user_id_key) and
+     2026-09-09 (workspaces_slug_key, Sentry JAVASCRIPT-NEXTJS-K/-Q) — two
+     concurrent renders of /dashboard/messenger for a brand-new Clerk user
+     (Next prefetches the route while navigating to it), where the losing
+     connection's read of the winner's just-committed row came back empty. A
+     wider retry budget bought headroom once, then the same class of gap
+     recurred at a different size. ensureProfile/ensureWorkspace now call
+     bootstrap_profile/bootstrap_workspace, which do the whole find-or-create
+     in one transaction on the database side, so there is no longer a
+     separate read/write pair for two connections to interleave across. */
+  it('creates the profile and workspace via one bootstrap RPC call each, on a brand-new user', async () => {
+    const { client, calls, tables } = stubClient({
       profiles: { rows: [] },
       workspaces: { rows: [] },
       widget_sites: { rows: [] },
     });
     setMessengerServiceClientForTests(client);
 
-    await listMessengerSites('user_1');
+    const sites = await listMessengerSites('user_1');
 
-    const mine = tables.profiles.rows.filter((r) => r.clerk_user_id === 'user_1');
-    expect(mine).toHaveLength(1);
+    expect(sites).toEqual([]);
+    expect(calls.filter((call) => call === 'rpc.bootstrap_profile')).toHaveLength(1);
+    expect(calls.filter((call) => call === 'rpc.bootstrap_workspace')).toHaveLength(1);
+    expect(tables.profiles.rows.filter((row) => row.clerk_user_id === 'user_1')).toHaveLength(1);
   });
 
-  it('reuses the existing profile and workspace without writing again', async () => {
+  it('reuses the existing profile and workspace, still through the same RPCs', async () => {
     const { client, calls } = stubClient({
       profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
       workspaces: { rows: [{ id: 'w-1', owner_profile_id: 'p-1', created_at: '2026-01-01' }] },
@@ -351,9 +278,36 @@ describe('provisioning', () => {
 
     await listMessengerSites('user_1');
 
+    // No separate .insert()/.upsert() path exists any more — bootstrap_profile
+    // and bootstrap_workspace handle "exists vs. needs creating" atomically
+    // inside the RPC itself, so the client-observable call shape is identical
+    // either way. What must hold is exactly one round trip per resource.
+    expect(calls.filter((call) => call === 'rpc.bootstrap_profile')).toHaveLength(1);
+    expect(calls.filter((call) => call === 'rpc.bootstrap_workspace')).toHaveLength(1);
     expect(calls).not.toContain('profiles.insert');
-    expect(calls).not.toContain('profiles.upsert');
     expect(calls).not.toContain('workspaces.insert');
+  });
+
+  it('surfaces a bootstrap_profile RPC failure as a clear error instead of hanging', async () => {
+    const { client } = stubClient({
+      profiles: { rows: [], rpcError: 'connection to server was lost' },
+      workspaces: { rows: [] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(listMessengerSites('user_1')).rejects.toThrow(/profile create failed/);
+  });
+
+  it('surfaces a bootstrap_workspace RPC failure as a clear error instead of hanging', async () => {
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1', email: 'a@b.c' }] },
+      workspaces: { rows: [], rpcError: 'connection to server was lost' },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(listMessengerSites('user_1')).rejects.toThrow(/workspace create failed/);
   });
 
   it('upgrades a placeholder email once a real one is known', async () => {

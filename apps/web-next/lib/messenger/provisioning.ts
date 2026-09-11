@@ -9,30 +9,26 @@ import type { WidgetSiteRow } from './types';
 export { isPlaceholderEmail };
 
 /* Lazy provisioning of the existing profiles -> workspaces -> widget_sites
-   foundation. The dashboard's original workspace RPC was never provisioned
-   in production, so Messenger creates these rows directly (service role)
-   the first time a merchant opens the Messenger section — idempotently.
-   Everything downstream (RLS policies, analytics RPCs, Install page data)
-   already understands this shape, which is precisely why we reuse it. */
+   foundation, the first time a merchant opens the Messenger section —
+   idempotently. Everything downstream (RLS policies, analytics RPCs,
+   Install page data) already understands this shape, which is precisely
+   why we reuse it.
 
-/* Ten attempts, ~6.75s of total added latency at worst — and only on the
-   truly racing path (see below). Two prior incidents measured real
-   visibility gaps between a winning transaction and a losing connection's
-   read of it: ~754ms on 2026-08-29 (profiles), then ~2.7s on 2026-09-09
-   (workspaces_slug_key, JAVASCRIPT-NEXTJS-K) — the 6-attempt/2.25s budget
-   that was sized for the FIRST gap wasn't wide enough for the second. This
-   budget has real headroom over both observed gaps. Every non-racing visit
-   (the overwhelming majority) still never reaches the loop at all, and a
-   bounded multi-second wait on the rare racing path is still strictly
-   better than the crash it replaces. Shared with ensureWorkspace below,
-   which hits the identical class of race on workspaces_slug_key. */
-const PROVISIONING_RACE_ATTEMPTS = 10;
-const PROVISIONING_RETRY_BASE_MS = 150;
+   ensureProfile/ensureWorkspace below call the bootstrap_profile/
+   bootstrap_workspace RPCs (supabase/clerk_bootstrap_functions.sql) rather
+   than reading and writing profiles/workspaces directly. Those RPCs run as
+   ONE statement inside ONE transaction on the database side, so "does a row
+   exist" and "create it if not" can never observe each other across two
+   different connections the way two separate HTTP round trips can — this
+   is what actually eliminates the race, not a wider retry budget around it.
 
-async function retryDelay(attempt: number): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, PROVISIONING_RETRY_BASE_MS * (attempt + 1)));
-}
-
+   That used to be a bounded 10-attempt retry loop with backoff (removed
+   2026-09-11): two prior production incidents (2026-08-29, profiles;
+   2026-09-09, workspaces_slug_key / Sentry JAVASCRIPT-NEXTJS-K) each showed
+   a real visibility gap between a winning transaction commit and a losing
+   connection's very next read of it, and the SECOND incident recurred even
+   after the FIRST retry-budget increase — evidence that widening the
+   window further was treating the symptom, not the cause. */
 export class UnauthorizedError extends Error {
   constructor() {
     super('Unauthorized');
@@ -52,136 +48,41 @@ export async function requireClerkUser(): Promise<{ userId: string; email: strin
   return { userId, email: null };
 }
 
+/* One RPC call, one transaction: bootstrap_profile does the upsert-with-
+   placeholder-upgrade-guard entirely on the database side (see
+   supabase/clerk_bootstrap_functions.sql), so there is no read-then-insert
+   gap for a concurrent request to land in. p_placeholder_suffix is passed
+   explicitly rather than hardcoded in SQL, so the definition of "placeholder"
+   stays sourced from this one constant. */
 async function ensureProfile(clerkUserId: string, email: string | null): Promise<ProfileRow> {
   const supabase = getMessengerServiceClient();
-  const existing = await supabase
-    .from('profiles')
-    .select('id, clerk_user_id, email')
-    .eq('clerk_user_id', clerkUserId)
-    .maybeSingle();
-  if (existing.error) throw new Error(`profile lookup failed: ${existing.error.message}`);
-  if (existing.data) {
-    const row = existing.data as ProfileRow;
-    /* Provisioning ran before any real address was available, so the row
-       holds a placeholder nobody can receive mail at. Upgrade it the first
-       time a real one arrives — and never the other way round, or a later
-       visit would wipe a working address. */
-    if (email && !isPlaceholderEmail(email) && isPlaceholderEmail(row.email)) {
-      const updated = await supabase.from('profiles').update({ email }).eq('id', row.id);
-      if (updated.error) throw new Error(`profile email upgrade failed: ${updated.error.message}`);
-      return { ...row, email };
-    }
-    return row;
-  }
-
-  /* Read-then-insert is not atomic, and a first visit renders this page more
-     than once concurrently — both reads miss, both insert, one dies on
-     profiles_clerk_user_id_key. `on conflict do nothing` makes the write
-     itself safe; ignoreDuplicates (rather than a real upsert) is deliberate,
-     because an upsert would overwrite a known email with the noreply
-     placeholder on every later visit.
-
-     What that still leaves: DO NOTHING reports success *without writing*
-     when a concurrent request holds the unique-index slot, and the winner's
-     row is not guaranteed to be visible to this connection the moment our
-     statement returns. This code used to read once and assume it was —
-     "whoever won the race, the row is committed by now" — which threw and
-     500'd the entire dashboard on a user's first ever visit. It happened in
-     production at 2026-08-29 22:20:10, where the winning row's transaction
-     had started at .224 and the loser's read at .978 still came back empty;
-     Next prefetching this route while navigating to it supplies the second
-     request. Retrying the write as well as the read also covers the case
-     where the winner rolled back, which re-reading alone would never fix. */
-  for (let attempt = 0; attempt < PROVISIONING_RACE_ATTEMPTS; attempt += 1) {
-    // Chaining select() onto the upsert means the connection that actually
-    // wins the race gets its row back here, with no further read needed and
-    // no race at all — the previous version always did a second round trip
-    // even when this request had just written the row itself.
-    const insert = await supabase
-      .from('profiles')
-      .upsert(
-        { clerk_user_id: clerkUserId, email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}` },
-        { onConflict: 'clerk_user_id', ignoreDuplicates: true },
-      )
-      .select('id, clerk_user_id, email')
-      .maybeSingle();
-    if (insert.error) throw new Error(`profile create failed: ${insert.error.message}`);
-    if (insert.data) return insert.data as ProfileRow;
-
-    // This connection lost the race (ignoreDuplicates skipped its own
-    // write) — only now does the winner's row need to become visible here.
-    const settled = await supabase
-      .from('profiles')
-      .select('id, clerk_user_id, email')
-      .eq('clerk_user_id', clerkUserId)
-      .maybeSingle();
-    if (settled.error) throw new Error(`profile lookup failed: ${settled.error.message}`);
-    if (settled.data) return settled.data as ProfileRow;
-
-    // Bounded: a page that hangs is worse than one that reports a failure.
-    if (attempt < PROVISIONING_RACE_ATTEMPTS - 1) await retryDelay(attempt);
-  }
-  throw new Error('profile create failed: row missing after insert');
+  const { data, error } = await supabase.rpc('bootstrap_profile', {
+    p_clerk_user_id: clerkUserId,
+    p_email: email ?? `${clerkUserId}${PLACEHOLDER_EMAIL_SUFFIX}`,
+    p_placeholder_suffix: PLACEHOLDER_EMAIL_SUFFIX,
+  });
+  if (error) throw new Error(`profile create failed: ${error.message}`);
+  if (!data) throw new Error('profile create failed: no row returned');
+  return data as ProfileRow;
 }
 
 /* Oldest-first everywhere, deliberately: workspaces has no unique key on
    owner_profile_id, so a concurrent first visit can leave two rows behind.
    An unordered limit(1) would then hop between them from request to request
-   and a merchant's sites would appear to come and go. Oldest wins, which is
-   also what the bootstrap_workspace RPC picks. */
+   and a merchant's sites would appear to come and go. bootstrap_workspace
+   (same file as bootstrap_profile above) already implements this exact
+   oldest-first-or-create logic atomically; p_slug is passed explicitly to
+   keep the same 'gc-<profileId>' format existing rows already use, rather
+   than the RPC's own auto-generated fallback. */
 async function ensureWorkspace(profileId: string): Promise<string> {
   const supabase = getMessengerServiceClient();
-  const existing = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_profile_id', profileId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (existing.error) throw new Error(`workspace lookup failed: ${existing.error.message}`);
-  if (existing.data) return existing.data.id as string;
-
-  // A uniqueness token, not a user-facing handle: the profile id already is
-  // one, and deriving it from the clerk id collapsed to a single value for
-  // every shop on the platform (normalizeShopDomain guarantees every domain
-  // ends `.myshopify.com`, so the old clerkUserId-derived slug stripped to
-  // the same 'myshopifycom' tail for every store).
-  const slug = `gc-${profileId}`;
-  const insert = await supabase
-    .from('workspaces')
-    .insert({ name: 'My workspace', slug, owner_profile_id: profileId })
-    .select('id')
-    .single();
-  if (insert.error) {
-    // Same visibility race as ensureProfile above (production,
-    // workspaces_slug_key: this connection's insert lost the race, but the
-    // winner's row was not yet visible to a single immediate re-read either)
-    // — retry with the same bounded backoff rather than one unretried read.
-    for (let attempt = 0; attempt < PROVISIONING_RACE_ATTEMPTS; attempt += 1) {
-      const raced = await supabase
-        .from('workspaces')
-        .select('id')
-        .eq('owner_profile_id', profileId)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (raced.data) return raced.data.id as string;
-      if (attempt < PROVISIONING_RACE_ATTEMPTS - 1) await retryDelay(attempt);
-    }
-    throw new Error(`workspace create failed: ${insert.error.message}`);
-  }
-  /* Re-read rather than trusting our own insert: a concurrent render may
-     have committed an earlier workspace, and both requests must agree on
-     which one is the merchant's. handle_new_workspace_owner adds the owner
-     membership on whichever rows were created. */
-  const settled = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_profile_id', profileId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return (settled.data?.id as string) ?? (insert.data.id as string);
+  const { data, error } = await supabase.rpc('bootstrap_workspace', {
+    p_owner_profile_id: profileId,
+    p_slug: `gc-${profileId}`,
+  });
+  if (error) throw new Error(`workspace create failed: ${error.message}`);
+  if (!data) throw new Error('workspace create failed: no row returned');
+  return (data as { id: string }).id;
 }
 
 export interface MessengerSiteView extends WidgetSiteRow {

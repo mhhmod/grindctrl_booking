@@ -158,8 +158,49 @@ describe('ensureShopOwnedSite against real provisioning', () => {
       return api;
     }
 
+    // Mirrors bootstrap_profile/bootstrap_workspace (see provisioning.test.ts's
+    // own copy of this mock, kept alongside since this file's stub is otherwise
+    // independent of it).
+    function rpc(fn: string, params: Record<string, unknown>) {
+      calls.push(`rpc.${fn}`);
+      if (fn === 'bootstrap_profile') {
+        const state = tables.profiles;
+        const clerkUserId = params.p_clerk_user_id as string;
+        const suffix = params.p_placeholder_suffix as string;
+        const incomingEmail = params.p_email as string;
+        const existing = state.rows.find((row) => row.clerk_user_id === clerkUserId);
+        if (existing) {
+          const existingIsPlaceholder = String(existing.email).endsWith(suffix);
+          const incomingIsPlaceholder = incomingEmail.endsWith(suffix);
+          if (!incomingIsPlaceholder && existingIsPlaceholder) existing.email = incomingEmail;
+          return Promise.resolve({ data: { ...existing }, error: null });
+        }
+        const inserted = { id: `profiles-${state.rows.length + 1}`, clerk_user_id: clerkUserId, email: incomingEmail };
+        state.rows.push(inserted);
+        return Promise.resolve({ data: inserted, error: null });
+      }
+      if (fn === 'bootstrap_workspace') {
+        const state = tables.workspaces;
+        const ownerProfileId = params.p_owner_profile_id as string;
+        const slug = params.p_slug as string;
+        const [existing] = state.rows
+          .filter((row) => row.owner_profile_id === ownerProfileId)
+          .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+        if (existing) return Promise.resolve({ data: { id: existing.id }, error: null });
+        const inserted = {
+          id: `workspaces-${state.rows.length + 1}`,
+          owner_profile_id: ownerProfileId,
+          slug,
+          created_at: new Date().toISOString(),
+        };
+        state.rows.push(inserted);
+        return Promise.resolve({ data: { id: inserted.id }, error: null });
+      }
+      return Promise.resolve({ data: null, error: { message: `unmocked rpc: ${fn}` } });
+    }
+
     return {
-      client: { from: (table: string) => builder(table) } as unknown as SupabaseClient,
+      client: { from: (table: string) => builder(table), rpc } as unknown as SupabaseClient,
       calls,
       tables,
     };
