@@ -123,9 +123,8 @@ export function BehaviourEditor({
     [publishedPayload, value],
   );
 
-  // Single daily window model for the UI (stored per-day server-side).
-  const firstWindow = value.availabilityHours[0];
   const activeDays = new Set(value.availabilityHours.map((h) => h.day));
+  const sortedHours = [...value.availabilityHours].sort((a, b) => a.day - b.day);
 
   function setHours(day: number, enabled: boolean) {
     const rest = value.availabilityHours.filter((h) => h.day !== day);
@@ -135,9 +134,16 @@ export function BehaviourEditor({
         : rest,
     });
   }
-  function setWindowBounds(startMinute: number, endMinute: number) {
+  /* Per-day, not shared: the data model already stores a distinct window
+     per day (AvailabilityHours[] has its own startMinute/endMinute per
+     row) — this used to overwrite every enabled day with whichever day's
+     picker was last touched, silently discarding e.g. a Saturday-specific
+     window the moment any other day's hours were edited. */
+  function setDayWindow(day: number, startMinute: number, endMinute: number) {
     patch({
-      availabilityHours: value.availabilityHours.map((h) => ({ ...h, startMinute, endMinute })),
+      availabilityHours: value.availabilityHours.map((h) =>
+        h.day === day ? { ...h, startMinute, endMinute } : h,
+      ),
     });
   }
 
@@ -347,22 +353,27 @@ export function BehaviourEditor({
                   </button>
                 ))}
               </div>
-              {value.availabilityHours.length > 0 && (
-                <div className="flex max-w-[320px] items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{t.from}</span>
-                  <Input
-                    type="time"
-                    aria-label={t.from}
-                    value={minutesToHHMM(firstWindow?.startMinute ?? 540)}
-                    onChange={(e) => setWindowBounds(hhmmToMinutes(e.target.value, 540), firstWindow?.endMinute ?? 1020)}
-                  />
-                  <span className="text-xs text-muted-foreground">{t.to}</span>
-                  <Input
-                    type="time"
-                    aria-label={t.to}
-                    value={minutesToHHMM(firstWindow?.endMinute ?? 1020)}
-                    onChange={(e) => setWindowBounds(firstWindow?.startMinute ?? 540, hhmmToMinutes(e.target.value, 1020))}
-                  />
+              {sortedHours.length > 0 && (
+                <div className="grid gap-2">
+                  {sortedHours.map((window) => (
+                    <div key={window.day} className="flex max-w-[380px] items-center gap-2">
+                      <span className="w-9 shrink-0 text-xs font-medium">{t.days[window.day]}</span>
+                      <span className="text-xs text-muted-foreground">{t.from}</span>
+                      <Input
+                        type="time"
+                        aria-label={`${t.from} · ${t.days[window.day]}`}
+                        value={minutesToHHMM(window.startMinute)}
+                        onChange={(e) => setDayWindow(window.day, hhmmToMinutes(e.target.value, window.startMinute), window.endMinute)}
+                      />
+                      <span className="text-xs text-muted-foreground">{t.to}</span>
+                      <Input
+                        type="time"
+                        aria-label={`${t.to} · ${t.days[window.day]}`}
+                        value={minutesToHHMM(window.endMinute)}
+                        onChange={(e) => setDayWindow(window.day, window.startMinute, hhmmToMinutes(e.target.value, window.endMinute))}
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
