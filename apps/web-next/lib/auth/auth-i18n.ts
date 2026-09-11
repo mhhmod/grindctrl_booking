@@ -15,6 +15,11 @@ export interface AuthCopy {
   brandTagline: string;
   signInTitle: string;
   signInSubtitle: string;
+  /** Shown instead of signInTitle/Subtitle when arriving via the Shopify
+   *  claim redirect — that visitor may never have had an account, so
+   *  "Welcome back" is the wrong tone regardless of locale. */
+  claimSignInTitle: string;
+  claimSignInSubtitle: string;
   signInFooterPrompt: string;
   signInFooterCta: string;
   signUpTitle: string;
@@ -56,6 +61,8 @@ const en: AuthCopy = {
   signInTitle: 'Welcome back',
   signInSubtitle:
     'Sign in to see your automations, leads, and conversations in one dashboard.',
+  claimSignInTitle: 'One more step to connect your store',
+  claimSignInSubtitle: 'Sign in or create an account to finish linking your Shopify store.',
   signInFooterPrompt: 'Need an account?',
   signInFooterCta: 'Create one',
   signUpTitle: 'Create your account',
@@ -102,6 +109,8 @@ const ar: AuthCopy = {
   brandTagline: 'أتمتة ذكاء اصطناعي مجهزة بالكامل، تتابعها من لوحة واحدة.',
   signInTitle: 'أهلًا بعودتك',
   signInSubtitle: 'سجّل الدخول لمتابعة الأتمتة والعملاء والمحادثات من لوحة واحدة.',
+  claimSignInTitle: 'خطوة أخيرة لربط متجرك',
+  claimSignInSubtitle: 'سجّل الدخول أو أنشئ حساباً لإتمام ربط متجرك على Shopify.',
   signInFooterPrompt: 'ليس لديك حساب؟',
   signInFooterCta: 'أنشئ حسابًا',
   signUpTitle: 'أنشئ حسابك',

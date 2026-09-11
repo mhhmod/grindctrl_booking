@@ -17,12 +17,15 @@ export default async function SignInPage({
   const redirectTo = resolveSignInDestination(params.redirect_url);
   const locale = await getRequestLocale();
   const copy = getAuthCopy(locale);
+  // A merchant bounced here mid-claim from Shopify may never have had an
+  // account — "Welcome back" is the wrong tone regardless of locale.
+  const fromClaim = redirectTo.startsWith('/claim');
 
   const shellProps = {
     locale,
     copy,
-    title: copy.signInTitle,
-    subtitle: copy.signInSubtitle,
+    title: fromClaim ? copy.claimSignInTitle : copy.signInTitle,
+    subtitle: fromClaim ? copy.claimSignInSubtitle : copy.signInSubtitle,
     footerPrompt: copy.signInFooterPrompt,
     footerCtaLabel: copy.signInFooterCta,
     footerCtaHref: '/sign-up',

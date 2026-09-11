@@ -75,4 +75,27 @@ describe('SignInPage', () => {
     expect(screen.getByRole('heading', { name: 'أهلًا بعودتك' })).toBeInTheDocument();
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
   });
+
+  it('shows context-aware copy, not "Welcome back", when arriving via the Shopify claim redirect', async () => {
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+
+    render(
+      await SignInPage({
+        searchParams: Promise.resolve({ redirect_url: '/claim?token=abc123' }),
+      }),
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'One more step to connect your store' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Welcome back' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the normal "Welcome back" copy for a plain sign-in visit', async () => {
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = 'pk_test_example';
+
+    render(await SignInPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
+  });
 });
