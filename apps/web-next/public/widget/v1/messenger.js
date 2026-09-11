@@ -316,7 +316,12 @@
     if (!effectiveKey) return;
     var params = '?key=' + encodeURIComponent(effectiveKey) +
       '&locale=' + encodeURIComponent(LOCALE_HINT || state.locale) +
-      '&origin=' + encodeURIComponent(ORIGIN);
+      '&origin=' + encodeURIComponent(ORIGIN) +
+      '&anonId=' + encodeURIComponent(ensureAnonId());
+    // A token identify() already received before this first build. A later
+    // one reaches the panel over postMessage instead -- see identify().
+    var knownToken = lsGet(LS.token);
+    if (knownToken) params += '&shopperToken=' + encodeURIComponent(knownToken);
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
     frame.title = state.locale === 'ar' ? 'محادثة الدعم' : 'Support chat';
@@ -452,6 +457,12 @@
     if (typeof token !== 'string' || token.length > 4096) return;
     lsSet(LS.token, token);
     state.identified = true;
+    // The panel already booted (open() was called, or warmPanel() ran)
+    // before this token existed -- its own build-time query param is long
+    // past. Storage cannot cross the origin boundary, so top it up directly.
+    if (state.iframe && state.iframe.contentWindow) {
+      state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:identify', token: token }, APP_ORIGIN);
+    }
   }
 
   function attachShopperToken() {

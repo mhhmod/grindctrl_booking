@@ -9,10 +9,15 @@ import { signOriginToken } from '@/lib/messenger/identity';
    launcher (or a configured greeting/proactive rule warrants it).
 
    Query params:
-     key     embed key (public identifier)
-     locale  en | ar | auto (default)
-     origin  merchant page origin — re-verified server-side against the
-             site's verified domain patterns before anything loads */
+     key          embed key (public identifier)
+     locale       en | ar | auto (default)
+     origin       merchant page origin — re-verified server-side against the
+                  site's verified domain patterns before anything loads
+     anonId       the shopper's storefront-origin anonymous id, read directly
+                  by MessengerPanel (client-side, not server props) since
+                  storage cannot cross this origin boundary
+     shopperToken same reasoning: a verified shopper token minted on the
+                  storefront side, forwarded so this iframe can present it */
 
 export const metadata: Metadata = {
   title: 'Support',

@@ -213,3 +213,78 @@ describe('MessengerPanel sender labels', () => {
     expect(screen.queryByText('Assistant')).not.toBeInTheDocument();
   });
 });
+
+/* The storefront loader (public/widget/v1/messenger.js) identifies the
+   shopper on its own origin, before this iframe exists — storage cannot
+   cross that boundary, so it forwards the anonId and any known shopper
+   token as iframe URL params instead (same channel key/locale/origin
+   already use). A verified token is bound to that exact anonId server-side
+   (lib/messenger/identity.ts's sid claim), so the two must travel together. */
+describe('MessengerPanel shopper identity forwarding', () => {
+  afterEach(() => {
+    window.history.pushState({}, '', '/');
+  });
+
+  it('adopts the loader-supplied anonId and shopper token on bootstrap, not its own', async () => {
+    window.history.pushState(
+      {},
+      '',
+      '/embed/messenger?key=gc_test_key&anonId=loader-anon-123456&shopperToken=tok.header.sig',
+    );
+
+    await bootPanel();
+
+    const bootstrapCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('/api/messenger/bootstrap'));
+    const body = JSON.parse(String((bootstrapCall?.[1] as RequestInit)?.body));
+    expect(body.anonymousId).toBe('loader-anon-123456');
+    expect(body.shopperToken).toBe('tok.header.sig');
+  });
+
+  it('carries the same shopper token on a later message', async () => {
+    window.history.pushState(
+      {},
+      '',
+      '/embed/messenger?key=gc_test_key&anonId=loader-anon-123456&shopperToken=tok.header.sig',
+    );
+
+    await bootPanel();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'hi there' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+
+    const sendCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('/api/messenger/send'));
+    const body = JSON.parse(String((sendCall?.[1] as RequestInit)?.body));
+    expect(body.shopperToken).toBe('tok.header.sig');
+  });
+
+  it('tops up a token that only arrives after the iframe already booted', async () => {
+    const originalParent = window.parent;
+    const fakeParent = { postMessage: vi.fn() };
+    Object.defineProperty(window, 'parent', { configurable: true, value: fakeParent });
+
+    try {
+      await bootPanel();
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { type: 'grindctrl-messenger:identify', token: 'late-token-xyz' },
+          source: fakeParent as unknown as MessageEventSource,
+        }),
+      );
+
+      fireEvent.change(screen.getByRole('textbox'), { target: { value: 'hello again' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const sendCall = fetchMock.mock.calls.find((c) => String(c[0]).includes('/api/messenger/send'));
+      const body = JSON.parse(String((sendCall?.[1] as RequestInit)?.body));
+      expect(body.shopperToken).toBe('late-token-xyz');
+    } finally {
+      Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    }
+  });
+});
