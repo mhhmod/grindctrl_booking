@@ -105,7 +105,10 @@ export function AiKnowledgeEditor({
   const [savedNote, setSavedNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [mode, setMode] = useState<'manual' | 'url'>('manual');
   const [formPending, startForm] = useTransition();
-  const [formNote, setFormNote] = useState<string | null>(null);
+  /* Same outcome-not-just-text shape as savedNote above — the previous
+     version guessed success by checking whether the message contained the
+     word "added", which could show a real success in the failure color. */
+  const [formNote, setFormNote] = useState<{ ok: boolean; text: string } | null>(null);
 
   function patch(partial: Partial<MessengerAi>) {
     setValue((prev) => ({ ...prev, ...partial }));
@@ -120,7 +123,9 @@ export function AiKnowledgeEditor({
   function submitKnowledge(formData: FormData) {
     startForm(async () => {
       const result = await actions.addKnowledge(formData);
-      setFormNote(result.ok ? result.message ?? t.add : result.error);
+      setFormNote(
+        result.ok ? { ok: true, text: result.message ?? t.add } : { ok: false, text: result.error },
+      );
     });
   }
 
@@ -245,8 +250,11 @@ export function AiKnowledgeEditor({
                 {formPending ? t.adding : t.add}
               </Button>
               {formNote && (
-                <span role="status" className={`text-xs ${formNote.startsWith(locale === 'ar' ? 'أ' : '') || formNote.includes('added') || formNote.includes('Added') ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}>
-                  {formNote}
+                <span
+                  role={formNote.ok ? 'status' : 'alert'}
+                  className={`text-xs ${formNote.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+                >
+                  {formNote.text}
                 </span>
               )}
             </div>
@@ -278,7 +286,7 @@ export function AiKnowledgeEditor({
                         onClick={() =>
                           startForm(async () => {
                             const r = await actions.syncKnowledge(siteId, entry.id);
-                            setFormNote(r.ok ? r.message ?? '' : r.error);
+                            setFormNote(r.ok ? { ok: true, text: r.message ?? '' } : { ok: false, text: r.error });
                           })
                         }
                       >
