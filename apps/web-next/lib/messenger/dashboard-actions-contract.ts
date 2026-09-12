@@ -17,6 +17,7 @@ export interface FetchMessagesResult {
 export interface MessengerHostActions {
   saveDraftSection(siteId: string, section: MessengerSection, payload: object): Promise<ActionResult>;
   publishConfig(siteId: string): Promise<ActionResult>;
+  revertConfigAction(siteId: string): Promise<ActionResult>;
   setMessengerEnabled(siteId: string, enabled: boolean): Promise<ActionResult>;
   addKnowledge(formData: FormData): Promise<ActionResult>;
   updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;

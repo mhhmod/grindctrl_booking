@@ -114,6 +114,11 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
+      revertConfigAction: async (siteId) => {
+        const result = await rawActions.revertConfigAction(siteId);
+        if (result.ok) void loadState();
+        return result;
+      },
       setMessengerEnabled: async (siteId, enabled) => {
         const result = await rawActions.setMessengerEnabled(siteId, enabled);
         if (result.ok) void loadState();

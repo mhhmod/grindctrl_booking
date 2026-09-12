@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MessengerSiteView } from './provisioning';
+import { resolveMessengerConfig, toSettingsSections } from './config';
 
 const { updateMock, recordAuditMock } = vi.hoisted(() => ({
   updateMock: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock('./conversations', () => ({ recordAudit: recordAuditMock }));
 
 import {
   publishConfigForSite,
+  revertConfigForSite,
   saveDraftSectionForSite,
   saveDraftSectionsForSite,
   setMessengerEnabledForSite,
@@ -174,5 +176,92 @@ describe('saveDraftSectionsForSite', () => {
 
     expect(result).toEqual({ ok: false, error: 'Unknown section.' });
     expect(updateMock).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('published version snapshots', () => {
+  it('leaves normalized config unchanged by reserved snapshot keys', () => {
+    const settings = { messenger_ai: { enabled: true }, custom: 'preserved' };
+    const withSnapshot = { ...settings, _previousSettings: { messenger_ai: { enabled: false } }, _previousVersion: 2 };
+    expect(resolveMessengerConfig(withSnapshot)).toEqual(resolveMessengerConfig(settings));
+    expect(toSettingsSections(resolveMessengerConfig(withSnapshot))).toEqual(toSettingsSections(resolveMessengerConfig(settings)));
+  });
+
+  it('keeps only the immediately preceding snapshot across two consecutive publishes', async () => {
+    updateMock.mockReturnValue(chain({ data: [{ id: 'site-1' }], error: null }));
+    const original = { messenger_ai: { enabled: false }, custom: { preserved: true } };
+    await publishConfigForSite(site({ settings_json: original, settings_draft: { messenger_ai: { enabled: true } } }), 'actor-1');
+    const first = updateMock.mock.calls[0][0];
+    expect(first.settings_json._previousSettings).toEqual(original);
+    expect(first.settings_json._previousVersion).toBe(3);
+    await publishConfigForSite(site({ ...first, settings_draft: { messenger_ai: { enabled: false } } }), 'actor-1');
+    const second = updateMock.mock.calls[1][0];
+    const cleanFirst = { ...first.settings_json };
+    delete cleanFirst._previousSettings;
+    delete cleanFirst._previousVersion;
+    expect(second.settings_json._previousSettings).toEqual(cleanFirst);
+    expect(second.settings_json._previousVersion).toBe(4);
+    expect(second.settings_json._previousSettings).not.toHaveProperty('_previousSettings');
+    expect(second.settings_json._previousSettings).not.toHaveProperty('_previousVersion');
+  });
+});
+
+describe('revertConfigForSite', () => {
+  it('restores exact prior settings once, advances version, and never reads or writes settings_draft', async () => {
+    const previous = { messenger_ai: { enabled: false }, custom: { retained: ['exactly'] } };
+    const current = site({ settings_json: { _previousSettings: previous, _previousVersion: 1 } });
+    Object.defineProperty(current, 'settings_draft', { get: () => { throw new Error('Draft must never be read'); } });
+    const builder = chain({ data: [{ id: current.id }], error: null });
+    updateMock.mockReturnValue(builder);
+    expect(await revertConfigForSite(current, 'actor-1')).toEqual({ ok: true, message: 'Reverted — your store is serving the previous version again.' });
+    expect(updateMock).toHaveBeenCalledExactlyOnceWith({ settings_json: previous, settings_version: 4 });
+    expect(builder.eq).toHaveBeenCalledWith('id', current.id);
+    expect(builder.eq).toHaveBeenCalledWith('settings_version', 3);
+    expect(recordAuditMock).toHaveBeenCalledWith({ siteId: current.id, actorClerkUserId: 'actor-1', action: 'config_reverted', detail: { revertedFromVersion: 3, revertedToVersion: 1 } });
+    const restored = site(updateMock.mock.calls[0][0]);
+    expect(await revertConfigForSite(restored, 'actor-1')).toEqual({ ok: false, error: 'Nothing to revert to.' });
+    expect(updateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('strips reserved history keys from the restored snapshot', async () => {
+    updateMock.mockReturnValue(chain({ data: [{ id: 'site-1' }], error: null }));
+    await revertConfigForSite(site({ settings_json: { _previousSettings: { custom: true, _previousSettings: { older: true }, _previousVersion: 0 }, _previousVersion: 2 } }), 'actor-1');
+    expect(updateMock).toHaveBeenCalledWith({ settings_json: { custom: true }, settings_version: 4 });
+  });
+
+  it.each([{}, { _previousSettings: {} }, { _previousSettings: {}, _previousVersion: '2' }])('refuses missing snapshot metadata without writing: %j', async (settings_json) => {
+    expect(await revertConfigForSite(site({ settings_json }), 'actor-1')).toEqual({ ok: false, error: 'Nothing to revert to.' });
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(recordAuditMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a stale version without applying a write or recording success', async () => {
+    const live = { settings_version: 4, settings_json: { latest: true } };
+    const before = structuredClone(live);
+    const guards: Record<string, unknown> = {};
+    updateMock.mockImplementation((patch) => {
+      const builder = {
+        eq: vi.fn((key, value) => { guards[key] = value; return builder; }),
+        select: vi.fn(() => {
+          if (guards.id === 'site-1' && guards.settings_version === live.settings_version) {
+            Object.assign(live, patch);
+            return Promise.resolve({ data: [{ id: 'site-1' }], error: null });
+          }
+          return Promise.resolve({ data: [], error: null });
+        }),
+      };
+      return builder;
+    });
+    expect(await revertConfigForSite(site({ settings_json: { _previousSettings: {}, _previousVersion: 2 } }), 'actor-1')).toEqual({ ok: false, error: 'Someone else published while you were editing. Refresh and try again.' });
+    expect(guards).toEqual({ id: 'site-1', settings_version: 3 });
+    expect(live).toEqual(before);
+    expect(recordAuditMock).not.toHaveBeenCalled();
+  });
+
+  it('throws database failures for the caller to map', async () => {
+    updateMock.mockReturnValue(chain({ error: { message: 'internal database detail' } }));
+    await expect(revertConfigForSite(site({ settings_json: { _previousSettings: {}, _previousVersion: 2 } }), 'actor-1')).rejects.toThrow('internal database detail');
+    expect(recordAuditMock).not.toHaveBeenCalled();
   });
 });

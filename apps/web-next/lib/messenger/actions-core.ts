@@ -107,9 +107,15 @@ export async function publishConfigForSite(
     ...(draft as Record<string, unknown>),
   };
   const resolved = resolveMessengerConfig(merged);
+  // Keep exactly one pre-publish snapshot, never a nested history.
+  const currentClean = { ...(site.settings_json as Record<string, unknown>) };
+  delete currentClean._previousSettings;
+  delete currentClean._previousVersion;
   const nextSettings: Record<string, unknown> = {
     ...(site.settings_json as Record<string, unknown>),
     ...toSettingsSections(resolved),
+    _previousSettings: currentClean,
+    _previousVersion: site.settings_version,
   };
 
   /* Optimistic concurrency on the version we read: two callers publishing at
@@ -139,6 +145,44 @@ export async function publishConfigForSite(
     detail: { version: site.settings_version + 1 },
   });
   return { ok: true, message: 'Published — live on your store within a minute.' };
+}
+
+export async function revertConfigForSite(
+  site: MessengerSiteView,
+  actorClerkUserId: string,
+): Promise<ActionResult> {
+  const settings = site.settings_json as Record<string, unknown>;
+  const previous = settings._previousSettings as Record<string, unknown> | undefined;
+  const previousVersion = settings._previousVersion as number | undefined;
+  if (!previous || typeof previousVersion !== 'number') {
+    return { ok: false, error: 'Nothing to revert to.' };
+  }
+  const cleanPrevious = { ...previous };
+  delete cleanPrevious._previousSettings;
+  delete cleanPrevious._previousVersion;
+
+  const supabase = getMessengerServiceClient();
+  const res = await supabase
+    .from('widget_sites')
+    .update({
+      settings_json: cleanPrevious,
+      settings_version: site.settings_version + 1,
+    })
+    .eq('id', site.id)
+    .eq('settings_version', site.settings_version)
+    .select('id');
+  if (res.error) throw new Error(res.error.message);
+  if ((res.data ?? []).length === 0) {
+    return { ok: false, error: 'Someone else published while you were editing. Refresh and try again.' };
+  }
+
+  await recordAudit({
+    siteId: site.id,
+    actorClerkUserId,
+    action: 'config_reverted',
+    detail: { revertedFromVersion: site.settings_version, revertedToVersion: previousVersion },
+  });
+  return { ok: true, message: 'Reverted — your store is serving the previous version again.' };
 }
 
 export async function setMessengerEnabledForSite(

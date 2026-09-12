@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useRef, useState, useTransition } from 'react';
+import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { MessengerTabId } from './messenger-tabs';
@@ -42,6 +45,11 @@ const COPY = {
     aiAction: 'Turn on AI replies',
     version: 'Published version',
     versionNote: 'The settings your store is serving right now',
+    revertAction: 'Revert to previous version',
+    reverting: 'Reverting…',
+    revertConfirm: 'Restore the previous published version? This cannot be undone.',
+    reverted: 'Reverted — your store is serving the previous version again.',
+    revertFailed: 'Could not revert. Please try again.',
     conversations: 'Conversations · 7 days',
     aiResolved: 'Closed by AI',
     handedOff: 'Needed your team',
@@ -69,6 +77,11 @@ const COPY = {
     aiAction: 'فعّل ردود الذكاء الاصطناعي',
     version: 'الإصدار المنشور',
     versionNote: 'الإعدادات التي يعرضها متجرك الآن',
+    revertAction: 'استعادة الإصدار السابق',
+    reverting: 'جارٍ الاستعادة…',
+    revertConfirm: 'هل تريد استعادة الإصدار المنشور السابق؟ لا يمكن التراجع عن هذه العملية.',
+    reverted: 'تمت الاستعادة — متجرك يعرض الإصدار السابق مجدداً.',
+    revertFailed: 'تعذرت الاستعادة. حاول مرة أخرى.',
     conversations: 'المحادثات · ٧ أيام',
     aiResolved: 'أُغلقت بالذكاء الاصطناعي',
     handedOff: 'احتاجت فريقك',
@@ -83,6 +96,9 @@ const COPY = {
 export function MessengerOverview({
   locale,
   siteName,
+  siteId,
+  canRevert = false,
+  actions,
   domain,
   active,
   aiEnabled,
@@ -93,6 +109,9 @@ export function MessengerOverview({
 }: {
   locale: string;
   siteName: string;
+  siteId?: string;
+  canRevert?: boolean;
+  actions?: Pick<MessengerHostActions, 'revertConfigAction'>;
   domain: string | null;
   active: boolean;
   aiEnabled: boolean;
@@ -105,6 +124,35 @@ export function MessengerOverview({
   onOpenTab?: (tab: MessengerTabId) => void;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const [pending, startTransition] = useTransition();
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const previousState = useRef({ siteId, version, canRevert });
+  useEffect(() => {
+    const before = previousState.current;
+    // Preserve success as revalidation consumes the snapshot; reset for a
+    // new publish (including one before props caught up) or another store.
+    if (siteId !== before.siteId || (canRevert && (!before.canRevert || version !== before.version))) {
+      setResult(null);
+    }
+    previousState.current = { siteId, version, canRevert };
+  }, [siteId, version, canRevert]);
+
+  function revert() {
+    const action = actions?.revertConfigAction;
+    if (!action || !siteId || pending || !window.confirm(t.revertConfirm)) return;
+    setResult(null);
+    startTransition(async () => {
+      try {
+        const outcome = await action(siteId);
+        setResult(outcome.ok
+          ? { ok: true, text: t.reverted }
+          : { ok: false, text: outcome.error || t.revertFailed });
+      } catch {
+        setResult({ ok: false, text: t.revertFailed });
+      }
+    });
+  }
+
   const detected = Boolean(detectedAt);
   const store = domain || siteName || t.yourStore;
 
@@ -141,7 +189,29 @@ export function MessengerOverview({
             !aiEnabled && onOpenTab ? { label: t.aiAction, onClick: () => onOpenTab('ai') } : null
           }
         />
-        <Fact label={t.version} value={`v${version}`} tone="plain" note={t.versionNote} />
+        <Fact label={t.version} value={`v${version}`} tone="plain" note={t.versionNote}>
+          {/* The received outcome is newer than canRevert until revalidation. */}
+          {canRevert && siteId && actions?.revertConfigAction && !result?.ok && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-3 h-auto min-h-11 max-w-full self-start whitespace-normal break-words py-2"
+              disabled={pending}
+              onClick={revert}
+            >
+              {pending ? t.reverting : t.revertAction}
+            </Button>
+          )}
+          {result && (
+            <p
+              role={result.ok ? 'status' : 'alert'}
+              className={`mt-2 text-xs [overflow-wrap:anywhere] ${result.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+            >
+              {result.text}
+            </p>
+          )}
+        </Fact>
       </div>
 
       {stats && stats.conversations7d > 0 ? (
@@ -233,12 +303,14 @@ function Fact({
   note,
   tone,
   action,
+  children,
 }: {
   label: string;
   value: string;
   note?: string;
   tone: 'good' | 'off' | 'plain';
   action?: { label: string; onClick: () => void } | null;
+  children?: React.ReactNode;
 }) {
   const valueTone =
     tone === 'good' ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground';
@@ -258,6 +330,7 @@ function Fact({
           {action.label}
         </Button>
       )}
+      {children}
     </div>
   );
 }

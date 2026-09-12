@@ -133,6 +133,7 @@ export default async function MessengerPage({
   const selected =
     sites.find((site) => site.id === params.site) ?? sites.find((site) => site.domain) ?? sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
+  const canRevert = Boolean((selected.settings_json as Record<string, unknown>)._previousSettings);
   const publishedConfig = resolveMessengerConfig(selected.settings_json);
   const configDiff = diffMessengerConfig(publishedConfig, config);
 
@@ -266,6 +267,7 @@ export default async function MessengerPage({
         cannedReplies={cannedReplies}
         actions={messengerActions}
         hasDraft={hasDraft}
+        canRevert={canRevert}
         configDiff={configDiff}
         currentProfileId={currentProfileId}
         assignableMembers={assignableMembers}

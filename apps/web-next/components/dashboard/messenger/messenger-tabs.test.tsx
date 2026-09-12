@@ -3,11 +3,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { MessengerTabs } from './messenger-tabs';
 
-const { behaviour, conversations } = vi.hoisted(() => ({ behaviour: vi.fn(), conversations: vi.fn() }));
+const { behaviour, conversations, overview } = vi.hoisted(() => ({ behaviour: vi.fn(), conversations: vi.fn(), overview: vi.fn() }));
 vi.mock('./behaviour-editor', () => ({ BehaviourEditor: (props: unknown) => { behaviour(props); return <div>Behaviour panel</div>; } }));
 vi.mock('./conversations-panel', () => ({ ConversationsPanel: (props: unknown) => { conversations(props); return <div>Conversation panel</div>; } }));
 vi.mock('./publish-bar', () => ({ PublishBar: () => null }));
-vi.mock('./overview', () => ({ MessengerOverview: () => null }));
+vi.mock('./overview', () => ({ MessengerOverview: (props: unknown) => { overview(props); return null; } }));
 vi.mock('./appearance-editor', () => ({ AppearanceEditor: () => null }));
 vi.mock('./ai-knowledge-editor', () => ({ AiKnowledgeEditor: () => null }));
 vi.mock('./install-card', () => ({ InstallCard: () => null }));
@@ -24,4 +24,14 @@ describe('MessengerTabs saved replies', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Conversations' }));
     expect(conversations).toHaveBeenLastCalledWith(expect.objectContaining({ cannedReplies, actions: props.actions, siteId: 'site-1' }));
   });
+});
+
+
+it.each([true, undefined])('threads revert availability and actions to Overview: %s', (canRevert) => {
+  const props = {
+    locale: 'en', initialTab: 'overview', siteId: 'site-1',
+    config: { ai: { enabled: false } }, actions: { revertConfigAction: vi.fn() }, canRevert,
+  } as unknown as React.ComponentProps<typeof MessengerTabs>;
+  render(<MessengerTabs {...props} />);
+  expect(overview).toHaveBeenLastCalledWith(expect.objectContaining({ siteId: 'site-1', canRevert: canRevert ?? false, actions: props.actions }));
 });

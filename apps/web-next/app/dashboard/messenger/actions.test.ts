@@ -102,7 +102,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
+import { assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, revertConfigAction, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -147,6 +147,7 @@ describe('messenger server actions — authorization', () => {
     for (const run of [
       () => saveDraftSection('site-1', 'appearance', {}),
       () => publishConfig('site-1'),
+      () => revertConfigAction('site-1'),
       () => setMessengerEnabled('site-1', true),
       () => staffReply('site-1', 'conv-1', 'hello'),
       () => pingStaffTyping('site-1', 'conv-1'),
@@ -450,5 +451,40 @@ describe('assignConversationAction', () => {
     expect(await takeoverConversation('site-1', 'conv-1')).toEqual({ ok: true });
     expect(mocks.takeOverConversation).toHaveBeenCalledWith('conv-1', 'profile-1');
     expect(mocks.assignConversation).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('revertConfigAction', () => {
+  beforeEach(() => {
+    mocks.requireOwnedSite.mockResolvedValue({ ...SITE, settings_json: { _previousSettings: { custom: true }, _previousVersion: 2 } });
+  });
+
+  it('authorizes and rate checks before reverting through the core and revalidates success', async () => {
+    expect((await revertConfigAction(SITE.id)).ok).toBe(true);
+    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', SITE.id);
+    expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
+    expect(mocks.requireOwnedSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
+    expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
+    expect(mocks.update).toHaveBeenCalledWith({ settings_json: { custom: true }, settings_version: 4 });
+    expect(mocks.recordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'config_reverted', actorClerkUserId: 'user_owner' }));
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/messenger');
+  });
+
+  it('maps a thrown core failure without exposing internals or revalidating', async () => {
+    mocks.result.current = { data: [], error: { message: 'private database detail' } };
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await revertConfigAction(SITE.id)).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+    expect(revalidatePath).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it.each(['ownership', 'rate limit', 'conflict'])('does not revalidate after %s failure', async (reason) => {
+    if (reason === 'ownership') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'rate limit') vi.mocked(requireMerchantRateLimit).mockRejectedValue(new RequestRateLimitError(503, 30));
+    if (reason === 'conflict') mocks.result.current = { data: [], error: null };
+    expect((await revertConfigAction(SITE.id)).ok).toBe(false);
+    if (reason !== 'conflict') expect(mocks.update).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 });

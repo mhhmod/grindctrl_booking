@@ -47,6 +47,7 @@ export function useStoreChatActions(): MessengerHostActions {
       saveDraftSections: (_siteId, sections) =>
         postJson('/api/shopify/store-chat/draft', { sections }),
       publishConfig: (_siteId) => postJson('/api/shopify/store-chat/publish', {}),
+      revertConfigAction: (_siteId) => postJson('/api/shopify/store-chat/revert', {}),
       setMessengerEnabled: (_siteId, enabled: boolean) =>
         postJson('/api/shopify/store-chat/enable', { enabled }),
       fetchConversationMessages: (_siteId, conversationId: string) => postThreadRead(conversationId),

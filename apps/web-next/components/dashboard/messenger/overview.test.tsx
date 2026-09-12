@@ -1,6 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MessengerOverview } from './overview';
 
 /* What this screen owes a merchant is a straight answer and a way to act on
@@ -12,6 +12,7 @@ type Props = React.ComponentProps<typeof MessengerOverview>;
 function renderOverview(overrides: Partial<Props> = {}) {
   const props: Props = {
     locale: 'en',
+    siteId: 'site-1',
     siteName: 'Demo store',
     domain: 'demo.myshopify.com',
     active: true,
@@ -112,4 +113,79 @@ describe('MessengerOverview satisfaction', () => {
     expect(screen.queryByText('0%')).not.toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
   });
+});
+
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('MessengerOverview revert', () => {
+  const label = 'Revert to previous version';
+  const success = 'Reverted — your store is serving the previous version again.';
+
+  it.each([{ canRevert: false, actions: { revertConfigAction: vi.fn() } }, { canRevert: true }, { canRevert: true, siteId: undefined, actions: { revertConfigAction: vi.fn() } }])('hides revert without a snapshot, action, or site id: %j', (props) => {
+    renderOverview(props);
+    expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
+  });
+
+  it('requires confirmation, shows pending, leaves AI actionable, then hides revert on success', async () => {
+    let finish!: (result: { ok: true }) => void;
+    const revertConfigAction = vi.fn(() => new Promise<{ ok: true }>((resolve) => { finish = resolve; }));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const onOpenTab = vi.fn();
+    renderOverview({ canRevert: true, actions: { revertConfigAction }, onOpenTab });
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(confirm).toHaveBeenCalledWith('Restore the previous published version? This cannot be undone.');
+    expect(revertConfigAction).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(revertConfigAction).toHaveBeenCalledExactlyOnceWith('site-1');
+    expect(screen.getByRole('button', { name: 'Reverting…' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Turn on AI replies' }));
+    expect(onOpenTab).toHaveBeenCalledExactlyOnceWith('ai');
+    await act(async () => finish({ ok: true }));
+    expect(screen.getByRole('status')).toHaveTextContent(success);
+    expect(screen.queryByRole('button', { name: label })).not.toBeInTheDocument();
+  });
+
+  it('shows the server failure and allows retry', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const revertConfigAction = vi.fn().mockResolvedValue({ ok: false, error: 'Someone else published. Refresh.' });
+    renderOverview({ canRevert: true, actions: { revertConfigAction } });
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Someone else published. Refresh.');
+    expect(await screen.findByRole('button', { name: label })).toBeEnabled();
+  });
+
+  it('uses a generic failure for a rejected transport', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderOverview({ canRevert: true, actions: { revertConfigAction: vi.fn().mockRejectedValue(new Error('network internals')) } });
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not revert. Please try again.');
+  });
+
+  it('localizes confirmation and success in Arabic', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderOverview({ locale: 'ar', canRevert: true, actions: { revertConfigAction: vi.fn().mockResolvedValue({ ok: true, message: success }) } });
+    fireEvent.click(screen.getByRole('button', { name: 'استعادة الإصدار السابق' }));
+    expect(confirm).toHaveBeenCalledWith('هل تريد استعادة الإصدار المنشور السابق؟ لا يمكن التراجع عن هذه العملية.');
+    expect(await screen.findByRole('status')).toHaveTextContent('تمت الاستعادة — متجرك يعرض الإصدار السابق مجدداً.');
+  });
+});
+
+
+it('keeps success through revalidation but enables revert after the next publish', async () => {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  const props: Props = {
+    locale: 'en', siteId: 'site-1', siteName: 'Demo', domain: null,
+    active: true, aiEnabled: true, detectedAt: null, version: 3, stats: null,
+    canRevert: true, actions: { revertConfigAction: vi.fn().mockResolvedValue({ ok: true }) },
+  };
+  const { rerender } = render(<MessengerOverview {...props} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Revert to previous version' }));
+  await screen.findByRole('status');
+  rerender(<MessengerOverview {...props} version={4} canRevert={false} />);
+  expect(screen.getByRole('status')).toBeInTheDocument();
+  rerender(<MessengerOverview {...props} version={5} canRevert />);
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Revert to previous version' })).toBeEnabled();
 });

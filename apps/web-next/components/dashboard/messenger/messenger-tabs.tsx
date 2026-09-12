@@ -65,6 +65,7 @@ export function MessengerTabs({
   cannedReplies = [],
   actions,
   hasDraft,
+  canRevert = false,
   configDiff = [],
   currentProfileId,
   assignableMembers = [],
@@ -88,6 +89,7 @@ export function MessengerTabs({
   cannedReplies?: CannedReply[];
   actions: MessengerHostActions;
   hasDraft: boolean;
+  canRevert?: boolean;
   /** Supplied by the dashboard; embedded hosts can omit the review. */
   configDiff?: MessengerConfigSectionDiff[];
   /** Signed-in dashboard viewer's profile id. Absent on the embedded
@@ -132,6 +134,9 @@ export function MessengerTabs({
       {tab === 'overview' && (
         <MessengerOverview
           locale={locale}
+          siteId={siteId}
+          canRevert={canRevert}
+          actions={actions}
           siteName={siteName}
           domain={domain}
           active={active}

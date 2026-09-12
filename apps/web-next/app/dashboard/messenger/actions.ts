@@ -40,7 +40,7 @@ import {
 } from '@/lib/messenger/attachments';
 import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
-import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
+import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, revertConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
 
@@ -111,6 +111,18 @@ export async function publishConfig(siteId: string): Promise<ActionResult> {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await publishConfigForSite(site, userId);
+    if (result.ok) revalidatePath('/dashboard/messenger');
+    return result;
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function revertConfigAction(siteId: string): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId);
+    const result = await revertConfigForSite(site, userId);
     if (result.ok) revalidatePath('/dashboard/messenger');
     return result;
   } catch (error) {
