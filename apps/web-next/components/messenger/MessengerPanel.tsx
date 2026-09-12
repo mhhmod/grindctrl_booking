@@ -105,6 +105,10 @@ export function MessengerPanel({
   const [bootError, setBootError] = useState(false);
   const [fullBleed, setFullBleed] = useState(false);
   const [typing, setTyping] = useState(false);
+  /* Staff-side presence: true while the moderator is actively composing a
+     reply (freshness is decided server-side per read). Independent of the
+     send()-driven `typing` above — the dots show when EITHER is true. */
+  const [staffTyping, setStaffTyping] = useState(false);
 
   /* Composer */
   const [draft, setDraft] = useState('');
@@ -216,6 +220,7 @@ export function MessengerPanel({
           anonymousId: string;
           conversationId: string;
           status: string;
+          staffTyping?: boolean;
           messages: WireMessage[];
         };
         if (cancelled) return;
@@ -224,6 +229,7 @@ export function MessengerPanel({
         setAnonId(data.anonymousId);
         setConversationId(data.conversationId);
         setStatus(data.status);
+        setStaffTyping(data.staffTyping === true);
         setMessages(data.messages);
       } catch {
         if (!cancelled) setBootError(true);
@@ -250,6 +256,7 @@ export function MessengerPanel({
       )
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
+          if (typeof data?.staffTyping === 'boolean') setStaffTyping(data.staffTyping);
           if (!data?.messages?.length) {
             if (typeof data?.status === 'string') setStatus(data.status);
             return;
@@ -281,7 +288,7 @@ export function MessengerPanel({
     };
   }, [config.key, conversationId, anonId, messages, effectiveOrigin, originToken]);
 
-  useEffect(scrollToEnd, [messages.length, typing, scrollToEnd]);
+  useEffect(scrollToEnd, [messages.length, typing, staffTyping, scrollToEnd]);
 
   /* The loader sees the storefront's visual viewport; this iframe only sees
      its own layout viewport. It resizes our box before notifying us, including
@@ -641,7 +648,7 @@ export function MessengerPanel({
           );
         })}
 
-        {typing && (
+        {(typing || staffTyping) && (
           <div className="flex justify-start" aria-label={t.typing} role="status">
             <div className="flex items-center gap-1 rounded-2xl rounded-es-md border border-border bg-card px-3 py-2.5">
               {[0, 150, 300].map((delay) => (

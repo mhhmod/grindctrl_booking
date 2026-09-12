@@ -5,6 +5,7 @@ import { ConversationsPanel, type ConversationListItem } from './conversations-p
 
 const fetchConversationMessages = vi.fn();
 const staffReply = vi.fn();
+const pingStaffTyping = vi.fn();
 const addInternalNote = vi.fn();
 const takeoverConversation = vi.fn();
 const releaseConversation = vi.fn();
@@ -17,6 +18,7 @@ const deleteCannedReply = vi.fn();
 const actions = {
   fetchConversationMessages,
   staffReply,
+  pingStaffTyping,
   addInternalNote,
   takeoverConversation,
   releaseConversation,
@@ -47,6 +49,7 @@ beforeEach(() => {
     messages: [{ id: 'm-1', role: 'user', content: 'Where is my order?', createdAt: '2026-08-30T10:00:00.000Z' }],
     attachments: {},
   });
+  pingStaffTyping.mockResolvedValue({ ok: true });
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -657,5 +660,58 @@ describe('ConversationsPanel internal notes', () => {
     // footer (and its toggle) briefly unmounts — wait for it to come back.
     expect(await screen.findByRole('button', { name: 'Reply' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'Note' })).toHaveAttribute('aria-pressed', 'false');
+  });
+});
+
+/* Staff "typing…" presence: the Reply composer pings (debounced, fire and
+   forget) so the shopper sees the dots — but the Note composer must NEVER
+   ping. A note is staff-only; even a "someone is typing" signal while a
+   moderator writes a private note about the shopper would breach that
+   boundary. These two tests are the lock on that gate. */
+describe('ConversationsPanel staff typing ping', () => {
+  it('pings while typing in the Reply composer', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    fireEvent.change(screen.getByLabelText('Type your reply…'), { target: { value: 'On it, checking now' } });
+
+    expect(pingStaffTyping).toHaveBeenCalledWith('site-1', 'conv-1');
+  });
+
+  it('pings at most once per window while typing continues', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    const box = screen.getByLabelText('Type your reply…');
+    fireEvent.change(box, { target: { value: 'a' } });
+    fireEvent.change(box, { target: { value: 'ab' } });
+    fireEvent.change(box, { target: { value: 'abc' } });
+
+    expect(pingStaffTyping).toHaveBeenCalledTimes(1);
+  });
+
+  it('NEVER pings while typing a private note', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Note' }));
+    fireEvent.change(screen.getByLabelText('Type a private note…'), { target: { value: 'VIP — comp shipping' } });
+
+    expect(pingStaffTyping).not.toHaveBeenCalled();
+  });
+
+  it('still sends the note through addInternalNote without pinging', async () => {
+    addInternalNote.mockResolvedValue({ ok: true });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Note' }));
+    fireEvent.change(screen.getByLabelText('Type a private note…'), { target: { value: 'VIP — comp shipping' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    });
+
+    expect(addInternalNote).toHaveBeenCalledWith('site-1', 'conv-1', 'VIP — comp shipping');
+    expect(pingStaffTyping).not.toHaveBeenCalled();
   });
 });

@@ -288,3 +288,58 @@ describe('MessengerPanel shopper identity forwarding', () => {
     }
   });
 });
+
+/* Staff "typing…" presence rides the existing poll, not a new transport: the
+   same dots the shopper sees while their own message is in flight also show
+   when a sync response reports staffTyping — and clear again once the ping
+   goes stale, all without touching the send()-driven typing state. */
+describe('MessengerPanel staff typing presence', () => {
+  function stubPresence(getStaffTyping: () => boolean, bootstrapTyping = false) {
+    fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.includes('/api/messenger/bootstrap')
+        ? { ...BOOTSTRAP, staffTyping: bootstrapTyping }
+        : { status: 'open', messages: [], staffTyping: getStaffTyping() };
+      return { ok: true, json: () => Promise.resolve(body) } as unknown as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  }
+
+  it('shows the typing dots when a sync response reports staffTyping: true', async () => {
+    stubPresence(() => true);
+    await bootPanel();
+
+    expect(screen.queryByRole('status', { name: 'Typing…' })).not.toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(16_000);
+    });
+
+    expect(screen.getByRole('status', { name: 'Typing…' })).toBeInTheDocument();
+  });
+
+  it('shows the dots from bootstrap when staff are already typing on first load', async () => {
+    stubPresence(() => false, true);
+    await bootPanel();
+
+    expect(screen.getByRole('status', { name: 'Typing…' })).toBeInTheDocument();
+  });
+
+  it('clears the dots once the ping goes stale, without sending anything', async () => {
+    let staffTyping = true;
+    stubPresence(() => staffTyping);
+    await bootPanel();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(16_000);
+    });
+    expect(screen.getByRole('status', { name: 'Typing…' })).toBeInTheDocument();
+
+    staffTyping = false;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(16_000);
+    });
+    expect(screen.queryByRole('status', { name: 'Typing…' })).not.toBeInTheDocument();
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/api/messenger/send'))).toBe(false);
+  });
+});

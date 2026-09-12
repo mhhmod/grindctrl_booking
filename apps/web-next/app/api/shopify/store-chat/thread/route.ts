@@ -11,6 +11,7 @@ import {
   getConversationForSite,
   listMessages,
   markConversationRead,
+  pingStaffTyping,
   recordAudit,
   resolveAssigneeNames,
   returnConversationToAi,
@@ -22,6 +23,7 @@ type ThreadBody =
   | { op: 'messages'; conversationId: string }
   | { op: 'reply'; conversationId: string; text: string }
   | { op: 'addNote'; conversationId: string; text: string }
+  | { op: 'ping'; conversationId: string }
   | { op: 'takeover'; conversationId: string }
   | { op: 'markRead'; conversationId: string }
   | { op: 'release'; conversationId: string }
@@ -167,6 +169,13 @@ export async function POST(request: NextRequest) {
       }
       case 'markRead': {
         await markConversationRead(conversation.id, conversation.metadata);
+        return NextResponse.json({ ok: true });
+      }
+      case 'ping': {
+        /* Ephemeral presence only: no audit entry (far too frequent) and no
+           state change. Same shared helper the dashboard action pings
+           through, so the merge lives in exactly one place. */
+        await pingStaffTyping(conversation.id, conversation.metadata);
         return NextResponse.json({ ok: true });
       }
       case 'release': {

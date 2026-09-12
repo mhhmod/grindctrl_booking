@@ -10,6 +10,7 @@ import {
 } from '@/lib/messenger/provisioning';
 import {
   appendMessage,
+  pingStaffTyping as pingTyping,
   recordAudit,
   resolveAssigneeNames,
   returnConversationToAi,
@@ -401,6 +402,26 @@ export async function addInternalNote(
       detail: { conversationId },
     });
     revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function pingStaffTyping(
+  siteId: string,
+  conversationId: string,
+): Promise<ActionResult> {
+  try {
+    /* ownedConversation is the tenancy check: it is what stops a merchant
+       lighting up a typing indicator on a site that is not theirs. */
+    const { conversation } = await ownedConversation(siteId, conversationId);
+    await pingTyping(conversationId, conversation.metadata);
+    /* Deliberately no audit entry and no revalidatePath. This fires on a
+       keystroke debounce while staff type, so it is far too frequent and
+       too ephemeral for an audit trail — and the shopper polls for the
+       derived boolean independently, so revalidating the dashboard tree
+       would buy nothing. */
     return { ok: true };
   } catch (error) {
     return fail(error);

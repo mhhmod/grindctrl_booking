@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
-import { getConversationForVisitor, getVisitor, listMessages } from '@/lib/messenger/conversations';
+import { getConversationForVisitor, getVisitor, isStaffTyping, listMessages } from '@/lib/messenger/conversations';
 
 /* GET /api/messenger/sync?key&anonId&conversationId&after=<iso>&origin
    Cursor-based recovery used on reconnect, tab refocus, and multi-tab
@@ -46,15 +46,19 @@ export async function GET(request: NextRequest) {
     }
 
     const visitor = await getVisitor(site.id, anonymousId);
-    if (!visitor) return NextResponse.json({ messages: [], status: null });
+    if (!visitor) return NextResponse.json({ messages: [], status: null, staffTyping: false });
 
     const conversation = await getConversationForVisitor(conversationId, visitor.id);
-    if (!conversation) return NextResponse.json({ messages: [], status: null });
+    if (!conversation) return NextResponse.json({ messages: [], status: null, staffTyping: false });
 
     const messages = await listMessages(conversation.id, { afterIso: after ?? null, limit: 50 });
     return NextResponse.json(
       {
         status: conversation.status,
+        /* Freshly derived on every read: a staff typing ping younger than
+           ~8s. The panel already polls here every ~15s, so this rides the
+           existing cadence — coarse-grained, never instant. */
+        staffTyping: isStaffTyping(conversation.metadata),
         messages: messages.map((m) => ({
           id: m.id,
           role: m.role,

@@ -12,6 +12,7 @@ const {
   getConversationForSiteMock,
   listMessagesMock,
   appendMessageMock,
+  pingStaffTypingMock,
   recordAuditMock,
   resolveAssigneeNamesMock,
   takeOverConversationMock,
@@ -26,6 +27,7 @@ const {
   getConversationForSiteMock: vi.fn(),
   listMessagesMock: vi.fn(),
   appendMessageMock: vi.fn(),
+  pingStaffTypingMock: vi.fn(),
   recordAuditMock: vi.fn(),
   resolveAssigneeNamesMock: vi.fn(),
   takeOverConversationMock: vi.fn(),
@@ -46,6 +48,7 @@ vi.mock('@/lib/messenger/conversations', () => ({
   getConversationForSite: getConversationForSiteMock,
   listMessages: listMessagesMock,
   appendMessage: appendMessageMock,
+  pingStaffTyping: pingStaffTypingMock,
   recordAudit: recordAuditMock,
   resolveAssigneeNames: resolveAssigneeNamesMock,
   takeOverConversation: takeOverConversationMock,
@@ -174,6 +177,19 @@ describe('POST /api/shopify/store-chat/thread', () => {
       expect.objectContaining({ siteId: 'site-real', actorClerkUserId: 'shop-demo.myshopify.com' }),
     );
     expect(res.status).toBe(200);
+  });
+
+  it('op=ping records presence through the shared helper, with no audit entry', async () => {
+    const metadata = { agent_last_read_at: '2026-09-01T00:00:00.000Z' };
+    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open', metadata });
+
+    const res = await POST(req({ op: 'ping', conversationId: 'c-1' }));
+
+    expect(res.status).toBe(200);
+    expect(pingStaffTypingMock).toHaveBeenCalledWith('c-1', metadata);
+    expect(recordAuditMock).not.toHaveBeenCalled();
+    expect(appendMessageMock).not.toHaveBeenCalled();
+    expect(takeOverConversationMock).not.toHaveBeenCalled();
   });
 
   it('op=takeover records the audit trail against the shop, not a person', async () => {

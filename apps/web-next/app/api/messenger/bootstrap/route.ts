@@ -5,6 +5,7 @@ import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/pub
 import {
   ensureOpenConversation,
   getVisitor,
+  isStaffTyping,
   listMessages,
   recordEvent,
   upsertVisitor,
@@ -143,6 +144,9 @@ export async function POST(request: NextRequest) {
       anonymousId: sessionId,
       conversationId: conversation.id,
       status: conversation.status,
+      /* Same fresh derivation as /sync: a staff typing ping younger than
+         ~8s. First paint shows the dots without waiting a poll cycle. */
+      staffTyping: isStaffTyping(conversation.metadata),
       aiEnabled: site.config.ai.enabled && site.status === 'active',
       storeName: site.name,
       v: site.settings_version,

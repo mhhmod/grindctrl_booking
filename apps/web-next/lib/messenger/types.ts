@@ -191,6 +191,10 @@ export interface ConversationRecord {
     /** Lifetime order-lookup attempts. Counted on attempts, not successes,
      *  so guessing order numbers is what exhausts the budget. */
     order_lookup_attempts?: number;
+    /** When staff last typed into the reply composer for this conversation.
+     *  Ephemeral presence only — the shopper never sees the timestamp
+     *  itself, just a derived "typing…" indicator while it is fresh. */
+    staff_typing_at?: string;
   };
 }
 

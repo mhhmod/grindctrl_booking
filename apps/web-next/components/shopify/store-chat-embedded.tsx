@@ -100,6 +100,10 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
          conversation feel like it had stalled. */
       markConversationRead: (siteId, conversationId) =>
         rawActions.markConversationRead(siteId, conversationId),
+      /* Like markConversationRead above: ephemeral presence the shopper
+         polls for independently, so no state re-pull. */
+      pingStaffTyping: (siteId, conversationId) =>
+        rawActions.pingStaffTyping(siteId, conversationId),
       saveDraftSections: async (siteId, sections) => {
         const result = await rawActions.saveDraftSections(siteId, sections);
         if (result.ok) void loadState();

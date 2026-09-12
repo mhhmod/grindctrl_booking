@@ -27,6 +27,12 @@ export interface MessengerHostActions {
   deleteCannedReply(siteId: string, replyId: string): Promise<ActionResult>;
   fetchConversationMessages(siteId: string, conversationId: string): Promise<FetchMessagesResult | { ok: false }>;
   staffReply(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
+  /** Ephemeral presence ping while staff type a reply. Debounced client-side
+   *  and fired from the reply composer only — never from the note composer,
+   *  so a private note can never leak even a "someone is typing" signal to
+   *  the shopper. No audit entry, no state refresh: the shopper polls for
+   *  the derived boolean on their own cadence. */
+  pingStaffTyping(siteId: string, conversationId: string): Promise<ActionResult>;
   /** Staff-only note: visible in the inbox, never to the shopper, and
    *  never part of the conversation turn-taking (no takeover, no status
    *  change, no notification). */

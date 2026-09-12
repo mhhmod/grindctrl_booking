@@ -52,6 +52,10 @@ export function useStoreChatActions(): MessengerHostActions {
       fetchConversationMessages: (_siteId, conversationId: string) => postThreadRead(conversationId),
       staffReply: (_siteId, conversationId: string, text: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'reply', conversationId, text }),
+      /* Reply-composer presence only — the panel gates this on reply mode,
+         so a private note never reaches this call. */
+      pingStaffTyping: (_siteId, conversationId: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'ping', conversationId }),
       addInternalNote: (_siteId, conversationId: string, text: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'addNote', conversationId, text }),
       takeoverConversation: (_siteId, conversationId: string) =>

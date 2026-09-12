@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => {
     getConversationForSite: vi.fn(),
     takeOverConversation: vi.fn(),
     appendMessage: vi.fn(async () => ({ message: { id: 'm1' }, replayed: false })),
+    pingStaffTyping: vi.fn(async () => {}),
     listMessages: vi.fn(async (): Promise<Array<{ id: string; role: string; content: string; created_at: string; metadata: Record<string, unknown> }>> => []),
     resolveAssigneeNames: vi.fn(async (): Promise<Record<string, string>> => ({})),
     listConversationAttachments: vi.fn(async () => []),
@@ -58,6 +59,7 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     getConversationForSite: mocks.getConversationForSite,
     takeOverConversation: mocks.takeOverConversation,
     appendMessage: mocks.appendMessage,
+    pingStaffTyping: mocks.pingStaffTyping,
     listMessages: mocks.listMessages,
     resolveAssigneeNames: mocks.resolveAssigneeNames,
   };
@@ -95,7 +97,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
+import { addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -142,6 +144,7 @@ describe('messenger server actions — authorization', () => {
       () => publishConfig('site-1'),
       () => setMessengerEnabled('site-1', true),
       () => staffReply('site-1', 'conv-1', 'hello'),
+      () => pingStaffTyping('site-1', 'conv-1'),
     ]) {
       const result = await run();
       expect(result.ok).toBe(false);
@@ -229,6 +232,40 @@ describe('addInternalNote', () => {
 
     expect(result.ok).toBe(false);
     expect(mocks.appendMessage).not.toHaveBeenCalled();
+  });
+});
+
+/* A typing ping is ephemeral presence, not content: it must prove ownership
+   of the site like every other conversation action, then merge the
+   timestamp through the shared helper — with no audit entry (far too
+   frequent for a trail) and no page revalidation (the shopper polls for
+   the boolean independently). */
+describe('pingStaffTyping', () => {
+  const METADATA = {
+    identity: { customer_id: 'c-1', email: 'sara@example.com', name: 'Sara', verified: true },
+    agent_last_read_at: '2026-09-01T00:00:00.000Z',
+  };
+
+  beforeEach(() => {
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', status: 'handoff_active', metadata: METADATA });
+  });
+
+  it('pings through the shared merge helper with the conversation just read', async () => {
+    const result = await pingStaffTyping('site-1', 'conv-1');
+
+    expect(result).toEqual({ ok: true });
+    expect(mocks.pingStaffTyping).toHaveBeenCalledWith('conv-1', METADATA);
+    expect(mocks.recordAudit).not.toHaveBeenCalled();
+    expect(mocks.appendMessage).not.toHaveBeenCalled();
+  });
+
+  it('refuses a ping on a site the caller does not own, before any write', async () => {
+    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+
+    const result = await pingStaffTyping('someone-elses-site', 'conv-1');
+
+    expect(result.ok).toBe(false);
+    expect(mocks.pingStaffTyping).not.toHaveBeenCalled();
   });
 });
 

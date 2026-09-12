@@ -7,8 +7,10 @@ import {
   claimHandoffNotification,
   countAwaitingHandoff,
   getWidgetLastSeenAt,
+  isStaffTyping,
   listConversationsForSite,
   listMessages,
+  pingStaffTyping,
   recordEvent,
   resolveAssigneeNames,
   returnConversationToAi,
@@ -464,5 +466,63 @@ describe('getWidgetLastSeenAt', () => {
     setMessengerServiceClientForTests(client);
 
     expect(await getWidgetLastSeenAt('site-1')).toBeNull();
+  });
+});
+
+/* Staff "typing…" presence is a read-modify-write of the metadata blob: the
+   timestamp merges in alongside whatever is already there. Clobbering the
+   blob here would silently wipe identity, read markers, and contact state —
+   so the merge preserving unrelated fields is the assertion that matters. */
+describe('pingStaffTyping', () => {
+  it('merges the timestamp without clobbering unrelated metadata', async () => {
+    const { client, calls } = stubQueryClient({ data: null, error: null });
+    setMessengerServiceClientForTests(client);
+    const current = {
+      identity: { customer_id: 'c-1', email: 'sara@example.com', name: 'Sara', verified: true },
+      agent_last_read_at: '2026-09-01T00:00:00.000Z',
+      contact_email: 'reply@example.com',
+    };
+
+    await pingStaffTyping('conv-1', current);
+
+    const updateCall = calls.find(([method]) => method === 'update');
+    const patch = updateCall?.[1][0] as { metadata: Record<string, unknown> };
+    expect(patch.metadata).toMatchObject({
+      identity: current.identity,
+      agent_last_read_at: '2026-09-01T00:00:00.000Z',
+      contact_email: 'reply@example.com',
+    });
+    expect(typeof patch.metadata.staff_typing_at).toBe('string');
+    expect(Date.now() - Date.parse(patch.metadata.staff_typing_at as string)).toBeLessThan(5000);
+    expect(calls).toContainEqual(['eq', ['id', 'conv-1']]);
+  });
+
+  it('throws when the metadata write fails, so a lost ping is never silent success', async () => {
+    const { client } = stubQueryClient({ data: null, error: { message: 'db down' } });
+    setMessengerServiceClientForTests(client);
+
+    await expect(pingStaffTyping('conv-1', {})).rejects.toThrow('conversation metadata update failed');
+  });
+});
+
+/* Freshness is decided on every read, never stored: a recent ping reads
+   true, an old or absent one reads false, and no "stopped typing" write is
+   needed for the indicator to clear. */
+describe('isStaffTyping', () => {
+  it('is true for a fresh ping, false when old or absent', () => {
+    const now = Date.now();
+    expect(isStaffTyping({}, now)).toBe(false);
+    expect(isStaffTyping({ staff_typing_at: new Date(now - 2000).toISOString() }, now)).toBe(true);
+    expect(isStaffTyping({ staff_typing_at: new Date(now - 30_000).toISOString() }, now)).toBe(false);
+  });
+
+  it('rejects unparsable timestamps instead of showing the dots forever', () => {
+    expect(isStaffTyping({ staff_typing_at: 'not-a-date' })).toBe(false);
+  });
+
+  it('goes stale at the freshness boundary', () => {
+    const now = Date.now();
+    expect(isStaffTyping({ staff_typing_at: new Date(now - 7999).toISOString() }, now)).toBe(true);
+    expect(isStaffTyping({ staff_typing_at: new Date(now - 8001).toISOString() }, now)).toBe(false);
   });
 });

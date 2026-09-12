@@ -160,6 +160,12 @@ function handoffReasonLabel(reason: string, t: (typeof COPY)['en']): string {
 
 const MESSAGE_WINDOW = 50;
 
+/* Staff typing pings fire at most this often while the moderator keeps
+   typing. Coarse on purpose: the shopper polls every ~15s anyway, so a
+   ~3s ping against an ~8s server freshness window keeps the dots lit
+   without a keystroke-level write stream. */
+const TYPING_PING_INTERVAL_MS = 3000;
+
 export interface ConversationListItem {
   id: string;
   status: string;
@@ -242,6 +248,7 @@ export function ConversationsPanel({
     MessengerHostActions,
     | 'fetchConversationMessages'
     | 'staffReply'
+    | 'pingStaffTyping'
     | 'addInternalNote'
     | 'takeoverConversation'
     | 'releaseConversation'
@@ -266,6 +273,9 @@ export function ConversationsPanel({
   const logRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const olderScroll = useRef<{ height: number; top: number } | null>(null);
+  /* Last staff-typing ping sent. A plain timestamp check is enough — no
+     debounce utility needed for presence data this coarse. */
+  const lastTypingPing = useRef(0);
   /* Cleared locally the instant a conversation is opened. Waiting for the
      server round trip and a revalidate meant the badge sat there for as long
      as the whole page took to re-render, which read as the click not having
@@ -564,6 +574,7 @@ export function ConversationsPanel({
                   setVisibleCount(MESSAGE_WINDOW);
                   olderScroll.current = null;
                   followLatest.current = true;
+                  lastTypingPing.current = 0;
                   setComposerMode('reply');
                 }
                 setMobileThreadOpen(true);
@@ -867,7 +878,23 @@ export function ConversationsPanel({
                 id={composerMode === 'note' || status === 'closed' ? 'staff-note' : 'staff-reply'}
                 rows={1}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
+                onChange={(e) => {
+                  setDraft(e.target.value.slice(0, 2000));
+                  /* Reply-composer presence ping, at most one per ~3s while
+                     the moderator keeps typing. Gated exactly like the submit
+                     routing below (reply mode AND not closed): a private note
+                     — including the note-style box of a resolved thread — must
+                     NEVER leak even a "someone is typing" signal to the
+                     shopper. Fire and forget, like markConversationRead above
+                     — a failed ping must never block typing. */
+                  if (composerMode === 'reply' && status !== 'closed' && selectedId) {
+                    const now = Date.now();
+                    if (now - lastTypingPing.current >= TYPING_PING_INTERVAL_MS) {
+                      lastTypingPing.current = now;
+                      void actions.pingStaffTyping(siteId, selectedId);
+                    }
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();

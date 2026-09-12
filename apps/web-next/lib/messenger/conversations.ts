@@ -126,6 +126,46 @@ export async function updateConversationMetadata(
   if (res.error) throw new Error(`conversation metadata update failed: ${res.error.message}`);
 }
 
+/* Staff "typing…" presence. The moderator's client pings (debounced, reply
+   composer only — never the internal-note box) while they type; the
+   shopper's panel polls for the derived boolean on its existing cadence.
+   No "stopped typing" ping exists on purpose: the timestamp simply goes
+   stale once typing stops and the freshness check below starts returning
+   false again. */
+
+/** How long a typing ping stays fresh. Pings fire roughly every ~3s while
+ *  actively typing, so 8s tolerates one missed ping without the dots
+ *  flickering, and still clears promptly once typing stops. */
+export const STAFF_TYPING_FRESH_MS = 8000;
+
+/** True while a staff typing ping is fresh. Computed on every read
+ *  (bootstrap and sync) — never stored — so staleness needs no writer. */
+export function isStaffTyping(
+  metadata: ConversationRecord['metadata'],
+  nowMs: number = Date.now(),
+): boolean {
+  const at = metadata.staff_typing_at;
+  if (typeof at !== 'string' || !at) return false;
+  const seen = Date.parse(at);
+  if (Number.isNaN(seen)) return false;
+  return nowMs - seen < STAFF_TYPING_FRESH_MS;
+}
+
+/** Merges a fresh typing timestamp into the metadata the caller just read
+ *  and persists it via updateConversationMetadata. The spread preserves
+ *  every unrelated field (identity, agent_last_read_at, …) — this is the
+ *  one place both the dashboard action and the embedded route ping
+ *  through, so the merge lives here and nowhere else. */
+export async function pingStaffTyping(
+  conversationId: string,
+  currentMetadata: ConversationRecord['metadata'],
+): Promise<void> {
+  await updateConversationMetadata(conversationId, {
+    ...currentMetadata,
+    staff_typing_at: new Date().toISOString(),
+  });
+}
+
 /* ── Conversations ────────────────────────────────────────────────────── */
 
 /** Returns the shopper's active conversation or creates one. Active means
