@@ -154,6 +154,7 @@ export function MessengerTabs({
             contactCapture={config.contactCapture}
             attachments={config.attachments}
             orderLookup={config.orderLookup}
+            cannedReplies={cannedReplies}
             actions={actions}
           />
         </div>

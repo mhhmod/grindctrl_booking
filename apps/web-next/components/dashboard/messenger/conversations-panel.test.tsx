@@ -91,9 +91,7 @@ describe('ConversationsPanel', () => {
   });
 });
 
-/* Saved replies live with the composer: picking one only pre-fills the
-   draft — it must never send by itself — and the inline manager routes
-   add/disable/delete through the matching host actions. */
+/* Inserting is a composer tool; merchant-wide management lives in Behaviour. */
 describe('ConversationsPanel canned replies', () => {
   const REPLIES = [
     {
@@ -126,11 +124,22 @@ describe('ConversationsPanel canned replies', () => {
     );
     await screen.findByText('Where is my order?');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Saved replies' }));
+    const trigger = screen.getByRole('button', { name: 'Saved replies' });
+    expect(trigger).toHaveAttribute('data-size', 'icon');
+    expect(trigger).toHaveTextContent('');
+    fireEvent.click(trigger);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(trigger.closest('footer')).not.toContainElement(screen.getByRole('dialog'));
     fireEvent.click(screen.getByRole('button', { name: 'Shipping times' }));
 
     expect(screen.getByLabelText('Type your reply…')).toHaveValue('We ship in 2 days.');
     expect(staffReply).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    for (const name of ['Manage saved replies', 'Add reply', 'Enable', 'Disable', 'Delete']) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+    expect(screen.queryByLabelText('Reply title…')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Reply text…')).not.toBeInTheDocument();
   });
 
   it('lists only active replies in the insert list', async () => {
@@ -158,53 +167,11 @@ describe('ConversationsPanel canned replies', () => {
     await screen.findByText('Where is my order?');
 
     expect(screen.queryByRole('button', { name: 'Saved replies' })).not.toBeInTheDocument();
-    // The manager is still discoverable — it is how the first reply gets added.
-    expect(screen.getByRole('button', { name: 'Manage saved replies' })).toBeInTheDocument();
+    // Management belongs in Behaviour.
+    expect(screen.queryByRole('button', { name: 'Manage saved replies' })).not.toBeInTheDocument();
   });
 
-  it('adds a reply through actions.addCannedReply', async () => {
-    render(
-      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={[]} actions={actions} />,
-    );
-    await screen.findByText('Where is my order?');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
-    fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: 'Shipping' } });
-    fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: 'Ships fast' } });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Add reply' }));
-    });
-
-    expect(addCannedReply).toHaveBeenCalledWith('site-1', 'Shipping', 'Ships fast');
-  });
-
-  it('toggles a reply status through actions.updateCannedReplyStatus', async () => {
-    render(
-      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
-    );
-    await screen.findByText('Where is my order?');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Disable' }));
-    });
-
-    expect(updateCannedReplyStatus).toHaveBeenCalledWith('site-1', 'r-1', 'disabled');
-  });
-
-  it('deletes a reply through actions.deleteCannedReply', async () => {
-    render(
-      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
-    );
-    await screen.findByText('Where is my order?');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
-    await act(async () => {
-      fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
-    });
-
-    expect(deleteCannedReply).toHaveBeenCalledWith('site-1', 'r-1');
-  });
 });
 
 /* A moderator with no technical background cannot parse a raw handoff_reason

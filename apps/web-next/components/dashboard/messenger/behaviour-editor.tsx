@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useMemo, useState, useTransition } from 'react';
+import { Badge } from '@/components/ui/badge';
+import type { CannedReply } from '@/lib/messenger/canned-replies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,6 +27,18 @@ import type {
 
 const COPY = {
   en: {
+    cannedManage: 'Saved replies',
+    cannedTitlePh: 'Reply title…',
+    cannedContentPh: 'Reply text…',
+    cannedAdd: 'Add reply',
+    cannedAdding: 'Adding…',
+    cannedAdded: 'Saved reply added.',
+    cannedEmpty: 'No saved replies yet — add one above.',
+    cannedActive: 'Active',
+    cannedDisabled: 'Disabled',
+    cannedEnable: 'Enable',
+    cannedDisable: 'Disable',
+    cannedDelete: 'Delete',
     title: 'Behaviour',
     subtitle: 'How the messenger greets and when it appears.',
     welcome: 'Welcome screen',
@@ -59,6 +73,18 @@ const COPY = {
     saved: 'Draft saved',
   },
   ar: {
+    cannedManage: 'الردود المحفوظة',
+    cannedTitlePh: 'عنوان الرد…',
+    cannedContentPh: 'نص الرد…',
+    cannedAdd: 'إضافة رد',
+    cannedAdding: 'جارٍ الإضافة…',
+    cannedAdded: 'تمت إضافة الرد المحفوظ.',
+    cannedEmpty: 'لا ردود محفوظة بعد — أضف واحداً أعلاه.',
+    cannedActive: 'مفعّل',
+    cannedDisabled: 'معطّل',
+    cannedEnable: 'تفعيل',
+    cannedDisable: 'تعطيل',
+    cannedDelete: 'حذف',
     title: 'السلوك',
     subtitle: 'كيف ترحّب دردشة المتجر ومتى تظهر.',
     welcome: 'شاشة الترحيب',
@@ -158,6 +184,7 @@ export function BehaviourEditor({
   contactCapture,
   attachments,
   orderLookup,
+  cannedReplies = [],
   actions,
 }: {
   locale: MessengerLocale;
@@ -173,9 +200,14 @@ export function BehaviourEditor({
   contactCapture: MessengerContactCapture;
   attachments: MessengerAttachments;
   orderLookup: MessengerOrderLookup;
-  actions: Pick<MessengerHostActions, 'saveDraftSections'>;
+  cannedReplies?: CannedReply[];
+  actions: Pick<MessengerHostActions, 'saveDraftSections' | 'addCannedReply' | 'updateCannedReplyStatus' | 'deleteCannedReply'>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const [cannedTitle, setCannedTitle] = useState('');
+  const [cannedContent, setCannedContent] = useState('');
+  const [cannedPending, startCanned] = useTransition();
+  const [cannedNote, setCannedNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [value, setValue] = useState<MessengerBehaviour>(initial);
   /* Support-desk sections, lifted here so the whole Behaviour tab saves in
      one atomic saveDraftSections call. Same payload shapes as before — only
@@ -251,6 +283,20 @@ export function BehaviourEditor({
       availabilityHours: value.availabilityHours.map((h) =>
         h.day === day ? { ...h, startMinute, endMinute } : h,
       ),
+    });
+  }
+
+  function submitCannedReply() {
+    const title = cannedTitle.trim();
+    const content = cannedContent.trim();
+    if (!title || !content) return;
+    startCanned(async () => {
+      const result = await actions.addCannedReply(siteId, title, content);
+      if (result.ok) {
+        setCannedTitle('');
+        setCannedContent('');
+        setCannedNote({ ok: true, text: t.cannedAdded });
+      } else setCannedNote({ ok: false, text: result.error });
     });
   }
 
@@ -555,6 +601,95 @@ export function BehaviourEditor({
           onAttachmentsChange={handleAttach}
           onOrderLookupChange={handleOrders}
         />
+
+        <section className="grid gap-3 rounded-xl border border-border p-4">
+          <h3 className="text-sm font-semibold">{t.cannedManage}</h3>
+          <div className="grid gap-1.5">
+            <Input
+              value={cannedTitle}
+              onChange={(e) => setCannedTitle(e.target.value.slice(0, 100))}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  if (!cannedPending) submitCannedReply();
+                }
+              }}
+              placeholder={t.cannedTitlePh}
+              maxLength={100}
+              aria-label={t.cannedTitlePh}
+              autoComplete="off"
+            />
+            <Textarea
+              value={cannedContent}
+              onChange={(e) => setCannedContent(e.target.value.slice(0, 2000))}
+              placeholder={t.cannedContentPh}
+              maxLength={2000}
+              rows={2}
+              aria-label={t.cannedContentPh}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={!cannedTitle.trim() || !cannedContent.trim() || cannedPending}
+                onClick={submitCannedReply}
+              >
+                {cannedPending ? t.cannedAdding : t.cannedAdd}
+              </Button>
+              {cannedNote && (
+                <span
+                  role={cannedNote.ok ? 'status' : 'alert'}
+                  className={`text-xs ${cannedNote.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+                >
+                  {cannedNote.text}
+                </span>
+              )}
+            </div>
+          </div>
+          {cannedReplies.length === 0 ? (
+            <p className="py-2 text-center text-xs text-muted-foreground">{t.cannedEmpty}</p>
+          ) : (
+            <ul className="grid max-h-48 gap-1.5 overflow-y-auto overscroll-contain">
+              {cannedReplies.map((reply) => (
+                <li key={reply.id} className="rounded-lg border border-border bg-card p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="min-w-0 truncate text-xs font-medium">{reply.title}</p>
+                    <Badge variant={reply.status === 'active' ? 'default' : 'secondary'}>
+                      {reply.status === 'active' ? t.cannedActive : t.cannedDisabled}
+                    </Badge>
+                  </div>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{reply.content}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      disabled={cannedPending}
+                      onClick={() =>
+                        startCanned(() =>
+                          void actions.updateCannedReplyStatus(
+                            siteId,
+                            reply.id,
+                            reply.status === 'active' ? 'disabled' : 'active',
+                          ),
+                        )
+                      }
+                      className="rounded-full border border-border px-2.5 py-1 text-[11px] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+                    >
+                      {reply.status === 'active' ? t.cannedDisable : t.cannedEnable}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={cannedPending}
+                      onClick={() => startCanned(() => void actions.deleteCannedReply(siteId, reply.id))}
+                      className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+                    >
+                      {t.cannedDelete}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={pending}>

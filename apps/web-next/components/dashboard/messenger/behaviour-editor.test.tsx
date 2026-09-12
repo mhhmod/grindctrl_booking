@@ -11,6 +11,13 @@ import type {
 } from '@/lib/messenger/types';
 
 const saveDraftSections = vi.fn();
+const addCannedReply = vi.fn();
+const updateCannedReplyStatus = vi.fn();
+const deleteCannedReply = vi.fn();
+const REPLIES = [
+  { id: 'r-1', title: 'Shipping', content: 'Ships fast', status: 'active' as const, sort_order: 0, updated_at: '' },
+  { id: 'r-2', title: 'Old policy', content: 'Old text', status: 'disabled' as const, sort_order: 1, updated_at: '' },
+];
 
 import { BehaviourEditor } from './behaviour-editor';
 
@@ -70,6 +77,7 @@ function renderEditor(
     attachments?: MessengerAttachments;
     orderLookup?: MessengerOrderLookup;
     shopDomain?: string | null;
+    cannedReplies?: typeof REPLIES;
   } = {},
 ) {
   return render(
@@ -83,7 +91,8 @@ function renderEditor(
       contactCapture={desk.contactCapture ?? { enabled: false, askOutsideHours: false }}
       attachments={desk.attachments ?? { enabled: false, triageEnabled: false }}
       orderLookup={desk.orderLookup ?? { enabled: false }}
-      actions={{ saveDraftSections }}
+      cannedReplies={desk.cannedReplies}
+      actions={{ saveDraftSections, addCannedReply, updateCannedReplyStatus, deleteCannedReply }}
     />,
   );
 }
@@ -91,6 +100,9 @@ function renderEditor(
 beforeEach(() => {
   vi.clearAllMocks();
   saveDraftSections.mockResolvedValue({ ok: true });
+  addCannedReply.mockResolvedValue({ ok: true });
+  updateCannedReplyStatus.mockResolvedValue({ ok: true });
+  deleteCannedReply.mockResolvedValue({ ok: true });
 });
 
 describe('BehaviourEditor availability hours', () => {
@@ -212,5 +224,63 @@ describe('BehaviourEditor combined save', () => {
     ];
     const notifications = sections.find((s) => s.section === 'notifications');
     expect(notifications?.payload.recipients).toEqual(['a@x.com', 'b@y.com']);
+  });
+});
+
+
+describe('BehaviourEditor saved replies', () => {
+  it('renders all replies and their status in its own section', () => {
+    renderEditor({}, { cannedReplies: REPLIES });
+    expect(screen.getByRole('heading', { name: 'Saved replies' })).toBeInTheDocument();
+    expect(screen.getByText('Shipping')).toBeInTheDocument();
+    expect(screen.getByText('Old policy')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
+    expect(screen.getByText('Disabled')).toBeInTheDocument();
+  });
+
+  it('adds immediately without saving the Behaviour draft and clears the inputs', async () => {
+    renderEditor();
+    expect(screen.getByText('No saved replies yet — add one above.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: ' Shipping ' } });
+    fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: ' Ships fast ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add reply' }));
+    expect(await screen.findByText('Saved reply added.')).toBeInTheDocument();
+    expect(addCannedReply).toHaveBeenCalledWith('site-1', 'Shipping', 'Ships fast');
+    expect(screen.getByLabelText('Reply title…')).toHaveValue('');
+    expect(screen.getByLabelText('Reply text…')).toHaveValue('');
+    expect(saveDraftSections).not.toHaveBeenCalled();
+  });
+
+  it.each([['Disable', 'r-1', 'disabled'], ['Enable', 'r-2', 'active']])('handles %s immediately', async (name, id, status) => {
+    renderEditor({}, { cannedReplies: REPLIES });
+    fireEvent.click(screen.getByRole('button', { name }));
+    await waitFor(() => expect(updateCannedReplyStatus).toHaveBeenCalledWith('site-1', id, status));
+    expect(saveDraftSections).not.toHaveBeenCalled();
+  });
+
+  it('deletes immediately without saving the Behaviour draft', async () => {
+    renderEditor({}, { cannedReplies: REPLIES });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    await waitFor(() => expect(deleteCannedReply).toHaveBeenCalledWith('site-1', 'r-1'));
+    expect(saveDraftSections).not.toHaveBeenCalled();
+  });
+
+  it('adds on title Enter without submitting the outer draft form', async () => {
+    renderEditor();
+    fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: 'Shipping' } });
+    fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: 'Ships fast' } });
+    expect(fireEvent.keyDown(screen.getByLabelText('Reply title…'), { key: 'Enter' })).toBe(false);
+    expect(await screen.findByText('Saved reply added.')).toBeInTheDocument();
+    expect(saveDraftSections).not.toHaveBeenCalled();
+  });
+
+  it('keeps input and shows an add failure', async () => {
+    addCannedReply.mockResolvedValueOnce({ ok: false, error: 'Could not add reply.' });
+    renderEditor();
+    fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: 'Shipping' } });
+    fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: 'Ships fast' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add reply' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not add reply.');
+    expect(screen.getByLabelText('Reply title…')).toHaveValue('Shipping');
   });
 });

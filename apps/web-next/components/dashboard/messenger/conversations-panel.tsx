@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
+import { MessageSquareText } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,18 +71,6 @@ const COPY = {
     noteLabel: 'Private note — only your team sees this',
     notePh: 'Type a private note…',
     cannedInsert: 'Saved replies',
-    cannedManage: 'Manage saved replies',
-    cannedTitlePh: 'Reply title…',
-    cannedContentPh: 'Reply text…',
-    cannedAdd: 'Add reply',
-    cannedAdding: 'Adding…',
-    cannedAdded: 'Saved reply added.',
-    cannedEmpty: 'No saved replies yet — add one above.',
-    cannedActive: 'Active',
-    cannedDisabled: 'Disabled',
-    cannedEnable: 'Enable',
-    cannedDisable: 'Disable',
-    cannedDelete: 'Delete',
   },
   ar: {
     title: 'المحادثات',
@@ -136,18 +126,6 @@ const COPY = {
     noteLabel: 'ملاحظة خاصة — لفريقك فقط',
     notePh: 'اكتب ملاحظة خاصة…',
     cannedInsert: 'ردود محفوظة',
-    cannedManage: 'إدارة الردود المحفوظة',
-    cannedTitlePh: 'عنوان الرد…',
-    cannedContentPh: 'نص الرد…',
-    cannedAdd: 'إضافة رد',
-    cannedAdding: 'جارٍ الإضافة…',
-    cannedAdded: 'تمت إضافة الرد المحفوظ.',
-    cannedEmpty: 'لا ردود محفوظة بعد — أضف واحداً أعلاه.',
-    cannedActive: 'مفعّل',
-    cannedDisabled: 'معطّل',
-    cannedEnable: 'تفعيل',
-    cannedDisable: 'تعطيل',
-    cannedDelete: 'حذف',
   },
 };
 
@@ -263,9 +241,6 @@ export function ConversationsPanel({
     | 'releaseConversation'
     | 'closeConversationAction'
     | 'markConversationRead'
-    | 'addCannedReply'
-    | 'updateCannedReplyStatus'
-    | 'deleteCannedReply'
   >;
   /** Signed-in dashboard viewer's profile id. When absent (the embedded
    *  Shopify surface has no per-staff-member identity) the "assigned to me"
@@ -340,11 +315,6 @@ export function ConversationsPanel({
      so the composer's insert list is derived client-side — no second fetch. */
   const activeCanned = cannedReplies.filter((reply) => reply.status === 'active');
   const [cannedOpen, setCannedOpen] = useState(false);
-  const [manageCanned, setManageCanned] = useState(false);
-  const [cannedTitle, setCannedTitle] = useState('');
-  const [cannedContent, setCannedContent] = useState('');
-  const [cannedPending, startCanned] = useTransition();
-  const [cannedNote, setCannedNote] = useState<{ ok: boolean; text: string } | null>(null);
 
   /* Measure the space below the host's wrapping tabs/header, rather than
      guessing their height. The mobile view aligns below DashboardShell's
@@ -467,20 +437,6 @@ export function ConversationsPanel({
         followLatest.current = true;
       }
       else setError(result.error);
-    });
-  }
-
-  function submitCannedReply() {
-    const title = cannedTitle.trim();
-    const content = cannedContent.trim();
-    if (!title || !content) return;
-    startCanned(async () => {
-      const result = await actions.addCannedReply(siteId, title, content);
-      if (result.ok) {
-        setCannedTitle('');
-        setCannedContent('');
-        setCannedNote({ ok: true, text: t.cannedAdded });
-      } else setCannedNote({ ok: false, text: result.error });
     });
   }
 
@@ -854,7 +810,7 @@ export function ConversationsPanel({
 
         {status && (
           <footer className="shrink-0 border-t border-border p-3">
-            <div className="mb-2 flex gap-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
+            <div className="mb-2 flex items-center gap-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
               {status !== 'closed' && (
                 <PillToggle active={composerMode === 'reply'} onClick={() => setComposerMode('reply')}>
                   {t.composerReply}
@@ -863,53 +819,35 @@ export function ConversationsPanel({
               <PillToggle active={composerMode === 'note' || status === 'closed'} onClick={() => setComposerMode('note')}>
                 {t.composerNote}
               </PillToggle>
-            </div>
-            {/* Saved replies live with the composer, not in their own tab: the
-                insert list only pre-fills the draft — the moderator still
-                presses Send (or Note) themselves. */}
-            <div className="mb-2 flex flex-wrap gap-1.5">
               {activeCanned.length > 0 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="min-h-9"
-                  aria-expanded={cannedOpen}
-                  onClick={() => setCannedOpen((open) => !open)}
-                >
-                  {t.cannedInsert}
-                </Button>
+                <Popover open={cannedOpen} onOpenChange={setCannedOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" size="icon" className="min-h-9 min-w-9" aria-label={t.cannedInsert}>
+                      <MessageSquareText aria-hidden="true" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" side="top" dir={locale === 'ar' ? 'rtl' : 'ltr'} aria-label={t.cannedInsert} className="w-64 max-w-[calc(100vw-2rem)] p-1">
+                    <ul aria-label={t.cannedInsert} className="grid max-h-40 gap-1 overflow-y-auto overscroll-contain">
+                      {activeCanned.map((reply) => (
+                        <li key={reply.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDraft(reply.content.slice(0, 2000));
+                              setCannedOpen(false);
+                            }}
+                            title={reply.content}
+                            className="min-h-9 w-full truncate rounded-lg px-2 py-1.5 text-start text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                          >
+                            {reply.title}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
               )}
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="min-h-9 text-muted-foreground"
-                aria-expanded={manageCanned}
-                onClick={() => setManageCanned((open) => !open)}
-              >
-                {t.cannedManage}
-              </Button>
             </div>
-            {cannedOpen && activeCanned.length > 0 && (
-              <ul aria-label={t.cannedInsert} className="mb-2 grid max-h-40 gap-1 overflow-y-auto overscroll-contain rounded-xl border border-border p-1.5">
-                {activeCanned.map((reply) => (
-                  <li key={reply.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDraft(reply.content.slice(0, 2000));
-                        setCannedOpen(false);
-                      }}
-                      title={reply.content}
-                      className="w-full truncate rounded-lg px-2 py-1.5 text-start text-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
-                    >
-                      {reply.title}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
             <form
               className="flex items-end gap-2"
               onSubmit={(e) => {
@@ -958,92 +896,6 @@ export function ConversationsPanel({
                 {t.send}
               </Button>
             </form>
-            {/* Supporting tool, deliberately secondary: a small inline manager
-                so a moderator never leaves this screen to add, disable, or
-                delete a saved reply. */}
-            {manageCanned && (
-              <div className="mt-2 grid gap-2 rounded-xl border border-border bg-muted/40 p-2.5">
-                <div className="grid gap-1.5">
-                  <Input
-                    value={cannedTitle}
-                    onChange={(e) => setCannedTitle(e.target.value.slice(0, 100))}
-                    placeholder={t.cannedTitlePh}
-                    maxLength={100}
-                    aria-label={t.cannedTitlePh}
-                    autoComplete="off"
-                  />
-                  <Textarea
-                    value={cannedContent}
-                    onChange={(e) => setCannedContent(e.target.value.slice(0, 2000))}
-                    placeholder={t.cannedContentPh}
-                    maxLength={2000}
-                    rows={2}
-                    aria-label={t.cannedContentPh}
-                  />
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={!cannedTitle.trim() || !cannedContent.trim() || cannedPending}
-                      onClick={submitCannedReply}
-                    >
-                      {cannedPending ? t.cannedAdding : t.cannedAdd}
-                    </Button>
-                    {cannedNote && (
-                      <span
-                        role={cannedNote.ok ? 'status' : 'alert'}
-                        className={`text-xs ${cannedNote.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
-                      >
-                        {cannedNote.text}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {cannedReplies.length === 0 ? (
-                  <p className="py-2 text-center text-xs text-muted-foreground">{t.cannedEmpty}</p>
-                ) : (
-                  <ul className="grid max-h-48 gap-1.5 overflow-y-auto overscroll-contain">
-                    {cannedReplies.map((reply) => (
-                      <li key={reply.id} className="rounded-lg border border-border bg-card p-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="min-w-0 truncate text-xs font-medium">{reply.title}</p>
-                          <Badge variant={reply.status === 'active' ? 'default' : 'secondary'}>
-                            {reply.status === 'active' ? t.cannedActive : t.cannedDisabled}
-                          </Badge>
-                        </div>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{reply.content}</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          <button
-                            type="button"
-                            disabled={cannedPending}
-                            onClick={() =>
-                              startCanned(() =>
-                                void actions.updateCannedReplyStatus(
-                                  siteId,
-                                  reply.id,
-                                  reply.status === 'active' ? 'disabled' : 'active',
-                                ),
-                              )
-                            }
-                            className="rounded-full border border-border px-2.5 py-1 text-[11px] transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-                          >
-                            {reply.status === 'active' ? t.cannedDisable : t.cannedEnable}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={cannedPending}
-                            onClick={() => startCanned(() => void actions.deleteCannedReply(siteId, reply.id))}
-                            className="rounded-full border border-destructive/40 px-2.5 py-1 text-[11px] text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-                          >
-                            {t.cannedDelete}
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
           </footer>
         )}
       </section>
