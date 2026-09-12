@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   MESSENGER_DEFAULTS,
+  MESSENGER_SECTION_NAMES,
+  diffMessengerConfig,
   mergeDraftOverPublished,
   resolveMessengerConfig,
 } from './config';
@@ -132,5 +134,41 @@ describe('mergeDraftOverPublished', () => {
     );
     expect(config.notifications.emailOnHandoff).toBe(true);
     expect(config.notifications.recipients).toEqual(['keep@store.com']);
+  });
+});
+
+
+describe('diffMessengerConfig', () => {
+  it('returns all sections unchanged for identical resolved configs', () => {
+    expect(diffMessengerConfig(resolveMessengerConfig({}), resolveMessengerConfig({}))).toEqual(
+      MESSENGER_SECTION_NAMES.map((section) => ({ section, changed: false, fields: [] })),
+    );
+  });
+
+  it('reports exactly one changed field with before and after values', () => {
+    const { config } = mergeDraftOverPublished({}, { messenger_ai: { enabled: true } });
+    expect(diffMessengerConfig(resolveMessengerConfig({}), config).filter((s) => s.changed)).toEqual([
+      { section: 'ai', changed: true, fields: [{ key: 'enabled', before: false, after: true }] },
+    ]);
+  });
+
+  it('reports multiple sections including nested values and arrays', () => {
+    const published = resolveMessengerConfig({});
+    const { config } = mergeDraftOverPublished({}, {
+      messenger_behaviour: { welcomeTitle: { en: 'Hello', ar: 'أهلاً' } },
+      messenger_notifications: { recipients: ['owner@store.com'] },
+    });
+    expect(diffMessengerConfig(published, config).filter((s) => s.changed)).toEqual([
+      { section: 'behaviour', changed: true, fields: [{ key: 'welcomeTitle', before: published.behaviour.welcomeTitle, after: { en: 'Hello', ar: 'أهلاً' } }] },
+      { section: 'notifications', changed: true, fields: [{ key: 'recipients', before: [], after: ['owner@store.com'] }] },
+    ]);
+  });
+
+  it('nets a reverted field to no change despite a saved draft', () => {
+    const draft = { messenger_ai: { enabled: true } };
+    draft.messenger_ai.enabled = false;
+    const { config, hasDraft } = mergeDraftOverPublished({}, draft);
+    expect(hasDraft).toBe(true);
+    expect(diffMessengerConfig(resolveMessengerConfig({}), config).every((s) => !s.changed && s.fields.length === 0)).toBe(true);
   });
 });

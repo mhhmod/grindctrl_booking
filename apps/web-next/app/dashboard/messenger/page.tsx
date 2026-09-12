@@ -11,7 +11,7 @@ import {
   shouldEnsureMessengerSite,
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
-import { mergeDraftOverPublished } from '@/lib/messenger/config';
+import { diffMessengerConfig, mergeDraftOverPublished, resolveMessengerConfig } from '@/lib/messenger/config';
 import {
   resolveAssigneeNames,
   listWorkspaceMembers,
@@ -133,6 +133,8 @@ export default async function MessengerPage({
   const selected =
     sites.find((site) => site.id === params.site) ?? sites.find((site) => site.domain) ?? sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
+  const publishedConfig = resolveMessengerConfig(selected.settings_json);
+  const configDiff = diffMessengerConfig(publishedConfig, config);
 
   const payload: PublicMessengerPayload = toPublicPayload(
     {
@@ -264,6 +266,7 @@ export default async function MessengerPage({
         cannedReplies={cannedReplies}
         actions={messengerActions}
         hasDraft={hasDraft}
+        configDiff={configDiff}
         currentProfileId={currentProfileId}
         assignableMembers={assignableMembers}
       />

@@ -297,6 +297,34 @@ export type MessengerSection = keyof typeof CONFIG_SECTIONS;
 
 export const MESSENGER_SECTION_NAMES = Object.keys(CONFIG_SECTIONS) as MessengerSection[];
 
+export interface MessengerConfigFieldDiff {
+  key: string;
+  before: unknown;
+  after: unknown;
+}
+
+export interface MessengerConfigSectionDiff {
+  section: MessengerSection;
+  changed: boolean;
+  fields: MessengerConfigFieldDiff[];
+}
+
+/** Compare fully resolved snapshots, so reverted draft edits net to no change. */
+export function diffMessengerConfig(
+  published: MessengerConfig,
+  pending: MessengerConfig,
+): MessengerConfigSectionDiff[] {
+  return MESSENGER_SECTION_NAMES.map((section) => {
+    const before = asRecord(published[section]);
+    const after = asRecord(pending[section]);
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    const fields = [...keys]
+      .filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]))
+      .map((key) => ({ key, before: before[key], after: after[key] }));
+    return { section, changed: fields.length > 0, fields };
+  });
+}
+
 const CONFIG_SECTION_KEYS = Object.values(CONFIG_SECTIONS);
 
 /** The settings_json shape for a resolved config — used on publish so every

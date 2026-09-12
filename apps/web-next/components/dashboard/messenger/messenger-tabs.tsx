@@ -9,6 +9,7 @@ import { ConversationsPanel, type ConversationListItem } from './conversations-p
 import { InstallCard } from './install-card';
 import { PublishBar } from './publish-bar';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
+import type { MessengerConfigSectionDiff } from '@/lib/messenger/config';
 import type { MessengerConfig, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 import type { CannedReply } from '@/lib/messenger/canned-replies';
@@ -64,6 +65,7 @@ export function MessengerTabs({
   cannedReplies = [],
   actions,
   hasDraft,
+  configDiff = [],
   currentProfileId,
   assignableMembers = [],
 }: {
@@ -86,6 +88,8 @@ export function MessengerTabs({
   cannedReplies?: CannedReply[];
   actions: MessengerHostActions;
   hasDraft: boolean;
+  /** Supplied by the dashboard; embedded hosts can omit the review. */
+  configDiff?: MessengerConfigSectionDiff[];
   /** Signed-in dashboard viewer's profile id. Absent on the embedded
    *  Shopify surface, which has no per-staff-member identity — so the
    *  "assigned to me" filter stays hidden there. */
@@ -185,7 +189,7 @@ export function MessengerTabs({
         />
       )}
 
-        <PublishBar locale={locale} siteId={siteId} hasDraft={hasDraft} actions={actions} />
+        <PublishBar locale={locale} siteId={siteId} hasDraft={hasDraft} configDiff={configDiff} actions={actions} />
       </div>
     </>
   );
