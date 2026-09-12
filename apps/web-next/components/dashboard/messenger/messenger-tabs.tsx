@@ -62,6 +62,7 @@ export function MessengerTabs({
   knowledge,
   actions,
   hasDraft,
+  currentProfileId,
 }: {
   locale: MessengerLocale;
   initialTab: MessengerTabId;
@@ -81,6 +82,10 @@ export function MessengerTabs({
   knowledge: KnowledgeEntry[];
   actions: MessengerHostActions;
   hasDraft: boolean;
+  /** Signed-in dashboard viewer's profile id. Absent on the embedded
+   *  Shopify surface, which has no per-staff-member identity — so the
+   *  "assigned to me" filter stays hidden there. */
+  currentProfileId?: string | null;
 }) {
   const [tab, setTab] = useState<MessengerTabId>(initialTab);
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
@@ -159,7 +164,7 @@ export function MessengerTabs({
         />
       )}
       {tab === 'conversations' && (
-        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} actions={actions} />
+        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} actions={actions} currentProfileId={currentProfileId} />
       )}
       {tab === 'installation' && (
         <InstallCard

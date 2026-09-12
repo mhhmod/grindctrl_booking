@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from './textarea';
+import { PillToggle } from './appearance-editor';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import { MessageText } from '@/components/messenger/message-text';
 
@@ -49,6 +50,11 @@ const COPY = {
     handoffShopperAsked: 'Shopper asked for a human',
     handoffAiHandedOff: 'AI handed this off',
     handoffOther: 'Handed off to your team',
+    assignedTo: (name: string) => `Assigned to ${name}`,
+    filterAll: 'All',
+    filterMine: 'Assigned to me',
+    mineEmpty: 'Nothing assigned to you right now',
+    mineEmptyBody: 'Conversations you take over will show up here.',
   },
   ar: {
     title: 'المحادثات',
@@ -87,6 +93,11 @@ const COPY = {
     handoffShopperAsked: 'طلب العميل التحدث مع موظف',
     handoffAiHandedOff: 'حوّلها الذكاء الاصطناعي',
     handoffOther: 'تم تحويلها إلى فريقك',
+    assignedTo: (name: string) => `مُسندة إلى ${name}`,
+    filterAll: 'الكل',
+    filterMine: 'مُسندة إليّ',
+    mineEmpty: 'لا توجد محادثات مُسندة إليك حالياً',
+    mineEmptyBody: 'المحادثات التي تتولاها ستظهر هنا.',
   },
 };
 
@@ -111,6 +122,10 @@ export interface ConversationListItem {
   visitorEmail: string | null;
   visitorName: string | null;
   handoffReason: string | null;
+  /** Profile id this conversation is taken over by, if any. */
+  assigneeId?: string | null;
+  /** Server-resolved display name for assigneeId, if any. */
+  assigneeName?: string | null;
   /** Shopper messages that arrived after this conversation was last opened
    *  in the dashboard. Absent on hosts that have not sent it yet. */
   unreadCount?: number;
@@ -166,6 +181,7 @@ export function ConversationsPanel({
   siteId,
   conversations,
   actions,
+  currentProfileId,
 }: {
   locale: 'en' | 'ar';
   siteId: string;
@@ -179,6 +195,10 @@ export function ConversationsPanel({
     | 'closeConversationAction'
     | 'markConversationRead'
   >;
+  /** Signed-in dashboard viewer's profile id. When absent (the embedded
+   *  Shopify surface has no per-staff-member identity) the "assigned to me"
+   *  filter is not rendered at all — there is no "me" to filter by. */
+  currentProfileId?: string | null;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
@@ -197,7 +217,15 @@ export function ConversationsPanel({
   const [readLocally, setReadLocally] = useState<Set<string>>(new Set());
   const unreadFor = (c: ConversationListItem) =>
     readLocally.has(c.id) ? 0 : c.unreadCount ?? 0;
-  const totalUnread = conversations.reduce((sum, c) => sum + unreadFor(c), 0);
+  /* Client-side only: the list is already fully loaded, so no round trip is
+     needed — and the toggle only exists when a viewer identity was passed. */
+  const canFilterByMe = currentProfileId != null;
+  const [mineOnly, setMineOnly] = useState(false);
+  const visibleConversations =
+    mineOnly && currentProfileId
+      ? conversations.filter((c) => c.assigneeId === currentProfileId)
+      : conversations;
+  const totalUnread = visibleConversations.reduce((sum, c) => sum + unreadFor(c), 0);
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [attachments, setAttachments] = useState<Record<string, WireAttachment>>({});
   const [status, setStatus] = useState<string>('');
@@ -338,6 +366,16 @@ export function ConversationsPanel({
       <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* List */}
       <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col gap-2`}>
+      {canFilterByMe && (
+        <div className="flex shrink-0 gap-1">
+          <PillToggle active={!mineOnly} onClick={() => setMineOnly(false)}>
+            {t.filterAll}
+          </PillToggle>
+          <PillToggle active={mineOnly} onClick={() => setMineOnly(true)}>
+            {t.filterMine}
+          </PillToggle>
+        </div>
+      )}
       <p
         role="status"
         className={`shrink-0 text-xs font-medium ${
@@ -346,11 +384,17 @@ export function ConversationsPanel({
       >
         {totalUnread > 0 ? t.unreadTotal(totalUnread) : t.allRead}
       </p>
+      {visibleConversations.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+          <p className="text-sm font-semibold">{t.mineEmpty}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t.mineEmptyBody}</p>
+        </div>
+      ) : (
       <ul
         className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pe-1"
         aria-label={t.title}
       >
-        {conversations.map((conversation) => (
+        {visibleConversations.map((conversation) => (
           <li key={conversation.id} className="shrink-0">
             <button
               type="button"
@@ -440,6 +484,11 @@ export function ConversationsPanel({
                         {handoffReasonLabel(conversation.handoffReason, t)}
                       </span>
                     )}
+                    {conversation.assigneeName && (
+                      <Badge variant="outline" className="max-w-full">
+                        <span className="truncate">{t.assignedTo(conversation.assigneeName)}</span>
+                      </Badge>
+                    )}
                   </span>
                 </span>
               </span>
@@ -447,6 +496,7 @@ export function ConversationsPanel({
           </li>
         ))}
       </ul>
+      )}
       </div>
 
       {/* Thread */}

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import {
   ensureMessengerSite,
+  getProfileId,
   listMessengerSites,
   resolveProvisionedSites,
   shouldEnsureMessengerSite,
@@ -12,6 +13,7 @@ import {
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
+  resolveAssigneeNames,
   summarizeConversations,
   type ConversationSummary,
   getOverviewStats,
@@ -168,6 +170,23 @@ export default async function MessengerPage({
   const summaries = await summarizeConversations(conversations).catch(
     (): Record<string, ConversationSummary> => ({}),
   );
+  // Who each taken-over conversation is assigned to, resolved once for the
+  // whole list. Names are a hint, not the inbox itself — a failed lookup
+  // leaves them blank rather than breaking the page.
+  const assigneeIds = [
+    ...new Set(
+      conversations.map((c) => c.assigned_profile_id).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const assigneeNames =
+    assigneeIds.length > 0
+      ? await resolveAssigneeNames(selected.workspace_id, assigneeIds).catch(
+          (): Record<string, string> => ({}),
+        )
+      : {};
+  // The "assigned to me" filter needs the viewer's own profile. A lookup
+  // failure hides the filter instead of breaking the page.
+  const currentProfileId = await getProfileId(userId).catch((): string | null => null);
   if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
   if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
   const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
@@ -228,12 +247,15 @@ export default async function MessengerPage({
           visitorEmail: c.visitor_email,
           visitorName: c.visitor_name,
           handoffReason: c.handoff_reason,
+          assigneeId: c.assigned_profile_id,
+          assigneeName: c.assigned_profile_id ? (assigneeNames[c.assigned_profile_id] ?? null) : null,
           unreadCount: summaries[c.id]?.unread ?? 0,
       preview: summaries[c.id]?.preview ?? null,
         }))}
         knowledge={knowledge}
         actions={messengerActions}
         hasDraft={hasDraft}
+        currentProfileId={currentProfileId}
       />
     </section>
   );

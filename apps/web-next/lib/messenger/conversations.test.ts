@@ -9,6 +9,7 @@ import {
   listConversationsForSite,
   listMessages,
   recordEvent,
+  resolveAssigneeNames,
   returnConversationToAi,
 } from './conversations';
 
@@ -246,6 +247,74 @@ describe('listConversationsForSite', () => {
 
     expect(result.visitor_email).toBe('shopper@example.com');
     expect(result.visitor_name).toBe('Sara');
+  });
+});
+
+/* The moderator inbox shows who each taken-over conversation is assigned
+   to. Assignment itself already works (takeOverConversation writes
+   assigned_profile_id); this only resolves those ids to display names,
+   scoped to the workspace so one store's staff never leak into another's. */
+describe('resolveAssigneeNames', () => {
+  it('returns {} without querying when there is nothing to resolve', async () => {
+    const client = {
+      from: () => {
+        throw new Error('must not query for an empty id list');
+      },
+    } as unknown as SupabaseClient;
+    setMessengerServiceClientForTests(client);
+
+    await expect(resolveAssigneeNames('ws-1', [])).resolves.toEqual({});
+    await expect(resolveAssigneeNames('ws-1', [null, undefined])).resolves.toEqual({});
+  });
+
+  it('scopes the lookup to the workspace and builds names from first+last name', async () => {
+    const { client, calls } = stubQueryClient({
+      data: [
+        { profile_id: 'p-1', profiles: { first_name: 'Sara', last_name: 'Khan', email: 'sara@example.com' } },
+      ],
+      error: null,
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(resolveAssigneeNames('ws-1', ['p-1', 'p-1', null])).resolves.toEqual({
+      'p-1': 'Sara Khan',
+    });
+    expect(calls).toContainEqual(['eq', ['workspace_id', 'ws-1']]);
+    // Deduped before the query goes out.
+    expect(calls).toContainEqual(['in', ['profile_id', ['p-1']]]);
+  });
+
+  it('falls back to email when names are blank', async () => {
+    const { client } = stubQueryClient({
+      data: [
+        { profile_id: 'p-2', profiles: { first_name: '  ', last_name: null, email: '  sara@example.com ' } },
+      ],
+      error: null,
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(resolveAssigneeNames('ws-1', ['p-2'])).resolves.toEqual({ 'p-2': 'sara@example.com' });
+  });
+
+  it('omits the entry rather than inventing an unlocalized placeholder when nothing is set', async () => {
+    const { client } = stubQueryClient({
+      data: [
+        { profile_id: 'p-3', profiles: { first_name: null, last_name: null, email: null } },
+        { profile_id: 'p-4', profiles: null },
+      ],
+      error: null,
+    });
+    setMessengerServiceClientForTests(client);
+
+    const names = await resolveAssigneeNames('ws-1', ['p-3', 'p-4']);
+    expect(names).toEqual({});
+  });
+
+  it('returns {} rather than throwing when the lookup fails — names must never take the inbox down', async () => {
+    const { client } = stubQueryClient({ data: null, error: { message: 'boom' } });
+    setMessengerServiceClientForTests(client);
+
+    await expect(resolveAssigneeNames('ws-1', ['p-1'])).resolves.toEqual({});
   });
 });
 

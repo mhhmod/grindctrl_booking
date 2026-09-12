@@ -452,6 +452,56 @@ export async function countAwaitingHandoff(siteIds: string[]): Promise<number> {
   return res.count ?? 0;
 }
 
+/** Resolves assignee profile ids to display names, scoped to a workspace so
+ *  one store's staff names can never leak into another store's inbox. Only
+ *  the display name leaves the server — emails stay in the database.
+ *
+ *  Soft-fails to an empty map: a name lookup must never take the
+ *  conversations list down (same convention as countAwaitingHandoff above). */
+export async function resolveAssigneeNames(
+  workspaceId: string,
+  profileIds: ReadonlyArray<string | null | undefined>,
+): Promise<Record<string, string>> {
+  const ids = [
+    ...new Set(
+      profileIds.filter((id): id is string => typeof id === 'string' && id.length > 0),
+    ),
+  ];
+  // Most page loads have zero assignments — don't force a round trip for nothing.
+  if (ids.length === 0) return {};
+  try {
+    const supabase = getMessengerServiceClient();
+    const res = await supabase
+      .from('workspace_members')
+      .select('profile_id, profiles(first_name, last_name, email)')
+      .eq('workspace_id', workspaceId)
+      .in('profile_id', ids);
+    if (res.error) return {};
+
+    // workspace_members.profile_id is a single NOT NULL FK, so PostgREST
+    // embeds profiles as one object (or null), never an array.
+    const names: Record<string, string> = {};
+    for (const row of (res.data ?? []) as Array<{
+      profile_id: string;
+      profiles: { first_name?: string | null; last_name?: string | null; email?: string | null } | null;
+    }>) {
+      const profile = row.profiles;
+      const full = [profile?.first_name?.trim(), profile?.last_name?.trim()].filter(Boolean).join(' ');
+      const display = full || profile?.email?.trim();
+      // No English/Arabic fallback string here on purpose: this is a
+      // server-side lookup with no locale to write in. A profile with
+      // neither a name nor an email is not expected (Clerk requires an
+      // email), but if it ever happens, omitting the key here — rather
+      // than inventing an English-only label — leaves the client's own
+      // falsy check to simply not render the assignee badge.
+      if (display) names[row.profile_id] = display;
+    }
+    return names;
+  } catch {
+    return {};
+  }
+}
+
 export async function takeOverConversation(
   conversationId: string,
   profileId: string,

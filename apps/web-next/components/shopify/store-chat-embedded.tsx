@@ -32,6 +32,8 @@ interface StoreChatState {
     visitorEmail: string | null;
     visitorName: string | null;
     handoffReason: string | null;
+    assigneeId?: string | null;
+    assigneeName?: string | null;
     unreadCount?: number;
     preview?: string | null;
   }>;

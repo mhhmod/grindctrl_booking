@@ -186,6 +186,88 @@ describe('ConversationsPanel unread', () => {
   });
 });
 
+/* The inbox shows who each taken-over conversation is assigned to, and a
+   signed-in dashboard viewer can filter to their own. The embedded Shopify
+   surface has no per-staff-member identity, so it never passes
+   currentProfileId — and then no filter control may render at all. */
+describe('ConversationsPanel assignee', () => {
+  const ASSIGNED: ConversationListItem[] = [
+    {
+      ...CONVERSATIONS[0],
+      id: 'conv-1',
+      visitorName: 'Shopper One',
+      assigneeId: 'me-1',
+      assigneeName: 'Sara Khan',
+    },
+    {
+      ...CONVERSATIONS[0],
+      id: 'conv-2',
+      visitorName: 'Shopper Two',
+      assigneeId: 'other-9',
+      assigneeName: 'Omar',
+    },
+  ];
+
+  it('renders the assignee name next to an assigned conversation', () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={ASSIGNED} actions={actions} />,
+    );
+
+    expect(screen.getByText('Assigned to Sara Khan')).toBeInTheDocument();
+    expect(screen.getByText('Assigned to Omar')).toBeInTheDocument();
+  });
+
+  it('renders no "Assigned to me" filter without a currentProfileId', () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={ASSIGNED} actions={actions} />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Assigned to me' })).not.toBeInTheDocument();
+    expect(screen.getByText('Shopper One')).toBeInTheDocument();
+    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+  });
+
+  it('filters the list to only my conversations when the toggle is active', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={ASSIGNED}
+        actions={actions}
+        currentProfileId="me-1"
+      />,
+    );
+
+    expect(screen.getByText('Shopper One')).toBeInTheDocument();
+    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
+
+    expect(screen.getByText('Shopper One')).toBeInTheDocument();
+    expect(screen.queryByText('Shopper Two')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+
+    expect(screen.getByText('Shopper One')).toBeInTheDocument();
+    expect(screen.getByText('Shopper Two')).toBeInTheDocument();
+  });
+
+  it('shows an empty state instead of a blank list when nothing is assigned to me', () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={[ASSIGNED[1]]}
+        actions={actions}
+        currentProfileId="me-1"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
+
+    expect(screen.getByText('Nothing assigned to you right now')).toBeInTheDocument();
+  });
+});
 /* The panel renders `attachments[message.id]` for every message. When a host
    returns a result without that field the lookup throws during render, React
    unmounts the panel, and the merchant is left with a blank Conversations tab

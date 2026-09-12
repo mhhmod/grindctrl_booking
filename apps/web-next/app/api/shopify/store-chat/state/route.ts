@@ -4,6 +4,7 @@ import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
+  resolveAssigneeNames,
   summarizeConversations,
   type ConversationSummary,
   getOverviewStats,
@@ -55,6 +56,20 @@ export async function GET(request: NextRequest) {
   const summaries = await summarizeConversations(conversations).catch(
     (): Record<string, ConversationSummary> => ({}),
   );
+  // Same assignee-name resolution as the dashboard page. No per-staff-member
+  // identity exists on this surface (one shared shop identity), so names are
+  // shown but there is deliberately no "assigned to me" here.
+  const assigneeIds = [
+    ...new Set(
+      conversations.map((c) => c.assigned_profile_id).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const assigneeNames =
+    assigneeIds.length > 0
+      ? await resolveAssigneeNames(site.workspace_id, assigneeIds).catch(
+          (): Record<string, string> => ({}),
+        )
+      : {};
   const knowledge = knowledgeRes.status === 'fulfilled' ? knowledgeRes.value : [];
   /* Was listManagedTryOnShops(), which calls requireDashboardOwner(). There
      is no Clerk session inside the embedded Shopify iframe, so that lookup
@@ -92,6 +107,8 @@ export async function GET(request: NextRequest) {
       visitorEmail: c.visitor_email,
       visitorName: c.visitor_name,
       handoffReason: c.handoff_reason,
+      assigneeId: c.assigned_profile_id,
+      assigneeName: c.assigned_profile_id ? (assigneeNames[c.assigned_profile_id] ?? null) : null,
       unreadCount: summaries[c.id]?.unread ?? 0,
       preview: summaries[c.id]?.preview ?? null,
     })),
