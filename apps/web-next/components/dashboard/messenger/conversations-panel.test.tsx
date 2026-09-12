@@ -265,7 +265,173 @@ describe('ConversationsPanel assignee', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
 
-    expect(screen.getByText('Nothing assigned to you right now')).toBeInTheDocument();
+    expect(screen.getByText('No conversations match')).toBeInTheDocument();
+  });
+});
+/* Search and status filters are pure client-side filters over the already
+   loaded `conversations` prop — no round trip, no query param. All three
+   filters (search, status, mineOnly) compose with AND semantics. */
+describe('ConversationsPanel search and status filters', () => {
+  const FILTERABLE: ConversationListItem[] = [
+    {
+      id: 'conv-alice',
+      status: 'open',
+      startedAt: '2026-08-30T10:00:00.000Z',
+      lastMessageAt: '2026-08-30T10:05:00.000Z',
+      visitorEmail: 'alice@example.com',
+      visitorName: 'Alice Shopper',
+      handoffReason: null,
+      preview: 'Where is my refund?',
+    },
+    {
+      id: 'conv-bob',
+      status: 'handoff_requested',
+      startedAt: '2026-08-30T09:00:00.000Z',
+      lastMessageAt: '2026-08-30T09:30:00.000Z',
+      visitorEmail: 'bob@example.com',
+      visitorName: null,
+      handoffReason: null,
+      preview: 'I need a human urgently',
+    },
+    {
+      id: 'conv-cara',
+      status: 'handoff_active',
+      startedAt: '2026-08-30T08:00:00.000Z',
+      lastMessageAt: '2026-08-30T08:30:00.000Z',
+      visitorEmail: null,
+      visitorName: 'Cara',
+      handoffReason: null,
+      preview: null,
+    },
+    {
+      id: 'conv-dan',
+      status: 'closed',
+      startedAt: '2026-08-29T10:00:00.000Z',
+      lastMessageAt: '2026-08-29T10:05:00.000Z',
+      visitorEmail: 'dan@example.com',
+      visitorName: 'Dan',
+      handoffReason: null,
+      preview: 'Thanks, all good!',
+    },
+  ];
+
+  function renderFilterable(extra?: { currentProfileId?: string }) {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={FILTERABLE}
+        actions={actions}
+        currentProfileId={extra?.currentProfileId}
+      />,
+    );
+  }
+
+  it('shows every conversation before any filter is applied', () => {
+    renderFilterable();
+
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Cara')).toBeInTheDocument();
+    expect(screen.getByText('Dan')).toBeInTheDocument();
+  });
+
+  it('narrows the list by visitor name, case-insensitively', () => {
+    renderFilterable();
+
+    fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'ALICE' } });
+
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+  });
+
+  it('matches against visitor email and message preview too', () => {
+    renderFilterable();
+
+    // Email match (null visitorName on conv-bob must not crash).
+    fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'bob@example' } });
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+
+    // Preview match.
+    fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'refund' } });
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+  });
+
+  it('restores the full list when the search box is cleared', () => {
+    renderFilterable();
+
+    const search = screen.getByLabelText('Search conversations');
+    fireEvent.change(search, { target: { value: 'alice' } });
+    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+
+    fireEvent.change(search, { target: { value: '' } });
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Cara')).toBeInTheDocument();
+    expect(screen.getByText('Dan')).toBeInTheDocument();
+  });
+
+  it('each status pill shows only its bucket; All statuses restores everything', () => {
+    renderFilterable();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Needs a reply' }));
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'In progress' }));
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.getByText('Cara')).toBeInTheDocument();
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dan')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resolved' }));
+    expect(screen.getByText('Dan')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'All statuses' }));
+    expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Cara')).toBeInTheDocument();
+    expect(screen.getByText('Dan')).toBeInTheDocument();
+  });
+
+  it('applies search AND status together — a text match outside the bucket is excluded', () => {
+    renderFilterable();
+
+    // "human" only appears in conv-bob's preview, which is handoff_requested,
+    // not "In progress" — so combining both filters must hide it.
+    fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'human' } });
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'In progress' }));
+    expect(screen.queryByText('bob@example.com')).not.toBeInTheDocument();
+    expect(screen.getByText('No conversations match')).toBeInTheDocument();
+  });
+
+  it('renders the filtered empty state when a combination matches nothing', () => {
+    renderFilterable();
+
+    fireEvent.change(screen.getByLabelText('Search conversations'), { target: { value: 'no-such-shopper-zzz' } });
+
+    expect(screen.getByText('No conversations match')).toBeInTheDocument();
+    expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+  });
+
+  it('still renders the true empty state when the host sends zero conversations', () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={[]} actions={actions} />,
+    );
+
+    expect(screen.getByText('No conversations yet')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Search conversations')).not.toBeInTheDocument();
   });
 });
 /* The panel renders `attachments[message.id]` for every message. When a host

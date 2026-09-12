@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from './textarea';
 import { PillToggle } from './appearance-editor';
@@ -53,8 +54,13 @@ const COPY = {
     assignedTo: (name: string) => `Assigned to ${name}`,
     filterAll: 'All',
     filterMine: 'Assigned to me',
-    mineEmpty: 'Nothing assigned to you right now',
-    mineEmptyBody: 'Conversations you take over will show up here.',
+    filteredEmpty: 'No conversations match',
+    filteredEmptyBody: 'Try a different search or filter.',
+    searchPlaceholder: 'Search conversations',
+    statusAll: 'All statuses',
+    statusNeedsReply: 'Needs a reply',
+    statusInProgress: 'In progress',
+    statusResolved: 'Resolved',
   },
   ar: {
     title: 'المحادثات',
@@ -96,8 +102,13 @@ const COPY = {
     assignedTo: (name: string) => `مُسندة إلى ${name}`,
     filterAll: 'الكل',
     filterMine: 'مُسندة إليّ',
-    mineEmpty: 'لا توجد محادثات مُسندة إليك حالياً',
-    mineEmptyBody: 'المحادثات التي تتولاها ستظهر هنا.',
+    filteredEmpty: 'لا توجد محادثات مطابقة',
+    filteredEmptyBody: 'جرّب بحثاً أو تصفية مختلفة.',
+    searchPlaceholder: 'ابحث في المحادثات',
+    statusAll: 'كل الحالات',
+    statusNeedsReply: 'تنتظر رداً',
+    statusInProgress: 'قيد المعالجة',
+    statusResolved: 'تم الحل',
   },
 };
 
@@ -221,10 +232,30 @@ export function ConversationsPanel({
      needed — and the toggle only exists when a viewer identity was passed. */
   const canFilterByMe = currentProfileId != null;
   const [mineOnly, setMineOnly] = useState(false);
-  const visibleConversations =
-    mineOnly && currentProfileId
-      ? conversations.filter((c) => c.assigneeId === currentProfileId)
-      : conversations;
+  /* Search text and status bucket are likewise pure in-memory filters over
+     the `conversations` prop — no server round trip, no query param. */
+  const [search, setSearch] = useState('');
+  type StatusFilter = 'all' | 'needs_reply' | 'in_progress' | 'resolved';
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const matchesStatus = (s: string) =>
+    statusFilter === 'all'
+      ? true
+      : statusFilter === 'needs_reply'
+        ? s === 'handoff_requested'
+        : statusFilter === 'in_progress'
+          ? s === 'open' || s === 'handoff_active'
+          : s === 'closed';
+  const visibleConversations = conversations.filter((c) => {
+    if (mineOnly && currentProfileId && c.assigneeId !== currentProfileId) return false;
+    if (!matchesStatus(c.status)) return false;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (c.visitorName ?? '').toLowerCase().includes(q) ||
+      (c.visitorEmail ?? '').toLowerCase().includes(q) ||
+      (c.preview ?? '').toLowerCase().includes(q)
+    );
+  });
   const totalUnread = visibleConversations.reduce((sum, c) => sum + unreadFor(c), 0);
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [attachments, setAttachments] = useState<Record<string, WireAttachment>>({});
@@ -366,6 +397,34 @@ export function ConversationsPanel({
       <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
       {/* List */}
       <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col gap-2`}>
+      <div className="shrink-0">
+        <label htmlFor="conversation-search" className="sr-only">
+          {t.searchPlaceholder}
+        </label>
+        <Input
+          id="conversation-search"
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t.searchPlaceholder}
+          aria-label={t.searchPlaceholder}
+          autoComplete="off"
+        />
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-1" role="group" aria-label={t.statusAll}>
+        <PillToggle active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+          {t.statusAll}
+        </PillToggle>
+        <PillToggle active={statusFilter === 'needs_reply'} onClick={() => setStatusFilter('needs_reply')}>
+          {t.statusNeedsReply}
+        </PillToggle>
+        <PillToggle active={statusFilter === 'in_progress'} onClick={() => setStatusFilter('in_progress')}>
+          {t.statusInProgress}
+        </PillToggle>
+        <PillToggle active={statusFilter === 'resolved'} onClick={() => setStatusFilter('resolved')}>
+          {t.statusResolved}
+        </PillToggle>
+      </div>
       {canFilterByMe && (
         <div className="flex shrink-0 gap-1">
           <PillToggle active={!mineOnly} onClick={() => setMineOnly(false)}>
@@ -386,8 +445,8 @@ export function ConversationsPanel({
       </p>
       {visibleConversations.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center">
-          <p className="text-sm font-semibold">{t.mineEmpty}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{t.mineEmptyBody}</p>
+          <p className="text-sm font-semibold">{t.filteredEmpty}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t.filteredEmptyBody}</p>
         </div>
       ) : (
       <ul
