@@ -286,7 +286,7 @@ export async function fetchConversationMessages(
   | {
       ok: true;
       status: string;
-      messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string }>;
+      messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string; feedback?: 'up' | 'down' }>;
       /** messageId -> viewable image. URLs expire in five minutes and are
        *  minted per request, after ownedConversation() proved this staff
        *  member owns the site the attachment belongs to. */
@@ -329,6 +329,7 @@ export async function fetchConversationMessages(
           m.metadata.internal === true && m.metadata.noteAuthorProfileId
             ? names[m.metadata.noteAuthorProfileId] ?? undefined
             : undefined,
+        feedback: m.metadata.feedback ?? undefined,
       })),
       attachments,
     };

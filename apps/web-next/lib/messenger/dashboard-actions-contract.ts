@@ -5,7 +5,7 @@ import type { MessengerSection } from './config';
 export interface FetchMessagesResult {
   ok: true;
   status: string;
-  messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string }>;
+  messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string; feedback?: 'up' | 'down' }>;
   attachments: Record<string, { url: string; mime: string; triage: TriageResult | null }>;
 }
 

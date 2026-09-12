@@ -197,6 +197,9 @@ interface WireMessage {
   internal?: boolean;
   /** Server-resolved display name of the note's staff author, if any. */
   noteAuthor?: string;
+  /** The shopper's own 👍/👎 on this reply, if they gave one. Read-only
+     here — staff never rate, they only see how a reply landed. */
+  feedback?: 'up' | 'down';
 }
 
 interface WireAttachment {
@@ -396,6 +399,7 @@ export function ConversationsPanel({
           author: m.author,
           internal: m.internal,
           noteAuthor: m.noteAuthorName,
+          feedback: m.feedback,
         })),
       );
       /* A host that omits this field must not take the tab down with it.
@@ -798,6 +802,18 @@ export function ConversationsPanel({
                         : 'AI'
                       : ''}{' '}
                     {relativeTime(message.createdAt, t)}
+                    {/* The shopper's own rating on this reply, if any. A
+                        plain glyph, deliberately not a button — this view
+                        is read-only, staff never submit a rating here. */}
+                    {message.feedback && (
+                      <span
+                        className="ms-1"
+                        role="img"
+                        aria-label={message.feedback === 'up' ? 'Rated helpful' : 'Rated not helpful'}
+                      >
+                        {message.feedback === 'up' ? '👍' : '👎'}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>

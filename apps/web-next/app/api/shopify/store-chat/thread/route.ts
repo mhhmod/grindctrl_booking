@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
             m.metadata.internal === true && m.metadata.noteAuthorProfileId
               ? names[m.metadata.noteAuthorProfileId] ?? undefined
               : undefined,
+          feedback: m.metadata.feedback ?? undefined,
         })),
         attachments,
       });

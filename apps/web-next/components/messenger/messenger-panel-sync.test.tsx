@@ -289,6 +289,80 @@ describe('MessengerPanel shopper identity forwarding', () => {
   });
 });
 
+/* Per-reply rating is a second, independent signal next to the
+   end-of-conversation rating: every assistant bubble carries its own
+   one-shot 👍/👎, the vote posts to /api/messenger/feedback with that
+   message's id, and a rated message shows the thanks line instead of the
+   buttons. Shopper messages and system lines never offer a vote. */
+describe('MessengerPanel per-message feedback', () => {
+  const ASSISTANT_REPLY = {
+    id: 'm-assistant-9',
+    role: 'assistant',
+    content: 'Here is an answer worth rating.',
+    createdAt: new Date().toISOString(),
+    author: 'ai',
+  };
+
+  function stubThread(messages: unknown[]) {
+    fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.includes('/api/messenger/bootstrap')
+        ? { ...BOOTSTRAP, messages }
+        : { status: 'open', messages: [] };
+      return { ok: true, json: () => Promise.resolve(body) } as unknown as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  }
+
+  function feedbackCalls() {
+    return fetchMock.mock.calls.filter((c) => String(c[0]).includes('/api/messenger/feedback'));
+  }
+
+  it('posts the vote with the message id and thanks the shopper immediately', async () => {
+    stubThread([ASSISTANT_REPLY]);
+    await bootPanel();
+
+    expect(screen.getByText('Here is an answer worth rating.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Helpful' }));
+
+    // Optimistic: no poll round trip needed before the acknowledgement shows.
+    expect(screen.getByText('Thanks for your feedback!')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Helpful' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Not helpful' })).not.toBeInTheDocument();
+
+    expect(feedbackCalls()).toHaveLength(1);
+    const body = JSON.parse(String((feedbackCalls()[0]?.[1] as RequestInit)?.body));
+    expect(body).toMatchObject({
+      conversationId: BOOTSTRAP.conversationId,
+      rating: 'up',
+      messageId: 'm-assistant-9',
+    });
+  });
+
+  it('shows the thanks line straight away for a message the server already marked rated', async () => {
+    stubThread([{ ...ASSISTANT_REPLY, feedback: 'down' }]);
+    await bootPanel();
+
+    expect(screen.getByText('Thanks for your feedback!')).toBeInTheDocument();
+    // One-shot: a rated message offers no buttons, so the vote cannot flip.
+    expect(screen.queryByRole('button', { name: 'Helpful' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Not helpful' })).not.toBeInTheDocument();
+    expect(feedbackCalls()).toHaveLength(0);
+  });
+
+  it('never renders rating buttons under shopper or system messages', async () => {
+    stubThread([
+      { id: 'm-user-1', role: 'user', content: 'My own question', createdAt: new Date().toISOString() },
+      { id: 'm-sys-1', role: 'system', content: 'You are being connected', createdAt: new Date().toISOString() },
+    ]);
+    await bootPanel();
+
+    expect(screen.getByText('My own question')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Helpful' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Not helpful' })).not.toBeInTheDocument();
+  });
+});
+
 /* Staff "typing…" presence rides the existing poll, not a new transport: the
    same dots the shopper sees while their own message is in flight also show
    when a sync response reports staffTyping — and clear again once the ping

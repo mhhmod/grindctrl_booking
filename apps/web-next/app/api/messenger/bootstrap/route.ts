@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
         content: m.content,
         createdAt: m.created_at,
         author: m.metadata.author ?? (m.role === 'assistant' ? 'ai' : undefined),
+        feedback: m.metadata.feedback ?? undefined,
       })),
     });
   } catch (error) {

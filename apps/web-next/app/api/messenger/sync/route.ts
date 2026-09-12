@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
           author:
             m.metadata.author ??
             (m.role === 'assistant' ? 'ai' : m.role === 'system' ? 'system' : 'shopper'),
+          feedback: m.metadata.feedback ?? undefined,
         })),
       },
       { headers: { 'Cache-Control': 'no-store' } },

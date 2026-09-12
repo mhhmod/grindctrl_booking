@@ -14,6 +14,7 @@ import {
   recordEvent,
   resolveAssigneeNames,
   returnConversationToAi,
+  setMessageFeedback,
 } from './conversations';
 
 /* A storefront can hold a conversation id that no longer exists. The event
@@ -502,6 +503,128 @@ describe('pingStaffTyping', () => {
     setMessengerServiceClientForTests(client);
 
     await expect(pingStaffTyping('conv-1', {})).rejects.toThrow('conversation metadata update failed');
+  });
+});
+
+/* A per-message rating lives in the message's own metadata blob
+   (metadata.feedback), next to author/escalated/attachment — which must all
+   survive the write untouched, exactly like pingStaffTyping's merge above.
+   The write is scoped by id AND conversation_id together, only assistant
+   rows are rateable, and a given rating is one-shot (same rating replays
+   cleanly, flipping is refused). */
+describe('setMessageFeedback', () => {
+  function stubMessageFeedbackClient(row: Record<string, unknown> | null) {
+    const calls: Array<[string, unknown[]]> = [];
+    const updates: Array<Record<string, unknown>> = [];
+    function builder(): Record<string, unknown> {
+      const b: Record<string, unknown> = {
+        select: (...args: unknown[]) => {
+          calls.push(['select', args]);
+          return b;
+        },
+        update: (patch: Record<string, unknown>) => {
+          calls.push(['update', [patch]]);
+          updates.push(patch);
+          return b;
+        },
+        eq: (...args: unknown[]) => {
+          calls.push(['eq', args]);
+          return b;
+        },
+        maybeSingle: (...args: unknown[]) => {
+          calls.push(['maybeSingle', args]);
+          return Promise.resolve({ data: row, error: null });
+        },
+        then: (resolve: (value: unknown) => unknown) =>
+          Promise.resolve({ error: null }).then(resolve),
+      };
+      return b;
+    }
+    const client = { from: () => builder() } as unknown as SupabaseClient;
+    return { client, calls, updates };
+  }
+
+  const assistantRow = (metadata: Record<string, unknown>) => ({
+    id: 'm-1',
+    role: 'assistant',
+    metadata,
+  });
+
+  it('merges feedback without clobbering unrelated metadata fields', async () => {
+    const { client, calls, updates } = stubMessageFeedbackClient(
+      assistantRow({ author: 'ai', escalated: true, attachment: { id: 'a-1', mime: 'image/png', bytes: 42 } }),
+    );
+    setMessengerServiceClientForTests(client);
+
+    await expect(
+      setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-1', rating: 'up' }),
+    ).resolves.toBe(true);
+
+    expect(updates).toHaveLength(1);
+    expect(updates[0]).toMatchObject({
+      metadata: {
+        author: 'ai',
+        escalated: true,
+        attachment: { id: 'a-1', mime: 'image/png', bytes: 42 },
+        feedback: 'up',
+      },
+    });
+  });
+
+  it('scopes both the read and the write to id AND conversation_id together', async () => {
+    const { client, calls } = stubMessageFeedbackClient(assistantRow({ author: 'ai' }));
+    setMessengerServiceClientForTests(client);
+
+    await setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-1', rating: 'down' });
+
+    expect(calls).toContainEqual(['eq', ['id', 'm-1']]);
+    expect(calls).toContainEqual(['eq', ['conversation_id', 'conv-1']]);
+    // One pair for the scoped read, one pair for the scoped write.
+    expect(calls.filter(([method]) => method === 'eq')).toHaveLength(4);
+  });
+
+  it('no-ops for a non-assistant role without writing anything', async () => {
+    const { client, updates } = stubMessageFeedbackClient({
+      id: 'm-2',
+      role: 'user',
+      metadata: {},
+    });
+    setMessengerServiceClientForTests(client);
+
+    await expect(
+      setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-2', rating: 'up' }),
+    ).resolves.toBe(false);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('returns false when no row matches the scoped lookup', async () => {
+    const { client, updates } = stubMessageFeedbackClient(null);
+    setMessengerServiceClientForTests(client);
+
+    await expect(
+      setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-missing', rating: 'up' }),
+    ).resolves.toBe(false);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('replays the same rating idempotently without a second write', async () => {
+    const { client, updates } = stubMessageFeedbackClient(assistantRow({ author: 'ai', feedback: 'up' }));
+    setMessengerServiceClientForTests(client);
+
+    await expect(
+      setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-1', rating: 'up' }),
+    ).resolves.toBe(true);
+    expect(updates).toHaveLength(0);
+  });
+
+  it('refuses to flip an existing rating to the other value', async () => {
+    const { client, updates } = stubMessageFeedbackClient(assistantRow({ author: 'ai', feedback: 'up' }));
+    setMessengerServiceClientForTests(client);
+
+    await expect(
+      setMessageFeedback({ conversationId: 'conv-1', messageId: 'm-1', rating: 'down' }),
+    ).resolves.toBe(false);
+    expect(updates).toHaveLength(0);
   });
 });
 

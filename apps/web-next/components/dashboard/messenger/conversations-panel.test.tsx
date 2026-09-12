@@ -663,6 +663,43 @@ describe('ConversationsPanel internal notes', () => {
   });
 });
 
+/* The shopper's per-reply 👍/👎 surfaces in the moderator inbox as a
+   read-only glyph next to the rated reply — staff see how an answer landed,
+   but this view never submits a rating itself. */
+describe('ConversationsPanel message feedback', () => {
+  beforeEach(() => {
+    fetchConversationMessages.mockResolvedValue({
+      ok: true,
+      status: 'open',
+      messages: [
+        { id: 'm-1', role: 'user', content: 'Is this in stock?', createdAt: '2026-08-30T10:00:00.000Z' },
+        { id: 'm-2', role: 'assistant', content: 'Yes — ships today.', createdAt: '2026-08-30T10:01:00.000Z', author: 'ai', feedback: 'up' },
+        { id: 'm-3', role: 'assistant', content: 'Anything else?', createdAt: '2026-08-30T10:02:00.000Z', author: 'ai', feedback: 'down' },
+        { id: 'm-4', role: 'assistant', content: 'Unrated reply.', createdAt: '2026-08-30T10:03:00.000Z', author: 'ai' },
+      ],
+      attachments: {},
+    });
+  });
+
+  it('shows the shopper rating beside each rated reply', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+
+    expect(await screen.findByLabelText('Rated helpful')).toHaveTextContent('👍');
+    expect(await screen.findByLabelText('Rated not helpful')).toHaveTextContent('👎');
+    expect(await screen.findByText('Unrated reply.')).toBeInTheDocument();
+  });
+
+  it('never renders a clickable rating control in the staff view', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Yes — ships today.');
+
+    expect(screen.queryByRole('button', { name: 'Helpful' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Not helpful' })).not.toBeInTheDocument();
+    // The indicators themselves are glyphs, not buttons.
+    expect(screen.getByLabelText('Rated helpful').tagName).not.toBe('BUTTON');
+  });
+});
+
 /* Staff "typing…" presence: the Reply composer pings (debounced, fire and
    forget) so the shopper sees the dots — but the Note composer must NEVER
    ping. A note is staff-only; even a "someone is typing" signal while a

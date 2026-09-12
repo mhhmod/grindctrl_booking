@@ -25,6 +25,9 @@ interface WireMessage {
   createdAt: string;
   author?: 'ai' | 'human' | 'system' | 'shopper';
   escalated?: boolean;
+  /** This reply's own 👍/👎 from the shopper, if given. Server-supplied —
+     reading it directly is the given state, so no client-side set needed. */
+  feedback?: 'up' | 'down';
   pending?: boolean;
   failed?: boolean;
 }
@@ -480,10 +483,10 @@ export function MessengerPanel({
     }
   }
 
-  async function giveFeedback(rating: 'up' | 'down') {
-    if (!anonId || !conversationId || feedbackGiven) return;
-    setFeedbackGiven(true);
-    await fetch('/api/messenger/feedback', {
+  /* Shared shape with giveFeedback below: same trust fields, plus the
+     target message when rating one reply instead of the whole thread. */
+  function postFeedback(rating: 'up' | 'down', messageId?: string) {
+    return fetch('/api/messenger/feedback', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -493,8 +496,24 @@ export function MessengerPanel({
         anonymousId: anonId,
         conversationId,
         rating,
+        ...(messageId ? { messageId } : {}),
       }),
     }).catch(() => {});
+  }
+
+  async function giveFeedback(rating: 'up' | 'down') {
+    if (!anonId || !conversationId || feedbackGiven) return;
+    setFeedbackGiven(true);
+    await postFeedback(rating);
+  }
+
+  /* One-shot per message, mirroring the conversation rating's no-takebacks
+     rule: the buttons unmount the moment feedback lands (optimistically),
+     and the server refuses to flip a recorded vote. */
+  async function giveMessageFeedback(messageId: string, rating: 'up' | 'down') {
+    if (!anonId || !conversationId) return;
+    setMessages((prev) => prev.map((m) => (m.id === messageId && !m.feedback ? { ...m, feedback: rating } : m)));
+    await postFeedback(rating, messageId);
   }
 
   const placeholder = pickLocalizedSafe(config.behaviour.inputPlaceholder, locale, t.messagePlaceholderFallback);
@@ -644,6 +663,35 @@ export function MessengerPanel({
                   </span>
                 )}
               </div>
+              {/* Per-reply rating: assistant bubbles only, never the
+                  shopper's own messages or system lines. Same emoji and
+                  button language as the end-of-conversation rating below;
+                  once rated, the buttons give way to the thanks line. */}
+              {!mine &&
+                (m.feedback ? (
+                  <span className="mt-1 px-1 text-[11px] text-muted-foreground" role="status">
+                    {t.feedbackThanks}
+                  </span>
+                ) : (
+                  <span className="mt-1 flex items-center gap-1 px-1">
+                    <button
+                      type="button"
+                      onClick={() => giveMessageFeedback(m.id, 'up')}
+                      aria-label="Helpful"
+                      className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                    >
+                      👍
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => giveMessageFeedback(m.id, 'down')}
+                      aria-label="Not helpful"
+                      className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
+                    >
+                      👎
+                    </button>
+                  </span>
+                ))}
             </div>
           );
         })}

@@ -166,6 +166,50 @@ export async function pingStaffTyping(
   });
 }
 
+/* Per-message shopper rating. A shopper rates one assistant reply 👍/👎;
+   the vote lives in that message's metadata blob (metadata.feedback), NOT
+   in messenger_feedback — that table holds the separate once-per-
+   conversation overall rating. Same read-modify-write shape as
+   pingStaffTyping above: the spread preserves every unrelated field
+   (author, escalated, attachment, …), and the write is scoped by BOTH id
+   and conversation_id so a message from someone else's conversation can
+   never be rated through this path.
+
+   One-shot per message, matching the conversation rating's no-takebacks
+   rule: a replay of the same rating succeeds idempotently; attempting to
+   flip to the other rating returns false and writes nothing.
+
+   Only assistant-role rows are rateable — a shopper's own message or a
+   system event line returns false rather than throwing, since the client
+   only ever renders the buttons under assistant bubbles. */
+export async function setMessageFeedback(input: {
+  conversationId: string;
+  messageId: string;
+  rating: 'up' | 'down';
+}): Promise<boolean> {
+  const supabase = getMessengerServiceClient();
+  const existing = await supabase
+    .from('widget_messages')
+    .select('id, role, metadata')
+    .eq('id', input.messageId)
+    .eq('conversation_id', input.conversationId)
+    .maybeSingle();
+  if (existing.error) throw new Error(`message lookup failed: ${existing.error.message}`);
+  const row = existing.data as { role: string; metadata: MessageRecord['metadata'] | null } | null;
+  if (!row) return false;
+  if (row.role !== 'assistant') return false;
+  const current = row.metadata ?? {};
+  if (current.feedback === input.rating) return true;
+  if (current.feedback !== undefined) return false;
+  const updated = await supabase
+    .from('widget_messages')
+    .update({ metadata: { ...current, feedback: input.rating } })
+    .eq('id', input.messageId)
+    .eq('conversation_id', input.conversationId);
+  if (updated.error) throw new Error(`message feedback update failed: ${updated.error.message}`);
+  return true;
+}
+
 /* ── Conversations ────────────────────────────────────────────────────── */
 
 /** Returns the shopper's active conversation or creates one. Active means

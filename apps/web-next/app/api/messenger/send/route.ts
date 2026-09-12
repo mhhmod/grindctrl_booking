@@ -519,7 +519,7 @@ function toWire(m: {
   role: string;
   content: string;
   created_at: string;
-  metadata?: { author?: string; escalated?: boolean };
+  metadata?: { author?: string; escalated?: boolean; feedback?: 'up' | 'down' };
 }) {
   return {
     id: m.id,
@@ -530,5 +530,6 @@ function toWire(m: {
       m.metadata?.author ??
       (m.role === 'assistant' ? 'ai' : m.role === 'system' ? 'system' : 'shopper'),
     escalated: m.metadata?.escalated === true || undefined,
+    feedback: m.metadata?.feedback ?? undefined,
   };
 }
