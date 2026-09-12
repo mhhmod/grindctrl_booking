@@ -38,6 +38,7 @@ export interface MessengerHostActions {
    *  change, no notification). */
   addInternalNote(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
   takeoverConversation(siteId: string, conversationId: string): Promise<ActionResult>;
+  assignConversationAction(siteId: string, conversationId: string, profileId: string): Promise<ActionResult>;
   /** Marks a conversation as seen by the merchant. */
   markConversationRead(siteId: string, conversationId: string): Promise<ActionResult>;
   /** Several sections in one write. Saving them as concurrent single-section

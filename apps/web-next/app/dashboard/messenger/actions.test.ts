@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { revalidatePath } from 'next/cache';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-rate-limit';
 vi.mock('@/lib/request-rate-limit', async (importOriginal) => ({
@@ -26,6 +27,8 @@ const mocks = vi.hoisted(() => {
     recordAudit: vi.fn(async () => {}),
     getConversationForSite: vi.fn(),
     takeOverConversation: vi.fn(),
+    assignConversation: vi.fn(),
+    listWorkspaceMembers: vi.fn(),
     appendMessage: vi.fn(async () => ({ message: { id: 'm1' }, replayed: false })),
     pingStaffTyping: vi.fn(async () => {}),
     listMessages: vi.fn(async (): Promise<Array<{ id: string; role: string; content: string; created_at: string; metadata: Record<string, unknown> }>> => []),
@@ -58,6 +61,8 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     recordAudit: mocks.recordAudit,
     getConversationForSite: mocks.getConversationForSite,
     takeOverConversation: mocks.takeOverConversation,
+    assignConversation: mocks.assignConversation,
+    listWorkspaceMembers: mocks.listWorkspaceMembers,
     appendMessage: mocks.appendMessage,
     pingStaffTyping: mocks.pingStaffTyping,
     listMessages: mocks.listMessages,
@@ -97,7 +102,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
+import { assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -389,5 +394,61 @@ describe('canned reply actions', () => {
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.delete).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('assignConversationAction', () => {
+  beforeEach(() => {
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', status: 'handoff_active' });
+    mocks.listWorkspaceMembers.mockResolvedValue([{ profileId: 'p-team', name: 'Teammate' }]);
+    mocks.assignConversation.mockResolvedValue({ id: 'conv-1', status: 'handoff_active', assigned_profile_id: 'p-team' });
+  });
+
+  it('rejects a profile outside the owned site workspace before assignment', async () => {
+    expect(await assignConversationAction('site-1', 'conv-1', 'p-foreign')).toEqual({ ok: false, error: 'Not a member of this workspace.' });
+    expect(mocks.listWorkspaceMembers).toHaveBeenCalledWith('ws-1');
+    expect(mocks.assignConversation).not.toHaveBeenCalled();
+    expect(mocks.recordAudit).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('assigns a workspace member and records conversation_assigned with actor and assignee', async () => {
+    expect(await assignConversationAction('site-1', 'conv-1', 'p-team')).toEqual({ ok: true });
+    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', 'site-1');
+    expect(mocks.getConversationForSite).toHaveBeenCalledWith('conv-1', 'site-1');
+    expect(mocks.listWorkspaceMembers).toHaveBeenCalledWith('ws-1');
+    expect(mocks.assignConversation).toHaveBeenCalledWith('conv-1', 'p-team');
+    expect(mocks.recordAudit).toHaveBeenCalledWith({ siteId: 'site-1', actorClerkUserId: 'user_owner', action: 'conversation_assigned', detail: { conversationId: 'conv-1', assignedProfileId: 'p-team' } });
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/messenger');
+  });
+
+  it('refuses a concurrent close without auditing success', async () => {
+    mocks.assignConversation.mockResolvedValue(null);
+    expect(await assignConversationAction('site-1', 'conv-1', 'p-team')).toEqual({ ok: false, error: 'Conversation state changed. Refresh and retry.' });
+    expect(mocks.recordAudit).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when member lookup yields no members', async () => {
+    mocks.listWorkspaceMembers.mockResolvedValue([]);
+    expect((await assignConversationAction('site-1', 'conv-1', 'p-team')).ok).toBe(false);
+    expect(mocks.assignConversation).not.toHaveBeenCalled();
+  });
+
+  it.each(['signed out', 'foreign site', 'foreign conversation'])('rejects %s before member lookup or mutation', async (reason) => {
+    if (reason === 'signed out') mocks.auth.mockResolvedValue({ userId: null });
+    if (reason === 'foreign site') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'foreign conversation') mocks.getConversationForSite.mockResolvedValue(null);
+    expect((await assignConversationAction('site-1', 'conv-1', 'p-team')).ok).toBe(false);
+    expect(mocks.listWorkspaceMembers).not.toHaveBeenCalled();
+    expect(mocks.assignConversation).not.toHaveBeenCalled();
+  });
+
+  it('preserves takeover as a claim for the current staff profile', async () => {
+    mocks.takeOverConversation.mockResolvedValue({ id: 'conv-1' });
+    expect(await takeoverConversation('site-1', 'conv-1')).toEqual({ ok: true });
+    expect(mocks.takeOverConversation).toHaveBeenCalledWith('conv-1', 'profile-1');
+    expect(mocks.assignConversation).not.toHaveBeenCalled();
   });
 });

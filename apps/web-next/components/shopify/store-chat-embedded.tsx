@@ -159,6 +159,9 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
+      // Never invoked on this surface — see rawActions.assignConversationAction.
+      assignConversationAction: (siteId, conversationId, profileId) =>
+        rawActions.assignConversationAction(siteId, conversationId, profileId),
       releaseConversation: async (siteId, conversationId) => {
         const result = await rawActions.releaseConversation(siteId, conversationId);
         if (result.ok) void loadState();

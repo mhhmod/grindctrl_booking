@@ -14,6 +14,7 @@ import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { mergeDraftOverPublished } from '@/lib/messenger/config';
 import {
   resolveAssigneeNames,
+  listWorkspaceMembers,
   summarizeConversations,
   type ConversationSummary,
   getOverviewStats,
@@ -187,6 +188,9 @@ export default async function MessengerPage({
           (): Record<string, string> => ({}),
         )
       : {};
+  const assignableMembers = await listWorkspaceMembers(selected.workspace_id).catch(
+    (): Array<{ profileId: string; name: string }> => [],
+  );
   // The "assigned to me" filter needs the viewer's own profile. A lookup
   // failure hides the filter instead of breaking the page.
   const currentProfileId = await getProfileId(userId).catch((): string | null => null);
@@ -261,6 +265,7 @@ export default async function MessengerPage({
         actions={messengerActions}
         hasDraft={hasDraft}
         currentProfileId={currentProfileId}
+        assignableMembers={assignableMembers}
       />
     </section>
   );

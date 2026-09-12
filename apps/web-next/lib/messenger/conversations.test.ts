@@ -4,6 +4,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { setMessengerServiceClientForTests } from './db';
 import {
   appendMessage,
+  assignConversation,
+  listWorkspaceMembers,
+  takeOverConversation,
   claimHandoffNotification,
   countAwaitingHandoff,
   getWidgetLastSeenAt,
@@ -647,5 +650,65 @@ describe('isStaffTyping', () => {
     const now = Date.now();
     expect(isStaffTyping({ staff_typing_at: new Date(now - 7999).toISOString() }, now)).toBe(true);
     expect(isStaffTyping({ staff_typing_at: new Date(now - 8001).toISOString() }, now)).toBe(false);
+  });
+});
+
+
+describe('listWorkspaceMembers', () => {
+  it('lists all named workspace members with trimmed names or email fallback', async () => {
+    const { client, calls } = stubQueryClient({ data: [
+      { profile_id: 'p-1', profiles: { first_name: ' Sara ', last_name: ' Khan ', email: 'sara@example.com' } },
+      { profile_id: 'p-2', profiles: { first_name: ' ', email: ' colleague@example.com ' } },
+      { profile_id: 'p-3', profiles: null },
+      { profile_id: 'p-4', profiles: { first_name: ' ', email: null } },
+    ], error: null });
+    const from = vi.spyOn(client, 'from');
+    setMessengerServiceClientForTests(client);
+    await expect(listWorkspaceMembers('ws-1')).resolves.toEqual([
+      { profileId: 'p-1', name: 'Sara Khan' },
+      { profileId: 'p-2', name: 'colleague@example.com' },
+    ]);
+    expect(from).toHaveBeenCalledWith('workspace_members');
+    expect(calls).toContainEqual(['select', ['profile_id, profiles(first_name, last_name, email)']]);
+    expect(calls).toContainEqual(['eq', ['workspace_id', 'ws-1']]);
+    expect(calls.some(([method]) => method === 'in')).toBe(false);
+  });
+
+  it('soft-fails to [] on query errors and thrown failures', async () => {
+    const { client } = stubQueryClient({ data: null, error: { message: 'down' } });
+    setMessengerServiceClientForTests(client);
+    await expect(listWorkspaceMembers('ws-1')).resolves.toEqual([]);
+    vi.spyOn(client, 'from').mockImplementation(() => { throw new Error('offline'); });
+    await expect(listWorkspaceMembers('ws-1')).resolves.toEqual([]);
+  });
+});
+
+describe('explicit assignment and self-claim guard', () => {
+  it.each(['open', 'handoff_requested', 'handoff_active', 'closed'])('assigns or reassigns from %s only if the WHERE guard permits it', async (status) => {
+    const row = { id: 'conv-1', status, assigned_profile_id: 'p-old' };
+    let patch: Record<string, unknown> = {};
+    let allowed: string[] = [];
+    const eq = vi.fn();
+    const builder = {
+      update: (value: Record<string, unknown>) => { patch = value; return builder; },
+      eq: (...args: unknown[]) => { eq(...args); return builder; },
+      in: (_key: string, values: string[]) => { allowed = values; return builder; },
+      select: () => Promise.resolve({ data: allowed.includes(row.status) ? [{ ...row, ...patch }] : [], error: null }),
+    };
+    setMessengerServiceClientForTests({ from: () => builder } as unknown as SupabaseClient);
+    const result = await assignConversation('conv-1', 'p-new');
+    expect(eq).toHaveBeenCalledWith('id', 'conv-1');
+    expect(allowed).toEqual(['open', 'handoff_requested', 'handoff_active']);
+    expect(patch).toEqual({ status: 'handoff_active', assigned_profile_id: 'p-new' });
+    if (status === 'closed') expect(result).toBeNull();
+    else expect(result).toMatchObject({ status: 'handoff_active', assigned_profile_id: 'p-new' });
+  });
+
+  it('keeps self-claim restricted to open and handoff_requested', async () => {
+    const { client, calls } = stubQueryClient({ data: [], error: null });
+    setMessengerServiceClientForTests(client);
+    await takeOverConversation('conv-1', 'p-self');
+    expect(calls).toContainEqual(['in', ['status', ['open', 'handoff_requested']]]);
+    expect(calls).toContainEqual(['update', [{ status: 'handoff_active', assigned_profile_id: 'p-self' }]]);
   });
 });

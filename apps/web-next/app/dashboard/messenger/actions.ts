@@ -10,6 +10,8 @@ import {
 } from '@/lib/messenger/provisioning';
 import {
   appendMessage,
+  assignConversation,
+  listWorkspaceMembers,
   pingStaffTyping as pingTyping,
   recordAudit,
   resolveAssigneeNames,
@@ -458,6 +460,32 @@ export async function takeoverConversation(siteId: string, conversationId: strin
       actorClerkUserId: userId,
       action: 'conversation_taken_over',
       detail: { conversationId },
+    });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function assignConversationAction(
+  siteId: string,
+  conversationId: string,
+  profileId: string,
+): Promise<ActionResult> {
+  try {
+    const { userId, site } = await ownedConversation(siteId, conversationId);
+    const members = await listWorkspaceMembers(site.workspace_id);
+    if (!members.some((member) => member.profileId === profileId)) {
+      return { ok: false, error: 'Not a member of this workspace.' };
+    }
+    const assigned = await assignConversation(conversationId, profileId);
+    if (!assigned) return { ok: false, error: 'Conversation state changed. Refresh and retry.' };
+    await recordAudit({
+      siteId,
+      actorClerkUserId: userId,
+      action: 'conversation_assigned',
+      detail: { conversationId, assignedProfileId: profileId },
     });
     revalidatePath('/dashboard/messenger');
     return { ok: true };

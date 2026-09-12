@@ -8,6 +8,7 @@ const staffReply = vi.fn();
 const pingStaffTyping = vi.fn();
 const addInternalNote = vi.fn();
 const takeoverConversation = vi.fn();
+const assignConversationAction = vi.fn();
 const releaseConversation = vi.fn();
 const closeConversationAction = vi.fn();
 const markConversationRead = vi.fn();
@@ -21,6 +22,7 @@ const actions = {
   pingStaffTyping,
   addInternalNote,
   takeoverConversation,
+  assignConversationAction,
   releaseConversation,
   closeConversationAction,
   markConversationRead,
@@ -750,5 +752,66 @@ describe('ConversationsPanel staff typing ping', () => {
 
     expect(addInternalNote).toHaveBeenCalledWith('site-1', 'conv-1', 'VIP — comp shipping');
     expect(pingStaffTyping).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('ConversationsPanel teammate assignment', () => {
+  const members = [{ profileId: 'p-1', name: 'Sara Khan' }, { profileId: 'p-2', name: 'عمر أحمد' }];
+
+  it.each(['open', 'handoff_requested', 'handoff_active'])('offers assignment for %s and reflects the current assignee', async (status) => {
+    fetchConversationMessages.mockResolvedValue({ ok: true, status, messages: [], attachments: {} });
+    assignConversationAction.mockResolvedValue({ ok: true });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={[{ ...CONVERSATIONS[0], status, assigneeId: 'p-1' }]} actions={actions} assignableMembers={members} />);
+    const select = await screen.findByRole('combobox', { name: 'Assign conversation to a teammate' });
+    expect(select).toHaveValue('p-1');
+    await act(async () => { fireEvent.change(select, { target: { value: 'p-2' } }); });
+    expect(assignConversationAction).toHaveBeenCalledWith('site-1', 'conv-1', 'p-2');
+    expect(takeoverConversation).not.toHaveBeenCalled();
+  });
+
+  it.each([0, 1])('hides assignment for %s assignable members', async (count) => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} assignableMembers={members.slice(0, count)} />);
+    await screen.findByText('Where is my order?');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+
+  it('hides assignment for a closed conversation', async () => {
+    fetchConversationMessages.mockResolvedValue({ ok: true, status: 'closed', messages: [], attachments: {} });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={[{ ...CONVERSATIONS[0], status: 'closed' }]} actions={actions} assignableMembers={members} />);
+    await screen.findByLabelText('Type a private note…');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+
+  it('disables assignment while pending and keeps server failures visible after refresh', async () => {
+    let finish!: (value: { ok: false; error: string }) => void;
+    assignConversationAction.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} assignableMembers={members} />);
+    const select = await screen.findByRole('combobox', { name: 'Assign conversation to a teammate' });
+    fireEvent.change(select, { target: { value: 'p-2' } });
+    await waitFor(() => expect(select).toBeDisabled());
+    await act(async () => { finish({ ok: false, error: 'Not a member of this workspace.' }); });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Not a member of this workspace.');
+    expect(select).not.toBeDisabled();
+    expect(select).toHaveValue('');
+  });
+
+  it('reflects revalidated assignments and the newly selected thread', async () => {
+    const rows = [{ ...CONVERSATIONS[0], assigneeId: 'p-1' }, { ...CONVERSATIONS[0], id: 'conv-2', visitorEmail: 'second@example.com', assigneeId: 'p-2' }];
+    const { rerender } = render(<ConversationsPanel locale="en" siteId="site-1" conversations={rows} actions={actions} assignableMembers={members} />);
+    const select = await screen.findByRole('combobox', { name: 'Assign conversation to a teammate' });
+    expect(select).toHaveValue('p-1');
+    rerender(<ConversationsPanel locale="en" siteId="site-1" conversations={[{ ...rows[0], assigneeId: 'p-2' }, rows[1]]} actions={actions} assignableMembers={members} />);
+    expect(select).toHaveValue('p-2');
+    fireEvent.click(screen.getByRole('button', { name: /second@example.com/ }));
+    expect(await screen.findByRole('combobox', { name: 'Assign conversation to a teammate' })).toHaveValue('p-2');
+  });
+
+  it('localizes the placeholder and accessible label in RTL', async () => {
+    render(<ConversationsPanel locale="ar" siteId="site-1" conversations={CONVERSATIONS} actions={actions} assignableMembers={members} />);
+    const select = await screen.findByRole('combobox', { name: 'إسناد المحادثة إلى زميل' });
+    expect(select).toHaveValue('');
+    expect(screen.getByRole('option', { name: 'إسناد إلى…' })).toBeDisabled();
+    expect(select.closest('[dir]')).toHaveAttribute('dir', 'rtl');
   });
 });

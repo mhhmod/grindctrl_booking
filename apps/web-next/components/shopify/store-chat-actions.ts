@@ -60,6 +60,12 @@ export function useStoreChatActions(): MessengerHostActions {
         postJson('/api/shopify/store-chat/thread', { op: 'addNote', conversationId, text }),
       takeoverConversation: (_siteId, conversationId: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'takeover', conversationId }),
+      /* No per-staff identity exists on this surface (the shop session has
+         no profile id), so there is never more than one assignable member
+         and the assign control never renders here — this stub only
+         satisfies the shared interface. */
+      assignConversationAction: () =>
+        Promise.resolve({ ok: false, error: 'Assignment is not available in this view.' }),
       markConversationRead: (_siteId, conversationId: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'markRead', conversationId }),
       releaseConversation: (_siteId, conversationId: string) =>

@@ -31,6 +31,8 @@ const COPY = {
     replyPh: 'Type your reply…',
     send: 'Send',
     takeOver: 'Take over',
+    assignTo: 'Assign to…',
+    assignLabel: 'Assign conversation to a teammate',
     returnToAi: 'Return to AI',
     resolve: 'Mark resolved',
     systemHandoff: 'AI handed this conversation to your team',
@@ -96,6 +98,8 @@ const COPY = {
     replyPh: 'اكتب ردك…',
     send: 'إرسال',
     takeOver: 'تولّى المحادثة',
+    assignTo: 'إسناد إلى…',
+    assignLabel: 'إسناد المحادثة إلى زميل',
     returnToAi: 'إعادة للذكاء الاصطناعي',
     resolve: 'إغلاق المحادثة',
     systemHandoff: 'حوّل المساعد هذه المحادثة إلى فريقك',
@@ -242,6 +246,7 @@ export function ConversationsPanel({
   cannedReplies = [],
   actions,
   currentProfileId,
+  assignableMembers = [],
 }: {
   locale: 'en' | 'ar';
   siteId: string;
@@ -254,6 +259,7 @@ export function ConversationsPanel({
     | 'pingStaffTyping'
     | 'addInternalNote'
     | 'takeoverConversation'
+    | 'assignConversationAction'
     | 'releaseConversation'
     | 'closeConversationAction'
     | 'markConversationRead'
@@ -265,6 +271,7 @@ export function ConversationsPanel({
    *  Shopify surface has no per-staff-member identity) the "assigned to me"
    *  filter is not rendered at all — there is no "me" to filter by. */
   currentProfileId?: string | null;
+  assignableMembers?: Array<{ profileId: string; name: string }>;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
@@ -320,6 +327,10 @@ export function ConversationsPanel({
   const [status, setStatus] = useState<string>('');
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // Keep assignment failures visible after act() refreshes the thread.
+  const [assignmentError, setAssignmentError] = useState<{ conversationId: string; text: string } | null>(null);
+  const displayedError = error || (assignmentError?.conversationId === selectedId ? assignmentError.text : null);
+  const assigneeId = conversations.find((conversation) => conversation.id === selectedId)?.assigneeId ?? '';
   const [pending, startTransition] = useTransition();
   /* Reply vs private note. Reset to Reply whenever another conversation is
      picked below — a mode that silently persists across threads is how a
@@ -497,9 +508,9 @@ export function ConversationsPanel({
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
       className="flex h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-1rem)] min-h-0 min-w-0 scroll-mt-14 flex-col gap-2"
     >
-      {error && (
+      {displayedError && (
         <div role="alert" className="flex max-h-[20%] shrink-0 items-center justify-between gap-2 overflow-y-auto rounded-xl border border-border bg-card px-3 py-2 text-xs text-destructive">
-          <p className="min-w-0 break-words">{error}</p>
+          <p className="min-w-0 break-words">{displayedError}</p>
           <Button size="sm" variant="outline" className="min-h-11" onClick={() => void load()}>{t.retry}</Button>
         </div>
       )}
@@ -701,6 +712,26 @@ export function ConversationsPanel({
               <Button size="sm" className="min-h-11" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.releaseConversation(siteId, selectedId))}>
                 {t.returnToAi}
               </Button>
+            )}
+            {assignableMembers.length > 1 && status && status !== 'closed' && selectedId && (
+              <select
+                aria-label={t.assignLabel}
+                value={assignableMembers.some((member) => member.profileId === assigneeId) ? assigneeId : ''}
+                disabled={pending}
+                onChange={(event) => {
+                  const profileId = event.target.value;
+                  act(async () => {
+                    const result = await actions.assignConversationAction(siteId, selectedId, profileId);
+                    setAssignmentError(result.ok ? null : { conversationId: selectedId, text: result.error });
+                  });
+                }}
+                className="min-h-11 min-w-0 max-w-full rounded-4xl border border-input bg-input/30 px-3 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              >
+                <option value="" disabled>{t.assignTo}</option>
+                {assignableMembers.map((member) => (
+                  <option key={member.profileId} value={member.profileId}>{member.name}</option>
+                ))}
+              </select>
             )}
             {status && status !== 'closed' && selectedId && (
               <Button size="sm" className="min-h-11" variant="ghost" disabled={pending} onClick={() => selectedId && act(() => actions.closeConversationAction(siteId, selectedId))}>

@@ -596,6 +596,48 @@ export async function resolveAssigneeNames(
   }
 }
 
+/** All assignable teammates, scoped to the workspace. A failed lookup must
+ *  hide delegation and fail closed when the action re-checks membership. */
+export async function listWorkspaceMembers(
+  workspaceId: string,
+): Promise<Array<{ profileId: string; name: string }>> {
+  try {
+    const supabase = getMessengerServiceClient();
+    const res = await supabase
+      .from('workspace_members')
+      .select('profile_id, profiles(first_name, last_name, email)')
+      .eq('workspace_id', workspaceId);
+    if (res.error) return [];
+
+    const members: Array<{ profileId: string; name: string }> = [];
+    for (const row of (res.data ?? []) as Array<{
+      profile_id: string;
+      profiles: { first_name?: string | null; last_name?: string | null; email?: string | null } | null;
+    }>) {
+      const profile = row.profiles;
+      const full = [profile?.first_name?.trim(), profile?.last_name?.trim()].filter(Boolean).join(' ');
+      const display = full || profile?.email?.trim();
+      // As in resolveAssigneeNames, omit nameless profiles instead of
+      // inventing a fallback in a server-side lookup without a locale.
+      if (display) members.push({ profileId: row.profile_id, name: display });
+    }
+    return members;
+  } catch {
+    return [];
+  }
+}
+
+/** Explicit assignment also permits reassignment of an active human thread. */
+export async function assignConversation(
+  conversationId: string,
+  profileId: string,
+): Promise<ConversationRecord | null> {
+  return guardedTransition(conversationId, ['open', 'handoff_requested', 'handoff_active'], {
+    status: 'handoff_active',
+    assigned_profile_id: profileId,
+  });
+}
+
 export async function takeOverConversation(
   conversationId: string,
   profileId: string,
