@@ -21,6 +21,7 @@ import {
   listConversationsForSite,
 } from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
+import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 import { getRequestLocale } from '@/lib/auth/locale';
@@ -153,13 +154,15 @@ export default async function MessengerPage({
   let stats: Awaited<ReturnType<typeof getOverviewStats>> | null = null;
   let conversations: Awaited<ReturnType<typeof listConversationsForSite>> = [];
   let knowledge: Awaited<ReturnType<typeof listKnowledge>> = [];
+  let cannedReplies: Awaited<ReturnType<typeof listCannedReplies>> = [];
   let storeDetectedAt: string | null = null;
 
-  const [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes] =
+  const [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes] =
     await Promise.allSettled([
       getOverviewStats(selected.id),
       listConversationsForSite(selected.id),
       listKnowledge(selected.id),
+      listCannedReplies(selected.id),
       getWidgetLastSeenAt(selected.id),
       selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
     ]);
@@ -188,9 +191,10 @@ export default async function MessengerPage({
   // failure hides the filter instead of breaking the page.
   const currentProfileId = await getProfileId(userId).catch((): string | null => null);
   if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
+  if (cannedRepliesRes.status === 'fulfilled') cannedReplies = cannedRepliesRes.value;
   if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
   const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
-  for (const failed of [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes]) {
+  for (const failed of [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
       // One slow or broken panel must not take the whole section down.
       console.error('[messenger] dashboard data failed:', failed.reason);
@@ -253,6 +257,7 @@ export default async function MessengerPage({
       preview: summaries[c.id]?.preview ?? null,
         }))}
         knowledge={knowledge}
+        cannedReplies={cannedReplies}
         actions={messengerActions}
         hasDraft={hasDraft}
         currentProfileId={currentProfileId}

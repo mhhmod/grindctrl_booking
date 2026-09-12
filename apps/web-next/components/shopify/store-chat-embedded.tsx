@@ -8,6 +8,7 @@ import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-con
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
+import type { CannedReply } from '@/lib/messenger/canned-replies';
 
 interface StoreChatState {
   site: {
@@ -38,6 +39,7 @@ interface StoreChatState {
     preview?: string | null;
   }>;
   knowledge: KnowledgeEntry[];
+  cannedReplies: CannedReply[];
 }
 
 const COPY = {
@@ -133,6 +135,21 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
+      addCannedReply: async (siteId, title, content) => {
+        const result = await rawActions.addCannedReply(siteId, title, content);
+        if (result.ok) void loadState();
+        return result;
+      },
+      updateCannedReplyStatus: async (siteId, replyId, status) => {
+        const result = await rawActions.updateCannedReplyStatus(siteId, replyId, status);
+        if (result.ok) void loadState();
+        return result;
+      },
+      deleteCannedReply: async (siteId, replyId) => {
+        const result = await rawActions.deleteCannedReply(siteId, replyId);
+        if (result.ok) void loadState();
+        return result;
+      },
       takeoverConversation: async (siteId, conversationId) => {
         const result = await rawActions.takeoverConversation(siteId, conversationId);
         if (result.ok) void loadState();
@@ -186,6 +203,7 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
       stats={state.stats as React.ComponentProps<typeof MessengerTabs>['stats']}
       conversations={state.conversations}
       knowledge={state.knowledge}
+      cannedReplies={state.cannedReplies ?? []}
       actions={actions}
       hasDraft={state.site.hasDraft}
     />

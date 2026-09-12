@@ -12,6 +12,7 @@ import {
   listConversationsForSite,
 } from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
+import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { toPublicPayload } from '@/lib/messenger/public-api';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 
@@ -43,10 +44,11 @@ export async function GET(request: NextRequest) {
     new Date(),
   );
 
-  const [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes] = await Promise.allSettled([
+  const [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes] = await Promise.allSettled([
     getOverviewStats(site.id),
     listConversationsForSite(site.id),
     listKnowledge(site.id),
+    listCannedReplies(site.id),
     getWidgetLastSeenAt(site.id),
     site.domain ? hasShopOrderAccess(site.domain) : Promise.resolve(false),
   ]);
@@ -71,6 +73,7 @@ export async function GET(request: NextRequest) {
         )
       : {};
   const knowledge = knowledgeRes.status === 'fulfilled' ? knowledgeRes.value : [];
+  const cannedReplies = cannedRepliesRes.status === 'fulfilled' ? cannedRepliesRes.value : [];
   /* Was listManagedTryOnShops(), which calls requireDashboardOwner(). There
      is no Clerk session inside the embedded Shopify iframe, so that lookup
      always threw here and detection was permanently null — the embedded app
@@ -78,7 +81,7 @@ export async function GET(request: NextRequest) {
      doing. This asks the site's own loader events instead, which need no
      Clerk identity because the session token already proved the shop. */
   const detectedAt = detectedRes.status === 'fulfilled' ? detectedRes.value : null;
-  for (const failed of [statsRes, conversationsRes, knowledgeRes, detectedRes, ordersRes]) {
+  for (const failed of [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
       console.error('[store-chat state] a panel failed:', failed.reason);
     }
@@ -113,5 +116,6 @@ export async function GET(request: NextRequest) {
       preview: summaries[c.id]?.preview ?? null,
     })),
     knowledge,
+    cannedReplies,
   });
 }

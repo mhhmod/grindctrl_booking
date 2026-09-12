@@ -26,6 +26,11 @@ import {
   reSyncKnowledge,
 } from '@/lib/messenger/knowledge';
 import {
+  addCannedReply as insertCannedReply,
+  removeCannedReply,
+  setCannedReplyStatus,
+} from '@/lib/messenger/canned-replies';
+import {
   listConversationAttachments,
   signAttachmentUrls,
   type TriageResult,
@@ -211,6 +216,54 @@ export async function syncKnowledge(siteId: string, entryId: string): Promise<Ac
     // "url" as part of a longer identifier (e.g. "source_url").
     const friendly = /\b(https?|url|page|readable)\b/i.test(raw) ? raw : undefined;
     return fail(friendly ? new Error(friendly) : error);
+  }
+}
+
+/* ── Canned replies ────────────────────────────────────────────────── */
+
+export async function addCannedReply(
+  siteId: string,
+  title: string,
+  content: string,
+): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    if (!siteId) return { ok: false, error: 'Missing site.' };
+    const site = await requireOwnedSite(userId, siteId);
+    if (!title.trim() || !content.trim()) return { ok: false, error: 'Title and content are required.' };
+    await insertCannedReply({ site, actorClerkUserId: userId, title, content });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true, message: 'Canned reply added.' };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function updateCannedReplyStatus(
+  siteId: string,
+  replyId: string,
+  status: 'active' | 'disabled',
+): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId);
+    await setCannedReplyStatus({ site, replyId, status });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function deleteCannedReply(siteId: string, replyId: string): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId);
+    await removeCannedReply({ site, actorClerkUserId: userId, replyId });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
   }
 }
 

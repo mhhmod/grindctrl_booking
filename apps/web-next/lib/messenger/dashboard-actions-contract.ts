@@ -22,6 +22,9 @@ export interface MessengerHostActions {
   updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
   deleteKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
   syncKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
+  addCannedReply(siteId: string, title: string, content: string): Promise<ActionResult>;
+  updateCannedReplyStatus(siteId: string, replyId: string, status: 'active' | 'disabled'): Promise<ActionResult>;
+  deleteCannedReply(siteId: string, replyId: string): Promise<ActionResult>;
   fetchConversationMessages(siteId: string, conversationId: string): Promise<FetchMessagesResult | { ok: false }>;
   staffReply(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
   /** Staff-only note: visible in the inbox, never to the shopper, and

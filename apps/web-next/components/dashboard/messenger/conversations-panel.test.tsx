@@ -10,6 +10,9 @@ const takeoverConversation = vi.fn();
 const releaseConversation = vi.fn();
 const closeConversationAction = vi.fn();
 const markConversationRead = vi.fn();
+const addCannedReply = vi.fn();
+const updateCannedReplyStatus = vi.fn();
+const deleteCannedReply = vi.fn();
 
 const actions = {
   fetchConversationMessages,
@@ -19,6 +22,9 @@ const actions = {
   releaseConversation,
   closeConversationAction,
   markConversationRead,
+  addCannedReply,
+  updateCannedReplyStatus,
+  deleteCannedReply,
 };
 
 const CONVERSATIONS: ConversationListItem[] = [
@@ -77,6 +83,122 @@ describe('ConversationsPanel', () => {
     });
 
     expect(staffReply).toHaveBeenCalledWith('site-1', 'conv-1', 'Shipped yesterday!');
+  });
+});
+
+/* Saved replies live with the composer: picking one only pre-fills the
+   draft — it must never send by itself — and the inline manager routes
+   add/disable/delete through the matching host actions. */
+describe('ConversationsPanel canned replies', () => {
+  const REPLIES = [
+    {
+      id: 'r-1',
+      title: 'Shipping times',
+      content: 'We ship in 2 days.',
+      status: 'active' as const,
+      sort_order: 0,
+      updated_at: '2026-08-30T10:00:00.000Z',
+    },
+    {
+      id: 'r-2',
+      title: 'Old policy',
+      content: 'No longer offered.',
+      status: 'disabled' as const,
+      sort_order: 1,
+      updated_at: '2026-08-29T10:00:00.000Z',
+    },
+  ];
+
+  beforeEach(() => {
+    addCannedReply.mockResolvedValue({ ok: true });
+    updateCannedReplyStatus.mockResolvedValue({ ok: true });
+    deleteCannedReply.mockResolvedValue({ ok: true });
+  });
+
+  it('fills the draft with the reply content without sending it', async () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
+    );
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Saved replies' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Shipping times' }));
+
+    expect(screen.getByLabelText('Type your reply…')).toHaveValue('We ship in 2 days.');
+    expect(staffReply).not.toHaveBeenCalled();
+  });
+
+  it('lists only active replies in the insert list', async () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
+    );
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Saved replies' }));
+
+    expect(screen.getByRole('button', { name: 'Shipping times' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Old policy' })).not.toBeInTheDocument();
+  });
+
+  it('hides the insert control entirely when no active reply exists', async () => {
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={CONVERSATIONS}
+        cannedReplies={[REPLIES[1]]}
+        actions={actions}
+      />,
+    );
+    await screen.findByText('Where is my order?');
+
+    expect(screen.queryByRole('button', { name: 'Saved replies' })).not.toBeInTheDocument();
+    // The manager is still discoverable — it is how the first reply gets added.
+    expect(screen.getByRole('button', { name: 'Manage saved replies' })).toBeInTheDocument();
+  });
+
+  it('adds a reply through actions.addCannedReply', async () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={[]} actions={actions} />,
+    );
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
+    fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: 'Shipping' } });
+    fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: 'Ships fast' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Add reply' }));
+    });
+
+    expect(addCannedReply).toHaveBeenCalledWith('site-1', 'Shipping', 'Ships fast');
+  });
+
+  it('toggles a reply status through actions.updateCannedReplyStatus', async () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
+    );
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Disable' }));
+    });
+
+    expect(updateCannedReplyStatus).toHaveBeenCalledWith('site-1', 'r-1', 'disabled');
+  });
+
+  it('deletes a reply through actions.deleteCannedReply', async () => {
+    render(
+      <ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} cannedReplies={REPLIES} actions={actions} />,
+    );
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Manage saved replies' }));
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[0]);
+    });
+
+    expect(deleteCannedReply).toHaveBeenCalledWith('site-1', 'r-1');
   });
 });
 

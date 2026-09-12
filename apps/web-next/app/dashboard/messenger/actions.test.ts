@@ -32,6 +32,10 @@ const mocks = vi.hoisted(() => {
     listConversationAttachments: vi.fn(async () => []),
     signAttachmentUrls: vi.fn(async () => ({})),
     update: vi.fn(),
+    insert: vi.fn(),
+    delete: vi.fn(),
+    /** What .single() resolves to, whenever it is awaited. */
+    singleResult: { current: { data: { id: 'r-1', title: 'Hello', content: 'Hi there', status: 'active', sort_order: 0, updated_at: '2026-01-01T00:00:00.000Z' }, error: null } as { data: unknown; error: unknown } },
     /** What the mocked query chain resolves to, whenever it is awaited. */
     result: { current: { data: [{ id: 'site-1' }], error: null } as { data: unknown[]; error: unknown } },
   };
@@ -69,12 +73,21 @@ vi.mock('@/lib/messenger/db', () => ({
   getMessengerServiceClient: () => ({
     from: () => {
       const builder = {
+        insert(row: Record<string, unknown>) {
+          mocks.insert(row);
+          return builder;
+        },
+        delete() {
+          mocks.delete();
+          return builder;
+        },
         update(patch: Record<string, unknown>) {
           mocks.update(patch);
           return builder;
         },
         eq: () => builder,
         select: () => builder,
+        single: () => Promise.resolve(mocks.singleResult.current),
         then: (resolve: (value: unknown) => unknown) => Promise.resolve(mocks.result.current).then(resolve),
       };
       return builder;
@@ -82,7 +95,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { addInternalNote, fetchConversationMessages, publishConfig, saveDraftSection, setMessengerEnabled, staffReply } from './actions';
+import { addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, publishConfig, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -263,5 +276,81 @@ describe('fetchConversationMessages with notes', () => {
       ],
       attachments: {},
     });
+  });
+});
+
+/* Canned replies go through the real lib module with the PostgREST-shaped
+   db mock above, so the audit action names are asserted for real — the lib
+   owns the write + audit, the server action owns the ownership check. */
+describe('canned reply actions', () => {
+  it('adds a canned reply for an owned site and audits canned_reply_added', async () => {
+    const result = await addCannedReply('site-1', '  Hello  ', '  Hi there  ');
+
+    expect(result).toEqual({ ok: true, message: 'Canned reply added.' });
+    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', 'site-1');
+    expect(mocks.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ widget_site_id: 'site-1', title: 'Hello', content: 'Hi there' }),
+    );
+    expect(mocks.recordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-1', actorClerkUserId: 'user_owner', action: 'canned_reply_added' }),
+    );
+  });
+
+  it('refuses a canned reply add without title or content, before any write', async () => {
+    expect(await addCannedReply('site-1', '  ', 'Hi there')).toEqual({ ok: false, error: 'Title and content are required.' });
+    expect(await addCannedReply('site-1', 'Hello', '   ')).toEqual({ ok: false, error: 'Title and content are required.' });
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('refuses a canned reply add on a site the caller does not own, before any write', async () => {
+    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+
+    const result = await addCannedReply('someone-elses-site', 'Hello', 'Hi there');
+
+    expect(result).toEqual({ ok: false, error: 'Unauthorized' });
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+
+  it('updates a canned reply status for an owned site', async () => {
+    const result = await updateCannedReplyStatus('site-1', 'r-1', 'disabled');
+
+    expect(result).toEqual({ ok: true });
+    expect(mocks.update).toHaveBeenCalledWith({ status: 'disabled' });
+  });
+
+  it('refuses a status update on a site the caller does not own, before any write', async () => {
+    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+
+    const result = await updateCannedReplyStatus('someone-elses-site', 'r-1', 'disabled');
+
+    expect(result.ok).toBe(false);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('deletes a canned reply and audits canned_reply_removed', async () => {
+    const result = await deleteCannedReply('site-1', 'r-1');
+
+    expect(result).toEqual({ ok: true });
+    expect(mocks.delete).toHaveBeenCalled();
+    expect(mocks.recordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-1', action: 'canned_reply_removed', detail: { id: 'r-1' } }),
+    );
+  });
+
+  it('refuses every canned reply mutation when the caller is signed out', async () => {
+    mocks.auth.mockResolvedValue({ userId: null });
+
+    for (const run of [
+      () => addCannedReply('site-1', 'Hello', 'Hi there'),
+      () => updateCannedReplyStatus('site-1', 'r-1', 'active'),
+      () => deleteCannedReply('site-1', 'r-1'),
+    ]) {
+      const result = await run();
+      expect(result.ok).toBe(false);
+    }
+    expect(mocks.requireOwnedSite).not.toHaveBeenCalled();
+    expect(mocks.insert).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.delete).not.toHaveBeenCalled();
   });
 });

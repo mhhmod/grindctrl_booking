@@ -11,6 +11,7 @@ import { PublishBar } from './publish-bar';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerConfig, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
+import type { CannedReply } from '@/lib/messenger/canned-replies';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 
 /* Tabs switch in the client. They used to be links to ?tab=…, so every
@@ -60,6 +61,7 @@ export function MessengerTabs({
   stats,
   conversations,
   knowledge,
+  cannedReplies = [],
   actions,
   hasDraft,
   currentProfileId,
@@ -80,6 +82,7 @@ export function MessengerTabs({
   stats: React.ComponentProps<typeof MessengerOverview>['stats'];
   conversations: ConversationListItem[];
   knowledge: KnowledgeEntry[];
+  cannedReplies?: CannedReply[];
   actions: MessengerHostActions;
   hasDraft: boolean;
   /** Signed-in dashboard viewer's profile id. Absent on the embedded
@@ -164,7 +167,7 @@ export function MessengerTabs({
         />
       )}
       {tab === 'conversations' && (
-        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} actions={actions} currentProfileId={currentProfileId} />
+        <ConversationsPanel locale={locale} siteId={siteId} conversations={conversations} cannedReplies={cannedReplies} actions={actions} currentProfileId={currentProfileId} />
       )}
       {tab === 'installation' && (
         <InstallCard

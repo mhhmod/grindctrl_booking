@@ -79,6 +79,12 @@ export function useStoreChatActions(): MessengerHostActions {
         postJson('/api/shopify/store-chat/knowledge', { op: 'delete', entryId }),
       syncKnowledge: (_siteId, entryId: string) =>
         postJson('/api/shopify/store-chat/knowledge', { op: 'sync', entryId }),
+      addCannedReply: (_siteId, title: string, content: string) =>
+        postJson('/api/shopify/store-chat/canned-replies', { op: 'add', title, content }),
+      updateCannedReplyStatus: (_siteId, replyId: string, status: 'active' | 'disabled') =>
+        postJson('/api/shopify/store-chat/canned-replies', { op: 'status', replyId, status }),
+      deleteCannedReply: (_siteId, replyId: string) =>
+        postJson('/api/shopify/store-chat/canned-replies', { op: 'delete', replyId }),
     }),
     [],
   );
