@@ -2,12 +2,8 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-/* /claim redeems a claim token minted by GET /api/shopify/claim/start (see
-   its route.test.ts for the mint side). The order of operations matters:
-   a dead/forged token must be rejected BEFORE sending anyone through sign-in
-   — see the "expired" tests below — and a successful redemption must
-   redirect with nothing left to swallow the redirect's control-flow throw
-   (see the "does not swallow" test). */
+/* Dead tokens must be rejected before sign-in; successful claims give
+   merchants next steps before they choose to open the dashboard. */
 
 const redirectMock = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -66,6 +62,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'dead' }) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /expired/i })).toBeInTheDocument();
     expect(requireDashboardUser).not.toHaveBeenCalled();
@@ -78,6 +75,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({}) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /expired/i })).toBeInTheDocument();
     expect(requireDashboardUser).not.toHaveBeenCalled();
@@ -98,39 +96,31 @@ describe('ClaimPage', () => {
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
-    redirectMock.mockImplementation(() => {
-      throw Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT' });
-    });
-
-    await expect(
-      ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) }),
-    ).rejects.toThrow('NEXT_REDIRECT');
+    await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
 
     expect(requireDashboardUser).toHaveBeenCalledWith('/claim?token=good-token');
   });
 
-  it('adopts the store when owner emails match case-insensitively and redirects', async () => {
+  it.each([
+    ['en', "You're connected", 'Start with Behaviour to set how chat works, then AI & Knowledge to guide replies. Review customer chats in Conversations. Your changes stay invisible to shoppers until you press Publish to your store.', 'Go to dashboard'],
+    ['ar', 'متجرك متصل الآن', 'ابدأ بتبويب السلوك لضبط الدردشة، ثم الذكاء والمعرفة لتوجيه الردود. راجع دردشات العملاء في المحادثات. لن تظهر تغييراتك للعملاء حتى تضغط على انشر على متجرك.', 'الانتقال إلى لوحة التحكم'],
+  ] as const)('adopts the store and renders next steps without redirecting in %s', async (locale, title, body, action) => {
+    vi.mocked(getRequestLocale).mockResolvedValue(locale);
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
-    redirectMock.mockImplementation(() => {
-      throw Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT' });
-    });
+    redirectMock.mockImplementation(() => { throw new Error('Unexpected redirect'); });
 
-    // The happy path end to end: adopts with the claimed shop, then hands
-    // off to /dashboard/messenger. This does NOT pin redirect() being
-    // outside the try — the catch below rethrows any non-ownership error
-    // regardless of where redirect() sits, so that placement can't be
-    // told apart by a black-box test; "does not swallow an unrelated
-    // error" below already covers the rethrow behaviour this exercises.
-    await expect(
-      ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) }),
-    ).rejects.toThrow('NEXT_REDIRECT');
+    const { container } = render(await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) }));
 
+    expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+    expect(screen.getByText(body)).toBeInTheDocument();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', '/dashboard/messenger');
+    expect(container.querySelector('section')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
     expect(getShopOwnerEmail).toHaveBeenCalledWith('demo.myshopify.com');
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/messenger');
-    expect(redirectMock).toHaveBeenCalledTimes(1);
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 
   it('renders "already connected" and does NOT redirect when the store belongs to another account', async () => {
@@ -140,6 +130,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /already connected/i })).toBeInTheDocument();
     expect(redirectMock).not.toHaveBeenCalled();
@@ -152,6 +143,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
     expect(screen.getByText(/contact support/i)).toBeInTheDocument();
@@ -174,6 +166,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /still connecting/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /try again/i })).toHaveAttribute(
@@ -197,6 +190,7 @@ describe('ClaimPage', () => {
 
     const result = await ClaimPage({ searchParams: Promise.resolve({ token: 'good-token' }) });
     render(result);
+    expect(screen.queryByRole('link', { name: 'Go to dashboard' })).not.toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: /couldn't verify/i })).toBeInTheDocument();
     expect(ensureMessengerSite).not.toHaveBeenCalled();
@@ -206,19 +200,13 @@ describe('ClaimPage', () => {
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });
     vi.mocked(requireDashboardUser).mockResolvedValue('user_1');
     vi.mocked(ensureMessengerSite).mockResolvedValue({ id: 'site-1' } as never);
-    redirectMock.mockImplementation(() => {
-      throw Object.assign(new Error('NEXT_REDIRECT'), { digest: 'NEXT_REDIRECT' });
-    });
-
     // Mirrors the mint-side test in route.test.ts: the shop that gets
     // adopted must be the one proven by the claim token, never one an
     // attacker can put in the URL — even though today's page doesn't read
     // searchParams.shop at all, this guards against that regressing.
-    await expect(
-      ClaimPage({
-        searchParams: Promise.resolve({ token: 'good', shop: 'evil.myshopify.com' }),
-      }),
-    ).rejects.toThrow('NEXT_REDIRECT');
+    await ClaimPage({
+      searchParams: Promise.resolve({ token: 'good', shop: 'evil.myshopify.com' }),
+    });
 
     expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
     expect(ensureMessengerSite).not.toHaveBeenCalledWith('user_1', 'evil.myshopify.com', expect.anything());

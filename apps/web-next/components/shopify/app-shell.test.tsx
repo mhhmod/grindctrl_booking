@@ -28,12 +28,23 @@ vi.mock('@/components/shopify/store-chat-embedded', () => ({ StoreChatEmbedded: 
 
 import { ShopifyAppShell } from './app-shell';
 
+const claimExplanation = 'Opens grindctrl.cloud to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.';
+
 describe('ShopifyAppShell claim button', () => {
   beforeEach(() => {
     ensureShopTokenMock.mockResolvedValue(undefined);
   });
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it.each([
+    ['en', claimExplanation],
+    ['ar', 'يفتح grindctrl.cloud لتسجيل الدخول وإدارة الإعدادات الكاملة من لوحة تحكمك؛ وتستمر دردشة المتجر بالعمل داخل Shopify في كل الأحوال.'],
+  ] as const)('explains the claim while idle in %s', async (locale, explanation) => {
+    render(<ShopifyAppShell locale={locale} />);
+    expect(screen.getByText(explanation)).toBeVisible();
+    await screen.findByTestId('auto-claim-mounted');
   });
 
   it('shows "Already connected" when the store was already linked', async () => {
@@ -43,6 +54,7 @@ describe('ShopifyAppShell claim button', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Claim this store' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent('Already connected');
+    expect(screen.queryByText(claimExplanation)).not.toBeInTheDocument();
   });
 
   it('shows an error message when the claim attempt fails', async () => {
@@ -52,6 +64,7 @@ describe('ShopifyAppShell claim button', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Claim this store' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not connect');
+    expect(screen.queryByText(claimExplanation)).not.toBeInTheDocument();
   });
 
   it('shows neither message after a successful navigation-bound claim', async () => {
@@ -77,11 +90,13 @@ describe('ShopifyAppShell claim button', () => {
     const button = screen.getByRole('button', { name: 'Claim this store' });
     fireEvent.click(button);
     expect(button).toBeDisabled();
+    expect(screen.queryByText(claimExplanation)).not.toBeInTheDocument();
 
     await act(async () => {
       resolveClaim('navigated');
     });
     await waitFor(() => expect(button).not.toBeDisabled());
+    expect(screen.getByText(claimExplanation)).toBeVisible();
   });
 });
 

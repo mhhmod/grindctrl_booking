@@ -18,6 +18,7 @@ const COPY = {
     sections: 'GRINDCTRL sections',
     themeToggle: 'Switch between light and dark',
     claimStore: 'Claim this store',
+    claimExplanation: 'Opens grindctrl.cloud to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.',
     claimAlreadyConnected: 'Already connected',
     claimError: 'Could not connect — try again',
   },
@@ -27,6 +28,7 @@ const COPY = {
     sections: 'أقسام GRINDCTRL',
     themeToggle: 'التبديل بين الوضع الفاتح والداكن',
     claimStore: 'المطالبة بهذا المتجر',
+    claimExplanation: 'يفتح grindctrl.cloud لتسجيل الدخول وإدارة الإعدادات الكاملة من لوحة تحكمك؛ وتستمر دردشة المتجر بالعمل داخل Shopify في كل الأحوال.',
     claimAlreadyConnected: 'متصل بالفعل',
     claimError: 'تعذّر الاتصال — حاول مجدداً',
   },
@@ -60,10 +62,10 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
       {tokenBootstrapped && <AutoClaim locale={locale} />}
-      <header className="flex items-center justify-between gap-3 px-1 pt-1">
+      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 pt-1">
         <BrandLogo size="sm" />
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             <Button
               type="button"
               variant="ghost"
@@ -104,6 +106,11 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
             <Moon className="size-4 dark:hidden" />
           </Button>
         </div>
+        {claimState === 'idle' && (
+          <span className="min-w-0 basis-full text-xs leading-relaxed text-foreground">
+            {t.claimExplanation}
+          </span>
+        )}
       </header>
 
       <nav aria-label={t.sections} className="min-w-0">

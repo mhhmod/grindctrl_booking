@@ -1,7 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { ensureMessengerSite } from '@/lib/messenger/provisioning';
@@ -21,16 +20,15 @@ import { getShopOwnerEmail } from '@/lib/shopify/shop-owner';
    ensureMessengerSite's StoreOwnedByAnotherAccountError is the only outcome
    this page can turn into a friendly page instead of a 500 — see
    app/dashboard/messenger/page.tsx for the same pattern. Everything else
-   must keep propagating, including next/navigation's redirect(), which
-   signals a page change by throwing — that's also why redirect() sits
-   OUTSIDE this try block instead of after ensureMessengerSite inside it: a
-   catch here only tests for one class, but a raw try/catch around a
-   redirect() would still swallow it if this file ever grows a catch-all. */
+   must keep propagating. Successful adoption renders next steps below. */
 
 export const dynamic = 'force-dynamic';
 
 const COPY = {
   en: {
+    successTitle: "You're connected",
+    successBody: 'Start with Behaviour to set how chat works, then AI & Knowledge to guide replies. Review customer chats in Conversations. Your changes stay invisible to shoppers until you press Publish to your store.',
+    goToDashboard: 'Go to dashboard',
     expiredTitle: 'This link has expired',
     expiredBody: 'Reopen GRINDCTRL from your Shopify admin and choose "Claim this store" again.',
     takenTitle: 'This store is already connected',
@@ -51,6 +49,9 @@ const COPY = {
     contactSupport: 'Contact support',
   },
   ar: {
+    successTitle: 'متجرك متصل الآن',
+    successBody: 'ابدأ بتبويب السلوك لضبط الدردشة، ثم الذكاء والمعرفة لتوجيه الردود. راجع دردشات العملاء في المحادثات. لن تظهر تغييراتك للعملاء حتى تضغط على انشر على متجرك.',
+    goToDashboard: 'الانتقال إلى لوحة التحكم',
     expiredTitle: 'انتهت صلاحية هذا الرابط',
     expiredBody: 'أعد فتح GRINDCTRL من لوحة تحكم Shopify واختر "المطالبة بهذا المتجر" مرة أخرى.',
     takenTitle: 'هذا المتجر متصل بالفعل',
@@ -157,5 +158,12 @@ export default async function ClaimPage({
     throw error;
   }
 
-  redirect('/dashboard/messenger');
+  return (
+    <MessagePage
+      locale={locale}
+      title={copy.successTitle}
+      body={copy.successBody}
+      actions={[{ label: copy.goToDashboard, href: '/dashboard/messenger' }]}
+    />
+  );
 }
