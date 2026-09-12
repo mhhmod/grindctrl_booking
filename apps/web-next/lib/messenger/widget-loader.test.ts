@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { HELP_ICON_CURVE, ICON_PATHS, safeColor } from '@/components/dashboard/messenger/launcher-preview';
 
 /* Both bugs covered here were invisible to every other kind of check: the file
    parses, ships, and runs, and the launcher simply ends up in the wrong place.
@@ -118,5 +119,34 @@ describe('storefront widget loader — closing and warm-up', () => {
   it('does not spend a shopper\'s metered data on a panel they may never open', () => {
     expect(loader).toContain('saveData');
     expect(loader).toContain('effectiveType');
+  });
+});
+
+/* launcher-preview.tsx (components/dashboard/messenger/launcher-preview.tsx)
+   is a hand-maintained React mirror of this loader's closed-state launcher —
+   it cannot import from a plain script with no build step, and the reverse
+   is also true, so nothing enforces the two agree beyond code review. This
+   is the cheap check the file's own top comment asks for: if either side's
+   icon paths or color fallback ever drift, one of these fails instead of a
+   merchant just seeing a mismatched preview vs. live store. Not a fix for
+   the duplication itself — that would mean bundling the widget, a real
+   architecture change — only a guardrail against silent drift. */
+describe('storefront widget loader — launcher preview parity', () => {
+  it('draws the chat and message icons with the exact path the dashboard preview uses', () => {
+    expect(loader).toContain('"' + ICON_PATHS.chat + '"');
+    expect(loader).toContain('"' + ICON_PATHS.message + '"');
+  });
+
+  it('draws the help icon with the exact curve the dashboard preview uses', () => {
+    expect(loader).toContain('"' + HELP_ICON_CURVE + '"');
+  });
+
+  it('falls back to the same accent color through the same hex check', () => {
+    expect(loader).toContain('/^#[0-9a-fA-F]{6}$/');
+    expect(loader).toContain("'#2a2826'");
+    // Exercise the actual dashboard-side function so a change to its
+    // behavior (not just its literals) is caught here too.
+    expect(safeColor('#123abc')).toBe('#123abc');
+    expect(safeColor('not-a-color')).toBe('#2a2826');
   });
 });
