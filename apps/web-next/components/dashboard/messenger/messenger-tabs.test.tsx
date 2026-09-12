@@ -35,3 +35,12 @@ it.each([true, undefined])('threads revert availability and actions to Overview:
   render(<MessengerTabs {...props} />);
   expect(overview).toHaveBeenLastCalledWith(expect.objectContaining({ siteId: 'site-1', canRevert: canRevert ?? false, actions: props.actions }));
 });
+
+it.each([true, undefined])('threads disconnect availability and actions to Overview: %s', (canDisconnect) => {
+  const props = {
+    locale: 'en', initialTab: 'overview', siteId: 'site-1',
+    config: { ai: { enabled: false } }, actions: { disconnectSiteAction: vi.fn() }, canDisconnect,
+  } as unknown as React.ComponentProps<typeof MessengerTabs>;
+  render(<MessengerTabs {...props} />);
+  expect(overview).toHaveBeenLastCalledWith(expect.objectContaining({ siteId: 'site-1', canDisconnect: canDisconnect ?? false, actions: props.actions }));
+});

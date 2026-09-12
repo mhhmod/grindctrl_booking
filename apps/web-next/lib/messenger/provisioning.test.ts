@@ -13,6 +13,9 @@ vi.mock('./shop-tenancy', async (importOriginal) => {
 
 import {
   ensureMessengerSite,
+  unclaimSite,
+  wasDisconnectedBySelf,
+  type MessengerSiteView,
   listMessengerSites,
   resolveProvisionedSites,
   shouldEnsureMessengerSite,
@@ -884,5 +887,106 @@ describe('provisioning', () => {
     expect(resolveProvisionedSites(refreshed, ensured)).toEqual(refreshed);
     expect(resolveProvisionedSites([], ensured)).toEqual([ensured]);
     expect(resolveProvisionedSites([], ensured)).not.toHaveLength(0);
+  });
+});
+
+
+describe('unclaimSite', () => {
+  const site: MessengerSiteView = {
+    id: 's-claimed', workspace_id: 'w-merchant', domain: 'demo.myshopify.com',
+    name: 'Demo', embed_key: 'gc_existing', status: 'active',
+    settings_json: { messenger_ai: { enabled: true } }, settings_version: 4,
+    settings_draft: { custom: true }, hasDraft: true,
+  };
+
+  it('returns the same site to its domain-derived synthetic workspace, changing only ownership, and stamps who disconnected it', async () => {
+    const row = { ...site, created_by_profile_id: 'p-merchant' };
+    const { client, tables, calls, updates } = stubClient({
+      profiles: { rows: [] }, workspaces: { rows: [] }, widget_sites: { rows: [row] },
+    });
+    setMessengerServiceClientForTests(client);
+    expect(await unclaimSite(site, 'p-merchant')).toEqual({ ...site, workspace_id: 'workspaces-1' });
+    expect(tables.profiles.rows[0]).toMatchObject({ clerk_user_id: 'shop-demo.myshopify.com' });
+    expect(tables.workspaces.rows[0]).toMatchObject({ owner_profile_id: 'profiles-1' });
+    expect(updates[0]).toEqual({
+      table: 'widget_sites', patch: { workspace_id: 'workspaces-1', created_by_profile_id: 'profiles-1' },
+      filters: [['id', site.id], ['workspace_id', site.workspace_id]],
+    });
+    // Second, best-effort write: the disconnect marker merges into
+    // settings_json without disturbing any existing key already there.
+    expect(updates[1]).toEqual({
+      table: 'widget_sites',
+      patch: { settings_json: { ...site.settings_json, _disconnectedByProfileId: 'p-merchant' } },
+      filters: [['id', site.id]],
+    });
+    expect(calls).toEqual(['rpc.bootstrap_profile', 'rpc.bootstrap_workspace', 'widget_sites.update', 'widget_sites.update']);
+    expect(tables.widget_sites.rows).toEqual([{
+      ...site, workspace_id: 'workspaces-1', created_by_profile_id: 'profiles-1',
+      settings_json: { ...site.settings_json, _disconnectedByProfileId: 'p-merchant' },
+    }]);
+  });
+
+  it('reports a concurrent move with a plain generic error and preserves the winning owner', async () => {
+    const row = { ...site, workspace_id: 'w-winner' };
+    const { client, tables } = stubClient({
+      profiles: { rows: [] }, workspaces: { rows: [] }, widget_sites: { rows: [row] },
+    });
+    setMessengerServiceClientForTests(client);
+    const error = await unclaimSite(site, 'p-merchant').catch((error: unknown) => error);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).constructor).toBe(Error);
+    expect((error as Error).message).toBe('Store state changed. Refresh and try again.');
+    expect(tables.widget_sites.rows).toEqual([row]);
+  });
+
+  it('rejects a domain-less draft before any bootstrap or write', async () => {
+    const { client, calls } = stubClient({});
+    setMessengerServiceClientForTests(client);
+    await expect(unclaimSite({ ...site, domain: null }, 'p-merchant')).rejects.toThrow('Cannot disconnect a site with no domain.');
+    expect(calls).toEqual([]);
+  });
+
+});
+
+describe('wasDisconnectedBySelf', () => {
+  it('is true only when the site still carries this exact profile\'s disconnect marker', async () => {
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1' }] },
+      widget_sites: { rows: [{ id: 's-1', domain: 'demo.myshopify.com', settings_json: { _disconnectedByProfileId: 'p-1' } }] },
+    });
+    setMessengerServiceClientForTests(client);
+    expect(await wasDisconnectedBySelf('demo.myshopify.com', 'user_1')).toBe(true);
+  });
+
+  it('is false when the marker belongs to a different profile', async () => {
+    const { client } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1' }] },
+      widget_sites: { rows: [{ id: 's-1', domain: 'demo.myshopify.com', settings_json: { _disconnectedByProfileId: 'p-other' } }] },
+    });
+    setMessengerServiceClientForTests(client);
+    expect(await wasDisconnectedBySelf('demo.myshopify.com', 'user_1')).toBe(false);
+  });
+
+  it('is false, not throwing, when no marker, no site, or no profile exists', async () => {
+    const { client: noMarker } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1' }] },
+      widget_sites: { rows: [{ id: 's-1', domain: 'demo.myshopify.com', settings_json: {} }] },
+    });
+    setMessengerServiceClientForTests(noMarker);
+    expect(await wasDisconnectedBySelf('demo.myshopify.com', 'user_1')).toBe(false);
+
+    const { client: noProfile } = stubClient({
+      profiles: { rows: [] },
+      widget_sites: { rows: [{ id: 's-1', domain: 'demo.myshopify.com', settings_json: { _disconnectedByProfileId: 'p-1' } }] },
+    });
+    setMessengerServiceClientForTests(noProfile);
+    expect(await wasDisconnectedBySelf('demo.myshopify.com', 'user_1')).toBe(false);
+
+    const { client: noSite } = stubClient({
+      profiles: { rows: [{ id: 'p-1', clerk_user_id: 'user_1' }] },
+      widget_sites: { rows: [] },
+    });
+    setMessengerServiceClientForTests(noSite);
+    expect(await wasDisconnectedBySelf('demo.myshopify.com', 'user_1')).toBe(false);
   });
 });

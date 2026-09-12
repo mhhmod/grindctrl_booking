@@ -3,7 +3,7 @@ import 'server-only';
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from './db';
 import { isPlaceholderEmail, PLACEHOLDER_EMAIL_SUFFIX } from './emails';
-import { canonicalShopDomain, findSiteByDomain, isShopProfileId, StoreOwnedByAnotherAccountError } from './shop-tenancy';
+import { canonicalShopDomain, findSiteByDomain, isShopProfileId, shopProfileId, StoreOwnedByAnotherAccountError } from './shop-tenancy';
 import type { WidgetSiteRow } from './types';
 
 export { isPlaceholderEmail };
@@ -230,6 +230,93 @@ async function adoptSite(
   // between our read and our write — not a state we can silently retry.
   if (!adopted.data) throw new StoreOwnedByAnotherAccountError(domain);
   return toView(adopted.data as unknown as Record<string, unknown>);
+}
+
+/** Reverses adoptSite: returns a claimed store to the shop's own synthetic
+ *  workspace so it can be reclaimed later, exactly as if freshly installed.
+ *  Never deletes anything — every conversation, knowledge entry, canned
+ *  reply, and setting stays on the same widget_sites row (its id never
+ *  changes); only workspace_id (who currently manages it from the
+ *  dashboard) moves. ensureShopOwnedSite already treats "owned by the
+ *  shop's own synthetic profile" and "owned by a real merchant" the same
+ *  way (reads by domain, never insists on owning it), so the embedded
+ *  Shopify admin surface keeps working through this with no special-
+ *  casing needed there — only the merchant's grindctrl.cloud dashboard
+ *  access changes. */
+export async function unclaimSite(
+  site: MessengerSiteView,
+  disconnectedByProfileId: string,
+): Promise<MessengerSiteView | null> {
+  if (!site.domain) throw new Error('Cannot disconnect a site with no domain.');
+  const shopProfile = await ensureProfile(shopProfileId(site.domain), null);
+  const shopWorkspaceId = await ensureWorkspace(shopProfile.id);
+  let unclaimed: MessengerSiteView;
+  try {
+    unclaimed = await adoptSite(site, shopWorkspaceId, shopProfile.id, site.domain);
+  } catch (error) {
+    // The CAS found the site moved since our read. Adoption's ownership
+    // wording is misleading in this direction; report the state change.
+    if (error instanceof StoreOwnedByAnotherAccountError) {
+      throw new Error('Store state changed. Refresh and try again.');
+    }
+    throw error;
+  }
+
+  /* Stamped as a best-effort follow-up, not part of adoptSite's own CAS:
+     this marker only stops app/dashboard/messenger/page.tsx's own silent
+     "give a first-time visitor a site immediately" heuristic from handing
+     this exact merchant their disconnected store back the moment Try-On
+     reports the domain still installed — see wasDisconnectedBySelf below.
+     It never gates a real reclaim: app/claim/page.tsx calls
+     ensureMessengerSite directly and does not consult it, so a merchant
+     who deliberately wants the store back always can. A failure here must
+     never turn a successful disconnect into a user-visible error — the
+     ownership transfer above already succeeded and is the part that
+     matters; worst case on failure, the known pre-existing auto-reclaim
+     heuristic just isn't guarded this one time. */
+  try {
+    const supabase = getMessengerServiceClient();
+    const currentSettings = (unclaimed.settings_json ?? {}) as Record<string, unknown>;
+    await supabase
+      .from('widget_sites')
+      .update({ settings_json: { ...currentSettings, _disconnectedByProfileId: disconnectedByProfileId } })
+      .eq('id', unclaimed.id);
+  } catch (error) {
+    console.warn('[messenger] disconnect marker write failed:', error instanceof Error ? error.message : error);
+  }
+
+  return unclaimed;
+}
+
+/** Used only by page.tsx's auto-provision heuristic (never by the real
+ *  /claim flow) to stop it from silently re-adopting a store this exact
+ *  merchant just disconnected, the moment Try-On reports the domain still
+ *  installed for their account — see unclaimSite's own comment above for
+ *  why the marker exists and why a real reclaim is unaffected by it.
+ *  Soft-fails to false: a lookup failure must never block legitimate
+ *  auto-provisioning for a genuinely new merchant. */
+export async function wasDisconnectedBySelf(domain: string, clerkUserId: string): Promise<boolean> {
+  try {
+    const supabase = getMessengerServiceClient();
+    const profileRes = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('clerk_user_id', clerkUserId)
+      .maybeSingle();
+    if (profileRes.error || !profileRes.data) return false;
+
+    const siteRes = await supabase
+      .from('widget_sites')
+      .select('settings_json')
+      .eq('domain', canonicalShopDomain(domain))
+      .maybeSingle();
+    if (siteRes.error || !siteRes.data) return false;
+
+    const settings = (siteRes.data.settings_json ?? {}) as Record<string, unknown>;
+    return settings._disconnectedByProfileId === (profileRes.data as { id: string }).id;
+  } catch {
+    return false;
+  }
 }
 
 async function reconcileDomainlessOrphans(workspaceId: string, keepSiteId: string): Promise<void> {

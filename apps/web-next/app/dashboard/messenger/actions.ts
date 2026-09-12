@@ -6,6 +6,7 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
 import {
   requireOwnedSite as loadOwnedSite,
   getProfileId,
+  unclaimSite,
   UnauthorizedError,
 } from '@/lib/messenger/provisioning';
 import {
@@ -125,6 +126,26 @@ export async function revertConfigAction(siteId: string): Promise<ActionResult> 
     const result = await revertConfigForSite(site, userId);
     if (result.ok) revalidatePath('/dashboard/messenger');
     return result;
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function disconnectSiteAction(siteId: string): Promise<ActionResult> {
+  try {
+    const userId = await currentUser();
+    const site = await requireOwnedSite(userId, siteId);
+    const profileId = await getProfileId(userId);
+    const result = await unclaimSite(site, profileId);
+    if (!result) throw new Error('Store state changed. Refresh and try again.');
+    await recordAudit({
+      siteId,
+      actorClerkUserId: userId,
+      action: 'store_disconnected',
+      detail: { domain: site.domain },
+    });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
   } catch (error) {
     return fail(error);
   }

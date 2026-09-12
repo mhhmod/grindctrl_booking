@@ -9,6 +9,7 @@ import {
   listMessengerSites,
   resolveProvisionedSites,
   shouldEnsureMessengerSite,
+  wasDisconnectedBySelf,
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { diffMessengerConfig, mergeDraftOverPublished, resolveMessengerConfig } from '@/lib/messenger/config';
@@ -94,6 +95,17 @@ export default async function MessengerPage({
   } catch {
     // Try-On lookup is optional here.
   }
+  if (domain && (await wasDisconnectedBySelf(domain, userId))) {
+    // This merchant deliberately disconnected this exact store (see
+    // disconnectSiteAction / unclaimSite). Without this, the very next
+    // load of this page would silently hand it right back the moment
+    // Try-On still reports the domain installed — undoing the disconnect
+    // with no warning. Only a real reclaim (app/claim/page.tsx, which
+    // re-verifies the Shopify owner email) should bring it back; treat
+    // Try-On's hint as absent so the block below falls through to its
+    // existing "give a first-time merchant a blank site" path instead.
+    domain = null;
+  }
   if (shouldEnsureMessengerSite(sites, domain)) {
     try {
       const ensured = await ensureMessengerSite(userId, domain, domain ?? undefined);
@@ -134,6 +146,7 @@ export default async function MessengerPage({
     sites.find((site) => site.id === params.site) ?? sites.find((site) => site.domain) ?? sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
   const canRevert = Boolean((selected.settings_json as Record<string, unknown>)._previousSettings);
+  const canDisconnect = Boolean(selected.domain);
   const publishedConfig = resolveMessengerConfig(selected.settings_json);
   const configDiff = diffMessengerConfig(publishedConfig, config);
 
@@ -268,6 +281,7 @@ export default async function MessengerPage({
         actions={messengerActions}
         hasDraft={hasDraft}
         canRevert={canRevert}
+        canDisconnect={canDisconnect}
         configDiff={configDiff}
         currentProfileId={currentProfileId}
         assignableMembers={assignableMembers}

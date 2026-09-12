@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
     UnauthorizedError,
     auth: vi.fn(),
     requireOwnedSite: vi.fn(),
+    unclaimSite: vi.fn(),
     getProfileId: vi.fn(async () => 'profile-1'),
     recordAudit: vi.fn(async () => {}),
     getConversationForSite: vi.fn(),
@@ -51,6 +52,7 @@ vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/messenger/provisioning', () => ({
   requireOwnedSite: mocks.requireOwnedSite,
+  unclaimSite: mocks.unclaimSite,
   getProfileId: mocks.getProfileId,
   UnauthorizedError: mocks.UnauthorizedError,
 }));
@@ -102,7 +104,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, revertConfigAction, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
+import { disconnectSiteAction, assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, revertConfigAction, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -486,5 +488,43 @@ describe('revertConfigAction', () => {
     expect((await revertConfigAction(SITE.id)).ok).toBe(false);
     if (reason !== 'conflict') expect(mocks.update).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('disconnectSiteAction', () => {
+  beforeEach(() => { mocks.unclaimSite.mockResolvedValue({ ...SITE, workspace_id: 'ws-shop' }); });
+
+  it('authorizes and rate checks before unclaiming, then audits and revalidates', async () => {
+    expect(await disconnectSiteAction(SITE.id)).toEqual({ ok: true });
+    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', SITE.id);
+    expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
+    expect(mocks.unclaimSite).toHaveBeenCalledExactlyOnceWith(SITE, 'profile-1');
+    expect(mocks.requireOwnedSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
+    expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
+    expect(mocks.recordAudit).toHaveBeenCalledExactlyOnceWith({ siteId: SITE.id, actorClerkUserId: 'user_owner', action: 'store_disconnected', detail: { domain: SITE.domain } });
+    expect(mocks.unclaimSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.recordAudit.mock.invocationCallOrder[0]);
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith('/dashboard/messenger');
+    expect(mocks.recordAudit.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(revalidatePath).mock.invocationCallOrder[0]);
+  });
+
+  it.each(['signed out', 'ownership', 'rate limit'])('blocks %s before unclaiming or auditing', async (reason) => {
+    if (reason === 'signed out') mocks.auth.mockResolvedValue({ userId: null });
+    if (reason === 'ownership') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'rate limit') vi.mocked(requireMerchantRateLimit).mockRejectedValue(new RequestRateLimitError(503, 30));
+    expect((await disconnectSiteAction(SITE.id)).ok).toBe(false);
+    expect(mocks.unclaimSite).not.toHaveBeenCalled();
+    expect(mocks.recordAudit).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([new Error('private database detail'), null])('maps failed or missing transfer through fail without auditing success: %s', async (outcome) => {
+    if (outcome) mocks.unclaimSite.mockRejectedValue(outcome);
+    else mocks.unclaimSite.mockResolvedValue(null);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await disconnectSiteAction(SITE.id)).toEqual({ ok: false, error: 'Action failed. Please try again.' });
+    expect(mocks.recordAudit).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+    log.mockRestore();
   });
 });

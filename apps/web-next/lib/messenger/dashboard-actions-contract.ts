@@ -18,6 +18,8 @@ export interface MessengerHostActions {
   saveDraftSection(siteId: string, section: MessengerSection, payload: object): Promise<ActionResult>;
   publishConfig(siteId: string): Promise<ActionResult>;
   revertConfigAction(siteId: string): Promise<ActionResult>;
+  /** Dashboard ownership action; embedded Shopify hosts omit it. */
+  disconnectSiteAction?(siteId: string): Promise<ActionResult>;
   setMessengerEnabled(siteId: string, enabled: boolean): Promise<ActionResult>;
   addKnowledge(formData: FormData): Promise<ActionResult>;
   updateKnowledgeStatus(siteId: string, entryId: string, status: 'active' | 'disabled'): Promise<ActionResult>;

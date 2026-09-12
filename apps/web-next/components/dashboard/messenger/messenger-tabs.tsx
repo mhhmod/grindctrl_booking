@@ -66,6 +66,7 @@ export function MessengerTabs({
   actions,
   hasDraft,
   canRevert = false,
+  canDisconnect = false,
   configDiff = [],
   currentProfileId,
   assignableMembers = [],
@@ -90,6 +91,7 @@ export function MessengerTabs({
   actions: MessengerHostActions;
   hasDraft: boolean;
   canRevert?: boolean;
+  canDisconnect?: boolean;
   /** Supplied by the dashboard; embedded hosts can omit the review. */
   configDiff?: MessengerConfigSectionDiff[];
   /** Signed-in dashboard viewer's profile id. Absent on the embedded
@@ -136,6 +138,7 @@ export function MessengerTabs({
           locale={locale}
           siteId={siteId}
           canRevert={canRevert}
+          canDisconnect={canDisconnect}
           actions={actions}
           siteName={siteName}
           domain={domain}

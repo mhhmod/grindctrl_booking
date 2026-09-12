@@ -50,6 +50,12 @@ const COPY = {
     revertConfirm: 'Restore the previous published version? This cannot be undone.',
     reverted: 'Reverted — your store is serving the previous version again.',
     revertFailed: 'Could not revert. Please try again.',
+    disconnectAction: 'Disconnect this store',
+    disconnectNote: 'Remove this store from your dashboard. Store Chat in Shopify and all store data stay in place.',
+    disconnecting: 'Disconnecting…',
+    disconnectConfirm: 'Disconnect this store from your grindctrl.cloud dashboard? This removes your dashboard access to this store. Store Chat keeps running in your Shopify admin exactly as before. Nothing is deleted: all conversations, knowledge, saved replies and settings stay with the store. You, or anyone with access to that Shopify admin, can reconnect it later through the normal claim flow and regain access to everything. If this was your only store, your dashboard may show a new, blank “My store” draft.',
+    disconnected: 'Store disconnected — your dashboard access has been removed. Nothing was deleted.',
+    disconnectFailed: 'Could not disconnect. Please try again.',
     conversations: 'Conversations · 7 days',
     aiResolved: 'Closed by AI',
     handedOff: 'Needed your team',
@@ -82,6 +88,12 @@ const COPY = {
     revertConfirm: 'هل تريد استعادة الإصدار المنشور السابق؟ لا يمكن التراجع عن هذه العملية.',
     reverted: 'تمت الاستعادة — متجرك يعرض الإصدار السابق مجدداً.',
     revertFailed: 'تعذرت الاستعادة. حاول مرة أخرى.',
+    disconnectAction: 'فصل هذا المتجر',
+    disconnectNote: 'أزل هذا المتجر من لوحة تحكمك. ستبقى دردشة المتجر في Shopify وجميع بيانات المتجر كما هي.',
+    disconnecting: 'جارٍ الفصل…',
+    disconnectConfirm: 'هل تريد فصل هذا المتجر عن لوحة تحكمك في grindctrl.cloud؟ سيُزال وصولك إلى هذا المتجر من لوحة التحكم. ستستمر دردشة المتجر في العمل داخل لوحة إدارة Shopify كما كانت تماماً. لن يُحذف أي شيء: ستبقى جميع المحادثات والمعرفة والردود المحفوظة والإعدادات مرتبطة بالمتجر. يمكنك أنت، أو أي شخص لديه وصول إلى لوحة إدارة Shopify لهذا المتجر، إعادة ربطه لاحقاً عبر خطوات المطالبة المعتادة واستعادة الوصول إلى كل شيء. إذا كان هذا متجرك الوحيد، فقد تعرض لوحة تحكمك مسودة جديدة وفارغة باسم «متجري».',
+    disconnected: 'تم فصل المتجر — أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.',
+    disconnectFailed: 'تعذر فصل المتجر. حاول مرة أخرى.',
     conversations: 'المحادثات · ٧ أيام',
     aiResolved: 'أُغلقت بالذكاء الاصطناعي',
     handedOff: 'احتاجت فريقك',
@@ -98,6 +110,7 @@ export function MessengerOverview({
   siteName,
   siteId,
   canRevert = false,
+  canDisconnect = false,
   actions,
   domain,
   active,
@@ -111,7 +124,8 @@ export function MessengerOverview({
   siteName: string;
   siteId?: string;
   canRevert?: boolean;
-  actions?: Pick<MessengerHostActions, 'revertConfigAction'>;
+  canDisconnect?: boolean;
+  actions?: Pick<MessengerHostActions, 'revertConfigAction' | 'disconnectSiteAction'>;
   domain: string | null;
   active: boolean;
   aiEnabled: boolean;
@@ -149,6 +163,35 @@ export function MessengerOverview({
           : { ok: false, text: outcome.error || t.revertFailed });
       } catch {
         setResult({ ok: false, text: t.revertFailed });
+      }
+    });
+  }
+
+  const [disconnectPending, startDisconnectTransition] = useTransition();
+  const [disconnectResult, setDisconnectResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const previousDisconnectState = useRef({ siteId, domain, canDisconnect });
+  useEffect(() => {
+    const before = previousDisconnectState.current;
+    // Keep the received success while props catch up; reset for another
+    // store or when this store becomes eligible again after reconnecting.
+    if (siteId !== before.siteId || domain !== before.domain || (canDisconnect && !before.canDisconnect)) {
+      setDisconnectResult(null);
+    }
+    previousDisconnectState.current = { siteId, domain, canDisconnect };
+  }, [siteId, domain, canDisconnect]);
+
+  function disconnect() {
+    const action = actions?.disconnectSiteAction;
+    if (!action || !siteId || !domain || !canDisconnect || disconnectPending || !window.confirm(t.disconnectConfirm)) return;
+    setDisconnectResult(null);
+    startDisconnectTransition(async () => {
+      try {
+        const outcome = await action(siteId);
+        setDisconnectResult(outcome.ok
+          ? { ok: true, text: t.disconnected }
+          : { ok: false, text: outcome.error || t.disconnectFailed });
+      } catch {
+        setDisconnectResult({ ok: false, text: t.disconnectFailed });
       }
     });
   }
@@ -213,6 +256,36 @@ export function MessengerOverview({
           )}
         </Fact>
       </div>
+
+      {canDisconnect && domain && siteId && actions?.disconnectSiteAction && (
+        <section className="min-w-0 rounded-xl border border-destructive/30 bg-card p-4 sm:p-5">
+          <h2 className="break-words text-sm font-semibold">{t.disconnectAction}</h2>
+          <p className="mt-1 max-w-prose break-words text-sm leading-relaxed text-muted-foreground">
+            {t.disconnectNote}
+          </p>
+          {/* Success is newer than eligibility until the dashboard refreshes. */}
+          {!disconnectResult?.ok && (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="mt-3 h-auto min-h-11 max-w-full whitespace-normal break-words py-2"
+              disabled={disconnectPending}
+              onClick={disconnect}
+            >
+              {disconnectPending ? t.disconnecting : t.disconnectAction}
+            </Button>
+          )}
+          {disconnectResult && (
+            <p
+              role={disconnectResult.ok ? 'status' : 'alert'}
+              className={`mt-2 text-xs [overflow-wrap:anywhere] ${disconnectResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'}`}
+            >
+              {disconnectResult.text}
+            </p>
+          )}
+        </section>
+      )}
 
       {stats && stats.conversations7d > 0 ? (
         <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-6">
