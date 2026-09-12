@@ -12,6 +12,7 @@ import {
   listMessages,
   markConversationRead,
   recordAudit,
+  resolveAssigneeNames,
   returnConversationToAi,
   takeOverConversation,
 } from '@/lib/messenger/conversations';
@@ -20,6 +21,7 @@ import { listConversationAttachments, signAttachmentUrls } from '@/lib/messenger
 type ThreadBody =
   | { op: 'messages'; conversationId: string }
   | { op: 'reply'; conversationId: string; text: string }
+  | { op: 'addNote'; conversationId: string; text: string }
   | { op: 'takeover'; conversationId: string }
   | { op: 'markRead'; conversationId: string }
   | { op: 'release'; conversationId: string }
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
   if (body.op === 'messages') {
     try {
       const [messages, rows] = await Promise.all([
-        listMessages(conversation.id, { limit: 200 }),
+        listMessages(conversation.id, { limit: 200, includeInternal: true }),
         listConversationAttachments(conversation.id),
       ]);
       const linked = rows.filter((row) => row.message_id);
@@ -82,6 +84,10 @@ export async function POST(request: NextRequest) {
         const url = signed[row.storage_path];
         if (url) attachments[row.message_id as string] = { url, mime: row.mime, triage: row.triage };
       }
+      const names = await resolveAssigneeNames(
+        site.workspace_id,
+        messages.filter((m) => m.metadata.internal === true).map((m) => m.metadata.noteAuthorProfileId),
+      );
       return NextResponse.json({
         ok: true,
         status: conversation.status,
@@ -91,6 +97,11 @@ export async function POST(request: NextRequest) {
           content: m.content,
           createdAt: m.created_at,
           author: m.metadata.author ?? (m.role === 'assistant' ? 'ai' : undefined),
+          internal: m.metadata.internal === true ? true : undefined,
+          noteAuthorName:
+            m.metadata.internal === true && m.metadata.noteAuthorProfileId
+              ? names[m.metadata.noteAuthorProfileId] ?? undefined
+              : undefined,
         })),
         attachments,
       });
@@ -116,6 +127,27 @@ export async function POST(request: NextRequest) {
           siteId: site.id,
           actorClerkUserId,
           action: 'conversation_taken_over',
+          detail: { conversationId: conversation.id },
+        });
+        return NextResponse.json({ ok: true });
+      }
+      case 'addNote': {
+        const trimmed = body.text.trim().slice(0, 2000);
+        if (!trimmed) return NextResponse.json({ ok: false, error: 'Note is empty.' }, { status: 400 });
+        /* Same shared shop identity as takeover/reply: an embedded session
+           proves the shop, never the staff member, so the note is attributed
+           to the shop's assignee profile, not a specific teammate. No
+           takeover, no status change — a note is not a turn in the thread. */
+        await appendMessage({
+          conversationId: conversation.id,
+          role: 'system',
+          content: trimmed,
+          metadata: { internal: true, noteAuthorProfileId: await getSiteAssigneeProfileId(site.workspace_id) },
+        });
+        await recordAudit({
+          siteId: site.id,
+          actorClerkUserId,
+          action: 'internal_note_added',
           detail: { conversationId: conversation.id },
         });
         return NextResponse.json({ ok: true });

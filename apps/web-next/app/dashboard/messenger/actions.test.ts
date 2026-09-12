@@ -27,6 +27,10 @@ const mocks = vi.hoisted(() => {
     getConversationForSite: vi.fn(),
     takeOverConversation: vi.fn(),
     appendMessage: vi.fn(async () => ({ message: { id: 'm1' }, replayed: false })),
+    listMessages: vi.fn(async (): Promise<Array<{ id: string; role: string; content: string; created_at: string; metadata: Record<string, unknown> }>> => []),
+    resolveAssigneeNames: vi.fn(async (): Promise<Record<string, string>> => ({})),
+    listConversationAttachments: vi.fn(async () => []),
+    signAttachmentUrls: vi.fn(async () => ({})),
     update: vi.fn(),
     /** What the mocked query chain resolves to, whenever it is awaited. */
     result: { current: { data: [{ id: 'site-1' }], error: null } as { data: unknown[]; error: unknown } },
@@ -50,8 +54,14 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     getConversationForSite: mocks.getConversationForSite,
     takeOverConversation: mocks.takeOverConversation,
     appendMessage: mocks.appendMessage,
+    listMessages: mocks.listMessages,
+    resolveAssigneeNames: mocks.resolveAssigneeNames,
   };
 });
+vi.mock('@/lib/messenger/attachments', () => ({
+  listConversationAttachments: mocks.listConversationAttachments,
+  signAttachmentUrls: mocks.signAttachmentUrls,
+}));
 /* Minimal PostgREST-shaped builder: every method chains, and awaiting it at
    any point yields the configured result — actions await after .eq() or
    after .select(), and both must work. */
@@ -72,7 +82,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { publishConfig, saveDraftSection, setMessengerEnabled, staffReply } from './actions';
+import { addInternalNote, fetchConversationMessages, publishConfig, saveDraftSection, setMessengerEnabled, staffReply } from './actions';
 
 const SITE = {
   id: 'site-1',
@@ -146,8 +156,7 @@ describe('messenger server actions — authorization', () => {
   });
 });
 
-describe('publishConfig', () => {
-  it('refuses to publish an empty draft', async () => {
+describe('publishConfig', () => {  it('refuses to publish an empty draft', async () => {
     mocks.requireOwnedSite.mockResolvedValue({ ...SITE, settings_draft: null });
 
     const result = await publishConfig('site-1');
@@ -174,5 +183,85 @@ describe('publishConfig', () => {
 
     expect(result.ok).toBe(false);
     expect(result).toHaveProperty('error', expect.stringMatching(/refresh/i));
+  });
+});
+
+/* A staff note is metadata about the conversation, not a turn in it: it
+   must land as a role:'system' + metadata.internal row, must not take over
+   the thread or change its status, and the moderator read must resolve the
+   author id to a display name without ever leaking the raw profile id. */
+describe('addInternalNote', () => {
+  beforeEach(() => {
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', status: 'handoff_active' });
+  });
+
+  it('appends a system/internal note without taking over, and audits it', async () => {
+    const result = await addInternalNote('site-1', 'conv-1', '  VIP — comp shipping  ');
+
+    expect(result).toEqual({ ok: true });
+    expect(mocks.appendMessage).toHaveBeenCalledWith({
+      conversationId: 'conv-1',
+      role: 'system',
+      content: 'VIP — comp shipping',
+      metadata: { internal: true, noteAuthorProfileId: 'profile-1' },
+    });
+    expect(mocks.takeOverConversation).not.toHaveBeenCalled();
+    expect(mocks.recordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-1', action: 'internal_note_added' }),
+    );
+  });
+
+  it('refuses an empty note', async () => {
+    const result = await addInternalNote('site-1', 'conv-1', '   ');
+
+    expect(result.ok).toBe(false);
+    expect(mocks.appendMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchConversationMessages with notes', () => {
+  it('reads with includeInternal and resolves the note author name', async () => {
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', status: 'open' });
+    mocks.listMessages.mockResolvedValue([
+      { id: 'm-1', role: 'user', content: 'hi', created_at: '2026-08-30T10:00:00.000Z', metadata: {} },
+      {
+        id: 'm-2',
+        role: 'system',
+        content: 'VIP — comp shipping',
+        created_at: '2026-08-30T10:01:00.000Z',
+        metadata: { internal: true, noteAuthorProfileId: 'profile-9' },
+      },
+    ]);
+    mocks.resolveAssigneeNames.mockResolvedValue({ 'profile-9': 'Sara Khan' });
+
+    const result = await fetchConversationMessages('site-1', 'conv-1');
+
+    expect(mocks.listMessages).toHaveBeenCalledWith('conv-1', { limit: 200, includeInternal: true });
+    expect(mocks.resolveAssigneeNames).toHaveBeenCalledWith('ws-1', ['profile-9']);
+    expect(result).toEqual({
+      ok: true,
+      status: 'open',
+      messages: [
+        {
+          id: 'm-1',
+          role: 'user',
+          content: 'hi',
+          createdAt: '2026-08-30T10:00:00.000Z',
+          author: undefined,
+          internal: undefined,
+          noteAuthorName: undefined,
+        },
+        {
+          id: 'm-2',
+          role: 'system',
+          content: 'VIP — comp shipping',
+          createdAt: '2026-08-30T10:01:00.000Z',
+          author: undefined,
+          internal: true,
+          noteAuthorName: 'Sara Khan',
+        },
+      ],
+      attachments: {},
+    });
   });
 });

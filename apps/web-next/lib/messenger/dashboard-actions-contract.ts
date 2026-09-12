@@ -5,7 +5,7 @@ import type { MessengerSection } from './config';
 export interface FetchMessagesResult {
   ok: true;
   status: string;
-  messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string }>;
+  messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string }>;
   attachments: Record<string, { url: string; mime: string; triage: TriageResult | null }>;
 }
 
@@ -24,6 +24,10 @@ export interface MessengerHostActions {
   syncKnowledge(siteId: string, entryId: string): Promise<ActionResult>;
   fetchConversationMessages(siteId: string, conversationId: string): Promise<FetchMessagesResult | { ok: false }>;
   staffReply(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
+  /** Staff-only note: visible in the inbox, never to the shopper, and
+   *  never part of the conversation turn-taking (no takeover, no status
+   *  change, no notification). */
+  addInternalNote(siteId: string, conversationId: string, text: string): Promise<ActionResult>;
   takeoverConversation(siteId: string, conversationId: string): Promise<ActionResult>;
   /** Marks a conversation as seen by the merchant. */
   markConversationRead(siteId: string, conversationId: string): Promise<ActionResult>;

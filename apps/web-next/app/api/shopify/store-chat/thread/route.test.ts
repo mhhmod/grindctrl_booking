@@ -13,6 +13,7 @@ const {
   listMessagesMock,
   appendMessageMock,
   recordAuditMock,
+  resolveAssigneeNamesMock,
   takeOverConversationMock,
   returnConversationToAiMock,
   closeConversationMock,
@@ -26,6 +27,7 @@ const {
   listMessagesMock: vi.fn(),
   appendMessageMock: vi.fn(),
   recordAuditMock: vi.fn(),
+  resolveAssigneeNamesMock: vi.fn(),
   takeOverConversationMock: vi.fn(),
   returnConversationToAiMock: vi.fn(),
   closeConversationMock: vi.fn(),
@@ -45,6 +47,7 @@ vi.mock('@/lib/messenger/conversations', () => ({
   listMessages: listMessagesMock,
   appendMessage: appendMessageMock,
   recordAudit: recordAuditMock,
+  resolveAssigneeNames: resolveAssigneeNamesMock,
   takeOverConversation: takeOverConversationMock,
   returnConversationToAi: returnConversationToAiMock,
   closeConversation: closeConversationMock,
@@ -72,6 +75,7 @@ beforeEach(() => {
   ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-real', workspace_id: 'ws-1' });
   listConversationAttachmentsMock.mockResolvedValue([]);
   signAttachmentUrlsMock.mockResolvedValue({});
+  resolveAssigneeNamesMock.mockResolvedValue({});
 });
 
 describe('POST /api/shopify/store-chat/thread', () => {
@@ -96,12 +100,58 @@ describe('POST /api/shopify/store-chat/thread', () => {
     ]);
     const res = await POST(req({ op: 'messages', conversationId: 'c-1' }));
     expect(res.status).toBe(200);
+    expect(listMessagesMock).toHaveBeenCalledWith('c-1', { limit: 200, includeInternal: true });
     expect(await res.json()).toEqual({
       ok: true,
       status: 'open',
-      messages: [{ id: 'm-1', role: 'user', content: 'hi', createdAt: '2026-08-30T10:00:00.000Z', author: undefined }],
+      messages: [{ id: 'm-1', role: 'user', content: 'hi', createdAt: '2026-08-30T10:00:00.000Z', author: undefined, internal: undefined, noteAuthorName: undefined }],
       attachments: {},
     });
+  });
+
+  it('op=messages resolves the note author name for an internal note', async () => {
+    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
+    listMessagesMock.mockResolvedValue([
+      { id: 'm-9', role: 'system', content: 'VIP', created_at: '2026-08-30T10:01:00.000Z', metadata: { internal: true, noteAuthorProfileId: 'profile-9' } },
+    ]);
+    resolveAssigneeNamesMock.mockResolvedValue({ 'profile-9': 'Sara Khan' });
+    const res = await POST(req({ op: 'messages', conversationId: 'c-1' }));
+    expect(res.status).toBe(200);
+    expect(resolveAssigneeNamesMock).toHaveBeenCalledWith('ws-1', ['profile-9']);
+    expect(await res.json()).toEqual({
+      ok: true,
+      status: 'open',
+      messages: [{ id: 'm-9', role: 'system', content: 'VIP', createdAt: '2026-08-30T10:01:00.000Z', author: undefined, internal: true, noteAuthorName: 'Sara Khan' }],
+      attachments: {},
+    });
+  });
+
+  it('op=addNote appends a system/internal note with the shop identity and no takeover', async () => {
+    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
+    getSiteAssigneeProfileIdMock.mockResolvedValue('profile-owner-1');
+    appendMessageMock.mockResolvedValue({ message: {}, replayed: false });
+
+    const res = await POST(req({ op: 'addNote', conversationId: 'c-1', text: '  VIP — comp shipping  ' }));
+
+    expect(res.status).toBe(200);
+    expect(getSiteAssigneeProfileIdMock).toHaveBeenCalledWith('ws-1');
+    expect(takeOverConversationMock).not.toHaveBeenCalled();
+    expect(appendMessageMock).toHaveBeenCalledWith({
+      conversationId: 'c-1',
+      role: 'system',
+      content: 'VIP — comp shipping',
+      metadata: { internal: true, noteAuthorProfileId: 'profile-owner-1' },
+    });
+    expect(recordAuditMock).toHaveBeenCalledWith(
+      expect.objectContaining({ siteId: 'site-real', actorClerkUserId: 'shop-demo.myshopify.com', action: 'internal_note_added' }),
+    );
+  });
+
+  it('op=addNote rejects an empty note', async () => {
+    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
+    const res = await POST(req({ op: 'addNote', conversationId: 'c-1', text: '   ' }));
+    expect(res.status).toBe(400);
+    expect(appendMessageMock).not.toHaveBeenCalled();
   });
 
   it('op=reply takes over an open conversation before appending, using the shop as actor', async () => {

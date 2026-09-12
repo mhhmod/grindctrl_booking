@@ -52,6 +52,8 @@ export function useStoreChatActions(): MessengerHostActions {
       fetchConversationMessages: (_siteId, conversationId: string) => postThreadRead(conversationId),
       staffReply: (_siteId, conversationId: string, text: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'reply', conversationId, text }),
+      addInternalNote: (_siteId, conversationId: string, text: string) =>
+        postJson('/api/shopify/store-chat/thread', { op: 'addNote', conversationId, text }),
       takeoverConversation: (_siteId, conversationId: string) =>
         postJson('/api/shopify/store-chat/thread', { op: 'takeover', conversationId }),
       markConversationRead: (_siteId, conversationId: string) =>

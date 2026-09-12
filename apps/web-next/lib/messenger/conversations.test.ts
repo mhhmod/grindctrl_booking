@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { setMessengerServiceClientForTests } from './db';
 import {
+  appendMessage,
   claimHandoffNotification,
   countAwaitingHandoff,
   getWidgetLastSeenAt,
@@ -220,6 +221,111 @@ describe('listMessages newestFirst', () => {
   });
 });
 
+/* Internal staff notes share the widget_messages table (role 'system',
+   metadata.internal). They must never reach the shopper widget or the AI's
+   generation history, so listMessages excludes them unless a moderator-facing
+   caller explicitly opts in with includeInternal. */
+describe('listMessages internal notes', () => {
+  const rows = [
+    { id: 'm-user', conversation_id: 'conv-1', role: 'user', content: 'hi', content_type: 'text', created_at: '2026-08-30T10:00:00.000Z', metadata: {} },
+    { id: 'm-handoff', conversation_id: 'conv-1', role: 'system', content: 'handoff', content_type: 'event', created_at: '2026-08-30T10:01:00.000Z', metadata: { author: 'system', escalated: true } },
+    { id: 'm-note', conversation_id: 'conv-1', role: 'system', content: 'VIP — comp shipping', content_type: 'text', created_at: '2026-08-30T10:02:00.000Z', metadata: { internal: true, noteAuthorProfileId: 'p-1' } },
+  ];
+
+  it('excludes internal-flagged messages by default, but keeps ordinary system rows', async () => {
+    const { client } = stubQueryClient({ data: rows, error: null });
+    setMessengerServiceClientForTests(client);
+
+    const messages = await listMessages('conv-1');
+
+    expect(messages.map((m) => m.id)).toEqual(['m-user', 'm-handoff']);
+  });
+
+  it('includes internal-flagged messages when includeInternal is true', async () => {
+    const { client } = stubQueryClient({ data: rows, error: null });
+    setMessengerServiceClientForTests(client);
+
+    const messages = await listMessages('conv-1', { includeInternal: true });
+
+    expect(messages.map((m) => m.id)).toEqual(['m-user', 'm-handoff', 'm-note']);
+  });
+});
+
+/** Minimal two-table stub: widget_messages for the insert(+select+single)
+ *  appendMessage itself issues, widget_conversations for the update
+ *  touchConversation issues — distinguished by the table name from() is
+ *  called with, since the two calls have unrelated shapes. */
+function stubAppendMessageClient(insertedRow: Record<string, unknown>) {
+  const conversationUpdates: Array<Record<string, unknown>> = [];
+  const client = {
+    from: (table: string) => {
+      if (table === 'widget_conversations') {
+        return {
+          update: (patch: Record<string, unknown>) => {
+            conversationUpdates.push(patch);
+            return { eq: () => Promise.resolve({ error: null }) };
+          },
+        };
+      }
+      return {
+        insert: () => ({
+          select: () => ({
+            single: () => Promise.resolve({ data: insertedRow, error: null }),
+          }),
+        }),
+      };
+    },
+  } as unknown as SupabaseClient;
+  return { client, conversationUpdates };
+}
+
+/* A note is metadata about the conversation, not a turn in it. Bumping
+   last_message_at the same way a real reply does would push a ticket a
+   staff member merely annotated to the top of the recency-sorted inbox,
+   ahead of conversations with real, older, still-unanswered shopper
+   messages — see conversations-panel.tsx's list ordering. */
+describe('appendMessage conversation ordering', () => {
+  const baseRow = {
+    id: 'm-1',
+    conversation_id: 'conv-1',
+    role: 'system',
+    content_type: 'text',
+    created_at: '2026-09-12T00:00:00.000Z',
+  };
+
+  it('does not touch last_message_at for an internal note', async () => {
+    const { client, conversationUpdates } = stubAppendMessageClient({
+      ...baseRow,
+      content: 'VIP — comp shipping',
+      metadata: { internal: true, noteAuthorProfileId: 'p-1' },
+    });
+    setMessengerServiceClientForTests(client);
+
+    await appendMessage({
+      conversationId: 'conv-1',
+      role: 'system',
+      content: 'VIP — comp shipping',
+      metadata: { internal: true, noteAuthorProfileId: 'p-1' },
+    });
+
+    expect(conversationUpdates).toHaveLength(0);
+  });
+
+  it('still touches last_message_at for an ordinary message', async () => {
+    const { client, conversationUpdates } = stubAppendMessageClient({
+      ...baseRow,
+      role: 'user',
+      content: 'Where is my order?',
+      metadata: {},
+    });
+    setMessengerServiceClientForTests(client);
+
+    await appendMessage({ conversationId: 'conv-1', role: 'user', content: 'Where is my order?' });
+
+    expect(conversationUpdates).toHaveLength(1);
+    expect(conversationUpdates[0]).toHaveProperty('last_message_at');
+  });
+});
 /* widget_conversations.visitor_id is a single NOT NULL FK, so the
    widget_visitors embed comes back as an object, not an array. Indexing
    [0] into that object (the old code) silently yields undefined, which is

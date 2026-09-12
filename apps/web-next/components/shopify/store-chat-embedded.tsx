@@ -153,6 +153,11 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
         if (result.ok) void loadState();
         return result;
       },
+      addInternalNote: async (siteId, conversationId, text) => {
+        const result = await rawActions.addInternalNote(siteId, conversationId, text);
+        if (result.ok) void loadState();
+        return result;
+      },
       // Pure read — no state to refresh.
       fetchConversationMessages: rawActions.fetchConversationMessages,
     }),

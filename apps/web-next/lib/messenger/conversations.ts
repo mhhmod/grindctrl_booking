@@ -316,7 +316,11 @@ export async function appendMessage(input: {
     .single();
 
   if (!insert.error) {
-    await touchConversation(input.conversationId);
+    // An internal note is metadata about the conversation, not a turn in
+    // it — bumping last_message_at would push a ticket a staff member
+    // merely annotated to the top of the recency-sorted inbox, ahead of
+    // conversations with real, older, still-unanswered shopper messages.
+    if (!input.metadata?.internal) await touchConversation(input.conversationId);
     return { message: mapMessage(insert.data as unknown as Record<string, unknown>), replayed: false };
   }
 
@@ -336,11 +340,15 @@ export async function appendMessage(input: {
   throw new Error(`message append failed: ${insert.error.message}`);
 }
 
+/* Staff-only notes (metadata.internal) are excluded by default so they can
+ *  never reach the shopper widget or the AI's generation history. Pass
+ *  includeInternal: true only on moderator-facing reads. */
 export async function listMessages(
   conversationId: string,
-  options?: { afterIso?: string | null; limit?: number; newestFirst?: boolean },
+  options?: { afterIso?: string | null; limit?: number; newestFirst?: boolean; includeInternal?: boolean },
 ): Promise<MessageRecord[]> {
   const supabase = getMessengerServiceClient();
+  const includeInternal = options?.includeInternal ?? false;
   let query = supabase
     .from('widget_messages')
     .select('*')
@@ -350,7 +358,9 @@ export async function listMessages(
   if (options?.afterIso) query = query.gt('created_at', options.afterIso);
   const rows = await query;
   if (rows.error) throw new Error(`messages query failed: ${rows.error.message}`);
-  return ((rows.data ?? []) as Array<Record<string, unknown>>).map(mapMessage);
+  const messages = ((rows.data ?? []) as Array<Record<string, unknown>>).map(mapMessage);
+  if (includeInternal) return messages;
+  return messages.filter((m) => m.metadata.internal !== true);
 }
 
 async function touchConversation(conversationId: string): Promise<void> {

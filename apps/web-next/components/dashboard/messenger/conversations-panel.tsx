@@ -61,6 +61,10 @@ const COPY = {
     statusNeedsReply: 'Needs a reply',
     statusInProgress: 'In progress',
     statusResolved: 'Resolved',
+    composerReply: 'Reply',
+    composerNote: 'Note',
+    noteLabel: 'Private note — only your team sees this',
+    notePh: 'Type a private note…',
   },
   ar: {
     title: 'المحادثات',
@@ -109,6 +113,10 @@ const COPY = {
     statusNeedsReply: 'تنتظر رداً',
     statusInProgress: 'قيد المعالجة',
     statusResolved: 'تم الحل',
+    composerReply: 'رد',
+    composerNote: 'ملاحظة',
+    noteLabel: 'ملاحظة خاصة — لفريقك فقط',
+    notePh: 'اكتب ملاحظة خاصة…',
   },
 };
 
@@ -152,6 +160,10 @@ interface WireMessage {
   content: string;
   createdAt: string;
   author?: string;
+  /** Staff-only note: rendered in a distinct style, never as a chat bubble. */
+  internal?: boolean;
+  /** Server-resolved display name of the note's staff author, if any. */
+  noteAuthor?: string;
 }
 
 interface WireAttachment {
@@ -201,6 +213,7 @@ export function ConversationsPanel({
     MessengerHostActions,
     | 'fetchConversationMessages'
     | 'staffReply'
+    | 'addInternalNote'
     | 'takeoverConversation'
     | 'releaseConversation'
     | 'closeConversationAction'
@@ -263,6 +276,10 @@ export function ConversationsPanel({
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  /* Reply vs private note. Reset to Reply whenever another conversation is
+     picked below — a mode that silently persists across threads is how a
+     customer-visible reply gets typed where a note was meant, or vice versa. */
+  const [composerMode, setComposerMode] = useState<'reply' | 'note'>('reply');
 
   /* Measure the space below the host's wrapping tabs/header, rather than
      guessing their height. The mobile view aligns below DashboardShell's
@@ -319,7 +336,17 @@ export function ConversationsPanel({
     const result = await actions.fetchConversationMessages(siteId, selectedId).catch(() => ({ ok: false as const }));
     if (seq !== loadSeq.current) return;
     if (result.ok) {
-      setMessages(result.messages);
+      setMessages(
+        result.messages.map((m) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          createdAt: m.createdAt,
+          author: m.author,
+          internal: m.internal,
+          noteAuthor: m.noteAuthorName,
+        })),
+      );
       /* A host that omits this field must not take the tab down with it.
          `attachments[message.id]` on undefined throws during render, React
          unmounts the whole panel, and the merchant gets a blank Conversations
@@ -356,6 +383,19 @@ export function ConversationsPanel({
     if (!text || !selectedId) return;
     act(async () => {
       const result = await actions.staffReply(siteId, selectedId, text);
+      if (result.ok) {
+        setDraft('');
+        followLatest.current = true;
+      }
+      else setError(result.error);
+    });
+  }
+
+  function sendNote() {
+    const text = draft.trim();
+    if (!text || !selectedId) return;
+    act(async () => {
+      const result = await actions.addInternalNote(siteId, selectedId, text);
       if (result.ok) {
         setDraft('');
         followLatest.current = true;
@@ -469,6 +509,7 @@ export function ConversationsPanel({
                   setVisibleCount(MESSAGE_WINDOW);
                   olderScroll.current = null;
                   followLatest.current = true;
+                  setComposerMode('reply');
                 }
                 setMobileThreadOpen(true);
                 /* Opening it IS reading it. Fire and forget: the badge is a
@@ -630,7 +671,27 @@ export function ConversationsPanel({
             </Button>
           )}
           {messages.slice(-visibleCount).map((message) =>
-            message.role === 'system' ? (
+            /* Staff-only note: a full-width amber block, unmistakable from a
+               real shopper-visible reply. Checked before the system branch —
+               a note also carries role 'system' but is not the handoff line. */
+            message.internal ? (
+              <div
+                key={message.id}
+                data-testid="internal-note"
+                className="rounded-xl border border-amber-600/30 bg-amber-500/10 px-3 py-2"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                  {t.noteLabel}
+                  {message.noteAuthor ? ` · ${message.noteAuthor}` : ''}
+                </p>
+                <div className="mt-0.5 break-words text-sm">
+                  <MessageText text={message.content} />
+                </div>
+                <span className="mt-0.5 block text-[10px] opacity-70">
+                  {relativeTime(message.createdAt, t)}
+                </span>
+              </div>
+            ) : message.role === 'system' ? (
               <p key={message.id} className="break-words text-center text-[11px] text-muted-foreground">
                 {message.role === 'system' && message.author === 'system' && message.content.length > 0
                   ? message.content
@@ -678,31 +739,45 @@ export function ConversationsPanel({
           )}
         </div>
 
-        {status && status !== 'closed' && (
+        {status && (
           <footer className="shrink-0 border-t border-border p-3">
+            <div className="mb-2 flex gap-1" role="group" aria-label={`${t.composerReply} / ${t.composerNote}`}>
+              {status !== 'closed' && (
+                <PillToggle active={composerMode === 'reply'} onClick={() => setComposerMode('reply')}>
+                  {t.composerReply}
+                </PillToggle>
+              )}
+              <PillToggle active={composerMode === 'note' || status === 'closed'} onClick={() => setComposerMode('note')}>
+                {t.composerNote}
+              </PillToggle>
+            </div>
             <form
               className="flex items-end gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
-                sendReply();
+                if (composerMode === 'note' || status === 'closed') sendNote();
+                else sendReply();
               }}
             >
-              <label htmlFor="staff-reply" className="sr-only">
-                {t.replyPh}
+              <label htmlFor={composerMode === 'note' || status === 'closed' ? 'staff-note' : 'staff-reply'} className="sr-only">
+                {composerMode === 'note' || status === 'closed' ? t.notePh : t.replyPh}
               </label>
               <Textarea
-                id="staff-reply"
+                id={composerMode === 'note' || status === 'closed' ? 'staff-note' : 'staff-reply'}
                 rows={1}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value.slice(0, 2000))}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    sendReply();
+                    if (composerMode === 'note' || status === 'closed') sendNote();
+                    else sendReply();
                   }
                 }}
-                placeholder={t.replyPh}
-                className="h-11 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto"
+                placeholder={composerMode === 'note' || status === 'closed' ? t.notePh : t.replyPh}
+                className={`h-11 min-h-11 min-w-0 flex-1 resize-none overflow-y-auto ${
+                  composerMode === 'note' || status === 'closed' ? 'border-amber-600/50 bg-amber-500/10' : ''
+                }`}
               />
               <Button type="submit" size="sm" className="min-h-11 min-w-11" disabled={!draft.trim() || pending}>
                 {t.send}

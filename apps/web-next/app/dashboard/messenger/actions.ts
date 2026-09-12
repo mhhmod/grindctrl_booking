@@ -11,6 +11,7 @@ import {
 import {
   appendMessage,
   recordAudit,
+  resolveAssigneeNames,
   returnConversationToAi,
   takeOverConversation,
   closeConversation,
@@ -231,7 +232,7 @@ export async function fetchConversationMessages(
   | {
       ok: true;
       status: string;
-      messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string }>;
+      messages: Array<{ id: string; role: string; content: string; createdAt: string; author?: string; internal?: boolean; noteAuthorName?: string }>;
       /** messageId -> viewable image. URLs expire in five minutes and are
        *  minted per request, after ownedConversation() proved this staff
        *  member owns the site the attachment belongs to. */
@@ -240,10 +241,10 @@ export async function fetchConversationMessages(
   | { ok: false }
 > {
   try {
-    const { conversation } = await ownedConversation(siteId, conversationId, 'read');
+    const { site, conversation } = await ownedConversation(siteId, conversationId, 'read');
     const { listMessages } = await import('@/lib/messenger/conversations');
     const [messages, rows] = await Promise.all([
-      listMessages(conversation.id, { limit: 200 }),
+      listMessages(conversation.id, { limit: 200, includeInternal: true }),
       listConversationAttachments(conversation.id),
     ]);
 
@@ -255,6 +256,11 @@ export async function fetchConversationMessages(
       if (url) attachments[row.message_id as string] = { url, mime: row.mime, triage: row.triage };
     }
 
+    const names = await resolveAssigneeNames(
+      site.workspace_id,
+      messages.filter((m) => m.metadata.internal === true).map((m) => m.metadata.noteAuthorProfileId),
+    );
+
     return {
       ok: true,
       status: conversation.status,
@@ -264,6 +270,11 @@ export async function fetchConversationMessages(
         content: m.content,
         createdAt: m.created_at,
         author: m.metadata.author ?? (m.role === 'assistant' ? 'ai' : undefined),
+        internal: m.metadata.internal === true ? true : undefined,
+        noteAuthorName:
+          m.metadata.internal === true && m.metadata.noteAuthorProfileId
+            ? names[m.metadata.noteAuthorProfileId] ?? undefined
+            : undefined,
       })),
       attachments,
     };
@@ -302,6 +313,38 @@ export async function staffReply(
       siteId,
       actorClerkUserId: userId,
       action: 'conversation_taken_over',
+      detail: { conversationId },
+    });
+    revalidatePath('/dashboard/messenger');
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+export async function addInternalNote(
+  siteId: string,
+  conversationId: string,
+  text: string,
+): Promise<ActionResult> {
+  try {
+    const { userId } = await ownedConversation(siteId, conversationId);
+    const trimmed = text.trim().slice(0, 2000);
+    if (!trimmed) return { ok: false, error: 'Note is empty.' };
+
+    // A note is metadata about the conversation, not a turn in it: no
+    // takeover, no status change, no notification.
+    const saved = await appendMessage({
+      conversationId,
+      role: 'system',
+      content: trimmed,
+      metadata: { internal: true, noteAuthorProfileId: await getProfileId(userId) },
+    });
+    void saved;
+    await recordAudit({
+      siteId,
+      actorClerkUserId: userId,
+      action: 'internal_note_added',
       detail: { conversationId },
     });
     revalidatePath('/dashboard/messenger');

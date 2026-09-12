@@ -5,6 +5,7 @@ import { ConversationsPanel, type ConversationListItem } from './conversations-p
 
 const fetchConversationMessages = vi.fn();
 const staffReply = vi.fn();
+const addInternalNote = vi.fn();
 const takeoverConversation = vi.fn();
 const releaseConversation = vi.fn();
 const closeConversationAction = vi.fn();
@@ -13,6 +14,7 @@ const markConversationRead = vi.fn();
 const actions = {
   fetchConversationMessages,
   staffReply,
+  addInternalNote,
   takeoverConversation,
   releaseConversation,
   closeConversationAction,
@@ -439,8 +441,7 @@ describe('ConversationsPanel search and status filters', () => {
    unmounts the panel, and the merchant is left with a blank Conversations tab
    and nothing said about why — the worst possible failure for an inbox. */
 describe('ConversationsPanel resilience', () => {
-  it('still renders the thread when the host omits attachments entirely', async () => {
-    fetchConversationMessages.mockResolvedValue({
+  it('still renders the thread when the host omits attachments entirely', async () => {    fetchConversationMessages.mockResolvedValue({
       ok: true,
       status: 'open',
       messages: [
@@ -464,5 +465,75 @@ describe('ConversationsPanel resilience', () => {
     );
 
     expect(await screen.findByText('Where is my order?')).toBeInTheDocument();
+  });
+});
+
+/* An internal note shares role 'system' with the handoff line, so without
+   its own branch it would render as nothing. It must instead render as a
+   clearly-marked block — never a normal chat bubble on either side — and
+   the composer must route Note-mode submits to addInternalNote, resetting
+   to Reply whenever another conversation is picked. */
+describe('ConversationsPanel internal notes', () => {
+  const TWO: ConversationListItem[] = [
+    { ...CONVERSATIONS[0], id: 'conv-1', visitorName: 'Shopper One' },
+    {
+      ...CONVERSATIONS[0],
+      id: 'conv-2',
+      visitorName: 'Shopper Two',
+      lastMessageAt: '2026-08-30T09:30:00.000Z',
+    },
+  ];
+
+  beforeEach(() => {
+    fetchConversationMessages.mockResolvedValue({
+      ok: true,
+      status: 'open',
+      messages: [
+        { id: 'm-1', role: 'user', content: 'Where is my order?', createdAt: '2026-08-30T10:00:00.000Z' },
+        { id: 'm-2', role: 'system', content: 'VIP — comp shipping', createdAt: '2026-08-30T10:01:00.000Z', internal: true, noteAuthorName: 'Sara Khan' },
+      ],
+      attachments: {},
+    });
+  });
+
+  it('renders an internal note in the distinct note style with its author, not as a chat bubble', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+
+    const note = await screen.findByTestId('internal-note');
+    expect(note).toBeInTheDocument();
+    expect(note).toHaveTextContent('VIP — comp shipping');
+    expect(note).toHaveTextContent('Sara Khan');
+    // Still a normal bubble for the real shopper message alongside it.
+    expect(await screen.findByText('Where is my order?')).toBeInTheDocument();
+  });
+
+  it('submits Note-mode text through addInternalNote, never staffReply', async () => {
+    addInternalNote.mockResolvedValue({ ok: true });
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Note' }));
+    fireEvent.change(screen.getByLabelText('Type a private note…'), { target: { value: 'VIP — comp shipping' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    });
+
+    expect(addInternalNote).toHaveBeenCalledWith('site-1', 'conv-1', 'VIP — comp shipping');
+    expect(staffReply).not.toHaveBeenCalled();
+  });
+
+  it('resets to Reply mode when another conversation is selected', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={TWO} actions={actions} />);
+    await screen.findByText('Where is my order?');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Note' }));
+    expect(screen.getByRole('button', { name: 'Note' })).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByText('Shopper Two'));
+
+    // Switching threads clears the status until the reload lands, so the
+    // footer (and its toggle) briefly unmounts — wait for it to come back.
+    expect(await screen.findByRole('button', { name: 'Reply' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Note' })).toHaveAttribute('aria-pressed', 'false');
   });
 });

@@ -212,5 +212,11 @@ export interface MessageRecord {
     /** Present on the message an image was posted with. The URL is minted
      *  per-view and never stored — see attachments.ts. */
     attachment?: { id: string; mime: string; bytes: number };
+    /** Staff-only note: visible in the moderator inbox, never to the
+     *  shopper and never fed to the AI as history. */
+    internal?: boolean;
+    /** Profile id of the staff author of an internal note. Server resolves
+     *  this to a display name; the id itself never leaves the server. */
+    noteAuthorProfileId?: string;
   };
 }
