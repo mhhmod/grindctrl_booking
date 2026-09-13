@@ -55,6 +55,7 @@ const NO_SHOP_PLAN_STATE: ShopEntitlement = {
   planId: null,
   planKey: null,
   planName: null,
+  modelKey: null,
   status: 'none',
   isFree: false,
   rendersIncluded: 0,

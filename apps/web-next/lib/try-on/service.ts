@@ -10,6 +10,7 @@ import {
   persistTryOnJob,
 } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
+import { getShopEntitlement } from './entitlement';
 import type { VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnFinalizationPendingError,
@@ -115,7 +116,13 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (billableLiveJob) {
-    const modelKey = process.env.TRYON_MODEL || DEFAULT_MODEL;
+    // The catalog carries a model per plan (tryon_plans.model_key) — a
+    // shop's actual entitled model, not one global default for every plan.
+    // reserve_tryon_credit records whatever modelKey it's given verbatim,
+    // so resolving the wrong one here silently mis-bills every plan the
+    // same way regardless of what they're entitled to.
+    const entitlement = await getShopEntitlement(shop);
+    const modelKey = entitlement.modelKey || process.env.TRYON_MODEL || DEFAULT_MODEL;
     const reservedJobId = createJobId();
     const reservation = await beginTryOnJob({
       shop,
@@ -172,6 +179,7 @@ export async function generateTryOn(
         productId,
         photoData as string,
         shop,
+        modelKey,
         garmentUrl,
         productName,
       );
@@ -263,11 +271,14 @@ export async function generateTryOn(
       throw new TryOnFinalizationPendingError(job.jobId);
     }
   } else if (mode === 'live' && photoSource === 'upload' && photoData) {
+    // Non-billable live path (demo/preview, not a storefront credit spend) —
+    // there is no shop entitlement to resolve a plan model from here.
     job = await runImageGeneration(
       sessionId,
       productId,
       photoData,
       shop,
+      process.env.TRYON_MODEL || DEFAULT_MODEL,
       garmentUrl,
       productName,
     );

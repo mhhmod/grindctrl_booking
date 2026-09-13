@@ -13,7 +13,7 @@ vi.mock('@/app/dashboard/try-on/plan-actions', () => ({
 
 const state: ShopEntitlement = {
   shop: 'alpha.myshopify.com', subscriptionId: 'sub', planId: 'p1', planKey: 'launch',
-  planName: 'Launch', status: 'grace', isFree: false, rendersIncluded: 300,
+  planName: 'Launch', modelKey: 'lite', status: 'grace', isFree: false, rendersIncluded: 300,
   planCreditsRemaining: 280, topUpCreditsRemaining: 0, totalCreditsRemaining: 280,
   currentPeriodStart: '2026-08-01T00:00:00Z', currentPeriodEnd: '2026-09-01T00:00:00Z',
   graceEndsAt: '2026-09-04T00:00:00Z', daysRemaining: 2, bannerState: 'grace',

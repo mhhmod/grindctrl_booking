@@ -54,6 +54,10 @@ export type ShopEntitlement = {
   planId: string | null;
   planKey: string | null;
   planName: string | null;
+  /** The active plan's own image model, for the generation call to use
+   *  instead of a single global default. Null only when there is no
+   *  resolvable plan (the no-subscription branch below). */
+  modelKey: string | null;
   status: SubscriptionStatus;
   isFree: boolean;
   rendersIncluded: number;
@@ -357,6 +361,7 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
       planId: null,
       planKey: null,
       planName: null,
+      modelKey: null,
       status: 'none',
       isFree: false,
       rendersIncluded: 0,
@@ -436,6 +441,7 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
     planId: plan.id,
     planKey: plan.plan_key,
     planName: plan.name,
+    modelKey: plan.model_key,
     status: subscription.status,
     isFree: plan.is_free,
     rendersIncluded: plan.renders_included,

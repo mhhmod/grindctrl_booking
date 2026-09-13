@@ -60,6 +60,7 @@ const STATE: ShopEntitlement = {
   planId: 'p0',
   planKey: 'free-v1',
   planName: 'Free',
+  modelKey: 'meta/muse-image',
   status: 'active',
   isFree: true,
   rendersIncluded: 20,

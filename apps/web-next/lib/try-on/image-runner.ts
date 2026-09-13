@@ -1,7 +1,10 @@
 /* ─── Try-On Agent — OpenRouter image runner (live mode) ───
-   Provider-agnostic by design: TRYON_MODEL is any OpenRouter image-model
-   slug (e.g. google/gemini-3.1-flash-image, openai/gpt-image-2) and can
-   be swapped anytime without code changes. */
+   Provider-agnostic by design: the caller passes any OpenRouter image-model
+   slug (e.g. google/gemini-3.1-flash-image, openai/gpt-image-2) and it can
+   be swapped anytime without code changes here. The model is resolved by
+   the caller (service.ts, from the shop's active plan) rather than read
+   from an env var in this file, so a shop's plan actually controls which
+   model it gets billed against. */
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -13,7 +16,6 @@ import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { toShopperFailureMessage } from './shopper-errors';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
-const DEFAULT_MODEL = 'meta/muse-image';
 
 /* Accepted upload formats for the live pipeline. HEIC/HEIF previews don't
    render in browsers anyway, so real uploads arrive as jpeg/png/webp. */
@@ -79,11 +81,11 @@ export async function runImageGeneration(
   productId: string,
   photoData: string,
   shop: string | null,
+  model: string,
   garmentUrl?: string,
   productName?: string,
 ): Promise<TryOnJob> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.TRYON_MODEL || DEFAULT_MODEL;
   const jobId = `tryon_${randomUUID()}`;
   const createdAt = new Date().toISOString();
   let costEstimate: number | null = 0; // No provider attempt yet.

@@ -6,7 +6,7 @@ const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwA
 const PHOTO = `data:image/png;base64,${PNG}`;
 const GARMENT = 'https://cdn.shopify.com/s/files/1/product.png';
 const fetchMock = vi.fn();
-const generate = () => runImageGeneration('session', 'product', PHOTO, 'test.myshopify.com', GARMENT);
+const generate = () => runImageGeneration('session', 'product', PHOTO, 'test.myshopify.com', 'meta/muse-image', GARMENT);
 
 beforeEach(() => {
   vi.stubEnv('OPENROUTER_API_KEY', 'test-only-key');
