@@ -152,6 +152,7 @@ interface LandingDict {
   footerDemo: string;
   footerPricing: string;
   footerRoi: string;
+  footerSecurity: string;
   analyticsTitle: string;
   analyticsDescription: string;
   analyticsChoiceLabel: string;
@@ -365,6 +366,7 @@ const en: LandingDict = {
   footerDemo: 'Live demo',
   footerPricing: 'Pricing',
   footerRoi: 'ROI calculator',
+  footerSecurity: 'Security',
   analyticsTitle: 'Analytics preferences',
   analyticsDescription: 'Optional analytics help us understand which pages and demos are useful. Nothing is collected until you allow it, and you can change your choice here.',
   analyticsChoiceLabel: 'Choose whether to allow optional analytics',
@@ -581,6 +583,7 @@ const ar: LandingDict = {
   footerDemo: 'تجربة مباشرة',
   footerPricing: 'الأسعار',
   footerRoi: 'حاسبة العائد',
+  footerSecurity: 'الأمان',
   analyticsTitle: 'تفضيلات التحليلات',
   analyticsDescription: 'تساعدنا التحليلات الاختيارية على فهم الصفحات والتجارب المفيدة. لن نجمع شيئًا حتى تسمح بذلك، ويمكنك تغيير اختيارك هنا.',
   analyticsChoiceLabel: 'اختر ما إذا كنت تسمح بالتحليلات الاختيارية',

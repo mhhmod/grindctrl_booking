@@ -36,7 +36,7 @@ export function SiteFooter({
         <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <BrandLogo size="sm" textClassName="text-xs" />
           <p className="text-xs">{t.footerTagline}</p>
-          <div className="flex items-center gap-5 text-xs">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
             <Link href="/" className="gc-tap transition-colors hover:text-foreground">
               {t.footerHome}
             </Link>
@@ -48,6 +48,9 @@ export function SiteFooter({
             </Link>
             <Link href="/roi" className="gc-tap transition-colors hover:text-foreground">
               {t.footerRoi}
+            </Link>
+            <Link href="/security" className="gc-tap transition-colors hover:text-foreground">
+              {t.footerSecurity}
             </Link>
           </div>
           {/* Second route to language/theme, same as the homepage — the

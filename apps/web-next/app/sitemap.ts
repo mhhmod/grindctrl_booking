@@ -11,6 +11,7 @@ const PRIORITY_ROUTES: Array<{ path: string; priority: number }> = [
   { path: '/conversations', priority: 0.7 },
   { path: '/operations', priority: 0.7 },
   { path: '/integrations', priority: 0.6 },
+  { path: '/security', priority: 0.5 },
 ];
 
 function siteUrl(): string {
