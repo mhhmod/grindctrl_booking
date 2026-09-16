@@ -6,6 +6,7 @@ const PRIORITY_ROUTES: Array<{ path: string; priority: number }> = [
   { path: '/', priority: 1 },
   { path: '/pricing', priority: 0.9 },
   { path: '/try-on', priority: 0.8 },
+  { path: '/roi', priority: 0.7 },
 ];
 
 function siteUrl(): string {

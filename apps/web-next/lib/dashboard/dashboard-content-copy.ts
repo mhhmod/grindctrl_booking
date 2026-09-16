@@ -117,6 +117,7 @@ export interface ImplementationCopy {
   pain: string;
   painPlaceholder: string;
   notes: string;
+  optional: string;
   notesPlaceholder: string;
   urgency: string;
   selectUrgency: string;
@@ -127,10 +128,23 @@ export interface ImplementationCopy {
   emailInvalid: string;
   businessTypeRequired: string;
   useCaseRequired: string;
+  painRequired: string;
   urgencyRequired: string;
   channelRequired: string;
   toolRequired: string;
+  errorsTitle: string;
   success: string;
+  notSent: string;
+  nextStepBody: string;
+  bookCall: string;
+  preparedSummary: string;
+  summaryCompany: string;
+  summaryUseCase: string;
+  summaryChannels: string;
+  summaryTools: string;
+  summaryPain: string;
+  summaryUrgency: string;
+  summaryNotes: string;
   submit: string;
 }
 
@@ -414,41 +428,57 @@ const analyticsAr: AnalyticsCopy = {
 
 const implementationEn: ImplementationCopy = {
   translate: identity,
-  badge: 'UI-only submission',
+  badge: 'Local preparation only',
   title: 'Implementation request',
-  description: 'Validate form locally, then prepare request summary. No network call happens in this phase.',
+  description: 'Prepare and review the details needed to scope managed implementation. Nothing leaves this browser in this phase.',
   companyName: 'Company name', workEmail: 'Work email', businessType: 'Business type',
   businessTypePlaceholder: 'e.g. Healthcare, Ecommerce, Services', primaryUseCase: 'Primary use case',
   selectUseCase: 'Select use case', channelsNeeded: 'Channels needed', toolsToConnect: 'Tools to connect',
   pain: 'Current process / pain', painPlaceholder: 'Describe current bottlenecks and handoff issues.',
-  notes: 'Notes', notesPlaceholder: 'Extra context for implementation team.', urgency: 'Urgency',
+  notes: 'Notes', optional: 'Optional', notesPlaceholder: 'Extra context for a future implementation review.', urgency: 'Urgency',
   selectUrgency: 'Select urgency', previewSummary: 'Selected preview summary',
   confidence: (value) => `${value}% confidence`, noPreview: 'No saved preview found yet.',
   companyRequired: 'Company name is required.', emailInvalid: 'Work email must be valid.',
   businessTypeRequired: 'Business type is required.', useCaseRequired: 'Primary use case is required.',
+  painRequired: 'Describe the current process or pain point.',
   urgencyRequired: 'Urgency is required.', channelRequired: 'Select at least one channel.',
   toolRequired: 'Select at least one tool.',
-  success: 'Implementation request prepared. The next phase will connect this to workspace storage and team notification.',
+  errorsTitle: 'Review the highlighted fields.',
+  success: 'Implementation request summary prepared locally.',
+  notSent: 'This has not been sent to GrindCTRL or saved to your workspace. It only exists in this browser tab.',
+  nextStepBody: 'To move forward, book a short call and share this summary with our team.',
+  bookCall: 'Book implementation call',
+  preparedSummary: 'Prepared request summary',
+  summaryCompany: 'Company and contact', summaryUseCase: 'Use case', summaryChannels: 'Channels',
+  summaryTools: 'Tools', summaryPain: 'Current process / pain', summaryUrgency: 'Urgency', summaryNotes: 'Notes',
   submit: 'Prepare implementation request',
 };
 
 const implementationAr: ImplementationCopy = {
   translate: arabicValue,
-  badge: 'إرسال تجريبي داخل الواجهة',
+  badge: 'تجهيز محلي فقط',
   title: 'طلب التنفيذ',
-  description: 'تحقق من النموذج محليًا ثم جهّز ملخص الطلب. لا يجري أي اتصال بالشبكة في هذه المرحلة.',
+  description: 'جهّز وراجع التفاصيل اللازمة لتحديد نطاق التنفيذ المُدار. لن تغادر أي بيانات هذا المتصفح في هذه المرحلة.',
   companyName: 'اسم الشركة', workEmail: 'بريد العمل الإلكتروني', businessType: 'نوع النشاط',
   businessTypePlaceholder: 'مثال: الرعاية الصحية، التجارة الإلكترونية، الخدمات', primaryUseCase: 'حالة الاستخدام الأساسية',
   selectUseCase: 'اختر حالة الاستخدام', channelsNeeded: 'القنوات المطلوبة', toolsToConnect: 'الأدوات المطلوب ربطها',
   pain: 'العملية الحالية / المشكلة', painPlaceholder: 'صِف الاختناقات الحالية ومشكلات التحويل.',
-  notes: 'ملاحظات', notesPlaceholder: 'سياق إضافي لفريق التنفيذ.', urgency: 'مدى الاستعجال',
+  notes: 'ملاحظات', optional: 'اختياري', notesPlaceholder: 'سياق إضافي لمراجعة تنفيذ مستقبلية.', urgency: 'مدى الاستعجال',
   selectUrgency: 'اختر مدى الاستعجال', previewSummary: 'ملخص المعاينة المحددة',
   confidence: (value) => `الثقة ${value}%`, noPreview: 'لا توجد معاينة محفوظة بعد.',
   companyRequired: 'اسم الشركة مطلوب.', emailInvalid: 'يجب إدخال بريد عمل إلكتروني صالح.',
   businessTypeRequired: 'نوع النشاط مطلوب.', useCaseRequired: 'حالة الاستخدام الأساسية مطلوبة.',
+  painRequired: 'صِف العملية الحالية أو المشكلة.',
   urgencyRequired: 'مدى الاستعجال مطلوب.', channelRequired: 'اختر قناة واحدة على الأقل.',
   toolRequired: 'اختر أداة واحدة على الأقل.',
-  success: 'تم تجهيز طلب التنفيذ. ستربطه المرحلة التالية بتخزين مساحة العمل وإشعارات الفريق.',
+  errorsTitle: 'راجع الحقول الموضحة.',
+  success: 'تم تجهيز ملخص طلب التنفيذ محليًا.',
+  notSent: 'لم يُرسل هذا إلى GrindCTRL ولم يُحفظ في مساحة عملك. يبقى فقط في هذا المتصفح.',
+  nextStepBody: 'للمتابعة، احجز مكالمة قصيرة وشارك هذا الملخص مع فريقنا.',
+  bookCall: 'احجز مكالمة التنفيذ',
+  preparedSummary: 'ملخص الطلب المجهّز',
+  summaryCompany: 'الشركة وبيانات الاتصال', summaryUseCase: 'حالة الاستخدام', summaryChannels: 'القنوات',
+  summaryTools: 'الأدوات', summaryPain: 'العملية الحالية / المشكلة', summaryUrgency: 'مدى الاستعجال', summaryNotes: 'الملاحظات',
   submit: 'تجهيز طلب التنفيذ',
 };
 
