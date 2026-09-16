@@ -38,8 +38,9 @@ export async function POST(request: NextRequest) {
     expiredPromise,
     orphanPromise,
   ]);
-  const failedOperations = Number(expiredResult.status === 'rejected') +
-    Number(orphanResult.status === 'rejected');
+  const failedOperations =
+    (expiredResult.status === 'rejected' ? 1 : expiredResult.value.failed) +
+    (orphanResult.status === 'rejected' ? 1 : orphanResult.value.failed);
 
   const summary = {
     expired: expiredResult.status === 'fulfilled' ? expiredResult.value : null,

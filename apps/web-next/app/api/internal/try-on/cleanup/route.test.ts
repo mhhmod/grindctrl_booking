@@ -68,10 +68,21 @@ describe('POST /api/internal/try-on/cleanup', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
+    expect(body).toEqual({
       ok: true,
       correlationId: expect.any(String),
-      data: { failedOperations: 0 },
+      data: {
+        expired: { scanned: 2, deleted: 2, failed: 0 },
+        orphans: {
+          foldersScanned: 3,
+          objectsScanned: 2,
+          candidates: 1,
+          deleted: 1,
+          skipped: 1,
+          failed: 0,
+        },
+        failedOperations: 0,
+      },
     });
     expect(cleanupExpiredMock).toHaveBeenCalledWith(50);
     expect(sweepOrphansMock).toHaveBeenCalledWith(25);
@@ -85,6 +96,48 @@ describe('POST /api/internal/try-on/cleanup', () => {
     expect(logText).not.toContain('myshopify.com');
   });
 
+  it('fails the run when fulfilled cleanup summaries report partial failures across tenants', async () => {
+    cleanupExpiredMock.mockResolvedValue({ scanned: 6, deleted: 4, failed: 2 });
+    sweepOrphansMock.mockResolvedValue({
+      foldersScanned: 5,
+      objectsScanned: 4,
+      candidates: 3,
+      deleted: 2,
+      skipped: 1,
+      failed: 1,
+    });
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const infoLog = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const response = await POST(request(SECRET));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(body).toEqual({
+      ok: false,
+      correlationId: expect.any(String),
+      error: 'Try-on cleanup did not complete.',
+      data: {
+        expired: { scanned: 6, deleted: 4, failed: 2 },
+        orphans: {
+          foldersScanned: 5,
+          objectsScanned: 4,
+          candidates: 3,
+          deleted: 2,
+          skipped: 1,
+          failed: 1,
+        },
+        failedOperations: 3,
+      },
+    });
+    expect(errorLog).toHaveBeenCalledWith(
+      '[try-on-cleanup] failed',
+      expect.objectContaining({ correlationId: body.correlationId, failedOperations: 3 }),
+    );
+    expect(infoLog).not.toHaveBeenCalled();
+  });
+
   it('fails one run visibly and lets the next schedule retry the backlog', async () => {
     cleanupExpiredMock
       .mockRejectedValueOnce(new Error(`storage unavailable: ${PATH_CANARY}`))
@@ -93,9 +146,17 @@ describe('POST /api/internal/try-on/cleanup', () => {
     const infoLog = vi.spyOn(console, 'info').mockImplementation(() => {});
 
     const failed = await POST(request(SECRET));
+    const failedBody = await failed.json();
     const retried = await POST(request(SECRET));
 
     expect(failed.status).toBe(500);
+    expect(failedBody).toMatchObject({
+      ok: false,
+      data: {
+        expired: null,
+        failedOperations: 1,
+      },
+    });
     expect(retried.status).toBe(200);
     expect(cleanupExpiredMock).toHaveBeenCalledTimes(2);
     expect(sweepOrphansMock).toHaveBeenCalledTimes(2);
