@@ -10,6 +10,24 @@ import {
 
 export type IntegrationStateLabels = Record<PublicIntegrationState, string>;
 
+/* Explicit membership, not "every register row": Groq and OpenRouter are
+   internal AI infrastructure (product-truth policy: named only on the
+   /integrations page, never on the general-audience homepage), and Groq has
+   no brand mark in simple-icons. Listing ids here means a future register
+   addition does not appear on the homepage by default. */
+const MARQUEE_INTEGRATION_IDS = [
+  'shopify',
+  'whatsapp',
+  'instagram',
+  'telegram',
+  'zapier',
+  'make',
+  'n8n',
+  'notion',
+  'hubspot',
+  'supabase',
+] as const;
+
 function Chip({ integration, labels }: { integration: PublicIntegration; labels: IntegrationStateLabels }) {
   const Mark = BRAND_MARKS[integration.name];
 
@@ -29,9 +47,12 @@ function Chip({ integration, labels }: { integration: PublicIntegration; labels:
 }
 
 export function CollaborationsMarquee({ labels }: { labels: IntegrationStateLabels }) {
+  const integrations = PUBLIC_INTEGRATIONS.filter((integration) =>
+    (MARQUEE_INTEGRATION_IDS as readonly string[]).includes(integration.id),
+  );
   return (
     <ul className="flex min-w-0 flex-wrap gap-2.5 px-3 sm:px-4">
-      {PUBLIC_INTEGRATIONS.map((integration) => (
+      {integrations.map((integration) => (
         <Chip key={integration.id} integration={integration} labels={labels} />
       ))}
     </ul>

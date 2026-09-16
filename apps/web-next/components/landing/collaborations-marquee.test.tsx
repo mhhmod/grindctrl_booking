@@ -30,7 +30,7 @@ describe('CollaborationsMarquee theming', () => {
       </ThemeProvider>,
     );
 
-    expect(container.querySelectorAll('[class~="bg-card/70"]')).toHaveLength(12);
+    expect(container.querySelectorAll('[class~="bg-card/70"]')).toHaveLength(10);
     expect(nextThemesProvider).toHaveBeenCalledWith(
       expect.objectContaining({
         attribute: 'class',
@@ -53,9 +53,16 @@ describe('CollaborationsMarquee theming', () => {
   it('keeps every integration in a static wrapping semantic list', () => {
     render(<CollaborationsMarquee labels={labels} />);
 
-    expect(screen.getAllByRole('listitem')).toHaveLength(12);
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
     expect(screen.getByRole('list')).toHaveClass('flex-wrap');
     expect(screen.getByText('Shopify')).toBeVisible();
     expect(screen.getByText('Supabase')).toBeVisible();
+  });
+
+  it('never names internal AI infrastructure on the general-audience homepage', () => {
+    // Groq/OpenRouter are named only on /integrations per product-truth policy.
+    render(<CollaborationsMarquee labels={labels} />);
+    expect(screen.queryByText('Groq')).not.toBeInTheDocument();
+    expect(screen.queryByText('OpenRouter')).not.toBeInTheDocument();
   });
 });

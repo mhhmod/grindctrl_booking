@@ -245,7 +245,7 @@ export const PUBLIC_TRUTH_REGISTER = [
   {
     id: 'integration.public-logo-strip',
     kind: 'integration',
-    statement: 'Shopify, WhatsApp, Instagram, Telegram, Zapier, Make, n8n, Gemini, Claude, Notion, HubSpot and Supabase are associated with GrindCTRL.',
+    statement: 'Shopify, WhatsApp, Instagram, Telegram, Zapier, Make, n8n, Notion, HubSpot and Supabase are associated with GrindCTRL.',
     surfaces: ['landing.collaborations'],
     status: 'unverified',
     handling: 'qualify',

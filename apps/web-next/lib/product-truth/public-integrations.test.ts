@@ -24,7 +24,6 @@ describe('public integration truth', () => {
     expect(findPublicIntegration('notion')?.state).toBe('planned');
     expect(findPublicIntegration('whatsapp')?.state).toBe('evidence-required');
     expect(findPublicIntegration('instagram')?.state).toBe('evidence-required');
-    expect(findPublicIntegration('claude')?.state).toBe('evidence-required');
   });
 
   it('never labels an evidence-free relationship as implemented or setup-ready', () => {
@@ -35,5 +34,25 @@ describe('public integration truth', () => {
 
   it('distinguishes infrastructure from a merchant integration', () => {
     expect(findPublicIntegration('supabase')?.state).toBe('infrastructure');
+    expect(findPublicIntegration('groq')?.state).toBe('infrastructure');
+    expect(findPublicIntegration('openrouter')?.state).toBe('infrastructure');
+  });
+
+  it('lists the AI providers actually paid for and called, with real evidence refs', () => {
+    // Groq (chat/STT/TTS) and OpenRouter (Try-On image generation, vision triage)
+    // are the only two AI providers with a real API key, SDK/fetch call, and env
+    // var in the codebase — see lib/assistant/groq-client.ts and
+    // lib/try-on/image-runner.ts.
+    expect(findPublicIntegration('groq')?.evidenceRef).toBeTruthy();
+    expect(findPublicIntegration('openrouter')?.evidenceRef).toBeTruthy();
+  });
+
+  it('never lists a raw underlying AI model as a directly integrated provider', () => {
+    // Gemini/Claude/OpenAI are only reachable indirectly, as swappable model
+    // slugs passed through the Groq/OpenRouter infrastructure entries above —
+    // they must never appear as their own register row or brand mark.
+    for (const bannedId of ['gemini', 'claude', 'anthropic', 'openai', 'gpt']) {
+      expect(findPublicIntegration(bannedId)).toBeUndefined();
+    }
   });
 });
