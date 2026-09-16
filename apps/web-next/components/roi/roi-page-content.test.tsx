@@ -27,10 +27,11 @@ describe('RoiPageContent', () => {
     expect(screen.getByText(t.resultsTitle)).toBeInTheDocument();
     expect(screen.getByText(t.disclaimer)).toBeInTheDocument();
     expect(screen.getByText(t.noCausation)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: t.bookCall })).toHaveAttribute(
-      'href',
-      expect.stringMatching(/^https?:/),
-    );
+    // Scoped to <main>: SiteHeader also renders a "Book a call" link now that
+    // the page shares the site header instead of its own bespoke one.
+    expect(
+      within(screen.getByRole('main')).getByRole('link', { name: t.bookCall }),
+    ).toHaveAttribute('href', expect.stringMatching(/^https?:/));
   });
 
   it('flips to RTL in Arabic', () => {

@@ -54,6 +54,11 @@ interface LandingDict {
   navHow: string;
   navDemo: string;
   navBenefits: string;
+  navProductGroup: string;
+  navProductShopping: string;
+  navProductConversations: string;
+  navProductOperations: string;
+  navProductIntegrations: string;
   navPricing: string;
   signIn: string;
   bookCall: string;
@@ -166,6 +171,11 @@ const en: LandingDict = {
   navHow: 'How it works',
   navDemo: 'Live demo',
   navBenefits: 'Why it matters',
+  navProductGroup: 'Product',
+  navProductShopping: 'AI Shopping',
+  navProductConversations: 'Conversations',
+  navProductOperations: 'Operations',
+  navProductIntegrations: 'Integrations',
   navPricing: 'Pricing',
   signIn: 'Sign in',
   bookCall: 'Book a call',
@@ -374,6 +384,11 @@ const ar: LandingDict = {
   navHow: 'كيف تعمل',
   navDemo: 'تجربة مباشرة',
   navBenefits: 'لماذا تهم المتاجر',
+  navProductGroup: 'المنتج',
+  navProductShopping: 'التسوق بالذكاء الاصطناعي',
+  navProductConversations: 'المحادثات',
+  navProductOperations: 'العمليات',
+  navProductIntegrations: 'التكاملات',
   navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',

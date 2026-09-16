@@ -8,19 +8,17 @@ import {
 } from '@hugeicons/core-free-icons';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BrandLogo } from '@/components/brand-logo';
 import { AmbientBackground } from '@/components/landing/ambient-background';
-import { AnalyticsConsentControl } from '@/components/landing/analytics-consent-control';
 import { RenderReceiptFigure } from '@/components/landing/render-receipt-figure';
 import { ConnectedJourneyRail } from '@/components/landing/connected-journey-rail';
 import { ConnectedSystemMap } from '@/components/landing/connected-system-map';
 import { JourneyProofTabs } from '@/components/landing/journey-proof-tabs';
 import { PlatformEvidenceSequence } from '@/components/landing/platform-evidence-sequence';
 import { PlatformPillars } from '@/components/landing/platform-pillars';
-import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
-import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { useLandingLocale } from '@/components/landing/landing-locale';
+import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
 import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
 import { trackClick } from '@/lib/analytics';
@@ -420,28 +418,7 @@ export function SiteLanding() {
         </section>
       </main>
 
-      {/* Reserve the 84px floating launcher's footprint plus a small gap at
-          the end of the page so locale/theme controls remain reachable. */}
-      <footer className="px-4 pb-24 pt-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-          <AnalyticsConsentControl />
-          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <BrandLogo size="sm" textClassName="text-xs" />
-            <p className="text-xs">{t.footerTagline}</p>
-            <div className="flex items-center gap-5 text-xs">
-              <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
-              <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
-              <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
-              <Link href="/roi" className="gc-tap transition-colors hover:text-foreground">{t.footerRoi}</Link>
-            </div>
-            {/* Language and theme left the top bar; the footer is their second route. */}
-            <div className="flex items-center gap-2">
-              <LandingLocaleToggle />
-              <ThemeToggle locale={locale} />
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter withConsentControl withLauncherSpacing />
     </>
   );
 }

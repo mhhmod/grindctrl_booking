@@ -88,4 +88,41 @@ describe('SiteHeader', () => {
     fireEvent.click(signIn);
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
+
+  it.each<SiteLocale>(['en', 'ar'])(
+    'lists the Product links in the desktop dropdown in %s',
+    async (locale) => {
+      const t = renderHeader(locale);
+      const header = within(screen.getByRole('banner'));
+      const trigger = header.getByRole('button', { name: t.navProductGroup });
+      fireEvent.pointerDown(trigger);
+      fireEvent.click(trigger);
+      const menu = await screen.findByRole('menu');
+      for (const label of [
+        t.navProductShopping,
+        t.navProductConversations,
+        t.navProductOperations,
+        t.navProductIntegrations,
+      ]) {
+        expect(within(menu).getByRole('menuitem', { name: label })).toBeInTheDocument();
+      }
+    },
+  );
+
+  it.each<SiteLocale>(['en', 'ar'])(
+    'lists the Product links flat in the mobile sheet in %s',
+    async (locale) => {
+      const t = renderHeader(locale);
+      fireEvent.click(screen.getByRole('button', { name: t.menu }));
+      const sheet = within(await screen.findByRole('dialog'));
+      for (const label of [
+        t.navProductShopping,
+        t.navProductConversations,
+        t.navProductOperations,
+        t.navProductIntegrations,
+      ]) {
+        expect(sheet.getByRole('link', { name: label })).toBeInTheDocument();
+      }
+    },
+  );
 });

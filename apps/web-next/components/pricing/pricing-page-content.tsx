@@ -1,12 +1,14 @@
 'use client';
 
+import React from 'react';
 import { CheckmarkCircle02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import Link from 'next/link';
-import { BrandLogo } from '@/components/brand-logo';
 import { Icon } from '@/components/icons';
 import { AmbientBackground } from '@/components/landing/ambient-background';
-import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { useLandingLocale } from '@/components/landing/landing-locale';
 import { Eyebrow } from '@/components/landing/eyebrow';
+import { SiteFooter } from '@/components/landing/site-footer';
+import { SiteHeader } from '@/components/landing/site-header';
 import { CurrencyToggle } from '@/components/pricing/currency-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -206,7 +208,7 @@ export function PricingPageContent({
   catalog: PublicEntitlementCatalog;
   currency: Currency;
 }) {
-  const { locale } = useLandingLocale();
+  const { locale, t: landingT } = useLandingLocale();
   const t = getPricingCopy(locale);
   const sortedPlans = [...catalog.plans].sort((a, b) => a.sortOrder - b.sortOrder);
   const sortedPacks = [...catalog.packs].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -220,41 +222,7 @@ export function PricingPageContent({
     <>
       <AmbientBackground />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-background">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" aria-label={t.brandHome} className="min-w-0 rounded-lg">
-            <BrandLogo size="sm" textClassName="text-[11px]" />
-          </Link>
-
-          <nav className="flex shrink-0 items-center gap-1 sm:gap-2" aria-label={t.pricing}>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden rounded-full px-3 text-muted-foreground sm:inline-flex"
-            >
-              <Link href="/">{t.home}</Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden rounded-full px-3 text-muted-foreground min-[430px]:inline-flex"
-            >
-              <Link href="/try-on">{t.liveDemo}</Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="min-h-11 rounded-full px-3 text-muted-foreground"
-            >
-              <Link href="/sign-in">{t.signIn}</Link>
-            </Button>
-            <LandingLocaleToggle className="bg-background backdrop-blur-none" />
-          </nav>
-        </div>
-      </header>
+      <SiteHeader locale={locale} t={landingT} />
 
       <main>
         <section className="relative overflow-hidden border-b border-border">
@@ -506,16 +474,7 @@ export function PricingPageContent({
         </section>
       </main>
 
-      <footer className="px-4 py-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <BrandLogo size="sm" textClassName="text-xs" />
-          <p className="text-xs">{t.footerTagline}</p>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-            <Link href="/">{t.home}</Link>
-            <Link href="/try-on">{t.liveDemo}</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

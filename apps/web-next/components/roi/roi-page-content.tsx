@@ -4,9 +4,10 @@ import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BrandLogo } from '@/components/brand-logo';
 import { AmbientBackground } from '@/components/landing/ambient-background';
-import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
+import { useLandingLocale } from '@/components/landing/landing-locale';
+import { SiteFooter } from '@/components/landing/site-footer';
+import { SiteHeader } from '@/components/landing/site-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -178,7 +179,7 @@ function ResultRow({
 }
 
 export function RoiPageContent({ initialCurrency }: { initialCurrency: Currency }) {
-  const { locale } = useLandingLocale();
+  const { locale, t: landingT } = useLandingLocale();
   const t = getRoiCopy(locale);
 
   const [inputs, setInputs] = useState<RoiScenarioInputs>(DEFAULT_INPUTS);
@@ -214,33 +215,7 @@ export function RoiPageContent({ initialCurrency }: { initialCurrency: Currency 
     <>
       <AmbientBackground />
 
-      <header className="sticky top-0 z-40 border-b border-border bg-background">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" aria-label={t.brandHome} className="min-w-0 rounded-lg">
-            <BrandLogo size="sm" textClassName="text-[11px]" />
-          </Link>
-
-          <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden rounded-full px-3 text-muted-foreground sm:inline-flex"
-            >
-              <Link href="/">{t.home}</Link>
-            </Button>
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="min-h-11 rounded-full px-3 text-muted-foreground"
-            >
-              <Link href="/pricing">{t.pricing}</Link>
-            </Button>
-            <LandingLocaleToggle className="bg-background backdrop-blur-none" />
-          </nav>
-        </div>
-      </header>
+      <SiteHeader locale={locale} t={landingT} />
 
       <main aria-label={t.pageLabel}>
         <section className="border-b border-border">
@@ -501,15 +476,7 @@ export function RoiPageContent({ initialCurrency }: { initialCurrency: Currency 
         </section>
       </main>
 
-      <footer className="px-4 py-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <BrandLogo size="sm" textClassName="text-xs" />
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-            <Link href="/">{t.home}</Link>
-            <Link href="/pricing">{t.pricing}</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </>
   );
 }

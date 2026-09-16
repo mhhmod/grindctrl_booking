@@ -2,33 +2,86 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { ArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { BrandLogo } from '@/components/brand-logo';
+import { Icon } from '@/components/icons';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { LandingLocaleToggle } from '@/components/landing/landing-locale';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import type { LandingTranslator, SiteLocale } from '@/lib/landing/landing-i18n';
 
-/* Pricing is a ROUTE, not an anchor. It used to be '#pricing', which scrolled
-   to a section of the landing page and never opened /pricing — so the pricing
-   page was unreachable from the navigation on any device. */
+/* Anchors into homepage sections. Pricing is a ROUTE, not an anchor — it used
+   to be '#pricing', which scrolled to a section of the landing page and never
+   opened /pricing, so the pricing page was unreachable from the navigation on
+   any device. Kept separate from navLinks below so the Product group can sit
+   between them without splicing one array by index. */
 const navLinks = [
   { href: '#how', key: 'navHow' },
   { href: '#demo', key: 'navDemo' },
   { href: '#benefits', key: 'navBenefits' },
-  { href: '/pricing', key: 'navPricing' },
 ] as const;
+
+const productLinks = [
+  { href: '/shopping', key: 'navProductShopping' },
+  { href: '/conversations', key: 'navProductConversations' },
+  { href: '/operations', key: 'navProductOperations' },
+  { href: '/integrations', key: 'navProductIntegrations' },
+] as const;
+
+const pricingLink = { href: '/pricing', key: 'navPricing' } as const;
 
 function isRoute(href: string) {
   return href.startsWith('/');
 }
 
+/* A homepage anchor only scrolls in place when the visitor is already on '/'.
+   From every other page it has to become a route ('/#how') so Link actually
+   navigates home before the browser jumps to the fragment. */
+function resolveNavHref(href: string, onHome: boolean): string {
+  return href.startsWith('#') && !onHome ? `/${href}` : href;
+}
+
+function NavItem({
+  href,
+  label,
+  className,
+  onSelect,
+}: {
+  href: string;
+  label: string;
+  className: string;
+  onSelect?: () => void;
+}) {
+  return isRoute(href) ? (
+    <Link href={href} onClick={onSelect} className={className}>
+      {label}
+    </Link>
+  ) : (
+    <a href={href} onClick={onSelect} className={className}>
+      {label}
+    </a>
+  );
+}
+
 export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTranslator }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const onHome = pathname === '/';
+  const desktopLinkClass = 'transition-colors hover:text-foreground';
+  const mobileLinkClass =
+    'flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground';
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
@@ -42,25 +95,37 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
         </Link>
 
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground lg:flex">
-          {navLinks.map((link) =>
-            isRoute(link.href) ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="transition-colors hover:text-foreground"
+          {navLinks.map((link) => (
+            <NavItem
+              key={link.href}
+              href={resolveNavHref(link.href, onHome)}
+              label={t[link.key]}
+              className={desktopLinkClass}
+            />
+          ))}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={`group inline-flex items-center gap-1 outline-none ${desktopLinkClass} data-open:text-foreground`}
+            >
+              {t.navProductGroup}
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-200 group-data-[state=open]:rotate-180"
               >
-                {t[link.key]}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                className="transition-colors hover:text-foreground"
-              >
-                {t[link.key]}
-              </a>
-            ),
-          )}
+                <Icon icon={ArrowDown01Icon} size={14} />
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              {productLinks.map((link) => (
+                <DropdownMenuItem key={link.href} asChild>
+                  <Link href={link.href}>{t[link.key]}</Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <NavItem href={pricingLink.href} label={t[pricingLink.key]} className={desktopLinkClass} />
         </nav>
 
         {/* On phones, labels get their own row instead of squeezing an
@@ -126,29 +191,33 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
             </div>
 
             <nav className="flex flex-col">
-              {navLinks.map((link) => {
-                const cls =
-                  'flex min-h-11 items-center text-base text-muted-foreground transition-colors hover:text-foreground';
-                return isRoute(link.href) ? (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={cls}
-                  >
-                    {t[link.key]}
-                  </Link>
-                ) : (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={cls}
-                  >
-                    {t[link.key]}
-                  </a>
-                );
-              })}
+              {navLinks.map((link) => (
+                <NavItem
+                  key={link.href}
+                  href={resolveNavHref(link.href, onHome)}
+                  label={t[link.key]}
+                  className={mobileLinkClass}
+                  onSelect={() => setOpen(false)}
+                />
+              ))}
+              {/* No nested accordion for 4 links — they sit flat in the same
+                  list, between Benefits and Pricing, same as desktop's dropdown
+                  position. */}
+              {productLinks.map((link) => (
+                <NavItem
+                  key={link.href}
+                  href={link.href}
+                  label={t[link.key]}
+                  className={mobileLinkClass}
+                  onSelect={() => setOpen(false)}
+                />
+              ))}
+              <NavItem
+                href={pricingLink.href}
+                label={t[pricingLink.key]}
+                className={mobileLinkClass}
+                onSelect={() => setOpen(false)}
+              />
               <Link
                 href="/sign-in"
                 onClick={() => setOpen(false)}

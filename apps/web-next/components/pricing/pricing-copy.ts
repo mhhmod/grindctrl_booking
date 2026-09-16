@@ -11,10 +11,6 @@ type PackCopy = {
 };
 
 export type PricingCopy = {
-  brandHome: string;
-  home: string;
-  liveDemo: string;
-  signIn: string;
   eyebrow: string;
   title: string;
   intro: string;
@@ -48,15 +44,10 @@ export type PricingCopy = {
   faq: Array<{ question: string; answer: string; truthRecordId?: string }>;
   ctaTitle: string;
   ctaBody: string;
-  footerTagline: string;
   pricing: string;
 };
 
 const en: PricingCopy = {
-  brandHome: 'GRINDCTRL home',
-  home: 'Home',
-  liveDemo: 'Live demo',
-  signIn: 'Sign in',
   eyebrow: 'AI Try-On pricing',
   title: 'More shopper confidence, priced for real usage.',
   intro:
@@ -147,15 +138,10 @@ const en: PricingCopy = {
   ],
   ctaTitle: 'Want try-on to feel native to your store?',
   ctaBody: 'Book a short call. We will recommend the right plan and map the setup with you.',
-  footerTagline: 'AI Try-On for Shopify stores.',
   pricing: 'Pricing',
 };
 
 const ar: PricingCopy = {
-  brandHome: 'الصفحة الرئيسية لـ GRINDCTRL',
-  home: 'الرئيسية',
-  liveDemo: 'تجربة مباشرة',
-  signIn: 'تسجيل الدخول',
   eyebrow: 'أسعار تجربة الملابس بالذكاء الاصطناعي',
   title: 'ثقة أكبر للمتسوق، بسعر يناسب الاستخدام الحقيقي.',
   intro:
@@ -245,7 +231,6 @@ const ar: PricingCopy = {
   ],
   ctaTitle: 'هل تريد أن تبدو التجربة جزءًا طبيعيًا من متجرك؟',
   ctaBody: 'احجز مكالمة قصيرة. سنقترح الخطة المناسبة ونرتب خطوات الإعداد معك.',
-  footerTagline: 'تجربة ملابس بالذكاء الاصطناعي لمتاجر Shopify.',
   pricing: 'الأسعار',
 };
 

@@ -3,9 +3,6 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
 export interface RoiCopy {
   pageLabel: string;
-  brandHome: string;
-  home: string;
-  pricing: string;
   bookCall: string;
   viewPricing: string;
   eyebrow: string;
@@ -48,9 +45,6 @@ export interface RoiCopy {
 
 const en: RoiCopy = {
   pageLabel: 'ROI scenario calculator',
-  brandHome: 'GrindCTRL home',
-  home: 'Home',
-  pricing: 'Pricing',
   bookCall: 'Book a call',
   viewPricing: 'View pricing',
   eyebrow: 'Business-case worksheet',
@@ -123,9 +117,6 @@ const en: RoiCopy = {
 
 const ar: RoiCopy = {
   pageLabel: 'حاسبة سيناريو العائد',
-  brandHome: 'الصفحة الرئيسية لـ GrindCTRL',
-  home: 'الرئيسية',
-  pricing: 'الأسعار',
   bookCall: 'احجز مكالمة',
   viewPricing: 'شاهد الأسعار',
   eyebrow: 'ورقة عمل لدراسة الجدوى',
