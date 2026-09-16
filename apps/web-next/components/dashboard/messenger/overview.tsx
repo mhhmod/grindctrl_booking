@@ -156,14 +156,19 @@ export function MessengerOverview({
     if (!action || !siteId || pending || !window.confirm(t.revertConfirm)) return;
     setResult(null);
     startTransition(async () => {
+      let next: { ok: boolean; text: string };
       try {
         const outcome = await action(siteId);
-        setResult(outcome.ok
+        next = outcome.ok
           ? { ok: true, text: t.reverted }
-          : { ok: false, text: outcome.error || t.revertFailed });
+          : { ok: false, text: outcome.error || t.revertFailed };
       } catch {
-        setResult({ ok: false, text: t.revertFailed });
+        next = { ok: false, text: t.revertFailed };
       }
+      // React only treats updates after an await as part of the transition
+      // when they are wrapped again; otherwise the result paints one commit
+      // before pending clears, showing the error beside a still-disabled button.
+      startTransition(() => setResult(next));
     });
   }
 
@@ -185,14 +190,17 @@ export function MessengerOverview({
     if (!action || !siteId || !domain || !canDisconnect || disconnectPending || !window.confirm(t.disconnectConfirm)) return;
     setDisconnectResult(null);
     startDisconnectTransition(async () => {
+      let next: { ok: boolean; text: string };
       try {
         const outcome = await action(siteId);
-        setDisconnectResult(outcome.ok
+        next = outcome.ok
           ? { ok: true, text: t.disconnected }
-          : { ok: false, text: outcome.error || t.disconnectFailed });
+          : { ok: false, text: outcome.error || t.disconnectFailed };
       } catch {
-        setDisconnectResult({ ok: false, text: t.disconnectFailed });
+        next = { ok: false, text: t.disconnectFailed };
       }
+      // Same post-await transition rule as revert above.
+      startDisconnectTransition(() => setDisconnectResult(next));
     });
   }
 
