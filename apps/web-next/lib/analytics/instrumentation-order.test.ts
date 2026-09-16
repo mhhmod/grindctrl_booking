@@ -16,4 +16,15 @@ describe('client instrumentation secret bootstrap order', () => {
     expect(bootstrap).toBeLessThan(sentry);
     expect(bootstrap).toBeLessThan(posthog);
   });
+
+  it('applies the shared fail-closed consent lifecycle to PostHog initialization', () => {
+    const source = readFileSync(
+      path.resolve(process.cwd(), 'instrumentation-client.ts'),
+      'utf8',
+    );
+
+    expect(source).toContain('...POSTHOG_FAIL_CLOSED_CONFIG');
+    expect(source).toContain('loaded: enforceAnalyticsConsent');
+    expect(source).not.toContain('capture_exceptions: true');
+  });
 });

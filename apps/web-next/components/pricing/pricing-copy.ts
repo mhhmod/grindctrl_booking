@@ -22,10 +22,6 @@ export type PricingCopy = {
   tryDemo: string;
   marketLabel: string;
   marketLead: string;
-  /* Takes the formatted price rather than baking one in: this sentence sits on
-     a page that can be priced in EGP, and a hardcoded "$15" put dollars back on
-     it. */
-  marketTail: (renders: string, price: string) => string;
   plansEyebrow: string;
   plansTitle: string;
   plansBody: string;
@@ -48,7 +44,8 @@ export type PricingCopy = {
   askAboutPack: string;
   faqEyebrow: string;
   faqTitle: string;
-  faq: Array<{ question: string; answer: string }>;
+  termsReviewNote: string;
+  faq: Array<{ question: string; answer: string; truthRecordId?: string }>;
   ctaTitle: string;
   ctaBody: string;
   footerTagline: string;
@@ -63,16 +60,15 @@ const en: PricingCopy = {
   eyebrow: 'AI Try-On pricing',
   title: 'More shopper confidence, priced for real usage.',
   intro:
-    'Start free, move up when try-on becomes part of your store, or let us set up and tune the full experience for you.',
+    'Start free, move up when try-on becomes part of your store, or ask us to scope the service options available for your plan.',
   bookCall: 'Book a pricing call',
   tryDemo: 'Try the live demo',
   marketLabel: 'Market position',
   marketLead: 'Entry plans from other Shopify try-on apps typically include 100 to 150 try-ons a month.',
-  marketTail: (renders, price) => `Launch includes ${renders} for ${price}.`,
   plansEyebrow: 'Monthly plans',
   plansTitle: 'Pick the level of support your store needs.',
   plansBody:
-    'Every plan includes delivered-image billing. Failed generations are refunded automatically.',
+    'Plan credits are charged for delivered images. Failed generations return the reserved customer credit; upstream provider cost may still be incurred.',
   recommended: 'Recommended',
   month: 'month',
   tryOnsPerMonth: (count) => `${count} try-ons per month`,
@@ -89,22 +85,20 @@ const en: PricingCopy = {
     'launch-v1': {
       name: 'Launch',
       description: 'The best value for stores ready to make try-on part of the buying journey.',
-      benefits: ['Our best value for a growing store', 'Top-ups available when you need them'],
+      benefits: ['Our best value for a growing store', 'Top-ups may be available; confirm during booking'],
     },
     'dfy-v1': {
       name: 'Done-for-you',
-      description: 'Premium output plus hands-on setup and ongoing care from GrindCTRL.',
+      description: 'Premium output with service scope confirmed before activation.',
       benefits: [
-        'Theme setup included',
-        'Brand tuning',
-        'Monthly check-in',
-        'Priority support',
+        'Implementation scope confirmed during booking',
+        'Brand options reviewed before activation',
       ],
     },
   },
   packsEyebrow: 'Top-up packs',
   packsTitle: 'Add credits without changing your plan.',
-  packsBody: 'One-time packs work with any active plan and stay valid for 365 days.',
+  packsBody: 'Ask us to confirm current pack availability and terms before activation.',
   oneTime: 'one time',
   renders: (count) => `${count} renders`,
   validFor: (days) => `Valid for ${days} days`,
@@ -116,6 +110,7 @@ const en: PricingCopy = {
   askAboutPack: 'Ask about this pack',
   faqEyebrow: 'Questions',
   faqTitle: 'Straight answers before you start.',
+  termsReviewNote: 'Payment, activation, renewal, and contract terms are confirmed during booking.',
   faq: [
     {
       question: 'What happens when I run out of credits?',
@@ -126,11 +121,13 @@ const en: PricingCopy = {
       question: 'Do unused credits roll over?',
       answer:
         'Plan credits reset at the end of each billing period. Top-up credits last for 365 days and can carry across active plan periods.',
+      truthRecordId: 'pricing.topups-valid-365-days',
     },
     {
       question: 'How do I pay?',
       answer:
         'No card is needed right now. Pay by bank transfer, Instapay, or Vodafone Cash, and we activate your plan the same day.',
+      truthRecordId: 'pricing.manual-payment-same-day-activation',
     },
     {
       question: 'What happens if a generation fails?',
@@ -145,11 +142,12 @@ const en: PricingCopy = {
     {
       question: 'Is there a contract?',
       answer: 'No. Plans are month to month, with no long-term contract.',
+      truthRecordId: 'pricing.month-to-month-no-contract',
     },
   ],
   ctaTitle: 'Want try-on to feel native to your store?',
   ctaBody: 'Book a short call. We will recommend the right plan and map the setup with you.',
-  footerTagline: 'Done-for-you AI Try-On for Shopify stores.',
+  footerTagline: 'AI Try-On for Shopify stores.',
   pricing: 'Pricing',
 };
 
@@ -161,16 +159,15 @@ const ar: PricingCopy = {
   eyebrow: 'أسعار تجربة الملابس بالذكاء الاصطناعي',
   title: 'ثقة أكبر للمتسوق، بسعر يناسب الاستخدام الحقيقي.',
   intro:
-    'ابدأ مجانًا، وانتقل إلى خطة أعلى عندما تصبح التجربة جزءًا من متجرك، أو دعنا نجهز التجربة بالكامل ونضبطها لك.',
+    'ابدأ مجانًا، وانتقل إلى خطة أعلى عندما تصبح التجربة جزءًا من متجرك، أو اطلب منا تحديد خيارات الخدمة المتاحة لخطتك.',
   bookCall: 'احجز مكالمة للأسعار',
   tryDemo: 'جرّب النسخة المباشرة',
   marketLabel: 'موقعنا في السوق',
   marketLead: 'تتضمن الخطط الأساسية في تطبيقات تجربة الملابس الأخرى على Shopify من 100 إلى 150 تجربة شهريًا.',
-  marketTail: (renders, price) => `بينما تتضمن خطة انطلاق ${renders} مقابل ${price}.`,
   plansEyebrow: 'الخطط الشهرية',
   plansTitle: 'اختر مستوى الدعم المناسب لمتجرك.',
   plansBody:
-    'كل الخطط تحاسب على الصور المستلمة فقط. أي عملية توليد تفشل تسترد رصيدها تلقائيًا.',
+    'يُخصم رصيد الخطة مقابل الصور التي تم تسليمها. تعيد العملية الفاشلة رصيد العميل المحجوز، وقد تبقى تكلفة مزود الخدمة قائمة.',
   recommended: 'موصى بها',
   month: 'شهر',
   tryOnsPerMonth: (count) => `${count} تجربة كل شهر`,
@@ -187,22 +184,20 @@ const ar: PricingCopy = {
     'launch-v1': {
       name: 'انطلاق',
       description: 'أفضل قيمة للمتاجر الجاهزة لجعل التجربة جزءًا من رحلة الشراء.',
-      benefits: ['أفضل قيمة لمتجر في مرحلة النمو', 'أرصدة إضافية عند الحاجة'],
+      benefits: ['أفضل قيمة لمتجر في مرحلة النمو', 'قد تتوفر أرصدة إضافية؛ نؤكدها أثناء الحجز'],
     },
     'dfy-v1': {
       name: 'خدمة متكاملة',
-      description: 'صور مميزة مع إعداد عملي ومتابعة مستمرة من GrindCTRL.',
+      description: 'صور مميزة مع تأكيد نطاق الخدمة قبل التفعيل.',
       benefits: [
-        'إعداد القالب مشمول',
-        'ضبط الهوية البصرية',
-        'متابعة شهرية',
-        'دعم بأولوية',
+        'تأكيد نطاق التنفيذ أثناء الحجز',
+        'مراجعة خيارات الهوية قبل التفعيل',
       ],
     },
   },
   packsEyebrow: 'حزم الرصيد الإضافي',
   packsTitle: 'أضف رصيدًا دون تغيير خطتك.',
-  packsBody: 'تعمل الحزم لمرة واحدة مع أي خطة نشطة، وتظل صالحة لمدة 365 يومًا.',
+  packsBody: 'تواصل معنا لتأكيد توفر الحزم وشروطها الحالية قبل التفعيل.',
   oneTime: 'دفعة واحدة',
   renders: (count) => `${count} صورة`,
   validFor: (days) => `صالحة لمدة ${days} يومًا`,
@@ -214,6 +209,7 @@ const ar: PricingCopy = {
   askAboutPack: 'اسأل عن هذه الحزمة',
   faqEyebrow: 'الأسئلة',
   faqTitle: 'إجابات واضحة قبل أن تبدأ.',
+  termsReviewNote: 'نؤكد شروط الدفع والتفعيل والتجديد والتعاقد أثناء الحجز.',
   faq: [
     {
       question: 'ماذا يحدث عندما ينتهي رصيدي؟',
@@ -224,11 +220,13 @@ const ar: PricingCopy = {
       question: 'هل ينتقل الرصيد غير المستخدم للشهر التالي؟',
       answer:
         'يتجدد رصيد الخطة في نهاية كل فترة فوترة. يستمر رصيد الحزم الإضافية لمدة 365 يومًا، ويمكن أن ينتقل بين فترات الخطة النشطة.',
+      truthRecordId: 'pricing.topups-valid-365-days',
     },
     {
       question: 'كيف أدفع؟',
       answer:
         'لا تحتاج إلى بطاقة الآن. يمكنك الدفع بتحويل بنكي أو Instapay أو Vodafone Cash، ونفعّل خطتك في اليوم نفسه.',
+      truthRecordId: 'pricing.manual-payment-same-day-activation',
     },
     {
       question: 'ماذا يحدث إذا فشلت عملية التوليد؟',
@@ -242,11 +240,12 @@ const ar: PricingCopy = {
     {
       question: 'هل يوجد عقد؟',
       answer: 'لا. الخطط شهرية ولا تتطلب عقدًا طويل الأجل.',
+      truthRecordId: 'pricing.month-to-month-no-contract',
     },
   ],
   ctaTitle: 'هل تريد أن تبدو التجربة جزءًا طبيعيًا من متجرك؟',
   ctaBody: 'احجز مكالمة قصيرة. سنقترح الخطة المناسبة ونرتب خطوات الإعداد معك.',
-  footerTagline: 'تجربة ملابس بالذكاء الاصطناعي مجهزة بالكامل لمتاجر Shopify.',
+  footerTagline: 'تجربة ملابس بالذكاء الاصطناعي لمتاجر Shopify.',
   pricing: 'الأسعار',
 };
 

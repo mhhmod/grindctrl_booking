@@ -25,7 +25,7 @@ describe('SiteLanding', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: 'Let shoppers see it on themselves before they buy.',
+        name: 'Turn every shopper signal into the next useful action.',
       }),
     ).toBeInTheDocument();
 
@@ -44,7 +44,7 @@ describe('SiteLanding', () => {
     const { container } = renderLanding('ar');
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: 'دع عملاءك يرون القطعة عليهم قبل الشراء.' }),
+      screen.getByRole('heading', { name: 'حوّل كل إشارة من المتسوق إلى الخطوة المفيدة التالية.' }),
     ).toBeInTheDocument();
   });
 });

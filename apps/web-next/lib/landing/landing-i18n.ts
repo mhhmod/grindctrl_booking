@@ -19,6 +19,33 @@ interface Item {
   body: string;
 }
 
+interface SystemMapRow {
+  shopper: string;
+  grindctrl: string;
+  business: string;
+}
+
+interface PlatformPillar {
+  title: string;
+  body: string;
+  status: string;
+}
+
+export type PlatformEvidenceItemId =
+  | 'operations'
+  | 'automation'
+  | 'integrations'
+  | 'managed-implementation'
+  | 'privacy-security';
+
+export interface PlatformEvidenceItem {
+  id: PlatformEvidenceItemId;
+  kind: 'standard' | 'integrations';
+  title: string;
+  body: string;
+  status: string;
+}
+
 interface LandingDict {
   brandHome: string;
   langToggleLabel: string;
@@ -41,11 +68,14 @@ interface LandingDict {
   heroChips: string[];
   heroRevealCaption: string;
   heroRevealAlt: string;
+  heroJourneyLabel: string;
+  heroJourneyStages: string[];
 
   howEyebrow: string;
   howTitle: string;
   howBody: string;
-  howSteps: Item[];
+  howMapColumns: [string, string, string];
+  howMapRows: SystemMapRow[];
 
   demoEyebrow: string;
   demoTitle: string;
@@ -58,13 +88,8 @@ interface LandingDict {
   benefitsEyebrow: string;
   benefitsTitle: string;
   benefitsBody: string;
-  returnBenefitLabel: string;
-  returnBenefitTitle: string;
-  returnBenefitBody: string;
-  confidenceBenefitLabel: string;
-  confidenceBenefitTitle: string;
-  confidenceBenefitBody: string;
-  merchantFeatures: Item[];
+  benefitsStatusNote: string;
+  platformPillars: PlatformPillar[];
 
   pricingEyebrow: string;
   pricingTitle: string;
@@ -80,6 +105,8 @@ interface LandingDict {
   proofBody: string;
   proofButton: string;
   proofDisclaimer: string;
+  proofJourneyLabel: string;
+  proofJourneyStages: Item[];
   proofImageAlt: string;
   proofCaption: string;
 
@@ -99,55 +126,17 @@ interface LandingDict {
   testimonialsBody: string;
   testimonials: { quote: string; name: string; role: string; photo: string }[];
 
-  operationsEyebrow: string;
-  operationsTitle: string;
-  operationsBody: string;
-  operationsBeats: { title: string; body: string }[];
+  integrationStateImplemented: string;
+  integrationStateSetupRequired: string;
+  integrationStateEvidenceRequired: string;
+  integrationStatePlanned: string;
+  integrationStateInfrastructure: string;
 
-  integrationsEyebrow: string;
-  integrationsTitle: string;
-  integrations: string[];
-
-  otherEyebrow: string;
-  otherTitle: string;
-  otherBody: string;
-  otherItems: string[];
-  /* Tools the automation work actually runs on. Rendered as brand chips. */
-  opsStack: string[];
-
-  /* Ops chain card, sits beside the otherItems list. */
-  opsChainKicker: string;
-  opsChainTitle: string;
-  opsChainAlt: string;
-  opsChainLiveLabel: string;
-  /* Exactly 4: Capture, Act, Check, Log. title carries the "01 · " prefix. */
-  opsChainSteps: Item[];
-  opsChainFootStrong: string;
-  opsChainFootRest: string;
-
-  /* Messaging channels card, sits beside the ops chain card. */
-  messagingKicker: string;
-  messagingTitle: string;
-  messagingAlt: string;
-  messagingReplyLabel: string;
-  messagingReplyText: string;
-  messagingStatusReplied: string;
-  messagingStatusDetail: string;
-  messagingFootStrong: string;
-  messagingFootRest: string;
-
-  automationsEyebrow: string;
-  automationsTitle: string;
-  automationsBody: string;
-  /* Exactly 3: the bar something had to clear before it appeared below. */
-  automationsQualifiers: string[];
-  automationsStatMessages: string;
-  automationsStatLeads: string;
-  automationsStatAutomations: string;
-  automationsStatResponse: string;
-  /* Exactly 4, matching CARDS order in automations-showcase.tsx: WhatsApp,
-     operations, leads, inbox. */
-  automationsCards: { label: string; caption: string }[];
+  platformEvidenceEyebrow: string;
+  platformEvidenceTitle: string;
+  platformEvidenceBody: string;
+  platformEvidenceLabel: string;
+  platformEvidenceItems: PlatformEvidenceItem[];
 
   ctaTitle: string;
   ctaBody: string;
@@ -157,6 +146,16 @@ interface LandingDict {
   footerHome: string;
   footerDemo: string;
   footerPricing: string;
+  footerRoi: string;
+  analyticsTitle: string;
+  analyticsDescription: string;
+  analyticsChoiceLabel: string;
+  analyticsAllow: string;
+  analyticsDeny: string;
+  analyticsStatusLabel: string;
+  analyticsStatusUnknown: string;
+  analyticsStatusGranted: string;
+  analyticsStatusDenied: string;
 }
 
 const en: LandingDict = {
@@ -173,38 +172,34 @@ const en: LandingDict = {
   menu: 'Menu',
   closeMenu: 'Close menu',
 
-  heroBadge: 'AI systems for online stores, built and run for you',
-  heroTitle: 'Let shoppers see it on themselves before they buy.',
+  heroBadge: 'AI commerce for online stores',
+  heroTitle: 'Turn every shopper signal into the next useful action.',
   heroSubtitle:
-    'Virtual try-on is where most stores start with us. From there we build the rest: shopper support, follow-up, and the repeat work behind the scenes. We set it up, run it, and keep it working in English and Arabic.',
-  heroPrimary: 'Book a call',
-  heroSecondary: 'Try it yourself',
+    'Start with virtual try-on, then explore how customer conversations, approved follow-up, workflows, and reporting can connect in English and Arabic.',
+  heroPrimary: 'Try it yourself',
+  heroSecondary: 'Book a call',
   heroChips: [
     'Built for Shopify',
-    'Managed setup',
+    'Live try-on demo',
     'Arabic and English',
   ],
   heroRevealCaption: 'See it on before you buy',
   heroRevealAlt:
     'A cream ringer T-shirt appears on a shopper, showing how the garment looks when worn.',
+  heroJourneyLabel: 'Illustrative connected journey',
+  heroJourneyStages: ['Live try-on', 'Intent can be captured', 'Approved follow-up can run', 'Connected outcomes can be reported'],
 
-  howEyebrow: 'How it works',
-  howTitle: 'From product page to a more confident cart.',
+  howEyebrow: 'Connected system',
+  howTitle: 'One customer journey. One operating layer.',
   howBody:
-    'The experience stays close to the shopping journey, with no detour into a separate app.',
-  howSteps: [
-    {
-      title: 'Shopper opens a product',
-      body: 'The try-on action appears on product pages and collection grids as they browse.',
-    },
-    {
-      title: 'They upload a photo',
-      body: 'A short, private flow guides them to add a clear full-body or half-body photo.',
-    },
-    {
-      title: 'They see it, then shop',
-      body: 'The preview shows the item on their photo and brings them back to add it to cart.',
-    },
+    'This illustrative journey shows how a customer action can become useful context, support an approved next step, and contribute to a measurable outcome when the required systems are connected.',
+  howMapColumns: ['Shopper', 'GrindCTRL', 'Business system'],
+  howMapRows: [
+    { shopper: 'Browses a product', grindctrl: 'Interest detected', business: 'Context prepared' },
+    { shopper: 'Tries the product', grindctrl: 'Try-on generated', business: 'Interest signal recorded' },
+    { shopper: 'Asks a question', grindctrl: 'Contextual answer prepared', business: 'Lead context enriched' },
+    { shopper: 'Returns later', grindctrl: 'Approved follow-up can run', business: 'Journey continues' },
+    { shopper: 'Places an order', grindctrl: 'Outcome captured where connected', business: 'Reporting can update' },
   ],
 
   demoEyebrow: 'Live demo',
@@ -212,38 +207,40 @@ const en: LandingDict = {
   demoBody:
     'Open the live experience, choose the sample garment, and see the full shopper flow for yourself.',
   demoButton: 'Open the live try-on',
-  demoNote: 'Bring a clear full-body or half-body photo. A preview takes about 9 seconds.',
+  demoNote: 'Bring a clear full-body or half-body photo. Processing time varies by image and provider availability.',
   demoPreviewLabel: 'AI render',
   demoImageAlt: 'Animation of a shopper photo being scanned and rendered into a virtual try-on',
 
-  benefitsEyebrow: 'Why merchants care',
-  benefitsTitle: 'Give shoppers more certainty without changing how they shop.',
+  benefitsEyebrow: 'Platform pillars',
+  benefitsTitle: 'Five capabilities. One customer journey.',
   benefitsBody:
-    'The try-on sits inside your storefront, follows your brand, and supports the moments where purchase decisions happen.',
-  returnBenefitLabel: 'Fewer avoidable returns',
-  returnBenefitTitle: 'Less guessing after delivery.',
-  returnBenefitBody:
-    'A visual preview can help reduce returns caused by shoppers feeling unsure about how a garment will look on them.',
-  confidenceBenefitLabel: 'More confidence',
-  confidenceBenefitTitle: 'A clearer decision before checkout.',
-  confidenceBenefitBody:
-    'Shoppers can picture the product on themselves while purchase intent is still high.',
-  merchantFeatures: [
+    'GrindCTRL is being assembled as one operating layer across the storefront and the work that follows. Current maturity is shown instead of implied.',
+  benefitsStatusNote: 'Status reflects current repository evidence, not confirmed deployment availability.',
+  platformPillars: [
     {
-      title: 'Product pages and collection grids',
-      body: 'The try-on entry point can appear where shoppers view one item or compare many.',
+      title: 'Shopping experiences',
+      body: 'Virtual try-on and branded storefront entry points help shoppers understand products before checkout.',
+      status: 'Implemented in source',
     },
     {
-      title: 'Native to Shopify',
-      body: 'The experience works with the storefront journey and returns shoppers to the product and cart.',
+      title: 'Customer conversations',
+      body: 'A configurable storefront assistant supports contextual customer questions and handoff paths.',
+      status: 'Implemented in source',
     },
     {
-      title: 'Matched to your brand',
-      body: 'Colors, corner radius, labels, and calls to action are tuned to feel at home in your store.',
+      title: 'Lead handling',
+      body: 'Customer and interest records exist, while scoring, ownership, and external CRM synchronization still need completion.',
+      status: 'Foundation only',
     },
     {
-      title: 'Arabic and English',
-      body: 'Shopper-facing copy and direction adapt for both RTL and LTR storefronts.',
+      title: 'Operations',
+      body: 'Workflow concepts and operator surfaces exist, but generalized production execution is not yet established.',
+      status: 'Foundation only',
+    },
+    {
+      title: 'Reporting',
+      body: 'Journey and revenue attribution require a defined event model and verified commerce connections.',
+      status: 'Planned layer',
     },
   ],
 
@@ -262,13 +259,24 @@ const en: LandingDict = {
   pricingNote: 'See the full comparison for plan terms, top-ups, and included service.',
   pricingLink: 'View full pricing',
 
-  proofEyebrow: 'Product proof',
-  proofTitle: 'Built for the storefront, managed behind the scenes.',
+  proofEyebrow: 'Beyond the render',
+  proofTitle: 'The customer journey does not end when the image is generated.',
   proofBody:
-    'The shopper sees a simple visual flow. GrindCTRL handles configuration, brand matching, monitoring, and ongoing care.',
+    'Try-on can become the first useful signal in a wider customer journey. Explore how each later step works when consent, business rules, and required integrations are configured.',
   proofButton: 'Test the shopper flow',
   proofDisclaimer:
-    'This animation illustrates the render step. It is not a customer testimonial or a performance claim.',
+    'The try-on button opens the live shopper demo. The downstream journey shown here is illustrative and configuration-dependent.',
+  proofJourneyLabel: 'Illustrative downstream journey',
+  proofJourneyStages: [
+    { title: 'Try-on', body: 'The shopper generates a product preview in the storefront experience.' },
+    { title: 'Intent', body: 'A product interaction can become a useful interest signal.' },
+    { title: 'Customer', body: 'With consent and identifiers, the signal can be associated with a new or existing customer profile.' },
+    { title: 'Conversation', body: 'Relevant product context can support the next customer question.' },
+    { title: 'CRM', body: 'Configured customer systems can receive the approved context needed by the team.' },
+    { title: 'Follow-up', body: 'A follow-up can run only under approved business rules and consent.' },
+    { title: 'Order', body: 'Where commerce events are connected, an attributable outcome can be captured.' },
+    { title: 'Reporting', body: 'Configured reporting can show how the journey progressed and where it stopped.' },
+  ],
   proofImageAlt: 'Animation of AI scanning a shopper photo and rendering the garment onto it',
   proofCaption: 'What the AI does to a shopper’s photo — the render step, not a mockup.',
 
@@ -288,107 +296,52 @@ const en: LandingDict = {
   testimonialsBody: 'This section stays hidden until verified customer quotes are approved.',
   testimonials: [],
 
-  operationsEyebrow: 'How it runs',
-  operationsTitle: 'A team runs this, not a black box.',
-  operationsBody: 'Every render is generated, checked, and shipped by people who use what they build.',
-  operationsBeats: [
-    { title: 'Why this exists', body: 'Shoppers guess how something will look on them. We built the system that lets them see it instead.' },
-    { title: 'Who runs it', body: 'A small team, not an anonymous platform. We use what we ship.' },
-    { title: 'How it works', body: "Every shop's renders, spend, and jobs run through one engineered pipeline." },
-    { title: 'What we watch', body: 'Job health and spend are tracked as they happen, not discovered later.' },
-    { title: 'What we check', body: 'Nothing reaches a storefront without a person reviewing it first.' },
-  ],
+  integrationStateImplemented: 'Implemented',
+  integrationStateSetupRequired: 'Setup required',
+  integrationStateEvidenceRequired: 'Evidence required',
+  integrationStatePlanned: 'Planned',
+  integrationStateInfrastructure: 'Infrastructure',
 
-  integrationsEyebrow: 'Storefront fit',
-  integrationsTitle: 'Made for the Shopify surfaces that matter.',
-  integrations: [
-    'Shopify',
-    'Product pages',
-    'Collection grids',
-    'Theme editor',
-    'Storefront API',
-    'Gemini',
-  ],
-
-  otherEyebrow: 'AI operations',
-  otherTitle: 'Try-on sells the product. The rest of the AI runs the business.',
-  otherBody:
-    'Try-on is the storefront. Behind it we build and run the operations layer: shopper support that answers in Arabic and English, leads captured and routed the moment they land, orders and follow-up handled without anyone retyping them, and reporting that arrives on its own. Same team, same dashboard.',
-  otherItems: [
-    'AI customer support across WhatsApp, Instagram, and web chat',
-    'Lead capture, scoring, and routing into your CRM',
-    'Order and follow-up automation',
-    'Document and back-office workflows',
-    'Reporting that builds itself',
-  ],
-  opsStack: [
-    'WhatsApp',
-    'Instagram',
-    'Telegram',
-    'Zapier',
-    'Make',
-    'n8n',
-    'Gemini',
-    'Claude',
-    'Notion',
-    'HubSpot',
-    'Supabase',
-  ],
-
-  opsChainKicker: 'Managed operations',
-  opsChainTitle: 'Nothing disappears into a black box.',
-  opsChainAlt:
-    'A continuous operations path captures a request, runs the automation, checks the outcome, and logs it to the dashboard.',
-  opsChainLiveLabel: 'Control live',
-  opsChainSteps: [
-    { title: '01 · Capture', body: 'Request received' },
-    { title: '02 · Act', body: 'Automation runs' },
-    { title: '03 · Check', body: 'Outcome verified' },
-    { title: '04 · Log', body: 'Dashboard updated' },
-  ],
-  opsChainFootStrong: 'Handled end to end.',
-  opsChainFootRest: 'Visible to you.',
-
-  messagingKicker: 'One operating voice',
-  messagingTitle: 'Every inbox follows the same rules.',
-  messagingAlt:
-    'One governed AI response is delivered consistently across WhatsApp, Instagram, and Facebook.',
-  messagingReplyLabel: 'AI reply · approved tone',
-  messagingReplyText: 'Yes, it is available. Would you like me to reserve it for you?',
-  messagingStatusReplied: 'Replied',
-  messagingStatusDetail: 'Tone checked',
-  messagingFootStrong: 'Same rules. Same tone.',
-  messagingFootRest: 'Every channel.',
-
-  automationsEyebrow: 'Real automations',
-  automationsTitle: 'Not mockups. What actually runs today.',
-  automationsBody:
-    'Every screen below is a live GrindCTRL account — the same automations we build behind your try-on. Nothing made this page unless it cleared three bars.',
-  automationsQualifiers: [
-    'Runs without a person watching it',
-    'Working on real customer conversations',
-    'Reports its own results',
-  ],
-  automationsStatMessages: 'Messages handled',
-  automationsStatLeads: 'Leads captured',
-  automationsStatAutomations: 'Automations live',
-  automationsStatResponse: 'Avg. response time',
-  automationsCards: [
+  platformEvidenceEyebrow: 'Platform evidence',
+  platformEvidenceTitle: 'One operating sequence, with the maturity visible.',
+  platformEvidenceBody:
+    'See what exists in the product, what depends on configuration, and what still needs live verification before it is treated as deployed capability.',
+  platformEvidenceLabel: 'Platform capability and evidence sequence',
+  platformEvidenceItems: [
     {
-      label: 'WhatsApp automation',
-      caption: 'Reads intent, drafts the reply, tags the lead — before a person opens the chat.',
+      id: 'operations',
+      kind: 'standard',
+      title: 'Operations',
+      body: 'Conversation handling, intents, job states, and audit trails exist in the product foundation. Generalized cross-channel execution is not presented as production-proven.',
+      status: 'Foundation in source',
     },
     {
-      label: 'Live operations',
-      caption: '1,284 runs this week. 92% finished with nobody watching.',
+      id: 'automation',
+      kind: 'standard',
+      title: 'Automation',
+      body: 'Approved rules can connect customer context to a next step. Each workflow still depends on its configured trigger, destination, credentials, and human approval boundary.',
+      status: 'Configuration dependent',
     },
     {
-      label: 'Lead pipeline',
-      caption: 'Every lead sorted and staged the moment it lands.',
+      id: 'integrations',
+      kind: 'integrations',
+      title: 'Integrations',
+      body: 'Every connection is labelled by depth: implemented, setup-required, evidence-required, planned, or infrastructure. A logo alone is never treated as proof of a live merchant connection.',
+      status: 'Depth disclosed',
     },
     {
-      label: 'Unified inbox',
-      caption: 'One inbox for every channel a customer messages from.',
+      id: 'managed-implementation',
+      kind: 'standard',
+      title: 'Managed implementation',
+      body: 'Discovery, setup, brand matching, and ongoing care can be scoped with the merchant. The exact service boundary is agreed for the selected engagement.',
+      status: 'Scoped per engagement',
+    },
+    {
+      id: 'privacy-security',
+      kind: 'standard',
+      title: 'Privacy and security',
+      body: 'Tenant scoping, explicit failure paths, and durable Shopify privacy processing exist in source. Legal approval, authenticated live journeys, and deployed-environment evidence remain separate release gates.',
+      status: 'Local safeguards',
     },
   ],
 
@@ -397,10 +350,20 @@ const en: LandingDict = {
     'Book a call and we will map the try-on experience to your Shopify theme, catalog, and customer journey.',
   ctaButton: 'Book a call',
 
-  footerTagline: 'Managed AI virtual try-on for Shopify fashion stores.',
+  footerTagline: 'AI commerce experiences for Shopify fashion stores.',
   footerHome: 'Home',
   footerDemo: 'Live demo',
   footerPricing: 'Pricing',
+  footerRoi: 'ROI calculator',
+  analyticsTitle: 'Analytics preferences',
+  analyticsDescription: 'Optional analytics help us understand which pages and demos are useful. Nothing is collected until you allow it, and you can change your choice here.',
+  analyticsChoiceLabel: 'Choose whether to allow optional analytics',
+  analyticsAllow: 'Allow analytics',
+  analyticsDeny: 'Deny analytics',
+  analyticsStatusLabel: 'Current choice',
+  analyticsStatusUnknown: 'Not chosen',
+  analyticsStatusGranted: 'Allowed',
+  analyticsStatusDenied: 'Denied',
 };
 
 const ar: LandingDict = {
@@ -417,37 +380,33 @@ const ar: LandingDict = {
   menu: 'القائمة',
   closeMenu: 'إغلاق القائمة',
 
-  heroBadge: 'أنظمة ذكاء اصطناعي للمتاجر الإلكترونية، نبنيها ونشغّلها لك',
-  heroTitle: 'دع عملاءك يرون القطعة عليهم قبل الشراء.',
+  heroBadge: 'تجارة ذكية للمتاجر الإلكترونية',
+  heroTitle: 'حوّل كل إشارة من المتسوق إلى الخطوة المفيدة التالية.',
   heroSubtitle:
-    'التجربة الافتراضية هي نقطة البداية مع معظم المتاجر. بعدها نبني الباقي: خدمة العملاء، والمتابعة، والمهام المتكررة خلف الكواليس. نتولى الإعداد والتشغيل والمتابعة بالعربية والإنجليزية.',
-  heroPrimary: 'احجز مكالمة',
-  heroSecondary: 'جرّبها بنفسك',
+    'ابدأ بالتجربة الافتراضية، ثم استكشف كيف يمكن ربط محادثات العملاء والمتابعة المعتمدة ومسارات العمل والتقارير بالعربية والإنجليزية.',
+  heroPrimary: 'جرّبها بنفسك',
+  heroSecondary: 'احجز مكالمة',
   heroChips: [
     'مصممة لمتاجر Shopify',
-    'إعداد وإدارة بالكامل',
+    'تجربة افتراضية مباشرة',
     'العربية والإنجليزية',
   ],
   heroRevealCaption: 'شاهدها عليك قبل الشراء',
   heroRevealAlt: 'تيشيرت رينجر كريمي يظهر على العميل ليوضح شكل القطعة أثناء ارتدائها.',
+  heroJourneyLabel: 'رحلة مترابطة توضيحية',
+  heroJourneyStages: ['تجربة افتراضية مباشرة', 'يمكن تسجيل الاهتمام', 'يمكن تشغيل متابعة معتمدة', 'يمكن إظهار النتائج عند الربط'],
 
-  howEyebrow: 'كيف تعمل',
-  howTitle: 'من صفحة المنتج إلى سلة شراء بثقة أكبر.',
+  howEyebrow: 'نظام مترابط',
+  howTitle: 'رحلة عميل واحدة. طبقة تشغيل واحدة.',
   howBody:
-    'تبقى التجربة داخل رحلة التسوق نفسها دون تحويل العميل إلى تطبيق منفصل.',
-  howSteps: [
-    {
-      title: 'يفتح العميل منتجًا',
-      body: 'يظهر زر التجربة في صفحات المنتجات وشبكات المجموعات أثناء التصفح.',
-    },
-    {
-      title: 'يرفع صورته',
-      body: 'توجهه خطوات قصيرة وخاصة لرفع صورة واضحة لكامل الجسم أو نصفه.',
-    },
-    {
-      title: 'يرى القطعة ثم يشتري',
-      body: 'تظهر المعاينة القطعة على صورته ثم تعيده إلى المنتج لإضافته إلى السلة.',
-    },
+    'توضح هذه الرحلة كيف يمكن أن يتحوّل تصرف العميل إلى سياق مفيد، وأن يدعم خطوة تالية معتمدة، وأن يساهم في نتيجة قابلة للقياس عند ربط الأنظمة المطلوبة.',
+  howMapColumns: ['المتسوق', 'GrindCTRL', 'نظام العمل'],
+  howMapRows: [
+    { shopper: 'يتصفح منتجاً', grindctrl: 'اكتشاف الاهتمام', business: 'تجهيز السياق' },
+    { shopper: 'يجرّب المنتج', grindctrl: 'إنشاء التجربة الافتراضية', business: 'تسجيل إشارة الاهتمام' },
+    { shopper: 'يطرح سؤالاً', grindctrl: 'تجهيز إجابة بالسياق', business: 'إثراء سياق العميل المحتمل' },
+    { shopper: 'يعود لاحقاً', grindctrl: 'إمكانية تشغيل متابعة معتمدة', business: 'استمرار الرحلة' },
+    { shopper: 'ينفّذ طلباً', grindctrl: 'تسجيل النتيجة عند الربط', business: 'إمكانية تحديث التقارير' },
   ],
 
   demoEyebrow: 'تجربة مباشرة',
@@ -455,38 +414,40 @@ const ar: LandingDict = {
   demoBody:
     'افتح التجربة المباشرة، واختر القطعة التجريبية، وشاهد رحلة العميل كاملة بنفسك.',
   demoButton: 'افتح تجربة الملابس',
-  demoNote: 'جهّز صورة واضحة لكامل الجسم أو نصفه. تستغرق المعاينة نحو 9 ثوانٍ.',
+  demoNote: 'جهّز صورة واضحة لكامل الجسم أو نصفه. يختلف وقت المعالجة حسب الصورة وتوفر مزود الخدمة.',
   demoPreviewLabel: 'معاينة بالذكاء الاصطناعي',
   demoImageAlt: 'رسوم متحركة توضح مسح صورة العميل وتحويلها إلى معاينة افتراضية للملابس',
 
-  benefitsEyebrow: 'لماذا تهم المتاجر',
-  benefitsTitle: 'امنح العملاء وضوحًا أكبر دون تغيير طريقة تسوقهم.',
+  benefitsEyebrow: 'ركائز المنصة',
+  benefitsTitle: 'خمس قدرات. رحلة عميل واحدة.',
   benefitsBody:
-    'تعمل التجربة داخل واجهة متجرك، وتتبع هويتك، وتظهر في اللحظات التي يتخذ فيها العميل قرار الشراء.',
-  returnBenefitLabel: 'مرتجعات أقل يمكن تجنبها',
-  returnBenefitTitle: 'تخمين أقل بعد الاستلام.',
-  returnBenefitBody:
-    'يمكن للمعاينة البصرية أن تساعد في تقليل المرتجعات الناتجة عن تردد العميل بشأن شكل القطعة عليه.',
-  confidenceBenefitLabel: 'ثقة أكبر',
-  confidenceBenefitTitle: 'قرار أوضح قبل الدفع.',
-  confidenceBenefitBody:
-    'يستطيع العميل تصور المنتج عليه بينما لا تزال رغبته في الشراء مرتفعة.',
-  merchantFeatures: [
+    'يجري بناء GrindCTRL كطبقة تشغيل واحدة تجمع واجهة المتجر والعمل الذي يليها. نعرض مستوى النضج الحالي بدلاً من الإيحاء به.',
+  benefitsStatusNote: 'تعكس الحالة أدلة المستودع الحالية، وليست تأكيداً لتوفر النشر الفعلي.',
+  platformPillars: [
     {
-      title: 'صفحات المنتجات وشبكات المجموعات',
-      body: 'يمكن أن يظهر مدخل التجربة عند مشاهدة منتج واحد أو مقارنة عدة منتجات.',
+      title: 'تجارب التسوق',
+      body: 'تساعد التجربة الافتراضية ومداخل المتجر المتناسقة مع الهوية العميل على فهم المنتج قبل الدفع.',
+      status: 'منفذة في المصدر',
     },
     {
-      title: 'متكاملة مع Shopify',
-      body: 'تعمل التجربة مع رحلة المتجر وتعيد العميل إلى المنتج والسلة.',
+      title: 'محادثات العملاء',
+      body: 'يدعم مساعد واجهة المتجر القابل للتهيئة أسئلة العملاء المرتبطة بالسياق ومسارات التحويل.',
+      status: 'منفذة في المصدر',
     },
     {
-      title: 'متناسقة مع علامتك',
-      body: 'نضبط الألوان والزوايا والنصوص وأزرار الإجراء لتبدو جزءًا طبيعيًا من متجرك.',
+      title: 'إدارة العملاء المحتملين',
+      body: 'توجد سجلات العملاء والاهتمام، بينما لا يزال التقييم والملكية والمزامنة الخارجية بحاجة إلى استكمال.',
+      status: 'أساس فقط',
     },
     {
-      title: 'العربية والإنجليزية',
-      body: 'تتكيف النصوص والاتجاهات الظاهرة للعميل مع واجهات RTL وLTR.',
+      title: 'العمليات',
+      body: 'توجد مفاهيم لمسارات العمل وواجهات للمشغل، لكن التنفيذ الإنتاجي العام لم يثبت بعد.',
+      status: 'أساس فقط',
+    },
+    {
+      title: 'التقارير',
+      body: 'يتطلب إسناد رحلة العميل والإيرادات نموذج أحداث محدداً وروابط تجارة موثقة.',
+      status: 'طبقة مخططة',
     },
   ],
 
@@ -509,13 +470,24 @@ const ar: LandingDict = {
   pricingNote: 'شاهد المقارنة الكاملة لمعرفة شروط الخطط والباقات الإضافية والخدمة المتضمنة.',
   pricingLink: 'شاهد الأسعار كاملة',
 
-  proofEyebrow: 'دليل المنتج',
-  proofTitle: 'مصممة لواجهة المتجر، ومدارة بالكامل خلف الكواليس.',
+  proofEyebrow: 'ما بعد المعاينة',
+  proofTitle: 'رحلة العميل لا تنتهي عند إنشاء الصورة.',
   proofBody:
-    'يرى العميل خطوات بصرية بسيطة، بينما يتولى GrindCTRL الإعداد وتنسيق الهوية والمراقبة والمتابعة المستمرة.',
+    'يمكن أن تصبح التجربة الافتراضية أول إشارة مفيدة في رحلة عميل أوسع. استكشف ما يحدث في كل خطوة لاحقة عند إعداد الموافقات وقواعد العمل والتكاملات المطلوبة.',
   proofButton: 'جرّب رحلة العميل',
   proofDisclaimer:
-    'هذه الرسوم المتحركة توضح خطوة المعاينة، وليست شهادة عميل أو ادعاءً بشأن الأداء.',
+    'يفتح الزر تجربة المتسوق المباشرة. أما الرحلة اللاحقة المعروضة هنا فتوضيحية وتعتمد على الإعداد.',
+  proofJourneyLabel: 'رحلة لاحقة توضيحية',
+  proofJourneyStages: [
+    { title: 'التجربة', body: 'ينشئ المتسوق معاينة للمنتج داخل تجربة واجهة المتجر.' },
+    { title: 'الاهتمام', body: 'يمكن أن يتحول التفاعل مع المنتج إلى إشارة اهتمام مفيدة.' },
+    { title: 'العميل', body: 'عند وجود الموافقة والمعرّفات، يمكن ربط الإشارة بملف عميل جديد أو موجود.' },
+    { title: 'المحادثة', body: 'يمكن أن يساعد سياق المنتج المناسب في الإجابة عن سؤال العميل التالي.' },
+    { title: 'CRM', body: 'يمكن لأنظمة العملاء المهيأة استقبال السياق المعتمد الذي يحتاجه الفريق.' },
+    { title: 'المتابعة', body: 'لا تعمل المتابعة إلا وفق قواعد العمل المعتمدة وموافقة العميل.' },
+    { title: 'الطلب', body: 'عند ربط أحداث التجارة، يمكن تسجيل نتيجة قابلة للإسناد.' },
+    { title: 'التقارير', body: 'يمكن للتقارير المهيأة إظهار تقدم الرحلة والنقطة التي توقفت عندها.' },
+  ],
   proofImageAlt: 'رسوم متحركة توضح مسح الذكاء الاصطناعي لصورة العميل وعرض القطعة عليها',
   proofCaption: 'هذا ما يفعله الذكاء الاصطناعي بصورة العميل — خطوة المعاينة الفعلية، وليست نموذجًا.',
 
@@ -535,107 +507,52 @@ const ar: LandingDict = {
   testimonialsBody: 'يبقى هذا القسم مخفيًا حتى اعتماد اقتباسات موثقة من العملاء.',
   testimonials: [],
 
-  operationsEyebrow: 'كيف نعمل',
-  operationsTitle: 'يديرها فريق، لا نظام مُهمَل.',
-  operationsBody: 'كل معاينة تُنشأ وتُراجَع وتُسلَّم من أشخاص يستخدمون ما يبنونه.',
-  operationsBeats: [
-    { title: 'لماذا وُجدت', body: 'يخمّن المتسوقون شكل المنتج عليهم. بنينا نظامًا يريهم إياه مباشرة.' },
-    { title: 'من يديرها', body: 'فريق صغير، لا منصة مجهولة. نستخدم ما نقدّمه.' },
-    { title: 'كيف تعمل', body: 'كل معاينات المتجر وإنفاقه ومهامه تمر عبر خط عمل واحد مُصمَّم بعناية.' },
-    { title: 'ما نراقبه', body: 'نتابع سلامة المهام والإنفاق لحظة حدوثها، لا بعد فواتها.' },
-    { title: 'ما نتحقق منه', body: 'لا شيء يصل إلى واجهة المتجر قبل أن يراجعه شخص.' },
-  ],
+  integrationStateImplemented: 'مطبق',
+  integrationStateSetupRequired: 'يتطلب إعدادًا',
+  integrationStateEvidenceRequired: 'يتطلب دليلاً',
+  integrationStatePlanned: 'مخطط له',
+  integrationStateInfrastructure: 'بنية تحتية',
 
-  integrationsEyebrow: 'تكامل واجهة المتجر',
-  integrationsTitle: 'مصممة لأهم نقاط التفاعل في Shopify.',
-  integrations: [
-    'Shopify',
-    'صفحات المنتجات',
-    'شبكات المجموعات',
-    'محرر القالب',
-    'Storefront API',
-    'Gemini',
-  ],
-
-  otherEyebrow: 'تشغيل بالذكاء الاصطناعي',
-  otherTitle: 'التجربة الافتراضية تبيع المنتج. وباقي الذكاء الاصطناعي يدير العمل.',
-  otherBody:
-    'التجربة الافتراضية هي الواجهة. وخلفها نبني ونشغّل طبقة العمليات: خدمة عملاء ترد بالعربية والإنجليزية، وعملاء محتملون يُلتقطون ويُوجّهون فور وصولهم، وطلبات ومتابعة تُدار دون إعادة إدخال يدوي، وتقارير تصل من تلقاء نفسها. الفريق نفسه واللوحة نفسها.',
-  otherItems: [
-    'دعم عملاء بالذكاء الاصطناعي عبر واتساب وإنستغرام والدردشة',
-    'جمع العملاء المحتملين وتقييمهم وتوجيههم إلى نظامك',
-    'أتمتة الطلبات والمتابعة',
-    'أتمتة المستندات والأعمال الخلفية',
-    'تقارير تُبنى تلقائيًا',
-  ],
-  opsStack: [
-    'WhatsApp',
-    'Instagram',
-    'Telegram',
-    'Zapier',
-    'Make',
-    'n8n',
-    'Gemini',
-    'Claude',
-    'Notion',
-    'HubSpot',
-    'Supabase',
-  ],
-
-  opsChainKicker: 'عمليات مُدارة',
-  opsChainTitle: 'لا شيء يختفي في صندوق أسود.',
-  opsChainAlt:
-    'مسار عمليات متواصل يستقبل الطلب، يشغّل الأتمتة، يتحقق من النتيجة، ثم يسجّلها في لوحة التحكم.',
-  opsChainLiveLabel: 'التحكم مباشر',
-  opsChainSteps: [
-    { title: '01 · استقبال', body: 'تم استلام الطلب' },
-    { title: '02 · تنفيذ', body: 'الأتمتة تعمل' },
-    { title: '03 · تحقق', body: 'تم التأكد من النتيجة' },
-    { title: '04 · تسجيل', body: 'تم تحديث اللوحة' },
-  ],
-  opsChainFootStrong: 'تُدار من البداية للنهاية.',
-  opsChainFootRest: 'وتظهر لك بالكامل.',
-
-  messagingKicker: 'صوت واحد موحّد',
-  messagingTitle: 'كل صندوق وارد يتبع القواعد نفسها.',
-  messagingAlt:
-    'رد واحد من الذكاء الاصطناعي يصل بثبات عبر واتساب وإنستغرام وفيسبوك.',
-  messagingReplyLabel: 'رد الذكاء الاصطناعي · بأسلوب معتمد',
-  messagingReplyText: 'نعم، متوفر. هل تحب أن أحجزه لك؟',
-  messagingStatusReplied: 'تم الرد',
-  messagingStatusDetail: 'تم ضبط الأسلوب',
-  messagingFootStrong: 'القواعد نفسها. الأسلوب نفسه.',
-  messagingFootRest: 'في كل قناة.',
-
-  automationsEyebrow: 'أتمتة حقيقية',
-  automationsTitle: 'ليست نماذج تجريبية. هذا ما يعمل فعليًا اليوم.',
-  automationsBody:
-    'كل شاشة أدناه من حساب GrindCTRL حقيقي وفعّال — نفس الأتمتة التي نبنيها خلف تجربة الملابس لديك. لا تظهر أي أتمتة هنا إلا إذا اجتازت ثلاثة شروط.',
-  automationsQualifiers: [
-    'تعمل دون إشراف بشري',
-    'تتعامل مع محادثات عملاء حقيقية',
-    'تُصدر تقاريرها بنفسها',
-  ],
-  automationsStatMessages: 'رسالة تمت معالجتها',
-  automationsStatLeads: 'عميل محتمل تم جمعه',
-  automationsStatAutomations: 'أتمتة نشطة',
-  automationsStatResponse: 'متوسط زمن الاستجابة',
-  automationsCards: [
+  platformEvidenceEyebrow: 'أدلة المنصة',
+  platformEvidenceTitle: 'مسار تشغيل واحد، ومستوى النضج ظاهر بوضوح.',
+  platformEvidenceBody:
+    'اطّلع على ما هو موجود في المنتج، وما يعتمد على الإعداد، وما يحتاج إلى تحقق فعلي قبل اعتباره قدرة منشورة.',
+  platformEvidenceLabel: 'تسلسل قدرات المنصة وأدلتها',
+  platformEvidenceItems: [
     {
-      label: 'أتمتة واتساب',
-      caption: 'يقرأ النية، يصيغ الرد، ويصنّف العميل المحتمل — قبل أن يفتح أي موظف المحادثة.',
+      id: 'operations',
+      kind: 'standard',
+      title: 'العمليات',
+      body: 'توجد في أساس المنتج إدارة المحادثات والنوايا وحالات المهام وسجلات التدقيق. ولا نقدّم التنفيذ العام عبر القنوات على أنه مثبت في الإنتاج.',
+      status: 'أساس موجود في المصدر',
     },
     {
-      label: 'العمليات المباشرة',
-      caption: '1,284 عملية هذا الأسبوع. اكتمل 92٪ منها دون مراقبة أحد.',
+      id: 'automation',
+      kind: 'standard',
+      title: 'الأتمتة',
+      body: 'يمكن للقواعد المعتمدة ربط سياق العميل بالخطوة التالية. ويظل كل مسار معتمداً على المشغّل والوجهة وبيانات الاعتماد وحدود الموافقة البشرية التي تم إعدادها.',
+      status: 'تعتمد على الإعداد',
     },
     {
-      label: 'مسار العملاء المحتملين',
-      caption: 'يُصنَّف كل عميل محتمل ويُوجَّه لحظة وصوله.',
+      id: 'integrations',
+      kind: 'integrations',
+      title: 'التكاملات',
+      body: 'يظهر عمق كل اتصال بوضوح: مطبق، أو يتطلب إعداداً، أو مخطط له، أو ضمن البنية التحتية. ولا يُعد الشعار وحده دليلاً على اتصال فعلي لمتجر.',
+      status: 'عمق الاتصال موضح',
     },
     {
-      label: 'صندوق وارد موحّد',
-      caption: 'صندوق واحد لكل قناة قد يراسل منها العميل.',
+      id: 'managed-implementation',
+      kind: 'standard',
+      title: 'التنفيذ المُدار',
+      body: 'يمكن تحديد نطاق الاستكشاف والإعداد ومواءمة الهوية والرعاية المستمرة مع المتجر. ويُتفق على حدود الخدمة الدقيقة لكل تعاقد.',
+      status: 'يُحدد لكل تعاقد',
+    },
+    {
+      id: 'privacy-security',
+      kind: 'standard',
+      title: 'الخصوصية والأمان',
+      body: 'توجد في المصدر ضوابط نطاق المستأجر ومسارات الفشل الصريحة والمعالجة الدائمة لطلبات خصوصية Shopify. وتبقى الموافقات القانونية والرحلات الفعلية الموثقة وأدلة بيئة النشر بوابات إصدار منفصلة.',
+      status: 'ضوابط محلية',
     },
   ],
 
@@ -644,10 +561,20 @@ const ar: LandingDict = {
     'احجز مكالمة وسنحدد كيف تتكامل تجربة الملابس مع قالب Shopify والكتالوج ورحلة عملائك.',
   ctaButton: 'احجز مكالمة',
 
-  footerTagline: 'تجربة ملابس افتراضية مدارة لمتاجر الأزياء على Shopify.',
+  footerTagline: 'تجارب تجارة بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.',
   footerHome: 'الرئيسية',
   footerDemo: 'تجربة مباشرة',
   footerPricing: 'الأسعار',
+  footerRoi: 'حاسبة العائد',
+  analyticsTitle: 'تفضيلات التحليلات',
+  analyticsDescription: 'تساعدنا التحليلات الاختيارية على فهم الصفحات والتجارب المفيدة. لن نجمع شيئًا حتى تسمح بذلك، ويمكنك تغيير اختيارك هنا.',
+  analyticsChoiceLabel: 'اختر ما إذا كنت تسمح بالتحليلات الاختيارية',
+  analyticsAllow: 'السماح بالتحليلات',
+  analyticsDeny: 'رفض التحليلات',
+  analyticsStatusLabel: 'الاختيار الحالي',
+  analyticsStatusUnknown: 'لم يتم الاختيار',
+  analyticsStatusGranted: 'مسموح',
+  analyticsStatusDenied: 'مرفوض',
 };
 
 export const LANDING_DICTIONARIES: Record<SiteLocale, LandingDict> = { en, ar };

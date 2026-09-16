@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import posthog, { type BeforeSendFn } from 'posthog-js';
+import { enforceAnalyticsConsent, POSTHOG_FAIL_CLOSED_CONFIG } from '@/lib/analytics/consent';
 import { scrubUrl } from '@/lib/analytics/scrub-url';
 import { isForeignScriptEvent } from '@/lib/analytics/foreign-frames';
 import { bootstrapStorefrontProof } from '@/lib/try-on/storefront-bootstrap';
@@ -71,12 +72,12 @@ if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 
   posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    /* Was installed for analytics only -- its error tracking dashboard
-       existed but had zero issues in it, because nothing was opting client
-       exceptions into it. Sentry already captures these (that's the
-       primary path); this is a second, independent record in case Sentry
-       config ever drifts. */
-    capture_exceptions: true,
+    /* The public preference control calls setAnalyticsConsent. Until a visitor
+       makes that explicit choice, the shared lifecycle remains opted out and
+       every automatic collection path stays disabled. Intentional events read
+       the same persisted SDK decision. Sentry remains the error path. */
+    ...POSTHOG_FAIL_CLOSED_CONFIG,
+    loaded: enforceAnalyticsConsent,
     before_send: scrubPostHogUrls,
   });
 }

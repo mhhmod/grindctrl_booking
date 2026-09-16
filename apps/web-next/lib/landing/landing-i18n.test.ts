@@ -55,3 +55,34 @@ describe('the two plan-name sources agree', () => {
     });
   }
 });
+
+describe('public landing claim guardrails', () => {
+  it.each(['en', 'ar'] as const)('does not publish an unverified fixed try-on duration in %s', (locale) => {
+    const copy = getLandingDictionary(locale);
+    expect(copy.demoNote).not.toMatch(/(?:9\s*seconds?|9\s*ثوان|٩\s*ثوان)/i);
+  });
+
+  it('localizes the evidence-required integration state', () => {
+    expect(getLandingDictionary('en').integrationStateEvidenceRequired).toBe('Evidence required');
+    expect(getLandingDictionary('ar').integrationStateEvidenceRequired).toBe('يتطلب دليلاً');
+  });
+
+  it.each(['en', 'ar'] as const)('keeps approval-gated managed-service promises out of the hero in %s', (locale) => {
+    const copy = getLandingDictionary(locale);
+    const heroCopy = [copy.heroBadge, copy.heroSubtitle, ...copy.heroChips].join(' ');
+    expect(heroCopy).not.toMatch(/Managed setup|configure and run|إعداد وإدارة بالكامل|نجهّز النظام ونديره/i);
+  });
+
+  it.each(['en', 'ar'] as const)('does not make an unconditional managed-service promise in the %s footer', (locale) => {
+    expect(getLandingDictionary(locale).footerTagline).not.toMatch(/managed|مدارة|مجهزة بالكامل/i);
+  });
+
+  it.each([
+    ['en', /can|illustrative|when/i],
+    ['ar', /يمكن|توضح|عند/],
+  ] as const)('qualifies the connected-system journey in %s', (locale, qualification) => {
+    const copy = getLandingDictionary(locale);
+    const journeyCopy = [copy.howBody, ...copy.heroJourneyStages].join(' ');
+    expect(journeyCopy).toMatch(qualification);
+  });
+});

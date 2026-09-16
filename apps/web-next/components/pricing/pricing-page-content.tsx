@@ -20,6 +20,10 @@ import {
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import { displayCurrencyFor, type Currency } from '@/lib/pricing/currency';
+import {
+  findPublicTruthRecord,
+  isPublishableWithoutOwnerReview,
+} from '@/lib/product-truth/public-register';
 import type {
   PublicCreditPackCatalogItem,
   PublicEntitlementCatalog,
@@ -51,6 +55,11 @@ export function formatCurrency(
   } catch {
     return `${currency} ${value.toFixed(fractionDigits)}`;
   }
+}
+
+export function isPricingRecordVisible(id: string): boolean {
+  const record = findPublicTruthRecord(id);
+  return record ? isPublishableWithoutOwnerReview(record) : false;
 }
 
 function getPlanCopyKey(planKey: string): string {
@@ -201,23 +210,11 @@ export function PricingPageContent({
   const t = getPricingCopy(locale);
   const sortedPlans = [...catalog.plans].sort((a, b) => a.sortOrder - b.sortOrder);
   const sortedPacks = [...catalog.packs].sort((a, b) => a.sortOrder - b.sortOrder);
-  const launchPlan = sortedPlans.find(
-    (plan) => getPlanCopyKey(plan.planKey) === 'launch-v1',
+  const showMarketComparison = isPricingRecordVisible('pricing.competitor-entry-volume');
+  const showPackValidity = isPricingRecordVisible('pricing.topups-valid-365-days');
+  const visibleFaq = t.faq.filter(
+    (item) => !item.truthRecordId || isPricingRecordVisible(item.truthRecordId),
   );
-  const launchRenders = launchPlan ? launchPlan.rendersIncluded.toLocaleString(
-    locale === 'ar' ? 'ar-EG' : 'en-US',
-    { numberingSystem: 'latn' },
-  ) : null;
-  /* Priced from the same row the card shows, so this sentence cannot drift from
-     the plan it describes or from the currency the page is in. */
-  const launchPrice = launchPlan
-    ? formatCurrency(
-        launchPlan.priceMinor / 100,
-        displayCurrencyFor(launchPlan, currency),
-        locale,
-        0,
-      )
-    : null;
 
   return (
     <>
@@ -268,7 +265,7 @@ export function PricingPageContent({
           {/* Tight on a phone: this hero ran 778px tall, which pushed the first
               price 1.57 screens down a page whose whole job is showing prices.
               Desktop spacing is unchanged. */}
-          <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:gap-10 sm:py-12 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(18rem,0.88fr)] lg:items-end lg:gap-16 lg:px-8 lg:py-24">
+          <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-24">
             <div className="min-w-0">
               <Badge
                 variant="secondary"
@@ -356,20 +353,14 @@ export function PricingPageContent({
                 was sitting above them — 186px of comparison a phone visitor had
                 to scroll past before seeing a single number. It lands better
                 once you have seen what it is comparing. */}
-            <aside className="mt-10 border-t border-border pt-7">
-              <Eyebrow locale={locale}>{t.marketLabel}</Eyebrow>
-              <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
-                {t.marketLead}
-                {launchRenders && launchPrice ? (
-                  <>
-                    {' '}
-                    <span className="text-muted-foreground">
-                      {t.marketTail(launchRenders, launchPrice)}
-                    </span>
-                  </>
-                ) : null}
-              </p>
-            </aside>
+            {showMarketComparison ? (
+              <aside className="mt-10 border-t border-border pt-7">
+                <Eyebrow locale={locale}>{t.marketLabel}</Eyebrow>
+                <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
+                  {t.marketLead}
+                </p>
+              </aside>
+            ) : null}
           </div>
         </section>
 
@@ -408,7 +399,9 @@ export function PricingPageContent({
                       </div>
                       <p className="mt-2 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
                         <span>{t.renders(formatNumber(pack.renders, locale))}</span>
-                        <span>{t.validFor(formatNumber(pack.validityDays, locale))}</span>
+                        {showPackValidity ? (
+                          <span>{t.validFor(formatNumber(pack.validityDays, locale))}</span>
+                        ) : null}
                       </p>
                     </div>
                     <div className="flex min-w-0 flex-col items-start gap-3 sm:items-end">
@@ -446,10 +439,13 @@ export function PricingPageContent({
               <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
                 {t.faqTitle}
               </h2>
+              <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
+                {t.termsReviewNote}
+              </p>
             </div>
 
             <div className="min-w-0 border-t border-border">
-              {t.faq.map((item) => (
+              {visibleFaq.map((item) => (
                 <details key={item.question} className="group min-w-0 border-b border-border">
                   <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-4 py-5 text-start font-semibold [&::-webkit-details-marker]:hidden">
                     <span className="min-w-0 break-words">{item.question}</span>

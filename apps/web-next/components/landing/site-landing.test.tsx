@@ -7,9 +7,6 @@ import { getLandingDictionary } from '@/lib/landing/landing-i18n';
 
 // Keep this regression focused on real footer controls, not animated proof
 // sections whose layout/motion is covered separately in browser checks.
-vi.mock('@/components/landing/ai-operations-chain', () => ({ AiOperationsChain: () => null }));
-vi.mock('@/components/landing/automations-showcase', () => ({ AutomationsShowcase: () => null }));
-vi.mock('@/components/landing/messaging-channels', () => ({ MessagingChannels: () => null }));
 vi.mock('@/components/landing/render-receipt-figure', () => ({ RenderReceiptFigure: () => null }));
 vi.mock('@/components/landing/collaborations-marquee', () => ({ CollaborationsMarquee: () => null }));
 vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'light', setTheme: vi.fn() }) }));

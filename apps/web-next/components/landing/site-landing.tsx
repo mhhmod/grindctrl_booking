@@ -1,43 +1,33 @@
 'use client';
 
-import React, { Fragment, useState } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
   ArrowRight02Icon,
-  CheckmarkCircle02Icon,
 } from '@hugeicons/core-free-icons';
-import { Shirt, ImageUp, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { BrandLogo } from '@/components/brand-logo';
-import { BRAND_MARKS } from '@/components/brand-marks';
-import { AiOperationsChain } from '@/components/landing/ai-operations-chain';
 import { AmbientBackground } from '@/components/landing/ambient-background';
-import { AutomationsShowcase } from '@/components/landing/automations-showcase';
-import { MessagingChannels } from '@/components/landing/messaging-channels';
-import { OperationsShowcase } from '@/components/landing/operations-showcase';
+import { AnalyticsConsentControl } from '@/components/landing/analytics-consent-control';
 import { RenderReceiptFigure } from '@/components/landing/render-receipt-figure';
-import { CollaborationsMarquee } from '@/components/landing/collaborations-marquee';
+import { ConnectedJourneyRail } from '@/components/landing/connected-journey-rail';
+import { ConnectedSystemMap } from '@/components/landing/connected-system-map';
+import { JourneyProofTabs } from '@/components/landing/journey-proof-tabs';
+import { PlatformEvidenceSequence } from '@/components/landing/platform-evidence-sequence';
+import { PlatformPillars } from '@/components/landing/platform-pillars';
 import { ThemeToggle } from '@/components/dashboard/theme-toggle';
 import { Icon } from '@/components/icons';
 import { Eyebrow } from '@/components/landing/eyebrow';
 import { LandingLocaleToggle, useLandingLocale } from '@/components/landing/landing-locale';
 import { SiteHeader } from '@/components/landing/site-header';
-import { StepMarker } from '@/components/landing/step-marker';
 import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
 
 const DEMO_URL = '/try-on';
-
-/* Literal depictions of each step: an actual garment, an actual photo upload,
-   an actual cart — the copy says "add it to cart" / "السلة" in both locales, so
-   the icon names the same object the sentence does. Same family so stroke
-   weight stays consistent; mixing weights is how this treatment falls apart. */
-const stepIcons = [Shirt, ImageUp, ShoppingCart];
 
 /* Testimonial quotes and photos are placeholders pending real client
    sign-off. Keep this false until verified quotes are approved. */
@@ -128,7 +118,7 @@ function ArrowIcon() {
    page has its own, and they are the ones that resolve currency per visitor. */
 
 export function SiteLanding() {
-  const { locale, t } = useLandingLocale();
+  const { locale, dir, t } = useLandingLocale();
 
   return (
     <>
@@ -170,8 +160,9 @@ export function SiteLanding() {
               </h1>
             </div>
 
-            <div className="order-2 min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+            <div className="order-2 flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
               <TryOnRevealFigure caption={t.heroRevealCaption} alt={t.heroRevealAlt} />
+              <ConnectedJourneyRail label={t.heroJourneyLabel} stages={t.heroJourneyStages} />
             </div>
 
             <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">
@@ -190,12 +181,7 @@ export function SiteLanding() {
                   size="lg"
                   className="h-12 rounded-full px-6 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <a
-                    href={BOOKING_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'hero' })}
-                  >
+                  <a href={DEMO_URL} onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'hero' })}>
                     {t.heroPrimary}
                     <ArrowIcon />
                   </a>
@@ -206,12 +192,14 @@ export function SiteLanding() {
                   size="lg"
                   className="h-12 rounded-full border-border px-6 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <Link
-                    href={DEMO_URL}
-                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'hero' })}
+                  <a
+                    href={BOOKING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'hero' })}
                   >
                     {t.heroSecondary}
-                  </Link>
+                  </a>
                 </Button>
               </div>
               <div
@@ -244,20 +232,9 @@ export function SiteLanding() {
               </p>
             </div>
 
-            <ol className="gc-how-sequence relative mt-14 grid min-w-0 gap-10 md:grid-cols-3 md:gap-8 lg:mt-20 lg:gap-12">
-              {t.howSteps.map((step, i) => (
-                <li
-                  key={step.title}
-                  className="gc-how-step relative z-10 min-w-0 ps-16 md:ps-0 md:pt-16"
-                >
-                  <div className="absolute start-0 top-0">
-                    <StepMarker index={i} icon={stepIcons[i] ?? Shirt} />
-                  </div>
-                  <h3 className="text-lg font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-[15px] leading-[1.65] text-muted-foreground">{step.body}</p>
-                </li>
-              ))}
-            </ol>
+            <div className="mt-10 lg:mt-14">
+              <ConnectedSystemMap columns={t.howMapColumns} rows={t.howMapRows} />
+            </div>
           </div>
         </section>
 
@@ -308,37 +285,8 @@ export function SiteLanding() {
             </div>
 
             <div className="min-w-0">
-              <div className="grid min-w-0 border-y border-border sm:grid-cols-2">
-                <div className="flex min-w-0 flex-col gap-3 py-7 sm:pe-8">
-                  <Eyebrow locale={locale}>{t.returnBenefitLabel}</Eyebrow>
-                  <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.returnBenefitTitle}</h3>
-                  <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.returnBenefitBody}</p>
-                </div>
-                <div className="flex min-w-0 flex-col gap-3 border-t border-border py-7 sm:border-s sm:border-t-0 sm:ps-8">
-                  <Eyebrow locale={locale}>{t.confidenceBenefitLabel}</Eyebrow>
-                  <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.confidenceBenefitTitle}</h3>
-                  <p className="text-[15px] leading-[1.7] text-muted-foreground">{t.confidenceBenefitBody}</p>
-                </div>
-              </div>
-
-              <div className="mt-8 min-w-0">
-                {t.merchantFeatures.map((feature, i) => (
-                  <Fragment key={feature.title}>
-                    {i > 0 ? <Separator /> : null}
-                    <div className="grid min-w-0 gap-3 py-5 first:pt-0 last:pb-0 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5">
-                      <span className="grid size-10 place-items-center rounded-full border border-border bg-muted/40 text-foreground">
-                        <Icon icon={CheckmarkCircle02Icon} size={19} />
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="text-lg font-semibold">{feature.title}</h3>
-                        <p className="mt-1 text-[15px] leading-[1.65] text-muted-foreground">
-                          {feature.body}
-                        </p>
-                      </div>
-                    </div>
-                  </Fragment>
-                ))}
-              </div>
+              <PlatformPillars items={t.platformPillars} />
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.benefitsStatusNote}</p>
             </div>
           </div>
         </section>
@@ -372,23 +320,9 @@ export function SiteLanding() {
               <p className="text-xs leading-relaxed text-muted-foreground">{t.proofDisclaimer}</p>
             </div>
             <div className="min-w-0 lg:order-first">
-              <RenderReceiptFigure />
+              <JourneyProofTabs dir={dir} label={t.proofJourneyLabel} stages={t.proofJourneyStages} />
             </div>
           </div>
-        </section>
-
-        {/* Fills the trust-proof gap left by disabled testimonials below:
-            not quotes pending sign-off, but the real team and systems
-            behind every render. */}
-        <section id="operations" aria-labelledby="operations-title">
-          <div className="gc-scroll-reveal mx-auto w-full max-w-3xl px-4 pb-10 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
-            <Eyebrow locale={locale} className="justify-center">{t.operationsEyebrow}</Eyebrow>
-            <h2 id="operations-title" className="mt-4 text-[28px] font-bold leading-[1.12] tracking-tight sm:text-4xl lg:text-[44px] lg:leading-[1.05]">
-              {t.operationsTitle}
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg">{t.operationsBody}</p>
-          </div>
-          <OperationsShowcase beats={t.operationsBeats} />
         </section>
 
         {/* Testimonials remain disabled until the placeholder quotes are replaced. */}
@@ -433,104 +367,27 @@ export function SiteLanding() {
           </section>
         )}
 
-        {/* Integrations */}
-        <section aria-labelledby="integrations-title">
-          <div className="gc-scroll-reveal mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
-            <div className="min-w-0 flex max-w-2xl flex-col gap-3">
-              <Eyebrow locale={locale}>{t.integrationsEyebrow}</Eyebrow>
-              <h2 id="integrations-title" className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {t.integrationsTitle}
-              </h2>
-            </div>
-
-            {/* Full width rather than sharing a row with the heading: twelve
-                partners wrapped into a flex pile on a phone and read as a wall
-                of pills. Moving rows show the same names in less height. */}
-            <div className="mt-8">
-              <CollaborationsMarquee />
-            </div>
-          </div>
-        </section>
-
-        {/* Other services */}
-        <section className="bg-muted/30" aria-labelledby="other-services-title">
-          <div className="gc-scroll-reveal mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-9 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
-            <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
-              <div className="min-w-0 flex flex-col gap-3">
-                <Eyebrow locale={locale}>{t.otherEyebrow}</Eyebrow>
-                <h2
-                  id="other-services-title"
-                  className="text-[26px] font-bold leading-[1.14] tracking-tight sm:text-3xl lg:text-[38px] lg:leading-[1.08]"
-                >
-                  {t.otherTitle}
-                </h2>
-                <p className="text-base leading-[1.65] text-muted-foreground">{t.otherBody}</p>
-              </div>
-
-              <div className="min-w-0 flex flex-col gap-6">
-                {/* The two claims above made concrete: the operations path
-                    stays visible end to end, and the same voice answers on
-                    every channel. Stacked, not side by side: this column is
-                    already half the page at desktop, and squeezing two 4:3
-                    cards into half of that shrank them to illegible-text
-                    territory. Full column width each reads clearly at every
-                    breakpoint instead of only on phones, where the side-by-side
-                    version happened to fall back to stacking anyway. */}
-                <AiOperationsChain className="mx-auto sm:mx-0" />
-                <MessagingChannels className="mx-auto sm:mx-0" />
-
-                {/* A list, not another card triplet: these are capabilities
-                    of one service, so they read better stacked than boxed. */}
-                <ul className="min-w-0 flex flex-col gap-3">
-                  {t.otherItems.map((item) => (
-                    <li key={item} className="flex min-w-0 items-start gap-2.5">
-                      <span className="mt-0.5 shrink-0 text-muted-foreground" aria-hidden="true">
-                        <Icon icon={CheckmarkCircle02Icon} />
-                      </span>
-                      <span className="min-w-0 text-[15px] leading-[1.55]">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="min-w-0">
-              <Eyebrow locale={locale}>{t.automationsEyebrow}</Eyebrow>
-              <h3 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{t.automationsTitle}</h3>
-              <p className="mt-2 max-w-2xl text-[15px] leading-[1.65] text-muted-foreground">
-                {t.automationsBody}
-              </p>
-              <div className="mt-7">
-                <AutomationsShowcase
-                  qualifiers={t.automationsQualifiers}
-                  statLabels={{
-                    automationsStatMessages: t.automationsStatMessages,
-                    automationsStatLeads: t.automationsStatLeads,
-                    automationsStatAutomations: t.automationsStatAutomations,
-                    automationsStatResponse: t.automationsStatResponse,
-                  }}
-                  cards={t.automationsCards}
-                />
-              </div>
-            </div>
-
-            {/* The tools this actually runs on. Same chip treatment as the
-                try-on integrations strip so the page reads as one system. */}
-            <div className="flex min-w-0 flex-wrap gap-2.5 border-t border-border pt-7">
-              {t.opsStack.map((name) => {
-                const Mark = BRAND_MARKS[name];
-                return (
-                  <Badge
-                    key={name}
-                    variant="outline"
-                    className="gc-integration-chip inline-flex items-center gap-1.5 rounded-full border-border bg-background px-3.5 text-[13px] font-medium"
-                  >
-                    {Mark ? <Mark className="shrink-0" /> : null}
-                    {name}
-                  </Badge>
-                );
-              })}
-            </div>
+        {/* One evidence-led sequence replaces the repeated operations,
+            automation-preview and integration sections. */}
+        <section id="operations" className="bg-muted/30" aria-labelledby="platform-evidence-title">
+          <div className="gc-scroll-reveal mx-auto w-full max-w-7xl min-w-0 px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+            <SectionHeading
+              id="platform-evidence-title"
+              eyebrow={t.platformEvidenceEyebrow}
+              title={t.platformEvidenceTitle}
+              body={t.platformEvidenceBody}
+            />
+            <PlatformEvidenceSequence
+              label={t.platformEvidenceLabel}
+              items={t.platformEvidenceItems}
+              integrationLabels={{
+                implemented: t.integrationStateImplemented,
+                'setup-required': t.integrationStateSetupRequired,
+                'evidence-required': t.integrationStateEvidenceRequired,
+                planned: t.integrationStatePlanned,
+                infrastructure: t.integrationStateInfrastructure,
+              }}
+            />
           </div>
         </section>
 
@@ -566,18 +423,22 @@ export function SiteLanding() {
       {/* Reserve the 84px floating launcher's footprint plus a small gap at
           the end of the page so locale/theme controls remain reachable. */}
       <footer className="px-4 pb-24 pt-10 text-sm text-muted-foreground sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <BrandLogo size="sm" textClassName="text-xs" />
-          <p className="text-xs">{t.footerTagline}</p>
-          <div className="flex items-center gap-5 text-xs">
-            <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
-            <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
-            <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
-          </div>
-          {/* Language and theme left the top bar; the footer is their second route. */}
-          <div className="flex items-center gap-2">
-            <LandingLocaleToggle />
-            <ThemeToggle locale={locale} />
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
+          <AnalyticsConsentControl />
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <BrandLogo size="sm" textClassName="text-xs" />
+            <p className="text-xs">{t.footerTagline}</p>
+            <div className="flex items-center gap-5 text-xs">
+              <Link href="/" className="gc-tap transition-colors hover:text-foreground">{t.footerHome}</Link>
+              <Link href={DEMO_URL} className="gc-tap transition-colors hover:text-foreground">{t.footerDemo}</Link>
+              <Link href="/pricing" className="gc-tap transition-colors hover:text-foreground">{t.footerPricing}</Link>
+              <Link href="/roi" className="gc-tap transition-colors hover:text-foreground">{t.footerRoi}</Link>
+            </div>
+            {/* Language and theme left the top bar; the footer is their second route. */}
+            <div className="flex items-center gap-2">
+              <LandingLocaleToggle />
+              <ThemeToggle locale={locale} />
+            </div>
           </div>
         </div>
       </footer>

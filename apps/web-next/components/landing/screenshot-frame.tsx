@@ -2,10 +2,9 @@ import React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
-/* A browser-chrome frame for real product screenshots. The automations
-   section shows actual GrindCTRL dashboard captures rather than illustration
-   — the chrome bar is what tells a scanning eye "this is running software",
-   not decoration for its own sake.
+/* A browser-chrome frame for product and workflow screenshots. The chrome bar
+   gives the images application context without asserting customer provenance
+   or verified operational outcomes.
 
    Screenshots are the product's own English-language UI: never mirrored for
    RTL (see CLAUDE.md's rule against mirroring media that isn't meant to be),
