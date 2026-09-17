@@ -86,7 +86,28 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 
 ## Next app UI front line
 
-`apps/web-next` is the Next.js application surface. For UI work there, shadcn/ui is the first-line component source and `components.json` is the source of truth for shadcn settings:
+`apps/web-next` is the Next.js application surface. Which component library to reach for depends on the surface:
+
+| Surface | Library |
+| --- | --- |
+| Merchant SaaS: `app/dashboard`, onboarding, claim, the embedded Shopify admin | **Mantine 9** |
+| Marketing site and the `/try-on` demo | Tailwind and the existing landing components |
+| Storefront embed (`app/embed/*`, `public/widget/*`) | Stays dependency-light and merchant-themed, no UI library |
+
+### Mantine 9 on the SaaS surfaces
+
+- New SaaS UI is built from Mantine components. Existing shadcn primitives keep working; migrate a file when you are already changing it, not as a sweep.
+- Mantine loads only where `MantineUiProvider` (`components/mantine/provider.tsx`) is mounted, which keeps its CSS off the marketing site and the storefront embed. A new SaaS route segment mounts it in its own layout and passes `dir`.
+- `components/mantine/theme.ts` is the only place brand values are defined. It bridges to the tokens in `app/globals.css`, so never hardcode a color, radius or font in a Mantine component. `theme.test.ts` fails if a token and its palette drift apart.
+- Light and dark come from next-themes (class on `<html>`) and Mantine follows it; direction comes from `<html dir>`. Do not add a second theme or direction switch.
+- `postcss-preset-mantine` is deliberately NOT installed: it rewrites every stylesheet in the app, the marketing CSS included. When adapting a block from `ui.mantine.dev`, convert its CSS to plain CSS in a `.module.css` file: `@mixin hover` becomes `@media (hover: hover) { &:hover { ... } }`, `@mixin rtl` becomes `:where([dir='rtl']) &`, `rem(16px)` becomes `1rem`, and `$mantine-breakpoint-*` becomes the widths in `theme.ts`.
+- Mantine's own defaults assume white text on the primary color, but the primary is cream in dark mode, so `theme.ts` and `components/mantine/styles.css` correct that. Any new Mantine component that puts text or an icon on a primary background needs a dark-mode check before it ships.
+- Tests that render Mantine components use `renderWithMantine` from `components/mantine/test-utils.tsx`.
+- Look APIs up with the official Mantine MCP server (`@mantine/mcp-server`: `search_docs`, `get_item_doc`, `get_item_props`) and the official skills in `.claude/skills` and `.agents/skills` (`mantine-form`, `mantine-combobox`, `mantine-custom-components`) instead of guessing.
+
+### shadcn, for what is already built on it
+
+`components.json` remains the source of truth for shadcn settings:
 
 - Check `apps/web-next/components/ui` before building a primitive from scratch.
 - If a primitive is missing, add it with the shadcn CLI/MCP into `apps/web-next`, then adapt it locally.
@@ -97,7 +118,7 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - Use Kiranism Next Shadcn Dashboard Starter (`https://github.com/Kiranism/next-shadcn-dashboard-starter`) selectively for admin patterns such as charts, tables, filters, forms, command-k, and feature-based dashboard structure. Account for its newer Next version before copying patterns.
 - Use CreemBase / UI Pacekit (`https://github.com/pacekit/creembase`) as a SaaS/Supabase/product-flow reference, especially for auth, billing, onboarding, pricing, and app shell ideas.
 - These reference repos are not package dependencies or MCP servers unless they expose a shadcn-compatible registry URL. Inspect and adapt patterns instead of copying whole files blindly.
-- For every non-trivial UI change: audit existing layout/components first, implement with shadcn-first primitives, then verify responsive behavior and RTL/LTR assumptions.
+- For every non-trivial UI change: audit existing layout/components first, then verify responsive behavior and RTL/LTR assumptions.
 - Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime.
 
 ### Landing sign-in regression guard
