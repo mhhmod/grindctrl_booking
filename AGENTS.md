@@ -121,7 +121,7 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - Use CreemBase / UI Pacekit (`https://github.com/pacekit/creembase`) as a SaaS/Supabase/product-flow reference, especially for auth, billing, onboarding, pricing, and app shell ideas.
 - These reference repos are not package dependencies or MCP servers unless they expose a shadcn-compatible registry URL. Inspect and adapt patterns instead of copying whole files blindly.
 - For every non-trivial UI change: audit existing layout/components first, then verify responsive behavior and RTL/LTR assumptions.
-- Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime.
+- Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime. The standalone build forwards proxied requests to itself over `localhost`, which works in the container (localhost is IPv4-only there) but fails on a Windows host, where those routes return 500 unless the server binds dual-stack (`HOSTNAME=::`).
 
 ### Landing sign-in regression guard
 
