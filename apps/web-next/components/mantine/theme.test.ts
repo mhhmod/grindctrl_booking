@@ -42,6 +42,17 @@ const light = block(':root,\n.light {'.replace('\n', css.includes('\r\n') ? '\r\
 const dark = block('.dark {');
 const { colors, white, black } = mantineTheme;
 
+function luminance(hex: string): number {
+  const channels = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const [r, g, b] = channels.map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrast(a: string, b: string): number {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
 describe('Mantine palette matches the app tokens', () => {
   it.each([
     ['inkLight-6 (light filled)', colors!.inkLight![6], light, 'primary'],
@@ -66,5 +77,23 @@ describe('Mantine palette matches the app tokens', () => {
     ['dark-8', colors!.dark![8], dark, 'background'],
   ] as const)('%s equals --%s', (_label, actual, scope, name) => {
     expect(actual).toBe(token(scope, name));
+  });
+});
+
+/* Mantine picks the filled shade per color scheme (primaryShade) and pairs it
+   with theme.white or theme.black. Every pair a merchant can see has to clear
+   WCAG AA for normal text, which Mantine's own red does not. */
+describe('filled shades stay readable', () => {
+  it.each([
+    ['brand light', colors!.inkLight![6], white!],
+    ['brand light hover', colors!.inkLight![7], white!],
+    ['brand dark', colors!.inkDark![7], black!],
+    ['brand dark hover', colors!.inkDark![8], black!],
+    ['red light', colors!.red![6], white!],
+    ['red light hover', colors!.red![7], white!],
+    ['red dark', colors!.red![7], white!],
+    ['red dark hover', colors!.red![8], white!],
+  ] as const)('%s clears 4.5:1', (_label, background, text) => {
+    expect(contrast(background, text)).toBeGreaterThanOrEqual(4.5);
   });
 });

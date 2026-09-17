@@ -39,7 +39,10 @@
     --radio-icon-color: var(--mantine-primary-color-contrast);
   }
 
-  .mantine-Progress-section {
+  /* Only sections left on the primary color: Mantine writes the section
+     color inline, so this matches the primary and leaves a section with an
+     explicit color on Mantine's own label color. */
+  .mantine-Progress-section[style*='--mantine-color-brand-filled'] {
     --progress-label-color: var(--mantine-primary-color-contrast);
   }
 

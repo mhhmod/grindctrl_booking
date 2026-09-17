@@ -93,5 +93,7 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   widenClientFileUpload: true,
+  /* Only applies to a `next build --webpack` run. The default build is
+     Turbopack, where Sentry has no equivalent tree-shaking option yet. */
   webpack: {treeshake: {removeDebugLogging: true}},
 });

@@ -24,7 +24,7 @@ import {
    out by role rather than as a light-to-dark ramp:
    light: 6 filled, 7 filled hover, 1 / 2 light variant, 9 light variant text
    dark:  7 filled, 8 filled hover, 9 source of the light variant background
-          (darkened by Mantine), 3 outline and text, 0 light variant text */
+          (darkened by Mantine), 3 outline, 4 text, 0 light variant text */
 const inkLight: MantineColorsTuple = [
   '#f6f3ee', '#e3dfda', '#d4d0cb', '#a7a4a0', '#837f7c',
   '#66625f', '#201d1b', '#2e2b28', '#3a3734', '#201d1b',
