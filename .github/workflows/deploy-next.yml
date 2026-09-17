@@ -202,27 +202,36 @@ jobs:
       # at BUILD time (NEXT_PUBLIC_* semantics). This catches the silent
       # failure mode where secrets exist but never reach the Docker build:
       # the site works fine, no console errors — and browser exceptions go
-      # nowhere. Checks the main-app chunk for both markers.
+      # nowhere. Turbopack names chunks by content hash with no stable
+      # "main-app" chunk, so this scans every chunk the homepage loads.
       - name: Verify client monitoring keys were baked into the bundle
         run: |
           html=$(curl -s --max-time 20 "https://grindctrl.cloud/")
-          chunk=$(printf '%s' "$html" | grep -o '/_next/static/chunks/main-app-[a-z0-9]*\.js' | head -n 1)
-          if [ -z "$chunk" ]; then
-            echo "FAIL could not locate the main-app chunk in the homepage HTML"
+          chunks=$(printf '%s' "$html" | grep -o '/_next/static/chunks/[A-Za-z0-9/_-]*\.js' | sort -u || true)
+          if [ -z "$chunks" ]; then
+            echo "FAIL no client chunks referenced by the homepage HTML"
             exit 1
           fi
-          bundle=$(curl -s --max-time 30 "https://grindctrl.cloud$chunk")
+          posthog=0
+          sentry=0
+          # `if` rather than `&&`: this step runs under `bash -e`, where a
+          # chunk that simply does not contain the marker would end the run.
+          for chunk in $chunks; do
+            bundle=$(curl -s --max-time 30 "https://grindctrl.cloud$chunk")
+            if printf '%s' "$bundle" | grep -q 'phc_'; then posthog=1; fi
+            if printf '%s' "$bundle" | grep -Eq 'https://[a-f0-9]{16,}@o[0-9]+\.ingest'; then sentry=1; fi
+          done
           ok=0
-          if printf '%s' "$bundle" | grep -q 'phc_'; then
+          if [ "$posthog" = 1 ]; then
             echo "OK   PostHog key inlined"
           else
-            echo "FAIL PostHog key missing from $chunk (is NEXT_PUBLIC_POSTHOG_KEY set as an Actions secret?)"
+            echo "FAIL PostHog key missing from every homepage chunk (is NEXT_PUBLIC_POSTHOG_KEY set as an Actions secret?)"
             ok=1
           fi
-          if printf '%s' "$bundle" | grep -Eq 'https://[a-f0-9]{16,}@o[0-9]+\.ingest'; then
+          if [ "$sentry" = 1 ]; then
             echo "OK   Sentry DSN inlined"
           else
-            echo "FAIL Sentry DSN missing from $chunk (is NEXT_PUBLIC_SENTRY_DSN set as an Actions secret?)"
+            echo "FAIL Sentry DSN missing from every homepage chunk (is NEXT_PUBLIC_SENTRY_DSN set as an Actions secret?)"
             ok=1
           fi
           exit $ok
