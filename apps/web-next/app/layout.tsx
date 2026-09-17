@@ -32,7 +32,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
   const locale = await getRequestLocale();
   const pathname = (await headers()).get('x-pathname');
   /* auth() throws if clerkMiddleware() didn't run for this request — and
-     middleware.ts's matcher deliberately excludes /embed/* (see its own
+     proxy.ts's matcher deliberately excludes /embed/* (see its own
      comment: cookie-less third-party iframe context). That exclusion is the
      exact same matcher that leaves x-pathname unset, so `pathname === null`
      is already the correct signal for "middleware did not run here" — no

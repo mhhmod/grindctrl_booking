@@ -17,7 +17,7 @@ import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
    this route, and the whole security property of a claim link is "minted
    only for someone who opened that store's Shopify admin".
 
-   middleware.ts excludes api/shopify wholesale (see its matcher comment —
+   proxy.ts excludes api/shopify wholesale (see its matcher comment —
    the embed/proxy routes are cookie-less), so nothing upstream throttles
    this route either. Same limiter as the sibling proxy route
    (messenger-identity): a valid session token alone would otherwise buy

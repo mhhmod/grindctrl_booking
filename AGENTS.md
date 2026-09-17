@@ -98,6 +98,7 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - Use CreemBase / UI Pacekit (`https://github.com/pacekit/creembase`) as a SaaS/Supabase/product-flow reference, especially for auth, billing, onboarding, pricing, and app shell ideas.
 - These reference repos are not package dependencies or MCP servers unless they expose a shadcn-compatible registry URL. Inspect and adapt patterns instead of copying whole files blindly.
 - For every non-trivial UI change: audit existing layout/components first, implement with shadcn-first primitives, then verify responsive behavior and RTL/LTR assumptions.
+- Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime.
 
 ### Landing sign-in regression guard
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { config } from './middleware';
+import { config } from './proxy';
 
 /* The matcher's negative-lookahead pattern is the single source of truth for
-   which routes run Clerk's middleware. This exact bug shipped once already:
+   which routes run Clerk's proxy. This exact bug shipped once already:
    /api/shopify/* was excluded (cookie-less third-party context) but the
    embedded app's own page tree at /shopify/* was not, so Clerk's
    cross-domain handshake ran inside the Shopify iframe and broke it
@@ -12,7 +12,7 @@ import { config } from './middleware';
 const [pattern] = config.matcher;
 const matcher = new RegExp(`^${pattern}$`);
 
-describe('middleware matcher', () => {
+describe('proxy matcher', () => {
   it('exempts only the exact secret-free health endpoint from Clerk', () => {
     expect(matcher.test('/api/health')).toBe(false);
     expect(matcher.test('/api/health-private')).toBe(true);
