@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@fontsource/ibm-plex-sans-arabic/700.css';
 import { headers } from 'next/headers';
 import { ClerkProvider } from '@clerk/nextjs';
+import { ColorSchemeScript } from '@mantine/core';
 import { auth } from '@clerk/nextjs/server';
 import { arSA, enUS } from '@clerk/localizations';
 import './globals.css';
@@ -56,8 +57,16 @@ export default async function RootLayout({children}: {children: React.ReactNode}
       lang={locale}
       dir={getDir(locale)}
       className={cn('font-sans')}
+      data-mantine-color-scheme="light"
       suppressHydrationWarning
     >
+      <head>
+        {/* Mantine (SaaS surfaces) reads its color scheme from this attribute.
+            It follows next-themes' stored value, so it is correct before
+            hydration. Only here: a script rendered deeper in the tree would
+            be recreated on client navigation, where scripts never run. */}
+        <ColorSchemeScript localStorageKey="theme" defaultColorScheme="light" />
+      </head>
       <body suppressHydrationWarning>
         <ThemeProvider>
           <GcSpotlight />

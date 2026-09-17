@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
   // Match the isolated Docker build, never infer the user's home lockfile.
   outputFileTracingRoot: path.resolve(__dirname),
   poweredByHeader: false,
+  experimental: {
+    // Not in Next's default list; keeps Mantine imports tree-shaken.
+    optimizePackageImports: ['@mantine/core', '@mantine/hooks'],
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },

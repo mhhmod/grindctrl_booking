@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
+import { MantineUiProvider } from '@/components/mantine/provider';
 import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
 import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
@@ -53,10 +54,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   });
 
   return (
-    <div dir={getDir(locale)} lang={locale}>
-      <DashboardShell locale={locale} navItems={navItems}>
-        {children}
-      </DashboardShell>
-    </div>
+    <MantineUiProvider dir={getDir(locale)}>
+      <div dir={getDir(locale)} lang={locale}>
+        <DashboardShell locale={locale} navItems={navItems}>
+          {children}
+        </DashboardShell>
+      </div>
+    </MantineUiProvider>
   );
 }

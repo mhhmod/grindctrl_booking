@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveTryOnSettingsAction } from '@/app/dashboard/try-on/actions';
 import { TryOnSettingsPanel } from './tryon-settings-panel';
@@ -66,6 +67,18 @@ describe('TryOnSettingsPanel safe action results', () => {
     fireEvent.click(screen.getByRole('button', { name: c.saveSettings }));
     expect(await screen.findByRole('status')).toHaveTextContent(c.savedLive);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('announces the save while it is in flight and blocks a second submit', async () => {
+    let resolve!: (value: { ok: true }) => void;
+    vi.mocked(saveTryOnSettingsAction).mockReturnValue(new Promise((r) => { resolve = r; }));
+    const c = getTryOnDashboardCopy('en');
+    mount('en');
+    fireEvent.click(screen.getByRole('button', { name: c.saveSettings }));
+    expect(await screen.findByRole('status')).toHaveTextContent(c.saving);
+    expect(screen.getByRole('button', { name: c.saveSettings })).toBeDisabled();
+    resolve({ ok: true });
+    expect(await screen.findByText(c.savedLive)).toBeInTheDocument();
   });
 
   it('handles an unexpected production action rejection without exposing details', async () => {

@@ -7,6 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DashboardSidebarNav } from '@/components/dashboard/nav-link';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
+import { MantineUiProvider } from '@/components/mantine/provider';
+import { MantineThemeCheck } from './mantine-check';
+import { getRequestLocale } from '@/lib/auth/locale';
+import { getDir } from '@/lib/landing/landing-i18n';
 import {
   Sidebar,
   SidebarContent,
@@ -78,12 +82,16 @@ const STATE: ShopEntitlement = {
   notes: null,
 };
 
-export default function UiCheckPage() {
+export default async function UiCheckPage() {
   if (process.env.NODE_ENV === 'production') notFound();
+  // Same gc-locale cookie as the dashboard, so Arabic can be checked here too.
+  const locale = await getRequestLocale();
 
   return (
+    <MantineUiProvider dir={getDir(locale)}>
     <SidebarProvider defaultOpen>
-      <Sidebar>
+      {/* Same side rule as DashboardShell: the sidebar is pinned physically. */}
+      <Sidebar side={locale === 'ar' ? 'right' : 'left'}>
         <SidebarContent className="p-2">
           <DashboardSidebarNav navItems={NAV_ITEMS} />
         </SidebarContent>
@@ -162,6 +170,16 @@ export default function UiCheckPage() {
 
           <Card>
             <CardHeader>
+              <CardTitle>Mantine theme</CardTitle>
+              <CardDescription>Core controls on the brand bridge.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MantineThemeCheck />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle>Appearance and journey</CardTitle>
               <CardDescription>The shared settings form with the live preview.</CardDescription>
             </CardHeader>
@@ -170,6 +188,7 @@ export default function UiCheckPage() {
                 shops={[{ domain: 'grindctrl.myshopify.com', status: 'installed', jobCount: 20 }]}
                 selectedShop="default"
                 settings={{ ...DEFAULT_SETTINGS }}
+                locale={locale}
               />
             </CardContent>
           </Card>
@@ -178,5 +197,6 @@ export default function UiCheckPage() {
         </main>
       </SidebarInset>
     </SidebarProvider>
+    </MantineUiProvider>
   );
 }

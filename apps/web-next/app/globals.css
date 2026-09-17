@@ -1,3 +1,7 @@
+/* Cascade layer order for the whole app. Mantine (SaaS surfaces only, see
+   components/mantine) sits above Tailwind's preflight and below utilities,
+   so a className on a Mantine component still wins. Must stay first. */
+@layer theme, base, mantine, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -206,7 +210,9 @@
   --gc-output-icon-border: oklch(0.78 0.14 295 / 22%);
 }
 
-:where(body, header, section, article, div, span, button, textarea, input, a, svg) {
+/* Unlayered, so it would override the transitions Mantine components define
+   in their own layer (a Switch thumb would jump). Mantine elements opt out. */
+:where(body, header, section, article, div, span, button, textarea, input, a, svg):where(:not([class*='mantine-'])) {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow;
   transition-duration: 220ms;
   transition-timing-function: ease;

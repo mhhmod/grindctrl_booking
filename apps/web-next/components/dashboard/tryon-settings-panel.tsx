@@ -4,8 +4,7 @@ import * as React from 'react';
 import { useCallback, useState, useTransition } from 'react';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Button, Group, NativeSelect, Stack, Text } from '@mantine/core';
 import {
   TryOnSettingsControls,
   type TryOnWidgetSettings,
@@ -98,31 +97,29 @@ export function TryOnSettingsPanel({
 
   const isDefault = selectedShop === 'default';
 
+  const shopOptions = [
+    { value: 'default', label: c.globalDefaultsOption },
+    ...shops.map((shop) => ({
+      value: shop.domain,
+      label: shop.status === 'uninstalled' ? `${shop.domain}${c.uninstalledSuffix}` : shop.domain,
+    })),
+  ];
+
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-2">
-        <Label htmlFor="shop_select">{c.editing}</Label>
-        <select
-          id="shop_select"
-          value={selectedShop}
-          disabled={isNavigating}
-          onChange={(e) =>
-            startNavigation(() => router.push(`/dashboard/try-on?shop=${encodeURIComponent(e.target.value)}`))
-          }
-          className="h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 text-sm sm:max-w-md"
-        >
-          <option value="default">{c.globalDefaultsOption}</option>
-          {shops.map((shop) => (
-            <option key={shop.domain} value={shop.domain}>
-              {shop.domain}
-              {shop.status === 'uninstalled' ? c.uninstalledSuffix : ''}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-muted-foreground">
-          {isDefault ? c.defaultsHelp : c.overridesHelp(selectedShop)}
-        </p>
-      </div>
+    <Stack gap="lg">
+      <NativeSelect
+        id="shop_select"
+        label={c.editing}
+        description={isDefault ? c.defaultsHelp : c.overridesHelp(selectedShop)}
+        inputWrapperOrder={['label', 'input', 'description']}
+        data={shopOptions}
+        value={selectedShop}
+        disabled={isNavigating}
+        onChange={(e) =>
+          startNavigation(() => router.push(`/dashboard/try-on?shop=${encodeURIComponent(e.currentTarget.value)}`))
+        }
+        maw={{ sm: 448 }}
+      />
 
       <TryOnSettingsControls
         locale={locale}
@@ -132,17 +129,21 @@ export function TryOnSettingsPanel({
         onLoadingStepsTextChange={setLoadingStepsText}
       />
 
-      <div className="flex flex-wrap items-start gap-3">
-        <Button className="shrink-0" type="button" onClick={save} disabled={status === 'saving' || isNavigating}>
-          {status === 'saving' ? c.saving : c.saveSettings}
+      <Group gap="sm" align="center">
+        <Button onClick={save} loading={status === 'saving'} disabled={isNavigating}>
+          {c.saveSettings}
         </Button>
-        {status === 'saved' && (
-          <span role="status" className="text-sm text-muted-foreground">{c.savedLive}</span>
-        )}
+        {status === 'saving' || status === 'saved' ? (
+          <Text role="status" size="sm" c="dimmed">
+            {status === 'saving' ? c.saving : c.savedLive}
+          </Text>
+        ) : null}
         {status === 'error' && (
-          <span role="alert" className="basis-full text-sm text-destructive sm:basis-auto sm:flex-1">{failureText ?? c.saveFailed}</span>
+          <Text role="alert" size="sm" c="var(--mantine-color-error)" className="basis-full sm:basis-auto sm:flex-1">
+            {failureText ?? c.saveFailed}
+          </Text>
         )}
-      </div>
-    </div>
+      </Group>
+    </Stack>
   );
 }

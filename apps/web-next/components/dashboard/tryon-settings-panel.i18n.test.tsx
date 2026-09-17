@@ -1,5 +1,6 @@
 import React from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 
 /* The panel navigates on shop change, so it needs a router. Nothing here

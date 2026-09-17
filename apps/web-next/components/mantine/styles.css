@@ -1,0 +1,59 @@
+/* Mantine for the SaaS surfaces. Loaded only by MantineUiProvider, so the
+   marketing site and the storefront embed never download it.
+
+   Same layer order globals.css declares. Repeating it here keeps Mantine
+   above Tailwind's preflight and below its utilities whichever stylesheet
+   the browser parses first. */
+@layer theme, base, mantine, components, utilities;
+
+@import '@mantine/core/styles.layer.css';
+
+@layer mantine {
+  /* Mantine's baseline paints body. The app keeps body transparent so the
+     fixed ambient layer stays visible; html already paints the page. */
+  body {
+    background-color: transparent;
+  }
+
+  /* Mantine falls back to white text on primary surfaces. The primary is
+     cream in dark mode, so these use the per-scheme primary contrast. An
+     explicit color prop still sets its own value inline. */
+  .mantine-Button-root,
+  .mantine-ButtonGroupSection-groupSection,
+  .mantine-ActionIcon-root,
+  .mantine-ActionIconGroupSection-groupSection,
+  .mantine-ThemeIcon-root,
+  .mantine-Badge-root,
+  .mantine-Chip-root,
+  .mantine-Checkbox-root,
+  .mantine-CheckboxIndicator-indicator,
+  .mantine-Radio-root,
+  .mantine-RadioIndicator-indicator {
+    --button-color: var(--mantine-primary-color-contrast);
+    --section-color: var(--mantine-primary-color-contrast);
+    --ai-color: var(--mantine-primary-color-contrast);
+    --ti-color: var(--mantine-primary-color-contrast);
+    --badge-color: var(--mantine-primary-color-contrast);
+    --chip-color: var(--mantine-primary-color-contrast);
+    --checkbox-icon-color: var(--mantine-primary-color-contrast);
+    --radio-icon-color: var(--mantine-primary-color-contrast);
+  }
+
+  .mantine-Progress-section {
+    --progress-label-color: var(--mantine-primary-color-contrast);
+  }
+
+  /* The thumb stays white on a checked track, which is cream in dark mode.
+     Switches with an explicit color keep Mantine's thumb. */
+  .mantine-Switch-root:not([style*='--switch-color'])
+    .mantine-Switch-input:checked:not(:disabled, [data-disabled])
+    + .mantine-Switch-track
+    .mantine-Switch-thumb {
+    --switch-thumb-bg: var(--mantine-primary-color-contrast);
+  }
+
+  /* One focus ring color across Tailwind and Mantine controls. */
+  .mantine-focus-auto:focus-visible {
+    outline-color: var(--ring);
+  }
+}
