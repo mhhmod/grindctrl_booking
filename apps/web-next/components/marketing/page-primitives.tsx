@@ -1,10 +1,18 @@
 'use client';
 
-/* Shared shell + section primitives for the Phase 4 product pages
-   (/shopping, /conversations, /operations, /integrations). Each one reuses
+/* Shared shell + section primitives for the product pages (/shopping,
+   /conversations, /operations, /integrations, /security). Each one reuses
    the exact tokens/classes already established on /pricing and /roi rather
    than inventing new layout rules — see components/pricing/pricing-page-content.tsx
-   and components/roi/roi-page-content.tsx for the source patterns. */
+   and components/roi/roi-page-content.tsx for the source patterns.
+
+   The shape here — small components, fully-optional props, one fixed
+   vertical-rhythm wrapper per section — is deliberately the same contract
+   Launch UI (github.com/launch-ui/launch-ui, MIT) uses for its own
+   Section/block components. This is that pattern's home in this repo; see
+   AGENTS.md's "Landing and marketing pages" section before adding a new
+   block, importing Launch UI's raw source, or reaching for another
+   component library. */
 
 import React from 'react';
 import Link from 'next/link';

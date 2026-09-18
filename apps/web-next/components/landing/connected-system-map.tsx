@@ -21,7 +21,10 @@ export function ConnectedSystemMap({ columns, rows }: {
       </div>
       <ol className="divide-y divide-border">
         {rows.map((row) => (
-          <li key={`${row.shopper}-${row.grindctrl}`} className="grid min-w-0 gap-3 px-4 py-4 md:grid-cols-[0.9fr_auto_1.1fr_auto_1fr] md:items-center md:px-5">
+          <li
+            key={`${row.shopper}-${row.grindctrl}`}
+            className="gc-spotlight grid min-w-0 gap-3 px-4 py-4 md:grid-cols-[0.9fr_auto_1.1fr_auto_1fr] md:items-center md:px-5"
+          >
             <MapCell label={columns[0]} value={row.shopper} />
             <Connector />
             <MapCell label={columns[1]} value={row.grindctrl} accent />

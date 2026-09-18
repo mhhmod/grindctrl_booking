@@ -13,7 +13,10 @@ export function PlatformPillars({ items }: { items: PlatformPillar[] }) {
       {items.map((item, index) => (
         <li
           key={item.title}
-          className="grid min-w-0 gap-3 border-b border-border p-4 last:border-b-0 sm:p-5 md:grid-cols-[3rem_minmax(0,0.72fr)_minmax(0,1.28fr)_auto] md:items-center md:gap-5"
+          /* Spotlight only, no gc-card-hover: these rows share borders inside
+             one overflow-hidden list, so a translateY lift would clip against
+             the parent's rounded corners and jump against the next row. */
+          className="gc-spotlight grid min-w-0 gap-3 border-b border-border p-4 last:border-b-0 sm:p-5 md:grid-cols-[3rem_minmax(0,0.72fr)_minmax(0,1.28fr)_auto] md:items-center md:gap-5"
         >
           <span className="text-xs font-bold tabular-nums text-muted-foreground" aria-hidden="true">
             {String(index + 1).padStart(2, '0')}

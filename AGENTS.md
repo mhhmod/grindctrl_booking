@@ -123,6 +123,53 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - For every non-trivial UI change: audit existing layout/components first, then verify responsive behavior and RTL/LTR assumptions.
 - Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime. The standalone build forwards proxied requests to itself over `localhost`, which works in the container (localhost is IPv4-only there) but fails on a Windows host, where those routes return 500 unless the server binds dual-stack (`HOSTNAME=::`).
 
+### Landing and marketing pages: Launch UI as the composition foundation
+
+The home page (`components/landing/site-landing.tsx`) and the product pages it links to
+(`/shopping`, `/conversations`, `/operations`, `/integrations`, `/security`, plus `/pricing`
+and `/roi` which predate the shared primitives) all render through
+`components/marketing/page-primitives.tsx` (`MarketingPage`, `ProductHero`, `ProductSection`,
+`CtaRow`, `NotLiveList`) or, for the home page itself, `site-landing.tsx`'s own equivalent
+markup. That file's composition contract — small components with fully-optional props, a
+`false` sentinel to hide a slot, one fixed vertical-rhythm wrapper per section — is deliberately
+modelled on [Launch UI](https://github.com/launch-ui/launch-ui) (MIT), which uses the same
+pattern in its own `Section`/block components. Treat `page-primitives.tsx` as that pattern's
+home in this repo and extend it the same way rather than inventing a parallel one.
+
+- Do NOT run Launch UI's shadcn CLI (`npx shadcn add @launchui/...`) in this repo. Its base
+  install overwrites `app/globals.css` and `components/ui/button.tsx` wholesale, which would
+  destroy the brand tokens and the button variants every surface depends on. When a Launch UI
+  block is a genuinely good structural reference, port the composition (props shape, the
+  `false`-to-hide convention, which primitives it composes) by hand into a Tailwind
+  implementation using this repo's own `components/ui/*` and `app/globals.css` tokens — never
+  its raw JSX or its gradient/glow visual skin, which conflicts with `DESIGN.md`'s bans on
+  gradient text and this brand's restrained warm cream/charcoal identity.
+- Launch UI's free tier (its GitHub repo, MIT) only has real source for 9 blocks: hero, navbar,
+  faq, stats, logos, pricing, cta, footer, items. `testimonials`, `bento-grid`, `tabs`,
+  `gallery`, `feature`, and `carousel` are Pro-only ($99 one-time at launchuicomponents.com) with
+  no public source — do not port a pattern that doesn't exist for free, and do not spend the
+  money without asking first. This repo already has bespoke, brand-adapted equivalents for the
+  ones that matter here (`JourneyProofTabs` for tabs, `PlatformEvidenceSequence` for an evidence
+  grid) — keep those rather than chasing the Pro versions.
+- Motion/visual-effect requests get evaluated against what already exists before reaching for
+  React Bits or any other component library: `.gc-spotlight` (`components/gc-spotlight.tsx` +
+  `app/globals.css`) is a cursor-following highlight via one delegated pointer listener, already
+  used by the shared `Card` primitive — it is the same idea as React Bits' SpotlightCard, built
+  leaner and already on-brand, so use it (`className="gc-spotlight"`, add `gc-card-hover` too
+  only on a real standalone card, never on a list row sharing borders inside an
+  `overflow-hidden` container — the hover lift clips and jumps there). `lib/landing/use-scroll-reveal.ts`
+  (GSAP + ScrollTrigger, `.in-view` gate) is the scroll-reveal primitive already in place.
+  React Bits (reactbits.dev, MIT + Commons Clause, genuinely free via its own public shadcn
+  registry, `npx shadcn add @react-bits/<Name>`) is fine to reach for something this repo has no
+  equivalent for, but check its registry's declared `dependencies` first — several components
+  need the `motion` package (not `framer-motion`, a different package despite the similar API),
+  which is not installed and is not obviously worth adding for one component.
+- Container width is `mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8` everywhere on these pages,
+  hero and normal sections alike, with no 6xl/7xl split — an earlier `docs/landing-ui-spec.md`
+  documented a different, dark-themed system with that split; it never matched the actual warm
+  cream/charcoal implementation and has been deleted. `DESIGN.md` is the live source of truth for
+  brand rules.
+
 ### Landing sign-in regression guard
 
 - Keep a visibly labelled, localized Sign in entry in the landing header, accessible without opening the menu. Do not restore an icon-only sign-in squeezed beside the wordmark.

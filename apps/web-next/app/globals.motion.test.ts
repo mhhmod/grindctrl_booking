@@ -56,7 +56,7 @@ describe('prefers-reduced-motion', () => {
   it('leaves entrance-animated content visible instead of stuck hidden', () => {
     // These classes start at opacity 0 and animate in. If the animation is
     // cancelled without pinning opacity, the content never appears at all.
-    for (const cls of ['gc-fade-in-up', 'gc-step-appear', 'gc-scroll-reveal']) {
+    for (const cls of ['gc-fade-in-up', 'gc-scroll-reveal']) {
       // [\s\S] instead of the s flag: this file compiles under the app's
       // TS target, which predates dotAll.
       const rule = block.match(new RegExp(`\\.${cls}[^{]*\\{[^}]*\\}`));

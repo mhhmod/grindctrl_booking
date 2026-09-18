@@ -261,10 +261,6 @@
   line-height: 1.85;
 }
 
-.gc-landing-border {
-  border-color: var(--gc-landing-border);
-}
-
 .gc-landing-card {
   border-color: var(--gc-landing-border);
   background: var(--gc-landing-panel-strong);
@@ -295,79 +291,9 @@
 
 /* ─── GrindCTRL Landing Animations ─── */
 
-@keyframes gc-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes gc-pulse-glow {
-  0%, 100% { opacity: 0.4; box-shadow: 0 0 0 0 oklch(0.7 0.1 260 / 0); }
-  50% { opacity: 1; box-shadow: 0 0 20px 4px oklch(0.7 0.1 260 / 0.15); }
-}
-
-@keyframes gc-signal-flow {
-  0% { transform: translateX(-100%); opacity: 0; }
-  30% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { transform: translateX(100%); opacity: 0; }
-}
-
-@keyframes gc-scan-line {
-  0% { transform: translateY(-100%); opacity: 0; }
-  10% { opacity: 0.5; }
-  90% { opacity: 0.5; }
-  100% { transform: translateY(100%); opacity: 0; }
-}
-
 @keyframes gc-fade-in-up {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes gc-grid-pulse {
-  0%, 100% { opacity: 0.03; }
-  50% { opacity: 0.07; }
-}
-
-@keyframes gc-node-ping {
-  0% { transform: scale(1); opacity: 0.6; }
-  50% { transform: scale(1.6); opacity: 0; }
-  100% { transform: scale(1); opacity: 0; }
-}
-
-@keyframes gc-step-appear {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes gc-trail-sweep {
-  0% { transform: translateX(-120%); opacity: 0; }
-  20% { opacity: 0.85; }
-  80% { opacity: 0.85; }
-  100% { transform: translateX(120%); opacity: 0; }
-}
-
-@keyframes gc-node-pulse-soft {
-  0%, 72%, 100% {
-    border-color: oklch(1 0 0 / 10%);
-    box-shadow: 0 0 0 0 oklch(0.72 0.14 265 / 0);
-    transform: translateY(0);
-  }
-  12%, 28% {
-    border-color: oklch(0.72 0.14 265 / 34%);
-    box-shadow: 0 0 24px -8px oklch(0.72 0.14 265 / 42%);
-    transform: translateY(-1px);
-  }
-}
-
-@keyframes gc-soft-glow {
-  0%, 100% { box-shadow: 0 24px 80px -48px oklch(0.65 0.16 260 / 35%); }
-  50% { box-shadow: 0 24px 90px -42px oklch(0.74 0.16 290 / 38%); }
-}
-
-@keyframes gc-ambient-drift {
-  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.55; }
-  50% { transform: translate3d(-18px, 14px, 0); opacity: 0.85; }
 }
 
 /* Ambient page background.
@@ -476,13 +402,6 @@
 @keyframes gc-result-reveal {
   from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
   to { opacity: 1; transform: translateY(0); filter: blur(0); }
-}
-
-@keyframes gc-progress-glow {
-  0% { transform: translateX(-110%); opacity: 0; }
-  22% { opacity: 0.65; }
-  78% { opacity: 0.65; }
-  100% { transform: translateX(110%); opacity: 0; }
 }
 
 /* Try-on scan choreography.
@@ -672,63 +591,11 @@
    choreography above leads with what the product does to a photo, and matches
    the Shopify button a merchant installs. */
 
-.gc-float { animation: gc-float 4s ease-in-out infinite; }
-.gc-pulse-glow { animation: gc-pulse-glow 3s ease-in-out infinite; }
-.gc-signal-flow { animation: gc-signal-flow 3s ease-in-out infinite; }
-.gc-scan-line { animation: gc-scan-line 4s linear infinite; }
 .gc-fade-in-up { animation: gc-fade-in-up 0.5s ease-out both; }
-.gc-grid-pulse { animation: gc-grid-pulse 6s ease-in-out infinite; }
-.gc-node-ping { animation: gc-node-ping 2s ease-out infinite; }
-.gc-step-appear { animation: gc-step-appear 0.4s ease-out both; }
-.gc-node-pulse { animation: gc-node-pulse-soft 6.6s ease-in-out infinite; }
-.gc-soft-glow { animation: gc-soft-glow 12s ease-in-out infinite; }
-.gc-ambient-glow { animation: gc-ambient-drift 10s ease-in-out infinite; will-change: transform, opacity; }
 .gc-result-reveal { animation: gc-result-reveal 280ms ease-out both; }
 .gc-tryon-garment { animation: gc-tryon-garment 6.5s cubic-bezier(.6,0,.3,1) infinite; }
 .gc-tryon-reveal { animation: gc-tryon-reveal 6.5s cubic-bezier(.65,0,.35,1) infinite; }
 .gc-tryon-caption { animation: gc-tryon-caption 6.5s ease-out infinite; }
-
-.gc-how-sequence {
-  --gc-sequence-start: scaleY(0);
-}
-
-.gc-how-sequence::before,
-.gc-how-sequence::after {
-  content: '';
-  position: absolute;
-  inset-block: 22px;
-  inset-inline-start: 21px;
-  inline-size: 1px;
-  background: var(--border);
-}
-
-.gc-how-sequence::after {
-  background: color-mix(in oklch, var(--foreground) 42%, transparent);
-  transform: none;
-  transform-origin: 50% 0;
-}
-
-@media (min-width: 48rem) {
-  .gc-how-sequence {
-    --gc-sequence-start: scaleX(0);
-  }
-
-  .gc-how-sequence::before,
-  .gc-how-sequence::after {
-    inset-block: 22px auto;
-    inset-inline: 22px;
-    block-size: 1px;
-    inline-size: auto;
-  }
-
-  .gc-how-sequence::after {
-    transform-origin: 0 50%;
-  }
-
-  .gc-landing-root[dir='rtl'] .gc-how-sequence::after {
-    transform-origin: 100% 50%;
-  }
-}
 
 /* View timelines are enhancement only. Base content above is visible. */
 @supports (animation-timeline: view()) {
@@ -736,26 +603,6 @@
     animation: gc-scroll-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
     animation-timeline: view();
     animation-range: entry 8% cover 28%;
-  }
-
-  .gc-how-step {
-    animation: gc-scroll-reveal 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-timeline: view();
-    animation-range: entry 8% cover 24%;
-  }
-
-  .gc-how-step:nth-child(2) {
-    animation-range: entry 14% cover 30%;
-  }
-
-  .gc-how-step:nth-child(3) {
-    animation-range: entry 20% cover 36%;
-  }
-
-  .gc-how-sequence::after {
-    animation: gc-sequence-draw 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-timeline: view();
-    animation-range: entry 10% cover 34%;
   }
 }
 
@@ -791,124 +638,10 @@
   }
 }
 
-/* Image + text hover: media zooms slightly, caption slides up over the
-   image. Caption stays pinned visible on touch and reduced-motion. */
-.gc-hover-reveal .gc-reveal-media {
-  position: relative;
-  overflow: hidden;
-}
-
-.gc-hover-reveal .gc-reveal-media img {
-  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.gc-hover-reveal .gc-reveal-caption {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  transform: translateY(100%);
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-  background: color-mix(in oklch, var(--background) 88%, transparent);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid var(--border);
-}
-
-.gc-hover-reveal:hover .gc-reveal-media img,
-.gc-hover-reveal:focus-within .gc-reveal-media img {
-  transform: scale(1.04);
-}
-
-.gc-hover-reveal:hover .gc-reveal-caption,
-.gc-hover-reveal:focus-within .gc-reveal-caption {
-  transform: translateY(0);
-}
-
-@media (hover: none) {
-  .gc-hover-reveal .gc-reveal-caption {
-    transform: none;
-  }
-  .gc-hover-reveal .gc-reveal-media img {
-    transition: none;
-  }
-}
-
 .gc-card-hover:hover {
   transform: translateY(-2px);
   border-color: color-mix(in oklch, var(--foreground) 24%, transparent);
   box-shadow: 0 18px 48px -30px color-mix(in oklch, var(--foreground) 30%, transparent);
-}
-
-.gc-trail-line::before,
-.gc-trail::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inline-size: 45%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, transparent, oklch(0.78 0.14 260 / 70%), transparent);
-  animation: gc-trail-sweep 5.8s ease-in-out infinite;
-}
-
-.gc-template-progress {
-  position: relative;
-  overflow: hidden;
-}
-
-.gc-template-progress::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  inset-block-start: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, oklch(0.76 0.14 275 / 65%), transparent);
-  animation: gc-progress-glow 8s ease-in-out infinite;
-}
-
-/* Staggered delays for children */
-.gc-stagger > :nth-child(1) { animation-delay: 0s; }
-.gc-stagger > :nth-child(2) { animation-delay: 0.08s; }
-.gc-stagger > :nth-child(3) { animation-delay: 0.16s; }
-.gc-stagger > :nth-child(4) { animation-delay: 0.24s; }
-.gc-stagger > :nth-child(5) { animation-delay: 0.32s; }
-.gc-stagger > :nth-child(6) { animation-delay: 0.4s; }
-.gc-stagger > :nth-child(7) { animation-delay: 0.48s; }
-.gc-stagger > :nth-child(8) { animation-delay: 0.56s; }
-
-/* Hero background grid */
-.gc-hero-grid {
-  background-image:
-    linear-gradient(oklch(1 0 0 / 4%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 4%) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* Glassmorphism card hover (used by ai-operations-trail, animated-capability-card) */
-.gc-glass {
-  background: oklch(1 0 0 / 4%);
-  backdrop-filter: blur(12px);
-  border: 1px solid oklch(1 0 0 / 8%);
-  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-}
-
-.gc-glass:hover {
-  border-color: oklch(1 0 0 / 15%);
-  box-shadow: 0 0 24px -4px oklch(0.7 0.08 260 / 0.12);
-  transform: translateY(-2px);
-}
-
-/* Processing step connector */
-.gc-connector {
-  position: relative;
-}
-
-.gc-connector::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -8px;
-  width: 1px;
-  height: 8px;
-  background: oklch(1 0 0 / 15%);
 }
 
 /* Reduced motion: disable all gc animations */
@@ -920,19 +653,6 @@
      reads as broken rather than calm. */
 
   /* Anything that loops, drifts, or travels: off. */
-  .gc-float,
-  .gc-pulse-glow,
-  .gc-signal-flow,
-  .gc-scan-line,
-  .gc-grid-pulse,
-  .gc-node-ping,
-  .gc-node-pulse,
-  .gc-soft-glow,
-  .gc-ambient-glow,
-  .gc-trail-line::before,
-  .gc-trail::before,
-  .gc-template-progress::after,
-  .gc-how-sequence::after,
   .gc-animated,
   .gc-animated *,
   /* <path> isn't in the tag list below, so the DNA ribbons need naming
@@ -956,7 +676,6 @@
      classes start at opacity 0, so cancelling the animation without pinning
      opacity would leave the content permanently invisible. */
   .gc-fade-in-up,
-  .gc-step-appear,
   .gc-result-reveal,
   .gc-scroll-reveal {
     animation: none !important;
@@ -992,22 +711,17 @@
     opacity: 1 !important;
   }
 
-  /* The collaborations marquee is JS-driven (InfiniteSlider) and checks
-     useReducedMotion() itself rather than a CSS rule here — see
-     components/ui/infinite-slider.tsx. */
+  /* CollaborationsMarquee (components/landing/collaborations-marquee.tsx) is a
+     static chip list, not an animated marquee, despite its name — nothing
+     to reduce-motion-gate here. */
 
-  .gc-aurora span,
-  .gc-how-sequence::after {
+  .gc-aurora span {
     animation: none !important;
     transform: none !important;
   }
 
   /* No hover travel anywhere. */
-  .gc-glass:hover,
-  .gc-card-hover:hover,
-  .gc-hover-reveal .gc-reveal-caption,
-  .gc-hover-reveal:hover .gc-reveal-media img,
-  .gc-hover-reveal:focus-within .gc-reveal-media img {
+  .gc-card-hover:hover {
     transform: none !important;
   }
 }
@@ -1033,18 +747,16 @@
   50% { transform: scale(1); opacity: 1; }
 }
 
-/* ─── Landing: render receipt (hero figure), ops chain, messaging channels ───
-   All three: dormant until `.in-view` is added (see use-scroll-reveal.ts),
-   built on the real --card/--card-foreground/--muted-foreground/--border
-   tokens so they follow the site's light/dark theme with no extra wiring,
-   and use CSS logical properties throughout for RTL. Motion is redesigned to
-   be direction-agnostic (radial/vertical, not left-to-right) wherever
-   possible; the one genuinely sequential path (ops chain) mirrors via
-   :dir(rtl) on its own text-free layer so labels never get mirrored. */
+/* ─── Landing: render receipt (hero figure) ───
+   The ops-chain and messaging-channel versions of this pattern (gccs-*,
+   gcmv-*) were removed with the components that rendered them; this is the
+   one still in use. Dormant until `.in-view` is added (see
+   use-scroll-reveal.ts), built on the real
+   --card/--card-foreground/--muted-foreground/--border tokens so it follows
+   the site's light/dark theme with no extra wiring, and uses CSS logical
+   properties throughout for RTL. */
 
-.gcpv-card, .gcpv-card *,
-.gccs-card, .gccs-card *,
-.gcmv-card, .gcmv-card * {
+.gcpv-card, .gcpv-card * {
   box-sizing: border-box;
 }
 
@@ -1107,7 +819,7 @@
    in this single-column mobile layout for the threshold to line up with the
    container-query one above. */
 @media (max-width: 400px) {
-  .gcmv-card, .gcpv-card { min-height: 256px; }
+  .gcpv-card { min-height: 256px; }
 }
 .gcpv-card, .gcpv-card * { animation-play-state: paused; }
 .gcpv-card.in-view, .gcpv-card.in-view * { animation-play-state: running; }
@@ -1124,136 +836,3 @@
   .gcpv-card:is(:hover, :focus-within), .gcpv-card:is(:hover, :focus-within) .gcpv-source { transform: none; }
 }
 
-/* — 2A: ops chain — */
-.gccs-card { --gccs-pad: clamp(16px, 5.45cqw, 24px); position: relative; isolation: isolate; container-type: inline-size; width: min(100%, 440px); aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--border); border-radius: 24px; outline: none; background: var(--card); color: var(--card-foreground); box-shadow: 0 12px 30px color-mix(in oklch, var(--card-foreground) 4%, transparent); transition: border-color 220ms ease, box-shadow 220ms ease; }
-.gccs-card:focus-visible { outline: 2px solid color-mix(in oklch, var(--primary) 65%, transparent); outline-offset: 4px; }
-.gccs-scene { position: absolute; inset: 0; opacity: 0; transform: translateY(10px); animation: gccs-reveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-.gccs-head { position: absolute; z-index: 4; inset-block-start: 6.4%; inset-inline: var(--gccs-pad); display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.gccs-head > div { min-width: 0; }
-.gccs-head p { margin: 0; }
-.gccs-kicker { margin-block-end: 3px !important; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
-.gccs-title { max-inline-size: 275px; font-size: 17px; line-height: 1.1; font-weight: 650; letter-spacing: -0.02em; }
-.gccs-live { display: flex; flex: none; align-items: center; gap: 7px; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase; }
-.gccs-live i { display: block; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--card-foreground); box-shadow: 0 0 12px color-mix(in oklch, var(--card-foreground) 50%, transparent); }
-.gccs-route { position: absolute; z-index: 1; inset: 0; direction: ltr; transform-origin: center; }
-.gccs-map { display: block; width: 100%; height: 100%; }
-.gccs-track { fill: none; stroke: color-mix(in oklch, var(--card-foreground) 38%, transparent); stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 18 7 4 9; animation: gccs-flow 8s linear infinite; transition: stroke 220ms ease, stroke-width 220ms ease, opacity 220ms ease; }
-.gccs-node { fill: var(--card); stroke: var(--card-foreground); stroke-width: 1.5; transform-box: fill-box; transform-origin: center; animation: gccs-node 8s ease-out infinite; transition: stroke-width 220ms ease; }
-.gccs-node-two { animation-delay: 2s; }
-.gccs-node-three { animation-delay: 4s; }
-.gccs-node-four { animation-delay: 6s; }
-.gccs-particle { fill: var(--card-foreground); filter: drop-shadow(0 0 7px color-mix(in oklch, var(--card-foreground) 70%, transparent)); offset-path: path("M 52 124 C 105 95 169 107 213 117 C 289 134 348 126 356 166 C 363 205 303 211 246 214 C 191 217 177 231 179 255"); offset-rotate: 0deg; animation: gccs-particle 8s cubic-bezier(0.45, 0, 0.2, 1) 150ms infinite; }
-.gccs-stage { position: absolute; z-index: 4; }
-.gccs-stage small, .gccs-stage strong { display: block; }
-.gccs-stage small { margin-block-end: 2px; color: var(--muted-foreground); font-size: 8px; line-height: 1.15; letter-spacing: 0.13em; text-transform: uppercase; transition: color 220ms ease; }
-.gccs-stage strong { font-size: 11px; line-height: 1.15; font-weight: 600; overflow-wrap: anywhere; }
-.gccs-one { inset-block-start: 42%; inset-inline-start: 6.1%; width: clamp(100px, 29.5cqw, 130px); }
-/* This checkpoint is genuinely boxed in: the header sits right above it,
-   its own node sits right below (~112px/34% in a 330px-tall card), and the
-   gap between the two is ~41px against a ~24px-tall label -- there isn't
-   room for generous margins, only correct ones. Verified against real
-   getBoundingClientRect() output at 440px width, not estimated: this value
-   clears both the header and the node by a real (if modest) margin. My
-   previous attempt here moved it TO 14%, which put it inside the header --
-   confirmed by the same kind of measurement that caught it. */
-.gccs-two { inset-block-start: 25%; inset-inline-start: 39%; width: clamp(100px, 28cqw, 123px); }
-.gccs-three { inset-block-start: 54.5%; inset-inline-end: 6.4%; width: clamp(100px, 28cqw, 123px); text-align: end; }
-.gccs-four { inset-block-start: 60%; inset-inline-start: 6.1%; width: clamp(100px, 29.5cqw, 130px); }
-.gccs-foot { position: absolute; z-index: 4; inset-inline-end: var(--gccs-pad); inset-block-end: 6.4%; max-inline-size: 62%; color: var(--muted-foreground); font-size: 9px; line-height: 1.3; letter-spacing: 0.09em; text-align: end; }
-.gccs-foot strong { color: var(--card-foreground); font-weight: 600; }
-.gccs-card:is(:hover, :focus-within) { border-color: color-mix(in oklch, var(--card-foreground) 24%, var(--border)); box-shadow: 0 17px 38px color-mix(in oklch, var(--card-foreground) 8%, transparent); }
-.gccs-card:is(:hover, :focus-within) .gccs-track { stroke: color-mix(in oklch, var(--card-foreground) 55%, transparent); stroke-width: 1.8; }
-.gccs-card:is(:hover, :focus-within) .gccs-node { stroke-width: 2.1; }
-.gccs-card:is(:hover, :focus-within) .gccs-stage small { color: var(--card-foreground); }
-.gccs-card:dir(rtl) .gccs-route { transform: scaleX(-1); }
-.gccs-card:lang(ar) :is(.gccs-kicker, .gccs-live, .gccs-stage small, .gccs-foot) { letter-spacing: 0; text-transform: none; }
-.gccs-card, .gccs-card * { animation-play-state: paused; }
-.gccs-card.in-view, .gccs-card.in-view * { animation-play-state: running; }
-@keyframes gccs-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes gccs-flow { to { stroke-dashoffset: -152; } }
-@keyframes gccs-particle { 0% { offset-distance: 0%; opacity: 0; transform: scale(0.55); } 7%, 92% { opacity: 0.96; } 100% { offset-distance: 100%; opacity: 0; transform: scale(1.08); } }
-@keyframes gccs-node { 0%, 8% { fill: var(--card-foreground); transform: scale(1.25); } 17%, 100% { fill: var(--card); transform: scale(1); } }
-@container (max-width: 360px) {
-  .gccs-live { display: none; }
-  .gccs-title { max-inline-size: 100%; font-size: 15px; }
-  .gccs-one { inset-block-start: 44%; }
-  .gccs-three { inset-block-start: 57%; }
-  .gccs-stage strong { font-size: 10px; }
-  .gccs-foot { font-size: 8px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gccs-card, .gccs-card * { animation: none !important; transition: none !important; }
-  .gccs-scene { opacity: 1; transform: none; }
-  .gccs-track { stroke-dasharray: none; opacity: 0.48; }
-  .gccs-particle { display: none; }
-  .gccs-node { fill: var(--card-foreground); transform: none; }
-}
-
-/* — 3A: messaging channels — */
-.gcmv-card { --gcmv-pad: clamp(16px, 5.45cqw, 24px); position: relative; isolation: isolate; container-type: inline-size; width: min(100%, 440px); aspect-ratio: 4 / 3; overflow: hidden; border: 1px solid var(--border); border-radius: 24px; background: var(--card); color: var(--card-foreground); box-shadow: 0 12px 30px color-mix(in oklch, var(--card-foreground) 4%, transparent); }
-.gcmv-scene { position: absolute; inset: 0; opacity: 0; transform: translateY(10px); animation: gcmv-reveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-.gcmv-head { position: absolute; z-index: 4; inset-block-start: 6.4%; inset-inline: var(--gcmv-pad); }
-.gcmv-head p { margin: 0; }
-.gcmv-kicker { margin-block-end: 5px !important; color: var(--muted-foreground); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; }
-.gcmv-title { font-size: 17px; line-height: 1.2; font-weight: 650; letter-spacing: -0.02em; }
-.gcmv-reply { position: absolute; z-index: 3; inset-block-start: 27%; inset-inline: var(--gcmv-pad); width: min(calc(100% - (2 * var(--gcmv-pad))), 300px); min-block-size: 86px; margin-inline: auto; padding: clamp(12px, 3.6cqw, 16px); border: 1px solid color-mix(in oklch, var(--card-foreground) 18%, var(--border)); border-radius: 17px; border-end-start-radius: 5px; background: color-mix(in oklch, var(--card-foreground) 5.5%, var(--card)); box-shadow: 0 10px 24px color-mix(in oklch, var(--card-foreground) 5%, transparent); }
-.gcmv-reply small { display: block; margin-block-end: 9px; color: var(--muted-foreground); font-size: 8px; letter-spacing: 0.13em; text-transform: uppercase; }
-.gcmv-reply p { margin: 0; font-size: clamp(12px, 3.2cqw, 14px); line-height: 1.45; overflow-wrap: anywhere; }
-.gcmv-route { position: absolute; z-index: 1; inset: 0; direction: ltr; transform-origin: center; }
-.gcmv-lines { display: block; width: 100%; height: 100%; }
-.gcmv-path { fill: none; stroke: color-mix(in oklch, var(--card-foreground) 30%, transparent); stroke-width: 1.15; stroke-linecap: round; }
-.gcmv-particle { fill: var(--card-foreground); filter: drop-shadow(0 0 6px color-mix(in oklch, var(--card-foreground) 72%, transparent)); offset-rotate: 0deg; animation: gcmv-travel 6.6s cubic-bezier(0.45, 0, 0.2, 1) infinite; }
-.gcmv-particle-one { offset-path: path("M 220 174 C 190 181 139 199 89 223"); animation-delay: 250ms; }
-.gcmv-particle-two { offset-path: path("M 220 174 C 220 190 220 205 220 223"); animation-delay: 1.8s; }
-.gcmv-particle-three { offset-path: path("M 220 174 C 250 181 301 199 351 223"); animation-delay: 3.35s; }
-.gcmv-channels { position: absolute; z-index: 3; inset-block-start: 63.5%; inset-inline: var(--gcmv-pad); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(4px, 2cqw, 9px); }
-.gcmv-channel { display: grid; min-width: 0; place-items: center; padding: 6px 3px; border-radius: 12px; outline: none; text-align: center; transition: background-color 200ms ease; }
-.gcmv-whatsapp { --gcmv-brand: #25D366; }
-.gcmv-instagram { --gcmv-brand: #FF0069; }
-.gcmv-facebook { --gcmv-brand: #0866FF; }
-.gcmv-icon { position: relative; display: grid; width: 27px; height: 27px; margin-block-end: 4px; place-items: center; color: var(--gcmv-brand); transition: transform 200ms ease; }
-.gcmv-icon svg { display: block; width: 23px; height: 23px; }
-.gcmv-ring { position: absolute; inset: 0; border: 1px solid var(--gcmv-brand); border-radius: 50%; opacity: 0; animation: gcmv-ring 6.6s ease-out infinite; }
-.gcmv-instagram .gcmv-ring { animation-delay: 1.8s; }
-.gcmv-facebook .gcmv-ring { animation-delay: 3.35s; }
-.gcmv-channel strong { display: block; max-inline-size: 100%; margin-block-end: 3px; font-size: 8px; line-height: 1.2; letter-spacing: 0.04em; overflow-wrap: anywhere; }
-.gcmv-channel small { position: relative; display: block; min-block-size: 10px; color: var(--muted-foreground); font-size: 8px; line-height: 1.2; }
-.gcmv-status, .gcmv-detail { display: block; transition: opacity 180ms ease, transform 180ms ease; }
-.gcmv-detail { position: absolute; inset: 0; opacity: 0; transform: translateY(3px); }
-.gcmv-channel:is(:hover, :focus-within) { background: color-mix(in oklch, var(--card-foreground) 5%, transparent); }
-.gcmv-channel:is(:hover, :focus-within) .gcmv-icon { transform: translateY(-2px); }
-.gcmv-channel:is(:hover, :focus-within) .gcmv-status { opacity: 0; transform: translateY(-3px); }
-.gcmv-channel:is(:hover, :focus-within) .gcmv-detail { opacity: 1; transform: translateY(0); }
-.gcmv-channel:focus-visible { outline: 2px solid color-mix(in oklch, var(--primary) 58%, transparent); outline-offset: 2px; }
-.gcmv-foot { position: absolute; z-index: 4; inset-inline: var(--gcmv-pad); inset-block-end: 6.4%; padding-block-start: 11px; border-block-start: 1px solid var(--border); color: var(--muted-foreground); font-size: 9px; line-height: 1.3; letter-spacing: 0.07em; }
-.gcmv-foot strong { color: var(--card-foreground); }
-.gcmv-card:dir(rtl) .gcmv-route { transform: scaleX(-1); }
-.gcmv-card:lang(ar) :is(.gcmv-kicker, .gcmv-reply small, .gcmv-channel strong, .gcmv-foot) { letter-spacing: 0; text-transform: none; }
-/* At <=360px, shrinking the channel row alone isn't enough: measured at a
-   320px viewport (288px card), the four stacked blocks -- head, reply,
-   channels, footer -- add up to more content height than a 4:3 card has at
-   all, even with zero gaps between them. No amount of repositioning fixes
-   that; the card itself has to grow taller here. aspect-ratio 9/8 clears
-   it with real (verified, not assumed) margin at 288px width. */
-@container (max-width: 360px) {
-  .gcmv-reply { inset-block-start: 32%; }
-  .gcmv-channels { inset-block-start: 68%; }
-  .gcmv-foot { inset-block-end: 1%; }
-  .gcmv-channel { padding: 3px 3px; }
-  .gcmv-icon { width: 22px; height: 22px; margin-block-end: 2px; }
-  .gcmv-icon svg { width: 18px; height: 18px; }
-  .gcmv-channel strong { font-size: 7px; margin-block-end: 2px; }
-  .gcmv-channel small { min-block-size: 8px; font-size: 7px; }
-}
-.gcmv-card, .gcmv-card * { animation-play-state: paused; }
-.gcmv-card.in-view, .gcmv-card.in-view * { animation-play-state: running; }
-@keyframes gcmv-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes gcmv-travel { 0% { offset-distance: 0%; opacity: 0; transform: scale(0.55); } 12%, 36% { opacity: 0.96; } 48%, 100% { offset-distance: 100%; opacity: 0; transform: scale(1.05); } }
-@keyframes gcmv-ring { 0%, 38% { opacity: 0; transform: scale(0.72); } 48% { opacity: 0.46; } 66%, 100% { opacity: 0; transform: scale(1.45); } }
-@media (prefers-reduced-motion: reduce) {
-  .gcmv-card, .gcmv-card * { animation: none !important; transition: none !important; }
-  .gcmv-scene { opacity: 1; transform: none; }
-  .gcmv-path { stroke: color-mix(in oklch, var(--card-foreground) 40%, transparent); }
-  .gcmv-particle, .gcmv-ring { display: none; }
-  .gcmv-channel:is(:hover, :focus-within) .gcmv-icon { transform: none; }
-}

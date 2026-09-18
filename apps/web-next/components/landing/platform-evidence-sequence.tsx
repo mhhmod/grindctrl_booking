@@ -23,7 +23,7 @@ export function PlatformEvidenceSequence({
         return (
           <li
             key={item.id}
-            className={`gc-landing-card min-w-0 overflow-hidden rounded-3xl border bg-background p-5 sm:p-7 ${
+            className={`gc-landing-card gc-spotlight gc-card-hover min-w-0 overflow-hidden rounded-3xl border bg-background p-5 sm:p-7 ${
               showsIntegrations ? 'lg:col-span-2' : ''
             }`}
           >
