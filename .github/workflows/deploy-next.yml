@@ -8,6 +8,12 @@ on:
       - ".github/workflows/deploy-next.yml"
       - ".github/workflows/next-release-check.yml"
       - ".dockerignore"
+  # Commits pushed with the default GITHUB_TOKEN (e.g.
+  # update-visual-baselines.yml's own commit) never fire the push trigger
+  # above -- GitHub excludes it from triggering other workflows to prevent
+  # push loops. This is the only way to run the release checks and deploy
+  # against such a commit without an unrelated follow-up push.
+  workflow_dispatch: {}
 
 # Only one deploy in flight at a time. Without this, two pushes close
 # together each start their own SSH session on the VPS running the same
