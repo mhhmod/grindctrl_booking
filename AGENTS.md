@@ -123,52 +123,43 @@ Do not mix up the anon keys or project refs. Check the `CONFIG` block at the top
 - For every non-trivial UI change: audit existing layout/components first, then verify responsive behavior and RTL/LTR assumptions.
 - Next.js 16 runs this app and its conventions differ from older training data: read `apps/web-next/node_modules/next/dist/docs/` before writing Next-specific code. Request interception lives in `proxy.ts` (not `middleware.ts`) and runs on the Node runtime. The standalone build forwards proxied requests to itself over `localhost`, which works in the container (localhost is IPv4-only there) but fails on a Windows host, where those routes return 500 unless the server binds dual-stack (`HOSTNAME=::`).
 
-### Landing and marketing pages: Launch UI as the composition foundation
+### Landing and marketing pages: the Golden Landing Standard
 
-The home page (`components/landing/site-landing.tsx`) and the product pages it links to
-(`/shopping`, `/conversations`, `/operations`, `/integrations`, `/security`, plus `/pricing`
-and `/roi` which predate the shared primitives) all render through
-`components/marketing/page-primitives.tsx` (`MarketingPage`, `ProductHero`, `ProductSection`,
-`CtaRow`, `NotLiveList`) or, for the home page itself, `site-landing.tsx`'s own equivalent
-markup. That file's composition contract — small components with fully-optional props, a
-`false` sentinel to hide a slot, one fixed vertical-rhythm wrapper per section — is deliberately
-modelled on [Launch UI](https://github.com/launch-ui/launch-ui) (MIT), which uses the same
-pattern in its own `Section`/block components. Treat `page-primitives.tsx` as that pattern's
-home in this repo and extend it the same way rather than inventing a parallel one.
+`docs/golden-landing-standard.md` is the full reference — read it before touching a marketing
+page. This is the enforceable summary:
 
-- Do NOT run Launch UI's shadcn CLI (`npx shadcn add @launchui/...`) in this repo. Its base
-  install overwrites `app/globals.css` and `components/ui/button.tsx` wholesale, which would
-  destroy the brand tokens and the button variants every surface depends on. When a Launch UI
-  block is a genuinely good structural reference, port the composition (props shape, the
-  `false`-to-hide convention, which primitives it composes) by hand into a Tailwind
-  implementation using this repo's own `components/ui/*` and `app/globals.css` tokens — never
-  its raw JSX or its gradient/glow visual skin, which conflicts with `DESIGN.md`'s bans on
-  gradient text and this brand's restrained warm cream/charcoal identity.
-- Launch UI's free tier (its GitHub repo, MIT) only has real source for 9 blocks: hero, navbar,
-  faq, stats, logos, pricing, cta, footer, items. `testimonials`, `bento-grid`, `tabs`,
-  `gallery`, `feature`, and `carousel` are Pro-only ($99 one-time at launchuicomponents.com) with
-  no public source — do not port a pattern that doesn't exist for free, and do not spend the
-  money without asking first. This repo already has bespoke, brand-adapted equivalents for the
-  ones that matter here (`JourneyProofTabs` for tabs, `PlatformEvidenceSequence` for an evidence
-  grid) — keep those rather than chasing the Pro versions.
-- Motion/visual-effect requests get evaluated against what already exists before reaching for
-  React Bits or any other component library: `.gc-spotlight` (`components/gc-spotlight.tsx` +
-  `app/globals.css`) is a cursor-following highlight via one delegated pointer listener, already
-  used by the shared `Card` primitive — it is the same idea as React Bits' SpotlightCard, built
-  leaner and already on-brand, so use it (`className="gc-spotlight"`, add `gc-card-hover` too
-  only on a real standalone card, never on a list row sharing borders inside an
-  `overflow-hidden` container — the hover lift clips and jumps there). `lib/landing/use-scroll-reveal.ts`
-  (GSAP + ScrollTrigger, `.in-view` gate) is the scroll-reveal primitive already in place.
-  React Bits (reactbits.dev, MIT + Commons Clause, genuinely free via its own public shadcn
-  registry, `npx shadcn add @react-bits/<Name>`) is fine to reach for something this repo has no
-  equivalent for, but check its registry's declared `dependencies` first — several components
-  need the `motion` package (not `framer-motion`, a different package despite the similar API),
-  which is not installed and is not obviously worth adding for one component.
+**Reuse by default. Only introduce a new visual/motion pattern when nothing in that doc already
+expresses the requirement**, and say explicitly, in the commit or the response, which existing
+pattern was checked and ruled out. "It would look nicer a different way" is not sufficient reason
+to diverge — "the existing primitives genuinely cannot represent this content/interaction" is.
+
+- Every page in `apps/web-next/e2e/golden-pages.ts` (home, pricing, roi, shopping,
+  conversations, operations, integrations, security) composes
+  `components/marketing/page-primitives.tsx` (`MarketingPage`, `ProductHero`, `ProductSection`,
+  `CtaRow`, `NotLiveList`) — pricing and roi are the one documented, pre-existing exception, not
+  a precedent for a new one — or, for the home page, `site-landing.tsx`'s own equivalent markup.
+  That contract (small components, fully-optional props, a `false` sentinel to hide a slot, one
+  fixed vertical-rhythm wrapper) is deliberately modelled on
+  [Launch UI](https://github.com/launch-ui/launch-ui) (MIT); do not run its shadcn CLI in this
+  repo (it overwrites `globals.css`/`button.tsx`) and its Pro-only blocks (testimonials,
+  bento-grid, tabs, gallery, feature, carousel) have no public source to port — this repo already
+  has bespoke equivalents for the ones that matter (`JourneyProofTabs`, `PlatformEvidenceSequence`).
+- Before reaching for React Bits or any other motion/visual-effect library, check
+  `.gc-spotlight` and `lib/landing/use-scroll-reveal.ts` — both already exist and already cover
+  the two strongest candidates that library offers (a cursor-spotlight hover, a scroll-triggered
+  reveal). If React Bits is still the right call for something genuinely missing, check its
+  registry's declared `dependencies` first (several of its components need the `motion` package,
+  not `framer-motion` — a different package despite the similar API — which is not installed).
 - Container width is `mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8` everywhere on these pages,
-  hero and normal sections alike, with no 6xl/7xl split — an earlier `docs/landing-ui-spec.md`
-  documented a different, dark-themed system with that split; it never matched the actual warm
-  cream/charcoal implementation and has been deleted. `DESIGN.md` is the live source of truth for
-  brand rules.
+  hero and normal sections alike, with no narrower variant. `DESIGN.md` is the live source of
+  truth for brand rules (tokens, motion bans, copy rules).
+- Automated checks guard all of this — responsive overflow at every breakpoint, WCAG 2.2 AA
+  (axe), RTL icon mirroring, visual regression, and source-level consistency (every golden page
+  really does compose the shared primitives) — see `apps/web-next/e2e/golden-standard-*.spec.ts`
+  and `apps/web-next/app/golden-landing-standard.test.ts`, wired into CI via
+  `next-release-check.yml`. A change that makes one of these fail is a regression to fix, not a
+  check to loosen — if a check is ever genuinely wrong (not just inconvenient), fix the check
+  itself in the same change and say why.
 
 ### Landing sign-in regression guard
 

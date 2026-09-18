@@ -1,0 +1,87 @@
+name: Update golden landing standard visual baselines
+
+# Manual only, on purpose — see docs/golden-landing-standard.md. This
+# regenerates the CI (Linux) visual-regression baselines for
+# apps/web-next/e2e/golden-standard-visual.spec.ts against a real
+# production Docker candidate, and commits them directly to whatever ref
+# this was dispatched on. Never triggered by a push or pull_request: a
+# baseline update is "yes, this new rendering is correct," a judgment call
+# for a human to make deliberately, not something that should happen as a
+# side effect of an unrelated change.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-baselines:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: apps/web-next
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: apps/web-next
+        run: npx playwright install --with-deps chromium
+
+      # Same credential-free build as next-release-check.yml's release
+      # candidate — no production secrets, this image is only used to take
+      # screenshots and is discarded at the end of this job.
+      - name: Build a disposable production candidate
+        run: docker build --build-arg SENTRY_RELEASE=${{ github.sha }} -t grindctrl-visual-baseline:${{ github.sha }} -f apps/web-next/Dockerfile .
+
+      - name: Start the candidate
+        run: |
+          docker run --detach --name gc-visual-baseline --memory=1g --cpus=2 -p 127.0.0.1:3101:3000 grindctrl-visual-baseline:${{ github.sha }}
+          ready=0
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3101/api/health; then
+              ready=1
+              break
+            fi
+            sleep 5
+          done
+          test "$ready" = 1
+
+      - name: Regenerate visual baselines
+        working-directory: apps/web-next
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3101
+        # Failures here are expected and fine — --update-snapshots writes
+        # the new baseline and still reports a "failed" test for the run
+        # that had no prior baseline to compare against; what matters is
+        # whether the snapshot files themselves changed, checked next.
+        run: npx playwright test golden-standard-visual.spec.ts --update-snapshots || true
+
+      - name: Remove the disposable candidate
+        if: always()
+        run: docker rm --force gc-visual-baseline || true
+
+      - name: Commit updated baselines, if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web-next/e2e/golden-standard-visual.spec.ts-snapshots
+          if git diff --cached --quiet; then
+            echo "No visual baseline changes — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(e2e): update golden landing standard visual baselines (linux)
+
+Regenerated via .github/workflows/update-visual-baselines.yml against a
+real production Docker candidate built from ${{ github.sha }}. Review the
+diffed PNGs before merging/deploying anything that depended on this run —
+this commit only proves the new render is internally consistent, not that
+it is correct."
+          git push origin HEAD:${{ github.ref }}

@@ -1,20 +1,32 @@
 import { test, expect } from '@playwright/test';
+import { GOLDEN_PAGES } from './golden-pages';
 
-const WIDTHS = [320, 360, 390, 430];
+/* The full checklist from ~/.claude/rules/responsive.md: four adjacent
+   small-phone widths (where most real overflow bugs happen — dense on
+   purpose) plus one width per remaining Tailwind breakpoint boundary. */
+const WIDTHS = [320, 360, 390, 430, 768, 1024, 1280, 1440];
 const LOCALES = ['en', 'ar'] as const;
 
-/* Every public page. /pricing was missed the first time round and kept the
-   tracking-[0.22em] eyebrow the landing pass removed, so it went untested with
-   the very defect this sweep exists to catch — /try-on and /sign-in are here
-   so that mistake doesn't repeat for them.
+/* Every page built on the golden landing/marketing primitives, plus the two
+   public pages that predate or sit outside that system (try-on, sign-in) —
+   see golden-pages.ts for the full list and why each is or isn't "golden".
+   /pricing was missed the first time round and kept the tracking-[0.22em]
+   eyebrow the landing pass removed, so it went untested with the very
+   defect this sweep exists to catch; every page in golden-pages.ts is
+   checked here specifically so that mistake can't repeat for a new one.
 
-   rootSelector: landing/pricing set dir+lang on an inner .gc-landing-root div,
-   not <html>. /try-on and /sign-in don't have that wrapper, but both read the
-   same gc-locale cookie as the root layout, which does set dir+lang on <html>
-   — so <html> is the correct, and only necessary, selector for those two. */
+   rootSelector: landing/pricing/roi set dir+lang on an inner .gc-landing-root
+   div, not <html>. The page-primitives.tsx pages (shopping, conversations,
+   operations, integrations, security) and try-on/sign-in don't have that
+   wrapper, but all of them read the same gc-locale cookie as the root
+   layout, which does set dir+lang on <html> — so <html> is the correct,
+   and only necessary, selector for those. */
 const PAGES = [
-  { name: 'landing', path: '/', rootSelector: '.gc-landing-root' },
-  { name: 'pricing', path: '/pricing', rootSelector: '.gc-landing-root' },
+  ...GOLDEN_PAGES.map((p) => ({
+    name: p.name,
+    path: p.path,
+    rootSelector: p.usesLandingRoot ? '.gc-landing-root' : 'html',
+  })),
   { name: 'try-on', path: '/try-on', rootSelector: 'html' },
   { name: 'sign-in', path: '/sign-in', rootSelector: 'html' },
 ] as const;
@@ -22,11 +34,11 @@ const PAGES = [
 for (const { name, path, rootSelector } of PAGES) {
 for (const locale of LOCALES) {
   for (const width of WIDTHS) {
-    test(`${name} has no horizontal overflow at ${width}px in ${locale}`, async ({ page, context }) => {
+    test(`${name} has no horizontal overflow at ${width}px in ${locale}`, async ({ page, context, baseURL }) => {
       /* Locale comes only from this cookie (SITE_LOCALE_COOKIE), read server
          side in app/page.tsx. There is no ?lang= param. */
       await context.addCookies([
-        { name: 'gc-locale', value: locale, url: 'http://localhost:3100' },
+        { name: 'gc-locale', value: locale, url: baseURL! },
       ]);
       await page.setViewportSize({ width, height: 900 });
       await page.goto(path);
