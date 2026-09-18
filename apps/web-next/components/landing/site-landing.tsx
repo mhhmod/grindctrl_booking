@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { RenderReceiptFigure } from '@/components/landing/render-receipt-figure';
-import { ConnectedJourneyRail } from '@/components/landing/connected-journey-rail';
 import { ConnectedSystemMap } from '@/components/landing/connected-system-map';
 import { JourneyProofTabs } from '@/components/landing/journey-proof-tabs';
 import { PlatformEvidenceSequence } from '@/components/landing/platform-evidence-sequence';
@@ -20,7 +19,9 @@ import { Eyebrow } from '@/components/landing/eyebrow';
 import { useLandingLocale } from '@/components/landing/landing-locale';
 import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
-import { TryOnRevealFigure } from '@/components/landing/try-on-reveal-figure';
+import { HeroSystem } from '@/components/landing/proof/hero-system';
+import { getProofCopy } from '@/components/landing/proof/proof-copy';
+import { ShopifyMark } from '@/components/brand-marks';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import type { PublicPlanCatalogItem } from '@/lib/try-on/public-catalog';
@@ -117,6 +118,7 @@ function ArrowIcon() {
 
 export function SiteLanding() {
   const { locale, dir, t } = useLandingLocale();
+  const p = getProofCopy(locale);
 
   return (
     <>
@@ -128,22 +130,14 @@ export function SiteLanding() {
         {/* Hero */}
         <section className="relative overflow-hidden" aria-labelledby="landing-hero-title">
           <div className="pointer-events-none absolute inset-0 -z-10 gc-hero-grid-warm" aria-hidden="true" />
-          <div
-            className="gc-ambient-glow pointer-events-none absolute -end-32 top-16 -z-10 size-80 rounded-full bg-primary/6 blur-3xl"
-            aria-hidden="true"
-          />
-          <div className="mx-auto grid w-full max-w-7xl gap-7 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-[0.88fr_1.12fr] lg:gap-x-16 lg:gap-y-6 lg:px-8 lg:py-28">
-            {/* Mobile order: headline, then the proof, then the pitch. The
-                visual has to land above the fold on a phone. */}
-            <div className="order-1 flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:justify-end lg:gap-6">
+          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-14 pt-10 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-center xl:gap-14 xl:pb-24 xl:pt-20">
+            <div className="flex min-w-0 flex-col gap-5 xl:gap-6">
               <Badge
                 variant="secondary"
-                /* This is a full sentence, not a one-word badge. Badge is
-                   h-5 whitespace-nowrap by default, so it ran ~54px past a
-                   320px viewport; h-auto + whitespace-normal lets it wrap.
-                   Typography follows the same locale rule as Eyebrow —
-                   letter-spacing breaks Arabic letter-joining. */
-                className={`gc-fade-in-up h-auto whitespace-normal rounded-full px-3 py-1 text-start text-[11px] font-semibold ${
+                /* A full sentence, not a one-word badge: h-auto and
+                   whitespace-normal let it wrap on narrow phones. Letter
+                   spacing breaks Arabic joining, so tracking is Latin only. */
+                className={`gc-fade-in-up h-auto w-fit whitespace-normal rounded-full px-3 py-1 text-start text-[11px] font-semibold ${
                   locale === 'ar' ? 'text-xs' : 'uppercase tracking-[0.16em]'
                 }`}
               >
@@ -151,36 +145,25 @@ export function SiteLanding() {
               </Badge>
               <h1
                 id="landing-hero-title"
-                className="gc-fade-in-up text-[clamp(2.1rem,7vw,4.25rem)] font-bold leading-[1.06] tracking-tight"
+                className="gc-fade-in-up max-w-[14ch] text-[clamp(2.1rem,6.4vw,4rem)] font-bold leading-[1.05] tracking-tight"
                 style={{ animationDelay: '0.05s' }}
               >
                 {t.heroTitle}
               </h1>
-            </div>
-
-            <div className="order-2 flex min-w-0 flex-col gap-3 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
-              <TryOnRevealFigure caption={t.heroRevealCaption} alt={t.heroRevealAlt} />
-              <ConnectedJourneyRail label={t.heroJourneyLabel} stages={t.heroJourneyStages} />
-            </div>
-
-            <div className="order-3 flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2 lg:gap-6">
               <p
                 className="gc-fade-in-up max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg"
-                style={{ animationDelay: '0.12s' }}
+                style={{ animationDelay: '0.1s' }}
               >
-                {t.heroSubtitle}
+                {p.heroSubtitle}
               </p>
-              <div
-                className="gc-fade-in-up flex flex-col gap-3 sm:flex-row"
-                style={{ animationDelay: '0.18s' }}
-              >
+              <div className="gc-fade-in-up flex flex-col gap-3 sm:flex-row" style={{ animationDelay: '0.15s' }}>
                 <Button
                   asChild
                   size="lg"
                   className="h-12 rounded-full px-6 text-sm font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
                 >
-                  <a href={DEMO_URL} onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'hero' })}>
-                    {t.heroPrimary}
+                  <a href="#see-it-working">
+                    {p.heroPrimary}
                     <ArrowIcon />
                   </a>
                 </Button>
@@ -196,22 +179,25 @@ export function SiteLanding() {
                     rel="noopener noreferrer"
                     onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'hero' })}
                   >
-                    {t.heroSecondary}
+                    {p.heroSecondary}
                   </a>
                 </Button>
               </div>
-              <div
-                className="gc-fade-in-up flex flex-wrap gap-x-5 gap-y-2 pt-1 text-sm text-muted-foreground"
-                style={{ animationDelay: '0.24s' }}
-              >
-                {t.heroChips.map((chip) => (
-                  <span key={chip} className="flex items-center gap-1.5">
-                    <span className="size-1.5 rounded-full bg-foreground/40" aria-hidden="true" />
-                    {chip}
-                  </span>
+              <ul className="gc-fade-in-up flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground" style={{ animationDelay: '0.2s' }}>
+                {p.heroTrust.map((item, i) => (
+                  <li key={item} className="flex items-center gap-1.5">
+                    {i === 0 ? (
+                      <ShopifyMark className="size-4" />
+                    ) : (
+                      <span className="size-1.5 rounded-full bg-foreground/40" aria-hidden="true" />
+                    )}
+                    {item}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
+
+            <HeroSystem locale={locale} copy={p} />
           </div>
         </section>
 

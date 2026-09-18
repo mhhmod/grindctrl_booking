@@ -31,6 +31,7 @@ import {
   siMeta,
   siN8n,
   siNotion,
+  siOpenrouter,
   siShopify,
   siStripe,
   siSupabase,
@@ -97,6 +98,7 @@ export const StripeMark = makeMark(siStripe);
 export const AirtableMark = makeMark(siAirtable);
 export const LinearMark = makeMark(siLinear);
 export const WooCommerceMark = makeMark(siWoocommerce);
+export const OpenRouterMark = makeMark(siOpenrouter);
 
 /* Lookup used by the landing strips. Keys match the untranslated brand names
    in the copy dictionaries, which stay Latin script in Arabic too. */
@@ -123,4 +125,5 @@ export const BRAND_MARKS: Record<string, ((props: MarkProps) => React.JSX.Elemen
   Stripe: StripeMark,
   Airtable: AirtableMark,
   Linear: LinearMark,
+  OpenRouter: OpenRouterMark,
 };

@@ -18,7 +18,7 @@ const CONV_KEY = (key: string) => `gc_msgr_${key}_conv`;
 /* Matches what /api/messenger/sync documents and is rate-limited for. */
 const SYNC_INTERVAL_MS = 15_000;
 
-interface WireMessage {
+export interface WireMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -63,6 +63,8 @@ export function MessengerPanel({
   variant = 'live',
   locale: localeOverride,
   originToken,
+  previewMessages,
+  previewStatus,
 }: {
   config: PublicMessengerPayload;
   variant?: 'live' | 'preview';
@@ -77,6 +79,12 @@ export function MessengerPanel({
    *  carries no locale, which left the preview stuck in English while its
    *  frame flipped to RTL. */
   locale?: MessengerLocale;
+  /** Preview only. Seeds the thread/handoff state the dashboard preview-frame
+   *  wants to demo (e.g. a handoff banner) without a network round trip.
+   *  Ignored in live mode — the real panel's state comes from bootstrap. */
+  previewMessages?: WireMessage[];
+  /** Preview only. See previewMessages. */
+  previewStatus?: string;
 }) {
   const [locale, setLocale] = useState<MessengerLocale>(localeOverride ?? 'en');
   // Locale must resolve after hydration (the iframe URL is the source of
@@ -102,8 +110,8 @@ export function MessengerPanel({
   /* Session state */
   const [anonId, setAnonId] = useState<string | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [messages, setMessages] = useState<WireMessage[]>([]);
+  const [status, setStatus] = useState<string | null>(variant === 'preview' ? (previewStatus ?? null) : null);
+  const [messages, setMessages] = useState<WireMessage[]>(variant === 'preview' ? (previewMessages ?? []) : []);
   const [booting, setBooting] = useState(variant === 'preview' ? false : true);
   const [bootError, setBootError] = useState(false);
   const [fullBleed, setFullBleed] = useState(false);

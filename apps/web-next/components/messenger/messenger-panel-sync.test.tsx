@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MessengerPanel } from './MessengerPanel';
+import { MessengerPanel, type WireMessage } from './MessengerPanel';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 
 /* The panel is an iframe on the merchant's storefront. A shopper who has
@@ -415,5 +415,62 @@ describe('MessengerPanel staff typing presence', () => {
     });
     expect(screen.queryByRole('status', { name: 'Typing…' })).not.toBeInTheDocument();
     expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/api/messenger/send'))).toBe(false);
+  });
+});
+
+/* The dashboard preview-frame renders the real panel but never wired it to
+   show anything but an empty thread — a merchant asking to see the handoff
+   banner or an AI-vs-human reply had nothing to look at. previewMessages/
+   previewStatus seed that same state, preview-only, with no network call. */
+describe('MessengerPanel preview seeding', () => {
+  const PREVIEW_MESSAGES: WireMessage[] = [
+    { id: 'p-1', role: 'user', content: 'Does the Premium Ringer Tee run true to size?', createdAt: new Date().toISOString() },
+    {
+      id: 'p-2',
+      role: 'assistant',
+      content: 'It has a relaxed fit and runs true to size.',
+      createdAt: new Date().toISOString(),
+      author: 'ai',
+    },
+  ];
+
+  it('renders the seeded messages and handoff state without any fetch', () => {
+    fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(
+      <MessengerPanel
+        config={CONFIG}
+        variant="preview"
+        locale="en"
+        previewMessages={PREVIEW_MESSAGES}
+        previewStatus="handoff_requested"
+      />,
+    );
+
+    expect(screen.getByText('Does the Premium Ringer Tee run true to size?')).toBeInTheDocument();
+    expect(screen.getByText('It has a relaxed fit and runs true to size.')).toBeInTheDocument();
+    expect(screen.getByText('Assistant')).toBeInTheDocument();
+    expect(screen.getByText('Connecting you with our team…')).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores previewMessages/previewStatus in live mode', async () => {
+    render(
+      <MessengerPanel
+        config={CONFIG}
+        originToken="tok"
+        locale="en"
+        previewMessages={PREVIEW_MESSAGES}
+        previewStatus="handoff_requested"
+      />,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    // Live boots from the (empty) bootstrap fetch, not the preview props.
+    expect(screen.queryByText('Does the Premium Ringer Tee run true to size?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Connecting you with our team…')).not.toBeInTheDocument();
   });
 });
