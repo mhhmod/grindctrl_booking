@@ -12,6 +12,7 @@ export type ProofCopy = {
   heroSecondary: string;
   heroTrust: string[];
   heroVisualLabel: string;
+  heroSelectorLabel: string;
   stops: Record<StopKey, { label: string; caption: string }>;
   demoNote: string;
   shopperGarment: string;
@@ -54,6 +55,7 @@ const en: ProofCopy = {
   heroSecondary: 'Book a call',
   heroTrust: ['Native Shopify app', 'Arabic and English', 'Set up and run by our team'],
   heroVisualLabel: 'One shopper moving through GrindCTRL: try-on, store chat, team inbox and report.',
+  heroSelectorLabel: 'See a different signal',
   stops: {
     signal: { label: 'Shopper signal', caption: 'Salma tries the linen shirt on' },
     context: { label: 'Customer context', caption: 'She asks about size. The assistant answers.' },
@@ -163,6 +165,7 @@ const ar: ProofCopy = {
   heroSecondary: 'احجز مكالمة',
   heroTrust: ['تطبيق Shopify أصلي', 'العربية والإنجليزية', 'نجهّزه ونديره لك'],
   heroVisualLabel: 'متسوقة واحدة عبر GrindCTRL: التجربة الافتراضية، ثم دردشة المتجر، ثم صندوق الفريق، ثم التقرير.',
+  heroSelectorLabel: 'اختر إشارة مختلفة',
   stops: {
     signal: { label: 'إشارة المتسوق', caption: 'سلمى تجرب قميص الكتان' },
     context: { label: 'سياق العميل', caption: 'تسأل عن المقاس فيجيب المساعد' },
