@@ -79,9 +79,9 @@ jobs:
           fi
           git commit -m "chore(e2e): update golden landing standard visual baselines (linux)
 
-Regenerated via .github/workflows/update-visual-baselines.yml against a
-real production Docker candidate built from ${{ github.sha }}. Review the
-diffed PNGs before merging/deploying anything that depended on this run —
-this commit only proves the new render is internally consistent, not that
-it is correct."
+          Regenerated via .github/workflows/update-visual-baselines.yml against a
+          real production Docker candidate built from ${{ github.sha }}. Review the
+          diffed PNGs before merging/deploying anything that depended on this run —
+          this commit only proves the new render is internally consistent, not that
+          it is correct."
           git push origin HEAD:${{ github.ref }}
