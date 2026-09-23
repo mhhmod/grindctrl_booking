@@ -40,6 +40,12 @@ describe('SiteLanding', () => {
     expect(demoLink).toBeInTheDocument();
   });
 
+  it('surfaces the ROI calculator beyond the footer', () => {
+    const { container } = renderLanding('en');
+    const roiLinks = container.querySelectorAll('a[href="/roi"]');
+    expect(roiLinks.length).toBeGreaterThan(1);
+  });
+
   it('switches to Arabic and flips direction to RTL', () => {
     const { container } = renderLanding('ar');
     expect(container.querySelector('[dir="rtl"]')).toBeInTheDocument();

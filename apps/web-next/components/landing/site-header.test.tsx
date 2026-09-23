@@ -53,7 +53,7 @@ describe('SiteHeader', () => {
 
     const sheet = within(await screen.findByRole('dialog'));
 
-    for (const label of [t.navHow, t.navDemo, t.navBenefits, t.navPricing, t.signIn]) {
+    for (const label of [t.navHow, t.navDemo, t.navBenefits, t.navRoi, t.navPricing, t.signIn]) {
       expect(sheet.getByRole('link', { name: label })).toBeInTheDocument();
     }
     expect(sheet.getByRole('button', { name: t.langToggleLabel })).toBeInTheDocument();

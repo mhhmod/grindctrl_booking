@@ -41,6 +41,7 @@ const productLinks = [
 ] as const;
 
 const pricingLink = { href: '/pricing', key: 'navPricing' } as const;
+const roiLink = { href: '/roi', key: 'navRoi' } as const;
 
 function isRoute(href: string) {
   return href.startsWith('/');
@@ -125,6 +126,7 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <NavItem href={roiLink.href} label={t[roiLink.key]} className={desktopLinkClass} />
           <NavItem href={pricingLink.href} label={t[pricingLink.key]} className={desktopLinkClass} />
         </nav>
 
@@ -212,6 +214,12 @@ export function SiteHeader({ locale, t }: { locale: SiteLocale; t: LandingTransl
                   onSelect={() => setOpen(false)}
                 />
               ))}
+              <NavItem
+                href={roiLink.href}
+                label={t[roiLink.key]}
+                className={mobileLinkClass}
+                onSelect={() => setOpen(false)}
+              />
               <NavItem
                 href={pricingLink.href}
                 label={t[pricingLink.key]}

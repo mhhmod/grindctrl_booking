@@ -21,6 +21,7 @@ import { SiteFooter } from '@/components/landing/site-footer';
 import { SiteHeader } from '@/components/landing/site-header';
 import { HeroSystem } from '@/components/landing/proof/hero-system';
 import { getProofCopy } from '@/components/landing/proof/proof-copy';
+import { getRoiCopy } from '@/components/roi/roi-copy';
 import { ShopifyMark } from '@/components/brand-marks';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
@@ -119,6 +120,7 @@ function ArrowIcon() {
 export function SiteLanding() {
   const { locale, dir, t } = useLandingLocale();
   const p = getProofCopy(locale);
+  const roi = getRoiCopy(locale);
 
   return (
     <>
@@ -272,6 +274,60 @@ export function SiteLanding() {
               <PlatformPillars items={t.platformPillars} />
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t.benefitsStatusNote}</p>
             </div>
+          </div>
+        </section>
+
+        {/* Business case: surfaces the existing /roi scenario calculator, which
+            was previously reachable only from the footer link. The card shows
+            the calculator's inputs and its formula line, never numbers; the
+            real, editable calculator lives on /roi. */}
+        <section id="roi" className="scroll-mt-20 bg-muted/35" aria-labelledby="roi-title">
+          <div className="gc-scroll-reveal mx-auto grid w-full max-w-7xl min-w-0 items-center gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1.14fr)] lg:gap-16 lg:px-8 lg:py-20">
+              <div className="min-w-0 flex flex-col items-start justify-center gap-5 lg:py-8">
+                <Badge variant="secondary" className="rounded-full px-3 py-1">
+                  {t.roiTeaserEyebrow}
+                </Badge>
+                <h2 id="roi-title" className="max-w-2xl text-[30px] font-bold leading-[1.1] tracking-tight sm:text-4xl lg:text-[48px]">
+                  {t.roiTeaserTitle}
+                </h2>
+                <p className="max-w-xl text-base leading-[1.7] text-muted-foreground sm:text-lg">
+                  {t.roiTeaserBody}
+                </p>
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-12 rounded-full px-6 font-semibold transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:hover:translate-y-0"
+                >
+                  <Link href="/roi">
+                    {t.roiTeaserButton}
+                    <ArrowIcon />
+                  </Link>
+                </Button>
+                <p className="text-xs leading-relaxed text-muted-foreground">{t.roiTeaserNote}</p>
+              </div>
+              <div className="relative min-w-0">
+                <div className="gc-landing-card gc-card-hover rounded-3xl border p-6 sm:p-8">
+                  <Eyebrow locale={locale}>{t.roiTeaserInputsLabel}</Eyebrow>
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {t.roiTeaserInputs.map((item) => (
+                      <li
+                        key={item}
+                        className="rounded-full border border-border bg-background px-3 py-1.5 text-sm text-foreground"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  {/* The calculator's own formula line, read from roi-copy.ts so this
+                      teaser can never describe different math than /roi runs. */}
+                  <div className="mt-6 border-t border-border pt-5">
+                    <Eyebrow locale={locale}>{roi.formulaTitle}</Eyebrow>
+                    <p className="mt-2 text-base font-semibold leading-snug text-foreground sm:text-lg">
+                      {roi.thesis}
+                    </p>
+                  </div>
+                </div>
+              </div>
           </div>
         </section>
 

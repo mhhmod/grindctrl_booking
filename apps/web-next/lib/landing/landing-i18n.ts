@@ -59,6 +59,7 @@ interface LandingDict {
   navProductConversations: string;
   navProductOperations: string;
   navProductIntegrations: string;
+  navRoi: string;
   navPricing: string;
   signIn: string;
   bookCall: string;
@@ -95,6 +96,14 @@ interface LandingDict {
   benefitsBody: string;
   benefitsStatusNote: string;
   platformPillars: PlatformPillar[];
+
+  roiTeaserEyebrow: string;
+  roiTeaserTitle: string;
+  roiTeaserBody: string;
+  roiTeaserButton: string;
+  roiTeaserNote: string;
+  roiTeaserInputsLabel: string;
+  roiTeaserInputs: string[];
 
   pricingEyebrow: string;
   pricingTitle: string;
@@ -177,6 +186,7 @@ const en: LandingDict = {
   navProductConversations: 'Conversations',
   navProductOperations: 'Operations',
   navProductIntegrations: 'Integrations',
+  navRoi: 'ROI calculator',
   navPricing: 'Pricing',
   signIn: 'Sign in',
   bookCall: 'Book a call',
@@ -254,6 +264,15 @@ const en: LandingDict = {
       status: 'Planned layer',
     },
   ],
+
+  roiTeaserEyebrow: 'Business case',
+  roiTeaserTitle: 'See what it could be worth for your store.',
+  roiTeaserBody:
+    'Enter your own sessions, conversion rate, order value, returns, and margin. Every formula stays visible, and every improvement assumption starts at zero.',
+  roiTeaserButton: 'Build your scenario',
+  roiTeaserNote: 'An illustrative worksheet, not a performance guarantee.',
+  roiTeaserInputsLabel: 'What you enter',
+  roiTeaserInputs: ['Sessions', 'Conversion rate', 'Order value', 'Returns', 'Margin'],
 
   pricingEyebrow: 'Pricing',
   pricingTitle: 'Start small, then scale with demand.',
@@ -391,6 +410,7 @@ const ar: LandingDict = {
   navProductConversations: 'المحادثات',
   navProductOperations: 'العمليات',
   navProductIntegrations: 'التكاملات',
+  navRoi: 'حاسبة العائد',
   navPricing: 'الأسعار',
   signIn: 'تسجيل الدخول',
   bookCall: 'احجز مكالمة',
@@ -467,6 +487,15 @@ const ar: LandingDict = {
       status: 'طبقة مخططة',
     },
   ],
+
+  roiTeaserEyebrow: 'دراسة الجدوى',
+  roiTeaserTitle: 'شاهد القيمة المحتملة لمتجرك.',
+  roiTeaserBody:
+    'أدخل زياراتك ومعدل التحويل ومتوسط قيمة الطلب والمرتجعات والهامش. تبقى كل المعادلات ظاهرة، وتبدأ كل افتراضات التحسن من الصفر.',
+  roiTeaserButton: 'ابدأ سيناريوك',
+  roiTeaserNote: 'ورقة عمل توضيحية وليست وعدًا بالأداء.',
+  roiTeaserInputsLabel: 'ما تُدخله',
+  roiTeaserInputs: ['الزيارات', 'معدل التحويل', 'قيمة الطلب', 'المرتجعات', 'الهامش'],
 
   pricingEyebrow: 'الأسعار',
   pricingTitle: 'ابدأ بحجم صغير ثم توسع مع الطلب.',
