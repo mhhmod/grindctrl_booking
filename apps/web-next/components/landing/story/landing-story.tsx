@@ -523,9 +523,13 @@ export function LandingStory() {
               <section id="journey" data-reveal="" aria-labelledby="journey-title" className="mx-auto max-w-7xl px-10 pt-[130px]">
                 <DeskJourney v={common} t={t} />
               </section>
-              {/* The closing band is drawn on a 1440px canvas, centred and clipped at the viewport. */}
+              {/* The closing band is drawn on a 1440px canvas, centred and clipped
+                  at the viewport. Equal negative margins centre it in both
+                  directions; a left and translate would not, because a block
+                  wider than its container overflows toward the inline start,
+                  which is the right in Arabic. */}
               <div className="mt-[140px] overflow-hidden bg-foreground">
-                <div className="relative left-1/2 w-[1440px] -translate-x-1/2">
+                <div className="mx-[calc((100%-1440px)/2)] w-[1440px]">
                   <DeskCta v={common} t={t} />
                 </div>
               </div>
