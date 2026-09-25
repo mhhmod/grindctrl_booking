@@ -1,8 +1,7 @@
 /* The landing story's data, ported from the v15 prototype logic
-   (docs/handoff/site-v15/design/prototype/boards/Scroll.dc.html and
+   (design/prototype/boards/Scroll.dc.html in the site-v15 handoff bundle and
    logic/director11.js). Timings and sizes are the prototype's own. */
 
-export const BREAK = 1000;
 export const TABLET_COLUMN = 560;
 export const SCENE_ORDER = ['tryon', 'store', 'ops', 'product', 'results'] as const;
 export type SceneKey = (typeof SCENE_ORDER)[number];

@@ -856,7 +856,9 @@ html[data-story='pinned'] [data-assistant-launcher] {
 
 /* Arabic drops the Latin letter-spacing the views carry inline, except in
    the parts that stay English (the live store window). */
-.gc-story { --gc-ls: 1; }
+.gc-story { --gc-ls: 1; --gc-board-scale: 1; }
+/* Before the director measures, the stack map already fits a narrow desktop. */
+@media (max-width: 1279.98px) { .gc-story { --gc-board-scale: 0.76; } }
 .gc-story:lang(ar),
 .gc-story :lang(ar) { --gc-ls: 0; }
 .gc-story [lang='en'] { --gc-ls: 1; }

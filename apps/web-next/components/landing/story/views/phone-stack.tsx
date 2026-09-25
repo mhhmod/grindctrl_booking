@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -16,7 +17,7 @@ export function PhoneStack({ v, t }: ViewProps) {
       <div data-reveal="">
         <div style={{ textAlign: "center" }}>
           <span style={{ display: "inline-flex", alignItems: "center", height: "26px", padding: "0 11px", borderRadius: "26px", border: "1px solid var(--border)", background: "var(--gc-chip)", fontSize: "11.5px", fontWeight: "600" }}>{t("Works inside your stack")}</span>
-          <h2 id="stack-title" style={{ margin: "12px 0 0", fontSize: "30px", lineHeight: "1.1", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Plugs into the store you already run.")}</h2>
+          <h2 id="m-stack-title" style={{ margin: "12px 0 0", fontSize: "30px", lineHeight: "1.1", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Plugs into the store you already run.")}</h2>
         </div>
       </div>
       <div data-reveal="">

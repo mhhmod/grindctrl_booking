@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -20,7 +21,7 @@ export function DeskStack({ v, t }: ViewProps) {
         </div>
       </div>
       <div data-reveal="">
-        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "48px", height: "400px" }}>
+        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "48px", marginInline: "calc((100% - 1200px) / 2)", width: "1200px", height: "400px", transform: "scale(var(--gc-board-scale, 1))", transformOrigin: "50% 0", marginBottom: "calc((var(--gc-board-scale, 1) - 1) * 400px)" }}>
           <svg aria-hidden="true" width="1200" height="380" viewBox="0 0 1200 380" style={{ position: "absolute", insetInlineStart: "0", top: "0", overflow: "visible" }} className="rtl:-scale-x-100">
             <path d="M284 128 H396" fill="none" stroke="color-mix(in srgb, var(--foreground) 28%, transparent)" strokeWidth="1.4" />
             <path d="M284 128 H396" pathLength="100" fill="none" stroke="var(--foreground)" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="6 94" style={{ animation: "gcs-flow 2.6s linear -0.0s infinite" }} />

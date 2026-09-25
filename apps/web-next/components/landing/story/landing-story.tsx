@@ -6,10 +6,10 @@
    The scenes are sections with a sticky sheet inside; story-controller.ts
    paces them (one gesture, one beat) and writes the per-frame values. The
    views in ./views are the prototype's markup ported to TSX, one per scene
-   and layout. Phones and tablets (under 1000px) get the phone layout. The
-   server guesses the layout from the request and the client corrects it
-   after hydration, as the prototype does. Scenes after the first load as
-   their own chunks so the first screen does not wait for them. */
+   and layout. Both layouts are rendered and CSS shows the phone one under
+   1000px (phones and tablets), so no width check in script decides what
+   the first paint shows. Scenes after the first load as their own chunks
+   so the first screen does not wait for them. */
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
@@ -91,22 +91,76 @@ function useStorySlice(controller: StoryController, keys: readonly (keyof StoryS
   return React.useSyncExternalStore(controller.subscribe, getSnapshot, getSnapshot);
 }
 
+type Envs = Record<StoryLayout, ValsEnv>;
+
 type SceneProps = {
   controller: StoryController;
-  env: ValsEnv;
+  envs: Envs;
+  /** The layout on screen, or null before the client has checked. */
+  layout: StoryLayout | null;
   common: V;
   t: StoryT;
 };
 
-function useVals(
-  controller: StoryController,
+/* Both layouts are in the page and CSS shows the one the viewport wants
+   (under 1000px, phones and tablets, the phone layout), so the first paint
+   is right on every device with no width check in script. Once the client
+   knows, the other one also gets `hidden` and stops updating; it renders
+   again only when it becomes the one on screen. */
+const VIEW_CLASS: Record<StoryLayout, string> = {
+  desk: 'contents max-[999.98px]:hidden [&[hidden]]:hidden',
+  phone: 'contents min-[1000px]:hidden [&[hidden]]:hidden',
+};
+
+type ViewComponent = React.ComponentType<{ v: V; t: StoryT }>;
+
+const FrozenView = React.memo(
+  function FrozenView({ View, v, t }: { View: ViewComponent; v: V; t: StoryT; frozen: boolean }) {
+    return <View v={v} t={t} />;
+  },
+  (prev, next) => prev.frozen && next.frozen && prev.t === next.t && prev.View === next.View,
+);
+
+function LayoutView({
+  which,
+  layout,
+  children,
+}: {
+  which: StoryLayout;
+  layout: StoryLayout | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <div data-view={which} className={VIEW_CLASS[which]} hidden={layout !== null && layout !== which}>
+      {children}
+    </div>
+  );
+}
+
+function ViewPair({ p, desk, phone, vDesk, vPhone }: { p: SceneProps; desk: ViewComponent; phone: ViewComponent; vDesk: V; vPhone: V }) {
+  const live = p.layout ?? 'desk';
+  return (
+    <>
+      <LayoutView which="desk" layout={p.layout}>
+        <FrozenView View={desk} v={vDesk} t={p.t} frozen={live !== 'desk'} />
+      </LayoutView>
+      <LayoutView which="phone" layout={p.layout}>
+        <FrozenView View={phone} v={vPhone} t={p.t} frozen={live !== 'phone'} />
+      </LayoutView>
+    </>
+  );
+}
+
+function usePairVals(
+  p: SceneProps,
   keys: readonly (keyof StoryState)[],
   compute: (s: StoryState, env: ValsEnv) => V,
-  env: ValsEnv,
-  common: V,
-) {
-  const s = useStorySlice(controller, keys);
-  return React.useMemo(() => ({ ...common, ...compute(s, env) }), [s, env, common, compute]);
+): [V, V] {
+  const s = useStorySlice(p.controller, keys);
+  const { envs, common } = p;
+  const vDesk = React.useMemo(() => ({ ...common, ...compute(s, envs.desk) }), [s, envs, common, compute]);
+  const vPhone = React.useMemo(() => ({ ...common, ...compute(s, envs.phone) }), [s, envs, common, compute]);
+  return [vDesk, vPhone];
 }
 
 /* ---------------------------------------------------------------- scene shells */
@@ -120,7 +174,7 @@ const SCENE_BG: Record<SceneKey, string> = {
 };
 const TITLE_ID: Record<StoryLayout, Record<SceneKey, string>> = {
   desk: { tryon: 'hero-title', store: 'store-title', ops: 'ops-title', product: 'product-title', results: 'results-title' },
-  phone: { tryon: 'm-hero-title', store: 'store-title', ops: 'ops-title', product: 'm-product-title', results: 'results-title' },
+  phone: { tryon: 'm-hero-title', store: 'm-store-title', ops: 'm-ops-title', product: 'm-product-title', results: 'm-results-title' },
 };
 
 function SceneShell({
@@ -172,36 +226,39 @@ function SceneShell({
 }
 
 /* ---------------------------------------------------------------- scenes */
-function TryScene({ controller, env, common, t }: SceneProps) {
-  const tv = useVals(controller, TRY_KEYS, tryVals, env, common);
-  const cv = useStorySlice(controller, CHAT_KEYS);
-  const v = React.useMemo(() => ({ ...tv, ...chatVals(cv, env) }), [tv, cv, env]);
-  return env.layout === 'desk' ? <DeskTry v={v} t={t} /> : <PhoneTry v={v} t={t} />;
+function TryScene(p: SceneProps) {
+  const [tDesk, tPhone] = usePairVals(p, TRY_KEYS, tryVals);
+  const cv = useStorySlice(p.controller, CHAT_KEYS);
+  const chat = React.useMemo(() => chatVals(cv, p.envs.desk), [cv, p.envs]);
+  const vDesk = React.useMemo(() => ({ ...tDesk, ...chat }), [tDesk, chat]);
+  return <ViewPair p={p} desk={DeskTry} phone={PhoneTry} vDesk={vDesk} vPhone={tPhone} />;
 }
 
-function StoreScene({ controller, env, common, t }: SceneProps) {
-  const v = useVals(controller, STORE_KEYS, storeVals, env, common);
-  return env.layout === 'desk' ? <DeskStore v={v} t={t} /> : <PhoneStore v={v} t={t} />;
+function StoreScene(p: SceneProps) {
+  const [vDesk, vPhone] = usePairVals(p, STORE_KEYS, storeVals);
+  return <ViewPair p={p} desk={DeskStore} phone={PhoneStore} vDesk={vDesk} vPhone={vPhone} />;
 }
 
-function OpsScene({ controller, env, common, t }: SceneProps) {
-  const v = useVals(controller, OPS_KEYS, opsVals, env, common);
-  return env.layout === 'desk' ? <DeskOps v={v} t={t} /> : <PhoneOps v={v} t={t} />;
+function OpsScene(p: SceneProps) {
+  const [vDesk, vPhone] = usePairVals(p, OPS_KEYS, opsVals);
+  return <ViewPair p={p} desk={DeskOps} phone={PhoneOps} vDesk={vDesk} vPhone={vPhone} />;
 }
 
-function ProductScene({ controller, env, common, t }: SceneProps) {
-  const v = useVals(controller, PRODUCT_KEYS, productVals, env, common);
-  return env.layout === 'desk' ? <DeskProduct v={v} t={t} /> : <PhoneProduct v={v} t={t} />;
+function ProductScene(p: SceneProps) {
+  const [vDesk, vPhone] = usePairVals(p, PRODUCT_KEYS, productVals);
+  return <ViewPair p={p} desk={DeskProduct} phone={PhoneProduct} vDesk={vDesk} vPhone={vPhone} />;
 }
 
-function ResultsScene({ controller, env, common, t }: SceneProps) {
-  const v = useVals(controller, RESULTS_KEYS, resultsVals, env, common);
-  return env.layout === 'desk' ? <DeskResults v={v} t={t} /> : <PhoneResults v={v} t={t} />;
+function ResultsScene(p: SceneProps) {
+  const [vDesk, vPhone] = usePairVals(p, RESULTS_KEYS, resultsVals);
+  return <ViewPair p={p} desk={DeskResults} phone={PhoneResults} vDesk={vDesk} vPhone={vPhone} />;
 }
 
-function ChatSection({ controller, env, common, t }: SceneProps) {
-  const v = useVals(controller, CHAT_KEYS, chatVals, env, common);
-  return <PhoneChat v={v} t={t} />;
+/** Ask the store: the hero chat in its own section, on phones only. */
+function ChatSection(p: SceneProps) {
+  const cv = useStorySlice(p.controller, CHAT_KEYS);
+  const v = React.useMemo(() => ({ ...p.common, ...chatVals(cv, p.envs.phone) }), [cv, p.envs, p.common]);
+  return <FrozenView View={PhoneChat} v={v} t={p.t} frozen={p.layout === 'desk'} />;
 }
 
 /* ---------------------------------------------------------------- rail and phone progress */
@@ -219,7 +276,7 @@ function StoryRail({ t, onGo }: { t: StoryT; onGo: (i: number) => void }) {
     <nav
       data-k="rail"
       aria-label={t('Page scenes')}
-      className="gc-frame fixed end-[clamp(10px,1.5vw,26px)] top-1/2 z-[45] flex flex-col gap-0.5 text-foreground"
+      className="gc-frame fixed end-[clamp(10px,1.5vw,26px)] top-1/2 z-[45] flex flex-col gap-0.5 text-foreground max-[999.98px]:hidden"
       style={{ opacity: 0, visibility: 'hidden', transform: 'translate3d(14px, -50%, 0)', transition: 'color 0.45s ease' }}
     >
       {RAIL_LABEL.map((label, i) => (
@@ -261,7 +318,7 @@ function StoryProgress() {
     <div
       data-k="prog"
       aria-hidden="true"
-      className="gc-frame pointer-events-none fixed start-1/2 z-50 flex w-40 gap-1 text-foreground ltr:-ml-20 rtl:-mr-20 lg:hidden"
+      className="gc-frame pointer-events-none fixed start-1/2 z-50 flex w-40 gap-1 text-foreground ltr:-ml-20 rtl:-mr-20 min-[1000px]:hidden"
       style={{ top: 'calc(76px + env(safe-area-inset-top, 0px))', opacity: 0, transition: 'opacity 0.3s ease, color 0.45s ease' }}
     >
       {[0, 1, 2, 3, 4].map((i) => (
@@ -274,10 +331,12 @@ function StoryProgress() {
 }
 
 /* ---------------------------------------------------------------- the page */
-export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: StoryLayout }) {
+export function LandingStory() {
   const { locale, t: lt, toggleLocale } = useLandingLocale();
   const rtl = locale === 'ar';
-  const [layout, setLayout] = React.useState<StoryLayout>(initialLayout);
+  /* Which layout is on screen. Null until the client has checked; CSS has
+     already shown the right one by then. */
+  const [layout, setLayout] = React.useState<StoryLayout | null>(null);
   /* Neither value changes the markup, so reading them on the first client
      render cannot cause a hydration mismatch; it saves a second measuring pass. */
   const [stacked, setStacked] = React.useState(() => matches(STACK_QUERY));
@@ -285,29 +344,24 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
   const [activeScene, setActiveScene] = React.useState(-1);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [controller] = React.useState(
-    () => new StoryController({ layout: initialLayout, stacked: false, reduce: false, rtl }, locale),
+    () => new StoryController({ layout: 'desk', stacked: false, reduce: false, rtl }, locale),
   );
   const t = React.useMemo(() => storyText(locale), [locale]);
 
   React.useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const phone = window.matchMedia(PHONE_QUERY);
-    const stack = window.matchMedia(STACK_QUERY);
-    const red = window.matchMedia(REDUCE_QUERY);
+    const query = (q: string) => (typeof window.matchMedia === 'function' ? window.matchMedia(q) : null);
+    const phone = query(PHONE_QUERY);
+    const stack = query(STACK_QUERY);
+    const red = query(REDUCE_QUERY);
     const sync = () => {
-      setLayout(phone.matches ? 'phone' : 'desk');
-      setStacked(stack.matches);
-      setReduce(red.matches);
+      setLayout(phone?.matches ? 'phone' : 'desk');
+      setStacked(Boolean(stack?.matches));
+      setReduce(Boolean(red?.matches));
     };
     sync();
-    phone.addEventListener('change', sync);
-    stack.addEventListener('change', sync);
-    red.addEventListener('change', sync);
-    return () => {
-      phone.removeEventListener('change', sync);
-      stack.removeEventListener('change', sync);
-      red.removeEventListener('change', sync);
-    };
+    const lists = [phone, stack, red];
+    lists.forEach((list) => list?.addEventListener('change', sync));
+    return () => lists.forEach((list) => list?.removeEventListener('change', sync));
   }, []);
 
   React.useEffect(() => {
@@ -319,7 +373,7 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
   const lastLocale = React.useRef(locale);
   React.useEffect(() => {
     const root = rootRef.current;
-    if (!root) return;
+    if (!root || layout === null) return;
     const env = { layout, stacked, reduce, rtl };
     if (!controller.mounted) {
       controller.mount(root, env);
@@ -329,16 +383,18 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
       lastLocale.current = locale;
       controller.relayout(root, env, { restartChat: localeChanged ? locale : undefined });
     }
-    /* Ready once the layout the viewport asks for is on screen and measured
-       (the server's guess may be about to be corrected). Tests wait on it. */
+    /* Ready once the director has measured the layout on screen. Tests wait on it. */
     root.toggleAttribute('data-ready', layout === (matches(PHONE_QUERY) ? 'phone' : 'desk'));
   }, [controller, layout, stacked, reduce, rtl, locale]);
 
   React.useEffect(() => () => controller.unmount(), [controller]);
 
-  const env = React.useMemo<ValsEnv>(
-    () => ({ layout, locale, rtl, controller, managedSetup: MANAGED_SETUP }),
-    [layout, locale, rtl, controller],
+  const envs = React.useMemo<Envs>(
+    () => ({
+      desk: { layout: 'desk', locale, rtl, controller, managedSetup: MANAGED_SETUP },
+      phone: { layout: 'phone', locale, rtl, controller, managedSetup: MANAGED_SETUP },
+    }),
+    [locale, rtl, controller],
   );
 
   const common = React.useMemo<V>(() => {
@@ -422,11 +478,10 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
   ];
 
   const trace = (key: keyof typeof STORY_TRACES) => STORY_TRACES[key].map((line) => t(line));
-  const props: SceneProps = { controller, env, common, t };
-  const desk = layout === 'desk';
+  const props: SceneProps = { controller, envs, layout, common, t };
 
   return (
-    <div ref={rootRef} className="gc-story" data-layout={layout}>
+    <div ref={rootRef} className="gc-story" data-layout={layout ?? undefined}>
       <SkipLink />
       <SiteHeader
         locale={locale}
@@ -440,14 +495,14 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
           controller.goTop();
         }}
         onMenuOpenChange={(open) => controller.setMenuOpen(open)}
-        phoneExtra={desk ? null : <StoryProgress />}
+        phoneExtra={<StoryProgress />}
       />
-      {desk ? <StoryRail t={t} onGo={(i) => controller.goSceneIndex(i)} /> : null}
+      <StoryRail t={t} onGo={(i) => controller.goSceneIndex(i)} />
       <StorySprites />
       <div data-k="vhProbe" aria-hidden="true" className="pointer-events-none invisible absolute top-0 h-svh w-px" />
       <main id="main" tabIndex={-1} className="outline-none">
         {SCENE_ORDER.map((scene, index) => (
-          <SceneShell key={scene} scene={scene} layout={layout} index={index} traces={trace(FRAME_KEY[scene] as keyof typeof STORY_TRACES)}>
+          <SceneShell key={scene} scene={scene} layout={layout ?? 'desk'} index={index} traces={trace(FRAME_KEY[scene] as keyof typeof STORY_TRACES)}>
             {scene === 'tryon' ? <TryScene {...props} /> : null}
             {scene === 'store' ? <StoreScene {...props} /> : null}
             {scene === 'ops' ? <OpsScene {...props} /> : null}
@@ -459,35 +514,35 @@ export function LandingStory({ initialLayout = 'desk' }: { initialLayout?: Story
           <div data-k="envR" className="gc-story-env">
             <BackgroundWiring trace={trace('R')} lane={false} />
           </div>
-          <div className="relative z-[1]">
-            {desk ? (
-              <>
-                <section id="stack" aria-labelledby="stack-title" className="mx-auto max-w-7xl px-10 pt-[130px]">
-                  <DeskStack v={common} t={t} />
-                </section>
-                <section id="journey" data-reveal="" aria-labelledby="journey-title" className="mx-auto max-w-7xl px-10 pt-[130px]">
-                  <DeskJourney v={common} t={t} />
-                </section>
-                {/* The closing band is drawn on a 1440px canvas, centred and clipped at the viewport. */}
-                <div className="mt-[140px] overflow-hidden bg-foreground">
-                  <div className="relative left-1/2 w-[1440px] -translate-x-1/2">
-                    <DeskCta v={common} t={t} />
-                  </div>
+          {/* Clipped sideways: the drawings here are laid out at their designed width. */}
+          <div className="relative z-[1] overflow-x-clip">
+            <LayoutView which="desk" layout={layout}>
+              <section id="stack" aria-labelledby="stack-title" className="mx-auto max-w-7xl px-10 pt-[130px]">
+                <DeskStack v={common} t={t} />
+              </section>
+              <section id="journey" data-reveal="" aria-labelledby="journey-title" className="mx-auto max-w-7xl px-10 pt-[130px]">
+                <DeskJourney v={common} t={t} />
+              </section>
+              {/* The closing band is drawn on a 1440px canvas, centred and clipped at the viewport. */}
+              <div className="mt-[140px] overflow-hidden bg-foreground">
+                <div className="relative left-1/2 w-[1440px] -translate-x-1/2">
+                  <DeskCta v={common} t={t} />
                 </div>
-              </>
-            ) : (
+              </div>
+            </LayoutView>
+            <LayoutView which="phone" layout={layout}>
               <div className="mx-auto w-[390px] max-w-full">
-                <section id="chat" data-chat-scene="" aria-labelledby="chat-title" className="px-5 pt-[76px]">
+                <section id="chat" data-chat-scene="" aria-labelledby="m-chat-title" className="px-5 pt-[76px]">
                   <ChatSection {...props} />
                 </section>
-                <section id="stack" aria-labelledby="stack-title" className="px-5 pt-[76px]">
+                <section id="m-stack" aria-labelledby="m-stack-title" className="px-5 pt-[76px]">
                   <PhoneStack v={common} t={t} />
                 </section>
                 <div className="mt-[84px] bg-foreground">
                   <PhoneCta v={common} t={t} />
                 </div>
               </div>
-            )}
+            </LayoutView>
           </div>
         </div>
       </main>

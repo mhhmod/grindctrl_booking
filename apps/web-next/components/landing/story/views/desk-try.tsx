@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -202,7 +203,7 @@ export function DeskTry({ v, t }: ViewProps) {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "300px minmax(0, 1fr)", gap: "20px", alignItems: "start" }}>
               <button type="button" onPointerEnter={v.peekIn} onPointerLeave={v.peekOut} onClick={v.peekTap} aria-pressed={v.peekOn} aria-label={t("Show the shopper photo this look was made from")} style={{ position: "relative", display: "block", flexShrink: "0", width: "300px", height: "375px", padding: "0", border: "0", borderRadius: "16px", overflow: "hidden", background: "var(--secondary)", cursor: "pointer", boxShadow: "0 0 0 1px color-mix(in srgb, var(--foreground) 8%, transparent), 0 24px 44px -26px color-mix(in srgb, var(--foreground) 55%, transparent)" }} data-ptr="photo">
-                <StoryImg eager src="/landing/v15/woman-linen-shirt.webp" w={922} h={1152} alt={t("Try-on image: sage linen shirt on the first shopper.")} sizes="300px" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 16%", display: "block", zIndex: v.l0Z, clipPath: `inset(0 0 ${v.l0Clip} 0)`, transition: v.l0Tr }} />
+                <StoryImg hero="desk" src="/landing/v15/woman-linen-shirt.webp" w={922} h={1152} alt={t("Try-on image: sage linen shirt on the first shopper.")} sizes="300px" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 16%", display: "block", zIndex: v.l0Z, clipPath: `inset(0 0 ${v.l0Clip} 0)`, transition: v.l0Tr }} />
                 <StoryImg src="/landing/v15/woman-abaya.webp" w={922} h={1152} alt={t("Try-on image: embroidered abaya on the first shopper.")} sizes="300px" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 16%", display: "block", zIndex: v.l1Z, clipPath: `inset(0 0 ${v.l1Clip} 0)`, transition: v.l1Tr }} />
                 <StoryImg src="/landing/v15/man-denim-overshirt.webp" w={922} h={1152} alt={t("Try-on image: denim overshirt on the second shopper.")} sizes="300px" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 16%", display: "block", zIndex: v.l2Z, clipPath: `inset(0 0 ${v.l2Clip} 0)`, transition: v.l2Tr }} />
                 <StoryImg src="/landing/v15/man-knit-polo.webp" w={922} h={1152} alt={t("Try-on image: knit polo on the second shopper.")} sizes="300px" style={{ position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 16%", display: "block", zIndex: v.l3Z, clipPath: `inset(0 0 ${v.l3Clip} 0)`, transition: v.l3Tr }} />

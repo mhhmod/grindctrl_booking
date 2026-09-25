@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -19,7 +20,7 @@ export function PhoneResults({ v, t }: ViewProps) {
           <span style={{ width: "1px", height: "11px", background: "var(--gc-inactive)" }} />
           {t("Real results")}
         </span>
-        <h2 id="results-title" style={{ margin: "12px 0 0", fontSize: "30px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Same shopper, every garment")}</h2>
+        <h2 id="m-results-title" style={{ margin: "12px 0 0", fontSize: "30px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Same shopper, every garment")}</h2>
         <p style={{ margin: "8px 0 0", fontSize: "14.5px", lineHeight: "1.5", color: "var(--muted-foreground)" }}>{t("Each shopper, then the same shopper in another garment.")}</p>
       </div>
       <div data-k="counter" aria-hidden="true" style={{ position: "absolute", insetInlineStart: "0", insetInlineEnd: "0", top: "0", display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", transform: "translate3d(0, 250px, 0)", fontSize: "12.5px", fontWeight: "700", fontVariantNumeric: "tabular-nums", color: "var(--foreground)" }}>

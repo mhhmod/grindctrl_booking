@@ -1,7 +1,7 @@
 /* The landing story's runtime: its state, the scene scripts and the
    director that paces scrolling. A port of the prototype's logic class and
    director (design/prototype/boards/Scroll.dc.html and
-   design/prototype/logic/director11.js), with the production changes from
+   design/prototype/logic/director11.js in the site-v15 handoff bundle), with the production changes from
    02-landing.md: reduced motion and short screens stack the scenes instead
    of pacing them, covered sheets are inert, timers pause while the tab is
    hidden, and hash links land on scenes.
@@ -335,7 +335,10 @@ export class StoryController {
   private directorMount(root: HTMLElement, opts: { keepBeat?: number; fallbackY?: number } = {}) {
     const phone = this.env.layout === 'phone';
     const k: Record<string, HTMLElement> = {};
+    /* Both layouts are in the page; only the one on screen is driven. */
     root.querySelectorAll<HTMLElement>('[data-k]').forEach((el) => {
+      const view = el.closest('[data-view]')?.getAttribute('data-view');
+      if (view && view !== this.env.layout) return;
       k[el.getAttribute('data-k') as string] = el;
     });
     const secs: Partial<Record<SceneKey, HTMLElement>> = {};
@@ -470,6 +473,9 @@ export class StoryController {
     const vh = this.viewportHeight(phone);
     d.vw = vw;
     d.vh = vh;
+    /* The 1200px stack map scales down with the page container (max-w-7xl less its padding). */
+    const column = Math.min(document.documentElement.clientWidth || rawVw, 1280) - 80;
+    d.root.style.setProperty('--gc-board-scale', r3(clamp(column / 1200, 0.5, 1)));
     const heroH = K.hero ? K.hero.offsetHeight : 520;
     const stageH = K.stage ? K.stage.offsetHeight : 520;
     const cardH = K.card0 ? K.card0.offsetHeight : 450;
@@ -803,7 +809,10 @@ export class StoryController {
     if (Math.abs(dy) < Math.abs(e.deltaX)) return;
     if (!this.controlled(dy)) return;
     e.preventDefault();
-    const dir = this.wheel.feed(dy, performance.now(), d.anim);
+    /* The event's own time, not when the handler ran: a busy main thread
+       delivers a fling in bursts, and the gaps between bursts must not read
+       as new gestures. */
+    const dir = this.wheel.feed(dy, e.timeStamp || performance.now(), d.anim);
     if (dir) this.step(dir);
   };
 
@@ -964,7 +973,18 @@ export class StoryController {
 
   /** Scrolls to a section after the story (How it works, Ask the store). */
   goSection(id: string) {
-    this.scrollToElement(document.getElementById(id), false);
+    this.scrollToElement(this.sectionById(id), false);
+  }
+
+  /** A section in the layout on screen: the phone view's copy of an id is prefixed m-. */
+  private sectionById(id: string): HTMLElement | null {
+    for (const candidate of [id, `m-${id}`]) {
+      const el = document.getElementById(candidate);
+      if (!el) continue;
+      const view = el.closest('[data-view]')?.getAttribute('data-view');
+      if (!view || view === this.env.layout) return el;
+    }
+    return null;
   }
 
   private scrollToElement(el: HTMLElement | null, exact: boolean) {
@@ -1003,7 +1023,7 @@ export class StoryController {
       } else this.tweenTo(d.beats[b].y);
       return true;
     }
-    const el = document.getElementById(id);
+    const el = this.sectionById(id);
     if (!el || !d.root.contains(el)) return false;
     if (instant) {
       const y = el.getBoundingClientRect().top + (window.scrollY || 0) - (d.phone ? 84 : 92);

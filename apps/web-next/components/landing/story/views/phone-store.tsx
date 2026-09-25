@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -21,7 +22,7 @@ export function PhoneStore({ v, t }: ViewProps) {
             <span style={{ width: "1px", height: "11px", background: "var(--gc-inactive)" }} />
             {t("Live store")}
           </span>
-          <h2 id="store-title" style={{ margin: "12px 0 0", fontSize: "28px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("A real store. Try it there.")}</h2>
+          <h2 id="m-store-title" style={{ margin: "12px 0 0", fontSize: "28px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("A real store. Try it there.")}</h2>
           <div style={{ marginTop: "10px", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "24px", padding: "0 9px", borderRadius: "12px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--foreground)", border: "1px solid color-mix(in srgb, var(--foreground) 20%, transparent)", background: "color-mix(in srgb, var(--card) 55%, transparent)" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_SHOPIFY} /></svg>

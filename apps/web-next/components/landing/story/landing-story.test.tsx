@@ -15,7 +15,7 @@ vi.mock('@/components/dashboard/theme-toggle', () => ({
 function renderStory(locale: 'en' | 'ar' = 'en') {
   return render(
     <LandingLocaleProvider initialLocale={locale}>
-      <LandingStory initialLayout="desk" />
+      <LandingStory />
     </LandingLocaleProvider>,
   );
 }

@@ -1,7 +1,8 @@
 /* The pure rules of the paced story, kept apart from the DOM so they can be
    tested: where the stops are, which stop a gesture moves to, how a wheel
    stream becomes exactly one beat, and how long a move takes. Ported from
-   the prototype's director (design/prototype/logic/director11.js). */
+   the prototype's director (design/prototype/logic/director11.js in the
+   site-v15 handoff bundle). */
 
 export const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 export const smooth = (a: number, b: number, x: number) => {

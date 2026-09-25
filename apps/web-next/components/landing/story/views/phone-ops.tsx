@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -18,7 +19,7 @@ export function PhoneOps({ v, t }: ViewProps) {
           <span style={{ width: "1px", height: "11px", background: "color-mix(in srgb, var(--gc-cream) 35%, transparent)" }} />
           {t("AI operations")}
         </span>
-        <h2 id="ops-title" style={{ margin: "12px 0 0", fontSize: "28px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Your team and the AI run support together.")}</h2>
+        <h2 id="m-ops-title" style={{ margin: "12px 0 0", fontSize: "28px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Your team and the AI run support together.")}</h2>
         <div style={{ marginTop: "14px" }}>
           <div role="group" aria-label={t("What the AI does")} style={{ display: "flex", gap: "6px" }}>
             <button type="button" onClick={v.goOps0} aria-pressed={v.ob0On} aria-label={t("Answers from what you teach it")} style={{ flex: "1 1 0", minWidth: "0", height: "30px", padding: "0", border: "0", background: "none", cursor: "pointer", display: "flex", alignItems: "center" }}>

@@ -1,5 +1,6 @@
-/* Generated from the v15 prototype markup (docs/handoff/site-v15/design/
-   prototype/boards/Scroll.dc.html). Sizes, spacing and timings are the
+/* Generated from the v15 prototype's markup (design/prototype/boards/
+   Scroll.dc.html in the site-v15 handoff bundle, whose notes are in
+   apps/web-next/docs/handoff/site-v15). Sizes, spacing and timings are the
    prototype's own; colours are mapped to tokens, left and right to logical
    properties, and every visible string goes through the story's typed
    string table. Edited by hand from here on. */
@@ -12,7 +13,7 @@ export function PhoneChat({ v, t }: ViewProps) {
     <>
       <div data-reveal="" style={{ textAlign: "center" }}>
         <span style={{ display: "inline-flex", alignItems: "center", height: "26px", padding: "0 11px", borderRadius: "26px", border: "1px solid var(--border)", background: "var(--gc-chip)", fontSize: "11.5px", fontWeight: "600" }}>{t("Store Chat")}</span>
-        <h2 id="chat-title" style={{ margin: "14px 0 0", fontSize: "32px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Ask the store")}</h2>
+        <h2 id="m-chat-title" style={{ margin: "14px 0 0", fontSize: "32px", lineHeight: "1.12", fontWeight: "700", letterSpacing: "calc(-0.035em * var(--gc-ls, 1))" }}>{t("Ask the store")}</h2>
         <p style={{ margin: "10px 0 0", fontSize: "15.5px", lineHeight: "1.6", color: "var(--muted-foreground)" }}>{t("Answers from your store in Arabic or English, and a person from your team when it matters.")}</p>
       </div>
       <div data-reveal="" style={{ marginTop: "24px" }}>
