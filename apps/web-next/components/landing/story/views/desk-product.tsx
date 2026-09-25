@@ -663,7 +663,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <path d="M578 128 L578 80" pathLength="100" fill="none" strokeWidth="3.2" strokeLinecap="round" style={{ stroke: "var(--foreground)", strokeDasharray: "14 200", strokeDashoffset: "14", animation: `${v.wfE67Flow} 0.8s cubic-bezier(0.45, 0, 0.2, 1) both` }} />
                   </svg>
                   <div style={{ position: "absolute", insetInlineStart: "12px", top: "128px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN1Line}`, background: v.wfN1Bg, color: v.wfN1Fg, opacity: v.wfN1Op, boxShadow: v.wfN1Sh, transform: `scale(${v.wfN1S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
                       {t("Shopper writes")}
                       {v.wfN1Done ? (
@@ -675,7 +675,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN1Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "174px", top: "128px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN2Line}`, background: v.wfN2Bg, color: v.wfN2Fg, opacity: v.wfN2Op, boxShadow: v.wfN2Sh, transform: `scale(${v.wfN2S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M12 3c.6 4.2 3 6.6 7.2 7.2-4.2.6-6.6 3-7.2 7.2-.6-4.2-3-6.6-7.2-7.2C9 9.6 11.4 7.2 12 3z" /></svg>
                       {t("AI reads it")}
                       {v.wfN2Done ? (
@@ -687,7 +687,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN2Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "344px", top: "22px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN3Line}`, background: v.wfN3Bg, color: v.wfN3Fg, opacity: v.wfN3Op, boxShadow: v.wfN3Sh, transform: `scale(${v.wfN3S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M20 6L9 17l-5-5" /></svg>
                       {t("AI answers")}
                       {v.wfN3Done ? (
@@ -699,7 +699,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN3Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "344px", top: "234px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN4Line}`, background: v.wfN4Bg, color: v.wfN4Fg, opacity: v.wfN4Op, boxShadow: v.wfN4Sh, transform: `scale(${v.wfN4S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                         <path d="M15 14l5-5-5-5" />
                         <path d="M20 9H9a5 5 0 00-5 5v5" />
@@ -714,7 +714,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN4Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "506px", top: "234px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN5Line}`, background: v.wfN5Bg, color: v.wfN5Fg, opacity: v.wfN5Op, boxShadow: v.wfN5Sh, transform: `scale(${v.wfN5S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                         <path d="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z" />
                         <path d="M3 7l9 6 9-6" />
@@ -729,7 +729,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN5Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "506px", top: "128px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN6Line}`, background: v.wfN6Bg, color: v.wfN6Fg, opacity: v.wfN6Op, boxShadow: v.wfN6Sh, transform: `scale(${v.wfN6S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                         <path d="M22 12h-6l-2 3h-4l-2-3H2" />
                         <path d="M5.5 5.1L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.5-6.9A2 2 0 0016.8 4H7.2a2 2 0 00-1.7 1.1z" />
@@ -744,7 +744,7 @@ export function DeskProduct({ v, t }: ViewProps) {
                     <span style={{ fontSize: "10px", opacity: "0.8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.wfN6Sub}</span>
                   </div>
                   <div style={{ position: "absolute", insetInlineStart: "506px", top: "22px", width: "144px", height: "58px", boxSizing: "border-box", padding: "9px 11px", borderRadius: "14px", border: `1px solid ${v.wfN7Line}`, background: v.wfN7Bg, color: v.wfN7Fg, opacity: v.wfN7Op, boxShadow: v.wfN7Sh, transform: `scale(${v.wfN7S})`, transition: "background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease, box-shadow 0.3s ease, transform 0.35s ease, opacity 0.35s ease", display: "flex", flexDirection: "column", justifyContent: "center", gap: "3px" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "calc(10.5px + 1px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                         <path d="M4 20V10" />
                         <path d="M10 20V4" />

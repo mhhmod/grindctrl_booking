@@ -75,6 +75,7 @@ export function StoreStrip({ t }: { t: TryOnTranslator }) {
                   src={product.image}
                   alt=""
                   fill
+                  unoptimized
                   sizes="(min-width: 1024px) 180px, 45vw"
                   className="object-cover group-hover:brightness-95"
                 />
