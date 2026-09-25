@@ -6,7 +6,8 @@
    TryOnDemo and TryOnResult untouched. */
 
 import * as React from 'react';
-import Image from 'next/image';
+import Image, { getImageProps } from 'next/image';
+import { preload } from 'react-dom';
 import { ShopifyMark } from '@/components/brand-marks';
 import { SiteBadge } from '@/components/site/chip';
 import {
@@ -179,6 +180,8 @@ const CARD = 'relative flex flex-col rounded-[26px] border border-border bg-card
 
 /* ─── The piece ─── */
 
+const DESK_PIECE_SIZES = '(min-width: 1280px) 280px, 240px';
+
 export function PieceCard({
   t,
   piece,
@@ -198,6 +201,18 @@ export function PieceCard({
       {t.pageChange}
     </SmallButton>
   );
+  /* The desktop card's image is the largest first paint on a desktop
+     screen. Its card is hidden on phones, so instead of loading it eagerly
+     (phones would download it for nothing) a preload scoped to the desktop
+     media query starts it with the page. */
+  const desk = getImageProps({ src: PIECES[piece].garment, alt: copy.name, fill: true, sizes: DESK_PIECE_SIZES }).props;
+  preload(desk.src, {
+    as: 'image',
+    imageSrcSet: desk.srcSet,
+    imageSizes: desk.sizes,
+    fetchPriority: 'high',
+    media: '(min-width: 1024px)',
+  });
   return (
     <>
       {/* Phones: one row. */}
@@ -237,7 +252,7 @@ export function PieceCard({
             src={PIECES[piece].garment}
             alt={copy.name}
             fill
-            sizes="(min-width: 1280px) 280px, 240px"
+            sizes={DESK_PIECE_SIZES}
             className="gc-anim-swap object-contain p-3.5"
           />
         </div>
