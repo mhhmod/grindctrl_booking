@@ -27,14 +27,29 @@ await check('openrouter_account', async () => {
     configured: true, hasExplicitKeyBudget: typeof data?.limit === 'number',
     keyBudgetRemainingPositive: typeof data?.limit_remaining === 'number' ? data.limit_remaining > 0 : null });
 });
+// Mirrors apps/web-next/lib/try-on/models.ts: the default and every tier
+// fallback resolve to one of these ids, so each must be a real image model.
+const DEFAULT_TRYON_MODEL = 'meta/muse-image';
+const TIER_ENV = { lite: 'TRYON_MODEL_LITE', flash: 'TRYON_MODEL_FLASH', muse: 'TRYON_MODEL_MUSE' };
+const env = name => process.env[name]?.trim() || null;
 await check('image_model_catalogue', async () => {
-  const model = process.env.TRYON_MODEL || 'google/gemini-3.1-flash-image';
+  const fallback = env('TRYON_MODEL') ?? DEFAULT_TRYON_MODEL;
+  const resolved = [{ source: env('TRYON_MODEL') ? 'TRYON_MODEL' : 'default', model: fallback }];
+  for (const [tier, name] of Object.entries(TIER_ENV)) {
+    resolved.push({ source: env(name) ? name : `${tier}->fallback`, tier, model: env(name) ?? fallback });
+  }
   const response = await request('https://openrouter.ai/api/v1/images/models');
   const data = response.ok ? await response.json() : null;
-  const item = Array.isArray(data?.data) ? data.data.find(item => item.id === model) : null;
-  add('image_model_catalogue', { ok: response.ok && Boolean(item), httpStatus: response.status,
-    configuredModel: model, acceptsImage: item?.architecture?.input_modalities?.includes('image') ?? null,
-    returnsImage: item?.architecture?.output_modalities?.includes('image') ?? null,
+  const catalogue = Array.isArray(data?.data) ? data.data : [];
+  const models = resolved.map(entry => {
+    const item = catalogue.find(candidate => candidate.id === entry.model);
+    return { ...entry, listed: Boolean(item),
+      acceptsImage: item?.architecture?.input_modalities?.includes('image') ?? null,
+      returnsImage: item?.architecture?.output_modalities?.includes('image') ?? null };
+  });
+  add('image_model_catalogue', {
+    ok: response.ok && models.every(model => model.listed && model.acceptsImage && model.returnsImage),
+    httpStatus: response.status, models,
     note: 'Catalogue presence does not prove generation quality, funding or reference-image compatibility.' });
 });
 await check('groq_models', async () => {

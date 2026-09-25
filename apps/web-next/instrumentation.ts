@@ -1,6 +1,10 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     await import('./sentry.server.config');
+    if (process.env.TRYON_MODE?.toLowerCase() === 'live') {
+      const { assertTryOnModelConfig } = await import('./lib/try-on/models');
+      assertTryOnModelConfig();
+    }
   }
 
   if (process.env.NEXT_RUNTIME === 'edge') {
