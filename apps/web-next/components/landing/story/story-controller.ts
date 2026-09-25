@@ -693,7 +693,11 @@ export class StoryController {
     const r = r1((1 - arrived) * 30);
     this.st(`sheet${key}`, 'border-radius', `${r}px ${r}px 0 0`);
     this.st(`env${key}`, 'clip-path', `inset(0 round ${r}px ${r}px 0 0)`);
-    this.st(`sheet${key}`, 'box-shadow', `0 -34px 80px -46px rgb(32 29 27 / ${r3(0.6 * (1 - arrived))})`);
+    /* The shadow is a large blur over a full-screen sheet, so every change
+       repaints the whole sheet. Seven steps look the same as a smooth fade
+       and repaint seven times instead of every frame. */
+    const shade = Math.round((1 - arrived) * 6) / 10;
+    this.st(`sheet${key}`, 'box-shadow', `0 -34px 80px -46px rgb(32 29 27 / ${r3(shade)})`);
   }
 
   /** Sheets that are fully covered or off screen take no focus. */
@@ -900,6 +904,14 @@ export class StoryController {
     const y0 = window.scrollY || 0;
     const dist = Math.abs(y1 - y0);
     cancelAnimationFrame(d.tw);
+    /* A jump across scenes (a nav item, a hash link, back to the top) would
+       race through every sheet in between, strobing light and dark and
+       redrawing each scene on the way. It cuts instead: the page fades to its
+       background, moves, and fades back in. Beat to beat stays a tween. */
+    if (!dur && !this.env.reduce && dist > window.innerHeight * 1.5) {
+      this.cutTo(y1);
+      return;
+    }
     if (dist < 1) {
       d.anim = false;
       this.arrive();
@@ -926,6 +938,30 @@ export class StoryController {
       }
     };
     d.tw = requestAnimationFrame(frame);
+  }
+
+  private cutTo(y1: number) {
+    const d = this.d;
+    if (!d) return;
+    const veil = document.createElement('div');
+    veil.setAttribute('aria-hidden', 'true');
+    veil.className = 'gc-story-veil';
+    document.body.appendChild(veil);
+    d.anim = true;
+    const fadeIn = veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
+    fadeIn.onfinish = () => {
+      window.scrollTo(0, y1);
+      this.arrive();
+      requestAnimationFrame(() => {
+        const fadeOut = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+        fadeOut.onfinish = () => {
+          veil.remove();
+          if (!this.d) return;
+          this.d.anim = false;
+          this.wheel.landed(performance.now());
+        };
+      });
+    };
   }
 
   private arrive() {

@@ -380,7 +380,7 @@ export function SiteHeader({
     <header data-site-header="">
       {/* Desktop */}
       <div
-        className="fixed left-1/2 z-50 hidden h-[62px] w-[min(1240px,calc(100%-40px))] -translate-x-1/2 items-center justify-between gap-3 rounded-full border border-border bg-card/[0.86] pe-[9px] ps-5 text-foreground shadow-[var(--gc-shadow-header)] backdrop-blur-[12px] lg:flex"
+        className="fixed left-1/2 z-50 hidden h-[62px] w-[min(1240px,calc(100%-40px))] -translate-x-1/2 items-center justify-between gap-3 rounded-full border border-border bg-card/[0.96] pe-[9px] ps-5 text-foreground shadow-[var(--gc-shadow-header)] lg:flex"
         style={{ top: 'calc(18px + env(safe-area-inset-top, 0px))' }}
       >
         <Brand copy={copy} onBrandClick={onBrandClick} tag={tag} />
@@ -408,7 +408,7 @@ export function SiteHeader({
       {/* Phones */}
       <Dialog.Root open={menuOpen} onOpenChange={setOpen}>
         <div
-          className="fixed inset-x-3 z-50 flex h-[58px] items-center justify-between gap-2 rounded-full border border-border bg-card/90 pe-1.5 ps-4 text-foreground shadow-[var(--gc-shadow-header-phone)] backdrop-blur-[12px] lg:hidden"
+          className="fixed inset-x-3 z-50 flex h-[58px] items-center justify-between gap-2 rounded-full border border-border bg-card/[0.96] pe-1.5 ps-4 text-foreground shadow-[var(--gc-shadow-header-phone)] lg:hidden"
           style={{ top: 'calc(12px + env(safe-area-inset-top, 0px))' }}
         >
           <Brand copy={copy} onBrandClick={onBrandClick} compact tag={tag} />
