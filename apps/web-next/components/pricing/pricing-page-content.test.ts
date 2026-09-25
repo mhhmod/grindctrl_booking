@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   formatCurrency,
   formatNumber,
+  getPlanCopyKey,
   isPricingRecordVisible,
+  isRecommendedPlan,
+  meterPercent,
 } from '@/components/pricing/pricing-page-content';
 import { getPricingCopy } from '@/components/pricing/pricing-copy';
 
@@ -44,7 +47,50 @@ describe('pricing truth gating', () => {
     ['en', /may be available.*confirm/i],
     ['ar', /قد تتوفر.*نؤكدها/],
   ] as const)('qualifies the visible Launch top-up benefit in %s', (locale, qualification) => {
-    const benefits = getPricingCopy(locale).plans['launch-v1'].benefits.join(' ');
+    const benefits = getPricingCopy(locale).plans['launch-v1'].features.map((feature) => feature.text).join(' ');
     expect(benefits).toMatch(qualification);
+  });
+
+  it.each(['en', 'ar'] as const)('keeps the done-for-you setup row behind the managed-setup record in %s', (locale) => {
+    const pro = getPricingCopy(locale).plans['pro-v1'];
+    const setup = pro.features.find((feature) => feature.truthRecordId === 'service.managed-setup');
+    expect(setup).toBeDefined();
+    expect(isPricingRecordVisible('service.managed-setup')).toBe(false);
+  });
+});
+
+describe('pricing plan mapping', () => {
+  it('maps every live plan family to its copy entry', () => {
+    expect(getPlanCopyKey('free-v2')).toBe('free-v1');
+    expect(getPlanCopyKey('launch-v1-egp')).toBe('launch-v1');
+    expect(getPlanCopyKey('growth-v1')).toBe('growth-v1');
+    expect(getPlanCopyKey('growth-v1-egp')).toBe('growth-v1');
+    expect(getPlanCopyKey('pro-v1-egp')).toBe('pro-v1');
+    expect(getPlanCopyKey('dfy-v1')).toBe('dfy-v1');
+    expect(getPlanCopyKey('something-else')).toBe('something-else');
+  });
+
+  it('gives Growth and Pro approved Arabic names instead of the English database names', () => {
+    const ar = getPricingCopy('ar');
+    expect(ar.plans['growth-v1'].name).toBe('نمو');
+    expect(ar.plans['growth-v1'].description).toBe('للمتاجر التي تجاوزت شهرها الأول.');
+    expect(ar.plans['pro-v1'].name).toBe('احترافي');
+    expect(ar.plans['growth-v1'].button).toBe('احجز مكالمة عن خطة نمو');
+    expect(ar.plans['pro-v1'].button).toBe('احجز مكالمة عن الخطة الاحترافية');
+  });
+
+  it('recommends the Launch family only', () => {
+    expect(isRecommendedPlan({ planKey: 'launch-v1' })).toBe(true);
+    expect(isRecommendedPlan({ planKey: 'launch-v1-egp' })).toBe(true);
+    expect(isRecommendedPlan({ planKey: 'growth-v1' })).toBe(false);
+    expect(isRecommendedPlan({ planKey: 'free-v2' })).toBe(false);
+  });
+
+  it('draws the try-ons meter against the largest plan, never under 3%', () => {
+    expect(meterPercent(650, 650)).toBe(100);
+    expect(meterPercent(350, 650)).toBe(54);
+    expect(meterPercent(15, 650)).toBe(3);
+    expect(meterPercent(0, 650)).toBe(3);
+    expect(meterPercent(10, 0)).toBe(3);
   });
 });

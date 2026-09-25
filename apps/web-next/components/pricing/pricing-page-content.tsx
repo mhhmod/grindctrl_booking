@@ -1,24 +1,42 @@
 'use client';
 
+/* The v15 pricing page. Plans, prices and packs come from the live catalog
+   (app/pricing/page.tsx resolves the currency and loads it); copy comes from
+   pricing-copy.ts; which answers show comes from lib/product-truth, exactly
+   as before. The design draws what a credit is instead of explaining it:
+   one photo plus one piece make one delivered look, and a failed generation
+   gives its credit back. */
+
 import React from 'react';
-import { CheckmarkCircle02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Icon } from '@/components/icons';
-import { AmbientBackground } from '@/components/landing/ambient-background';
 import { useLandingLocale } from '@/components/landing/landing-locale';
-import { Eyebrow } from '@/components/landing/eyebrow';
-import { SiteFooter } from '@/components/landing/site-footer';
-import { SiteHeader } from '@/components/landing/site-header';
 import { CurrencyToggle } from '@/components/pricing/currency-toggle';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { SiteChip, SiteBadge } from '@/components/site/chip';
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  BlocksIcon,
+  BoltIcon,
+  CalendarIcon,
+  CameraIcon,
+  ChartIcon,
+  ChatIcon,
+  EqualsIcon,
+  HangerIcon,
+  InfoIcon,
+  MinusIcon,
+  PhotoIcon,
+  PlusIcon,
+  RefundIcon,
+  ShirtIcon,
+  SITE_ICONS,
+  SparkleIcon,
+  StackIcon,
+  TagIcon,
+  TickIcon,
+} from '@/components/site/icons';
+import { MarketingChrome } from '@/components/site/marketing-chrome';
+import { GrindctrlMark } from '@/components/site/marks';
+import type { SiteNavItem } from '@/components/site/site-header';
 import { trackClick } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import { displayCurrencyFor, type Currency } from '@/lib/pricing/currency';
@@ -32,7 +50,7 @@ import type {
   PublicPlanCatalogItem,
 } from '@/lib/try-on/public-catalog';
 import { cn } from '@/lib/utils';
-import { getPricingCopy, type PricingCopy } from './pricing-copy';
+import { getPricingCopy, type PlanFeature, type PricingCopy } from './pricing-copy';
 
 export function formatNumber(value: number, locale: 'en' | 'ar'): string {
   return new Intl.NumberFormat(locale === 'ar' ? 'ar-EG' : 'en-US', {
@@ -64,11 +82,16 @@ export function isPricingRecordVisible(id: string): boolean {
   return record ? isPublishableWithoutOwnerReview(record) : false;
 }
 
-function getPlanCopyKey(planKey: string): string {
-  if (planKey.startsWith('free-')) return 'free-v1';
-  if (planKey.startsWith('launch-')) return 'launch-v1';
-  if (planKey.startsWith('dfy-')) return 'dfy-v1';
-  return planKey;
+const PLAN_PREFIXES = ['free', 'launch', 'growth', 'pro', 'dfy'] as const;
+type PlanFamily = (typeof PLAN_PREFIXES)[number];
+
+export function planFamily(planKey: string): PlanFamily | null {
+  return PLAN_PREFIXES.find((prefix) => planKey.startsWith(`${prefix}-`)) ?? null;
+}
+
+export function getPlanCopyKey(planKey: string): string {
+  const family = planFamily(planKey);
+  return family ? `${family}-v1` : planKey;
 }
 
 function getPackCopyKey(packKey: string): string {
@@ -77,129 +100,471 @@ function getPackCopyKey(packKey: string): string {
   return packKey;
 }
 
-function isPremiumPlan(plan: PublicPlanCatalogItem): boolean {
-  return getPlanCopyKey(plan.planKey) === 'dfy-v1';
+export function isRecommendedPlan(plan: Pick<PublicPlanCatalogItem, 'planKey'>): boolean {
+  return plan.planKey.startsWith('launch-');
 }
 
-function isFreePlan(plan: PublicPlanCatalogItem): boolean {
-  return getPlanCopyKey(plan.planKey) === 'free-v1';
+/** The try-ons meter: this plan against the largest plan on the page, never under 3%. */
+export function meterPercent(renders: number, largest: number): number {
+  if (largest <= 0) return 3;
+  return Math.max(3, Math.min(100, Math.round((renders / largest) * 100)));
 }
 
-function isPremiumPack(pack: PublicCreditPackCatalogItem): boolean {
-  return getPackCopyKey(pack.packKey) === 'pack-flash-v1';
+const PLAN_ICON: Record<PlanFamily, React.ComponentType<{ size?: number }>> = {
+  free: SparkleIcon,
+  launch: BoltIcon,
+  growth: ChartIcon,
+  pro: BlocksIcon,
+  dfy: BlocksIcon,
+};
+
+function isFeatureVisible(feature: PlanFeature): boolean {
+  return !feature.truthRecordId || isPricingRecordVisible(feature.truthRecordId);
 }
+
+const SECTIONS = ['plans', 'topups', 'faq'] as const;
+type SectionId = (typeof SECTIONS)[number];
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+}
+
+function scrollToSection(id: SectionId) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+  window.history.replaceState(null, '', `#${id}`);
+}
+
+/* ─── Hero figure: one try-on, drawn ─── */
+
+function UnitTile({
+  src,
+  label,
+  icon,
+  contain = false,
+}: {
+  src: string;
+  label: string;
+  icon: React.ReactNode;
+  contain?: boolean;
+}) {
+  return (
+    <div className="w-[var(--tile)] text-center">
+      <div className="relative h-[calc(var(--tile)*1.3)] overflow-hidden rounded-2xl bg-gc-studio">
+        <Image
+          src={src}
+          alt=""
+          fill
+          priority
+          sizes="(min-width: 1024px) 118px, 92px"
+          className={cn(contain ? 'object-contain p-2' : 'object-cover object-[50%_16%]')}
+        />
+      </div>
+      <span className="mt-2 inline-flex items-center gap-[5px] text-xs font-bold text-gc-text-2">
+        {icon}
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function Operator({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="mt-[calc(var(--tile)*0.65-15px)] inline-flex size-[30px] shrink-0 items-center justify-center rounded-full bg-foreground text-background"
+    >
+      {children}
+    </span>
+  );
+}
+
+function UnitCard({ t }: { t: PricingCopy }) {
+  return (
+    <figure
+      role="img"
+      aria-label={t.unitAria}
+      /* Tiles are 92px on phones and 118px on desktop, and shrink with the
+         viewport below about 425px so the figure never overflows at 320. */
+      className="m-0 rounded-[28px] border border-border bg-card p-4 shadow-[var(--gc-shadow-float)] [--tile:min(92px,calc((100vw-148px)/3))] lg:p-[22px] lg:[--tile:118px]"
+    >
+      <div className="flex items-start justify-center gap-1.5 lg:gap-2.5">
+        <UnitTile src="/landing/v15/shopper-woman.webp" label={t.unitPhoto} icon={<CameraIcon size={13} strokeWidth={1.9} />} />
+        <Operator>
+          <PlusIcon size={14} strokeWidth={2.2} />
+        </Operator>
+        <UnitTile
+          src="/landing/v15/garment-abaya.webp"
+          label={t.unitPiece}
+          icon={<HangerIcon size={13} strokeWidth={1.9} />}
+          contain
+        />
+        <Operator>
+          <EqualsIcon size={14} strokeWidth={2.2} />
+        </Operator>
+        <UnitTile src="/landing/v15/woman-abaya.webp" label={t.unitLook} icon={<SparkleIcon size={13} strokeWidth={1.9} />} />
+      </div>
+      <div className="mt-3.5 flex items-center justify-center gap-2.5 text-sm font-bold lg:mt-[18px]">
+        <span className="inline-flex h-8 items-center gap-[7px] rounded-full bg-foreground px-3 text-background">
+          <StackIcon size={15} strokeWidth={1.9} />
+          {t.unitTryOn}
+        </span>
+        <span aria-hidden="true" className="text-muted-foreground">
+          =
+        </span>
+        {t.unitDelivered}
+      </div>
+    </figure>
+  );
+}
+
+/* ─── Plans ─── */
 
 function PlanCard({
   plan,
   t,
   locale,
-  index,
   currency,
+  largest,
 }: {
   plan: PublicPlanCatalogItem;
   t: PricingCopy;
   locale: 'en' | 'ar';
-  index: number;
   currency: Currency;
+  largest: number;
 }) {
+  const family = planFamily(plan.planKey);
   const copy = t.plans[getPlanCopyKey(plan.planKey)];
   const name = locale === 'ar' && copy ? copy.name : plan.name;
+  /* Unchanged rule: English leads with the database description, Arabic with
+     the approved copy entry. */
   const description = locale === 'ar'
     ? copy?.description ?? plan.description
     : plan.description ?? copy?.description;
-  const recommended = getPlanCopyKey(plan.planKey) === 'launch-v1';
-  const price = formatCurrency(
-    plan.priceMinor / 100,
-    displayCurrencyFor(plan, currency),
-    locale,
-    0,
-  );
-  const benefits = [
-    t.tryOnsPerMonth(formatNumber(plan.rendersIncluded, locale)),
-    isPremiumPlan(plan) ? t.premiumQuality : t.standardQuality,
-    ...(copy?.benefits ?? []),
+  const recommended = isRecommendedPlan(plan);
+  const Icon = family ? PLAN_ICON[family] : SparkleIcon;
+  const price = formatCurrency(plan.priceMinor / 100, displayCurrencyFor(plan, currency), locale, 0);
+  const headingId = `plan-${plan.planKey}`;
+  const features: PlanFeature[] = [
+    { icon: 'photo', text: family === 'dfy' ? t.premiumQuality : t.standardQuality },
+    ...(copy?.features ?? []).filter(isFeatureVisible),
   ];
+  const free = plan.isFree || family === 'free';
+  const buttonClass = cn(
+    'mt-5 inline-flex h-[46px] w-full items-center justify-center gap-[9px] whitespace-nowrap rounded-full px-5 text-[15px] font-bold hover:brightness-110',
+    recommended ? 'bg-foreground text-background' : 'border border-border bg-card text-foreground',
+  );
+  const track = () => trackClick('plan_cta_clicked', { plan: plan.planKey, section: 'pricing_plan' });
 
   return (
-    <Card
+    <article
+      aria-labelledby={headingId}
       className={cn(
-        'gc-fade-in-up gc-card-hover flex min-w-0 flex-col rounded-2xl',
+        'relative flex min-w-0 flex-col rounded-[26px] bg-card p-5',
         recommended
-          ? 'gc-landing-card border-2 border-foreground'
-          : 'gc-landing-panel border-border',
+          ? 'border-[1.5px] border-foreground shadow-[var(--gc-shadow-card-strong)]'
+          : 'border border-border shadow-[var(--gc-shadow-card)]',
       )}
-      style={{ animationDelay: `${0.05 + index * 0.06}s` }}
     >
-      <CardHeader className="p-5 sm:p-6">
-        <div className="flex min-w-0 flex-col gap-5">
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <CardTitle className="min-w-0 text-xl leading-tight">
-              <h3 className="break-words">{name}</h3>
-            </CardTitle>
-            {recommended ? (
-              <Badge className="h-6 shrink-0 rounded-full px-2.5">{t.recommended}</Badge>
-            ) : null}
-          </div>
-          <p className="min-h-12 text-sm leading-6 text-muted-foreground">
-            {description}
-          </p>
-          <div className="min-w-0">
-            <p className="flex min-w-0 flex-wrap items-end gap-x-2 gap-y-1">
-              <span className="break-words text-[clamp(2.2rem,11vw,3.25rem)] font-bold leading-none tracking-tight">
-                {price}
-              </span>
-              <span className="pb-1 text-sm text-muted-foreground">/ {t.month}</span>
-            </p>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex-1 px-5 pb-6 pt-0 sm:px-6">
-        <ul className="flex flex-col gap-3">
-          {benefits.map((benefit) => (
-            <li key={benefit} className="flex min-w-0 items-start gap-2.5 text-sm leading-6">
-              <span className="mt-1 shrink-0 text-muted-foreground" aria-hidden="true">
-                <Icon icon={CheckmarkCircle02Icon} size={16} />
-              </span>
-              <span className="min-w-0 break-words">{benefit}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-
-      <CardFooter className="px-5 pb-5 pt-0 sm:px-6 sm:pb-6">
-        <Button
-          asChild
-          variant={recommended ? 'default' : 'outline'}
-          size="lg"
-          className="h-12 w-full rounded-full"
-        >
-          {/* Free is the one plan with no billing conversation to have — it
-              routes to the real self-serve signup instead of the booking
-              link every other plan needs, since payment is arranged
-              directly for those (see merchant-plan-card.tsx). */}
-          {isFreePlan(plan) ? (
-            <Link
-              href="/sign-up"
-              onClick={() => trackClick('plan_cta_clicked', { plan: getPlanCopyKey(plan.planKey) })}
-            >
-              {t.choosePlan(name)}
-            </Link>
-          ) : (
-            <a
-              href={BOOKING_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackClick('plan_cta_clicked', { plan: getPlanCopyKey(plan.planKey) })}
-            >
-              {t.bookCallForPlan(name)}
-            </a>
+      <div className="flex items-center gap-2.5">
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-flex size-[38px] shrink-0 items-center justify-center rounded-xl',
+            recommended ? 'bg-foreground text-background' : 'bg-gc-studio text-foreground',
           )}
-        </Button>
-      </CardFooter>
-    </Card>
+        >
+          <Icon size={19} />
+        </span>
+        <h3 id={headingId} className="min-w-0 flex-1 break-words text-[19px] font-bold">
+          {name}
+        </h3>
+        {recommended ? (
+          <SiteBadge tone="ink" icon={<TickIcon size={12} strokeWidth={2.4} />}>
+            {t.recommended}
+          </SiteBadge>
+        ) : null}
+      </div>
+      {description ? (
+        <p className="mt-3 text-[13.5px] leading-normal text-muted-foreground lg:min-h-10">{description}</p>
+      ) : null}
+      <p className="mt-4 flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+        <span className="break-words text-[44px] font-bold leading-none tracking-[-0.03em]">{price}</span>
+        <span className="text-sm text-muted-foreground">/ {t.month}</span>
+      </p>
+      <div className="mt-[18px]">
+        <div className="flex items-center justify-between gap-3 text-[13.5px] font-bold">
+          <span className="inline-flex items-center gap-[7px]">
+            <ShirtIcon size={15} />
+            {t.tryOns(formatNumber(plan.rendersIncluded, locale))}
+          </span>
+          <span className="text-xs font-semibold text-muted-foreground">{t.perMonth}</span>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-[3px] bg-secondary" aria-hidden="true">
+          <div
+            data-meter=""
+            className="h-full rounded-[3px] bg-foreground"
+            style={{ width: `${meterPercent(plan.rendersIncluded, largest)}%` }}
+          />
+        </div>
+      </div>
+      <ul className="mt-[18px] flex flex-1 flex-col gap-[9px]">
+        {features.map((feature) => {
+          const FeatureIcon = SITE_ICONS[feature.icon];
+          return (
+            <li key={feature.text} className="flex items-center gap-[9px] text-[13.5px] leading-snug">
+              <span
+                aria-hidden="true"
+                className="inline-flex size-[26px] shrink-0 items-center justify-center rounded-lg bg-gc-studio"
+              >
+                <FeatureIcon size={14} />
+              </span>
+              <span className="min-w-0">{feature.text}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {free ? (
+        <Link href="/sign-up" onClick={track} className={buttonClass}>
+          <SparkleIcon size={17} />
+          {t.choosePlan(name)}
+        </Link>
+      ) : (
+        <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer" onClick={track} className={buttonClass}>
+          <CalendarIcon size={17} />
+          {copy?.button ?? t.bookCallForPlan(name)}
+        </a>
+      )}
+    </article>
   );
 }
+
+function FlowNode({
+  icon,
+  title,
+  detail,
+  dark = false,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  detail: string;
+  dark?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-2.5 rounded-2xl py-2.5 pe-3.5 ps-2.5',
+        dark ? 'bg-foreground text-background' : 'border border-border bg-card',
+      )}
+    >
+      <span
+        className={cn(
+          'inline-flex size-[34px] shrink-0 items-center justify-center rounded-[11px]',
+          dark ? 'bg-background/[0.12]' : 'bg-gc-studio',
+        )}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13.5px] font-bold">{title}</span>
+        <span className="block text-xs opacity-75">{detail}</span>
+      </span>
+    </div>
+  );
+}
+
+function CreditFlow({ t }: { t: PricingCopy }) {
+  return (
+    <div
+      role="img"
+      aria-label={t.creditsAria}
+      className="mt-[22px] flex flex-col gap-3.5 rounded-3xl bg-card/70 p-4 lg:mt-[26px] lg:grid lg:grid-cols-[minmax(0,250px)_auto_minmax(0,260px)] lg:items-center lg:justify-between lg:gap-7 lg:px-6 lg:py-5"
+    >
+      <div>
+        <p className="text-[15px] font-bold">{t.creditsTitle}</p>
+        <p className="mt-[3px] text-[13px] leading-[1.45] text-muted-foreground">{t.creditsLine}</p>
+      </div>
+      <div className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center lg:gap-3">
+        <FlowNode dark icon={<StackIcon size={17} />} title={t.creditReserved} detail={t.creditReservedWhen} />
+        {/* Phones: one arrow down to both outcomes. */}
+        <svg
+          width="22"
+          height="14"
+          viewBox="0 0 34 14"
+          fill="none"
+          stroke="var(--gc-inactive)"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          aria-hidden="true"
+          className="mx-auto rotate-90 lg:hidden"
+        >
+          <path d="M1 7h30M26 2l5 5-5 5" />
+        </svg>
+        {/* Desktop: the reserved credit forks into its two outcomes. */}
+        <svg
+          width="46"
+          height="120"
+          viewBox="0 0 46 120"
+          fill="none"
+          stroke="var(--gc-inactive)"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="hidden shrink-0 lg:block rtl:-scale-x-100"
+        >
+          <path d="M1 60h15" />
+          <path d="M16 60V36q0-8 8-8h18M37 23l5 5-5 5" />
+          <path d="M16 60v24q0 8 8 8h18M37 87l5 5-5 5" />
+        </svg>
+        <div className="flex flex-col gap-2">
+          <FlowNode icon={<TickIcon size={17} />} title={t.creditDelivered} detail={t.creditDeliveredResult} />
+          <FlowNode icon={<RefundIcon size={17} />} title={t.creditFailed} detail={t.creditFailedResult} />
+        </div>
+      </div>
+      <p className="flex items-start gap-2 text-[12.5px] leading-normal text-muted-foreground lg:border-s lg:border-secondary lg:ps-6">
+        <InfoIcon size={15} className="mt-px shrink-0" />
+        <span>{t.creditNote}</span>
+      </p>
+    </div>
+  );
+}
+
+/* ─── Packs ─── */
+
+function PackRow({
+  pack,
+  t,
+  locale,
+  showValidity,
+}: {
+  pack: PublicCreditPackCatalogItem;
+  t: PricingCopy;
+  locale: 'en' | 'ar';
+  showValidity: boolean;
+}) {
+  const key = getPackCopyKey(pack.packKey);
+  const packCopy = t.packs[key];
+  const name = packCopy?.name ?? pack.name;
+  const premium = key === 'pack-flash-v1';
+  return (
+    <article className="flex items-center gap-3 rounded-[22px] border border-border bg-card px-4 py-4 sm:gap-4 sm:px-[18px]">
+      <span
+        aria-hidden="true"
+        className={cn(
+          'inline-flex size-[52px] shrink-0 items-center justify-center rounded-2xl',
+          premium ? 'bg-foreground text-background' : 'bg-gc-studio text-foreground',
+        )}
+      >
+        <StackIcon size={24} strokeWidth={1.7} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 lang="en" className="text-[17px] font-bold">
+            {name}
+          </h3>
+          {premium ? <SiteBadge icon={<SparkleIcon size={13} strokeWidth={1.9} />}>{t.premium}</SiteBadge> : null}
+        </div>
+        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <PhotoIcon size={14} />
+            {t.renders(formatNumber(pack.renders, locale))}
+          </span>
+          {showValidity ? <span>{t.validFor(formatNumber(pack.validityDays, locale))}</span> : null}
+        </p>
+      </div>
+      <p className="shrink-0 text-end">
+        <span className="block text-[22px] font-bold tracking-[-0.02em] sm:text-[26px]">
+          {formatCurrency(pack.priceMinor / 100, pack.currency, locale, 0)}
+        </span>
+        <span className="block text-xs text-muted-foreground">{t.oneTime}</span>
+      </p>
+      <a
+        href={BOOKING_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t.askAboutPack(name)}
+        onClick={() => trackClick('pack_cta_clicked', { pack: pack.packKey, section: 'pricing_pack' })}
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border text-foreground hover:bg-foreground/[0.06]"
+      >
+        <CalendarIcon size={17} />
+      </a>
+    </article>
+  );
+}
+
+/* ─── Questions ─── */
+
+function FaqList({ items }: { items: PricingCopy['faq'] }) {
+  const [open, setOpen] = React.useState(0);
+  return (
+    <div className="min-w-0 border-t border-secondary">
+      {items.map((item, index) => {
+        const expanded = open === index;
+        const Icon = SITE_ICONS[item.icon];
+        return (
+          <div key={item.question} className="border-b border-secondary">
+            <h3>
+              <button
+                type="button"
+                id={`faq-q${index}`}
+                aria-expanded={expanded}
+                aria-controls={`faq-a${index}`}
+                onClick={() => setOpen(expanded ? -1 : index)}
+                className="flex min-h-[60px] w-full items-center gap-3 px-1 py-2 text-start text-[15.5px] font-bold text-foreground hover:bg-foreground/[0.03]"
+              >
+                <span
+                  aria-hidden="true"
+                  className="inline-flex size-[34px] shrink-0 items-center justify-center rounded-[11px] bg-gc-studio"
+                >
+                  <Icon size={16} />
+                </span>
+                <span className="min-w-0 flex-1">{item.question}</span>
+                {expanded ? <MinusIcon size={18} strokeWidth={2} /> : <PlusIcon size={18} strokeWidth={2} />}
+              </button>
+            </h3>
+            <div
+              id={`faq-a${index}`}
+              role="region"
+              aria-labelledby={`faq-q${index}`}
+              hidden={!expanded}
+              className="gc-anim-in pb-[18px] pe-1 ps-[50px] text-[14.5px] leading-relaxed text-gc-text-2"
+            >
+              <p>{item.answer}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Page ─── */
+
+function useActiveSection(): SectionId | null {
+  const [active, setActive] = React.useState<SectionId | null>(null);
+  React.useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const visible = new Map<string, boolean>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => visible.set(entry.target.id, entry.isIntersecting));
+        const first = SECTIONS.find((id) => visible.get(id));
+        setActive(first ?? null);
+      },
+      { rootMargin: '-30% 0px -55% 0px' },
+    );
+    SECTIONS.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+  return active;
+}
+
+const headingClass = 'text-[28px] font-bold leading-[1.1] tracking-[-0.03em] sm:text-4xl lg:text-[44px]';
 
 export function PricingPageContent({
   catalog,
@@ -210,271 +575,198 @@ export function PricingPageContent({
 }) {
   const { locale, t: landingT } = useLandingLocale();
   const t = getPricingCopy(locale);
+  const activeSection = useActiveSection();
   const sortedPlans = [...catalog.plans].sort((a, b) => a.sortOrder - b.sortOrder);
   const sortedPacks = [...catalog.packs].sort((a, b) => a.sortOrder - b.sortOrder);
+  const largest = Math.max(0, ...sortedPlans.map((plan) => plan.rendersIncluded));
   const showMarketComparison = isPricingRecordVisible('pricing.competitor-entry-volume');
   const showPackValidity = isPricingRecordVisible('pricing.topups-valid-365-days');
   const visibleFaq = t.faq.filter(
     (item) => !item.truthRecordId || isPricingRecordVisible(item.truthRecordId),
   );
 
+  const tab = (id: SectionId, label: string, icon: React.ReactNode): SiteNavItem => ({
+    id,
+    label,
+    href: `#${id}`,
+    icon,
+    onSelect: (event) => {
+      event.preventDefault();
+      scrollToSection(id);
+    },
+  });
+  const tabs = [
+    tab('plans', t.tabPlans, <CalendarIcon size={15} />),
+    tab('topups', t.tabTopups, <StackIcon size={15} />),
+    tab('faq', t.tabQuestions, <ChatIcon size={15} />),
+  ];
+  const menu: SiteNavItem[] = [
+    ...tabs,
+    { id: 'home', label: landingT.footerHome, href: '/', icon: <GrindctrlMark className="h-3.5 w-5" /> },
+    { id: 'try-on', label: landingT.footerDemo, href: '/try-on', icon: <ShirtIcon size={16} /> },
+  ];
+
+  const primaryCta = 'inline-flex h-[50px] items-center justify-center gap-[9px] whitespace-nowrap rounded-full px-[22px] text-[15px] font-bold hover:brightness-110';
+
   return (
-    <>
-      <AmbientBackground />
-
-      <SiteHeader locale={locale} t={landingT} />
-
-      <main>
-        <section className="relative overflow-hidden border-b border-border">
-          <div
-            className="gc-hero-grid-warm pointer-events-none absolute inset-0 -z-10"
-            aria-hidden="true"
-          />
-          {/* Tight on a phone: this hero ran 778px tall, which pushed the first
-              price 1.57 screens down a page whose whole job is showing prices.
-              Desktop spacing is unchanged. */}
-          <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-24">
-            <div className="min-w-0">
-              <Badge
-                variant="secondary"
-                className="gc-fade-in-up h-7 rounded-full px-3 text-[11px] font-semibold uppercase tracking-[0.18em]"
-              >
-                {t.eyebrow}
-              </Badge>
+    <MarketingChrome
+      wiring
+      trace={t.trace}
+      header={{
+        nav: tabs,
+        menuItems: menu,
+        navIcons: true,
+        tag: { icon: <TagIcon size={15} />, label: t.pricing },
+        activeId: activeSection,
+        bookIcon: true,
+      }}
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[560px] lg:max-w-none">
+          {/* Hero */}
+          <section
+            aria-labelledby="pricing-title"
+            className="flex flex-col gap-[26px] pt-4 text-center lg:flex-row lg:items-center lg:justify-between lg:gap-10 lg:pt-9 lg:text-start"
+          >
+            <div className="min-w-0 lg:max-w-[600px]">
+              <SiteChip icon={<TagIcon size={15} />}>{t.eyebrow}</SiteChip>
               <h1
-                className="gc-fade-in-up mt-4 max-w-4xl text-[clamp(1.75rem,6vw,4.8rem)] font-bold leading-[1.05] tracking-tight sm:mt-6"
-                style={{ animationDelay: '0.05s' }}
+                id="pricing-title"
+                className="mt-4 text-[32px] font-bold leading-[1.06] tracking-[-0.035em] lg:text-[50px]"
               >
                 {t.title}
               </h1>
-              <p
-                className="gc-fade-in-up mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
-                style={{ animationDelay: '0.11s' }}
-              >
-                {t.intro}
-              </p>
-              <div
-                className="gc-fade-in-up mt-8 flex flex-col gap-3 sm:flex-row"
-                style={{ animationDelay: '0.17s' }}
-              >
-                <Button asChild size="lg" className="h-12 rounded-full px-6 font-semibold">
-                  <a
-                    href={BOOKING_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_hero' })}
-                  >
-                    {t.bookCall}
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="h-12 rounded-full border-border px-6 font-semibold"
+              <p className="mt-3.5 text-[15px] leading-normal text-muted-foreground lg:text-[17px]">{t.intro}</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-2.5 lg:justify-start">
+                <a
+                  href={BOOKING_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_hero' })}
+                  className={cn(primaryCta, 'bg-foreground text-background')}
                 >
-                  <Link
-                    href="/try-on"
-                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_hero' })}
-                  >
-                    {t.tryDemo}
-                  </Link>
-                </Button>
+                  <CalendarIcon size={17} />
+                  {t.bookCall}
+                </a>
+                <Link
+                  href="/try-on"
+                  onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_hero' })}
+                  className={cn(primaryCta, 'border border-border bg-card text-foreground')}
+                >
+                  <ShirtIcon size={17} />
+                  {t.tryDemo}
+                </Link>
               </div>
             </div>
-
-          </div>
-        </section>
-
-        <section className="border-b border-border">
-          <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8 lg:py-24">
-            <div className="mb-6 max-w-3xl sm:mb-10">
-              <Eyebrow locale={locale}>{t.plansEyebrow}</Eyebrow>
-              <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl lg:text-[44px]">
-                {t.plansTitle}
-              </h2>
-              <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-                {t.plansBody}
-              </p>
+            <div className="flex justify-center lg:shrink-0">
+              <UnitCard t={t} />
             </div>
+          </section>
 
-            {/* Sits with the prices rather than in a page header, so somebody
-                who scrolled straight to the plans can still correct it. */}
-            <div className="mb-6 flex justify-start">
+          {/* Plans */}
+          <section id="plans" aria-labelledby="plans-title" className="mt-[60px] scroll-mt-24 lg:mt-24">
+            <div className="flex flex-col items-center gap-4 text-center lg:flex-row lg:items-end lg:justify-between lg:text-start">
+              <div className="min-w-0">
+                <SiteChip icon={<CalendarIcon size={15} />}>{t.plansEyebrow}</SiteChip>
+                <h2 id="plans-title" className={cn('mt-3.5', headingClass)}>
+                  {t.plansTitle}
+                </h2>
+              </div>
               <CurrencyToggle currency={currency} />
             </div>
-
-            <div className="grid min-w-0 gap-5 lg:grid-cols-3 lg:items-stretch">
-              {sortedPlans.map((plan, index) => (
+            <div className="mt-[22px] grid min-w-0 gap-3 lg:mt-[30px] lg:grid-cols-2 lg:gap-4 xl:grid-cols-4">
+              {sortedPlans.map((plan) => (
                 <PlanCard
                   key={plan.planKey}
                   plan={plan}
                   t={t}
                   locale={locale}
-                  index={index}
                   currency={currency}
+                  largest={largest}
                 />
               ))}
             </div>
-
-            {/* Moved out of the hero. It is an argument ABOUT the prices, and it
-                was sitting above them — 186px of comparison a phone visitor had
-                to scroll past before seeing a single number. It lands better
-                once you have seen what it is comparing. */}
+            <CreditFlow t={t} />
             {showMarketComparison ? (
-              <aside className="mt-10 border-t border-border pt-7">
-                <Eyebrow locale={locale}>{t.marketLabel}</Eyebrow>
-                <p className="mt-4 max-w-xl text-lg font-semibold leading-8 sm:text-xl">
-                  {t.marketLead}
-                </p>
+              <aside className="mt-8 border-t border-border pt-6 text-center lg:text-start">
+                <SiteChip>{t.marketLabel}</SiteChip>
+                <p className="mt-3 max-w-xl text-lg font-semibold leading-8 lg:max-w-2xl">{t.marketLead}</p>
               </aside>
             ) : null}
-          </div>
-        </section>
+          </section>
 
-        <section className="border-b border-border bg-muted/20">
-          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-16 lg:px-8 lg:py-24">
-            <div className="min-w-0">
-              <Eyebrow locale={locale}>{t.packsEyebrow}</Eyebrow>
-              <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
+          {/* Top-ups */}
+          <section
+            id="topups"
+            aria-labelledby="packs-title"
+            className="mt-[60px] flex scroll-mt-24 flex-col gap-5 lg:mt-[100px] lg:flex-row lg:items-center lg:justify-between lg:gap-[60px]"
+          >
+            <div className="min-w-0 text-center lg:max-w-[420px] lg:text-start">
+              <SiteChip icon={<StackIcon size={15} />}>{t.packsEyebrow}</SiteChip>
+              <h2 id="packs-title" className={cn('mt-3.5', headingClass)}>
                 {t.packsTitle}
               </h2>
-              <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">
-                {t.packsBody}
-              </p>
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t.packsBody}</p>
             </div>
-
-            <div className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card">
-              {sortedPacks.map((pack, index) => {
-                const packCopy = t.packs[getPackCopyKey(pack.packKey)];
-                const name = locale === 'ar' && packCopy ? packCopy.name : pack.name;
-                return (
-                  <article
-                    key={pack.packKey}
-                    className={cn(
-                      'grid min-w-0 gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6',
-                      index > 0 && 'border-t border-border',
-                    )}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 flex-wrap items-center gap-2">
-                        <h3 className="min-w-0 break-words text-lg font-semibold">{name}</h3>
-                        {isPremiumPack(pack) ? (
-                          <Badge variant="outline" className="rounded-full">
-                            {t.premium}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-2 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                        <span>{t.renders(formatNumber(pack.renders, locale))}</span>
-                        {showPackValidity ? (
-                          <span>{t.validFor(formatNumber(pack.validityDays, locale))}</span>
-                        ) : null}
-                      </p>
-                    </div>
-                    <div className="flex min-w-0 flex-col items-start gap-3 sm:items-end">
-                      <p className="min-w-0 sm:text-end">
-                        <span className="block break-words text-2xl font-bold tracking-tight">
-                          {formatCurrency(pack.priceMinor / 100, pack.currency, locale, 0)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{t.oneTime}</span>
-                      </p>
-                      {/* Packs are bought from inside the dashboard (see
-                          app/dashboard/try-on/plan-actions.ts), not here —
-                          this priced card had nothing to click before. */}
-                      <Button asChild variant="outline" size="sm" className="rounded-full px-4">
-                        <a
-                          href={BOOKING_URL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => trackClick('pack_cta_clicked', { pack: getPackCopyKey(pack.packKey) })}
-                        >
-                          {t.askAboutPack}
-                        </a>
-                      </Button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-border">
-          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:gap-16 lg:px-8 lg:py-24">
-            <div className="min-w-0">
-              <Eyebrow locale={locale}>{t.faqEyebrow}</Eyebrow>
-              <h2 className="mt-3 text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
-                {t.faqTitle}
-              </h2>
-              <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
-                {t.termsReviewNote}
-              </p>
-            </div>
-
-            <div className="min-w-0 border-t border-border">
-              {visibleFaq.map((item) => (
-                <details key={item.question} className="group min-w-0 border-b border-border">
-                  <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-4 py-5 text-start font-semibold [&::-webkit-details-marker]:hidden">
-                    <span className="min-w-0 break-words">{item.question}</span>
-                    <span
-                      className="shrink-0 transition-transform duration-200 ease-out group-open:rotate-45 motion-reduce:transition-none"
-                      aria-hidden="true"
-                    >
-                      <Icon icon={PlusSignIcon} size={18} />
-                    </span>
-                  </summary>
-                  <p className="max-w-2xl pb-5 pe-8 text-sm leading-7 text-muted-foreground sm:text-base">
-                    {item.answer}
-                  </p>
-                </details>
+            <div className="flex min-w-0 flex-col gap-2.5 lg:w-[600px] lg:max-w-[58%]">
+              {sortedPacks.map((pack) => (
+                <PackRow key={pack.packKey} pack={pack} t={t} locale={locale} showValidity={showPackValidity} />
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="border-b border-border">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-            <div className="gc-landing-card flex min-w-0 flex-col items-start gap-6 rounded-3xl border p-7 sm:p-12 lg:flex-row lg:items-end lg:justify-between">
-              <div className="min-w-0 max-w-2xl">
-                <h2 className="text-[28px] font-bold leading-tight tracking-tight sm:text-4xl">
-                  {t.ctaTitle}
-                </h2>
-                <p className="mt-3 text-base leading-7 text-muted-foreground sm:text-lg">
-                  {t.ctaBody}
-                </p>
-              </div>
-              <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
-                <Button asChild size="lg" className="h-12 rounded-full px-6 font-semibold">
-                  <a
-                    href={BOOKING_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_closing' })}
-                  >
-                    {t.bookCall}
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="h-12 rounded-full border-border px-6 font-semibold"
-                >
-                  <Link
-                    href="/try-on"
-                    onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_closing' })}
-                  >
-                    {t.tryDemo}
-                  </Link>
-                </Button>
-              </div>
+          {/* Questions */}
+          <section
+            id="faq"
+            aria-labelledby="faq-title"
+            className="mt-[60px] flex scroll-mt-24 flex-col gap-[18px] lg:mt-[100px] lg:flex-row lg:items-start lg:justify-between lg:gap-[60px]"
+          >
+            <div className="min-w-0 text-center lg:max-w-[400px] lg:text-start">
+              <SiteChip icon={<ChatIcon size={15} />}>{t.faqEyebrow}</SiteChip>
+              <h2 id="faq-title" className={cn('mt-3.5', headingClass)}>
+                {t.faqTitle}
+              </h2>
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t.termsReviewNote}</p>
             </div>
-          </div>
-        </section>
-      </main>
+            <div className="min-w-0 lg:w-[600px] lg:max-w-[58%]">
+              <FaqList items={visibleFaq} />
+            </div>
+          </section>
 
-      <SiteFooter />
-    </>
+          {/* Closing band */}
+          <section
+            aria-labelledby="close-title"
+            className="mb-4 mt-[60px] flex flex-col gap-5 rounded-[30px] bg-foreground p-[26px] text-center text-background lg:mt-[100px] lg:flex-row lg:items-center lg:justify-between lg:gap-[30px] lg:p-10 lg:text-start"
+          >
+            <div className="min-w-0">
+              <h2 id="close-title" className="text-[26px] font-bold leading-[1.12] tracking-[-0.03em] lg:text-[34px]">
+                {t.ctaTitle}
+              </h2>
+              <p className="mt-2.5 text-[15px] leading-normal text-background/75">{t.ctaBody}</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2.5 lg:shrink-0">
+              <a
+                href={BOOKING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackClick('cta_clicked', { cta: 'book_call', section: 'pricing_closing' })}
+                className={cn(primaryCta, 'bg-background text-foreground')}
+              >
+                <CalendarIcon size={17} />
+                {t.bookCall}
+              </a>
+              <Link
+                href="/try-on"
+                onClick={() => trackClick('cta_clicked', { cta: 'try_on', section: 'pricing_closing' })}
+                className={cn(primaryCta, 'border border-background/30 text-background')}
+              >
+                <ShirtIcon size={17} />
+                {t.tryDemo}
+              </Link>
+            </div>
+          </section>
+        </div>
+      </div>
+    </MarketingChrome>
   );
 }
