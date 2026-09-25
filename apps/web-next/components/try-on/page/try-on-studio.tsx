@@ -85,11 +85,12 @@ function readAsDataUrl(file: File): Promise<string> {
 export function TryOnStudio() {
   const { t, locale, toggleLocale } = useTryOnLocale();
   const [state, dispatch] = React.useReducer(studioReducer, INITIAL_STATE);
-  const [step, setStep] = React.useState(0);
+  /* Progress steps belong to one request, so a new request starts at 0 without a reset. */
+  const [progress, setProgress] = React.useState({ request: -1, step: 0 });
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [compareOpen, setCompareOpen] = React.useState(false);
-  const [retryUnlockAt, setRetryUnlockAt] = React.useState(0);
-  const [, forceTick] = React.useState(0);
+  /* Set when a 429 arrives; clears itself once its Retry-After has passed. */
+  const [retryLock, setRetryLock] = React.useState<{ ms: number } | null>(null);
   const [pieceSwaps, setPieceSwaps] = React.useState(0);
   const lookCardRef = React.useRef<HTMLElement>(null);
   const startedAt = React.useRef(0);
@@ -101,9 +102,12 @@ export function TryOnStudio() {
      result really arrives; they never claim to be finished early. */
   React.useEffect(() => {
     if (state.stage !== 'creating') return;
-    setStep(0);
+    const request = state.request;
     const timer = window.setInterval(() => {
-      setStep((current) => Math.min(current + 1, t.loadingSteps.length - 1));
+      setProgress((current) => ({
+        request,
+        step: Math.min((current.request === request ? current.step : 0) + 1, t.loadingSteps.length - 1),
+      }));
     }, STEP_RHYTHM_MS);
     return () => window.clearInterval(timer);
   }, [state.stage, state.request, t.loadingSteps.length]);
@@ -128,7 +132,7 @@ export function TryOnStudio() {
             properties: { demo: 'try_on', durationMs: Math.round(performance.now() - startedAt.current) },
           });
         } else {
-          if (result.failure.kind === 'rate_limited') setRetryUnlockAt(Date.now() + result.failure.retryAfterMs);
+          if (result.failure.kind === 'rate_limited') setRetryLock({ ms: result.failure.retryAfterMs });
           dispatch({ type: 'failed', request, failure: result.failure });
         }
       })
@@ -142,12 +146,10 @@ export function TryOnStudio() {
 
   /* Try again waits out a 429's Retry-After. */
   React.useEffect(() => {
-    if (!retryUnlockAt) return;
-    const wait = retryUnlockAt - Date.now();
-    if (wait <= 0) return;
-    const timer = window.setTimeout(() => forceTick((n) => n + 1), wait + 20);
+    if (!retryLock) return;
+    const timer = window.setTimeout(() => setRetryLock(null), Math.max(0, retryLock.ms) + 20);
     return () => window.clearTimeout(timer);
-  }, [retryUnlockAt]);
+  }, [retryLock]);
 
   /* The newest look is what the visitor sees. */
   React.useEffect(() => {
@@ -191,7 +193,8 @@ export function TryOnStudio() {
     applyDocumentLocale(next);
   };
 
-  const retryLocked = state.failure?.kind === 'rate_limited' && Date.now() < retryUnlockAt;
+  const retryLocked = state.failure?.kind === 'rate_limited' && retryLock !== null;
+  const step = progress.request === state.request ? progress.step : 0;
   const pair = comparePair(state);
 
   const storeLinkTracked = () => trackClick('cta_clicked', { cta: 'open_store', section: 'try_on_header' });
