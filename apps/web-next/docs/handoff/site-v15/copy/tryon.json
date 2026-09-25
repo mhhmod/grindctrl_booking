@@ -1,0 +1,518 @@
+{
+ "page": "tryon",
+ "note": "English source with its approved Arabic, in reading order, grouped by the section the prototype renders it in. Strings marked set-by-code are produced by the page logic (states, captions, labels). Product names, GRINDCTRL, the store domain and the password stay in English in both languages.",
+ "sections": [
+  {
+   "section": "page",
+   "strings": [
+    {
+     "en": "GrindCTRL home",
+     "ar": "الصفحة الرئيسية لـ GrindCTRL",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "GRINDCTRL",
+     "ar": "GRINDCTRL",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Steps",
+     "ar": "الخطوات",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The piece",
+     "ar": "القطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your photo",
+     "ar": "صورتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Create",
+     "ar": "الإنشاء",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your look",
+     "ar": "إطلالتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Demo store",
+     "ar": "المتجر التجريبي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "See it on you before you buy.",
+     "ar": "شاهدها عليك قبل الشراء.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pick a piece, add a photo, get your look.",
+     "ar": "اختر قطعة، وأضف صورة، واحصل على إطلالتك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "For stores: book a call",
+     "ar": "للمتاجر: احجز مكالمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Add a photo to create your look.",
+     "ar": "أضف صورة لإنشاء إطلالتك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Create my look",
+     "ar": "اصنع إطلالتي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try another piece",
+     "ar": "جرّب قطعة أخرى",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Compare looks",
+     "ar": "قارن الإطلالات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Download",
+     "ar": "تنزيل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Continue shopping",
+     "ar": "تابع التسوّق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The demo store",
+     "ar": "المتجر التجريبي",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sample looks are real try-on engine outputs on AI-generated models.",
+     "ar": "الإطلالات النموذجية مخرجات حقيقية لمحرك التجربة على عارضين مولَّدين بالذكاء الاصطناعي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Close",
+     "ar": "إغلاق",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envT",
+   "strings": [
+    {
+     "en": "photo received",
+     "ar": "تم استلام الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "garment mapped",
+     "ar": "تمت مطابقة القطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "look rendered",
+     "ar": "اكتملت الإطلالة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "ready to shop",
+     "ar": "جاهز للشراء",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-piece",
+   "strings": [
+    {
+     "en": "Change",
+     "ar": "تغيير",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Demo piece",
+     "ar": "قطعة تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-photo",
+   "strings": [
+    {
+     "en": "Used only to create this preview. Not stored or shared.",
+     "ar": "تُستخدم فقط لإنشاء هذه المعاينة. لا تُخزَّن ولا تُشارك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Add your photo",
+     "ar": "أضف صورتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Full or half body. JPG, PNG or WebP, up to 8 MB.",
+     "ar": "صورة كاملة أو نصفية. JPG أو PNG أو WebP، حتى 8 ميجابايت.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "or",
+     "ar": "أو",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Use a sample photo",
+     "ar": "استخدم صورة نموذجية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "An AI-generated model",
+     "ar": "عارض مولَّد بالذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-look",
+   "strings": [
+    {
+     "en": "Compare with your photo",
+     "ar": "قارن بصورتك",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Photo",
+     "ar": "الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Look",
+     "ar": "الإطلالة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your look appears here",
+     "ar": "ستظهر إطلالتك هنا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Creating your preview",
+     "ar": "جارٍ إنشاء معاينتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Preparing your preview…",
+     "ar": "جارٍ تجهيز المعاينة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Analyzing photo composition…",
+     "ar": "تحليل تكوين الصورة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Mapping product to your photo…",
+     "ar": "مطابقة المنتج مع صورتك…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Rendering try-on preview…",
+     "ar": "إنشاء معاينة التجربة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Finalizing result…",
+     "ar": "إنهاء النتيجة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your photo stayed on this device",
+     "ar": "بقيت صورتك على هذا الجهاز",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "This design preview doesn’t send photos anywhere, so it can’t render yours. The live try-on in the demo store does.",
+     "ar": "معاينة التصميم هذه لا ترسل الصور إلى أي مكان، لذا لا يمكنها إنشاء إطلالتك. التجربة المباشرة في المتجر التجريبي تفعل ذلك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try it in the demo store",
+     "ar": "جرّبها في المتجر التجريبي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "A sample look made by the try-on engine. The preview is visual guidance, not an exact sizing guarantee.",
+     "ar": "إطلالة نموذجية أنشأها محرك التجربة. المعاينة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-looks",
+   "strings": [
+    {
+     "en": "Your looks",
+     "ar": "إطلالاتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "The demo store",
+   "strings": [
+    {
+     "en": "grindctrl.myshopify.com",
+     "ar": "grindctrl.myshopify.com",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The same try-on, inside a real store.",
+     "ar": "التجربة نفسها، داخل متجر حقيقي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try it on with AI on every product",
+     "ar": "زر جرّبها بالذكاء الاصطناعي على كل منتج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Open the demo store",
+     "ar": "افتح المتجر التجريبي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store password",
+     "ar": "كلمة مرور المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Riyadh Tie-Waist Open Abaya",
+     "ar": "Riyadh Tie-Waist Open Abaya",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Blacktop Ringer Tee",
+     "ar": "Blacktop Ringer Tee",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Heavyweight Boxy Tee",
+     "ar": "Heavyweight Boxy Tee",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Boxy Tee & Short Set",
+     "ar": "Boxy Tee & Short Set",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-pick-title",
+   "strings": [
+    {
+     "en": "Demo pieces with sample looks. Your photo stays as it is.",
+     "ar": "قطع تجريبية بإطلالات نموذجية. تبقى صورتك كما هي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Embroidered abaya",
+     "ar": "عباية مطرّزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Womenswear",
+     "ar": "ملابس نسائية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sage linen shirt",
+     "ar": "قميص كتان بلون المريمية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Denim overshirt",
+     "ar": "قميص جينز خارجي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Menswear",
+     "ar": "ملابس رجالية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Knit polo",
+     "ar": "قميص بولو محبوك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "tp-cmp-title",
+   "strings": [
+    {
+     "en": "Your looks side by side",
+     "ar": "إطلالاتك جنبًا إلى جنب",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  }
+ ],
+ "setByCode": [
+  {
+   "en": "Sample photo",
+   "ar": "صورة نموذجية",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "File is too large. Maximum size is 8 MB.",
+   "ar": "حجم الملف كبير جدًا. الحد الأقصى 8 ميجابايت.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Unsupported file type. Please upload a JPG, PNG or WebP image.",
+   "ar": "نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WebP.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copied",
+   "ar": "تم النسخ",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Selected, press Ctrl+C",
+   "ar": "تم التحديد، اضغط Ctrl+C",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copy",
+   "ar": "نسخ",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Store password copied",
+   "ar": "تم نسخ كلمة مرور المتجر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copy the store password",
+   "ar": "انسخ كلمة مرور المتجر",
+   "kind": "set-by-code"
+  }
+ ],
+ "additions": {
+  "note": "Strings the production page needs that the prototype did not have. The Arabic for Change photo is the repo's existing changePhoto value.",
+  "strings": [
+   {
+    "en": "Change piece",
+    "ar": "تغيير القطعة",
+    "kind": "aria-label",
+    "use": "accessible name of the piece card Change button"
+   },
+   {
+    "en": "Change photo",
+    "ar": "تغيير الصورة",
+    "kind": "aria-label",
+    "use": "accessible name of the photo card Change button"
+   },
+   {
+    "en": "{n} of 4",
+    "ar": "{n} من 4",
+    "kind": "text",
+    "use": "looks tray count, n is the number of looks, digits stay Western"
+   }
+  ],
+  "languageSwitch": {
+   "whenPageIsEnglish": {
+    "label": "العربية",
+    "ariaLabel": "التبديل إلى العربية",
+    "lang": "ar"
+   },
+   "whenPageIsArabic": {
+    "label": "English",
+    "ariaLabel": "Switch to English",
+    "lang": "en"
+   }
+  }
+ }
+}

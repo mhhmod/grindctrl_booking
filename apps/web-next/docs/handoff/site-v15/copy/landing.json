@@ -1,0 +1,2756 @@
+{
+ "page": "landing",
+ "note": "English source with its approved Arabic, in reading order, grouped by the section the prototype renders it in. Strings marked set-by-code are produced by the page logic (states, captions, labels). Product names, GRINDCTRL, the store domain and the password stay in English in both languages.",
+ "sections": [
+  {
+   "section": "page",
+   "strings": [
+    {
+     "en": "GrindCTRL home",
+     "ar": "الصفحة الرئيسية لـ GrindCTRL",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "GRINDCTRL",
+     "ar": "GRINDCTRL",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Main",
+     "ar": "القائمة الرئيسية",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call",
+     "ar": "احجز مكالمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Page scenes",
+     "ar": "مشاهد الصفحة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Close menu",
+     "ar": "إغلاق القائمة",
+     "kind": "aria-label",
+     "firstSeenOn": "phone"
+    },
+    {
+     "en": "Menu",
+     "ar": "القائمة",
+     "kind": "aria-label",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "nav0",
+   "strings": [
+    {
+     "en": "Try it on",
+     "ar": "جرّبها عليك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav1",
+   "strings": [
+    {
+     "en": "Live store",
+     "ar": "المتجر المباشر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav2",
+   "strings": [
+    {
+     "en": "AI operations",
+     "ar": "عمليات الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav3",
+   "strings": [
+    {
+     "en": "Product",
+     "ar": "المنتج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav4",
+   "strings": [
+    {
+     "en": "Results",
+     "ar": "النتائج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav5",
+   "strings": [
+    {
+     "en": "How it works",
+     "ar": "كيف يعمل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "nav6",
+   "strings": [
+    {
+     "en": "Pricing",
+     "ar": "الأسعار",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envA",
+   "strings": [
+    {
+     "en": "photo received",
+     "ar": "تم استلام الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "garment mapped",
+     "ar": "تمت مطابقة القطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "look rendered",
+     "ar": "اكتملت الإطلالة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "added to cart",
+     "ar": "أُضيفت إلى السلة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "hero",
+   "strings": [
+    {
+     "en": "AI try-on",
+     "ar": "تجربة افتراضية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shopify fashion stores",
+     "ar": "متاجر أزياء Shopify",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English. We set it up and keep it running.",
+     "ar": "يرى المتسوّقون ملابسك عليهم من صورة واحدة، ويحصلون على إجابات من متجرك بالعربية أو الإنجليزية. نحن نجهّز كل شيء ونبقيه يعمل.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try it on yourself",
+     "ar": "جرّبها بنفسك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shopify",
+     "ar": "Shopify",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "hero-title",
+   "strings": [
+    {
+     "en": "The fitting room your",
+     "ar": "غرفة القياس التي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "online store was missing.",
+     "ar": "افتقدها متجرك الإلكتروني.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cap1",
+   "strings": [
+    {
+     "en": "Tap a garment. The same shopper wears it.",
+     "ar": "اضغط على قطعة، فيرتديها المتسوّق نفسه.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cap2",
+   "strings": [
+    {
+     "en": "Compare it with the photo she started from.",
+     "ar": "قارنها بالصورة التي بدأت بها.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cap3",
+   "strings": [
+    {
+     "en": "Switch shoppers. Everyone sees it on themselves.",
+     "ar": "بدّل المتسوّق. كلٌّ يراها على نفسه.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cap4",
+   "strings": [
+    {
+     "en": "Your turn. Pick a shopper and a garment.",
+     "ar": "دورك الآن. اختر متسوّقًا وقطعة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "stage",
+   "strings": [
+    {
+     "en": "Try-on demo",
+     "ar": "عرض التجربة الافتراضية",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store Chat demo",
+     "ar": "عرض دردشة المتجر",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "Try-on demo",
+   "strings": [
+    {
+     "en": "Pick a shopper, then a garment. The same shopper wears it.",
+     "ar": "اختر متسوّقًا ثم قطعة، فيرتديها المتسوّق نفسه.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pick a garment",
+     "ar": "اختر قطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Hover the photo to compare",
+     "ar": "مرّر فوق الصورة للمقارنة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try another shopper",
+     "ar": "جرّب متسوّقًا آخر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the shopper photo this look was made from",
+     "ar": "اعرض صورة المتسوّق التي صُنعت منها هذه الإطلالة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: sage linen shirt on the first shopper.",
+     "ar": "صورة تجربة: قميص الكتان بلون المريمية على المتسوّقة الأولى.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: embroidered abaya on the first shopper.",
+     "ar": "صورة تجربة: العباية المطرّزة على المتسوّقة الأولى.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: denim overshirt on the second shopper.",
+     "ar": "صورة تجربة: قميص الجينز الخارجي على المتسوّق الثاني.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: knit polo on the second shopper.",
+     "ar": "صورة تجربة: قميص البولو المحبوك على المتسوّق الثاني.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: sage linen shirt on the third shopper.",
+     "ar": "صورة تجربة: قميص الكتان بلون المريمية على المتسوّقة الثالثة.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: satin midi skirt on the third shopper.",
+     "ar": "صورة تجربة: تنورة الساتان على المتسوّقة الثالثة.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: denim shirt on the fourth shopper.",
+     "ar": "صورة تجربة: قميص الجينز على المتسوّق الرابع.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: knit polo on the fourth shopper.",
+     "ar": "صورة تجربة: قميص البولو المحبوك على المتسوّق الرابع.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: floral tiered dress on the fifth shopper.",
+     "ar": "صورة تجربة: الفستان المزهر على المتسوّقة الخامسة.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: straight jeans on the fifth shopper.",
+     "ar": "صورة تجربة: الجينز المستقيم على المتسوّقة الخامسة.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: denim shirt on the sixth shopper.",
+     "ar": "صورة تجربة: قميص الجينز على المتسوّق السادس.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: crew sweatshirt on the sixth shopper.",
+     "ar": "صورة تجربة: السويتشيرت على المتسوّق السادس.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI render",
+     "ar": "صورة بالذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Her photo",
+     "ar": "صورتها",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "His photo",
+     "ar": "صورته",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Hover to compare",
+     "ar": "مرّر للمقارنة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pick a shopper",
+     "ar": "اختر متسوّقًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the first shopper",
+     "ar": "اعرض المتسوّقة الأولى",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the second shopper",
+     "ar": "اعرض المتسوّق الثاني",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the third shopper",
+     "ar": "اعرض المتسوّقة الثالثة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the fourth shopper",
+     "ar": "اعرض المتسوّق الرابع",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the fifth shopper",
+     "ar": "اعرض المتسوّقة الخامسة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Show the sixth shopper",
+     "ar": "اعرض المتسوّق السادس",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sage linen shirt",
+     "ar": "قميص كتان بلون المريمية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Embroidered abaya",
+     "ar": "عباية مطرّزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Denim overshirt",
+     "ar": "قميص جينز خارجي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Knit polo",
+     "ar": "قميص بولو محبوك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Satin midi skirt",
+     "ar": "تنورة ساتان متوسطة الطول",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Denim shirt",
+     "ar": "قميص جينز",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Floral tiered dress",
+     "ar": "فستان مزهر بطبقات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Straight jeans",
+     "ar": "جينز بقصّة مستقيمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Crew sweatshirt",
+     "ar": "سويتشيرت بياقة دائرية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on images on AI-generated models.",
+     "ar": "صور التجربة على عارضين مولَّدين بالذكاء الاصطناعي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Tap to compare",
+     "ar": "اضغط للمقارنة",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "Store Chat demo",
+   "strings": [
+    {
+     "en": "G",
+     "ar": "G",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "GrindCTRL demo store",
+     "ar": "متجر GrindCTRL التجريبي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Chat language",
+     "ar": "لغة الدردشة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "EN",
+     "ar": "EN",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cue",
+   "strings": [
+    {
+     "en": "Scroll",
+     "ar": "مرّر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "recA",
+   "strings": [
+    {
+     "en": "How the try-on demo plays as you scroll: Tap a garment. The same shopper wears it. Compare it with the photo she started from. Switch shoppers. Everyone sees it on themselves. Your turn. Pick a shopper and a garment.",
+     "ar": "كيف يعمل عرض التجربة أثناء التمرير: اضغط على قطعة فيرتديها المتسوّق نفسه. قارنها بالصورة التي بدأت بها. بدّل المتسوّق، فكلٌّ يراها على نفسه. دورك الآن: اختر متسوّقًا وقطعة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envS",
+   "strings": [
+    {
+     "en": "store opened",
+     "ar": "فُتح المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "product viewed",
+     "ar": "عُرض المنتج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "try-on opened",
+     "ar": "فُتحت التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "chat answered",
+     "ar": "تم الرد في الدردشة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "store-title",
+   "strings": [
+    {
+     "en": "A real store. Try it there.",
+     "ar": "متجر حقيقي. جرّبها هناك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "sblock",
+   "strings": [
+    {
+     "en": "Shopify store",
+     "ar": "متجر Shopify",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on on every product",
+     "ar": "تجربة على كل منتج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Open the live store",
+     "ar": "افتح المتجر المباشر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store password",
+     "ar": "كلمة مرور المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Real store and products at grindctrl.myshopify.com. The chat lines are demo text.",
+     "ar": "متجر ومنتجات حقيقية على grindctrl.myshopify.com. رسائل الدردشة نص تجريبي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Real store and products. The chat lines are demo text.",
+     "ar": "متجر ومنتجات حقيقية. رسائل الدردشة نص تجريبي.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "envO",
+   "strings": [
+    {
+     "en": "message in",
+     "ar": "رسالة جديدة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "intent: sizing",
+     "ar": "النية: المقاس",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "knowledge lookup",
+     "ar": "بحث في المعرفة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "handoff to team",
+     "ar": "تحويل إلى الفريق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "ops-title",
+   "strings": [
+    {
+     "en": "Your team and the AI",
+     "ar": "فريقك والذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "run support together.",
+     "ar": "يديران الدعم معًا.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your team and the AI run support together.",
+     "ar": "فريقك والذكاء الاصطناعي يديران الدعم معًا.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "oblock",
+   "strings": [
+    {
+     "en": "Every conversation is answered, checked or handed to the right person, and you can see all of it.",
+     "ar": "كل محادثة يُرد عليها أو تُراجع أو تُحوَّل إلى الشخص المناسب، وترى ذلك كله.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What the AI does",
+     "ar": "ما يفعله الذكاء الاصطناعي",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Answers from what you teach it",
+     "ar": "يجيب مما تعلّمه له",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sizing, delivery and care, from your store knowledge, in Arabic or English.",
+     "ar": "المقاسات والتوصيل والعناية، من معرفة متجرك، بالعربية أو الإنجليزية.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Order status inside the chat",
+     "ar": "حالة الطلب داخل الدردشة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Read-only, once the email matches the order. No refunds or edits.",
+     "ar": "للقراءة فقط، بعد تطابق البريد مع الطلب. لا استرداد ولا تعديل.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Photos read, hard cases handed off",
+     "ar": "قراءة الصور وتحويل الحالات الصعبة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The AI describes the photo and hands off with the reason. Your team gets an email.",
+     "ar": "يصف الذكاء الاصطناعي الصورة ويحوّل المحادثة مع السبب. ويصل بريد إلى فريقك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "O",
+     "ar": "O",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "N",
+     "ar": "N",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your team takes over",
+     "ar": "فريقك يتولّى الأمر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assign it, add a private note, reply with a saved answer. The AI steps back.",
+     "ar": "عيّنها، وأضف ملاحظة خاصة، ورُد بإجابة محفوظة. ويتنحّى الذكاء الاصطناعي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated demo of support run by the AI and your team: questions answered from store knowledge, order status looked up read-only, a photo described and handed to the team with the reason, and a teammate taking over with a private note and a saved reply.",
+     "ar": "عرض متحرك لدعم يديره الذكاء الاصطناعي وفريقك: إجابات من معرفة المتجر، واستعلام عن حالة الطلب للقراءة فقط، وصورة تُوصف وتُحوَّل إلى الفريق مع السبب، وزميل يتولّى الأمر بملاحظة خاصة ورد محفوظ.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI agent",
+     "ar": "وكيل الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store knowledge",
+     "ar": "معرفة المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shopify orders",
+     "ar": "طلبات Shopify",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Photo reader",
+     "ar": "قارئ الصور",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Answer in chat",
+     "ar": "رد في الدردشة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Hand off",
+     "ar": "تحويل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Closed by AI",
+     "ar": "أغلقها الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Team inbox",
+     "ar": "صندوق وارد الفريق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Today in your dashboard",
+     "ar": "اليوم في لوحة التحكم",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Demo data",
+     "ar": "بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Conversations",
+     "ar": "المحادثات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Handed to your team",
+     "ar": "حُوّلت إلى فريقك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Waiting now",
+     "ar": "بانتظار الرد الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Demo data. Order status needs read access to your store's orders. Setup, tuning and ongoing care are part of the service.",
+     "ar": "بيانات تجريبية. تتطلب حالة الطلب صلاحية قراءة طلبات متجرك. الإعداد والضبط والمتابعة المستمرة جزء من الخدمة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "n8n",
+     "ar": "n8n",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "HubSpot",
+     "ar": "HubSpot",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Custom steps, built during setup",
+     "ar": "خطوات مخصصة تُبنى أثناء الإعداد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Demo data. Setup and ongoing care are part of the service.",
+     "ar": "بيانات تجريبية. الإعداد والمتابعة المستمرة جزء من الخدمة.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "envB",
+   "strings": [
+    {
+     "en": "knowledge saved",
+     "ar": "حُفظت المعرفة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "reply saved",
+     "ar": "حُفظ الرد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "handoff rule on",
+     "ar": "قاعدة التحويل مفعّلة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "report ready",
+     "ar": "التقرير جاهز",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "bblock",
+   "strings": [
+    {
+     "en": "The product",
+     "ar": "المنتج",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Watch each part work, shown with demo data. Where a part is not finished, it says so.",
+     "ar": "شاهد كل جزء وهو يعمل، ببيانات تجريبية. وحين لا يكون الجزء مكتملًا نقول ذلك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Parts of the system",
+     "ar": "أجزاء النظام",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Storefront",
+     "ar": "واجهة المتجر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Live",
+     "ar": "مباشر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI try-on on your product pages.",
+     "ar": "تجربة افتراضية على صفحات منتجاتك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Conversation",
+     "ar": "المحادثة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store Chat answers from your store knowledge and hands off when needed.",
+     "ar": "تجيب دردشة المتجر من معرفة متجرك وتحوّل المحادثة عند الحاجة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Customer",
+     "ar": "العميل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Name, email and the full thread stay together in your inbox. CRM sync is planned.",
+     "ar": "الاسم والبريد والمحادثة كاملة معًا في صندوق الوارد. المزامنة مع نظام إدارة العملاء قيد التخطيط.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Workflow",
+     "ar": "سير العمل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The AI answers or hands off with the reason, your team gets an email, and every case lands in the dashboard.",
+     "ar": "يجيب الذكاء الاصطناعي أو يحوّل مع السبب، ويصل بريد إلى فريقك، وتظهر كل حالة في لوحة التحكم.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Report",
+     "ar": "التقرير",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store Chat and try-on activity in your dashboard. Revenue attribution is planned.",
+     "ar": "نشاط دردشة المتجر والتجربة في لوحة التحكم. نسب الإيرادات قيد التخطيط.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated demo: on a product page a shopper taps Try it on with AI, adds her photo, generates a try-on preview of the shirt on herself and adds it to her cart.",
+     "ar": "عرض متحرك: في صفحة منتج تضغط متسوّقة على جرّبها بالذكاء الاصطناعي، وتضيف صورتها، وتنشئ معاينة للقميص عليها، ثم تضيفه إلى سلتها.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "GRINDCTRL DEMO STORE",
+     "ar": "متجر GRINDCTRL التجريبي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Size",
+     "ar": "المقاس",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "S",
+     "ar": "S",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "M",
+     "ar": "M",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "L",
+     "ar": "L",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "XL",
+     "ar": "XL",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Add to cart",
+     "ar": "أضِف إلى السلة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try it on with AI",
+     "ar": "جرّبها بالذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Upload your photo",
+     "ar": "ارفع صورتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your photo is ready",
+     "ar": "صورتك جاهزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Creating your preview",
+     "ar": "جارٍ إنشاء معاينتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-On Preview",
+     "ar": "معاينة التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Drag and drop your photo here",
+     "ar": "اسحب صورتك وأفلتها هنا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "or click to browse · JPG, PNG, WebP",
+     "ar": "أو اضغط للتصفح · JPG، PNG، WebP",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Mapping product to your photo…",
+     "ar": "مطابقة المنتج مع صورتك…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Rendering try-on preview…",
+     "ar": "إنشاء معاينة التجربة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your photo is used only to create this try-on preview.",
+     "ar": "تُستخدم صورتك فقط لإنشاء هذه المعاينة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The preview is visual guidance, not an exact sizing guarantee.",
+     "ar": "المعاينة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Generate Try-On Preview",
+     "ar": "إنشاء معاينة التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Adding…",
+     "ar": "جارٍ الإضافة…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What the shopper sees on your product page · Demo data",
+     "ar": "ما يراه المتسوّق في صفحة منتجك · بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated demo: a shopper asks about sizing and the assistant answers from the store knowledge. She rates the answer, asks about stock, leaves her email for the reply, and the team joins with an answer.",
+     "ar": "عرض متحرك: متسوّقة تسأل عن المقاس فيجيب المساعد من معرفة المتجر. تقيّم الإجابة، وتسأل عن التوفر، وتترك بريدها للرد، ثم ينضم الفريق بإجابة.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assistant may reply automatically",
+     "ar": "قد يرد المساعد تلقائيًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Does the sage linen shirt run true to size? I'm between M and L.",
+     "ar": "هل مقاس قميص الكتان بلون المريمية مضبوط؟ أنا بين M و L.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assistant",
+     "ar": "المساعد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "It's cut oversized, so M already sits relaxed and L gives a longer, looser fit. Want a teammate to confirm stock in sage?",
+     "ar": "قصّته واسعة، فمقاس M مريح أصلًا، ومقاس L أطول وأوسع. هل تريد أن يتأكد أحد من الفريق من توفر اللون؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Thanks for your feedback!",
+     "ar": "شكرًا على رأيك!",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Yes please, is M in stock in sage?",
+     "ar": "نعم من فضلك، هل مقاس M متوفر بلون المريمية؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Team",
+     "ar": "الفريق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Good news: M in sage is in stock. You can order it now.",
+     "ar": "خبر سار: مقاس M متوفر بلون المريمية. يمكنك الطلب الآن.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Connecting you with our team…",
+     "ar": "جارٍ توصيلك بفريقنا…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Our team joined the conversation",
+     "ar": "انضم فريقنا إلى المحادثة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Where should we reply?",
+     "ar": "أين نرد عليك؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "you@example.com",
+     "ar": "you@example.com",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "salma@example.com",
+     "ar": "salma@example.com",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Not now",
+     "ar": "ليس الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Send",
+     "ar": "إرسال",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Thanks, we will reply to you there.",
+     "ar": "شكرًا، سنرد عليك هناك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Ask anything…",
+     "ar": "اسأل أي شيء…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Powered by GRINDCTRL",
+     "ar": "بدعم من GRINDCTRL",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What the shopper sees in Store Chat · Demo data",
+     "ar": "ما يراه المتسوّق في دردشة المتجر · بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated demo: a new conversation from Salma arrives in the team inbox and opens with the whole thread, what the AI said and why it was handed off.",
+     "ar": "عرض متحرك: تصل محادثة جديدة من سلمى إلى صندوق وارد الفريق وتُفتح بكامل تفاصيلها، وما قاله الذكاء الاصطناعي، وسبب تحويلها.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Search conversations",
+     "ar": "ابحث في المحادثات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "All",
+     "ar": "الكل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assigned to me",
+     "ar": "المعيّنة لي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Salma",
+     "ar": "سلمى",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "now",
+     "ar": "الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Needs a reply",
+     "ar": "تحتاج إلى رد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI handed this off",
+     "ar": "حوّلها الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "A",
+     "ar": "A",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Anonymous shopper",
+     "ar": "متسوّق مجهول",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "4h ago",
+     "ar": "قبل 4 ساعات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Do you ship to Alexandria, and how long does it take?",
+     "ar": "هل تشحنون إلى الإسكندرية، وكم يستغرق التوصيل؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI handling",
+     "ar": "يتولّاها الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "noura@example.com",
+     "ar": "noura@example.com",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "1d ago",
+     "ar": "قبل يوم",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Can I exchange it for a smaller size?",
+     "ar": "هل يمكنني استبدالها بمقاس أصغر؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Resolved",
+     "ar": "تم الحل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "CRM sync is planned.",
+     "ar": "المزامنة مع نظام إدارة العملاء قيد التخطيط.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Take over",
+     "ar": "تولَّ المحادثة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Mark resolved",
+     "ar": "تعليم كمحلولة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "↪ AI handed this conversation to your team",
+     "ar": "↪ حوّل الذكاء الاصطناعي هذه المحادثة إلى فريقك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "You are replying",
+     "ar": "أنت من يرد الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Return to AI",
+     "ar": "أعِدها إلى الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assign to…",
+     "ar": "عيّن إلى…",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Omar",
+     "ar": "عمر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI",
+     "ar": "الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What your team sees in the inbox · Demo data",
+     "ar": "ما يراه فريقك في صندوق الوارد · بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "How work moves between the AI and your team. Pick a case: a sizing question the AI answers, a stock question it hands to your team with an email alert, or a photo the AI reads and labels for your team. Each case ends in the dashboard.",
+     "ar": "كيف ينتقل العمل بين الذكاء الاصطناعي وفريقك. اختر حالة: سؤال عن المقاس يجيب عنه الذكاء الاصطناعي، أو سؤال عن التوفر يحوّله إلى فريقك مع تنبيه بالبريد، أو صورة يقرؤها ويصنّفها لفريقك. وتنتهي كل حالة في لوحة التحكم.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "How work moves",
+     "ar": "كيف ينتقل العمل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pick a case to follow it",
+     "ar": "اختر حالة لتتابعها",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pick a case",
+     "ar": "اختر حالة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sizing question",
+     "ar": "سؤال عن المقاس",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Stock question",
+     "ar": "سؤال عن التوفر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Photo of an order",
+     "ar": "صورة لطلب",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shopper writes",
+     "ar": "المتسوّق يكتب",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI reads it",
+     "ar": "يقرؤها الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI answers",
+     "ar": "يجيب الذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Hands off",
+     "ar": "يحوّل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Email alert",
+     "ar": "تنبيه بالبريد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Dashboard",
+     "ar": "لوحة التحكم",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "How work moves between the AI and your team · Demo data",
+     "ar": "كيف ينتقل العمل بين الذكاء الاصطناعي وفريقك · بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated demo: the dashboard counts Store Chat conversations, AI-closed chats, handoffs, reply time and satisfaction, and try-on generations per day.",
+     "ar": "عرض متحرك: تحصي لوحة التحكم محادثات دردشة المتجر، والمحادثات التي أغلقها الذكاء الاصطناعي، والتحويلات، ووقت الرد، والرضا، وعمليات إنشاء التجربة يوميًا.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Revenue attribution is planned.",
+     "ar": "نسب الإيرادات قيد التخطيط.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Store Chat is live",
+     "ar": "دردشة المتجر تعمل الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Conversations · 7 days",
+     "ar": "المحادثات · 7 أيام",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Needed your team",
+     "ar": "احتاجت إلى فريقك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Open right now",
+     "ar": "مفتوحة الآن",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Median first reply (7d)",
+     "ar": "متوسط أول رد (7 أيام)",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Satisfaction · 30 days",
+     "ar": "الرضا · 30 يومًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on",
+     "ar": "التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "avg render 11.4s",
+     "ar": "متوسط الإنشاء 11.4 ث",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Generations, 7 days",
+     "ar": "عمليات الإنشاء، 7 أيام",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "up 25% on last week",
+     "ar": "ارتفاع 25% عن الأسبوع الماضي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Success rate, 7 days",
+     "ar": "نسبة النجاح، 7 أيام",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "3 failed",
+     "ar": "3 لم تكتمل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Generations per day",
+     "ar": "عمليات الإنشاء يوميًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sep 16 · 12 generations",
+     "ar": "16 سبتمبر · 12 عملية إنشاء",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sep 11",
+     "ar": "11 سبتمبر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Sep 17",
+     "ar": "17 سبتمبر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What you see in the dashboard · Demo data",
+     "ar": "ما تراه في لوحة التحكم · بيانات تجريبية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Animated walkthroughs recreated from the product's own screens, with demo data.",
+     "ar": "جولات متحركة أُعيد بناؤها من شاشات المنتج نفسه، ببيانات تجريبية.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "← Back to conversations",
+     "ar": "← العودة إلى المحادثات",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    },
+    {
+     "en": "Sizing",
+     "ar": "المقاس",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    },
+    {
+     "en": "Stock",
+     "ar": "التوفر",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    },
+    {
+     "en": "Photo",
+     "ar": "الصورة",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "product-title",
+   "strings": [
+    {
+     "en": "One system, five connected parts",
+     "ar": "نظام واحد، خمسة أجزاء مترابطة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envC",
+   "strings": [
+    {
+     "en": "look 1 rendered",
+     "ar": "الإطلالة 1 جاهزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "same shopper",
+     "ar": "المتسوّق نفسه",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "look 2 rendered",
+     "ar": "الإطلالة 2 جاهزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "shared",
+     "ar": "تمت المشاركة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "chead",
+   "strings": [
+    {
+     "en": "Real results",
+     "ar": "نتائج حقيقية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Each shopper, then the same shopper in another garment. Tap a look to switch it.",
+     "ar": "كل متسوّق، ثم المتسوّق نفسه في قطعة أخرى. اضغط على إطلالة لتبدّلها.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Each shopper, then the same shopper in another garment.",
+     "ar": "كل متسوّق، ثم المتسوّق نفسه في قطعة أخرى.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "results-title",
+   "strings": [
+    {
+     "en": "Same shopper, every garment",
+     "ar": "المتسوّق نفسه، في كل قطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "sheetC",
+   "strings": [
+    {
+     "en": "Try-on results",
+     "ar": "نتائج التجربة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card0",
+   "strings": [
+    {
+     "en": "Show the same shopper in embroidered abaya",
+     "ar": "اعرض المتسوّقة نفسها بالعباية المطرّزة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: sage linen shirt.",
+     "ar": "صورة تجربة: قميص الكتان بلون المريمية.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Womenswear",
+     "ar": "ملابس نسائية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try it with your photo",
+     "ar": "جرّبها بصورتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card1",
+   "strings": [
+    {
+     "en": "Show the same shopper in knit polo",
+     "ar": "اعرض المتسوّق نفسه بقميص البولو المحبوك",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: denim overshirt.",
+     "ar": "صورة تجربة: قميص الجينز الخارجي.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Menswear",
+     "ar": "ملابس رجالية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card2",
+   "strings": [
+    {
+     "en": "Show the same shopper in satin midi skirt",
+     "ar": "اعرض المتسوّقة نفسها بتنورة الساتان",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card3",
+   "strings": [
+    {
+     "en": "Try-on image: denim shirt.",
+     "ar": "صورة تجربة: قميص الجينز.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card4",
+   "strings": [
+    {
+     "en": "Show the same shopper in straight jeans",
+     "ar": "اعرض المتسوّقة نفسها بالجينز المستقيم",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: floral tiered dress.",
+     "ar": "صورة تجربة: الفستان المزهر.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Girls",
+     "ar": "بنات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card5",
+   "strings": [
+    {
+     "en": "Show the same shopper in crew sweatshirt",
+     "ar": "اعرض المتسوّق نفسه بالسويتشيرت",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Boys",
+     "ar": "أولاد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card6",
+   "strings": [
+    {
+     "en": "Show another shopper in the same skirt",
+     "ar": "اعرض متسوّقة أخرى بالتنورة نفسها",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try-on image: satin midi skirt.",
+     "ar": "صورة تجربة: تنورة الساتان.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Same skirt, two shoppers",
+     "ar": "التنورة نفسها، على متسوّقتين",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "card7",
+   "strings": [
+    {
+     "en": "Show the same shopper in sage linen shirt",
+     "ar": "اعرض المتسوّقة نفسها بقميص الكتان",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Shopper photo.",
+     "ar": "صورة المتسوّق.",
+     "kind": "alt",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Photo, then try-on",
+     "ar": "الصورة، ثم التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envR",
+   "strings": [
+    {
+     "en": "tried on",
+     "ar": "جرّب القطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "asked a question",
+     "ar": "طرح سؤالًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "person joined",
+     "ar": "انضم شخص من الفريق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "call booked",
+     "ar": "حُجزت مكالمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "stack",
+   "strings": [
+    {
+     "en": "Works inside your stack",
+     "ar": "يعمل داخل أدواتك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.",
+     "ar": "كيف يتصل GrindCTRL: يرسل متجرك على Shopify (تطبيق أصلي ومكوّنات القالب) المنتجات وحالة الطلبات للقراءة فقط إلى GrindCTRL، حيث تعمل التجربة ودردشة المتجر وصندوق وارد الفريق ولوحة التحكم. ويحوّل GrindCTRL المحادثات إلى فريقك مع السبب وتنبيهات بالبريد. ويتصل n8n وHubSpot عبر إعداد مخصص.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your Shopify store",
+     "ar": "متجرك على Shopify",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Native app",
+     "ar": "تطبيق أصلي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Theme blocks",
+     "ar": "مكوّنات القالب",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Products",
+     "ar": "المنتجات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Orders, read-only",
+     "ar": "الطلبات، للقراءة فقط",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Handoffs",
+     "ar": "التحويلات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Email alerts",
+     "ar": "تنبيهات بالبريد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Your team",
+     "ar": "فريقك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Handoff with the reason",
+     "ar": "تحويل مع السبب",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Assigned to Omar",
+     "ar": "عُيّنت لعمر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Private note added",
+     "ar": "أُضيفت ملاحظة خاصة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Custom setup",
+     "ar": "إعداد مخصص",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "stack-title",
+   "strings": [
+    {
+     "en": "Plugs into the store you already run.",
+     "ar": "يتصل بالمتجر الذي تديره بالفعل.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "journey-title",
+   "strings": [
+    {
+     "en": "From try-on to your team",
+     "ar": "من التجربة إلى فريقك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "journey",
+   "strings": [
+    {
+     "en": "Follow one shopper through GrindCTRL. Real product screens, shown with demo data.",
+     "ar": "تابع متسوّقة واحدة عبر GrindCTRL. شاشات المنتج الحقيقية، ببيانات تجريبية.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Salma tries the linen shirt on",
+     "ar": "سلمى تجرّب قميص الكتان",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "One photo, any product page with the try-on block.",
+     "ar": "صورة واحدة، على أي صفحة منتج فيها مكوّن التجربة.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Does the sage linen shirt run true to size?",
+     "ar": "هل مقاس قميص الكتان بلون المريمية مضبوط؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "It's cut oversized, so M already sits relaxed and L gives a longer, looser fit.",
+     "ar": "قصّته واسعة، فمقاس M مريح أصلًا، ومقاس L أطول وأوسع.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "She asks about size. The assistant answers.",
+     "ar": "تسأل عن المقاس، فيجيب المساعد.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Replies are grounded in the knowledge you add.",
+     "ar": "الردود مبنية على المعرفة التي تضيفها.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "3h ago",
+     "ar": "قبل 3 ساعات",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Handed to Omar with a private note",
+     "ar": "حُوّلت إلى عمر مع ملاحظة خاصة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Handoffs, assignment, private notes and saved replies for your team.",
+     "ar": "تحويلات وتعيين وملاحظات خاصة وردود محفوظة لفريقك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "See it working",
+     "ar": "شاهده وهو يعمل",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "cta-title",
+   "strings": [
+    {
+     "en": "Give shoppers a reason to feel sure before checkout.",
+     "ar": "امنح المتسوّقين سببًا للثقة قبل الدفع.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call and we will map try-on and Store Chat to your Shopify theme, catalog and customer questions.",
+     "ar": "احجز مكالمة وسنربط التجربة ودردشة المتجر بقالب Shopify الخاص بك وكتالوجك وأسئلة عملائك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Open the live demo store",
+     "ar": "افتح المتجر التجريبي المباشر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "rest",
+   "strings": [
+    {
+     "en": "Footer",
+     "ar": "تذييل الصفحة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "English",
+     "ar": "English",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "© 2026 GrindCTRL. AI commerce experiences for Shopify fashion stores.",
+     "ar": "© 2026 GrindCTRL. تجارب تسوّق بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "© 2026 GrindCTRL",
+     "ar": "© 2026 GrindCTRL",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "Footer",
+   "strings": [
+    {
+     "en": "Try-on page",
+     "ar": "صفحة التجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "ROI calculator",
+     "ar": "حاسبة العائد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Security",
+     "ar": "الأمان",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "rail",
+   "strings": [
+    {
+     "en": "Go to Try it on",
+     "ar": "انتقل إلى جرّبها عليك",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Go to Live store",
+     "ar": "انتقل إلى المتجر المباشر",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Go to AI operations",
+     "ar": "انتقل إلى عمليات الذكاء الاصطناعي",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Go to The product",
+     "ar": "انتقل إلى المنتج",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Go to Results",
+     "ar": "انتقل إلى النتائج",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "gc-menu",
+   "strings": [
+    {
+     "en": "Ask the store",
+     "ar": "اسأل المتجر",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "m-hero-title",
+   "strings": [
+    {
+     "en": "The fitting room your online store was missing.",
+     "ar": "غرفة القياس التي افتقدها متجرك الإلكتروني.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "chat",
+   "strings": [
+    {
+     "en": "Answers from your store in Arabic or English, and a person from your team when it matters.",
+     "ar": "إجابات من متجرك بالعربية أو الإنجليزية، وشخص من فريقك حين يلزم.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  },
+  {
+   "section": "m-cta-title",
+   "strings": [
+    {
+     "en": "Book a call and we will map try-on and Store Chat to your Shopify theme and catalog.",
+     "ar": "احجز مكالمة وسنربط التجربة ودردشة المتجر بقالب Shopify الخاص بك وكتالوجك.",
+     "kind": "text",
+     "firstSeenOn": "phone"
+    }
+   ]
+  }
+ ],
+ "setByCode": [
+  {
+   "en": "Is there a size guide?",
+   "ar": "هل يوجد دليل مقاسات؟",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Checks store knowledge",
+   "ar": "يراجع معرفة المتجر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Size guide sent",
+   "ar": "أُرسل دليل المقاسات",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Rated helpful",
+   "ar": "قُيّم بأنه مفيد",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "A shopper asks: Is there a size guide?",
+   "ar": "متسوّق يسأل: هل يوجد دليل مقاسات؟",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The AI checks what you taught it about sizing.",
+   "ar": "يراجع الذكاء الاصطناعي ما علّمته له عن المقاسات.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "It answers with your size guide.",
+   "ar": "ويجيب بدليل مقاساتك.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The shopper rates the answer helpful.",
+   "ar": "يقيّم المتسوّق الإجابة بأنها مفيدة.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The dashboard counts it as closed by AI.",
+   "ar": "تحتسبها لوحة التحكم مغلقة بالذكاء الاصطناعي.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Handled start to finish by the AI.",
+   "ar": "تولّاها الذكاء الاصطناعي من البداية إلى النهاية.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Is M in stock in sage?",
+   "ar": "هل مقاس M متوفر بلون المريمية؟",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Needs a teammate",
+   "ar": "تحتاج إلى زميل",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Reason: confirm stock",
+   "ar": "السبب: تأكيد التوفر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "A shopper needs you",
+   "ar": "متسوّق يحتاج إليك",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "A shopper asks: Is M in stock in sage?",
+   "ar": "متسوّق يسأل: هل مقاس M متوفر بلون المريمية؟",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The AI decides a teammate should confirm stock.",
+   "ar": "يقرّر الذكاء الاصطناعي أن يتأكد زميل من التوفر.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "It hands the chat to your team with the reason.",
+   "ar": "ويحوّل المحادثة إلى فريقك مع السبب.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Your team gets an email: A shopper needs you.",
+   "ar": "يصل بريد إلى فريقك: متسوّق يحتاج إليك.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Omar picks it up, leaves a private note and replies.",
+   "ar": "يتولاها عمر، ويترك ملاحظة خاصة، ثم يرد.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The dashboard counts it under Needed your team.",
+   "ar": "تحتسبها لوحة التحكم ضمن ما احتاج إلى فريقك.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The shopper got a person. Your team got the context.",
+   "ar": "حصل المتسوّق على شخص، وحصل فريقك على السياق.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Sent a photo",
+   "ar": "أرسل صورة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Photo: a torn seam",
+   "ar": "الصورة: درزة ممزقة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Label: Looks damaged",
+   "ar": "التصنيف: تبدو تالفة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Omar takes over",
+   "ar": "عمر يتولّى الأمر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "A shopper sends a photo of her order.",
+   "ar": "متسوّقة ترسل صورة لطلبها.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The AI reads the photo and notes what it shows.",
+   "ar": "يقرأ الذكاء الاصطناعي الصورة ويدوّن ما تظهره.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Your team sees it with a label: Looks damaged.",
+   "ar": "يراها فريقك مع تصنيف: تبدو تالفة.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Omar takes over the chat.",
+   "ar": "يتولّى عمر المحادثة.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The AI labels it. A person decides.",
+   "ar": "الذكاء الاصطناعي يصنّف، والإنسان يقرّر.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Text and photos",
+   "ar": "نصوص وصور",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "From store knowledge",
+   "ar": "من معرفة المتجر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "With the reason",
+   "ar": "مع السبب",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "To your team",
+   "ar": "إلى فريقك",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "What happened",
+   "ar": "ما الذي حدث",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Size guide found",
+   "ar": "وُجد دليل المقاسات",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Link sent in chat",
+   "ar": "أُرسل الرابط في الدردشة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Where is order #1042?",
+   "ar": "أين الطلب رقم 1042؟",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Asks for the email",
+   "ar": "يطلب البريد الإلكتروني",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Email matched",
+   "ar": "تطابق البريد",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Shipped, tracking sent",
+   "ar": "شُحن، وأُرسل رقم التتبع",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Reads the photo",
+   "ar": "يقرأ الصورة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Torn seam, damaged",
+   "ar": "درزة ممزقة، القطعة تالفة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Reason: damaged item",
+   "ar": "السبب: قطعة تالفة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Email sent to team",
+   "ar": "أُرسل بريد إلى الفريق",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Saved reply ready",
+   "ar": "الرد المحفوظ جاهز",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Omar replied in chat",
+   "ar": "ردّ عمر في الدردشة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Steps back for Omar",
+   "ar": "يتنحّى لصالح عمر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Reads and decides",
+   "ar": "يقرأ ويقرّر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "What you teach it",
+   "ar": "ما تعلّمه له",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Read-only lookup",
+   "ar": "استعلام للقراءة فقط",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Describes the photo",
+   "ar": "يصف الصورة",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "In the same chat",
+   "ar": "في الدردشة نفسها",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "No team needed",
+   "ar": "دون حاجة للفريق",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Assign, note, reply",
+   "ar": "تعيين، ملاحظة، رد",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Name, email and the full thread stay together in your inbox.",
+   "ar": "الاسم والبريد والمحادثة كاملة معًا في صندوق الوارد.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "The AI answers or hands off, your team gets an email, and every case lands in the dashboard.",
+   "ar": "يجيب الذكاء الاصطناعي أو يحوّل، ويصل بريد إلى فريقك، وتظهر كل حالة في لوحة التحكم.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Store Chat and try-on activity in your dashboard.",
+   "ar": "نشاط دردشة المتجر والتجربة في لوحة التحكم.",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copied",
+   "ar": "تم النسخ",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Selected, press Ctrl+C",
+   "ar": "تم التحديد، اضغط Ctrl+C",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copy",
+   "ar": "نسخ",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Store password copied",
+   "ar": "تم نسخ كلمة مرور المتجر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Copy the store password",
+   "ar": "انسخ كلمة مرور المتجر",
+   "kind": "set-by-code"
+  },
+  {
+   "en": "Open menu",
+   "ar": "فتح القائمة",
+   "kind": "set-by-code"
+  }
+ ],
+ "heroChatScript": [
+  {
+   "key": "intro",
+   "en": "Ask the store a question. Pick one below.",
+   "ar": "اسأل المتجر سؤالاً. اختر واحداً بالأسفل."
+  },
+  {
+   "key": "notice",
+   "en": "Assistant may reply automatically",
+   "ar": "قد يرد المساعد تلقائياً"
+  },
+  {
+   "key": "powered",
+   "en": "Powered by GRINDCTRL. Demo conversation.",
+   "ar": "مدعوم من GRINDCTRL. محادثة تجريبية."
+  },
+  {
+   "key": "ai",
+   "en": "Assistant",
+   "ar": "المساعد"
+  },
+  {
+   "key": "team",
+   "en": "Team · Omar",
+   "ar": "الفريق · عمر"
+  },
+  {
+   "key": "typing",
+   "en": "Typing…",
+   "ar": "يكتب…"
+  },
+  {
+   "key": "wait",
+   "en": "Typing…",
+   "ar": "يكتب…"
+  },
+  {
+   "key": "connecting",
+   "en": "Connecting you with our team…",
+   "ar": "جارٍ توصيلك بفريقنا…"
+  },
+  {
+   "key": "joined",
+   "en": "Our team joined the conversation",
+   "ar": "انضم فريقنا إلى المحادثة"
+  },
+  {
+   "key": "inbox",
+   "en": "In your team inbox",
+   "ar": "في صندوق الوارد لدى فريقك"
+  },
+  {
+   "key": "who",
+   "en": "Salma",
+   "ar": "سلمى"
+  },
+  {
+   "key": "initial",
+   "en": "S",
+   "ar": "س"
+  },
+  {
+   "key": "needs",
+   "en": "Needs a reply",
+   "ar": "تنتظر رداً"
+  },
+  {
+   "key": "handed",
+   "en": "AI handed this off",
+   "ar": "حوّلها الذكاء الاصطناعي"
+  },
+  {
+   "key": "assigned",
+   "en": "Assigned to Omar",
+   "ar": "مُسندة إلى عمر"
+  },
+  {
+   "key": "q1",
+   "en": "Does the sage linen shirt run true to size? I'm between M and L.",
+   "ar": "هل قميص الكتان الأخضر مقاسه مضبوط؟ أنا بين M و L."
+  },
+  {
+   "key": "a1",
+   "en": "It's cut oversized, so M already sits relaxed and L gives a longer, looser fit. Want a teammate to confirm stock in sage?",
+   "ar": "قصّته واسعة، فالمقاس M مريح بالفعل والمقاس L أطول وأوسع. هل تريدين أن يؤكد أحد أعضاء الفريق توفر اللون الأخضر؟"
+  },
+  {
+   "key": "q2",
+   "en": "Yes please, is M in stock in sage?",
+   "ar": "نعم من فضلك، هل المقاس M متوفر باللون الأخضر؟"
+  },
+  {
+   "key": "guide",
+   "en": "Is there a size guide?",
+   "ar": "هل يوجد دليل مقاسات؟"
+  },
+  {
+   "key": "guideA",
+   "en": "You can check our size guide here to help pick the right fit.",
+   "ar": "يمكنك مراجعة دليل المقاسات هنا لمساعدتك على الاختيار."
+  },
+  {
+   "key": "person",
+   "en": "Can I talk to someone from your team?",
+   "ar": "هل يمكنني التحدث مع أحد من فريقكم؟"
+  },
+  {
+   "key": "teamA",
+   "en": "Checked stock: M in sage is available.",
+   "ar": "راجعت المخزون: المقاس M متوفر باللون الأخضر."
+  },
+  {
+   "key": "chip.q1",
+   "en": "Does it run true to size?",
+   "ar": "هل مقاسه مضبوط؟"
+  },
+  {
+   "key": "chip.q2",
+   "en": "Yes please, is M in stock?",
+   "ar": "نعم، هل المقاس M متوفر؟"
+  },
+  {
+   "key": "chip.guide",
+   "en": "Is there a size guide?",
+   "ar": "هل يوجد دليل مقاسات؟"
+  },
+  {
+   "key": "chip.person",
+   "en": "Talk to a person",
+   "ar": "أريد التحدث مع الفريق"
+  },
+  {
+   "key": "chip.restart",
+   "en": "Start over",
+   "ar": "ابدأ من جديد"
+  }
+ ],
+ "additions": {
+  "note": "Strings the pages use that sit outside the extracted sections: the translated tag on the store replay's Generate button, the hint on the store window link, and the language switch, whose label and accessible name are always written in the language it switches to.",
+  "strings": [
+   {
+    "en": "Your turn: press it on the live store",
+    "ar": "دورك: اضغطه في المتجر المباشر",
+    "kind": "text",
+    "use": "tag beside the Generate button in the store replay, beat four"
+   },
+   {
+    "en": "Open this page on the live demo store, in a new tab",
+    "ar": "افتح هذه الصفحة في المتجر التجريبي المباشر، في علامة تبويب جديدة",
+    "kind": "aria-label",
+    "use": "accessible name of the store window link"
+   },
+   {
+    "en": "Open this page on the live store",
+    "ar": "افتح هذه الصفحة في المتجر المباشر",
+    "kind": "text",
+    "use": "hint chip shown on hover or focus of the store window"
+   }
+  ],
+  "languageSwitch": {
+   "whenPageIsEnglish": {
+    "label": "العربية",
+    "ariaLabel": "التبديل إلى العربية",
+    "lang": "ar"
+   },
+   "whenPageIsArabic": {
+    "label": "English",
+    "ariaLabel": "Switch to English",
+    "lang": "en"
+   }
+  }
+ }
+}
