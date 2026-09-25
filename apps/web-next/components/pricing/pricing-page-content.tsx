@@ -186,10 +186,15 @@ function UnitCard({ t }: { t: PricingCopy }) {
       role="img"
       aria-label={t.unitAria}
       /* Tiles are 92px on phones and 118px on desktop, and shrink with the
-         viewport below about 425px so the figure never overflows at 320. */
-      className="m-0 rounded-[28px] border border-border bg-card p-4 shadow-[var(--gc-shadow-float)] [--tile:min(92px,calc((100vw-148px)/3))] lg:p-[22px] lg:[--tile:118px]"
+         viewport below about 425px so the figure never overflows at 320.
+         The figure's size is set from the tile size (three tiles, two 30px
+         operators, the gaps, padding and border) rather than from its
+         content, so a slow connection that paints the figure before all of
+         it has arrived doesn't move it, or the heading beside it, as the
+         rest streams in. */
+      className="m-0 w-[calc(var(--tile)*3+118px)] rounded-[28px] border border-border bg-card p-4 shadow-[var(--gc-shadow-float)] [--tile:min(92px,calc((100vw-148px)/3))] lg:min-h-[calc(var(--tile)*1.3+125px)] lg:w-[calc(var(--tile)*3+146px)] lg:p-[22px] lg:[--tile:118px]"
     >
-      <div className="flex items-start justify-center gap-1.5 lg:gap-2.5">
+      <div className="flex items-start justify-start gap-1.5 lg:gap-2.5">
         <UnitTile src="/landing/v15/shopper-woman.webp" label={t.unitPhoto} icon={<CameraIcon size={13} strokeWidth={1.9} />} />
         <Operator>
           <PlusIcon size={14} strokeWidth={2.2} />
