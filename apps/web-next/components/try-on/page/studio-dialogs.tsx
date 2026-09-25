@@ -114,7 +114,7 @@ export function PiecePicker({
               )}
             >
               <span className="relative h-[72px] w-[58px] shrink-0 overflow-hidden rounded-xl bg-gc-studio">
-                <Image src={PIECES[key].garment} alt="" fill sizes="58px" className="object-contain" />
+                <Image src={PIECES[key].garment} alt="" fill unoptimized sizes="58px" className="object-contain" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-bold">{copy.name}</span>

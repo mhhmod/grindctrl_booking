@@ -55,6 +55,17 @@ const nextConfig: NextConfig = {
         headers: baseline,
       },
       {
+        /* The marketing pages' images are served as files, not through the
+           image optimizer, so let browsers keep them for a day and reuse
+           them for a week while they check for a new copy. */
+        source: '/landing/:path+',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
+        source: '/try-on/demo/:path+',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
         /* Embedded Shopify admin pages render inside the Shopify admin iframe. */
         source: '/shopify/:path*',
         headers: [

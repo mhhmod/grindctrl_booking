@@ -4,8 +4,10 @@ import { preload } from 'react-dom';
 
 const HERO_MEDIA = { desk: '(min-width: 1000px)', phone: '(max-width: 999.98px)' } as const;
 
-/** A story image at its designed size. The source files are already sized
- *  webp, so next/image only has to pick the right width for the screen. */
+/** A story image at its designed size. The source files are already small,
+ *  sized webp (the whole set is about 1.2 MB), so they are served as they
+ *  are: through the image optimizer the server had to resize each one on
+ *  first request, and pages sat on empty placeholders while it did. */
 export function StoryImg({
   src,
   w,
@@ -28,7 +30,7 @@ export function StoryImg({
   hero?: 'desk' | 'phone';
 }) {
   if (hero) {
-    const { props } = getImageProps({ src, width: w, height: h, alt, sizes });
+    const { props } = getImageProps({ src, width: w, height: h, alt, sizes, unoptimized: true });
     preload(props.src, {
       as: 'image',
       imageSrcSet: props.srcSet,
@@ -44,6 +46,7 @@ export function StoryImg({
       height={h}
       alt={alt}
       sizes={sizes}
+      unoptimized
       style={style}
       loading="lazy"
       fetchPriority={hero ? 'high' : undefined}

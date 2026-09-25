@@ -156,6 +156,7 @@ function UnitTile({
           src={src}
           alt=""
           fill
+          unoptimized
           /* Eager, not priority: the tiles are on the first screen, but a
              high-priority preload of all three competes with the
              stylesheet on a slow connection and delays the first paint. */

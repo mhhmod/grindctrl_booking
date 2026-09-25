@@ -205,7 +205,7 @@ export function PieceCard({
      screen. Its card is hidden on phones, so instead of loading it eagerly
      (phones would download it for nothing) a preload scoped to the desktop
      media query starts it with the page. */
-  const desk = getImageProps({ src: PIECES[piece].garment, alt: copy.name, fill: true, sizes: DESK_PIECE_SIZES }).props;
+  const desk = getImageProps({ src: PIECES[piece].garment, alt: copy.name, fill: true, sizes: DESK_PIECE_SIZES, unoptimized: true }).props;
   preload(desk.src, {
     as: 'image',
     imageSrcSet: desk.srcSet,
@@ -226,6 +226,7 @@ export function PieceCard({
             src={PIECES[piece].garment}
             alt={copy.name}
             fill
+            unoptimized
             sizes="76px"
             className="gc-anim-swap object-contain"
           />
@@ -252,6 +253,7 @@ export function PieceCard({
             src={PIECES[piece].garment}
             alt={copy.name}
             fill
+            unoptimized
             sizes={DESK_PIECE_SIZES}
             className="gc-anim-swap object-contain p-3.5"
           />
@@ -386,7 +388,7 @@ export function PhotoCard({
             className="flex h-14 w-full items-center gap-3 rounded-2xl border border-border px-2 text-start text-foreground hover:bg-foreground/[0.03]"
           >
             <span className="relative size-10 shrink-0 overflow-hidden rounded-xl">
-              <Image src={sampleThumb} alt="" fill sizes="40px" className="object-cover object-[50%_12%]" />
+              <Image src={sampleThumb} alt="" fill unoptimized sizes="40px" className="object-cover object-[50%_12%]" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold">{t.pageUseSample}</span>
