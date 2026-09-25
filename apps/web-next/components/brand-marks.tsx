@@ -43,7 +43,14 @@ import {
   siZapier,
 } from 'simple-icons';
 
-export type MarkProps = { className?: string; style?: React.CSSProperties };
+export type MarkProps = {
+  className?: string;
+  style?: React.CSSProperties;
+  /** Ink or cream instead of the brand colour, for marks set inside monochrome UI. */
+  monochrome?: boolean;
+  /** Hidden from assistive technology when a visible name sits right beside it. */
+  decorative?: boolean;
+};
 
 type SimpleIcon = { title: string; hex: string; path: string };
 
@@ -57,16 +64,17 @@ function markFill(icon: SimpleIcon): string {
 }
 
 function makeMark(icon: SimpleIcon) {
-  function Mark({ className, style }: MarkProps) {
+  function Mark({ className, style, monochrome = false, decorative = false }: MarkProps) {
     return (
       <svg
         viewBox="0 0 24 24"
         className={className}
         style={style}
-        role="img"
-        aria-label={icon.title}
+        role={decorative ? undefined : 'img'}
+        aria-label={decorative ? undefined : icon.title}
+        aria-hidden={decorative ? true : undefined}
         focusable="false"
-        fill={markFill(icon)}
+        fill={monochrome ? 'currentColor' : markFill(icon)}
       >
         <path d={icon.path} />
       </svg>

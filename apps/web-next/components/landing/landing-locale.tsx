@@ -12,6 +12,7 @@ import {
   type SiteLocale,
 } from '@/lib/landing/landing-i18n';
 import { persistSiteLocale } from '@/lib/landing/site-locale-store';
+import { applyDocumentLocale } from '@/components/site/language-switch';
 
 interface LandingLocaleContextValue {
   locale: SiteLocale;
@@ -38,6 +39,7 @@ export function LandingLocaleProvider({
     setLocale(next);
     // Notify sibling consumers outside the state updater/render phase.
     persistSiteLocale(next);
+    applyDocumentLocale(next);
   }, [locale]);
 
   const value = useMemo<LandingLocaleContextValue>(
@@ -52,6 +54,11 @@ export function LandingLocaleProvider({
       </div>
     </LandingLocaleContext.Provider>
   );
+}
+
+/** The landing locale when a LandingLocaleProvider is above, otherwise null. */
+export function useOptionalLandingLocale(): LandingLocaleContextValue | null {
+  return useContext(LandingLocaleContext);
 }
 
 export function useLandingLocale(): LandingLocaleContextValue {

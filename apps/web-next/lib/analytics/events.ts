@@ -19,7 +19,7 @@ export type AnalyticsChannel = (typeof ANALYTICS_CHANNELS)[number];
 
 export type AnalyticsEventPayloadMap = {
   'storefront.cta_clicked': {
-    cta: 'try_on' | 'book_call' | 'start_trial' | 'choose_plan' | 'ask_about_pack';
+    cta: 'try_on' | 'book_call' | 'start_trial' | 'choose_plan' | 'ask_about_pack' | 'open_store';
     placement: string;
     planKey?: string;
     packKey?: string;
@@ -81,7 +81,7 @@ export type AnalyticsPropertyRule =
    exhaustive rule per property name so every accepted value is checked for
    its primitive type and, where applicable, its finite enum/literal set. */
 export const ANALYTICS_PROPERTY_RULES = {
-  cta: { type: 'string', values: ['try_on', 'book_call', 'start_trial', 'choose_plan', 'ask_about_pack'] },
+  cta: { type: 'string', values: ['try_on', 'book_call', 'start_trial', 'choose_plan', 'ask_about_pack', 'open_store'] },
   placement: { type: 'string' },
   planKey: { type: 'string' },
   packKey: { type: 'string' },

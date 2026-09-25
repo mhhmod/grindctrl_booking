@@ -147,6 +147,30 @@ interface LandingDict {
   ctaBody: string;
   ctaButton: string;
 
+  /* Site v15 chrome: header, phone menu and footer (copy/landing.json). */
+  siteMainNav: string;
+  siteOpenMenu: string;
+  navTryOn: string;
+  navLiveStore: string;
+  navAiOps: string;
+  navProduct: string;
+  navResults: string;
+  navHowItWorks: string;
+  menuTheProduct: string;
+  menuAskStore: string;
+  footerNav: string;
+  footerProduct: string;
+  footerLiveStore: string;
+  footerTryOnPage: string;
+  footerCopyright: string;
+  footerCopyrightShort: string;
+  passwordLabel: string;
+  passwordCopy: string;
+  passwordCopied: string;
+  passwordSelected: string;
+  passwordCopyAria: string;
+  passwordCopiedAria: string;
+
   footerTagline: string;
   footerHome: string;
   footerDemo: string;
@@ -165,7 +189,7 @@ interface LandingDict {
 }
 
 const en: LandingDict = {
-  brandHome: 'GRINDCTRL home',
+  brandHome: 'GrindCTRL home',
   langToggleLabel: 'Change language',
   langSwitchTo: 'العربية',
 
@@ -361,6 +385,28 @@ const en: LandingDict = {
     'Book a call and we will map the try-on experience to your Shopify theme, catalog, and customer journey.',
   ctaButton: 'Book a call',
 
+  siteMainNav: 'Main',
+  siteOpenMenu: 'Open menu',
+  navTryOn: 'Try it on',
+  navLiveStore: 'Live store',
+  navAiOps: 'AI operations',
+  navProduct: 'Product',
+  navResults: 'Results',
+  navHowItWorks: 'How it works',
+  menuTheProduct: 'The product',
+  menuAskStore: 'Ask the store',
+  footerNav: 'Footer',
+  footerProduct: 'Product',
+  footerLiveStore: 'Live store',
+  footerTryOnPage: 'Try-on page',
+  footerCopyright: '© 2026 GrindCTRL. AI commerce experiences for Shopify fashion stores.',
+  footerCopyrightShort: '© 2026 GrindCTRL',
+  passwordLabel: 'Store password',
+  passwordCopy: 'Copy',
+  passwordCopied: 'Copied',
+  passwordSelected: 'Selected, press Ctrl+C',
+  passwordCopyAria: 'Copy the store password',
+  passwordCopiedAria: 'Store password copied',
   footerTagline: 'AI commerce experiences for Shopify fashion stores.',
   footerHome: 'Home',
   footerDemo: 'Live demo',
@@ -379,7 +425,7 @@ const en: LandingDict = {
 };
 
 const ar: LandingDict = {
-  brandHome: 'الصفحة الرئيسية GRINDCTRL',
+  brandHome: 'الصفحة الرئيسية لـ GrindCTRL',
   langToggleLabel: 'تغيير اللغة',
   langSwitchTo: 'English',
 
@@ -578,6 +624,28 @@ const ar: LandingDict = {
     'احجز مكالمة وسنحدد كيف تتكامل تجربة الملابس مع قالب Shopify والكتالوج ورحلة عملائك.',
   ctaButton: 'احجز مكالمة',
 
+  siteMainNav: 'القائمة الرئيسية',
+  siteOpenMenu: 'فتح القائمة',
+  navTryOn: 'جرّبها عليك',
+  navLiveStore: 'المتجر المباشر',
+  navAiOps: 'عمليات الذكاء الاصطناعي',
+  navProduct: 'المنتج',
+  navResults: 'النتائج',
+  navHowItWorks: 'كيف يعمل',
+  menuTheProduct: 'المنتج',
+  menuAskStore: 'اسأل المتجر',
+  footerNav: 'تذييل الصفحة',
+  footerProduct: 'المنتج',
+  footerLiveStore: 'المتجر المباشر',
+  footerTryOnPage: 'صفحة التجربة',
+  footerCopyright: '© 2026 GrindCTRL. تجارب تسوّق بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.',
+  footerCopyrightShort: '© 2026 GrindCTRL',
+  passwordLabel: 'كلمة مرور المتجر',
+  passwordCopy: 'نسخ',
+  passwordCopied: 'تم النسخ',
+  passwordSelected: 'تم التحديد، اضغط Ctrl+C',
+  passwordCopyAria: 'انسخ كلمة مرور المتجر',
+  passwordCopiedAria: 'تم نسخ كلمة مرور المتجر',
   footerTagline: 'تجارب تجارة بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.',
   footerHome: 'الرئيسية',
   footerDemo: 'تجربة مباشرة',
