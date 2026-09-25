@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { getProduct, getDefaultProduct, DEFAULT_PRODUCT_ID } from './products';
 
@@ -25,5 +27,22 @@ describe('try-on products', () => {
     const product = getDefaultProduct();
     expect(product.imageUrl).toBeTruthy();
     expect(product.details.length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    'demo-embroidered-abaya',
+    'demo-sage-linen-shirt',
+    'demo-denim-overshirt',
+    'demo-knit-polo',
+  ])('serves the %s public demo piece from a file the runner can read', (id) => {
+    const product = getProduct(id);
+    expect(product?.id).toBe(id);
+    expect(product?.details.length).toBeGreaterThan(0);
+    // lib/try-on/image-runner.ts reads the garment from public/<imageUrl>.
+    expect(existsSync(join(process.cwd(), 'public', product!.imageUrl))).toBe(true);
+  });
+
+  it('keeps the ringer tee as the default product', () => {
+    expect(DEFAULT_PRODUCT_ID).toBe('premium-ringer-tee');
   });
 });

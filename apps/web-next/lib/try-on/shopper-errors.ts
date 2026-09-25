@@ -74,7 +74,7 @@ export function classifyTryOnFailure(error: unknown): TryOnFailureKind {
 
 const EN: Record<TryOnFailureKind, string> = {
   service_unavailable:
-    'Try-on is unavailable right now. Please try again later — nothing was charged to you.',
+    'Try-on is unavailable right now. Please try again later. Nothing was charged to you.',
   busy: 'Try-on is busy at the moment. Please try again in a minute.',
   photo_rejected:
     'That photo could not be used. Try a clear, front-facing photo of one person in good light.',
@@ -82,7 +82,7 @@ const EN: Record<TryOnFailureKind, string> = {
 };
 
 const AR: Record<TryOnFailureKind, string> = {
-  service_unavailable: 'خدمة التجربة غير متاحة حالياً. حاول لاحقاً — لم يُخصم منك شيء.',
+  service_unavailable: 'خدمة التجربة غير متاحة حالياً. حاول لاحقاً. لم يُخصم منك شيء.',
   busy: 'خدمة التجربة مزدحمة الآن. حاول بعد دقيقة.',
   photo_rejected:
     'تعذّر استخدام هذه الصورة. جرّب صورة واضحة لشخص واحد من الأمام وبإضاءة جيدة.',
@@ -93,4 +93,9 @@ const AR: Record<TryOnFailureKind, string> = {
 export function toShopperFailureMessage(error: unknown, locale?: string): string {
   const table = locale === 'ar' ? AR : EN;
   return table[classifyTryOnFailure(error)];
+}
+
+/** The failure sentence for an already classified outcome. */
+export function shopperFailureMessage(kind: TryOnFailureKind, locale?: string): string {
+  return (locale === 'ar' ? AR : EN)[kind];
 }

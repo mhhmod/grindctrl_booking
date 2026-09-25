@@ -25,7 +25,7 @@ describe('toShopperFailureMessage', () => {
     expect(shown).not.toMatch(/credit/i);
     expect(shown).not.toMatch(/https?:\/\//);
     expect(shown).toBe(
-      'Try-on is unavailable right now. Please try again later — nothing was charged to you.',
+      'Try-on is unavailable right now. Please try again later. Nothing was charged to you.',
     );
   });
 
@@ -42,7 +42,7 @@ describe('toShopperFailureMessage', () => {
      upstream message cannot introduce a new leak. */
   it('emits only our own sentences, whatever the provider said', () => {
     const ours = new Set([
-      'Try-on is unavailable right now. Please try again later — nothing was charged to you.',
+      'Try-on is unavailable right now. Please try again later. Nothing was charged to you.',
       'Try-on is busy at the moment. Please try again in a minute.',
       'That photo could not be used. Try a clear, front-facing photo of one person in good light.',
       'Try-on could not finish. Please try again.',

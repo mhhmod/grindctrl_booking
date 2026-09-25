@@ -90,6 +90,60 @@ interface TryOnDict {
   colorsVary: string;
   tryDifferent: string;
 
+  /* Public /try-on page, site v15 (copy/tryon.json). */
+  pageTag: string;
+  pageStepsLabel: string;
+  pageStepPiece: string;
+  pageStepPhoto: string;
+  pageStepCreate: string;
+  pageStepLook: string;
+  pageDemoStore: string;
+  pageTitle: string;
+  pageSubtitle: string;
+  pageForStores: string;
+  pageNeedPhoto: string;
+  pageCreateLook: string;
+  pageTryAnother: string;
+  pageCompareLooks: string;
+  pageDownload: string;
+  pageContinueShopping: string;
+  pageStoreAria: string;
+  pageSampleNote: string;
+  pageClose: string;
+  pageTrace: string[];
+  pageChange: string;
+  pageChangePiece: string;
+  pageDemoPiece: string;
+  pageAddPhoto: string;
+  pageUploadRules: string;
+  pageOr: string;
+  pageUseSample: string;
+  pageSampleModel: string;
+  pageSamplePhoto: string;
+  pageCompareWithPhoto: string;
+  pageViewPhoto: string;
+  pageViewLook: string;
+  pageLookEmpty: string;
+  pageSampleCaption: string;
+  pageLooksTitle: string;
+  pageLooksCount: (count: string) => string;
+  pageStoreTitle: string;
+  pageStoreBadge: string;
+  pageOpenStore: string;
+  pagePickerNote: string;
+  pageCompareTitle: string;
+  pageErrType: string;
+  pagePricing: string;
+  pageFooterNav: string;
+  pageCopyright: string;
+  pageCopyrightShort: string;
+  pagePasswordLabel: string;
+  pagePasswordCopy: string;
+  pagePasswordCopied: string;
+  pagePasswordSelected: string;
+  pagePasswordCopyAria: string;
+  pagePasswordCopiedAria: string;
+  pagePieces: Record<'abaya' | 'linen' | 'denim' | 'polo', { name: string; kind: string }>;
   product: Record<string, ProductCopy>;
 }
 
@@ -97,7 +151,7 @@ const en: TryOnDict = {
   langToggleLabel: 'Change language',
   langSwitchTo: 'العربية',
 
-  brandHome: 'GRINDCTRL home',
+  brandHome: 'GrindCTRL home',
   home: 'Home',
 
   heroBadge: 'AI Visual Sales',
@@ -172,6 +226,65 @@ const en: TryOnDict = {
   colorsVary: 'Colors may vary slightly from the actual product.',
   tryDifferent: 'Try with a different photo',
 
+  pageTag: 'Try-On',
+  pageStepsLabel: 'Steps',
+  pageStepPiece: 'The piece',
+  pageStepPhoto: 'Your photo',
+  pageStepCreate: 'Create',
+  pageStepLook: 'Your look',
+  pageDemoStore: 'Demo store',
+  pageTitle: 'See it on you before you buy.',
+  pageSubtitle: 'Pick a piece, add a photo, get your look.',
+  pageForStores: 'For stores: book a call',
+  pageNeedPhoto: 'Add a photo to create your look.',
+  pageCreateLook: 'Create my look',
+  pageTryAnother: 'Try another piece',
+  pageCompareLooks: 'Compare looks',
+  pageDownload: 'Download',
+  pageContinueShopping: 'Continue shopping',
+  pageStoreAria: 'The demo store',
+  pageSampleNote: 'Sample looks are real try-on engine outputs on AI-generated models.',
+  pageClose: 'Close',
+  pageTrace: ['photo received', 'garment mapped', 'look rendered', 'ready to shop'],
+  pageChange: 'Change',
+  pageChangePiece: 'Change piece',
+  pageDemoPiece: 'Demo piece',
+  pageAddPhoto: 'Add your photo',
+  pageUploadRules: 'Full or half body. JPG, PNG or WebP, up to 8 MB.',
+  pageOr: 'or',
+  pageUseSample: 'Use a sample photo',
+  pageSampleModel: 'An AI-generated model',
+  pageSamplePhoto: 'Sample photo',
+  pageCompareWithPhoto: 'Compare with your photo',
+  pageViewPhoto: 'Photo',
+  pageViewLook: 'Look',
+  pageLookEmpty: 'Your look appears here',
+  pageSampleCaption:
+    'A sample look made by the try-on engine. The preview is visual guidance, not an exact sizing guarantee.',
+  pageLooksTitle: 'Your looks',
+  pageLooksCount: (count) => `${count} of 4`,
+  pageStoreTitle: 'The same try-on, inside a real store.',
+  pageStoreBadge: 'Try it on with AI on every product',
+  pageOpenStore: 'Open the demo store',
+  pagePickerNote: 'Demo pieces with sample looks. Your photo stays as it is.',
+  pageCompareTitle: 'Your looks side by side',
+  pageErrType: 'Unsupported file type. Please upload a JPG, PNG or WebP image.',
+  pagePricing: 'Pricing',
+  pageFooterNav: 'Footer',
+  pageCopyright: '© 2026 GrindCTRL. AI commerce experiences for Shopify fashion stores.',
+  pageCopyrightShort: '© 2026 GrindCTRL',
+  pagePasswordLabel: 'Store password',
+  pagePasswordCopy: 'Copy',
+  pagePasswordCopied: 'Copied',
+  pagePasswordSelected: 'Selected, press Ctrl+C',
+  pagePasswordCopyAria: 'Copy the store password',
+  pagePasswordCopiedAria: 'Store password copied',
+  pagePieces: {
+    abaya: { name: 'Embroidered abaya', kind: 'Womenswear' },
+    linen: { name: 'Sage linen shirt', kind: 'Womenswear' },
+    denim: { name: 'Denim overshirt', kind: 'Menswear' },
+    polo: { name: 'Knit polo', kind: 'Menswear' },
+  },
   product: {},
 };
 
@@ -179,7 +292,7 @@ const ar: TryOnDict = {
   langToggleLabel: 'تغيير اللغة',
   langSwitchTo: 'English',
 
-  brandHome: 'الصفحة الرئيسية GRINDCTRL',
+  brandHome: 'الصفحة الرئيسية لـ GrindCTRL',
   home: 'الرئيسية',
 
   heroBadge: 'مبيعات بصرية بالذكاء الاصطناعي',
@@ -254,6 +367,64 @@ const ar: TryOnDict = {
   colorsVary: 'قد تختلف الألوان قليلًا عن المنتج الفعلي.',
   tryDifferent: 'جرّب بصورة مختلفة',
 
+  pageTag: 'التجربة الافتراضية',
+  pageStepsLabel: 'الخطوات',
+  pageStepPiece: 'القطعة',
+  pageStepPhoto: 'صورتك',
+  pageStepCreate: 'الإنشاء',
+  pageStepLook: 'إطلالتك',
+  pageDemoStore: 'المتجر التجريبي',
+  pageTitle: 'شاهدها عليك قبل الشراء.',
+  pageSubtitle: 'اختر قطعة، وأضف صورة، واحصل على إطلالتك.',
+  pageForStores: 'للمتاجر: احجز مكالمة',
+  pageNeedPhoto: 'أضف صورة لإنشاء إطلالتك.',
+  pageCreateLook: 'اصنع إطلالتي',
+  pageTryAnother: 'جرّب قطعة أخرى',
+  pageCompareLooks: 'قارن الإطلالات',
+  pageDownload: 'تنزيل',
+  pageContinueShopping: 'تابع التسوّق',
+  pageStoreAria: 'المتجر التجريبي',
+  pageSampleNote: 'الإطلالات النموذجية مخرجات حقيقية لمحرك التجربة على عارضين مولَّدين بالذكاء الاصطناعي.',
+  pageClose: 'إغلاق',
+  pageTrace: ['تم استلام الصورة', 'تمت مطابقة القطعة', 'اكتملت الإطلالة', 'جاهز للشراء'],
+  pageChange: 'تغيير',
+  pageChangePiece: 'تغيير القطعة',
+  pageDemoPiece: 'قطعة تجريبية',
+  pageAddPhoto: 'أضف صورتك',
+  pageUploadRules: 'صورة كاملة أو نصفية. JPG أو PNG أو WebP، حتى 8 ميجابايت.',
+  pageOr: 'أو',
+  pageUseSample: 'استخدم صورة نموذجية',
+  pageSampleModel: 'عارض مولَّد بالذكاء الاصطناعي',
+  pageSamplePhoto: 'صورة نموذجية',
+  pageCompareWithPhoto: 'قارن بصورتك',
+  pageViewPhoto: 'الصورة',
+  pageViewLook: 'الإطلالة',
+  pageLookEmpty: 'ستظهر إطلالتك هنا',
+  pageSampleCaption: 'إطلالة نموذجية أنشأها محرك التجربة. المعاينة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.',
+  pageLooksTitle: 'إطلالاتك',
+  pageLooksCount: (count) => `${count} من 4`,
+  pageStoreTitle: 'التجربة نفسها، داخل متجر حقيقي.',
+  pageStoreBadge: 'زر جرّبها بالذكاء الاصطناعي على كل منتج',
+  pageOpenStore: 'افتح المتجر التجريبي',
+  pagePickerNote: 'قطع تجريبية بإطلالات نموذجية. تبقى صورتك كما هي.',
+  pageCompareTitle: 'إطلالاتك جنبًا إلى جنب',
+  pageErrType: 'نوع الملف غير مدعوم. يرجى رفع صورة JPG أو PNG أو WebP.',
+  pagePricing: 'الأسعار',
+  pageFooterNav: 'تذييل الصفحة',
+  pageCopyright: '© 2026 GrindCTRL. تجارب تسوّق بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.',
+  pageCopyrightShort: '© 2026 GrindCTRL',
+  pagePasswordLabel: 'كلمة مرور المتجر',
+  pagePasswordCopy: 'نسخ',
+  pagePasswordCopied: 'تم النسخ',
+  pagePasswordSelected: 'تم التحديد، اضغط Ctrl+C',
+  pagePasswordCopyAria: 'انسخ كلمة مرور المتجر',
+  pagePasswordCopiedAria: 'تم نسخ كلمة مرور المتجر',
+  pagePieces: {
+    abaya: { name: 'عباية مطرّزة', kind: 'ملابس نسائية' },
+    linen: { name: 'قميص كتان بلون المريمية', kind: 'ملابس نسائية' },
+    denim: { name: 'قميص جينز خارجي', kind: 'ملابس رجالية' },
+    polo: { name: 'قميص بولو محبوك', kind: 'ملابس رجالية' },
+  },
   product: {
     'premium-ringer-tee': {
       name: 'تيشيرت رينجر بريميوم',
