@@ -13,12 +13,12 @@ const LOGO_MASK: React.CSSProperties = {
 };
 
 /** The GrindCTRL mark in the current text colour, so it follows the theme. */
-export function GrindctrlMark({ className }: { className?: string }) {
+export function GrindctrlMark({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <span
       aria-hidden="true"
       className={cn('inline-block h-6 w-9 shrink-0 bg-current', className)}
-      style={LOGO_MASK}
+      style={style ? { ...LOGO_MASK, ...style } : LOGO_MASK}
     />
   );
 }

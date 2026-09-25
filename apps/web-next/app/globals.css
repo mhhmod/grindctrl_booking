@@ -221,6 +221,8 @@
   --gc-wire-line: rgb(32 29 27 / 0.085);
   --gc-wire-pulse: rgb(32 29 27 / 0.42);
   --gc-wire-node: rgb(32 29 27 / 0.14);
+  /* Landing story (site v15): stronger rules for graph edges. */
+  --gc-line-strong: #cbc6c0;
 }
 
 .dark {
@@ -250,6 +252,35 @@
   --gc-wire-line: rgb(240 236 232 / 0.075);
   --gc-wire-pulse: rgb(240 236 232 / 0.5);
   --gc-wire-node: rgb(240 236 232 / 0.16);
+  --gc-line-strong: #4a4541;
+}
+
+/* Landing story (site v15): values that stay the same in both themes. The
+   AI operations scene is always ink with cream text, and the live store
+   window shows the demo store in its own colours, as it really looks. */
+:root {
+  --gc-ink: #201d1b;
+  --gc-cream: #f0ece8;
+  --gc-cream-muted: #b2aeaa;
+  --gc-ink-2: #4d4946;
+  --gc-panel-dark: #262320;
+  --st-ink: #121212;
+  --st-bg: #ffffff;
+  --st-soft: #f2f2f2;
+  --st-text: #3a3a3a;
+  --st-line: #e2e2e2;
+  --st-warm: #f1eeea;
+  --st-warm-2: #e6e2dd;
+  --st-warm-3: #d8d3cd;
+  /* Physical sides for the few values CSS has no logical form for
+     (transform-origin, gradients). */
+  --gc-start: left;
+  --gc-end: right;
+}
+
+[dir='rtl'] {
+  --gc-start: right;
+  --gc-end: left;
 }
 
 /* The AI operations scene is dark in both themes. Like .gc-auth-brand, it
@@ -780,11 +811,6 @@
 .gc-wire-step { opacity: 0.2; animation: gcs-wire-step 12s linear infinite; }
 [data-wiring]:not([data-live]) * { animation-play-state: paused !important; }
 
-/* Reveal-on-enter for the blocks after the story (driven by
-   lib/landing/use-scroll-reveal.ts adding .in-view). */
-.gc-rise-in { opacity: 0; transform: translateY(34px); transition: opacity 1s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.gc-rise-in.in-view { opacity: 1; transform: none; }
-
 /* The site assistant launcher steps aside while the landing story is pinned
    (the story sets data-story="pinned" on <html>) and returns for the rest
    of the page. visibility also takes it out of the tab order meanwhile. */
@@ -797,6 +823,91 @@ html[data-story='pinned'] [data-assistant-launcher] {
 /* Elements the landing story writes every frame opt out of the global 220ms
    colour and shadow transition, or they would trail the scroll. */
 .gc-frame, .gc-frame * { transition: none; }
+
+/* ─── Site v15: the landing story (components/landing/story) ───
+   Keyframes the scene scripts use by name. The -a/-b pairs are identical on
+   purpose: switching between them restarts an animation on the same
+   element, which is how a beat replays a tap, a wipe or a progress bar. */
+@keyframes gcs-float { 0%, 100% { transform: rotate(var(--r, 0deg)) translateY(0); } 50% { transform: rotate(var(--r, 0deg)) translateY(var(--y, -12px)); } }
+@keyframes gcs-msg { 0% { opacity: 0; transform: translateY(8px); } 5%, 84% { opacity: 1; transform: none; } 92%, 100% { opacity: 0; transform: none; } }
+@keyframes gcs-nudge { 0%, 60%, 100% { transform: translateX(0); } 30% { transform: translateX(4px); } }
+@keyframes gcs-ping { 0% { transform: scale(1); opacity: 0.7; } 75%, 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes gcs-twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes gcs-scan-seq { 0% { transform: translateY(-100%); opacity: 0; } 3% { opacity: 1; } 24% { transform: translateY(0); opacity: 1; } 30%, 100% { transform: translateY(0); opacity: 0; } }
+@keyframes gcs-scan-once { 0% { transform: translateY(-100%); opacity: 0; } 8% { opacity: 1; } 58% { transform: translateY(0); opacity: 1; } 72%, 100% { transform: translateY(0); opacity: 0; } }
+@keyframes gcs-down-a { 0% { transform: translateY(-100%); opacity: 1; } 94% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes gcs-down-b { 0% { transform: translateY(-100%); opacity: 1; } 94% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes gcs-up-a { 0% { transform: translateY(0); opacity: 1; } 94% { transform: translateY(-100%); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
+@keyframes gcs-up-b { 0% { transform: translateY(0); opacity: 1; } 94% { transform: translateY(-100%); opacity: 1; } 100% { transform: translateY(-100%); opacity: 0; } }
+@keyframes gcs-tap-a { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(2.3); opacity: 0; } }
+@keyframes gcs-tap-b { 0% { transform: scale(1); opacity: 0.85; } 100% { transform: scale(2.3); opacity: 0; } }
+@keyframes gcs-prog-a { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes gcs-prog-b { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes gcs-type-a { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes gcs-type-b { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes gcs-flow-a { from { stroke-dashoffset: 14; } to { stroke-dashoffset: -100; } }
+@keyframes gcs-flow-b { from { stroke-dashoffset: 14; } to { stroke-dashoffset: -100; } }
+@keyframes gcs-oflow-a { from { stroke-dashoffset: 16; } to { stroke-dashoffset: -100; } }
+@keyframes gcs-oflow-b { from { stroke-dashoffset: 16; } to { stroke-dashoffset: -100; } }
+@keyframes gcs-grow-a { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes gcs-grow-b { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes gcs-pop-a { 0% { transform: scale(1); } 35% { transform: scale(1.16); } 100% { transform: scale(1); } }
+@keyframes gcs-pop-b { 0% { transform: scale(1); } 35% { transform: scale(1.16); } 100% { transform: scale(1); } }
+
+/* Arabic drops the Latin letter-spacing the views carry inline, except in
+   the parts that stay English (the live store window). */
+.gc-story { --gc-ls: 1; }
+.gc-story:lang(ar),
+.gc-story :lang(ar) { --gc-ls: 0; }
+.gc-story [lang='en'] { --gc-ls: 1; }
+
+/* Scenes: a section with a sticky full-height sheet and some scroll length
+   after it (lengths in viewport heights in story-data.ts). Every scene after
+   the first overlaps the one before by a viewport, so the next sheet slides
+   up over the current one. Heights use svh so a phone's toolbar never moves
+   the layout, and the director measures with the same unit. */
+.gc-story-scene { position: relative; height: calc(200svh + var(--gc-len) * 1svh); }
+.gc-story-scene + .gc-story-scene { margin-top: -100svh; }
+.gc-story-scene[data-scene='results'] { height: calc(100svh + var(--gc-len) * 1svh); }
+.gc-story-beat { position: absolute; left: 0; width: 1px; height: 1px; pointer-events: none; }
+.gc-story-sheet { position: sticky; top: 0; height: 100svh; overflow: hidden; }
+.gc-story-env { position: absolute; inset: 0; z-index: 0; pointer-events: none; clip-path: inset(0); }
+.gc-story-rec { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 38%; }
+.gc-story-dim { position: absolute; inset: 0; z-index: 60; background: var(--gc-ink); opacity: 0; pointer-events: none; }
+.gc-story-rest { position: relative; z-index: 6; background: var(--background); }
+.gc-story[data-a='steps'] [data-k='hero'] { pointer-events: none; }
+.gc-story [data-k^='env']:not([data-live]) [data-wiring] * { animation-play-state: paused !important; }
+.gc-story[data-paused] * { animation-play-state: paused !important; }
+[dir='rtl'] .gc-story [data-flip] { scale: -1 1; }
+.gc-story button:focus-visible,
+.gc-story a:focus-visible { outline: 2px solid var(--foreground); outline-offset: 3px; }
+
+/* Hover and focus details the views mark with data attributes. */
+.gc-story [data-cta]:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -12px rgb(32 29 27 / 0.6); }
+.gc-story [data-rail-item]:hover [data-tip],
+.gc-story [data-rail-item]:focus-visible [data-tip] { opacity: 1; transform: none; }
+.gc-story [data-live-link]:hover [data-live-chip],
+.gc-story [data-live-link]:focus-visible [data-live-chip] { opacity: 1; transform: translate(-50%, 0); }
+.gc-story [data-live-link]:focus-visible { outline: 2px solid var(--gc-ink); outline-offset: -2px; }
+.gc-story [data-storelink]:hover { color: var(--gc-cream) !important; }
+
+/* Blocks after the story rise into place once as they enter the view. */
+.gc-story[data-reveal-on] [data-reveal] { opacity: 0; transform: translateY(34px); transition: opacity 1s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.gc-story[data-reveal-on] [data-reveal][data-in] { opacity: 1; transform: none; }
+
+/* Reduced motion, or a screen too short to pace (a phone held sideways):
+   no pacing at all. The scenes are ordinary sections one after another,
+   each showing its final beat; the director sizes each sheet to its
+   content. This is layout, not motion, so it sits outside the consolidated
+   reduced-motion block below (and names the short screen first, so that
+   block stays the first reduced-motion rule in the file). */
+@media (max-height: 559.98px), (prefers-reduced-motion: reduce) {
+  .gc-story-scene,
+  .gc-story-scene[data-scene='results'] { height: auto; }
+  .gc-story-scene + .gc-story-scene { margin-top: 0; }
+  .gc-story-sheet { position: relative; min-height: 100svh; }
+  .gc-story-beat { display: none; }
+}
 
 /* Reduced motion: disable all gc animations */
 @media (prefers-reduced-motion: reduce) {
@@ -834,11 +945,6 @@ html[data-story='pinned'] [data-assistant-launcher] {
   .gc-wire-step {
     animation: none !important;
     opacity: 0.45 !important;
-  }
-
-  .gc-rise-in {
-    opacity: 1 !important;
-    transform: none !important;
   }
 
   /* Reduce motion, do not strip the interface of feedback. Windows
