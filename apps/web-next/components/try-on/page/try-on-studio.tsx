@@ -282,7 +282,12 @@ export function TryOnStudio() {
                 </a>
               </div>
 
-              <div className="mt-[26px] flex flex-col gap-1.5 lg:mt-[30px] lg:grid lg:grid-cols-[260px_48px_260px_48px_minmax(0,1fr)] lg:items-center lg:gap-0 xl:grid-cols-[300px_56px_300px_56px_minmax(0,1fr)]">
+              {/* On desktop the cards are centred on the look card, the tallest:
+                  its 520px stage, 44px head, 10px padding and 1px border each
+                  side. The row starts at that height so a slow connection that
+                  paints the row before the look card has arrived doesn't drop
+                  the other cards when it lands. */}
+              <div className="mt-[26px] flex flex-col gap-1.5 lg:mt-[30px] lg:grid lg:min-h-[586px] lg:grid-cols-[260px_48px_260px_48px_minmax(0,1fr)] lg:items-center lg:gap-0 xl:grid-cols-[300px_56px_300px_56px_minmax(0,1fr)]">
                 <PieceCard t={t} piece={state.piece} swapKey={pieceSwaps} onChange={() => setPickerOpen(true)} />
                 <Joiner glyph="plus" busy={state.stage === 'creating'} />
                 <PhotoCard
