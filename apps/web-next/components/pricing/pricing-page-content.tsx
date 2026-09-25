@@ -156,7 +156,10 @@ function UnitTile({
           src={src}
           alt=""
           fill
-          priority
+          /* Eager, not priority: the tiles are on the first screen, but a
+             high-priority preload of all three competes with the
+             stylesheet on a slow connection and delays the first paint. */
+          loading="eager"
           sizes="(min-width: 1024px) 118px, 92px"
           className={cn(contain ? 'object-contain p-2' : 'object-cover object-[50%_16%]')}
         />
