@@ -877,6 +877,10 @@ html[data-story='pinned'] [data-assistant-launcher] {
 .gc-story-rec { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 38%; }
 .gc-story-dim { position: absolute; inset: 0; z-index: 60; background: var(--gc-ink); opacity: 0; pointer-events: none; }
 .gc-story-rest { position: relative; z-index: 6; background: var(--background); }
+/* The cut for long jumps (story-controller.ts cutTo): covers the page, not the header. */
+.gc-story-veil { position: fixed; inset: 0; z-index: 45; background: var(--background); opacity: 0; pointer-events: none; }
+/* Sheets that are covered or off screen stop their loops. */
+.gc-story-sheet[inert] * { animation-play-state: paused !important; }
 .gc-story[data-a='steps'] [data-k='hero'] { pointer-events: none; }
 .gc-story [data-k^='env']:not([data-live]) [data-wiring] * { animation-play-state: paused !important; }
 .gc-story[data-paused] * { animation-play-state: paused !important; }
