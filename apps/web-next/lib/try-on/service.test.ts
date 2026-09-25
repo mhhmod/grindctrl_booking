@@ -151,79 +151,143 @@ describe('try-on service', () => {
       expect(job.meta.runtime).toBe('mock');
     });
 
-    it('resolves the billing model from the shop\'s own plan, not a global default', async () => {
-      process.env.TRYON_MODE = 'live';
-      getShopEntitlementMock.mockResolvedValue({ modelKey: 'lite-v2' });
-      beginTryOnJobMock.mockResolvedValue({
-        jobId: 'job-plan-model',
-        created: true,
-        status: 'queued',
-        modelKey: 'lite-v2',
-        message: null,
-        provider: null,
-        costUsd: null,
-        durationMs: null,
-        createdAt: '2026-08-31T00:00:00.000Z',
-      });
-      runImageGenerationMock.mockResolvedValue({
-        jobId: 'provider-job',
-        sessionId: 'ts_abcdefghijklmnopqrstuvwx',
-        productId: 'premium-ringer-tee',
-        shop: 'store-one.myshopify.com',
-        status: 'completed',
-        resultImageUrl: 'data:image/png;base64,RESULT',
-        createdAt: '2026-08-31T00:00:00.000Z',
-        meta: { runtime: 'live', provider: 'lite-v2', costEstimate: 0.01 },
-      });
-      const auth = storefrontAuthorization();
+    describe('plan tier to provider model', () => {
+      const TIER_ENV_NAMES = ['TRYON_MODEL', 'TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE'];
 
-      await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
-
-      expect(getShopEntitlementMock).toHaveBeenCalledWith(auth.shop);
-      expect(beginTryOnJobMock).toHaveBeenCalledWith(
-        expect.objectContaining({ modelKey: 'lite-v2' }),
-      );
-      expect(runImageGenerationMock).toHaveBeenCalledWith(
-        auth.sessionId,
-        auth.productId,
-        'data:image/png;base64,AAAA',
-        auth.shop,
-        'lite-v2',
-        undefined,
-        undefined,
-      );
-    });
-
-    it('falls back to the default model when the shop has no resolvable plan model', async () => {
-      process.env.TRYON_MODE = 'live';
-      getShopEntitlementMock.mockResolvedValue({ modelKey: null });
-      beginTryOnJobMock.mockResolvedValue({
-        jobId: 'job-fallback-model',
-        created: true,
-        status: 'queued',
-        modelKey: 'meta/muse-image',
-        message: null,
-        provider: null,
-        costUsd: null,
-        durationMs: null,
-        createdAt: '2026-08-31T00:00:00.000Z',
-      });
-      runImageGenerationMock.mockResolvedValue({
-        jobId: 'provider-job',
-        sessionId: 'ts_abcdefghijklmnopqrstuvwx',
-        productId: 'premium-ringer-tee',
-        shop: 'store-one.myshopify.com',
-        status: 'completed',
-        resultImageUrl: 'data:image/png;base64,RESULT',
-        createdAt: '2026-08-31T00:00:00.000Z',
-        meta: { runtime: 'live', provider: 'meta/muse-image', costEstimate: 0.01 },
+      beforeEach(() => {
+        TIER_ENV_NAMES.forEach((name) => delete process.env[name]);
+        process.env.TRYON_MODE = 'live';
+        beginTryOnJobMock.mockImplementation((input: { jobId: string; modelKey: string }) =>
+          Promise.resolve({
+            jobId: input.jobId,
+            created: true,
+            status: 'queued',
+            modelKey: input.modelKey,
+            message: null,
+            provider: null,
+            costUsd: null,
+            durationMs: null,
+            createdAt: '2026-08-31T00:00:00.000Z',
+          }),
+        );
+        runImageGenerationMock.mockResolvedValue({
+          jobId: 'provider-job',
+          sessionId: 'ts_abcdefghijklmnopqrstuvwx',
+          productId: 'premium-ringer-tee',
+          shop: 'store-one.myshopify.com',
+          status: 'completed',
+          resultImageUrl: 'data:image/png;base64,RESULT',
+          createdAt: '2026-08-31T00:00:00.000Z',
+          meta: { runtime: 'live', provider: 'provider', costEstimate: 0.01 },
+        });
       });
 
-      await generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AAAA');
+      afterEach(() => {
+        TIER_ENV_NAMES.forEach((name) => delete process.env[name]);
+      });
 
-      expect(beginTryOnJobMock).toHaveBeenCalledWith(
-        expect.objectContaining({ modelKey: 'meta/muse-image' }),
-      );
+      async function generateFor(tier: string | null) {
+        getShopEntitlementMock.mockResolvedValue({ modelKey: tier });
+        const auth = storefrontAuthorization();
+        await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
+        return {
+          auth,
+          providerModel: runImageGenerationMock.mock.calls[0][4],
+          reservedTier: beginTryOnJobMock.mock.calls[0][0].modelKey,
+        };
+      }
+
+      it.each([
+        ['lite', 'TRYON_MODEL_LITE', 'google/gemini-3.1-flash-lite-image'],
+        ['flash', 'TRYON_MODEL_FLASH', 'google/gemini-3.1-flash-image'],
+        ['muse', 'TRYON_MODEL_MUSE', 'meta/muse-image'],
+      ])('sends the provider id configured for the %s tier, never the label', async (tier, envName, id) => {
+        process.env[envName] = id;
+
+        const { auth, providerModel, reservedTier } = await generateFor(tier);
+
+        expect(getShopEntitlementMock).toHaveBeenCalledWith(auth.shop);
+        expect(providerModel).toBe(id);
+        expect(reservedTier).toBe(tier);
+      });
+
+      it('falls back to TRYON_MODEL, then the default, when a tier has no model configured', async () => {
+        const first = await generateFor('lite');
+        expect(first.providerModel).toBe('meta/muse-image');
+        expect(first.reservedTier).toBe('lite');
+
+        runImageGenerationMock.mockClear();
+        beginTryOnJobMock.mockClear();
+        process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
+        const second = await generateFor('lite');
+        expect(second.providerModel).toBe('google/gemini-3.1-flash-image');
+        expect(second.reservedTier).toBe('lite');
+      });
+
+      it('falls back to the default and logs when the tier label is unknown', async () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        const { providerModel, reservedTier } = await generateFor('turbo');
+
+        expect(providerModel).toBe('meta/muse-image');
+        expect(reservedTier).toBe('turbo');
+        expect(error).toHaveBeenCalledWith('[try-on] unknown_model_tier', { tier: 'turbo' });
+      });
+
+      it('passes a real vendor/model id through unchanged', async () => {
+        const { providerModel, reservedTier } = await generateFor('google/gemini-3-pro-image');
+
+        expect(providerModel).toBe('google/gemini-3-pro-image');
+        expect(reservedTier).toBe('google/gemini-3-pro-image');
+      });
+
+      it('reserves the default model when the shop has no plan model at all', async () => {
+        const { providerModel, reservedTier } = await generateFor(null);
+
+        expect(providerModel).toBe('meta/muse-image');
+        expect(reservedTier).toBe('meta/muse-image');
+      });
+
+      it('names the model that was actually called when the provider fails', async () => {
+        process.env.TRYON_MODEL_LITE = 'google/gemini-3.1-flash-lite-image';
+        getShopEntitlementMock.mockResolvedValue({ modelKey: 'lite' });
+        runImageGenerationMock.mockRejectedValue(new Error('provider_http_error'));
+        const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await expect(
+          generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AAAA'),
+        ).rejects.toThrow('provider_http_error');
+
+        expect(error).toHaveBeenCalledWith(
+          '[try-on] generation_failed_detail',
+          expect.objectContaining({ provider: 'google/gemini-3.1-flash-lite-image' }),
+        );
+        expect(finalizeTryOnJobMock.mock.calls[0][0]).toMatchObject({
+          status: 'failed',
+          modelKey: 'lite',
+          meta: { provider: 'google/gemini-3.1-flash-lite-image' },
+        });
+      });
+
+      it('uses TRYON_MODEL for the non-billable public demo path', async () => {
+        process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
+        runImageGenerationMock.mockResolvedValue({
+          jobId: 'provider-demo',
+          sessionId: 'ts_abcdefghijklmnopqrstuvwx',
+          productId: 'premium-ringer-tee',
+          shop: null,
+          status: 'completed',
+          resultImageUrl: 'data:image/png;base64,DEMO',
+          createdAt: '2026-08-31T00:00:00.000Z',
+          meta: { runtime: 'live', provider: 'google/gemini-3.1-flash-image', costEstimate: 0.01 },
+        });
+
+        await generateTryOn(authorization(), 'upload', 'data:image/png;base64,AAAA');
+
+        expect(getShopEntitlementMock).not.toHaveBeenCalled();
+        expect(beginTryOnJobMock).not.toHaveBeenCalled();
+        expect(runImageGenerationMock.mock.calls[0][4]).toBe('google/gemini-3.1-flash-image');
+      });
     });
 
     it('uses the shop bound to the verified authorization', async () => {

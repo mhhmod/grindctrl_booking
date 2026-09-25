@@ -17,6 +17,7 @@ import {
   TryOnResultUnavailableError,
 } from './result-errors';
 import { toShopperFailureMessage } from './shopper-errors';
+import { defaultTryOnModel, resolveTryOnModel } from './models';
 
 export {
   TryOnFinalizationPendingError,
@@ -24,8 +25,6 @@ export {
   TryOnResultSchemaNotReadyError,
   TryOnResultUnavailableError,
 } from './result-errors';
-
-const DEFAULT_MODEL = 'meta/muse-image';
 
 /* In-memory job results are the polling fast path between generation and
    render. Entries hold the full base64 result image, so the map MUST stay
@@ -116,13 +115,14 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (billableLiveJob) {
-    // The catalog carries a model per plan (tryon_plans.model_key) — a
-    // shop's actual entitled model, not one global default for every plan.
-    // reserve_tryon_credit records whatever modelKey it's given verbatim,
-    // so resolving the wrong one here silently mis-bills every plan the
-    // same way regardless of what they're entitled to.
+    /* tryon_plans.model_key holds a tier label (lite, flash, muse), not a
+       provider id. Two values, on purpose: the tier is what the shop is
+       entitled to and is what reserve_tryon_credit records on the job and
+       ledger; the provider id is what OpenRouter must receive. Sending the
+       label upstream got every paid storefront try-on rejected. */
     const entitlement = await getShopEntitlement(shop);
-    const modelKey = entitlement.modelKey || process.env.TRYON_MODEL || DEFAULT_MODEL;
+    const modelKey = entitlement.modelKey || defaultTryOnModel();
+    const providerModel = resolveTryOnModel(entitlement.modelKey);
     const reservedJobId = createJobId();
     const reservation = await beginTryOnJob({
       shop,
@@ -179,7 +179,7 @@ export async function generateTryOn(
         productId,
         photoData as string,
         shop,
-        modelKey,
+        providerModel,
         garmentUrl,
         productName,
       );
@@ -190,7 +190,7 @@ export async function generateTryOn(
       console.error('[try-on] generation_failed_detail', {
         jobId: reservedJobId,
         shop,
-        provider: modelKey,
+        provider: providerModel,
         detail: error instanceof Error ? error.message : String(error),
       });
       const failedJob: TryOnJob = {
@@ -209,7 +209,7 @@ export async function generateTryOn(
            is actually useful. */
         message: toShopperFailureMessage(error),
         createdAt: reservation.createdAt,
-        meta: { runtime: 'live', provider: modelKey, costEstimate: null },
+        meta: { runtime: 'live', provider: providerModel, costEstimate: null },
       };
       await finalizeTryOnJob(failedJob, Date.now() - startedAt);
       storeJob(failedJob);
@@ -278,7 +278,7 @@ export async function generateTryOn(
       productId,
       photoData,
       shop,
-      process.env.TRYON_MODEL || DEFAULT_MODEL,
+      defaultTryOnModel(),
       garmentUrl,
       productName,
     );

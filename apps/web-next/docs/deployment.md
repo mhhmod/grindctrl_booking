@@ -87,6 +87,27 @@ SHOPIFY_API_KEY="client_id from apps/grindctrl-tryon/shopify.app.toml"
 # account has no multimodal model on it. OPENROUTER_API_KEY is already set
 # for Try-On and is reused. Optional override:
 # STORE_CHAT_VISION_MODEL="google/gemini-2.5-flash-lite"
+
+# Try-On. "live" calls the image provider; anything else uses the mock
+# runner. The try-on and chat routes answer 503 without the secrets below.
+TRYON_MODE="live"
+OPENROUTER_API_KEY="sk-or-..."
+SHOPIFY_API_SECRET="client secret from the Shopify app"
+SUPABASE_SERVICE_ROLE_KEY="service role key for prsusuwxbzaekynonifl"
+GROQ_API_KEY="gsk_..."
+# Upstash Redis. Try-on and chat rate limits fail closed without it.
+UPSTASH_REDIS_REST_URL="https://....upstash.io"
+UPSTASH_REDIS_REST_TOKEN="..."
+
+# Try-On models. Plan rows store a TIER label (lite, flash or muse), never a
+# provider id, so each tier maps to an OpenRouter image model id here. All
+# optional: an unset tier falls back to TRYON_MODEL, then meta/muse-image.
+# Every value must look like vendor/model, or a live boot refuses to start.
+# Check each resolved id with scripts/production-readiness-preflight.mjs.
+# TRYON_MODEL="meta/muse-image"
+# TRYON_MODEL_LITE="meta/muse-image"
+# TRYON_MODEL_FLASH="meta/muse-image"
+# TRYON_MODEL_MUSE="meta/muse-image"
 ```
 
 > **`NEXT_PUBLIC_APP_URL` must be `https://grindctrl.cloud`.** It is what
