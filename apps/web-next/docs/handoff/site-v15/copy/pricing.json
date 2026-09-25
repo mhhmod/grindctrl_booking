@@ -1,0 +1,633 @@
+{
+ "page": "pricing",
+ "note": "English source with its approved Arabic, in reading order, grouped by the section the prototype renders it in. Strings marked set-by-code are produced by the page logic (states, captions, labels). Product names, GRINDCTRL, the store domain and the password stay in English in both languages.",
+ "sections": [
+  {
+   "section": "page",
+   "strings": [
+    {
+     "en": "GrindCTRL home",
+     "ar": "الصفحة الرئيسية لـ GrindCTRL",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "GRINDCTRL",
+     "ar": "GRINDCTRL",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Pricing",
+     "ar": "الأسعار",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "On this page",
+     "ar": "في هذه الصفحة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call",
+     "ar": "احجز مكالمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "AI Try-On pricing",
+     "ar": "أسعار تجربة الملابس بالذكاء الاصطناعي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "More shopper confidence, priced for real usage.",
+     "ar": "ثقة أكبر للمتسوق، بسعر يناسب الاستخدام الحقيقي.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Start free, move up when try-on becomes part of your store.",
+     "ar": "ابدأ مجانًا، وانتقل إلى خطة أعلى عندما تصبح التجربة جزءًا من متجرك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a pricing call",
+     "ar": "احجز مكالمة للأسعار",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Try the live demo",
+     "ar": "جرّب النسخة المباشرة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "One try-on: a shopper photo and a piece make one delivered look. One look uses one credit.",
+     "ar": "تجربة واحدة: صورة المتسوق مع القطعة تنتج إطلالة واحدة مُسلَّمة، وكل إطلالة تستخدم رصيدًا واحدًا.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Footer",
+     "ar": "تذييل الصفحة",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "On this page",
+   "strings": [
+    {
+     "en": "Plans",
+     "ar": "الخطط",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Top-ups",
+     "ar": "الرصيد الإضافي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Questions",
+     "ar": "الأسئلة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "envP",
+   "strings": [
+    {
+     "en": "plan chosen",
+     "ar": "اختيرت الخطة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "credits loaded",
+     "ar": "أُضيف الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "image delivered",
+     "ar": "سُلّمت الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "credit used",
+     "ar": "خُصم الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "One try-on: a shopper photo and a piece make one delivered look. One look uses one credit.",
+   "strings": [
+    {
+     "en": "Photo",
+     "ar": "الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Piece",
+     "ar": "القطعة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Look",
+     "ar": "الإطلالة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "1 try-on",
+     "ar": "تجربة واحدة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "1 delivered image",
+     "ar": "صورة واحدة مُسلَّمة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "plans",
+   "strings": [
+    {
+     "en": "Monthly plans",
+     "ar": "الخطط الشهرية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Plan credits are charged for delivered images. A failed generation returns the reserved credit.",
+     "ar": "يُخصم رصيد الخطة مقابل الصور التي تم تسليمها، وتعيد العملية الفاشلة الرصيد المحجوز.",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "How credits work",
+     "ar": "كيف يعمل الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Plan credits are charged for delivered images.",
+     "ar": "يُخصم رصيد الخطة مقابل الصور التي تم تسليمها.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Credit reserved",
+     "ar": "حجز الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "When a shopper presses Generate",
+     "ar": "عندما يضغط المتسوق على إنشاء",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Image delivered",
+     "ar": "تم تسليم الصورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The credit is used",
+     "ar": "يُخصم الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Generation failed",
+     "ar": "فشلت عملية الإنشاء",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The credit comes back",
+     "ar": "يعود الرصيد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Upstream provider cost may still be incurred on a failed generation.",
+     "ar": "قد تبقى تكلفة مزود الخدمة قائمة عند فشل عملية الإنشاء.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "plans-title",
+   "strings": [
+    {
+     "en": "Pick the level of support your store needs.",
+     "ar": "اختر مستوى الدعم المناسب لمتجرك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "pl-free",
+   "strings": [
+    {
+     "en": "Free",
+     "ar": "مجاني",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Start with the live storefront experience.",
+     "ar": "اختبر تجربة المتجر المباشرة قبل الالتزام.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "/ month",
+     "ar": "/ شهر",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "15 try-ons",
+     "ar": "15 تجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "per month",
+     "ar": "شهريًا",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Standard image quality",
+     "ar": "جودة صور قياسية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "No card required",
+     "ar": "لا تحتاج إلى بطاقة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "A simple starting point for one store",
+     "ar": "بداية بسيطة لمتجر واحد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Choose Free",
+     "ar": "اختر مجاني",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "pl-launch",
+   "strings": [
+    {
+     "en": "Launch",
+     "ar": "انطلاق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Recommended",
+     "ar": "موصى بها",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "The best value for stores ready to make try-on part of the buying journey.",
+     "ar": "أفضل قيمة للمتاجر الجاهزة لجعل التجربة جزءًا من رحلة الشراء.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "150 try-ons",
+     "ar": "150 تجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Our best value for a growing store",
+     "ar": "أفضل قيمة لمتجر في مرحلة النمو",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Top-ups may be available; confirm during booking",
+     "ar": "قد تتوفر أرصدة إضافية؛ نؤكدها أثناء الحجز",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call about Launch",
+     "ar": "احجز مكالمة عن خطة انطلاق",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "pl-growth",
+   "strings": [
+    {
+     "en": "Growth",
+     "ar": "نمو",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "For stores past their first month.",
+     "ar": "للمتاجر التي تجاوزت شهرها الأول.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "350 try-ons",
+     "ar": "350 تجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call about Growth",
+     "ar": "احجز مكالمة عن خطة نمو",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "pl-pro",
+   "strings": [
+    {
+     "en": "Pro",
+     "ar": "احترافي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Growth plan plus done-for-you setup.",
+     "ar": "خطة النمو مع إعداد متكامل ننفّذه لك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "650 try-ons",
+     "ar": "650 تجربة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Done-for-you setup",
+     "ar": "إعداد متكامل ننفّذه لك",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a call about Pro",
+     "ar": "احجز مكالمة عن الخطة الاحترافية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "topups",
+   "strings": [
+    {
+     "en": "Top-up packs",
+     "ar": "حزم الرصيد الإضافي",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Ask us to confirm current pack availability and terms before activation.",
+     "ar": "تواصل معنا لتأكيد توفر الحزم وشروطها الحالية قبل التفعيل.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Boost 80",
+     "ar": "Boost 80",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "80 renders",
+     "ar": "80 صورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "one time",
+     "ar": "دفعة واحدة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Ask about Boost 80",
+     "ar": "اسأل عن Boost 80",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Boost 75 Pro",
+     "ar": "Boost 75 Pro",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Premium",
+     "ar": "مميزة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "75 renders",
+     "ar": "75 صورة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Ask about Boost 75 Pro",
+     "ar": "اسأل عن Boost 75 Pro",
+     "kind": "aria-label",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "packs-title",
+   "strings": [
+    {
+     "en": "Add credits without changing your plan.",
+     "ar": "أضف رصيدًا دون تغيير خطتك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "faq-title",
+   "strings": [
+    {
+     "en": "Straight answers before you start.",
+     "ar": "إجابات واضحة قبل أن تبدأ.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "faq",
+   "strings": [
+    {
+     "en": "Payment, activation, renewal, and contract terms are confirmed during booking.",
+     "ar": "نؤكد شروط الدفع والتفعيل والتجديد والتعاقد أثناء الحجز.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What happens when I run out of credits?",
+     "ar": "ماذا يحدث عندما ينتهي رصيدي؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "What happens if a generation fails?",
+     "ar": "ماذا يحدث إذا فشلت عملية التوليد؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Can I change plans?",
+     "ar": "هل يمكنني تغيير الخطة؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "faq-a0",
+   "strings": [
+    {
+     "en": "The try-on widget stops showing to shoppers, so your store never displays a broken button. Top up your credits or upgrade your plan to bring it back.",
+     "ar": "تتوقف أداة التجربة عن الظهور للمتسوقين، لذلك لن يرى زوار متجرك زرًا لا يعمل. أضف رصيدًا أو انتقل إلى خطة أعلى لإعادتها.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "faq-a1",
+   "strings": [
+    {
+     "en": "The credit is refunded automatically. You only pay for images that are delivered successfully.",
+     "ar": "يعود الرصيد تلقائيًا. أنت تدفع فقط مقابل الصور التي تستلمها بنجاح.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "faq-a2",
+   "strings": [
+    {
+     "en": "Yes. Upgrades apply immediately. Downgrades take effect at the start of your next billing period.",
+     "ar": "نعم. تبدأ الترقية فورًا، ويبدأ التخفيض إلى خطة أقل مع فترة الفوترة التالية.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "close-title",
+   "strings": [
+    {
+     "en": "Want try-on to feel native to your store?",
+     "ar": "هل تريد أن تبدو التجربة جزءًا طبيعيًا من متجرك؟",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Book a short call. We will recommend the right plan and map the setup with you.",
+     "ar": "احجز مكالمة قصيرة. سنقترح الخطة المناسبة ونرتب خطوات الإعداد معك.",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  },
+  {
+   "section": "Footer",
+   "strings": [
+    {
+     "en": "Home",
+     "ar": "الرئيسية",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Live demo",
+     "ar": "تجربة مباشرة",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "ROI calculator",
+     "ar": "حاسبة العائد",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    },
+    {
+     "en": "Security",
+     "ar": "الأمان",
+     "kind": "text",
+     "firstSeenOn": "desktop"
+    }
+   ]
+  }
+ ],
+ "setByCode": [],
+ "additions": {
+  "languageSwitch": {
+   "whenPageIsEnglish": {
+    "label": "العربية",
+    "ariaLabel": "التبديل إلى العربية",
+    "lang": "ar"
+   },
+   "whenPageIsArabic": {
+    "label": "English",
+    "ariaLabel": "Switch to English",
+    "lang": "en"
+   }
+  },
+  "note": "Per plan button labels in Arabic read with the word plan, for example احجز مكالمة عن خطة نمو, as listed in the sections above."
+ }
+}

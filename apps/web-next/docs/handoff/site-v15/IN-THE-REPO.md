@@ -1,0 +1,3 @@
+What of the site-v15 handoff is committed
+
+The notes (README.md, 01-system.md to 06-qa.md, CLAUDE_CODE_PROMPT.md), the copy files, tokens.json, the icon set and the asset manifest are committed here so the repo's own documents can point at them. Two parts of the handoff bundle stay with the owner and are not committed: `design/` (reference screenshots of every state and the prototype's boards, logic and generators, about 12 MB) and `assets/images` (every image the pages use, already copied to `public/landing/v15` and `public/try-on/demo`). Where code comments name `design/prototype/...`, they mean that folder in the handoff bundle.

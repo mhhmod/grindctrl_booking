@@ -3,7 +3,8 @@
 import React, { useSyncExternalStore } from 'react';
 import posthog from 'posthog-js';
 import { Button } from '@/components/ui/button';
-import { useLandingLocale } from '@/components/landing/landing-locale';
+import { useOptionalLandingLocale } from '@/components/landing/landing-locale';
+import { getLandingDictionary, type SiteLocale } from '@/lib/landing/landing-i18n';
 import {
   readAnalyticsConsent,
   setAnalyticsConsent,
@@ -31,8 +32,11 @@ function notifyConsentChanged() {
   consentListeners.forEach((listener) => listener());
 }
 
-export function AnalyticsConsentControl() {
-  const { t } = useLandingLocale();
+/* Pages outside LandingLocaleProvider (the try-on page runs under
+   TryOnLocaleProvider) pass their locale in; landing pages can omit it. */
+export function AnalyticsConsentControl({ locale }: { locale?: SiteLocale } = {}) {
+  const context = useOptionalLandingLocale();
+  const t = getLandingDictionary(locale ?? context?.locale ?? 'en');
   const consent = useSyncExternalStore(
     subscribeToConsent,
     getConsentSnapshot,

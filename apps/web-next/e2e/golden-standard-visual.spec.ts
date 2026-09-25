@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { GOLDEN_PAGES } from './golden-pages';
+import { waitForPageReady } from './page-ready';
 
 /* Visual regression on the two highest-traffic, highest-risk pages: the
    home page carries the platform's whole pitch, and pricing is the page
@@ -48,7 +49,7 @@ for (const golden of VISUAL_PAGES) {
         await page.emulateMedia({ reducedMotion: 'reduce' });
         await page.setViewportSize({ width, height: 1200 });
         await page.goto(golden.path);
-        await page.evaluate(() => document.fonts.ready);
+        await waitForPageReady(page, golden.path);
         await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
 
         await expect(page).toHaveScreenshot(`${golden.name}-${locale}-${width}.png`, {

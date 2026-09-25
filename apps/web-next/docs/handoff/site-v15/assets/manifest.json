@@ -1,0 +1,528 @@
+[
+  {
+    "file": "assets/images/b-denim.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/b-denim.webp",
+    "prototypeRef": "/_blob/a1fe1533447ed80a103c531b51c6a47e",
+    "bytes": 26954
+  },
+  {
+    "file": "assets/images/b-sweat.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/b-sweat.webp",
+    "prototypeRef": "/_blob/becb12a235a80fc85fef40be642904de",
+    "bytes": 21636
+  },
+  {
+    "file": "assets/images/face-b.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-b.webp",
+    "prototypeRef": "/_blob/c0a9ed15ad353783e9cb2ff5fc233b5c",
+    "bytes": 2594
+  },
+  {
+    "file": "assets/images/face-g.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-g.webp",
+    "prototypeRef": "/_blob/2b551c9ff00f60ca0e0b184e519d700b",
+    "bytes": 2910
+  },
+  {
+    "file": "assets/images/face-m1.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-m1.webp",
+    "prototypeRef": "/_blob/52e90530625ea070106423401e0bed2a",
+    "bytes": 3494
+  },
+  {
+    "file": "assets/images/face-man2.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-man2.webp",
+    "prototypeRef": "/_blob/f8956c31903e44c93bf527702207fd17",
+    "bytes": 2862
+  },
+  {
+    "file": "assets/images/face-salma.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-salma.webp",
+    "prototypeRef": "/_blob/bbc85d0ac51525c02443d1a82902f8e5",
+    "bytes": 2374
+  },
+  {
+    "file": "assets/images/face-w1.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Shopper avatar for the hero shopper picker.",
+    "suggestedPublicPath": "public/landing/v15/face-w1.webp",
+    "prototypeRef": "/_blob/cd288959012b67f44ed45e322abfbf13",
+    "bytes": 3652
+  },
+  {
+    "file": "assets/images/g-dress.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/g-dress.webp",
+    "prototypeRef": "/_blob/9b45e58c647aa573ee3977be75139cc8",
+    "bytes": 32042
+  },
+  {
+    "file": "assets/images/g-jeans.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/g-jeans.webp",
+    "prototypeRef": "/_blob/51ab9536a760ed621faf86da18490aa8",
+    "bytes": 22048
+  },
+  {
+    "file": "assets/images/garment-abaya.webp",
+    "usedOn": [
+      "landing",
+      "pricing",
+      "tryon"
+    ],
+    "role": "Demo piece, product image on a light background. The garment input for try-on.",
+    "suggestedPublicPath": "public/landing/v15/garment-abaya.webp",
+    "prototypeRef": "/_blob/0100a9bf8ea38aca1ea2673d86383062",
+    "bytes": 22596
+  },
+  {
+    "file": "assets/images/garment-denim-overshirt.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "Demo piece, product image on a light background. The garment input for try-on.",
+    "suggestedPublicPath": "public/landing/v15/garment-denim-overshirt.webp",
+    "prototypeRef": "/_blob/e8c54c9978341ad5ac89c58414a184b5",
+    "bytes": 102622
+  },
+  {
+    "file": "assets/images/garment-knit-polo.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "Demo piece, product image on a light background. The garment input for try-on.",
+    "suggestedPublicPath": "public/landing/v15/garment-knit-polo.webp",
+    "prototypeRef": "/_blob/34ced6750bf0cc0607dbe0f1c67e3fb1",
+    "bytes": 70930
+  },
+  {
+    "file": "assets/images/garment-linen-shirt.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "Demo piece, product image on a light background. The garment input for try-on.",
+    "suggestedPublicPath": "public/landing/v15/garment-linen-shirt.webp",
+    "prototypeRef": "/_blob/d55aa6d1337b14a09c179374142f1f1d",
+    "bytes": 57772
+  },
+  {
+    "file": "assets/images/logo-cream.svg",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "GrindCTRL mark (SVG). Ink on light surfaces, cream on dark ones.",
+    "suggestedPublicPath": "public/landing/v15/logo-cream.svg",
+    "prototypeRef": "/_blob/430af5d0698e6835da8f838730bd41ea",
+    "bytes": 20171
+  },
+  {
+    "file": "assets/images/logo-ink.svg",
+    "usedOn": [
+      "landing",
+      "pricing",
+      "tryon"
+    ],
+    "role": "GrindCTRL mark (SVG). Ink on light surfaces, cream on dark ones.",
+    "suggestedPublicPath": "public/landing/v15/logo-ink.svg",
+    "prototypeRef": "/_blob/8f1a6b8112ab37ec80a0cbed559cbcf9",
+    "bytes": 20171
+  },
+  {
+    "file": "assets/images/m1-denim.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/m1-denim.webp",
+    "prototypeRef": "/_blob/2691a81361b1160df0dce0709a2cc504",
+    "bytes": 22916
+  },
+  {
+    "file": "assets/images/m1-photo.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "The fourth hero shopper's original photo, shown when comparing in the hero stage. Only shoppers one, two and four have an original photo.",
+    "suggestedPublicPath": "public/landing/v15/m1-photo.webp",
+    "prototypeRef": "/_blob/6328129fa4745b09a17c62a6176ae082",
+    "bytes": 17952
+  },
+  {
+    "file": "assets/images/m1-polo.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/m1-polo.webp",
+    "prototypeRef": "/_blob/6ed67d558ca1124c989bdc4221810a33",
+    "bytes": 20414
+  },
+  {
+    "file": "assets/images/man-denim-overshirt.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "A real try-on engine output of the demo piece on the sample shopper.",
+    "suggestedPublicPath": "public/landing/v15/man-denim-overshirt.webp",
+    "prototypeRef": "/_blob/1f276436e84f138000dde95b2b70bbff",
+    "bytes": 47122
+  },
+  {
+    "file": "assets/images/man-knit-polo.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "A real try-on engine output of the demo piece on the sample shopper.",
+    "suggestedPublicPath": "public/landing/v15/man-knit-polo.webp",
+    "prototypeRef": "/_blob/e2e1dbcfc12a8eb8bd49abfeed953e6c",
+    "bytes": 42302
+  },
+  {
+    "file": "assets/images/shopper-man.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "Sample shopper photo, an AI-generated model. Used as the 'Use a sample photo' input. Also the original photo of the first two hero shoppers for the compare peek.",
+    "suggestedPublicPath": "public/landing/v15/shopper-man.webp",
+    "prototypeRef": "/_blob/2db92840d9dafedd1a3ae99c2210dcc2",
+    "bytes": 32714
+  },
+  {
+    "file": "assets/images/shopper-woman.webp",
+    "usedOn": [
+      "landing",
+      "pricing",
+      "tryon"
+    ],
+    "role": "Sample shopper photo, an AI-generated model. Used as the 'Use a sample photo' input. Also the original photo of the first two hero shoppers for the compare peek.",
+    "suggestedPublicPath": "public/landing/v15/shopper-woman.webp",
+    "prototypeRef": "/_blob/defbbf3a977b101d7e6bcceda32ff0eb",
+    "bytes": 23692
+  },
+  {
+    "file": "assets/images/st-705-tee.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-705-tee.webp",
+    "prototypeRef": "/_blob/168a23b13e2589d70e0d0041c6f45bbb",
+    "bytes": 10336
+  },
+  {
+    "file": "assets/images/st-blacktop-ringer.webp",
+    "usedOn": [
+      "tryon"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-blacktop-ringer.webp",
+    "prototypeRef": "/_blob/1488db9349d64872380cff3c84ad2fd7",
+    "bytes": 5880
+  },
+  {
+    "file": "assets/images/st-boxy-tee.webp",
+    "usedOn": [
+      "tryon"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-boxy-tee.webp",
+    "prototypeRef": "/_blob/9887597dcc2406451ff4a051b019efd9",
+    "bytes": 44016
+  },
+  {
+    "file": "assets/images/st-cargo-pants.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-cargo-pants.webp",
+    "prototypeRef": "/_blob/8032b760aa94b2b1d9caf5ef34a16a3c",
+    "bytes": 11924
+  },
+  {
+    "file": "assets/images/st-cascade-jeans.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-cascade-jeans.webp",
+    "prototypeRef": "/_blob/15425bbaa1312dfd83947bf2c14fc1d5",
+    "bytes": 34902
+  },
+  {
+    "file": "assets/images/st-coastline-ringer.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-coastline-ringer.webp",
+    "prototypeRef": "/_blob/b93b05bd22442e845f3f5ad0a861ccb0",
+    "bytes": 8420
+  },
+  {
+    "file": "assets/images/st-crew-tee.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-crew-tee.webp",
+    "prototypeRef": "/_blob/cbb51a07fd24b82ca934cff5b537a2e3",
+    "bytes": 1772
+  },
+  {
+    "file": "assets/images/st-drift-trouser.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-drift-trouser.webp",
+    "prototypeRef": "/_blob/20585a61d9e2bf970215d0cfa1a4186a",
+    "bytes": 41886
+  },
+  {
+    "file": "assets/images/st-lounge-set.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-lounge-set.webp",
+    "prototypeRef": "/_blob/4e56cceab1c440fb6382b546c0d0d511",
+    "bytes": 12942
+  },
+  {
+    "file": "assets/images/st-muscat-abaya.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-muscat-abaya.webp",
+    "prototypeRef": "/_blob/b0b1bca39c56fd314686bf8a75dca7a2",
+    "bytes": 25524
+  },
+  {
+    "file": "assets/images/st-nida-abaya.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-nida-abaya.webp",
+    "prototypeRef": "/_blob/22d1743de8107d7f35cf9b1be2a935c5",
+    "bytes": 31928
+  },
+  {
+    "file": "assets/images/st-riyadh-abaya.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-riyadh-abaya.webp",
+    "prototypeRef": "/_blob/c240217a45a9a9c84d81bde84ebd1825",
+    "bytes": 9958
+  },
+  {
+    "file": "assets/images/st-riyadh-main.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-riyadh-main.webp",
+    "prototypeRef": "/_blob/c8a48322a0a8bf9eb596bdad217d4d29",
+    "bytes": 23518
+  },
+  {
+    "file": "assets/images/st-short-set.webp",
+    "usedOn": [
+      "tryon"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-short-set.webp",
+    "prototypeRef": "/_blob/e410354dba6c4667270eb83e539289ed",
+    "bytes": 20526
+  },
+  {
+    "file": "assets/images/st-zahra-abaya.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Product image from the live demo store grindctrl.myshopify.com, used in the store replay and store strip.",
+    "suggestedPublicPath": "public/landing/v15/st-zahra-abaya.webp",
+    "prototypeRef": "/_blob/dda21e5e789003d87204d02e9988b79f",
+    "bytes": 13578
+  },
+  {
+    "file": "assets/images/tile-g-jeans.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile-g-jeans.webp",
+    "prototypeRef": "/_blob/82b0b61882a7936b314ad2b48eee0fe7",
+    "bytes": 10246
+  },
+  {
+    "file": "assets/images/tile-w1-skirt.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile-w1-skirt.webp",
+    "prototypeRef": "/_blob/26ded1cf53ade9960427a950a45eab4b",
+    "bytes": 4984
+  },
+  {
+    "file": "assets/images/tile2-b-denim.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-b-denim.webp",
+    "prototypeRef": "/_blob/d5cf146577c8ac3bc34b08b95fa5b5af",
+    "bytes": 15290
+  },
+  {
+    "file": "assets/images/tile2-b-sweat.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-b-sweat.webp",
+    "prototypeRef": "/_blob/8f41c1e7067b970e2d980dac1c486065",
+    "bytes": 8818
+  },
+  {
+    "file": "assets/images/tile2-g-dress.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-g-dress.webp",
+    "prototypeRef": "/_blob/02522ff5df31920d10e11ca3d22cda35",
+    "bytes": 14980
+  },
+  {
+    "file": "assets/images/tile2-m1-denim.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-m1-denim.webp",
+    "prototypeRef": "/_blob/35038b79d97a4ef3bacbff5ff218e4ba",
+    "bytes": 13870
+  },
+  {
+    "file": "assets/images/tile2-m1-polo.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-m1-polo.webp",
+    "prototypeRef": "/_blob/9a41b34f76edb4dc13c71a8478ecea6f",
+    "bytes": 10824
+  },
+  {
+    "file": "assets/images/tile2-w1-shirt.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Garment thumbnail for the hero garment picker.",
+    "suggestedPublicPath": "public/landing/v15/tile2-w1-shirt.webp",
+    "prototypeRef": "/_blob/90d336998cdfb267b0d6c2d224622ec7",
+    "bytes": 11000
+  },
+  {
+    "file": "assets/images/w1-shirt.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/w1-shirt.webp",
+    "prototypeRef": "/_blob/a6551d8cedfea2921ec001201a3045dc",
+    "bytes": 21350
+  },
+  {
+    "file": "assets/images/w1-skirt.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "Hero look, a real try-on engine output for one shopper and one garment.",
+    "suggestedPublicPath": "public/landing/v15/w1-skirt.webp",
+    "prototypeRef": "/_blob/846f5c8b2ca147d8194ec553dc36ec2e",
+    "bytes": 20254
+  },
+  {
+    "file": "assets/images/w3-skirt.webp",
+    "usedOn": [
+      "landing"
+    ],
+    "role": "A look used only by the results scene, a real try-on engine output.",
+    "suggestedPublicPath": "public/landing/v15/w3-skirt.webp",
+    "prototypeRef": "/_blob/c4cf5e5a3eb5a3f957cd58d6e436e83b",
+    "bytes": 18194
+  },
+  {
+    "file": "assets/images/woman-abaya.webp",
+    "usedOn": [
+      "landing",
+      "pricing",
+      "tryon"
+    ],
+    "role": "A real try-on engine output of the demo piece on the sample shopper.",
+    "suggestedPublicPath": "public/landing/v15/woman-abaya.webp",
+    "prototypeRef": "/_blob/124143a2f6c7afea7d1b0e3b11023d90",
+    "bytes": 35074
+  },
+  {
+    "file": "assets/images/woman-linen-shirt.webp",
+    "usedOn": [
+      "landing",
+      "tryon"
+    ],
+    "role": "A real try-on engine output of the demo piece on the sample shopper.",
+    "suggestedPublicPath": "public/landing/v15/woman-linen-shirt.webp",
+    "prototypeRef": "/_blob/5d16184b0779b96f6a56f8fc21e60aaa",
+    "bytes": 35330
+  }
+]

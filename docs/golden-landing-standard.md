@@ -108,13 +108,44 @@ test in the same change:
   `.gc-card-hover` on a row that shares a border with siblings inside an
   `overflow-hidden` list (the hover lift clips against the parent's rounded
   corners and jumps against the next row) — see `PlatformPillars` for the
-  spotlight-only pattern and `PlatformEvidenceSequence` for the
-  spotlight+card-hover pattern on real standalone cards.
+  spotlight-only pattern.
 - `.gc-card-hover` — `translateY(-2px)` + border/shadow lift on hover, for
   standalone cards only (see above).
 
 All four respect `prefers-reduced-motion: reduce` (see the consolidated
 block in `globals.css`, guarded by `app/globals.motion.test.ts`).
+
+### Approved story motion set (site v15)
+
+A paced product story cannot be built from reveal classes alone, so the v15
+pages (landing, try-on, pricing) also use the story motion set in
+`globals.css`, under "Site v15: the approved story motion set" and "Site
+v15: the landing story". It is the prototype's own vocabulary
+(the prototype in the site-v15 handoff bundle, whose notes are in
+`apps/web-next/docs/handoff/site-v15`), renamed with a `gcs-` prefix:
+
+- Entrances and dialogs: `.gc-anim-fade`, `-menu`, `-in`, `-rise`,
+  `-reveal`, `-swap`, `-drop`, `-open` (keyframes `gcs-fade` … `gcs-open`).
+- Loops that show something is live: `.gc-anim-invite`, `-typing`, `-ring`,
+  `-live`, `-spin`, `-scan`, `-flow`, and the background wiring
+  (`.gc-wire-pulse`, `.gc-wire-node`, `.gc-wire-step`), which run only while
+  on screen and in a visible tab.
+- Story keyframes the scene scripts name inline: `gcs-ping`, `gcs-twinkle`,
+  `gcs-nudge`, `gcs-float`, `gcs-msg`, `gcs-scan-seq`, `gcs-scan-once`, and
+  the restartable pairs `gcs-down-a/b`, `gcs-up-a/b`, `gcs-tap-a/b`,
+  `gcs-prog-a/b`, `gcs-type-a/b`, `gcs-flow-a/b`, `gcs-oflow-a/b`,
+  `gcs-grow-a/b`, `gcs-pop-a/b` (switching between the identical halves of
+  a pair is how a beat replays a tap, a wipe or a progress bar).
+- Scroll pacing is not an animation class: `components/landing/story`
+  moves between beats with a quartic tween of `window.scrollTo` and writes
+  per-frame transforms straight to elements, never through React state.
+
+Under reduced motion every one of these stops: the entrances resolve to
+their end frame, the loops stop, and the landing story does not pace at all
+(its scenes become ordinary sections, each showing its final beat; the same
+happens on screens shorter than 560px). Blocks after the story rise 34px
+into place once as they enter the view (`[data-reveal]`), except under
+reduced motion.
 
 **Reaching for a new motion/visual-effect library:** check the above first.
 React Bits (reactbits.dev, MIT + Commons Clause, free via its own public

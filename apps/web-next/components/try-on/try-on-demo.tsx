@@ -27,11 +27,10 @@ import {
   clearPendingStorefrontProof,
   getPendingStorefrontProof,
 } from '@/lib/try-on/storefront-bootstrap';
-import {
-  retryAfterDelayMs,
-  TRYON_POLL_TIMEOUT_MS,
-  tryOnPollDelayMs,
-} from '@/lib/try-on/poll-policy';
+import { createAttemptNonce, fetchWithOneRetry, pollTryOnJob } from '@/lib/try-on/client';
+
+// Kept exported from here for the embed's existing tests.
+export { pollTryOnJob };
 
 type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 type GenerationPhase =
@@ -41,75 +40,6 @@ type GenerationPhase =
   | 'result-received';
 
 const SLOW_GENERATION_MS = 12_000;
-
-function createAttemptNonce(): string {
-  const bytes = new Uint8Array(18);
-  window.crypto.getRandomValues(bytes);
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-async function fetchWithOneRetry(input: RequestInfo | URL, init: RequestInit): Promise<Response> {
-  try {
-    const response = await fetch(input, init);
-    if (response.status < 500) return response;
-  } catch {
-    // A retry is safe because the same signed attempt/request key is reused.
-  }
-  return fetch(input, init);
-}
-
-function waitForPoll(delayMs: number): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, delayMs));
-}
-
-export async function pollTryOnJob(
-  jobId: string,
-  signedSession: string,
-  fallbackError: string,
-): Promise<TryOnJobApiResponse> {
-  const deadline = Date.now() + TRYON_POLL_TIMEOUT_MS;
-  let requestCount = 0;
-
-  while (Date.now() < deadline) {
-    const response = await fetch(`/api/try-on/jobs/${encodeURIComponent(jobId)}`, {
-      headers: { Authorization: `Bearer ${signedSession}` },
-    });
-    requestCount += 1;
-
-    if (response.status === 429) {
-      const scheduledDelay = tryOnPollDelayMs(requestCount);
-      const serverDelay = retryAfterDelayMs(response.headers.get('Retry-After'));
-      const remaining = Math.max(0, deadline - Date.now());
-      await waitForPoll(Math.min(remaining, Math.max(scheduledDelay, serverDelay ?? 0)));
-      continue;
-    }
-
-    const data: TryOnJobApiResponse = await response.json();
-
-    if (!response.ok || !data.ok) {
-      throw new Error(data.message || data.error || fallbackError);
-    }
-    if (data.status === 'failed') {
-      throw new Error(data.message || fallbackError);
-    }
-    if (data.status === 'completed') {
-      if (!data.resultImageUrl) {
-        throw new Error(data.message || fallbackError);
-      }
-      return data;
-    }
-    if (data.status !== 'queued' && data.status !== 'processing') {
-      throw new Error(fallbackError);
-    }
-
-    const remaining = Math.max(0, deadline - Date.now());
-    await waitForPoll(Math.min(remaining, tryOnPollDelayMs(requestCount)));
-  }
-
-  throw new Error(fallbackError);
-}
 
 /* Single ordered source of truth — progress percentage and loading-step
    index both derive from one phase's position here, instead of two

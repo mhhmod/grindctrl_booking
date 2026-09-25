@@ -2,7 +2,7 @@
 
 import React, { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { SwapIcon } from '@/components/site/icons';
 import { useLandingLocale } from '@/components/landing/landing-locale';
 import { CURRENCY_COOKIE, type Currency } from '@/lib/pricing/currency';
 
@@ -30,15 +30,14 @@ export function CurrencyToggle({ currency }: { currency: Currency }) {
   }
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
-      size="sm"
       onClick={toggle}
       disabled={isPending}
-      className="min-h-11 rounded-full border border-border px-4 text-xs font-semibold"
+      className="inline-flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border bg-card px-4 text-[13.5px] font-semibold text-foreground hover:bg-foreground/[0.05] disabled:opacity-60"
     >
+      <SwapIcon size={16} />
       {label}
-    </Button>
+    </button>
   );
 }

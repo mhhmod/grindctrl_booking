@@ -163,8 +163,8 @@ to diverge — "the existing primitives genuinely cannot represent this content/
 
 ### Landing sign-in regression guard
 
-- Keep a visibly labelled, localized Sign in entry in the landing header, accessible without opening the menu. Do not restore an icon-only sign-in squeezed beside the wordmark.
-- Preserve the mobile two-row allocation below 640px unless a replacement is verified at 320/343/375/390px in EN/AR and light/dark themes. Sign-in, booking and menu controls must remain separate, unclipped 44px touch targets.
+- Keep a visibly labelled, localized Sign in entry in the desktop header beside the language switch, accessible without opening a menu. Do not restore an icon-only sign-in squeezed beside the wordmark.
+- On phones the v15 header (`components/site/site-header.tsx`) is a single row: the wordmark, Book a call and the menu button. Sign in is the first row of the menu dialog, which takes focus when it opens. The owner chose this for the v15 site (see `apps/web-next/docs/handoff/site-v15/README.md`), replacing the earlier two-row mobile header; `components/site/site-header.test.tsx` asserts both halves. Any further change must be verified at 320/343/375/390px in EN/AR and light/dark themes, with Book a call and the menu button as separate, unclipped 44px touch targets.
 - Repeat the checks and read the known local-auth limitations in `docs/superpowers/checkpoints/2026-09-05-mobile-signin-ui.md` before changing this header. Unit tests alone are not browser proof.
 
 ## Next application release guard (2026-09-05)

@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { useLandingLocale } from '@/components/landing/landing-locale';
-import { SiteFooter } from '@/components/landing/site-footer';
-import { SiteHeader } from '@/components/landing/site-header';
+import { MarketingChrome } from '@/components/site/marketing-chrome';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -212,12 +211,7 @@ export function RoiPageContent({ initialCurrency }: { initialCurrency: Currency 
   }
 
   return (
-    <>
-      <AmbientBackground />
-
-      <SiteHeader locale={locale} t={landingT} />
-
-      <main aria-label={t.pageLabel}>
+    <MarketingChrome background={<AmbientBackground />} mainLabel={t.pageLabel}>
         <section className="border-b border-border">
           <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
             <div className="min-w-0 max-w-3xl">
@@ -474,9 +468,6 @@ export function RoiPageContent({ initialCurrency }: { initialCurrency: Currency 
             </ol>
           </div>
         </section>
-      </main>
-
-      <SiteFooter />
-    </>
+    </MarketingChrome>
   );
 }

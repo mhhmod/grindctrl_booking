@@ -19,8 +19,7 @@ import Link from 'next/link';
 import { AmbientBackground } from '@/components/landing/ambient-background';
 import { Eyebrow } from '@/components/landing/eyebrow';
 import { useLandingLocale } from '@/components/landing/landing-locale';
-import { SiteFooter } from '@/components/landing/site-footer';
-import { SiteHeader } from '@/components/landing/site-header';
+import { MarketingChrome } from '@/components/site/marketing-chrome';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { trackClick } from '@/lib/analytics';
@@ -28,15 +27,7 @@ import { BOOKING_URL } from '@/lib/booking';
 import { cn } from '@/lib/utils';
 
 export function MarketingPage({ children }: { children: React.ReactNode }) {
-  const { locale, t } = useLandingLocale();
-  return (
-    <>
-      <AmbientBackground />
-      <SiteHeader locale={locale} t={t} />
-      <main>{children}</main>
-      <SiteFooter />
-    </>
-  );
+  return <MarketingChrome background={<AmbientBackground />}>{children}</MarketingChrome>;
 }
 
 export interface CtaLink {

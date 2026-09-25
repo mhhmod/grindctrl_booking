@@ -58,7 +58,9 @@ function LauncherButton({ open, onClick, buttonRef }: { open: boolean; onClick: 
     // via transform, which lands its own edge at exactly 16px from the real
     // viewport corner (14px inset from an 84px box + this box's 2px offset),
     // matching the plain single-button layout this replaces pixel-for-pixel.
-    <div className="fixed bottom-[2px] end-[2px] z-40 size-[84px]">
+    // data-assistant-launcher: hidden by globals.css while the landing story
+    // is pinned (html[data-story="pinned"]), back once the story ends.
+    <div data-assistant-launcher="" className="fixed bottom-[2px] end-[2px] z-40 size-[84px]">
       {!open && <LauncherMotionDna />}
       <button
         ref={buttonRef}

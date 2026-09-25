@@ -99,3 +99,23 @@ describe('AssistantLauncher', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+/* The launcher steps aside while the landing story is pinned: the story sets
+   data-story="pinned" on <html> and globals.css hides anything marked
+   data-assistant-launcher (visibility, so it also leaves the tab order). */
+describe('AssistantLauncher while the landing story is pinned', () => {
+  it('marks its root so the pinned story can hide it', () => {
+    const { container } = renderLauncher();
+    expect(container.querySelector('[data-assistant-launcher]')).not.toBeNull();
+  });
+
+  it('is hidden by the stylesheet while html[data-story="pinned"]', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const css = readFileSync(join(__dirname, '../../app/globals.css'), 'utf8');
+    const rule = css.match(/html\[data-story='pinned'\] \[data-assistant-launcher\]\s*\{[^}]*\}/);
+    expect(rule, 'the pinned-story rule for the launcher is missing').not.toBeNull();
+    expect(rule![0]).toMatch(/visibility:\s*hidden/);
+    expect(rule![0]).toMatch(/pointer-events:\s*none/);
+  });
+});

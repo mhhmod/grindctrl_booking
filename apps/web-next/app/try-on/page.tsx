@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
-import { TryOnPageContent } from '@/components/try-on/try-on-page-content';
+import { TryOnStudio } from '@/components/try-on/page/try-on-studio';
 import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
 import {
   DEFAULT_TRYON_LOCALE,
@@ -11,9 +11,9 @@ import {
 } from '@/lib/try-on/i18n';
 
 export const metadata: Metadata = {
-  title: 'Try-On Agent — GRINDCTRL',
+  title: 'GrindCTRL Try-On: see it on you before you buy',
   description:
-    'Upload your photo and preview how a product looks on you. Powered by GrindCTRL AI visual sales tools.',
+    'Pick a piece, add a photo and get your look. The same AI try-on runs inside a real Shopify store.',
 };
 
 export default async function TryOnPage() {
@@ -34,9 +34,9 @@ export default async function TryOnPage() {
   return (
     <TryOnLocaleProvider
       initialLocale={initialLocale}
-      className="gc-animated min-h-screen bg-background text-foreground"
+      className="gc-animated min-h-dvh overflow-x-clip bg-background text-foreground"
     >
-      <TryOnPageContent />
+      <TryOnStudio />
     </TryOnLocaleProvider>
   );
 }

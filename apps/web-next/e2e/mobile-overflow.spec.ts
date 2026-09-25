@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { GOLDEN_PAGES } from './golden-pages';
+import { waitForPageReady } from './page-ready';
 
 /* The full checklist from ~/.claude/rules/responsive.md: four adjacent
    small-phone widths (where most real overflow bugs happen — dense on
@@ -43,8 +44,9 @@ for (const locale of LOCALES) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(path);
       /* Not networkidle — Next dev holds an HMR connection open, so it never
-         settles. Fonts are what actually move text widths, so wait for those. */
-      await page.evaluate(() => document.fonts.ready);
+         settles. Fonts are what actually move text widths, so wait for those
+         (and, on the landing, for the story's layout). */
+      await waitForPageReady(page, path);
 
       /* Prove the locale actually applied — otherwise this silently tests
          English twice and the Arabic case, the one most likely to overflow,

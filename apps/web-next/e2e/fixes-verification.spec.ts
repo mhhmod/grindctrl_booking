@@ -18,40 +18,38 @@ test.describe('theme defaults to light', () => {
 });
 
 test.describe('try-on live demo — Arabic actually renders', () => {
-  test('Arabic strings appear in the header and hero, not English fallbacks', async ({ page, context }) => {
-    await context.addCookies([{ name: 'gc-locale', value: 'ar', url: 'http://localhost:3100' }]);
+  /* The v15 try-on page replaced the old hero badge and its #tryon-locale-toggle.
+     The checks follow the same two symptoms on the new page: Arabic must
+     really render (not English fallbacks), and the language control must
+     offer English once the page is Arabic. */
+  test('Arabic strings appear in the heading and the footer controls, not English fallbacks', async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: 'gc-locale', value: 'ar', url: baseURL! }]);
     await page.goto('/try-on');
     await page.evaluate(() => document.fonts.ready);
 
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.getByRole('heading', { level: 1, name: 'شاهدها عليك قبل الشراء.' })).toBeVisible();
 
-    /* The hero badge pill — was correctly Arabic already; confirms the page
-       is really in Arabic mode before checking the parts that weren't. The
-       same string legitimately appears twice (BrandLogo's header subtitle
-       and the hero pill both use t.heroBadge), so .first() rather than a
-       strict single match. */
-    await expect(page.getByText('مبيعات بصرية بالذكاء الاصطناعي').first()).toBeVisible();
-
-    /* Regression: ThemeToggle rendered with no locale prop on this page, so
-       its aria-label was always English regardless of site locale. */
+    /* Regression: ThemeToggle once rendered with no locale prop on this page,
+       so its aria-label was always English regardless of site locale. */
     const themeToggle = page.getByRole('button', { name: /التبديل إلى/ });
-    await expect(themeToggle).toBeVisible();
+    await expect(themeToggle.first()).toBeAttached();
     const englishThemeToggle = page.getByRole('button', { name: /^Switch to (light|dark) mode$/ });
     await expect(englishThemeToggle).toHaveCount(0);
   });
 
-  test('the language toggle offers "English", not a leftover Arabic label, once already in Arabic', async ({
+  test('the language switch offers "English", not a leftover Arabic label, once already in Arabic', async ({
     page,
     context,
+    baseURL,
   }) => {
-    await context.addCookies([{ name: 'gc-locale', value: 'ar', url: 'http://localhost:3100' }]);
-    /* The toggle's visible label is hidden below sm: (locale-toggle.tsx),
-       and its accessible name comes from a fixed aria-label rather than
-       that text, so this checks visible text content at a width where the
-       label shows, not the accessible name. */
-    await page.setViewportSize({ width: 800, height: 900 });
+    await context.addCookies([{ name: 'gc-locale', value: 'ar', url: baseURL! }]);
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/try-on');
-    await expect(page.locator('#tryon-locale-toggle')).toContainText('English');
+    const toggle = page.getByRole('banner').getByRole('button', { name: 'Switch to English' });
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveText('English');
+    await expect(toggle).toHaveAttribute('lang', 'en');
   });
 });
 
