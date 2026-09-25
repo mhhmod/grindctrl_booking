@@ -142,7 +142,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <path d="M699,190 C699,150 491,156 491,112" pathLength="100" fill="none" stroke="var(--gc-cream)" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="16 200" strokeDashoffset="16" style={{ filter: "drop-shadow(0 0 5px color-mix(in srgb, var(--gc-cream) 85%, transparent))", animation: `${v.oeInboxAnswerFlow} 0.8s cubic-bezier(0.45, 0, 0.2, 1) both` }} />
               </svg>
               <div style={{ position: "absolute", insetInlineStart: "0px", top: "40px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onChatLine}`, background: v.onChatBg, color: v.onChatFg, opacity: v.onChatOp, boxShadow: v.onChatSh, transform: `scale(${v.onChatS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <path d="M5 5.5h14a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 17H10l-4.5 3.5V17H5a1.5 1.5 0 01-1.5-1.5V7A1.5 1.5 0 015 5.5z" />
                   </svg>
@@ -157,7 +157,7 @@ export function DeskOps({ v, t }: ViewProps) {
                     <span aria-hidden="true" style={{ position: "absolute", inset: "-1px", borderRadius: "15px", border: "1px solid color-mix(in srgb, var(--gc-cream) 70%, transparent)", animation: "gcs-halo 1.6s ease-out infinite", pointerEvents: "none" }} />
                   </>
                 ) : null}
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <span aria-hidden="true" style={{ width: "18px", height: "18px", flexShrink: "0", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid currentColor", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M12 3c.6 4.2 3.1 6.7 7.3 7.3-4.2.6-6.7 3.1-7.3 7.3-.6-4.2-3.1-6.7-7.3-7.3C8.9 9.7 11.4 7.2 12 3z" /></svg>
                   </span>
@@ -167,7 +167,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onAiSubFg, transition: "color 0.35s ease" }}>{v.onAiSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "208px", top: "0px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onKnowLine}`, background: v.onKnowBg, color: v.onKnowFg, opacity: v.onKnowOp, boxShadow: v.onKnowSh, transform: `scale(${v.onKnowS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <path d="M5 4.5h9.5a3 3 0 013 3v12H8a3 3 0 01-3-3v-12z" />
                     <path d="M5 16.5a3 3 0 013-3h9.5" />
@@ -178,7 +178,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onKnowSubFg, transition: "color 0.35s ease" }}>{v.onKnowSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "208px", top: "95px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onOrderLine}`, background: v.onOrderBg, color: v.onOrderFg, opacity: v.onOrderOp, boxShadow: v.onOrderSh, transform: `scale(${v.onOrderS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_SHOPIFY} /></svg>
                   {t("Shopify orders")}
                 </span>
@@ -186,7 +186,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onOrderSubFg, transition: "color 0.35s ease" }}>{v.onOrderSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "208px", top: "190px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onPhotoLine}`, background: v.onPhotoBg, color: v.onPhotoFg, opacity: v.onPhotoOp, boxShadow: v.onPhotoSh, transform: `scale(${v.onPhotoS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <rect x="3.5" y="5" width="17" height="14" rx="2" />
                     <circle cx="9" cy="10" r="1.6" />
@@ -198,7 +198,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onPhotoSubFg, transition: "color 0.35s ease" }}>{v.onPhotoSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "416px", top: "48px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onAnswerLine}`, background: v.onAnswerBg, color: v.onAnswerFg, opacity: v.onAnswerOp, boxShadow: v.onAnswerSh, transform: `scale(${v.onAnswerS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <path d="M9.5 8L5 12l4.5 4" />
                     <path d="M5 12h9a5 5 0 015 5v1" />
@@ -209,7 +209,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onAnswerSubFg, transition: "color 0.35s ease" }}>{v.onAnswerSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "416px", top: "190px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onHandLine}`, background: v.onHandBg, color: v.onHandFg, opacity: v.onHandOp, boxShadow: v.onHandSh, transform: `scale(${v.onHandS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <path d="M3.5 12h8" />
                     <path d="M8.5 8.5L12 12l-3.5 3.5" />
@@ -222,7 +222,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onHandSubFg, transition: "color 0.35s ease" }}>{v.onHandSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "624px", top: "48px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onClosedLine}`, background: v.onClosedBg, color: v.onClosedFg, opacity: v.onClosedOp, boxShadow: v.onClosedSh, transform: `scale(${v.onClosedS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                     <circle cx="12" cy="12" r="8.5" />
                     <path d="M8.5 12.2l2.4 2.4 4.8-5" />
@@ -233,7 +233,7 @@ export function DeskOps({ v, t }: ViewProps) {
                 <span style={{ display: "block", marginTop: "6px", fontSize: "10.5px", lineHeight: "1.3", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: v.onClosedSubFg, transition: "color 0.35s ease" }}>{v.onClosedSub}</span>
               </div>
               <div style={{ position: "absolute", insetInlineStart: "624px", top: "190px", width: "150px", height: "64px", boxSizing: "border-box", padding: "10px 11px", borderRadius: "15px", border: `1px solid ${v.onInboxLine}`, background: v.onInboxBg, color: v.onInboxFg, opacity: v.onInboxOp, boxShadow: v.onInboxSh, transform: `scale(${v.onInboxS})`, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease, opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "12.5px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "7px", fontSize: "calc(11px + 1.5px * var(--gc-ls, 1))", fontWeight: "700", whiteSpace: "nowrap" }}>
                   <span aria-hidden="true" style={{ display: "inline-flex" }}>
                     <span style={{ width: "16px", height: "16px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid currentColor", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "8.5px", fontWeight: "800", background: "inherit" }}>O</span>
                     <span style={{ width: "16px", height: "16px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid currentColor", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "8.5px", fontWeight: "800", background: "inherit", marginInlineStart: "-5px" }}>N</span>
