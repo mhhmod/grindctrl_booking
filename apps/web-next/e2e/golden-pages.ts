@@ -23,7 +23,7 @@ export interface GoldenPage {
 }
 
 export const GOLDEN_PAGES: GoldenPage[] = [
-  { name: 'landing', path: '/', usesLandingRoot: true, visualAnchor: 'landing-hero-title' },
+  { name: 'landing', path: '/', usesLandingRoot: true, visualAnchor: 'hero-title' },
   { name: 'pricing', path: '/pricing', usesLandingRoot: true },
   { name: 'roi', path: '/roi', usesLandingRoot: true },
   { name: 'shopping', path: '/shopping', usesLandingRoot: true },

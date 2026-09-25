@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForPageReady } from './page-ready';
 
 /* dir/lang correctness is already covered per-page by mobile-overflow.spec.ts.
    This file checks the other half of RTL: the handful of elements that are
@@ -30,7 +31,7 @@ test.describe('directional icons mirror in Arabic', () => {
       await context.clearCookies();
       await context.addCookies([{ name: 'gc-locale', value: locale, url: baseURL! }]);
       await page.goto('/');
-      await page.evaluate(() => document.fonts.ready);
+      await waitForPageReady(page, '/');
 
       const arrow = page.locator('[data-icon="inline-end"] svg').first();
       await expect(arrow).toBeVisible();
@@ -44,7 +45,11 @@ test.describe('directional icons mirror in Arabic', () => {
     }
   });
 
-  test('the "how it works" connector arrow rotates for Arabic\'s reversed reading order', async ({
+  /* The old #how section and its rotating connector went with the previous
+     landing. The v15 page's How it works section is #journey, and its
+     forward arrow (on See it working) mirrors with scale, like every
+     forward arrow on the page. */
+  test('the How it works forward arrow mirrors for Arabic\'s reversed reading order', async ({
     page,
     context,
     baseURL,
@@ -52,21 +57,19 @@ test.describe('directional icons mirror in Arabic', () => {
     for (const locale of ['en', 'ar'] as const) {
       await context.clearCookies();
       await context.addCookies([{ name: 'gc-locale', value: locale, url: baseURL! }]);
-      // Desktop width: the connector only rotates at md: and up (it stacks
-      // vertically, unrotated, below that — rotating it there would be wrong).
       await page.setViewportSize({ width: 1280, height: 1000 });
       await page.goto('/');
-      await page.evaluate(() => document.fonts.ready);
-      await page.locator('#how').scrollIntoViewIfNeeded();
+      await waitForPageReady(page, '/');
+      await page.locator('#journey').scrollIntoViewIfNeeded();
 
-      const connector = page.locator('#how svg').first();
-      await expect(connector).toBeVisible();
-      const { rotate } = await computedDirectionalStyle(connector);
+      const arrow = page.locator('#journey [data-icon="inline-end"] svg').first();
+      await expect(arrow).toBeVisible();
+      const { scale } = await computedDirectionalStyle(arrow);
 
       if (locale === 'ar') {
-        expect(rotate, 'connector must rotate 180° in Arabic at desktop width (rtl:md:rotate-180)').toBe('180deg');
+        expect(scale, 'the arrow must be horizontally flipped in Arabic').toBe('-1 1');
       } else {
-        expect(rotate, 'connector must render unrotated in English at desktop width (md:rotate-0)').toBe('none');
+        expect(scale, 'the arrow must render unflipped in English').toBe('none');
       }
     }
   });
