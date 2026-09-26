@@ -63,8 +63,11 @@ const PhoneStack = dynamic(() => import('./views/phone-stack').then(pick('PhoneS
 const PhoneCta = dynamic(() => import('./views/phone-cta').then(pick('PhoneCta')));
 
 const PHONE_QUERY = '(max-width: 999.98px)';
-/* Matches the stacked layout rule in globals.css. */
-const STACK_QUERY = '(max-height: 559.98px), (prefers-reduced-motion: reduce)';
+/* Matches the stacked layout rule in globals.css. Touch screens stack too:
+   pacing a swipe means scrolling the page from script every frame, which
+   fights the phone's own momentum and its collapsing address bar, so the
+   story lagged and flashed on real phones. Stacked, it scrolls natively. */
+const STACK_QUERY = '(max-height: 559.98px), (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse)';
 const REDUCE_QUERY = '(prefers-reduced-motion: reduce)';
 
 function matches(query: string) {

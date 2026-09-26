@@ -907,13 +907,13 @@ html[data-story='pinned'] [data-assistant-launcher] {
 .gc-story[data-reveal-on] [data-reveal] { opacity: 0; transform: translateY(34px); transition: opacity 1s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .gc-story[data-reveal-on] [data-reveal][data-in] { opacity: 1; transform: none; }
 
-/* Reduced motion, or a screen too short to pace (a phone held sideways):
-   no pacing at all. The scenes are ordinary sections one after another,
+/* Reduced motion, a screen too short to pace (a phone held sideways), or a
+   touch screen (see STACK_QUERY in landing-story.tsx): no pacing at all. The scenes are ordinary sections one after another,
    each showing its final beat; the director sizes each sheet to its
    content. This is layout, not motion, so it sits outside the consolidated
    reduced-motion block below (and names the short screen first, so that
    block stays the first reduced-motion rule in the file). */
-@media (max-height: 559.98px), (prefers-reduced-motion: reduce) {
+@media (max-height: 559.98px), (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse) {
   .gc-story-scene,
   .gc-story-scene[data-scene='results'] { height: auto; }
   .gc-story-scene + .gc-story-scene { margin-top: 0; }
