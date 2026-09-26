@@ -1,11 +1,9 @@
 # Build with Vite, run Playwright tests, then deploy to GitHub Pages
 name: Deploy to Pages
 
+# The live site is apps/web-next (deploy-next.yml). This older Vite site no
+# longer builds on every push and pull request; run it by hand if needed.
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
