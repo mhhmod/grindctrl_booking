@@ -879,8 +879,14 @@ html[data-story='pinned'] [data-assistant-launcher] {
 .gc-story-rest { position: relative; z-index: 6; background: var(--background); }
 /* The cut for long jumps (story-controller.ts cutTo): covers the page, not the header. */
 .gc-story-veil { position: fixed; inset: 0; z-index: 45; background: var(--background); opacity: 0; pointer-events: none; }
-/* Sheets that are covered or off screen stop their loops. */
-.gc-story-sheet[inert] * { animation-play-state: paused !important; }
+/* Sheets that are covered or off screen are not drawn at all. Every sheet
+   is a full-screen GPU layer with many layers inside it; keeping all five
+   painted used about 40 screens of GPU memory, and on real devices the parts
+   the GPU could not repaint in time flashed as bare background (black or
+   white) while scrolling. The director un-hides a sheet 40px before it
+   enters the screen (story-controller.ts syncInert). */
+.gc-story-sheet[inert],
+.gc-story-sheet[inert] * { visibility: hidden !important; animation-play-state: paused !important; }
 .gc-story[data-a='steps'] [data-k='hero'] { pointer-events: none; }
 .gc-story [data-k^='env']:not([data-live]) [data-wiring] * { animation-play-state: paused !important; }
 .gc-story[data-paused] * { animation-play-state: paused !important; }
