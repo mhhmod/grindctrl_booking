@@ -213,6 +213,7 @@ export class StoryController {
   private beatTimers = new PausableTimers();
   private chatTimers = new PausableTimers();
   private wheel = new WheelGate();
+  private nativeRun = 0;
   private tapTimer: ReturnType<typeof setTimeout> | undefined;
   private sTapTimer: ReturnType<typeof setTimeout> | undefined;
   private lateMeasure: ReturnType<typeof setTimeout> | undefined;
@@ -940,6 +941,29 @@ export class StoryController {
       return;
     }
     d.anim = true;
+    /* Android browsers place position: sticky on the compositor thread. A
+       tween that calls scrollTo from requestAnimationFrame moves the page on
+       the main thread, and the two drift a frame apart, so the sheet
+       underneath shows through for single frames. A native smooth scroll runs
+       on the compositor with the sheets, so touch devices use it and finish
+       on scrollend. */
+    if ('onscrollend' in window && window.matchMedia('(pointer: coarse)').matches) {
+      const run = ++this.nativeRun;
+      const end = () => {
+        if (run !== this.nativeRun) return;
+        this.nativeRun++;
+        window.removeEventListener('scrollend', end);
+        clearTimeout(guard);
+        if (!this.d) return;
+        d.anim = false;
+        this.wheel.landed(performance.now());
+        this.arrive();
+      };
+      const guard = setTimeout(end, 1400);
+      window.addEventListener('scrollend', end);
+      window.scrollTo({ top: y1, behavior: 'smooth' });
+      return;
+    }
     const t0 = performance.now();
     const frame = (t: number) => {
       if (!this.d) return;
