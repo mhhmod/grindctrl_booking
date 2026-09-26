@@ -204,6 +204,11 @@ function SceneShell({
       {BEATS[scene].map((f, i) => (
         <i key={i} data-beat={`${scene}:${i}`} aria-hidden="true" className="gc-story-beat" style={{ top: `${f * len}svh` }} />
       ))}
+      {/* The shadow a sheet casts on the one it covers, as its own layer
+          the director fades with opacity alone (see .gc-story-shade). */}
+      <div aria-hidden="true" className="gc-story-shade">
+        <i data-k={`shade${key}`} />
+      </div>
       <div
         data-k={`sheet${key}`}
         className={cn('gc-story-sheet gc-frame', dark && 'gc-sheet-dark')}
