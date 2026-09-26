@@ -716,8 +716,10 @@ export class StoryController {
     FRAMES.forEach(([scene], i) => {
       const top = d.tops[scene];
       const covered = (d.tgt[`o${scene}`] ?? 0) >= 0.999 || (i === FRAMES.length - 1 && restTop <= 0);
-      /* 40px of lead so a sheet is drawn before its edge comes into view. */
-      const below = top !== undefined && top >= d.vh + 40;
+      /* A full screen of lead: on a phone one scroll frame can move far more
+         than a few pixels, and a sheet still hidden when its edge arrives
+         flashes as bare background. Only sheets two screens away are hidden. */
+      const below = top !== undefined && top >= d.vh * 2;
       sig += covered || below ? '1' : '0';
     });
     if (sig === d.inert) return;

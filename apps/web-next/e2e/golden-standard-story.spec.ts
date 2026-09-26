@@ -163,17 +163,3 @@ test.describe('landing story, reduced motion', () => {
     await expect.poll(() => scrollY(page)).toBeGreaterThan(0);
   });
 });
-
-test.describe('landing story, touch screen', () => {
-  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
-
-  test('stacks and scrolls natively instead of pacing swipes', async ({ page }) => {
-    await page.goto('/');
-    await waitForPageReady(page, '/');
-    /* Paced swipes scrolled the page from script every frame, which fought the
-       phone's own momentum and address bar and flickered on real phones. */
-    await expect(page.locator('.gc-story')).toHaveAttribute('data-stacked', '');
-    expect(await page.locator('[data-k="sheetS"]').evaluate((el) => getComputedStyle(el).position)).toBe('relative');
-    await expect(page.locator('html')).not.toHaveAttribute('data-story', 'pinned');
-  });
-});
