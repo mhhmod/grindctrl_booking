@@ -170,6 +170,8 @@ type Director = {
   noClickUntil: number;
   lastStore: number;
   inert: string;
+  lastW: number;
+  lastH: number;
   pinned: boolean | null;
   /* measured geometry */
   fitA: number;
@@ -352,7 +354,7 @@ export class StoryController {
       beats: [], stops: [], restY: 1e9, beat: -1, capWant: 0, capLine: -1,
       ptr: -1, tapN: 0, chat: false, flips: '', cpos: 0, upto: -1, dataA: '',
       anim: false, tw: 0, settleT: undefined, hold: 0, navAct: -2,
-      touching: false, tStart: null, tMode: null, tDy: 0, noClickUntil: 0, lastStore: -1, inert: '', pinned: null,
+      touching: false, tStart: null, tMode: null, tDy: 0, noClickUntil: 0, lastStore: -1, inert: '', lastW: -1, lastH: -1, pinned: null,
       fitA: 1, capY: 0, y0: 0, y1: 0, fitS: 1, fitO: 1, fitB: 1, fitC: 1, cy: 0, ky: 0, ty: 0, spread: 1,
     };
     root.toggleAttribute('data-stacked', this.env.stacked);
@@ -449,9 +451,19 @@ export class StoryController {
   private onResize = () => {
     const d = this.d;
     if (!d) return;
+    /* Mobile browsers fire resize while a swipe shows or hides the address
+       bar. The sheets are sized in svh, which that never changes, so a resize
+       that keeps the width and the svh height is not a layout change: re-
+       measuring and snapping back to the beat there fights the finger and
+       flashes the sheet underneath on alternate frames. */
+    const w = window.innerWidth;
+    const h = d.k.vhProbe?.offsetHeight || 0;
+    if (w === d.lastW && h === d.lastH) return;
+    d.lastW = w;
+    d.lastH = h;
     const at = d.beat;
     this.directorMeasure();
-    if (!this.env.stacked && at >= 0 && at < d.stops.length && !d.anim) window.scrollTo(0, d.stops[at]);
+    if (!this.env.stacked && !d.touching && at >= 0 && at < d.stops.length && !d.anim) window.scrollTo(0, d.stops[at]);
     this.kick(true);
   };
 
