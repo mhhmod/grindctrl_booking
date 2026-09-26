@@ -706,11 +706,14 @@ export class StoryController {
     const r = r1((1 - arrived) * 30);
     this.st(`sheet${key}`, 'border-radius', `${r}px ${r}px 0 0`);
     this.st(`env${key}`, 'clip-path', `inset(0 round ${r}px ${r}px 0 0)`);
-    /* The shadow is a large blur over a full-screen sheet, so every change
-       repaints the whole sheet. Seven steps look the same as a smooth fade
-       and repaint seven times instead of every frame. */
-    const shade = Math.round((1 - arrived) * 6) / 10;
-    this.st(`sheet${key}`, 'box-shadow', `0 -34px 80px -46px rgb(32 29 27 / ${r3(shade)})`);
+    /* The shadow lives on its own layer and only its opacity changes. As a
+       box-shadow on the sheet, every change (and every change of the
+       sheet's corner radius, which reshapes the shadow) re-rastered the
+       whole sheet, frame after frame, until the sheet arrived. */
+    this.st(`shade${key}`, 'opacity', r3(1 - arrived));
+    /* Once the sheet has arrived its shadow is gone; hidden, the layer
+       holds no GPU tiles while the sheet stays on screen. */
+    this.st(`shade${key}`, 'visibility', arrived > 0.999 ? 'hidden' : 'visible');
   }
 
   /** Sheets that are fully covered or off screen take no focus. */
