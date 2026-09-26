@@ -883,8 +883,8 @@ html[data-story='pinned'] [data-assistant-launcher] {
    is a full-screen GPU layer with many layers inside it; keeping all five
    painted used about 40 screens of GPU memory, and on real devices the parts
    the GPU could not repaint in time flashed as bare background (black or
-   white) while scrolling. The director un-hides a sheet 40px before it
-   enters the screen (story-controller.ts syncInert). */
+   white) while scrolling. The director un-hides a sheet a full screen before
+   it enters (story-controller.ts syncInert). */
 .gc-story-sheet[inert],
 .gc-story-sheet[inert] * { visibility: hidden !important; animation-play-state: paused !important; }
 .gc-story[data-a='steps'] [data-k='hero'] { pointer-events: none; }
@@ -907,13 +907,13 @@ html[data-story='pinned'] [data-assistant-launcher] {
 .gc-story[data-reveal-on] [data-reveal] { opacity: 0; transform: translateY(34px); transition: opacity 1s ease, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .gc-story[data-reveal-on] [data-reveal][data-in] { opacity: 1; transform: none; }
 
-/* Reduced motion, a screen too short to pace (a phone held sideways), or a
-   touch screen (see STACK_QUERY in landing-story.tsx): no pacing at all. The scenes are ordinary sections one after another,
+/* Reduced motion, or a screen too short to pace (a phone held sideways):
+   no pacing at all. The scenes are ordinary sections one after another,
    each showing its final beat; the director sizes each sheet to its
    content. This is layout, not motion, so it sits outside the consolidated
    reduced-motion block below (and names the short screen first, so that
    block stays the first reduced-motion rule in the file). */
-@media (max-height: 559.98px), (prefers-reduced-motion: reduce), (hover: none) and (pointer: coarse) {
+@media (max-height: 559.98px), (prefers-reduced-motion: reduce) {
   .gc-story-scene,
   .gc-story-scene[data-scene='results'] { height: auto; }
   .gc-story-scene + .gc-story-scene { margin-top: 0; }
