@@ -46,6 +46,18 @@ await check('image_model_catalogue', async () => {
     httpStatus: response.status, models,
     note: 'Catalogue presence does not prove generation quality, funding or reference-image compatibility.' });
 });
+// Mirrors apps/web-next/lib/messenger/chat-client.ts: Store Chat replies use
+// the first model and fall back to the second, both through OpenRouter.
+const STORE_CHAT_MODELS = ['openai/gpt-oss-120b', 'google/gemini-2.5-flash-lite'];
+await check('store_chat_model_catalogue', async () => {
+  const response = await request('https://openrouter.ai/api/v1/models');
+  const data = response.ok ? await response.json() : null;
+  const catalogue = Array.isArray(data?.data) ? data.data : [];
+  const models = STORE_CHAT_MODELS.map(id => ({ id, listed: catalogue.some(item => item.id === id) }));
+  add('store_chat_model_catalogue', { ok: response.ok && models.every(model => model.listed),
+    httpStatus: response.status, models,
+    note: 'Catalogue presence does not prove Arabic reply quality or that a no-data-collection provider is serving it.' });
+});
 await check('groq_models', async () => {
   const key = process.env.GROQ_API_KEY;
   if (!key) return add('groq_models', { ok: false, configured: false });

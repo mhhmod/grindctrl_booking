@@ -75,14 +75,14 @@ export const PUBLIC_INTEGRATIONS = [
     name: 'Groq',
     state: 'infrastructure',
     evidenceRef: 'apps/web-next/lib/assistant/groq-client.ts',
-    note: 'Internal AI infrastructure for chat, speech-to-text and text-to-speech. Not a merchant-connectable tool.',
+    note: 'Internal AI infrastructure for the site assistant chat, speech-to-text and text-to-speech. Not a merchant-connectable tool.',
   },
   {
     id: 'openrouter',
     name: 'OpenRouter',
     state: 'infrastructure',
     evidenceRef: 'apps/web-next/lib/try-on/image-runner.ts',
-    note: 'Internal AI infrastructure that routes Try-On image generation and messenger attachment/vision triage (apps/web-next/lib/messenger/vision-client.ts) to swappable underlying models. Not a merchant-connectable tool.',
+    note: 'Internal AI infrastructure that routes Try-On image generation, Store Chat replies (apps/web-next/lib/messenger/chat-client.ts) and messenger attachment/vision triage (apps/web-next/lib/messenger/vision-client.ts) to swappable underlying models. Not a merchant-connectable tool.',
   },
   {
     id: 'notion',
