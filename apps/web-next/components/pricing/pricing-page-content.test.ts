@@ -94,3 +94,16 @@ describe('pricing plan mapping', () => {
     expect(meterPercent(10, 0)).toBe(3);
   });
 });
+
+describe('Store Chat section copy', () => {
+  /* Each spec states a limit the code enforces (lib/messenger), so both
+     languages must state the same limits, in the same order. */
+  it('lists the same limits in English and Arabic', () => {
+    const numbers = (locale: 'en' | 'ar') =>
+      getPricingCopy(locale).chatSpecs.map((spec) => spec.detail.match(/\d+/g) ?? []);
+    expect(getPricingCopy('ar').chatSpecs.map((spec) => spec.icon)).toEqual(
+      getPricingCopy('en').chatSpecs.map((spec) => spec.icon),
+    );
+    expect(numbers('ar')).toEqual(numbers('en'));
+  });
+});

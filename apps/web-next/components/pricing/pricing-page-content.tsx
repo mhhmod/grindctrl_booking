@@ -122,7 +122,7 @@ function isFeatureVisible(feature: PlanFeature): boolean {
   return !feature.truthRecordId || isPricingRecordVisible(feature.truthRecordId);
 }
 
-const SECTIONS = ['plans', 'topups', 'faq'] as const;
+const SECTIONS = ['plans', 'chat', 'topups', 'faq'] as const;
 type SectionId = (typeof SECTIONS)[number];
 
 function prefersReducedMotion(): boolean {
@@ -606,6 +606,7 @@ export function PricingPageContent({
   });
   const tabs = [
     tab('plans', t.tabPlans, <CalendarIcon size={15} />),
+    tab('chat', t.tabChat, <ChatIcon size={15} />),
     tab('topups', t.tabTopups, <StackIcon size={15} />),
     tab('faq', t.tabQuestions, <ChatIcon size={15} />),
   ];
@@ -702,6 +703,40 @@ export function PricingPageContent({
                 <p className="mt-3 max-w-xl text-lg font-semibold leading-8 lg:max-w-2xl">{t.marketLead}</p>
               </aside>
             ) : null}
+          </section>
+
+          {/* Store Chat */}
+          <section
+            id="chat"
+            aria-labelledby="chat-title"
+            className="mt-[60px] flex scroll-mt-24 flex-col gap-5 lg:mt-[100px] lg:flex-row lg:items-start lg:justify-between lg:gap-[60px]"
+          >
+            <div className="min-w-0 text-center lg:max-w-[420px] lg:text-start">
+              <SiteChip icon={<ChatIcon size={15} />}>{t.chatEyebrow}</SiteChip>
+              <h2 id="chat-title" className={cn('mt-3.5', headingClass)}>
+                {t.chatTitle}
+              </h2>
+              <p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">{t.chatBody}</p>
+            </div>
+            <ul className="grid min-w-0 gap-2.5 sm:grid-cols-2 lg:w-[600px] lg:max-w-[58%]">
+              {t.chatSpecs.map((spec) => {
+                const Icon = SITE_ICONS[spec.icon];
+                return (
+                  <li key={spec.title} className="flex items-start gap-3 rounded-[22px] border border-border bg-card px-4 py-4">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-gc-studio text-foreground"
+                    >
+                      <Icon size={19} strokeWidth={1.7} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[15px] font-bold leading-snug">{spec.title}</span>
+                      <span className="mt-1 block text-[13px] leading-[1.45] text-muted-foreground">{spec.detail}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
 
           {/* Top-ups */}

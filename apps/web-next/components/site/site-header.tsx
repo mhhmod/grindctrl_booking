@@ -269,7 +269,9 @@ function DesktopNav({
             item.wideOnly && 'hidden min-[1180px]:inline-flex',
           )}
         >
-          {navIcons && item.icon ? item.icon : null}
+          {/* Icons need the room of a wide header; below 1280px they would
+              squeeze the page tag beside the wordmark. */}
+          {navIcons && item.icon ? <span className="hidden xl:inline-flex">{item.icon}</span> : null}
           {item.label}
           {item.external ? <ExtIcon size={13} /> : null}
         </NavLink>
