@@ -107,3 +107,20 @@ describe('Store Chat section copy', () => {
     expect(numbers('ar')).toEqual(numbers('en'));
   });
 });
+
+describe('image quality copy', () => {
+  /* Every plan, pack and the demo render with the same model
+     (lib/try-on/models.ts), so no plan or pack may promise better images. */
+  it.each([
+    ['en', /premium|higher quality|better quality|best quality/i],
+    ['ar', /مميزة|جودة أعلى|أعلى جودة|أفضل جودة/],
+  ] as const)('promises the same image quality on every plan and pack in %s', (locale, better) => {
+    const copy = getPricingCopy(locale);
+    const planText = Object.values(copy.plans).flatMap((plan) => [
+      plan.description ?? '',
+      ...plan.features.map((feature) => feature.text),
+    ]);
+    const packText = Object.values(copy.packs).map((pack) => pack.name);
+    expect([copy.sameQuality, ...planText, ...packText].filter((text) => better.test(text))).toEqual([]);
+  });
+});
