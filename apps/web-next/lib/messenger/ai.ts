@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getGroqClient, withGroqCall, CHAT_MODEL } from '@/lib/assistant/groq-client';
+import { storeChatComplete } from './chat-client';
 import { getActiveKnowledge, type KnowledgeEntry } from './knowledge';
 import { ACTION_SENTINEL } from './actions';
 import type { OrderFacts } from './orders';
@@ -156,24 +156,20 @@ export async function generateAssistantReply(input: {
   history: HistoryTurn[];
   userMessage: string;
 }): Promise<AssistantResult> {
-  const client = getGroqClient();
-  const completion = await withGroqCall('messenger.chat', (signal) =>
-    client.chat.completions.create({
-      model: CHAT_MODEL,
-      temperature: 0.3,
-      max_tokens: 400,
-      messages: [
-        { role: 'system', content: input.prompt },
-        ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
-          role: turn.role,
-          content: turn.content.slice(0, MESSAGE_CAP),
-        })),
-        { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
-      ],
-    }, { signal }),
-  );
+  const completion = await storeChatComplete('messenger.chat', {
+    temperature: 0.3,
+    maxTokens: 400,
+    messages: [
+      { role: 'system', content: input.prompt },
+      ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
+        role: turn.role,
+        content: turn.content.slice(0, MESSAGE_CAP),
+      })),
+      { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
+    ],
+  });
 
-  const raw = (completion.choices?.[0]?.message?.content ?? '').toString().trim();
+  const raw = completion.trim();
   const escalate = raw.includes(HANDOFF_SENTINEL);
   const reply = raw
     .replaceAll(HANDOFF_SENTINEL, '')
@@ -192,36 +188,32 @@ export async function phraseOrderAnswer(input: {
   userMessage: string;
   facts: OrderFacts;
 }): Promise<string> {
-  const client = getGroqClient();
-  const completion = await withGroqCall('messenger.order-answer', (signal) =>
-    client.chat.completions.create({
-      model: CHAT_MODEL,
-      temperature: 0.2,
-      max_tokens: 300,
-      messages: [
-        {
-          role: 'system',
-          content: [
-            input.prompt,
-            'VERIFIED ORDER FACTS (retrieved by the store system for this shopper — the only order',
-            'information you may state. Do not add, estimate, or infer anything beyond these fields,',
-            'and never mention field names, JSON, or that you performed a lookup):',
-            '<<<',
-            JSON.stringify(input.facts),
-            '>>>',
-            'Answer the question using these facts in 1-4 sentences of plain text.',
-            'If the facts do not answer what they asked, say what you do know and offer the team.',
-          ].join('\n'),
-        },
-        ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
-          role: turn.role,
-          content: turn.content.slice(0, MESSAGE_CAP),
-        })),
-        { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
-      ],
-    }, { signal }),
-  );
-  const text = (completion.choices?.[0]?.message?.content ?? '').toString().trim();
+  const completion = await storeChatComplete('messenger.order-answer', {
+    temperature: 0.2,
+    maxTokens: 300,
+    messages: [
+      {
+        role: 'system',
+        content: [
+          input.prompt,
+          'VERIFIED ORDER FACTS (retrieved by the store system for this shopper — the only order',
+          'information you may state. Do not add, estimate, or infer anything beyond these fields,',
+          'and never mention field names, JSON, or that you performed a lookup):',
+          '<<<',
+          JSON.stringify(input.facts),
+          '>>>',
+          'Answer the question using these facts in 1-4 sentences of plain text.',
+          'If the facts do not answer what they asked, say what you do know and offer the team.',
+        ].join('\n'),
+      },
+      ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
+        role: turn.role,
+        content: turn.content.slice(0, MESSAGE_CAP),
+      })),
+      { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
+    ],
+  });
+  const text = completion.trim();
   // Never let the action line survive into a shopper-visible message.
   return text.replaceAll(ACTION_SENTINEL, '').trim().slice(0, 2000) || fallbackReply();
 }

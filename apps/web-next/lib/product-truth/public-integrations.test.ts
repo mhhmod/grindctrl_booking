@@ -39,7 +39,8 @@ describe('public integration truth', () => {
   });
 
   it('lists the AI providers actually paid for and called, with real evidence refs', () => {
-    // Groq (chat/STT/TTS) and OpenRouter (Try-On image generation, vision triage)
+    // Groq (site assistant chat/STT/TTS) and OpenRouter (Try-On image generation,
+    // Store Chat replies, vision triage)
     // are the only two AI providers with a real API key, SDK/fetch call, and env
     // var in the codebase — see lib/assistant/groq-client.ts and
     // lib/try-on/image-runner.ts.
