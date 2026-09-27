@@ -1,39 +1,19 @@
-export const DEFAULT_TRYON_MODEL = 'meta/muse-image';
+/* Every try-on image is made by one model: Meta Muse Image through
+   OpenRouter. That holds for every plan, every top-up pack and the public
+   demo, so no plan renders with a different or better model, and no
+   environment variable can swap it. Plan and pack rows still carry a tier
+   label (lite, flash, muse) for the credit ledger; it no longer picks the
+   model. */
+export const TRYON_IMAGE_MODEL = 'meta/muse-image';
 
-/* Plan and pack rows store a tier label (the tryon_plans_model_check
-   constraint allows only these three), never a provider model id. Each tier
-   maps to its own env var so ops can repoint a tier without a migration. */
-const TIER_ENV: Record<string, string> = {
-  lite: 'TRYON_MODEL_LITE',
-  flash: 'TRYON_MODEL_FLASH',
-  muse: 'TRYON_MODEL_MUSE',
-};
+/* Settings that used to pick a model per plan tier. They do nothing now. */
+const RETIRED_MODEL_SETTINGS = ['TRYON_MODEL', 'TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE'];
 
-const SLUG_RE = /^[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._:-]*$/i;
-
-function envModel(name: string): string | null {
-  const value = process.env[name]?.trim();
-  if (!value) return null;
-  if (!SLUG_RE.test(value)) throw new Error(`${name} must be a provider model id such as vendor/model`);
-  return value;
-}
-
-export function defaultTryOnModel(): string {
-  return envModel('TRYON_MODEL') ?? DEFAULT_TRYON_MODEL;
-}
-
-/** Turns a plan tier label (lite, flash, muse) into a provider model id. Never sends a label upstream. */
-export function resolveTryOnModel(tier: string | null | undefined): string {
-  const raw = tier?.trim();
-  if (!raw) return defaultTryOnModel();
-  if (SLUG_RE.test(raw)) return raw;
-  const envName = TIER_ENV[raw.toLowerCase()];
-  if (!envName) console.error('[try-on] unknown_model_tier', { tier: raw });
-  return (envName ? envModel(envName) : null) ?? defaultTryOnModel();
-}
-
-/** Called once at startup when TRYON_MODE=live, so a bad value fails the boot, not a shopper. */
-export function assertTryOnModelConfig(): void {
-  defaultTryOnModel();
-  Object.values(TIER_ENV).forEach(envModel);
+/** Called once at startup when TRYON_MODE=live: a leftover model setting is
+ *  reported, so nobody believes it still chooses the model. */
+export function reportRetiredModelSettings(): void {
+  const settings = RETIRED_MODEL_SETTINGS.filter((name) => process.env[name]?.trim());
+  if (settings.length > 0) {
+    console.warn('[try-on] ignored_model_settings', { settings, model: TRYON_IMAGE_MODEL });
+  }
 }

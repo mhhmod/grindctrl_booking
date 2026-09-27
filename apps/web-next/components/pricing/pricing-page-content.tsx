@@ -256,7 +256,7 @@ function PlanCard({
   const price = formatCurrency(plan.priceMinor / 100, displayCurrencyFor(plan, currency), locale, 0);
   const headingId = `plan-${plan.planKey}`;
   const features: PlanFeature[] = [
-    { icon: 'photo', text: family === 'dfy' ? t.premiumQuality : t.standardQuality },
+    { icon: 'photo', text: t.sameQuality },
     ...(copy?.features ?? []).filter(isFeatureVisible),
   ];
   const free = plan.isFree || family === 'free';
@@ -456,15 +456,11 @@ function PackRow({
   const key = getPackCopyKey(pack.packKey);
   const packCopy = t.packs[key];
   const name = packCopy?.name ?? pack.name;
-  const premium = key === 'pack-flash-v1';
   return (
     <article className="flex items-center gap-3 rounded-[22px] border border-border bg-card px-4 py-4 sm:gap-4 sm:px-[18px]">
       <span
         aria-hidden="true"
-        className={cn(
-          'inline-flex size-[52px] shrink-0 items-center justify-center rounded-2xl',
-          premium ? 'bg-foreground text-background' : 'bg-gc-studio text-foreground',
-        )}
+        className="inline-flex size-[52px] shrink-0 items-center justify-center rounded-2xl bg-gc-studio text-foreground"
       >
         <StackIcon size={24} strokeWidth={1.7} />
       </span>
@@ -473,7 +469,6 @@ function PackRow({
           <h3 lang="en" className="text-[17px] font-bold">
             {name}
           </h3>
-          {premium ? <SiteBadge icon={<SparkleIcon size={13} strokeWidth={1.9} />}>{t.premium}</SiteBadge> : null}
         </div>
         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">

@@ -17,7 +17,7 @@ import {
   TryOnResultUnavailableError,
 } from './result-errors';
 import { toShopperFailureMessage } from './shopper-errors';
-import { defaultTryOnModel, resolveTryOnModel } from './models';
+import { TRYON_IMAGE_MODEL } from './models';
 
 export {
   TryOnFinalizationPendingError,
@@ -116,13 +116,13 @@ export async function generateTryOn(
 
   if (billableLiveJob) {
     /* tryon_plans.model_key holds a tier label (lite, flash, muse), not a
-       provider id. Two values, on purpose: the tier is what the shop is
-       entitled to and is what reserve_tryon_credit records on the job and
-       ledger; the provider id is what OpenRouter must receive. Sending the
-       label upstream got every paid storefront try-on rejected. */
+       provider id. reserve_tryon_credit still records it on the job and
+       ledger, but it no longer picks the model: every plan renders with
+       the same one. Sending the label upstream got every paid storefront
+       try-on rejected, so OpenRouter only ever receives the model id. */
     const entitlement = await getShopEntitlement(shop);
-    const modelKey = entitlement.modelKey || defaultTryOnModel();
-    const providerModel = resolveTryOnModel(entitlement.modelKey);
+    const modelKey = entitlement.modelKey || TRYON_IMAGE_MODEL;
+    const providerModel = TRYON_IMAGE_MODEL;
     const reservedJobId = createJobId();
     const reservation = await beginTryOnJob({
       shop,
@@ -271,14 +271,14 @@ export async function generateTryOn(
       throw new TryOnFinalizationPendingError(job.jobId);
     }
   } else if (mode === 'live' && photoSource === 'upload' && photoData) {
-    // Non-billable live path (demo/preview, not a storefront credit spend) —
-    // there is no shop entitlement to resolve a plan model from here.
+    // Non-billable live path (demo/preview, not a storefront credit spend):
+    // the same model as every plan.
     job = await runImageGeneration(
       sessionId,
       productId,
       photoData,
       shop,
-      defaultTryOnModel(),
+      TRYON_IMAGE_MODEL,
       garmentUrl,
       productName,
     );

@@ -27,17 +27,11 @@ await check('openrouter_account', async () => {
     configured: true, hasExplicitKeyBudget: typeof data?.limit === 'number',
     keyBudgetRemainingPositive: typeof data?.limit_remaining === 'number' ? data.limit_remaining > 0 : null });
 });
-// Mirrors apps/web-next/lib/try-on/models.ts: the default and every tier
-// fallback resolve to one of these ids, so each must be a real image model.
-const DEFAULT_TRYON_MODEL = 'meta/muse-image';
-const TIER_ENV = { lite: 'TRYON_MODEL_LITE', flash: 'TRYON_MODEL_FLASH', muse: 'TRYON_MODEL_MUSE' };
-const env = name => process.env[name]?.trim() || null;
+// Mirrors apps/web-next/lib/try-on/models.ts: every try-on on every plan
+// uses this one image model, so it must be a real, listed image model.
+const TRYON_IMAGE_MODEL = 'meta/muse-image';
 await check('image_model_catalogue', async () => {
-  const fallback = env('TRYON_MODEL') ?? DEFAULT_TRYON_MODEL;
-  const resolved = [{ source: env('TRYON_MODEL') ? 'TRYON_MODEL' : 'default', model: fallback }];
-  for (const [tier, name] of Object.entries(TIER_ENV)) {
-    resolved.push({ source: env(name) ? name : `${tier}->fallback`, tier, model: env(name) ?? fallback });
-  }
+  const resolved = [{ source: 'pinned', model: TRYON_IMAGE_MODEL }];
   const response = await request('https://openrouter.ai/api/v1/images/models');
   const data = response.ok ? await response.json() : null;
   const catalogue = Array.isArray(data?.data) ? data.data : [];

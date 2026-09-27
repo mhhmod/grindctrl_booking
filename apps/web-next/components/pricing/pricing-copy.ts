@@ -60,8 +60,7 @@ export type PricingCopy = {
   month: string;
   tryOns: (count: string) => string;
   perMonth: string;
-  standardQuality: string;
-  premiumQuality: string;
+  sameQuality: string;
   choosePlan: (name: string) => string;
   bookCallForPlan: (name: string) => string;
   plans: Record<string, PlanCopy>;
@@ -85,7 +84,6 @@ export type PricingCopy = {
   oneTime: string;
   renders: (count: string) => string;
   validFor: (days: string) => string;
-  premium: string;
   packs: Record<string, PackCopy>;
   askAboutPack: (name: string) => string;
   faqEyebrow: string;
@@ -125,8 +123,7 @@ const en: PricingCopy = {
   month: 'month',
   tryOns: (count) => `${count} try-ons`,
   perMonth: 'per month',
-  standardQuality: 'Standard image quality',
-  premiumQuality: 'Premium image quality',
+  sameQuality: 'Same image quality on every plan',
   choosePlan: (name) => `Choose ${name}`,
   bookCallForPlan: (name) => `Book a call about ${name}`,
   plans: {
@@ -161,7 +158,7 @@ const en: PricingCopy = {
     },
     'dfy-v1': {
       name: 'Done-for-you',
-      description: 'Premium output with service scope confirmed before activation.',
+      description: 'Done-for-you setup, with service scope confirmed before activation.',
       features: [
         { icon: 'check', text: 'Implementation scope confirmed during booking' },
         { icon: 'check', text: 'Brand options reviewed before activation' },
@@ -195,7 +192,6 @@ const en: PricingCopy = {
   oneTime: 'one time',
   renders: (count) => `${count} renders`,
   validFor: (days) => `Valid for ${days} days`,
-  premium: 'Premium',
   packs: {
     'pack-lite-v1': { name: 'Boost 80' },
     'pack-flash-v1': { name: 'Boost 75 Pro' },
@@ -275,8 +271,7 @@ const ar: PricingCopy = {
   month: 'شهر',
   tryOns: (count) => `${count} تجربة`,
   perMonth: 'شهريًا',
-  standardQuality: 'جودة صور قياسية',
-  premiumQuality: 'جودة صور مميزة',
+  sameQuality: 'جودة الصور نفسها في كل الخطط',
   choosePlan: (name) => `اختر ${name}`,
   bookCallForPlan: (name) => `احجز مكالمة عن ${name}`,
   plans: {
@@ -311,7 +306,7 @@ const ar: PricingCopy = {
     },
     'dfy-v1': {
       name: 'خدمة متكاملة',
-      description: 'صور مميزة مع تأكيد نطاق الخدمة قبل التفعيل.',
+      description: 'إعداد كامل نتولاه عنك، مع تأكيد نطاق الخدمة قبل التفعيل.',
       features: [
         { icon: 'check', text: 'تأكيد نطاق التنفيذ أثناء الحجز' },
         { icon: 'check', text: 'مراجعة خيارات الهوية قبل التفعيل' },
@@ -345,7 +340,6 @@ const ar: PricingCopy = {
   oneTime: 'دفعة واحدة',
   renders: (count) => `${count} صورة`,
   validFor: (days) => `صالحة لمدة ${days} يومًا`,
-  premium: 'مميزة',
   packs: {
     'pack-lite-v1': { name: 'Boost 80' },
     'pack-flash-v1': { name: 'Boost 75 Pro' },
