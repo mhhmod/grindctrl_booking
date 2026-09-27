@@ -20,6 +20,12 @@ type PackCopy = {
   name: string;
 };
 
+export type ChatSpec = {
+  icon: SiteIconName;
+  title: string;
+  detail: string;
+};
+
 export type PricingFaqItem = {
   icon: SiteIconName;
   question: string;
@@ -36,6 +42,7 @@ export type PricingCopy = {
   pricing: string;
   onThisPage: string;
   tabPlans: string;
+  tabChat: string;
   tabTopups: string;
   tabQuestions: string;
   trace: string[];
@@ -68,6 +75,10 @@ export type PricingCopy = {
   creditFailed: string;
   creditFailedResult: string;
   creditNote: string;
+  chatEyebrow: string;
+  chatTitle: string;
+  chatBody: string;
+  chatSpecs: ChatSpec[];
   packsEyebrow: string;
   packsTitle: string;
   packsBody: string;
@@ -96,6 +107,7 @@ const en: PricingCopy = {
   pricing: 'Pricing',
   onThisPage: 'On this page',
   tabPlans: 'Plans',
+  tabChat: 'Store Chat',
   tabTopups: 'Top-ups',
   tabQuestions: 'Questions',
   trace: ['plan chosen', 'credits loaded', 'image delivered', 'credit used'],
@@ -166,6 +178,17 @@ const en: PricingCopy = {
   creditFailed: 'Generation failed',
   creditFailedResult: 'The credit comes back',
   creditNote: 'Upstream provider cost may still be incurred on a failed generation.',
+  chatEyebrow: 'Store Chat',
+  chatTitle: 'Store Chat is included on every plan.',
+  chatBody: 'Every plan, Free included, comes with the same Store Chat on your storefront. Chats do not use try-on credits.',
+  chatSpecs: [
+    { icon: 'book', title: 'Answers from your store knowledge', detail: 'Up to 50 entries, written by you or imported from a web page.' },
+    { icon: 'box', title: 'Read-only order status', detail: 'Shoppers check an order with its number and email. Up to 5 lookups per chat, no edits or refunds.' },
+    { icon: 'handoff', title: 'Handoff to your team', detail: 'Chats move to your inbox, with email alerts to up to 5 addresses, at most 10 alerts an hour.' },
+    { icon: 'photo', title: 'Photos from shoppers', detail: 'Up to 10 photos per chat, 5 MB each, kept for 90 days.' },
+    { icon: 'reply', title: 'Saved replies', detail: 'Up to 50 ready answers for your team to send.' },
+    { icon: 'globe', title: 'Arabic and English', detail: "Replies follow the shopper's language." },
+  ],
   packsEyebrow: 'Top-up packs',
   packsTitle: 'Add credits without changing your plan.',
   packsBody: 'Ask us to confirm current pack availability and terms before activation.',
@@ -234,6 +257,7 @@ const ar: PricingCopy = {
   pricing: 'الأسعار',
   onThisPage: 'في هذه الصفحة',
   tabPlans: 'الخطط',
+  tabChat: 'Store Chat',
   tabTopups: 'الرصيد الإضافي',
   tabQuestions: 'الأسئلة',
   trace: ['اختيرت الخطة', 'أُضيف الرصيد', 'سُلّمت الصورة', 'خُصم الرصيد'],
@@ -304,6 +328,17 @@ const ar: PricingCopy = {
   creditFailed: 'فشلت عملية الإنشاء',
   creditFailedResult: 'يعود الرصيد',
   creditNote: 'قد تبقى تكلفة مزود الخدمة قائمة عند فشل عملية الإنشاء.',
+  chatEyebrow: 'Store Chat',
+  chatTitle: 'Store Chat مضمّنة في كل الخطط.',
+  chatBody: 'كل خطة، بما فيها المجانية، تأتي مع Store Chat نفسها على متجرك. المحادثات لا تستخدم رصيد التجارب.',
+  chatSpecs: [
+    { icon: 'book', title: 'إجابات من معلومات متجرك', detail: 'حتى 50 مدخلًا تكتبها بنفسك أو تستوردها من صفحة ويب.' },
+    { icon: 'box', title: 'حالة الطلب للعرض فقط', detail: 'يتحقق المتسوق من طلبه برقم الطلب والبريد الإلكتروني. حتى 5 محاولات في كل محادثة، دون تعديل أو استرداد.' },
+    { icon: 'handoff', title: 'تحويل المحادثة إلى فريقك', detail: 'تنتقل المحادثات إلى صندوق الوارد لديك، مع تنبيهات بالبريد إلى 5 عناوين كحد أقصى، و10 تنبيهات في الساعة كحد أقصى.' },
+    { icon: 'photo', title: 'صور من المتسوقين', detail: 'حتى 10 صور في كل محادثة، بحجم 5 ميجابايت لكل صورة، وتُحفظ 90 يومًا.' },
+    { icon: 'reply', title: 'ردود محفوظة', detail: 'حتى 50 ردًا جاهزًا يرسلها فريقك.' },
+    { icon: 'globe', title: 'العربية والإنجليزية', detail: 'يأتي الرد بلغة المتسوق.' },
+  ],
   packsEyebrow: 'حزم الرصيد الإضافي',
   packsTitle: 'أضف رصيدًا دون تغيير خطتك.',
   packsBody: 'تواصل معنا لتأكيد توفر الحزم وشروطها الحالية قبل التفعيل.',
