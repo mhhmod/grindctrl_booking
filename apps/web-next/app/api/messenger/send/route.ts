@@ -26,7 +26,7 @@ import {
   detectExplicitHandoffRequest,
   generateAssistantReply,
   phraseOrderAnswer,
-  detectLocale,
+  resolveReplyLocale,
   pickLocalized,
 } from '@/lib/messenger/ai';
 import { getActiveKnowledge } from '@/lib/messenger/knowledge';
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
       role: 'user',
       content: text,
       clientKey,
-      metadata: { locale: localeHint ?? detectLocale(text) },
+      metadata: { locale: resolveReplyLocale(text, localeHint) },
     });
 
     if (replayed) {
@@ -257,7 +257,7 @@ export async function POST(request: NextRequest) {
           role: 'system',
           content: pickLocalized(
             { en: 'You are being connected with our team — we will reply here shortly.', ar: 'جارٍ توصيلك بفريقنا — سنرد عليك هنا قريباً.' },
-            localeHint ?? detectLocale(text),
+            resolveReplyLocale(text, localeHint),
           ),
           contentType: 'event',
           metadata: { author: 'system', escalated: true },
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4) Grounded generation.
-    const locale = localeHint ?? detectLocale(text);
+    const locale = resolveReplyLocale(text, localeHint);
     const knowledge = await getActiveKnowledge(site.id);
     const history = (await listMessages(conversation.id, { limit: 20 }))
       .filter((m) => m.id !== userMessage.id)
