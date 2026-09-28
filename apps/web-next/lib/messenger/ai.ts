@@ -30,10 +30,33 @@ const TONE_GUIDANCE: Record<MessengerAi['tone'], string> = {
   warm: 'Sound warm and reassuring. Acknowledge how the shopper feels before answering.',
 };
 
+/* Franco-Arabic (Arabic written in Latin letters, common in Egypt): digits
+   standing for Arabic sounds inside words (3ayez, a2dar, 7aga), or everyday
+   words that are not English. Two hits, so one stray word never flips an
+   English message. */
+const FRANCO_DIGIT_WORD = /\b[a-z]*[a-z][2375][a-z]+[a-z0-9]*\b|\b[2375][a-z]{2,}\b/gi;
+const FRANCO_WORDS = /\b(ana|enta|enty|ezay|ezayak|3ayez|3ayza|3awez|3ayz|fen|feen|leh|keda|kda|mesh|msh|momken|mumkin|law|lw|b kam|bkam|shokran|el|elly|alli|wana|ya3ni|7aga|3ashan|3shan|ba2a|delwa2ty|dlw2ty)\b/gi;
+
+export function isFrancoArabic(text: string): boolean {
+  const hits = (text.match(FRANCO_DIGIT_WORD) ?? []).length + (text.match(FRANCO_WORDS) ?? []).length;
+  return hits >= 2;
+}
+
 export function detectLocale(text: string): MessengerLocale {
   const arabic = (text.match(/[\u0600-\u06FF]/g) ?? []).length;
   const latin = (text.match(/[A-Za-z]/g) ?? []).length;
-  return arabic > latin ? 'ar' : 'en';
+  if (arabic > latin) return 'ar';
+  return isFrancoArabic(text) ? 'ar' : 'en';
+}
+
+/** The shopper's own words decide the reply language. The storefront's
+ *  locale is only a fallback for messages with no letters to go on (an order
+ *  number, an emoji), because an English storefront still has Arabic-speaking
+ *  shoppers. */
+export function resolveReplyLocale(text: string, storefrontLocale: MessengerLocale | null): MessengerLocale {
+  const letters = (text.match(/[\u0600-\u06FFA-Za-z]/g) ?? []).length;
+  if (letters < 2) return storefrontLocale ?? 'en';
+  return detectLocale(text);
 }
 
 export function pickLocalized(localized: { en: string; ar: string }, locale: MessengerLocale): string {

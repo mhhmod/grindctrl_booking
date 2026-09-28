@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSystemPrompt, detectExplicitHandoffRequest, detectLocale } from './ai';
+import { buildSystemPrompt, detectExplicitHandoffRequest, detectLocale, resolveReplyLocale } from './ai';
 
 const BASE_INPUT = {
   storeName: 'Sara’s Store',
@@ -81,5 +81,29 @@ describe('detectLocale', () => {
     expect(detectLocale('مرحبا كيف حالك')).toBe('ar');
     expect(detectLocale('hello there')).toBe('en');
     expect(detectLocale('مرحبا، هل هذا المنتج متوفر؟ iPhone')).toBe('ar');
+  });
+});
+
+describe('reply language', () => {
+  it('reads Franco-Arabic as Arabic', () => {
+    expect(detectLocale('ana 3ayez a3raf law a2dar araga3 el order')).toBe('ar');
+    expect(detectLocale('el shipping le masr el gedida b kam')).toBe('ar');
+  });
+
+  it('keeps plain English as English', () => {
+    expect(detectLocale('Do you have this abaya in black?')).toBe('en');
+    expect(detectLocale('Where is my order 99999? email test@example.com')).toBe('en');
+    expect(detectLocale('I want size L and 2 of them')).toBe('en');
+  });
+
+  it("follows the shopper's words over an English storefront", () => {
+    expect(resolveReplyLocale('هل عندكم توصيل للسعودية؟', 'en')).toBe('ar');
+    expect(resolveReplyLocale('عايز أكلم حد من خدمة العملاء', 'en')).toBe('ar');
+    expect(resolveReplyLocale('Do you ship to Riyadh?', 'ar')).toBe('en');
+  });
+
+  it('falls back to the storefront locale when the message has no words', () => {
+    expect(resolveReplyLocale('12345', 'ar')).toBe('ar');
+    expect(resolveReplyLocale('👍', null)).toBe('en');
   });
 });
