@@ -14,6 +14,7 @@ import {
   ProductResolutionError,
   resolveStorefrontProduct,
 } from '@/lib/shopify/product-resolver';
+import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
 
 /* Shopify App Proxy child route:
  *   /apps/grindctrl/try-on-context -> /api/shopify/proxy/try-on-context
@@ -49,13 +50,16 @@ export async function GET(request: NextRequest) {
     throw error;
   }
 
-  const secret = process.env.SHOPIFY_API_SECRET?.trim();
-  if (!secret) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  if (getConfiguredShopifyApps().length === 0) {
+    return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  }
 
   const params = request.nextUrl.searchParams;
-  if (!verifyShopifyProxySignature(params, secret)) {
+  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
+  if (!resolved) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
   }
+  const secret = resolved.app.secret;
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const issuedAt = freshProxyTimestamp(params.get('timestamp'), nowSeconds);

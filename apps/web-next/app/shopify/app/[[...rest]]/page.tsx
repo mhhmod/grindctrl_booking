@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ShopifyAppShell } from '@/components/shopify/app-shell';
-import { SHOPIFY_CLIENT_ID } from '@/lib/shopify/session-token';
+import { currentShopifyClientId } from '@/lib/shopify/session-token';
 import { DEFAULT_TRYON_LOCALE, getDir, isTryOnLocale, type TryOnLocale } from '@/lib/try-on/i18n';
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default async function ShopifyAdminPage({
 
   return (
     <>
-      <meta name="shopify-api-key" content={SHOPIFY_CLIENT_ID} />
+      <meta name="shopify-api-key" content={currentShopifyClientId() ?? ''} />
       {/* Plain sync script: executes during HTML parse, before hydration.
           next/script beforeInteractive only works in the root layout. */}
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}

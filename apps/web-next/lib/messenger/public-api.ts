@@ -4,7 +4,7 @@ import { getMessengerServiceClient } from './db';
 import { decideOrigin, type DomainPatternRow } from './origins';
 import { resolveMessengerConfig } from './config';
 import { canonicalShopDomain } from './shop-tenancy';
-import { verifyOriginToken } from './identity';
+import { verifyOriginTokenAnyApp } from './identity';
 import type { MessengerConfig } from './types';
 import type { MessengerBehaviour } from './types';
 
@@ -116,11 +116,7 @@ export function provenOrigin(
      every panel request our own domain and fail every check. The loader,
      which runs on the storefront itself, is the cross-origin case the header
      was made for, and it carries no token. */
-  const verified = verifyOriginToken(
-    process.env.SHOPIFY_API_SECRET ?? '',
-    source.originToken,
-    key,
-  );
+  const verified = verifyOriginTokenAnyApp(source.originToken, key);
   if (verified) return { origin: verified, trusted: true };
   if (source.headerOrigin) return { origin: source.headerOrigin, trusted: true };
   return {

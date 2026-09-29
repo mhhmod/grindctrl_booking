@@ -55,11 +55,13 @@ function makeRequest(body: Record<string, unknown>) {
 }
 
 beforeEach(() => {
+  process.env.SHOPIFY_API_KEY = 'test-only-client-id';
   process.env.SHOPIFY_API_SECRET = SECRET;
   rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
 });
 
 afterEach(() => {
+  delete process.env.SHOPIFY_API_KEY;
   delete process.env.SHOPIFY_API_SECRET;
   vi.clearAllMocks();
 });

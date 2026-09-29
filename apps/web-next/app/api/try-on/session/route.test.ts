@@ -55,6 +55,7 @@ function storefrontToken() {
 
 describe('POST /api/try-on/session', () => {
   beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     rateLimitState.configured = true;
@@ -70,6 +71,7 @@ describe('POST /api/try-on/session', () => {
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     vi.restoreAllMocks();

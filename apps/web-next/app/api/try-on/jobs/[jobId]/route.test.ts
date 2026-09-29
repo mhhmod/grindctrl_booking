@@ -38,12 +38,14 @@ const SECRET = 'test-shopify-secret';
 
 describe('GET /api/try-on/jobs/[jobId]', () => {
   beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     durableLoadMock.mockResolvedValue(null);
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     vi.restoreAllMocks();
   });

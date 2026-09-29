@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 
 /* Shopper identity for the Support Messenger.
 
@@ -155,6 +156,20 @@ export function verifyShopperToken(
   };
 }
 
+/** Same check as verifyShopperToken, but against whichever configured app's
+ *  secret signed the token, since a shopper token minted by the proxy route
+ *  carries no clientId of its own for a caller to look up directly. */
+export function verifyShopperTokenAnyApp(
+  token: string,
+  expectedSessionId: string,
+  expectedShop: unknown,
+): VerifiedShopperIdentity | null {
+  return (
+    resolveShopifyApp((secret) => verifyShopperToken(secret, token, expectedSessionId, expectedShop))
+      ?.value ?? null
+  );
+}
+
 export const MESSENGER_TOKEN_TTL_SECONDS = TOKEN_TTL_SECONDS;
 
 /* ---- Storefront origin proof -------------------------------------------
@@ -231,6 +246,12 @@ export function verifyOriginToken(
   if (typeof payload.exp !== 'number' || payload.exp < now - 30) return null;
   if (payload.key !== expectedKey) return null;
   return typeof payload.org === 'string' && payload.org ? payload.org : null;
+}
+
+/** Same check as verifyOriginToken, but against whichever configured app's
+ *  secret signed the token (see verifyShopperTokenAnyApp). */
+export function verifyOriginTokenAnyApp(token: unknown, expectedKey: string): string | null {
+  return resolveShopifyApp((secret) => verifyOriginToken(secret, token, expectedKey))?.value ?? null;
 }
 
 export const MESSENGER_ORIGIN_TOKEN_TTL_SECONDS = ORIGIN_TOKEN_TTL_SECONDS;

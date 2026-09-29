@@ -3,22 +3,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { markTryOnShopUninstalled, recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { deleteShopToken } from '@/lib/shopify/tokens';
 import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
+
+function verifiesWebhookHmac(body: string, hmacHeader: string) {
+  return (secret: string): boolean => {
+    const digest = createHmac('sha256', secret).update(body, 'utf8').digest('base64');
+    const a = Buffer.from(digest);
+    const b = Buffer.from(hmacHeader);
+    return a.length === b.length && timingSafeEqual(a, b);
+  };
+}
 
 /* Shopify lifecycle receiver and durable mandatory privacy processing.
    Settings survive lifecycle events; privacy requests use the gated processor. */
 export async function POST(request: NextRequest) {
-  const secret = process.env.SHOPIFY_API_SECRET;
   const hmacHeader = request.headers.get('x-shopify-hmac-sha256') ?? '';
   const body = await request.text();
 
-  if (!secret || !hmacHeader) {
+  if (!hmacHeader) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const digest = createHmac('sha256', secret).update(body, 'utf8').digest('base64');
-  const a = Buffer.from(digest);
-  const b = Buffer.from(hmacHeader);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+  // A webhook carries no client id, only the shop it's about (below) --
+  // check it against every configured app's secret and accept whichever
+  // one it verifies against.
+  if (!resolveShopifyApp(verifiesWebhookHmac(body, hmacHeader))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

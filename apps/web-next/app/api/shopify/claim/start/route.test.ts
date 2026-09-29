@@ -57,10 +57,12 @@ describe('GET /api/shopify/claim/start', () => {
 
   afterEach(() => {
     vi.resetAllMocks();
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
   });
 
   it('returns 401 and never provisions when the authorization header is missing', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
 
     const response = await GET(req('https://app.example.com/api/shopify/claim/start'));
@@ -73,6 +75,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('returns 401 and never provisions when the session token is invalid', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue(null);
 
@@ -88,6 +91,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('provisions and mints a token for the shop from the SESSION TOKEN, ignoring a query-string shop', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
     ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
@@ -111,6 +115,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('returns alreadyLinked without minting when a real Clerk account owns the site', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
     ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
@@ -127,6 +132,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('returns 503 without minting when the provisioned site owner cannot be resolved', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
     ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
@@ -143,6 +149,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('strips a lowercase "bearer " prefix too', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
     ensureShopOwnedSiteMock.mockResolvedValue({ id: 'site-1' });
@@ -157,6 +164,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('returns 503 with no token when ensureShopOwnedSite throws', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
     ensureShopOwnedSiteMock.mockRejectedValue(new Error('db down'));
@@ -200,6 +208,7 @@ describe('GET /api/shopify/claim/start', () => {
   });
 
   it('returns 429 and never provisions when the caller is rate-limited', async () => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = 'secret';
     rateLimitMock.mockResolvedValue({ success: false, reset: Date.now() + 30_000 });
 

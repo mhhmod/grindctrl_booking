@@ -31,6 +31,7 @@ function request(topic: string, signature?: string) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv('SHOPIFY_API_KEY', 'test-only-client-id');
   vi.stubEnv('SHOPIFY_API_SECRET', 'test-only-secret');
   markUninstalled.mockResolvedValue(true);
   recordSeen.mockResolvedValue(true);

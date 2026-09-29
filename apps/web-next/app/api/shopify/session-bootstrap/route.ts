@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
-import { verifySessionToken } from '@/lib/shopify/session-token';
+import { verifySessionTokenResolved } from '@/lib/shopify/session-token';
 import { getShopToken, hasRequiredScopes, storeShopToken } from '@/lib/shopify/tokens';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/session-bootstrap
    Ensures this shop has a stored, sufficiently-scoped Admin API access
@@ -37,14 +38,18 @@ export async function GET(request: NextRequest) {
     throw error;
   }
 
-  const secret = process.env.SHOPIFY_API_SECRET?.trim();
-  const clientId = process.env.SHOPIFY_API_KEY?.trim();
-  if (!secret || !clientId) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  if (getConfiguredShopifyApps().length === 0) {
+    return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  }
 
   const header = request.headers.get('authorization') ?? '';
   const sessionToken = header.replace(/^bearer\s+/i, '').trim();
-  const session = sessionToken ? verifySessionToken(sessionToken) : null;
+  const session = sessionToken ? verifySessionTokenResolved(sessionToken) : null;
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  // The token's own aud already named the app; exchange with that SAME
+  // app's clientId/secret pair, not necessarily the legacy fallback one.
+  const clientId = session.app.clientId;
+  const secret = session.app.secret;
 
   const existing = await getShopToken(session.shop);
   if (existing && hasRequiredScopes(existing.scopes)) {

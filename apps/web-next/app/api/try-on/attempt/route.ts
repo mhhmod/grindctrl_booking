@@ -8,6 +8,7 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
 
 /** Mints one server-authorized generation attempt from a valid base session.
@@ -44,14 +45,10 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
-
-    const secret = process.env.SHOPIFY_API_SECRET?.trim();
-    if (!secret) {
-      return NextResponse.json(
-        { ok: false, error: 'Try-on is not configured.' } satisfies TryOnApiResponse,
-        { status: 503 },
-      );
-    }
+    // Plain locals, not body.*, so their narrowed types survive the closure
+    // resolveShopifyApp passes them into below.
+    const sessionId = body.sessionId;
+    const productId = body.productId;
 
     const rawVariantId = body.variantId;
     const variantId = normalizeVariantId(rawVariantId);
@@ -64,11 +61,14 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const session = verifyTryOnSession(secret, body.sessionId, {
-      productId: body.productId,
-      variantId: rawVariantId === undefined ? undefined : variantId,
-      nonce: storefrontNonce,
-    });
+    const resolved = resolveShopifyApp((secret) =>
+      verifyTryOnSession(secret, sessionId, {
+        productId,
+        variantId: rawVariantId === undefined ? undefined : variantId,
+        nonce: storefrontNonce,
+      }),
+    );
+    const session = resolved?.value;
     if (!session || (session.purpose === 'storefront' && !storefrontNonce)) {
       return NextResponse.json(
         { ok: false, error: 'Invalid or expired try-on session.' } satisfies TryOnApiResponse,
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const attempt = signTryOnAttempt(secret, {
+    const attempt = signTryOnAttempt(resolved.app.secret, {
       session,
       attemptNonce: body.attemptNonce,
     });

@@ -14,6 +14,11 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 export const APP_SCOPES = 'read_products,read_orders,write_app_proxy';
 
 export const OAUTH_STATE_COOKIE = 'gc_shopify_oauth_state';
+/** Which configured app /oauth/start chose, so /oauth/callback -- which
+ *  gets no client id back from Shopify -- verifies and exchanges against
+ *  that SAME app. Same lifetime and cookie attributes as the state cookie
+ *  it rides alongside. */
+export const OAUTH_APP_COOKIE = 'gc_shopify_oauth_app';
 export const OAUTH_STATE_TTL_SECONDS = 600;
 
 /** Verifies the `hmac` parameter over the rest of the raw query string.

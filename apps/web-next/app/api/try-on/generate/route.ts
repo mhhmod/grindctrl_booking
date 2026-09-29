@@ -23,6 +23,7 @@ import {
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
+import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -118,8 +119,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    const secret = process.env.SHOPIFY_API_SECRET?.trim();
-    if (!secret) {
+    if (getConfiguredShopifyApps().length === 0) {
       const message = 'Try-on is not configured.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
@@ -139,11 +139,14 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const sessionAuthorization = verifyTryOnSession(secret, sessionId, {
-      productId,
-      variantId: rawVariantId === undefined ? undefined : variantId,
-      nonce: storefrontNonce,
-    });
+    const resolvedSession = resolveShopifyApp((secret) =>
+      verifyTryOnSession(secret, sessionId, {
+        productId,
+        variantId: rawVariantId === undefined ? undefined : variantId,
+        nonce: storefrontNonce,
+      }),
+    );
+    const sessionAuthorization = resolvedSession?.value;
     if (!sessionAuthorization) {
       const message = 'Invalid or expired try-on session.';
       return NextResponse.json(
@@ -151,6 +154,9 @@ export async function POST(request: NextRequest) {
         { status: 401 },
       );
     }
+    // The attempt token, if any, was minted from this same session and so
+    // must verify against the same app's secret.
+    const secret = resolvedSession.app.secret;
     if (
       sessionAuthorization.purpose === 'legacy-compat' &&
       !legacyStorefrontCompatEnabled()

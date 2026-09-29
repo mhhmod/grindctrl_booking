@@ -20,7 +20,7 @@ import { parseModelTurn } from '@/lib/messenger/actions';
 import { lookupOrder, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify } from '@/lib/messenger/escalate';
-import { verifyShopperToken } from '@/lib/messenger/identity';
+import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
 import {
   buildSystemPrompt,
   detectExplicitHandoffRequest,
@@ -213,9 +213,8 @@ export async function POST(request: NextRequest) {
     // Identity refresh (token may have just been issued by the proxy).
     let identityName: string | null = conversation.metadata.identity?.name ?? null;
     let verifiedCustomer = conversation.metadata.identity?.verified === true;
-    const secret = process.env.SHOPIFY_API_SECRET;
-    if (secret && shopperToken) {
-      const claims = verifyShopperToken(secret, shopperToken, anonymousId, site.domain);
+    if (shopperToken) {
+      const claims = verifyShopperTokenAnyApp(shopperToken, anonymousId, site.domain);
       const bound = conversation.metadata.identity?.customer_id ?? null;
       /* A token only ever confirms the customer this conversation is already
          bound to (or binds a previously anonymous one). A token for someone

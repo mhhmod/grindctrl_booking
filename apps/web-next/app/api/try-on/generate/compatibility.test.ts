@@ -64,6 +64,7 @@ function request(sessionId: string, shop: unknown) {
 
 describe('temporary legacy compatibility generation boundary', () => {
   beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT =
       'allow-unsigned-nonbillable-storefront';
@@ -82,6 +83,7 @@ describe('temporary legacy compatibility generation boundary', () => {
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     vi.restoreAllMocks();

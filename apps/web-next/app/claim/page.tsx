@@ -7,6 +7,7 @@ import { ensureMessengerSite } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { verifyClaimToken } from '@/lib/shopify/claim-token';
 import { getShopOwnerEmail } from '@/lib/shopify/shop-owner';
+import { primaryShopifyApp } from '@/lib/shopify/app-registry';
 
 /* Redeem side of the claim flow — see app/api/shopify/claim/start/route.ts
    for the mint side. Order matters:
@@ -117,7 +118,9 @@ export default async function ClaimPage({
   const locale = await getRequestLocale();
   const copy = COPY[locale === 'ar' ? 'ar' : 'en'];
 
-  const claim = verifyClaimToken(process.env.SHOPIFY_API_SECRET ?? '', token);
+  // Claim tokens are always signed with the primary app's secret (see
+  // app/api/shopify/claim/start/route.ts) -- verify against that same one.
+  const claim = verifyClaimToken(primaryShopifyApp()?.secret ?? '', token);
   if (!claim) {
     return <MessagePage locale={locale} title={copy.expiredTitle} body={copy.expiredBody} />;
   }
