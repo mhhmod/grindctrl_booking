@@ -27,6 +27,8 @@ export function parsePhotoDataUrl(photoData: string): { mime: string } | null {
 const MAX_GARMENT_BYTES = 8 * 1024 * 1024;
 export const IMAGE_PROVIDER_TIMEOUT_MS = 120_000;
 const MAX_PROVIDER_JSON_BYTES = Math.ceil(TRYON_RESULT_MAX_BYTES / 3) * 4 + 64 * 1024;
+const PROVIDER_MAX_ATTEMPTS = 2;
+const PROVIDER_RETRY_DELAY_MS = 750;
 
 /* Only Shopify-controlled image hosts are allowed as remote garment
    sources (SSRF guard): the shared CDN, or a *.myshopify.com shop
@@ -123,32 +125,50 @@ export async function runImageGeneration(
 
   costEstimate = null; // An attempted/ambiguous call is not proven free.
   try {
-    const res = await fetch(OPENROUTER_IMAGES_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
-      redirect: 'error',
-      cache: 'no-store',
-      body: JSON.stringify({
-        model,
-        prompt:
-          `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
-          'This must look like the SAME photograph, retaken with the person wearing the new garment: ' +
-          'identical face, skin tone, hair, pose, body proportions, camera angle, background, and framing. ' +
-          "Match the original photo's lighting direction, color temperature, grain, and sharpness so the garment blends seamlessly. " +
-          'The garment must keep its true color, pattern, logo placement, and fabric texture, with natural drape, ' +
-          "realistic wrinkles, and correct fit for the person's build. " +
-          'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
-        input_references: [
-          { type: 'image_url', image_url: { url: photoData } },
-          { type: 'image_url', image_url: { url: garmentDataUrl } },
-        ],
-        n: 1,
-      }),
+    const requestBody = JSON.stringify({
+      model,
+      prompt:
+        `Virtual try-on: show the person from the first reference image wearing the garment from the second reference image (${garmentName}). ` +
+        'This must look like the SAME photograph, retaken with the person wearing the new garment: ' +
+        'identical face, skin tone, hair, pose, body proportions, camera angle, background, and framing. ' +
+        "Match the original photo's lighting direction, color temperature, grain, and sharpness so the garment blends seamlessly. " +
+        'The garment must keep its true color, pattern, logo placement, and fabric texture, with natural drape, ' +
+        "realistic wrinkles, and correct fit for the person's build. " +
+        'No beautification, no body reshaping, no background changes, no added props. Photorealistic, indistinguishable from a real photo.',
+      input_references: [
+        { type: 'image_url', image_url: { url: photoData } },
+        { type: 'image_url', image_url: { url: garmentDataUrl } },
+      ],
+      n: 1,
     });
+
+    /* One retry, and only for a response that proves no image was generated:
+       429 (rate limited) or 5xx (the edge/upstream rejected the request
+       before any generation ran). A network error or our own timeout is
+       deliberately NOT retried here — the request may have completed
+       upstream even though we never saw the response, and retrying would
+       risk a second real charge for one shopper action. Those still fail on
+       the first attempt, same as before this retry existed. */
+    let res: Response;
+    let attempt = 0;
+    for (;;) {
+      attempt += 1;
+      res = await fetch(OPENROUTER_IMAGES_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
+        redirect: 'error',
+        cache: 'no-store',
+        body: requestBody,
+      });
+      const retryable = res.status === 429 || (res.status >= 500 && res.status < 600);
+      if (res.ok || !retryable || attempt >= PROVIDER_MAX_ATTEMPTS) break;
+      await res.body?.cancel();
+      await new Promise((resolve) => setTimeout(resolve, PROVIDER_RETRY_DELAY_MS));
+    }
 
     if (!res.ok) {
       await res.body?.cancel();
