@@ -33,10 +33,12 @@ function request(sessionId: string, attemptNonce = ATTEMPT_NONCE) {
 
 describe('POST /api/try-on/attempt', () => {
   beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
   });
 

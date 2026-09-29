@@ -5,6 +5,7 @@ import { signClaimToken } from '@/lib/shopify/claim-token';
 import { ensureShopOwnedSite } from '@/lib/messenger/shop-provisioning';
 import { findSiteByDomain, isShopProfileId } from '@/lib/messenger/shop-tenancy';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
+import { primaryShopifyApp } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/claim/start
    Mints a short-lived claim token for "adopt this store into my account"
@@ -33,9 +34,12 @@ export async function GET(request: NextRequest) {
     throw error;
   }
 
-  // ?.trim(): a whitespace-only env value is truthy, and would otherwise
-  // fail HMAC verification below with a 401 instead of this diagnostic 503.
-  const secret = process.env.SHOPIFY_API_SECRET?.trim();
+  // Claim tokens are our own namespace (iss: 'grindctrl-shop-claim'), not
+  // tied to which of possibly several apps proved this session -- the
+  // primary (first-configured) app signs it, same as a single-app
+  // deployment always did. verifySessionToken below still checks the
+  // session token itself against whichever app actually signed it.
+  const secret = primaryShopifyApp()?.secret;
   if (!secret) return NextResponse.json({ error: 'not_configured' }, { status: 503 });
 
   const header = request.headers.get('authorization') ?? '';

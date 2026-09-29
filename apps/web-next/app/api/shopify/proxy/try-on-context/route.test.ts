@@ -94,6 +94,7 @@ function attemptRequest(sessionId: string, nonce = NONCE) {
 
 describe('GET /api/shopify/proxy/try-on-context', () => {
   beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     // Reinstall after the previous test's restoreAllMocks so this suite is
     // order-independent when run with the wider focused group.
@@ -103,6 +104,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     vi.restoreAllMocks();
   });

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
 import { storeShopToken } from '@/lib/shopify/tokens';
-import { OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
+import { OAUTH_APP_COOKIE, OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
+import { findShopifyAppByClientId, primaryShopifyApp } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/oauth/callback
    Completes authorization and stores the offline Admin token, encrypted.
@@ -46,9 +47,15 @@ export async function GET(request: NextRequest) {
       forwardedProto: request.headers.get('x-forwarded-proto'),
       fallbackAppUrl: 'https://grindctrl.cloud',
     }) ?? 'https://grindctrl.cloud';
-  const secret = process.env.SHOPIFY_API_SECRET?.trim();
-  const clientId = process.env.SHOPIFY_API_KEY?.trim();
-  if (!secret || !clientId) return failure(appUrl, 'oauth is not configured');
+  // /oauth/start recorded which app it authorized as in its own cookie --
+  // Shopify's callback carries no client id, only the code and shop. A
+  // missing cookie (an old bookmarked/in-flight link from before this app
+  // became multi-app-aware) falls back to the primary app, same as a
+  // single-app deployment always resolved.
+  const cookieAppId = request.cookies.get(OAUTH_APP_COOKIE)?.value;
+  const app = cookieAppId ? findShopifyAppByClientId(cookieAppId) : primaryShopifyApp();
+  if (!app) return failure(appUrl, 'oauth is not configured');
+  const { clientId, secret } = app;
 
   const params = request.nextUrl.searchParams;
   const shopDomain = normalizeShopDomain(params.get('shop'));
@@ -92,5 +99,6 @@ export async function GET(request: NextRequest) {
 
   const response = NextResponse.redirect(ordersReturn(appUrl, 'connected'));
   response.cookies.delete(OAUTH_STATE_COOKIE);
+  response.cookies.delete(OAUTH_APP_COOKIE);
   return response;
 }

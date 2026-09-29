@@ -10,7 +10,7 @@ import { NextRequest } from 'next/server';
 
 const verifySessionTokenMock = vi.fn();
 vi.mock('@/lib/shopify/session-token', () => ({
-  verifySessionToken: (...args: unknown[]) => verifySessionTokenMock(...args),
+  verifySessionTokenResolved: (...args: unknown[]) => verifySessionTokenMock(...args),
 }));
 
 const getShopTokenMock = vi.fn();
@@ -72,7 +72,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('skips the exchange when a sufficiently-scoped token already exists', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     getShopTokenMock.mockResolvedValue({
       accessToken: 'existing',
       scopes: 'read_products,read_orders,write_app_proxy',
@@ -92,7 +95,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('re-exchanges when the existing token is missing a required scope', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     getShopTokenMock.mockResolvedValue({ accessToken: 'stale', scopes: 'read_products' });
     vi.stubGlobal(
       'fetch',
@@ -119,7 +125,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('exchanges the verified session token against Shopify with the correct grant, then stores the result', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     const fetchMock = vi
       .fn()
       .mockResolvedValue(
@@ -159,7 +168,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('returns 502 without storing when Shopify rejects the exchange', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 400 })));
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -175,7 +187,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('returns 502 when the exchange call itself throws (network failure)', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -189,7 +204,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   it('returns 503 when storing the exchanged token fails', async () => {
-    verifySessionTokenMock.mockReturnValue({ shop: 'demo.myshopify.com' });
+    verifySessionTokenMock.mockReturnValue({
+      shop: 'demo.myshopify.com',
+      app: { clientId: 'client-id', secret: 'secret' },
+    });
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(new Response(JSON.stringify({ access_token: 'tok', scope: 'read_products' }), { status: 200 })),

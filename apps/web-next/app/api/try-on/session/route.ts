@@ -19,6 +19,7 @@ import {
   legacyStorefrontCompatEnabled,
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
+import { getConfiguredShopifyApps, primaryShopifyApp, resolveShopifyApp } from '@/lib/shopify/app-registry';
 import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
 
 /**
@@ -79,8 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    const secret = process.env.SHOPIFY_API_SECRET?.trim();
-    if (!secret) {
+    if (getConfiguredShopifyApps().length === 0) {
       const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
       return NextResponse.json(res, { status: 503 });
     }
@@ -109,7 +109,17 @@ export async function POST(request: NextRequest) {
           handle: productId,
           variantId,
         });
-        const context = signStorefrontContext(secret, {
+        // No Shopify-signed proof here (legacy compat trusts body.shop
+        // directly, see warnLegacyStorefrontCompat below), so there is no
+        // cryptographic signal for which app this is: the primary
+        // (first-configured) app signs it, same as a single-app deployment
+        // always did.
+        const legacySecret = primaryShopifyApp()?.secret;
+        if (!legacySecret) {
+          const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
+          return NextResponse.json(res, { status: 503 });
+        }
+        const context = signStorefrontContext(legacySecret, {
           shop,
           productId: resolved.handle,
           variantId: resolved.variantId,
@@ -118,7 +128,7 @@ export async function POST(request: NextRequest) {
           canonicalGarmentUrl: resolved.garmentUrl,
           nonce: createTryOnNonce(),
         });
-        signedSession = signTryOnSession(secret, {
+        signedSession = signTryOnSession(legacySecret, {
           purpose: 'legacy-compat',
           context: context.claims,
         });
@@ -145,19 +155,25 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(res, { status: 400 });
       }
 
-      const storefront = verifyStorefrontContext(secret, contextToken, {
-        productId,
-        variantId: body.variantId === undefined ? undefined : variantId,
-        nonce,
-      });
-      if (!storefront) {
+      const resolved = resolveShopifyApp((appSecret) =>
+        verifyStorefrontContext(appSecret, contextToken, {
+          productId,
+          variantId: body.variantId === undefined ? undefined : variantId,
+          nonce,
+        }),
+      );
+      if (!resolved) {
         const res: TryOnApiResponse = { ok: false, error: 'Invalid storefront context.' };
         return NextResponse.json(res, { status: 401 });
       }
-      signedSession = signTryOnSession(secret, { purpose: 'storefront', context: storefront });
+      signedSession = signTryOnSession(resolved.app.secret, {
+        purpose: 'storefront',
+        context: resolved.value,
+      });
     } else {
       // The public demo is deliberately a different capability. It cannot
-      // name a shop and is limited to the app's seeded demo catalog.
+      // name a shop and is limited to the app's seeded demo catalog, so
+      // there is no per-app signal either: the primary app signs it.
       if (
         body.storefrontContext !== undefined ||
         body.storefrontNonce !== undefined ||
@@ -167,7 +183,12 @@ export async function POST(request: NextRequest) {
         const res: TryOnApiResponse = { ok: false, error: 'Invalid public demo context.' };
         return NextResponse.json(res, { status: 400 });
       }
-      signedSession = signTryOnSession(secret, { purpose: 'public-demo', productId });
+      const demoSecret = primaryShopifyApp()?.secret;
+      if (!demoSecret) {
+        const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
+        return NextResponse.json(res, { status: 503 });
+      }
+      signedSession = signTryOnSession(demoSecret, { purpose: 'public-demo', productId });
     }
 
     const session: TryOnSession = {

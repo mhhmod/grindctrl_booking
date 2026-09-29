@@ -4,6 +4,7 @@ import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifyTryOnSession } from '@/lib/try-on/storefront-context';
 import { loadAuthorizedDurableTryOnJob } from '@/lib/try-on/persistence';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import {
   TryOnResultPersistenceError,
   TryOnResultSchemaNotReadyError,
@@ -52,17 +53,11 @@ export async function GET(
     return NextResponse.json(res, { status: 400 });
   }
 
-  const secret = process.env.SHOPIFY_API_SECRET?.trim();
-  if (!secret) {
-    return NextResponse.json(
-      { ok: false, message: 'Try-on is not configured.', error: 'Try-on is not configured.' },
-      { status: 503 },
-    );
-  }
-
   const authorizationHeader = request.headers.get('authorization') ?? '';
   const token = authorizationHeader.replace(/^bearer\s+/i, '');
-  const session = token ? verifyTryOnSession(secret, token) : null;
+  const session = token
+    ? resolveShopifyApp((secret) => verifyTryOnSession(secret, token))?.value
+    : null;
   if (!session) {
     return NextResponse.json(
       { ok: false, message: 'Invalid or expired try-on session.', error: 'Invalid or expired try-on session.' },

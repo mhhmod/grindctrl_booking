@@ -4,9 +4,11 @@ import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import {
   buildAuthorizeUrl,
   resolveCallbackBase,
+  OAUTH_APP_COOKIE,
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_TTL_SECONDS,
 } from '@/lib/shopify/oauth';
+import { findShopifyAppByClientId, primaryShopifyApp } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/oauth/start?shop=<store>.myshopify.com
    Begins the merchant's authorization so the app can read their orders.
@@ -23,11 +25,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_shop' }, { status: 400 });
   }
 
-  const clientId = process.env.SHOPIFY_API_KEY?.trim();
-  if (!clientId) {
-    console.error('[shopify] oauth start: SHOPIFY_API_KEY is not set');
+  // The caller (today, only the "Grant order access" button) may name which
+  // configured app to authorize as; omitted, this is the primary app, same
+  // as a single-app deployment always was. The chosen app's clientId rides
+  // along in its own cookie so the callback -- which gets no client id back
+  // from Shopify -- verifies and exchanges against that SAME app, not
+  // whichever happens to be primary by the time the callback lands.
+  const requestedAppId = request.nextUrl.searchParams.get('app');
+  const app = requestedAppId ? findShopifyAppByClientId(requestedAppId) : primaryShopifyApp();
+  if (!app) {
+    console.error('[shopify] oauth start: no matching Shopify app is configured');
     return NextResponse.json({ error: 'oauth_not_configured' }, { status: 503 });
   }
+  const clientId = app.clientId;
 
   /* The callback MUST come back to the host that is about to be handed the
      state cookie — see resolveCallbackBase for why the forwarded headers,
@@ -57,6 +67,13 @@ export async function GET(request: NextRequest) {
      accounts.shopify.com, and Strict would withhold the cookie on exactly
      that request. */
   response.cookies.set(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/api/shopify/oauth',
+    maxAge: OAUTH_STATE_TTL_SECONDS,
+  });
+  response.cookies.set(OAUTH_APP_COOKIE, clientId, {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

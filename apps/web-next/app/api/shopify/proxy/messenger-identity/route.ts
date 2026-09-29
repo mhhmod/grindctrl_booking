@@ -7,6 +7,7 @@ import {
 } from '@/lib/messenger/identity';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 
 /* GET /apps/grindctrl/messenger-identity  (Shopify App Proxy)
    Storefront flow:
@@ -26,12 +27,13 @@ export async function GET(request: NextRequest) {
     throw error;
   }
 
-  const secret = process.env.SHOPIFY_API_SECRET;
   const params = request.nextUrl.searchParams;
 
-  if (!secret || !verifyShopifyProxySignature(params, secret)) {
+  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
+  if (!resolved) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
   }
+  const secret = resolved.app.secret;
 
   const nowSeconds = Math.floor(Date.now() / 1000);
   const timestamp = params.get('timestamp') ?? '';

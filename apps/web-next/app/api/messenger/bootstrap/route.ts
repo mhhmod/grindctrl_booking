@@ -11,7 +11,7 @@ import {
   upsertVisitor,
 } from '@/lib/messenger/conversations';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
-import { verifyShopperToken } from '@/lib/messenger/identity';
+import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
 import type { MessengerLocale } from '@/lib/messenger/types';
 
 /* POST /api/messenger/bootstrap
@@ -76,9 +76,8 @@ export async function POST(request: NextRequest) {
     // by the Shopify proxy route. Bound to this session and the loaded site,
     // never a shop supplied in the request body or an old metadata flag.
     let identity: { customerId: string; email: string; name: string } | null = null;
-    const secret = process.env.SHOPIFY_API_SECRET;
-    if (secret && typeof body.shopperToken === 'string') {
-      const claims = verifyShopperToken(secret, body.shopperToken, anonymousId, site.domain);
+    if (typeof body.shopperToken === 'string') {
+      const claims = verifyShopperTokenAnyApp(body.shopperToken, anonymousId, site.domain);
       if (claims?.customerId) {
         identity = {
           customerId: claims.customerId,
