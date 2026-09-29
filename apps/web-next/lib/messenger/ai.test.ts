@@ -62,6 +62,38 @@ describe('buildSystemPrompt', () => {
     });
     expect(prompt.length).toBeLessThan(10_000);
   });
+
+  it('says explicitly when there is no store reference data, rather than staying silent', () => {
+    const prompt = buildSystemPrompt(BASE_INPUT);
+    expect(prompt).toContain('STORE REFERENCE DATA: none provided');
+    expect(prompt).toContain('check with the team');
+  });
+
+  it('names concrete policy categories a plausible-sounding guess still counts as inventing', () => {
+    const prompt = buildSystemPrompt(BASE_INPUT);
+    expect(prompt).toContain('return/exchange windows');
+    expect(prompt).toContain('30 days');
+  });
+
+  it('tells the model not to guess beyond what reference data covers, even when some exists', () => {
+    const prompt = buildSystemPrompt({
+      ...BASE_INPUT,
+      knowledge: [
+        {
+          id: 'k1',
+          title: 'shipping',
+          content: 'We ship within 3 business days.',
+          source: 'manual',
+          source_url: null,
+          status: 'active',
+          last_synced_at: null,
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    });
+    expect(prompt).toContain('not covered above');
+    expect(prompt).toContain('do not guess or estimate');
+  });
 });
 
 describe('detectExplicitHandoffRequest', () => {

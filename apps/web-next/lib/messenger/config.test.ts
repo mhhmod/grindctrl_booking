@@ -12,7 +12,7 @@ describe('resolveMessengerConfig', () => {
     const config = resolveMessengerConfig({});
     expect(config.appearance.accentColor).toBe(MESSENGER_DEFAULTS.appearance.accentColor);
     expect(config.behaviour.proactiveEnabled).toBe(false);
-    expect(config.ai.enabled).toBe(false);
+    expect(config.ai.enabled).toBe(true);
   });
 
   it('rejects invalid accent colors and keeps defaults', () => {
@@ -146,9 +146,9 @@ describe('diffMessengerConfig', () => {
   });
 
   it('reports exactly one changed field with before and after values', () => {
-    const { config } = mergeDraftOverPublished({}, { messenger_ai: { enabled: true } });
+    const { config } = mergeDraftOverPublished({}, { messenger_ai: { enabled: false } });
     expect(diffMessengerConfig(resolveMessengerConfig({}), config).filter((s) => s.changed)).toEqual([
-      { section: 'ai', changed: true, fields: [{ key: 'enabled', before: false, after: true }] },
+      { section: 'ai', changed: true, fields: [{ key: 'enabled', before: true, after: false }] },
     ]);
   });
 
@@ -165,8 +165,8 @@ describe('diffMessengerConfig', () => {
   });
 
   it('nets a reverted field to no change despite a saved draft', () => {
-    const draft = { messenger_ai: { enabled: true } };
-    draft.messenger_ai.enabled = false;
+    const draft = { messenger_ai: { enabled: false } };
+    draft.messenger_ai.enabled = true;
     const { config, hasDraft } = mergeDraftOverPublished({}, draft);
     expect(hasDraft).toBe(true);
     expect(diffMessengerConfig(resolveMessengerConfig({}), config).every((s) => !s.changed && s.fields.length === 0)).toBe(true);

@@ -65,7 +65,7 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     availabilityHours: [],
   },
   ai: {
-    enabled: false,
+    enabled: true,
     tone: 'friendly',
     instructions: '',
     languageMode: 'auto',
@@ -209,7 +209,11 @@ function normalizeAi(raw: unknown): MessengerAi {
   const r = asRecord(raw);
   const tone = r.tone;
   return {
-    enabled: r.enabled === true,
+    // On by default, same as contactCapture/notifications below: a merchant
+    // who never touched this setting gets an AI assistant answering
+    // shoppers, not a silent chat box. An explicit `false` (the merchant
+    // turned it off) is still respected.
+    enabled: r.enabled !== false,
     tone:
       tone === 'professional' || tone === 'concise' || tone === 'warm'
         ? tone
