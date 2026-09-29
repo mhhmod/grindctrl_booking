@@ -1,5 +1,5 @@
 import 'server-only';
-import nodemailer from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 /* One sending account for the whole app. The env vars carry the TRYON_
    prefix for historical reasons — the Try-On campaign was the first thing
@@ -41,7 +41,7 @@ function readPassword(): string | null {
   return pass || null;
 }
 
-export function getSmtpTransport(): nodemailer.Transporter | null {
+export function getSmtpTransport(): Transporter | null {
   const user = readUser();
   const pass = readPassword();
   if (!user || !pass) return null;
