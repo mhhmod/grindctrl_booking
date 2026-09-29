@@ -79,3 +79,39 @@ describe('image provider safety boundary', () => {
     expect(parsePhotoDataUrl('data:image/png;base64,%%%%')).toBeNull();
   });
 });
+
+describe('transient provider failure retry', () => {
+  it.each([429, 500, 503])(
+    'retries once after a %i and succeeds on the second attempt',
+    async (status) => {
+      fetchMock.mockResolvedValueOnce(Response.json({ error: 'rate limited or down' }, { status }));
+      fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG, media_type: 'image/png' }], usage: { cost: 0.02 } }));
+      const job = await generate();
+      expect(job.status).toBe('completed');
+      // 1 garment fetch + 2 OpenRouter attempts.
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    },
+  );
+
+  it('gives up after one retry if the provider keeps failing', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ error: 'down' }, { status: 503 }));
+    fetchMock.mockResolvedValueOnce(Response.json({ error: 'still down' }, { status: 503 }));
+    const job = await generate();
+    expect(job.status).toBe('failed');
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('does not retry a non-retryable 4xx (no image was ever at risk of double-generation, but also no point retrying)', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ error: { message: 'bad request' } }, { status: 400 }));
+    const job = await generate();
+    expect(job.status).toBe('failed');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not retry a timeout/network exception (ambiguous billing outcome)', async () => {
+    fetchMock.mockRejectedValueOnce(new DOMException('boom', 'TimeoutError'));
+    const job = await generate();
+    expect(job.status).toBe('failed');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
