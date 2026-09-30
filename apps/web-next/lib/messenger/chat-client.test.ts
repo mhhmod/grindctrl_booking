@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const groq = vi.hoisted(() => ({ create: vi.fn() }));
+vi.mock('@/lib/assistant/groq-client', () => ({
+  CHAT_MODEL: 'openai/gpt-oss-120b',
+  getGroqClient: () => ({ chat: { completions: { create: groq.create } } }),
+  withGroqCall: (_label: string, fn: (signal: AbortSignal) => Promise<unknown>) => fn(new AbortController().signal),
+}));
 import { ProviderUnavailableError } from '@/lib/assistant/errors';
 import {
   STORE_CHAT_BACKUP_MODEL,
@@ -28,10 +35,13 @@ describe('Store Chat completions', () => {
     vi.stubGlobal('fetch', fetchMock);
     vi.spyOn(console, 'info').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     delete process.env.OPENROUTER_API_KEY;
+    delete process.env.GROQ_API_KEY;
+    groq.create.mockReset();
     fetchMock.mockReset();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -109,5 +119,31 @@ describe('Store Chat completions', () => {
     fetchMock.mockRejectedValue(new DOMException('The operation timed out.', 'TimeoutError'));
 
     await expect(storeChatComplete('messenger.chat', request)).rejects.toBeInstanceOf(ProviderUnavailableError);
+  });
+
+  it('answers through Groq when OpenRouter cannot, for example out of credit', async () => {
+    process.env.GROQ_API_KEY = 'groq-key';
+    fetchMock.mockResolvedValue(reply({ error: { message: 'Insufficient credits' } }, 402));
+    groq.create.mockResolvedValue({ choices: [{ message: { content: 'نعم، نوصل للإسكندرية.' } }] });
+
+    await expect(storeChatComplete('messenger.chat', request)).resolves.toBe('نعم، نوصل للإسكندرية.');
+    expect(groq.create).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'openai/gpt-oss-120b', max_tokens: 400, messages: request.messages }),
+      expect.anything(),
+    );
+    expect(console.warn).toHaveBeenCalledWith('[store-chat] fallback', { operation: 'messenger.chat', to: 'groq' });
+  });
+
+  it('does not call Groq when OpenRouter answers', async () => {
+    process.env.GROQ_API_KEY = 'groq-key';
+    fetchMock.mockResolvedValue(reply({ choices: [{ message: { content: 'ok' } }] }));
+    await storeChatComplete('messenger.chat', request);
+    expect(groq.create).not.toHaveBeenCalled();
+  });
+
+  it('fails as before when neither provider is available', async () => {
+    fetchMock.mockResolvedValue(reply({ error: { message: 'Insufficient credits' } }, 402));
+    await expect(storeChatComplete('messenger.chat', request)).rejects.toBeInstanceOf(ProviderUnavailableError);
+    expect(groq.create).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { ProviderUnavailableError } from '@/lib/assistant/errors';
+import { CHAT_MODEL, getGroqClient, withGroqCall } from '@/lib/assistant/groq-client';
 
 /* Store Chat's text model, through OpenRouter.
 
@@ -48,10 +49,33 @@ export function storeChatRequestBody(input: StoreChatRequest) {
   };
 }
 
-/** One Store Chat completion. Returns the raw assistant text. Logs only the
- *  model and provider that answered, timing and aggregate usage, never the
- *  prompt or the reply. */
+/** One Store Chat completion. OpenRouter first; if it cannot answer at all
+ *  (no credit, key limit, outage), the same open model on Groq answers
+ *  instead, so shoppers are not left without a reply. Logs only which
+ *  provider answered, timing and aggregate usage, never the prompt or the
+ *  reply. */
 export async function storeChatComplete(operation: string, input: StoreChatRequest): Promise<string> {
+  try {
+    return await openRouterComplete(operation, input);
+  } catch (primaryError) {
+    if (!process.env.GROQ_API_KEY?.trim()) throw primaryError;
+    console.warn('[store-chat] fallback', { operation, to: 'groq' });
+    const completion = await withGroqCall(`${operation}.fallback`, (signal) =>
+      getGroqClient().chat.completions.create(
+        {
+          model: CHAT_MODEL,
+          temperature: input.temperature,
+          max_tokens: input.maxTokens,
+          messages: input.messages,
+        },
+        { signal },
+      ),
+    );
+    return (completion.choices?.[0]?.message?.content ?? '').toString();
+  }
+}
+
+async function openRouterComplete(operation: string, input: StoreChatRequest): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) throw new ProviderUnavailableError(undefined, { cause: new StoreChatNotConfiguredError() });
 
