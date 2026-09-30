@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   consume: vi.fn(),
   owner: vi.fn(),
   ensureSite: vi.fn(),
+  transfer: vi.fn(),
 }));
 
 vi.mock('@/lib/shopify/session-token', () => ({ authenticateShopifyRequest: mocks.authenticate }));
@@ -12,7 +13,10 @@ vi.mock('@/lib/shopify/shop-links', () => ({
   consumeShopLinkCode: mocks.consume,
   getShopOwnerClerkUserId: mocks.owner,
 }));
-vi.mock('@/lib/messenger/provisioning', () => ({ ensureMessengerSite: mocks.ensureSite }));
+vi.mock('@/lib/messenger/provisioning', () => ({
+  ensureMessengerSite: mocks.ensureSite,
+  transferShopSite: mocks.transfer,
+}));
 vi.mock('@/lib/messenger/shop-tenancy', () => ({
   StoreOwnedByAnotherAccountError: class StoreOwnedByAnotherAccountError extends Error {},
 }));
@@ -56,6 +60,21 @@ describe('POST /api/shopify/admin/link', () => {
     expect(mocks.consume).toHaveBeenLastCalledWith('ABCD', 'shop.myshopify.com', { replace: true });
     await post({ code: 'ABCD', replace: 'yes' });
     expect(mocks.consume).toHaveBeenLastCalledWith('ABCD', 'shop.myshopify.com', { replace: false });
+  });
+
+  it('moves Store Chat to the linked account on a re-link', async () => {
+    mocks.consume.mockResolvedValue('linked');
+    mocks.transfer.mockResolvedValue(true);
+    const res = await post({ code: 'ABCD', replace: true });
+    expect(await res.json()).toEqual({ outcome: 'linked', storeChat: 'adopted' });
+    expect(mocks.transfer).toHaveBeenCalledWith('shop.myshopify.com', 'user_owner');
+    expect(mocks.ensureSite).toHaveBeenCalledWith('user_owner', 'shop.myshopify.com', 'shop.myshopify.com');
+  });
+
+  it('never moves Store Chat on a first link', async () => {
+    mocks.consume.mockResolvedValue('linked');
+    await post({ code: 'ABCD' });
+    expect(mocks.transfer).not.toHaveBeenCalled();
   });
 
   it('keeps the link when Store Chat belongs to another account', async () => {

@@ -288,6 +288,29 @@ export async function unclaimSite(
   return unclaimed;
 }
 
+/** Moves a store's Store Chat to the given account. Used only when the
+ *  store's own admin re-links the store to a different dashboard account
+ *  from inside Shopify (authenticated as that store's staff, holding a code
+ *  from the new account): the same authority that moves the store's Try-On
+ *  link moves its Store Chat, so one re-link moves everything. The move is
+ *  the same compare-and-set as adoption, so a concurrent change wins.
+ *  Returns whether the site now belongs to the account. */
+export async function transferShopSite(domain: string, toClerkUserId: string): Promise<boolean> {
+  const canonical = canonicalShopDomain(domain);
+  const existing = await findSiteByDomain(canonical);
+  if (!existing) return false;
+  const profile = await ensureProfile(toClerkUserId, null);
+  const workspaceId = await ensureWorkspace(profile.id);
+  if (existing.workspace_id === workspaceId) return true;
+  try {
+    await adoptSite(existing, workspaceId, profile.id, canonical);
+    return true;
+  } catch (error) {
+    if (error instanceof StoreOwnedByAnotherAccountError) return false;
+    throw error;
+  }
+}
+
 /** Used only by page.tsx's auto-provision heuristic (never by the real
  *  /claim flow) to stop it from silently re-adopting a store this exact
  *  merchant just disconnected, the moment Try-On reports the domain still
