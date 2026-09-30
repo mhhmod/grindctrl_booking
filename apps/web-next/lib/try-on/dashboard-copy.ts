@@ -185,7 +185,7 @@ const en: TryOnDashboardCopy = {
   shopLinkCodeLabel: 'Store linking code',
   shopLinkExpiresIn: (time) => `Expires in ${time}`,
   connectStoreInstructions:
-    'Open the GrindCTRL app from your Shopify admin, and enter this code where it asks you to link your account.',
+    'In your Shopify admin, open Apps, then GrindCTRL. Under "Link to dashboard", enter this code. If the store is already connected to another account, choose "Link a different account" first.',
   generateNewShopLinkCode: 'Generate a new code',
   shopLinkCodeFailed: 'Could not generate a code. Try again.',
   columnShop: 'Shop',
@@ -321,7 +321,7 @@ const ar: TryOnDashboardCopy = {
   shopLinkCodeLabel: 'رمز ربط المتجر',
   shopLinkExpiresIn: (time) => `تنتهي صلاحيته خلال ${time}`,
   connectStoreInstructions:
-    'افتح تطبيق جريند كنترول من لوحة تحكم شوبيفاي، ثم أدخل هذا الرمز عندما يطلب منك التطبيق ربط حسابك.',
+    'في لوحة تحكم شوبيفاي، افتح التطبيقات ثم جريند كنترول. في قسم "الربط بلوحة التحكم" أدخل هذا الرمز. إذا كان المتجر مرتبطاً بحساب آخر، اختر أولاً "ربط حساب آخر".',
   generateNewShopLinkCode: 'أنشئ رمزاً جديداً',
   shopLinkCodeFailed: 'تعذّر إنشاء الرمز. حاول مرة أخرى.',
   columnShop: 'المتجر',

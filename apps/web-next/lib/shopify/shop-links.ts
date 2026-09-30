@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { randomInt } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
@@ -84,9 +84,14 @@ async function markCodeConsumed(
   if (error) throw new Error(`Unable to consume shop link code: ${error.message}`);
 }
 
+/* `replace` is sent only from the "Link a different account" action in the
+   Shopify admin. The request is already authenticated as staff of this store
+   (Shopify session token), and the code proves the new account asked for the
+   link, so the store's own admin may move it to that account. */
 export async function consumeShopLinkCode(
   code: string,
   shopDomain: string,
+  options: { replace?: boolean } = {},
 ): Promise<ConsumeShopLinkResult> {
   const normalizedCode = normalizeCode(code);
   const supabase = getServiceClient();
@@ -112,7 +117,19 @@ export async function consumeShopLinkCode(
   if (!shop) throw new Error('Unable to link unknown Shopify shop');
 
   const owner = (shop as ShopOwnerRow).owner_clerk_user_id;
-  if (owner && owner !== linkRow.clerk_user_id) return 'already_owned';
+  if (owner && owner !== linkRow.clerk_user_id) {
+    if (!options.replace) return 'already_owned';
+    // Conditional on the owner we read, so a concurrent change is not overwritten.
+    const { data: moved, error: moveError } = await supabase
+      .from('tryon_shops')
+      .update({ owner_clerk_user_id: linkRow.clerk_user_id })
+      .eq('shop_domain', shopDomain)
+      .eq('owner_clerk_user_id', owner)
+      .select('owner_clerk_user_id')
+      .maybeSingle();
+    if (moveError) throw new Error(`Unable to relink Shopify shop: ${moveError.message}`);
+    if (!moved) return 'already_owned';
+  }
 
   if (!owner) {
     /* Keep the ownership check true at write time too. If two accounts race
@@ -156,4 +173,47 @@ export async function isShopLinked(shopDomain: string): Promise<boolean> {
   if (error) throw new Error(`Unable to read Shopify shop link: ${error.message}`);
 
   return (data as ShopOwnerRow | null)?.owner_clerk_user_id != null;
+}
+
+/** "m•••@gmail.com": enough for a store admin to recognise which dashboard
+ *  account the store is connected to, without exposing the full address. */
+export function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return '•••';
+  return `${local[0]}•••@${domain}`;
+}
+
+/** The masked email of the dashboard account this store is linked to, or null
+ *  when it is not linked or the account cannot be read. */
+export async function getShopLinkedAccountHint(shopDomain: string): Promise<string | null> {
+  const supabase = getServiceClient();
+  const { data, error } = await supabase
+    .from('tryon_shops')
+    .select('owner_clerk_user_id')
+    .eq('shop_domain', shopDomain)
+    .maybeSingle();
+  if (error) throw new Error(`Unable to read Shopify shop link: ${error.message}`);
+  const owner = (data as ShopOwnerRow | null)?.owner_clerk_user_id;
+  if (!owner) return null;
+  try {
+    const user = await (await clerkClient()).users.getUser(owner);
+    const email =
+      user.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)?.emailAddress ??
+      user.emailAddresses[0]?.emailAddress;
+    return email ? maskEmail(email) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The dashboard account a store is linked to, or null. */
+export async function getShopOwnerClerkUserId(shopDomain: string): Promise<string | null> {
+  const supabase = getServiceClient();
+  const { data, error } = await supabase
+    .from('tryon_shops')
+    .select('owner_clerk_user_id')
+    .eq('shop_domain', shopDomain)
+    .maybeSingle();
+  if (error) throw new Error(`Unable to read Shopify shop link: ${error.message}`);
+  return (data as ShopOwnerRow | null)?.owner_clerk_user_id ?? null;
 }
