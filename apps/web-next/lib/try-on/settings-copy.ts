@@ -101,6 +101,9 @@ export interface SettingsFormCopy {
   shopLinkTitle: string;
   shopLinkDescription: string;
   shopLinked: string;
+  shopLinkedTo: (account: string) => string;
+  relinkShop: string;
+  relinkHint: string;
   shopLinkSuccess: string;
   shopLinkCodeLabel: string;
   shopLinkCodePlaceholder: string;
@@ -195,6 +198,10 @@ const en: SettingsFormCopy = {
   shopLinkTitle: 'Link to dashboard',
   shopLinkDescription: 'Connect this Shopify store to your GrindCTRL dashboard account.',
   shopLinked: 'Connected to your GrindCTRL dashboard account.',
+  shopLinkedTo: (account) => `Connected to the GrindCTRL dashboard account ${account}.`,
+  relinkShop: 'Link a different account',
+  relinkHint:
+    'Enter a code from the GrindCTRL account this store should belong to. It replaces the current connection.',
   shopLinkSuccess: 'Connected. Return to your GrindCTRL dashboard and refresh the page.',
   shopLinkCodeLabel: 'Dashboard linking code',
   shopLinkCodePlaceholder: 'ABCD-EFGH',
@@ -288,6 +295,9 @@ const ar: SettingsFormCopy = {
   shopLinkTitle: 'الربط بلوحة التحكم',
   shopLinkDescription: 'اربط متجر شوبيفاي هذا بحسابك في لوحة تحكم جريند كنترول.',
   shopLinked: 'متصل بحسابك في لوحة تحكم جريند كنترول.',
+  shopLinkedTo: (account) => `متصل بحساب لوحة تحكم جريند كنترول ${account}.`,
+  relinkShop: 'ربط حساب آخر',
+  relinkHint: 'أدخل رمزاً من حساب جريند كنترول الذي يجب أن يتبعه هذا المتجر. سيحل محل الربط الحالي.',
   shopLinkSuccess: 'تم الاتصال. ارجع إلى لوحة تحكم جريند كنترول وحدّث الصفحة.',
   shopLinkCodeLabel: 'رمز الربط من لوحة التحكم',
   shopLinkCodePlaceholder: 'ABCD-EFGH',

@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
+  getUser: vi.fn(),
 }));
 
-vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
+vi.mock('@clerk/nextjs/server', () => ({
+  auth: mocks.auth,
+  clerkClient: async () => ({ users: { getUser: mocks.getUser } }),
+}));
 
 type QueryResult = { data: unknown; error: { message: string } | null };
 
@@ -69,7 +73,13 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({ from: (table: string) => fromMock(table) }),
 }));
 
-import { consumeShopLinkCode, createShopLinkCode, isShopLinked } from './shop-links';
+import {
+  consumeShopLinkCode,
+  createShopLinkCode,
+  getShopLinkedAccountHint,
+  isShopLinked,
+  maskEmail,
+} from './shop-links';
 
 const NOW = '2026-09-10T10:00:00.000Z';
 const activeLink = {
@@ -178,6 +188,48 @@ describe('consumeShopLinkCode', () => {
     expect(findShop.operation).toBe('select');
   });
 
+  it("moves a shop owned by another account when the store's admin asks to replace the link", async () => {
+    const findCode = makeBuilder({ data: activeLink, error: null });
+    const findShop = makeBuilder({ data: { owner_clerk_user_id: 'user_someone_else' }, error: null });
+    const moveShop = makeBuilder({ data: { owner_clerk_user_id: 'user_owner' }, error: null });
+    const consumeCode = makeBuilder({ data: null, error: null });
+    queueBuilders(findCode, findShop, moveShop, consumeCode);
+
+    await expect(
+      consumeShopLinkCode('ABCDEFGH', 'real-shop.myshopify.com', { replace: true }),
+    ).resolves.toBe('linked');
+
+    expect(moveShop.operation).toBe('update');
+    expect(moveShop.payload).toEqual({ owner_clerk_user_id: 'user_owner' });
+    // Only moves it away from the owner that was read, never over a concurrent change.
+    expect(moveShop.eqCalls).toContainEqual(['owner_clerk_user_id', 'user_someone_else']);
+    expect(consumeCode.operation).toBe('update');
+  });
+
+  it('keeps the current owner when a replace races with another change', async () => {
+    const findCode = makeBuilder({ data: activeLink, error: null });
+    const findShop = makeBuilder({ data: { owner_clerk_user_id: 'user_someone_else' }, error: null });
+    const moveShop = makeBuilder({ data: null, error: null });
+    queueBuilders(findCode, findShop, moveShop);
+
+    await expect(
+      consumeShopLinkCode('ABCDEFGH', 'real-shop.myshopify.com', { replace: true }),
+    ).resolves.toBe('already_owned');
+    expect(fromMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('still rejects an expired code when replacing', async () => {
+    const findCode = makeBuilder({
+      data: { ...activeLink, expires_at: '2026-09-10T09:59:59.000Z' },
+      error: null,
+    });
+    queueBuilders(findCode);
+
+    await expect(
+      consumeShopLinkCode('ABCDEFGH', 'real-shop.myshopify.com', { replace: true }),
+    ).resolves.toBe('expired');
+  });
+
   it('rejects an expired code', async () => {
     queueBuilders(
       makeBuilder({
@@ -229,5 +281,38 @@ describe('isShopLinked', () => {
 
     await expect(isShopLinked('real-shop.myshopify.com')).resolves.toBe(expected);
     expect(findShop.eqCalls).toContainEqual(['shop_domain', 'real-shop.myshopify.com']);
+  });
+});
+
+describe('linked account hint', () => {
+  it('masks the email to its first letter and domain', () => {
+    expect(maskEmail('merchant@gmail.com')).toBe('m•••@gmail.com');
+    expect(maskEmail('not-an-email')).toBe('•••');
+  });
+
+  it("returns the owner's masked primary email", async () => {
+    queueBuilders(makeBuilder({ data: { owner_clerk_user_id: 'user_owner' }, error: null }));
+    mocks.getUser.mockResolvedValue({
+      primaryEmailAddressId: 'e2',
+      emailAddresses: [
+        { id: 'e1', emailAddress: 'old@example.com' },
+        { id: 'e2', emailAddress: 'owner@shop.com' },
+      ],
+    });
+
+    await expect(getShopLinkedAccountHint('real-shop.myshopify.com')).resolves.toBe('o•••@shop.com');
+    expect(mocks.getUser).toHaveBeenCalledWith('user_owner');
+  });
+
+  it('returns null for an unlinked shop without asking Clerk', async () => {
+    queueBuilders(makeBuilder({ data: { owner_clerk_user_id: null }, error: null }));
+    await expect(getShopLinkedAccountHint('real-shop.myshopify.com')).resolves.toBeNull();
+    expect(mocks.getUser).not.toHaveBeenCalled();
+  });
+
+  it('returns null when the account cannot be read', async () => {
+    queueBuilders(makeBuilder({ data: { owner_clerk_user_id: 'user_owner' }, error: null }));
+    mocks.getUser.mockRejectedValue(new Error('clerk down'));
+    await expect(getShopLinkedAccountHint('real-shop.myshopify.com')).resolves.toBeNull();
   });
 });

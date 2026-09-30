@@ -19,12 +19,16 @@ const APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 
 function ShopLinkCard({
   initiallyLinked,
+  linkedAccount,
   c,
 }: {
   initiallyLinked: boolean;
+  linkedAccount: string | null;
   c: ReturnType<typeof getSettingsFormCopy>;
 }) {
   const [linked, setLinked] = useState(initiallyLinked);
+  // A linked store can still be moved to another dashboard account by its admin.
+  const [relinking, setRelinking] = useState(false);
   const [linkCode, setLinkCode] = useState('');
   const [status, setStatus] = useState<
     'idle' | 'submitting' | ConsumeShopLinkResult | 'error'
@@ -42,7 +46,7 @@ function ShopLinkCard({
       const res = await fetch('/api/shopify/admin/link', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: linkCode }),
+        body: JSON.stringify({ code: linkCode, replace: relinking }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -57,11 +61,14 @@ function ShopLinkCard({
       }
 
       setStatus(data.outcome);
-      if (data.outcome === 'linked') setLinked(true);
+      if (data.outcome === 'linked') {
+        setLinked(true);
+        setRelinking(false);
+      }
     } catch {
       setStatus('error');
     }
-  }, [linkCode]);
+  }, [linkCode, relinking]);
 
   return (
     <Card>
@@ -70,10 +77,28 @@ function ShopLinkCard({
         <CardDescription>{c.shopLinkDescription}</CardDescription>
       </CardHeader>
       <CardContent>
-        {linked ? (
-          <p className="text-sm text-foreground" role="status">
-            {status === 'linked' ? c.shopLinkSuccess : c.shopLinked}
-          </p>
+        {linked && !relinking ? (
+          <div className="grid justify-items-start gap-3">
+            <p className="text-sm text-foreground" role="status">
+              {status === 'linked'
+                ? c.shopLinkSuccess
+                : linkedAccount
+                  ? c.shopLinkedTo(linkedAccount)
+                  : c.shopLinked}
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setRelinking(true);
+                setLinkCode('');
+                setStatus('idle');
+              }}
+            >
+              {c.relinkShop}
+            </Button>
+          </div>
         ) : (
           <form
             className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
@@ -104,6 +129,9 @@ function ShopLinkCard({
             <Button type="submit" disabled={status === 'submitting'}>
               {status === 'submitting' ? c.linkingShop : c.linkShop}
             </Button>
+            {relinking && (
+              <p className="text-sm text-muted-foreground sm:col-span-2">{c.relinkHint}</p>
+            )}
             {hasError && (
               <p
                 id="shop-link-status"
@@ -132,6 +160,7 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
   const [s, setS] = useState<TryOnWidgetSettings | null>(null);
   const [plan, setPlan] = useState<MerchantPlan | null>(null);
   const [linked, setLinked] = useState(false);
+  const [linkedAccount, setLinkedAccount] = useState<string | null>(null);
   const [loadingStepsText, setLoadingStepsText] = useState('');
   const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'error'>(
     'loading',
@@ -150,12 +179,14 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
           settings: TryOnWidgetSettings;
           plan?: MerchantPlan;
           linked: boolean;
+          linkedAccount?: string | null;
         };
         if (cancelled) return;
         setShop(data.shop);
         setS(data.settings);
         if (data.plan) setPlan(data.plan);
         setLinked(data.linked);
+        setLinkedAccount(data.linkedAccount ?? null);
         setLoadingStepsText(data.settings.loadingSteps?.join('\n') ?? '');
         setStatus('ready');
       } catch {
@@ -217,7 +248,7 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
-      <ShopLinkCard initiallyLinked={linked} c={c} />
+      <ShopLinkCard initiallyLinked={linked} linkedAccount={linkedAccount} c={c} />
 
       {plan && <MerchantPlanCard plan={plan} shop={shop} />}
 

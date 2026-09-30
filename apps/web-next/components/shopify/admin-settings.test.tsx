@@ -25,9 +25,9 @@ function response(body: unknown, ok = true) {
   return { ok, status: ok ? 200 : 500, json: vi.fn(async () => body) } as unknown as Response;
 }
 
-function mockSettingsLoad(linked: boolean) {
+function mockSettingsLoad(linked: boolean, linkedAccount: string | null = null) {
   vi.mocked(fetch).mockResolvedValueOnce(
-    response({ shop: 'real-shop.myshopify.com', settings, linked }),
+    response({ shop: 'real-shop.myshopify.com', settings, linked, linkedAccount }),
   );
 }
 
@@ -44,6 +44,24 @@ describe('ShopifyAdminSettings shop linking', () => {
 
     expect(await screen.findByText(c.shopLinked)).toBeInTheDocument();
     expect(screen.queryByLabelText(c.shopLinkCodeLabel)).not.toBeInTheDocument();
+  });
+
+  it('names the linked account and lets the store admin link a different one', async () => {
+    mockSettingsLoad(true, 'm•••@gmail.com');
+    vi.mocked(fetch).mockResolvedValueOnce(response({ outcome: 'linked' }));
+    render(<ShopifyAdminSettings locale="en" />);
+
+    expect(await screen.findByText(c.shopLinkedTo('m•••@gmail.com'))).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: c.relinkShop }));
+
+    expect(screen.getByText(c.relinkHint)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(c.shopLinkCodeLabel), { target: { value: 'WXYZ-2345' } });
+    fireEvent.click(screen.getByRole('button', { name: c.linkShop }));
+
+    expect(await screen.findByText(c.shopLinkSuccess)).toBeInTheDocument();
+    expect(vi.mocked(fetch).mock.lastCall?.[1]?.body).toBe(
+      JSON.stringify({ code: 'WXYZ-2345', replace: true }),
+    );
   });
 
   it('shows the code form when the shop is not linked', async () => {
@@ -72,7 +90,7 @@ describe('ShopifyAdminSettings shop linking', () => {
         Authorization: 'Bearer verified-session-token',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code: 'ABCD-EFGH' }),
+      body: JSON.stringify({ code: 'ABCD-EFGH', replace: false }),
     });
   });
 
