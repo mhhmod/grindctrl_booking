@@ -39,10 +39,15 @@ export default async function DashboardTryOnPage({
   const shopDomains = shops.map((shop) => shop.domain);
 
   /* Only a shop we already know about may be selected; anything else falls
-     back to the global defaults row. The save action re-checks server-side. */
+     back to the merchant's own first shop (installed first). The global
+     defaults row is never an edit target here: the save action refuses it,
+     so opening on it made a merchant's first save fail and hid their plan.
+     'default' remains only for a caller with no shop, whose cards are not
+     rendered. The save action re-checks server-side. */
   const requested = normalizeShopDomain(params.shop);
+  const ownShop = shops.find((shop) => shop.status === 'installed') ?? shops[0];
   const selectedShop =
-    requested && shops.some((shop) => shop.domain === requested) ? requested : 'default';
+    requested && shops.some((shop) => shop.domain === requested) ? requested : ownShop?.domain ?? 'default';
 
   // A presentation link is never a reason to accept a query-string tenant.
   // The public client ID is verified in shopify.app.toml/app-identity.ts;

@@ -70,7 +70,6 @@ export interface TryOnDashboardCopy {
 
   /* ── Settings panel ── */
   editing: string;
-  globalDefaultsOption: string;
   /** Glued to a shop domain inside an <option>. Not a standalone word. */
   uninstalledSuffix: string;
   defaultsHelp: string;
@@ -235,7 +234,6 @@ const en: TryOnDashboardCopy = {
   statusFailed: 'Failed',
 
   editing: 'Editing',
-  globalDefaultsOption: 'Global defaults (every shop without its own settings)',
   uninstalledSuffix: ' (uninstalled)',
   defaultsHelp:
     'These values apply to every shop that has not overridden them. A merchant saving in their Shopify admin overrides them for that shop only.',
@@ -373,7 +371,6 @@ const ar: TryOnDashboardCopy = {
   /* Not 'التعديل على': that is a dangling preposition, and this label stands
      alone above the select rather than running into the shop name. */
   editing: 'نطاق التعديل',
-  globalDefaultsOption: 'الإعدادات الافتراضية العامة (كل متجر بلا إعدادات خاصة)',
   uninstalledSuffix: ' (غير مثبَّت)',
   defaultsHelp:
     'تنطبق هذه القيم على كل متجر لم يتجاوزها بإعدادات خاصة. وعندما يحفظ التاجر إعداداته في لوحة شوبيفاي، فإنها تتجاوزها لمتجره وحده.',
