@@ -97,13 +97,12 @@ export function TryOnSettingsPanel({
 
   const isDefault = selectedShop === 'default';
 
-  const shopOptions = [
-    { value: 'default', label: c.globalDefaultsOption },
-    ...shops.map((shop) => ({
-      value: shop.domain,
-      label: shop.status === 'uninstalled' ? `${shop.domain}${c.uninstalledSuffix}` : shop.domain,
-    })),
-  ];
+  /* Only the merchant's own shops: the shared defaults row cannot be saved
+     from the dashboard, so offering it only led to a failed save. */
+  const shopOptions = shops.map((shop) => ({
+    value: shop.domain,
+    label: shop.status === 'uninstalled' ? `${shop.domain}${c.uninstalledSuffix}` : shop.domain,
+  }));
 
   return (
     <Stack gap="lg">

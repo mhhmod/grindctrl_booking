@@ -172,15 +172,15 @@ describe('DashboardTryOnPage', () => {
       .toHaveAttribute('href', 'https://admin.shopify.com/store/alpha/apps/' + SHOPIFY_APP_CLIENT_ID);
   });
 
-  it.each(['en', 'ar'] as const)('asks for an owned shop in %s rather than linking an ambiguous or forged selection', async (locale) => {
+  it.each(['en', 'ar'] as const)('links the merchant\'s own shop in %s, never a forged selection', async (locale) => {
     cookieLocale = locale;
     vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([
       ownedShop('alpha.myshopify.com'), ownedShop('beta.myshopify.com'),
     ]);
     await renderPage('attacker.myshopify.com');
     const c = getTryOnDashboardCopy(locale);
-    expect(screen.queryByRole('link', { name: c.openShopifyApp })).not.toBeInTheDocument();
-    expect(screen.getByText(c.chooseShopForApp)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: c.openShopifyApp }))
+      .toHaveAttribute('href', 'https://admin.shopify.com/store/alpha/apps/' + SHOPIFY_APP_CLIENT_ID);
     expect(document.body.innerHTML).not.toContain('/store/attacker/');
   });
 
@@ -201,16 +201,16 @@ describe('DashboardTryOnPage', () => {
     expect(screen.getByRole('button', { name: 'Save settings' })).toBeInTheDocument();
   });
 
-  it('defaults to the global row and offers each installed shop', async () => {
+  // The shared defaults row cannot be saved from here, so opening on it made
+  // a merchant's first save fail and hid their plan.
+  it("opens on the merchant's own shop and never offers the global row", async () => {
     await renderPage();
 
-    expect(screen.getByLabelText('Editing')).toHaveValue('default');
-    expect(
-      screen.getByRole('option', { name: /Global defaults/ }),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
     expect(
       screen.getByRole('option', { name: 'grindctrl.myshopify.com' }),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Global defaults/ })).not.toBeInTheDocument();
   });
 
   it('selects a known shop from the query string', async () => {
@@ -220,10 +220,47 @@ describe('DashboardTryOnPage', () => {
   });
 
   // A forged or unknown shop must never become the edit target.
-  it('falls back to the global row for an unknown shop', async () => {
+  it("shows the merchant's own plan without asking them to pick a shop", async () => {
+    vi.mocked(getShopPlanState).mockClear();
+    await renderPage();
+
+    expect(getShopPlanState).toHaveBeenCalledWith('grindctrl.myshopify.com');
+    const c = getTryOnDashboardCopy('en');
+    const card = screen.getByText(c.planAndCredits).closest('[data-slot="card"]') as HTMLElement;
+    expect(within(card).getByText(c.planRendersLeft(280, 300))).toBeInTheDocument();
+  });
+
+  it('opens on an installed shop before an uninstalled one', async () => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([
+      {
+        domain: 'old-store.myshopify.com',
+        status: 'uninstalled' as const,
+        installedAt: '2026-06-01T00:00:00.000Z',
+        uninstalledAt: '2026-06-20T00:00:00.000Z',
+        lastSeenAt: '2026-06-20T00:00:00.000Z',
+        jobCount: 0,
+        lastJobAt: null,
+      },
+      {
+        domain: 'grindctrl.myshopify.com',
+        status: 'installed' as const,
+        installedAt: '2026-07-01T00:00:00.000Z',
+        uninstalledAt: null,
+        lastSeenAt: '2026-07-16T00:00:00.000Z',
+        jobCount: 3,
+        lastJobAt: '2026-07-16T00:00:00.000Z',
+      },
+    ]);
+    await renderPage();
+
+    expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+  });
+
+  it("falls back to the merchant's own shop for an unknown shop", async () => {
     await renderPage('attacker.myshopify.com');
 
-    expect(screen.getByLabelText('Editing')).toHaveValue('default');
+    expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+    expect(screen.queryByRole('option', { name: 'attacker.myshopify.com' })).not.toBeInTheDocument();
   });
 
   it.each(['en', 'ar'] as const)('does not render provider spend or per-job costs in %s', async (locale) => {
