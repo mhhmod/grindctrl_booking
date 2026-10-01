@@ -21,6 +21,7 @@ export interface TryOnDashboardCopy {
   merchantShopsBody: string;
   noShopsYet: string;
   connectStore: string;
+  connectAnotherStore: string;
   generatingShopLinkCode: string;
   shopLinkCodeLabel: string;
   shopLinkExpiresIn: (time: string) => string;
@@ -181,6 +182,7 @@ const en: TryOnDashboardCopy = {
     'A shop appears here once it is connected to your account, and drops to uninstalled when Shopify tells us it was removed.',
   noShopsYet: 'No shop is linked to your account yet. Once one is connected, it will appear here.',
   connectStore: 'Connect a store',
+  connectAnotherStore: 'Connect or re-link a store',
   generatingShopLinkCode: 'Generating code…',
   shopLinkCodeLabel: 'Store linking code',
   shopLinkExpiresIn: (time) => `Expires in ${time}`,
@@ -317,6 +319,7 @@ const ar: TryOnDashboardCopy = {
     'يظهر المتجر هنا بعد ربطه بحسابك، ويتحول إلى غير مثبَّت عندما تخبرنا شوبيفاي بإزالته.',
   noShopsYet: 'لا يوجد متجر مرتبط بحسابك بعد. بمجرد ربط متجر، سيظهر هنا.',
   connectStore: 'اربط متجراً',
+  connectAnotherStore: 'ربط متجر أو إعادة ربطه',
   generatingShopLinkCode: 'جارٍ إنشاء الرمز…',
   shopLinkCodeLabel: 'رمز ربط المتجر',
   shopLinkExpiresIn: (time) => `تنتهي صلاحيته خلال ${time}`,

@@ -20,7 +20,10 @@ function formatCode(code: string): string {
   return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
 
-export function ConnectShopPanel({ locale }: { locale: SiteLocale }) {
+/* `hasShops`: the merchant already has a store, so the same code connects
+   another store or re-links one (the Shopify page's "Link a different
+   account"). The button stays available either way. */
+export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLocale; hasShops?: boolean }) {
   const c = getTryOnDashboardCopy(locale);
   const [linkCode, setLinkCode] = useState<ShopLinkCode | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -51,7 +54,11 @@ export function ConnectShopPanel({ locale }: { locale: SiteLocale }) {
     return (
       <div className="grid justify-items-start gap-2">
         <Button type="button" size="sm" onClick={() => void generate()} disabled={status === 'generating'}>
-          {status === 'generating' ? c.generatingShopLinkCode : c.connectStore}
+          {status === 'generating'
+            ? c.generatingShopLinkCode
+            : hasShops
+              ? c.connectAnotherStore
+              : c.connectStore}
         </Button>
         {status === 'error' && (
           <p className="text-sm text-destructive" role="alert">

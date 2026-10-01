@@ -47,11 +47,12 @@ const TAB_COPY = {
     live: 'Live',
     off: 'Off',
     hasDraft: 'Unpublished changes',
-    storeTakenTitle: 'This store is already connected',
-    // See the matching comment in app/claim/page.tsx: there is no
-    // disconnect/unclaim path in the app, so don't send a merchant looking
-    // for one.
-    storeTakenBody: "It's already connected to another GRINDCTRL account. Contact support if that doesn't sound right.",
+    storeTakenTitle: "This store's Store Chat is on another account",
+    // The store's Try-On link is on this account, so the merchant can move
+    // Store Chat themselves: a re-link from Shopify admin moves both.
+    storeTakenBody:
+      'To move it here: in Try-On, choose "Connect or re-link a store" to get a code. Then in your Shopify admin, open Apps, then GrindCTRL, choose "Link a different account" and enter the code.',
+    storeTakenAction: 'Get a linking code',
   },
   ar: {
     overview: 'نظرة عامة',
@@ -63,8 +64,10 @@ const TAB_COPY = {
     live: 'يعمل',
     off: 'متوقف',
     hasDraft: 'تغييرات غير منشورة',
-    storeTakenTitle: 'هذا المتجر متصل بالفعل',
-    storeTakenBody: 'هذا المتجر متصل بالفعل بحساب GRINDCTRL آخر. تواصل مع الدعم إذا لم يكن ذلك صحيحاً.',
+    storeTakenTitle: 'محادثة المتجر لهذا المتجر على حساب آخر',
+    storeTakenBody:
+      'لنقلها إلى هنا: من صفحة التجربة اختر "ربط متجر أو إعادة ربطه" للحصول على رمز. ثم في لوحة تحكم شوبيفاي افتح التطبيقات ثم جريند كنترول، واختر "ربط حساب آخر" وأدخل الرمز.',
+    storeTakenAction: 'احصل على رمز الربط',
   },
 } as const;
 
@@ -134,6 +137,12 @@ export default async function MessengerPage({
             <div className="grid max-w-md gap-2 text-center">
               <h1 className="text-lg font-semibold">{copy.storeTakenTitle}</h1>
               <p className="text-sm text-muted-foreground">{copy.storeTakenBody}</p>
+              <Link
+                href="/dashboard/try-on"
+                className="mx-auto mt-2 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              >
+                {copy.storeTakenAction}
+              </Link>
             </div>
           </section>
         );

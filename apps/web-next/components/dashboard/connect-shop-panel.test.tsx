@@ -37,6 +37,17 @@ describe('ConnectShopPanel', () => {
     expect(screen.getByText(c.shopLinkExpiresIn('0:05'))).toBeInTheDocument();
   });
 
+  it('stays available once a store is connected, to add or re-link one', async () => {
+    render(<ConnectShopPanel locale="en" hasShops />);
+    expect(screen.queryByRole('button', { name: c.connectStore })).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: c.connectAnotherStore }));
+    });
+
+    expect(screen.getByText('ABCD-EFGH')).toBeInTheDocument();
+  });
+
   it('counts down to expiry', async () => {
     render(<ConnectShopPanel locale="en" />);
     await act(async () => {

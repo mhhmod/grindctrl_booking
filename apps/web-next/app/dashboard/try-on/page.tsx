@@ -104,34 +104,37 @@ export default async function DashboardTryOnPage({
               <ConnectShopPanel locale={pageLocale} />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{c.columnShop}</TableHead>
-                  <TableHead>{c.columnStatus}</TableHead>
-                  <TableHead className="text-end">{c.columnGenerations}</TableHead>
-                  <TableHead>{c.columnLastGeneration}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shops.map((shop) => (
-                  <TableRow key={shop.domain}>
-                    <TableCell className="font-medium">{shop.domain}</TableCell>
-                    <TableCell>
-                      <Badge variant={shop.status === 'installed' ? 'secondary' : 'destructive'}>
-                        {statusLabel(c, shop.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-end tabular-nums">{shop.jobCount}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {shop.lastJobAt
-                        ? new Date(shop.lastJobAt).toLocaleString(dateLocale)
-                        : c.noneYet}
-                    </TableCell>
+            <div className="grid gap-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{c.columnShop}</TableHead>
+                    <TableHead>{c.columnStatus}</TableHead>
+                    <TableHead className="text-end">{c.columnGenerations}</TableHead>
+                    <TableHead>{c.columnLastGeneration}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {shops.map((shop) => (
+                    <TableRow key={shop.domain}>
+                      <TableCell className="font-medium">{shop.domain}</TableCell>
+                      <TableCell>
+                        <Badge variant={shop.status === 'installed' ? 'secondary' : 'destructive'}>
+                          {statusLabel(c, shop.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-end tabular-nums">{shop.jobCount}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {shop.lastJobAt
+                          ? new Date(shop.lastJobAt).toLocaleString(dateLocale)
+                          : c.noneYet}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <ConnectShopPanel locale={pageLocale} hasShops />
+            </div>
           )}
         </CardContent>
       </Card>
