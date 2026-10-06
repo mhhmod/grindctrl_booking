@@ -133,6 +133,38 @@ describe('MessengerPanel reply delivery', () => {
     expect(screen.getByText('This is the merchant replying by hand.')).toBeInTheDocument();
   });
 
+  /* A 15 s poll made a merchant's reply take 21 s to reach the shopper in a
+     live test. While a person is on the other end it must arrive in seconds. */
+  it.each(['handoff_requested', 'handoff_active'])(
+    'shows a team reply within 4 s while the conversation is %s',
+    async (status) => {
+      fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        const body = url.includes('/api/messenger/bootstrap')
+          ? { ...BOOTSTRAP, status }
+          : { status, messages: [MERCHANT_REPLY] };
+        return { ok: true, json: () => Promise.resolve(body) } as unknown as Response;
+      });
+      await bootPanel();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4_100);
+      });
+
+      expect(screen.getByText('This is the merchant replying by hand.')).toBeInTheDocument();
+    },
+  );
+
+  it('keeps the slower poll while only the AI is answering', async () => {
+    await bootPanel();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_100);
+    });
+
+    expect(syncCalls()).toHaveLength(0);
+  });
+
   it('carries the origin proof on the polled request', async () => {
     await bootPanel('tok-abc');
 
