@@ -50,9 +50,9 @@ describe('buildSystemPrompt', () => {
     expect(prompt).toContain('VERIFIED as customer #77');
   });
 
-  it('includes the handoff sentinel contract exactly once', () => {
+  it('teaches the model to emit the handoff sentinel in exactly one instruction', () => {
     const prompt = buildSystemPrompt(BASE_INPUT);
-    expect(prompt.match(/\[\[HANDOFF\]\]/g)?.length).toBe(1);
+    expect(prompt.match(/end your reply with exactly \[\[HANDOFF\]\]/g)).toHaveLength(1);
   });
 
   it('caps runaway merchant instructions', () => {
@@ -66,7 +66,33 @@ describe('buildSystemPrompt', () => {
   it('says explicitly when there is no store reference data, rather than staying silent', () => {
     const prompt = buildSystemPrompt(BASE_INPUT);
     expect(prompt).toContain('STORE REFERENCE DATA: none provided');
-    expect(prompt).toContain('check with the team');
+    expect(prompt).toContain('you do not have that detail');
+  });
+
+  /* Live test: "I will check with the team and get back to you" left the
+     conversation AI-handled, so no one was told and no one got back. */
+  it('never has the model promise a follow-up that nothing performs', () => {
+    for (const escalationEnabled of [true, false]) {
+      const prompt = buildSystemPrompt({ ...BASE_INPUT, ai: { ...BASE_INPUT.ai, escalationEnabled } });
+      expect(prompt).not.toContain('say you will check with the team');
+      expect(prompt).not.toMatch(/say you will check/i);
+    }
+  });
+
+  it('offers the team for a gap, and hands off when the shopper accepts, with handoff on', () => {
+    const prompt = buildSystemPrompt(BASE_INPUT);
+    expect(prompt).toContain('ask whether they would like you to bring in the team');
+    expect(prompt).toContain('says yes to your offer to bring in the team');
+    expect(prompt).toContain('without it no one is told');
+  });
+
+  it('never mentions a handoff or a team follow-up with handoff off', () => {
+    const prompt = buildSystemPrompt({ ...BASE_INPUT, ai: { ...BASE_INPUT.ai, escalationEnabled: false } });
+    expect(prompt).not.toContain('[[HANDOFF]]');
+    expect(prompt).not.toContain('would like you to bring in the team');
+    expect(prompt).toContain('Do not promise that anyone will check, follow up, or get back to them.');
+    expect(prompt).toContain('Never say you are bringing in the team.');
+    expect(prompt).not.toContain('offer a human');
   });
 
   it('names concrete policy categories a plausible-sounding guess still counts as inventing', () => {

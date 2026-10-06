@@ -15,8 +15,13 @@ import { MessageText } from './message-text';
 const ANON_KEY = (key: string) => `gc_msgr_${key}_anon`;
 const CONV_KEY = (key: string) => `gc_msgr_${key}_conv`;
 
-/* Matches what /api/messenger/sync documents and is rate-limited for. */
+/* Matches what /api/messenger/sync documents and is rate-limited for
+   (10 requests per 10 s per client). While a person is on the other end,
+   a 15 s poll made a merchant's reply take up to 15 s (21 s measured live)
+   to appear, so the panel polls faster only for those conversations. */
 const SYNC_INTERVAL_MS = 15_000;
+const LIVE_SYNC_INTERVAL_MS = 4_000;
+const LIVE_STATUSES = new Set(['handoff_requested', 'handoff_active']);
 
 export interface WireMessage {
   id: string;
@@ -289,7 +294,10 @@ export function MessengerPanel({
        happened to tab away and back. Poll while visible — the interval this
        endpoint was documented and rate-limited for, and which was simply
        never written. */
-    const timer = window.setInterval(sync, SYNC_INTERVAL_MS);
+    const timer = window.setInterval(
+      sync,
+      status && LIVE_STATUSES.has(status) ? LIVE_SYNC_INTERVAL_MS : SYNC_INTERVAL_MS,
+    );
     document.addEventListener('visibilitychange', sync);
     window.addEventListener('focus', sync);
     return () => {
@@ -297,7 +305,7 @@ export function MessengerPanel({
       document.removeEventListener('visibilitychange', sync);
       window.removeEventListener('focus', sync);
     };
-  }, [config.key, conversationId, anonId, messages, effectiveOrigin, originToken]);
+  }, [config.key, conversationId, anonId, messages, effectiveOrigin, originToken, status]);
 
   useEffect(scrollToEnd, [messages.length, typing, staffTyping, scrollToEnd]);
 
