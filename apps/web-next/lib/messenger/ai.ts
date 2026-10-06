@@ -4,7 +4,7 @@ import { storeChatComplete } from './chat-client';
 import { getActiveKnowledge, type KnowledgeEntry } from './knowledge';
 import { ACTION_SENTINEL } from './actions';
 import type { OrderFacts } from './orders';
-import type { MessengerAi, MessengerLocale } from './types';
+import type { ArabicDialect, MessengerAi, MessengerLocale } from './types';
 
 /* The support agent's brain. Design invariants:
    - Store knowledge is UNTRUSTED reference data: it is framed as quoted
@@ -42,6 +42,23 @@ const TONE_GUIDANCE: Record<MessengerAi['tone'], string> = {
    English message. */
 const FRANCO_DIGIT_WORD = /\b[a-z]*[a-z][2375][a-z]+[a-z0-9]*\b|\b[2375][a-z]{2,}\b/gi;
 const FRANCO_WORDS = /\b(ana|enta|enty|ezay|ezayak|3ayez|3ayza|3awez|3ayz|fen|feen|leh|keda|kda|mesh|msh|momken|mumkin|law|lw|b kam|bkam|shokran|el|elly|alli|wana|ya3ni|7aga|3ashan|3shan|ba2a|delwa2ty|dlw2ty)\b/gi;
+
+/* How Arabic replies should read. Shoppers in Egypt write and expect
+   Egyptian Arabic; replies in formal Arabic read as a machine. */
+const DIALECT_GUIDANCE: Record<ArabicDialect, string> = {
+  egyptian:
+    'Write in Egyptian Arabic (عامية مصرية) as people in Egypt chat, e.g. "ممكن", "عايز", "هيوصلك", "إزاي", "دلوقتي", not formal Modern Standard Arabic.',
+  gulf: 'Write in Gulf Arabic (لهجة خليجية) as people in Saudi Arabia and the Gulf chat, e.g. "وش", "أبي", "يوصلك", not formal Modern Standard Arabic.',
+  levantine:
+    'Write in Levantine Arabic (لهجة شامية) as people in Syria, Lebanon, Jordan and Palestine chat, e.g. "شو", "بدك", "هلق", not formal Modern Standard Arabic.',
+  msa: 'Write in clear, simple Modern Standard Arabic (فصحى مبسطة).',
+};
+
+/* A shopper writing Franco-Arabic reads it best: reply the same way, not
+   in Arabic script. Facts (prices, numbers) stay exact. */
+const FRANCO_GUIDANCE =
+  'The shopper writes Franco-Arabic (Arabic in Latin letters, with 2, 3, 5, 7 for Arabic sounds, e.g. "3ayez", "7aga", "a2dar"). ' +
+  'Reply the same way: Arabic in Latin letters with those digits, never Arabic script. Keep numbers, prices and currencies exact (e.g. 60 EGP).';
 
 export function isFrancoArabic(text: string): boolean {
   const hits = (text.match(FRANCO_DIGIT_WORD) ?? []).length + (text.match(FRANCO_WORDS) ?? []).length;
@@ -128,6 +145,8 @@ export interface PromptInput {
   knowledge: KnowledgeEntry[];
   /** Verified claims only when identity was cryptographically confirmed. */
   identity?: { customerId?: string | null; name?: string | null; email?: string | null; verifiedCustomer: boolean };
+  /** The shopper's message is Franco-Arabic: reply in Franco, not Arabic script. */
+  franco?: boolean;
   /** Teaches the action line. Off means the model is never told the action
    *  exists, so it cannot ask for something the server would refuse. */
   orderLookupEnabled?: boolean;
@@ -164,6 +183,10 @@ export function buildSystemPrompt(input: PromptInput): string {
         ? 'Match whichever language the shopper writes in even though your replies default to that language for this turn.'
         : ''),
   );
+  if (input.locale === 'ar') {
+    parts.push(DIALECT_GUIDANCE[input.ai.arabicDialect ?? 'egyptian']);
+    if (input.franco) parts.push(FRANCO_GUIDANCE);
+  }
   parts.push(TONE_GUIDANCE[input.ai.tone]);
   parts.push(
     [

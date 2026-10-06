@@ -9,6 +9,7 @@ const BASE_INPUT = {
     tone: 'friendly' as const,
     instructions: '',
     languageMode: 'auto' as const,
+    arabicDialect: 'egyptian' as const,
     escalationEnabled: true,
   },
   locale: 'en' as const,
@@ -119,6 +120,35 @@ describe('buildSystemPrompt', () => {
     });
     expect(prompt).toContain('not covered above');
     expect(prompt).toContain('do not guess or estimate');
+  });
+});
+
+describe('Arabic dialect and Franco replies', () => {
+  const AR = { ...BASE_INPUT, locale: 'ar' as const };
+
+  it('replies in Egyptian Arabic by default, not formal Arabic', () => {
+    expect(buildSystemPrompt(AR)).toContain('Egyptian Arabic');
+  });
+
+  it.each([
+    ['gulf', 'Gulf Arabic'],
+    ['levantine', 'Levantine Arabic'],
+    ['msa', 'Modern Standard Arabic'],
+  ] as const)('follows the merchant choice %s', (arabicDialect, expected) => {
+    const prompt = buildSystemPrompt({ ...AR, ai: { ...AR.ai, arabicDialect } });
+    expect(prompt).toContain(expected);
+    expect(prompt).not.toContain('Egyptian Arabic');
+  });
+
+  it('adds no dialect guidance to English replies', () => {
+    expect(buildSystemPrompt(BASE_INPUT)).not.toContain('Egyptian Arabic');
+  });
+
+  it('replies in Franco to a Franco shopper, never Arabic script', () => {
+    const prompt = buildSystemPrompt({ ...AR, franco: true });
+    expect(prompt).toContain('Reply the same way: Arabic in Latin letters');
+    expect(prompt).toContain('never Arabic script');
+    expect(buildSystemPrompt(AR)).not.toContain('Arabic in Latin letters');
   });
 });
 

@@ -28,6 +28,7 @@ import {
   phraseOrderAnswer,
   resolveReplyLocale,
   pickLocalized,
+  isFrancoArabic,
 } from '@/lib/messenger/ai';
 import { getActiveKnowledge } from '@/lib/messenger/knowledge';
 import { isWithinAvailabilityHours } from '@/lib/messenger/public-api';
@@ -313,6 +314,7 @@ export async function POST(request: NextRequest) {
                 }
               : undefined,
           orderLookupEnabled: orderLookupAvailable,
+          franco: locale === 'ar' && isFrancoArabic(text),
         }),
         history,
         userMessage: text,
@@ -419,6 +421,7 @@ export async function POST(request: NextRequest) {
               ai: site.config.ai,
               locale,
               knowledge,
+              franco: locale === 'ar' && isFrancoArabic(text),
             }),
             history,
             userMessage: text,

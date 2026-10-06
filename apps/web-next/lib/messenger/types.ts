@@ -71,8 +71,13 @@ export interface MessengerAi {
   instructions: string;
   /* 'auto' detects between en/ar per message; otherwise pinned. */
   languageMode: 'auto' | MessengerLocale;
+  /* Which Arabic the assistant writes when it replies in Arabic. The
+     merchant chooses; Egyptian by default. */
+  arabicDialect: ArabicDialect;
   escalationEnabled: boolean;
 }
+
+export type ArabicDialect = 'egyptian' | 'gulf' | 'levantine' | 'msa';
 
 export interface MessengerNotifications {
   emailOnHandoff: boolean;
