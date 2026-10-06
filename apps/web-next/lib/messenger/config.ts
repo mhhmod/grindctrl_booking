@@ -69,6 +69,7 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     tone: 'friendly',
     instructions: '',
     languageMode: 'auto',
+    arabicDialect: 'egyptian',
     escalationEnabled: true,
   },
   notifications: {
@@ -221,6 +222,10 @@ function normalizeAi(raw: unknown): MessengerAi {
     instructions:
       typeof r.instructions === 'string' ? r.instructions.slice(0, 4000).trim() : MESSENGER_DEFAULTS.ai.instructions,
     languageMode: r.languageMode === 'en' || r.languageMode === 'ar' ? r.languageMode : MESSENGER_DEFAULTS.ai.languageMode,
+    arabicDialect:
+      r.arabicDialect === 'gulf' || r.arabicDialect === 'levantine' || r.arabicDialect === 'msa'
+        ? r.arabicDialect
+        : MESSENGER_DEFAULTS.ai.arabicDialect,
     escalationEnabled: r.escalationEnabled !== false,
   };
 }

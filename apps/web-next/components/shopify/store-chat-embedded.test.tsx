@@ -50,7 +50,7 @@ const STATE_RESPONSE = {
   config: {
     appearance: { accentColor: '#2a2826', launcherIcon: 'chat', launcherCustomIconUrl: null, launcherLabel: { en: 'Support', ar: 'الدعم' }, launcherSizePx: 56, position: 'bottom-right', radiusStyle: 'soft', themeMode: 'auto', assistantAvatarUrl: null },
     behaviour: { welcomeTitle: { en: 'Hi', ar: 'مرحباً' }, welcomeSubtitle: { en: 'Ask us', ar: 'اسألنا' }, inputPlaceholder: { en: 'Ask…', ar: 'اكتب…' }, greetingEnabled: true, greetingDelaySeconds: 6, greeting: null, proactiveEnabled: false, proactiveDelaySeconds: 30, proactiveCapPerVisitor: 1, targetingMode: 'everywhere', excludePatterns: [], availabilityMode: 'always', availabilityTimezone: 'UTC', availabilityHours: [] },
-    ai: { enabled: false, tone: 'friendly', instructions: '', languageMode: 'auto', escalationEnabled: true },
+    ai: { enabled: false, tone: 'friendly', instructions: '', languageMode: 'auto', arabicDialect: 'egyptian' as const, escalationEnabled: true },
     notifications: { emailOnHandoff: true, recipients: [] },
     contactCapture: { enabled: true, askOutsideHours: true },
     attachments: { enabled: false, triageEnabled: true },

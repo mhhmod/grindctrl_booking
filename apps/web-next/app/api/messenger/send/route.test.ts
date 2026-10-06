@@ -109,7 +109,7 @@ const SITE = {
   workspace_id: 'ws-1',
   config: {
     ...resolveMessengerConfig({}),
-    ai: { enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', escalationEnabled: true },
+    ai: { enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', arabicDialect: 'egyptian' as const, escalationEnabled: true },
   },
   domain: null,
   security: { allow_localhost: false },

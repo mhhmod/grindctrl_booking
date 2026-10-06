@@ -10,7 +10,7 @@ import { PillToggle } from './appearance-editor';
 import { PreviewFrame } from './preview-frame';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
-import type { AssistantTone, MessengerAi, MessengerLocale } from '@/lib/messenger/types';
+import type { ArabicDialect, AssistantTone, MessengerAi, MessengerLocale } from '@/lib/messenger/types';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 
 /* AI & Knowledge: tone presets + one plain-language instructions field,
@@ -30,6 +30,8 @@ const COPY = {
       'e.g. We ship from Riyadh in 1–3 days. Free returns within 14 days. Always offer size help politely.',
     language: 'Reply language',
     languages: { auto: 'Match shopper', en: 'English', ar: 'Arabic' },
+    dialect: 'Arabic replies in',
+    dialects: { egyptian: 'Egyptian', gulf: 'Gulf', levantine: 'Levantine', msa: 'Formal Arabic' },
     escalation: 'Offer a human when asked',
     knowledgeTitle: 'Knowledge',
     knowledgeSubtitle: 'The AI answers only from these facts. Add policies, shipping info, FAQs.',
@@ -65,6 +67,8 @@ const COPY = {
     instructionsPh: 'مثال: نشحن من الرياض خلال ١–٣ أيام. إرجاع مجاني خلال ١٤ يوماً.',
     language: 'لغة الردود',
     languages: { auto: 'حسب العميل', en: 'الإنجليزية', ar: 'العربية' },
+    dialect: 'الردود العربية باللهجة',
+    dialects: { egyptian: 'المصرية', gulf: 'الخليجية', levantine: 'الشامية', msa: 'الفصحى' },
     escalation: 'تحويل لموظف عند الطلب',
     knowledgeTitle: 'المعرفة',
     knowledgeSubtitle: 'يجيب المساعد من هذه المعلومات فقط. أضف السياسات والشيوخ والأسئلة الشائعة.',
@@ -203,6 +207,16 @@ export function AiKnowledgeEditor({
                 {(['auto', 'en', 'ar'] as const).map((mode2) => (
                   <PillToggle key={mode2} active={value.languageMode === mode2} onClick={() => patch({ languageMode: mode2 })}>
                     {t.languages[mode2]}
+                  </PillToggle>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>{t.dialect}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(t.dialects) as ArabicDialect[]).map((dialect) => (
+                  <PillToggle key={dialect} active={value.arabicDialect === dialect} onClick={() => patch({ arabicDialect: dialect })}>
+                    {t.dialects[dialect]}
                   </PillToggle>
                 ))}
               </div>

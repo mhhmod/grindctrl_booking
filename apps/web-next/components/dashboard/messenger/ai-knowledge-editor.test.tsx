@@ -14,6 +14,7 @@ const AI: MessengerAi = {
   tone: 'friendly',
   instructions: '',
   languageMode: 'auto',
+  arabicDialect: 'egyptian' as const,
   escalationEnabled: true,
 };
 
