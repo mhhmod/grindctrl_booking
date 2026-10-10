@@ -1,0 +1,73 @@
+{
+  "en": {
+    "native_pdf_pages": 7,
+    "native_animations": 198,
+    "roundtrip_animations": 198,
+    "video": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "nb_frames": "855"
+        }
+      ],
+      "format": {
+        "duration": "42.750000"
+      }
+    }
+  },
+  "ar": {
+    "native_pdf_pages": 7,
+    "native_animations": 198,
+    "roundtrip_animations": 198,
+    "video": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1280,
+          "height": 720,
+          "nb_frames": "855"
+        }
+      ],
+      "format": {
+        "duration": "42.750000"
+      }
+    }
+  },
+  "slides_per_language": 7,
+  "responsive_checks": {
+    "languages": [
+      "en",
+      "ar"
+    ],
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1366,
+      1440
+    ],
+    "horizontal_overflow": false,
+    "desktop_text_clipping": false
+  },
+  "controls": [
+    "pause",
+    "replay",
+    "step from first event",
+    "show all",
+    "RTL navigation",
+    "notes"
+  ],
+  "offline_external_requests": 0,
+  "reduced_motion": "initial complete static state verified",
+  "research": "partial: supplied sites blocked; primary alternatives documented",
+  "comprehension_review": "designer self-review; no external participants",
+  "native_playback_limit": "LibreOffice rendering/roundtrip checked; Microsoft PowerPoint, Keynote and Google Slides not directly tested",
+  "minimum_text_palette_contrast": 5.26
+}

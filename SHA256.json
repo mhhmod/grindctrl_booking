@@ -1,0 +1,78 @@
+{
+  "Before-after.png": {
+    "bytes": 81591,
+    "sha256": "bb84d3f98229dba019a6c268e6367474845f5873ce95a0e4770017458ff952bf"
+  },
+  "Cover.png": {
+    "bytes": 102154,
+    "sha256": "d61f13feb4ad3c063cadbde7b25441fcebe2b4987c1348e657e8c044eddae349"
+  },
+  "DESIGN-REVIEW.md": {
+    "bytes": 5357,
+    "sha256": "f79d91c417feef0f2ce014ba75914be1c8346dad234fc7cf1c45782f9504ca5d"
+  },
+  "GRINDCTRL-Visual-First-Arabic.mp4": {
+    "bytes": 527067,
+    "sha256": "b230ada6850e0d6d55ee794a84fb64f67adcd2ee573d8e90940e96e103f12e0b"
+  },
+  "GRINDCTRL-Visual-First-Arabic.pdf": {
+    "bytes": 494378,
+    "sha256": "249d07bd5327fc2b5c03407d489756c868ea4a7f2da817c0e5a2bf41d089cb49"
+  },
+  "GRINDCTRL-Visual-First-Arabic.pptx": {
+    "bytes": 216815,
+    "sha256": "c6ff0e46bf431b1575fe3b4216253d1f57a738e8fa9ee51e476d02dfd194a23f"
+  },
+  "GRINDCTRL-Visual-First-English.mp4": {
+    "bytes": 674679,
+    "sha256": "1a15792d84571ae53d666407fb05199f33be995ac3428b98f293e6cb9b8b2dd7"
+  },
+  "GRINDCTRL-Visual-First-English.pdf": {
+    "bytes": 561026,
+    "sha256": "88525dca03f3ce129312ba3c4699f51c28735edc8218c20490a34e0c1c9c7170"
+  },
+  "GRINDCTRL-Visual-First-English.pptx": {
+    "bytes": 213788,
+    "sha256": "cbe8b72005ddb780710ad323759adeaf075b3482f9f67e2549aa3ee4acab52fa"
+  },
+  "GRINDCTRL-Visual-First-Presentation.zip": {
+    "bytes": 5490339,
+    "sha256": "d70d9722599cf07f1bbe9572e220c03f4c5658614f21b9e25a4f9e9cba4fe5ea"
+  },
+  "GRINDCTRL-Visual-First-Preview.html": {
+    "bytes": 463421,
+    "sha256": "4eda01a0c2c0831c545933834cc13619a86166657d8caaa991f9d880ca86c5e4"
+  },
+  "Manual-search.png": {
+    "bytes": 94877,
+    "sha256": "c40fd6b5b7b5027f21c884ceb7d45d1b12fe13097dd96adcae0436c207f1ba26"
+  },
+  "Overview-Arabic.png": {
+    "bytes": 253554,
+    "sha256": "e23753de3923283579de519272315320ec7350c79657086e331da4dfaa556d14"
+  },
+  "Overview-English.png": {
+    "bytes": 306379,
+    "sha256": "23c53f533f9915b26cf23e6d2a4cc3d07c4c4c1eda329141bc2aadc977f1f95e"
+  },
+  "Proposed-workspace.png": {
+    "bytes": 107936,
+    "sha256": "03f4d11f0194c45d239eebd4ab8f6f7814a1dae9b9efa02ad4e2141576bf0860"
+  },
+  "README.md": {
+    "bytes": 2041,
+    "sha256": "58822242f82738ea38b1a844a5e0c71c6d1e160d991014cf265bbc7ccee3322b"
+  },
+  "RESEARCH-AND-DIRECTION.md": {
+    "bytes": 10053,
+    "sha256": "c1be8c0cab227b2fb84c18c080f8c30a30f6b26a80f8998d321a1dcf14144297"
+  },
+  "STORYBOARD.md": {
+    "bytes": 3074,
+    "sha256": "85dcc2a87a6672dd412ecd7a0deda80240aedb5f87a93d93c0113d224248442a"
+  },
+  "validation.json": {
+    "bytes": 1614,
+    "sha256": "4b9496c2f11c4ef17d98c9a4c58ad4757ec016ae1142d42de084043b637db797"
+  }
+}
