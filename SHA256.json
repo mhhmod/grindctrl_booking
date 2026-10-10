@@ -1,0 +1,50 @@
+{
+  "Cover.png": {
+    "bytes": 90548,
+    "sha256": "12710c2a8d44f5137636f3f58a92a83d7040c79b3a23ff819ba0785f97a9d9f8"
+  },
+  "Employee-workspace.png": {
+    "bytes": 107146,
+    "sha256": "c2ffc586e4206b2d92bc80e0ec42dd91f5f7c7465342e09772fa614a9ab8267d"
+  },
+  "GRINDCTRL-Light-Arabic.mp4": {
+    "bytes": 299839,
+    "sha256": "13f894223cc261c048f01415ce8cef9d106d0145afb5c9e82880f88298158c80"
+  },
+  "GRINDCTRL-Light-Arabic.pdf": {
+    "bytes": 505697,
+    "sha256": "070ce14f4befc6e29d1d52ba2360d6a0165ea8f6af25a61ab6a4e52a7d5db1cd"
+  },
+  "GRINDCTRL-Light-Arabic.pptx": {
+    "bytes": 205994,
+    "sha256": "6f6ccb46ce8697cb8f227b62dae81b465341b465edba5e96f0857b16e054714e"
+  },
+  "GRINDCTRL-Light-English.mp4": {
+    "bytes": 388217,
+    "sha256": "575fb3be24a5245b30cb2d60c296292fad3f4ac5ad3cc37ebcf995ef0738116c"
+  },
+  "GRINDCTRL-Light-English.pdf": {
+    "bytes": 683741,
+    "sha256": "6ae318eb2c0f9b53da52ff6be6d12116698ff7819233646c27225c348056658c"
+  },
+  "GRINDCTRL-Light-English.pptx": {
+    "bytes": 202400,
+    "sha256": "d1d872efef92a2ac33be2d18e47be57a3af4763fa66fad905ef4cfd190b97973"
+  },
+  "GRINDCTRL-Light-Presentation.zip": {
+    "bytes": 3379131,
+    "sha256": "f32935372a48f70816f6c828259e5e1106767f6410e5533e7850edc8fda1221b"
+  },
+  "GRINDCTRL-Light-Preview.html": {
+    "bytes": 451792,
+    "sha256": "155e9c1e5287ac4d6e94d61d3e807b9e4899f8fefcd8b39b9649b4ac314ef9ab"
+  },
+  "Overview-Arabic.png": {
+    "bytes": 247468,
+    "sha256": "2ca50b27cdc8a41d57a0e5ec37278b3768c5f29787f51e9551ef56cadc08cf32"
+  },
+  "Overview-English.png": {
+    "bytes": 311939,
+    "sha256": "de2e3ccb9c7f60050c783dff27c911a9d66a471edb945d4369d643dd9e0ce709"
+  }
+}
