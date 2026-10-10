@@ -1,0 +1,34 @@
+{
+  "GRINDCTRL-English.pptx": {
+    "bytes": 237132,
+    "sha256": "c98be1f6c2fd1e766c937c35db7b7db4f6718b761e54b4e828ed4d826b11e293"
+  },
+  "GRINDCTRL-Arabic.pptx": {
+    "bytes": 240915,
+    "sha256": "bc420e25ada0707019d7da81b86d99aadea02f970f19ec7587d448d139fc1986"
+  },
+  "GRINDCTRL-English.pdf": {
+    "bytes": 600688,
+    "sha256": "d787c81bc7f53d6cedac09dd6194c6249816d54d9342a5ed334d372e1ad4fb64"
+  },
+  "GRINDCTRL-Arabic.pdf": {
+    "bytes": 560569,
+    "sha256": "d2d8a7e197f0a61b48d1f0983e1a090a45788fe23732b01d238e00443e1874a2"
+  },
+  "GRINDCTRL-English.mp4": {
+    "bytes": 467667,
+    "sha256": "48158c21d192e685a2b9bb575bfac88de6f24d9133f60c62d81abaa555414b4d"
+  },
+  "GRINDCTRL-Arabic.mp4": {
+    "bytes": 346487,
+    "sha256": "7e9bfbd4279c6af29f43f086debfefb275f112f3b032ffdcf7560bd3bdc18600"
+  },
+  "GRINDCTRL-preview.html": {
+    "bytes": 435407,
+    "sha256": "5fd6cecf59fefe0b780d62a21b384c33e5f7132a07dd9e8d5939fd6ed3501f3a"
+  },
+  "GRINDCTRL-complete.zip": {
+    "bytes": 3686507,
+    "sha256": "5c782568fdfdef9461a912e1a9f10835ab23fc34ca4f55fea3e78d2facd4a4f1"
+  }
+}
