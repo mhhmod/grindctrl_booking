@@ -1,0 +1,399 @@
+{
+  "version": 1,
+  "enabled": false,
+  "status": "awaiting_authorized_anonymized_captures",
+  "concrete_screenshots_verified": false,
+  "slots": {
+    "genesys.call": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S1",
+          "box": {
+            "x": 48,
+            "y": 176,
+            "w": 322,
+            "h": 472
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        },
+        {
+          "scene": "S2",
+          "box": {
+            "x": 48,
+            "y": 176,
+            "w": 322,
+            "h": 472
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        },
+        {
+          "scene": "S3",
+          "box": {
+            "x": 48,
+            "y": 176,
+            "w": 322,
+            "h": 472
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        }
+      ]
+    },
+    "desk.context": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S1",
+          "box": {
+            "x": 400,
+            "y": 176,
+            "w": 832,
+            "h": 472
+          },
+          "illustrative_anchor_templates": {
+            "customer": [
+              0.1,
+              0.2,
+              0.64,
+              0.15
+            ],
+            "ticket": [
+              0.02,
+              0.53,
+              0.32,
+              0.27
+            ],
+            "latest_note": [
+              0.39,
+              0.66,
+              0.58,
+              0.28
+            ]
+          }
+        },
+        {
+          "scene": "S3",
+          "box": {
+            "x": 400,
+            "y": 176,
+            "w": 832,
+            "h": 472
+          },
+          "illustrative_anchor_templates": {
+            "customer": [
+              0.1,
+              0.2,
+              0.64,
+              0.15
+            ],
+            "ticket": [
+              0.02,
+              0.53,
+              0.32,
+              0.27
+            ],
+            "latest_note": [
+              0.39,
+              0.66,
+              0.58,
+              0.28
+            ]
+          }
+        }
+      ]
+    },
+    "desk.search": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S2",
+          "box": {
+            "x": 400,
+            "y": 208,
+            "w": 832,
+            "h": 404
+          },
+          "illustrative_anchor_templates": {
+            "search": [
+              0.03,
+              0.23,
+              0.94,
+              0.17
+            ],
+            "ticket": [
+              0.03,
+              0.59,
+              0.94,
+              0.33
+            ]
+          }
+        }
+      ]
+    },
+    "desk.case": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S4",
+          "box": {
+            "x": 48,
+            "y": 176,
+            "w": 1184,
+            "h": 350
+          },
+          "illustrative_anchor_templates": {
+            "ticket": [
+              0.36,
+              0.25,
+              0.6,
+              0.15
+            ],
+            "latest_note": [
+              0.37,
+              0.58,
+              0.61,
+              0.32
+            ]
+          }
+        }
+      ]
+    },
+    "comparison.current": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S5",
+          "box": {
+            "x": 48,
+            "y": 240,
+            "w": 560,
+            "h": 379
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.14,
+              0.23,
+              0.79,
+              0.12
+            ],
+            "manual_search": [
+              0.16,
+              0.56,
+              0.77,
+              0.15
+            ]
+          }
+        }
+      ]
+    },
+    "comparison.proposed": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S5",
+          "box": {
+            "x": 672,
+            "y": 240,
+            "w": 560,
+            "h": 379
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.14,
+              0.23,
+              0.79,
+              0.12
+            ],
+            "latest_note": [
+              0.04,
+              0.61,
+              0.92,
+              0.31
+            ]
+          }
+        }
+      ]
+    },
+    "workspace.benefits": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S6",
+          "box": {
+            "x": 48,
+            "y": 178,
+            "w": 876,
+            "h": 452
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.27,
+              0.05,
+              0.62,
+              0.11
+            ],
+            "ticket": [
+              0.08,
+              0.51,
+              0.84,
+              0.11
+            ],
+            "latest_note": [
+              0.03,
+              0.77,
+              0.95,
+              0.18
+            ]
+          }
+        }
+      ]
+    },
+    "workspace.test": {
+      "approved": false,
+      "anonymized": false,
+      "product_edition": null,
+      "employee_permission_role": null,
+      "capture_date": null,
+      "source_file": null,
+      "authorization_reference": null,
+      "screen_pop_target": "unverified",
+      "crop_geometry_verified": false,
+      "anchors_must_be_remeasured": true,
+      "states": [],
+      "placements": [
+        {
+          "scene": "S7",
+          "box": {
+            "x": 790,
+            "y": 243,
+            "w": 442,
+            "h": 345
+          },
+          "illustrative_anchor_templates": {
+            "caller_number": [
+              0.05,
+              0.3,
+              0.87,
+              0.12
+            ],
+            "latest_note": [
+              0.05,
+              0.63,
+              0.9,
+              0.29
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

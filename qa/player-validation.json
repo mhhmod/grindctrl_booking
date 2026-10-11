@@ -1,0 +1,28 @@
+{
+  "checks": [
+    "16 out-of-order seek destinations reconstruct the correct scene from audio time.",
+    "Lookup → associated record → ticket context → shared-number choice → selected context states checked.",
+    "Real audio playback, pause freeze, resume, replay, language continuity, phrase stepping and reduced motion checked.",
+    "390px mobile controls fit without body overflow; enlarged scene can be panned.",
+    "Both static PDFs generated from complete synchronized scene states."
+  ],
+  "limitations": [
+    "No external participants tested.",
+    "No human full listen-through claimed.",
+    "Microsoft PowerPoint audiovisual playback is not available in this environment."
+  ],
+  "audio": {
+    "duration": 137.04,
+    "readyState": 4
+  },
+  "mobile": {
+    "width": 390,
+    "body": 390,
+    "controls": [
+      42,
+      42,
+      42
+    ]
+  },
+  "pageErrors": []
+}

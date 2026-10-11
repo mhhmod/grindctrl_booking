@@ -1,0 +1,23 @@
+# Visual direction and evidence
+
+The handoff prompt, prior nine-slide deck, supplied narration and reference script were inspected before building. The previous card/technology-led layouts were replaced with employee scenes: one recurring masked caller, selected ticket and source note. All slides use warm off-white, white surfaces, charcoal text, restrained GRINDCTRL accents, Manrope and IBM Plex Sans Arabic. No dark sections, invented performance metrics or generative AI pitch are included.
+
+The first scene presents the proposed outcome immediately. Later scenes show retrieval, record choice, exchange follow-up and a matched comparison. The call position stays consistent between current and proposed workflows. Related status and notes stay beside their ticket; benefits are annotations attached to UI features. Motion directs attention or reveals a state described by the recording. The 350 ms easing is not service latency.
+
+## Accessible primary alternatives
+
+The earlier research pass in this session read these primary sources through allowed GitHub access. Its findings are reused; this is not a claim of new experimental validation.
+
+- [W3C COGA research synthesis](https://github.com/w3c/coga/blob/f15bbd18d18f2acc32b94fe9b54f4519e2781ec5/user-research/index.html) and [clear page structure](https://github.com/w3c/coga/blob/f15bbd18d18f2acc32b94fe9b54f4519e2781ec5/design-guide/o2p03-page-structure.html): proximity, common region, visual grouping and recognition; avoid excessive icons.
+- [W3C avoiding memorization](https://github.com/w3c/coga/blob/f15bbd18d18f2acc32b94fe9b54f4519e2781ec5/design-guide/o6p05-low-cognition.html) and [important information](https://github.com/w3c/coga/blob/f15bbd18d18f2acc32b94fe9b54f4519e2781ec5/design-guide/o2p04-page-important.html): reduce number-copying and retrieval demands, expose the useful note.
+- [IBM Carbon grid](https://github.com/carbon-design-system/carbon-website/blob/5e9cd1da43c32d3d3b991dc947b427f674da61a8/src/pages/elements/2x-grid/usage.mdx), [spacing](https://github.com/carbon-design-system/carbon-website/blob/5e9cd1da43c32d3d3b991dc947b427f674da61a8/src/pages/elements/spacing/overview.mdx) and [motion choreography](https://github.com/carbon-design-system/carbon-website/blob/5e9cd1da43c32d3d3b991dc947b427f674da61a8/src/pages/elements/motion/choreography.mdx): hierarchy, consistent spatial relationships, meaningful state changes and restrained movement. Embedded remote example videos were not played.
+- [Microsoft Fluent motion](https://github.com/microsoft/fluentui/blob/6e52576d457f0ca13225ea2712e0db7bd1c27e28/packages/react-components/react-motion/stories/src/Introduction/index.mdx) and [reduced motion](https://github.com/microsoft/fluentui/blob/6e52576d457f0ca13225ea2712e0db7bd1c27e28/packages/react-components/react-motion/stories/src/CreatePresenceComponent/CreatePresenceComponentReducedMotion.stories.md): separate presence from travel, retain understandable states with reduced motion.
+- [Chatwoot's own product example](https://github.com/chatwoot/chatwoot/blob/develop/.github/screenshots/dashboard.png): previously inspected adjacent conversation/contact regions, persistent identity, selected history and differentiated internal notes. Its screenshot and real records are not reproduced here; no Chatwoot installation at Concrete is implied.
+
+Requested NN/g, Cambridge, Fluent website, Zendesk, Intercom, Zoho and Genesys reference pages were blocked by the configured network proxy. Current official Genesys agent-workspace and Zoho ticket-detail pages were also attempted and blocked. Those pages were not read and their native UI/capabilities are not claimed verified. An accessible Genesys supervisor-monitoring blueprint README was inspected, but it does not verify this employee call/ticket layout. Mayer signaling/contiguity and squint-test concepts are provisional design heuristics here, not a completed review of the inaccessible primary chapters or evidence of guaranteed comprehension.
+
+## Composition review
+
+Full-size English/Arabic scenes, cue-state contact sheets, no-text compositions and reduced-detail previews are inspected as design heuristics. These test dominant subject, grouping and continuity; they do not constitute an external user study or a scientifically validated three-second threshold. Static PDFs retain complete states. The before/after reveals visible manual searching versus contextual history, rather than requiring integration terminology.
+
+The actual GRINDCTRL brand mark and provided source artwork are retained. Vendor marks identify existing systems without endorsement. Every native vendor surface remains **illustrative** pending the authorized UI-fidelity pass.

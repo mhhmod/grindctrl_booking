@@ -1,0 +1,18 @@
+{
+  "en": {
+    "slides": 8,
+    "native_text_shapes": 226,
+    "native_entrance_effects": 107,
+    "timing_targets_verified": true,
+    "native_layout_opened_in": "LibreOffice",
+    "microsoft_playback_verified": false
+  },
+  "ar": {
+    "slides": 8,
+    "native_text_shapes": 226,
+    "native_entrance_effects": 107,
+    "timing_targets_verified": true,
+    "native_layout_opened_in": "LibreOffice",
+    "microsoft_playback_verified": false
+  }
+}

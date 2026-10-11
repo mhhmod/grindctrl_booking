@@ -1,0 +1,138 @@
+{
+  "source_sha256": "6eb97961a8a1f7adb87e8726d20fc3c1046f6bcf81e8471b6260958b6ad56623",
+  "source_container_duration": 137.090612,
+  "source_decoded_samples": 6043464,
+  "source_decoded_duration": 137.04,
+  "videos": {
+    "en": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 4113,
+      "container_duration": 137.1,
+      "audio_duration": 137.04,
+      "audio_decoded_samples": 6043648,
+      "audio_coverage_seconds": 137.04,
+      "audio_windows": [
+        {
+          "source_start_seconds": 0,
+          "correlation_at_zero_lag": 0.9997551,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 20,
+          "correlation_at_zero_lag": 0.999922,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 40,
+          "correlation_at_zero_lag": 0.9999382,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 60,
+          "correlation_at_zero_lag": 0.9999112,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 80,
+          "correlation_at_zero_lag": 0.9999146,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 100,
+          "correlation_at_zero_lag": 0.9999035,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 120,
+          "correlation_at_zero_lag": 0.999927,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 132,
+          "correlation_at_zero_lag": 0.9998885,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        }
+      ],
+      "complete_video_decode": "passed",
+      "sha256": "ca5de3349b6b48a2c408e9d08ba972fa2a9dd9296462842dcfb668cae0f70135"
+    },
+    "ar": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 4113,
+      "container_duration": 137.1,
+      "audio_duration": 137.04,
+      "audio_decoded_samples": 6043648,
+      "audio_coverage_seconds": 137.04,
+      "audio_windows": [
+        {
+          "source_start_seconds": 0,
+          "correlation_at_zero_lag": 0.9997551,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 20,
+          "correlation_at_zero_lag": 0.999922,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 40,
+          "correlation_at_zero_lag": 0.9999382,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 60,
+          "correlation_at_zero_lag": 0.9999112,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 80,
+          "correlation_at_zero_lag": 0.9999146,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 100,
+          "correlation_at_zero_lag": 0.9999035,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 120,
+          "correlation_at_zero_lag": 0.999927,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 132,
+          "correlation_at_zero_lag": 0.9998885,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        }
+      ],
+      "complete_video_decode": "passed",
+      "sha256": "14570bb1284e49e54faf58fed5a6812560e2554819efd599d9c9f28e69d56081"
+    }
+  },
+  "method": "Decoded PCM window cross-correlation at 44.1 kHz; lag checked at beginning, middle and end. AAC is lossy; MP3 master remains byte-identical in HTML/PPTX.",
+  "byte_identical_audio_embeddings": [
+    "HTML",
+    "English PPTX",
+    "Arabic PPTX"
+  ]
+}

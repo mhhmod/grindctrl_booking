@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "grindctrl-narrated-presentation-build",
+  "version": "1.0.0",
+  "description": "Standalone presentation build tools; no production app changes",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

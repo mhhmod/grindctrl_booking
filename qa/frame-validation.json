@@ -1,0 +1,118 @@
+{
+  "method": "28 decoded video frames compared to the same browser evaluator at their frame timestamps; lossy H264 expected small pixel differences.",
+  "samples": [
+    {
+      "frame": "frame-0-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1196
+    },
+    {
+      "frame": "frame-0-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1665
+    },
+    {
+      "frame": "frame-1110-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 0.9265
+    },
+    {
+      "frame": "frame-1110-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 0.937
+    },
+    {
+      "frame": "frame-1242-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 0.8989
+    },
+    {
+      "frame": "frame-1242-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 0.9047
+    },
+    {
+      "frame": "frame-1314-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1078
+    },
+    {
+      "frame": "frame-1314-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1529
+    },
+    {
+      "frame": "frame-1470-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1112
+    },
+    {
+      "frame": "frame-1470-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.129
+    },
+    {
+      "frame": "frame-1530-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1169
+    },
+    {
+      "frame": "frame-1530-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1302
+    },
+    {
+      "frame": "frame-1563-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1086
+    },
+    {
+      "frame": "frame-1563-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.1483
+    },
+    {
+      "frame": "frame-1857-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.2675
+    },
+    {
+      "frame": "frame-1857-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.2854
+    },
+    {
+      "frame": "frame-2550-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.3595
+    },
+    {
+      "frame": "frame-2550-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.3702
+    },
+    {
+      "frame": "frame-2934-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.3054
+    },
+    {
+      "frame": "frame-2934-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.3468
+    },
+    {
+      "frame": "frame-3630-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.7613
+    },
+    {
+      "frame": "frame-3630-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.7614
+    },
+    {
+      "frame": "frame-3945-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.5373
+    },
+    {
+      "frame": "frame-3945-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.5454
+    },
+    {
+      "frame": "frame-4112-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.523
+    },
+    {
+      "frame": "frame-4112-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.5255
+    },
+    {
+      "frame": "frame-750-ar-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.0952
+    },
+    {
+      "frame": "frame-750-en-actual",
+      "mean_absolute_pixel_difference_0_to_255": 1.0967
+    }
+  ],
+  "all_passed": true
+}

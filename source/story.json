@@ -1,0 +1,6303 @@
+{
+  "title": {
+    "en": "GRINDCTRL × Concrete · Narrated product demonstration",
+    "ar": "GRINDCTRL × كونكريت · عرض المنتج بالتعليق الصوتي"
+  },
+  "colors": {
+    "bg": "#F8F7F4",
+    "paper": "#FFFFFF",
+    "ink": "#262626",
+    "muted": "#68645E",
+    "line": "#E6E3DE",
+    "accent": "#965318",
+    "gold": "#FFBA65",
+    "green": "#49654E",
+    "soft": "#F4F2EE",
+    "sage": "#EFF4EE",
+    "warm": "#FFF2DD",
+    "shadow": "#EDEAE4"
+  },
+  "slides": [
+    {
+      "index": 0,
+      "id": "S1",
+      "start": 0,
+      "end": 16.395,
+      "title": {
+        "en": "The call, with its history.",
+        "ar": "المكالمة ومعاها تاريخ الخدمة."
+      },
+      "section": {
+        "en": "The imagined employee experience",
+        "ar": "التجربة المقترحة للموظف"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "The imagined employee experience",
+            "ar": "التجربة المقترحة للموظف"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "The call, with its history.",
+            "ar": "المكالمة ومعاها تاريخ الخدمة."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "01 / 07",
+            "ar": "01 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 181,
+          "w": 322,
+          "h": 472,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "genesys",
+          "x": 72,
+          "y": 195,
+          "w": 138,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 228,
+          "y": 198,
+          "w": 118,
+          "h": 32,
+          "text": {
+            "en": "Call",
+            "ar": "المكالمة"
+          },
+          "size": 18,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 248,
+          "x2": 370,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 280,
+          "w": 82,
+          "h": 82,
+          "fill": "#EFF4EE",
+          "line": "#EFF4EE"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-call",
+          "x": 96,
+          "y": 302,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 387,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "Incoming caller",
+            "ar": "متصل وارد"
+          },
+          "size": 25,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 443,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 29,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 493,
+          "w": 270,
+          "h": 32,
+          "text": {
+            "en": "Call active",
+            "ar": "مكالمة جارية"
+          },
+          "size": 20,
+          "color": "#49654E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "ellipse",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-mic",
+          "x": 86,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 140,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-pause",
+          "x": 152,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 206,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-end",
+          "x": 218,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 181,
+          "w": 832,
+          "h": 472,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 176,
+          "w": 832,
+          "h": 472,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "zoho",
+          "x": 424,
+          "y": 195,
+          "w": 76,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 517,
+          "y": 195,
+          "w": 682,
+          "h": 39,
+          "text": {
+            "en": "Zoho Desk · Customer context",
+            "ar": "Zoho Desk · معلومات العميل"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 248,
+          "x2": 1232,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 272,
+          "w": 47,
+          "h": 47,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-actor",
+          "x": 434.34,
+          "y": 282.34,
+          "w": 26.320000000000004,
+          "h": 26.320000000000004
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 488,
+          "y": 271,
+          "w": 700,
+          "h": 40,
+          "text": {
+            "en": "Contact A",
+            "ar": "العميل A"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 488,
+          "y": 319,
+          "w": 225,
+          "h": 32,
+          "text": {
+            "en": "Associated record",
+            "ar": "سجل مرتبط"
+          },
+          "size": 19,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 732,
+          "y": 318,
+          "w": 265,
+          "h": 33,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 20,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 363,
+          "x2": 1208,
+          "y2": 363,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 383,
+          "w": 243,
+          "h": 36,
+          "text": {
+            "en": "Previous tickets",
+            "ar": "التذاكر السابقة"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 416,
+          "y": 428,
+          "w": 263,
+          "h": 121,
+          "fill": "#F4F2EE",
+          "line": "#FFBA65",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-case",
+          "x": 430,
+          "y": 446,
+          "w": 27,
+          "h": 27
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 444,
+          "w": 184,
+          "h": 34,
+          "text": {
+            "en": "T101 · Exchange",
+            "ar": "T101 · استبدال"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 430,
+          "y": 491,
+          "w": 228,
+          "h": 53,
+          "text": {
+            "en": "Branch review\npending",
+            "ar": "بانتظار\nمراجعة الفرع"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-case",
+          "x": 430,
+          "y": 579,
+          "w": 25,
+          "h": 25
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 572,
+          "w": 190,
+          "h": 35,
+          "text": {
+            "en": "T098 · Size query",
+            "ar": "T098 · سؤال مقاس"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 607,
+          "w": 188,
+          "h": 28,
+          "text": {
+            "en": "Closed",
+            "ar": "مغلقة"
+          },
+          "size": 17,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 702,
+          "y": 390,
+          "x2": 702,
+          "y2": 479,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 702,
+          "y": 512,
+          "x2": 702,
+          "y2": 622,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 687,
+          "y": 496,
+          "x2": 719,
+          "y2": 496,
+          "color": "#965318",
+          "width": 1.7,
+          "arrow": true
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 728,
+          "y": 381,
+          "w": 478,
+          "h": 40,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-clock",
+          "x": 728,
+          "y": 436,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 762,
+          "y": 434,
+          "w": 447,
+          "h": 35,
+          "text": {
+            "en": "Waiting on the branch",
+            "ar": "بانتظار الفرع"
+          },
+          "size": 21,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 724,
+          "y": 488,
+          "w": 484,
+          "h": 132,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-file",
+          "x": 744,
+          "y": 505,
+          "w": 25,
+          "h": 25
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 782,
+          "y": 503,
+          "w": 426,
+          "h": 33,
+          "text": {
+            "en": "Latest recorded note",
+            "ar": "آخر ملاحظة مسجلة"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 0,
+          "until": null,
+          "slot": "desk.context",
+          "x": 744,
+          "y": 550,
+          "w": 440,
+          "h": 66,
+          "text": {
+            "en": "Branch review\nis still pending.",
+            "ar": "مراجعة الفرع\nلسه مطلوبة."
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "outline",
+          "at": 2.906,
+          "until": 4.417,
+          "slot": null,
+          "x": 66,
+          "y": 270,
+          "w": 286,
+          "h": 322,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 6.9,
+          "until": 8.704,
+          "slot": null,
+          "x": 416,
+          "y": 426,
+          "w": 263,
+          "h": 121,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 8.704,
+          "until": 10.26,
+          "slot": null,
+          "x": 725,
+          "y": 423,
+          "w": 482,
+          "h": 59,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 10.26,
+          "until": 13.184,
+          "slot": null,
+          "x": 724,
+          "y": 488,
+          "w": 484,
+          "h": 132,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C01 · 0.000–2.660s · تخيلوا معايا موظف Customer Service في Concrete، · Show the complete imagined call-and-history workspace immediately.",
+          "ar": "C01 · 0.000–2.660 ثانية · تخيلوا معايا موظف Customer Service في Concrete،"
+        },
+        {
+          "en": "C02 · 2.906–3.857s · جاله Call من عميل. · Focus the already-visible incoming call.",
+          "ar": "C02 · 2.906–3.857 ثانية · جاله Call من عميل."
+        },
+        {
+          "en": "C03 · 4.417–6.450s · بدل ما يبدأ يدور على بياناته من الأول، · Hold the outcome-first workspace; no manual search is illustrated here.",
+          "ar": "C03 · 4.417–6.450 ثانية · بدل ما يبدأ يدور على بياناته من الأول،"
+        },
+        {
+          "en": "C04 · 6.900–8.521s · تخيلوا لو الـTickets السابقة، · Focus the existing previous-ticket row.",
+          "ar": "C04 · 6.900–8.521 ثانية · تخيلوا لو الـTickets السابقة،"
+        },
+        {
+          "en": "C05 · 8.704–12.844s · والـStatus بتاع كل Ticket، والـLatest Update، ظهروا قدامه مع المكالمة. · Focus status; move focus to the latest note at C05-note.",
+          "ar": "C05 · 8.704–12.844 ثانية · والـStatus بتاع كل Ticket، والـLatest Update، ظهروا قدامه مع المكالمة."
+        },
+        {
+          "en": "C06 · 13.184–15.860s · دي ببساطة التجربة اللي GRINDCTRL بتقترحها. · Hold the proposed outcome; GRINDCTRL framing confirms a proposal.",
+          "ar": "C06 · 13.184–15.860 ثانية · دي ببساطة التجربة اللي GRINDCTRL بتقترحها."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "genesys.call": {
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "anchors": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        },
+        "desk.context": {
+          "x": 400,
+          "y": 176,
+          "w": 832,
+          "h": 472,
+          "anchors": {
+            "customer": [
+              0.1,
+              0.2,
+              0.64,
+              0.15
+            ],
+            "ticket": [
+              0.02,
+              0.53,
+              0.32,
+              0.27
+            ],
+            "latest_note": [
+              0.39,
+              0.66,
+              0.58,
+              0.28
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 1,
+      "id": "S2",
+      "start": 16.395,
+      "end": 33.78,
+      "title": {
+        "en": "The history exists. The employee searches for it.",
+        "ar": "التاريخ موجود. الموظف بيدور عليه."
+      },
+      "section": {
+        "en": "Reported current workflow",
+        "ar": "طريقة العمل الحالية بحسب الإفادة"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "Reported current workflow",
+            "ar": "طريقة العمل الحالية بحسب الإفادة"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "The history exists. The employee searches for it.",
+            "ar": "التاريخ موجود. الموظف بيدور عليه."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "02 / 07",
+            "ar": "02 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 181,
+          "w": 322,
+          "h": 472,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "genesys",
+          "x": 72,
+          "y": 195,
+          "w": 138,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 228,
+          "y": 198,
+          "w": 118,
+          "h": 32,
+          "text": {
+            "en": "Call",
+            "ar": "المكالمة"
+          },
+          "size": 18,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 248,
+          "x2": 370,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 280,
+          "w": 82,
+          "h": 82,
+          "fill": "#EFF4EE",
+          "line": "#EFF4EE"
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-call",
+          "x": 96,
+          "y": 302,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 387,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "Incoming caller",
+            "ar": "متصل وارد"
+          },
+          "size": 25,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 443,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 29,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 493,
+          "w": 270,
+          "h": 32,
+          "text": {
+            "en": "Call active",
+            "ar": "مكالمة جارية"
+          },
+          "size": 20,
+          "color": "#49654E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "ellipse",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-mic",
+          "x": 86,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 140,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-pause",
+          "x": 152,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 206,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-end",
+          "x": 218,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "rect",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "x": 400,
+          "y": 213,
+          "w": 832,
+          "h": 404,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "x": 400,
+          "y": 208,
+          "w": 832,
+          "h": 404,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "key": "zoho",
+          "x": 424,
+          "y": 227,
+          "w": 76,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "x": 517,
+          "y": 227,
+          "w": 682,
+          "h": 39,
+          "text": {
+            "en": "Zoho Desk · Ticket search",
+            "ar": "Zoho Desk · بحث التذاكر"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "x": 400,
+          "y": 280,
+          "x2": 1232,
+          "y2": 280,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "outline",
+          "at": 19.179,
+          "until": 21.546,
+          "slot": null,
+          "x": 66,
+          "y": 270,
+          "w": 286,
+          "h": 322,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 21.546,
+          "until": 24.621,
+          "slot": null,
+          "x": 423,
+          "y": 299,
+          "w": 786,
+          "h": 71,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "rect",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "x": 424,
+          "y": 300,
+          "w": 784,
+          "h": 69,
+          "fill": "#FFFFFF",
+          "line": "#FFBA65",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 16.395,
+          "until": null,
+          "slot": "desk.search",
+          "key": "icon-search",
+          "x": 444,
+          "y": 321,
+          "w": 28,
+          "h": 28
+        },
+        {
+          "type": "text",
+          "at": 16.395,
+          "until": 24.621,
+          "slot": "desk.search",
+          "x": 490,
+          "y": 320,
+          "w": 461,
+          "h": 43,
+          "text": {
+            "en": "Search by phone number",
+            "ar": "بحث برقم التليفون"
+          },
+          "size": 24,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 24.621,
+          "until": null,
+          "slot": "desk.search",
+          "x": 490,
+          "y": 317,
+          "w": 443,
+          "h": 44,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 24.621,
+          "until": null,
+          "slot": "desk.search",
+          "x": 1032,
+          "y": 310,
+          "w": 161,
+          "h": 49,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "text",
+          "at": 24.621,
+          "until": null,
+          "slot": "desk.search",
+          "x": 1045,
+          "y": 318,
+          "w": 134,
+          "h": 34,
+          "text": {
+            "en": "Search",
+            "ar": "بحث"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "center",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 24.621,
+          "until": null,
+          "slot": "desk.search",
+          "key": "icon-pointer",
+          "x": 1156,
+          "y": 345,
+          "w": 41,
+          "h": 41
+        },
+        {
+          "type": "line",
+          "at": 24.621,
+          "until": null,
+          "slot": null,
+          "x": 340,
+          "y": 464,
+          "x2": 383,
+          "y2": 464,
+          "color": "#965318",
+          "width": 2,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 24.621,
+          "until": null,
+          "slot": null,
+          "x": 383,
+          "y": 464,
+          "x2": 383,
+          "y2": 335,
+          "color": "#965318",
+          "width": 2,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 24.621,
+          "until": null,
+          "slot": null,
+          "x": 383,
+          "y": 335,
+          "x2": 418,
+          "y2": 335,
+          "color": "#965318",
+          "width": 2,
+          "arrow": true
+        },
+        {
+          "type": "text",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "x": 424,
+          "y": 394,
+          "w": 746,
+          "h": 36,
+          "text": {
+            "en": "Contact A · Existing ticket",
+            "ar": "العميل A · تذكرة موجودة"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "x": 424,
+          "y": 447,
+          "w": 784,
+          "h": 135,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "key": "icon-case",
+          "x": 444,
+          "y": 464,
+          "w": 28,
+          "h": 28
+        },
+        {
+          "type": "text",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "x": 487,
+          "y": 458,
+          "w": 679,
+          "h": 42,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 26,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "key": "icon-clock",
+          "x": 444,
+          "y": 509,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "text",
+          "at": 28.108,
+          "until": null,
+          "slot": "desk.search",
+          "x": 478,
+          "y": 507,
+          "w": 690,
+          "h": 35,
+          "text": {
+            "en": "Branch review pending",
+            "ar": "بانتظار مراجعة الفرع"
+          },
+          "size": 21,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 29.636,
+          "until": null,
+          "slot": "desk.search",
+          "x": 444,
+          "y": 549,
+          "w": 724,
+          "h": 33,
+          "text": {
+            "en": "Latest note: Branch review is still pending.",
+            "ar": "آخر ملاحظة: مراجعة الفرع لسه مطلوبة."
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C07 · 16.395–18.951s · النهارده، حسب الـWorkflow الحالي اللي اتشرح لنا، · Cut to the reported current workflow: call and separate Desk search.",
+          "ar": "C07 · 16.395–18.951 ثانية · النهارده، حسب الـWorkflow الحالي اللي اتشرح لنا،"
+        },
+        {
+          "en": "C08 · 19.179–21.271s · الموظف بيستقبل الـCall على Genesys. · Focus the visible Genesys call.",
+          "ar": "C08 · 19.179–21.271 ثانية · الموظف بيستقبل الـCall على Genesys."
+        },
+        {
+          "en": "C09 · 21.546–24.179s · ولو محتاج يعرف العميل كان عنده Tickets إيه قبل كده، · Focus the separate Desk search field.",
+          "ar": "C09 · 21.546–24.179 ثانية · ولو محتاج يعرف العميل كان عنده Tickets إيه قبل كده،"
+        },
+        {
+          "en": "C10 · 24.621–27.677s · بيضطر يعمل Manual Search برقم التليفون على Zoho Desk. · Manually carry the masked number into Desk search; pointer chooses search.",
+          "ar": "C10 · 24.621–27.677 ثانية · بيضطر يعمل Manual Search برقم التليفون على Zoho Desk."
+        },
+        {
+          "en": "C11 · 28.108–29.292s · البيانات موجودة بالفعل، · Reveal the existing Contact A ticket result.",
+          "ar": "C11 · 28.108–29.292 ثانية · البيانات موجودة بالفعل،"
+        },
+        {
+          "en": "C12 · 29.636–33.316s · لكن الموظف محتاج يعمل كذا خطوة عشان يوصل للـCustomer History. · Reveal the latest note beneath the manually retrieved ticket.",
+          "ar": "C12 · 29.636–33.316 ثانية · لكن الموظف محتاج يعمل كذا خطوة عشان يوصل للـCustomer History."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "genesys.call": {
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "anchors": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        },
+        "desk.search": {
+          "x": 400,
+          "y": 208,
+          "w": 832,
+          "h": 404,
+          "anchors": {
+            "search": [
+              0.03,
+              0.23,
+              0.94,
+              0.17
+            ],
+            "ticket": [
+              0.03,
+              0.59,
+              0.94,
+              0.33
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 2,
+      "id": "S3",
+      "start": 33.78,
+      "end": 52.546,
+      "title": {
+        "en": "The call stays in view. The context appears beside it.",
+        "ar": "المكالمة ظاهرة. ومعلومات العميل بتظهر جنبها."
+      },
+      "section": {
+        "en": "Proposed lookup and record choice",
+        "ar": "البحث المقترح واختيار السجل"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "Proposed lookup and record choice",
+            "ar": "البحث المقترح واختيار السجل"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "The call stays in view. The context appears beside it.",
+            "ar": "المكالمة ظاهرة. ومعلومات العميل بتظهر جنبها."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "03 / 07",
+            "ar": "03 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 33.78,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 181,
+          "w": 322,
+          "h": 472,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 33.78,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 33.78,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "genesys",
+          "x": 72,
+          "y": 195,
+          "w": 138,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 228,
+          "y": 198,
+          "w": 118,
+          "h": 32,
+          "text": {
+            "en": "Call",
+            "ar": "المكالمة"
+          },
+          "size": 18,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 33.78,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 48,
+          "y": 248,
+          "x2": 370,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 280,
+          "w": 82,
+          "h": 82,
+          "fill": "#EFF4EE",
+          "line": "#EFF4EE"
+        },
+        {
+          "type": "image",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-call",
+          "x": 96,
+          "y": 302,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "type": "text",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 387,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "Incoming caller",
+            "ar": "متصل وارد"
+          },
+          "size": 25,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 443,
+          "w": 270,
+          "h": 43,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 29,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 493,
+          "w": 270,
+          "h": 32,
+          "text": {
+            "en": "Call active",
+            "ar": "مكالمة جارية"
+          },
+          "size": 20,
+          "color": "#49654E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "ellipse",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 74,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-mic",
+          "x": 86,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 140,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-pause",
+          "x": 152,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "ellipse",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "x": 206,
+          "y": 562,
+          "w": 46,
+          "h": 46,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE"
+        },
+        {
+          "type": "image",
+          "at": 35.311,
+          "until": null,
+          "slot": "genesys.call",
+          "key": "icon-end",
+          "x": 218,
+          "y": 574,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "rect",
+          "at": 33.78,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 181,
+          "w": 832,
+          "h": 472,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 33.78,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 176,
+          "w": 832,
+          "h": 472,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 33.78,
+          "until": null,
+          "slot": "desk.context",
+          "key": "zoho",
+          "x": 424,
+          "y": 195,
+          "w": 76,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 33.78,
+          "until": null,
+          "slot": "desk.context",
+          "x": 517,
+          "y": 195,
+          "w": 682,
+          "h": 39,
+          "text": {
+            "en": "Zoho Desk · Customer context",
+            "ar": "Zoho Desk · معلومات العميل"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 33.78,
+          "until": null,
+          "slot": "desk.context",
+          "x": 400,
+          "y": 248,
+          "x2": 1232,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 272,
+          "w": 47,
+          "h": 47,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD"
+        },
+        {
+          "type": "image",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-actor",
+          "x": 434.34,
+          "y": 282.34,
+          "w": 26.320000000000004,
+          "h": 26.320000000000004
+        },
+        {
+          "type": "text",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "x": 488,
+          "y": 271,
+          "w": 700,
+          "h": 40,
+          "text": {
+            "en": "Contact A",
+            "ar": "العميل A"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "x": 488,
+          "y": 319,
+          "w": 225,
+          "h": 32,
+          "text": {
+            "en": "Associated record",
+            "ar": "سجل مرتبط"
+          },
+          "size": 19,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "x": 732,
+          "y": 318,
+          "w": 265,
+          "h": 33,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 20,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 40.905,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 363,
+          "x2": 1208,
+          "y2": 363,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 424,
+          "y": 383,
+          "w": 243,
+          "h": 36,
+          "text": {
+            "en": "Previous tickets",
+            "ar": "التذاكر السابقة"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 416,
+          "y": 428,
+          "w": 263,
+          "h": 121,
+          "fill": "#F4F2EE",
+          "line": "#FFBA65",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-case",
+          "x": 430,
+          "y": 446,
+          "w": 27,
+          "h": 27
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 444,
+          "w": 184,
+          "h": 34,
+          "text": {
+            "en": "T101 · Exchange",
+            "ar": "T101 · استبدال"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 430,
+          "y": 491,
+          "w": 228,
+          "h": 53,
+          "text": {
+            "en": "Branch review\npending",
+            "ar": "بانتظار\nمراجعة الفرع"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-case",
+          "x": 430,
+          "y": 579,
+          "w": 25,
+          "h": 25
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 572,
+          "w": 190,
+          "h": 35,
+          "text": {
+            "en": "T098 · Size query",
+            "ar": "T098 · سؤال مقاس"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 473,
+          "y": 607,
+          "w": 188,
+          "h": 28,
+          "text": {
+            "en": "Closed",
+            "ar": "مغلقة"
+          },
+          "size": 17,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 702,
+          "y": 390,
+          "x2": 702,
+          "y2": 479,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 702,
+          "y": 512,
+          "x2": 702,
+          "y2": 622,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "line",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 687,
+          "y": 496,
+          "x2": 719,
+          "y2": 496,
+          "color": "#965318",
+          "width": 1.7,
+          "arrow": true
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 728,
+          "y": 381,
+          "w": 478,
+          "h": 40,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-clock",
+          "x": 728,
+          "y": 436,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 762,
+          "y": 434,
+          "w": 447,
+          "h": 35,
+          "text": {
+            "en": "Waiting on the branch",
+            "ar": "بانتظار الفرع"
+          },
+          "size": 21,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 724,
+          "y": 488,
+          "w": 484,
+          "h": 132,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "key": "icon-file",
+          "x": 744,
+          "y": 505,
+          "w": 25,
+          "h": 25
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 782,
+          "y": 503,
+          "w": 426,
+          "h": 33,
+          "text": {
+            "en": "Latest recorded note",
+            "ar": "آخر ملاحظة مسجلة"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 43.056,
+          "until": null,
+          "slot": "desk.context",
+          "x": 744,
+          "y": 550,
+          "w": 440,
+          "h": 66,
+          "text": {
+            "en": "Branch review\nis still pending.",
+            "ar": "مراجعة الفرع\nلسه مطلوبة."
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "outline",
+          "at": 36.585,
+          "until": 40.905,
+          "slot": null,
+          "x": 67,
+          "y": 433,
+          "w": 284,
+          "h": 68,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "line",
+          "at": 36.585,
+          "until": null,
+          "slot": null,
+          "x": 354,
+          "y": 464,
+          "x2": 392,
+          "y2": 464,
+          "color": "#965318",
+          "width": 2,
+          "arrow": true
+        },
+        {
+          "type": "text",
+          "at": 36.585,
+          "until": 40.905,
+          "slot": null,
+          "x": 424,
+          "y": 301,
+          "w": 748,
+          "h": 52,
+          "text": {
+            "en": "Authorized lookup of existing Desk records",
+            "ar": "بحث في سجلات Desk بصلاحيات الموظف"
+          },
+          "size": 25,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 401,
+          "y": 249,
+          "w": 830,
+          "h": 398,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE",
+          "radius": 0,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "rect",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 416,
+          "y": 256,
+          "w": 808,
+          "h": 376,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "rect",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 424,
+          "y": 270,
+          "w": 784,
+          "h": 352,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 290,
+          "w": 736,
+          "h": 41,
+          "text": {
+            "en": "More than one customer record",
+            "ar": "أكثر من سجل عميل"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 345,
+          "w": 736,
+          "h": 33,
+          "text": {
+            "en": "Employee chooses the appropriate record",
+            "ar": "الموظف يختار السجل المناسب"
+          },
+          "size": 21,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "rect",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 400,
+          "w": 736,
+          "h": 62,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 8,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "ellipse",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 462,
+          "y": 409,
+          "w": 39,
+          "h": 39,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "image",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "key": "icon-actor",
+          "x": 470.58,
+          "y": 417.58,
+          "w": 21.840000000000003,
+          "h": 21.840000000000003,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 518,
+          "y": 415,
+          "w": 311,
+          "h": 37,
+          "text": {
+            "en": "Contact A",
+            "ar": "العميل A"
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 848,
+          "y": 415,
+          "w": 294,
+          "h": 37,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "rect",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 474,
+          "w": 736,
+          "h": 62,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 8,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "ellipse",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 462,
+          "y": 483,
+          "w": 39,
+          "h": 39,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "image",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "key": "icon-actor",
+          "x": 470.58,
+          "y": 491.58,
+          "w": 21.840000000000003,
+          "h": 21.840000000000003,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 518,
+          "y": 489,
+          "w": 311,
+          "h": 37,
+          "text": {
+            "en": "Contact B",
+            "ar": "العميل B"
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 848,
+          "y": 489,
+          "w": 294,
+          "h": 37,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "outline",
+          "at": 50.294,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 400,
+          "w": 736,
+          "h": 62,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "image",
+          "at": 50.294,
+          "until": 51.957,
+          "slot": null,
+          "key": "icon-pointer",
+          "x": 1133,
+          "y": 428,
+          "w": 39,
+          "h": 39,
+          "native_appendix": "record-choice"
+        },
+        {
+          "type": "text",
+          "at": 48.104,
+          "until": 51.957,
+          "slot": null,
+          "x": 448,
+          "y": 548,
+          "w": 736,
+          "h": 32,
+          "text": {
+            "en": "Number association does not verify identity",
+            "ar": "مطابقة الرقم لا تثبت الهوية"
+          },
+          "size": 19,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui",
+          "native_appendix": "record-choice"
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C13 · 33.780–35.048s · في الـSolution اللي بنقترحه، · Change to the proposed lookup scenario.",
+          "ar": "C13 · 33.780–35.048 ثانية · في الـSolution اللي بنقترحه،"
+        },
+        {
+          "en": "C14 · 35.311–36.352s · أول ما الـCall توصل، · Incoming call appears, anchored at the same position.",
+          "ar": "C14 · 35.311–36.352 ثانية · أول ما الـCall توصل،"
+        },
+        {
+          "en": "C15 · 36.585–40.510s · النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup في Zoho Desk. · Focus caller number and trace an authorized lookup toward Desk.",
+          "ar": "C15 · 36.585–40.510 ثانية · النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup في Zoho Desk."
+        },
+        {
+          "en": "C16 · 40.905–42.801s · ولما يلاقي الـCustomer Record المناسب، · Associated Contact A record appears; no verified-identity badge.",
+          "ar": "C16 · 40.905–42.801 ثانية · ولما يلاقي الـCustomer Record المناسب،"
+        },
+        {
+          "en": "C17 · 43.056–47.687s · الـTicket History والـLatest Updates يظهروا للـAgent، من غير ما يضطر يعمل Search بنفسه. · Reveal ticket history and its source note beside the ongoing call.",
+          "ar": "C17 · 43.056–47.687 ثانية · الـTicket History والـLatest Updates يظهروا للـAgent، من غير ما يضطر يعمل Search بنفسه."
+        },
+        {
+          "en": "C18 · 48.104–50.083s · ولو الرقم مرتبط بأكتر من Customer، · Show a two-record chooser for the shared-number scenario.",
+          "ar": "C18 · 48.104–50.083 ثانية · ولو الرقم مرتبط بأكتر من Customer،"
+        },
+        {
+          "en": "C19 · 50.294–51.957s · الموظف بيختار الـRecord الصحيح. · Highlight employee choice of Contact A; return to its context at the measured end of this phrase.",
+          "ar": "C19 · 50.294–51.957 ثانية · الموظف بيختار الـRecord الصحيح."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "genesys.call": {
+          "x": 48,
+          "y": 176,
+          "w": 322,
+          "h": 472,
+          "anchors": {
+            "caller_number": [
+              0.08,
+              0.56,
+              0.84,
+              0.11
+            ],
+            "call_state": [
+              0.08,
+              0.67,
+              0.84,
+              0.08
+            ]
+          }
+        },
+        "desk.context": {
+          "x": 400,
+          "y": 176,
+          "w": 832,
+          "h": 472,
+          "anchors": {
+            "customer": [
+              0.1,
+              0.2,
+              0.64,
+              0.15
+            ],
+            "ticket": [
+              0.02,
+              0.53,
+              0.32,
+              0.27
+            ],
+            "latest_note": [
+              0.39,
+              0.66,
+              0.58,
+              0.28
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 3,
+      "id": "S4",
+      "start": 52.546,
+      "end": 73.02,
+      "title": {
+        "en": "Continue from the latest recorded update.",
+        "ar": "نكمل من آخر تحديث مسجل."
+      },
+      "section": {
+        "en": "Fictional exchange follow-up",
+        "ar": "مثال خيالي لمتابعة استبدال"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "Fictional exchange follow-up",
+            "ar": "مثال خيالي لمتابعة استبدال"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "Continue from the latest recorded update.",
+            "ar": "نكمل من آخر تحديث مسجل."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "04 / 07",
+            "ar": "04 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 52.546,
+          "until": null,
+          "slot": "desk.case",
+          "x": 48,
+          "y": 181,
+          "w": 1184,
+          "h": 350,
+          "fill": "#EDEAE4",
+          "line": "#EDEAE4",
+          "radius": 12
+        },
+        {
+          "type": "rect",
+          "at": 52.546,
+          "until": null,
+          "slot": "desk.case",
+          "x": 48,
+          "y": 176,
+          "w": 1184,
+          "h": 350,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 52.546,
+          "until": null,
+          "slot": "desk.case",
+          "key": "zoho",
+          "x": 72,
+          "y": 195,
+          "w": 76,
+          "h": 32
+        },
+        {
+          "type": "text",
+          "at": 52.546,
+          "until": null,
+          "slot": "desk.case",
+          "x": 165,
+          "y": 195,
+          "w": 1034,
+          "h": 39,
+          "text": {
+            "en": "Zoho Desk · Exchange follow-up",
+            "ar": "Zoho Desk · متابعة استبدال"
+          },
+          "size": 21,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 52.546,
+          "until": null,
+          "slot": "desk.case",
+          "x": 48,
+          "y": 248,
+          "x2": 1232,
+          "y2": 248,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 54.089,
+          "until": null,
+          "slot": null,
+          "key": "icon-call",
+          "x": 78,
+          "y": 278,
+          "w": 49,
+          "h": 49
+        },
+        {
+          "type": "text",
+          "at": 54.089,
+          "until": null,
+          "slot": null,
+          "x": 155,
+          "y": 280,
+          "w": 300,
+          "h": 40,
+          "text": {
+            "en": "Contact A",
+            "ar": "العميل A"
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 54.089,
+          "until": null,
+          "slot": null,
+          "x": 78,
+          "y": 354,
+          "w": 340,
+          "h": 42,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 52.546,
+          "until": null,
+          "slot": null,
+          "x": 452,
+          "y": 273,
+          "x2": 452,
+          "y2": 502,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 54.089,
+          "until": null,
+          "slot": null,
+          "key": "icon-case",
+          "x": 484,
+          "y": 276,
+          "w": 30,
+          "h": 30
+        },
+        {
+          "type": "text",
+          "at": 54.089,
+          "until": null,
+          "slot": null,
+          "x": 530,
+          "y": 269,
+          "w": 650,
+          "h": 42,
+          "text": {
+            "en": "T101 · Exchange request",
+            "ar": "T101 · طلب استبدال"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 58.42,
+          "until": null,
+          "slot": "desk.case",
+          "key": "icon-clock",
+          "x": 484,
+          "y": 325,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "text",
+          "at": 58.42,
+          "until": null,
+          "slot": "desk.case",
+          "x": 518,
+          "y": 323,
+          "w": 674,
+          "h": 35,
+          "text": {
+            "en": "Waiting on the branch",
+            "ar": "بانتظار الفرع"
+          },
+          "size": 21,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 61.437,
+          "until": null,
+          "slot": "desk.case",
+          "x": 482,
+          "y": 382,
+          "w": 719,
+          "h": 112,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 61.437,
+          "until": null,
+          "slot": "desk.case",
+          "key": "icon-file",
+          "x": 504,
+          "y": 402,
+          "w": 29,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 61.437,
+          "until": null,
+          "slot": "desk.case",
+          "x": 548,
+          "y": 398,
+          "w": 625,
+          "h": 31,
+          "text": {
+            "en": "Latest recorded note",
+            "ar": "آخر ملاحظة مسجلة"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 61.437,
+          "until": null,
+          "slot": "desk.case",
+          "x": 504,
+          "y": 444,
+          "w": 666,
+          "h": 41,
+          "text": {
+            "en": "Branch review is still pending.",
+            "ar": "مراجعة الفرع لسه مطلوبة."
+          },
+          "size": 29,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "ellipse",
+          "at": 68.416,
+          "until": null,
+          "slot": null,
+          "x": 68,
+          "y": 566,
+          "w": 58,
+          "h": 58,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD"
+        },
+        {
+          "type": "image",
+          "at": 68.416,
+          "until": null,
+          "slot": null,
+          "key": "icon-actor",
+          "x": 80.76,
+          "y": 578.76,
+          "w": 32.480000000000004,
+          "h": 32.480000000000004
+        },
+        {
+          "type": "image",
+          "at": 68.416,
+          "until": null,
+          "slot": null,
+          "key": "icon-speech",
+          "x": 144,
+          "y": 574,
+          "w": 35,
+          "h": 35
+        },
+        {
+          "type": "text",
+          "at": 68.416,
+          "until": null,
+          "slot": null,
+          "x": 201,
+          "y": 559,
+          "w": 1000,
+          "h": 44,
+          "text": {
+            "en": "Continue the conversation from this note.",
+            "ar": "نكمل الحديث من الملاحظة دي."
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 68.416,
+          "until": null,
+          "slot": null,
+          "x": 201,
+          "y": 609,
+          "w": 1000,
+          "h": 30,
+          "text": {
+            "en": "Employee reads existing context; the ticket is unchanged.",
+            "ar": "الموظف بيقرأ المعلومات الموجودة؛ التذكرة لم تتغير."
+          },
+          "size": 20,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C20 · 52.546–53.671s · خلينا ناخد مثال عملي. · Cut to a focused fictional exchange case.",
+          "ar": "C20 · 52.546–53.671 ثانية · خلينا ناخد مثال عملي."
+        },
+        {
+          "en": "C21 · 54.089–57.999s · Customer بيتصل عشان يعمل Follow-up على Exchange Request كان قدمه قبل كده. · Show the exchange follow-up ticket title alongside the ongoing call.",
+          "ar": "C21 · 54.089–57.999 ثانية · Customer بيتصل عشان يعمل Follow-up على Exchange Request كان قدمه قبل كده."
+        },
+        {
+          "en": "C22 · 58.420–61.209s · الـAgent بيشوف الـTicket السابقة، والـStatus بتاعها، · Highlight T101 and its pending branch-review status.",
+          "ar": "C22 · 58.420–61.209 ثانية · الـAgent بيشوف الـTicket السابقة، والـStatus بتاعها،"
+        },
+        {
+          "en": "C23 · 61.437–64.518s · ويلاقي في الـLatest Note إن الطلب لسه Pending Branch Review. · Reveal and focus the latest recorded note: branch review is still pending.",
+          "ar": "C23 · 61.437–64.518 ثانية · ويلاقي في الـLatest Note إن الطلب لسه Pending Branch Review."
+        },
+        {
+          "en": "C24 · 64.869–68.112s · بدل ما يبدأ من الصفر ويسأل العميل عن كل التفاصيل تاني، · Keep the case in view; no extra customer-question checklist or ticket mutation.",
+          "ar": "C24 · 64.869–68.112 ثانية · بدل ما يبدأ من الصفر ويسأل العميل عن كل التفاصيل تاني،"
+        },
+        {
+          "en": "C25 · 68.416–72.613s · يقدر يشوف آخر Update، ويفهم الـCase، ويكمل الـFollow-up من نفس النقطة. · Connect the visible source note to the employee conversation cue.",
+          "ar": "C25 · 68.416–72.613 ثانية · يقدر يشوف آخر Update، ويفهم الـCase، ويكمل الـFollow-up من نفس النقطة."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "desk.case": {
+          "x": 48,
+          "y": 176,
+          "w": 1184,
+          "h": 350,
+          "anchors": {
+            "ticket": [
+              0.36,
+              0.25,
+              0.6,
+              0.15
+            ],
+            "latest_note": [
+              0.37,
+              0.58,
+              0.61,
+              0.32
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 4,
+      "id": "S5",
+      "start": 73.02,
+      "end": 94.163,
+      "title": {
+        "en": "Same customer. Same ticket. A clearer start.",
+        "ar": "نفس العميل. نفس التذكرة. وبداية أوضح."
+      },
+      "section": {
+        "en": "Current and proposed, side by side",
+        "ar": "الحالي والمقترح جنب بعض"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "Current and proposed, side by side",
+            "ar": "الحالي والمقترح جنب بعض"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "Same customer. Same ticket. A clearer start.",
+            "ar": "نفس العميل. نفس التذكرة. وبداية أوضح."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "05 / 07",
+            "ar": "05 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 178,
+          "w": 560,
+          "h": 41,
+          "text": {
+            "en": "Current",
+            "ar": "الحالي"
+          },
+          "size": 26,
+          "color": "#68645E",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 48,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "key": "genesys",
+          "x": 70,
+          "y": 260,
+          "w": 127,
+          "h": 31
+        },
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "key": "icon-call",
+          "x": 70,
+          "y": 327,
+          "w": 36,
+          "h": 36
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 129,
+          "y": 330,
+          "w": 440,
+          "h": 42,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 122,
+          "y": 396,
+          "w": 466,
+          "h": 204,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 10
+        },
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.current",
+          "key": "zoho",
+          "x": 141,
+          "y": 412,
+          "w": 71,
+          "h": 26
+        },
+        {
+          "type": "rect",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 141,
+          "y": 453,
+          "w": 428,
+          "h": 56,
+          "fill": "#FFFFFF",
+          "line": "#FFBA65",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "key": "icon-search",
+          "x": 156,
+          "y": 468,
+          "w": 24,
+          "h": 24
+        },
+        {
+          "type": "text",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 198,
+          "y": 463,
+          "w": 313,
+          "h": 38,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 26,
+          "color": "#262626",
+          "bold": false,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "key": "icon-pointer",
+          "x": 510,
+          "y": 486,
+          "w": 36,
+          "h": 36
+        },
+        {
+          "type": "text",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 141,
+          "y": 527,
+          "w": 420,
+          "h": 34,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 22,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 78.106,
+          "until": null,
+          "slot": "comparison.current",
+          "x": 141,
+          "y": 567,
+          "w": 420,
+          "h": 28,
+          "text": {
+            "en": "Note: Branch review pending.",
+            "ar": "ملاحظة: بانتظار مراجعة الفرع."
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": null,
+          "x": 672,
+          "y": 178,
+          "w": 560,
+          "h": 41,
+          "text": {
+            "en": "Proposed",
+            "ar": "المقترح"
+          },
+          "size": 26,
+          "color": "#49654E",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 672,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.proposed",
+          "key": "genesys",
+          "x": 694,
+          "y": 260,
+          "w": 127,
+          "h": 31
+        },
+        {
+          "type": "image",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.proposed",
+          "key": "icon-call",
+          "x": 694,
+          "y": 327,
+          "w": 36,
+          "h": 36
+        },
+        {
+          "type": "text",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 753,
+          "y": 330,
+          "w": 440,
+          "h": 42,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 73.02,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 694,
+          "y": 398,
+          "x2": 1210,
+          "y2": 398,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "key": "zoho",
+          "x": 694,
+          "y": 417,
+          "w": 72,
+          "h": 26
+        },
+        {
+          "type": "text",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 783,
+          "y": 413,
+          "w": 427,
+          "h": 37,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 22,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 694,
+          "y": 472,
+          "w": 516,
+          "h": 117,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "key": "icon-file",
+          "x": 713,
+          "y": 489,
+          "w": 26,
+          "h": 26
+        },
+        {
+          "type": "text",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 755,
+          "y": 486,
+          "w": 407,
+          "h": 32,
+          "text": {
+            "en": "Latest recorded note",
+            "ar": "آخر ملاحظة مسجلة"
+          },
+          "size": 20,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 84.277,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 713,
+          "y": 535,
+          "w": 469,
+          "h": 38,
+          "text": {
+            "en": "Branch review still pending.",
+            "ar": "بانتظار مراجعة الفرع."
+          },
+          "size": 25,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "outline",
+          "at": 77.147,
+          "until": 82.654,
+          "slot": "comparison.current",
+          "x": 48,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 82.654,
+          "until": 86.581,
+          "slot": "comparison.proposed",
+          "x": 672,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "outline",
+          "at": 91.656,
+          "until": null,
+          "slot": "comparison.proposed",
+          "x": 693,
+          "y": 471,
+          "w": 518,
+          "h": 119,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        },
+        {
+          "type": "text",
+          "at": 86.581,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 635,
+          "w": 1184,
+          "h": 31,
+          "text": {
+            "en": "Existing records, available during the call.",
+            "ar": "السجلات الموجودة، متاحة وقت المكالمة."
+          },
+          "size": 22,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C26 · 73.020–74.870s · نفس الـCustomer، ونفس الـTickets، · Cut to a matched current/proposed comparison, with the same masked number and T101.",
+          "ar": "C26 · 73.020–74.870 ثانية · نفس الـCustomer، ونفس الـTickets،"
+        },
+        {
+          "en": "C27 · 75.025–76.716s · لكن الـWorkflow اختلف تمامًا. · Hold the matched comparison; neither side creates new records.",
+          "ar": "C27 · 75.025–76.716 ثانية · لكن الـWorkflow اختلف تمامًا."
+        },
+        {
+          "en": "C28 · 77.147–77.903s · قبل التحسين، · Focus the current-workflow side.",
+          "ar": "C28 · 77.147–77.903 ثانية · قبل التحسين،"
+        },
+        {
+          "en": "C29 · 78.106–82.363s · الـAgent محتاج يعمل Manual Search، ويفتح الـTicket، ويدور على آخر Update. · Show phone-number search, T101 and its latest note on the current side.",
+          "ar": "C29 · 78.106–82.363 ثانية · الـAgent محتاج يعمل Manual Search، ويفتح الـTicket، ويدور على آخر Update."
+        },
+        {
+          "en": "C30 · 82.654–84.058s · بعد الـIntegration المقترح، · Focus the proposed-workflow side.",
+          "ar": "C30 · 82.654–84.058 ثانية · بعد الـIntegration المقترح،"
+        },
+        {
+          "en": "C31 · 84.277–86.150s · الـCustomer Context بيظهر مع الـCall. · Reveal context beside the same call on the proposed side.",
+          "ar": "C31 · 84.277–86.150 ثانية · الـCustomer Context بيظهر مع الـCall."
+        },
+        {
+          "en": "C32 · 86.581–88.485s · الفرق مش إننا بنضيف بيانات جديدة. · Emphasize identical existing ticket identity on both sides; no new-data claim.",
+          "ar": "C32 · 86.581–88.485 ثانية · الفرق مش إننا بنضيف بيانات جديدة."
+        },
+        {
+          "en": "C33 · 88.871–91.500s · الفرق إننا بنخلي البيانات الموجودة بالفعل · Keep the same ticket and note, with a simple association cue.",
+          "ar": "C33 · 88.871–91.500 ثانية · الفرق إننا بنخلي البيانات الموجودة بالفعل"
+        },
+        {
+          "en": "C34 · 91.656–93.764s · متاحة للموظف في الوقت اللي محتاجها فيه. · Focus the note already available on the proposed side.",
+          "ar": "C34 · 91.656–93.764 ثانية · متاحة للموظف في الوقت اللي محتاجها فيه."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "comparison.current": {
+          "x": 48,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "anchors": {
+            "caller_number": [
+              0.14,
+              0.23,
+              0.79,
+              0.12
+            ],
+            "manual_search": [
+              0.16,
+              0.56,
+              0.77,
+              0.15
+            ]
+          }
+        },
+        "comparison.proposed": {
+          "x": 672,
+          "y": 240,
+          "w": 560,
+          "h": 379,
+          "anchors": {
+            "caller_number": [
+              0.14,
+              0.23,
+              0.79,
+              0.12
+            ],
+            "latest_note": [
+              0.04,
+              0.61,
+              0.92,
+              0.31
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 5,
+      "id": "S6",
+      "start": 94.163,
+      "end": 113.196,
+      "title": {
+        "en": "Less searching. More attention to the customer.",
+        "ar": "بحث أقل. وتركيز أكبر مع العميل."
+      },
+      "section": {
+        "en": "Expected benefits to validate",
+        "ar": "فوائد متوقعة نحتاج نختبرها"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "Expected benefits to validate",
+            "ar": "فوائد متوقعة نحتاج نختبرها"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "Less searching. More attention to the customer.",
+            "ar": "بحث أقل. وتركيز أكبر مع العميل."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "06 / 07",
+            "ar": "06 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 48,
+          "y": 178,
+          "w": 876,
+          "h": 452,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "genesys",
+          "x": 72,
+          "y": 199,
+          "w": 138,
+          "h": 32
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "icon-call",
+          "x": 236,
+          "y": 205,
+          "w": 29,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 286,
+          "y": 200,
+          "w": 540,
+          "h": 44,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 48,
+          "y": 262,
+          "x2": 924,
+          "y2": 262,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 72,
+          "y": 291,
+          "w": 49,
+          "h": 49,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD"
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "icon-actor",
+          "x": 82.78,
+          "y": 301.78,
+          "w": 27.44,
+          "h": 27.44
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 141,
+          "y": 292,
+          "w": 548,
+          "h": 40,
+          "text": {
+            "en": "Contact A",
+            "ar": "العميل A"
+          },
+          "size": 28,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "zoho",
+          "x": 800,
+          "y": 295,
+          "w": 80,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 141,
+          "y": 342,
+          "w": 703,
+          "h": 32,
+          "text": {
+            "en": "Associated record · Existing ticket history",
+            "ar": "سجل مرتبط · تاريخ التذاكر الموجود"
+          },
+          "size": 22,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 72,
+          "y": 395,
+          "x2": 900,
+          "y2": 395,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "icon-case",
+          "x": 73,
+          "y": 414,
+          "w": 28,
+          "h": 28
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 118,
+          "y": 409,
+          "w": 735,
+          "h": 44,
+          "text": {
+            "en": "T101 · Exchange follow-up",
+            "ar": "T101 · متابعة استبدال"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "icon-clock",
+          "x": 73,
+          "y": 470,
+          "w": 22,
+          "h": 22
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 107,
+          "y": 468,
+          "w": 666,
+          "h": 35,
+          "text": {
+            "en": "Waiting on the branch",
+            "ar": "بانتظار الفرع"
+          },
+          "size": 21,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 72,
+          "y": 525,
+          "w": 828,
+          "h": 81,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "key": "icon-file",
+          "x": 92,
+          "y": 548,
+          "w": 29,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": "workspace.benefits",
+          "x": 142,
+          "y": 544,
+          "w": 735,
+          "h": 42,
+          "text": {
+            "en": "Branch review is still pending.",
+            "ar": "مراجعة الفرع لسه مطلوبة."
+          },
+          "size": 29,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 930,
+          "y": 318,
+          "x2": 956,
+          "y2": 318,
+          "color": "#965318",
+          "width": 2,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 921,
+          "y": 314,
+          "w": 8,
+          "h": 8,
+          "fill": "#965318",
+          "line": "#965318"
+        },
+        {
+          "type": "text",
+          "at": 94.163,
+          "until": null,
+          "slot": null,
+          "x": 978,
+          "y": 300,
+          "w": 246,
+          "h": 79,
+          "text": {
+            "en": "Fewer manual\nsearch steps",
+            "ar": "خطوات بحث يدوي\nأقل"
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 930,
+          "y": 433,
+          "x2": 956,
+          "y2": 433,
+          "color": "#965318",
+          "width": 2,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 921,
+          "y": 429,
+          "w": 8,
+          "h": 8,
+          "fill": "#965318",
+          "line": "#965318"
+        },
+        {
+          "type": "text",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 978,
+          "y": 421,
+          "w": 246,
+          "h": 79,
+          "text": {
+            "en": "Clearer\nfollow-up",
+            "ar": "متابعة\nأوضح"
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 930,
+          "y": 566,
+          "x2": 956,
+          "y2": 566,
+          "color": "#965318",
+          "width": 2,
+          "arrow": false
+        },
+        {
+          "type": "ellipse",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 921,
+          "y": 562,
+          "w": 8,
+          "h": 8,
+          "fill": "#965318",
+          "line": "#965318"
+        },
+        {
+          "type": "text",
+          "at": 97.323,
+          "until": null,
+          "slot": null,
+          "x": 978,
+          "y": 539,
+          "w": 246,
+          "h": 79,
+          "text": {
+            "en": "More informed\nconversations",
+            "ar": "محادثات بمعلومات\nأوضح"
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 106.294,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 640,
+          "w": 1100,
+          "h": 27,
+          "text": {
+            "en": "Expected benefits · Measure in an authorized pilot",
+            "ar": "فوائد متوقعة · نقيسها في تجربة أولية مصرح بها"
+          },
+          "size": 18,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "outline",
+          "at": 101.75,
+          "until": 106.294,
+          "slot": "workspace.benefits",
+          "x": 68,
+          "y": 521,
+          "w": 836,
+          "h": 89,
+          "color": "#FFBA65",
+          "radius": 8,
+          "width": 2
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C35 · 94.163–101.396s · بالنسبة لـConcrete، ده ممكن يقلل خطوات الـManual Search، ويسهّل الـFollow-up، ويساعد الـAgents يفهموا الـCustomer Cases بشكل أسرع. · Show the first expected-benefit annotation; disclose follow-up and informed-conversation annotations at C35-followup.",
+          "ar": "C35 · 94.163–101.396 ثانية · بالنسبة لـConcrete، ده ممكن يقلل خطوات الـManual Search، ويسهّل الـFollow-up، ويساعد الـAgents يفهموا الـCustomer Cases بشكل أسرع."
+        },
+        {
+          "en": "C36 · 101.750–105.876s · وده ينعكس على الـAgent Experience، وممكن يحسّن الـCustomer Experience كمان. · Focus the source note in the enlarged workspace.",
+          "ar": "C36 · 101.750–105.876 ثانية · وده ينعكس على الـAgent Experience، وممكن يحسّن الـCustomer Experience كمان."
+        },
+        {
+          "en": "C37 · 106.294–107.977s · وطبعًا دي Expected Benefits، · Show Expected benefits label, replacing any implication of measured outcomes.",
+          "ar": "C37 · 106.294–107.977 ثانية · وطبعًا دي Expected Benefits،"
+        },
+        {
+          "en": "C38 · 108.229–111.094s · هنحتاج نقيسها ونتأكد منها من خلال Pilot حقيقي، · Hold the pilot-validation label while narration describes measurement.",
+          "ar": "C38 · 108.229–111.094 ثانية · هنحتاج نقيسها ونتأكد منها من خلال Pilot حقيقي،"
+        },
+        {
+          "en": "C39 · 111.326–112.850s · مش مجرد أرقام أو وعود. · Hold the pilot expectation label; no percentages or monetary promises.",
+          "ar": "C39 · 111.326–112.850 ثانية · مش مجرد أرقام أو وعود."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "workspace.benefits": {
+          "x": 48,
+          "y": 178,
+          "w": 876,
+          "h": 452,
+          "anchors": {
+            "caller_number": [
+              0.27,
+              0.05,
+              0.62,
+              0.11
+            ],
+            "ticket": [
+              0.08,
+              0.51,
+              0.84,
+              0.11
+            ],
+            "latest_note": [
+              0.03,
+              0.77,
+              0.95,
+              0.18
+            ]
+          }
+        }
+      }
+    },
+    {
+      "index": 6,
+      "id": "S7",
+      "start": 113.196,
+      "end": 137.091,
+      "title": {
+        "en": "Inspect the existing setup. Then test the experience.",
+        "ar": "نفحص الإعدادات الحالية. وبعدها نختبر التجربة."
+      },
+      "section": {
+        "en": "A practical first collaboration",
+        "ar": "خطوة عملية لأول تعاون"
+      },
+      "dark": false,
+      "elements": [
+        {
+          "type": "image",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "key": "brand",
+          "x": 48,
+          "y": 27,
+          "w": 43,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 104,
+          "y": 29,
+          "w": 220,
+          "h": 31,
+          "text": {
+            "en": "GRINDCTRL",
+            "ar": "GRINDCTRL"
+          },
+          "size": 18,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 690,
+          "y": 29,
+          "w": 542,
+          "h": 30,
+          "text": {
+            "en": "A practical first collaboration",
+            "ar": "خطوة عملية لأول تعاون"
+          },
+          "size": 16,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 91,
+          "w": 1184,
+          "h": 65,
+          "text": {
+            "en": "Inspect the existing setup. Then test the experience.",
+            "ar": "نفحص الإعدادات الحالية. وبعدها نختبر التجربة."
+          },
+          "size": 42,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "heading"
+        },
+        {
+          "type": "line",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 670,
+          "x2": 1232,
+          "y2": 670,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 683,
+          "w": 1080,
+          "h": 24,
+          "text": {
+            "en": "Concrete · Proposed collaboration · Illustrative UI and fictional records",
+            "ar": "كونكريت · تعاون مقترح · واجهات توضيحية وسجلات خيالية"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "framing"
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 1150,
+          "y": 683,
+          "w": 82,
+          "h": 25,
+          "text": {
+            "en": "07 / 07",
+            "ar": "07 / 07"
+          },
+          "size": 15,
+          "color": "#68645E",
+          "bold": false,
+          "align": "end",
+          "ltr": true,
+          "role": "framing"
+        },
+        {
+          "type": "rect",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 48,
+          "y": 190,
+          "w": 369,
+          "h": 394,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "key": "icon-file",
+          "x": 75,
+          "y": 214,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 132,
+          "y": 215,
+          "w": 252,
+          "h": 40,
+          "text": {
+            "en": "2023 contract",
+            "ar": "عقد ٢٠٢٣"
+          },
+          "size": 25,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 76,
+          "y": 285,
+          "w": 284,
+          "h": 4,
+          "fill": "#E6E3DE",
+          "line": "#E6E3DE",
+          "radius": 0
+        },
+        {
+          "type": "rect",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 76,
+          "y": 307,
+          "w": 252,
+          "h": 4,
+          "fill": "#E6E3DE",
+          "line": "#E6E3DE",
+          "radius": 0
+        },
+        {
+          "type": "rect",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 76,
+          "y": 329,
+          "w": 268,
+          "h": 4,
+          "fill": "#E6E3DE",
+          "line": "#E6E3DE",
+          "radius": 0
+        },
+        {
+          "type": "rect",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "x": 70,
+          "y": 365,
+          "w": 325,
+          "h": 124,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "text",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "x": 90,
+          "y": 384,
+          "w": 285,
+          "h": 89,
+          "text": {
+            "en": "“CRM URL pop up\nintegration”",
+            "ar": "“CRM URL pop up\nintegration”"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 113.196,
+          "until": null,
+          "slot": null,
+          "x": 76,
+          "y": 529,
+          "w": 304,
+          "h": 34,
+          "text": {
+            "en": "November 2023 · p. 4",
+            "ar": "نوفمبر ٢٠٢٣ · ص. ٤"
+          },
+          "size": 20,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "x": 76,
+          "y": 497,
+          "w": 304,
+          "h": 30,
+          "text": {
+            "en": "Current operation unverified.",
+            "ar": "التشغيل الحالي غير متحقق منه."
+          },
+          "size": 18,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "key": "icon-settings",
+          "x": 467,
+          "y": 256,
+          "w": 44,
+          "h": 44
+        },
+        {
+          "type": "text",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "x": 467,
+          "y": 318,
+          "w": 273,
+          "h": 81,
+          "text": {
+            "en": "Inspect the\nconfiguration",
+            "ar": "نفحص\nالإعدادات"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 123.098,
+          "until": null,
+          "slot": null,
+          "x": 467,
+          "y": 425,
+          "w": 273,
+          "h": 83,
+          "text": {
+            "en": "Smallest supported\nimprovement",
+            "ar": "أبسط تحسين\nتدعمه الأنظمة"
+          },
+          "size": 23,
+          "color": "#68645E",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 116.272,
+          "until": null,
+          "slot": null,
+          "x": 420,
+          "y": 399,
+          "x2": 451,
+          "y2": 399,
+          "color": "#965318",
+          "width": 2,
+          "arrow": true
+        },
+        {
+          "type": "rect",
+          "at": 123.098,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 790,
+          "y": 243,
+          "w": 442,
+          "h": 345,
+          "fill": "#FFFFFF",
+          "line": "#E6E3DE",
+          "radius": 12
+        },
+        {
+          "type": "image",
+          "at": 123.098,
+          "until": null,
+          "slot": "workspace.test",
+          "key": "icon-call",
+          "x": 814,
+          "y": 266,
+          "w": 29,
+          "h": 29
+        },
+        {
+          "type": "text",
+          "at": 123.098,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 859,
+          "y": 263,
+          "w": 334,
+          "h": 41,
+          "text": {
+            "en": "Authorized test call",
+            "ar": "مكالمة اختبار مصرح بها"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 123.098,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 790,
+          "y": 325,
+          "x2": 1232,
+          "y2": 325,
+          "color": "#E6E3DE",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "text",
+          "at": 123.098,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 814,
+          "y": 347,
+          "w": 387,
+          "h": 41,
+          "text": {
+            "en": "+20 ••• 410",
+            "ar": "+20 ••• 410"
+          },
+          "size": 27,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": true,
+          "role": "ui"
+        },
+        {
+          "type": "image",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "key": "zoho",
+          "x": 814,
+          "y": 408,
+          "w": 73,
+          "h": 26
+        },
+        {
+          "type": "text",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 908,
+          "y": 405,
+          "w": 293,
+          "h": 38,
+          "text": {
+            "en": "T101 · Exchange",
+            "ar": "T101 · استبدال"
+          },
+          "size": 23,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "rect",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 812,
+          "y": 461,
+          "w": 399,
+          "h": 100,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 8
+        },
+        {
+          "type": "image",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "key": "icon-file",
+          "x": 832,
+          "y": 479,
+          "w": 25,
+          "h": 25
+        },
+        {
+          "type": "text",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 872,
+          "y": 476,
+          "w": 312,
+          "h": 33,
+          "text": {
+            "en": "Latest recorded note",
+            "ar": "آخر ملاحظة مسجلة"
+          },
+          "size": 18,
+          "color": "#965318",
+          "bold": false,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "text",
+          "at": 130.713,
+          "until": null,
+          "slot": "workspace.test",
+          "x": 832,
+          "y": 520,
+          "w": 349,
+          "h": 35,
+          "text": {
+            "en": "Branch review pending.",
+            "ar": "بانتظار مراجعة الفرع."
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        },
+        {
+          "type": "line",
+          "at": 123.098,
+          "until": null,
+          "slot": null,
+          "x": 744,
+          "y": 399,
+          "x2": 780,
+          "y2": 399,
+          "color": "#965318",
+          "width": 2,
+          "arrow": true
+        },
+        {
+          "type": "text",
+          "at": 129.462,
+          "until": null,
+          "slot": null,
+          "x": 467,
+          "y": 616,
+          "w": 746,
+          "h": 35,
+          "text": {
+            "en": "Start the call with existing customer context.",
+            "ar": "نبدأ المكالمة بمعلومات العميل الموجودة."
+          },
+          "size": 24,
+          "color": "#262626",
+          "bold": true,
+          "align": "start",
+          "ltr": false,
+          "role": "ui"
+        }
+      ],
+      "notes": [
+        {
+          "en": "New GRINDCTRL proposal; no existing Concrete/Centro relationship or implemented integration. The customer workflow is reported, not independently tested. Native product edition, screen-pop target, permissions and actual screen geometry are unverified. All visible data and interfaces are illustrative.",
+          "ar": "مقترح جديد لـGRINDCTRL؛ لا يوجد تنفيذ سابق أو علاقة حالية بكونكريت أو Centro. طريقة العمل بحسب إفادة المستخدم ولم تُختبر مستقلًا. النسخة والواجهة والـpop-up والصلاحيات وشكل الشاشات الفعلية غير متحقق منها. كل البيانات والواجهات توضيحية."
+        },
+        {
+          "en": "Caller-number association is not authentication. Existing verification and permissions apply. No AI, ticket write, refund decision, live connector or measured savings are shown. The first technical step is inspecting the existing contracted CRM URL pop up integration (November 2023, PDF page 4).",
+          "ar": "ربط رقم المتصل لا يثبت هويته. تظل إجراءات التحقق والصلاحيات مطلوبة. لا يوجد AI أو تعديل تذكرة أو قرار استرداد أو ربط حي أو نتائج توفير مقاسة. البداية التقنية فحص بند CRM URL pop up integration في عقد نوفمبر ٢٠٢٣، صفحة PDF رقم ٤."
+        },
+        {
+          "en": "Narration cues for this scene:",
+          "ar": "توقيتات التعليق الصوتي للمشهد:"
+        },
+        {
+          "en": "C40 · 113.196–115.921s · وأول خطوة مش إننا نبني System جديد من الصفر. · Cut to the practical existing-configuration inspection.",
+          "ar": "C40 · 113.196–115.921 ثانية · وأول خطوة مش إننا نبني System جديد من الصفر."
+        },
+        {
+          "en": "C41 · 116.272–120.288s · هنبدأ نراجع الـIntegration والـPop-up الموجودين بالفعل بين Genesys وZoho، · Highlight the exact 2023 contract scope and existing pop-up configuration.",
+          "ar": "C41 · 116.272–120.288 ثانية · هنبدأ نراجع الـIntegration والـPop-up الموجودين بالفعل بين Genesys وZoho،"
+        },
+        {
+          "en": "C42 · 120.490–122.802s · ونشوف إيه اللي شغال وإيه اللي محتاج يتظبط. · Keep the existing-configuration inspection in view; current operation is unverified.",
+          "ar": "C42 · 120.490–122.802 ثانية · ونشوف إيه اللي شغال وإيه اللي محتاج يتظبط."
+        },
+        {
+          "en": "C43 · 123.098–127.510s · بعدها نحدد أنسب Solution، ونجرّبه مع فريق Concrete من خلال Test Calls. · Reveal the smallest-supported-improvement label and authorized test-call workspace.",
+          "ar": "C43 · 123.098–127.510 ثانية · بعدها نحدد أنسب Solution، ونجرّبه مع فريق Concrete من خلال Test Calls."
+        },
+        {
+          "en": "C44 · 127.842–129.135s · هدفنا بسيط وواضح: · Hold the planned test; keep proposal status explicit.",
+          "ar": "C44 · 127.842–129.135 ثانية · هدفنا بسيط وواضح:"
+        },
+        {
+          "en": "C45 · 129.462–130.561s · نخلي الـAgent يبدأ · Focus the employee call in the planned test workspace.",
+          "ar": "C45 · 129.462–130.561 ثانية · نخلي الـAgent يبدأ"
+        },
+        {
+          "en": "C46 · 130.713–134.563s · كل Call وهو عنده الـCustomer Context اللي يساعده يقدم Service أفضل، · Reveal existing ticket context in that test workspace.",
+          "ar": "C46 · 130.713–134.563 ثانية · كل Call وهو عنده الـCustomer Context اللي يساعده يقدم Service أفضل،"
+        },
+        {
+          "en": "C47 · 134.819–136.836s · من غير خطوات يدوية مش ضرورية. · Hold the final call plus context; no additional manual search shown.",
+          "ar": "C47 · 134.819–136.836 ثانية · من غير خطوات يدوية مش ضرورية."
+        }
+      ],
+      "motion": {
+        "steps": 1,
+        "interval": 1000,
+        "fade": 350
+      },
+      "slots": {
+        "workspace.test": {
+          "x": 790,
+          "y": 243,
+          "w": 442,
+          "h": 345,
+          "anchors": {
+            "caller_number": [
+              0.05,
+              0.3,
+              0.87,
+              0.12
+            ],
+            "latest_note": [
+              0.05,
+              0.63,
+              0.9,
+              0.29
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "timeline": {
+    "duration": 137.090612,
+    "audio_sha256": "6eb97961a8a1f7adb87e8726d20fc3c1046f6bcf81e8471b6260958b6ad56623",
+    "audio_original": "grindctrl_voiceover_ar.mp3",
+    "audio_language": "Egyptian Business Arabic",
+    "chapters": [
+      {
+        "id": "S1",
+        "name": "The imagined outcome",
+        "start": 0,
+        "end": 16.395,
+        "index": 0
+      },
+      {
+        "id": "S2",
+        "name": "The reported manual search",
+        "start": 16.395,
+        "end": 33.78,
+        "index": 1
+      },
+      {
+        "id": "S3",
+        "name": "Proposed lookup and employee choice",
+        "start": 33.78,
+        "end": 52.546,
+        "index": 2
+      },
+      {
+        "id": "S4",
+        "name": "A fictional exchange follow-up",
+        "start": 52.546,
+        "end": 73.02,
+        "index": 3
+      },
+      {
+        "id": "S5",
+        "name": "Same case, different experience",
+        "start": 73.02,
+        "end": 94.163,
+        "index": 4
+      },
+      {
+        "id": "S6",
+        "name": "Expected benefits to validate",
+        "start": 94.163,
+        "end": 113.196,
+        "index": 5
+      },
+      {
+        "id": "S7",
+        "name": "Inspect the existing setup and test",
+        "start": 113.196,
+        "end": 137.091,
+        "index": 6
+      }
+    ],
+    "cues": [
+      {
+        "id": "C01",
+        "phrase_id": 1,
+        "start": 0.0,
+        "end": 2.66,
+        "scene_id": "S1",
+        "spoken_phrase": "تخيلوا معايا موظف Customer Service في Concrete،",
+        "asr_raw": "تخيالوا معي موظف كستيمر سيرفز في كونكريت",
+        "visual_event": "Show the complete imagined call-and-history workspace immediately.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C02",
+        "phrase_id": 2,
+        "start": 2.906,
+        "end": 3.857,
+        "scene_id": "S1",
+        "spoken_phrase": "جاله Call من عميل.",
+        "asr_raw": "جالوا call من عميل",
+        "visual_event": "Focus the already-visible incoming call.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C03",
+        "phrase_id": 3,
+        "start": 4.417,
+        "end": 6.45,
+        "scene_id": "S1",
+        "spoken_phrase": "بدل ما يبدأ يدور على بياناته من الأول،",
+        "asr_raw": "بدل ما يبدأ يدور على بياناتهم من الأول",
+        "visual_event": "Hold the outcome-first workspace; no manual search is illustrated here.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C04",
+        "phrase_id": 4,
+        "start": 6.9,
+        "end": 8.521,
+        "scene_id": "S1",
+        "spoken_phrase": "تخيلوا لو الـTickets السابقة،",
+        "asr_raw": "تخيلوا لو تيكتز السابقة",
+        "visual_event": "Focus the existing previous-ticket row.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C05",
+        "phrase_id": 5,
+        "start": 8.704,
+        "end": 12.844,
+        "scene_id": "S1",
+        "spoken_phrase": "والـStatus بتاع كل Ticket، والـLatest Update، ظهروا قدامه مع المكالمة.",
+        "asr_raw": "والستيتس بتعكل لتكت والليتس تأبديت هروا قداموا مع المكلمة",
+        "visual_event": "Focus status; move focus to the latest note at C05-note.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C06",
+        "phrase_id": 6,
+        "start": 13.184,
+        "end": 15.86,
+        "scene_id": "S1",
+        "spoken_phrase": "دي ببساطة التجربة اللي GRINDCTRL بتقترحها.",
+        "asr_raw": "هذه بساطة التجربة لغرانيين كنتول بتقترحها",
+        "visual_event": "Hold the proposed outcome; GRINDCTRL framing confirms a proposal.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C07",
+        "phrase_id": 7,
+        "start": 16.395,
+        "end": 18.951,
+        "scene_id": "S2",
+        "spoken_phrase": "النهارده، حسب الـWorkflow الحالي اللي اتشرح لنا،",
+        "asr_raw": "النهاردة حسب الوركفلو الحالي اللي تشرح لنا",
+        "visual_event": "Cut to the reported current workflow: call and separate Desk search.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C08",
+        "phrase_id": 8,
+        "start": 19.179,
+        "end": 21.271,
+        "scene_id": "S2",
+        "spoken_phrase": "الموظف بيستقبل الـCall على Genesys.",
+        "asr_raw": "الموظف بيستقبل الكل على جانسيس",
+        "visual_event": "Focus the visible Genesys call.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C09",
+        "phrase_id": 9,
+        "start": 21.546,
+        "end": 24.179,
+        "scene_id": "S2",
+        "spoken_phrase": "ولو محتاج يعرف العميل كان عنده Tickets إيه قبل كده،",
+        "asr_raw": "ولو محتاجه أعرف العميل كان عنده تكتس أي قبل كده",
+        "visual_event": "Focus the separate Desk search field.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C10",
+        "phrase_id": 10,
+        "start": 24.621,
+        "end": 27.677,
+        "scene_id": "S2",
+        "spoken_phrase": "بيضطر يعمل Manual Search برقم التليفون على Zoho Desk.",
+        "asr_raw": "بطريقة يعمل منيول سرچ برقم التلفون على زوه دسك",
+        "visual_event": "Manually carry the masked number into Desk search; pointer chooses search.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C11",
+        "phrase_id": 11,
+        "start": 28.108,
+        "end": 29.292,
+        "scene_id": "S2",
+        "spoken_phrase": "البيانات موجودة بالفعل،",
+        "asr_raw": "البايانات موجودة بالفعل",
+        "visual_event": "Reveal the existing Contact A ticket result.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C12",
+        "phrase_id": 12,
+        "start": 29.636,
+        "end": 33.316,
+        "scene_id": "S2",
+        "spoken_phrase": "لكن الموظف محتاج يعمل كذا خطوة عشان يوصل للـCustomer History.",
+        "asr_raw": "لكن الموظف محتاجي يعمل كزة خطوة عشان يوصل لكستمر هستري",
+        "visual_event": "Reveal the latest note beneath the manually retrieved ticket.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C13",
+        "phrase_id": 13,
+        "start": 33.78,
+        "end": 35.048,
+        "scene_id": "S3",
+        "spoken_phrase": "في الـSolution اللي بنقترحه،",
+        "asr_raw": "في السلوشن الذي نقترحه",
+        "visual_event": "Change to the proposed lookup scenario.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C14",
+        "phrase_id": 14,
+        "start": 35.311,
+        "end": 36.352,
+        "scene_id": "S3",
+        "spoken_phrase": "أول ما الـCall توصل،",
+        "asr_raw": "أول ملكال توصل",
+        "visual_event": "Incoming call appears, anchored at the same position.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C15",
+        "phrase_id": 15,
+        "start": 36.585,
+        "end": 40.51,
+        "scene_id": "S3",
+        "spoken_phrase": "النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup في Zoho Desk.",
+        "asr_raw": "النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup في زوهو دسك.",
+        "visual_event": "Focus caller number and trace an authorized lookup toward Desk.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C16",
+        "phrase_id": 16,
+        "start": 40.905,
+        "end": 42.801,
+        "scene_id": "S3",
+        "spoken_phrase": "ولما يلاقي الـCustomer Record المناسب،",
+        "asr_raw": "و لما يلاقي الـ Customer Record المناسب",
+        "visual_event": "Associated Contact A record appears; no verified-identity badge.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C17",
+        "phrase_id": 17,
+        "start": 43.056,
+        "end": 47.687,
+        "scene_id": "S3",
+        "spoken_phrase": "الـTicket History والـLatest Updates يظهروا للـAgent، من غير ما يضطر يعمل Search بنفسه.",
+        "asr_raw": "التكتحستي والأسفات الأسفى يظهر للأجنت من غير ما يطر يعمل سرح بنفسه",
+        "visual_event": "Reveal ticket history and its source note beside the ongoing call.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C18",
+        "phrase_id": 18,
+        "start": 48.104,
+        "end": 50.083,
+        "scene_id": "S3",
+        "spoken_phrase": "ولو الرقم مرتبط بأكتر من Customer،",
+        "asr_raw": "ولو الرقم مرتبط بأكثر من كستيمر",
+        "visual_event": "Show a two-record chooser for the shared-number scenario.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C19",
+        "phrase_id": 19,
+        "start": 50.294,
+        "end": 51.957,
+        "scene_id": "S3",
+        "spoken_phrase": "الموظف بيختار الـRecord الصحيح.",
+        "asr_raw": "الموظف بيختار الركد الصحيح",
+        "visual_event": "Highlight employee choice of Contact A; return to its context at the measured end of this phrase.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C20",
+        "phrase_id": 20,
+        "start": 52.546,
+        "end": 53.671,
+        "scene_id": "S4",
+        "spoken_phrase": "خلينا ناخد مثال عملي.",
+        "asr_raw": "خلينا ناخد مثال عمله",
+        "visual_event": "Cut to a focused fictional exchange case.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C21",
+        "phrase_id": 21,
+        "start": 54.089,
+        "end": 57.999,
+        "scene_id": "S4",
+        "spoken_phrase": "Customer بيتصل عشان يعمل Follow-up على Exchange Request كان قدمه قبل كده.",
+        "asr_raw": "كستيمر يتصل عشان يعمل فالوووب على اكسشينج ركوست كان قدامه قبل كده",
+        "visual_event": "Show the exchange follow-up ticket title alongside the ongoing call.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C22",
+        "phrase_id": 22,
+        "start": 58.42,
+        "end": 61.209,
+        "scene_id": "S4",
+        "spoken_phrase": "الـAgent بيشوف الـTicket السابقة، والـStatus بتاعها،",
+        "asr_raw": "الأيجنت يشوف التكتة السابقة والستيتس بتاعها",
+        "visual_event": "Highlight T101 and its pending branch-review status.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C23",
+        "phrase_id": 23,
+        "start": 61.437,
+        "end": 64.518,
+        "scene_id": "S4",
+        "spoken_phrase": "ويلاقي في الـLatest Note إن الطلب لسه Pending Branch Review.",
+        "asr_raw": "نحن نجد نحو الأخيرة في تطلب لسة \"بنج رفو\"",
+        "visual_event": "Reveal and focus the latest recorded note: branch review is still pending.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C24",
+        "phrase_id": 24,
+        "start": 64.869,
+        "end": 68.112,
+        "scene_id": "S4",
+        "spoken_phrase": "بدل ما يبدأ من الصفر ويسأل العميل عن كل التفاصيل تاني،",
+        "asr_raw": "بدل ما يبدأ من الصف رويس ألالعميل عن كل التفاصيل تاني",
+        "visual_event": "Keep the case in view; no extra customer-question checklist or ticket mutation.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C25",
+        "phrase_id": 25,
+        "start": 68.416,
+        "end": 72.613,
+        "scene_id": "S4",
+        "spoken_phrase": "يقدر يشوف آخر Update، ويفهم الـCase، ويكمل الـFollow-up من نفس النقطة.",
+        "asr_raw": "يقدر يشوف آخر أبديت ويفهم الكيس ويكمل الفالوواب من نفس النقطة",
+        "visual_event": "Connect the visible source note to the employee conversation cue.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C26",
+        "phrase_id": 26,
+        "start": 73.02,
+        "end": 74.87,
+        "scene_id": "S5",
+        "spoken_phrase": "نفس الـCustomer، ونفس الـTickets،",
+        "asr_raw": "نفس البيت والتكتبات",
+        "visual_event": "Cut to a matched current/proposed comparison, with the same masked number and T101.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C27",
+        "phrase_id": 27,
+        "start": 75.025,
+        "end": 76.716,
+        "scene_id": "S5",
+        "spoken_phrase": "لكن الـWorkflow اختلف تمامًا.",
+        "asr_raw": "لكن الوركفلو اختلف تماماً",
+        "visual_event": "Hold the matched comparison; neither side creates new records.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C28",
+        "phrase_id": 28,
+        "start": 77.147,
+        "end": 77.903,
+        "scene_id": "S5",
+        "spoken_phrase": "قبل التحسين،",
+        "asr_raw": "قبل التحسين",
+        "visual_event": "Focus the current-workflow side.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C29",
+        "phrase_id": 29,
+        "start": 78.106,
+        "end": 82.363,
+        "scene_id": "S5",
+        "spoken_phrase": "الـAgent محتاج يعمل Manual Search، ويفتح الـTicket، ويدور على آخر Update.",
+        "asr_raw": "الأجنت محتاجة يعمل مانيول سرچ ويفتح التكت ويدور على أخر أبديت",
+        "visual_event": "Show phone-number search, T101 and its latest note on the current side.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C30",
+        "phrase_id": 30,
+        "start": 82.654,
+        "end": 84.058,
+        "scene_id": "S5",
+        "spoken_phrase": "بعد الـIntegration المقترح،",
+        "asr_raw": "بعد الانتجريشن المقترح",
+        "visual_event": "Focus the proposed-workflow side.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C31",
+        "phrase_id": 31,
+        "start": 84.277,
+        "end": 86.15,
+        "scene_id": "S5",
+        "spoken_phrase": "الـCustomer Context بيظهر مع الـCall.",
+        "asr_raw": "الكوستمر كونتكست بيظهر مع الكال",
+        "visual_event": "Reveal context beside the same call on the proposed side.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C32",
+        "phrase_id": 32,
+        "start": 86.581,
+        "end": 88.485,
+        "scene_id": "S5",
+        "spoken_phrase": "الفرق مش إننا بنضيف بيانات جديدة.",
+        "asr_raw": "الفرق مش اننا نضيف بايانات جديدة",
+        "visual_event": "Emphasize identical existing ticket identity on both sides; no new-data claim.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C33",
+        "phrase_id": 33,
+        "start": 88.871,
+        "end": 91.5,
+        "scene_id": "S5",
+        "spoken_phrase": "الفرق إننا بنخلي البيانات الموجودة بالفعل",
+        "asr_raw": "الفرق أننا بنخلي البعينات الموجودة بالفعل",
+        "visual_event": "Keep the same ticket and note, with a simple association cue.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C34",
+        "phrase_id": 34,
+        "start": 91.656,
+        "end": 93.764,
+        "scene_id": "S5",
+        "spoken_phrase": "متاحة للموظف في الوقت اللي محتاجها فيه.",
+        "asr_raw": "متاح للموظف الوقت اللي محتاجها فيه",
+        "visual_event": "Focus the note already available on the proposed side.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C35",
+        "phrase_id": 35,
+        "start": 94.163,
+        "end": 101.396,
+        "scene_id": "S6",
+        "spoken_phrase": "بالنسبة لـConcrete، ده ممكن يقلل خطوات الـManual Search، ويسهّل الـFollow-up، ويساعد الـAgents يفهموا الـCustomer Cases بشكل أسرع.",
+        "asr_raw": "بالنسبة الكنكريت، ده ممكن يقلل الخطوات المانيول سرچ وسهل الفلوو اب ويساعد الاجنسي فهموا الكستمر كيسيز بشكل أسرع",
+        "visual_event": "Show the first expected-benefit annotation; disclose follow-up and informed-conversation annotations at C35-followup.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C36",
+        "phrase_id": 36,
+        "start": 101.75,
+        "end": 105.876,
+        "scene_id": "S6",
+        "spoken_phrase": "وده ينعكس على الـAgent Experience، وممكن يحسّن الـCustomer Experience كمان.",
+        "asr_raw": "و هذا ينعكس على الأجنت تشاركة و يمكن يحسن تشاركة كوستمري.",
+        "visual_event": "Focus the source note in the enlarged workspace.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C37",
+        "phrase_id": 37,
+        "start": 106.294,
+        "end": 107.977,
+        "scene_id": "S6",
+        "spoken_phrase": "وطبعًا دي Expected Benefits،",
+        "asr_raw": "وطبعا دي اكسبكتد بانفت",
+        "visual_event": "Show Expected benefits label, replacing any implication of measured outcomes.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C38",
+        "phrase_id": 38,
+        "start": 108.229,
+        "end": 111.094,
+        "scene_id": "S6",
+        "spoken_phrase": "هنحتاج نقيسها ونتأكد منها من خلال Pilot حقيقي،",
+        "asr_raw": "سنحتاج نقسها و نتأكد منها من خلال طريقة حقيقة",
+        "visual_event": "Hold the pilot-validation label while narration describes measurement.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C39",
+        "phrase_id": 39,
+        "start": 111.326,
+        "end": 112.85,
+        "scene_id": "S6",
+        "spoken_phrase": "مش مجرد أرقام أو وعود.",
+        "asr_raw": "مش مجرد أرقام أو وعود",
+        "visual_event": "Hold the pilot expectation label; no percentages or monetary promises.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C40",
+        "phrase_id": 40,
+        "start": 113.196,
+        "end": 115.921,
+        "scene_id": "S7",
+        "spoken_phrase": "وأول خطوة مش إننا نبني System جديد من الصفر.",
+        "asr_raw": "و أول خطوة ليس لن نبني سستم جديد من الصفر",
+        "visual_event": "Cut to the practical existing-configuration inspection.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C41",
+        "phrase_id": 41,
+        "start": 116.272,
+        "end": 120.288,
+        "scene_id": "S7",
+        "spoken_phrase": "هنبدأ نراجع الـIntegration والـPop-up الموجودين بالفعل بين Genesys وZoho،",
+        "asr_raw": "سنبدأ نراجع الانتجريشن والبابوب الموجودين بالفعل بين جانسس وزوه",
+        "visual_event": "Highlight the exact 2023 contract scope and existing pop-up configuration.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C42",
+        "phrase_id": 42,
+        "start": 120.49,
+        "end": 122.802,
+        "scene_id": "S7",
+        "spoken_phrase": "ونشوف إيه اللي شغال وإيه اللي محتاج يتظبط.",
+        "asr_raw": "ونشوف إلي شغال وإلي محتاجة زبت",
+        "visual_event": "Keep the existing-configuration inspection in view; current operation is unverified.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C43",
+        "phrase_id": 43,
+        "start": 123.098,
+        "end": 127.51,
+        "scene_id": "S7",
+        "spoken_phrase": "بعدها نحدد أنسب Solution، ونجرّبه مع فريق Concrete من خلال Test Calls.",
+        "asr_raw": "بعدها نحدد أنسب سلوشن ونجربه مع فريق كونكريت من خلال تست كولز",
+        "visual_event": "Reveal the smallest-supported-improvement label and authorized test-call workspace.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C44",
+        "phrase_id": 44,
+        "start": 127.842,
+        "end": 129.135,
+        "scene_id": "S7",
+        "spoken_phrase": "هدفنا بسيط وواضح:",
+        "asr_raw": "هدافنا بسيط ووضح",
+        "visual_event": "Hold the planned test; keep proposal status explicit.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C45",
+        "phrase_id": 45,
+        "start": 129.462,
+        "end": 130.561,
+        "scene_id": "S7",
+        "spoken_phrase": "نخلي الـAgent يبدأ",
+        "asr_raw": "نخلي الاجنت يبدأ",
+        "visual_event": "Focus the employee call in the planned test workspace.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C46",
+        "phrase_id": 46,
+        "start": 130.713,
+        "end": 134.563,
+        "scene_id": "S7",
+        "spoken_phrase": "كل Call وهو عنده الـCustomer Context اللي يساعده يقدم Service أفضل،",
+        "asr_raw": "كل كل كل و هو عنده الكستمار كونتكست الذي يساعده يقدم سيرفس أفضل",
+        "visual_event": "Reveal existing ticket context in that test workspace.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      },
+      {
+        "id": "C47",
+        "phrase_id": 47,
+        "start": 134.819,
+        "end": 136.836,
+        "scene_id": "S7",
+        "spoken_phrase": "من غير خطوات يدوية مش ضرورية.",
+        "asr_raw": "منذ اخطاءات يدوية مجدورورية",
+        "visual_event": "Hold the final call plus context; no additional manual search shown.",
+        "timing_method": "Measured speech interval from source waveform, checked with local Whisper ASR; not proportional script timing",
+        "transcript_method": "ASR + supplied reference for code-switched spelling; raw ASR retained",
+        "confidence": "phrase boundary measured; verbatim spelling reference-assisted",
+        "estimated_boundary_tolerance_ms": 150
+      }
+    ],
+    "subphrase_cues": [
+      {
+        "id": "C05-note",
+        "parent": "C05",
+        "start": 10.26,
+        "end": 12.844,
+        "scene_id": "S1",
+        "spoken_phrase": "والـLatest Update، ظهروا قدامه مع المكالمة.",
+        "visual_event": "Focus the latest source note in the imagined outcome.",
+        "timing_method": "Whisper native segment boundary in the completed padded 0–16.2s pass; within measured C05 interval",
+        "estimated_boundary_tolerance_ms": 200
+      },
+      {
+        "id": "C35-followup",
+        "parent": "C35",
+        "start": 97.323,
+        "end": 101.396,
+        "scene_id": "S6",
+        "spoken_phrase": "ويسهّل الـFollow-up، ويساعد الـAgents يفهموا الـCustomer Cases بشكل أسرع.",
+        "asr_raw": " وسهل الفلوو اب ويساعد الاجنسي فهموا الكستمر كيسيز بشكل أسرع",
+        "visual_event": "Reveal follow-up and informed-conversation annotations together during this recognized subphrase; no finer word-level boundary is asserted.",
+        "timing_method": "Native Whisper segment offset 3.24s from ASR input starting 80ms before measured C35; bounded by measured phrase end",
+        "estimated_boundary_tolerance_ms": 200
+      }
+    ],
+    "method_note": "Silence gaps measured on decoded original audio at -35 dB, 150 ms. Every speech interval transcribed locally with Whisper small through sherpa-onnx. Eight-second silence was appended only to ASR analysis windows to avoid sherpa decoder token-budget truncation; original audio was never edited. Phrase start/end are measured waveform intervals, not claimed word-perfect forced alignment. Vendor/English spellings are reference-assisted; uncertain raw recognition is retained for audit."
+  },
+  "sources": [
+    {
+      "file": "User report in this session",
+      "pages": [],
+      "supports": {
+        "en": "Manual phone search works; automatic call context reportedly absent. Not independently tested.",
+        "ar": "البحث اليدوي بالرقم يعمل، والمعلومات لا تظهر تلقائيًا بحسب الإفادة. لم يُختبر مستقلًا."
+      }
+    },
+    {
+      "file": "Concrete contract (29-11-2023).pdf",
+      "pages": [
+        4
+      ],
+      "supports": {
+        "en": "Exact scope: CRM URL pop up integration. Current operation unverified.",
+        "ar": "البند: CRM URL pop up integration. التشغيل الحالي غير متحقق منه."
+      }
+    }
+  ],
+  "fixtures": {
+    "fictional": true
+  },
+  "ui_fidelity": {
+    "status": "conceptual",
+    "concrete_screenshots_verified": false,
+    "native_layout_verified": false,
+    "display_model": "separate illustrative context window; actual target to validate"
+  }
+}
