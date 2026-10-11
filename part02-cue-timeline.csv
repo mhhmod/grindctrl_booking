@@ -1,0 +1,83 @@
+cue,scene,speech_start_seconds,speech_end_seconds,semantic_description,raw_Arabic_ASR_not_verbatim
+C01,S1,0.000000,0.992766,Part 01 recap,في الفيديو الأول
+C02,S1,1.146440,2.246032,"The idea, simply",شوفنا الفكرة بصوتا
+C03,S1,2.747324,3.533515,The call arrives,الكول توصل
+C04,S1,3.788073,6.001383,The agent sees customer context,سوف تجد أجن تلاقي الناس في المناسبة
+C05,S1,6.566327,7.083379,This time,المرودي
+C06,S1,7.485918,9.187574,Inside the workflow,"خلين ننوط ""خلقوا"" على ""تحديد"""
+C07,S1,9.661701,12.357211,Follow one call through Genesys,سنتابع مكلمة واحدة من أول متدخل جانسس
+C08,S1,12.715283,14.839365,Find the correct ticket,لحدما الموظف يوصل للتكتصح
+C09,S1,15.084626,15.906485,Continue the follow-up,نكمل الفلوات
+C10,S1,16.382789,18.983175,GRINDCTRL proposes this experience,هذا أنا موزق للتجربة اللي قرين كنطرول بتقترحها
+C11,S1,19.309410,21.643651,This is not a deployed Concrete system,ليس نظام بأن نشغل بالفعل عند The Concrete
+C12,S2,22.309478,24.642766,Call assigned to an agent,أولما الكول تتوزع على الموظف في جانسس
+C13,S2,24.824082,27.384286,Available call information,نحتاج نعرف ما المعلومات المتاحة عن المكلمة
+C14,S2,27.810045,29.601066,"Caller number, if available",لو رقم المتاصل متاح في الستاب
+C15,S2,29.820884,33.203220,An authorized lookup key,بنستخدمه كالوكوب كي للبحث عن الكاستم الركد في زوجه دسك.
+C16,S2,33.663946,34.838050,A matching detail,هنا في تفصيل المهم
+C17,S2,35.257551,37.583243,Different number formats,الرقم يمكن أن يكون مكتوب بأكثر منصيغة
+C18,S2,37.962925,39.746871,Handle formats correctly,فلازم الماتشن يتعامل معها صح
+C19,S2,40.202313,40.652336,Also,أبردو
+C20,S2,40.893197,42.661451,A number associated with a record,مجرد أن الرقم طابق ركيد
+C21,S2,42.864399,44.902608,Association is not identity verification,دمش معنى النهوية المتصلة أكدت
+C22,S3,45.488050,47.522494,One clear customer record,لو البحث يرغب بكستمركورد واضح
+C23,S3,47.743741,49.617506,Within the agent’s permitted access,وبحسب الأكسس المسموح للموظف
+C24,S3,49.874512,51.822132,Show useful call context,بنعرض المعلومات التي تساعده في المكلمة
+C25,S3,52.151927,54.968458,Previous tickets and each ticket’s status,زي البروية تكت و الستاتس بتعكل لتكت
+C26,S3,55.163424,57.734649,Assigned agent and latest recorded update,ومن الأساين دا جنت وخر أبديت متسبيل
+C27,S3,58.215261,61.240839,Agent selects the relevant ticket,الموظف يقدر يختار التكت المرتابطة بسبب الاتصال
+C28,S3,61.468390,64.095556,Avoid searching again across screens,بدل ما يتنقل بن ششات ويضور من أول و جديد
+C29,S3,64.447347,64.958095,Most importantly,والأهم
+C30,S3,65.222494,66.978481,Information stays in context,أن كل معلومة بين في مكانها
+C31,S3,67.239524,69.559705,No unrelated dashboard,مشووس الداشبورد مليانة بيانات ملحش لزم
+C32,S4,70.104172,71.172200,A fictional example,خلين نتشوف مثال عملي
+C33,S4,71.632177,74.039365,Earlier exchange request,كستمر يتصل يتابع اكسشينج ركوست قديم
+C34,S4,74.523061,77.445964,Open ticket; inspect status and owner,نفتح التكت و نشوف الستاتس الفعلي والانر
+C35,S4,77.609819,78.682902,Latest existing note,وخر نوت موجودة
+C36,S4,79.111995,79.702585,In this example,في المسلدة
+C37,S4,79.963787,82.253424,Branch review is still pending,النوت بتقول أن مراجعة الفرع للسباندين
+C38,S4,82.744195,83.196485,Pay attention,خليباً
+C39,S4,83.458889,85.259932,This is the ticket’s note,دي معلومة مكتوبة جوة تكت
+C40,S4,85.440816,87.187574,It need not be the status field,"مش شر تتكون اسمي ""الستاتس نفسه"""
+C41,S4,87.635102,90.150000,Agent understands the last recorded position,كده الاجنت فهم آخر مقطع وصلت لها الحالة
+C42,S4,90.443537,93.644082,Continue without restarting every question,ويقدر يكمل مع العميل من غير ما يبدأ الأسئلة كلها تانية
+C43,S5,94.097846,97.381383,"One number, multiple customers",طيب لو نفس رقم التلفون موجود عند أكتر من كاستم
+C44,S5,97.968549,102.386553,Do not automatically choose and expose history,هنا مش منطق النظام يختار واحد الواحده ويعرى التاريخه كأنه كل حاجة مؤكدة
+C45,S5,102.776667,105.249002,Possible matches,المفروض تظهر الباسب الماتشز بشكل واضح
+C46,S5,105.558889,107.697528,Review permitted information,والاجنت يراجع المعلومات المسموح بها
+C47,S5,108.064490,111.391111,Select after agreed verification steps,ويحدد الركد الصحيح بعد خطوات التحقق المتفق عليها
+C48,S5,111.873288,116.653878,Speed without compromising accuracy or privacy,كده بنحافظ على سرعة الوصول المعلومة من غير من ضحي بالدقة أو خصوصية العملة
+C49,S6,117.093061,119.422404,Two different fallback conditions,وفي حلتين مختلفتين لازم منخلتش بينه
+C50,S6,119.955488,120.516735,First condition,أول حالة
+C51,S6,120.846440,121.651973,Lookup completed,البحث اشتغل
+C52,S6,121.851882,123.611723,No matching customer record,بس ما فيش كاستوم الركد متابق
+C53,S6,123.982336,127.541429,Existing manual search procedure,هنا الموظف يقدر يكمل بمانيول سرچ حسب الإجراءات الموجودة
+C54,S6,128.021701,128.557982,Second condition,تاني حيلا
+C55,S6,128.862313,131.034444,Zoho Desk unavailable or lookup failed,زوه دسك مش متاح أو اللوكوب فشل
+C56,S6,131.461678,133.904490,Show an error / unavailable state,يجب أن تظهر كأرر أو أستيقظة مستحيلة
+C57,S6,134.191995,136.076984,Do not report no tickets found,"مش رسالة بتقول ""نو تكتس فاون"""
+C58,S6,136.607415,137.304467,In either condition,وفي الحلتين
+C59,S6,137.515896,138.694762,The call continues,المكلمة نفسها تكمبل
+C60,S6,138.974195,141.328141,Keep the usual follow-up route,والموظف ما يفقدش طريقة المتابعة المعتادة
+C61,S7,142.326961,143.156009,Implementation transition (short ASR uncertain),هل نفسه؟
+C62,S7,143.633469,146.965828,Review contracted screen pop / integration,سنبدأ بمرجعة الاسكرين بوب والانتجريشن المسكورين في العوود
+C63,S7,147.218254,150.430794,Inspect actual Genesys and Desk configuration,ونشوف الكنفجراريشن الموجود فعلاً في جنسس وزوه دسك
+C64,S7,150.888617,153.536871,Use native features if sufficient,لو الناتف تقدر تحقق التجربة المطلوبة
+C65,S7,153.727619,154.214649,Use the suitable native configuration,نستخدمها
+C66,S7,154.688073,155.917687,If there is a real gap,ولو في جاب حيائية
+C67,S7,156.162766,158.247120,Smallest necessary approved integration layer,نحدد أصغر إنتجريشن لير مطلوبة
+C68,S7,158.674150,159.520726,In every case,وفكل الأحوال
+C69,S7,159.698798,161.093787,Preserve permissions,والتحديث عن التفضل المحفوظة
+C70,S7,161.375057,164.970816,Call arrival does not change ticket status,وما فيش تغيير تلقائي للتكتب ستاتس لمجرد ان المكلمة وصلت
+C71,S8,165.313265,166.772721,How will we know it works?,وزي نعرف ان التقربة نجحت
+C72,S8,167.250884,169.087347,A good-looking animation is insufficient,ليس سيكتفى أن الأنميشن شكلها حلو
+C73,S8,169.660068,172.203583,Authorized pilot test calls,"سنقوم بعمل ""Pilot"" بمكلمات اختبار مصرح بها"
+C74,S8,172.482766,175.058753,Compare manual and proposed workflows,ونقارن المانيول سرچ بالوركفلو المقترح
+C75,S8,175.652109,179.740771,Measure interactions and time to correct context,سنقس عدد الخطوات والوقت اللي الاجن بيخدوا عشان يوصل لمعلومة صحيحة
+C76,S8,180.146145,181.075896,Matching accuracy,ودقة المتحيخ
+C77,S8,181.349093,183.633946,Shared numbers and errors,والتعامل مع الأقام المشتركة والأرز
+C78,S8,184.168798,185.330680,When results are available,لما النتائك تبقى واضحة
+C79,S8,185.554308,187.901202,Establish the actual value for Concrete,مقدر نحدد القيمة الفعلية لكونكريت
+C80,S8,188.221156,189.320317,A sound first step,وديل بداية صح
+C81,S8,189.786009,191.310816,A testable experience,تجربة قابلة للاختبار
+C82,S8,191.615034,193.679365,Built on the existing systems,مبنية على الأنظمة الموجودة بالفعل

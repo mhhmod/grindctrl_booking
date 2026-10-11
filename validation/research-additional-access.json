@@ -1,0 +1,22 @@
+[
+  {
+    "key": "genesys-app-doc",
+    "url": "https://mypurecloud.github.io/client-app-sdk/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-api",
+    "url": "https://desk.zoho.com/DeskAPIDocument",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-product",
+    "url": "https://www.zoho.com/desk/ticketing-system.html",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-product",
+    "url": "https://www.genesys.com/capabilities/agent-workspace",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  }
+]

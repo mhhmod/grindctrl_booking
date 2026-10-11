@@ -1,0 +1,164 @@
+{
+  "source_sha256": "3839fb67298c6c043b91683d20083349130500554a5978313639edc3f04ccf78",
+  "source_container_duration": 194.037551,
+  "source_decoded_samples": 8555400,
+  "source_decoded_duration": 194.0,
+  "audio_peak": 0.333224892616272,
+  "audio_rms": 0.02873842604458332,
+  "videos": {
+    "en": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 5820,
+      "container_duration": 194.0,
+      "audio_duration": 194.0,
+      "audio_decoded_samples": 8555520,
+      "audio_coverage_seconds": 194.0,
+      "audio_windows": [
+        {
+          "source_start_seconds": 0,
+          "correlation_at_zero_lag": 0.9999273,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 24,
+          "correlation_at_zero_lag": 0.9998891,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 47,
+          "correlation_at_zero_lag": 0.9999027,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 73,
+          "correlation_at_zero_lag": 0.9998873,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 96,
+          "correlation_at_zero_lag": 0.9999139,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 122,
+          "correlation_at_zero_lag": 0.9999098,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 145,
+          "correlation_at_zero_lag": 0.9999201,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 169,
+          "correlation_at_zero_lag": 0.999953,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 188,
+          "correlation_at_zero_lag": 0.9999503,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 191,
+          "correlation_at_zero_lag": 0.9999426,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        }
+      ],
+      "complete_video_decode": "passed",
+      "sha256": "5e2a91a887dd8987aa1ada26cffccf2ce69fd27f5d749fba5f9c71364bab2169"
+    },
+    "ar": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 5820,
+      "container_duration": 194.0,
+      "audio_duration": 194.0,
+      "audio_decoded_samples": 8555520,
+      "audio_coverage_seconds": 194.0,
+      "audio_windows": [
+        {
+          "source_start_seconds": 0,
+          "correlation_at_zero_lag": 0.9999273,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 24,
+          "correlation_at_zero_lag": 0.9998891,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 47,
+          "correlation_at_zero_lag": 0.9999027,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 73,
+          "correlation_at_zero_lag": 0.9998873,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 96,
+          "correlation_at_zero_lag": 0.9999139,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 122,
+          "correlation_at_zero_lag": 0.9999098,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 145,
+          "correlation_at_zero_lag": 0.9999201,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 169,
+          "correlation_at_zero_lag": 0.999953,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 188,
+          "correlation_at_zero_lag": 0.9999503,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        },
+        {
+          "source_start_seconds": 191,
+          "correlation_at_zero_lag": 0.9999426,
+          "best_lag_samples": 0,
+          "best_lag_ms": 0.0
+        }
+      ],
+      "complete_video_decode": "passed",
+      "sha256": "343c3fda59180639caffbacb77799dda1ebffb7a779f9cb10f51f0ddda11af76"
+    }
+  },
+  "method": "Decoded PCM window cross-correlation at 44.1 kHz; lag checked at beginning, middle and end. AAC is lossy; MP3 master remains byte-identical in HTML/PPTX.",
+  "byte_identical_audio_embeddings": [
+    "HTML",
+    "English PPTX",
+    "Arabic PPTX"
+  ]
+}

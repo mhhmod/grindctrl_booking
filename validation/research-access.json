@@ -1,0 +1,46 @@
+[
+  {
+    "key": "genesys-agent-ui",
+    "url": "https://help.mypurecloud.com/articles/agent-workspace-overview/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-screenpop",
+    "url": "https://help.mypurecloud.com/articles/create-an-inbound-call-flow/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-ticket-ui",
+    "url": "https://help.zoho.com/portal/en/kb/desk/ticket-management/articles/understanding-the-ticket-detail-page",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "zoho-customer-ui",
+    "url": "https://help.zoho.com/portal/en/kb/desk/contacts-and-accounts/articles/customer-module-the-contacts-and-accounts-detail-page",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "genesys-client-sdk",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+    "status": 200,
+    "bytes": 7408
+  },
+  {
+    "key": "genesys-platform-sdk",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/README.md",
+    "status": 200,
+    "bytes": 47927
+  },
+  {
+    "key": "genesys-spark",
+    "url": "https://raw.githubusercontent.com/GenesysCloud/spark-components/main/README.md",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "key": "zoho-sdk",
+    "url": "https://raw.githubusercontent.com/zoho/zohodesk-python-sdk/master/README.md",
+    "error": "HTTP Error 404: Not Found"
+  }
+]

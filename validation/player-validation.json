@@ -1,0 +1,31 @@
+{
+  "checks": [
+    "96 seek destinations: exact chapter/audio clock association, out-of-order state reconstruction, near-end coverage.",
+    "Delayed history/field/note disclosure; Open status remains unchanged; no candidate history before selection; separate no-match and unavailable states; pilot measures and final signoff.",
+    "Real browser audio play, chapter crossing, pause/freeze, resume, mute, replay, chapter jumps, phrase stepping, language continuity, reduced motion.",
+    "All event/static states in both languages: no text overflow or JavaScript errors.",
+    "390px mobile controls fit; enlarged UI pans without body overflow.",
+    "English/Arabic ten-page static PDFs: eight scenes plus two complementary exception states."
+  ],
+  "layout": [],
+  "limitations": [
+    "No external participant or human listen-through test.",
+    "No Microsoft PowerPoint playback verification.",
+    "No live Concrete tenant UI or configuration inspected."
+  ],
+  "audio": {
+    "duration": 194,
+    "readyState": 4
+  },
+  "pageErrors": [],
+  "mobile": {
+    "viewport": 390,
+    "body": 390,
+    "buttonHeights": [
+      42,
+      42,
+      42,
+      42
+    ]
+  }
+}

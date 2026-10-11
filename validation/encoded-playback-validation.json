@@ -1,0 +1,191 @@
+{
+  "encodedPlayback": [
+    {
+      "file": "grindctrl-concrete-part02-narrated.mp4",
+      "duration": 194,
+      "width": 1920,
+      "height": 1080,
+      "muted": false,
+      "checks": [
+        {
+          "seek": 0,
+          "time": 0.151705,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 10,
+          "audioDecodedBytes": 10043
+        },
+        {
+          "seek": 45.488,
+          "time": 45.649697,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 135,
+          "audioDecodedBytes": 101593
+        },
+        {
+          "seek": 81.9,
+          "time": 82.045027,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 352,
+          "audioDecodedBytes": 258049
+        },
+        {
+          "seek": 104,
+          "time": 104.153463,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 482,
+          "audioDecodedBytes": 358196
+        },
+        {
+          "seek": 125.8,
+          "time": 125.943246,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 515,
+          "audioDecodedBytes": 387878
+        },
+        {
+          "seek": 139.9,
+          "time": 140.053236,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 722,
+          "audioDecodedBytes": 541061
+        },
+        {
+          "seek": 153.4,
+          "time": 153.547148,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 833,
+          "audioDecodedBytes": 621372
+        },
+        {
+          "seek": 183.1,
+          "time": 183.25015,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1087,
+          "audioDecodedBytes": 808569
+        },
+        {
+          "seek": 193.5,
+          "time": 194,
+          "paused": true,
+          "ended": true,
+          "error": null,
+          "frames": 1157,
+          "audioDecodedBytes": 858683
+        }
+      ]
+    },
+    {
+      "file": "grindctrl-concrete-part02-narrated-ar.mp4",
+      "duration": 194,
+      "width": 1920,
+      "height": 1080,
+      "muted": false,
+      "checks": [
+        {
+          "seek": 0,
+          "time": 0.147962,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 10,
+          "audioDecodedBytes": 10043
+        },
+        {
+          "seek": 45.488,
+          "time": 45.632039,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 134,
+          "audioDecodedBytes": 101593
+        },
+        {
+          "seek": 81.9,
+          "time": 82.054156,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 351,
+          "audioDecodedBytes": 257563
+        },
+        {
+          "seek": 104,
+          "time": 104.152808,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 481,
+          "audioDecodedBytes": 357710
+        },
+        {
+          "seek": 125.8,
+          "time": 125.952051,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 515,
+          "audioDecodedBytes": 387392
+        },
+        {
+          "seek": 139.9,
+          "time": 140.059683,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 722,
+          "audioDecodedBytes": 540575
+        },
+        {
+          "seek": 153.4,
+          "time": 153.535279,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 833,
+          "audioDecodedBytes": 620853
+        },
+        {
+          "seek": 183.1,
+          "time": 183.258495,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1086,
+          "audioDecodedBytes": 808050
+        },
+        {
+          "seek": 193.5,
+          "time": 194,
+          "paused": true,
+          "ended": true,
+          "error": null,
+          "frames": 1156,
+          "audioDecodedBytes": 858164
+        }
+      ]
+    }
+  ],
+  "fidelityHook": {
+    "refusedUnapproved": true,
+    "installedApprovedSyntheticFixture": true,
+    "correctCameraParentAndTimedState": true,
+    "resetToIllustration": true
+  },
+  "limitation": "Software playback/decode inspection, ASR and signal comparison; no human full listen-through or perceptual audio rating is claimed."
+}

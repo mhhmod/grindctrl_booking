@@ -1,0 +1,245 @@
+{
+  "sample_count": 60,
+  "frames": [
+    {
+      "frame": "frame-0-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0808937757201647
+    },
+    {
+      "frame": "frame-0-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1074652777777778
+    },
+    {
+      "frame": "frame-1086-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0546945730452675
+    },
+    {
+      "frame": "frame-1086-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0693778935185185
+    },
+    {
+      "frame": "frame-1302-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9758463541666667
+    },
+    {
+      "frame": "frame-1302-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9912501607510288
+    },
+    {
+      "frame": "frame-1611-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9434646669238683
+    },
+    {
+      "frame": "frame-1611-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9516785622427983
+    },
+    {
+      "frame": "frame-1692-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9506036201131687
+    },
+    {
+      "frame": "frame-1692-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9588766718106996
+    },
+    {
+      "frame": "frame-1800-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0571516525205762
+    },
+    {
+      "frame": "frame-1800-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0727363040123457
+    },
+    {
+      "frame": "frame-210-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0746058384773662
+    },
+    {
+      "frame": "frame-210-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0959722222222221
+    },
+    {
+      "frame": "frame-2346-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0202544688786008
+    },
+    {
+      "frame": "frame-2346-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0377964248971194
+    },
+    {
+      "frame": "frame-2457-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0353125
+    },
+    {
+      "frame": "frame-2457-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0607349537037036
+    },
+    {
+      "frame": "frame-2583-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.029165541409465
+    },
+    {
+      "frame": "frame-2583-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0446077674897118
+    },
+    {
+      "frame": "frame-276-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0329846643518519
+    },
+    {
+      "frame": "frame-276-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0599726723251028
+    },
+    {
+      "frame": "frame-3111-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0050358474794239
+    },
+    {
+      "frame": "frame-3111-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0084485918209876
+    },
+    {
+      "frame": "frame-3279-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0251027199074074
+    },
+    {
+      "frame": "frame-3279-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.047553047839506
+    },
+    {
+      "frame": "frame-3348-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.104616930298354
+    },
+    {
+      "frame": "frame-3348-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.131598990483539
+    },
+    {
+      "frame": "frame-3441-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.0749569187242798
+    },
+    {
+      "frame": "frame-3441-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1023617541152264
+    },
+    {
+      "frame": "frame-3639-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8667721193415638
+    },
+    {
+      "frame": "frame-3639-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8792441486625514
+    },
+    {
+      "frame": "frame-3774-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8862332818930041
+    },
+    {
+      "frame": "frame-3774-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9016591113683128
+    },
+    {
+      "frame": "frame-3900-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8627287487139917
+    },
+    {
+      "frame": "frame-3900-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8851953125
+    },
+    {
+      "frame": "frame-3975-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8896138760288066
+    },
+    {
+      "frame": "frame-3975-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9143369020061728
+    },
+    {
+      "frame": "frame-4197-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9322259194958847
+    },
+    {
+      "frame": "frame-4197-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9585861947016461
+    },
+    {
+      "frame": "frame-4602-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.625712287808642
+    },
+    {
+      "frame": "frame-4602-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.6272145061728396
+    },
+    {
+      "frame": "frame-4719-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.5209182098765432
+    },
+    {
+      "frame": "frame-4719-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.5394434799382717
+    },
+    {
+      "frame": "frame-4920-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.3603706918724279
+    },
+    {
+      "frame": "frame-4920-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.3951003086419753
+    },
+    {
+      "frame": "frame-5214-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.2071871784979424
+    },
+    {
+      "frame": "frame-5214-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.2253049447016462
+    },
+    {
+      "frame": "frame-5346-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1650985403806584
+    },
+    {
+      "frame": "frame-5346-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1733312435699588
+    },
+    {
+      "frame": "frame-5493-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.189833622685185
+    },
+    {
+      "frame": "frame-5493-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.2032524755658436
+    },
+    {
+      "frame": "frame-5819-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1925519225823045
+    },
+    {
+      "frame": "frame-5819-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 1.1962559477880659
+    },
+    {
+      "frame": "frame-690-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8636533886316873
+    },
+    {
+      "frame": "frame-690-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.8637885802469136
+    },
+    {
+      "frame": "frame-855-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.897721032664609
+    },
+    {
+      "frame": "frame-855-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9100726594650206
+    },
+    {
+      "frame": "frame-912-ar-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9423310506687242
+    },
+    {
+      "frame": "frame-912-en-expected.png",
+      "mean_absolute_pixel_error_0_to_255": 0.9628520447530864
+    }
+  ]
+}

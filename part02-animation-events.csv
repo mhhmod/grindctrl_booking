@@ -1,0 +1,85 @@
+scene,time_seconds,related_phrase,appearing_text,disappearing_text,appearing_elements
+S1,0.000000,C01,"GRINDCTRL × Concrete | Part 02 · The deep dive | Inside the workflow. One call, in detail. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 01 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Customer context | Contact A | Associated customer record | +20 ••• 410 | Previous tickets | T101 · Exchange follow-up | Open | Agent B | T098 · Size query | Closed | Agent C | T101 · Exchange follow-up | Status | Open | Assigned agent | Agent B | Latest recorded note | Branch review is still pending.",,59
+S1,2.747324,C03,,,1
+S1,3.788073,C04,,,1
+S1,6.566327,C05,,,0
+S1,7.485918,C06,,,0
+S1,9.187574,C06,,,0
+S1,12.715283,C08,,,1
+S1,15.084626,C09,,,1
+S1,16.382789,C10,,,0
+S2,22.309478,C12,GRINDCTRL × Concrete | Part 02 · Caller number → lookup | The caller number starts a lookup. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 02 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Lookup · Proposed,,32
+S2,24.824082,C13,Use the available call information,,2
+S2,27.810045,C14,"Caller number, if available in this setup",,2
+S2,29.601066,C14,,,0
+S2,29.820884,C15,+20 ••• 410 | Lookup key | Existing Zoho Desk customer records,"Use the available call information | Caller number, if available in this setup",6
+S2,35.257551,C17,0••• 410 | +20 ••• 410,,4
+S2,37.583243,C17,,,0
+S2,37.962925,C18,Illustrative equivalent formats · Matching rules to validate,,2
+S2,40.893197,C20,,,1
+S2,42.864399,C21,A number association does not verify identity.,,1
+S3,45.488050,C22,"GRINDCTRL × Concrete | Part 02 · What the employee sees | The relevant context, beside the call. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 03 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Customer context | Contact A | Associated customer record | +20 ••• 410",,38
+S3,47.743741,C23,"Permitted
+access",,2
+S3,52.151927,C25,Previous tickets | T101 · Exchange follow-up | T098 · Size query,,8
+S3,54.968458,C25,Open | Closed,,2
+S3,55.163424,C26,Agent B | Agent C,,2
+S3,57.734649,C26,Latest recorded note | Branch review is still pending.,,4
+S3,58.215261,C27,T101 · Exchange follow-up | Status | Open | Assigned agent | Agent B,,7
+S3,61.468390,C28,,,0
+S3,64.447347,C29,,,0
+S3,65.222494,C30,,,1
+S3,67.239524,C31,,,0
+S4,70.104172,C32,"GRINDCTRL × Concrete | Part 02 · Exchange follow-up | T101: read the note, keep the status clear. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 04 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Ticket T101 · Read-only",,32
+S4,71.632177,C33,T101 · Exchange request | Contact A · Existing exchange follow-up,,3
+S4,74.523061,C34,Ticket status | Open | Assigned agent | Agent B,,5
+S4,77.445964,C34,,,0
+S4,77.609819,C35,Latest recorded note,,3
+S4,79.963787,C37,Branch review is still pending.,,1
+S4,83.458889,C39,,,1
+S4,85.440816,C40,,,1
+S4,87.635102,C41,,,0
+S4,90.443537,C42,,,2
+S5,94.097846,C43,GRINDCTRL × Concrete | Part 02 · Ambiguity and human control | One number. Two possible records. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 05 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Record choice · Proposed | More than one possible customer,,33
+S5,97.968549,C44,Ticket history stays hidden until selection.,,2
+S5,102.776667,C45,Contact A | +20 ••• 410 | Contact B | +20 ••• 410,,10
+S5,105.558889,C46,,,1
+S5,108.064490,C47,Use the agreed verification steps before choosing.,,1
+S5,111.391111,C47,,,2
+S5,111.872925,C48,Contact A | Associated customer record | +20 ••• 410 | Previous tickets | T101 · Exchange follow-up | Open | Agent B | T098 · Size query | Closed | Agent C | T101 · Exchange follow-up | Status | Open | Assigned agent | Agent B | Latest recorded note | Branch review is still pending.,More than one possible customer | Ticket history stays hidden until selection. | Contact A | +20 ••• 410 | Contact B | +20 ••• 410 | Use the agreed verification steps before choosing.,27
+S6,117.093061,C49,GRINDCTRL × Concrete | Part 02 · No match ≠ lookup failure | Different results. The call continues. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 06 / 08 | Voice | Incoming caller | Caller number | +20 ••• 410 | Call active | Assigned to an agent | Zoho Desk | Lookup result · Proposed | Lookup result for +20 ••• 410,,34
+S6,120.846440,C51,Lookup completed,,2
+S6,121.851882,C52,No matching customer,,1
+S6,123.982336,C53,Use the existing manual-search procedure. | Manual search,,4
+S6,128.862313,C55,Lookup could not complete,Lookup completed | No matching customer | Use the existing manual-search procedure. | Manual search,2
+S6,131.461678,C56,Lookup unavailable | Retry,,4
+S6,134.191995,C57,An availability error. Not an empty ticket list.,,1
+S6,137.515896,C59,,,1
+S6,138.974195,C60,"Keep the usual follow-up route.
+Manual search when available.",,1
+S7,142.326961,C61,GRINDCTRL × Concrete | Part 02 · Implementation decision | Inspect first. Use the smallest supported change. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 07 / 08,,10
+S7,143.633469,C62,"Inspect the
+existing setup | “CRM URL pop up
+integration” | 2023 contract · p.4",,5
+S7,147.218254,C63,,,1
+S7,150.888617,C64,Native configuration,,5
+S7,153.727619,C65,"Use it if it supports
+the required experience.",,1
+S7,154.688073,C66,,,2
+S7,156.162766,C67,"Minimal approved adapter | Only for a verified gap.
+Supported mechanisms only.",,3
+S7,158.674150,C68,Read-only first scope · Actual display and configuration to validate,,2
+S7,159.698798,C69,"Permissions
+preserved",,2
+S7,161.375057,C70,"T101 | Status stays Open | Call arrival does
+not write to tickets.",,5
+S8,165.313265,C71,GRINDCTRL × Concrete | Part 02 · Pilot validation | Prove the value with authorized test calls. | Illustrative proposed workflow · Fictional records · Display surface subject to validation | 08 / 08,,7
+S8,169.660068,C73,Pilot observation sheet | To measure during pilot,,3
+S8,172.482766,C74,Current manual search | +20 ••• 410 | +20 ••• 410 | Find Contact A → Open T101 | Proposed caller context | +20 ••• 410 | T101 · Exchange follow-up | Branch review is still pending.,,23
+S8,175.652109,C75,Manual interactions · Time to correct context | To measure,,4
+S8,180.146145,C76,Correct matching | To measure,,3
+S8,181.349093,C77,Shared / unknown numbers · Permissions · Errors | To measure,,3
+S8,185.554308,C79,,,1
+S8,188.221156,C80,GRINDCTRL × Concrete,Pilot observation sheet | To measure during pilot | Manual interactions · Time to correct context | To measure | Correct matching | To measure | Shared / unknown numbers · Permissions · Errors | To measure,3
+S8,189.786009,C81,Authorized configuration review,,2
+S8,191.615034,C82,Test calls,,3

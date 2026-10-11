@@ -1,0 +1,316 @@
+{
+  "enabled": false,
+  "reason": "No authorized anonymized Concrete tenant screenshots were supplied or inspected.",
+  "slots": {
+    "genesys.call": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S1",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S2",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S3",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S4",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S5",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S6",
+          "box": {
+            "x": 48,
+            "y": 168,
+            "w": 278,
+            "h": 478,
+            "anchors": {
+              "caller_number": [
+                0.07,
+                0.56,
+                0.85,
+                0.1
+              ],
+              "call_state": [
+                0.07,
+                0.68,
+                0.8,
+                0.08
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "desk.context": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S1",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S2",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S3",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {
+              "contact": [
+                0.09,
+                0.17,
+                0.75,
+                0.17
+              ],
+              "previous_tickets": [
+                0.02,
+                0.4,
+                0.37,
+                0.48
+              ],
+              "latest_note": [
+                0.42,
+                0.67,
+                0.54,
+                0.28
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S4",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {
+              "ticket_status": [
+                0.03,
+                0.44,
+                0.3,
+                0.17
+              ],
+              "assigned_agent": [
+                0.41,
+                0.44,
+                0.5,
+                0.17
+              ],
+              "latest_note": [
+                0.03,
+                0.66,
+                0.94,
+                0.28
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S5",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S6",
+          "box": {
+            "x": 350,
+            "y": 168,
+            "w": 882,
+            "h": 478,
+            "anchors": {}
+          }
+        }
+      ]
+    },
+    "comparison.current": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S8",
+          "box": {
+            "x": 48,
+            "y": 221,
+            "w": 566,
+            "h": 224,
+            "anchors": {
+              "caller_number": [
+                0.34,
+                0.06,
+                0.61,
+                0.17
+              ],
+              "ticket_context": [
+                0.03,
+                0.34,
+                0.93,
+                0.58
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "comparison.proposed": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S8",
+          "box": {
+            "x": 666,
+            "y": 221,
+            "w": 566,
+            "h": 224,
+            "anchors": {
+              "caller_number": [
+                0.34,
+                0.06,
+                0.61,
+                0.17
+              ],
+              "ticket_context": [
+                0.03,
+                0.34,
+                0.93,
+                0.58
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

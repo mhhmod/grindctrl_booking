@@ -1,0 +1,21 @@
+[
+  {
+    "key": "zoho-ticket",
+    "url": "https://help.zoho.com/portal/en/kb/desk/ticket-management/articles/understanding-the-ticket-detail-page",
+    "title": "",
+    "bodyLength": 0,
+    "excerpt": ""
+  },
+  {
+    "key": "zoho-customer",
+    "url": "https://help.zoho.com/portal/en/kb/desk/contacts-and-accounts/articles/customer-module-the-contacts-and-accounts-detail-page",
+    "title": "",
+    "bodyLength": 0,
+    "excerpt": ""
+  },
+  {
+    "key": "genesys-help",
+    "url": "https://help.genesys.cloud/articles/agent-workspace-overview/",
+    "error": "Error: page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at https://help.genesys.cloud/articles/agent-workspace-overview/\nCall log:\n\u001b[2m  - navigating to \"https://help.genesys.cloud/articles/agent-workspace-overview/\", waiting until \"domcontentl"
+  }
+]
