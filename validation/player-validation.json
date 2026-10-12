@@ -1,0 +1,31 @@
+{
+  "checks": [
+    "133 audio/scene/out-of-order seek destinations checked.",
+    "Required fields; per-call source/author; typed draft → demo recorded state → future retrieval with original call/author; safe visible exception states and final hero verified.",
+    "Real audio playback, pause freezes typing, resume, replay, mute, chapter/phrase jumps, language continuity and reduced motion.",
+    "Interactive offline UI: shared-number guard, correct selection, empty-note rejection, current-note save, future-call retrieval, denied history and unavailable lookup checked.",
+    "All timed/static/typing states in both visual languages: no text overflow or JS errors. 390px mobile controls fit; enlarged scene pans.",
+    "English/Arabic static PDFs generated: eight film scenes plus four complementary entry/exception states."
+  ],
+  "layout": [],
+  "limitations": [
+    "No tenant UI, native note-save, role or retention validation.",
+    "No external participant or human full listen-through test.",
+    "Microsoft PowerPoint audiovisual playback not tested."
+  ],
+  "audio": {
+    "duration": 286.16,
+    "readyState": 4
+  },
+  "pageErrors": [],
+  "mobile": {
+    "viewport": 390,
+    "body": 390,
+    "buttons": [
+      42,
+      42,
+      42,
+      42
+    ]
+  }
+}

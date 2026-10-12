@@ -1,0 +1,62 @@
+[
+  {
+    "key": "concrete-site",
+    "url": "https://concrete.store/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "concrete-icons",
+    "url": "https://concrete.store/iconclubinfo/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-notes",
+    "url": "https://help.genesys.cloud/articles/enter-notes-for-an-interaction/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-history",
+    "url": "https://help.genesys.cloud/articles/view-interaction-history-contact/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-association",
+    "url": "https://help.genesys.cloud/articles/work-external-contact-interaction/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-retention",
+    "url": "https://help.mypurecloud.com/articles/limit-interaction-history-for-external-contacts-and-organization-to-365-days/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-modules",
+    "url": "https://help.zoho.com/portal/en/kb/desk/customization/modules/articles/standard-modules-and-fields-zoho-desk",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "zoho-contacts",
+    "url": "https://help.zoho.com/portal/en/kb/desk/contacts-and-accounts/articles/customer-module-the-contacts-and-accounts-detail-page",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "zoho-calls",
+    "url": "https://help.zoho.com/portal/en/kb/desk/activities/articles/adding-editing-and-deleting-calls",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "zoho-customfields",
+    "url": "https://help.zoho.com/portal/en/kb/desk/customization/layouts-and-fields/articles/working-with-custom-fields",
+    "status": 200,
+    "bytes": 34087
+  },
+  {
+    "key": "genesys-sdk",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+    "status": 200,
+    "bytes": 7408
+  }
+]

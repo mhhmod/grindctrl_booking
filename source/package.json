@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "grindctrl-concrete-part03-customer360-build",
+  "version": "1.0.0",
+  "description": "Audio-clock product walkthrough build and QA tools",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

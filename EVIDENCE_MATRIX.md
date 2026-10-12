@@ -1,0 +1,43 @@
+# Part 03 — evidence and field ownership
+
+Prepared 12 October 2026. This is a new GRINDCTRL proposal based on the Sales Manager’s requirement reported by the user. The supplied production prompt and intended script were read in full; the actual new recording is the timing/content authority.
+
+**No Concrete tenant, authorized native screenshots, credentials, API grants, role configuration, note storage or retention settings were available or inspected.** The five existing contract PDFs and their prior visual reading notes are available. Relevant November 2023 PDF p.4 is reinspected for scope. A contract is not proof of live behavior.
+
+## Field and record matrix
+
+| Required field / behavior | Evidence and source of truth | Linking / access | Coverage, missing values and proposed display |
+|---|---|---|---|
+| Incoming phone | Genesys is the reported call system. Actual exposed caller data and tenant configuration unknown. | A caller number is a lookup candidate, never identity authentication. Normalize with approved rules and confirm ambiguous associations. | Synthetic masked phone +20 10 •••• 4821. Withheld/unknown number requires manual procedures; no inferred identity. |
+| Customer name | Customer record must come from an approved authoritative source; source location not inspected. Reported manual Zoho Desk phone search works, but this does not verify the field or API. | Stable customer ID, approved linking rules and permitted record access. | Ahmed M. (DEMO). No match and unavailable lookup are distinct. Shared-number histories stay hidden until agreed verification and selection. |
+| Email | Approved recorded customer-contact field; exact system/permission/freshness unknown. | Only when present and permitted. | Synthetic reserved-domain ahmed@example.com; missing or inaccessible value says Not available. |
+| Icons Club tier | Handoff/user gives LIFESTYLE, PRESTIGE, ELITE and cites Concrete’s public Icons Club page. Direct public site attempts were proxy-blocked; tier vocabulary was not independently re-read. Source database/field/API/freshness unknown. | Obtain a verified customer-to-membership association from the approved source. Public tier definitions do not locate the database or establish eligibility. | ELITE (Illustrative), compact in the profile header. Missing tier says Segment not available. No guessed membership, benefits, member number or automatic prioritization. |
+| Individual past calls | Handoff cites Genesys interaction history/contact association and Zoho Desk Calls activities. Official help attempts were blocked or blank shells, so current behavior was not independently verified here. | Compound source system + unique interaction ID; customer link, retained record and agent access all required. | Three explicitly synthetic dated calls, newest first, with their own agents and notes. Not “all calls forever.” Unavailable, partially linked, empty and denied history are distinct simulation states. |
+| Previous human-written note | Intended canonical record is an individual call/interaction note, not a global contact note, ticket note, transcript or AI summary. Real note source is unknown until tenant review. | The note’s source-system/interaction key must agree with its owning call. Author and timestamp stay attached. | 08 Oct/Agent A note is attached only to DEMO-1008. A recorded branch-review request is not proof of completion. |
+| New current-call note | Proposed human capture flow. Native Genesys save/ACW behavior was not verified, so a generic demo recording step is used. | Save only to the authorized current interaction, including after-call state; prevent cross-customer, wrong-interaction, empty and denied writes. | Human Agent D writes the prescribed note to DEMO-1012. Recorded (demo) indicates local simulation, not a live vendor save or Zoho sync. |
+| Later retrieval | Proposed continuity after permitted retention and linking. No real cross-system sync was inspected. | A future DEMO-1015 interaction may read the older DEMO-1012 note only through the permitted customer/call association. Original author/key remain unchanged. | Agent E sees the note under the 12 Oct call, not under the 15 Oct call or a customer-global note. |
+| Transfer / author handling | Concrete’s actual conversation/participant/transfer keys and vendor save behavior are unknown. | Simulation keeps its canonical interaction key and existing note authors when the handling agent changes; production mapping must be verified. | Tested invariant, not a claim that every native transfer creates or retains a particular vendor ID. |
+| Retention / permissions | Actual Genesys/Desk plan, retention range, external-contact association and note/field entitlements unknown. | Enforce backend authorization, permitted fields, source ownership, association and applicable retention before displaying data. | No numeric lifetime or 365-day tenant entitlement is promised. Recent synthetic rows are illustrative, not verified retained records. |
+
+## Evidence classifications
+
+- **Reported requirement:** The Sales Manager wants name, phone, Icons Club tier, optional email, per-call activity and human-written notes for each particular call. This was reported by the user, not an interview or independent operational diagnosis.
+- **Contracted scope:** November 2023 PDF p.4 includes “CRM URL pop up integration,” static scripts and Genesys configuration. Earlier contracts concern Zoho/Desk service functions and Prism scope; renewals do not establish current permissions or note integration. Confidential commercial terms and contract scans are excluded from public deliverables.
+- **Actually inspected project assets:** Approved Part 01 MP4/source, existing Part 02 source and synthetic demonstration code, supplied GRINDCTRL/Genesys/Zoho artwork, fonts and the new production package. These are not tenant captures.
+- **Officially accessible principle:** [Genesys Client Apps SDK README](https://github.com/MyPureCloud/client-app-sdk/blob/master/README.md) was retrieved. It describes app/UI integration and separate platform data access; embedding/configuration and authorization constraints apply. It does not prove a native notes UI, auto-save, retention or Concrete entitlement.
+- **Handoff-cited vendor capabilities, not independently verified here:** Interaction notes, contact-linked history and Desk Calls activity. They remain review candidates. No exact current native layout or auto-save behavior is claimed.
+- **Proposed:** The visual caller profile, individual-call notes and future retrieval, with read/write guards in an offline synthetic simulation. An integration decision remains conditional on actual review.
+
+## Official-reference access log
+
+Concrete [site](https://concrete.store/) and [Icons Club](https://concrete.store/iconclubinfo/) — proxy 403.
+
+Genesys [interaction notes](https://help.genesys.cloud/articles/enter-notes-for-an-interaction/), [contact interaction history](https://help.genesys.cloud/articles/view-interaction-history-contact/), [contact association](https://help.genesys.cloud/articles/work-external-contact-interaction/) and [history limitation reference](https://help.mypurecloud.com/articles/limit-interaction-history-for-external-contacts-and-organization-to-365-days/) — proxy 403.
+
+Zoho [standard modules](https://help.zoho.com/portal/en/kb/desk/customization/modules/articles/standard-modules-and-fields-zoho-desk), [contact page](https://help.zoho.com/portal/en/kb/desk/contacts-and-accounts/articles/customer-module-the-contacts-and-accounts-detail-page), [calls activity](https://help.zoho.com/portal/en/kb/desk/activities/articles/adding-editing-and-deleting-calls), [custom fields](https://help.zoho.com/portal/en/kb/desk/customization/layouts-and-fields/articles/working-with-custom-fields) — HTTP 200 shell; usable article content must be checked separately and is not assumed read.
+
+## Implementation decision remains open
+
+Inspect the existing screen-pop target and actual Genesys/Zoho configuration. Locate the authoritative profile fields, loyalty tier, interaction activity and agent-note store. Verify supported contact association, permissions, source keys, retention, transfer/ACW behavior and freshness. Prefer existing supported native capability if sufficient. Add the smallest approved bridge only for a verified gap. Manual UI search is not evidence of an equivalent API.
+
+The film uses an illustrative interaction workspace, not a guaranteed native sidebar or a newly deployed backend. Note-saving is visibly a demo recording step. No automatic Genesys-to-Zoho note replication, AI content, call recording, ticket update or measured savings is shown.

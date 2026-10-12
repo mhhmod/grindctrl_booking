@@ -1,0 +1,3493 @@
+{
+  "duration": 286.16,
+  "container_duration": 286.197551,
+  "fps": 30,
+  "audio_filename": "grindctrl-part03-voiceover-ar.mp3",
+  "audio_sha256": "0fd419e6f6bbed75c4bb2e0e3747b3fc3ab5f9b2864b577c4c95bcb95fe70d01",
+  "chapters": [
+    {
+      "id": "S1",
+      "title": "Recognize the caller",
+      "start": 0,
+      "end": 39.718526
+    },
+    {
+      "id": "S2",
+      "title": "Identity and contact",
+      "start": 39.718526,
+      "end": 62.166757
+    },
+    {
+      "id": "S3",
+      "title": "Concrete Icons Club",
+      "start": 62.166757,
+      "end": 83.10966
+    },
+    {
+      "id": "S4",
+      "title": "Per-call activity",
+      "start": 83.10966,
+      "end": 117.618322
+    },
+    {
+      "id": "S5",
+      "title": "The earlier call note",
+      "start": 117.618322,
+      "end": 160.26644
+    },
+    {
+      "id": "S6",
+      "title": "Record a note; retrieve it later",
+      "start": 160.26644,
+      "end": 195.552789
+    },
+    {
+      "id": "S7",
+      "title": "Safe exception states",
+      "start": 195.552789,
+      "end": 219.327483
+    },
+    {
+      "id": "S8",
+      "title": "Validate sources; pilot the experience",
+      "start": 219.327483,
+      "end": 286.16
+    }
+  ],
+  "cues": [
+    {
+      "id": "C001",
+      "scene_id": "S1",
+      "start": 0.0,
+      "end": 0.872857,
+      "spoken_phrase": "في الفيديو الأول،",
+      "caption_ar": "في الفيديو الأول،",
+      "raw_recognition": "في الفيديو الأول",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " في الفيديو الأول"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C002",
+      "scene_id": "S1",
+      "start": 1.034331,
+      "end": 5.559297,
+      "spoken_phrase": "شوفنا إزاي نقدر نخلي الـAgent يبدأ المكالمة وهو شايف الـCustomer Context",
+      "caption_ar": "شوفنا إزاي نقدر نخلي الـAgent يبدأ المكالمة وهو شايف الـCustomer Context",
+      "raw_recognition": "شوفنا الي نقدر نخلي الاجنت يبدأ المكلمة وهو شاي في الـ Customer Context",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.64,
+          "text": " شوفنا الي نقدر نخلي الاجنت يبدأ المكلمة وهو شاي في الـ Customer Context"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C003",
+      "scene_id": "S1",
+      "start": 5.712086,
+      "end": 6.711134,
+      "spoken_phrase": "والـTickets السابقة،",
+      "caption_ar": "والـTickets السابقة،",
+      "raw_recognition": "ويأتي الى السابقة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ويأتي الى السابقة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C004",
+      "scene_id": "S1",
+      "start": 7.103946,
+      "end": 9.278957,
+      "spoken_phrase": "بدل ما يضطر يدور على كل حاجة بنفسه.",
+      "caption_ar": "بدل ما يضطر يدور على كل حاجة بنفسه.",
+      "raw_recognition": "بدل ما يتطري يدور على كل حاجة بنفسه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.36,
+          "text": " بدل ما يتطري يدور على كل حاجة بنفسه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C005",
+      "scene_id": "S1",
+      "start": 9.884218,
+      "end": 10.713787,
+      "spoken_phrase": "وفي الفيديو التاني،",
+      "caption_ar": "وفي الفيديو التاني،",
+      "raw_recognition": "و في الفيديو تاني",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و في الفيديو تاني"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C006",
+      "scene_id": "S1",
+      "start": 10.956576,
+      "end": 12.78195,
+      "spoken_phrase": "دخلنا أكتر في تفاصيل الـWorkflow،",
+      "caption_ar": "دخلنا أكتر في تفاصيل الـWorkflow،",
+      "raw_recognition": "دخلنا أكثر في تفاصيل الوركفلو",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " دخلنا أكثر في تفاصيل الوركفلو"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C007",
+      "scene_id": "S1",
+      "start": 13.260068,
+      "end": 14.682472,
+      "spoken_phrase": "وشوفنا إزاي الـLookup بيتم،",
+      "caption_ar": "وشوفنا إزاي الـLookup بيتم،",
+      "raw_recognition": "و شفنا زي لكبيتم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و شفنا زي لكبيتم"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C008",
+      "scene_id": "S1",
+      "start": 15.002494,
+      "end": 17.500272,
+      "spoken_phrase": "وإزاي الـAgent يقدر يتابع الـCases المختلفة.",
+      "caption_ar": "وإزاي الـAgent يقدر يتابع الـCases المختلفة.",
+      "raw_recognition": "وزاي الاجنت يقدر يتابع الكيسيز المختلفة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " وزاي الاجنت يقدر يتابع الكيسيز المختلفة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C009",
+      "scene_id": "S1",
+      "start": 18.302109,
+      "end": 18.774966,
+      "spoken_phrase": "النهارده،",
+      "caption_ar": "النهارده،",
+      "raw_recognition": "انهردا",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " انهردا"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C010",
+      "scene_id": "S1",
+      "start": 19.013787,
+      "end": 20.178322,
+      "spoken_phrase": "هنكمل خطوة أبعد،",
+      "caption_ar": "هنكمل خطوة أبعد،",
+      "raw_recognition": "سنكمل خطوة أبعد",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " سنكمل خطوة أبعد"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C011",
+      "scene_id": "S1",
+      "start": 20.396599,
+      "end": 23.262154,
+      "spoken_phrase": "بفكرة جاية من احتياج فريق المبيعات في Concrete نفسه.",
+      "caption_ar": "بفكرة جاية من احتياج فريق المبيعات في Concrete نفسه.",
+      "raw_recognition": "بفكرة جاية من احتياج فريق المبعات في كونكريت نفسه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " بفكرة جاية من احتياج فريق المبعات في كونكريت نفسه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C012",
+      "scene_id": "S1",
+      "start": 23.954172,
+      "end": 25.699751,
+      "spoken_phrase": "تخيلوا إن أول ما الـCall توصل،",
+      "caption_ar": "تخيلوا إن أول ما الـCall توصل،",
+      "raw_recognition": "تخيلوا أن أول ملكول توصل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " تخيلوا أن أول ملكول توصل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C013",
+      "scene_id": "S1",
+      "start": 25.95322,
+      "end": 28.529796,
+      "spoken_phrase": "الـAgent يلاقي قدامه مش بس الـTickets السابقة،",
+      "caption_ar": "الـAgent يلاقي قدامه مش بس الـTickets السابقة،",
+      "raw_recognition": "الاجنت يلاي أدامه مش بس التكتس السابقة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " الاجنت يلاي أدامه مش بس التكتس السابقة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C014",
+      "scene_id": "S1",
+      "start": 28.825261,
+      "end": 31.127982,
+      "spoken_phrase": "لكن كمان الـCustomer Profile بالكامل،",
+      "caption_ar": "لكن كمان الـCustomer Profile بالكامل،",
+      "raw_recognition": "لكن كونتمر بروفايل بالكامل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": " لكن كونتمر بروفايل بالكامل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C015",
+      "scene_id": "S1",
+      "start": 31.641769,
+      "end": 34.376893,
+      "spoken_phrase": "وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،",
+      "caption_ar": "وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،",
+      "raw_recognition": "وتاريخ كل المكلمات التي حصلت مع العميل قبل كده",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.9,
+          "text": " وتاريخ كل المكلمات التي حصلت مع العميل قبل كده"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C016",
+      "scene_id": "S1",
+      "start": 34.783855,
+      "end": 36.780635,
+      "spoken_phrase": "والـNotes اللي اتكتبت خلال كل مكالمة.",
+      "caption_ar": "والـNotes اللي اتكتبت خلال كل مكالمة.",
+      "raw_recognition": "و نوطس لتكتبت خلال كل مكانما",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و نوطس لتكتبت خلال كل مكانما"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C017",
+      "scene_id": "S1",
+      "start": 37.40873,
+      "end": 38.925896,
+      "spoken_phrase": "خلينا نشوف التجربة دي بالتفصيل.",
+      "caption_ar": "خلينا نشوف التجربة دي بالتفصيل.",
+      "raw_recognition": "خلين ننشوف التغرب هذه بتفصيل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " خلين ننشوف التغرب هذه بتفصيل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C018",
+      "scene_id": "S2",
+      "start": 39.718526,
+      "end": 42.219932,
+      "spoken_phrase": "أول ما العميل يتصل على الـHotline بتاع Concrete،",
+      "caption_ar": "أول ما العميل يتصل على الـHotline بتاع Concrete،",
+      "raw_recognition": "أول ما العميل يتصل على هاتلين بداعة كونكريت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " أول ما العميل يتصل على هاتلين بداعة كونكريت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C019",
+      "scene_id": "S2",
+      "start": 42.495397,
+      "end": 44.510408,
+      "spoken_phrase": "الـCall بتوصل للـAgent على Genesys.",
+      "caption_ar": "الـCall بتوصل للـAgent على Genesys.",
+      "raw_recognition": "الكل تصل إلى الاجنة على جنسس.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الكل تصل إلى الاجنة على جنسس."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C020",
+      "scene_id": "S2",
+      "start": 45.020635,
+      "end": 45.685896,
+      "spoken_phrase": "وفي اللحظة دي،",
+      "caption_ar": "وفي اللحظة دي،",
+      "raw_recognition": "وفي اللحظة دي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وفي اللحظة دي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C021",
+      "scene_id": "S2",
+      "start": 45.936304,
+      "end": 51.55415,
+      "spoken_phrase": "بنقترح إن النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.",
+      "caption_ar": "بنقترح إن النظام يستخدم رقم المتصل عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.",
+      "raw_recognition": "بنقترح أن النظام يستخدم رقم المتصل عشان يعمل \"Automatic Lookup\" عن الكستم الركد المناسب.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 5.8,
+          "text": " بنقترح أن النظام يستخدم رقم المتصل عشان يعمل \"Automatic Lookup\" عن الكستم الركد المناسب."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C022",
+      "scene_id": "S2",
+      "start": 52.279637,
+      "end": 54.576599,
+      "spoken_phrase": "وبمجرد ما يتم تحديد الـCustomer الصحيح،",
+      "caption_ar": "وبمجرد ما يتم تحديد الـCustomer الصحيح،",
+      "raw_recognition": "وبمجرد ما يتم تحديد الكاستمر الصحيح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": " وبمجرد ما يتم تحديد الكاستمر الصحيح"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C023",
+      "scene_id": "S2",
+      "start": 54.99288,
+      "end": 56.128027,
+      "spoken_phrase": "يظهر قدام الموظف",
+      "caption_ar": "يظهر قدام الموظف",
+      "raw_recognition": "يظهر قدام الموظف",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " يظهر قدام الموظف"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C024",
+      "scene_id": "S2",
+      "start": 56.28102,
+      "end": 57.483832,
+      "spoken_phrase": "أربع معلومات أساسية.",
+      "caption_ar": "أربع معلومات أساسية.",
+      "raw_recognition": "أربع معلومات أساسية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أربع معلومات أساسية"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C025",
+      "scene_id": "S2",
+      "start": 58.100816,
+      "end": 58.663084,
+      "spoken_phrase": "أول حاجة،",
+      "caption_ar": "أول حاجة،",
+      "raw_recognition": "أول حاجة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أول حاجة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C026",
+      "scene_id": "S2",
+      "start": 58.838299,
+      "end": 59.568526,
+      "spoken_phrase": "الـMobile Number.",
+      "caption_ar": "الـMobile Number.",
+      "raw_recognition": "الموبايل نمبر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الموبايل نمبر"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C027",
+      "scene_id": "S2",
+      "start": 60.118073,
+      "end": 61.581361,
+      "spoken_phrase": "تاني حاجة، الـCustomer Name.",
+      "caption_ar": "تاني حاجة، الـCustomer Name.",
+      "raw_recognition": "تاني حاجة الكوستمر نايم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " تاني حاجة الكوستمر نايم"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C028",
+      "scene_id": "S3",
+      "start": 62.166757,
+      "end": 62.767166,
+      "spoken_phrase": "تالت حاجة،",
+      "caption_ar": "تالت حاجة،",
+      "raw_recognition": "ثلت حاجة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ثلت حاجة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C029",
+      "scene_id": "S3",
+      "start": 62.92195,
+      "end": 63.922721,
+      "spoken_phrase": "الـCustomer Segment،",
+      "caption_ar": "الـCustomer Segment،",
+      "raw_recognition": "\"القصومر سيغمنت\"",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " \"القصومر سيغمنت\""
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C030",
+      "scene_id": "S3",
+      "start": 64.121224,
+      "end": 66.721859,
+      "spoken_phrase": "سواء كان Lifestyle أو Prestige أو Elite،",
+      "caption_ar": "سواء كان Lifestyle أو Prestige أو Elite،",
+      "raw_recognition": "سواء كان ليفستيل أو برستيج أو إليت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " سواء كان ليفستيل أو برستيج أو إليت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C031",
+      "scene_id": "S3",
+      "start": 67.058322,
+      "end": 70.377891,
+      "spoken_phrase": "حسب الـMembership Level المسجل للعميل في Concrete Icons Club.",
+      "caption_ar": "حسب الـMembership Level المسجل للعميل في Concrete Icons Club.",
+      "raw_recognition": "حسب المنبرشب لفل المسجل العاميل في \"Concrete Icons Club\"",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " حسب المنبرشب لفل المسجل العاميل في \"Concrete Icons Club\""
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C032",
+      "scene_id": "S3",
+      "start": 71.054966,
+      "end": 71.765125,
+      "spoken_phrase": "ورابع حاجة،",
+      "caption_ar": "ورابع حاجة،",
+      "raw_recognition": "وربحاجة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وربحاجة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C033",
+      "scene_id": "S3",
+      "start": 71.941361,
+      "end": 74.724014,
+      "spoken_phrase": "الـEmail Address، لو موجود بالفعل في بيانات العميل.",
+      "caption_ar": "الـEmail Address، لو موجود بالفعل في بيانات العميل.",
+      "raw_recognition": "الإيميل أدرس لو موجود بالفعل في بيانات العميل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " الإيميل أدرس لو موجود بالفعل في بيانات العميل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C034",
+      "scene_id": "S3",
+      "start": 75.534127,
+      "end": 79.664467,
+      "spoken_phrase": "كل المعلومات دي هتبقى متجمعة في Customer Profile واضح ومنظم،",
+      "caption_ar": "كل المعلومات دي هتبقى متجمعة في Customer Profile واضح ومنظم،",
+      "raw_recognition": "كل المعلومات هذه ستكون متجمعة في كستمار بروفايل واضح ومنظم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.26,
+          "text": " كل المعلومات هذه ستكون متجمعة في كستمار بروفايل واضح ومنظم"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C035",
+      "scene_id": "S3",
+      "start": 79.977347,
+      "end": 82.507075,
+      "spoken_phrase": "وسهل جدًا إن الموظف يقراه أثناء المكالمة.",
+      "caption_ar": "وسهل جدًا إن الموظف يقراه أثناء المكالمة.",
+      "raw_recognition": "وسهل جداً أن الموظف يقرأوا أسناء المكلمة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " وسهل جداً أن الموظف يقرأوا أسناء المكلمة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C036",
+      "scene_id": "S4",
+      "start": 83.10966,
+      "end": 86.117347,
+      "spoken_phrase": "لكن القيمة الحقيقية مش بس إننا نعرف مين العميل.",
+      "caption_ar": "لكن القيمة الحقيقية مش بس إننا نعرف مين العميل.",
+      "raw_recognition": "لكن القيمة الحقيقية ليس فقط أن نعرف مين العميل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.16,
+          "text": " لكن القيمة الحقيقية ليس فقط أن نعرف مين العميل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C037",
+      "scene_id": "S4",
+      "start": 86.65263,
+      "end": 87.470794,
+      "spoken_phrase": "القيمة الأكبر،",
+      "caption_ar": "القيمة الأكبر،",
+      "raw_recognition": "القيمة الأكبر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " القيمة الأكبر"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C038",
+      "scene_id": "S4",
+      "start": 87.673991,
+      "end": 89.62161,
+      "spoken_phrase": "إننا نعرف إيه اللي حصل معاه قبل كده.",
+      "caption_ar": "إننا نعرف إيه اللي حصل معاه قبل كده.",
+      "raw_recognition": "أننا نعرف أين لحصل معاقب لكده",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أننا نعرف أين لحصل معاقب لكده"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C039",
+      "scene_id": "S4",
+      "start": 90.203401,
+      "end": 92.040816,
+      "spoken_phrase": "وهنا بييجي دور الـCall Activity.",
+      "caption_ar": "وهنا بييجي دور الـCall Activity.",
+      "raw_recognition": "و هنا بيجدور الـ call activity",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و هنا بيجدور الـ call activity"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C040",
+      "scene_id": "S4",
+      "start": 92.737664,
+      "end": 96.396168,
+      "spoken_phrase": "بدل ما الموظف يشوف مجرد قايمة بأرقام أو تواريخ مكالمات،",
+      "caption_ar": "بدل ما الموظف يشوف مجرد قايمة بأرقام أو تواريخ مكالمات،",
+      "raw_recognition": "بدلما الموظف يشوف مجرد قيمة بأرقام أو توريخ مكلمات",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.8,
+          "text": " بدلما الموظف يشوف مجرد قيمة بأرقام أو توريخ مكلمات"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C041",
+      "scene_id": "S4",
+      "start": 96.808413,
+      "end": 99.015533,
+      "spoken_phrase": "إحنا بنقترح إنه يشوف Timeline واضحة،",
+      "caption_ar": "إحنا بنقترح إنه يشوف Timeline واضحة،",
+      "raw_recognition": "نقطرح أن نرى وضحة وطحة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.46,
+          "text": " نقطرح أن نرى وضحة وطحة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C042",
+      "scene_id": "S4",
+      "start": 99.259773,
+      "end": 101.494717,
+      "spoken_phrase": "فيها كل الـPrevious Calls المتاحة للعميل.",
+      "caption_ar": "فيها كل الـPrevious Calls المتاحة للعميل.",
+      "raw_recognition": "فيها كل البرديوز كالز المتاحة للعميل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.44,
+          "text": " فيها كل البرديوز كالز المتاحة للعميل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C043",
+      "scene_id": "S4",
+      "start": 102.208299,
+      "end": 104.494535,
+      "spoken_phrase": "كل Call يكون لها تاريخها ووقتها،",
+      "caption_ar": "كل Call يكون لها تاريخها ووقتها،",
+      "raw_recognition": "كل كال يكون لها ترخة ووقتها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.44,
+          "text": " كل كال يكون لها ترخة ووقتها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C044",
+      "scene_id": "S4",
+      "start": 104.941905,
+      "end": 107.547075,
+      "spoken_phrase": "والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.",
+      "caption_ar": "والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.",
+      "raw_recognition": "والاجنت التي تعمل معها لو البيانات دي متسجلة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " والاجنت التي تعمل معها لو البيانات دي متسجلة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C045",
+      "scene_id": "S4",
+      "start": 108.062313,
+      "end": 108.553605,
+      "spoken_phrase": "والأهم،",
+      "caption_ar": "والأهم،",
+      "raw_recognition": "والأهم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " والأهم"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C046",
+      "scene_id": "S4",
+      "start": 108.940295,
+      "end": 110.923605,
+      "spoken_phrase": "الـNotes الخاصة بالمكالمة دي تحديدًا.",
+      "caption_ar": "الـNotes الخاصة بالمكالمة دي تحديدًا.",
+      "raw_recognition": "النوتز الخاصة بالمكلمة دي تحديداً",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " النوتز الخاصة بالمكلمة دي تحديداً"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C047",
+      "scene_id": "S4",
+      "start": 111.466939,
+      "end": 113.628118,
+      "spoken_phrase": "يعني كل مكالمة لها الـHistory بتاعتها،",
+      "caption_ar": "يعني كل مكالمة لها الـHistory بتاعتها،",
+      "raw_recognition": "يعني كل مكلمة لها الهيستري بتاعتها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.36,
+          "text": " يعني كل مكلمة لها الهيستري بتاعتها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C048",
+      "scene_id": "S4",
+      "start": 113.875011,
+      "end": 115.143651,
+      "spoken_phrase": "والـNotes اللي اتكتبت فيها،",
+      "caption_ar": "والـNotes اللي اتكتبت فيها،",
+      "raw_recognition": "والنوطس اللي تكتبت فيها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " والنوطس اللي تكتبت فيها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C049",
+      "scene_id": "S4",
+      "start": 115.461066,
+      "end": 117.013152,
+      "spoken_phrase": "بشكل منفصل ومنظم.",
+      "caption_ar": "بشكل منفصل ومنظم.",
+      "raw_recognition": "بشكل منفصل و منظم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بشكل منفصل و منظم"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C050",
+      "scene_id": "S5",
+      "start": 117.618322,
+      "end": 118.7922,
+      "spoken_phrase": "خلينا ناخد مثال عملي.",
+      "caption_ar": "خلينا ناخد مثال عملي.",
+      "raw_recognition": "خلنا ناخد مثال عمل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 1.34,
+          "text": " خلنا ناخد مثال عمل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C051",
+      "scene_id": "S5",
+      "start": 119.394218,
+      "end": 123.405896,
+      "spoken_phrase": "عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.",
+      "caption_ar": "عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.",
+      "raw_recognition": "عميل من الإليد سيجمنت تصل الإزبوع اللفات بخصوص exchange request",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.16,
+          "text": " عميل من الإليد سيجمنت تصل الإزبوع اللفات بخصوص exchange request"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C052",
+      "scene_id": "S5",
+      "start": 123.934807,
+      "end": 124.717937,
+      "spoken_phrase": "خلال المكالمة،",
+      "caption_ar": "خلال المكالمة،",
+      "raw_recognition": "خلال المكلمة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " خلال المكلمة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C053",
+      "scene_id": "S5",
+      "start": 124.92322,
+      "end": 127.764059,
+      "spoken_phrase": "الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،",
+      "caption_ar": "الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،",
+      "raw_recognition": "الاجينت كتب نوت أن الطلب محتاج مراجعة من الفرع",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " الاجينت كتب نوت أن الطلب محتاج مراجعة من الفرع"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C054",
+      "scene_id": "S5",
+      "start": 128.010385,
+      "end": 129.221429,
+      "spoken_phrase": "وإن فيه Follow-up مطلوب.",
+      "caption_ar": "وإن فيه Follow-up مطلوب.",
+      "raw_recognition": "وإن فيه فالوك مطلوب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وإن فيه فالوك مطلوب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C055",
+      "scene_id": "S5",
+      "start": 129.933673,
+      "end": 130.4122,
+      "spoken_phrase": "النهارده،",
+      "caption_ar": "النهارده،",
+      "raw_recognition": "النهار ده",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " النهار ده"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C056",
+      "scene_id": "S5",
+      "start": 130.601179,
+      "end": 133.413401,
+      "spoken_phrase": "نفس العميل بيتصل تاني يسأل عن آخر Update.",
+      "caption_ar": "نفس العميل بيتصل تاني يسأل عن آخر Update.",
+      "raw_recognition": "نفس العميل بيطصل تاني يسأل عن آخر update",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " نفس العميل بيطصل تاني يسأل عن آخر update"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C057",
+      "scene_id": "S5",
+      "start": 133.984014,
+      "end": 137.339796,
+      "spoken_phrase": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول،",
+      "caption_ar": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول،",
+      "raw_recognition": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C058",
+      "scene_id": "S5",
+      "start": 137.734785,
+      "end": 139.185986,
+      "spoken_phrase": "يقدر يفتح الـPrevious Call،",
+      "caption_ar": "يقدر يفتح الـPrevious Call،",
+      "raw_recognition": "يقدر يفتح ال-Previous call",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " يقدر يفتح ال-Previous call"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C059",
+      "scene_id": "S5",
+      "start": 139.357732,
+      "end": 140.787959,
+      "spoken_phrase": "ويشوف الـNote اللي زميله كتبها.",
+      "caption_ar": "ويشوف الـNote اللي زميله كتبها.",
+      "raw_recognition": "ويشوف النوتل لزميله كتبه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ويشوف النوتل لزميله كتبه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C060",
+      "scene_id": "S5",
+      "start": 141.401293,
+      "end": 143.05966,
+      "spoken_phrase": "يعرف العميل كان بيتكلم في إيه،",
+      "caption_ar": "يعرف العميل كان بيتكلم في إيه،",
+      "raw_recognition": "يارف العميل كان بيتكلم في ايه؟",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " يارف العميل كان بيتكلم في ايه؟"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C061",
+      "scene_id": "S5",
+      "start": 143.39254,
+      "end": 144.806689,
+      "spoken_phrase": "وإيه آخر خطوة تسجلت،",
+      "caption_ar": "وإيه آخر خطوة تسجلت،",
+      "raw_recognition": "و أي أخر خطوة تسجلت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و أي أخر خطوة تسجلت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C062",
+      "scene_id": "S5",
+      "start": 144.96415,
+      "end": 146.632222,
+      "spoken_phrase": "وإيه الموضوع اللي محتاج Follow-up.",
+      "caption_ar": "وإيه الموضوع اللي محتاج Follow-up.",
+      "raw_recognition": "وإي الموضوع اللي محتاج فلووب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وإي الموضوع اللي محتاج فلووب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C063",
+      "scene_id": "S5",
+      "start": 147.128571,
+      "end": 147.657029,
+      "spoken_phrase": "وبالتالي،",
+      "caption_ar": "وبالتالي،",
+      "raw_recognition": "وبتلي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وبتلي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C064",
+      "scene_id": "S5",
+      "start": 147.880113,
+      "end": 150.005306,
+      "spoken_phrase": "يبدأ المحادثة وهو فاهم الـContext،",
+      "caption_ar": "يبدأ المحادثة وهو فاهم الـContext،",
+      "raw_recognition": "يبدأ المحتسى وهو فاهم الكنتكست",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.32,
+          "text": " يبدأ المحتسى وهو فاهم الكنتكست"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C065",
+      "scene_id": "S5",
+      "start": 150.331451,
+      "end": 153.005261,
+      "spoken_phrase": "من غير ما العميل يضطر يعيد نفس الشرح كل مرة.",
+      "caption_ar": "من غير ما العميل يضطر يعيد نفس الشرح كل مرة.",
+      "raw_recognition": "من غير ما العميل يضطر يعيد نفس الشرحة كل مرة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " من غير ما العميل يضطر يعيد نفس الشرحة كل مرة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C066",
+      "scene_id": "S5",
+      "start": 153.658254,
+      "end": 154.085646,
+      "spoken_phrase": "وطبعًا،",
+      "caption_ar": "وطبعًا،",
+      "raw_recognition": "وطبعاً",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وطبعاً"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C067",
+      "scene_id": "S5",
+      "start": 154.314739,
+      "end": 156.201519,
+      "spoken_phrase": "الـNote بتوضح اللي تسجل في المكالمة،",
+      "caption_ar": "الـNote بتوضح اللي تسجل في المكالمة،",
+      "raw_recognition": "النوت بتوضح لتسجل في المكلمة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " النوت بتوضح لتسجل في المكلمة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C068",
+      "scene_id": "S5",
+      "start": 156.442245,
+      "end": 158.99322,
+      "spoken_phrase": "مش بالضرورة إن الإجراء المطلوب اتنفذ بالفعل.",
+      "caption_ar": "مش بالضرورة إن الإجراء المطلوب اتنفذ بالفعل.",
+      "raw_recognition": "مش بالضرورة أن الإجراء المطلوب اتنفس بالفعل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " مش بالضرورة أن الإجراء المطلوب اتنفس بالفعل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C069",
+      "scene_id": "S6",
+      "start": 160.26644,
+      "end": 162.927937,
+      "spoken_phrase": "خلينا نشوف إيه اللي هيحصل أثناء الـCurrent Call نفسها.",
+      "caption_ar": "خلينا نشوف إيه اللي هيحصل أثناء الـCurrent Call نفسها.",
+      "raw_recognition": "دعنا نرى ما يحدث في الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 0.0,
+          "text": " دعنا نرى ما يحدث في الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C070",
+      "scene_id": "S6",
+      "start": 163.323175,
+      "end": 164.91907,
+      "spoken_phrase": "الـAgent بيتكلم مع العميل،",
+      "caption_ar": "الـAgent بيتكلم مع العميل،",
+      "raw_recognition": "الأجنت تكلم مع رمي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الأجنت تكلم مع رمي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C071",
+      "scene_id": "S6",
+      "start": 165.233719,
+      "end": 168.767302,
+      "spoken_phrase": "وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،",
+      "caption_ar": "وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،",
+      "raw_recognition": "و في نفس الوقت يقدر يسجل نواتز جديدة عن تفاصيل المحادسة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.68,
+          "text": " و في نفس الوقت يقدر يسجل نواتز جديدة عن تفاصيل المحادسة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C072",
+      "scene_id": "S6",
+      "start": 169.234512,
+      "end": 170.899433,
+      "spoken_phrase": "والإجراء اللي تم الاتفاق عليه،",
+      "caption_ar": "والإجراء اللي تم الاتفاق عليه،",
+      "raw_recognition": "والإجراء اللي تم اللي اتفاق علي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " والإجراء اللي تم اللي اتفاق علي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C073",
+      "scene_id": "S6",
+      "start": 171.076349,
+      "end": 172.306463,
+      "spoken_phrase": "أو الـFollow-up المطلوب.",
+      "caption_ar": "أو الـFollow-up المطلوب.",
+      "raw_recognition": "أو الفلوواب المطلوب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أو الفلوواب المطلوب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C074",
+      "scene_id": "S6",
+      "start": 172.626032,
+      "end": 173.832925,
+      "spoken_phrase": "وبعد ما الـCall تخلص،",
+      "caption_ar": "وبعد ما الـCall تخلص،",
+      "raw_recognition": "وبعدما الكال تخلص",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وبعدما الكال تخلص"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C075",
+      "scene_id": "S6",
+      "start": 174.027166,
+      "end": 176.838707,
+      "spoken_phrase": "الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،",
+      "caption_ar": "الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،",
+      "raw_recognition": "الملاحظات تتحفز مرتبطة بنفس الكل اكتبتي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " الملاحظات تتحفز مرتبطة بنفس الكل اكتبتي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C076",
+      "scene_id": "S6",
+      "start": 177.35712,
+      "end": 179.935737,
+      "spoken_phrase": "حسب طريقة التسجيل والـIntegration اللي هنعتمدها.",
+      "caption_ar": "حسب طريقة التسجيل والـIntegration اللي هنعتمدها.",
+      "raw_recognition": "حسب طريقة التسجيل والانتجريشن التي نعتمدها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " حسب طريقة التسجيل والانتجريشن التي نعتمدها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C077",
+      "scene_id": "S6",
+      "start": 180.367052,
+      "end": 182.002585,
+      "spoken_phrase": "ولما العميل يتصل مرة تانية،",
+      "caption_ar": "ولما العميل يتصل مرة تانية،",
+      "raw_recognition": "و لما العمين يتصل مرة تانية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و لما العمين يتصل مرة تانية"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C078",
+      "scene_id": "S6",
+      "start": 182.300612,
+      "end": 183.259229,
+      "spoken_phrase": "الـAgent التالي،",
+      "caption_ar": "الـAgent التالي،",
+      "raw_recognition": "الاجنة تالي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الاجنة تالي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C079",
+      "scene_id": "S6",
+      "start": 183.440499,
+      "end": 187.394104,
+      "spoken_phrase": "يقدر يرجع للـPrevious Calls ويشوف الـNotes الخاصة بكل مكالمة،",
+      "caption_ar": "يقدر يرجع للـPrevious Calls ويشوف الـNotes الخاصة بكل مكالمة،",
+      "raw_recognition": "يقدر يرجع على البروزيات الأولى ويشوف النوت الخاصة بكل مكلمة.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.16,
+          "text": " يقدر يرجع على البروزيات الأولى ويشوف النوت الخاصة بكل مكلمة."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C080",
+      "scene_id": "S6",
+      "start": 187.780522,
+      "end": 189.220159,
+      "spoken_phrase": "حسب الصلاحيات المتاحة له.",
+      "caption_ar": "حسب الصلاحيات المتاحة له.",
+      "raw_recognition": "حسب الصلاحيات المتاحلي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " حسب الصلاحيات المتاحلي"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C081",
+      "scene_id": "S6",
+      "start": 189.525624,
+      "end": 191.645057,
+      "spoken_phrase": "يعني بدل ما كل مكالمة تبدأ من الصفر،",
+      "caption_ar": "يعني بدل ما كل مكالمة تبدأ من الصفر،",
+      "raw_recognition": "يعني بدلا مكل مكلمة تبدأ من الصف",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.34,
+          "text": " يعني بدلا مكل مكلمة تبدأ من الصف"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C082",
+      "scene_id": "S6",
+      "start": 192.05322,
+      "end": 193.573741,
+      "spoken_phrase": "كل Call بتضيف معلومات،",
+      "caption_ar": "كل Call بتضيف معلومات،",
+      "raw_recognition": "كل كال ضد جيش معلومات",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " كل كال ضد جيش معلومات"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C083",
+      "scene_id": "S6",
+      "start": 193.731973,
+      "end": 195.105556,
+      "spoken_phrase": "تساعد في المكالمة اللي بعدها.",
+      "caption_ar": "تساعد في المكالمة اللي بعدها.",
+      "raw_recognition": "تساعد في المكلمة اللي بعدها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " تساعد في المكلمة اللي بعدها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C084",
+      "scene_id": "S7",
+      "start": 195.552789,
+      "end": 196.357619,
+      "spoken_phrase": "وفي نفس الوقت،",
+      "caption_ar": "وفي نفس الوقت،",
+      "raw_recognition": "و في نفس الوقت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و في نفس الوقت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C085",
+      "scene_id": "S7",
+      "start": 196.559955,
+      "end": 199.614558,
+      "spoken_phrase": "لازم التجربة تتعامل بشكل واضح مع الحالات المختلفة.",
+      "caption_ar": "لازم التجربة تتعامل بشكل واضح مع الحالات المختلفة.",
+      "raw_recognition": "لازم التجربة تتعامل بشكل واضح مع الحلات المختلفة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.28,
+          "text": " لازم التجربة تتعامل بشكل واضح مع الحلات المختلفة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C086",
+      "scene_id": "S7",
+      "start": 200.100091,
+      "end": 201.458889,
+      "spoken_phrase": "لو رقم العميل مش موجود،",
+      "caption_ar": "لو رقم العميل مش موجود،",
+      "raw_recognition": "لو رقم العميل مش موجود",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " لو رقم العميل مش موجود"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C087",
+      "scene_id": "S7",
+      "start": 201.809841,
+      "end": 203.802948,
+      "spoken_phrase": "الـAgent يقدر يعمل Manual Search.",
+      "caption_ar": "الـAgent يقدر يعمل Manual Search.",
+      "raw_recognition": "الاجن تقدر يعمل منيول سرچ",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الاجن تقدر يعمل منيول سرچ"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C088",
+      "scene_id": "S7",
+      "start": 204.095147,
+      "end": 206.529546,
+      "spoken_phrase": "ولو نفس الرقم مرتبط بأكتر من Customer،",
+      "caption_ar": "ولو نفس الرقم مرتبط بأكتر من Customer،",
+      "raw_recognition": "ولو نفس الرقم مرتضت بأكثر من كاستمر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " ولو نفس الرقم مرتضت بأكثر من كاستمر"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C089",
+      "scene_id": "S7",
+      "start": 206.848526,
+      "end": 211.626485,
+      "spoken_phrase": "الموظف يراجع الـPossible Matches ويحدد الـRecord الصحيح بعد التحقق المطلوب.",
+      "caption_ar": "الموظف يراجع الـPossible Matches ويحدد الـRecord الصحيح بعد التحقق المطلوب.",
+      "raw_recognition": "الموظف يراجع البحث بحيث يحديد الركد الصحيح بعد التحقق المطلوب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.88,
+          "text": " الموظف يراجع البحث بحيث يحديد الركد الصحيح بعد التحقق المطلوب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C090",
+      "scene_id": "S7",
+      "start": 211.929025,
+      "end": 213.830045,
+      "spoken_phrase": "ولو الـEmail أو الـSegment مش متاحة،",
+      "caption_ar": "ولو الـEmail أو الـSegment مش متاحة،",
+      "raw_recognition": "ولو الإيميل أو السجمنة مش متاحة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ولو الإيميل أو السجمنة مش متاحة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C091",
+      "scene_id": "S7",
+      "start": 214.203129,
+      "end": 216.35195,
+      "spoken_phrase": "النظام يوضح إن المعلومة مش موجودة،",
+      "caption_ar": "النظام يوضح إن المعلومة مش موجودة،",
+      "raw_recognition": "النظام يوضح أن المعلومة مش موجودة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.32,
+          "text": " النظام يوضح أن المعلومة مش موجودة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C092",
+      "scene_id": "S7",
+      "start": 216.642494,
+      "end": 218.298685,
+      "spoken_phrase": "بدل ما يعرض بيانات غير مؤكدة.",
+      "caption_ar": "بدل ما يعرض بيانات غير مؤكدة.",
+      "raw_recognition": "بدل ما يعرض بعينات غير مؤكدة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بدل ما يعرض بعينات غير مؤكدة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C093",
+      "scene_id": "S8",
+      "start": 219.327483,
+      "end": 222.836009,
+      "spoken_phrase": "إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في Concrete؟",
+      "caption_ar": "إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في Concrete؟",
+      "raw_recognition": "إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في كونكريت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.68,
+          "text": " إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في كونكريت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C094",
+      "scene_id": "S8",
+      "start": 223.378617,
+      "end": 225.237256,
+      "spoken_phrase": "هنبدأ بمراجعة الـGenesys Setup،",
+      "caption_ar": "هنبدأ بمراجعة الـGenesys Setup،",
+      "raw_recognition": "سنبدأ بمرجعة الجنس الستاب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " سنبدأ بمرجعة الجنس الستاب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C095",
+      "scene_id": "S8",
+      "start": 225.400658,
+      "end": 226.40458,
+      "spoken_phrase": "والـZoho Integration،",
+      "caption_ar": "والـZoho Integration،",
+      "raw_recognition": "وزوهو انتغريشن",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 1.12,
+          "text": " وزوهو انتغريشن"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C096",
+      "scene_id": "S8",
+      "start": 226.905057,
+      "end": 229.925782,
+      "spoken_phrase": "ونحدد مكان تخزين الـCall Activities والـAgent Notes،",
+      "caption_ar": "ونحدد مكان تخزين الـCall Activities والـAgent Notes،",
+      "raw_recognition": "ونحدد مكان تخزين الـ call activities وال agent notes",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.16,
+          "text": " ونحدد مكان تخزين الـ call activities وال agent notes"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C097",
+      "scene_id": "S8",
+      "start": 230.087755,
+      "end": 231.909229,
+      "spoken_phrase": "ومصدر بيانات الـCustomer Segment.",
+      "caption_ar": "ومصدر بيانات الـCustomer Segment.",
+      "raw_recognition": "وما صدر بيانات الكسطمر سغمنت.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وما صدر بيانات الكسطمر سغمنت."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C098",
+      "scene_id": "S8",
+      "start": 232.143923,
+      "end": 232.593447,
+      "spoken_phrase": "بعدها،",
+      "caption_ar": "بعدها،",
+      "raw_recognition": "بعدها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بعدها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C099",
+      "scene_id": "S8",
+      "start": 232.758571,
+      "end": 235.858639,
+      "spoken_phrase": "نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،",
+      "caption_ar": "نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،",
+      "raw_recognition": "سنرى ما يمكننا استخدمه من نيتف فترز الموجودة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.2,
+          "text": " سنرى ما يمكننا استخدمه من نيتف فترز الموجودة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C100",
+      "scene_id": "S8",
+      "start": 236.108095,
+      "end": 237.834512,
+      "spoken_phrase": "وإيه اللي محتاج Integration إضافية،",
+      "caption_ar": "وإيه اللي محتاج Integration إضافية،",
+      "raw_recognition": "وإلي محتاج إنتاجراشيون إضافية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وإلي محتاج إنتاجراشيون إضافية"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C101",
+      "scene_id": "S8",
+      "start": 238.211156,
+      "end": 240.380975,
+      "spoken_phrase": "من غير ما نبني System جديد لو مش محتاجينه.",
+      "caption_ar": "من غير ما نبني System جديد لو مش محتاجينه.",
+      "raw_recognition": "من غير ما نبني سستم جديد لو مش محتاجينه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.32,
+          "text": " من غير ما نبني سستم جديد لو مش محتاجينه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C102",
+      "scene_id": "S8",
+      "start": 240.69737,
+      "end": 243.010159,
+      "spoken_phrase": "وهنختبر التجربة باستخدام Test Calls،",
+      "caption_ar": "وهنختبر التجربة باستخدام Test Calls،",
+      "raw_recognition": "وها نختبر التجربة باستخدام Test Cause",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": " وها نختبر التجربة باستخدام Test Cause"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C103",
+      "scene_id": "S8",
+      "start": 243.203741,
+      "end": 246.090431,
+      "spoken_phrase": "عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،",
+      "caption_ar": "عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،",
+      "raw_recognition": "لتأكد أن بانات العميل تظهر بشبل صحيح.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " لتأكد أن بانات العميل تظهر بشبل صحيح."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C104",
+      "scene_id": "S8",
+      "start": 246.646939,
+      "end": 249.041474,
+      "spoken_phrase": "وإن كل Call مرتبطة بالـNotes الخاصة بيها،",
+      "caption_ar": "وإن كل Call مرتبطة بالـNotes الخاصة بيها،",
+      "raw_recognition": "وأن كل لكال مرتبطة بالنوتر خاص بها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " وأن كل لكال مرتبطة بالنوتر خاص بها"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C105",
+      "scene_id": "S8",
+      "start": 249.631361,
+      "end": 251.892449,
+      "spoken_phrase": "وإن المعلومات بتوصل للـAgent المناسب،",
+      "caption_ar": "وإن المعلومات بتوصل للـAgent المناسب،",
+      "raw_recognition": "وأن المعلومات بتوصل للأيجنت المناسب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.36,
+          "text": " وأن المعلومات بتوصل للأيجنت المناسب"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C106",
+      "scene_id": "S8",
+      "start": 252.043787,
+      "end": 252.895147,
+      "spoken_phrase": "بصلاحيات واضحة.",
+      "caption_ar": "بصلاحيات واضحة.",
+      "raw_recognition": "بصلاحيات وطحة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بصلاحيات وطحة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C107",
+      "scene_id": "S8",
+      "start": 253.388889,
+      "end": 254.037596,
+      "spoken_phrase": "وفي النهاية،",
+      "caption_ar": "وفي النهاية،",
+      "raw_recognition": "وفنههه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وفنههه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C108",
+      "scene_id": "S8",
+      "start": 254.293265,
+      "end": 257.035465,
+      "spoken_phrase": "إحنا مش بنتكلم عن مجرد شاشة فيها بيانات أكتر.",
+      "caption_ar": "إحنا مش بنتكلم عن مجرد شاشة فيها بيانات أكتر.",
+      "raw_recognition": "نحن لا تتكلم عن مجرد شاشة فيها بيانات أكثر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " نحن لا تتكلم عن مجرد شاشة فيها بيانات أكثر"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C109",
+      "scene_id": "S8",
+      "start": 257.652336,
+      "end": 261.9539,
+      "spoken_phrase": "إحنا بنتكلم عن تجربة بتساعد موظف خدمة العملاء يعرف مين العميل،",
+      "caption_ar": "إحنا بنتكلم عن تجربة بتساعد موظف خدمة العملاء يعرف مين العميل،",
+      "raw_recognition": "نتكلم عن تجربة بتساعد موظف خدمة العملة يعرف من العميل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.5,
+          "text": " نتكلم عن تجربة بتساعد موظف خدمة العملة يعرف من العميل"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C110",
+      "scene_id": "S8",
+      "start": 262.382222,
+      "end": 263.421542,
+      "spoken_phrase": "ومستوى عضويته،",
+      "caption_ar": "ومستوى عضويته،",
+      "raw_recognition": "و مستوعة عضوية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " و مستوعة عضوية"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C111",
+      "scene_id": "S8",
+      "start": 263.618435,
+      "end": 264.998526,
+      "spoken_phrase": "وتاريخ تواصله مع الشركة،",
+      "caption_ar": "وتاريخ تواصله مع الشركة،",
+      "raw_recognition": "وتاريخ تواصل مع الشركة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وتاريخ تواصل مع الشركة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C112",
+      "scene_id": "S8",
+      "start": 265.365283,
+      "end": 267.115238,
+      "spoken_phrase": "وآخر ملاحظات تسجلت عنه.",
+      "caption_ar": "وآخر ملاحظات تسجلت عنه.",
+      "raw_recognition": "وخر ملاحظات تسجلت عنه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وخر ملاحظات تسجلت عنه"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C113",
+      "scene_id": "S8",
+      "start": 267.472993,
+      "end": 269.982834,
+      "spoken_phrase": "وده يفتح فرصة حقيقية لتحسين الـFollow-up،",
+      "caption_ar": "وده يفتح فرصة حقيقية لتحسين الـFollow-up،",
+      "raw_recognition": "وده يفتح فرصة حقيقية لتحسين الفالوة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " وده يفتح فرصة حقيقية لتحسين الفالوة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C114",
+      "scene_id": "S8",
+      "start": 270.26449,
+      "end": 271.542857,
+      "spoken_phrase": "وتسهيل شغل الـAgents،",
+      "caption_ar": "وتسهيل شغل الـAgents،",
+      "raw_recognition": "وتسهيل شغل الاجتنس",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وتسهيل شغل الاجتنس"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C115",
+      "scene_id": "S8",
+      "start": 271.876122,
+      "end": 275.044422,
+      "spoken_phrase": "وتقديم Customer Experience أكتر تنظيمًا واستمرارية.",
+      "caption_ar": "وتقديم Customer Experience أكتر تنظيمًا واستمرارية.",
+      "raw_recognition": "وتأديم كستمر تنظيمة أكثر تنظيمة وستمرارية.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.32,
+          "text": " وتأديم كستمر تنظيمة أكثر تنظيمة وستمرارية."
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C116",
+      "scene_id": "S8",
+      "start": 275.422132,
+      "end": 279.735329,
+      "spoken_phrase": "وده بالضبط اللي GRINDCTRL بتقترح تقدمه لـConcrete:",
+      "caption_ar": "وده بالضبط اللي GRINDCTRL بتقترح تقدمه لـConcrete:",
+      "raw_recognition": "و دبط ضبط \"GRIND CTRL\" بتقترح تقدمه الكنكريت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.54,
+          "text": " و دبط ضبط \"GRIND CTRL\" بتقترح تقدمه الكنكريت"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C117",
+      "scene_id": "S8",
+      "start": 280.192177,
+      "end": 281.427619,
+      "spoken_phrase": "إن كل Call جديدة،",
+      "caption_ar": "إن كل Call جديدة،",
+      "raw_recognition": "في كل كل جديد",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " في كل كل جديد"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C118",
+      "scene_id": "S8",
+      "start": 281.694898,
+      "end": 284.820998,
+      "spoken_phrase": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،",
+      "caption_ar": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،",
+      "raw_recognition": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.28,
+          "text": " تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    },
+    {
+      "id": "C119",
+      "scene_id": "S8",
+      "start": 285.206553,
+      "end": 285.759955,
+      "spoken_phrase": "مش من الصفر.",
+      "caption_ar": "مش من الصفر.",
+      "raw_recognition": "ميش من السفر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 1.0,
+          "text": " ميش من السفر"
+        }
+      ],
+      "timing_basis": "measured phrase start/end; not word interpolation"
+    }
+  ],
+  "subphrase_cues": [],
+  "method": {
+    "audio_authority": "Actual final MP3; expanded narration differs from intended handoff script. Original retained unchanged.",
+    "boundary_method": "Actual PCM silence segmentation: -35 dB / 150 ms pauses; local Whisper-small phrase and contextual recognition.",
+    "captions": "ASR-assisted Arabic transcript normalized for readability and vendor spellings. Not certified verbatim or word-level alignment; human subtitle review recommended. Raw recognition retained.",
+    "raw_segments": "Local ASR analysis offsets with silence padding; not global film timestamps or animation authority.",
+    "precision": "Stored measured phrase start/end offsets are not exact individual-word timestamps. All detailed effects use measured phrase boundaries.",
+    "external_listening": "No external participant or human full listen-through claimed."
+  },
+  "animation_events": [
+    {
+      "scene_id": "S1",
+      "time": 0,
+      "related_phrase_id": "C001",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Customer recognition",
+        "The call becomes a customer conversation.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "01 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 1.034331,
+      "related_phrase_id": "C002",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 23.954172,
+      "related_phrase_id": "C012",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": [
+        {
+          "start": 23.954172,
+          "end": 31.127982,
+          "scale0": 1,
+          "scale1": 1.015,
+          "x": 640,
+          "y": 420
+        }
+      ]
+    },
+    {
+      "scene_id": "S1",
+      "time": 28.825261,
+      "related_phrase_id": "C014",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 31.127982,
+      "related_phrase_id": "C014",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": [
+        {
+          "start": 23.954172,
+          "end": 31.127982,
+          "scale0": 1,
+          "scale1": 1.015,
+          "x": 640,
+          "y": 420
+        }
+      ]
+    },
+    {
+      "scene_id": "S1",
+      "time": 31.641769,
+      "related_phrase_id": "C015",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "Agent A",
+        "DEMO-1008",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "Agent B",
+        "DEMO-1003",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "Agent C",
+        "DEMO-0926"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 34.783855,
+      "related_phrase_id": "C016",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Followed up on the exchange. Branch review requested.",
+        "Customer requested a size exchange.",
+        "Customer asked about product availability."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1008",
+          "author": "Agent A",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-1003",
+          "author": "Agent B",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-0926",
+          "author": "Agent C",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 37.40873,
+      "related_phrase_id": "C017",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 39.718526,
+      "related_phrase_id": "C018",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Identity and contact",
+        "Start with the caller number. Resolve a record.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "02 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 45.936304,
+      "related_phrase_id": "C021",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Available caller number → lookup",
+        "Permitted customer-record lookup; source and linking to validate.",
+        "+20 10 •••• 4821"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 52.279637,
+      "related_phrase_id": "C022",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Permitted record association (DEMO)",
+        "The number is a lookup key, not identity verification."
+      ],
+      "disappearing_text": [
+        "Available caller number → lookup",
+        "Permitted customer-record lookup; source and linking to validate.",
+        "+20 10 •••• 4821"
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 58.100816,
+      "related_phrase_id": "C025",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [
+        "Permitted record association (DEMO)",
+        "The number is a lookup key, not identity verification."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 58.838299,
+      "related_phrase_id": "C026",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "+20 10 •••• 4821"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 60.118073,
+      "related_phrase_id": "C027",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Ahmed M. (DEMO)",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 62.166757,
+      "related_phrase_id": "C028",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Icons Club in context",
+        "Name, number, membership and email.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "03 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 62.92195,
+      "related_phrase_id": "C029",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Concrete Icons Club"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 64.121224,
+      "related_phrase_id": "C030",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "LIFESTYLE",
+        "PRESTIGE",
+        "ELITE"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 67.058322,
+      "related_phrase_id": "C031",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "Approved membership source required.\nNo tier inferred from the phone number."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 71.941361,
+      "related_phrase_id": "C033",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "ahmed@example.com"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 75.534127,
+      "related_phrase_id": "C034",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": [
+        {
+          "start": 75.534127,
+          "end": 79.664467,
+          "scale0": 1,
+          "scale1": 1.018,
+          "x": 779,
+          "y": 385
+        }
+      ]
+    },
+    {
+      "scene_id": "S3",
+      "time": 79.664467,
+      "related_phrase_id": "C034",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": [
+        {
+          "start": 75.534127,
+          "end": 79.664467,
+          "scale0": 1,
+          "scale1": 1.018,
+          "x": 779,
+          "y": 385
+        }
+      ]
+    },
+    {
+      "scene_id": "S4",
+      "time": 83.10966,
+      "related_phrase_id": "C036",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Individual call activity",
+        "Each call keeps its own human-written notes.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "04 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 90.203401,
+      "related_phrase_id": "C039",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Call activity, not a customer-global summary."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 96.808413,
+      "related_phrase_id": "C041",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Call activity",
+        "Retained · Linked · Permitted"
+      ],
+      "disappearing_text": [
+        "Call activity, not a customer-global summary."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 102.208299,
+      "related_phrase_id": "C043",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "DEMO-1008",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "DEMO-1003",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "DEMO-0926"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 104.941905,
+      "related_phrase_id": "C044",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Agent A",
+        "Agent B",
+        "Agent C"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 108.940295,
+      "related_phrase_id": "C046",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Followed up on the exchange. Branch review requested.",
+        "Customer requested a size exchange.",
+        "Customer asked about product availability."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1008",
+          "author": "Agent A",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-1003",
+          "author": "Agent B",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-0926",
+          "author": "Agent C",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 111.466939,
+      "related_phrase_id": "C047",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 113.875011,
+      "related_phrase_id": "C048",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 115.461066,
+      "related_phrase_id": "C049",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 117.618322,
+      "related_phrase_id": "C050",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · The 08 Oct follow-up",
+        "Open the earlier call. Read the original note.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "05 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof",
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "Agent A",
+        "DEMO-1008",
+        "Followed up on the exchange. Branch review requested.",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "Agent B",
+        "DEMO-1003",
+        "Customer requested a size exchange.",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "Agent C",
+        "DEMO-0926",
+        "Customer asked about product availability."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1008",
+          "author": "Agent A",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-1003",
+          "author": "Agent B",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-0926",
+          "author": "Agent C",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 119.394218,
+      "related_phrase_id": "C051",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 123.934807,
+      "related_phrase_id": "C052",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 124.92322,
+      "related_phrase_id": "C053",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 129.933673,
+      "related_phrase_id": "C055",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 137.734785,
+      "related_phrase_id": "C058",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Previous calls",
+        "08 Oct",
+        "Agent A",
+        "DEMO-1008",
+        "03 Oct",
+        "Agent B",
+        "DEMO-1003",
+        "26 Sep",
+        "Agent C",
+        "DEMO-0926"
+      ],
+      "disappearing_text": [
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "Agent A",
+        "DEMO-1008",
+        "Followed up on the exchange. Branch review requested.",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "Agent B",
+        "DEMO-1003",
+        "Customer requested a size exchange.",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "Agent C",
+        "DEMO-0926",
+        "Customer asked about product availability."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 139.357732,
+      "related_phrase_id": "C059",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "08 Oct 2026 · 14:32 · Inbound",
+        "Agent A · DEMO-1008",
+        "Note: 08 Oct · 14:36",
+        "Agent-written note",
+        "Followed up on the exchange. Branch review requested.",
+        "Source: this interaction only · Synthetic record"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1008",
+          "author": "Agent A",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 141.401293,
+      "related_phrase_id": "C060",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 147.128571,
+      "related_phrase_id": "C063",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 156.442245,
+      "related_phrase_id": "C068",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Recorded request · Completion is not confirmed"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 160.26644,
+      "related_phrase_id": "C069",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Current note → later retrieval",
+        "Write it for this call. Retrieve it from this call.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "06 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 163.323175,
+      "related_phrase_id": "C070",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Current call note · Human Agent D",
+        "12 Oct 2026 · 10:24 · DEMO-1012",
+        "Save note",
+        "Draft · Proposed recording step"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 165.233719,
+      "related_phrase_id": "C071",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Customer called again; awaiting a confirmed branch update."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1012",
+          "author": "Agent D",
+          "typing": {
+            "start": 165.233719,
+            "end": 172.306463
+          }
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 172.626032,
+      "related_phrase_id": "C074",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Caller number",
+        "+20 10 •••• 4821",
+        "After call (DEMO)",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction"
+      ],
+      "disappearing_text": [
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction"
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 174.027166,
+      "related_phrase_id": "C075",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 176.838707,
+      "related_phrase_id": "C075",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Recorded (DEMO) · Same interaction: DEMO-1012"
+      ],
+      "disappearing_text": [
+        "Draft · Proposed recording step"
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 180.367052,
+      "related_phrase_id": "C077",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Later call (DEMO)",
+        "Agent E",
+        "DEMO-1015",
+        "15 Oct · 09:10",
+        "Fictional interaction",
+        "Previous calls",
+        "12 Oct",
+        "Agent D",
+        "08 Oct",
+        "Agent A",
+        "03 Oct",
+        "Agent B",
+        "26 Sep",
+        "Agent C",
+        "Later interaction (DEMO) · 15 Oct 2026 · Agent E"
+      ],
+      "disappearing_text": [
+        "Caller number",
+        "+20 10 •••• 4821",
+        "After call (DEMO)",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Current call note · Human Agent D",
+        "12 Oct 2026 · 10:24 · DEMO-1012",
+        "Customer called again; awaiting a confirmed branch update.",
+        "Save note",
+        "Recorded (DEMO) · Same interaction: DEMO-1012"
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 183.440499,
+      "related_phrase_id": "C079",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "12 Oct 2026 · 10:24 · Inbound",
+        "Agent D · DEMO-1012",
+        "Note: 12 Oct · 10:29",
+        "Agent-written note",
+        "Customer called again; awaiting a confirmed branch update.",
+        "Original author: Agent D · Source: DEMO-1012"
+      ],
+      "disappearing_text": [
+        "Later interaction (DEMO) · 15 Oct 2026 · Agent E"
+      ],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1012",
+          "author": "Agent D",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 187.780522,
+      "related_phrase_id": "C080",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 189.525624,
+      "related_phrase_id": "C081",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 192.05322,
+      "related_phrase_id": "C082",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 193.731973,
+      "related_phrase_id": "C083",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 195.552789,
+      "related_phrase_id": "C084",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Safe exception states",
+        "Show the truth. Keep the call moving.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "07 / 08",
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Call active",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof",
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "Agent A",
+        "DEMO-1008",
+        "Followed up on the exchange. Branch review requested.",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "Agent B",
+        "DEMO-1003",
+        "Customer requested a size exchange.",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "Agent C",
+        "DEMO-0926",
+        "Customer asked about product availability."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1008",
+          "author": "Agent A",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-1003",
+          "author": "Agent B",
+          "typing": null
+        },
+        {
+          "interaction_id": "DEMO-0926",
+          "author": "Agent C",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 200.100091,
+      "related_phrase_id": "C086",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "No matching record",
+        "Continue with the existing manual-search procedure."
+      ],
+      "disappearing_text": [
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof",
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "08 Oct 2026",
+        "14:32 · Inbound",
+        "Agent A",
+        "DEMO-1008",
+        "Followed up on the exchange. Branch review requested.",
+        "03 Oct 2026",
+        "11:08 · Inbound",
+        "Agent B",
+        "DEMO-1003",
+        "Customer requested a size exchange.",
+        "26 Sep 2026",
+        "16:45 · Inbound",
+        "Agent C",
+        "DEMO-0926",
+        "Customer asked about product availability."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 201.809841,
+      "related_phrase_id": "C087",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Manual search"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 204.095147,
+      "related_phrase_id": "C088",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "More than one possible customer",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Customer B (DEMO)",
+        "+20 10 •••• 4821"
+      ],
+      "disappearing_text": [
+        "No matching record",
+        "Continue with the existing manual-search procedure.",
+        "Manual search"
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 206.848526,
+      "related_phrase_id": "C089",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Agreed verification first. No candidate history disclosed."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 211.626485,
+      "related_phrase_id": "C089",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 211.929025,
+      "related_phrase_id": "C090",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "Segment not available",
+        "Not available",
+        "Associated record · Not identity proof"
+      ],
+      "disappearing_text": [
+        "More than one possible customer",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Customer B (DEMO)",
+        "+20 10 •••• 4821",
+        "Agreed verification first. No candidate history disclosed."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 214.203129,
+      "related_phrase_id": "C091",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Unavailable or unlinked data is not guessed.\nHistory and note permissions still apply."
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 216.642494,
+      "related_phrase_id": "C092",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Lookup unavailable",
+        "Availability error · Not an empty call history.\nThe active call continues."
+      ],
+      "disappearing_text": [
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "Segment not available",
+        "Not available",
+        "Associated record · Not identity proof",
+        "Unavailable or unlinked data is not guessed.\nHistory and note permissions still apply."
+      ],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 219.327483,
+      "related_phrase_id": "C093",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 03 · Native capability and a pilot",
+        "Validate the sources. Then test the experience.",
+        "Proposed experience · Synthetic records · Native UI, sources and recording behavior to validate",
+        "08 / 08",
+        "Inspect existing sources and supported presentation"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 223.378617,
+      "related_phrase_id": "C094",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Genesys",
+        "Interaction → its agent notes"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 225.400658,
+      "related_phrase_id": "C095",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Zoho Desk",
+        "Customer / call activities, if supported"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 230.087755,
+      "related_phrase_id": "C097",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Concrete Icons Club",
+        "Membership source: identify and validate"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 232.758571,
+      "related_phrase_id": "C099",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Use existing native features if sufficient"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 236.108095,
+      "related_phrase_id": "C100",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Smallest supported bridge only for a gap"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 240.69737,
+      "related_phrase_id": "C102",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Authorized pilot · To validate"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 243.203741,
+      "related_phrase_id": "C103",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Profile and membership source"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 246.646939,
+      "related_phrase_id": "C104",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Call ↔ own note ↔ permitted agent"
+      ],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 253.388889,
+      "related_phrase_id": "C107",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [
+        "Interaction workspace",
+        "Customer 360° · Illustrative",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "Later call (DEMO)",
+        "Agent E",
+        "DEMO-1015",
+        "15 Oct · 09:10",
+        "Fictional interaction",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "Concrete Icons Club",
+        "ELITE (Illustrative)",
+        "ahmed@example.com",
+        "Associated record · Not identity proof",
+        "Previous calls",
+        "12 Oct",
+        "Agent D",
+        "08 Oct",
+        "Agent A",
+        "03 Oct",
+        "Agent B",
+        "26 Sep",
+        "Agent C",
+        "12 Oct 2026 · 10:24 · Inbound",
+        "Agent D · DEMO-1012",
+        "Note: 12 Oct · 10:29",
+        "Agent-written note",
+        "Customer called again; awaiting a confirmed branch update.",
+        "Agent D wrote this for DEMO-1012, not DEMO-1015.",
+        "Start from the last recorded interaction."
+      ],
+      "disappearing_text": [
+        "Validate the sources. Then test the experience.",
+        "Inspect existing sources and supported presentation",
+        "Genesys",
+        "Interaction → its agent notes",
+        "Zoho Desk",
+        "Customer / call activities, if supported",
+        "Concrete Icons Club",
+        "Membership source: identify and validate",
+        "Use existing native features if sufficient",
+        "Smallest supported bridge only for a gap",
+        "Authorized pilot · To validate",
+        "Profile and membership source",
+        "Call ↔ own note ↔ permitted agent"
+      ],
+      "note_ownership": [
+        {
+          "interaction_id": "DEMO-1012",
+          "author": "Agent D",
+          "typing": null
+        }
+      ],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 257.652336,
+      "related_phrase_id": "C109",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 262.382222,
+      "related_phrase_id": "C110",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 263.618435,
+      "related_phrase_id": "C111",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 265.365283,
+      "related_phrase_id": "C112",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 267.472993,
+      "related_phrase_id": "C113",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 281.694898,
+      "related_phrase_id": "C118",
+      "basis": "measured phrase/scene boundary; easing and typing windows use actual phrase bounds",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "note_ownership": [],
+      "camera_events": []
+    }
+  ],
+  "animation_easing_ms": 350,
+  "note_relationships": {
+    "historic_note": "demo_interactions::DEMO-1008 / Agent A",
+    "new_note": "demo_interactions::DEMO-1012 / Agent D",
+    "later_active_call": "demo_interactions::DEMO-1015 / Agent E",
+    "retrieval": "The later interaction reads the original DEMO-1012 note; no note is copied into DEMO-1015.",
+    "save_behavior": "Generic proposed demo recording step; native save/ACW and storage unverified."
+  },
+  "supplemental_visuals": "Lookup-unavailable state supplements the actual C092 data-truth phrase; the expanded recording does not name every exception. It is not transcribed as spoken service-unavailable wording."
+}

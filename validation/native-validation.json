@@ -1,0 +1,78 @@
+{
+  "en": {
+    "pptx_native_pages": 12,
+    "html_pdf_pages": 12,
+    "native_fonts": [
+      "BAAAAA+Manrope-Bold",
+      "CAAAAA+Manrope-Regular",
+      "DAAAAA+Manrope-Bold",
+      "EAAAAA+Manrope-Regular",
+      "FAAAAA+Manrope-Regular",
+      "GAAAAA+Manrope-Bold",
+      "HAAAAA+Manrope-Bold",
+      "IAAAAA+Manrope-Bold",
+      "JAAAAA+Manrope-Regular",
+      "KAAAAA+Manrope-Regular",
+      "LAAAAA+Manrope-Bold",
+      "MAAAAA+Manrope-Regular",
+      "NAAAAA+Manrope-Bold",
+      "OAAAAA+Manrope-Bold",
+      "PAAAAA+Manrope-Regular",
+      "QAAAAA+Manrope-Regular",
+      "RAAAAA+DejaVuSans",
+      "SAAAAA+Manrope-Bold",
+      "TAAAAA+Manrope-Bold",
+      "UAAAAA+Manrope-Regular",
+      "VAAAAA+Manrope-Regular"
+    ],
+    "page_size": [
+      0.0,
+      0.0,
+      960.0094604492188,
+      540.0
+    ]
+  },
+  "ar": {
+    "pptx_native_pages": 12,
+    "html_pdf_pages": 12,
+    "native_fonts": [
+      "ABAAAA+IBMPlexSansArabic-Medium",
+      "BAAAAA+Manrope-Bold",
+      "BBAAAA+IBMPlexSansArabic-Medium",
+      "CAAAAA+IBMPlexSansArabic-Medium",
+      "CBAAAA+IBMPlexSansArabic-Medium",
+      "DAAAAA+NotoSans-Regular",
+      "DBAAAA+Manrope-Bold",
+      "EAAAAA+IBMPlexSansArabic-Medium",
+      "EBAAAA+Manrope-Regular",
+      "FAAAAA+NotoSans-Bold",
+      "FBAAAA+IBMPlexSansArabic-Medium",
+      "GAAAAA+IBMPlexSansArabic-Medium",
+      "HAAAAA+Manrope-Regular",
+      "IAAAAA+IBMPlexSansArabic-Medium",
+      "JAAAAA+Manrope-Bold",
+      "KAAAAA+IBMPlexSansArabic-Medium",
+      "LAAAAA+Manrope-Bold",
+      "MAAAAA+IBMPlexSansArabic-Medium",
+      "NAAAAA+IBMPlexSansArabic-Medium",
+      "OAAAAA+Manrope-Regular",
+      "PAAAAA+Manrope-Regular",
+      "QAAAAA+Manrope-Regular",
+      "RAAAAA+Manrope-Bold",
+      "SAAAAA+Manrope-Regular",
+      "TAAAAA+Manrope-Regular",
+      "UAAAAA+Manrope-Bold",
+      "VAAAAA+IBMPlexSansArabic-Medium",
+      "WAAAAA+Manrope-Bold",
+      "XAAAAA+Manrope-Bold",
+      "YAAAAA+Manrope-Regular",
+      "ZAAAAA+Manrope-Regular"
+    ],
+    "page_size": [
+      0.0,
+      0.0,
+      960.0094604492188,
+      540.0
+    ]
+  }
+}

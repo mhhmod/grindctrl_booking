@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "Every retained/linked historic call retrieves only its own human-author note.",
+    "Current/after-call save stays under DEMO-1012; future DEMO-1015 reads it without copying it or replacing its author. Wrong interaction and empty note writes are rejected.",
+    "Shared-number candidates expose no history before agreed selection, and the other customer never receives customer A notes.",
+    "No match, service unavailable and withheld number are distinct; call remains active.",
+    "Missing fields stay missing; unavailable/denied/partially linked history are distinct and do not expose inaccessible notes.",
+    "Denied writes are blocked; synthetic transfer preserves canonical call and previous note authors. No claim of tenant/vendor transfer behavior.",
+    "Compound source/interaction keys prevent source collisions; unretained records are not readable."
+  ],
+  "scope": "Offline synthetic model, not vendor APIs, real retention, tenant auth or production behavior."
+}

@@ -1,0 +1,16 @@
+{
+  "synthetic": true,
+  "sourceSystem": "demo_interactions",
+  "currentInteractionId": "DEMO-1012",
+  "laterInteractionId": "DEMO-1015",
+  "customer": {"id":"DEMO-CUSTOMER-A","name":"Ahmed M. (DEMO)","phone":"+20 10 •••• 4821","email":"ahmed@example.com","segment":"ELITE","segmentIllustrative":true},
+  "secondCandidate":{"id":"DEMO-CUSTOMER-B","name":"Customer B (DEMO)","phone":"+20 10 •••• 4821","email":null,"segment":null},
+  "calls":[
+    {"id":"DEMO-1008","sourceSystem":"demo_interactions","customerId":"DEMO-CUSTOMER-A","time":"2026-10-08T14:32:00+03:00","dateLabel":"08 Oct 2026","timeLabel":"14:32","direction":"Inbound","agent":"Agent A","retained":true,"linked":true,"notes":[{"interactionId":"DEMO-1008","sourceSystem":"demo_interactions","author":"Agent A","createdAt":"2026-10-08T14:36:00+03:00","text":"Followed up on the exchange. Branch review requested."}]},
+    {"id":"DEMO-1003","sourceSystem":"demo_interactions","customerId":"DEMO-CUSTOMER-A","time":"2026-10-03T11:08:00+03:00","dateLabel":"03 Oct 2026","timeLabel":"11:08","direction":"Inbound","agent":"Agent B","retained":true,"linked":true,"notes":[{"interactionId":"DEMO-1003","sourceSystem":"demo_interactions","author":"Agent B","createdAt":"2026-10-03T11:12:00+03:00","text":"Customer requested a size exchange."}]},
+    {"id":"DEMO-0926","sourceSystem":"demo_interactions","customerId":"DEMO-CUSTOMER-A","time":"2026-09-26T16:45:00+03:00","dateLabel":"26 Sep 2026","timeLabel":"16:45","direction":"Inbound","agent":"Agent C","retained":true,"linked":true,"notes":[{"interactionId":"DEMO-0926","sourceSystem":"demo_interactions","author":"Agent C","createdAt":"2026-09-26T16:47:00+03:00","text":"Customer asked about product availability."}]},
+    {"id":"DEMO-1012","sourceSystem":"demo_interactions","customerId":"DEMO-CUSTOMER-A","time":"2026-10-12T10:24:00+03:00","dateLabel":"12 Oct 2026","timeLabel":"10:24","direction":"Inbound","agent":"Agent D","retained":true,"linked":true,"notes":[]},
+    {"id":"DEMO-1015","sourceSystem":"demo_interactions","customerId":"DEMO-CUSTOMER-A","time":"2026-10-15T09:10:00+03:00","dateLabel":"15 Oct 2026","timeLabel":"09:10","direction":"Inbound","agent":"Agent E","retained":true,"linked":true,"notes":[]}
+  ],
+  "newNote":"Customer called again; awaiting a confirmed branch update."
+}

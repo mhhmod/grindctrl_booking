@@ -1,0 +1,227 @@
+{
+  "encodedPlayback": [
+    {
+      "file": "GRINDCTRL_Concrete_Part03_Customer360.mp4",
+      "duration": 286.166667,
+      "width": 1920,
+      "height": 1080,
+      "muted": false,
+      "checks": [
+        {
+          "seek": 0,
+          "time": 0.153467,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 10,
+          "audioDecodedBytes": 9927
+        },
+        {
+          "seek": 39.719,
+          "time": 39.868582,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 211,
+          "audioDecodedBytes": 152788
+        },
+        {
+          "seek": 73.8,
+          "time": 73.951832,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 435,
+          "audioDecodedBytes": 321759
+        },
+        {
+          "seek": 110.2,
+          "time": 110.334446,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 500,
+          "audioDecodedBytes": 375849
+        },
+        {
+          "seek": 142.5,
+          "time": 142.646481,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 534,
+          "audioDecodedBytes": 407706
+        },
+        {
+          "seek": 169.9,
+          "time": 170.050066,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 642,
+          "audioDecodedBytes": 489630
+        },
+        {
+          "seek": 190,
+          "time": 190.146149,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 851,
+          "audioDecodedBytes": 639880
+        },
+        {
+          "seek": 210.5,
+          "time": 210.637681,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 926,
+          "audioDecodedBytes": 694929
+        },
+        {
+          "seek": 249,
+          "time": 249.159065,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1157,
+          "audioDecodedBytes": 857418
+        },
+        {
+          "seek": 280.5,
+          "time": 280.643417,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1331,
+          "audioDecodedBytes": 986447
+        },
+        {
+          "seek": 285.5,
+          "time": 286.166667,
+          "paused": true,
+          "ended": true,
+          "error": null,
+          "frames": 1416,
+          "audioDecodedBytes": 1044739
+        }
+      ]
+    },
+    {
+      "file": "GRINDCTRL_Concrete_Part03_Customer360_AR.mp4",
+      "duration": 286.166667,
+      "width": 1920,
+      "height": 1080,
+      "muted": false,
+      "checks": [
+        {
+          "seek": 0,
+          "time": 0.164358,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 10,
+          "audioDecodedBytes": 10320
+        },
+        {
+          "seek": 39.719,
+          "time": 39.86485,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 211,
+          "audioDecodedBytes": 153181
+        },
+        {
+          "seek": 73.8,
+          "time": 73.939435,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 434,
+          "audioDecodedBytes": 322152
+        },
+        {
+          "seek": 110.2,
+          "time": 110.340327,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 500,
+          "audioDecodedBytes": 376242
+        },
+        {
+          "seek": 142.5,
+          "time": 142.641142,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 535,
+          "audioDecodedBytes": 408099
+        },
+        {
+          "seek": 169.9,
+          "time": 170.042267,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 641,
+          "audioDecodedBytes": 490023
+        },
+        {
+          "seek": 190,
+          "time": 190.142648,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 851,
+          "audioDecodedBytes": 640273
+        },
+        {
+          "seek": 210.5,
+          "time": 210.642374,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 925,
+          "audioDecodedBytes": 696081
+        },
+        {
+          "seek": 249,
+          "time": 249.150889,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1156,
+          "audioDecodedBytes": 858570
+        },
+        {
+          "seek": 280.5,
+          "time": 280.652555,
+          "paused": false,
+          "ended": false,
+          "error": null,
+          "frames": 1331,
+          "audioDecodedBytes": 987218
+        },
+        {
+          "seek": 285.5,
+          "time": 286.166667,
+          "paused": true,
+          "ended": true,
+          "error": null,
+          "frames": 1416,
+          "audioDecodedBytes": 1045510
+        }
+      ]
+    }
+  ],
+  "fidelityHook": {
+    "refusedUnapproved": true,
+    "installedApprovedSyntheticFixture": true,
+    "correctCameraParentAndTimedState": true,
+    "resetToIllustration": true
+  },
+  "limitation": "Software playback/decode inspection, ASR and signal comparison; no human full listen-through or perceptual audio rating is claimed."
+}

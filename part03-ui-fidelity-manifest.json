@@ -1,0 +1,284 @@
+{
+  "enabled": false,
+  "reason": "No authorized anonymized Concrete tenant captures were supplied or inspected.",
+  "slots": {
+    "genesys.call": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S1",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S2",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S3",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S4",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S5",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S6",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S7",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        },
+        {
+          "scene_id": "S8",
+          "box": {
+            "x": 48,
+            "y": 230,
+            "w": 264,
+            "h": 416,
+            "anchors": {
+              "caller_number": [
+                0.08,
+                0.31,
+                0.86,
+                0.14
+              ],
+              "interaction": [
+                0.08,
+                0.59,
+                0.85,
+                0.12
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "customer.context": {
+      "approved": false,
+      "anonymized": false,
+      "states": [],
+      "scenes": [
+        {
+          "scene_id": "S1",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S2",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S3",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S4",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S5",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S6",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S7",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        },
+        {
+          "scene_id": "S8",
+          "box": {
+            "x": 332,
+            "y": 242,
+            "w": 888,
+            "h": 392,
+            "anchors": {}
+          }
+        }
+      ]
+    }
+  }
+}
