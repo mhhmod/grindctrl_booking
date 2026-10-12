@@ -1,0 +1,60 @@
+[
+  {
+    "key": "genesys-native-notes",
+    "url": "https://help.genesys.cloud/articles/enter-notes-for-an-interaction/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-history",
+    "url": "https://help.genesys.cloud/articles/view-interaction-history-contact/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-retention",
+    "url": "https://help.mypurecloud.com/articles/limit-interaction-history-for-external-contacts-and-organization-to-365-days/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-contacts",
+    "url": "https://help.zoho.com/portal/en/kb/desk/contacts-and-accounts/articles/customer-module-the-contacts-and-accounts-detail-page",
+    "status": 200,
+    "bytes": 34087,
+    "content_access": "HTML application shell only; no usable article text retrieved. No UI/capability claim based on status 200."
+  },
+  {
+    "key": "zoho-calls",
+    "url": "https://help.zoho.com/portal/en/kb/desk/activities/articles/adding-editing-and-deleting-calls",
+    "status": 200,
+    "bytes": 34087,
+    "content_access": "HTML application shell only; no usable article text retrieved. No UI/capability claim based on status 200."
+  },
+  {
+    "key": "concrete-icons",
+    "url": "https://concrete.store/iconclubinfo/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-sdk",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+    "status": 200,
+    "bytes": 7408,
+    "content_access": "README text"
+  },
+  {
+    "key": "genesys-externalcontacts-api",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ExternalContactsApi.md",
+    "status": 200,
+    "bytes": 292150
+  },
+  {
+    "key": "genesys-conversations-api",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ConversationsApi.md",
+    "status": 200,
+    "bytes": 667863
+  },
+  {
+    "key": "genesys-wrapup-model",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/Wrapup.md",
+    "error": "HTTP Error 404: Not Found"
+  }
+]

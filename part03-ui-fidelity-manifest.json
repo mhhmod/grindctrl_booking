@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "status": "illustrative; no authorized screenshots supplied",
+  "slots": {
+    "genesys.call": {
+      "approved": false,
+      "anonymized": false,
+      "states": []
+    },
+    "customer.context": {
+      "approved": false,
+      "anonymized": false,
+      "states": []
+    }
+  },
+  "instructions": "Only approved anonymized captures. Replace state-specific regions, retain same call IDs and ownership, remeasure all focus anchors, rerun audio and layout QA. Never mix real screenshots with fabricated live data."
+}

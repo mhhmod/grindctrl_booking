@@ -1,0 +1,74 @@
+## postConversationsCallParticipantCommunicationWrapup
+
+> void postConversationsCallParticipantCommunicationWrapup(conversationId, participantId, communicationId, opts)
+
+
+POST /api/v2/conversations/calls/{conversationId}/participants/{participantId}/communications/{communicationId}/wrapup
+
+Apply wrap-up for this conversation communication
+
+Requires ANY permissions:
+
+* conversation:participant:wrapup
+
+### Example Usage
+
+```{"language":"javascript"}
+// Browser
+const platformClient = require('platformClient');
+// Node
+const platformClient = require('purecloud-platform-client-v2');
+
+// Manually set auth token or use loginImplicitGrant(...) or loginClientCredentialsGrant(...) or loginPKCEGrant(...)
+platformClient.ApiClient.instance.setAccessToken(yourAccessToken);
+
+let apiInstance = new platformClient.ConversationsApi();
+
+let conversationId = "conversationId_example"; // String | conversationId
+let participantId = "participantId_example"; // String | participantId
+let communicationId = "communicationId_example"; // String | communicationId
+let opts = { 
+  'body': {}, // Object | Wrap-up
+  'customHeaders': {  // Object.<string, string> | Request Custom Headers
+    'X-Service-Name': 'customer-service',
+    'X-Request-ID': 'req-12345'
+  }
+};
+
+apiInstance.postConversationsCallParticipantCommunicationWrapup(conversationId, participantId, communicationId, opts)
+  .then(() => {
+    console.log('postConversationsCallParticipantCommunicationWrapup returned successfully.');
+  })
+  .catch((err) => {
+    console.log('There was a failure calling postConversationsCallParticipantCommunicationWrapup');
+    console.error(err);
+  });
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+| ------------- | ------------- | ------------- | ------------- |
+ **conversationId** | **String** | conversationId |  |
+ **participantId** | **String** | participantId |  |
+ **communicationId** | **String** | communicationId |  |
+ **body** | **Object** | Wrap-up | [optional]  |
+ **customHeaders** | **Object.<string, string>** | Request Custom Headers | [optional] |
+
+### Return type
+
+void (no response body)
+
+
+## postConversationsCallParticipantConsult
+
+> ConsultTransferResponse postConversationsCallParticipantConsult(conversationId, participantId, body, opts)
+
+:::{"alert":"warning","title":"Deprecated","collapsible":false,"autoCollapse":false}
+This resource has been deprecated
+:::
+
+POST /api/v2/conversations/calls/{conversationId}/participants/{participantId}/consult
+
+Initiate and update consult transfer (Deprecated)

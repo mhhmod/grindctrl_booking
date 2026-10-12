@@ -1,0 +1,663 @@
+{
+  "frames": [
+    {
+      "frame": 1095,
+      "time": 36.5,
+      "name": "encoded-1095"
+    },
+    {
+      "frame": 1884,
+      "time": 62.8,
+      "name": "encoded-1884"
+    },
+    {
+      "frame": 2430,
+      "time": 81,
+      "name": "encoded-2430"
+    },
+    {
+      "frame": 3387,
+      "time": 112.9,
+      "name": "encoded-3387"
+    },
+    {
+      "frame": 4764,
+      "time": 158.8,
+      "name": "encoded-4764"
+    },
+    {
+      "frame": 5694,
+      "time": 189.8,
+      "name": "encoded-5694"
+    },
+    {
+      "frame": 6330,
+      "time": 211,
+      "name": "encoded-6330"
+    },
+    {
+      "frame": 8535,
+      "time": 284.5,
+      "name": "encoded-8535"
+    },
+    {
+      "frame": 343,
+      "time": 11.433333333333334,
+      "name": "encoded-343"
+    },
+    {
+      "frame": 729,
+      "time": 24.3,
+      "name": "encoded-729"
+    },
+    {
+      "frame": 891,
+      "time": 29.7,
+      "name": "encoded-891"
+    },
+    {
+      "frame": 971,
+      "time": 32.36666666666667,
+      "name": "encoded-971"
+    },
+    {
+      "frame": 1068,
+      "time": 35.6,
+      "name": "encoded-1068"
+    },
+    {
+      "frame": 1407,
+      "time": 46.9,
+      "name": "encoded-1407"
+    },
+    {
+      "frame": 1494,
+      "time": 49.8,
+      "name": "encoded-1494"
+    },
+    {
+      "frame": 1603,
+      "time": 53.43333333333333,
+      "name": "encoded-1603"
+    },
+    {
+      "frame": 1688,
+      "time": 56.266666666666666,
+      "name": "encoded-1688"
+    },
+    {
+      "frame": 1804,
+      "time": 60.13333333333333,
+      "name": "encoded-1804"
+    },
+    {
+      "frame": 1865,
+      "time": 62.166666666666664,
+      "name": "encoded-1865"
+    },
+    {
+      "frame": 1925,
+      "time": 64.16666666666667,
+      "name": "encoded-1925"
+    },
+    {
+      "frame": 1961,
+      "time": 65.36666666666666,
+      "name": "encoded-1961"
+    },
+    {
+      "frame": 2056,
+      "time": 68.53333333333333,
+      "name": "encoded-2056"
+    },
+    {
+      "frame": 2199,
+      "time": 73.3,
+      "name": "encoded-2199"
+    },
+    {
+      "frame": 2957,
+      "time": 98.56666666666666,
+      "name": "encoded-2957"
+    },
+    {
+      "frame": 3118,
+      "time": 103.93333333333334,
+      "name": "encoded-3118"
+    },
+    {
+      "frame": 3193,
+      "time": 106.43333333333334,
+      "name": "encoded-3193"
+    },
+    {
+      "frame": 3315,
+      "time": 110.5,
+      "name": "encoded-3315"
+    },
+    {
+      "frame": 3396,
+      "time": 113.2,
+      "name": "encoded-3396"
+    },
+    {
+      "frame": 3520,
+      "time": 117.33333333333333,
+      "name": "encoded-3520"
+    },
+    {
+      "frame": 3637,
+      "time": 121.23333333333333,
+      "name": "encoded-3637"
+    },
+    {
+      "frame": 3806,
+      "time": 126.86666666666666,
+      "name": "encoded-3806"
+    },
+    {
+      "frame": 3956,
+      "time": 131.86666666666667,
+      "name": "encoded-3956"
+    },
+    {
+      "frame": 3976,
+      "time": 132.53333333333333,
+      "name": "encoded-3976"
+    },
+    {
+      "frame": 4191,
+      "time": 139.7,
+      "name": "encoded-4191"
+    },
+    {
+      "frame": 4240,
+      "time": 141.33333333333334,
+      "name": "encoded-4240"
+    },
+    {
+      "frame": 4693,
+      "time": 156.43333333333334,
+      "name": "encoded-4693"
+    },
+    {
+      "frame": 5028,
+      "time": 167.6,
+      "name": "encoded-5028"
+    },
+    {
+      "frame": 5239,
+      "time": 174.63333333333333,
+      "name": "encoded-5239"
+    },
+    {
+      "frame": 5284,
+      "time": 176.13333333333333,
+      "name": "encoded-5284"
+    },
+    {
+      "frame": 5476,
+      "time": 182.53333333333333,
+      "name": "encoded-5476"
+    },
+    {
+      "frame": 5535,
+      "time": 184.5,
+      "name": "encoded-5535"
+    },
+    {
+      "frame": 5625,
+      "time": 187.5,
+      "name": "encoded-5625"
+    },
+    {
+      "frame": 5747,
+      "time": 191.56666666666666,
+      "name": "encoded-5747"
+    },
+    {
+      "frame": 6066,
+      "time": 202.2,
+      "name": "encoded-6066"
+    },
+    {
+      "frame": 6117,
+      "time": 203.9,
+      "name": "encoded-6117"
+    },
+    {
+      "frame": 6187,
+      "time": 206.23333333333332,
+      "name": "encoded-6187"
+    },
+    {
+      "frame": 6269,
+      "time": 208.96666666666667,
+      "name": "encoded-6269"
+    },
+    {
+      "frame": 6439,
+      "time": 214.63333333333333,
+      "name": "encoded-6439"
+    },
+    {
+      "frame": 6452,
+      "time": 215.06666666666666,
+      "name": "encoded-6452"
+    },
+    {
+      "frame": 6521,
+      "time": 217.36666666666667,
+      "name": "encoded-6521"
+    },
+    {
+      "frame": 6593,
+      "time": 219.76666666666668,
+      "name": "encoded-6593"
+    },
+    {
+      "frame": 6795,
+      "time": 226.5,
+      "name": "encoded-6795"
+    },
+    {
+      "frame": 6856,
+      "time": 228.53333333333333,
+      "name": "encoded-6856"
+    },
+    {
+      "frame": 6897,
+      "time": 229.9,
+      "name": "encoded-6897"
+    },
+    {
+      "frame": 6997,
+      "time": 233.23333333333332,
+      "name": "encoded-6997"
+    },
+    {
+      "frame": 7081,
+      "time": 236.03333333333333,
+      "name": "encoded-7081"
+    },
+    {
+      "frame": 7172,
+      "time": 239.06666666666666,
+      "name": "encoded-7172"
+    },
+    {
+      "frame": 7311,
+      "time": 243.7,
+      "name": "encoded-7311"
+    },
+    {
+      "frame": 7389,
+      "time": 246.3,
+      "name": "encoded-7389"
+    },
+    {
+      "frame": 7488,
+      "time": 249.6,
+      "name": "encoded-7488"
+    },
+    {
+      "frame": 7574,
+      "time": 252.46666666666667,
+      "name": "encoded-7574"
+    },
+    {
+      "frame": 7686,
+      "time": 256.2,
+      "name": "encoded-7686"
+    },
+    {
+      "frame": 7904,
+      "time": 263.46666666666664,
+      "name": "encoded-7904"
+    },
+    {
+      "frame": 7942,
+      "time": 264.73333333333335,
+      "name": "encoded-7942"
+    },
+    {
+      "frame": 7979,
+      "time": 265.96666666666664,
+      "name": "encoded-7979"
+    },
+    {
+      "frame": 8089,
+      "time": 269.6333333333333,
+      "name": "encoded-8089"
+    },
+    {
+      "frame": 8482,
+      "time": 282.73333333333335,
+      "name": "encoded-8482"
+    },
+    {
+      "frame": 0,
+      "time": 0,
+      "name": "encoded-0"
+    },
+    {
+      "frame": 180,
+      "time": 6,
+      "name": "encoded-180"
+    },
+    {
+      "frame": 390,
+      "time": 13,
+      "name": "encoded-390"
+    },
+    {
+      "frame": 720,
+      "time": 24,
+      "name": "encoded-720"
+    },
+    {
+      "frame": 1620,
+      "time": 54,
+      "name": "encoded-1620"
+    },
+    {
+      "frame": 1799,
+      "time": 59.96666666666667,
+      "name": "encoded-1799"
+    },
+    {
+      "frame": 1864,
+      "time": 62.13333333333333,
+      "name": "encoded-1864"
+    },
+    {
+      "frame": 2010,
+      "time": 67,
+      "name": "encoded-2010"
+    },
+    {
+      "frame": 2220,
+      "time": 74,
+      "name": "encoded-2220"
+    },
+    {
+      "frame": 3150,
+      "time": 105,
+      "name": "encoded-3150"
+    },
+    {
+      "frame": 3420,
+      "time": 114,
+      "name": "encoded-3420"
+    },
+    {
+      "frame": 3540,
+      "time": 118,
+      "name": "encoded-3540"
+    },
+    {
+      "frame": 4245,
+      "time": 141.5,
+      "name": "encoded-4245"
+    },
+    {
+      "frame": 4695,
+      "time": 156.5,
+      "name": "encoded-4695"
+    },
+    {
+      "frame": 5052,
+      "time": 168.4,
+      "name": "encoded-5052"
+    },
+    {
+      "frame": 5124,
+      "time": 170.8,
+      "name": "encoded-5124"
+    },
+    {
+      "frame": 5241,
+      "time": 174.7,
+      "name": "encoded-5241"
+    },
+    {
+      "frame": 5286,
+      "time": 176.2,
+      "name": "encoded-5286"
+    },
+    {
+      "frame": 5487,
+      "time": 182.9,
+      "name": "encoded-5487"
+    },
+    {
+      "frame": 5634,
+      "time": 187.8,
+      "name": "encoded-5634"
+    },
+    {
+      "frame": 5742,
+      "time": 191.4,
+      "name": "encoded-5742"
+    },
+    {
+      "frame": 5970,
+      "time": 199,
+      "name": "encoded-5970"
+    },
+    {
+      "frame": 6144,
+      "time": 204.8,
+      "name": "encoded-6144"
+    },
+    {
+      "frame": 6270,
+      "time": 209,
+      "name": "encoded-6270"
+    },
+    {
+      "frame": 6417,
+      "time": 213.9,
+      "name": "encoded-6417"
+    },
+    {
+      "frame": 6558,
+      "time": 218.6,
+      "name": "encoded-6558"
+    },
+    {
+      "frame": 6690,
+      "time": 223,
+      "name": "encoded-6690"
+    },
+    {
+      "frame": 6960,
+      "time": 232,
+      "name": "encoded-6960"
+    },
+    {
+      "frame": 7230,
+      "time": 241,
+      "name": "encoded-7230"
+    },
+    {
+      "frame": 7590,
+      "time": 253,
+      "name": "encoded-7590"
+    },
+    {
+      "frame": 7710,
+      "time": 257,
+      "name": "encoded-7710"
+    },
+    {
+      "frame": 7800,
+      "time": 260,
+      "name": "encoded-7800"
+    },
+    {
+      "frame": 7905,
+      "time": 263.5,
+      "name": "encoded-7905"
+    },
+    {
+      "frame": 7950,
+      "time": 265,
+      "name": "encoded-7950"
+    },
+    {
+      "frame": 8040,
+      "time": 268,
+      "name": "encoded-8040"
+    },
+    {
+      "frame": 8160,
+      "time": 272,
+      "name": "encoded-8160"
+    },
+    {
+      "frame": 8337,
+      "time": 277.9,
+      "name": "encoded-8337"
+    },
+    {
+      "frame": 8424,
+      "time": 280.8,
+      "name": "encoded-8424"
+    },
+    {
+      "frame": 8490,
+      "time": 283,
+      "name": "encoded-8490"
+    },
+    {
+      "frame": 8577,
+      "time": 285.9,
+      "name": "encoded-8577"
+    },
+    {
+      "frame": 8607,
+      "time": 286.9,
+      "name": "encoded-8607"
+    }
+  ],
+  "playback": [
+    {
+      "seek": 0,
+      "time": 0.150378,
+      "ended": false,
+      "error": null,
+      "frames": 10,
+      "audioDecodedBytes": 9877
+    },
+    {
+      "seek": 40.5,
+      "time": 40.650356,
+      "ended": false,
+      "error": null,
+      "frames": 235,
+      "audioDecodedBytes": 163567
+    },
+    {
+      "seek": 65,
+      "time": 65.144972,
+      "ended": false,
+      "error": null,
+      "frames": 445,
+      "audioDecodedBytes": 304062
+    },
+    {
+      "seek": 110,
+      "time": 110.161495,
+      "ended": false,
+      "error": null,
+      "frames": 505,
+      "audioDecodedBytes": 348132
+    },
+    {
+      "seek": 141,
+      "time": 141.141789,
+      "ended": false,
+      "error": null,
+      "frames": 745,
+      "audioDecodedBytes": 521239
+    },
+    {
+      "seek": 169,
+      "time": 169.155802,
+      "ended": false,
+      "error": null,
+      "frames": 825,
+      "audioDecodedBytes": 584817
+    },
+    {
+      "seek": 188,
+      "time": 188.156445,
+      "ended": false,
+      "error": null,
+      "frames": 975,
+      "audioDecodedBytes": 696810
+    },
+    {
+      "seek": 209,
+      "time": 209.1554,
+      "ended": false,
+      "error": null,
+      "frames": 1005,
+      "audioDecodedBytes": 721404
+    },
+    {
+      "seek": 249,
+      "time": 249.162316,
+      "ended": false,
+      "error": null,
+      "frames": 1235,
+      "audioDecodedBytes": 893089
+    },
+    {
+      "seek": 258,
+      "time": 258.143539,
+      "ended": false,
+      "error": null,
+      "frames": 1485,
+      "audioDecodedBytes": 1081405
+    },
+    {
+      "seek": 269,
+      "time": 269.144503,
+      "ended": false,
+      "error": null,
+      "frames": 1565,
+      "audioDecodedBytes": 1146799
+    },
+    {
+      "seek": 280,
+      "time": 280.146227,
+      "ended": false,
+      "error": null,
+      "frames": 1725,
+      "audioDecodedBytes": 1272015
+    },
+    {
+      "seek": 285.8,
+      "time": 286.966667,
+      "ended": true,
+      "error": null,
+      "frames": 1834,
+      "audioDecodedBytes": 1351459
+    }
+  ],
+  "fidelityHook": {
+    "refusedUnapproved": true,
+    "installedApprovedSyntheticFixture": true,
+    "visibleInCorrectCamera": true,
+    "reset": true
+  },
+  "limitations": "Software playback and decode checks. No human full listen-through or pronunciation approval claimed.",
+  "video": {
+    "duration": 286.966667,
+    "width": 1920,
+    "height": 1080,
+    "muted": false
+  }
+}

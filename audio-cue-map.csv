@@ -1,0 +1,121 @@
+cue,scene,start_seconds,end_seconds,normalized_draft_transcript,basis
+C001,S01,0.0,0.918231,في الفيديو الأول،,measured phrase onset/end; not interpolated words
+C002,S01,1.083061,5.786054,شوفنا إزاي نقدر نخلي الـAgent يبدأ المكالمة وهو شايف الـCustomer Context،,measured phrase onset/end; not interpolated words
+C003,S01,5.939546,6.861202,والـTickets السابقة،,measured phrase onset/end; not interpolated words
+C004,S01,7.43907,9.502086,بدل ما يضطر يدور على كل حاجة بنفسه.,measured phrase onset/end; not interpolated words
+C005,S01,10.033628,10.888526,وفي الفيديو التاني،,measured phrase onset/end; not interpolated words
+C006,S01,11.2822,13.09839,دخلنا أكتر في تفاصيل الـWorkflow،,measured phrase onset/end; not interpolated words
+C007,S01,13.436145,14.895624,وشوفنا إزاي الـLookup بيتم،,measured phrase onset/end; not interpolated words
+C008,S01,15.320499,17.769501,وإزاي الـAgent يقدر يتابع الـCases المختلفة.,measured phrase onset/end; not interpolated words
+C009,S01,18.461791,18.966825,النهارده،,measured phrase onset/end; not interpolated words
+C010,S01,19.167891,20.280907,هنكمل خطوة أبعد،,measured phrase onset/end; not interpolated words
+C011,S01,20.51644,23.526077,بفكرة جاية من احتياج فريق المبيعات في Concrete نفسه.,measured phrase onset/end; not interpolated words
+C012,S01,24.130408,25.917506,تخيلوا إن أول ما الـCall توصل،,measured phrase onset/end; not interpolated words
+C013,S01,26.212971,29.011315,الـAgent يلاقي قدامه مش بس الـTickets السابقة،,measured phrase onset/end; not interpolated words
+C014,S01,29.527256,31.751383,لكن كمان الـCustomer Profile بالكامل،,measured phrase onset/end; not interpolated words
+C015,S01,32.191247,35.005261,وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،,measured phrase onset/end; not interpolated words
+C016,S01,35.424422,37.375986,والـNotes اللي اتكتبت خلال كل مكالمة.,measured phrase onset/end; not interpolated words
+C017,S01,38.080612,39.625737,خلينا نشوف التجربة دي بالتفصيل.,measured phrase onset/end; not interpolated words
+C018,S02,40.431814,42.960658,أول ما العميل يتصل على الـHotline بتاع Concrete،,measured phrase onset/end; not interpolated words
+C019,S02,43.256054,45.353923,الـCall بتوصل للـAgent على Genesys.,measured phrase onset/end; not interpolated words
+C020,S02,45.795397,46.482653,وفي اللحظة دي،,measured phrase onset/end; not interpolated words
+C021,S02,46.744444,49.229093,بنقترح إن النظام يستخدم رقم المتصل،,measured phrase onset/end; not interpolated words
+C022,S02,49.634649,52.797324,عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.,measured phrase onset/end; not interpolated words
+C023,S02,53.271905,55.672404,وبمجرد ما يتم تحديد الـCustomer الصحيح،,measured phrase onset/end; not interpolated words
+C024,S02,56.092313,58.571655,يظهر قدام الموظف أربع معلومات أساسية.,measured phrase onset/end; not interpolated words
+C025,S02,59.153968,59.76424,أول حاجة،,measured phrase onset/end; not interpolated words
+C026,S02,59.975261,60.69424,الـMobile Number.,measured phrase onset/end; not interpolated words
+C027,S02,61.22746,61.793605,تاني حاجة،,measured phrase onset/end; not interpolated words
+C028,S02,62.010317,62.763175,الـCustomer Name.,measured phrase onset/end; not interpolated words
+C029,S03,63.226916,63.838186,تالت حاجة،,measured phrase onset/end; not interpolated words
+C030,S03,63.992222,65.017755,الـCustomer Segment،,measured phrase onset/end; not interpolated words
+C031,S03,65.219909,67.994218,سواء كان Lifestyle أو Prestige أو Elite،,measured phrase onset/end; not interpolated words
+C032,S03,68.385351,71.825238,حسب الـMembership Level المسجل للعميل في Concrete Icons Club.,measured phrase onset/end; not interpolated words
+C033,S03,72.236689,72.95966,ورابع حاجة،,measured phrase onset/end; not interpolated words
+C034,S03,73.153243,75.915873,الـEmail Address، لو موجود بالفعل في بيانات العميل.,measured phrase onset/end; not interpolated words
+C035,S03,76.605896,80.781882,كل المعلومات دي هتبقى متجمعة في Customer Profile واضح ومنظم،,measured phrase onset/end; not interpolated words
+C036,S03,80.977211,83.701088,وسهل جدًا إن الموظف يقراه أثناء المكالمة.,measured phrase onset/end; not interpolated words
+C037,S04,84.242109,87.344512,لكن القيمة الحقيقية مش بس إننا نعرف مين العميل.,measured phrase onset/end; not interpolated words
+C038,S04,87.980431,88.805465,القيمة الأكبر،,measured phrase onset/end; not interpolated words
+C039,S04,89.05907,91.133288,إننا نعرف إيه اللي حصل معاه قبل كده.,measured phrase onset/end; not interpolated words
+C040,S04,91.730408,92.089002,وهنا،,measured phrase onset/end; not interpolated words
+C041,S04,92.244558,93.560816,بييجي دور الـCall Activity.,measured phrase onset/end; not interpolated words
+C042,S04,94.134671,97.994739,بدل ما الموظف يشوف مجرد قايمة بأرقام أو تواريخ مكالمات،,measured phrase onset/end; not interpolated words
+C043,S04,98.406122,100.686803,بنقترح إنه يشوف Timeline واضحة،,measured phrase onset/end; not interpolated words
+C044,S04,100.933356,103.219184,فيها كل الـPrevious Calls المتاحة للعميل.,measured phrase onset/end; not interpolated words
+C045,S04,103.771134,105.973401,كل Call يكون لها تاريخها ووقتها،,measured phrase onset/end; not interpolated words
+C046,S04,106.275125,109.01415,والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.,measured phrase onset/end; not interpolated words
+C047,S04,109.486871,109.996757,والأهم،,measured phrase onset/end; not interpolated words
+C048,S04,110.343673,112.368934,الـNotes الخاصة بالمكالمة دي تحديدًا.,measured phrase onset/end; not interpolated words
+C049,S04,113.020227,116.815805,يعني كل مكالمة لها الـHistory بتاعتها والـNotes اللي اتكتبت فيها،,measured phrase onset/end; not interpolated words
+C050,S04,117.168526,118.04932,بشكل منفصل،,measured phrase onset/end; not interpolated words
+C051,S04,118.242812,118.723243,ومنظم.,measured phrase onset/end; not interpolated words
+C052,S05,119.347029,120.5122,خلينا ناخد مثال عملي.,measured phrase onset/end; not interpolated words
+C053,S05,121.069751,125.097868,عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.,measured phrase onset/end; not interpolated words
+C054,S05,125.658322,126.452993,خلال المكالمة،,measured phrase onset/end; not interpolated words
+C055,S05,126.691746,129.651474,الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،,measured phrase onset/end; not interpolated words
+C056,S05,129.94415,131.186463,وإن فيه Follow-up مطلوب.,measured phrase onset/end; not interpolated words
+C057,S05,131.707211,132.203016,النهارده،,measured phrase onset/end; not interpolated words
+C058,S05,132.370567,135.099138,نفس العميل بيتصل تاني يسأل عن آخر Update.,measured phrase onset/end; not interpolated words
+C059,S05,135.743084,139.089365,بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول،,measured phrase onset/end; not interpolated words
+C060,S05,139.535397,140.985601,يقدر يفتح الـPrevious Call،,measured phrase onset/end; not interpolated words
+C061,S05,141.158617,142.640748,ويشوف الـNote اللي زميله كتبها.,measured phrase onset/end; not interpolated words
+C062,S05,143.145011,144.864671,يعرف العميل كان بيتكلم في إيه،,measured phrase onset/end; not interpolated words
+C063,S05,145.117188,146.492018,وإيه آخر خطوة تسجلت،,measured phrase onset/end; not interpolated words
+C064,S05,147.008844,148.488413,وإيه الموضوع اللي محتاج Follow-up.,measured phrase onset/end; not interpolated words
+C065,S05,149.064535,149.600431,وبالتالي،,measured phrase onset/end; not interpolated words
+C066,S05,149.822585,152.15907,يبدأ المحادثة وهو فاهم الـContext،,measured phrase onset/end; not interpolated words
+C067,S05,152.311769,155.092971,من غير ما العميل يضطر يعيد نفس الشرح كل مرة.,measured phrase onset/end; not interpolated words
+C068,S05,155.613741,156.063651,وطبعًا،,measured phrase onset/end; not interpolated words
+C069,S05,156.283673,158.239433,الـNote بتوضح اللي تسجل في المكالمة،,measured phrase onset/end; not interpolated words
+C070,S05,158.52771,161.19678,مش بالضرورة إن الإجراء المطلوب اتنفذ بالفعل.,measured phrase onset/end; not interpolated words
+C071,S06,162.408345,165.126689,خلينا نشوف إيه اللي هيحصل أثناء الـCurrent Call نفسها.,measured phrase onset/end; not interpolated words
+C072,S06,165.691043,167.25585,الـAgent بيتكلم مع العميل،,measured phrase onset/end; not interpolated words
+C073,S06,167.435601,170.984558,وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،,measured phrase onset/end; not interpolated words
+C074,S06,171.15737,172.819297,والإجراء اللي تم الاتفاق عليه،,measured phrase onset/end; not interpolated words
+C075,S06,173.019728,174.209184,أو الـFollow-up المطلوب.,measured phrase onset/end; not interpolated words
+C076,S06,174.470499,175.788753,وبعد ما الـCall تخلص،,measured phrase onset/end; not interpolated words
+C077,S06,175.966463,178.900136,الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،,measured phrase onset/end; not interpolated words
+C078,S06,179.246395,181.95288,حسب طريقة التسجيل والـIntegration اللي هنعتمدها.,measured phrase onset/end; not interpolated words
+C079,S06,182.372766,184.0022,ولما العميل يتصل مرة تانية،,measured phrase onset/end; not interpolated words
+C080,S06,184.327052,187.042857,الـAgent التالي يقدر يرجع للـPrevious Calls،,measured phrase onset/end; not interpolated words
+C081,S06,187.326009,189.333265,ويشوف الـNotes الخاصة بكل مكالمة،,measured phrase onset/end; not interpolated words
+C082,S06,189.598186,191.072109,حسب الصلاحيات المتاحة له.,measured phrase onset/end; not interpolated words
+C083,S06,191.394603,193.619819,يعني بدل ما كل مكالمة تبدأ من الصفر،,measured phrase onset/end; not interpolated words
+C084,S06,193.961973,194.565782,كل Call،,measured phrase onset/end; not interpolated words
+C085,S06,194.718503,197.100703,بتضيف معلومات تساعد في المكالمة اللي بعدها.,measured phrase onset/end; not interpolated words
+C086,S07,197.488549,201.550612,وفي نفس الوقت لازم التجربة تتعامل بشكل واضح مع الحالات المختلفة.,measured phrase onset/end; not interpolated words
+C087,S07,202.023379,203.45449,لو رقم العميل مش موجود،,measured phrase onset/end; not interpolated words
+C088,S07,203.733311,205.774263,الـAgent يقدر يعمل Manual Search.,measured phrase onset/end; not interpolated words
+C089,S07,206.083424,208.465918,ولو نفس الرقم مرتبط بأكتر من Customer،,measured phrase onset/end; not interpolated words
+C090,S07,208.808458,211.608005,الموظف يراجع الـPossible Matches،,measured phrase onset/end; not interpolated words
+C091,S07,211.80712,214.465238,ويحدد الـRecord الصحيح بعد التحقق المطلوب.,measured phrase onset/end; not interpolated words
+C092,S07,214.888571,216.857506,ولو الـEmail أو الـSegment مش متاحة،,measured phrase onset/end; not interpolated words
+C093,S07,217.190612,219.356032,النظام يوضح إن المعلومة مش موجودة،,measured phrase onset/end; not interpolated words
+C094,S07,219.587483,221.346689,بدل ما يعرض بيانات غير مؤكدة.,measured phrase onset/end; not interpolated words
+C095,S08,222.299093,225.925918,إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في Concrete؟,measured phrase onset/end; not interpolated words
+C096,S08,226.322268,228.213719,هنبدأ بمراجعة الـGenesys Setup،,measured phrase onset/end; not interpolated words
+C097,S08,228.365533,229.372063,والـZoho Integration،,measured phrase onset/end; not interpolated words
+C098,S08,229.725782,232.79,ونحدد مكان تخزين الـCall Activities والـAgent Notes،,measured phrase onset/end; not interpolated words
+C099,S08,233.057075,234.888889,ومصدر بيانات الـCustomer Segment.,measured phrase onset/end; not interpolated words
+C100,S08,235.187483,235.651383,بعدها،,measured phrase onset/end; not interpolated words
+C101,S08,235.856984,238.633265,نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،,measured phrase onset/end; not interpolated words
+C102,S08,238.901315,240.754649,وإيه اللي محتاج Integration إضافية،,measured phrase onset/end; not interpolated words
+C103,S08,240.998299,243.203605,من غير ما نبني System جديد لو مش محتاجينه.,measured phrase onset/end; not interpolated words
+C104,S08,243.546395,245.956893,وهنختبر التجربة باستخدام Test Calls،,measured phrase onset/end; not interpolated words
+C105,S08,246.136893,249.115079,عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،,measured phrase onset/end; not interpolated words
+C106,S08,249.421361,251.904739,وإن كل Call مرتبطة بالـNotes الخاصة بيها،,measured phrase onset/end; not interpolated words
+C107,S08,252.286893,255.664467,وإن المعلومات بتوصل للـAgent المناسب بصلاحيات واضحة.,measured phrase onset/end; not interpolated words
+C108,S08,256.029546,256.684762,وفي النهاية،,measured phrase onset/end; not interpolated words
+C109,S08,256.9239,259.6061,إحنا مش بنتكلم عن مجرد شاشة فيها بيانات أكتر.,measured phrase onset/end; not interpolated words
+C110,S08,259.970136,263.10254,إحنا بنتكلم عن تجربة بتساعد موظف خدمة العملاء،,measured phrase onset/end; not interpolated words
+C111,S08,263.312404,264.356553,يعرف مين العميل،,measured phrase onset/end; not interpolated words
+C112,S08,264.582925,265.593673,ومستوى عضويته،,measured phrase onset/end; not interpolated words
+C113,S08,265.816145,269.176961,وتاريخ تواصله مع الشركة وآخر ملاحظات تسجلت عنه.,measured phrase onset/end; not interpolated words
+C114,S08,269.4722,272.121043,وده يفتح فرصة حقيقية لتحسين الـFollow-up،,measured phrase onset/end; not interpolated words
+C115,S08,272.344535,273.69102,وتسهيل شغل الـAgents،,measured phrase onset/end; not interpolated words
+C116,S08,273.898163,277.149637,وتقديم Customer Experience أكتر تنظيمًا واستمرارية.,measured phrase onset/end; not interpolated words
+C117,S08,277.52746,280.850975,وده بالضبط اللي GRINDCTRL بتقترح تقدمه لـConcrete:,measured phrase onset/end; not interpolated words
+C118,S08,281.167483,282.35483,إن كل Call جديدة،,measured phrase onset/end; not interpolated words
+C119,S08,282.577596,285.73873,تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،,measured phrase onset/end; not interpolated words
+C120,S08,286.020522,286.617506,مش من الصفر.,measured phrase onset/end; not interpolated words

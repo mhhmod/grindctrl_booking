@@ -1,0 +1,67 @@
+scene,seconds,cue,speech_anchor,spoken_phrase_draft,visual_change
+S01,11.2822,C006,start,دخلنا أكتر في تفاصيل الـWorkflow،,icon-search / Lookup and safe record selection
+S01,24.130408,C012,start,تخيلوا إن أول ما الـCall توصل،,outline
+S01,29.527256,C014,start,لكن كمان الـCustomer Profile بالكامل،,outline
+S01,32.191247,C015,start,وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،,Call activity / Retained · Linked · Permitted / line / ellipse / icon-call / 08 Oct · 14:32 / DEMO-1008 / Agent A / ellipse / icon-call / 03 Oct · 11:08 / DEMO-1003 / Agent B / ellipse / icon-call / 26 Sep · 16:45 / DEMO-0926 / Agent C
+S01,35.424422,C016,start,والـNotes اللي اتكتبت خلال كل مكالمة.,icon-pen / Followed up on the exchange. Branch review requested. / icon-pen / Customer requested a size exchange. / icon-pen / Customer asked about product availability. / outline
+S02,46.744444,C021,start,بنقترح إن النظام يستخدم رقم المتصل،,icon-search / Lookup using the caller number / Permitted record search · Source and identity process to validate. / icon-search / +20 10 •••• 4821
+S02,49.634649,C022,start,عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.,line
+S02,53.271905,C023,start,وبمجرد ما يتم تحديد الـCustomer الصحيح،,"icon-actor / A candidate record is associated / Phone association is not identity proof.
+Use the agreed checks before disclosure."
+S02,56.092313,C024,start,يظهر قدام الموظف أربع معلومات أساسية.,Customer profile / Associated record · Demo disclosure permitted / icon-call / Phone number / +20 10 •••• 4821 / icon-actor / Customer name / Ahmed M. (DEMO) / icon-quality / Icons Club segment / ELITE · Demo / icon-mail / Email / ahmed@example.com / line / Call activity / Retained · Linked · Permitted / line / ellipse / icon-call / 08 Oct · 14:32 / DEMO-1008 / Agent A / icon-pen / Followed up on the exchange. Branch review requested. / ellipse / icon-call / 03 Oct · 11:08 / DEMO-1003 / Agent B / icon-pen / Customer requested a size exchange. / ellipse / icon-call / 26 Sep · 16:45 / DEMO-0926 / Agent C / icon-pen / Customer asked about product availability.
+S02,59.975261,C026,start,الـMobile Number.,outline
+S02,62.010317,C028,start,الـCustomer Name.,outline
+S03,63.992222,C030,start,الـCustomer Segment،,outline
+S03,65.219909,C031,start,سواء كان Lifestyle أو Prestige أو Elite،,LIFESTYLE / PRESTIGE / ELITE / outline
+S03,68.385351,C032,start,حسب الـMembership Level المسجل للعميل في Concrete Icons Club.,"icon-link / Illustrative ELITE record · Trusted membership source to verify.
+If no tier is available, show “Not available”."
+S03,73.153243,C034,start,الـEmail Address، لو موجود بالفعل في بيانات العميل.,outline
+S04,98.406122,C043,start,بنقترح إنه يشوف Timeline واضحة،,Call activity / Retained · Linked · Permitted / line / ellipse / icon-call / ellipse / icon-call / ellipse / icon-call
+S04,103.771134,C045,start,كل Call يكون لها تاريخها ووقتها،,08 Oct · 14:32 / DEMO-1008 / 03 Oct · 11:08 / DEMO-1003 / 26 Sep · 16:45 / DEMO-0926 / outline
+S04,106.275125,C046,start,والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.,Agent A / Agent B / Agent C / outline
+S04,110.343673,C048,start,الـNotes الخاصة بالمكالمة دي تحديدًا.,icon-pen / Followed up on the exchange. Branch review requested. / icon-pen / Customer requested a size exchange. / icon-pen / Customer asked about product availability. / outline
+S04,113.020227,C049,start,يعني كل مكالمة لها الـHistory بتاعتها والـNotes اللي اتكتبت فيها،,Call activity / rect / icon-call / 08 Oct / 14:32 / DEMO-1008 / Agent A / rect / icon-call / 03 Oct / 11:08 / DEMO-1003 / Agent B / rect / icon-call / 26 Sep / 16:45 / DEMO-0926 / Agent C / line / 08 Oct 2026 call · Original note / icon-actor / Agent A · DEMO-1008 / Written 14:36 / rect / icon-pen / Human-written agent note / Followed up on the exchange. Branch review requested. / Source: DEMO-1008 · No global-note merge
+S04,117.168526,C050,start,بشكل منفصل،,Call activity / rect / icon-call / 08 Oct / 14:32 / DEMO-1008 / Agent A / rect / icon-call / 03 Oct / 11:08 / DEMO-1003 / Agent B / rect / icon-call / 26 Sep / 16:45 / DEMO-0926 / Agent C / line / 03 Oct 2026 call · Original note / icon-actor / Agent B · DEMO-1003 / Written 11:12 / rect / icon-pen / Human-written agent note / Customer requested a size exchange. / Source: DEMO-1003 · No global-note merge / icon-pointer
+S05,121.069751,C053,start,عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.,outline
+S05,126.691746,C055,start,الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،,outline
+S05,131.707211,C057,start,النهارده،,rect
+S05,132.370567,C058,start,نفس العميل بيتصل تاني يسأل عن آخر Update.,Today: the customer asks for the latest update.
+S05,139.535397,C060,start,يقدر يفتح الـPrevious Call،,Call activity / rect / icon-call / 08 Oct / 14:32 / DEMO-1008 / Agent A / rect / icon-call / 03 Oct / 11:08 / DEMO-1003 / Agent B / rect / icon-call / 26 Sep / 16:45 / DEMO-0926 / Agent C / line / icon-pointer
+S05,141.158617,C061,start,ويشوف الـNote اللي زميله كتبها.,08 Oct 2026 call · Original note / icon-actor / Agent A · DEMO-1008 / Written 14:36 / rect / icon-pen / Human-written agent note / Followed up on the exchange. Branch review requested. / Source: DEMO-1008 · No global-note merge / outline
+S05,156.283673,C069,start,الـNote بتوضح اللي تسجل في المكالمة،,rect / icon-clock / Review requested · Completion not confirmed
+S06,167.435601,C073,start,وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،,Customer called again; awaiting a confirmed branch update.
+S06,174.470499,C076,start,وبعد ما الـCall تخلص،,ellipse / icon-call / Inbound call / Caller number / +20 10 •••• 4821 / ellipse / After call (demo) / Agent D / DEMO-1012 / 12 Oct · 10:24 / ellipse / icon-mic / ellipse / icon-pause / ellipse / icon-end
+S06,175.966463,C077,start,الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،,Recorded in demo · Source remains DEMO-1012 / icon-pointer / outline
+S06,182.372766,C079,start,ولما العميل يتصل مرة تانية،,ellipse / icon-call / Inbound call / Caller number / +20 10 •••• 4821 / ellipse / Call active / Agent E / DEMO-1015 / 15 Oct · 09:10 / ellipse / icon-mic / ellipse / icon-pause / ellipse / icon-end / Call activity / rect / icon-call / 12 Oct / 10:24 / DEMO-1012 / Agent D / rect / icon-call / 08 Oct / 14:32 / DEMO-1008 / Agent A / rect / icon-call / 03 Oct / 11:08 / DEMO-1003 / Agent B / line / Later call · 15 Oct · Agent E
+S06,184.327052,C080,start,الـAgent التالي يقدر يرجع للـPrevious Calls،,icon-pointer
+S06,187.326009,C081,start,ويشوف الـNotes الخاصة بكل مكالمة،,12 Oct call · Original note / icon-actor / Agent D · DEMO-1012 / Written 10:29 / rect / icon-pen / Human-written agent note / Customer called again; awaiting a confirmed branch update. / Original author: Agent D · Original call: DEMO-1012 / outline
+S06,191.394603,C083,start,يعني بدل ما كل مكالمة تبدأ من الصفر،,outline
+S07,202.023379,C087,start,لو رقم العميل مش موجود،,icon-search / No matching record / Continue with manual search. Do not invent a customer record.
+S07,203.733311,C088,start,الـAgent يقدر يعمل Manual Search.,rect / icon-search / Manual search
+S07,206.083424,C089,start,ولو نفس الرقم مرتبط بأكتر من Customer،,More than one possible customer / rect / icon-actor / Ahmed M. (DEMO) / +20 10 •••• 4821 / rect / icon-actor / Customer B (DEMO) / +20 10 •••• 4821
+S07,208.808458,C090,start,الموظف يراجع الـPossible Matches،,"icon-lock / Verify, then choose the correct record.
+Candidate history stays hidden until permitted."
+S07,214.465238,C091,end,ويحدد الـRecord الصحيح بعد التحقق المطلوب.,outline
+S07,214.888571,C092,start,ولو الـEmail أو الـSegment مش متاحة،,"Customer profile / Associated record · Demo disclosure permitted / icon-call / Phone number / +20 10 •••• 4821 / icon-actor / Customer name / Ahmed M. (DEMO) / icon-quality / Icons Club segment / Not available / icon-mail / Email / Not available / line / icon-lock / Missing fields stay “Not available”.
+History and notes remain subject to permissions."
+S07,217.190612,C093,start,النظام يوضح إن المعلومة مش موجودة،,outline
+S07,219.587483,C094,start,بدل ما يعرض بيانات غير مؤكدة.,"No inference from caller number, spending, or appearance."
+S08,226.322268,C096,start,هنبدأ بمراجعة الـGenesys Setup،,genesys / Genesys · Contracted screen pop / Contracted scope · Operation unverified
+S08,228.365533,C097,start,والـZoho Integration،,"zoho / Zoho Desk · Records to inspect / Inspect records, permissions and display"
+S08,229.725782,C098,start,ونحدد مكان تخزين الـCall Activities والـAgent Notes،,"line / icon-call / Call ID ↔ Human note / Locate storage, ownership, retention and access.
+Keep call notes separate from ticket/global notes."
+S08,233.057075,C099,start,ومصدر بيانات الـCustomer Segment.,icon-quality / Icons Club segment / Trusted source and update policy: to validate.
+S08,235.856984,C101,start,نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،,"rect / icon-settings / Existing native features
+if they meet the requirement"
+S08,238.901315,C102,start,وإيه اللي محتاج Integration إضافية،,"line / icon-link / Smallest supported integration
+only for a verified gap"
+S08,243.546395,C104,start,وهنختبر التجربة باستخدام Test Calls،,"Authorized pilot · Observations to record, not claimed results"
+S08,246.136893,C105,start,عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،,icon-actor / Field accuracy
+S08,249.421361,C106,start,وإن كل Call مرتبطة بالـNotes الخاصة بيها،,icon-pen / Call ↔ own note
+S08,252.286893,C107,start,وإن المعلومات بتوصل للـAgent المناسب بصلاحيات واضحة.,icon-lock / Permitted access
+S08,256.029546,C108,start,وفي النهاية،,rect / rect / genesys / Voice interaction / Customer 360° · Proposed workspace / icon-actor / Agent / line / line / ellipse / icon-call / Inbound call / Caller number / +20 10 •••• 4821 / ellipse / Call active / Agent E / DEMO-1015 / 15 Oct · 09:10 / ellipse / icon-mic / ellipse / icon-pause / ellipse / icon-end / Customer profile / Associated record · Demo disclosure permitted / icon-call / Phone number / +20 10 •••• 4821 / icon-actor / Customer name / Ahmed M. (DEMO) / icon-quality / Icons Club segment / ELITE · Demo / icon-mail / Email / ahmed@example.com / line / Call activity / rect / icon-call / 12 Oct / 10:24 / DEMO-1012 / Agent D / rect / icon-call / 08 Oct / 14:32 / DEMO-1008 / Agent A / rect / icon-call / 03 Oct / 11:08 / DEMO-1003 / Agent B / line / 12 Oct call · Original note / icon-actor / Agent D · DEMO-1012 / Written 10:29 / rect / icon-pen / Human-written agent note / Customer called again; awaiting a confirmed branch update. / Agent E reads Agent D’s original DEMO-1012 note. / The next call starts with the last recorded note.
+S08,263.312404,C111,start,يعرف مين العميل،,outline
+S08,264.582925,C112,start,ومستوى عضويته،,outline
+S08,265.816145,C113,start,وتاريخ تواصله مع الشركة وآخر ملاحظات تسجلت عنه.,outline
+S08,269.4722,C114,start,وده يفتح فرصة حقيقية لتحسين الـFollow-up،,outline
+S08,282.577596,C119,start,تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،,outline

@@ -1,0 +1,74 @@
+{
+  "audio_status": "new master supplied and explicitly authorized for exact use by user",
+  "audio_filename": "Part03_Corrected_Master.mp3",
+  "audio_sha256": "167b0508b8f6f53bdfa4a4fc0b240a841c9436c10fd3484bbb6b8e768de5e1ad",
+  "decoded_duration_seconds": 286.96,
+  "pronunciation_human_signoff_available": false,
+  "individual_S01_S08_files_supplied": false,
+  "scenes": [
+    {
+      "scene": "S01",
+      "title": "From call context to Customer 360\u00b0",
+      "master_start_seconds": 0,
+      "master_end_seconds": 40.431814,
+      "duration_seconds": 40.431814,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S02",
+      "title": "Incoming call and four profile fields",
+      "master_start_seconds": 40.431814,
+      "master_end_seconds": 63.226916,
+      "duration_seconds": 22.795102,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S03",
+      "title": "Concrete Icons Club in context",
+      "master_start_seconds": 63.226916,
+      "master_end_seconds": 84.242109,
+      "duration_seconds": 21.015193,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S04",
+      "title": "Each call and its own notes",
+      "master_start_seconds": 84.242109,
+      "master_end_seconds": 119.347029,
+      "duration_seconds": 35.10492,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S05",
+      "title": "Read the original follow-up note",
+      "master_start_seconds": 119.347029,
+      "master_end_seconds": 162.408345,
+      "duration_seconds": 43.061316,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S06",
+      "title": "Write now; retrieve the same call later",
+      "master_start_seconds": 162.408345,
+      "master_end_seconds": 197.488549,
+      "duration_seconds": 35.080204,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S07",
+      "title": "Safe exception states",
+      "master_start_seconds": 197.488549,
+      "master_end_seconds": 222.299093,
+      "duration_seconds": 24.810544,
+      "separate_audio_file": null
+    },
+    {
+      "scene": "S08",
+      "title": "Inspect sources, then pilot",
+      "master_start_seconds": 222.299093,
+      "master_end_seconds": 286.96,
+      "duration_seconds": 64.660907,
+      "separate_audio_file": null
+    }
+  ]
+}
