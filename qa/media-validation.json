@@ -1,0 +1,160 @@
+{
+  "source_sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a",
+  "rejected_audio_excluded": true,
+  "source_container_duration": 285.962449,
+  "source_decoded_samples": 12609072,
+  "source_decoded_duration": 285.92,
+  "source_peak": 0.26115643978118896,
+  "source_rms": 0.024265926331281662,
+  "source_clipped_sample_count": 0,
+  "original_words_and_speed_preserved": true,
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30/1",
+    "frames": 8578,
+    "container_duration": 285.933333,
+    "audio_duration": 285.92,
+    "audio_decoded_samples": 12609536,
+    "source_coverage_seconds": 285.92,
+    "full_video_decode": "passed",
+    "sha256": "ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd"
+  },
+  "audio_windows": [
+    {
+      "source_start_seconds": 0,
+      "zero_lag_correlation": 0.9999003,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 5,
+      "zero_lag_correlation": 0.9999146,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 29,
+      "zero_lag_correlation": 0.9999182,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 45,
+      "zero_lag_correlation": 0.9999087,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 61,
+      "zero_lag_correlation": 0.9999383,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 76,
+      "zero_lag_correlation": 0.9999228,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 93,
+      "zero_lag_correlation": 0.9999272,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 107,
+      "zero_lag_correlation": 0.9998285,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 125,
+      "zero_lag_correlation": 0.9999513,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 138,
+      "zero_lag_correlation": 0.9999027,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 157,
+      "zero_lag_correlation": 0.9999344,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 176,
+      "zero_lag_correlation": 0.9999354,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 189,
+      "zero_lag_correlation": 0.9999446,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 207,
+      "zero_lag_correlation": 0.9999007,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 220,
+      "zero_lag_correlation": 0.9999343,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 238,
+      "zero_lag_correlation": 0.9999,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 253,
+      "zero_lag_correlation": 0.9999294,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 265,
+      "zero_lag_correlation": 0.9999186,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 273,
+      "zero_lag_correlation": 0.9999191,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 280,
+      "zero_lag_correlation": 0.9998981,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    },
+    {
+      "source_start_seconds": 283,
+      "zero_lag_correlation": 0.9998891,
+      "best_lag_samples": 0,
+      "best_lag_ms": 0.0
+    }
+  ],
+  "byte_identical_audio_embeddings": [
+    "HTML",
+    "English PPTX"
+  ],
+  "limitations": "Signal QA verifies source preservation and audio alignment, not a human pronunciation approval or an end-to-end listening test. MP4 audio uses AAC encoding; the MP3 is unchanged in source, HTML and PPTX.",
+  "audio_source_count": 1,
+  "audio_stream_count": 1,
+  "audio_start_sec": 0,
+  "audio_edits": []
+}

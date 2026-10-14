@@ -1,0 +1,39 @@
+[
+  {
+    "key": "concrete",
+    "url": "https://concrete.store/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "icons-club",
+    "url": "https://concrete.store/iconclubinfo/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-copilot",
+    "url": "https://help.genesys.cloud/articles/about-agent-copilot/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "zoho-zia",
+    "url": "https://www.zoho.com/desk/zia.html",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "woocommerce-api",
+    "url": "https://raw.githubusercontent.com/woocommerce/woocommerce-rest-api-docs/trunk/source/includes/v3/_products.md",
+    "status": 200,
+    "bytes": 108452
+  },
+  {
+    "key": "retailpro",
+    "url": "https://www.retailpro.com/Software/RetailPro9/",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "key": "genesys-sdk",
+    "url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+    "status": 200,
+    "bytes": 7408
+  }
+]

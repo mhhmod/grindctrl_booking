@@ -1,0 +1,2310 @@
+{
+  "oneMaster": {
+    "audioElements": 1,
+    "trackCount": 1,
+    "audioEdits": [],
+    "start": 0,
+    "scenes": 9
+  },
+  "seekStates": [
+    {
+      "lang": "en",
+      "time": 0,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 0.5,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 6.829592,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 7.925805,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 9.770091,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 11.831587,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 17.100612,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 17.982222,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 18.772472,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 21.763016,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 24.015601,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 26.194059,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 30.082857,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 33.046667,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 34.448073,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 37.093968,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 39.006961,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 41.392063,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 42.441361,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 44.313401,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 45.689558,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 46.416655,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 47.107551,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 47.8978,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 49.744943,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 51.754558,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 53.910544,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 56.965782,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 61.963039,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 65.359683,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 68.791927,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 70.207687,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 72.893946,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 74.8078,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 76.514444,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 79.743084,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 81.297755,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 82.514127,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 85.335057,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 87.576961,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 90.380363,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 93.534535,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 95.489048,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 97.745306,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 100.301655,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 105.04458,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 107.306236,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 110.443288,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 114.861746,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 119.407234,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 122.421995,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 124.201678,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 126.173628,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 127.005102,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 129.418367,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 131.732336,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 135.795034,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 137.943333,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 138.768889,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 139.65772099999998,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 140.748254,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 142.726803,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 145.536939,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 147.970227,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 151.92068,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 154.853764,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 156.229456,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 158.010113,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 160.550431,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 163.648934,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 166.768549,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 168.842109,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 170.840181,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 172.205896,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 174.938322,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 177.159728,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 180.19381,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 184.175624,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 185.852404,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 189.595805,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 190.889909,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 193.572268,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 195.750884,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 201.831565,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 206.19552199999998,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 207.01771,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 209.014762,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 212.794535,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 214.650159,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 216.387483,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 219.308685,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 220.680703,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 222.450771,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 224.716531,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 225.522574,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 226.314739,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 227.251927,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 228.353787,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 231.663197,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 233.865805,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 235.14619,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 237.580522,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 240.782744,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 243.637687,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 246.13161,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 247.76263,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 250.029546,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 251.501429,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 252.665057,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 254.468753,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 257.079683,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 258.584422,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 260.447823,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 262.336644,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 265.729274,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 269.046644,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 271.330612,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 272.62946700000003,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 273.325918,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 274.825533,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 275.79424,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 277.683424,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 281.542925,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 283.645011,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 284.755896,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 9.670091000000001,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 11.731587000000001,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 17.000612,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 17.882222,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 18.672472,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 23.915601,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 38.906960999999995,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 44.213401,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 45.757415,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 46.380295,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 47.007551,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 47.797799999999995,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 51.654558,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 53.810544,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 65.25968300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 72.793946,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 74.7078,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 76.414444,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 81.197755,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 82.41412700000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 90.28036300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 95.389048,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 97.645306,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 100.201655,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 104.94458,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 107.206236,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 110.343288,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 114.761746,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 129.318367,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 131.632336,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 135.695034,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 137.843333,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 138.668889,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 139.559841,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 142.626803,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 147.870227,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 151.82068,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 160.450431,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 163.548934,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 166.668549,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 168.742109,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 174.838322,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 177.059728,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 184.075624,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 193.472268,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 195.65088400000002,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 201.73156500000002,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 208.914762,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 212.694535,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 214.550159,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 224.616531,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 225.465646,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 226.214739,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 227.151927,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 231.563197,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 233.765805,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 235.04619,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 237.480522,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 247.66263,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 251.401429,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 256.97968299999997,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 258.484422,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 260.347823,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 262.23664399999996,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 265.62927399999995,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 268.946644,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 273.225918,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 274.725533,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 275.69424,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 277.583424,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 281.442925,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 26.6,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 57.3,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 87.4,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 116.8,
+      "scene": "S04"
+    },
+    {
+      "lang": "en",
+      "time": 152,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
+      "time": 181,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 216,
+      "scene": "S07"
+    },
+    {
+      "lang": "en",
+      "time": 246.9,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 283,
+      "scene": "S09"
+    },
+    {
+      "lang": "en",
+      "time": 285.91,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 0,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 0.5,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 6.829592,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 7.925805,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 9.770091,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 11.831587,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 17.100612,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 17.982222,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 18.772472,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 21.763016,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 24.015601,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 26.194059,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 30.082857,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 33.046667,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 34.448073,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 37.093968,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 39.006961,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 41.392063,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 42.441361,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 44.313401,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 45.689558,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 46.416655,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 47.107551,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 47.8978,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 49.744943,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 51.754558,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 53.910544,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 56.965782,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 61.963039,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 65.359683,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 68.791927,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 70.207687,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 72.893946,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 74.8078,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 76.514444,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 79.743084,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 81.297755,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 82.514127,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 85.335057,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 87.576961,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 90.380363,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 93.534535,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 95.489048,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 97.745306,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 100.301655,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 105.04458,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 107.306236,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 110.443288,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 114.861746,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 119.407234,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 122.421995,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 124.201678,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 126.173628,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 127.005102,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 129.418367,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 131.732336,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 135.795034,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 137.943333,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 138.768889,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 139.65772099999998,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 140.748254,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 142.726803,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 145.536939,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 147.970227,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 151.92068,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 154.853764,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 156.229456,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 158.010113,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 160.550431,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 163.648934,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 166.768549,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 168.842109,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 170.840181,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 172.205896,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 174.938322,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 177.159728,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 180.19381,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 184.175624,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 185.852404,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 189.595805,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 190.889909,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 193.572268,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 195.750884,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 201.831565,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 206.19552199999998,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 207.01771,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 209.014762,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 212.794535,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 214.650159,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 216.387483,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 219.308685,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 220.680703,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 222.450771,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 224.716531,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 225.522574,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 226.314739,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 227.251927,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 228.353787,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 231.663197,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 233.865805,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 235.14619,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 237.580522,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 240.782744,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 243.637687,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 246.13161,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 247.76263,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 250.029546,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 251.501429,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 252.665057,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 254.468753,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 257.079683,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 258.584422,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 260.447823,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 262.336644,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 265.729274,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 269.046644,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 271.330612,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 272.62946700000003,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 273.325918,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 274.825533,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 275.79424,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 277.683424,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 281.542925,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 283.645011,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 284.755896,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 9.670091000000001,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 11.731587000000001,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 17.000612,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 17.882222,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 18.672472,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 23.915601,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 38.906960999999995,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 44.213401,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 45.757415,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 46.380295,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 47.007551,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 47.797799999999995,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 51.654558,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 53.810544,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 65.25968300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 72.793946,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 74.7078,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 76.414444,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 81.197755,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 82.41412700000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 90.28036300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 95.389048,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 97.645306,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 100.201655,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 104.94458,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 107.206236,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 110.343288,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 114.761746,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 129.318367,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 131.632336,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 135.695034,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 137.843333,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 138.668889,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 139.559841,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 142.626803,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 147.870227,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 151.82068,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 160.450431,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 163.548934,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 166.668549,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 168.742109,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 174.838322,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 177.059728,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 184.075624,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 193.472268,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 195.65088400000002,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 201.73156500000002,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 208.914762,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 212.694535,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 214.550159,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 224.616531,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 225.465646,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 226.214739,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 227.151927,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 231.563197,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 233.765805,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 235.04619,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 237.480522,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 247.66263,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 251.401429,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 256.97968299999997,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 258.484422,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 260.347823,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 262.23664399999996,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 265.62927399999995,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 268.946644,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 273.225918,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 274.725533,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 275.69424,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 277.583424,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 281.442925,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 26.6,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 57.3,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 87.4,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 116.8,
+      "scene": "S04"
+    },
+    {
+      "lang": "ar",
+      "time": 152,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
+      "time": 181,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 216,
+      "scene": "S07"
+    },
+    {
+      "lang": "ar",
+      "time": 246.9,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 283,
+      "scene": "S09"
+    },
+    {
+      "lang": "ar",
+      "time": 285.91,
+      "scene": "S09"
+    }
+  ],
+  "textOverflow": [],
+  "businessStates": [
+    {
+      "time": 49.9,
+      "expected": [
+        "Blazer",
+        "Shirt",
+        "Trousers",
+        "Shoes"
+      ],
+      "absent": [
+        "Knit"
+      ],
+      "passed": true
+    },
+    {
+      "time": 52.2,
+      "expected": [
+        "Knit",
+        "Refine the look"
+      ],
+      "absent": [
+        "Shirt"
+      ],
+      "passed": true
+    },
+    {
+      "time": 56.8,
+      "expected": [
+        "If service supported",
+        "No booking made"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 83.7,
+      "expected": [
+        "Not available",
+        "No stock connection"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 105.4,
+      "expected": [
+        "Source: DEMO policy excerpt"
+      ],
+      "absent": [
+        "Call summary"
+      ],
+      "passed": true
+    },
+    {
+      "time": 112.5,
+      "expected": [
+        "AI call summary · DRAFT",
+        "Human edit / review",
+        "Approve before saving",
+        "Prior human note"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 149,
+      "expected": [
+        "Benefits must be",
+        "program rules"
+      ],
+      "absent": [
+        "VIP",
+        "Gold"
+      ],
+      "passed": true
+    },
+    {
+      "time": 181,
+      "expected": [
+        "Branch A · Demo",
+        "Branch B · Demo",
+        "Manager review required",
+        "Approve",
+        "Reject"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 216,
+      "expected": [
+        "DRAFT · Demo creative",
+        "Human brand review"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 248,
+      "expected": [
+        "DEMO-STOCK-A-M",
+        "DEMO-CALL-1008",
+        "NOT CONCRETE RESULTS"
+      ],
+      "absent": [
+        "%"
+      ],
+      "passed": true
+    },
+    {
+      "time": 283,
+      "expected": [
+        "Authorized, scoped pilot",
+        "Measure the actual result",
+        "Expand from evidence"
+      ],
+      "absent": [
+        "%"
+      ],
+      "passed": true
+    }
+  ],
+  "motion": [
+    {
+      "dissolveUsesTwoScenes": true,
+      "reducedMotionUsesOne": true,
+      "reducedTypingShowsComplete": true
+    }
+  ],
+  "captions": [
+    {
+      "time": 2,
+      "dir": "rtl",
+      "text": "في الفيديوهات اللي فاتت، شفنا إزاي GRINDCTRL ممكن تساعد Concrete تطور تجربة خدمة العملاء،",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    },
+    {
+      "time": 39,
+      "dir": "rtl",
+      "text": "يقول للـAI Stylist هو رايح فين،",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    },
+    {
+      "time": 99,
+      "dir": "rtl",
+      "text": "وبيكون محتاج يفهم العميل بسرعة.",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    },
+    {
+      "time": 136,
+      "dir": "rtl",
+      "text": "وكمان عضويته في Icons Club:",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    },
+    {
+      "time": 196,
+      "dir": "rtl",
+      "text": "ويطلع منها اقتراحات للـCopy، والـVisual Concepts، ونسخ مناسبة للسوشيال ميديا والإيميل.",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    },
+    {
+      "time": 279,
+      "dir": "rtl",
+      "text": "دي الرؤية اللي GRINDCTRL بتقترح تناقشها مع Concrete:",
+      "scrollHeight": 63,
+      "clientHeight": 63
+    }
+  ],
+  "mobile": [
+    {
+      "lang": "en",
+      "width": 390,
+      "bodyWidth": 390,
+      "buttons": [
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42
+      ]
+    },
+    {
+      "lang": "ar",
+      "width": 390,
+      "bodyWidth": 390,
+      "buttons": [
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42,
+        42
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "lang": "en",
+      "pages": 13
+    },
+    {
+      "lang": "ar",
+      "pages": 13
+    }
+  ],
+  "audioClock": {
+    "passed": true
+  }
+}
