@@ -75,7 +75,7 @@ const en: SecurityCopy = {
   photosBody: 'What happens to a photo from the moment you upload it for a try-on.',
   photosItems: [
     'Your try-on photo is sent directly to our AI provider to generate the preview. We do not store the uploaded photo on our servers.',
-    'The generated result is kept for up to 30 minutes, then automatically deleted by a cleanup job that runs every 10 minutes.',
+    'The generated result is kept only until it reaches your browser, and for 10 minutes at most. A cleanup job that runs every 10 minutes deletes any copy left.',
     'The generated result is only reachable through short-lived signed links, capped at 5 minutes and tied to your own session. It never has a public URL.',
   ],
 
@@ -221,7 +221,7 @@ const ar: SecurityCopy = {
   photosBody: 'ما يحدث للصورة من لحظة رفعها للتجربة الافتراضية.',
   photosItems: [
     'تُرسل صورة التجربة الافتراضية مباشرة إلى مزوّد الذكاء الاصطناعي لدينا لتوليد المعاينة. لا نخزّن الصورة المرفوعة على خوادمنا.',
-    'يُحتفظ بالنتيجة المولّدة لمدة أقصاها 30 دقيقة، ثم تُحذف تلقائيًا بواسطة مهمة تنظيف تعمل كل 10 دقائق.',
+    'يُحتفظ بالنتيجة المولّدة حتى تصل إلى متصفحك فقط، ولمدة أقصاها 10 دقائق. وتحذف مهمة تنظيف تعمل كل 10 دقائق أي نسخة متبقية.',
     'لا يمكن الوصول إلى النتيجة المولّدة إلا عبر روابط موقّعة قصيرة الأجل، بحد أقصى 5 دقائق ومرتبطة بجلستك أنت. لا يوجد لها رابط عام.',
   ],
 

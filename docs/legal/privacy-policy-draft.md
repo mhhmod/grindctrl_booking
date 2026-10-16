@@ -14,7 +14,7 @@ These need an owner decision or legal input before this can be published. They a
 5. **Legal basis for shopper data processing under GDPR/other regimes**, if we knowingly serve EU or other regulated shoppers through merchant storefronts. Today the product does not check shopper location.
 6. **Children's use.** There is no age gate anywhere in the product (try-on, Store Chat, or dashboard). Decide the minimum age policy and whether an age gate or a "not directed at children" statement is legally sufficient for our markets.
 7. **Merchant data controller/processor roles.** This draft states our proposed role split (processor for shopper data collected through a merchant's store, controller for merchant account data) as the closest fit to how the product actually works. Confirm this is the position we want to take contractually, since it drives whether we owe merchants a formal Data Processing Agreement (the security page already states no DPA exists yet).
-8. **OpenRouter's and Groq's own data retention and training-use terms.** We have not independently reviewed their policies or DPAs. Needed before we can make any claim about what happens to a shopper's photo or chat content once it leaves our servers.
+8. **OpenRouter's and Groq's own data retention and training-use terms.** We have not independently reviewed their policies or DPAs. Needed before we can make any claim about what happens to a shopper's photo or chat content once it leaves our servers. Our image request asks OpenRouter for providers that do not collect data, but OpenRouter lists no zero-data-retention endpoint for the try-on model (meta/muse-image), so zero retention at the provider needs written confirmation or a different model.
 9. **Refund and dispute handling** is not addressed in this policy (see the Terms of Service draft) but may need a cross-reference once decided.
 10. **Do we want a cookie consent banner beyond the existing analytics opt-in control?** Today there is no cookie banner; the analytics consent control on the marketing site is the only consent mechanism.
 
@@ -47,7 +47,7 @@ This policy applies to two different groups of people, and our role is different
 
 **Try-on:**
 - **The photo you upload** for a try-on. This photo is sent directly to our AI image provider to generate the preview and is **not stored on our servers**.
-- **The generated try-on result image**, kept for up to 30 minutes and then automatically deleted by a cleanup job that runs every 10 minutes.
+- **The generated try-on result image**, kept on our servers only until your browser has received it, and never readable for more than 10 minutes. Any copy left after that is deleted by a cleanup job that runs every 10 minutes.
 
 **Store Chat:**
 - **Your messages** in the chat, and **your name and email** if you provide them (for example, to look up an order).
@@ -97,7 +97,7 @@ We have not independently reviewed OpenRouter's or Groq's own data-retention or 
 | Data | Retention |
 |---|---|
 | Try-on uploaded photo | Not stored; sent directly to our AI provider and discarded |
-| Try-on generated result | Up to 30 minutes, then automatically deleted (cleanup runs every 10 minutes) |
+| Try-on generated result | Deleted when your browser has received it; otherwise readable for at most 10 minutes, then deleted by a cleanup job that runs every 10 minutes |
 | Try-on result access links | Signed links valid for up to 5 minutes |
 | Store Chat visitor records, conversations, messages | To be confirmed (Open Question 1) |
 | Merchant account and workspace data | Kept for the life of the account; removed on request or as required by section 7 |
@@ -106,7 +106,7 @@ We have not independently reviewed OpenRouter's or Groq's own data-retention or 
 
 ## 7. Shopper photos
 
-Your try-on photo is sent directly to our AI image provider to generate the preview. We do not store the uploaded photo on our own servers at any point. Only the generated result image is temporarily stored, for up to 30 minutes, and only ever reachable through a short-lived signed link tied to your session. It is never given a public URL.
+Your try-on photo is sent directly to our AI image provider to generate the preview, with a request that it go only to providers that do not collect data. We do not store the uploaded photo on our own servers at any point. Only the generated result image is temporarily stored: it is deleted as soon as your browser has received it, it is only ever reachable through a short-lived signed link tied to your session, and that session lasts at most 10 minutes. It is never given a public URL. Whether our image provider keeps the photo is not yet confirmed (Open Question 8).
 
 ## 8. Cookies and consent
 

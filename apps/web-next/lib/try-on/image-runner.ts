@@ -17,6 +17,15 @@ import { toShopperFailureMessage } from './shopper-errors';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
 
+/* The shopper's photo may only go to providers that do not collect it, the
+   same preference Store Chat sends. OpenRouter enforces provider filters on
+   this endpoint (an impossible `only` is refused with a 404 before any
+   cost). Zero retention (`zdr`) is not sent: OpenRouter's list of ZDR
+   endpoints has none for the try-on model, and on 2026-10-16 the images
+   endpoint answered a `zdr: true` request for it anyway, so the flag would
+   prove nothing (phase zero item 2, an owner question). */
+export const IMAGE_PROVIDER_PREFERENCES = { data_collection: 'deny' } as const;
+
 /* Accepted upload formats for the live pipeline. HEIC/HEIF previews don't
    render in browsers anyway, so real uploads arrive as jpeg/png/webp. */
 export function parsePhotoDataUrl(photoData: string): { mime: string } | null {
@@ -140,6 +149,7 @@ export async function runImageGeneration(
         { type: 'image_url', image_url: { url: garmentDataUrl } },
       ],
       n: 1,
+      provider: IMAGE_PROVIDER_PREFERENCES,
     });
 
     /* One retry, and only for a response that proves no image was generated:

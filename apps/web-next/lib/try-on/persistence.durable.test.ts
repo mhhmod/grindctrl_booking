@@ -81,6 +81,7 @@ import {
   cleanupExpiredTryOnResults,
   loadAuthorizedDurableTryOnJob,
   persistGeneratedTryOnResult,
+  releaseDurableTryOnResult,
   sweepOrphanedTryOnResults,
   TRYON_ORPHAN_SAFETY_GRACE_MS,
   TRYON_RESULT_RETENTION_MS,
@@ -518,6 +519,65 @@ describe('durable try-on result persistence', () => {
       deleted: 0,
       skipped: 0,
       failed: 0,
+    });
+  });
+
+  /* Phase zero item 2: the stored look goes once the browser holds it, and
+     never outlives the session that alone could read it. */
+  describe('photo promise retention', () => {
+    it('keeps a stored look no longer than a try-on session lasts', () => {
+      expect(TRYON_RESULT_RETENTION_MS).toBe(10 * 60 * 1000);
+    });
+
+    it('deletes the stored look of this session when its browser holds it', async () => {
+      state.maybeSingleResults.push(
+        { data: row({ status: 'completed', result_storage_path: PATH }), error: null },
+        { data: { id: JOB_ID }, error: null },
+      );
+
+      expect(await releaseDurableTryOnResult(authorization(), JOB_ID, NOW)).toBe('released');
+      expect(state.events).toEqual(['storage-remove', 'row-update']);
+      expect(removeMock).toHaveBeenCalledWith([PATH]);
+      expect(state.updatePayloads[0]).toEqual({
+        result_storage_path: null,
+        result_deleted_at: new Date(NOW).toISOString(),
+      });
+    });
+
+    it.each([
+      ['another session', { sessionId: 'ts_zzzzzzzzzzzzzzzzzzzzzzzz' }],
+      ['another product', { productId: 'other-product' }],
+      ['another shop', { shop: 'store-two.myshopify.com' }],
+    ])('leaves the look of %s alone', async (_label, mismatch) => {
+      state.maybeSingleResults.push({
+        data: row({ status: 'completed', result_storage_path: PATH }),
+        error: null,
+      });
+      expect(await releaseDurableTryOnResult(authorization(mismatch), JOB_ID, NOW)).toBe('nothing');
+      expect(state.events).toEqual([]);
+    });
+
+    it('does nothing for a look already deleted or never stored', async () => {
+      state.maybeSingleResults.push(
+        { data: row({ status: 'completed', result_deleted_at: new Date(NOW).toISOString() }), error: null },
+        { data: null, error: null },
+      );
+      expect(await releaseDurableTryOnResult(authorization(), JOB_ID, NOW)).toBe('nothing');
+      expect(await releaseDurableTryOnResult(authorization(), JOB_ID, NOW)).toBe('nothing');
+      expect(await releaseDurableTryOnResult(authorization(), 'not-a-job-id', NOW)).toBe('nothing');
+      expect(state.events).toEqual([]);
+    });
+
+    it('surfaces a storage failure so the caller can say so, and keeps the row', async () => {
+      state.maybeSingleResults.push({
+        data: row({ status: 'completed', result_storage_path: PATH }),
+        error: null,
+      });
+      removeMock.mockResolvedValueOnce({ data: null, error: { message: 'storage unavailable' } });
+      await expect(releaseDurableTryOnResult(authorization(), JOB_ID, NOW)).rejects.toBeInstanceOf(
+        TryOnResultPersistenceError,
+      );
+      expect(state.events).toEqual(['storage-remove']);
     });
   });
 });

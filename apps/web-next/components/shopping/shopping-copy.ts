@@ -65,7 +65,7 @@ const en: ShoppingCopy = {
     },
     {
       title: 'Generated preview is deleted automatically',
-      body: 'The AI-generated result is kept privately for about 30 minutes, then removed by a cleanup job that runs every 10 minutes.',
+      body: 'The AI-generated result is kept privately only until it reaches your browser, and for 10 minutes at most. A cleanup job that runs every 10 minutes removes any copy left.',
     },
   ],
 
@@ -119,7 +119,7 @@ const ar: ShoppingCopy = {
     },
     {
       title: 'المعاينة الناتجة تُحذف تلقائيًا',
-      body: 'تُحفظ النتيجة الناتجة بشكل خاص لمدة 30 دقيقة تقريبًا، ثم تُحذف عبر مهمة تنظيف تعمل كل 10 دقائق.',
+      body: 'تُحفظ النتيجة الناتجة بشكل خاص حتى تصل إلى متصفحك فقط، ولمدة أقصاها 10 دقائق. وتحذف مهمة تنظيف تعمل كل 10 دقائق أي نسخة متبقية.',
     },
   ],
 

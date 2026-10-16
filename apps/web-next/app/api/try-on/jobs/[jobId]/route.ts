@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getJob } from '@/lib/try-on/service';
+import { forgetJob, getJob } from '@/lib/try-on/service';
 import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifyTryOnSession } from '@/lib/try-on/storefront-context';
-import { loadAuthorizedDurableTryOnJob } from '@/lib/try-on/persistence';
+import {
+  loadAuthorizedDurableTryOnJob,
+  releaseDurableTryOnResult,
+} from '@/lib/try-on/persistence';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import {
   TryOnResultPersistenceError,
@@ -144,4 +147,66 @@ export async function GET(
 
   const res = toJobResponse(job);
   return NextResponse.json(res, { status: 200 });
+}
+
+/**
+ * DELETE /api/try-on/jobs/[jobId]
+ * The shopper's browser holds the look, so the server's copies go now
+ * instead of waiting for their expiry (phase zero item 2). Only a job of
+ * this exact session is touched. Every authorized call answers 204, whether
+ * or not there was anything to delete, so the answer never confirms
+ * another session's job.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> },
+) {
+  try {
+    await requireRateLimit(tryOnPollRatelimit, clientIp(request) ?? 'unknown');
+  } catch (error) {
+    if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
+    throw error;
+  }
+
+  const { jobId } = await params;
+  const authorizationHeader = request.headers.get('authorization') ?? '';
+  const token = authorizationHeader.replace(/^bearer\s+/i, '');
+  const session = token
+    ? resolveShopifyApp((secret) => verifyTryOnSession(secret, token))?.value
+    : null;
+  if (!session) {
+    return NextResponse.json(
+      { ok: false, message: 'Invalid or expired try-on session.', error: 'Invalid or expired try-on session.' },
+      { status: 401 },
+    );
+  }
+  if (!jobId) return new NextResponse(null, { status: 204 });
+
+  const job = getJob(jobId);
+  if (
+    job &&
+    job.sessionId === session.sessionId &&
+    job.productId === session.productId &&
+    job.shop === session.shop
+  ) {
+    forgetJob(jobId);
+  }
+
+  try {
+    await releaseDurableTryOnResult(session, jobId);
+  } catch (error) {
+    if (
+      error instanceof TryOnResultSchemaNotReadyError ||
+      error instanceof TryOnResultPersistenceError
+    ) {
+      // The scheduled cleanup still deletes it at its expiry.
+      console.error('[try-on] result_release_failed', { jobId });
+      return NextResponse.json(
+        { ok: false, message: 'Try again later.', error: 'Try again later.' },
+        { status: 503 },
+      );
+    }
+    throw error;
+  }
+  return new NextResponse(null, { status: 204 });
 }

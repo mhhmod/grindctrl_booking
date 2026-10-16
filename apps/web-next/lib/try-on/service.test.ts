@@ -103,11 +103,14 @@ describe('try-on service', () => {
     persistGeneratedTryOnResultMock.mockReset().mockResolvedValue({
       storagePath: 'jobs/tryon_test/result.png',
       persistedAt: '2026-08-31T00:00:00.000Z',
-      expiresAt: '2026-08-31T00:30:00.000Z',
+      expiresAt: '2026-08-31T00:10:00.000Z',
     });
     persistTryOnJobMock.mockReset().mockResolvedValue(undefined);
     runImageGenerationMock.mockReset();
     getShopModelKeyMock.mockReset().mockResolvedValue('meta/muse-image');
+    /* The fixtures are dated 2026-08-31; jobs expire with their session
+       (ten minutes), so the clock reads a minute after them. */
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-08-31T00:01:00.000Z'));
   });
 
   afterEach(() => {
