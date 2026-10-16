@@ -300,3 +300,38 @@ describe('MessengerOverview disconnect', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('تم فصل المتجر — أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.');
   });
 });
+
+/* Phase zero item 6: alerts that reached nobody are shown, not hidden in
+   event logs. */
+describe('MessengerOverview alert problems', () => {
+  const STATS = {
+    conversations7d: 4,
+    aiResolved7d: 1,
+    handedOff7d: 3,
+    openNow: 1,
+    medianFirstResponseSeconds7d: 4,
+    feedbackUp30d: 0,
+    feedbackDown30d: 0,
+  };
+
+  it('says how many handoffs alerted nobody, why, and where to fix it', () => {
+    const onOpenTab = vi.fn();
+    renderOverview({ stats: { ...STATS, alertProblems7d: { no_recipient: 2, send_failed: 1 } }, onOpenTab });
+
+    expect(screen.getByText('3 requests for a person alerted nobody in the last 7 days')).toBeInTheDocument();
+    expect(screen.getByText('Nobody is set to get alerts. Add an address in Behaviour. (2)')).toBeInTheDocument();
+    expect(screen.getByText('The alert email failed. It is tried again for two hours. (1)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Behaviour' }));
+    expect(onOpenTab).toHaveBeenCalledWith('behaviour');
+  });
+
+  it('says nothing when every alert went out', () => {
+    renderOverview({ stats: { ...STATS, alertProblems7d: {} } });
+    expect(screen.queryByTestId('alert-problems')).not.toBeInTheDocument();
+  });
+
+  it('says it in Arabic', () => {
+    renderOverview({ locale: 'ar', stats: { ...STATS, alertProblems7d: { smtp_not_configured: 1 } } });
+    expect(screen.getByText('طلب واحد للتحدث مع شخص لم ينبّه أحداً خلال 7 أيام')).toBeInTheDocument();
+  });
+});

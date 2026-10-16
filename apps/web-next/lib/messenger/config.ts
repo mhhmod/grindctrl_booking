@@ -171,11 +171,15 @@ function normalizeBehaviour(raw: unknown): MessengerBehaviour {
       const h = asRecord(entry);
       return {
         day: clampInt(h.day, 0, 6, -1),
-        startMinute: clampInt(h.startMinute, 0, 1440, -1),
+        startMinute: clampInt(h.startMinute, 0, 1439, -1),
         endMinute: clampInt(h.endMinute, 0, 1440, -1),
       };
     })
-    .filter((h) => h.day >= 0 && h.startMinute >= 0 && h.endMinute > h.startMinute)
+    /* An end at or before the start runs past midnight ("10 am to 00:00",
+       "8 pm to 2 am"); the time input sends midnight as 00:00, and dropping
+       those windows on save made such hours impossible to enter. Only a
+       window with no length is dropped. */
+    .filter((h) => h.day >= 0 && h.startMinute >= 0 && h.endMinute >= 0 && h.endMinute !== h.startMinute)
     .slice(0, 7);
   const timezone =
     typeof r.availabilityTimezone === 'string' &&

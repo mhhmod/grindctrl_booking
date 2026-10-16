@@ -126,6 +126,24 @@ export async function updateConversationMetadata(
   if (res.error) throw new Error(`conversation metadata update failed: ${res.error.message}`);
 }
 
+/** Merges fields into a conversation's metadata as it is now, read fresh,
+ *  so a write from an older copy of the row cannot undo another one (the
+ *  handoff alert outcome, phase zero item 6, is written while the send
+ *  route still holds the row it read at the start of the turn). */
+export async function patchConversationMetadata(
+  conversationId: string,
+  patch: Partial<ConversationRecord['metadata']>,
+): Promise<ConversationRecord['metadata'] | null> {
+  const supabase = getMessengerServiceClient();
+  const res = await supabase.from('widget_conversations').select('metadata').eq('id', conversationId).maybeSingle();
+  if (res.error) throw new Error(`conversation metadata read failed: ${res.error.message}`);
+  if (!res.data) return null;
+  const current = ((res.data as { metadata?: unknown }).metadata ?? {}) as ConversationRecord['metadata'];
+  const next = { ...current, ...patch };
+  await updateConversationMetadata(conversationId, next);
+  return next;
+}
+
 /* Staff "typing…" presence. The moderator's client pings (debounced, reply
    composer only — never the internal-note box) while they type; the
    shopper's panel polls for the derived boolean on its existing cadence.
@@ -490,6 +508,15 @@ export async function claimAiTurn(conversationId: string): Promise<boolean> {
   return kept !== null;
 }
 
+/** After hours with n23_after_hours on, the assistant keeps answering a
+ *  shopper who asked for a person while the team is away. Same re-assertion
+ *  as claimAiTurn, for a conversation still waiting on the team: a person
+ *  taking it over in the meantime wins. */
+export async function claimAiTurnWhileWaiting(conversationId: string): Promise<boolean> {
+  const kept = await guardedTransition(conversationId, ['handoff_requested'], { status: 'handoff_requested' });
+  return kept !== null;
+}
+
 /** Shopper asked for a human (or AI decided to escalate). AI loses the mic
  *  the instant this lands: aiMayAnswer checks status === 'open'. */
 export async function requestHandoff(
@@ -784,6 +811,37 @@ export interface MessengerOverviewStats {
   medianFirstResponseSeconds7d: number | null;
   feedbackUp30d: number;
   feedbackDown30d: number;
+  /** Handoffs in the last 7 days whose alert reached nobody, by reason, each
+   *  conversation counted once (phase zero item 6). */
+  alertProblems7d: AlertProblems;
+}
+
+export type AlertProblemReason = 'no_recipient' | 'smtp_not_configured' | 'send_failed' | 'throttled';
+export type AlertProblems = Partial<Record<AlertProblemReason, number>>;
+
+/** Reads the notifier's own events: skipped for a reason the merchant can
+ *  act on, failed, or throttled. An alert skipped because another attempt
+ *  held the claim is not a problem and is left out. */
+export function countAlertProblems(
+  rows: Array<{ conversation_id: string | null; event_name: string; payload: Record<string, unknown> | null }>,
+): AlertProblems {
+  const seen = new Map<AlertProblemReason, Set<string>>();
+  for (const row of rows) {
+    const reason: AlertProblemReason | null =
+      row.event_name === 'handoff_notify_failed'
+        ? 'send_failed'
+        : row.event_name === 'handoff_notify_throttled'
+          ? 'throttled'
+          : row.event_name === 'handoff_notify_skipped' &&
+              (row.payload?.reason === 'no_recipient' || row.payload?.reason === 'smtp_not_configured')
+            ? (row.payload.reason as AlertProblemReason)
+            : null;
+    if (!reason) continue;
+    const ids = seen.get(reason) ?? new Set<string>();
+    ids.add(row.conversation_id ?? `event-${ids.size}`);
+    seen.set(reason, ids);
+  }
+  return Object.fromEntries([...seen].map(([reason, ids]) => [reason, ids.size]));
 }
 
 export async function getOverviewStats(siteId: string): Promise<MessengerOverviewStats> {
@@ -865,6 +923,20 @@ export async function getOverviewStats(siteId: string): Promise<MessengerOvervie
     }
   }
 
+  let alertProblems7d: AlertProblems = {};
+  const alertRows = await supabase
+    .from('widget_events')
+    .select('conversation_id, event_name, payload')
+    .eq('widget_site_id', siteId)
+    .in('event_name', ['handoff_notify_skipped', 'handoff_notify_failed', 'handoff_notify_throttled'])
+    .gte('created_at', since7d)
+    .limit(1000);
+  if (!alertRows.error) {
+    alertProblems7d = countAlertProblems(
+      (alertRows.data ?? []) as Array<{ conversation_id: string | null; event_name: string; payload: Record<string, unknown> | null }>,
+    );
+  }
+
   return {
     conversations7d: conversations.length,
     aiResolved7d,
@@ -873,5 +945,6 @@ export async function getOverviewStats(siteId: string): Promise<MessengerOvervie
     medianFirstResponseSeconds7d,
     feedbackUp30d,
     feedbackDown30d,
+    alertProblems7d,
   };
 }

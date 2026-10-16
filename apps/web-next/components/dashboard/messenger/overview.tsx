@@ -25,7 +25,12 @@ type Stats = {
   medianFirstResponseSeconds7d: number | null;
   feedbackUp30d: number;
   feedbackDown30d: number;
+  /** Handoffs whose alert reached nobody in the last 7 days, by reason. */
+  alertProblems7d?: Partial<Record<AlertReason, number>>;
 } | null;
+
+type AlertReason = 'no_recipient' | 'smtp_not_configured' | 'send_failed' | 'throttled';
+const ALERT_REASONS: AlertReason[] = ['no_recipient', 'smtp_not_configured', 'send_failed', 'throttled'];
 
 const COPY = {
   en: {
@@ -68,6 +73,16 @@ const COPY = {
     satisfaction: 'Satisfaction · 30 days',
     seconds: 's',
     noData: 'No conversations yet. Once Store Chat is live, shopper questions land here.',
+    alertsTitle: (n: number) =>
+      n === 1 ? '1 request for a person alerted nobody in the last 7 days' : `${n} requests for a person alerted nobody in the last 7 days`,
+    alertsBody: 'The conversations are in Conversations, but no alert reached anyone.',
+    alertReason: {
+      no_recipient: 'Nobody is set to get alerts. Add an address in Behaviour.',
+      smtp_not_configured: 'Email sending is not set up for this app, so alerts cannot go out.',
+      send_failed: 'The alert email failed. It is tried again for two hours.',
+      throttled: 'More than 10 alerts came in one hour. The rest go out later.',
+    },
+    alertsAction: 'Open Behaviour',
   },
   ar: {
     liveTitle: 'دردشة المتجر تعمل',
@@ -108,6 +123,16 @@ const COPY = {
     satisfaction: 'الرضا · ٣٠ يومًا',
     seconds: ' ث',
     noData: 'لا محادثات بعد. بعد تفعيل دردشة المتجر ستظهر أسئلة العملاء هنا.',
+    alertsTitle: (n: number) =>
+      n === 1 ? 'طلب واحد للتحدث مع شخص لم ينبّه أحداً خلال 7 أيام' : `${n} من طلبات التحدث مع شخص لم تنبّه أحداً خلال 7 أيام`,
+    alertsBody: 'تبقى المحادثات في صندوق المحادثات، لكن لم يصل تنبيه إلى أحد.',
+    alertReason: {
+      no_recipient: 'لا يوجد من يتلقى التنبيهات. أضف عنواناً في السلوك.',
+      smtp_not_configured: 'إرسال البريد غير مُعدّ لهذا التطبيق، لذلك لا يمكن إرسال التنبيهات.',
+      send_failed: 'تعذّر إرسال بريد التنبيه. تُعاد المحاولة لمدة ساعتين.',
+      throttled: 'وصل أكثر من 10 تنبيهات في ساعة واحدة. تُرسل البقية لاحقاً.',
+    },
+    alertsAction: 'افتح السلوك',
   },
 };
 
@@ -144,6 +169,7 @@ export function MessengerOverview({
   onOpenTab?: (tab: MessengerTabId) => void;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
+  const alertTotal = ALERT_REASONS.reduce((sum, reason) => sum + (stats?.alertProblems7d?.[reason] ?? 0), 0);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const previousState = useRef({ siteId, version, canRevert });
@@ -301,6 +327,29 @@ export function MessengerOverview({
             >
               {disconnectResult.text}
             </p>
+          )}
+        </section>
+      )}
+
+      {alertTotal > 0 && (
+        <section
+          role="status"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 text-sm"
+          data-testid="alert-problems"
+        >
+          <p className="font-semibold">{t.alertsTitle(alertTotal)}</p>
+          <p className="mt-1 text-muted-foreground">{t.alertsBody}</p>
+          <ul className="mt-2 grid gap-1 text-muted-foreground">
+            {ALERT_REASONS.filter((reason) => (stats?.alertProblems7d?.[reason] ?? 0) > 0).map((reason) => (
+              <li key={reason}>
+                {t.alertReason[reason]} ({stats?.alertProblems7d?.[reason]})
+              </li>
+            ))}
+          </ul>
+          {(stats?.alertProblems7d?.no_recipient ?? 0) > 0 && onOpenTab && (
+            <Button type="button" size="sm" variant="outline" className="mt-3" onClick={() => onOpenTab('behaviour')}>
+              {t.alertsAction}
+            </Button>
           )}
         </section>
       )}

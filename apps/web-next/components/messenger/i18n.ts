@@ -12,7 +12,6 @@ export interface PanelCopy {
   aiNotice: string;
   aiSenderLabel: string;
   humanSenderLabel: string;
-  connectingTeam: string;
   teamReplied: string;
   resolved: string;
   rateQuestion: string;
@@ -37,6 +36,24 @@ export interface PanelCopy {
   attachBadType: string;
   attachFailed: string;
   attachImageAlt: string;
+  /* Handoff, after hours and the assistant down (v16 phase zero items 6-8) */
+  alertedTitle: string;
+  alertedBody: string;
+  savedTitle: string;
+  savedBody: string;
+  awayTitle: (time: string | null, zone: string | null) => string;
+  awayBody: string;
+  stillHelp: string;
+  assistantNow: string;
+  teamHereUntil: (time: string) => string;
+  teamAwayUntil: (time: string) => string;
+  teamAway: string;
+  savedMark: string;
+  assistantDownTitle: string;
+  assistantDownBody: string;
+  sendToTeam: string;
+  offlineBar: string;
+  waitingToSend: string;
 }
 
 const EN: PanelCopy = {
@@ -48,7 +65,6 @@ const EN: PanelCopy = {
   aiNotice: 'Assistant may reply automatically',
   aiSenderLabel: 'Assistant',
   humanSenderLabel: 'Team',
-  connectingTeam: 'Connecting you with our team…',
   teamReplied: 'Our team joined the conversation',
   resolved: 'Conversation resolved',
   rateQuestion: 'Was this helpful?',
@@ -57,13 +73,13 @@ const EN: PanelCopy = {
   retry: 'Retry',
   unavailableTitle: 'Support is resting',
   unavailableBody: 'Please check back a little later.',
-  offlineNote: 'We are away right now — leave a message and the team will reply.',
+  offlineNote: 'We are away right now. Leave a message and the team will reply.',
   contactTitle: 'Where should we reply?',
   contactLabel: 'Your email address',
   contactPlaceholder: 'you@example.com',
   contactSend: 'Send',
   contactSkip: 'Not now',
-  contactThanks: 'Thanks — we will reply to you there.',
+  contactThanks: 'Thanks, we will reply to you there.',
   contactInvalid: 'Please enter a valid email address.',
   attachAria: 'Attach a photo',
   attachUploading: 'Uploading photo…',
@@ -71,6 +87,24 @@ const EN: PanelCopy = {
   attachBadType: 'Only JPEG, PNG, or WebP images can be attached.',
   attachFailed: 'The photo could not be sent.',
   attachImageAlt: 'Photo you sent',
+  alertedTitle: 'The team has your message',
+  alertedBody: 'You will see the reply here.',
+  savedTitle: 'Your message is saved for the team',
+  savedBody: 'They will reply here.',
+  awayTitle: (time, zone) =>
+    time ? `The team is away until ${time}${zone ? ` ${zone}` : ''}` : 'The team is away right now',
+  awayBody: 'Tell us where to reply and they will answer when they are back.',
+  stillHelp: 'While you wait, I can still help with anything else.',
+  assistantNow: 'Assistant answers now',
+  teamHereUntil: (time) => `team here until ${time}`,
+  teamAwayUntil: (time) => `team away until ${time}`,
+  teamAway: 'team away',
+  savedMark: 'Saved',
+  assistantDownTitle: 'The assistant can’t answer right now',
+  assistantDownBody: 'Your message is saved. Send it to the team and they reply here.',
+  sendToTeam: 'Send it to the team',
+  offlineBar: 'You’re offline. We’ll send it when you’re back.',
+  waitingToSend: 'Waiting to send',
 };
 
 const AR: PanelCopy = {
@@ -82,7 +116,6 @@ const AR: PanelCopy = {
   aiNotice: 'قد يرد المساعد تلقائياً',
   aiSenderLabel: 'المساعد',
   humanSenderLabel: 'الفريق',
-  connectingTeam: 'جارٍ توصيلك بفريقنا…',
   teamReplied: 'انضم فريقنا إلى المحادثة',
   resolved: 'تم حل المحادثة',
   rateQuestion: 'هل كانت هذه المساعدة مفيدة؟',
@@ -91,13 +124,13 @@ const AR: PanelCopy = {
   retry: 'إعادة المحاولة',
   unavailableTitle: 'الدعم غير متاح حالياً',
   unavailableBody: 'يرجى المحاولة مرة أخرى بعد قليل.',
-  offlineNote: 'نحن خارج أوقات العمل الآن — اترك رسالة وسيرد عليك الفريق.',
+  offlineNote: 'نحن خارج أوقات العمل الآن. اترك رسالة وسيرد عليك الفريق.',
   contactTitle: 'أين نرد عليك؟',
   contactLabel: 'بريدك الإلكتروني',
   contactPlaceholder: 'you@example.com',
   contactSend: 'إرسال',
   contactSkip: 'ليس الآن',
-  contactThanks: 'شكراً — سنرد عليك هناك.',
+  contactThanks: 'شكراً، سنرد عليك هناك.',
   contactInvalid: 'يرجى إدخال بريد إلكتروني صحيح.',
   attachAria: 'إرفاق صورة',
   attachUploading: 'جارٍ رفع الصورة…',
@@ -105,6 +138,23 @@ const AR: PanelCopy = {
   attachBadType: 'يمكن إرفاق صور JPEG أو PNG أو WebP فقط.',
   attachFailed: 'تعذّر إرسال الصورة.',
   attachImageAlt: 'الصورة التي أرسلتها',
+  alertedTitle: 'وصلت رسالتك إلى الفريق',
+  alertedBody: 'سيظهر الرد هنا.',
+  savedTitle: 'رسالتك محفوظة لدى الفريق',
+  savedBody: 'سيظهر ردهم هنا.',
+  awayTitle: (time, zone) => (time ? `الفريق غير متاح حتى ${time}${zone ? ` ${zone}` : ''}` : 'الفريق غير متاح الآن'),
+  awayBody: 'يمكنك إخبارنا أين نرد عليك، وسيرد الفريق عند عودته.',
+  stillHelp: 'لحين ردهم، يمكنني مساعدتك في أي شيء آخر.',
+  assistantNow: 'المساعد يرد الآن',
+  teamHereUntil: (time) => `الفريق متاح حتى ${time}`,
+  teamAwayUntil: (time) => `الفريق غير متاح حتى ${time}`,
+  teamAway: 'الفريق غير متاح',
+  savedMark: 'تم الحفظ',
+  assistantDownTitle: 'المساعد لا يستطيع الرد الآن',
+  assistantDownBody: 'رسالتك محفوظة. يمكنك إرسالها إلى الفريق وسيردون هنا.',
+  sendToTeam: 'إرسالها إلى الفريق',
+  offlineBar: 'لا يوجد اتصال بالإنترنت. سنرسلها عند عودة الاتصال.',
+  waitingToSend: 'في انتظار الإرسال',
 };
 
 export function getPanelCopy(locale: MessengerLocale): PanelCopy {

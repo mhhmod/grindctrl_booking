@@ -125,42 +125,10 @@ export function provenOrigin(
   };
 }
 
-/** Business-hours check in the merchant's configured timezone. */
-export function isWithinAvailabilityHours(behaviour: MessengerBehaviour, now: Date): boolean {
-  if (behaviour.availabilityMode === 'always') return true;
-  if (!behaviour.availabilityTimezone || behaviour.availabilityHours.length === 0) return true;
-
-  let parts: { weekday?: string; hour?: string; minute?: string };
-  try {
-    parts = new Intl.DateTimeFormat('en-US', {
-      timeZone: behaviour.availabilityTimezone,
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).formatToParts(now).reduce<{ weekday?: string; hour?: string; minute?: string }>(
-      (acc, part) => {
-        if (part.type === 'weekday') acc.weekday = part.value;
-        if (part.type === 'hour') acc.hour = part.value;
-        if (part.type === 'minute') acc.minute = part.value;
-        return acc;
-      },
-      {},
-    );
-  } catch {
-    return true; // Bad tz string must not take the widget offline.
-  }
-
-  const dayIndex = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday ?? '');
-  if (dayIndex < 0 || parts.hour === undefined || parts.minute === undefined) return true;
-  // "24" can appear with hourCycle h24 quirks; normalize.
-  const hour = Number(parts.hour) % 24;
-  const minuteOfDay = hour * 60 + Number(parts.minute);
-
-  return behaviour.availabilityHours.some(
-    (window) => window.day === dayIndex && minuteOfDay >= window.startMinute && minuteOfDay < window.endMinute,
-  );
-}
+/** Business-hours check in the merchant's configured timezone. Lives in
+ *  hours.ts, which also reads windows that run past midnight. */
+import { isWithinAvailabilityHours, teamHours } from './hours';
+export { isWithinAvailabilityHours };
 
 /* Public JSON payload delivered to loader + embed. Contains no secrets —
    the embed key is a public identifier by design. */
@@ -177,6 +145,8 @@ export interface PublicMessengerPayload {
   /** The v16 features switched on for this store (lib/flags/store-flags.ts).
    *  A marked element is drawn only when its flag is listed here. */
   features: string[];
+  /** When the team is in, for the header (n23_after_hours on only). */
+  team?: { open: boolean; opensAt: string | null; closesAt: string | null; timezone: string } | null;
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
     MessengerConfig['behaviour'],
@@ -214,6 +184,12 @@ export function toPublicPayload(
     aiEnabled: active && site.config.ai.enabled,
     attachmentsEnabled: active && site.config.attachments.enabled,
     features: active ? [...features] : [],
+    team:
+      active && features.includes('n23_after_hours')
+        ? (({ open, opensAt, closesAt, timezone }) => ({ open, opensAt, closesAt, timezone }))(
+            teamHours(site.config.behaviour, now),
+          )
+        : null,
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,

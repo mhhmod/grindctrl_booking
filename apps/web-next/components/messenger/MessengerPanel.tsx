@@ -4,8 +4,17 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { MessengerLocale } from '@/lib/messenger/types';
+import type { PublicHandoffAlert } from '@/lib/messenger/handoff-alert';
 import { getPanelCopy } from './i18n';
 import { MessageText } from './message-text';
+import {
+  cityTime,
+  confirmMessage,
+  formatTeamTime,
+  handoffCard,
+  mergeMessages,
+  type PanelTeam,
+} from './panel-state';
 
 /* The shopper-facing messenger surface. Rendered inside an iframe on
    grindctrl.cloud/embed/messenger so merchant theme CSS can never reach it.
@@ -35,7 +44,15 @@ export interface WireMessage {
   feedback?: 'up' | 'down';
   pending?: boolean;
   failed?: boolean;
+  /** The key this message was sent with; Retry sends it again with it. */
+  clientKey?: string;
+  /** Offline: waiting in the outbox, sent in order when back online. */
+  queued?: boolean;
+  /** The assistant could not answer; the message is saved (N24). */
+  saved?: boolean;
 }
+
+type SendOutcome = 'sent' | 'queued' | 'failed';
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
@@ -125,6 +142,21 @@ export function MessengerPanel({
      reply (freshness is decided server-side per read). Independent of the
      send()-driven `typing` above — the dots show when EITHER is true. */
   const [staffTyping, setStaffTyping] = useState(false);
+
+  /* Whether someone was really alerted about the handoff, and when the team
+     is in (v16 phase zero items 6 and 7). */
+  const [alert, setAlert] = useState<PublicHandoffAlert | null>(null);
+  const [team, setTeam] = useState<PanelTeam | null>(config.team ?? null);
+  const afterHoursMode = config.features?.includes('n23_after_hours') ?? false;
+  /* The assistant could not answer the last message (N24). */
+  const [assistantDown, setAssistantDown] = useState(false);
+  const [handingOff, setHandingOff] = useState(false);
+  /* Offline outbox (item 8): messages wait and go out in order. */
+  const [online, setOnline] = useState(true);
+  const messagesRef = useRef<WireMessage[]>([]);
+  const flushingRef = useRef(false);
+  /* The outbox flush, for effects that must not re-bind on every render. */
+  const flushRef = useRef<() => Promise<void>>(async () => {});
 
   /* Composer */
   const [draft, setDraft] = useState('');
@@ -237,6 +269,7 @@ export function MessengerPanel({
           conversationId: string;
           status: string;
           staffTyping?: boolean;
+          alert?: PublicHandoffAlert | null;
           messages: WireMessage[];
         };
         if (cancelled) return;
@@ -246,6 +279,7 @@ export function MessengerPanel({
         setConversationId(data.conversationId);
         setStatus(data.status);
         setStaffTyping(data.staffTyping === true);
+        setAlert(data.alert ?? null);
         setMessages(data.messages);
       } catch {
         if (!cancelled) setBootError(true);
@@ -273,18 +307,20 @@ export function MessengerPanel({
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
           if (typeof data?.staffTyping === 'boolean') setStaffTyping(data.staffTyping);
+          // A retried alert that went out later reaches the shopper here.
+          if (data && 'alert' in data) setAlert(data.alert ?? null);
           if (!data?.messages?.length) {
             if (typeof data?.status === 'string') setStatus(data.status);
             return;
           }
           setStatus(data.status ?? null);
-          setMessages((prev) => {
-            const seen = new Set(prev.filter((m) => !m.pending && !m.failed).map((m) => m.id));
-            const fresh = data.messages as WireMessage[];
-            return [...prev.filter((m) => !m.pending && !m.failed), ...fresh.filter((m) => !seen.has(m.id))];
-          });
+          /* By id: a staff reply arriving while a message is still sending,
+             failed or waiting offline no longer wipes that message out. */
+          setMessages((prev) => mergeMessages(prev, data.messages as WireMessage[]));
         })
         .catch(() => {});
+      // Messages left waiting by a dropped connection go out on the next poll.
+      if (navigator.onLine !== false && messagesRef.current.some((m) => m.queued)) void flushRef.current();
     }
     /* The events alone were never enough. This panel is an iframe, and a
        shopper who has asked a question and is waiting for an answer switches
@@ -347,24 +383,45 @@ export function MessengerPanel({
     if (!booting && !hasCoarsePointer()) inputRef.current?.focus();
   }, [booting]);
 
-  async function send(overrideText?: string) {
-    const text = (overrideText ?? draft).trim();
-    if (variant === 'preview') return;
-    if (!text || !anonId || !conversationId) return;
-    setDraft('');
-    resizeInput();
+  /* The latest messages for the outbox, which runs outside a render. */
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
-    const clientKey = crypto.randomUUID();
+  /**
+   * Sends one shopper message. A retry or an outbox send passes the message
+   * it is sending again, so it keeps its place and its key: the server
+   * stores it once and answers it once (phase zero item 8).
+   */
+  async function send(overrideText?: string, again?: WireMessage): Promise<SendOutcome> {
+    const text = (again?.content ?? overrideText ?? draft).trim();
+    if (variant === 'preview') return 'failed';
+    if (!text || !anonId || !conversationId) return 'failed';
+    if (!again) {
+      setDraft('');
+      resizeInput();
+    }
+
+    const clientKey = again?.clientKey ?? crypto.randomUUID();
     const optimistic: WireMessage = {
-      id: `pending-${clientKey}`,
+      id: again?.id ?? `pending-${clientKey}`,
       role: 'user',
       content: text,
-      createdAt: new Date().toISOString(),
+      createdAt: again?.createdAt ?? new Date().toISOString(),
+      clientKey,
       pending: true,
     };
-    setMessages((prev) => [...prev, optimistic]);
-    setTyping(true);
+    setMessages((prev) =>
+      again ? prev.map((m) => (m.id === again.id ? optimistic : m)) : [...prev, optimistic],
+    );
 
+    // Offline: it waits in the outbox and goes out when the connection is back.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? { ...m, pending: false, queued: true } : m)));
+      return 'queued';
+    }
+
+    setTyping(true);
     try {
       const res = await fetch('/api/messenger/send', {
         method: 'POST',
@@ -389,6 +446,10 @@ export function MessengerPanel({
             status?: string;
             error?: string;
             askContact?: boolean;
+            alert?: PublicHandoffAlert | null;
+            team?: PanelTeam | null;
+            saved?: boolean;
+            assistant?: 'unavailable';
           }
         | null;
       if (!res.ok || !data?.userMessage) throw new Error(data?.error ?? 'send_failed');
@@ -402,26 +463,107 @@ export function MessengerPanel({
         localStorage.setItem(CONV_KEY(config.key), data.conversationId);
       }
 
-      setMessages((prev) =>
-        prev.map((m) => (m.id === optimistic.id ? { ...data.userMessage!, pending: false } : m)),
-      );
-      if (data.reply) setMessages((prev) => [...prev, data.reply!]);
+      const confirmed: WireMessage = { ...data.userMessage, saved: data.saved === true || undefined };
+      setMessages((prev) => confirmMessage(prev, optimistic.id, confirmed));
+      if (data.reply) setMessages((prev) => mergeMessages(prev, [data.reply!]));
       if (data.status) setStatus(data.status);
       if (data.askContact) setAskContact(true);
-    } catch {
-      setMessages((prev) => prev.map((m) => (m.id === optimistic.id ? { ...m, pending: false, failed: true } : m)));
+      if (data.alert !== undefined) setAlert(data.alert ?? null);
+      if (data.team) setTeam(data.team);
+      // N24: the assistant could not answer; offer to send it to the team.
+      setAssistantDown(data.assistant === 'unavailable');
+      return 'sent';
+    } catch (error) {
+      // A fetch that never reached us is a dropped connection, not a refusal.
+      const dropped = error instanceof TypeError;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === optimistic.id ? { ...m, pending: false, ...(dropped ? { queued: true } : { failed: true }) } : m,
+        ),
+      );
+      return dropped ? 'queued' : 'failed';
     } finally {
       setTyping(false);
-      inputRef.current?.focus();
+      if (!again) inputRef.current?.focus();
     }
   }
 
+  /** Sends what waited offline, in the order it was written. Stops at the
+   *  first one that still cannot go out. */
+  async function flushQueue() {
+    if (flushingRef.current) return;
+    flushingRef.current = true;
+    try {
+      for (const message of messagesRef.current.filter((m) => m.queued)) {
+        if ((await send(undefined, message)) === 'queued') break;
+      }
+    } finally {
+      flushingRef.current = false;
+    }
+  }
+
+  useEffect(() => {
+    flushRef.current = flushQueue;
+  });
+
+  useEffect(() => {
+    if (variant !== 'live') return;
+    const update = () => {
+      setOnline(navigator.onLine !== false);
+      if (navigator.onLine !== false) void flushRef.current();
+    };
+    update();
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, [variant, anonId, conversationId]);
+
   function retryFailed(message: WireMessage) {
-    // Remove the failed bubble first so the fresh optimistic copy is the
-    // only representation of this turn, then resend its exact text.
-    setMessages((prev) => prev.filter((m) => m.id !== message.id));
-    setDraft('');
-    void send(message.content);
+    // Same message, same key: the server answers it once however often the
+    // shopper taps Retry.
+    void send(undefined, message);
+  }
+
+  /** N24: the assistant could not answer; send the saved message to the
+   *  team through the same alert flow as any handoff. */
+  async function handOffSaved() {
+    if (!anonId || !conversationId) return;
+    setHandingOff(true);
+    try {
+      const res = await fetch('/api/messenger/handoff', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin,
+          originToken,
+          anonymousId: anonId,
+          conversationId,
+          reason: 'assistant_unavailable',
+          locale,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        status?: string;
+        alert?: PublicHandoffAlert | null;
+        team?: PanelTeam | null;
+        line?: WireMessage;
+      } | null;
+      if (!res.ok || !data?.ok) return;
+      if (data.status) setStatus(data.status);
+      if (data.alert !== undefined) setAlert(data.alert ?? null);
+      if (data.team) setTeam(data.team);
+      if (data.line) setMessages((prev) => mergeMessages(prev, [data.line!]));
+      setAssistantDown(false);
+    } catch {
+      // The card stays, so the shopper can try again.
+    } finally {
+      setHandingOff(false);
+    }
   }
 
   function resizeInput() {
@@ -538,6 +680,16 @@ export function MessengerPanel({
 
   const showHandoffBanner =
     status === 'handoff_requested' || status === 'handoff_active' || status === 'closed';
+  /* n23_after_hours: the assistant answers now, and the header says when the
+     team is in. */
+  const teamLine = !team
+    ? t.assistantNow
+    : team.open
+      ? team.closesAt
+        ? `${t.assistantNow} · ${t.teamHereUntil(formatTeamTime(team.closesAt, locale))}`
+        : t.assistantNow
+      : `${t.assistantNow} · ${team.opensAt ? t.teamAwayUntil(formatTeamTime(team.opensAt, locale)) : t.teamAway}`;
+  const card = handoffCard(alert, afterHoursMode ? team : null);
   const lastIsOurs = messages.length > 0 && ['assistant', 'system'].includes(messages[messages.length - 1].role);
 
   if (bootError) {
@@ -575,9 +727,9 @@ export function MessengerPanel({
           <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
             <span
               aria-hidden="true"
-              className={`inline-block size-1.5 rounded-full ${config.available ? 'bg-primary' : 'bg-muted-foreground'}`}
+              className={`inline-block size-1.5 rounded-full ${config.available || afterHoursMode ? 'bg-primary' : 'bg-muted-foreground'}`}
             />
-            {config.available ? t.aiNotice : t.offlineNote}
+            {afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
           </p>
         </div>
 
@@ -610,6 +762,14 @@ export function MessengerPanel({
           </button>
         )}
       </header>
+
+      {/* Offline: what the shopper writes waits and goes out when the
+          connection is back (phase zero item 8). */}
+      {!online && (
+        <p role="status" className="bg-foreground px-4 py-2 text-center text-[11px] text-background">
+          {t.offlineBar}
+        </p>
+      )}
 
       {/* Thread */}
       <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4" role="log" aria-live="polite" aria-busy={booting}>
@@ -666,6 +826,14 @@ export function MessengerPanel({
                 ) : null}
                 <MessageText text={m.content} />
                 {m.pending && <span className="ms-2 inline-block animate-pulse">…</span>}
+                {m.queued && (
+                  <span className="mt-1 block text-[11px] opacity-90" role="status">
+                    {t.waitingToSend}
+                  </span>
+                )}
+                {m.saved && (
+                  <span className="mt-1 block text-[11px] opacity-90">{t.savedMark}</span>
+                )}
                 {m.failed && (
                   <span className="mt-1 flex items-center gap-2 text-[11px] opacity-90">
                     {t.sendFailed}
@@ -726,13 +894,56 @@ export function MessengerPanel({
           </div>
         )}
 
-        {showHandoffBanner && (
+        {/* N24: the assistant could not answer; the message is saved and
+            the team is one tap away. */}
+        {assistantDown && status === 'open' && (
+          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3" role="status">
+            <p className="text-xs font-semibold">{t.assistantDownTitle}</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{t.assistantDownBody}</p>
+            <button
+              type="button"
+              onClick={() => void handOffSaved()}
+              disabled={handingOff}
+              className="mt-2 rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+              style={{ backgroundColor: accent }}
+            >
+              {t.sendToTeam}
+            </button>
+          </div>
+        )}
+
+        {/* While the team has it: only an alert that really went out says
+            the team has the message (phase zero item 6). */}
+        {status === 'handoff_requested' && (
+          <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3 text-center" role="status">
+            {card.kind === 'alerted' ? (
+              <>
+                <p className="text-xs font-semibold">{t.alertedTitle}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t.alertedBody}</p>
+              </>
+            ) : card.kind === 'after_hours' ? (
+              <>
+                <p className="text-xs font-semibold">
+                  {t.awayTitle(
+                    card.opensAt ? formatTeamTime(card.opensAt, locale) : null,
+                    card.timezone ? cityTime(card.timezone, locale) : null,
+                  )}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t.awayBody}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t.stillHelp}</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-semibold">{t.savedTitle}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t.savedBody}</p>
+              </>
+            )}
+          </div>
+        )}
+
+        {showHandoffBanner && status !== 'handoff_requested' && (
           <p className="text-center text-[11px] text-muted-foreground" role="status">
-            {status === 'handoff_active'
-              ? t.teamReplied
-              : status === 'closed'
-                ? t.resolved
-                : t.connectingTeam}
+            {status === 'handoff_active' ? t.teamReplied : t.resolved}
           </p>
         )}
 

@@ -285,3 +285,48 @@ describe('BehaviourEditor saved replies', () => {
     expect(screen.getByLabelText('Reply title…')).toHaveValue('Shipping');
   });
 });
+
+/* Phase zero item 7: hours start in the store's own time zone, and with
+   n23_after_hours on, no days means the team is away all week. */
+describe('BehaviourEditor opening hours defaults', () => {
+  function renderWith(props: { shopTimezone?: string | null; features?: string[]; behaviour?: Partial<MessengerBehaviour> }) {
+    return render(
+      <BehaviourEditor
+        locale="en"
+        siteId="site-1"
+        initial={{ ...BEHAVIOUR, ...props.behaviour }}
+        publishedPayload={{ ...PAYLOAD, features: props.features ?? [] }}
+        shopDomain="grindctrl.myshopify.com"
+        notifications={{ emailOnHandoff: true, recipients: ['owner@example.com'] }}
+        contactCapture={{ enabled: false, askOutsideHours: false }}
+        attachments={{ enabled: false, triageEnabled: false }}
+        orderLookup={{ enabled: false }}
+        actions={{ saveDraftSections, addCannedReply, updateCannedReplyStatus, deleteCannedReply }}
+        shopTimezone={props.shopTimezone ?? null}
+      />,
+    );
+  }
+
+  it('switching to hours picks the store\'s own time zone instead of UTC', () => {
+    renderWith({ shopTimezone: 'Africa/Cairo', behaviour: { availabilityMode: 'always', availabilityTimezone: 'UTC' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Business hours' }));
+    expect((screen.getByLabelText('Timezone') as HTMLSelectElement).value).toBe('Africa/Cairo');
+  });
+
+  it('keeps a time zone the merchant already chose', () => {
+    renderWith({ shopTimezone: 'Africa/Cairo', behaviour: { availabilityMode: 'always', availabilityTimezone: 'Asia/Riyadh' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Business hours' }));
+    expect((screen.getByLabelText('Timezone') as HTMLSelectElement).value).toBe('Asia/Riyadh');
+  });
+
+  it('warns that no days means the team is away all week, only with n23_after_hours on', () => {
+    const warning = 'With no days selected, Store Chat shows the team as away all week. The assistant still answers.';
+    renderWith({ features: ['n23_after_hours'], behaviour: { availabilityHours: [] } });
+    expect(screen.getByText(warning)).toBeInTheDocument();
+  });
+
+  it('says nothing about no days with the flag off', () => {
+    renderWith({ behaviour: { availabilityHours: [] } });
+    expect(screen.queryByText(/away all week/)).not.toBeInTheDocument();
+  });
+});

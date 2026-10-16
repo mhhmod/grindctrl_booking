@@ -3,10 +3,18 @@ import 'server-only';
 import { getMessengerServiceClient } from './db';
 import {
   claimHandoffNotification,
+  getConversationForSite,
   listMessages,
   recordEvent,
+  patchConversationMetadata,
   releaseHandoffNotification,
 } from './conversations';
+import {
+  readHandoffAlert,
+  type HandoffAlert,
+  type HandoffAlertReason,
+  type HandoffAlertStatus,
+} from './handoff-alert';
 import { sendHandoffNotification } from '@/lib/email/handoff-notification-sender';
 import { hasSmtpConfigured } from '@/lib/email/transport';
 import { isPlaceholderEmail } from './emails';
@@ -83,9 +91,34 @@ function shopperLabel(conversation: NotifyHandoffInput['conversation'], locale: 
   return locale === 'ar' ? 'عميل زائر' : 'anonymous shopper';
 }
 
-/** Notifies the merchant that a conversation needs a human. Never throws —
- *  the caller has already escalated the conversation regardless of whether
- *  this succeeds.
+/** Stores this attempt's outcome on the conversation (phase zero item 6),
+ *  read fresh and merged so other metadata survives. Never throws: a lost
+ *  record must not turn a sent alert into an error. */
+async function recordAlertOutcome(
+  siteId: string,
+  conversationId: string,
+  status: HandoffAlertStatus,
+  reason: HandoffAlertReason | null,
+): Promise<HandoffAlert> {
+  const at = new Date().toISOString();
+  let alert: HandoffAlert = { status, reason, channels: status === 'sent' ? ['email'] : [], at, attempts: 1 };
+  try {
+    const current = await getConversationForSite(conversationId, siteId);
+    if (!current) return alert;
+    const previous = readHandoffAlert(current.metadata as Record<string, unknown>);
+    alert = { ...alert, attempts: (previous?.attempts ?? 0) + 1 };
+    await patchConversationMetadata(conversationId, { handoff_alert: alert });
+  } catch (error) {
+    console.error('[messenger] alert outcome not recorded:', error instanceof Error ? error.message : error);
+  }
+  return alert;
+}
+
+/** Notifies the merchant that a conversation needs a human, and answers
+ *  whether someone was really alerted: 'sent', 'pending' (throttled or a
+ *  failed send, which the retry worker tries again) or 'none' (alerts off,
+ *  no email set up, nobody to alert). Never throws — the caller has already
+ *  escalated the conversation regardless of whether this succeeds.
  *
  *  Order, deliberately: emailOnHandoff → SMTP configured → recipients →
  *  hourly cap → claim LAST → send. Everything before the claim is a
@@ -100,10 +133,12 @@ function shopperLabel(conversation: NotifyHandoffInput['conversation'], locale: 
  *  release the claim before recording handoff_notify_failed, putting that
  *  failure back in the same "try again later" state as the pre-claim
  *  bails. */
-export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
+export async function notifyHandoff(input: NotifyHandoffInput): Promise<HandoffAlert> {
+  const { site, conversation } = input;
+  const outcome = (status: HandoffAlertStatus, reason: HandoffAlertReason | null) =>
+    recordAlertOutcome(site.id, conversation.id, status, reason);
   try {
-    const { site, conversation } = input;
-    if (!site.notifications.emailOnHandoff) return;
+    if (!site.notifications.emailOnHandoff) return await outcome('none', 'disabled');
 
     if (!hasSmtpConfigured()) {
       await recordEvent({
@@ -112,7 +147,7 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
         eventName: 'handoff_notify_skipped',
         payload: { reason: 'smtp_not_configured' },
       });
-      return;
+      return await outcome('none', 'smtp_not_configured');
     }
 
     const recipients =
@@ -126,7 +161,7 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
         eventName: 'handoff_notify_skipped',
         payload: { reason: 'no_recipient' },
       });
-      return;
+      return await outcome('none', 'no_recipient');
     }
 
     if (await overHourlyCap(site.id)) {
@@ -135,7 +170,7 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
         conversationId: conversation.id,
         eventName: 'handoff_notify_throttled',
       });
-      return;
+      return await outcome('pending', 'throttled');
     }
 
     const claimed = await claimHandoffNotification(conversation.id);
@@ -149,7 +184,13 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
         eventName: 'handoff_notify_skipped',
         payload: { reason: 'already_claimed' },
       });
-      return;
+      // Another attempt holds the claim and is sending, or has sent; its own
+      // outcome replaces this one when it lands.
+      const current = await getConversationForSite(conversation.id, site.id);
+      return (
+        readHandoffAlert(current?.metadata as Record<string, unknown> | undefined) ??
+        (await outcome('pending', 'already_claimed'))
+      );
     }
 
     // {limit: 3, newestFirst: true} + reverse(): the three most RECENT
@@ -178,7 +219,7 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
         conversationId: conversation.id,
         eventName: 'handoff_notify_failed',
       });
-      return;
+      return await outcome('pending', 'send_failed');
     }
 
     await recordEvent({
@@ -186,7 +227,9 @@ export async function notifyHandoff(input: NotifyHandoffInput): Promise<void> {
       conversationId: conversation.id,
       eventName: 'handoff_notified',
     });
+    return await outcome('sent', null);
   } catch (error) {
     console.error('[messenger] notifyHandoff failed:', error instanceof Error ? error.message : error);
+    return outcome('pending', 'error');
   }
 }

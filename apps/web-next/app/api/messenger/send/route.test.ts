@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* Route-level integration: every boundary (site resolution, persistence,
    model, limiters) is stubbed so we can assert the SEND PIPELINE CONTRACTS:
@@ -31,6 +31,9 @@ const mocks = vi.hoisted(() => ({
   updateConversationMetadata: vi.fn(async () => {}),
   recordAudit: vi.fn(async () => {}),
   lookupOrder: vi.fn(),
+  storeFlags: vi.fn(async (): Promise<string[]> => []),
+  patchConversationMetadata: vi.fn(async () => ({})),
+  claimAiTurnWhileWaiting: vi.fn(async () => true),
 }));
 
 vi.hoisted(() => {
@@ -75,6 +78,8 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
     recordEvent: mocks.recordEvent,
     requestHandoff: mocks.requestHandoff,
     updateConversationMetadata: mocks.updateConversationMetadata,
+    patchConversationMetadata: mocks.patchConversationMetadata,
+    claimAiTurnWhileWaiting: mocks.claimAiTurnWhileWaiting,
     recordAudit: mocks.recordAudit,
   };
 });
@@ -83,6 +88,10 @@ vi.mock('@/lib/messenger/orders', async (importOriginal) => {
   return { ...actual, lookupOrder: mocks.lookupOrder };
 });
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
+vi.mock('@/lib/flags/store-flags', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/flags/store-flags')>();
+  return { ...actual, storeFlags: mocks.storeFlags };
+});
 vi.mock('@/lib/messenger/ai', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messenger/ai')>();
   return {
@@ -171,7 +180,15 @@ beforeEach(() => {
   mocks.escalateAndNotify.mockResolvedValue(null);
   mocks.updateConversationMetadata.mockResolvedValue(undefined);
   mocks.recordAudit.mockResolvedValue(undefined);
+  mocks.storeFlags.mockResolvedValue([]);
+  mocks.patchConversationMetadata.mockResolvedValue({});
+  mocks.claimAiTurnWhileWaiting.mockResolvedValue(true);
 });
+
+const SENT_ALERT = { status: 'sent', reason: null, channels: ['email'], at: '2026-10-16T12:00:00.000Z', attempts: 1 };
+function escalation(alert: Record<string, unknown> = SENT_ALERT) {
+  return { conversation: { ...CONVERSATION, status: 'handoff_requested' }, alert };
+}
 
 const ACTION = (payload: object) => `<<GC_ACTION>>${JSON.stringify(payload)}`;
 
@@ -305,10 +322,10 @@ describe('POST /api/messenger/send', () => {
         replayed: false,
       })
       .mockResolvedValueOnce({
-        message: { id: 's1', role: 'system', content: 'Connecting you…', created_at: new Date().toISOString(), metadata: { escalated: true } },
+        message: { id: 's1', role: 'system', content: 'The team has your message.', created_at: new Date().toISOString(), metadata: { escalated: true } },
         replayed: false,
       });
-    mocks.escalateAndNotify.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
 
     const res = await POST(makeRequest(body));
     const data = await res.json();
@@ -319,13 +336,14 @@ describe('POST /api/messenger/send', () => {
       'shopper_requested_human',
       expect.stringContaining('talk to someone'),
       expect.objectContaining({ id: SITE.id, workspace_id: SITE.workspace_id }),
+      {},
     );
     expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
   });
 
   it('escalates through the notifying wrapper, not requestHandoff directly', async () => {
     mocks.detectExplicitHandoffRequest.mockReturnValue(true);
-    mocks.escalateAndNotify.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
     mocks.appendMessage.mockResolvedValue({
       message: { id: 'u5', role: 'user', content: 'get me a human', created_at: new Date().toISOString(), metadata: {} },
       replayed: false,
@@ -482,5 +500,165 @@ describe('POST /api/messenger/send — after the merchant resolves', () => {
 
     expect(mocks.ensureOpenConversation).not.toHaveBeenCalled();
     expect(body.conversationId).toBe('conv-1');
+  });
+});
+
+/* ── v16 phase zero items 6, 7 and 8 ─────────────────────────────────── */
+
+function echoTurn(reply: { id: string; role: string; content: string } | null = null) {
+  const user = { id: 'u9', role: 'user', content: validBody.text, created_at: new Date().toISOString(), metadata: {} };
+  mocks.appendMessage.mockImplementation(async (input: { role: string; content: string }) => ({
+    message:
+      input.role === 'user'
+        ? user
+        : { id: reply?.id ?? 'x9', role: input.role, content: input.content, created_at: new Date().toISOString(), metadata: {} },
+    replayed: false,
+  }));
+}
+
+describe('item 6: the handoff line depends on whether someone was alerted', () => {
+  it('says the team has the message only when an alert went out', async () => {
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    echoTurn();
+
+    const data = await (await POST(makeRequest({ ...validBody, text: 'a person please' }))).json();
+
+    expect(data.reply.content).toBe('Sent to the team.');
+    expect(data.alert).toEqual({ status: 'sent', channels: ['email'], at: SENT_ALERT.at, afterHours: false });
+  });
+
+  it('says only that the message is saved when nobody could be alerted', async () => {
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    mocks.escalateAndNotify.mockResolvedValue(
+      escalation({ status: 'none', reason: 'no_recipient', channels: [], at: SENT_ALERT.at, attempts: 1 }),
+    );
+    echoTurn();
+
+    const data = await (await POST(makeRequest({ ...validBody, text: 'a person please' }))).json();
+
+    expect(data.reply.content).toBe('Saved for the team.');
+    expect(data.alert.status).toBe('none');
+    expect(JSON.stringify(data)).not.toContain('no_recipient');
+  });
+
+  it('writes the contact prompt into the row as it is now, not over the alert outcome', async () => {
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    echoTurn();
+    const site = { ...SITE, config: { ...SITE.config, contactCapture: { enabled: true, askOutsideHours: true } } };
+    mocks.loadPublicSite.mockResolvedValue(site);
+    // A fresh row: the route writes into the metadata object it read.
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
+
+    const data = await (await POST(makeRequest({ ...validBody, text: 'a person please' }))).json();
+
+    expect(data.askContact).toBe(true);
+    expect(mocks.patchConversationMetadata).toHaveBeenCalledWith(CONVERSATION.id, { contact_prompted_at: expect.any(String) });
+    expect(mocks.updateConversationMetadata).not.toHaveBeenCalled();
+  });
+});
+
+describe('item 7: after hours with n23_after_hours on', () => {
+  // Thursday 2027-01-14 at 11 pm in Cairo (UTC+2 in January).
+  const ELEVEN_PM_CAIRO = new Date('2027-01-14T21:00:00Z');
+  const CAIRO_SITE = {
+    ...SITE,
+    config: {
+      ...SITE.config,
+      behaviour: {
+        ...SITE.config.behaviour,
+        availabilityMode: 'hours' as const,
+        availabilityTimezone: 'Africa/Cairo',
+        availabilityHours: [4, 5].map((day) => ({ day, startMinute: 600, endMinute: 1320 })),
+      },
+    },
+  };
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(ELEVEN_PM_CAIRO);
+    mocks.loadPublicSite.mockResolvedValue(CAIRO_SITE);
+    mocks.isWithinAvailabilityHours.mockReturnValue(false);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('at 11 pm Cairo time the assistant answers, and nobody is alerted', async () => {
+    mocks.storeFlags.mockResolvedValue(['n23_after_hours']);
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Yes, it is lined.', escalate: false, raw: 'Yes, it is lined.' });
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data.reply.content).toBe('Yes, it is lined.');
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
+
+  it('with the flag off, keeps today\'s behaviour: the assistant is quiet after hours', async () => {
+    echoTurn();
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data.reply).toBeNull();
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+  });
+
+  it('a request for a person at night waits for opening time instead of alerting anyone', async () => {
+    mocks.storeFlags.mockResolvedValue(['n23_after_hours']);
+    mocks.detectExplicitHandoffRequest.mockReturnValue(true);
+    const deferred = { status: 'pending', reason: 'after_hours', channels: [], at: ELEVEN_PM_CAIRO.toISOString(), attempts: 0, dueAt: '2027-01-15T08:00:00.000Z' };
+    mocks.escalateAndNotify.mockResolvedValue(escalation(deferred));
+    echoTurn();
+
+    const data = await (await POST(makeRequest({ ...validBody, text: 'I need a person' }))).json();
+
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(
+      CONVERSATION.id,
+      'shopper_requested_human',
+      expect.any(String),
+      expect.anything(),
+      { deferUntil: '2027-01-15T08:00:00.000Z' },
+    );
+    expect(data.alert).toMatchObject({ status: 'pending', afterHours: true });
+    expect(data.team).toMatchObject({ open: false, opensAt: '10:00', timezone: 'Africa/Cairo' });
+  });
+
+  it('keeps helping a shopper who is waiting for the team overnight', async () => {
+    mocks.storeFlags.mockResolvedValue(['n23_after_hours']);
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'It ships in 2 days.', escalate: false, raw: 'It ships in 2 days.' });
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data.reply.content).toBe('It ships in 2 days.');
+    expect(data.status).toBe('handoff_requested');
+    expect(mocks.claimAiTurnWhileWaiting).toHaveBeenCalledWith(CONVERSATION.id);
+    expect(mocks.claimAiTurn).not.toHaveBeenCalled();
+  });
+});
+
+describe('item 8: when the assistant is down', () => {
+  beforeEach(() => {
+    echoTurn();
+    mocks.generateAssistantReply.mockRejectedValue(new Error('both providers failed'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('with n24_assistant_down on, answers that the message is saved', async () => {
+    mocks.storeFlags.mockResolvedValue(['n24_assistant_down']);
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data).toMatchObject({ reply: null, saved: true, assistant: 'unavailable', status: 'open' });
+    expect(data.userMessage.id).toBe('u9');
+  });
+
+  it('with the flag off, keeps today\'s 502', async () => {
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe('ai_unavailable');
   });
 });
