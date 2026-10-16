@@ -1,0 +1,750 @@
+{
+ "note": "Approved Arabic, taken from the four Arabic boards and paired with the English it translates. Use these exact strings, and use them as the model for tone and terms when drafting Arabic for strings that have none. Western digits. Shopper-facing strings address a woman shopper for this modest-wear sample store; the real widget must use neutral or merchant-chosen forms (see 01-system.md).",
+ "pairs": [
+  {
+   "en": "Maison Noor",
+   "ar": "ميزون نور",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Today",
+   "ar": "اليوم",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Inbox",
+   "ar": "الرسائل",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Try-On",
+   "ar": "التجربة الافتراضية",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Store Chat",
+   "ar": "دردشة المتجر",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Plan",
+   "ar": "الباقة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Settings",
+   "ar": "الإعدادات",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Looks this cycle",
+   "ar": "الإطلالات في هذه الدورة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "870 left of 2,000",
+   "ar": "متبقي 870 من 2,000",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Runs out about 12 Oct",
+   "ar": "تنفد تقريباً يوم 12 أكتوبر",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Hana Adel",
+   "ar": "هناء عادل",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Owner",
+   "ar": "المالكة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Friday, 2 October",
+   "ar": "الجمعة، 2 أكتوبر",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Good afternoon, Hana",
+   "ar": "مساء الخير يا هناء",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Ask GrindCTRL or search",
+   "ar": "اسأل GrindCTRL أو ابحث",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "العربية",
+   "ar": "English",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Everything is working",
+   "ar": "كل شيء يعمل",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Try-on live on 28 product pages",
+   "ar": "التجربة الافتراضية تعمل على 28 صفحة منتج",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Store Chat live, seen 2 min ago",
+   "ar": "دردشة المتجر تعمل، آخر نشاط قبل دقيقتين",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Nour is online",
+   "ar": "نور متصلة الآن",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Health details",
+   "ar": "تفاصيل الحالة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Needs you",
+   "ar": "يحتاجك الآن",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "4 things, most urgent first",
+   "ar": "4 أمور، الأكثر إلحاحاً أولاً",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "3 shoppers are waiting for a person",
+   "ar": "3 متسوقين ينتظرون شخصاً من فريقك",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Longest wait 12 min · their carts hold EGP 9,850",
+   "ar": "أطول انتظار 12 دقيقة، وفي سلالهم 9,850 ج.م",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Open inbox",
+   "ar": "افتح الرسائل",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "9 shoppers asked about exchanges after 14 days",
+   "ar": "9 متسوقين سألوا عن الاستبدال بعد 14 يوماً",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Mostly in Arabic. The assistant had no answer, so we drafted one from your policy.",
+   "ar": "أغلبهم بالعربية. لم يجد المساعد إجابة، فكتبنا لك واحدة من سياستك.",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Review answer",
+   "ar": "راجع الإجابة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Looks run out in about 10 days",
+   "ar": "الإطلالات تنفد خلال 10 أيام تقريباً",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "At this week's pace, 6 days before your 18 October reset. Try it on hides while you're out.",
+   "ar": "بمعدل هذا الأسبوع، أي قبل التجديد في 18 أكتوبر بستة أيام. يختفي زر التجربة حتى تضيف المزيد.",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Add looks",
+   "ar": "أضف إطلالات",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Riyadh Open Abaya: 140 looks, 2 orders",
+   "ar": "عباية الرياض المفتوحة: 140 إطلالة وطلبان فقط",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "31% said the look wasn't right. The model's raised arm in the product photo is the likely cause.",
+   "ar": "31% قالوا إن الإطلالة غير مناسبة. ذراع العارضة المرفوعة في صورة المنتج هي السبب الأرجح.",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "See why",
+   "ar": "اعرف السبب",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Sales with GrindCTRL, this week",
+   "ar": "المبيعات مع GrindCTRL هذا الأسبوع",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "EGP 48,200",
+   "ar": "48,200 ج.م",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "12% on last week",
+   "ar": "12% عن الأسبوع الماضي",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Sat",
+   "ar": "سبت",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Sun",
+   "ar": "أحد",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Mon",
+   "ar": "اثنين",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Tue",
+   "ar": "ثلاثاء",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Wed",
+   "ar": "أربعاء",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Thu",
+   "ar": "خميس",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Fri",
+   "ar": "جمعة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Orders within 7 days of a try-on or a chat, counting only the pieces they tried or asked about. Change",
+   "ar": "طلبات خلال 7 أيام من تجربة أو محادثة، ونحتسب فقط القطع التي جربوها أو سألوا عنها. تغيير",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "50/50 test, day 9 of 14",
+   "ar": "اختبار 50/50، اليوم 9 من 14",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "So far 9% more add to carts with try-on, across 4,210 visitors. Keep it running 5 more days for a clear answer.",
+   "ar": "حتى الآن إضافات للسلة أكثر بنسبة 9% مع التجربة، من 4,210 زائر. اتركه 5 أيام أخرى لنتيجة واضحة.",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Looks",
+   "ar": "الإطلالات",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "18% more than last week",
+   "ar": "18% أكثر من الأسبوع الماضي",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Added to cart after a look",
+   "ar": "أضافوا للسلة بعد الإطلالة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Shoppers who chose to try on",
+   "ar": "متسوقون اختاروا التجربة بأنفسهم",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Chats the assistant solved",
+   "ar": "محادثات أنهاها المساعد",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Of 418 chats, the rest went to the team",
+   "ar": "من 418 محادثة، والباقي للفريق",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Team first reply",
+   "ar": "أول رد من الفريق",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "9 min",
+   "ar": "9 دقائق",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "During opening hours",
+   "ar": "خلال ساعات العمل",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Right now on maisonnoor.com",
+   "ar": "الآن على maisonnoor.com",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "14 shoppers, 2 trying on, 4 in a chat",
+   "ar": "14 متسوقاً الآن، منهم 2 يجربون و4 في محادثة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "A shopper tried on the Layla abaya and added it to cart",
+   "ar": "متسوقة جربت عباية ليلى وأضافتها للسلة",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "The assistant answered a size question in Egyptian Arabic",
+   "ar": "المساعد أجاب عن سؤال مقاس باللهجة المصرية",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "A shopper is trying on the Linen overshirt",
+   "ar": "متسوقة تجرب قميص الكتان الآن",
+   "from": "Today-Arabic"
+  },
+  {
+   "en": "Switch store, current Maison Noor",
+   "ar": "تبديل المتجر، الحالي ميزون نور",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "Menu",
+   "ar": "القائمة",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "Notifications",
+   "ar": "التنبيهات",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "Notifications, 2 new",
+   "ar": "التنبيهات، 2 جديد",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "Store health",
+   "ar": "حالة المتجر",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "This week",
+   "ar": "هذا الأسبوع",
+   "from": "Today-Arabic (assistive)"
+  },
+  {
+   "en": "Store admin",
+   "ar": "إدارة المتجر",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Search",
+   "ar": "بحث",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Home",
+   "ar": "الرئيسية",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Orders",
+   "ar": "الطلبات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Products",
+   "ar": "المنتجات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Customers",
+   "ar": "العملاء",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Content",
+   "ar": "المحتوى",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Analytics",
+   "ar": "الإحصاءات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Marketing",
+   "ar": "التسويق",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Discounts",
+   "ar": "الخصومات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Sales channels",
+   "ar": "قنوات البيع",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Online Store",
+   "ar": "المتجر الإلكتروني",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Apps",
+   "ar": "التطبيقات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Plans",
+   "ar": "الباقات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "At this week's pace you'll run out 6 days before your 18 October reset. Try it on hides while you're out, and Store Chat keeps working.",
+   "ar": "بمعدل هذا الأسبوع ستنفد الإطلالات قبل التجديد في 18 أكتوبر بستة أيام. يختفي زر التجربة حتى تضيف المزيد، وتستمر دردشة المتجر في العمل.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Add 500 looks",
+   "ar": "أضف 500 إطلالة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "See plans",
+   "ar": "الباقات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Status",
+   "ar": "الحالة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Checked in your live theme 3 min ago",
+   "ar": "تم التحقق في قالبك المنشور قبل 3 دقائق",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Showing on 28 product pages. 2 are flagged and 1 needs a better photo.",
+   "ar": "يظهر في 28 صفحة منتج، منها 2 عليهما ملاحظة، ومنتج واحد يحتاج صورة أفضل.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "On",
+   "ar": "يعمل",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Answering on every page. Nour is online for handoffs.",
+   "ar": "يجيب في كل الصفحات، ونور متصلة لاستلام المحادثات.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Last 7 days",
+   "ar": "آخر 7 أيام",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Looks made",
+   "ar": "الإطلالات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Shoppers who chose to try on",
+   "ar": "متسوقون اختاروا التجربة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "of 418 chats",
+   "ar": "من 418 محادثة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Sales after a look or chat",
+   "ar": "مبيعات بعد تجربة أو محادثة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Full results in the GrindCTRL dashboard",
+   "ar": "النتائج الكاملة في لوحة GrindCTRL",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Needs you",
+   "ar": "يحتاجك",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "3 shoppers want a person",
+   "ar": "3 متسوقين يريدون التحدث مع شخص",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Longest wait 12 min. Their carts hold EGP 9,850.",
+   "ar": "أطول انتظار 12 دقيقة، وفي سلالهم 9,850 ج.م.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Approve an answer about exchanges",
+   "ar": "وافق على إجابة عن الاستبدال",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "9 shoppers asked this week. We drafted it from your refund policy.",
+   "ar": "سأل 9 متسوقين هذا الأسبوع، وكتبناها من سياسة الاسترجاع.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Review",
+   "ar": "راجع",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Riyadh Open Abaya looks often come out wrong",
+   "ar": "إطلالات عباية الرياض المفتوحة لا تبدو صحيحة غالباً",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "31% said not right. The model's arm is raised in the product photo.",
+   "ar": "31% قالوا إنها غير مناسبة. ذراع العارضة مرفوعة في صورة المنتج.",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Fix photo",
+   "ar": "أصلح الصورة",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Learn more about how we count sales",
+   "ar": "اعرف المزيد عن طريقة احتساب المبيعات",
+   "from": "Shopify-Arabic"
+  },
+  {
+   "en": "Shopify admin",
+   "ar": "إدارة Shopify",
+   "from": "Shopify-Arabic (assistive)"
+  },
+  {
+   "en": "More actions",
+   "ar": "المزيد",
+   "from": "Shopify-Arabic (assistive)"
+  },
+  {
+   "en": "Try-On settings",
+   "ar": "إعدادات التجربة",
+   "from": "Shopify-Arabic (assistive)"
+  },
+  {
+   "en": "Store Chat settings",
+   "ar": "إعدادات الدردشة",
+   "from": "Shopify-Arabic (assistive)"
+  },
+  {
+   "en": "Your look is ready",
+   "ar": "إطلالتكِ جاهزة",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Layla Embroidered Abaya · EGP 3,250",
+   "ar": "عباية ليلى المطرزة · 3,250 ج.م",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Look",
+   "ar": "الإطلالة",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Your photo",
+   "ar": "صورتكِ",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "AI preview",
+   "ar": "معاينة بالذكاء الاصطناعي",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Not right?",
+   "ar": "غير مناسبة؟",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Colour",
+   "ar": "اللون",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Black",
+   "ar": "أسود",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Size",
+   "ar": "المقاس",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Add to cart · Black, M",
+   "ar": "أضيفي إلى السلة · أسود، M",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Save photo",
+   "ar": "احفظي",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Send",
+   "ar": "أرسلي",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Ask about fit",
+   "ar": "اسألي عن المقاس",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Try these on you, one tap each",
+   "ar": "جربي هذه عليكِ بلمسة واحدة",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Uses this photo",
+   "ar": "بنفس الصورة",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Linen shirt",
+   "ar": "قميص كتان",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Denim overshirt",
+   "ar": "قميص جينز",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Zahra abaya",
+   "ar": "عباية زهرة",
+   "from": "TryOn-Arabic"
+  },
+  {
+   "en": "Close",
+   "ar": "إغلاق",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "You wearing the Layla Embroidered Abaya in black",
+   "ar": "أنتِ ترتدين عباية ليلى المطرزة باللون الأسود",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "Compare",
+   "ar": "مقارنة",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "This look doesn't look right",
+   "ar": "الإطلالة لا تبدو صحيحة",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "Sand",
+   "ar": "رملي",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "Olive",
+   "ar": "زيتي",
+   "from": "TryOn-Arabic (assistive)"
+  },
+  {
+   "en": "Assistant answers now · team here until 10 pm",
+   "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "From the store's size guide",
+   "ar": "من دليل المقاسات",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Layla Embroidered Abaya",
+   "ar": "عباية ليلى المطرزة",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Black · M · EGP 3,250",
+   "ar": "أسود · M · 3,250 ج.م",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Try it on",
+   "ar": "جربيها عليكِ",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Add M",
+   "ar": "أضيفي M",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Store assistant, AI",
+   "ar": "مساعد المتجر، ذكاء اصطناعي",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Message",
+   "ar": "رسالتك",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Close chat",
+   "ar": "إغلاق المحادثة",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Add a photo",
+   "ar": "أضيفي صورة",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Send",
+   "ar": "إرسال",
+   "from": "Chat-Arabic"
+  },
+  {
+   "en": "Hi, I can help with sizes, delivery, exchanges or anything in the store. What would you like to know?",
+   "ar": "أهلاً! أقدر أساعدك في المقاسات والتوصيل والاستبدال أو أي حاجة في المتجر. تحبي تعرفي إيه؟",
+   "from": "ChatStudio (greeting)"
+  },
+  {
+   "en": "Yes. Exchanges are free within 30 days if the piece is unworn and still has its tags. Refunds are within 14 days. Send your order number here and I'll pass it to the team to arrange.",
+   "ar": "أيوه، الاستبدال مجاني خلال 30 يوم لو القطعة ما اتلبستش وعليها التيكت. استرجاع الفلوس خلال 14 يوم بس. ابعتي رقم الأوردر هنا وهبلّغ الفريق يرتّبوا كل حاجة.",
+   "from": "Knowledge (sample answer, shows the assistant register)"
+  },
+  {
+   "en": "Not at the moment. We deliver within Egypt only for now.",
+   "ar": "لأ، حالياً بنوصّل داخل مصر بس.",
+   "from": "Knowledge (sample answer, shows the assistant register)"
+  },
+  {
+   "en": "EN",
+   "ar": "ع",
+   "from": "ChatStudio (preview language toggle)"
+  }
+ ]
+}
