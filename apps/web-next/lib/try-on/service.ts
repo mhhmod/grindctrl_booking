@@ -18,6 +18,7 @@ import {
 } from './result-errors';
 import { toShopperFailureMessage } from './shopper-errors';
 import { TRYON_IMAGE_MODEL } from './models';
+import { TRYON_SESSION_TTL_SECONDS } from './storefront-context';
 
 export {
   TryOnFinalizationPendingError,
@@ -31,8 +32,11 @@ export {
    bounded: TTL covers the poll window (generation ~10s + client rendering),
    and the cap guards against burst traffic between TTL sweeps. Billable
    storefront results also have a short-lived private durable fallback, so
-   eviction or a process restart does not trigger another provider call. */
-const JOB_TTL_MS = 30 * 60 * 1000;
+   eviction or a process restart does not trigger another provider call.
+   A job is only ever read through its try-on session, so it lives no longer
+   than a session can, and the shopper's browser drops it sooner with
+   forgetJob once it holds the look (phase zero item 2). */
+export const JOB_TTL_MS = TRYON_SESSION_TTL_SECONDS * 1000;
 const JOB_STORE_MAX = 1000;
 const jobStore = new Map<string, TryOnJob>();
 
@@ -57,10 +61,7 @@ function createJobId(): string {
 
 export function storeJob(job: TryOnJob, now: number = Date.now()): void {
   for (const [id, existing] of jobStore) {
-    const createdAt = Date.parse(existing.createdAt);
-    if (!Number.isFinite(createdAt) || now - createdAt > JOB_TTL_MS) {
-      jobStore.delete(id);
-    }
+    if (isExpired(existing, now)) jobStore.delete(id);
   }
   while (jobStore.size >= JOB_STORE_MAX) {
     let oldestId: string | null = null;
@@ -133,7 +134,7 @@ export async function generateTryOn(
     });
 
     if (!reservation.created) {
-      const cached = jobStore.get(reservation.jobId);
+      const cached = getJob(reservation.jobId);
       if (
         cached &&
         cached.sessionId === sessionId &&
@@ -302,6 +303,21 @@ export async function generateTryOn(
   return job;
 }
 
-export function getJob(jobId: string): TryOnJob | undefined {
-  return jobStore.get(jobId);
+function isExpired(job: TryOnJob, now: number): boolean {
+  const createdAt = Date.parse(job.createdAt);
+  return !Number.isFinite(createdAt) || now - createdAt > JOB_TTL_MS;
+}
+
+export function getJob(jobId: string, now: number = Date.now()): TryOnJob | undefined {
+  const job = jobStore.get(jobId);
+  if (job && isExpired(job, now)) {
+    jobStore.delete(jobId);
+    return undefined;
+  }
+  return job;
+}
+
+/** Drops a job's in-memory copy, result image included. */
+export function forgetJob(jobId: string): void {
+  jobStore.delete(jobId);
 }

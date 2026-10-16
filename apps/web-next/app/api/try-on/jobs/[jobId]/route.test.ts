@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { durableLoadMock, rateLimitMock } = vi.hoisted(() => ({
+const { durableLoadMock, durableReleaseMock, rateLimitMock } = vi.hoisted(() => ({
   durableLoadMock: vi.fn(),
+  durableReleaseMock: vi.fn(),
   rateLimitMock: vi.fn(),
 }));
 
@@ -24,11 +25,13 @@ vi.mock('@/lib/try-on/persistence', async () => {
   return {
     ...actual,
     loadAuthorizedDurableTryOnJob: (...args: unknown[]) => durableLoadMock(...args),
+    releaseDurableTryOnResult: (...args: unknown[]) => durableReleaseMock(...args),
   };
 });
 
-import { GET } from '@/app/api/try-on/jobs/[jobId]/route';
-import { generateTryOn, storeJob } from '@/lib/try-on/service';
+import { DELETE, GET } from '@/app/api/try-on/jobs/[jobId]/route';
+import { generateTryOn, getJob, storeJob } from '@/lib/try-on/service';
+import { TryOnResultPersistenceError } from '@/lib/try-on/result-errors';
 import {
   signStorefrontContext,
   signTryOnSession,
@@ -252,5 +255,80 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
     );
 
     expect(response.status).toBe(401);
+  });
+});
+
+/* Phase zero item 2: once the shopper's browser holds the look, the server's
+   copies go. */
+describe('DELETE /api/try-on/jobs/[jobId]', () => {
+  beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
+    process.env.SHOPIFY_API_SECRET = SECRET;
+    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    durableReleaseMock.mockReset().mockResolvedValue('released');
+  });
+
+  afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
+    delete process.env.SHOPIFY_API_SECRET;
+    vi.restoreAllMocks();
+  });
+
+  function release(jobId: string, token: string) {
+    return DELETE(
+      new NextRequest(`http://localhost/api/try-on/jobs/${jobId}`, {
+        method: 'DELETE',
+        headers: { authorization: `Bearer ${token}` },
+      }),
+      { params: Promise.resolve({ jobId }) },
+    );
+  }
+
+  it('drops the memory copy and the stored copy of its own session', async () => {
+    const session = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const job = await generateTryOn(session.claims, 'mock');
+    expect(getJob(job.jobId)).toBeDefined();
+
+    const response = await release(job.jobId, session.token);
+
+    expect(response.status).toBe(204);
+    expect(getJob(job.jobId)).toBeUndefined();
+    expect(durableReleaseMock).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: session.claims.sessionId }),
+      job.jobId,
+    );
+  });
+
+  it("leaves another session's job in place and answers the same way", async () => {
+    const owner = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const other = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const job = await generateTryOn(owner.claims, 'mock');
+
+    const response = await release(job.jobId, other.token);
+
+    expect(response.status).toBe(204);
+    expect(getJob(job.jobId)).toBeDefined();
+  });
+
+  it('refuses a request without a valid session', async () => {
+    const response = await release('tryon_anything', 'not-a-token');
+    expect(response.status).toBe(401);
+    expect(durableReleaseMock).not.toHaveBeenCalled();
+  });
+
+  it('answers 503 when storage cannot delete it, leaving the expiry to finish the job', async () => {
+    const session = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    durableReleaseMock.mockRejectedValueOnce(new TryOnResultPersistenceError('tryon_x'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const response = await release('tryon_x', session.token);
+    expect(response.status).toBe(503);
+  });
+
+  it('is rate limited like polling', async () => {
+    rateLimitMock.mockResolvedValueOnce({ success: false, reset: Date.now() + 10_000 });
+    const response = await release('tryon_x', 'anything');
+    expect(response.status).toBe(429);
+    expect(durableReleaseMock).not.toHaveBeenCalled();
   });
 });

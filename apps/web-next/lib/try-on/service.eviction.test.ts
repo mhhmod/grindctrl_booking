@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getJob, storeJob } from './service';
+import { forgetJob, getJob, JOB_TTL_MS, storeJob } from './service';
 import type { TryOnJob } from './types';
 
 function makeJob(jobId: string, createdAt: string): TryOnJob {
@@ -36,12 +36,35 @@ describe('job store lifecycle bounds', () => {
     vi.setSystemTime(start);
     storeJob(makeJob('tryon_old', new Date(start).toISOString()), start);
 
-    // Advance past the 30-minute TTL and insert another job.
-    vi.setSystemTime(start + 31 * 60 * 1000);
-    storeJob(makeJob('tryon_new', new Date(start + 31 * 60 * 1000).toISOString()));
+    // Advance past the 10-minute TTL and insert another job.
+    vi.setSystemTime(start + 11 * 60 * 1000);
+    storeJob(makeJob('tryon_new', new Date(start + 11 * 60 * 1000).toISOString()));
 
     expect(getJob('tryon_old')).toBeUndefined();
     expect(getJob('tryon_new')?.jobId).toBe('tryon_new');
+  });
+
+  /* Phase zero item 2: a look is held no longer than a try-on session,
+     the only thing that can read it, lasts. */
+  it('keeps a job no longer than a try-on session lasts', () => {
+    expect(JOB_TTL_MS).toBe(10 * 60 * 1000);
+  });
+
+  it('answers nothing for an expired job even before the next insert prunes it', () => {
+    const start = Date.now();
+    vi.setSystemTime(start);
+    storeJob(makeJob('tryon_stale', new Date(start).toISOString()), start);
+
+    vi.setSystemTime(start + JOB_TTL_MS + 1);
+    expect(getJob('tryon_stale')).toBeUndefined();
+  });
+
+  it('forgets a job, result included, when asked', () => {
+    const now = Date.now();
+    vi.setSystemTime(now);
+    storeJob(makeJob('tryon_held', new Date(now).toISOString()), now);
+    forgetJob('tryon_held');
+    expect(getJob('tryon_held')).toBeUndefined();
   });
 
   it('drops malformed timestamps during pruning instead of keeping them forever', () => {

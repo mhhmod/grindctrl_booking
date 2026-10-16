@@ -1,7 +1,9 @@
 /* Try-on job persistence (Supabase, service role).
    Source photos stay ephemeral. Completed provider results for billable
    storefront jobs are stored briefly in a private bucket so idempotent
-   replay survives process restarts. */
+   replay survives process restarts. A stored look is deleted as soon as the
+   shopper's browser says it holds the look, and otherwise once its session
+   could no longer read it (phase zero item 2). */
 
 import 'server-only';
 
@@ -16,7 +18,7 @@ import {
 } from './entitlement';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
-import type { VerifiedTryOnSession } from './storefront-context';
+import { TRYON_SESSION_TTL_SECONDS, type VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnResultPersistenceError,
   TryOnResultSchemaNotReadyError,
@@ -24,7 +26,10 @@ import {
 } from './result-errors';
 
 const RESULT_BUCKET = 'tryon-results';
-export const TRYON_RESULT_RETENTION_MS = 30 * 60 * 1000;
+/* A stored look is only ever read through its try-on session, and no
+   session outlives TRYON_SESSION_TTL_SECONDS, so keeping it longer than
+   that serves nobody. */
+export const TRYON_RESULT_RETENTION_MS = TRYON_SESSION_TTL_SECONDS * 1000;
 export const TRYON_CLEANUP_BATCH_LIMIT = 50;
 export const TRYON_ORPHAN_SWEEP_LIMIT = 25;
 export const TRYON_ORPHAN_SAFETY_GRACE_MS = 15 * 60 * 1000;
@@ -360,6 +365,54 @@ export async function loadAuthorizedDurableTryOnJob(
   }
 
   return baseJob;
+}
+
+/**
+ * Deletes a stored look once the shopper's browser holds it. Acts only on a
+ * job of this exact session, product and shop; any other job, a job with no
+ * stored look, or one already deleted is left alone and reported the same
+ * way, so the answer never confirms another session's job.
+ */
+export async function releaseDurableTryOnResult(
+  authorization: VerifiedTryOnSession,
+  jobId: string,
+  now: number = Date.now(),
+): Promise<'released' | 'nothing'> {
+  if (!JOB_ID_RE.test(jobId)) return 'nothing';
+  // No database here means no stored looks either: the memory copy is all.
+  if (!getServiceClient()) return 'nothing';
+  const row = await selectDurableResultRow(jobId);
+  if (
+    !row ||
+    row.session_id !== authorization.sessionId ||
+    row.product_id !== authorization.productId ||
+    normalizeShopDomain(row.shop) !== authorization.shop ||
+    !row.result_storage_path ||
+    row.result_deleted_at
+  ) {
+    return 'nothing';
+  }
+  if (!RESULT_PATH_RE.test(row.result_storage_path)) {
+    throw new TryOnResultPersistenceError(jobId);
+  }
+
+  const client = requireServiceClient(jobId);
+  const removal = await client.storage.from(RESULT_BUCKET).remove([row.result_storage_path]);
+  if (removal.error && !isMissingObject(removal.error)) {
+    throw persistenceError(jobId, removal.error);
+  }
+  const update = await client
+    .from('tryon_jobs')
+    .update({
+      result_storage_path: null,
+      result_deleted_at: new Date(now).toISOString(),
+    })
+    .eq('id', jobId)
+    .eq('result_storage_path', row.result_storage_path)
+    .select('id')
+    .maybeSingle();
+  if (update.error) throw persistenceError(jobId, update.error);
+  return update.data ? 'released' : 'nothing';
 }
 
 export async function cleanupExpiredTryOnResults(

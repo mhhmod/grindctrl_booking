@@ -97,6 +97,70 @@ export async function pollTryOnJob(
   throw new Error(fallbackError);
 }
 
+/* ─── Taking the look off our server (phase zero item 2) ─── */
+
+const LOCAL_RESULT_MAX_BYTES = 12 * 1024 * 1024;
+
+const LOCAL_RESULT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+async function blobToDataUrl(blob: Blob, type: string): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  for (let start = 0; start < bytes.length; start += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000));
+  }
+  return `data:${type};base64,${window.btoa(binary)}`;
+}
+
+/** The look as bytes held by this page. A data URL already is; a signed
+ *  link is read once now. Null when it cannot be read here. */
+async function readLookIntoPage(url: string, signal?: AbortSignal): Promise<string | null> {
+  if (url.startsWith('data:')) return url;
+  try {
+    const response = await fetch(url, { cache: 'no-store', signal });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    const type = (response.headers.get('content-type') ?? blob.type).split(';')[0].trim().toLowerCase();
+    if (!LOCAL_RESULT_TYPES.has(type) || blob.size === 0 || blob.size > LOCAL_RESULT_MAX_BYTES) return null;
+    return await blobToDataUrl(blob, type);
+  } catch (error) {
+    if (isAbort(error)) throw error;
+    return null;
+  }
+}
+
+/** Tells the server this page holds the look, so it deletes its copies now.
+ *  Best effort: if it never arrives, they still expire with the session. */
+export function releaseTryOnResult(jobId: string, signedSession: string): void {
+  try {
+    void fetch(`/api/try-on/jobs/${encodeURIComponent(jobId)}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${signedSession}` },
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // A browser without fetch keepalive still has the expiry.
+  }
+}
+
+/**
+ * Keeps the look in this page and lets the server delete its copy. Returns
+ * the image to show: the page's own copy, or the original link when the
+ * look could not be read here, in which case the server copy is left to
+ * expire so the link keeps working.
+ */
+export async function keepTryOnResultInPage(
+  jobId: string,
+  signedSession: string,
+  resultImageUrl: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const local = await readLookIntoPage(resultImageUrl, signal);
+  if (!local) return resultImageUrl;
+  releaseTryOnResult(jobId, signedSession);
+  return local;
+}
+
 /* ─── The public demo, end to end ─── */
 
 /** Why a public try-on did not produce a look, in terms the page can localise. */
@@ -207,7 +271,8 @@ export async function runPublicTryOn({
     if (!job.ok || job.status !== 'completed' || !job.resultImageUrl || !job.jobId) {
       throw new TryOnStop({ kind: classifyTryOnFailure(job.message || job.error || '') });
     }
-    return { ok: true, jobId: job.jobId, resultImageUrl: job.resultImageUrl };
+    const resultImageUrl = await keepTryOnResultInPage(job.jobId, session.sessionId, job.resultImageUrl, signal);
+    return { ok: true, jobId: job.jobId, resultImageUrl };
   } catch (error) {
     if (isAbort(error)) throw error;
     if (error instanceof TryOnStop) return { ok: false, failure: error.failure };

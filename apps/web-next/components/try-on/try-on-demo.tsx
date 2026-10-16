@@ -27,7 +27,13 @@ import {
   clearPendingStorefrontProof,
   getPendingStorefrontProof,
 } from '@/lib/try-on/storefront-bootstrap';
-import { createAttemptNonce, fetchWithOneRetry, pollTryOnJob } from '@/lib/try-on/client';
+import {
+  createAttemptNonce,
+  fetchWithOneRetry,
+  keepTryOnResultInPage,
+  pollTryOnJob,
+} from '@/lib/try-on/client';
+import { phoneStore } from '@/lib/try-on/phone-store';
 
 // Kept exported from here for the embed's existing tests.
 export { pollTryOnJob };
@@ -191,6 +197,11 @@ export function TryOnDemo({
     }
   }, [displayShop, product.id, shopProduct, t.genericError, t.storefrontProofError, variantId]);
 
+  /* Whatever this phone kept past its expiry goes on every load. */
+  useEffect(() => {
+    void phoneStore().purgeExpired();
+  }, []);
+
   useEffect(() => {
     if (sessionInitStarted.current) return;
     sessionInitStarted.current = true;
@@ -291,6 +302,13 @@ export function TryOnDemo({
         throw new Error(genData.message || genData.error || t.genericError);
       }
 
+      /* The look now lives in this page; the server's copy is deleted. */
+      const resultImageUrl = await keepTryOnResultInPage(
+        genData.jobId,
+        session.sessionId,
+        genData.resultImageUrl,
+      );
+
       setGenerationPhase('result-received');
 
       setJob({
@@ -299,7 +317,7 @@ export function TryOnDemo({
         productId: genData.productId,
         shop: session.shop,
         status: genData.status,
-        resultImageUrl: genData.resultImageUrl,
+        resultImageUrl,
         message: genData.message,
         createdAt: new Date().toISOString(),
         meta: genData.meta,

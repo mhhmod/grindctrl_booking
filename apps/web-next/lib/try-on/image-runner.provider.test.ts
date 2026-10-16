@@ -31,6 +31,16 @@ describe('image provider safety boundary', () => {
     }
     expect(IMAGE_PROVIDER_TIMEOUT_MS).toBe(120_000);
   });
+  /* Phase zero item 2: the photo only goes to providers that do not
+     collect it. */
+  it('asks OpenRouter for providers that do not collect the photo', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost: 0.01 } }));
+    await generate();
+    const [url, options] = fetchMock.mock.calls[1];
+    expect(url).toBe('https://openrouter.ai/api/v1/images');
+    const body = JSON.parse(String(options.body)) as { provider?: unknown };
+    expect(body.provider).toEqual({ data_collection: 'deny' });
+  });
   it.each([undefined, -1, '0.01'])('does not invent zero cost for unreported/invalid usage (%s)', async (cost) => {
     fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost } }));
     expect((await generate()).meta.costEstimate).toBeNull();

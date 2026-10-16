@@ -62,8 +62,13 @@ describe('TryOnDemo storefront session lifecycle', () => {
   it('exchanges context on mount and supports a new-photo render after context TTL', async () => {
     const attempts: Array<Record<string, unknown>> = [];
     const generations: Array<Record<string, unknown>> = [];
+    const releases: Array<{ url: string; authorization: string | null }> = [];
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input);
+      if (init?.method === 'DELETE') {
+        releases.push({ url, authorization: new Headers(init.headers).get('authorization') });
+        return new Response(null, { status: 204 });
+      }
       const body = init?.body ? JSON.parse(String(init.body)) as Record<string, unknown> : {};
       if (url.endsWith('/api/try-on/session')) {
         return jsonResponse({
@@ -133,13 +138,24 @@ describe('TryOnDemo storefront session lifecycle', () => {
       'signed-attempt-1',
       'signed-attempt-2',
     ]);
+    /* Phase zero item 2: each look, once in the page, leaves our server. */
+    await waitFor(() => expect(releases).toHaveLength(2));
+    expect(releases).toEqual([
+      { url: '/api/try-on/jobs/tryon_1', authorization: 'Bearer signed-session-token' },
+      { url: '/api/try-on/jobs/tryon_2', authorization: 'Bearer signed-session-token' },
+    ]);
   });
 
   it('polls an overlapping processing job with the signed session until its result is ready', async () => {
     const pollRequests: RequestInit[] = [];
+    const releases: string[] = [];
     let pollCount = 0;
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
       const url = String(input);
+      if (init?.method === 'DELETE') {
+        releases.push(url);
+        return new Response(null, { status: 204 });
+      }
       if (url.endsWith('/api/try-on/session')) {
         return jsonResponse({
           ok: true,
@@ -206,6 +222,7 @@ describe('TryOnDemo storefront session lifecycle', () => {
     expect(await screen.findByAltText('Try-on preview of Premium tee', {}, { timeout: 3_000 })).toBeVisible();
     expect(pollCount).toBe(2);
     expect(pollRequests).toHaveLength(2);
+    expect(releases).toEqual(['/api/try-on/jobs/tryon_overlap']);
     for (const request of pollRequests) {
       expect(new Headers(request.headers).get('authorization')).toBe(
         'Bearer signed-session-token',
