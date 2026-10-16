@@ -200,6 +200,9 @@ export interface ConversationRecord {
      *  Ephemeral presence only — the shopper never sees the timestamp
      *  itself, just a derived "typing…" indicator while it is fresh. */
     staff_typing_at?: string;
+    /** Whether someone was really alerted about the current handoff
+     *  (lib/messenger/handoff-alert.ts). */
+    handoff_alert?: import('./handoff-alert').HandoffAlert;
   };
 }
 

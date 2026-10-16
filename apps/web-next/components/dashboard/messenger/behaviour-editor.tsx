@@ -61,6 +61,7 @@ const COPY = {
     timezone: 'Timezone',
     timezoneCurrent: 'Current selection',
     timezoneOther: 'Other',
+    noDaysWarning: 'With no days selected, Store Chat shows the team as away all week. The assistant still answers.',
     days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     from: 'From',
     to: 'To',
@@ -107,6 +108,7 @@ const COPY = {
     timezone: 'المنطقة الزمنية',
     timezoneCurrent: 'الاختيار الحالي',
     timezoneOther: 'أخرى',
+    noDaysWarning: 'دون اختيار أي يوم، تعرض دردشة المتجر الفريق غير متاح طوال الأسبوع. ويظل المساعد يرد.',
     days: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'],
     from: 'من',
     to: 'إلى',
@@ -186,6 +188,7 @@ export function BehaviourEditor({
   orderLookup,
   cannedReplies = [],
   actions,
+  shopTimezone = null,
 }: {
   locale: MessengerLocale;
   siteId: string;
@@ -202,6 +205,9 @@ export function BehaviourEditor({
   orderLookup: MessengerOrderLookup;
   cannedReplies?: CannedReply[];
   actions: Pick<MessengerHostActions, 'saveDraftSections' | 'addCannedReply' | 'updateCannedReplyStatus' | 'deleteCannedReply'>;
+  /** The store's own time zone from Shopify, the default for opening hours
+   *  in place of UTC (phase zero item 7). */
+  shopTimezone?: string | null;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [cannedTitle, setCannedTitle] = useState('');
@@ -487,7 +493,13 @@ export function BehaviourEditor({
             </PillToggle>
             <PillToggle
               active={value.availabilityMode === 'hours'}
-              onClick={() => patch({ availabilityMode: 'hours' })}
+              onClick={() =>
+                patch({
+                  availabilityMode: 'hours',
+                  // Hours start in the store's own time zone, not UTC.
+                  ...(value.availabilityTimezone === 'UTC' && shopTimezone ? { availabilityTimezone: shopTimezone } : {}),
+                })
+              }
             >
               {t.hours}
             </PillToggle>
@@ -530,6 +542,13 @@ export function BehaviourEditor({
                   </button>
                 ))}
               </div>
+              {/* n23_after_hours: hours describe the team only, so no days
+                  means the team is shown as away all week. */}
+              {sortedHours.length === 0 && publishedPayload.features?.includes('n23_after_hours') && (
+                <p role="status" className="text-xs text-amber-700 dark:text-amber-400">
+                  {t.noDaysWarning}
+                </p>
+              )}
               {sortedHours.length > 0 && (
                 <div className="grid gap-2">
                   {sortedHours.map((window) => (

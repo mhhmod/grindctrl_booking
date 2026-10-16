@@ -32,7 +32,8 @@ import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messe
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import * as messengerActions from './actions';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
-import { flagStoreForSite, storeFlagRows } from '@/lib/flags/store-flags';
+import { flagStoreForSite, storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
+import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
 
 export const dynamic = 'force-dynamic';
@@ -161,6 +162,12 @@ export default async function MessengerPage({
   const canDisconnect = Boolean(selected.domain);
   const publishedConfig = resolveMessengerConfig(selected.settings_json);
   const configDiff = diffMessengerConfig(publishedConfig, config);
+  // The store's v16 flags, so the preview and the editors show what is on.
+  const flagStore = flagStoreForSite(selected);
+  const [features, shopTimezone] = await Promise.all([
+    storeFlags(flagStore),
+    'shopDomain' in flagStore ? getShopTimezone(flagStore.shopDomain) : Promise.resolve(null),
+  ]);
 
   const payload: PublicMessengerPayload = toPublicPayload(
     {
@@ -171,6 +178,7 @@ export default async function MessengerPage({
       config,
     },
     new Date(),
+    features,
   );
 
   const tab: MessengerTabId = (TAB_IDS as readonly string[]).includes(params.tab ?? '')
@@ -227,7 +235,6 @@ export default async function MessengerPage({
   if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
   const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
   // Only the platform operator sees, or may change, this store's v16 flags.
-  const flagStore = flagStoreForSite(selected);
   const flagRows = (await isTryOnPlatformOperator()) ? await storeFlagRows(flagStore) : null;
   for (const failed of [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
@@ -300,6 +307,7 @@ export default async function MessengerPage({
         configDiff={configDiff}
         currentProfileId={currentProfileId}
         assignableMembers={assignableMembers}
+        shopTimezone={shopTimezone}
       />
 
       {flagRows && (

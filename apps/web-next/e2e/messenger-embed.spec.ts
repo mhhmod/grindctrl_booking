@@ -201,7 +201,7 @@ test.describe('storefront support messenger', () => {
               ? []
               : [
                   { id: 'u1', role: 'user', content: 'Where is my order?', createdAt: new Date().toISOString() },
-                  { id: 's1', role: 'system', content: 'You are being connected with our team — we will reply here shortly.', createdAt: new Date().toISOString(), author: 'system' },
+                  { id: 's1', role: 'system', content: 'Saved for the team.', createdAt: new Date().toISOString(), author: 'system' },
                 ],
         },
       });
@@ -227,8 +227,9 @@ test.describe('storefront support messenger', () => {
 
     await frame.locator('#gc-msgr-input').fill('Where is my order?');
     await frame.getByRole('button', { name: /send message/i }).click();
-    // Before the refresh the only handoff signal is the live status banner.
-    await expect(frame.getByText(/connecting you with our team/i)).toBeVisible();
+    // Before the refresh the only handoff signal is the live card. No alert
+    // outcome is known here, so it says only what is true: saved.
+    await expect(frame.getByText('Your message is saved for the team', { exact: true })).toBeVisible();
 
     // A genuine refresh of the same origin: localStorage (anon id +
     // conversation id) must survive and the loader must restore the thread.
@@ -236,7 +237,7 @@ test.describe('storefront support messenger', () => {
     await launcherButton(page).click();
 
     await expect(frame.getByText('Where is my order?').first()).toBeVisible({ timeout: 20_000 });
-    await expect(frame.getByText(/being connected with our team/i)).toBeVisible();
+    await expect(frame.getByText('Saved for the team.', { exact: true })).toBeVisible();
   });
 
   test('mobile viewport: the opened messenger fills the screen and stays usable', async ({ page }) => {

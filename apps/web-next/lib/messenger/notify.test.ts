@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => {
     releaseHandoffNotification: vi.fn(async () => {}),
     listMessages: vi.fn(async () => [] as Array<{ role: string; content: string }>),
     recordEvent: vi.fn(async () => {}),
+    getConversationForSite: vi.fn(async () => ({ id: 'conv-1', metadata: {} as Record<string, unknown> })),
+    patchConversationMetadata: vi.fn(async () => ({})),
     sendHandoffNotification: vi.fn(async (_input: unknown) => ({ sent: true })),
     hasSmtpConfigured: vi.fn(() => true),
     /** Row fixtures the mocked query builder filters against — see the
@@ -30,6 +32,8 @@ vi.mock('@/lib/messenger/conversations', () => ({
   releaseHandoffNotification: mocks.releaseHandoffNotification,
   listMessages: mocks.listMessages,
   recordEvent: mocks.recordEvent,
+  getConversationForSite: mocks.getConversationForSite,
+  patchConversationMetadata: mocks.patchConversationMetadata,
 }));
 
 vi.mock('@/lib/email/handoff-notification-sender', () => ({
@@ -116,7 +120,15 @@ beforeEach(() => {
   mocks.hasSmtpConfigured.mockReturnValue(true);
   mocks.membersRows.current = [];
   mocks.eventsRows.current = [];
+  mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', metadata: {} });
+  mocks.patchConversationMetadata.mockResolvedValue({});
 });
+
+/** The outcome notifyHandoff stored on the conversation. */
+function storedOutcome() {
+  return (mocks.patchConversationMetadata.mock.calls.at(-1) as unknown as [string, { handoff_alert: Record<string, unknown> }])?.[1]
+    ?.handoff_alert;
+}
 
 describe('notifyHandoff', () => {
   it('does nothing when emailOnHandoff is false', async () => {
@@ -300,8 +312,51 @@ describe('notifyHandoff', () => {
     mocks.claimHandoffNotification.mockRejectedValue(new Error('db unreachable'));
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(notifyHandoff(makeInput())).resolves.toBeUndefined();
+    await expect(notifyHandoff(makeInput())).resolves.toMatchObject({ status: 'pending', reason: 'error' });
 
     expect(logged).toHaveBeenCalledWith('[messenger] notifyHandoff failed:', expect.anything());
+  });
+});
+
+/* Phase zero item 6: the caller, the panel and the retry worker learn
+   whether someone was really alerted, from one stored outcome. */
+describe('notifyHandoff outcome', () => {
+  it.each([
+    ['alerts are off', () => makeInput({ notifications: { emailOnHandoff: false } }), 'none', 'disabled'],
+    ['email is not set up', () => (mocks.hasSmtpConfigured.mockReturnValue(false), makeInput()), 'none', 'smtp_not_configured'],
+    ['nobody can be alerted', () => makeInput({ notifications: { recipients: [] } }), 'none', 'no_recipient'],
+    ['the send fails', () => (mocks.sendHandoffNotification.mockResolvedValue({ sent: false }), makeInput()), 'pending', 'send_failed'],
+  ] as const)('answers %s', async (_label, input, status, reason) => {
+    const outcome = await notifyHandoff(input());
+    expect(outcome).toMatchObject({ status, reason, channels: [] });
+    expect(storedOutcome()).toMatchObject({ status, reason });
+  });
+
+  it('answers pending when the site is over its hourly cap, for the retry worker', async () => {
+    mocks.eventsRows.current = Array.from({ length: 10 }, () => ({
+      widget_site_id: 'site-1',
+      event_name: 'handoff_notified',
+      created_at: new Date().toISOString(),
+    }));
+    expect(await notifyHandoff(makeInput())).toMatchObject({ status: 'pending', reason: 'throttled' });
+  });
+
+  it('answers sent, by email, once the email went out, and counts the attempt', async () => {
+    mocks.getConversationForSite.mockResolvedValue({
+      id: 'conv-1',
+      metadata: { handoff_alert: { status: 'pending', reason: 'send_failed', channels: [], at: '2026-10-16T10:00:00Z', attempts: 2 } },
+    });
+    const outcome = await notifyHandoff(makeInput());
+    expect(outcome).toMatchObject({ status: 'sent', reason: null, channels: ['email'], attempts: 3 });
+    expect(mocks.patchConversationMetadata).toHaveBeenCalledWith('conv-1', { handoff_alert: outcome });
+  });
+
+  it('leaves the outcome to the attempt that holds the claim', async () => {
+    mocks.claimHandoffNotification.mockResolvedValue(false);
+    const sent = { status: 'sent', reason: null, channels: ['email'], at: '2026-10-16T10:00:00Z', attempts: 1 };
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', metadata: { handoff_alert: sent } });
+
+    expect(await notifyHandoff(makeInput())).toMatchObject({ status: 'sent' });
+    expect(mocks.patchConversationMetadata).not.toHaveBeenCalled();
   });
 });

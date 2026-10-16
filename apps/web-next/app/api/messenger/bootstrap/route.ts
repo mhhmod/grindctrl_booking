@@ -10,6 +10,7 @@ import {
   recordEvent,
   upsertVisitor,
 } from '@/lib/messenger/conversations';
+import { publicAlertFor } from '@/lib/messenger/handoff-alert';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
 import type { MessengerLocale } from '@/lib/messenger/types';
@@ -146,6 +147,7 @@ export async function POST(request: NextRequest) {
       /* Same fresh derivation as /sync: a staff typing ping younger than
          ~8s. First paint shows the dots without waiting a poll cycle. */
       staffTyping: isStaffTyping(conversation.metadata),
+      alert: publicAlertFor(conversation),
       aiEnabled: site.config.ai.enabled && site.status === 'active',
       storeName: site.name,
       v: site.settings_version,

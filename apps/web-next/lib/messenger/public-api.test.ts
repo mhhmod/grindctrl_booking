@@ -24,3 +24,26 @@ describe('toPublicPayload features', () => {
     expect(toPublicPayload(site('active'), new Date()).features).toEqual([]);
   });
 });
+
+describe('toPublicPayload team hours (n23_after_hours)', () => {
+  it('says when the team is in only while the flag is on', () => {
+    const base = site('active');
+    const config = {
+      ...base.config,
+      behaviour: {
+        ...base.config.behaviour,
+        availabilityMode: 'hours' as const,
+        availabilityTimezone: 'UTC',
+        availabilityHours: [{ day: 5, startMinute: 600, endMinute: 1320 }],
+      },
+    };
+    const friday11am = new Date('2026-10-16T11:00:00Z');
+    expect(toPublicPayload({ ...base, config }, friday11am, ['n23_after_hours']).team).toEqual({
+      open: true,
+      opensAt: null,
+      closesAt: '22:00',
+      timezone: 'UTC',
+    });
+    expect(toPublicPayload({ ...base, config }, friday11am, []).team).toBeNull();
+  });
+});

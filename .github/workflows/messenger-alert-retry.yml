@@ -1,0 +1,50 @@
+name: Store Chat Alert Retry
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Sends the Store Chat handoff alerts that are due: throttled or failed
+# ones, and after-hours ones whose opening time has come (v16 phase zero
+# items 6 and 7). Each run takes a bounded batch; a delayed or missed run is
+# safe, the next one picks up what is still due. Never cancel a run in flight.
+concurrency:
+  group: messenger-alert-retry
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Send due handoff alerts
+        env:
+          MESSENGER_ALERTS_URL: ${{ secrets.MESSENGER_ALERTS_URL }}
+          MESSENGER_ALERTS_SECRET: ${{ secrets.MESSENGER_ALERTS_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Until the owner adds both secrets the retry has nowhere to call;
+          # say so in the run instead of failing every five minutes.
+          if [[ -z "${MESSENGER_ALERTS_URL:-}" || -z "${MESSENGER_ALERTS_SECRET:-}" ]]; then
+            echo "::notice::MESSENGER_ALERTS_URL or MESSENGER_ALERTS_SECRET is not set; skipping."
+            exit 0
+          fi
+
+          status="$(curl --silent --show-error \
+            --output alert-retry-response.json \
+            --write-out '%{http_code}' \
+            --max-time 120 \
+            --request POST \
+            --header "Authorization: Bearer ${MESSENGER_ALERTS_SECRET}" \
+            --header 'Content-Type: application/json' \
+            "${MESSENGER_ALERTS_URL}")"
+
+          if [[ "${status}" -lt 200 || "${status}" -ge 300 ]]; then
+            echo "Alert retry endpoint returned HTTP ${status}."
+            exit 1
+          fi

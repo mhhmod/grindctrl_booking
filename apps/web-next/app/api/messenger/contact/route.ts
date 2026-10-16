@@ -5,8 +5,8 @@ import { resolveShopperSession } from '@/lib/messenger/public-session';
 import {
   recordAudit,
   recordEvent,
+  patchConversationMetadata,
   setVisitorEmail,
-  updateConversationMetadata,
 } from '@/lib/messenger/conversations';
 import { normalizeContactEmail } from '@/lib/messenger/contact';
 
@@ -55,8 +55,9 @@ export async function POST(request: NextRequest) {
     }
 
     await setVisitorEmail(visitor.id, email);
-    await updateConversationMetadata(conversation.id, {
-      ...conversation.metadata,
+    // Merged into the row as it is now, so a handoff alert outcome recorded
+    // a moment ago is not undone by this request's older copy.
+    await patchConversationMetadata(conversation.id, {
       contact_email: email,
       // A shopper who answers has answered; make sure nothing offers again
       // even if the block was rendered before the prompt was recorded.

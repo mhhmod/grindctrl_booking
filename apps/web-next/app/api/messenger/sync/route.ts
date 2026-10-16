@@ -3,6 +3,7 @@ import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from 
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import { getConversationForVisitor, getVisitor, isStaffTyping, listMessages } from '@/lib/messenger/conversations';
+import { publicAlertFor } from '@/lib/messenger/handoff-alert';
 
 /* GET /api/messenger/sync?key&anonId&conversationId&after=<iso>&origin
    Cursor-based recovery used on reconnect, tab refocus, and multi-tab
@@ -59,6 +60,9 @@ export async function GET(request: NextRequest) {
            ~8s. The panel already polls here every ~15s, so this rides the
            existing cadence — coarse-grained, never instant. */
         staffTyping: isStaffTyping(conversation.metadata),
+        /* Whether someone was really alerted (phase zero item 6). A retried
+           alert that goes out later reaches the shopper here. */
+        alert: publicAlertFor(conversation),
         messages: messages.map((m) => ({
           id: m.id,
           role: m.role,

@@ -8,10 +8,12 @@ import {
   MESSAGE_MAX_LENGTH,
   appendMessage,
   claimAiTurn,
+  claimAiTurnWhileWaiting,
   ensureOpenConversation,
   getConversationForVisitor,
   getVisitor,
   listMessages,
+  patchConversationMetadata,
   recordAudit,
   recordEvent,
   updateConversationMetadata,
@@ -19,7 +21,11 @@ import {
 import { parseModelTurn } from '@/lib/messenger/actions';
 import { lookupOrder, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { shouldAskForContact } from '@/lib/messenger/contact';
-import { escalateAndNotify } from '@/lib/messenger/escalate';
+import { escalateAndNotify, type Escalation } from '@/lib/messenger/escalate';
+import { handoffLine } from '@/lib/messenger/handoff-copy';
+import { toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
+import { teamHours } from '@/lib/messenger/hours';
+import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
 import {
   buildSystemPrompt,
@@ -173,7 +179,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ conversationId: conv().id, ...body });
     }
 
-    const withinHours = isWithinAvailabilityHours(site.config.behaviour, new Date());
+    const now = new Date();
+    const withinHours = isWithinAvailabilityHours(site.config.behaviour, now);
+
+    /* n23_after_hours (phase zero item 7): opening hours describe the team
+       only. The assistant answers at any hour, and a request for a person
+       while the team is away alerts nobody until it is back. Off, hours
+       keep deciding whether the assistant answers, as before. */
+    const features = await storeFlags(flagStoreForSite(site));
+    const afterHoursMode = features.includes('n23_after_hours');
+    const team = afterHoursMode ? teamHours(site.config.behaviour, now) : null;
+    const teamIsIn = team ? team.open : withinHours;
+    /* n24_assistant_down (phase zero item 8): when both model providers
+       fail, the message reads as saved and the team is one tap away. */
+    const assistantDownMode = features.includes('n24_assistant_down');
+
+    /** Hands the conversation to the team, deferring the alert to opening
+     *  time when the team is away and n23_after_hours is on. */
+    function escalate(reason: string, summary: string): Promise<Escalation | null> {
+      return escalateAndNotify(
+        conversation!.id,
+        reason,
+        summary,
+        notifySite,
+        team && !team.open ? { deferUntil: team.opensAtIso } : {},
+      );
+    }
+
+    /** The transcript line and the answer fields for a won handoff. */
+    async function handedOff(escalation: Escalation, locale: MessengerLocale) {
+      const line = await appendMessage({
+        conversationId: conversation!.id,
+        role: 'system',
+        content: pickLocalized(handoffLine(escalation.alert.status), locale),
+        contentType: 'event',
+        metadata: { author: 'system', escalated: true },
+      });
+      // A later write from this turn's copy of the row must keep the outcome.
+      conversation!.metadata.handoff_alert = escalation.alert;
+      return {
+        line: line.message,
+        alert: toPublicHandoffAlert(escalation.alert),
+        team,
+      };
+    }
 
     /* Order lookup needs a real Shopify store to address. A site with no
        connected domain, or one pointing at something that is not a
@@ -195,14 +244,17 @@ export async function POST(request: NextRequest) {
           alreadyPrompted: Boolean(conversation!.metadata.contact_prompted_at),
           knownEmail: conversation!.metadata.identity?.email || visitor!.user_email || null,
           justEscalated,
-          withinHours,
+          withinHours: teamIsIn,
         })
       ) {
         return undefined;
       }
       try {
-        conversation!.metadata.contact_prompted_at = new Date().toISOString();
-        await updateConversationMetadata(conversation!.id, conversation!.metadata);
+        const promptedAt = new Date().toISOString();
+        conversation!.metadata.contact_prompted_at = promptedAt;
+        // Merged into the row as it is now, so the handoff alert outcome
+        // written meanwhile survives.
+        await patchConversationMetadata(conversation!.id, { contact_prompted_at: promptedAt });
         return true;
       } catch {
         // Failing to record the prompt means we cannot promise "once", so
@@ -248,33 +300,29 @@ export async function POST(request: NextRequest) {
     // 2) Explicit "I want a human" short-circuits the model entirely.
     if (detectExplicitHandoffRequest(text)) {
       const summary = `Shopper asked for a person. Last message: "${text.slice(0, 160)}"`;
-      const transitioned = site.config.ai.escalationEnabled
-        ? await escalateAndNotify(conversation.id, 'shopper_requested_human', summary, notifySite)
+      const escalation = site.config.ai.escalationEnabled
+        ? await escalate('shopper_requested_human', summary)
         : null;
-      if (transitioned) {
-        const ack = await appendMessage({
-          conversationId: conversation.id,
-          role: 'system',
-          content: pickLocalized(
-            { en: 'You are being connected with our team — we will reply here shortly.', ar: 'جارٍ توصيلك بفريقنا — سنرد عليك هنا قريباً.' },
-            resolveReplyLocale(text, localeHint),
-          ),
-          contentType: 'event',
-          metadata: { author: 'system', escalated: true },
-        });
-        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'shopper_requested_human' } }).catch(() => {});
+      if (escalation) {
+        const handed = await handedOff(escalation, resolveReplyLocale(text, localeHint));
+        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'shopper_requested_human', alert: escalation.alert.status } }).catch(() => {});
         return ok({
           userMessage: toWire(userMessage),
-          reply: toWire(ack.message),
-          status: transitioned.status,
+          reply: toWire(handed.line),
+          status: escalation.conversation.status,
+          alert: handed.alert,
+          team: handed.team,
           askContact: await contactPrompt(true),
         });
       }
     }
 
     // 3) AI gate: enabled + published + within hours + still owns the mic.
-    const aiEnabled = site.config.ai.enabled && withinHours;
-    const ownsMic = conversation.status === 'open';
+    //    With n23_after_hours on, hours no longer silence the assistant, and
+    //    it keeps helping a shopper who is waiting for the team to come in.
+    const aiEnabled = site.config.ai.enabled && (afterHoursMode || withinHours);
+    const waitingAfterHours = Boolean(team && !team.open) && conversation.status === 'handoff_requested';
+    const ownsMic = conversation.status === 'open' || waitingAfterHours;
 
     if (!aiEnabled || !ownsMic) {
       // Closed, handed off, or outside business hours: accept the message
@@ -322,13 +370,24 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('[messenger] ai failed:', error instanceof Error ? error.message : error);
       void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_failed' }).catch(() => {});
+      if (assistantDownMode) {
+        // The message was stored before the model ran: it is saved, and the
+        // panel offers to send it to the team.
+        return ok({
+          userMessage: toWire(userMessage),
+          reply: null,
+          saved: true,
+          assistant: 'unavailable',
+          status: conversation.status,
+        });
+      }
       return NextResponse.json({ userMessage: toWire(userMessage), error: 'ai_unavailable' }, { status: 502 });
     }
 
     /* The model takes seconds; `ownsMic` above is a read from before it ran.
        Re-assert ownership atomically before anything generated is stored,
        so a staff takeover that lands mid-generation is not talked over. */
-    if (!(await claimAiTurn(conversation.id))) {
+    if (!(await (waitingAfterHours ? claimAiTurnWhileWaiting(conversation.id) : claimAiTurn(conversation.id)))) {
       void recordEvent({
         siteId: site.id,
         conversationId: conversation.id,
@@ -371,7 +430,7 @@ export async function POST(request: NextRequest) {
         content: pickLocalized(ORDER_UNAVAILABLE, locale),
         metadata: { author: 'ai', locale },
       });
-      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
     }
 
     if (turn.kind === 'action' && orderShopDomain) {
@@ -437,7 +496,7 @@ export async function POST(request: NextRequest) {
           metadata: { author: 'ai', locale },
         });
         void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'order_lookup_performed' }).catch(() => {});
-        return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+        return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
       }
 
       void recordAudit({
@@ -463,42 +522,36 @@ export async function POST(request: NextRequest) {
         eventName: 'order_lookup_denied',
         payload: { reason: outcome.reason },
       }).catch(() => {});
-      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
     }
 
     if (escalating) {
-      const transitioned = await escalateAndNotify(
-        conversation.id,
-        'assistant_escalated',
-        `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
-        notifySite,
-      );
+      // Already waiting on the team (after hours): nothing new to hand off.
+      const escalation = waitingAfterHours
+        ? null
+        : await escalate(
+            'assistant_escalated',
+            `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
+          );
       const saved = await appendMessage({
         conversationId: conversation.id,
         role: 'assistant',
         content: result.reply,
-        metadata: { author: 'ai', locale, escalated: transitioned ? true : undefined },
+        metadata: { author: 'ai', locale, escalated: escalation ? true : undefined },
       });
-      if (transitioned) {
-        await appendMessage({
-          conversationId: conversation.id,
-          role: 'system',
-          content: pickLocalized(
-            { en: 'You are being connected with our team — we will reply here shortly.', ar: 'جارٍ توصيلك بفريقنا — سنرد عليك هنا قريباً.' },
-            locale,
-          ),
-          contentType: 'event',
-          metadata: { author: 'system', escalated: true },
-        });
-        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_escalated' } }).catch(() => {});
+      if (escalation) {
+        const handed = await handedOff(escalation, locale);
+        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_escalated', alert: escalation.alert.status } }).catch(() => {});
         return ok({
           userMessage: toWire(userMessage),
           reply: toWire(saved.message),
-          status: transitioned.status,
+          status: escalation.conversation.status,
+          alert: handed.alert,
+          team: handed.team,
           askContact: await contactPrompt(true),
         });
       }
-      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+      return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
     }
 
     const saved = await appendMessage({
@@ -508,7 +561,7 @@ export async function POST(request: NextRequest) {
       metadata: { author: 'ai', locale },
     });
     void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_replied' }).catch(() => {});
-    return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: 'open' });
+    return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     console.error('[messenger] send failed:', error instanceof Error ? error.message : error);

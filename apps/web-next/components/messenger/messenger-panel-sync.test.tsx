@@ -483,7 +483,8 @@ describe('MessengerPanel preview seeding', () => {
     expect(screen.getByText('Does the Premium Ringer Tee run true to size?')).toBeInTheDocument();
     expect(screen.getByText('It has a relaxed fit and runs true to size.')).toBeInTheDocument();
     expect(screen.getByText('Assistant')).toBeInTheDocument();
-    expect(screen.getByText('Connecting you with our team…')).toBeInTheDocument();
+    // No alert is known in a preview, so it shows what is always true.
+    expect(screen.getByText('Your message is saved for the team')).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -503,6 +504,6 @@ describe('MessengerPanel preview seeding', () => {
 
     // Live boots from the (empty) bootstrap fetch, not the preview props.
     expect(screen.queryByText('Does the Premium Ringer Tee run true to size?')).not.toBeInTheDocument();
-    expect(screen.queryByText('Connecting you with our team…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Your message is saved for the team')).not.toBeInTheDocument();
   });
 });

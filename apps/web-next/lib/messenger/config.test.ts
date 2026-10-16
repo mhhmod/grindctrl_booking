@@ -172,3 +172,21 @@ describe('diffMessengerConfig', () => {
     expect(diffMessengerConfig(resolveMessengerConfig({}), config).every((s) => !s.changed && s.fields.length === 0)).toBe(true);
   });
 });
+
+/* Phase zero item 7: hours that run past midnight can be saved. */
+describe('opening hours on save', () => {
+  function saved(windows: Array<{ day: number; startMinute: number; endMinute: number }>) {
+    return resolveMessengerConfig({ messenger_behaviour: { availabilityMode: 'hours', availabilityHours: windows } }).behaviour
+      .availabilityHours;
+  }
+
+  it('keeps a window that ends at midnight or later in the night', () => {
+    expect(saved([{ day: 5, startMinute: 600, endMinute: 0 }])).toEqual([{ day: 5, startMinute: 600, endMinute: 0 }]);
+    expect(saved([{ day: 4, startMinute: 1200, endMinute: 120 }])).toEqual([{ day: 4, startMinute: 1200, endMinute: 120 }]);
+  });
+
+  it('still drops a window with no length, or one that is not a time', () => {
+    expect(saved([{ day: 1, startMinute: 540, endMinute: 540 }])).toEqual([]);
+    expect(saved([{ day: 'x' as unknown as number, startMinute: 540, endMinute: 600 }])).toEqual([]);
+  });
+});

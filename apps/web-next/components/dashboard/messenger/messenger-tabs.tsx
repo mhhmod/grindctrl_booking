@@ -59,6 +59,7 @@ export function MessengerTabs({
   ordersAuthorized = false,
   config,
   payload,
+  shopTimezone = null,
   stats,
   conversations,
   knowledge,
@@ -84,6 +85,8 @@ export function MessengerTabs({
   ordersAuthorized?: boolean;
   config: MessengerConfig;
   payload: PublicMessengerPayload;
+  /** The store's own time zone from Shopify, for the opening hours default. */
+  shopTimezone?: string | null;
   stats: React.ComponentProps<typeof MessengerOverview>['stats'];
   conversations: ConversationListItem[];
   knowledge: KnowledgeEntry[];
@@ -168,6 +171,7 @@ export function MessengerTabs({
             orderLookup={config.orderLookup}
             cannedReplies={cannedReplies}
             actions={actions}
+            shopTimezone={shopTimezone}
           />
         </div>
       )}
