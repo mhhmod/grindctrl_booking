@@ -113,6 +113,9 @@ export function TryOnDemo({
   const [isSlowGeneration, setIsSlowGeneration] = useState(false);
   const [job, setJob] = useState<TryOnJob | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /* Set when the store cannot make looks right now (out of looks, plan
+     lapsed): retrying cannot help, so the error offers no retry. */
+  const [unavailable, setUnavailable] = useState(false);
   const [session, setSession] = useState<TryOnSession | null>(null);
   const [sessionState, setSessionState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -270,6 +273,12 @@ export function TryOnDemo({
         genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError);
       }
 
+      /* The server's TRYON_UNAVAILABLE sentence is English; a shopper in
+         Arabic reads this store's language instead. */
+      if (genData.code === 'TRYON_UNAVAILABLE') {
+        setUnavailable(true);
+        throw new Error(t.tryOnUnavailable);
+      }
       if (
         !genData.ok ||
         !genData.jobId ||
@@ -320,6 +329,7 @@ export function TryOnDemo({
     setPhotoDataUrl(null);
     setJob(null);
     setError(null);
+    setUnavailable(false);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setStep('upload');
@@ -605,20 +615,28 @@ export function TryOnDemo({
             <div className="flex size-14 items-center justify-center rounded-2xl bg-destructive/10">
               <AlertCircle className="size-6 text-destructive" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t.errorTitle}
+            {unavailable ? (
+              <h3 className="text-lg font-semibold text-foreground" role="status">
+                {t.tryOnUnavailable}
               </h3>
-              <p className="text-sm text-muted-foreground">{error}</p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              className="rounded-xl"
-              id="tryon-retry-btn"
-            >
-              {t.tryAgain}
-            </Button>
+            ) : (
+              <>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {t.errorTitle}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  className="rounded-xl"
+                  id="tryon-retry-btn"
+                >
+                  {t.tryAgain}
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

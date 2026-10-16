@@ -8,10 +8,13 @@ const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const NONCE = 'abcdefghijklmnopqrstuvwx';
 const DISTINCT_NONCE = 'zyxwvutsrqponmlkjihgfedc';
 
-const { rateLimitMock, resolveStorefrontProductMock } = vi.hoisted(() => ({
+const { rateLimitMock, resolveStorefrontProductMock, launchMock } = vi.hoisted(() => ({
   rateLimitMock: vi.fn(),
   resolveStorefrontProductMock: vi.fn(),
+  launchMock: vi.fn(),
 }));
+
+vi.mock('@/lib/try-on/launch', () => ({ getTryOnLaunch: (...args: unknown[]) => launchMock(...args) }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: (...args: unknown[]) => rateLimitMock(...args) },
@@ -100,7 +103,38 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     // order-independent when run with the wider focused group.
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     resolveStorefrontProductMock.mockResolvedValue(RESOLVED_PRODUCT);
+    launchMock.mockReset().mockResolvedValue({ tryOn: 'live', reason: null });
     vi.spyOn(Date, 'now').mockReturnValue(NOW_SECONDS * 1000);
+  });
+
+  /* N34: a page cached before the looks ran out must not start a look. */
+  it.each(['out_of_looks', 'plan_inactive', 'not_installed'] as const)(
+    'refuses with 409 %s before asking for a photo',
+    async (reason) => {
+      launchMock.mockResolvedValue({ tryOn: 'hidden', reason });
+      const response = await GET(signedRequest());
+
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({ error: reason });
+      expect(launchMock).toHaveBeenCalledWith('demo.myshopify.com');
+      expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it('does not refuse when the looks could not be read; the reservation still gates', async () => {
+    launchMock.mockResolvedValue({ tryOn: 'hidden', reason: 'unavailable' });
+    const response = await GET(signedRequest());
+
+    expect(response.status).toBe(200);
+  });
+
+  it('checks the signature before reading the looks', async () => {
+    const forged = signedRequest();
+    forged.nextUrl.searchParams.set('signature', '0'.repeat(64));
+    const response = await GET(new NextRequest(forged.nextUrl));
+
+    expect(response.status).toBe(401);
+    expect(launchMock).not.toHaveBeenCalled();
   });
 
   afterEach(() => {

@@ -2,6 +2,12 @@
   margin: 12px 0;
 }
 
+/* Out of the layout until the config says try-on is live, so a store with
+   no looks shows nothing at all, not an empty gap above Add to cart. */
+.gc-tryon-root--pending {
+  display: none;
+}
+
 .gc-tryon-btn {
   display: inline-flex;
   align-items: center;
@@ -21,10 +27,6 @@
 .gc-tryon-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
-}
-
-.gc-tryon-btn--loading {
-  visibility: hidden;
 }
 
 /* Animated visual hint: a tee settles onto the figure inside a slowly
