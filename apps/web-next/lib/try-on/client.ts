@@ -111,10 +111,21 @@ function bytesToDataUrl(bytes: Uint8Array, type: string): string {
   return `data:${type};base64,${window.btoa(binary)}`;
 }
 
-/** The look as bytes held by this page. A data URL already is; a signed
- *  link is read once now. Null when it cannot be read here. */
+/** Our own static file (the demo's mock look), not a look stored for a
+ *  shopper: it stays as it is. */
+function isOwnStaticFile(url: string): boolean {
+  try {
+    return new URL(url, window.location.href).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+/** The look as something this page holds. A data URL already is, and so is
+ *  one of our own static files; a signed storage link is read once now.
+ *  Null when it cannot be read here. */
 async function readLookIntoPage(url: string, signal?: AbortSignal): Promise<string | null> {
-  if (url.startsWith('data:')) return url;
+  if (url.startsWith('data:') || isOwnStaticFile(url)) return url;
   try {
     const response = await fetch(url, { cache: 'no-store', signal });
     if (!response.ok) return null;

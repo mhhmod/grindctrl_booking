@@ -44,6 +44,13 @@ describe('keepTryOnResultInPage', () => {
     expect(releaseCalls()).toHaveLength(1);
   });
 
+  it("keeps one of our own files, such as the demo's mock look, as it is", async () => {
+    const mock = '/try-on/mock-result.png';
+    expect(await keepTryOnResultInPage('tryon_5', 'signed-session', mock)).toBe(mock);
+    expect(fetchMock.mock.calls.filter(([url]) => url === mock)).toHaveLength(0);
+    expect(releaseCalls()).toHaveLength(1);
+  });
+
   it.each([
     ['a failed read', () => new Response('gone', { status: 404 })],
     ['something that is not a picture', () => new Response('<svg/>', { headers: { 'content-type': 'image/svg+xml' } })],
