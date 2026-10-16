@@ -103,12 +103,14 @@
     var url = APP_ORIGIN + '/api/messenger/config?' +
       (KEY ? 'key=' + encodeURIComponent(KEY) : 'shop=' + encodeURIComponent(SHOP)) +
       '&origin=' + encodeURIComponent(ORIGIN);
-    fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); }).then(function (data) {
+    fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject({ status: r.status }); }).then(function (data) {
       lsSet(LS.config, JSON.stringify({ fetchedAt: Date.now(), data: data }));
       done(data);
-    }).catch(function () {
+    }).catch(function (err) {
       var fallback = cachedConfig();
-      track('config_fetch_failed', {});
+      // The status when the browser lets us read it; a refused origin gets
+      // no CORS header, so it arrives as 0 and the server names the reason.
+      track('config_fetch_failed', { status: err && typeof err.status === 'number' ? err.status : 0 });
       done(fallback);
     });
   }

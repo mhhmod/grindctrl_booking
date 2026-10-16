@@ -4,6 +4,7 @@ import { verifySessionTokenResolved } from '@/lib/shopify/session-token';
 import { getShopToken, hasRequiredScopes, storeShopToken } from '@/lib/shopify/tokens';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
+import { syncShopStorefrontDomains } from '@/lib/messenger/shop-domain-sync';
 
 /* GET /api/shopify/session-bootstrap
    Ensures this shop has a stored, sufficiently-scoped Admin API access
@@ -53,6 +54,9 @@ export async function GET(request: NextRequest) {
 
   const existing = await getShopToken(session.shop);
   if (existing && hasRequiredScopes(existing.scopes)) {
+    // Every admin open: keep Store Chat's allowed storefront domains in step
+    // with the store's (phase zero item 5). Never awaited, never throws.
+    void syncShopStorefrontDomains(session.shop, existing.accessToken);
     return NextResponse.json({ ok: true, provisioned: 'existing' });
   }
 
@@ -105,5 +109,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'store_failed' }, { status: 503 });
   }
 
+  // First open after install: the same domain sync, with the new token.
+  void syncShopStorefrontDomains(session.shop, granted.access_token);
   return NextResponse.json({ ok: true, provisioned: 'exchanged' });
 }

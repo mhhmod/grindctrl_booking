@@ -24,6 +24,11 @@ vi.mock('@/lib/shopify/tokens', () => ({
     ),
 }));
 
+const syncDomainsMock = vi.fn();
+vi.mock('@/lib/messenger/shop-domain-sync', () => ({
+  syncShopStorefrontDomains: (...args: unknown[]) => syncDomainsMock(...args),
+}));
+
 const rateLimitMock = vi.fn();
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: (...args: unknown[]) => rateLimitMock(...args) },
@@ -45,6 +50,10 @@ describe('GET /api/shopify/session-bootstrap', () => {
   });
 
   afterEach(() => {
+    // No path that fails to hold a usable token may sync with it.
+    if (expect.getState().currentTestName?.match(/401|502|503|429/)) {
+      expect(syncDomainsMock).not.toHaveBeenCalled();
+    }
     vi.resetAllMocks();
     vi.unstubAllGlobals();
     delete process.env.SHOPIFY_API_SECRET;
@@ -92,6 +101,8 @@ describe('GET /api/shopify/session-bootstrap', () => {
     expect(body).toEqual({ ok: true, provisioned: 'existing' });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(storeShopTokenMock).not.toHaveBeenCalled();
+    // Phase zero item 5: every admin open syncs the store's domains.
+    expect(syncDomainsMock).toHaveBeenCalledWith('demo.myshopify.com', 'existing');
   });
 
   it('re-exchanges when the existing token is missing a required scope', async () => {
@@ -165,6 +176,8 @@ describe('GET /api/shopify/session-bootstrap', () => {
       accessToken: 'granted-token',
       scopes: 'read_products,read_orders,write_app_proxy',
     });
+    // The first open after install syncs with the new token.
+    expect(syncDomainsMock).toHaveBeenCalledWith('demo.myshopify.com', 'granted-token');
   });
 
   it('returns 502 without storing when Shopify rejects the exchange', async () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useTransition } from 'react';
+import { storeChatPresence } from '@/lib/messenger/presence';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,9 @@ const COPY = {
     setUpBody:
       'Store Chat is ready, but it has not loaded on {store} yet. Turn on the Store Chat block in your Shopify theme and it goes live straight away.',
     setUpAction: 'Show me how',
+    quietTitle: 'Store Chat hasn’t loaded lately',
+    quietBody:
+      'It hasn’t loaded on {store} in the last two days. If shoppers have visited since, check that the Store Chat block is still turned on in your Shopify theme.',
     offTitle: 'Store Chat is turned off',
     offBody: 'Nobody on {store} can see it right now.',
     offAction: 'Go to Installation',
@@ -73,6 +77,8 @@ const COPY = {
     setUpBody:
       'دردشة المتجر جاهزة، لكنها لم تُحمَّل على {store} بعد. فعّل كتلة دردشة المتجر في قالب Shopify وستعمل فوراً.',
     setUpAction: 'أرِني الطريقة',
+    quietTitle: 'لم تُحمَّل دردشة المتجر مؤخراً',
+    quietBody: 'لم تُحمَّل على {store} خلال اليومين الماضيين. إذا زار عملاء متجرك منذ ذلك الحين، تأكد أن كتلة دردشة المتجر ما زالت مفعّلة في قالب Shopify.',
     offTitle: 'دردشة المتجر متوقفة',
     offBody: 'لا أحد على {store} يمكنه رؤيتها الآن.',
     offAction: 'انتقل إلى التثبيت',
@@ -204,14 +210,18 @@ export function MessengerOverview({
     });
   }
 
-  const detected = Boolean(detectedAt);
+  /* Live means seen recently, not seen once (phase zero item 5). */
+  const presence = storeChatPresence(detectedAt);
+  const detected = presence !== 'never';
   const store = domain || siteName || t.yourStore;
 
   const status = !active
     ? { tone: 'off' as const, title: t.offTitle, body: t.offBody, action: t.offAction }
-    : detected
+    : presence === 'live'
       ? { tone: 'good' as const, title: t.liveTitle, body: t.liveBody, action: null }
-      : { tone: 'warn' as const, title: t.setUpTitle, body: t.setUpBody, action: t.setUpAction };
+      : presence === 'quiet'
+        ? { tone: 'warn' as const, title: t.quietTitle, body: t.quietBody, action: t.setUpAction }
+        : { tone: 'warn' as const, title: t.setUpTitle, body: t.setUpBody, action: t.setUpAction };
 
   return (
     <section className="grid min-w-0 gap-4">
