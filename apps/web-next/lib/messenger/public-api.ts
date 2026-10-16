@@ -174,6 +174,9 @@ export interface PublicMessengerPayload {
   /** Whether the panel renders the attach-photo control at all. The upload
    *  route re-checks the same flag — this only decides what is drawn. */
   attachmentsEnabled: boolean;
+  /** The v16 features switched on for this store (lib/flags/store-flags.ts).
+   *  A marked element is drawn only when its flag is listed here. */
+  features: string[];
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
     MessengerConfig['behaviour'],
@@ -199,6 +202,7 @@ export function toPublicPayload(
     config: MessengerConfig;
   },
   now: Date,
+  features: readonly string[] = [],
 ): PublicMessengerPayload {
   const active = site.status === 'active';
   return {
@@ -209,6 +213,7 @@ export function toPublicPayload(
     available: active && isWithinAvailabilityHours(site.config.behaviour, now),
     aiEnabled: active && site.config.ai.enabled,
     attachmentsEnabled: active && site.config.attachments.enabled,
+    features: active ? [...features] : [],
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,

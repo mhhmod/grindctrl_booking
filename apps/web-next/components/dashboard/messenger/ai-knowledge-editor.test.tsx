@@ -26,6 +26,7 @@ const PAYLOAD: PublicMessengerPayload = {
   available: true,
   aiEnabled: true,
   attachmentsEnabled: false,
+  features: [],
   appearance: {
     accentColor: '#2a2826',
     launcherIcon: 'chat',

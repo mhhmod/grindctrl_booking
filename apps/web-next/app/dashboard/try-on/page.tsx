@@ -16,6 +16,8 @@ import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { ConnectShopPanel } from '@/components/dashboard/connect-shop-panel';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
+import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
+import { storeFlagRows } from '@/lib/flags/store-flags';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +68,10 @@ export default async function DashboardTryOnPage({
   const [settings, catalog, planState] = hasShops
     ? await Promise.all([getTryOnSettings(selectedShop), listPlansCatalog(), getShopPlanState(selectedShop)])
     : [null, null, null];
+
+  // Only the platform operator sees, or may change, a shop's v16 flags.
+  const flagRows =
+    canManagePlan && selectedShop !== 'default' ? await storeFlagRows({ shopDomain: selectedShop }) : null;
 
   const completed = jobs.filter((j) => j.status === 'completed');
   const avgSeconds = completed.length
@@ -161,6 +167,10 @@ export default async function DashboardTryOnPage({
             />
           </CardContent>
         </Card>
+      )}
+
+      {flagRows && (
+        <StoreFlagsCard kind="shop" storeKey={selectedShop} storeLabel={selectedShop} rows={flagRows} />
       )}
 
       {hasShops && settings && (

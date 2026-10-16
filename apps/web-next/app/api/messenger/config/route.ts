@@ -8,6 +8,7 @@ import {
   toPublicPayload,
 } from '@/lib/messenger/public-api';
 import { recordEvent } from '@/lib/messenger/conversations';
+import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
    Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
     }
 
-    const payload = toPublicPayload(site, new Date());
+    const payload = toPublicPayload(site, new Date(), await storeFlags(flagStoreForSite(site)));
     void recordEvent({ siteId: site.id, eventName: 'config_served', payload: { v: payload.v } }).catch(() => {});
 
     /* The widget fetches this from the merchant's storefront, so the response

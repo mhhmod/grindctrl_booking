@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   originAllowed: vi.fn(),
   toPublicPayload: vi.fn(),
   recordEvent: vi.fn(),
+  storeFlags: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -27,6 +28,11 @@ vi.mock('@/lib/messenger/conversations', () => ({
   recordEvent: mocks.recordEvent,
 }));
 
+vi.mock('@/lib/flags/store-flags', async (original) => ({
+  ...(await original<typeof import('@/lib/flags/store-flags')>()),
+  storeFlags: mocks.storeFlags,
+}));
+
 import { GET } from './route';
 
 const SITE = { id: 'site-1' };
@@ -43,6 +49,22 @@ describe('GET /api/messenger/config', () => {
     mocks.originAllowed.mockReturnValue(true);
     mocks.toPublicPayload.mockReturnValue(PAYLOAD);
     mocks.recordEvent.mockResolvedValue(undefined);
+    mocks.storeFlags.mockResolvedValue([]);
+  });
+
+  /* v16 per-store flags: the loader and panel learn which features are on. */
+  it("hands the store's flags to the payload, keyed by its Shopify shop", async () => {
+    mocks.loadPublicSiteByDomain.mockResolvedValue({ id: 'site-1', domain: 'grindctrl.myshopify.com' });
+    mocks.storeFlags.mockResolvedValue(['n23_after_hours']);
+
+    await GET(req('https://app.example.com/api/messenger/config?shop=grindctrl.myshopify.com'));
+
+    expect(mocks.storeFlags).toHaveBeenCalledWith({ shopDomain: 'grindctrl.myshopify.com' });
+    expect(mocks.toPublicPayload).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'site-1' }),
+      expect.any(Date),
+      ['n23_after_hours'],
+    );
   });
 
   it('loads config by Shopify domain when no key is provided', async () => {

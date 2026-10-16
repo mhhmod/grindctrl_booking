@@ -29,6 +29,7 @@ const PAYLOAD: PublicMessengerPayload = {
   available: true,
   aiEnabled: true,
   attachmentsEnabled: false,
+  features: [],
   appearance: APPEARANCE,
   behaviour: {
     welcomeTitle: { en: 'Hi', ar: 'مرحباً' },

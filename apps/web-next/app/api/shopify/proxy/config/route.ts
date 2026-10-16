@@ -13,6 +13,7 @@ import {
 import { isTryOnLocale, DEFAULT_TRYON_LOCALE, type TryOnLocale } from '@/lib/try-on/i18n';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { storeFlags } from '@/lib/flags/store-flags';
 
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
@@ -63,7 +64,11 @@ export async function GET(request: NextRequest) {
   const copy = pickMerchantCopy(settings, locale);
   /* The one launch answer both storefront scripts read: they keep the
      button and the catalogue pills out of the page unless it is live. */
-  const launch = await getTryOnLaunch(shop);
+  const [launch, features] = await Promise.all([
+    getTryOnLaunch(shop),
+    // The v16 features on for this store; the storefront scripts read them.
+    shop ? storeFlags({ shopDomain: shop }) : Promise.resolve([]),
+  ]);
   const available = launch.tryOn === 'live';
 
   const body: Record<string, unknown> = {
@@ -91,6 +96,7 @@ export async function GET(request: NextRequest) {
     // Kept for storefront scripts deployed before `tryOn` existed.
     available,
     messageKey: available ? null : 'tryOnTemporarilyUnavailable',
+    features,
   };
   // A failed entitlement read is not cached, so the next request retries
   // instead of hiding the button for a full minute.
