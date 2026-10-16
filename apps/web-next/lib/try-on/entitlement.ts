@@ -179,6 +179,86 @@ function requireActionKey(actionKey: string): string {
   return actionKey;
 }
 
+type ServiceClient = ReturnType<typeof getServiceClient>;
+
+export type CreditBalance = { planCreditsRemaining: number; topUpCreditsRemaining: number };
+
+const LEDGER_PAGE_ROWS = 1_000;
+
+/* Looks left for a subscription (phase zero item 4). Reading every ledger
+   row and summing in JavaScript broke once a store passed the PostgREST row
+   cap: each look writes a debit and each failed look a refund, so the rows
+   grow with use, and the capped read silently undercounted the spending.
+   `tryon_credit_balance` (supabase/20261016_tryon_credit_balance.sql) sums
+   it in one aggregate. Until the owner applies that file, a paged read of
+   the same rows gives the same answer. */
+export async function readCreditBalance(
+  supabase: ServiceClient,
+  subscriptionId: string,
+): Promise<CreditBalance> {
+  const { data, error } = await supabase.rpc('tryon_credit_balance', {
+    p_subscription_id: subscriptionId,
+  });
+  if (!error) {
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | { plan_remaining: number | string | null; top_up_remaining: number | string | null }
+      | undefined;
+    return {
+      planCreditsRemaining: Number(row?.plan_remaining ?? 0),
+      topUpCreditsRemaining: Number(row?.top_up_remaining ?? 0),
+    };
+  }
+  if (!isMissingFunctionError(error)) throwRpcError(error);
+  return pagedLedgerBalance(supabase, subscriptionId);
+}
+
+function isMissingFunctionError(error: { code?: string; message: string }): boolean {
+  // PostgREST: function not in its schema cache; Postgres: undefined function.
+  return error.code === 'PGRST202' || error.code === '42883';
+}
+
+/** The pre-SQL rule, read in pages so no row cap can cut it short. */
+export function sumLedgerBalance(ledger: readonly LedgerRow[], now = Date.now()): CreditBalance {
+  const childTotals = new Map<string, number>();
+  for (const entry of ledger) {
+    if (!entry.source_grant_id) continue;
+    childTotals.set(
+      entry.source_grant_id,
+      (childTotals.get(entry.source_grant_id) ?? 0) + entry.amount,
+    );
+  }
+  let planCreditsRemaining = 0;
+  let topUpCreditsRemaining = 0;
+  for (const grant of ledger) {
+    if (grant.entry_type !== 'grant' || !grant.expires_at) continue;
+    if (new Date(grant.expires_at).getTime() <= now) continue;
+    const remaining = Math.max(0, grant.amount + (childTotals.get(grant.id) ?? 0));
+    if (grant.credit_pack_id) topUpCreditsRemaining += remaining;
+    else if (grant.plan_id) planCreditsRemaining += remaining;
+  }
+  return { planCreditsRemaining, topUpCreditsRemaining };
+}
+
+async function pagedLedgerBalance(
+  supabase: ServiceClient,
+  subscriptionId: string,
+): Promise<CreditBalance> {
+  const ledger: LedgerRow[] = [];
+  for (let from = 0; ; from += LEDGER_PAGE_ROWS) {
+    const { data, error } = await supabase
+      .from('tryon_credit_ledger')
+      .select('id, entry_type, amount, source_grant_id, plan_id, credit_pack_id, expires_at')
+      .eq('subscription_id', subscriptionId)
+      .order('id')
+      .range(from, from + LEDGER_PAGE_ROWS - 1);
+    throwRpcError(error);
+    const page = (data ?? []) as LedgerRow[];
+    ledger.push(...page);
+    if (page.length < LEDGER_PAGE_ROWS) break;
+  }
+  return sumLedgerBalance(ledger);
+}
+
 function throwRpcError(error: { message: string } | null): void {
   if (!error) return;
   if (error.message.includes('TRYON_UNAVAILABLE')) {
@@ -381,12 +461,9 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
     };
   }
 
-  const [planResult, ledgerResult, pendingPlanResult] = await Promise.all([
+  const [planResult, balance, pendingPlanResult] = await Promise.all([
     supabase.from('tryon_plans').select('*').eq('id', subscription.plan_id).single(),
-    supabase
-      .from('tryon_credit_ledger')
-      .select('id, entry_type, amount, source_grant_id, plan_id, credit_pack_id, expires_at')
-      .eq('subscription_id', subscription.id),
+    readCreditBalance(supabase, subscription.id),
     subscription.pending_plan_id
       ? supabase
           .from('tryon_plans')
@@ -396,30 +473,11 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
       : Promise.resolve({ data: null, error: null }),
   ]);
   throwRpcError(planResult.error);
-  throwRpcError(ledgerResult.error);
   throwRpcError(pendingPlanResult.error);
 
   const plan = planResult.data as PlanRow;
-  const ledger = (ledgerResult.data ?? []) as LedgerRow[];
-  const childTotals = new Map<string, number>();
-  for (const entry of ledger) {
-    if (!entry.source_grant_id) continue;
-    childTotals.set(
-      entry.source_grant_id,
-      (childTotals.get(entry.source_grant_id) ?? 0) + entry.amount,
-    );
-  }
-
+  const { planCreditsRemaining, topUpCreditsRemaining } = balance;
   const now = Date.now();
-  let planCreditsRemaining = 0;
-  let topUpCreditsRemaining = 0;
-  for (const grant of ledger) {
-    if (grant.entry_type !== 'grant' || !grant.expires_at) continue;
-    if (new Date(grant.expires_at).getTime() <= now) continue;
-    const remaining = Math.max(0, grant.amount + (childTotals.get(grant.id) ?? 0));
-    if (grant.credit_pack_id) topUpCreditsRemaining += remaining;
-    else if (grant.plan_id) planCreditsRemaining += remaining;
-  }
 
   const totalCreditsRemaining = planCreditsRemaining + topUpCreditsRemaining;
   const remainingTarget = subscription.status === 'grace'
@@ -463,6 +521,26 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
     pendingPlanEffectiveAt: subscription.pending_plan_effective_at,
     notes: subscription.notes,
   };
+}
+
+/* The plan's tier label for the generation path, which records it on the
+   reservation and needs nothing else. It used to load the whole
+   entitlement, a reconcile and the full ledger, on every generation;
+   reserve_tryon_credit reconciles and checks the looks itself. */
+export async function getShopModelKey(shop: unknown): Promise<string | null> {
+  const domain = requireShop(shop);
+  const supabase = getServiceClient();
+  const subscription = await supabase
+    .from('tryon_subscriptions')
+    .select('plan_id')
+    .eq('shop_domain', domain)
+    .maybeSingle();
+  throwRpcError(subscription.error);
+  const planId = (subscription.data as { plan_id?: string } | null)?.plan_id;
+  if (!planId) return null;
+  const plan = await supabase.from('tryon_plans').select('model_key').eq('id', planId).maybeSingle();
+  throwRpcError(plan.error);
+  return (plan.data as { model_key?: string | null } | null)?.model_key ?? null;
 }
 
 export async function reserveCredit(input: {
