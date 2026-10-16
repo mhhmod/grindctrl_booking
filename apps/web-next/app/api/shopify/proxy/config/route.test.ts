@@ -3,10 +3,11 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { entitlementMock, settingsMock, rateLimitMock } = vi.hoisted(() => ({
+const { entitlementMock, settingsMock, rateLimitMock, flagsMock } = vi.hoisted(() => ({
   entitlementMock: vi.fn(),
   settingsMock: vi.fn(),
   rateLimitMock: vi.fn(),
+  flagsMock: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => {
@@ -24,6 +25,9 @@ vi.mock('@/lib/try-on/entitlement', () => ({
 }));
 vi.mock('@/lib/try-on/settings', () => ({
   getTryOnSettings: (...args: unknown[]) => settingsMock(...args),
+}));
+vi.mock('@/lib/flags/store-flags', () => ({
+  storeFlags: (...args: unknown[]) => flagsMock(...args),
 }));
 vi.mock('@/lib/try-on/merchant-copy', () => ({
   pickMerchantCopy: () => ({ buttonLabel: 'Try it on', catalogLabel: 'Try on', disclaimerText: '' }),
@@ -62,6 +66,22 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     clearProxyConfigCache();
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
     entitlementMock.mockReset().mockResolvedValue(entitlement());
+    flagsMock.mockReset().mockResolvedValue([]);
+  });
+
+  /* v16 per-store flags: the storefront scripts read them from here. */
+  it("lists the signed shop's v16 features, and none for an unsigned caller", async () => {
+    flagsMock.mockResolvedValue(['n23_after_hours']);
+    const body = await (await GET(request())).json();
+    expect(body.features).toEqual(['n23_after_hours']);
+    expect(flagsMock).toHaveBeenCalledWith({ shopDomain: SHOP });
+
+    flagsMock.mockClear();
+    const unsigned = await (
+      await GET(new NextRequest(`https://app.example.com/api/shopify/proxy/config?shop=${SHOP}&locale=ar`))
+    ).json();
+    expect(unsigned.features).toEqual([]);
+    expect(flagsMock).not.toHaveBeenCalled();
   });
 
   afterEach(() => {

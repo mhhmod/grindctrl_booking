@@ -31,6 +31,9 @@ import { toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import * as messengerActions from './actions';
+import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
+import { flagStoreForSite, storeFlagRows } from '@/lib/flags/store-flags';
+import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -223,6 +226,9 @@ export default async function MessengerPage({
   if (cannedRepliesRes.status === 'fulfilled') cannedReplies = cannedRepliesRes.value;
   if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
   const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
+  // Only the platform operator sees, or may change, this store's v16 flags.
+  const flagStore = flagStoreForSite(selected);
+  const flagRows = (await isTryOnPlatformOperator()) ? await storeFlagRows(flagStore) : null;
   for (const failed of [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes]) {
     if (failed.status === 'rejected') {
       // One slow or broken panel must not take the whole section down.
@@ -295,6 +301,15 @@ export default async function MessengerPage({
         currentProfileId={currentProfileId}
         assignableMembers={assignableMembers}
       />
+
+      {flagRows && (
+        <StoreFlagsCard
+          kind={'shopDomain' in flagStore ? 'shop' : 'site'}
+          storeKey={'shopDomain' in flagStore ? flagStore.shopDomain : flagStore.widgetSiteId}
+          storeLabel={selected.domain ?? selected.name}
+          rows={flagRows}
+        />
+      )}
     </section>
   );
 }

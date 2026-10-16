@@ -4,6 +4,7 @@ import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/
 import { MessengerPanel } from '@/components/messenger/MessengerPanel';
 import { signOriginToken } from '@/lib/messenger/identity';
 import { primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 
 /* The GRINDCTRL Support Messenger, embedded via iframe from merchant stores.
    Loaded lazily by /widget/v1/messenger.js only when the shopper opens the
@@ -68,7 +69,7 @@ export default async function EmbedMessengerPage({
         site.status === 'active' &&
         originAllowed(site, origin, { trusted: refererOrigin !== null })
       ) {
-        payload = toPublicPayload(site, new Date());
+        payload = toPublicPayload(site, new Date(), await storeFlags(flagStoreForSite(site)));
         // Signed with the primary app's secret; verifyOriginTokenAnyApp
         // (lib/messenger/identity.ts) checks it against every configured
         // app, so this only needs to pick one to sign with.
