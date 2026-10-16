@@ -66,6 +66,8 @@ interface TryOnDict {
   errorTitle: string;
   tryAgain: string;
   genericError: string;
+  /** The store has no looks left (or its plan lapsed) mid-session. */
+  tryOnUnavailable: string;
 
   photoLabel: string;
   uploadAria: string;
@@ -199,6 +201,7 @@ const en: TryOnDict = {
   errorTitle: 'Something went wrong',
   tryAgain: 'Try again',
   genericError: 'Something went wrong.',
+  tryOnUnavailable: 'Try it on isn’t available on this store right now.',
 
   photoLabel: 'Your photo',
   uploadAria: 'Upload your photo',
@@ -340,6 +343,7 @@ const ar: TryOnDict = {
   errorTitle: 'حدث خطأ ما',
   tryAgain: 'حاول مرة أخرى',
   genericError: 'حدث خطأ ما.',
+  tryOnUnavailable: 'التجربة غير متاحة في هذا المتجر الآن.',
 
   photoLabel: 'صورتك',
   uploadAria: 'ارفع صورتك',

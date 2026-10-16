@@ -576,6 +576,7 @@ export async function beginTryOnJob(input: {
 export async function finalizeTryOnJob(job: TryOnJob, durationMs: number): Promise<void> {
   await finalizeCreditJob({
     jobId: job.jobId,
+    shop: job.shop,
     status: job.status === 'completed' ? 'completed' : 'failed',
     provider: job.meta.provider,
     costUsd: job.meta.costEstimate,

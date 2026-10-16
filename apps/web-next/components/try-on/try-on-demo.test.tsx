@@ -251,6 +251,58 @@ describe('TryOnDemo storefront session lifecycle', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  /* Phase zero item 1: when the store's last look goes mid-session, an
+     Arabic shopper read the server's English sentence. */
+  it('says try-on is unavailable in the shopper\u2019s language, not the server\u2019s English', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith('/api/try-on/session')) {
+        return jsonResponse({
+          ok: true,
+          data: {
+            sessionId: 'signed-session-token',
+            productId: 'premium-ringer-tee',
+            shop: 'demo.myshopify.com',
+            variantId: '123',
+            garmentUrl: 'https://cdn.shopify.com/s/files/garment.png',
+            nonce: STOREFRONT_NONCE,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 600_000).toISOString(),
+          },
+        });
+      }
+      if (url.endsWith('/api/try-on/attempt')) {
+        return jsonResponse({
+          ok: true,
+          data: { attemptId: 'signed-attempt-1', expiresAt: new Date(Date.now() + 600_000).toISOString() },
+        });
+      }
+      if (url.endsWith('/api/try-on/generate')) {
+        return jsonResponse({
+          ok: false,
+          code: 'TRYON_UNAVAILABLE',
+          message: 'Try-on is temporarily unavailable. Please check back soon.',
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+    renderStorefront('ar');
+
+    const input = document.querySelector<HTMLInputElement>('#photo-upload-input');
+    fireEvent.change(input!, {
+      target: { files: [new File(['photo'], 'me.png', { type: 'image/png' })] },
+    });
+    const generate = await screen.findByRole('button', { name: 'إنشاء معاينة التجربة' });
+    await waitFor(() => expect(generate).toBeEnabled());
+    fireEvent.click(generate);
+
+    expect(await screen.findByText('التجربة غير متاحة في هذا المتجر الآن.')).toBeVisible();
+    expect(screen.queryByText(/temporarily unavailable/)).toBeNull();
+    // Retrying cannot make looks appear, so none is offered.
+    expect(screen.queryByRole('button', { name: 'حاول مرة أخرى' })).toBeNull();
+    expect(screen.queryByText('حدث خطأ ما')).toBeNull();
+  });
+
   it('renders localized accessible proof failure and retry guidance', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       jsonResponse({ ok: false, error: 'invalid storefront context' }, 401),

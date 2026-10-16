@@ -1,0 +1,1872 @@
+{
+ "surface": "store-chat",
+ "note": "Every translatable string on each board, in reading order, with its Arabic. kind is text, attr (aria-label, alt, placeholder or title), title (the document title) or js (copy the board script renders). status approved means the owner has seen and approved that Arabic on a board; draft means it was written for this handoff in the same voice and the owner still has to review it. Prices, sizes, codes, initials and the sample store name in Latin letters are not listed because they do not change between languages, except that prices read \"3,250 ج.م\" in Arabic. Chat-Arabic is Arabic by design and has no English twin.",
+ "boards": [
+  {
+   "board": "Chat-Launcher",
+   "title": "1 Ask from the product page",
+   "title_ar": "1 السؤال من صفحة المنتج",
+   "screens": {
+    "en": "design/screens/store-chat/01-Chat-Launcher.webp",
+    "ar": "design/screens/store-chat/ar/01-Chat-Launcher.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat, asking from the product page",
+     "ar": "دردشة المتجر، السؤال من صفحة المنتج",
+     "status": "draft",
+     "context": "Chat-Launcher · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Menu",
+     "ar": "القائمة",
+     "status": "approved",
+     "context": "Chat-Launcher · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "Chat-Launcher · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Chat-Launcher · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Bag, empty",
+     "ar": "السلة فارغة",
+     "status": "draft",
+     "context": "Chat-Launcher · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Description",
+     "ar": "الوصف",
+     "status": "draft",
+     "context": "Chat-Launcher · div"
+    },
+    {
+     "kind": "text",
+     "en": "Size and fit",
+     "ar": "المقاس والقصّة",
+     "status": "draft",
+     "context": "Chat-Launcher · div"
+    },
+    {
+     "kind": "text",
+     "en": "Delivery and exchange",
+     "ar": "التوصيل والاستبدال",
+     "status": "draft",
+     "context": "Chat-Launcher · div"
+    },
+    {
+     "kind": "text",
+     "en": "Questions about this abaya?",
+     "ar": "عندكِ أسئلة عن هذه العباية؟",
+     "status": "draft",
+     "context": "Chat-Launcher · h2"
+    },
+    {
+     "kind": "text",
+     "en": "AI answers",
+     "ar": "إجابات بالذكاء الاصطناعي",
+     "status": "draft",
+     "context": "Chat-Launcher · span · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "How long is it on 160 cm?",
+     "ar": "طولها قد إيه على 160 سم؟",
+     "status": "draft",
+     "context": "Chat-Launcher · a · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Is the fabric see-through in daylight?",
+     "ar": "القماش بيشفّ في نور النهار؟",
+     "status": "draft",
+     "context": "Chat-Launcher · a · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Can I exchange it for another colour?",
+     "ar": "ينفع أبدّلها بلون تاني؟",
+     "status": "draft",
+     "context": "Chat-Launcher · a · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about this abaya",
+     "ar": "اسألي عن هذه العباية",
+     "status": "draft",
+     "context": "Chat-Launcher · label · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Ask anything about this piece",
+     "ar": "اسألي أي سؤال عن هذه القطعة",
+     "status": "draft",
+     "context": "Chat-Launcher · placeholder of input · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send question",
+     "ar": "أرسلي السؤال",
+     "status": "draft",
+     "context": "Chat-Launcher · aria-label of a · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Complete the look",
+     "ar": "أكملي الإطلالة",
+     "status": "draft",
+     "context": "Chat-Launcher · span · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Linen overshirt",
+     "ar": "قميص الكتان",
+     "status": "draft",
+     "context": "Chat-Launcher · alt of img · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Muscat abaya",
+     "ar": "عباية مسقط",
+     "status": "draft",
+     "context": "Chat-Launcher · alt of img · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Open Store Chat",
+     "ar": "افتحي دردشة المتجر",
+     "status": "draft",
+     "context": "Chat-Launcher · aria-label of a · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "attr",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Launcher · title of span · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Launcher · span · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Black / M · EGP&nbsp;3,250",
+     "ar": "أسود / M · 3,250 ج.م",
+     "status": "draft",
+     "context": "Chat-Launcher · span · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Chat-Launcher · button · under \"Questions about this abaya?\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-Launcher · div · under \"Questions about this abaya?\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-Home",
+   "title": "2 Chat home",
+   "title_ar": "2 بداية المحادثة",
+   "screens": {
+    "en": "design/screens/store-chat/02-Chat-Home.webp",
+    "ar": "design/screens/store-chat/ar/02-Chat-Home.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat home",
+     "ar": "الصفحة الرئيسية لدردشة المتجر",
+     "status": "draft",
+     "context": "Chat-Home · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-Home · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-Home · span · under \"Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "More options",
+     "ar": "خيارات أخرى",
+     "status": "draft",
+     "context": "Chat-Home · aria-label of button · under \"Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-Home · aria-label of button · under \"Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "You're viewing",
+     "ar": "تشاهدين الآن",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Home · span · under \"Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Black · M · EGP&nbsp;3,250",
+     "ar": "أسود · M · 3,250 ج.م",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "Chat-Home · a · under \"Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Welcome to Maison Noor",
+     "ar": "أهلاً بكِ في ميزون نور",
+     "status": "draft",
+     "context": "Chat-Home · h3"
+    },
+    {
+     "kind": "text",
+     "en": "Hi, I can help with sizes, delivery, exchanges or anything in the store. What would you like to know?",
+     "ar": "أهلاً! أقدر أساعدك في المقاسات والتوصيل والاستبدال أو أي حاجة في المتجر. تحبي تعرفي إيه؟",
+     "status": "approved",
+     "context": "Chat-Home · p · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI",
+     "ar": "مساعد المتجر، ذكاء اصطناعي",
+     "status": "approved",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Track my order",
+     "ar": "تتبعي طلبكِ",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Sizes and fit",
+     "ar": "المقاسات والقصّة",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Delivery and exchange",
+     "ar": "التوصيل والاستبدال",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Talk to a person",
+     "ar": "تحدثي مع شخص من الفريق",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Yesterday",
+     "ar": "أمس",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Exchange for the Riyadh abaya",
+     "ar": "استبدال عباية الرياض",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "Add a photo",
+     "ar": "أضيفي صورة",
+     "status": "approved",
+     "context": "Chat-Home · aria-label of button · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-Home · label · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "Ask about sizes, delivery or an order",
+     "ar": "اسألي عن المقاسات أو التوصيل أو أي طلب",
+     "status": "draft",
+     "context": "Chat-Home · placeholder of input · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "Speak your message",
+     "ar": "سجّلي رسالتكِ بصوتكِ",
+     "status": "draft",
+     "context": "Chat-Home · aria-label of button · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-Home · aria-label of a · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Answers come from the store's AI assistant. A person from the team takes over when you ask, or when it can't help.",
+     "ar": "الإجابات من مساعد المتجر بالذكاء الاصطناعي. يتولى شخص من الفريق المحادثة عندما تطلبين ذلك، أو عندما لا يستطيع المساعد مساعدتكِ.",
+     "status": "draft",
+     "context": "Chat-Home · span · under \"Welcome to Maison Noor\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-Home · div · under \"Welcome to Maison Noor\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-Answer",
+   "title": "3 An answer that sells",
+   "title_ar": "3 إجابة تبيع",
+   "screens": {
+    "en": "design/screens/store-chat/03-Chat-Answer.webp",
+    "ar": "design/screens/store-chat/ar/03-Chat-Answer.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat, an answer that sells",
+     "ar": "دردشة المتجر، إجابة تبيع",
+     "status": "draft",
+     "context": "Chat-Answer · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Back to chat home",
+     "ar": "العودة إلى الصفحة الرئيسية للدردشة",
+     "status": "draft",
+     "context": "Chat-Answer · aria-label of a"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Answer · span"
+    },
+    {
+     "kind": "text",
+     "en": "Black · M · EGP 3,250",
+     "ar": "أسود · M · 3,250 ج.م",
+     "status": "approved",
+     "context": "Chat-Answer · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-Answer · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Is this in black in M? And how long is it on 160 cm?",
+     "ar": "فيه منها أسود مقاس M؟ وطولها هيبقى قد إيه على 160 سم؟",
+     "status": "draft",
+     "context": "Chat-Answer · div"
+    },
+    {
+     "kind": "text",
+     "en": "Yes, black is in stock in M, 3 left.",
+     "ar": "أيوه، الأسود متوفر في مقاس M، فاضل منه 3 قطع.",
+     "status": "draft",
+     "context": "Chat-Answer · div"
+    },
+    {
+     "kind": "text",
+     "en": "At 160 cm the M ends about 4 cm above your ankle. The L would touch the floor in flat shoes, but it's sold out in black right now.",
+     "ar": "على طول 160 سم، مقاس M هيبقى فوق الكاحل بحوالي 4 سم. مقاس L هيلمس الأرض مع شوز فلات، بس الأسود منه خلص دلوقتي.",
+     "status": "draft",
+     "context": "Chat-Answer · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Length and stock by size",
+     "ar": "الطول والكمية المتوفرة حسب المقاس",
+     "status": "draft",
+     "context": "Chat-Answer · aria-label of table"
+    },
+    {
+     "kind": "text",
+     "en": "Size",
+     "ar": "المقاس",
+     "status": "approved",
+     "context": "Chat-Answer · th · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Length",
+     "ar": "الطول",
+     "status": "draft",
+     "context": "Chat-Answer · th · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "On 160 cm",
+     "ar": "على طول 160 سم",
+     "status": "draft",
+     "context": "Chat-Answer · th · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "Chat-Answer · th · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "138 cm",
+     "ar": "138 سم",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Above ankle",
+     "ar": "فوق الكاحل",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "5 left",
+     "ar": "باقي 5",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "142 cm",
+     "ar": "142 سم",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Just above ankle",
+     "ar": "فوق الكاحل بقليل",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "3 left",
+     "ar": "باقي 3",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "146 cm",
+     "ar": "146 سم",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Floor length",
+     "ar": "تلمس الأرض",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Sold out",
+     "ar": "نفدت الكمية",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "148 cm",
+     "ar": "148 سم",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "Floor length",
+     "ar": "تلمس الأرض",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "2 left",
+     "ar": "باقي 2",
+     "status": "draft",
+     "context": "Chat-Answer · td · in \"Length and stock by size\""
+    },
+    {
+     "kind": "text",
+     "en": "From the store's size guide",
+     "ar": "من دليل المقاسات",
+     "status": "approved",
+     "context": "Chat-Answer · a"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Answer · span"
+    },
+    {
+     "kind": "text",
+     "en": "Black · M · EGP 3,250",
+     "ar": "أسود · M · 3,250 ج.م",
+     "status": "approved",
+     "context": "Chat-Answer · span"
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "Chat-Answer · a"
+    },
+    {
+     "kind": "text",
+     "en": "Add M",
+     "ar": "أضيفي M",
+     "status": "approved",
+     "context": "Chat-Answer · button"
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI",
+     "ar": "مساعد المتجر، ذكاء اصطناعي",
+     "status": "approved",
+     "context": "Chat-Answer · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Helpful",
+     "ar": "مفيدة",
+     "status": "draft",
+     "context": "Chat-Answer · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Not helpful",
+     "ar": "غير مفيدة",
+     "status": "draft",
+     "context": "Chat-Answer · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Show me sand",
+     "ar": "وريني الرملي",
+     "status": "draft",
+     "context": "Chat-Answer · button"
+    },
+    {
+     "kind": "text",
+     "en": "Delivery to Alexandria?",
+     "ar": "فيه توصيل لإسكندرية؟",
+     "status": "draft",
+     "context": "Chat-Answer · button"
+    },
+    {
+     "kind": "text",
+     "en": "Exchange rules",
+     "ar": "شروط الاستبدال",
+     "status": "draft",
+     "context": "Chat-Answer · button"
+    },
+    {
+     "kind": "attr",
+     "en": "Add a photo",
+     "ar": "أضيفي صورة",
+     "status": "approved",
+     "context": "Chat-Answer · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-Answer · label"
+    },
+    {
+     "kind": "attr",
+     "en": "Ask a follow-up",
+     "ar": "اسألي سؤالاً آخر",
+     "status": "draft",
+     "context": "Chat-Answer · placeholder of input"
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-Answer · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-Answer · div · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-Order",
+   "title": "4 Where is my order",
+   "title_ar": "4 أين طلبي",
+   "screens": {
+    "en": "design/screens/store-chat/04-Chat-Order.webp",
+    "ar": "design/screens/store-chat/ar/04-Chat-Order.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat, where is my order",
+     "ar": "دردشة المتجر، أين طلبي",
+     "status": "draft",
+     "context": "Chat-Order · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Back to chat home",
+     "ar": "العودة إلى الصفحة الرئيسية للدردشة",
+     "status": "draft",
+     "context": "Chat-Order · aria-label of a"
+    },
+    {
+     "kind": "text",
+     "en": "Your orders",
+     "ar": "طلباتكِ",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "text",
+     "en": "Signed in as Salma",
+     "ar": "مسجّلة الدخول باسم سلمى",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-Order · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Where is my order?",
+     "ar": "طلبي فين؟",
+     "status": "draft",
+     "context": "Chat-Order · div"
+    },
+    {
+     "kind": "text",
+     "en": "Here are your recent orders, Salma. Tap one to see where it is.",
+     "ar": "دي طلباتك الأخيرة يا سلمى. دوسي على أي طلب عشان تعرفي هو فين.",
+     "status": "draft",
+     "context": "Chat-Order · div"
+    },
+    {
+     "kind": "text",
+     "en": "2 items · EGP 4,700",
+     "ar": "قطعتان · 4,700 ج.م",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "text",
+     "en": "Out for delivery",
+     "ar": "خرج للتوصيل",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "text",
+     "en": "1 item · EGP 2,200",
+     "ar": "قطعة واحدة · 2,200 ج.م",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "text",
+     "en": "Delivered 12 Sep",
+     "ar": "تم التوصيل في 12 سبتمبر",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Order 1042",
+     "ar": "الطلب 1042",
+     "status": "draft",
+     "context": "Chat-Order · aria-label of section"
+    },
+    {
+     "kind": "text",
+     "en": "Order #1042",
+     "ar": "الطلب #1042",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Out for delivery",
+     "ar": "خرج للتوصيل",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Arrives today by 9 pm",
+     "ar": "يصل اليوم قبل 9 مساءً",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla abaya, linen overshirt",
+     "ar": "عباية ليلى، قميص الكتان",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Placed",
+     "ar": "تم الطلب",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "28 Sep",
+     "ar": "28 سبتمبر",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Shipped with Bosta",
+     "ar": "تم الشحن مع بوسطة",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "1 Oct",
+     "ar": "1 أكتوبر",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Out for delivery",
+     "ar": "خرج للتوصيل",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Today",
+     "ar": "اليوم",
+     "status": "approved",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Cash due on delivery",
+     "ar": "الدفع عند الاستلام",
+     "status": "draft",
+     "context": "Chat-Order · span · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Track with Bosta",
+     "ar": "تتبعي مع بوسطة",
+     "status": "draft",
+     "context": "Chat-Order · button · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "WhatsApp updates",
+     "ar": "تحديثات على واتساب",
+     "status": "draft",
+     "context": "Chat-Order · button · in \"Order 1042\""
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI · read only, it cannot change your order",
+     "ar": "مساعد المتجر، ذكاء اصطناعي · للاطلاع فقط، ولا يمكنه تغيير طلبكِ",
+     "status": "draft",
+     "context": "Chat-Order · span"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-Order · label"
+    },
+    {
+     "kind": "attr",
+     "en": "Ask about this order",
+     "ar": "اسألي عن هذا الطلب",
+     "status": "draft",
+     "context": "Chat-Order · placeholder of input"
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-Order · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-Order · div · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-Arabic",
+   "title": "5 Arabic and Franco",
+   "title_ar": null,
+   "screens": {
+    "en": "design/screens/store-chat/05-Chat-Arabic.webp",
+    "ar": null
+   },
+   "strings": [],
+   "note": "Arabic board, its strings are already Arabic in the board source."
+  },
+  {
+   "board": "Chat-States",
+   "title": "6 Handoff and failure states",
+   "title_ar": "6 التحويل للفريق والأعطال",
+   "screens": {
+    "en": "design/screens/store-chat/06-Chat-States.webp",
+    "ar": "design/screens/store-chat/ar/06-Chat-States.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat, handoff and failure states",
+     "ar": "دردشة المتجر، التحويل إلى الفريق وحالات التعطل",
+     "status": "draft",
+     "context": "Chat-States · document title"
+    },
+    {
+     "kind": "text",
+     "en": "The team was really alerted",
+     "ar": "تم تنبيه الفريق فعلاً",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-States · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Can I talk to someone about changing my delivery address?",
+     "ar": "ممكن أكلم حد بخصوص تغيير عنوان التوصيل؟",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Of course. I've passed your message and order #1042 to the team.",
+     "ar": "أكيد. بلّغت الفريق برسالتك والطلب #1042.",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "The team has your message",
+     "ar": "وصلت رسالتكِ إلى الفريق",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "The team usually replies in about 10 minutes. You will see the reply here.",
+     "ar": "يرد الفريق عادةً خلال 10 دقائق تقريباً. سترين الرد هنا.",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "If you leave, where should they reply?",
+     "ar": "إذا غادرتِ، أين يرد عليكِ الفريق؟",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Email",
+     "ar": "البريد الإلكتروني",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Edit",
+     "ar": "تعديل",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "While you wait, I can still help with anything else.",
+     "ar": "لحد ما يردوا عليكي، أقدر أساعدك في أي حاجة تانية.",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "After hours, nobody pretends to be there",
+     "ar": "بعد ساعات العمل، لا أحد يتظاهر بأنه موجود",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team away until 10 am",
+     "ar": "المساعد يرد الآن · الفريق غير متاح حتى 10 صباحاً",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-States · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "I need to talk to a person please",
+     "ar": "عايزة أكلم حد من الفريق لو سمحت",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "The team is away until 10 am Cairo time",
+     "ar": "الفريق غير متاح حتى 10 صباحاً بتوقيت القاهرة",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Tell us where to reply and they will answer first thing tomorrow.",
+     "ar": "أخبرينا أين نرد عليكِ، وسيرد الفريق عليكِ صباح الغد مباشرة.",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Where should they reply?",
+     "ar": "أين يرد عليكِ الفريق؟",
+     "status": "draft",
+     "context": "Chat-States · aria-label of div"
+    },
+    {
+     "kind": "text",
+     "en": "Email",
+     "ar": "البريد الإلكتروني",
+     "status": "draft",
+     "context": "Chat-States · button · in \"Where should they reply?\""
+    },
+    {
+     "kind": "text",
+     "en": "Your email address",
+     "ar": "بريدكِ الإلكتروني",
+     "status": "draft",
+     "context": "Chat-States · label"
+    },
+    {
+     "kind": "text",
+     "en": "Send to the team",
+     "ar": "أرسلي إلى الفريق",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Or keep asking me, I am here all night.",
+     "ar": "أو كمّلي اسأليني، أنا هنا طول الليل.",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "The assistant is down, the message is safe",
+     "ar": "المساعد متوقف، والرسالة محفوظة",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Team here until 10 pm",
+     "ar": "الفريق متاح حتى 10 مساءً",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-States · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Do you ship to Jeddah?",
+     "ar": "بتشحنوا لجدة؟",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Saved",
+     "ar": "تم الحفظ",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "The assistant can't answer right now",
+     "ar": "المساعد لا يستطيع الرد الآن",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Your message is saved. Send it to the team and they reply here, usually in about 10 minutes.",
+     "ar": "رسالتكِ محفوظة. أرسليها إلى الفريق وسيردون هنا، عادةً خلال 10 دقائق تقريباً.",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Send it to the team",
+     "ar": "أرسليها إلى الفريق",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Message the store on WhatsApp",
+     "ar": "راسلي المتجر على واتساب",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "A photo of a problem gets a next step",
+     "ar": "صورة المشكلة تقود إلى خطوة تالية",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-States · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Your photo of the abaya hem",
+     "ar": "صورتكِ لطرف العباية",
+     "status": "draft",
+     "context": "Chat-States · aria-label of div"
+    },
+    {
+     "kind": "text",
+     "en": "The hem came apart after one wear",
+     "ar": "طرف العباية اتفك بعد أول لبسة",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "<0>I'm sorry about that.</0> The stitching at the hem looks loose in your photo. The store's policy covers faults like this, and the team decides how to put it right. Tap below and I'll send them your photo and order #1019.",
+     "ar": "<0>آسفين جداً على اللي حصل.</0> الخياطة عند طرف العباية باينة مفكوكة في صورتك. سياسة المتجر بتغطي العيوب اللي زي دي، والفريق هو اللي بيقرر الحل المناسب. دوسي تحت وأنا هبعتلهم صورتك والطلب #1019.",
+     "status": "draft",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Ask for a new one or a refund",
+     "ar": "اطلبي قطعة جديدة أو استرداد المبلغ",
+     "status": "draft",
+     "context": "Chat-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI · the team sees your photo too",
+     "ar": "مساعد المتجر، ذكاء اصطناعي · الفريق يرى صورتكِ أيضاً",
+     "status": "draft",
+     "context": "Chat-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-States · div · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-Desktop",
+   "title": "7 Desktop, with try-on inside the chat",
+   "title_ar": "7 الكمبيوتر، مع التجربة داخل المحادثة",
+   "screens": {
+    "en": "design/screens/store-chat/07-Chat-Desktop.webp",
+    "ar": "design/screens/store-chat/ar/07-Chat-Desktop.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat on desktop, with try-on inside the chat",
+     "ar": "دردشة المتجر على الكمبيوتر، مع التجربة الافتراضية داخل المحادثة",
+     "status": "draft",
+     "context": "Chat-Desktop · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Free delivery in Cairo over EGP 1,500",
+     "ar": "توصيل مجاني داخل القاهرة للطلبات فوق 1,500 ج.م",
+     "status": "draft",
+     "context": "Chat-Desktop · div"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "Chat-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "New in",
+     "ar": "وصل حديثاً",
+     "status": "draft",
+     "context": "Chat-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Abayas",
+     "ar": "العبايات",
+     "status": "draft",
+     "context": "Chat-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Sets",
+     "ar": "الأطقم",
+     "status": "draft",
+     "context": "Chat-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Linen",
+     "ar": "الكتان",
+     "status": "draft",
+     "context": "Chat-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Our story",
+     "ar": "قصتنا",
+     "status": "draft",
+     "context": "Chat-Desktop · a"
+    },
+    {
+     "kind": "attr",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Account",
+     "ar": "الحساب",
+     "status": "draft",
+     "context": "Chat-Desktop · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Bag",
+     "ar": "السلة",
+     "status": "draft",
+     "context": "Chat-Desktop · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Desktop · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Chat-Desktop · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Open front, soft crepe with hand-finished embroidery along the front and sleeves.",
+     "ar": "مفتوحة من الأمام، من الكريب الناعم بتطريز يدوي على الأمام والأكمام.",
+     "status": "draft",
+     "context": "Chat-Desktop · p · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Colour, <0>Black</0>",
+     "ar": "اللون، <0>أسود</0>",
+     "status": "draft",
+     "context": "Chat-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Sand",
+     "ar": "رملي",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Olive",
+     "ar": "زيتي",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Size,",
+     "ar": "المقاس،",
+     "status": "draft",
+     "context": "Chat-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "Chat-Desktop · a · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Chat-Desktop · button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of aside · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-Desktop · span · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-Desktop · span · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Close chat",
+     "ar": "إغلاق المحادثة",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Would this suit me? I'm 160 cm.",
+     "ar": "هتليق عليّا؟ طولي 160 سم.",
+     "status": "draft",
+     "context": "Chat-Desktop · div · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "At 160 cm the M ends about 4 cm above your ankle. Want to see it on you? I can use the photo saved on this device.",
+     "ar": "على طول 160 سم، مقاس M هيبقى فوق الكاحل بحوالي 4 سم. تحبي تشوفيها عليكي؟ أقدر أستخدم الصورة المحفوظة على الجهاز ده.",
+     "status": "draft",
+     "context": "Chat-Desktop · div · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "See it on me",
+     "ar": "وريني شكلها عليّا",
+     "status": "draft",
+     "context": "Chat-Desktop · div · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "You wearing the Layla Embroidered Abaya",
+     "ar": "أنتِ ترتدين عباية ليلى المطرزة",
+     "status": "draft",
+     "context": "Chat-Desktop · alt of img · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "Chat-Desktop · span · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Open full view",
+     "ar": "العرض بالحجم الكامل",
+     "status": "draft",
+     "context": "Chat-Desktop · aria-label of a · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla, Black, M. Made from your saved photo.",
+     "ar": "عباية ليلى، أسود، M. من صورتكِ المحفوظة.",
+     "status": "draft",
+     "context": "Chat-Desktop · span · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart · Black, M",
+     "ar": "أضيفي إلى السلة · أسود، M",
+     "status": "approved",
+     "context": "Chat-Desktop · button · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI",
+     "ar": "مساعد المتجر، ذكاء اصطناعي",
+     "status": "approved",
+     "context": "Chat-Desktop · span · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Add a photo",
+     "ar": "أضيفي صورة",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-Desktop · label · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Ask a follow-up",
+     "ar": "اسألي سؤالاً آخر",
+     "status": "draft",
+     "context": "Chat-Desktop · placeholder of input · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-Desktop · aria-label of button · in \"Store Chat\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-Desktop · div · under \"Layla Embroidered Abaya\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Chat-More",
+   "title": "8 Guest orders and offline",
+   "title_ar": "8 طلبات الضيوف وانقطاع الاتصال",
+   "screens": {
+    "en": "design/screens/store-chat/08-Chat-More.webp",
+    "ar": "design/screens/store-chat/ar/08-Chat-More.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat, more cases",
+     "ar": "دردشة المتجر، حالات أخرى",
+     "status": "draft",
+     "context": "Chat-More · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Track an order without an account",
+     "ar": "تتبّع طلب بدون حساب",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Where is my order?",
+     "ar": "طلبي فين؟",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "I can check without an account. What's your order number, and the email or phone you ordered with?",
+     "ar": "أقدر أدوّر عليه من غير حساب. إيه رقم الطلب، والإيميل أو رقم الموبايل اللي طلبتي بيه؟",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Order number",
+     "ar": "رقم الطلب",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Order number",
+     "ar": "رقم الطلب",
+     "status": "draft",
+     "context": "Chat-More · aria-label of input"
+    },
+    {
+     "kind": "text",
+     "en": "Email or phone you ordered with",
+     "ar": "البريد الإلكتروني أو رقم الهاتف الذي طلبتِ به",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Email or phone you ordered with",
+     "ar": "البريد الإلكتروني أو رقم الهاتف الذي طلبتِ به",
+     "status": "draft",
+     "context": "Chat-More · aria-label of input"
+    },
+    {
+     "kind": "text",
+     "en": "Find my order",
+     "ar": "البحث عن طلبي",
+     "status": "draft",
+     "context": "Chat-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "We only show an order to the email or phone that placed it.",
+     "ar": "لا نعرض الطلب إلا للبريد الإلكتروني أو رقم الهاتف الذي تم الطلب به.",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "The order, found",
+     "ar": "تم العثور على الطلب",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Found it. It's on its way with Bosta.",
+     "ar": "لقيته. الطلب في الطريق مع بوسطة.",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Order #1027",
+     "ar": "الطلب #1027",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Linen overshirt, Sage M",
+     "ar": "قميص الكتان، أخضر مريمي M",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Placed",
+     "ar": "تم الطلب",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "30 Sep",
+     "ar": "30 سبتمبر",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Shipped with Bosta",
+     "ar": "تم الشحن مع بوسطة",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Today, 11:20 am",
+     "ar": "اليوم، 11:20 ص",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Arrives tomorrow",
+     "ar": "يصل غداً",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Cash due on delivery, EGP 2,200",
+     "ar": "الدفع عند الاستلام، 2,200 ج.م",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Send me updates on WhatsApp",
+     "ar": "أرسلوا لي التحديثات على واتساب",
+     "status": "draft",
+     "context": "Chat-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Store assistant, AI · it can read your order but not change it",
+     "ar": "مساعد المتجر، ذكاء اصطناعي · يمكنه قراءة طلبكِ لكن لا يمكنه تغييره",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Offline, nothing is lost",
+     "ar": "دون اتصال، لا يضيع شيء",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Assistant answers now · team here until 10 pm",
+     "ar": "المساعد يرد الآن · الفريق متاح حتى 10 مساءً",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "You're offline. We'll send it when you're back.",
+     "ar": "أنتِ غير متصلة بالإنترنت. سنرسلها عند عودة الاتصال.",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Is the Zahra abaya lined?",
+     "ar": "عباية زهرة مبطّنة؟",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Yes, it's fully lined, so it isn't see-through.",
+     "ar": "أيوه، مبطّنة بالكامل، فمش بتشفّ.",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "And does it come in olive?",
+     "ar": "وفيه منها زيتي؟",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Waiting to send",
+     "ar": "في انتظار الإرسال",
+     "status": "draft",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Keep typing. Nothing you write is lost.",
+     "ar": "تابعي الكتابة. لن يضيع شيء مما تكتبينه.",
+     "status": "draft",
+     "context": "Chat-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Chat-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Chat-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Chat-More · div · canvas-only note"
+    }
+   ]
+  }
+ ]
+}

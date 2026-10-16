@@ -1,0 +1,2146 @@
+{
+ "surface": "try-on",
+ "note": "Every translatable string on each board, in reading order, with its Arabic. kind is text, attr (aria-label, alt, placeholder or title), title (the document title) or js (copy the board script renders). status approved means the owner has seen and approved that Arabic on a board; draft means it was written for this handoff in the same voice and the owner still has to review it. Prices, sizes, codes, initials and the sample store name in Latin letters are not listed because they do not change between languages, except that prices read \"3,250 ج.م\" in Arabic. Chat-Arabic is Arabic by design and has no English twin.",
+ "boards": [
+  {
+   "board": "TryOn-PDP",
+   "title": "1 Product page",
+   "title_ar": "1 صفحة المنتج",
+   "screens": {
+    "en": "design/screens/try-on/01-TryOn-PDP.webp",
+    "ar": "design/screens/try-on/ar/01-TryOn-PDP.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, product page on a phone",
+     "ar": "التجربة الافتراضية، صفحة المنتج على الهاتف",
+     "status": "draft",
+     "context": "TryOn-PDP · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Free delivery in Cairo over EGP 1,500",
+     "ar": "توصيل مجاني داخل القاهرة للطلبات فوق 1,500 ج.م",
+     "status": "draft",
+     "context": "TryOn-PDP · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Menu",
+     "ar": "القائمة",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "TryOn-PDP · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Bag, empty",
+     "ar": "السلة فارغة",
+     "status": "draft",
+     "context": "TryOn-PDP · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Layla Embroidered Abaya, front",
+     "ar": "عباية ليلى المطرزة، من الأمام",
+     "status": "draft",
+     "context": "TryOn-PDP · alt of img"
+    },
+    {
+     "kind": "attr",
+     "en": "Save to wishlist",
+     "ar": "احفظي في المفضلة",
+     "status": "draft",
+     "context": "TryOn-PDP · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-PDP · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Open front, hand-finished embroidery",
+     "ar": "مفتوحة من الأمام، بتطريز يدوي",
+     "status": "draft",
+     "context": "TryOn-PDP · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Colour",
+     "ar": "اللون",
+     "status": "approved",
+     "context": "TryOn-PDP · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Colour",
+     "ar": "اللون",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of div · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of button · in \"Colour\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Sand",
+     "ar": "رملي",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of button · in \"Colour\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Olive",
+     "ar": "زيتي",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of button · in \"Colour\" · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "TryOn-PDP · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Size",
+     "ar": "المقاس",
+     "status": "approved",
+     "context": "TryOn-PDP · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Size",
+     "ar": "المقاس",
+     "status": "approved",
+     "context": "TryOn-PDP · aria-label of div · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "TryOn-PDP · a · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "TryOn-PDP · button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Ready in about 20 seconds. Your photo is deleted after each look.",
+     "ar": "جاهزة خلال 20 ثانية تقريباً. تُحذف صورتكِ بعد كل إطلالة.",
+     "status": "draft",
+     "context": "TryOn-PDP · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Questions about this abaya?<0>Ask us</0>",
+     "ar": "عندكِ أسئلة عن هذه العباية؟<0>اسألينا</0>",
+     "status": "draft",
+     "context": "TryOn-PDP · a · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-PDP · div · under \"Layla Embroidered Abaya\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Photo",
+   "title": "2 Add a photo",
+   "title_ar": "2 إضافة صورة",
+   "screens": {
+    "en": "design/screens/try-on/02-TryOn-Photo.webp",
+    "ar": "design/screens/try-on/ar/02-TryOn-Photo.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, add a photo",
+     "ar": "التجربة الافتراضية، إضافة صورة",
+     "status": "draft",
+     "context": "TryOn-Photo · document title"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "TryOn-Photo · div"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-Photo · span"
+    },
+    {
+     "kind": "text",
+     "en": "Black · M",
+     "ar": "أسود · M",
+     "status": "draft",
+     "context": "TryOn-Photo · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-Photo · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "See it on you",
+     "ar": "شاهديها عليكِ",
+     "status": "draft",
+     "context": "TryOn-Photo · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Add one photo where you stand straight, head to feet. It takes about 20 seconds.",
+     "ar": "أضيفي صورة واحدة وأنتِ واقفة باستقامة، من الرأس إلى القدمين. يستغرق الأمر حوالي 20 ثانية.",
+     "status": "draft",
+     "context": "TryOn-Photo · p · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Head to feet in frame",
+     "ar": "من الرأس إلى القدمين داخل الصورة",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Hijab and loose clothes are fine",
+     "ar": "الحجاب والملابس الواسعة لا مشكلة فيها",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Good light, plain wall",
+     "ar": "إضاءة جيدة وحائط سادة",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Take a photo",
+     "ar": "التقطي صورة",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "We guide you while you stand back",
+     "ar": "نرشدكِ وأنتِ تبتعدين عن الهاتف",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Choose from your photos",
+     "ar": "اختاري من صوركِ",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "iPhone and Android photos work",
+     "ar": "صور iPhone وAndroid مناسبة",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "No photo? Use a model like you",
+     "ar": "بدون صورة؟ استخدمي عارضة تشبهكِ",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Every size, with or without hijab",
+     "ar": "كل المقاسات، بحجاب أو بدون",
+     "status": "draft",
+     "context": "TryOn-Photo · span · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo is used only to make this preview. It is not stored permanently or shared publicly. <0>How photos are handled</0>",
+     "ar": "تُستخدم صورتكِ فقط لتجهيز هذه المعاينة. لا تُحفظ بشكل دائم ولا تُنشر للعامة. <0>كيف نتعامل مع الصور</0>",
+     "status": "draft",
+     "context": "TryOn-Photo · p · under \"See it on you\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Photo · div · under \"See it on you\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Check",
+   "title": "3 Photo check and consent",
+   "title_ar": "3 فحص الصورة والموافقة",
+   "screens": {
+    "en": "design/screens/try-on/03-TryOn-Check.webp",
+    "ar": "design/screens/try-on/ar/03-TryOn-Check.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, photo check and consent",
+     "ar": "التجربة الافتراضية، فحص الصورة والموافقة",
+     "status": "draft",
+     "context": "TryOn-Check · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Back to photo options",
+     "ar": "العودة إلى خيارات الصورة",
+     "status": "draft",
+     "context": "TryOn-Check · aria-label of a"
+    },
+    {
+     "kind": "text",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "TryOn-Check · h2"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-Check · aria-label of button · under \"Your photo\""
+    },
+    {
+     "kind": "attr",
+     "en": "Your photo, standing, head to feet",
+     "ar": "صورتكِ وأنتِ واقفة، من الرأس إلى القدمين",
+     "status": "draft",
+     "context": "TryOn-Check · alt of img · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Looks great",
+     "ar": "تبدو رائعة",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Head to feet",
+     "ar": "من الرأس إلى القدمين",
+     "status": "draft",
+     "context": "TryOn-Check · div · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "One person",
+     "ar": "شخص واحد",
+     "status": "draft",
+     "context": "TryOn-Check · div · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Bright and sharp",
+     "ar": "مضيئة وواضحة",
+     "status": "draft",
+     "context": "TryOn-Check · div · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Standing straight",
+     "ar": "وقفة مستقيمة",
+     "status": "draft",
+     "context": "TryOn-Check · div · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Use a different photo",
+     "ar": "استخدمي صورة أخرى",
+     "status": "draft",
+     "context": "TryOn-Check · a · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Before your first try-on",
+     "ar": "قبل تجربتكِ الأولى",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo goes to our secure AI service only to make this preview.",
+     "ar": "تُرسل صورتكِ إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة.",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "It is not stored permanently or shared publicly. We only ask this once.",
+     "ar": "لا تُحفظ بشكل دائم ولا تُنشر للعامة. نسألكِ هذا مرة واحدة فقط.",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Keep my photo on this phone",
+     "ar": "الاحتفاظ بصورتي على هذا الهاتف",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Try other pieces in one tap. Kept on this phone for 24 hours.",
+     "ar": "جربي قطعاً أخرى بلمسة واحدة. تبقى على هذا الهاتف 24 ساعة.",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "attr",
+     "en": "Keep my photo on this phone",
+     "ar": "الاحتفاظ بصورتي على هذا الهاتف",
+     "status": "draft",
+     "context": "TryOn-Check · aria-label of button · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Agree and try it on",
+     "ar": "وافقي وجربيها عليكِ",
+     "status": "draft",
+     "context": "TryOn-Check · a · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "By continuing you agree to the <0>try-on privacy notice</0>.",
+     "ar": "بالمتابعة توافقين على <0>إشعار الخصوصية الخاص بالتجربة الافتراضية</0>.",
+     "status": "draft",
+     "context": "TryOn-Check · span · under \"Your photo\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Check · div · under \"Your photo\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Waiting",
+   "title": "4 Making the look",
+   "title_ar": "4 تجهيز الإطلالة",
+   "screens": {
+    "en": "design/screens/try-on/04-TryOn-Waiting.webp",
+    "ar": "design/screens/try-on/ar/04-TryOn-Waiting.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, making the look",
+     "ar": "التجربة الافتراضية، تجهيز الإطلالة",
+     "status": "draft",
+     "context": "TryOn-Waiting · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Minimise and keep browsing",
+     "ar": "صغّري النافذة وتابعي التصفح",
+     "status": "draft",
+     "context": "TryOn-Waiting · aria-label of a"
+    },
+    {
+     "kind": "attr",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "TryOn-Waiting · alt of img"
+    },
+    {
+     "kind": "attr",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-Waiting · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "Making your look",
+     "ar": "نجهّز إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-Waiting · h2"
+    },
+    {
+     "kind": "text",
+     "en": "About 12 seconds left",
+     "ar": "تبقّت 12 ثانية تقريباً",
+     "status": "draft",
+     "context": "TryOn-Waiting · span · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Reading your photo",
+     "ar": "نحلّل صورتكِ",
+     "status": "draft",
+     "context": "TryOn-Waiting · span · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Fitting the garment",
+     "ar": "نضبط القطعة عليكِ",
+     "status": "draft",
+     "context": "TryOn-Waiting · span · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Rendering your look",
+     "ar": "نضع اللمسات الأخيرة على إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-Waiting · span · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Keep browsing, I'll tell you when it's ready",
+     "ar": "تابعي التصفح، وسأخبركِ عندما تجهز",
+     "status": "draft",
+     "context": "TryOn-Waiting · a · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Cancel",
+     "ar": "إلغاء",
+     "status": "draft",
+     "context": "TryOn-Waiting · button · under \"Making your look\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Waiting · div · under \"Making your look\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Result",
+   "title": "5 The look",
+   "title_ar": "5 الإطلالة",
+   "screens": {
+    "en": "design/screens/try-on/05-TryOn-Result.webp",
+    "ar": "design/screens/try-on/ar/05-TryOn-Result.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, the look",
+     "ar": "التجربة الافتراضية، الإطلالة",
+     "status": "draft",
+     "context": "TryOn-Result · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Your look is ready",
+     "ar": "إطلالتكِ جاهزة",
+     "status": "approved",
+     "context": "TryOn-Result · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya · EGP 3,250",
+     "ar": "عباية ليلى المطرزة · 3,250 ج.م",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-Result · aria-label of button · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "You wearing the Layla Embroidered Abaya in black",
+     "ar": "أنتِ ترتدين عباية ليلى المطرزة باللون الأسود",
+     "status": "approved",
+     "context": "TryOn-Result · alt of img · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "Your original photo",
+     "ar": "صورتكِ الأصلية",
+     "status": "draft",
+     "context": "TryOn-Result · alt of img · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "Compare",
+     "ar": "مقارنة",
+     "status": "approved",
+     "context": "TryOn-Result · aria-label of div · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Look",
+     "ar": "الإطلالة",
+     "status": "approved",
+     "context": "TryOn-Result · button · in \"Compare\" · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "TryOn-Result · button · in \"Compare\" · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "This look doesn't look right",
+     "ar": "الإطلالة لا تبدو صحيحة",
+     "status": "approved",
+     "context": "TryOn-Result · aria-label of button · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Not right?",
+     "ar": "غير مناسبة؟",
+     "status": "approved",
+     "context": "TryOn-Result · button · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Change photo",
+     "ar": "غيّري الصورة",
+     "status": "draft",
+     "context": "TryOn-Result · a · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Making it in {{colourName}}",
+     "ar": "نجهّزها بلون {{colourName}}",
+     "status": "draft",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "About 10 seconds, same photo",
+     "ar": "حوالي 10 ثوانٍ، بنفس الصورة",
+     "status": "draft",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Colour",
+     "ar": "اللون",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "Colour",
+     "ar": "اللون",
+     "status": "approved",
+     "context": "TryOn-Result · aria-label of div · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Size",
+     "ar": "المقاس",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "attr",
+     "en": "Size",
+     "ar": "المقاس",
+     "status": "approved",
+     "context": "TryOn-Result · aria-label of div · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Save photo",
+     "ar": "احفظي",
+     "status": "approved",
+     "context": "TryOn-Result · button · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "TryOn-Result · button · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about fit",
+     "ar": "اسألي عن المقاس",
+     "status": "approved",
+     "context": "TryOn-Result · a · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "This preview is a visual guide, not an exact sizing guarantee. Colours may vary slightly.",
+     "ar": "هذه المعاينة دليل بصري وليست ضماناً دقيقاً للمقاس. قد تختلف الألوان قليلاً.",
+     "status": "draft",
+     "context": "TryOn-Result · p · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Try these on you, one tap each",
+     "ar": "جربي هذه عليكِ بلمسة واحدة",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Uses this photo",
+     "ar": "بنفس الصورة",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Linen shirt",
+     "ar": "قميص كتان",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Denim overshirt",
+     "ar": "قميص جينز",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Zahra abaya",
+     "ar": "عباية زهرة",
+     "status": "approved",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Added {{colourName}}, {{sizeName}}",
+     "ar": "تمت الإضافة: {{colourName}}، {{sizeName}}",
+     "status": "draft",
+     "context": "TryOn-Result · span · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Checkout",
+     "ar": "إتمام الشراء",
+     "status": "draft",
+     "context": "TryOn-Result · button · under \"Your look is ready\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Result · div · under \"Your look is ready\" · canvas-only note"
+    },
+    {
+     "kind": "js",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "TryOn-Result · script line 140 · name · shown via {{name}} in aria-label"
+    },
+    {
+     "kind": "js",
+     "en": "Sand",
+     "ar": "رملي",
+     "status": "approved",
+     "context": "TryOn-Result · script line 141 · name · shown via {{name}} in aria-label"
+    },
+    {
+     "kind": "js",
+     "en": "Olive",
+     "ar": "زيتي",
+     "status": "approved",
+     "context": "TryOn-Result · script line 142 · name · shown via {{name}} in aria-label"
+    },
+    {
+     "kind": "js",
+     "en": "Add to cart · ",
+     "ar": "أضيفي إلى السلة · ",
+     "status": "draft",
+     "context": "TryOn-Result · script line 161 · addLabel · joined with + (check word order) · shown via {{addLabel}} in text"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Browse",
+   "title": "6 Try from the collection",
+   "title_ar": "6 التجربة من المجموعة",
+   "screens": {
+    "en": "design/screens/try-on/06-TryOn-Browse.webp",
+    "ar": "design/screens/try-on/ar/06-TryOn-Browse.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on from the collection page",
+     "ar": "التجربة الافتراضية من صفحة المجموعة",
+     "status": "draft",
+     "context": "TryOn-Browse · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Free delivery in Cairo over EGP 1,500",
+     "ar": "توصيل مجاني داخل القاهرة للطلبات فوق 1,500 ج.م",
+     "status": "draft",
+     "context": "TryOn-Browse · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Menu",
+     "ar": "القائمة",
+     "status": "approved",
+     "context": "TryOn-Browse · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "TryOn-Browse · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "TryOn-Browse · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Bag, empty",
+     "ar": "السلة فارغة",
+     "status": "draft",
+     "context": "TryOn-Browse · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Abayas",
+     "ar": "العبايات",
+     "status": "draft",
+     "context": "TryOn-Browse · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Filter",
+     "ar": "تصفية",
+     "status": "draft",
+     "context": "TryOn-Browse · button · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Sort",
+     "ar": "ترتيب",
+     "status": "draft",
+     "context": "TryOn-Browse · button · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "14 pieces",
+     "ar": "14 قطعة",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "attr",
+     "en": "You wearing the Layla Embroidered Abaya",
+     "ar": "أنتِ ترتدين عباية ليلى المطرزة",
+     "status": "draft",
+     "context": "TryOn-Browse · alt of img · under \"Abayas\""
+    },
+    {
+     "kind": "attr",
+     "en": "Show the product photo",
+     "ar": "اعرضي صورة المنتج",
+     "status": "draft",
+     "context": "TryOn-Browse · aria-label of button · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Your look",
+     "ar": "إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-Browse · a · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "attr",
+     "en": "Riyadh Open Abaya",
+     "ar": "عباية الرياض المفتوحة",
+     "status": "draft",
+     "context": "TryOn-Browse · alt of img · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "TryOn-Browse · button · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Riyadh Open Abaya",
+     "ar": "عباية الرياض المفتوحة",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "attr",
+     "en": "Zahra Occasion Abaya",
+     "ar": "عباية زهرة للمناسبات",
+     "status": "draft",
+     "context": "TryOn-Browse · alt of img · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Trying on",
+     "ar": "جاري التجربة",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Zahra Occasion Abaya",
+     "ar": "عباية زهرة للمناسبات",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "attr",
+     "en": "Muscat Crepe Abaya",
+     "ar": "عباية مسقط الكريب",
+     "status": "draft",
+     "context": "TryOn-Browse · alt of img · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on",
+     "ar": "جربيها عليكِ",
+     "status": "approved",
+     "context": "TryOn-Browse · button · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Muscat Crepe Abaya",
+     "ar": "عباية مسقط الكريب",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Making your Zahra look",
+     "ar": "نجهّز إطلالتكِ بعباية زهرة",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "About 9 seconds. Keep browsing.",
+     "ar": "حوالي 9 ثوانٍ. تابعي التصفح.",
+     "status": "draft",
+     "context": "TryOn-Browse · span · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "My looks",
+     "ar": "إطلالاتي",
+     "status": "draft",
+     "context": "TryOn-Browse · a · under \"Abayas\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Browse · div · under \"Abayas\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-States",
+   "title": "7 When things go wrong, and My looks",
+   "title_ar": "7 عندما يحدث خطأ، وإطلالاتي",
+   "screens": {
+    "en": "design/screens/try-on/07-TryOn-States.webp",
+    "ar": "design/screens/try-on/ar/07-TryOn-States.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, when things go wrong, and My looks",
+     "ar": "التجربة الافتراضية، عند حدوث خطأ، وإطلالاتي",
+     "status": "draft",
+     "context": "TryOn-States · document title"
+    },
+    {
+     "kind": "text",
+     "en": "The photo needs a small fix",
+     "ar": "الصورة تحتاج تعديلاً بسيطاً",
+     "status": "draft",
+     "context": "TryOn-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "TryOn-States · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-States · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "Your photo, feet cut off at the bottom",
+     "ar": "صورتكِ، والقدمان مقطوعتان من الأسفل",
+     "status": "draft",
+     "context": "TryOn-States · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "Step back a little so your feet show",
+     "ar": "ابتعدي قليلاً لتظهر قدماكِ",
+     "status": "draft",
+     "context": "TryOn-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Head to feet, feet are cut off",
+     "ar": "من الرأس إلى القدمين، القدمان مقطوعتان",
+     "status": "draft",
+     "context": "TryOn-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "One person",
+     "ar": "شخص واحد",
+     "status": "draft",
+     "context": "TryOn-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Bright and sharp",
+     "ar": "مضيئة وواضحة",
+     "status": "draft",
+     "context": "TryOn-States · div"
+    },
+    {
+     "kind": "text",
+     "en": "Full length helps us get the hem and the fall of the abaya right.",
+     "ar": "الصورة بالطول الكامل تساعدنا على ضبط طرف العباية وانسدالها.",
+     "status": "draft",
+     "context": "TryOn-States · p"
+    },
+    {
+     "kind": "text",
+     "en": "Take it again",
+     "ar": "التقطيها مرة أخرى",
+     "status": "draft",
+     "context": "TryOn-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Use this photo anyway",
+     "ar": "استخدمي هذه الصورة على أي حال",
+     "status": "draft",
+     "context": "TryOn-States · button"
+    },
+    {
+     "kind": "text",
+     "en": "Busy, the shopper keeps their place",
+     "ar": "ضغط كبير، والمتسوقة تحتفظ بدورها",
+     "status": "draft",
+     "context": "TryOn-States · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-States · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "seconds",
+     "ar": "ثانية",
+     "status": "draft",
+     "context": "TryOn-States · span"
+    },
+    {
+     "kind": "text",
+     "en": "Lots of people are trying on right now",
+     "ar": "كثيرون يجربون الآن",
+     "status": "draft",
+     "context": "TryOn-States · h2"
+    },
+    {
+     "kind": "text",
+     "en": "We will start yours automatically in 12 seconds. You keep your place and your photo.",
+     "ar": "سنبدأ إطلالتكِ تلقائياً خلال 12 ثانية. دوركِ وصورتكِ محفوظان.",
+     "status": "draft",
+     "context": "TryOn-States · p · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-States · span · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "Black · M",
+     "ar": "أسود · M",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "Keep browsing, I'll tell you",
+     "ar": "تابعي التصفح، وسأخبركِ",
+     "status": "draft",
+     "context": "TryOn-States · button · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "Cancel",
+     "ar": "إلغاء",
+     "status": "draft",
+     "context": "TryOn-States · button · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "A look did not come out right",
+     "ar": "إطلالة لم تظهر بشكل صحيح",
+     "status": "draft",
+     "context": "TryOn-States · div · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-States · aria-label of button · under \"Lots of people are trying on right now\""
+    },
+    {
+     "kind": "text",
+     "en": "This look did not come out right",
+     "ar": "هذه الإطلالة لم تظهر بشكل صحيح",
+     "status": "draft",
+     "context": "TryOn-States · h2"
+    },
+    {
+     "kind": "text",
+     "en": "This piece's photo makes it hard to show on you. Here are other ways to see how it fits.",
+     "ar": "صورة هذه القطعة تجعل إظهارها عليكِ صعباً. إليكِ طرقاً أخرى لتري كيف تناسبكِ.",
+     "status": "draft",
+     "context": "TryOn-States · p · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "See it on a model like you",
+     "ar": "شاهديها على عارضة تشبهكِ",
+     "status": "draft",
+     "context": "TryOn-States · a · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Try another piece",
+     "ar": "جربي قطعة أخرى",
+     "status": "draft",
+     "context": "TryOn-States · a · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about the fit",
+     "ar": "اسألي عن المقاس",
+     "status": "draft",
+     "context": "TryOn-States · a · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "My looks, across the whole store",
+     "ar": "إطلالاتي، من المتجر كله",
+     "status": "draft",
+     "context": "TryOn-States · div · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "My looks",
+     "ar": "إطلالاتي",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "3 looks, kept on this phone",
+     "ar": "3 إطلالات، محفوظة على هذا الهاتف",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-States · aria-label of button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "attr",
+     "en": "Look, Layla Embroidered Abaya",
+     "ar": "إطلالة، عباية ليلى المطرزة",
+     "status": "draft",
+     "context": "TryOn-States · alt of img · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla abaya",
+     "ar": "عباية ليلى",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Black, M",
+     "ar": "أسود، M",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Add",
+     "ar": "إضافة",
+     "status": "draft",
+     "context": "TryOn-States · button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send on WhatsApp",
+     "ar": "أرسلي على واتساب",
+     "status": "draft",
+     "context": "TryOn-States · aria-label of button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "attr",
+     "en": "Look, Linen Overshirt",
+     "ar": "إطلالة، قميص الكتان",
+     "status": "draft",
+     "context": "TryOn-States · alt of img · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Linen overshirt",
+     "ar": "قميص الكتان",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Sage, M",
+     "ar": "أخضر مريمي، M",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Add",
+     "ar": "إضافة",
+     "status": "draft",
+     "context": "TryOn-States · button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send on WhatsApp",
+     "ar": "أرسلي على واتساب",
+     "status": "draft",
+     "context": "TryOn-States · aria-label of button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Zahra Occasion Abaya",
+     "ar": "عباية زهرة للمناسبات",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Making it, about 6 seconds",
+     "ar": "نجهّزها، حوالي 6 ثوانٍ",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo and looks stay on this phone for 24 hours. The store sees a look only if you send it.",
+     "ar": "تبقى صورتكِ وإطلالاتكِ على هذا الهاتف 24 ساعة. لا يرى المتجر أي إطلالة إلا إذا أرسلتِها.",
+     "status": "draft",
+     "context": "TryOn-States · span · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Delete all",
+     "ar": "احذفي الكل",
+     "status": "draft",
+     "context": "TryOn-States · button · under \"This look did not come out right\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-States · div · under \"This look did not come out right\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-Desktop",
+   "title": "8 Desktop product page",
+   "title_ar": "8 صفحة المنتج على الكمبيوتر",
+   "screens": {
+    "en": "design/screens/try-on/08-TryOn-Desktop.webp",
+    "ar": "design/screens/try-on/ar/08-TryOn-Desktop.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on on a desktop product page",
+     "ar": "التجربة الافتراضية في صفحة منتج على الكمبيوتر",
+     "status": "draft",
+     "context": "TryOn-Desktop · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Free delivery in Cairo over EGP 1,500",
+     "ar": "توصيل مجاني داخل القاهرة للطلبات فوق 1,500 ج.م",
+     "status": "draft",
+     "context": "TryOn-Desktop · div"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "New in",
+     "ar": "وصل حديثاً",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Abayas",
+     "ar": "العبايات",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Sets",
+     "ar": "الأطقم",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Linen",
+     "ar": "الكتان",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Our story",
+     "ar": "قصتنا",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "attr",
+     "en": "You wearing the Layla Embroidered Abaya in black",
+     "ar": "أنتِ ترتدين عباية ليلى المطرزة باللون الأسود",
+     "status": "approved",
+     "context": "TryOn-Desktop · alt of img"
+    },
+    {
+     "kind": "attr",
+     "en": "Your original photo",
+     "ar": "صورتكِ الأصلية",
+     "status": "draft",
+     "context": "TryOn-Desktop · alt of img"
+    },
+    {
+     "kind": "attr",
+     "en": "Drag to compare your photo and the look",
+     "ar": "اسحبي للمقارنة بين صورتكِ والإطلالة",
+     "status": "draft",
+     "context": "TryOn-Desktop · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "Your look",
+     "ar": "إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "Change photo",
+     "ar": "غيّري الصورة",
+     "status": "draft",
+     "context": "TryOn-Desktop · a"
+    },
+    {
+     "kind": "attr",
+     "en": "This look doesn't look right",
+     "ar": "الإطلالة لا تبدو صحيحة",
+     "status": "approved",
+     "context": "TryOn-Desktop · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Not right?",
+     "ar": "غير مناسبة؟",
+     "status": "approved",
+     "context": "TryOn-Desktop · button"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-Desktop · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Your look is ready, made in 14 seconds",
+     "ar": "إطلالتكِ جاهزة، جُهّزت في 14 ثانية",
+     "status": "draft",
+     "context": "TryOn-Desktop · span"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-Desktop · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Colour, <0>Black</0>",
+     "ar": "اللون، <0>أسود</0>",
+     "status": "draft",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Black",
+     "ar": "أسود",
+     "status": "approved",
+     "context": "TryOn-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Sand",
+     "ar": "رملي",
+     "status": "approved",
+     "context": "TryOn-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "attr",
+     "en": "Olive",
+     "ar": "زيتي",
+     "status": "approved",
+     "context": "TryOn-Desktop · aria-label of button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Pick a colour to see it on you",
+     "ar": "اختاري لوناً لتريه عليكِ",
+     "status": "draft",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Size,",
+     "ar": "المقاس،",
+     "status": "draft",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Size guide",
+     "ar": "دليل المقاسات",
+     "status": "draft",
+     "context": "TryOn-Desktop · a · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart · Black, M",
+     "ar": "أضيفي إلى السلة · أسود، M",
+     "status": "approved",
+     "context": "TryOn-Desktop · button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Save image",
+     "ar": "احفظي الصورة",
+     "status": "draft",
+     "context": "TryOn-Desktop · button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Send to my phone",
+     "ar": "أرسليها إلى هاتفكِ",
+     "status": "draft",
+     "context": "TryOn-Desktop · button · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about the fit",
+     "ar": "اسألي عن المقاس",
+     "status": "draft",
+     "context": "TryOn-Desktop · a · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "This preview is a visual guide, not an exact sizing guarantee. Colours may vary slightly.",
+     "ar": "هذه المعاينة دليل بصري وليست ضماناً دقيقاً للمقاس. قد تختلف الألوان قليلاً.",
+     "status": "draft",
+     "context": "TryOn-Desktop · p · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Try these on you, one click each",
+     "ar": "جربي هذه عليكِ بنقرة واحدة",
+     "status": "draft",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Linen overshirt",
+     "ar": "قميص الكتان",
+     "status": "draft",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Denim overshirt",
+     "ar": "قميص جينز",
+     "status": "approved",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Zahra abaya",
+     "ar": "عباية زهرة",
+     "status": "approved",
+     "context": "TryOn-Desktop · span · under \"Layla Embroidered Abaya\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-Desktop · div · under \"Layla Embroidered Abaya\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Studio-Phone",
+   "title": "9 Website studio on a phone",
+   "title_ar": "9 استوديو الموقع على الهاتف",
+   "screens": {
+    "en": "design/screens/try-on/09-Studio-Phone.webp",
+    "ar": "design/screens/try-on/ar/09-Studio-Phone.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Website try-on studio on a phone",
+     "ar": "استوديو التجربة الافتراضية على الموقع، من الهاتف",
+     "status": "draft",
+     "context": "Studio-Phone · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Studio-Phone · span"
+    },
+    {
+     "kind": "text",
+     "en": "See what your shoppers will see.",
+     "ar": "شاهد ما سيراه المتسوقون لديك.",
+     "status": "draft",
+     "context": "Studio-Phone · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Pick a piece and add a photo. This is the try-on your shoppers get on your store.",
+     "ar": "اختر قطعة وأضف صورة. هذه هي التجربة الافتراضية التي يحصل عليها المتسوقون في متجرك.",
+     "status": "draft",
+     "context": "Studio-Phone · p · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Add it to your Shopify store",
+     "ar": "أضفها إلى متجرك على Shopify",
+     "status": "draft",
+     "context": "Studio-Phone · a · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "The piece",
+     "ar": "القطعة",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "attr",
+     "en": "Embroidered abaya",
+     "ar": "عباية مطرزة",
+     "status": "draft",
+     "context": "Studio-Phone · alt of img · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "attr",
+     "en": "Change the piece",
+     "ar": "تغيير القطعة",
+     "status": "draft",
+     "context": "Studio-Phone · aria-label of button · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Embroidered abaya",
+     "ar": "عباية مطرزة",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "attr",
+     "en": "Your photo",
+     "ar": "صورتكِ",
+     "status": "approved",
+     "context": "Studio-Phone · alt of img · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "attr",
+     "en": "Change your photo",
+     "ar": "تغيير صورتك",
+     "status": "draft",
+     "context": "Studio-Phone · aria-label of button · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Looks great, head to feet",
+     "ar": "تبدو رائعة، من الرأس إلى القدمين",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Your look appears here",
+     "ar": "ستظهر إطلالتك هنا",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "About 15 seconds after you tap Create",
+     "ar": "خلال 15 ثانية تقريباً بعد الضغط على إنشاء",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Create my look",
+     "ar": "إنشاء إطلالتي",
+     "status": "draft",
+     "context": "Studio-Phone · button · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo is used once for this preview, then deleted.",
+     "ar": "تُستخدم صورتك مرة واحدة لهذه المعاينة، ثم تُحذف.",
+     "status": "draft",
+     "context": "Studio-Phone · span · under \"See what your shoppers will see.\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Studio-Phone · div · under \"See what your shoppers will see.\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "TryOn-More",
+   "title": "10 More ways in: no camera, no photo, sharing",
+   "title_ar": "10 طرق أخرى: بلا كاميرا أو صورة، والمشاركة",
+   "screens": {
+    "en": "design/screens/try-on/10-TryOn-More.webp",
+    "ar": "design/screens/try-on/ar/10-TryOn-More.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-on, more ways in",
+     "ar": "التجربة الافتراضية، طرق أخرى للبدء",
+     "status": "draft",
+     "context": "TryOn-More · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Inside Instagram's browser",
+     "ar": "داخل متصفح Instagram",
+     "status": "draft",
+     "context": "TryOn-More · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-More · aria-label of button"
+    },
+    {
+     "kind": "attr",
+     "en": "More",
+     "ar": "المزيد",
+     "status": "draft",
+     "context": "TryOn-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Add a photo of you",
+     "ar": "أضيفي صورة لكِ",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya · Black · M",
+     "ar": "عباية ليلى المطرزة · أسود · M",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "You're in Instagram's browser, so the camera may not open here. A photo from your gallery works just as well.",
+     "ar": "أنتِ في متصفح Instagram، لذلك قد لا تفتح الكاميرا هنا. صورة من معرض صوركِ تفي بالغرض تماماً.",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Choose a photo",
+     "ar": "اختيار صورة",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Open in my browser",
+     "ar": "افتحي في متصفحكِ",
+     "status": "draft",
+     "context": "TryOn-More · a"
+    },
+    {
+     "kind": "text",
+     "en": "Your piece, size and choices come with you",
+     "ar": "قطعتكِ ومقاسكِ واختياراتكِ تنتقل معكِ",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "No photo? Use a model like you",
+     "ar": "بدون صورة؟ استخدمي عارضة تشبهكِ",
+     "status": "draft",
+     "context": "TryOn-More · a"
+    },
+    {
+     "kind": "text",
+     "en": "Your photo is deleted after each look",
+     "ar": "تُحذف صورتكِ بعد كل إطلالة",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "No photo, a model like you",
+     "ar": "بدون صورة، عارضة تشبهكِ",
+     "status": "draft",
+     "context": "TryOn-More · div"
+    },
+    {
+     "kind": "text",
+     "en": "See it on a model like you",
+     "ar": "شاهديها على عارضة تشبهكِ",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Close",
+     "ar": "إغلاق",
+     "status": "approved",
+     "context": "TryOn-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Pick what's closest to you. No photo needed.",
+     "ar": "اختاري الأقرب إليكِ. لا حاجة إلى صورة.",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Height",
+     "ar": "الطول",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Under 155 cm",
+     "ar": "أقل من 155 سم",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "155 to 165",
+     "ar": "155 إلى 165",
+     "status": "draft",
+     "context": "TryOn-More · bdi"
+    },
+    {
+     "kind": "text",
+     "en": "Over 165",
+     "ar": "أكثر من 165",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Your usual size",
+     "ar": "مقاسكِ المعتاد",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "With hijab",
+     "ar": "بحجاب",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Without",
+     "ar": "بدون",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "attr",
+     "en": "A model about 160 cm tall in the Layla abaya, size M",
+     "ar": "عارضة طولها حوالي 160 سم ترتدي عباية ليلى، مقاس M",
+     "status": "draft",
+     "context": "TryOn-More · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Model, 160 cm, size M",
+     "ar": "عارضة، 160 سم، مقاس M",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart · Black, M",
+     "ar": "أضيفي إلى السلة · أسود، M",
+     "status": "approved",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Use my own photo instead",
+     "ar": "استخدمي صورتكِ بدلاً من ذلك",
+     "status": "draft",
+     "context": "TryOn-More · a"
+    },
+    {
+     "kind": "text",
+     "en": "Send your look",
+     "ar": "أرسلي إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-More · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Your look",
+     "ar": "إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-More · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Send your look",
+     "ar": "أرسلي إطلالتكِ",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya, Black, M. The image is marked AI preview and Maison Noor.",
+     "ar": "عباية ليلى المطرزة، أسود، M. على الصورة علامة معاينة بالذكاء الاصطناعي واسم ميزون نور.",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Story",
+     "ar": "القصة",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Copy link",
+     "ar": "انسخي الرابط",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "Save",
+     "ar": "حفظ",
+     "status": "draft",
+     "context": "TryOn-More · button"
+    },
+    {
+     "kind": "text",
+     "en": "The link opens your look on maisonnoor.com for 7 days. Only people you send it to can see it, and you can delete it any time.",
+     "ar": "يفتح الرابط إطلالتكِ على maisonnoor.com لمدة 7 أيام. لا يراها إلا من ترسلين لهم الرابط، ويمكنكِ حذفها في أي وقت.",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor sees this look only if you send it to them",
+     "ar": "لن تصل هذه الإطلالة إلى ميزون نور إلا إذا أرسلتِها لهم",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "What the friend opens",
+     "ar": "ما تفتحه الصديقة",
+     "status": "draft",
+     "context": "TryOn-More · div"
+    },
+    {
+     "kind": "attr",
+     "en": "Back",
+     "ar": "رجوع",
+     "status": "draft",
+     "context": "TryOn-More · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "TryOn-More · div"
+    },
+    {
+     "kind": "attr",
+     "en": "A shared look in the Layla Embroidered Abaya",
+     "ar": "إطلالة تمت مشاركتها بعباية ليلى المطرزة",
+     "status": "draft",
+     "context": "TryOn-More · alt of img"
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "A look made with Try it on",
+     "ar": "إطلالة صُنعت بالتجربة الافتراضية",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Black, M · EGP 3,250",
+     "ar": "أسود، M · 3,250 ج.م",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Try it on yourself",
+     "ar": "جربيها عليكِ بنفسكِ",
+     "status": "draft",
+     "context": "TryOn-More · a"
+    },
+    {
+     "kind": "text",
+     "en": "See the abaya",
+     "ar": "شاهدي العباية",
+     "status": "draft",
+     "context": "TryOn-More · a"
+    },
+    {
+     "kind": "text",
+     "en": "Shared by the person who made it. This page disappears in 7 days.",
+     "ar": "شاركها الشخص الذي صنعها. تختفي هذه الصفحة بعد 7 أيام.",
+     "status": "draft",
+     "context": "TryOn-More · span"
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "TryOn-More · div · canvas-only note"
+    }
+   ]
+  }
+ ]
+}

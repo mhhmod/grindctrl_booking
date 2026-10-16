@@ -1,0 +1,4331 @@
+{
+ "surface": "shopify-app",
+ "note": "Every translatable string on each board, in reading order, with its Arabic. kind is text, attr (aria-label, alt, placeholder or title), title (the document title) or js (copy the board script renders). status approved means the owner has seen and approved that Arabic on a board; draft means it was written for this handoff in the same voice and the owner still has to review it. Prices, sizes, codes, initials and the sample store name in Latin letters are not listed because they do not change between languages, except that prices read \"3,250 ج.م\" in Arabic. Chat-Arabic is Arabic by design and has no English twin.",
+ "boards": [
+  {
+   "board": "Shopify-Home-Setup",
+   "title": "1 App home, first day",
+   "title_ar": "1 الرئيسية، اليوم الأول",
+   "screens": {
+    "en": "design/screens/shopify-app/desktop/01-Shopify-Home-Setup.webp",
+    "ar": "design/screens/shopify-app/ar/desktop/01-Shopify-Home-Setup.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "GrindCTRL, first day",
+     "ar": "GrindCTRL، اليوم الأول",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Store admin",
+     "ar": "إدارة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span"
+    },
+    {
+     "kind": "text",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span"
+    },
+    {
+     "kind": "text",
+     "en": "Ctrl K",
+     "ar": "Ctrl K",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Notifications",
+     "ar": "التنبيهات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Shopify admin",
+     "ar": "إدارة Shopify",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · aria-label of nav"
+    },
+    {
+     "kind": "text",
+     "en": "Home",
+     "ar": "الرئيسية",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Orders",
+     "ar": "الطلبات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Products",
+     "ar": "المنتجات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Customers",
+     "ar": "العملاء",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Content",
+     "ar": "المحتوى",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Analytics",
+     "ar": "الإحصاءات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Marketing",
+     "ar": "التسويق",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Discounts",
+     "ar": "الخصومات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales channels",
+     "ar": "قنوات البيع",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Online Store",
+     "ar": "المتجر الإلكتروني",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Apps",
+     "ar": "التطبيقات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "attr",
+     "en": "More actions",
+     "ar": "المزيد",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "You get 15 free looks every month. Choose a plan only when you need more. Store Chat is included in every plan.",
+     "ar": "تحصل على 15 إطلالة مجانية كل شهر. اختر باقة فقط عندما تحتاج إلى المزيد. دردشة المتجر مشمولة في كل باقة.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Dismiss",
+     "ar": "إغلاق",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Set up GrindCTRL",
+     "ar": "إعداد GrindCTRL",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · h2"
+    },
+    {
+     "kind": "attr",
+     "en": "Collapse setup guide",
+     "ar": "طي دليل الإعداد",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · aria-label of button · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "attr",
+     "en": "Dismiss setup guide",
+     "ar": "إغلاق دليل الإعداد",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · aria-label of button · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Five short steps to get Try-On and Store Chat live on your store.",
+     "ar": "خمس خطوات قصيرة لتشغيل التجربة الافتراضية ودردشة المتجر في متجرك.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "1 of 5 steps done",
+     "ar": "تم إكمال 1 من 5 خطوات",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Link your GrindCTRL account",
+     "ar": "ربط حساب GrindCTRL",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Linked to your GrindCTRL account <0/><1>Change</1>",
+     "ar": "مرتبط بحساب GrindCTRL الخاص بك <0/><1>تغيير</1>",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Turn on GrindCTRL in your theme",
+     "ar": "تفعيل GrindCTRL في قالبك",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "This opens your theme editor at App embeds. Switch on GRINDCTRL Store Chat and Try-On on product cards, click Save, then come back. We check it worked on our own.",
+     "ar": "يفتح هذا محرر القالب على تضمينات التطبيقات. فعّل «GRINDCTRL Store Chat» و«Try-On on product cards»، ثم انقر على حفظ وعُد إلى هنا. سنتحقق بأنفسنا من نجاح ذلك.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Turn on in theme",
+     "ar": "التفعيل في القالب",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · a · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Add Try it on to product pages",
+     "ar": "إضافة زر التجربة إلى صفحات المنتجات",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · a · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Watch how, 1 min",
+     "ar": "شاهد الشرح، دقيقة واحدة",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · button · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat and product card pills: not on yet in Dawn, your live theme. Checked just now.",
+     "ar": "دردشة المتجر وأزرار بطاقات المنتجات: غير مفعّلة بعد في Dawn، قالبك المنشور. تم التحقق للتو.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it on button: not added to product pages yet.",
+     "ar": "زر التجربة: لم يُضف إلى صفحات المنتجات بعد.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "App embeds",
+     "ar": "تضمينات التطبيقات",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "GRINDCTRL Store Chat",
+     "ar": "GRINDCTRL Store Chat",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On on product cards",
+     "ar": "Try-On on product cards",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Other app",
+     "ar": "تطبيق آخر",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Save",
+     "ar": "حفظ",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Check what the assistant learned",
+     "ar": "راجع ما تعلّمه المساعد",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "We drafted 12 answers from your policies, in Arabic and English.",
+     "ar": "صغنا 12 إجابة من سياساتك، بالعربية والإنجليزية.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Try it yourself",
+     "ar": "جرّبه بنفسك",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Only you see GrindCTRL on your store until you go live.",
+     "ar": "لن يرى أحد غيرك GrindCTRL في متجرك حتى تطلقه للمتسوقين.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Go live",
+     "ar": "أطلقه للمتسوقين",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "For everyone, or for half your visitors so you can measure the difference.",
+     "ar": "للجميع، أو لنصف زوارك حتى تقيس الفرق.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Set up GrindCTRL\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Off",
+     "ar": "متوقف",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Try-On\""
+    },
+    {
+     "kind": "text",
+     "en": "Goes live at step 5. Shoppers see Try it on where the GrindCTRL Try-On block sits.",
+     "ar": "تبدأ العمل في الخطوة 5. يرى المتسوقون زر التجربة حيث يوجد قسم «GrindCTRL Try-On».",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Try-On\""
+    },
+    {
+     "kind": "text",
+     "en": "48 products, 28 with photos that work",
+     "ar": "48 منتجاً، منها 28 بصور صالحة",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Try-On\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Off",
+     "ar": "متوقف",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "We read 48 products and 4 policies. 12 answers are ready for you to check at step 3.",
+     "ar": "قرأنا 48 منتجاً و4 سياسات. هناك 12 إجابة جاهزة لتراجعها في الخطوة 3.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Replies in Arabic or English, matching each shopper.",
+     "ar": "ترد بالعربية أو الإنجليزية حسب لغة كل متسوقة.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · span · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Last 7 days",
+     "ar": "آخر 7 أيام",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Looks made",
+     "ar": "الإطلالات",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Added to cart after a look",
+     "ar": "أضافوا للسلة بعد الإطلالة",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Chats the assistant solved",
+     "ar": "محادثات أنهاها المساعد",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales after a look or chat",
+     "ar": "مبيعات بعد تجربة أو محادثة",
+     "status": "approved",
+     "context": "Shopify-Home-Setup · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Your first numbers show here after the first try-on or chat, usually on day one.",
+     "ar": "تظهر أرقامك الأولى هنا بعد أول تجربة أو محادثة، عادةً في اليوم الأول.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · div · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Learn more about <0>setting up GrindCTRL</0> or <1>book a call with us</1>",
+     "ar": "اعرف المزيد عن <0>إعداد GrindCTRL</0> أو <1>احجز مكالمة معنا</1>",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · p · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Shopify-Home-Setup · div · under \"Last 7 days\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Shopify-Home",
+   "title": "2 App home, live",
+   "title_ar": "2 الرئيسية، بعد الإطلاق",
+   "screens": {
+    "en": "design/screens/shopify-app/desktop/02-Shopify-Home.webp",
+    "ar": "design/screens/shopify-app/ar/desktop/02-Shopify-Home.webp"
+   },
+   "strings": [
+    {
+     "kind": "text",
+     "en": "Store admin",
+     "ar": "إدارة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home · span"
+    },
+    {
+     "kind": "text",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Shopify-Home · span"
+    },
+    {
+     "kind": "text",
+     "en": "Ctrl K",
+     "ar": "Ctrl K",
+     "status": "draft",
+     "context": "Shopify-Home · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Notifications",
+     "ar": "التنبيهات",
+     "status": "approved",
+     "context": "Shopify-Home · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Home · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Shopify admin",
+     "ar": "إدارة Shopify",
+     "status": "approved",
+     "context": "Shopify-Home · aria-label of nav"
+    },
+    {
+     "kind": "text",
+     "en": "Home",
+     "ar": "الرئيسية",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Orders",
+     "ar": "الطلبات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Products",
+     "ar": "المنتجات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Customers",
+     "ar": "العملاء",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Content",
+     "ar": "المحتوى",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Analytics",
+     "ar": "الإحصاءات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Marketing",
+     "ar": "التسويق",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Discounts",
+     "ar": "الخصومات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales channels",
+     "ar": "قنوات البيع",
+     "status": "approved",
+     "context": "Shopify-Home · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Online Store",
+     "ar": "المتجر الإلكتروني",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Apps",
+     "ar": "التطبيقات",
+     "status": "approved",
+     "context": "Shopify-Home · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Home · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "attr",
+     "en": "More actions",
+     "ar": "المزيد",
+     "status": "approved",
+     "context": "Shopify-Home · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Looks run out in about 10 days",
+     "ar": "الإطلالات تنفد خلال 10 أيام تقريباً",
+     "status": "approved",
+     "context": "Shopify-Home · div"
+    },
+    {
+     "kind": "text",
+     "en": "At this pace you'll run out 6 days before your 18 October reset. <0>Try it on hides while you're out, and Store Chat keeps working.</0>",
+     "ar": "بهذا المعدل ستنفد إطلالاتك قبل 6 أيام من تجدد الدورة في 18 أكتوبر. <0>يختفي زر التجربة ما دامت الإطلالات نافدة، وتستمر دردشة المتجر في العمل.</0>",
+     "status": "draft",
+     "context": "Shopify-Home · span"
+    },
+    {
+     "kind": "text",
+     "en": "Add 80 looks",
+     "ar": "أضف 80 إطلالة",
+     "status": "draft",
+     "context": "Shopify-Home · a"
+    },
+    {
+     "kind": "text",
+     "en": "See plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Home · a"
+    },
+    {
+     "kind": "text",
+     "en": "Status",
+     "ar": "الحالة",
+     "status": "approved",
+     "context": "Shopify-Home · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Checked in your live theme 3 min ago",
+     "ar": "تم التحقق في قالبك المنشور قبل 3 دقائق",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "Showing on 28 product pages. <0>2 are flagged and 1 needs a better photo.</0>",
+     "ar": "يظهر في 28 صفحة منتج، <0>منها 2 عليهما ملاحظة، ومنتج واحد يحتاج صورة أفضل.</0>",
+     "status": "draft",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "On",
+     "ar": "يعمل",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "attr",
+     "en": "Try-On settings",
+     "ar": "إعدادات التجربة",
+     "status": "approved",
+     "context": "Shopify-Home · aria-label of a · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "Answering on every page. Your team gets an email when a shopper wants a person.",
+     "ar": "تجيب في كل الصفحات. يتلقى فريقك بريداً إلكترونياً عندما تطلب متسوقة التحدث مع شخص.",
+     "status": "draft",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "On",
+     "ar": "يعمل",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Status\""
+    },
+    {
+     "kind": "attr",
+     "en": "Store Chat settings",
+     "ar": "إعدادات الدردشة",
+     "status": "approved",
+     "context": "Shopify-Home · aria-label of a · under \"Status\""
+    },
+    {
+     "kind": "text",
+     "en": "Last 7 days",
+     "ar": "آخر 7 أيام",
+     "status": "approved",
+     "context": "Shopify-Home · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Looks made",
+     "ar": "الإطلالات",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Added to cart after a look",
+     "ar": "أضافوا للسلة بعد الإطلالة",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Shoppers who chose to try on",
+     "ar": "متسوقون اختاروا التجربة بأنفسهم",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Chats the assistant solved",
+     "ar": "محادثات أنهاها المساعد",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "of 140 chats",
+     "ar": "من 140 محادثة",
+     "status": "draft",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales after a look or chat",
+     "ar": "مبيعات بعد تجربة أو محادثة",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Full results in the GrindCTRL dashboard",
+     "ar": "النتائج الكاملة في لوحة GrindCTRL",
+     "status": "approved",
+     "context": "Shopify-Home · a · under \"Last 7 days\""
+    },
+    {
+     "kind": "text",
+     "en": "Needs you",
+     "ar": "يحتاجك الآن",
+     "status": "approved",
+     "context": "Shopify-Home · h2"
+    },
+    {
+     "kind": "text",
+     "en": "3 shoppers want a person",
+     "ar": "3 متسوقين يريدون التحدث مع شخص",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Longest wait 12 min. <0>Their carts hold EGP&nbsp;9,850.</0>",
+     "ar": "أطول انتظار 12 دقيقة، <0>وفي سلالهم 9,850 ج.م.</0>",
+     "status": "draft",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Open inbox",
+     "ar": "افتح الرسائل",
+     "status": "approved",
+     "context": "Shopify-Home · a · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Approve an answer about exchanges",
+     "ar": "وافق على إجابة عن الاستبدال",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "9 shoppers asked in the last 7 days. We drafted it from your refund policy.",
+     "ar": "سأل 9 متسوقين خلال آخر 7 أيام. صغنا الإجابة من سياسة الاسترداد لديك.",
+     "status": "draft",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Review",
+     "ar": "راجع",
+     "status": "approved",
+     "context": "Shopify-Home · a · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Riyadh Open Abaya looks often come out wrong",
+     "ar": "إطلالات عباية الرياض المفتوحة لا تبدو صحيحة غالباً",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "31% said not right. The model's arm is raised in the product photo.",
+     "ar": "31% قالوا إنها غير مناسبة. ذراع العارضة مرفوعة في صورة المنتج.",
+     "status": "approved",
+     "context": "Shopify-Home · span · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Fix photo",
+     "ar": "أصلح الصورة",
+     "status": "approved",
+     "context": "Shopify-Home · a · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Learn more about <0>how we count sales</0>",
+     "ar": "اعرف المزيد عن <0>طريقة احتساب المبيعات</0>",
+     "status": "draft",
+     "context": "Shopify-Home · p · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Linked to your GrindCTRL account <0/><1>Change</1>",
+     "ar": "مرتبط بحساب GrindCTRL الخاص بك <0/><1>تغيير</1>",
+     "status": "draft",
+     "context": "Shopify-Home · p · under \"Needs you\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Shopify-Home · div · under \"Needs you\" · canvas-only note"
+    }
+   ]
+  },
+  {
+   "board": "Shopify-TryOn",
+   "title": "3 Try-On settings",
+   "title_ar": "3 إعدادات التجربة الافتراضية",
+   "screens": {
+    "en": "design/screens/shopify-app/desktop/03-Shopify-TryOn.webp",
+    "ar": "design/screens/shopify-app/ar/desktop/03-Shopify-TryOn.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Try-On settings",
+     "ar": "إعدادات التجربة",
+     "status": "approved",
+     "context": "Shopify-TryOn · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Unsaved changes",
+     "ar": "تغييرات غير محفوظة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of header"
+    },
+    {
+     "kind": "text",
+     "en": "Unsaved changes",
+     "ar": "تغييرات غير محفوظة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Discard",
+     "ar": "تجاهل",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Save",
+     "ar": "حفظ",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Store admin",
+     "ar": "إدارة المتجر",
+     "status": "approved",
+     "context": "Shopify-TryOn · span"
+    },
+    {
+     "kind": "text",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Shopify-TryOn · span"
+    },
+    {
+     "kind": "text",
+     "en": "Ctrl K",
+     "ar": "Ctrl K",
+     "status": "draft",
+     "context": "Shopify-TryOn · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Notifications",
+     "ar": "التنبيهات",
+     "status": "approved",
+     "context": "Shopify-TryOn · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-TryOn · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Shopify admin",
+     "ar": "إدارة Shopify",
+     "status": "approved",
+     "context": "Shopify-TryOn · aria-label of nav"
+    },
+    {
+     "kind": "text",
+     "en": "Home",
+     "ar": "الرئيسية",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Orders",
+     "ar": "الطلبات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Products",
+     "ar": "المنتجات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Customers",
+     "ar": "العملاء",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Content",
+     "ar": "المحتوى",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Analytics",
+     "ar": "الإحصاءات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Marketing",
+     "ar": "التسويق",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Discounts",
+     "ar": "الخصومات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales channels",
+     "ar": "قنوات البيع",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Online Store",
+     "ar": "المتجر الإلكتروني",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Apps",
+     "ar": "التطبيقات",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-TryOn · span"
+    },
+    {
+     "kind": "attr",
+     "en": "More actions",
+     "ar": "المزيد",
+     "status": "approved",
+     "context": "Shopify-TryOn · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Saved, live within a minute.",
+     "ar": "تم الحفظ، ويظهر في متجرك خلال دقيقة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · div"
+    },
+    {
+     "kind": "text",
+     "en": "Where it shows",
+     "ar": "أين يظهر",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "On for 28 products",
+     "ar": "يعمل في 28 منتجاً",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Checked in your live theme 3 minutes ago. Try-on uses each product's main photo.",
+     "ar": "تم التحقق في قالبك المنشور قبل 3 دقائق. تستخدم التجربة الصورة الرئيسية لكل منتج.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Riyadh Open Abaya",
+     "ar": "عباية الرياض المفتوحة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Flagged: 31% said not right. The model's arm is raised.",
+     "ar": "عليه ملاحظة: 31% قالوا إنها غير مناسبة. ذراع العارضة مرفوعة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Replace photo",
+     "ar": "استبدل الصورة",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Pause",
+     "ar": "إيقاف مؤقت",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Muscat Crepe Abaya",
+     "ar": "عباية مسقط الكريب",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Flagged: 14% said not right. Top half only.",
+     "ar": "عليه ملاحظة: 14% قالوا إنها غير مناسبة. الصورة للنصف العلوي فقط.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Replace photo",
+     "ar": "استبدل الصورة",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Pause",
+     "ar": "إيقاف مؤقت",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Nida Linen Abaya",
+     "ar": "عباية ندى الكتان",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Off: only a close-up of the fabric.",
+     "ar": "متوقف: لا توجد سوى صورة مقرّبة للقماش.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Add a photo",
+     "ar": "أضيفي صورة",
+     "status": "approved",
+     "context": "Shopify-TryOn · a · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Turn on for new products when their photo works",
+     "ar": "التفعيل للمنتجات الجديدة عندما تكون صورتها صالحة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Show on",
+     "ar": "يظهر على",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "All clothing",
+     "ar": "كل الملابس",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Pieces that can't be tried on are left out on their own",
+     "ar": "القطع التي لا يمكن تجربتها تُستبعد تلقائياً",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Collections I choose",
+     "ar": "مجموعات أختارها",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Where it shows\""
+    },
+    {
+     "kind": "text",
+     "en": "Button",
+     "ar": "الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "The Try it on button on your product pages and the pill on your collection cards.",
+     "ar": "زر التجربة في صفحات منتجاتك، وزر البطاقة على بطاقات المنتجات في مجموعاتك.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Style",
+     "ar": "النمط",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "attr",
+     "en": "Button style",
+     "ar": "نمط الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of div · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Filled",
+     "ar": "ممتلئ",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Button style\" · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Outline",
+     "ar": "بإطار",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Button style\" · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Link",
+     "ar": "رابط",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Button style\" · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Colours",
+     "ar": "الألوان",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Match my theme",
+     "ar": "طابِق قالبي",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Button colour",
+     "ar": "لون الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "attr",
+     "en": "Button colour #111111",
+     "ar": "لون الزر #111111",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of button · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Text colour",
+     "ar": "لون النص",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "attr",
+     "en": "Text colour #FFFFFF",
+     "ar": "لون النص #FFFFFF",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of button · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Corner radius",
+     "ar": "استدارة الحواف",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Product page button",
+     "ar": "زر صفحة المنتج",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenLabel}} of 40",
+     "ar": "{{lenLabel}} من 40",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenLabelAr}} of 40",
+     "ar": "{{lenLabelAr}} من 40",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Product card pill",
+     "ar": "زر بطاقة المنتج",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Shown on product cards in your collections.",
+     "ar": "يظهر على بطاقات المنتجات في مجموعاتك.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenPill}} of 24",
+     "ar": "{{lenPill}} من 24",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenPillAr}} of 24",
+     "ar": "{{lenPillAr}} من 24",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Leave one empty to reuse the other language.",
+     "ar": "اترك أحدهما فارغاً لاستخدام نص اللغة الأخرى.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Position",
+     "ar": "الموضع",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "The button is the GrindCTRL Try-On block in your product page template. Its place is set in your theme editor.",
+     "ar": "الزر هو قسم «GrindCTRL Try-On» في قالب صفحة المنتج. يُحدَّد موضعه في محرر القالب.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Move it in the theme editor",
+     "ar": "انقله في محرر القالب",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Button\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-on panel",
+     "ar": "لوحة التجربة",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "The panel that opens when a shopper taps Try it on.",
+     "ar": "اللوحة التي تُفتح عندما تضغط المتسوقة على زر التجربة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Background",
+     "ar": "الخلفية",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Try-on panel\""
+    },
+    {
+     "kind": "attr",
+     "en": "Panel background",
+     "ar": "خلفية اللوحة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of div · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Light",
+     "ar": "فاتح",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Panel background\" · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Dark",
+     "ar": "داكن",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Panel background\" · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Loading animation",
+     "ar": "حركة التحميل",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Try-on panel\""
+    },
+    {
+     "kind": "attr",
+     "en": "Loading animation",
+     "ar": "حركة التحميل",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of div · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Checklist steps",
+     "ar": "قائمة خطوات",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Loading animation\" · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Photo pulse",
+     "ar": "نبض الصورة",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Loading animation\" · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Progress bar",
+     "ar": "شريط التقدم",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Loading animation\" · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Loading steps",
+     "ar": "خطوات التحميل",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "Shown one after another while the look is made. Leave them empty to use the standard steps.",
+     "ar": "تظهر واحدة تلو الأخرى أثناء إنشاء الإطلالة. اتركها فارغة لاستخدام الخطوات القياسية.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Try-on panel\""
+    },
+    {
+     "kind": "attr",
+     "en": "Step 1",
+     "ar": "الخطوة 1",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of input · under \"Try-on panel\""
+    },
+    {
+     "kind": "attr",
+     "en": "Step 2",
+     "ar": "الخطوة 2",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of input · under \"Try-on panel\""
+    },
+    {
+     "kind": "attr",
+     "en": "Step 3",
+     "ar": "الخطوة 3",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of input · under \"Try-on panel\""
+    },
+    {
+     "kind": "text",
+     "en": "On the look",
+     "ar": "على الإطلالة",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "What shoppers can do after they see themselves in the piece.",
+     "ar": "ما يمكن للمتسوقين فعله بعد أن يروا أنفسهم بالقطعة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Adds the piece in the size they picked.",
+     "ar": "يضيف القطعة بالمقاس الذي اختارته المتسوقة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of button · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Save photo",
+     "ar": "احفظي",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Saves the look to the shopper's phone.",
+     "ar": "يحفظ الإطلالة على هاتف المتسوقة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Save photo",
+     "ar": "احفظي",
+     "status": "approved",
+     "context": "Shopify-TryOn · aria-label of button · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Send on WhatsApp",
+     "ar": "أرسلي على واتساب",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Opens WhatsApp with a short message about the piece. The shopper picks who gets it.",
+     "ar": "يفتح واتساب برسالة قصيرة عن القطعة، والمتسوقة تختار من ترسلها إليه.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Send on WhatsApp",
+     "ar": "أرسلي على واتساب",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of button · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Try with a different photo",
+     "ar": "جربي بصورة مختلفة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Starts again with a new photo.",
+     "ar": "يبدأ من جديد بصورة جديدة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Try with a different photo",
+     "ar": "جربي بصورة مختلفة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of button · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Note under each look",
+     "ar": "الملاحظة أسفل كل إطلالة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Up to 300 characters. Leave both empty to use the standard note.",
+     "ar": "حتى 300 حرف. اتركهما فارغين لاستخدام الملاحظة القياسية.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenNote}} of 300",
+     "ar": "{{lenNote}} من 300",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "{{lenNoteAr}} of 300",
+     "ar": "{{lenNoteAr}} من 300",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"On the look\""
+    },
+    {
+     "kind": "text",
+     "en": "Privacy",
+     "ar": "الخصوصية",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Each photo goes to our try-on service, makes one look, then is deleted. Shoppers can keep their photo and looks on their own phone for 24 hours. You only see a look a shopper sends you.",
+     "ar": "تُرسل كل صورة إلى خدمة التجربة لدينا لصنع إطلالة واحدة، ثم تُحذف. يمكن للمتسوقين الاحتفاظ بصورهم وإطلالاتهم على هواتفهم لمدة 24 ساعة. ولا ترى أنت إلا الإطلالة التي ترسلها إليك متسوقة.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Privacy\""
+    },
+    {
+     "kind": "text",
+     "en": "Show \"Your photo is deleted after each look\" under the button",
+     "ar": "عرض \"صورتكِ تُحذف بعد كل إطلالة\" أسفل الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Privacy\""
+    },
+    {
+     "kind": "text",
+     "en": "See what shoppers read",
+     "ar": "عرض ما يقرؤه المتسوقون",
+     "status": "draft",
+     "context": "Shopify-TryOn · a · under \"Privacy\""
+    },
+    {
+     "kind": "text",
+     "en": "Limits",
+     "ar": "الحدود",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Looks per shopper each day",
+     "ar": "الإطلالات لكل متسوقة يومياً",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Limits\""
+    },
+    {
+     "kind": "text",
+     "en": "When your looks run out",
+     "ar": "عندما تنفد إطلالاتك",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Limits\""
+    },
+    {
+     "kind": "text",
+     "en": "Hide the button",
+     "ar": "إخفاء الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Limits\""
+    },
+    {
+     "kind": "text",
+     "en": "Shoppers never see an error",
+     "ar": "لا يرى المتسوقون أي خطأ",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Limits\""
+    },
+    {
+     "kind": "text",
+     "en": "Keep going with top-ups, up to your spending cap",
+     "ar": "الاستمرار بالإضافات التلقائية حتى حد الإنفاق",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · under \"Limits\""
+    },
+    {
+     "kind": "attr",
+     "en": "Preview",
+     "ar": "معاينة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of aside · under \"Limits\""
+    },
+    {
+     "kind": "text",
+     "en": "Preview",
+     "ar": "معاينة",
+     "status": "draft",
+     "context": "Shopify-TryOn · h2 · in \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Unsaved changes included",
+     "ar": "يشمل التغييرات غير المحفوظة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "attr",
+     "en": "Preview state",
+     "ar": "حالة المعاينة",
+     "status": "draft",
+     "context": "Shopify-TryOn · aria-label of div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Button",
+     "ar": "الزر",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Card pill",
+     "ar": "زر البطاقة",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Photo",
+     "ar": "الصورة",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Making",
+     "ar": "قيد الإنشاء",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Look",
+     "ar": "الإطلالة",
+     "status": "approved",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Problem",
+     "ar": "مشكلة",
+     "status": "draft",
+     "context": "Shopify-TryOn · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Your photo is deleted after each look",
+     "ar": "تُحذف صورتكِ بعد كل إطلالة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Abayas",
+     "ar": "العبايات",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "4 of 24",
+     "ar": "4 من 24",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Zahra Occasion Abaya",
+     "ar": "عباية زهرة للمناسبات",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Riyadh Open Abaya",
+     "ar": "عباية الرياض المفتوحة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Muscat Crepe Abaya",
+     "ar": "عباية مسقط الكريب",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Add a photo of you",
+     "ar": "أضيفي صورة لكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Full body, good light, standing straight",
+     "ar": "الجسم كاملاً، إضاءة جيدة، وقفة مستقيمة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Take a photo",
+     "ar": "التقطي صورة",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Choose from my photos",
+     "ar": "اختاري من صوري",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "No photo? Use a model like you",
+     "ar": "بدون صورة؟ استخدمي عارضة تشبهكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Making your look",
+     "ar": "نجهّز إطلالتكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Keep browsing, I'll tell you when it's ready",
+     "ar": "تابعي التصفح، وسأخبركِ عندما تجهز",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "AI preview",
+     "ar": "معاينة بالذكاء الاصطناعي",
+     "status": "approved",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla, Black",
+     "ar": "ليلى، أسود",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart · M",
+     "ar": "أضيفي إلى السلة · M",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Save photo",
+     "ar": "احفظي",
+     "status": "approved",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Send on WhatsApp",
+     "ar": "أرسلي على واتساب",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Try with a different photo",
+     "ar": "جربي بصورة مختلفة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "We need to see all of you",
+     "ar": "نحتاج أن نراكِ كاملة",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Your feet were cut off, so the length would come out wrong. Stand a little further back.",
+     "ar": "قدماكِ لم تظهرا في الصورة، لذلك سيبدو الطول غير صحيح. ابتعدي قليلاً إلى الخلف.",
+     "status": "draft",
+     "context": "Shopify-TryOn · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Try another photo",
+     "ar": "جربي صورة أخرى",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Shopify-TryOn · div · under \"Preview\" · canvas-only note"
+    },
+    {
+     "kind": "js",
+     "en": "Reading your photo",
+     "ar": "نحلّل صورتكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 326"
+    },
+    {
+     "kind": "js",
+     "en": "Fitting the garment",
+     "ar": "نضبط القطعة عليكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 326"
+    },
+    {
+     "kind": "js",
+     "en": "Rendering your look",
+     "ar": "نضع اللمسات الأخيرة على إطلالتكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 326"
+    },
+    {
+     "kind": "js",
+     "en": "Try it on with AI",
+     "ar": "جربيها عليكِ بالذكاء الاصطناعي",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 348 · labelShown · shown via {{labelShown}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Try on",
+     "ar": "جربي",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 349 · pillShown · shown via {{pillShown}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Reading your photo",
+     "ar": "نحلّل صورتكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 352 · step1Shown · shown via {{step1Shown}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Fitting the garment",
+     "ar": "نضبط القطعة عليكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 352 · step2Shown · shown via {{step2Shown}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Rendering your look",
+     "ar": "نضع اللمسات الأخيرة على إطلالتكِ",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 352 · step3Shown · shown via {{step3Shown}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "This preview is visual guidance only and is not an exact sizing guarantee. Colors may vary slightly from the actual product.",
+     "ar": "هذه المعاينة للتوضيح فقط ولا تضمن دقة المقاس. قد تختلف الألوان قليلاً عن المنتج الحقيقي.",
+     "status": "draft",
+     "context": "Shopify-TryOn · script line 355 · noteShown · shown via {{noteShown}} in text"
+    }
+   ]
+  },
+  {
+   "board": "Shopify-Chat",
+   "title": "4 Store Chat settings",
+   "title_ar": "4 إعدادات دردشة المتجر",
+   "screens": {
+    "en": "design/screens/shopify-app/desktop/04-Shopify-Chat.webp",
+    "ar": "design/screens/shopify-app/ar/desktop/04-Shopify-Chat.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Store Chat settings",
+     "ar": "إعدادات الدردشة",
+     "status": "approved",
+     "context": "Shopify-Chat · document title"
+    },
+    {
+     "kind": "attr",
+     "en": "Unsaved changes",
+     "ar": "تغييرات غير محفوظة",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of header"
+    },
+    {
+     "kind": "text",
+     "en": "Unsaved changes",
+     "ar": "تغييرات غير محفوظة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Discard",
+     "ar": "تجاهل",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Save",
+     "ar": "حفظ",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Unsaved changes\""
+    },
+    {
+     "kind": "text",
+     "en": "Store admin",
+     "ar": "إدارة المتجر",
+     "status": "approved",
+     "context": "Shopify-Chat · span"
+    },
+    {
+     "kind": "text",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Shopify-Chat · span"
+    },
+    {
+     "kind": "text",
+     "en": "Ctrl K",
+     "ar": "Ctrl K",
+     "status": "draft",
+     "context": "Shopify-Chat · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Notifications",
+     "ar": "التنبيهات",
+     "status": "approved",
+     "context": "Shopify-Chat · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Chat · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Shopify admin",
+     "ar": "إدارة Shopify",
+     "status": "approved",
+     "context": "Shopify-Chat · aria-label of nav"
+    },
+    {
+     "kind": "text",
+     "en": "Home",
+     "ar": "الرئيسية",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Orders",
+     "ar": "الطلبات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Products",
+     "ar": "المنتجات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Customers",
+     "ar": "العملاء",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Content",
+     "ar": "المحتوى",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Analytics",
+     "ar": "الإحصاءات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Marketing",
+     "ar": "التسويق",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Discounts",
+     "ar": "الخصومات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales channels",
+     "ar": "قنوات البيع",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Online Store",
+     "ar": "المتجر الإلكتروني",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Apps",
+     "ar": "التطبيقات",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Chat · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Chat · span"
+    },
+    {
+     "kind": "attr",
+     "en": "More actions",
+     "ar": "المزيد",
+     "status": "approved",
+     "context": "Shopify-Chat · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Chat · h1"
+    },
+    {
+     "kind": "text",
+     "en": "Live on maisonnoor.com",
+     "ar": "تعمل على maisonnoor.com",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Hidden from shoppers",
+     "ar": "مخفية عن المتسوقين",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Every change shows in the preview first. Shoppers see it when you publish.",
+     "ar": "يظهر كل تغيير في المعاينة أولًا. ويراه المتسوقون عندما تنشر.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Store Chat\""
+    },
+    {
+     "kind": "attr",
+     "en": "Changes not live yet",
+     "ar": "تغييرات لم تُنشر بعد",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of div · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Your changes are saved. Shoppers still see the published version.",
+     "ar": "تم حفظ تغييراتك. وما زال المتسوقون يرون النسخة المنشورة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Changes not live yet\" · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Publish to your store",
+     "ar": "انشر في متجرك",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Changes not live yet\" · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Review changes",
+     "ar": "راجع التغييرات",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Changes not live yet\" · under \"Store Chat\""
+    },
+    {
+     "kind": "text",
+     "en": "Questions it couldn't answer",
+     "ar": "أسئلة لم يستطع الإجابة عنها",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "3 to review",
+     "ar": "3 للمراجعة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Can I exchange after 14 days?",
+     "ar": "هل يمكنني الاستبدال بعد 14 يومًا؟",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Asked 9 times in the last 7 days, 7 of them in Arabic",
+     "ar": "سُئل 9 مرات في آخر 7 أيام، منها 7 بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Suggested answer<0>from your refund policy</0>",
+     "ar": "إجابة مقترحة<0>من سياسة الاسترداد لديك</0>",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Yes. Exchanges are free within 30 days if the piece is unworn and still has its tags. Refunds are within 14 days. Send your order number here and I'll pass it to the team to arrange.",
+     "ar": "أيوه، الاستبدال مجاني خلال 30 يوم لو القطعة ما اتلبستش وعليها التيكت. استرجاع الفلوس خلال 14 يوم بس. ابعتي رقم الأوردر هنا وهبلّغ الفريق يرتّبوا كل حاجة.",
+     "status": "approved",
+     "context": "Shopify-Chat · p · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Approve",
+     "ar": "وافق",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Edit",
+     "ar": "تعديل",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Send to my team instead",
+     "ar": "إرسال إلى فريقي بدلاً من ذلك",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Do you ship to Saudi Arabia?",
+     "ar": "هل تشحنون إلى السعودية؟",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Asked 6 times. Nothing in your store answers it yet.",
+     "ar": "طُرح 6 مرات. ولا يوجد في متجرك ما يجيب عنه بعد.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Answer",
+     "ar": "إجابة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Does the Zahra abaya come in a petite length?",
+     "ar": "هل تتوفر عباية زهرة بطول للقامة القصيرة؟",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Asked 4 times. An answer is ready from the product description.",
+     "ar": "سُئل 4 مرات. توجد إجابة جاهزة من وصف المنتج.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Review",
+     "ar": "راجع",
+     "status": "approved",
+     "context": "Shopify-Chat · button · under \"Questions it couldn't answer\""
+    },
+    {
+     "kind": "text",
+     "en": "Where it appears",
+     "ar": "أين تظهر",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Where shoppers find the chat on your store.",
+     "ar": "أين يجد المتسوقون الدردشة في متجرك.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Chat bubble",
+     "ar": "فقاعة الدردشة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Bottom left",
+     "ar": "أسفل اليسار",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Bottom right",
+     "ar": "أسفل اليمين",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Bottom corner of every page, except checkout.",
+     "ar": "الزاوية السفلية من كل صفحة، عدا صفحة الدفع.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Stay above your Add to cart bar",
+     "ar": "اجعلها فوق شريط الإضافة إلى السلة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Your product pages have a sticky bar on phones. The bubble sits 96 px higher there, so it never hides the button.",
+     "ar": "في صفحات منتجاتك شريط ثابت على الهواتف. لذلك ترتفع الفقاعة هناك 96 بكسل، فلا تُخفي الزر أبدًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask from the product page",
+     "ar": "السؤال من صفحة المنتج",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Adds a quiet \"Questions about this piece?\" line under Add to cart.",
+     "ar": "يضيف سطرًا هادئًا «أسئلة عن هذه القطعة؟» تحت زر الإضافة إلى السلة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Hide on some pages",
+     "ar": "أخفِها في بعض الصفحات",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Hide the chat on pages whose address contains",
+     "ar": "أخفِ الدردشة في الصفحات التي يحتوي عنوانها على",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "/pages/wholesale",
+     "ar": "/pages/wholesale",
+     "status": "draft",
+     "context": "Shopify-Chat · bdi · under \"Where it appears\""
+    },
+    {
+     "kind": "attr",
+     "en": "Remove /pages/wholesale",
+     "ar": "أزل /pages/wholesale",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of button · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "/account",
+     "ar": "/account",
+     "status": "draft",
+     "context": "Shopify-Chat · bdi · under \"Where it appears\""
+    },
+    {
+     "kind": "attr",
+     "en": "Remove /account",
+     "ar": "أزل /account",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of button · under \"Where it appears\""
+    },
+    {
+     "kind": "attr",
+     "en": "/collections/sale",
+     "ar": "/collections/sale",
+     "status": "draft",
+     "context": "Shopify-Chat · placeholder of input · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Add",
+     "ar": "إضافة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "First hello",
+     "ar": "التحية الأولى",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "A small bubble 6 seconds after the page loads.",
+     "ar": "فقاعة صغيرة تظهر بعد 6 ثوانٍ من تحميل الصفحة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "It never shows while the product page line is visible.",
+     "ar": "لا تظهر أبدًا ما دام سطر صفحة المنتج ظاهرًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Where it appears\""
+    },
+    {
+     "kind": "text",
+     "en": "Look",
+     "ar": "الإطلالة",
+     "status": "approved",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "How the chat looks on your store.",
+     "ar": "شكل الدردشة في متجرك.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Launcher icon",
+     "ar": "أيقونة زر الدردشة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Chat",
+     "ar": "الدردشة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Help",
+     "ar": "المساعدة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Brand colour",
+     "ar": "لون العلامة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Brand colour",
+     "ar": "لون العلامة",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Match my theme",
+     "ar": "طابِق قالبي",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Used for the chat bubble and buttons.",
+     "ar": "يُستخدم لفقاعة الدردشة والأزرار.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Easy to read",
+     "ar": "سهولة القراءة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Text on the button passes the contrast check, 18 to 1.",
+     "ar": "نص الزر يجتاز فحص التباين، بنسبة 18 إلى 1.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Passes",
+     "ar": "ناجح",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Corners",
+     "ar": "الحواف",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Soft",
+     "ar": "ناعمة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Round",
+     "ar": "دائرية",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Sharp",
+     "ar": "حادة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Theme",
+     "ar": "المظهر",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Automatic",
+     "ar": "تلقائي",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Light",
+     "ar": "فاتح",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Dark",
+     "ar": "داكن",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Launcher label",
+     "ar": "نص زر الدردشة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Launcher label in English",
+     "ar": "نص زر الدردشة بالإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic",
+     "ar": "العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "attr",
+     "en": "Launcher label in Arabic",
+     "ar": "نص زر الدردشة بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Leave empty for an icon-only button.",
+     "ar": "اتركه فارغًا ليظهر الزر بأيقونة فقط.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Look\""
+    },
+    {
+     "kind": "text",
+     "en": "Welcome screen",
+     "ar": "شاشة الترحيب",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "What shoppers see when they open the chat. Write it once in each language.",
+     "ar": "ما يراه المتسوقون عند فتح الدردشة. اكتبه مرة واحدة بكل لغة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Title",
+     "ar": "العنوان",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Welcome title in English",
+     "ar": "عنوان الترحيب بالإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic",
+     "ar": "العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Welcome title in Arabic",
+     "ar": "عنوان الترحيب بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Message",
+     "ar": "رسالتك",
+     "status": "approved",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Welcome message in English",
+     "ar": "رسالة الترحيب بالإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of textarea · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic",
+     "ar": "العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Welcome message in Arabic",
+     "ar": "رسالة الترحيب بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of textarea · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Message box hint",
+     "ar": "تلميح خانة الرسالة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Message box hint in English",
+     "ar": "تلميح خانة الرسالة بالإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of textarea · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic",
+     "ar": "العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "attr",
+     "en": "Message box hint in Arabic",
+     "ar": "تلميح خانة الرسالة بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of textarea · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Shown in the empty message box.",
+     "ar": "يظهر في خانة الرسالة وهي فارغة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Welcome screen\""
+    },
+    {
+     "kind": "text",
+     "en": "Assistant",
+     "ar": "المساعد",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "How the assistant answers shoppers.",
+     "ar": "طريقة رد المساعد على المتسوقين.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Assistant replies",
+     "ar": "ردود المساعد",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "The assistant answers first. Turn it off and every question waits for your team.",
+     "ar": "يرد المساعد أولًا. وإذا أوقفته، ينتظر كل سؤال فريقك.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Assistant name",
+     "ar": "اسم المساعد",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Tone",
+     "ar": "نبرة الرد",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Friendly",
+     "ar": "ودودة",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Professional",
+     "ar": "مهنية",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Concise",
+     "ar": "موجزة",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Warm",
+     "ar": "دافئة",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Reply language",
+     "ar": "لغة الرد",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Match the shopper",
+     "ar": "حسب لغة المتسوقة",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "English",
+     "ar": "الإنجليزية",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic",
+     "ar": "العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · option · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic dialect",
+     "ar": "اللهجة العربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Egyptian by default. It switches to Gulf or Levantine when the shopper writes that way.",
+     "ar": "المصرية افتراضيًا. وتتحول إلى الخليجية أو الشامية عندما تكتب المتسوقة بها.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Egyptian, follows the shopper",
+     "ar": "المصرية، وتتبع المتسوقة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "In Arabic, speak to shoppers as",
+     "ar": "صيغة مخاطبة المتسوقين بالعربية",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Women",
+     "ar": "النساء",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Men",
+     "ar": "الرجال",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Everyone",
+     "ar": "الجميع",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Arabic changes with who you speak to. It switches as soon as a shopper's own words show otherwise.",
+     "ar": "تختلف صيغ العربية حسب من تخاطبه. ويغيّر المساعد الصيغة فور أن تدل كلمات من يراسله على غير ذلك.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Answer Franco in Franco",
+     "ar": "رُدّ بالفرانكو على من يكتب بالفرانكو",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "When a shopper writes Arabic in English letters, like \"3ayez\", it replies the same way.",
+     "ar": "عندما تكتب المتسوقة العربية بحروف إنجليزية، مثل «3ayez»، يرد بالطريقة نفسها.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "Anything the assistant should always know",
+     "ar": "ما يجب أن يعرفه المساعد دائمًا",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "We deliver within Egypt only. Exchanges are free within 30 days if the piece is unworn with tags. Never promise a delivery date outside Cairo.",
+     "ar": "نوصّل داخل مصر فقط. الاستبدال مجاني خلال 30 يومًا إذا كانت القطعة غير ملبوسة وعليها البطاقات. لا تَعِد أبدًا بموعد توصيل خارج القاهرة.",
+     "status": "draft",
+     "context": "Shopify-Chat · textarea · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "About how you support customers. Facts and rules work best.",
+     "ar": "عن طريقة دعمك لعملائك. الحقائق والقواعد تعطي أفضل النتائج.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "142 of 2,000",
+     "ar": "142 من 2,000",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Assistant\""
+    },
+    {
+     "kind": "text",
+     "en": "When to bring in a person",
+     "ar": "متى يتدخل شخص من الفريق",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "The assistant tells the shopper a person will reply, and your team gets an email.",
+     "ar": "يخبر المساعد المتسوقة بأن شخصًا من الفريق سيرد، ويصل إلى فريقك بريد إلكتروني.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Offer a person when the shopper asks",
+     "ar": "اعرض شخصًا من الفريق عندما تطلب المتسوقة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "The chat moves to your team in the inbox.",
+     "ar": "تنتقل المحادثة إلى فريقك في الرسائل.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Requests to refund, exchange or change an order",
+     "ar": "طلبات الاسترداد أو الاستبدال أو تعديل الطلب",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "It still answers questions about your policies, like how long exchanges take.",
+     "ar": "يظل المساعد يجيب عن أسئلة سياساتك، مثل المدة التي يستغرقها الاستبدال.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "The shopper seems upset",
+     "ar": "تبدو المتسوقة منزعجة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Big orders",
+     "ar": "الطلبات الكبيرة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Over EGP 10,000, or 5 or more of one piece",
+     "ar": "أكثر من 10,000 ج.م، أو 5 قطع أو أكثر من الصنف نفسه",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask where to reply when nobody can answer now",
+     "ar": "اسأل أين نرد عندما لا يتوفر أحد للرد الآن",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "The assistant asks once for an email address, so your team can reply later.",
+     "ar": "يطلب المساعد عنوان البريد الإلكتروني مرة واحدة، ليتمكن فريقك من الرد لاحقًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Also ask outside opening hours",
+     "ar": "اسأل أيضًا خارج ساعات العمل",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"When to bring in a person\""
+    },
+    {
+     "kind": "text",
+     "en": "Photos and orders",
+     "ar": "الصور والطلبات",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Shoppers can show a problem and check an order without waiting for your team.",
+     "ar": "يمكن للمتسوقين عرض المشكلة ومتابعة الطلب دون انتظار فريقك.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Let shoppers send a photo",
+     "ar": "اسمح للمتسوقين بإرسال صورة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "JPEG, PNG or WebP up to 5 MB. Location data is removed and photos are kept 90 days.",
+     "ar": "JPEG أو PNG أو WebP حتى 5 ميجابايت. تُحذف بيانات الموقع وتُحفظ الصور 90 يومًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Describe what the photo shows",
+     "ar": "صِف ما تُظهره الصورة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Labels like Looks damaged or Looks like a size problem, for your team.",
+     "ar": "تصنيفات لفريقك مثل «يبدو تالفًا» أو «تبدو مشكلة مقاس».",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Look up order status and tracking",
+     "ar": "استعلم عن حالة الطلب وتتبّعه",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "With the order number and the email on the order.",
+     "ar": "برقم الطلب والبريد الإلكتروني المسجل في الطلب.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Order access approved for this store",
+     "ar": "تمت الموافقة على الوصول إلى الطلبات لهذا المتجر",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Photos and orders\""
+    },
+    {
+     "kind": "text",
+     "en": "Who gets alerted",
+     "ar": "من يصله التنبيه",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "When a shopper needs a person.",
+     "ar": "عندما تحتاج متسوقة إلى شخص من الفريق.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Email when a shopper needs a person",
+     "ar": "أرسل بريدًا إلكترونيًا عندما تحتاج متسوقة إلى شخص من الفريق",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Up to 5 addresses, at most 10 emails an hour.",
+     "ar": "حتى 5 عناوين، وبحد أقصى 10 رسائل في الساعة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Who gets alerted\""
+    },
+    {
+     "kind": "attr",
+     "en": "Alert emails",
+     "ar": "عناوين بريد التنبيهات",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of div · under \"Who gets alerted\""
+    },
+    {
+     "kind": "attr",
+     "en": "Remove hana@maisonnoor.com",
+     "ar": "أزل hana@maisonnoor.com",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of button · in \"Alert emails\" · under \"Who gets alerted\""
+    },
+    {
+     "kind": "attr",
+     "en": "Remove nour@maisonnoor.com",
+     "ar": "أزل nour@maisonnoor.com",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of button · in \"Alert emails\" · under \"Who gets alerted\""
+    },
+    {
+     "kind": "attr",
+     "en": "Add an email address",
+     "ar": "أضف عنوان بريد إلكتروني",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of input · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Add",
+     "ar": "إضافة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Alert whoever is on shift, on WhatsApp",
+     "ar": "نبّه من في المناوبة على واتساب",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Nour is on shift now.",
+     "ar": "نور في المناوبة الآن.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Team and shifts",
+     "ar": "الفريق والمناوبات",
+     "status": "draft",
+     "context": "Shopify-Chat · a · under \"Who gets alerted\""
+    },
+    {
+     "kind": "text",
+     "en": "Opening hours",
+     "ar": "ساعات العمل",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Business hours",
+     "ar": "مواعيد العمل",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Opening hours\""
+    },
+    {
+     "kind": "text",
+     "en": "Saturday to Thursday 10 am to 10 pm, Friday 2 pm to 10 pm, Cairo time.",
+     "ar": "من السبت إلى الخميس من 10 ص إلى 10 م، والجمعة من 2 م إلى 10 م، بتوقيت القاهرة.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Opening hours\""
+    },
+    {
+     "kind": "text",
+     "en": "Outside them the assistant keeps answering and asks where the team should reply.",
+     "ar": "خارج هذه الساعات يواصل المساعد الرد، ويسأل أين يرد الفريق.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Opening hours\""
+    },
+    {
+     "kind": "text",
+     "en": "Change",
+     "ar": "تغيير",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Opening hours\""
+    },
+    {
+     "kind": "text",
+     "en": "Installation",
+     "ar": "التثبيت",
+     "status": "draft",
+     "context": "Shopify-Chat · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Installed in Dawn as the GRINDCTRL Store Chat app embed.",
+     "ar": "مثبّتة في Dawn عبر تضمين التطبيق «GRINDCTRL Store Chat».",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Last storefront check 2 min ago.",
+     "ar": "آخر فحص لواجهة المتجر قبل دقيقتين.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Open theme editor",
+     "ar": "افتح محرر القالب",
+     "status": "draft",
+     "context": "Shopify-Chat · a · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Test it now",
+     "ar": "اختبرها الآن",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Not on Shopify?",
+     "ar": "متجرك ليس على Shopify؟",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Copy the script",
+     "ar": "انسخ الكود",
+     "status": "draft",
+     "context": "Shopify-Chat · a · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Published version 14",
+     "ar": "النسخة المنشورة 14",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Revert to previous version",
+     "ar": "استعد النسخة السابقة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Disconnect this store",
+     "ar": "افصل هذا المتجر",
+     "status": "draft",
+     "context": "Shopify-Chat · a · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat in Shopify and your data stay in place.",
+     "ar": "تبقى دردشة المتجر في Shopify وبياناتك كما هي.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"Installation\""
+    },
+    {
+     "kind": "text",
+     "en": "Connected",
+     "ar": "متصل",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"WhatsApp\""
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor, <0/>. Used to reply after hours and to send looks that shoppers ask for.",
+     "ar": "ميزون نور، <0/>. يُستخدم للرد بعد ساعات العمل ولإرسال الإطلالات التي يطلبها المتسوقون.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"WhatsApp\""
+    },
+    {
+     "kind": "text",
+     "en": "3 message templates approved by WhatsApp: Your look, We're back, Order update. Shoppers get a message only after they ask for one.",
+     "ar": "3 قوالب رسائل معتمدة من واتساب: إطلالتكِ، عدنا، تحديث الطلب. لا تصل المتسوقين أي رسالة إلا بعد أن يطلبوها.",
+     "status": "draft",
+     "context": "Shopify-Chat · span · under \"WhatsApp\""
+    },
+    {
+     "kind": "text",
+     "en": "Manage",
+     "ar": "إدارة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · under \"WhatsApp\""
+    },
+    {
+     "kind": "attr",
+     "en": "Preview",
+     "ar": "معاينة",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of aside · under \"WhatsApp\""
+    },
+    {
+     "kind": "text",
+     "en": "Preview",
+     "ar": "معاينة",
+     "status": "draft",
+     "context": "Shopify-Chat · h2 · in \"Preview\""
+    },
+    {
+     "kind": "attr",
+     "en": "Preview language",
+     "ar": "لغة المعاينة",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "attr",
+     "en": "Preview state",
+     "ar": "حالة المعاينة",
+     "status": "draft",
+     "context": "Shopify-Chat · aria-label of div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Bubble",
+     "ar": "الفقاعة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Open",
+     "ar": "مفتوحة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Answer",
+     "ar": "إجابة",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Team",
+     "ar": "الفريق",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "After hours",
+     "ar": "خارج ساعات العمل",
+     "status": "draft",
+     "context": "Shopify-Chat · button · in \"Preview state\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "MAISON NOOR",
+     "ar": "ميزون نور",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Layla Embroidered Abaya",
+     "ar": "عباية ليلى المطرزة",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Questions about this abaya?",
+     "ar": "عندكِ أسئلة عن هذه العباية؟",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Add to cart",
+     "ar": "أضيفي إلى السلة",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask us",
+     "ar": "اسألينا",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Team here until 10 pm",
+     "ar": "الفريق متاح حتى 10 مساءً",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Welcome to Maison Noor",
+     "ar": "أهلاً بكِ في ميزون نور",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Hi, I can help with sizes, delivery, exchanges or anything in the store. What would you like to know?",
+     "ar": "أهلاً! أقدر أساعدك في المقاسات والتوصيل والاستبدال أو أي حاجة في المتجر. تحبي تعرفي إيه؟",
+     "status": "approved",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Track my order",
+     "ar": "تتبعي طلبكِ",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Sizes and fit",
+     "ar": "المقاسات والقصّة",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Delivery and exchange",
+     "ar": "التوصيل والاستبدال",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about sizes, delivery or an order",
+     "ar": "اسألي عن المقاسات أو التوصيل أو أي طلب",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Team here until 10 pm",
+     "ar": "الفريق متاح حتى 10 مساءً",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Can I exchange after 14 days?",
+     "ar": "هل يمكنني الاستبدال بعد 14 يومًا؟",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Yes. Exchanges are free within 30 days if it's unworn with tags. Send your order number and I'll pass it to the team.",
+     "ar": "أيوه، الاستبدال مجاني خلال 30 يوم لو القطعة ما اتلبستش وعليها التيكت. ابعتي رقم الأوردر وهبلّغ الفريق.",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about sizes, delivery or an order",
+     "ar": "اسألي عن المقاسات أو التوصيل أو أي طلب",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Nour, Maison Noor",
+     "ar": "نور، ميزون نور",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Online now",
+     "ar": "متصلة الآن",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "I want to change my delivery address",
+     "ar": "عايزة أغيّر عنوان التوصيل",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "I've passed this to the team with your order number. Nour usually replies in about 10 minutes.",
+     "ar": "بلّغت الفريق ومعاهم رقم طلبك. نور عادةً بترد خلال 10 دقايق تقريبًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Our team joined the conversation",
+     "ar": "انضم فريقنا إلى المحادثة",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Hi Salma, send me the new address and I'll update it now.",
+     "ar": "أهلًا يا سلمى، ابعتيلي العنوان الجديد وهحدّثه حالًا.",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about sizes, delivery or an order",
+     "ar": "اسألي عن المقاسات أو التوصيل أو أي طلب",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Team back at 10 am",
+     "ar": "الفريق يعود الساعة 10 صباحًا",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Can I pay in installments?",
+     "ar": "ينفع أدفع بالتقسيط؟",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "The team is away until 10 am Cairo time. Leave your email and they will reply there.",
+     "ar": "الفريق مش موجود دلوقتي لحد الساعة 10 الصبح بتوقيت القاهرة. سيبي إيميلك وهيردّوا عليكِ هناك.",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Where should we reply?",
+     "ar": "أين نرد عليكِ؟",
+     "status": "draft",
+     "context": "Shopify-Chat · span · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Send",
+     "ar": "أرسلي",
+     "status": "approved",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Not now",
+     "ar": "ليس الآن",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Ask about sizes, delivery or an order",
+     "ar": "اسألي عن المقاسات أو التوصيل أو أي طلب",
+     "status": "draft",
+     "context": "Shopify-Chat · div · in \"Preview\" · under \"Preview\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Shopify-Chat · div · under \"Preview\" · canvas-only note"
+    },
+    {
+     "kind": "js",
+     "en": "3 changes not live yet",
+     "ar": "3 تغييرات لم تُنشر بعد",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 375 · changesText · shown via {{changesText}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "2 changes not live yet",
+     "ar": "تغييران لم يُنشرا بعد",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 375 · changesText · shown via {{changesText}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Store Chat is on",
+     "ar": "دردشة المتجر تعمل",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 377 · onText · shown via {{onText}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Store Chat is off",
+     "ar": "دردشة المتجر متوقفة",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 377 · onText · shown via {{onText}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Turn off",
+     "ar": "إيقاف",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 378 · onBtn · shown via {{onBtn}} in text"
+    },
+    {
+     "kind": "js",
+     "en": "Turn on Store Chat",
+     "ar": "تشغيل دردشة المتجر",
+     "status": "draft",
+     "context": "Shopify-Chat · script line 378 · onBtn · shown via {{onBtn}} in text"
+    }
+   ]
+  },
+  {
+   "board": "Shopify-Plans",
+   "title": "5 Plans and usage",
+   "title_ar": "5 الباقات والاستخدام",
+   "screens": {
+    "en": "design/screens/shopify-app/desktop/05-Shopify-Plans.webp",
+    "ar": "design/screens/shopify-app/ar/desktop/05-Shopify-Plans.webp"
+   },
+   "strings": [
+    {
+     "kind": "title",
+     "en": "Plans and usage",
+     "ar": "الباقات والاستخدام",
+     "status": "draft",
+     "context": "Shopify-Plans · document title"
+    },
+    {
+     "kind": "text",
+     "en": "Store admin",
+     "ar": "إدارة المتجر",
+     "status": "approved",
+     "context": "Shopify-Plans · span"
+    },
+    {
+     "kind": "text",
+     "en": "Search",
+     "ar": "بحث",
+     "status": "approved",
+     "context": "Shopify-Plans · span"
+    },
+    {
+     "kind": "text",
+     "en": "Ctrl K",
+     "ar": "Ctrl K",
+     "status": "draft",
+     "context": "Shopify-Plans · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Notifications",
+     "ar": "التنبيهات",
+     "status": "approved",
+     "context": "Shopify-Plans · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Maison Noor",
+     "ar": "ميزون نور",
+     "status": "approved",
+     "context": "Shopify-Plans · span"
+    },
+    {
+     "kind": "attr",
+     "en": "Shopify admin",
+     "ar": "إدارة Shopify",
+     "status": "approved",
+     "context": "Shopify-Plans · aria-label of nav"
+    },
+    {
+     "kind": "text",
+     "en": "Home",
+     "ar": "الرئيسية",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Orders",
+     "ar": "الطلبات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Products",
+     "ar": "المنتجات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Customers",
+     "ar": "العملاء",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Content",
+     "ar": "المحتوى",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Analytics",
+     "ar": "الإحصاءات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Marketing",
+     "ar": "التسويق",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Discounts",
+     "ar": "الخصومات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Sales channels",
+     "ar": "قنوات البيع",
+     "status": "approved",
+     "context": "Shopify-Plans · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Online Store",
+     "ar": "المتجر الإلكتروني",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Apps",
+     "ar": "التطبيقات",
+     "status": "approved",
+     "context": "Shopify-Plans · span · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Try-On",
+     "ar": "التجربة الافتراضية",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Settings",
+     "ar": "الإعدادات",
+     "status": "approved",
+     "context": "Shopify-Plans · a · in \"Shopify admin\""
+    },
+    {
+     "kind": "text",
+     "en": "Plans",
+     "ar": "الباقات",
+     "status": "approved",
+     "context": "Shopify-Plans · span"
+    },
+    {
+     "kind": "attr",
+     "en": "More actions",
+     "ar": "المزيد",
+     "status": "approved",
+     "context": "Shopify-Plans · aria-label of button"
+    },
+    {
+     "kind": "text",
+     "en": "Looks this cycle",
+     "ar": "الإطلالات في هذه الدورة",
+     "status": "approved",
+     "context": "Shopify-Plans · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Runs out about 12 Oct",
+     "ar": "تنفد تقريباً يوم 12 أكتوبر",
+     "status": "approved",
+     "context": "Shopify-Plans · span · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "150 left",
+     "ar": "150 متبقية",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "of 350, resets 18 October",
+     "ar": "من 350، تتجدد في 18 أكتوبر",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Looks this cycle\""
+    },
+    {
+     "kind": "attr",
+     "en": "Looks used",
+     "ar": "الإطلالات المستخدمة",
+     "status": "draft",
+     "context": "Shopify-Plans · aria-label of div · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "At this pace, about 14 looks a day, you'll run out 6 days before the reset. <0>Try it on hides while you're out, and Store Chat keeps working.</0> Looks you add last 12 months and are used after your plan's looks.",
+     "ar": "بهذا المعدل، نحو 14 إطلالة يومياً، ستنفد إطلالاتك قبل 6 أيام من تجدد الدورة. <0>يختفي زر التجربة ما دامت الإطلالات نافدة، وتستمر دردشة المتجر في العمل.</0> الإطلالات التي تضيفها تبقى صالحة 12 شهراً، وتُستخدم بعد إطلالات باقتك.",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "Add 80 looks, $5",
+     "ar": "أضف 80 إطلالة، $5",
+     "status": "draft",
+     "context": "Shopify-Plans · button · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "Set up top-ups",
+     "ar": "إعداد الإضافات التلقائية",
+     "status": "draft",
+     "context": "Shopify-Plans · a · under \"Looks this cycle\""
+    },
+    {
+     "kind": "text",
+     "en": "Top-ups",
+     "ar": "الإضافات التلقائية",
+     "status": "draft",
+     "context": "Shopify-Plans · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Add 80 looks for $5 when 5% are left",
+     "ar": "إضافة 80 إطلالة مقابل $5 عندما يتبقى 5%",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Top-ups\""
+    },
+    {
+     "kind": "text",
+     "en": "So the button never hides in a busy week.",
+     "ar": "حتى لا يختفي الزر أبداً في أسبوع مزدحم.",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Top-ups\""
+    },
+    {
+     "kind": "text",
+     "en": "Spending cap: $50 every 30 days",
+     "ar": "حد الإنفاق: $50 كل 30 يوماً",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Top-ups\""
+    },
+    {
+     "kind": "text",
+     "en": "You approved it in Shopify. We never charge above it, and we tell you at 90% of your cap.",
+     "ar": "وافقت عليه في Shopify. لا نحاسبك فوقه أبداً، وننبهك عند بلوغ 90% منه.",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Top-ups\""
+    },
+    {
+     "kind": "text",
+     "en": "Change in Shopify",
+     "ar": "التعديل في Shopify",
+     "status": "draft",
+     "context": "Shopify-Plans · a · under \"Top-ups\""
+    },
+    {
+     "kind": "text",
+     "en": "Last 3 cycles",
+     "ar": "آخر 3 دورات",
+     "status": "draft",
+     "context": "Shopify-Plans · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Cycle",
+     "ar": "الدورة",
+     "status": "draft",
+     "context": "Shopify-Plans · th · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "Looks used",
+     "ar": "الإطلالات المستخدمة",
+     "status": "draft",
+     "context": "Shopify-Plans · th · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "Extra charges",
+     "ar": "رسوم إضافية",
+     "status": "draft",
+     "context": "Shopify-Plans · th · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "18 Jul to 18 Aug",
+     "ar": "18 يوليو إلى 18 أغسطس",
+     "status": "draft",
+     "context": "Shopify-Plans · td · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "18 Aug to 18 Sep",
+     "ar": "18 أغسطس إلى 18 سبتمبر",
+     "status": "draft",
+     "context": "Shopify-Plans · td · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "18 Sep to 18 Oct, so far",
+     "ar": "18 سبتمبر إلى 18 أكتوبر، حتى الآن",
+     "status": "draft",
+     "context": "Shopify-Plans · td · under \"Last 3 cycles\""
+    },
+    {
+     "kind": "text",
+     "en": "Your plan",
+     "ar": "باقتك",
+     "status": "draft",
+     "context": "Shopify-Plans · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Active",
+     "ar": "نشطة",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Your plan\""
+    },
+    {
+     "kind": "text",
+     "en": "Growth",
+     "ar": "Growth",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Your plan\""
+    },
+    {
+     "kind": "text",
+     "en": "$29 every 30 days",
+     "ar": "$29 كل 30 يوماً",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Your plan\""
+    },
+    {
+     "kind": "text",
+     "en": "350 looks, Store Chat included. <0>Billed by Shopify with your other apps.</0> Next bill on 18 October.",
+     "ar": "350 إطلالة، ودردشة المتجر مشمولة. <0>تتم الفوترة عبر Shopify مع تطبيقاتك الأخرى.</0> الفاتورة القادمة في 18 أكتوبر.",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Your plan\""
+    },
+    {
+     "kind": "text",
+     "en": "Change plan",
+     "ar": "تغيير الباقة",
+     "status": "draft",
+     "context": "Shopify-Plans · a · under \"Your plan\""
+    },
+    {
+     "kind": "text",
+     "en": "Compare plans",
+     "ar": "مقارنة الباقات",
+     "status": "draft",
+     "context": "Shopify-Plans · h2"
+    },
+    {
+     "kind": "text",
+     "en": "Free",
+     "ar": "Free",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "15 looks a month, Store Chat",
+     "ar": "15 إطلالة شهرياً، ودردشة المتجر",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "Launch",
+     "ar": "Launch",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "150 looks, Store Chat",
+     "ar": "150 إطلالة، ودردشة المتجر",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "Growth",
+     "ar": "Growth",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "Current",
+     "ar": "الحالية",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "350 looks, Store Chat, top-ups",
+     "ar": "350 إطلالة، ودردشة المتجر، والإضافات التلقائية",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "Pro",
+     "ar": "Pro",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "650 looks, hands-on setup and support",
+     "ar": "650 إطلالة، وإعداد ودعم شخصي",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "At your pace, about 430 looks a month, Growth with one 80-look top-up comes to $34. Pro would be $49, so staying on Growth is cheaper. We'll tell you if that changes.",
+     "ar": "بمعدلك الحالي، نحو 430 إطلالة شهرياً، تصل تكلفة Growth مع إضافة واحدة من 80 إطلالة إلى $34. أما Pro فتكلف $49، لذا البقاء على Growth أوفر. سنخبرك إن تغيّر ذلك.",
+     "status": "draft",
+     "context": "Shopify-Plans · span · under \"Compare plans\""
+    },
+    {
+     "kind": "text",
+     "en": "Orange outline: new back end work. Everything else runs on what the app has today.",
+     "ar": "الإطار البرتقالي: عمل جديد في الخادم. كل ما عداه يعمل بما في التطبيق اليوم.",
+     "status": "draft",
+     "context": "Shopify-Plans · div · under \"Compare plans\" · canvas-only note"
+    }
+   ]
+  }
+ ]
+}

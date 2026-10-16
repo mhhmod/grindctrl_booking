@@ -55,6 +55,26 @@
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
   }
 
+  /* The config's launch answer (N34). `available` is the older field, read
+     only if a server without `tryOn` ever answers. A failed config read is
+     not "hidden": the button keeps today's defaults, and the context route
+     still refuses a store that has no looks. */
+  function tryOnHidden(cfg) {
+    if (!cfg) return false;
+    if (cfg.tryOn === 'hidden') return true;
+    return cfg.tryOn === undefined && cfg.available === false;
+  }
+
+  // The theme editor always shows the block, so a merchant who is out of
+  // looks can still place and style it.
+  function inThemeEditor() {
+    return !!(window.Shopify && window.Shopify.designMode);
+  }
+
+  function removeBlock(root) {
+    if (root.parentNode) root.parentNode.removeChild(root);
+  }
+
   function getStorefrontContext(root, nonce) {
     var url =
       '/apps/grindctrl/try-on-context?product=' +
@@ -67,6 +87,12 @@
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     }).then(function (res) {
+      // 409: this store cannot start a look now (out of looks, plan lapsed).
+      if (res.status === 409) {
+        var hidden = new Error('try_on_hidden');
+        hidden.tryOnHidden = true;
+        throw hidden;
+      }
       if (!res.ok) throw new Error('storefront_context_unavailable');
       return res.json();
     }).then(function (data) {
@@ -84,6 +110,10 @@
     })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (cfg) {
+        if (tryOnHidden(cfg) && !inThemeEditor()) {
+          removeBlock(root);
+          return;
+        }
         if (!cfg) return;
         if (root.dataset.labelSource !== 'theme' && cfg.buttonLabel) {
           var labelEl = btn.querySelector('.gc-tryon-label');
@@ -107,8 +137,10 @@
       })
       .catch(function () { /* defaults from CSS/schema stay */ })
       .then(function () {
+        if (!root.parentNode) return;
         btn.classList.remove('gc-tryon-btn--loading');
         btn.removeAttribute('aria-busy');
+        root.classList.remove('gc-tryon-root--pending');
       });
   }
 
@@ -229,7 +261,13 @@
       });
 
       root.appendChild(frame);
-      }).catch(function () {
+      }).catch(function (error) {
+        // The looks ran out after this page loaded: take the button away
+        // rather than show an error the shopper cannot act on.
+        if (error && error.tryOnHidden) {
+          removeBlock(root);
+          return;
+        }
         // Billing proof failed closed: do not open an iframe that could run
         // an unbound paid generation.
         showProofError(root, btn, locale);

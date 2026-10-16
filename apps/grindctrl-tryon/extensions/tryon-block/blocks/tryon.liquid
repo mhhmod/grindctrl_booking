@@ -8,7 +8,7 @@
     {% assign resolved_button_label = block.settings.button_label %}
   {% endif %}
   <div
-    class="gc-tryon-root"
+    class="gc-tryon-root gc-tryon-root--pending"
     data-product="{{ product.handle }}"
     data-title="{{ product.title | escape }}"
     data-garment="{{ product.featured_image | image_url: width: 1200 }}"

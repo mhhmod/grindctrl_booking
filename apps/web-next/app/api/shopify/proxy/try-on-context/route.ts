@@ -15,6 +15,7 @@ import {
   resolveStorefrontProduct,
 } from '@/lib/shopify/product-resolver';
 import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { getTryOnLaunch } from '@/lib/try-on/launch';
 
 /* Shopify App Proxy child route:
  *   /apps/grindctrl/try-on-context -> /api/shopify/proxy/try-on-context
@@ -82,6 +83,19 @@ export async function GET(request: NextRequest) {
   }
   if (rawVariantId && !variantId) {
     return NextResponse.json({ error: 'bad_variant' }, { status: 400 });
+  }
+
+  /* A product page cached before the looks ran out still shows the button.
+     Refuse here, before a photo is ever asked for, with the launch reason
+     as the code (N34: out_of_looks). A failed entitlement read is not a
+     refusal: the credit reservation at generation is the real gate, so a
+     database hiccup must not hide try-on from a store that has looks. */
+  const launch = await getTryOnLaunch(shop);
+  if (launch.tryOn === 'hidden' && launch.reason !== 'unavailable') {
+    return NextResponse.json(
+      { error: launch.reason },
+      { status: 409, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   let resolvedProduct;

@@ -36,6 +36,26 @@
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
   }
 
+  /* The config's launch answer (N34), read the same way as the product-page
+     block: hidden adds no pills at all; a failed read keeps today's pills,
+     and the context route still refuses a store with no looks. */
+  function tryOnHidden(c) {
+    if (!c) return false;
+    if (c.tryOn === 'hidden') return true;
+    return c.tryOn === undefined && c.available === false;
+  }
+
+  var stopped = false;
+  var observer = null;
+
+  // Looks ran out after the page loaded: take every pill away.
+  function stopTryOn() {
+    stopped = true;
+    if (observer) observer.disconnect();
+    var pills = document.querySelectorAll('.gc-cat-btn');
+    for (var i = 0; i < pills.length; i++) pills[i].remove();
+  }
+
   function getStorefrontContext(product, nonce) {
     return fetch(
       '/apps/grindctrl/try-on-context?product=' +
@@ -44,6 +64,11 @@
         encodeURIComponent(nonce),
       { credentials: 'same-origin', headers: { Accept: 'application/json' } }
     ).then(function (res) {
+      if (res.status === 409) {
+        var hidden = new Error('try_on_hidden');
+        hidden.tryOnHidden = true;
+        throw hidden;
+      }
       if (!res.ok) throw new Error('storefront_context_unavailable');
       return res.json();
     }).then(function (data) {
@@ -246,7 +271,12 @@
         if (frame) { frame.remove(); frame = null; }
         showDialogError(loading, handle, title, garment);
       });
-    }).catch(function () {
+    }).catch(function (error) {
+      if (error && error.tryOnHidden) {
+        closeDialog();
+        stopTryOn();
+        return;
+      }
       showDialogError(loading, handle, title, garment);
     });
   }
@@ -303,6 +333,7 @@
 
   /* ── Card discovery: any element containing a /products/ link + image ── */
   function findCards() {
+    if (stopped) return;
     var seen = {};
     var anchors = document.querySelectorAll('a[href*="/products/"]');
     for (var i = 0; i < anchors.length; i++) {
@@ -335,6 +366,7 @@
       '<span class="gc-cat-btn-ic">' + ICON_SVG + '</span><span class="gc-cat-btn-label">Try on</span>';
 
     cfgPromise.then(function (c) {
+      if (stopped || tryOnHidden(c)) return;
       if (c) {
         if (typeof c.catalogIconPx === 'number') {
           btn.style.setProperty('--gc-cat-icon', c.catalogIconPx + 'px');
@@ -406,14 +438,22 @@
   );
 
   function init() {
-    injectStyles();
-    findCards();
-    // Themes lazy-render grids (filtering, infinite scroll); re-scan calmly.
-    var t = null;
-    new MutationObserver(function () {
-      clearTimeout(t);
-      t = setTimeout(findCards, 400);
-    }).observe(document.body, { childList: true, subtree: true });
+    // Nothing is added to the page until the config says try-on is live.
+    cfgPromise.then(function (c) {
+      if (tryOnHidden(c)) {
+        stopped = true;
+        return;
+      }
+      injectStyles();
+      findCards();
+      // Themes lazy-render grids (filtering, infinite scroll); re-scan calmly.
+      var t = null;
+      observer = new MutationObserver(function () {
+        clearTimeout(t);
+        t = setTimeout(findCards, 400);
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
   }
 
   if (document.readyState === 'loading') {

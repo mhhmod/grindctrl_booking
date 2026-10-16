@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { getTryOnSettings } from '@/lib/try-on/settings';
-import { getShopEntitlement } from '@/lib/try-on/entitlement';
+import { getTryOnLaunch } from '@/lib/try-on/launch';
+import {
+  cachedProxyConfig,
+  proxyConfigCacheKey,
+  storeProxyConfig,
+} from '@/lib/shopify/proxy-config-cache';
 import { isTryOnLocale, DEFAULT_TRYON_LOCALE, type TryOnLocale } from '@/lib/try-on/i18n';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
@@ -10,39 +15,15 @@ import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
    Same-origin on the shop side, so no CORS needed.
-   ponytail: no HMAC check while this serves only public styling config;
-   verify `signature` with the app secret before serving anything sensitive.
+   ponytail: no HMAC check while this serves only public styling config and
+   the public launch answer; verify `signature` with the app secret before
+   serving anything sensitive.
 
    This endpoint is unauthenticated and reachable by anyone, and each
    uncached call costs ~6 Supabase queries (settings + entitlement
-   reconciliation). The short-lived response cache below keeps a scripted
-   flood from multiplying into database load while still letting merchants
-   see styling edits within a minute. */
-const CACHE_TTL_MS = 60_000;
-const CACHE_MAX_ENTRIES = 200;
-const responseCache = new Map<string, { expires: number; body: Record<string, unknown> }>();
-
-function cachedConfig(key: string): Record<string, unknown> | null {
-  const hit = responseCache.get(key);
-  if (!hit) return null;
-  if (Date.now() > hit.expires) {
-    responseCache.delete(key);
-    return null;
-  }
-  // Refresh insertion order so the map itself acts as an LRU eviction queue.
-  responseCache.delete(key);
-  responseCache.set(key, hit);
-  return hit.body;
-}
-
-function storeConfig(key: string, body: Record<string, unknown>): void {
-  while (responseCache.size >= CACHE_MAX_ENTRIES) {
-    const oldest = responseCache.keys().next().value;
-    if (oldest === undefined) break;
-    responseCache.delete(oldest);
-  }
-  responseCache.set(key, { expires: Date.now() + CACHE_TTL_MS, body });
-}
+   reconciliation). Answers are cached for a minute (proxy-config-cache),
+   and every path that changes a shop's looks, plan or install clears the
+   shop's entries, so the Try it on button follows the looks at once. */
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,8 +41,8 @@ export async function GET(request: NextRequest) {
   const requested = request.nextUrl.searchParams.get('locale');
   const locale: TryOnLocale = isTryOnLocale(requested) ? requested : DEFAULT_TRYON_LOCALE;
 
-  const cacheKey = `${shop ?? 'default'}:${locale}`;
-  const cached = cachedConfig(cacheKey);
+  const cacheKey = proxyConfigCacheKey(shop, locale);
+  const cached = cachedProxyConfig(cacheKey);
   if (cached) {
     return NextResponse.json(cached, { headers: { 'Cache-Control': 'private, no-store' } });
   }
@@ -72,12 +53,10 @@ export async function GET(request: NextRequest) {
      every shopper got the merchant's strings in one language regardless of
      the store's language. */
   const copy = pickMerchantCopy(settings, locale);
-  let available = false;
-  try {
-    available = (await getShopEntitlement(shop)).available;
-  } catch {
-    available = false;
-  }
+  /* The one launch answer both storefront scripts read: they keep the
+     button and the catalogue pills out of the page unless it is live. */
+  const launch = await getTryOnLaunch(shop);
+  const available = launch.tryOn === 'live';
 
   const body: Record<string, unknown> = {
     buttonLabel: copy.buttonLabel,
@@ -99,10 +78,15 @@ export async function GET(request: NextRequest) {
     showTryAgain: settings.showTryAgain,
     disclaimerText: copy.disclaimerText,
     locale,
+    tryOn: launch.tryOn,
+    reason: launch.reason,
+    // Kept for storefront scripts deployed before `tryOn` existed.
     available,
     messageKey: available ? null : 'tryOnTemporarilyUnavailable',
   };
-  storeConfig(cacheKey, body);
+  // A failed entitlement read is not cached, so the next request retries
+  // instead of hiding the button for a full minute.
+  if (launch.reason !== 'unavailable') storeProxyConfig(cacheKey, body);
 
   return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
 }

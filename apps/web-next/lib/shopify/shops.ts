@@ -7,6 +7,7 @@ import {
   authorizeDashboardShop,
   normalizeShopDomain,
 } from './shop-authorization';
+import { invalidateProxyConfig } from './proxy-config-cache';
 
 export type TryOnShopStatus = 'installed' | 'uninstalled';
 
@@ -71,6 +72,8 @@ export async function recordTryOnShopSeen(shop: unknown): Promise<boolean> {
       .upsert(payload, { onConflict: 'shop_domain' });
 
     if (error) throw error;
+    // A (re)install can make the storefront button live again.
+    if (!current || current.status === 'uninstalled') invalidateProxyConfig(domain);
     return true;
   } catch (error) {
     console.error('tryon_shops seen update failed:', error instanceof Error ? error.message : error);
@@ -97,6 +100,7 @@ export async function markTryOnShopUninstalled(shop: unknown): Promise<boolean> 
     );
 
     if (error) throw error;
+    invalidateProxyConfig(domain);
     return true;
   } catch (error) {
     console.error(

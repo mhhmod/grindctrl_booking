@@ -1,0 +1,346 @@
+{
+ "surface": "start",
+ "note": "The Main board renders these pairs from its script; its English and Arabic switch changes the language and points every link at the Arabic twins.",
+ "boards": [
+  {
+   "board": "Main",
+   "title": "Start here",
+   "screens": {
+    "en": "design/screens/start/01-Main.webp",
+    "ar": "design/screens/start/01-Main.arabic.webp"
+   },
+   "strings": [
+    {
+     "kind": "js",
+     "en": "Phone",
+     "ar": "هاتف",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Desktop",
+     "ar": "كمبيوتر",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Arabic",
+     "ar": "عربي",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Product journeys, v16",
+     "ar": "رحلات المنتج، الإصدار 16",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Language of the screens",
+     "ar": "لغة الشاشات",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Every role gets one effortless path.",
+     "ar": "لكل دور طريق واحد سهل.",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Shoppers try on and ask without friction. Merchants open one screen and know what needs them. Every screen comes in English and in Arabic, right to left. Open any step, or press Play and click through.",
+     "ar": "تجرّب المتسوقة وتسأل بلا عناء، ويفتح التاجر شاشة واحدة فيعرف ما يحتاج إليه. كل شاشة متاحة بالإنجليزية وبالعربية من اليمين إلى اليسار. افتح أي خطوة، أو اضغط تشغيل وتنقّل بين الشاشات.",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Every screen has a Review switch, Mark new, that outlines in orange what the app cannot do yet. Everything else runs on the back end that exists today.",
+     "ar": "في كل شاشة مفتاح مراجعة يحدد بإطار برتقالي ما لا يستطيع التطبيق فعله بعد. وكل ما عداه يعمل على الخادم الموجود اليوم.",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "SHOPPERS",
+     "ar": "المتسوقون",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "MERCHANTS",
+     "ar": "التجار",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Try-on",
+     "ar": "التجربة الافتراضية",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "On the merchant's own store",
+     "ar": "على متجر التاجر نفسه",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Store Chat",
+     "ar": "دردشة المتجر",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Answers that sell, honest handoff",
+     "ar": "إجابات تبيع وتحويل صادق للفريق",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Web dashboard",
+     "ar": "لوحة التحكم على الويب",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "grindctrl.cloud for owners and teams",
+     "ar": "grindctrl.cloud للمالكين وفرقهم",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Shopify admin app",
+     "ar": "تطبيق إدارة Shopify",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Native inside Shopify",
+     "ar": "جزء أصيل من Shopify",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Product page",
+     "ar": "صفحة المنتج",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Add a photo",
+     "ar": "إضافة صورة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Photo check and consent",
+     "ar": "فحص الصورة والموافقة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Making the look",
+     "ar": "تجهيز الإطلالة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "The look",
+     "ar": "الإطلالة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Try from the collection",
+     "ar": "التجربة من المجموعة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "When things go wrong",
+     "ar": "عندما يحدث خطأ",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Desktop product page",
+     "ar": "صفحة المنتج على الكمبيوتر",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Website studio",
+     "ar": "استوديو الموقع",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "No camera, no photo, sharing",
+     "ar": "بلا كاميرا أو صورة، والمشاركة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Ask from the product page",
+     "ar": "السؤال من صفحة المنتج",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Chat home",
+     "ar": "بداية المحادثة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "An answer that sells",
+     "ar": "إجابة تبيع",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Where is my order",
+     "ar": "أين طلبي",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Arabic and Franco",
+     "ar": "العربية والفرانكو",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Handoff and failures",
+     "ar": "التحويل للفريق والأعطال",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Desktop with try-on inside",
+     "ar": "الكمبيوتر مع التجربة داخل المحادثة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Guest orders and offline",
+     "ar": "طلبات الضيوف وانقطاع الاتصال",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Tell us about your store",
+     "ar": "عرّفنا على متجرك",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Connect your store",
+     "ar": "اربط متجرك",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Today, while setting up",
+     "ar": "اليوم، أثناء الإعداد",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Today, live",
+     "ar": "اليوم، بعد الإطلاق",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Inbox",
+     "ar": "الرسائل",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Teach the assistant",
+     "ar": "علّم المساعد",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Store Chat studio",
+     "ar": "استوديو دردشة المتجر",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Try-On results",
+     "ar": "نتائج التجربة الافتراضية",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Try-On studio",
+     "ar": "استوديو التجربة الافتراضية",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Plan and looks",
+     "ar": "الباقة والإطلالات",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Ask GrindCTRL",
+     "ar": "اسأل GrindCTRL",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "From a phone",
+     "ar": "من الهاتف",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Broken and quiet days",
+     "ar": "أيام الأعطال والأيام الهادئة",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Team, shifts, WhatsApp",
+     "ar": "الفريق والمناوبات وواتساب",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "App home, first day",
+     "ar": "الرئيسية، اليوم الأول",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "App home, live",
+     "ar": "الرئيسية، بعد الإطلاق",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Try-On settings",
+     "ar": "إعدادات التجربة الافتراضية",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Store Chat settings",
+     "ar": "إعدادات دردشة المتجر",
+     "status": "draft"
+    },
+    {
+     "kind": "js",
+     "en": "Plans and usage",
+     "ar": "الباقات والاستخدام",
+     "status": "draft"
+    }
+   ]
+  }
+ ]
+}

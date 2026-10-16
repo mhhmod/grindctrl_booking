@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -484,6 +485,9 @@ export async function reserveCredit(input: {
     p_model_key: input.modelKey,
   });
   throwRpcError(error);
+  // This may have used the shop's last look: the storefront button must
+  // hide on the next config read, not a minute later.
+  invalidateProxyConfig(domain);
 
   const row = (Array.isArray(data) ? data[0] : data) as ReservationRow | undefined;
   if (!row) throw new Error('Credit reservation returned no job');
@@ -502,6 +506,8 @@ export async function reserveCredit(input: {
 
 export async function finalizeCreditJob(input: {
   jobId: string;
+  /** The job's shop, so a failed look credited back can bring the button back. */
+  shop?: string | null;
   status: 'completed' | 'failed';
   provider?: string;
   costUsd?: number | null;
@@ -517,6 +523,7 @@ export async function finalizeCreditJob(input: {
     p_message: input.message ?? null,
   });
   throwRpcError(error);
+  if (input.status === 'failed') invalidateProxyConfig(normalizeShopDomain(input.shop));
   if (data !== input.status) {
     throw new Error(`Try-on job was already finalized as ${String(data)}`);
   }
@@ -531,6 +538,8 @@ export async function refundCredit(jobId: string): Promise<void> {
 export async function reconcileShopSubscription(shop: string): Promise<void> {
   const { error } = await getServiceClient().rpc('reconcile_tryon_subscription', { p_shop_domain: shop });
   throwRpcError(error);
+  // A renewal grants a new period's looks.
+  invalidateProxyConfig(normalizeShopDomain(shop));
 }
 
 export async function runDailyReconciliation(): Promise<number> {
@@ -550,6 +559,8 @@ export async function runOwnerEntitlementMutation(
   requireActionKey(params.p_action_key);
   const { data, error } = await getServiceClient().rpc(functionName, params);
   throwRpcError(error);
+  // Plans, renewals and top-ups all change the looks left.
+  invalidateProxyConfig(normalizeShopDomain(params.p_shop_domain));
   const result = data as OwnerMutationResult | null;
   if (!result) throw new Error('Owner plan action returned no result');
   return result;
