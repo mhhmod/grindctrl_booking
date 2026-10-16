@@ -7,7 +7,7 @@ const {
   persistGeneratedTryOnResultMock,
   persistTryOnJobMock,
   runImageGenerationMock,
-  getShopEntitlementMock,
+  getShopModelKeyMock,
 } = vi.hoisted(() => ({
   beginTryOnJobMock: vi.fn(),
   finalizeTryOnJobMock: vi.fn(),
@@ -15,7 +15,7 @@ const {
   persistGeneratedTryOnResultMock: vi.fn(),
   persistTryOnJobMock: vi.fn(),
   runImageGenerationMock: vi.fn(),
-  getShopEntitlementMock: vi.fn(),
+  getShopModelKeyMock: vi.fn(),
 }));
 
 vi.mock('./persistence', () => ({
@@ -31,7 +31,7 @@ vi.mock('./image-runner', () => ({
   runImageGeneration: (...args: unknown[]) => runImageGenerationMock(...args),
 }));
 vi.mock('./entitlement', () => ({
-  getShopEntitlement: (...args: unknown[]) => getShopEntitlementMock(...args),
+  getShopModelKey: (...args: unknown[]) => getShopModelKeyMock(...args),
 }));
 
 import {
@@ -107,7 +107,7 @@ describe('try-on service', () => {
     });
     persistTryOnJobMock.mockReset().mockResolvedValue(undefined);
     runImageGenerationMock.mockReset();
-    getShopEntitlementMock.mockReset().mockResolvedValue({ modelKey: 'meta/muse-image' });
+    getShopModelKeyMock.mockReset().mockResolvedValue('meta/muse-image');
   });
 
   afterEach(() => {
@@ -187,7 +187,7 @@ describe('try-on service', () => {
       });
 
       async function generateFor(tier: string | null) {
-        getShopEntitlementMock.mockResolvedValue({ modelKey: tier });
+        getShopModelKeyMock.mockResolvedValue(tier);
         const auth = storefrontAuthorization();
         await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
         return {
@@ -202,7 +202,7 @@ describe('try-on service', () => {
         async (tier) => {
           const { auth, providerModel, reservedTier } = await generateFor(tier);
 
-          expect(getShopEntitlementMock).toHaveBeenCalledWith(auth.shop);
+          expect(getShopModelKeyMock).toHaveBeenCalledWith(auth.shop);
           expect(providerModel).toBe('meta/muse-image');
           expect(reservedTier).toBe(tier ?? 'meta/muse-image');
         },
@@ -218,7 +218,7 @@ describe('try-on service', () => {
       });
 
       it('names meta/muse-image when the provider fails', async () => {
-        getShopEntitlementMock.mockResolvedValue({ modelKey: 'lite' });
+        getShopModelKeyMock.mockResolvedValue('lite');
         runImageGenerationMock.mockRejectedValue(new Error('provider_http_error'));
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -252,7 +252,7 @@ describe('try-on service', () => {
 
         await generateTryOn(authorization(), 'upload', 'data:image/png;base64,AAAA');
 
-        expect(getShopEntitlementMock).not.toHaveBeenCalled();
+        expect(getShopModelKeyMock).not.toHaveBeenCalled();
         expect(beginTryOnJobMock).not.toHaveBeenCalled();
         expect(runImageGenerationMock.mock.calls[0][4]).toBe('meta/muse-image');
       });

@@ -10,7 +10,7 @@ import {
   persistTryOnJob,
 } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
-import { getShopEntitlement } from './entitlement';
+import { getShopModelKey } from './entitlement';
 import type { VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnFinalizationPendingError,
@@ -120,8 +120,7 @@ export async function generateTryOn(
        ledger, but it no longer picks the model: every plan renders with
        the same one. Sending the label upstream got every paid storefront
        try-on rejected, so OpenRouter only ever receives the model id. */
-    const entitlement = await getShopEntitlement(shop);
-    const modelKey = entitlement.modelKey || TRYON_IMAGE_MODEL;
+    const modelKey = (await getShopModelKey(shop)) || TRYON_IMAGE_MODEL;
     const providerModel = TRYON_IMAGE_MODEL;
     const reservedJobId = createJobId();
     const reservation = await beginTryOnJob({
