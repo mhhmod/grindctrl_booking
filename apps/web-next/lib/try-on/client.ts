@@ -103,8 +103,7 @@ const LOCAL_RESULT_MAX_BYTES = 12 * 1024 * 1024;
 
 const LOCAL_RESULT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-async function blobToDataUrl(blob: Blob, type: string): Promise<string> {
-  const bytes = new Uint8Array(await blob.arrayBuffer());
+function bytesToDataUrl(bytes: Uint8Array, type: string): string {
   let binary = '';
   for (let start = 0; start < bytes.length; start += 0x8000) {
     binary += String.fromCharCode(...bytes.subarray(start, start + 0x8000));
@@ -119,10 +118,11 @@ async function readLookIntoPage(url: string, signal?: AbortSignal): Promise<stri
   try {
     const response = await fetch(url, { cache: 'no-store', signal });
     if (!response.ok) return null;
-    const blob = await response.blob();
-    const type = (response.headers.get('content-type') ?? blob.type).split(';')[0].trim().toLowerCase();
-    if (!LOCAL_RESULT_TYPES.has(type) || blob.size === 0 || blob.size > LOCAL_RESULT_MAX_BYTES) return null;
-    return await blobToDataUrl(blob, type);
+    const type = (response.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
+    if (!LOCAL_RESULT_TYPES.has(type)) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > LOCAL_RESULT_MAX_BYTES) return null;
+    return bytesToDataUrl(bytes, type);
   } catch (error) {
     if (isAbort(error)) throw error;
     return null;
