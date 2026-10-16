@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { proxyVisitorId, requireProxyRateLimit } from '@/lib/shopify/proxy-rate-limit';
 import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import {
@@ -9,7 +10,6 @@ import {
   STOREFRONT_CONTEXT_TTL_SECONDS,
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
-import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import {
   ProductResolutionError,
   resolveStorefrontProduct,
@@ -44,19 +44,29 @@ function freshProxyTimestamp(raw: string | null, nowSeconds: number): number | n
 }
 
 export async function GET(request: NextRequest) {
+  const configured = getConfiguredShopifyApps().length > 0;
+  const params = request.nextUrl.searchParams;
+  const resolved = configured
+    ? resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret))
+    : null;
+
+  /* Keyed by the signed shop and the script's visitor id, since the address
+     here is Shopify's (phase zero item 3). Unsigned callers keep the
+     address key and are refused just below. */
   try {
-    await requireRateLimit(publicApiRatelimit, `tc:${clientIp(request) ?? 'unknown'}`);
+    await requireProxyRateLimit(request, {
+      route: 'try-on-context',
+      signedShop: resolved ? normalizeShopDomain(params.get('shop')) : null,
+      visitorId: proxyVisitorId(params.get('vid')),
+    });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
   }
 
-  if (getConfiguredShopifyApps().length === 0) {
+  if (!configured) {
     return NextResponse.json({ error: 'not_configured' }, { status: 503 });
   }
-
-  const params = request.nextUrl.searchParams;
-  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
   if (!resolved) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
   }

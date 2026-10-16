@@ -5,8 +5,8 @@ import {
   signShopperToken,
   verifyShopifyProxySignature,
 } from '@/lib/messenger/identity';
-import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
-import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { proxyVisitorId, requireProxyRateLimit } from '@/lib/shopify/proxy-rate-limit';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 
 /* GET /apps/grindctrl/messenger-identity  (Shopify App Proxy)
@@ -20,16 +20,22 @@ import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 const SID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 
 export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
+
+  /* Keyed by the signed shop and the loader's anonymous id (sid), since the
+     address here is Shopify's (phase zero item 3). */
   try {
-    await requireRateLimit(publicApiRatelimit, `mi:${clientIp(request) ?? 'unknown'}`);
+    await requireProxyRateLimit(request, {
+      route: 'messenger-identity',
+      signedShop: resolved ? normalizeShopDomain(params.get('shop')) : null,
+      visitorId: proxyVisitorId(params.get('sid')),
+    });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
   }
 
-  const params = request.nextUrl.searchParams;
-
-  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
   if (!resolved) {
     return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
   }

@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   configured: true,
   publicLimit: vi.fn(),
   pollLimit: vi.fn(),
+  proxyLimit: vi.fn(),
   loadSite: vi.fn(),
   loadSiteByDomain: vi.fn(),
   resolveSession: vi.fn(),
@@ -28,6 +29,11 @@ vi.mock('@/lib/ratelimit', () => ({
   },
   merchantReadRatelimit: null,
   merchantWriteRatelimit: null,
+  // Signed App Proxy traffic only (phase zero item 3); these requests are
+  // unsigned, so they must stay on the address budget above.
+  proxyVisitorRatelimit: { get configured() { return mocks.configured; }, limit: mocks.proxyLimit },
+  proxyShopReadRatelimit: { get configured() { return mocks.configured; }, limit: mocks.proxyLimit },
+  proxyShopMintRatelimit: { get configured() { return mocks.configured; }, limit: mocks.proxyLimit },
   rateLimitedResponse: () => new Response(null, { status: 429 }),
 }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({
@@ -129,6 +135,7 @@ describe.each(routes)('$name public enforcement', (route) => {
       if (failure === 'missing configuration') expect(limit).not.toHaveBeenCalled();
       else expect(limit.mock.calls).toEqual([[`${route.prefix}203.0.113.9`]]);
       expect(route.poll ? mocks.publicLimit : mocks.pollLimit).not.toHaveBeenCalled();
+      expect(mocks.proxyLimit).not.toHaveBeenCalled();
       expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain('private Redis credentials');
       if (route.cors) {
         expect(response.headers.get('Access-Control-Allow-Origin')).toBe(route.cors);

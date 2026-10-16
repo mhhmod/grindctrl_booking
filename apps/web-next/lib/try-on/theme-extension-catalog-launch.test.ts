@@ -18,9 +18,13 @@ const GRID = `
     <li class="grid__item"><a href="/products/crepe-abaya"><img src="https://cdn.shopify.com/b.jpg" alt="Crepe abaya"></a></li>
   </ul>`;
 
+const fetched: string[] = [];
+
 function stubFetch(config: unknown, contextStatus = 200) {
+  fetched.length = 0;
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
+    fetched.push(url);
     if (url.includes('/apps/grindctrl/config')) {
       return new Response(JSON.stringify(config), { status: 200 });
     }
@@ -67,6 +71,15 @@ describe('Try-On catalogue pills launch answer', () => {
 
     await waitFor(() => expect(document.querySelectorAll('.gc-cat-btn')).toHaveLength(0));
     expect(document.querySelector('.gc-cat-overlay--open')).toBeNull();
+
+    // Phase zero item 3: the same stored visitor id rides both calls.
+    const stored = localStorage.getItem('gc_tryon_vid');
+    expect(stored).toMatch(/^[A-Za-z0-9_-]{16,64}$/);
+    const mine = fetched.filter((url) => url.includes('/apps/grindctrl/'));
+    expect(mine.length).toBeGreaterThanOrEqual(2);
+    for (const url of mine) {
+      expect(new URL(url, 'https://shop.example').searchParams.get('vid')).toBe(stored);
+    }
     expect(document.querySelector('.gc-cat-overlay [role="alert"]')).toBeNull();
   });
 });
