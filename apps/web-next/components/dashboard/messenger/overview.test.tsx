@@ -38,9 +38,22 @@ describe('MessengerOverview status', () => {
   });
 
   it('confirms a live store and says when it was last seen', () => {
-    renderOverview({ active: true, detectedAt: '2026-09-01T10:00:00.000Z' });
+    renderOverview({ active: true, detectedAt: new Date(Date.now() - 2 * 60_000).toISOString() });
     expect(screen.getByRole('heading', { name: 'Store Chat is live' })).toBeInTheDocument();
     expect(screen.getByText(/Last seen on your store/)).toBeInTheDocument();
+  });
+
+  /* Phase zero item 5: "live" used to mean seen once, at any time. A store
+     whose theme dropped the block weeks ago still read as live. */
+  it('turns amber when the store has not loaded Store Chat for days', () => {
+    const onOpenTab = vi.fn();
+    renderOverview({ active: true, detectedAt: new Date(Date.now() - 3 * 24 * 3_600_000).toISOString(), onOpenTab });
+    expect(screen.getByRole('heading', { name: 'Store Chat hasn’t loaded lately' })).toBeInTheDocument();
+    expect(screen.getByText(/It hasn’t loaded on demo\.myshopify\.com in the last two days/)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Store Chat is live' })).toBeNull();
+    expect(screen.getByText(/Last seen on your store/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show me how' }));
+    expect(onOpenTab).toHaveBeenCalledWith('installation');
   });
 
   it('reports an off site as off, not as merely undetected', () => {

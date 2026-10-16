@@ -8,6 +8,7 @@ import {
   provenOrigin,
 } from '@/lib/messenger/public-api';
 import { recordEvent } from '@/lib/messenger/conversations';
+import { configFailurePayload } from '@/lib/messenger/config-failure';
 
 /* POST /api/messenger/event
    Storefront telemetry. Strict name allowlist so this cannot become a
@@ -98,9 +99,25 @@ export async function POST(request: NextRequest) {
         ? await loadPublicSiteByDomain(shop)
         : null
       : await loadPublicSite(key);
-    if (!site || !originAllowed(site, origin, { trusted: originTrusted })) {
-      return NextResponse.json({ ok: false }, { status: 403 });
+    if (!site) return NextResponse.json({ ok: false }, { status: 403 });
+    const allowed = originAllowed(site, origin, { trusted: originTrusted });
+
+    /* A failed config fetch is the one event worth keeping from an origin
+       Store Chat refused: it is exactly how a store on an unverified custom
+       domain fails, and the merchant should be able to see it (phase zero
+       item 5). The reason comes from this server's own origin check, and
+       the host from the browser's Origin header, never from the payload. */
+    if (name === 'config_fetch_failed') {
+      await recordEvent({
+        siteId: site.id,
+        conversationId: null,
+        eventName: name,
+        payload: configFailurePayload(body.payload, origin, allowed),
+      });
+      return NextResponse.json({ ok: true }, { headers: corsHeaders(request) });
     }
+
+    if (!allowed) return NextResponse.json({ ok: false }, { status: 403 });
 
     await recordEvent({
       siteId: site.id,

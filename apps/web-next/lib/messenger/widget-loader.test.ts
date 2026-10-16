@@ -150,3 +150,13 @@ describe('storefront widget loader — launcher preview parity', () => {
     expect(safeColor('not-a-color')).toBe('#2a2826');
   });
 });
+
+/* Phase zero item 5: a failed config fetch used to report nothing, so the
+   merchant could not see why Store Chat stayed off their own domain. */
+describe('storefront widget loader — config failures', () => {
+  it('reports the status it saw when the config cannot be fetched', () => {
+    expect(loader).toContain('Promise.reject({ status: r.status })');
+    expect(loader).toContain("track('config_fetch_failed', { status: err && typeof err.status === 'number' ? err.status : 0 })");
+    expect(loader).not.toContain("track('config_fetch_failed', {})");
+  });
+});

@@ -75,6 +75,20 @@ describe('decideOrigin', () => {
     expect(decideOrigin({ ...site, origin: 'https://grindctrl.myshopify.com.evil.com' }).allowed).toBe(false);
   });
 
+  /* Phase zero item 5: a store's own custom domain is admitted once the
+     Shopify domain sync has written it as a verified row. */
+  it('admits a custom storefront domain once Shopify confirmed it, and only that host', () => {
+    const patterns = [
+      { pattern: 'maisonnoor.com', verification_status: 'verified', environment: 'production' },
+      { pattern: 'old-name.com', verification_status: 'disabled', environment: 'production' },
+    ];
+    const base = { patterns, security: null, siteDomain: 'maison-noor.myshopify.com' };
+    expect(decideOrigin({ ...base, origin: 'https://maisonnoor.com' })).toEqual({ allowed: true });
+    expect(decideOrigin({ ...base, origin: 'https://old-name.com' }).allowed).toBe(false);
+    expect(decideOrigin({ ...base, origin: 'https://evil-maisonnoor.com' }).allowed).toBe(false);
+    expect(decideOrigin({ ...base, origin: 'https://shop.maisonnoor.com' }).allowed).toBe(false);
+  });
+
   it('changes nothing for a site with no connected domain', () => {
     expect(
       decideOrigin({ origin: 'https://anything.com', patterns: [], security: {}, siteDomain: null }).allowed,
