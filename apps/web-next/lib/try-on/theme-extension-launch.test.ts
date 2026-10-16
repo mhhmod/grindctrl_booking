@@ -104,6 +104,23 @@ describe('Try-On product block launch answer', () => {
     expect(document.body.contains(root)).toBe(true);
   });
 
+  /* Phase zero item 3: the server keys these calls by shop and this id,
+     since they reach it from Shopify's address. */
+  it('sends one stored anonymous visitor id on the config and context calls', async () => {
+    localStorage.clear();
+    const calls = stubFetch({ tryOn: 'live', reason: null }, 409);
+    window.eval(productAsset);
+    const root = document.querySelector('.gc-tryon-root')!;
+    await waitFor(() => expect(root.classList.contains('gc-tryon-root--pending')).toBe(false));
+    fireEvent.click(document.querySelector('.gc-tryon-btn')!);
+    await waitFor(() => expect(calls.some((url) => url.includes('try-on-context'))).toBe(true));
+
+    const stored = localStorage.getItem('gc_tryon_vid');
+    expect(stored).toMatch(/^[A-Za-z0-9_-]{16,64}$/);
+    const ids = calls.map((url) => new URL(url, 'https://shop.example').searchParams.get('vid'));
+    expect(ids).toEqual([stored, stored]);
+  });
+
   it('takes the button away when the looks ran out after the page loaded', async () => {
     const calls = stubFetch({ tryOn: 'live', reason: null }, 409);
     window.eval(productAsset);

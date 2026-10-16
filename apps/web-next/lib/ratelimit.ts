@@ -16,11 +16,24 @@ import {
    Signed service webhooks, OAuth callbacks, health and OPTIONS preflight
    deliberately retain their own protocol/auth controls instead of sharing
    shopper buckets. There is no blanket middleware throttle. */
+const NO_LIMITERS = {
+  publicApi: null,
+  tryOnPoll: null,
+  merchantRead: null,
+  merchantWrite: null,
+  proxyVisitor: null,
+  proxyShopRead: null,
+  proxyShopMint: null,
+} as const;
+
 function createRatelimiters(): {
   publicApi: Ratelimit | null;
   tryOnPoll: Ratelimit | null;
   merchantRead: Ratelimit | null;
   merchantWrite: Ratelimit | null;
+  proxyVisitor: Ratelimit | null;
+  proxyShopRead: Ratelimit | null;
+  proxyShopMint: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -29,7 +42,7 @@ function createRatelimiters(): {
     console.error(
       '[ratelimit] Redis configuration missing — protected requests are unavailable.',
     );
-    return { publicApi: null, tryOnPoll: null, merchantRead: null, merchantWrite: null };
+    return { ...NO_LIMITERS };
   }
   try {
     const redis = Redis.fromEnv();
@@ -63,12 +76,38 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:merchant-write',
         analytics: false,
       }),
+      /* Shopify App Proxy traffic (lib/shopify/proxy-rate-limit.ts). These
+         requests reach us from Shopify, so the network address is Shopify's,
+         shared by every shopper of every store. They are keyed by the signed
+         shop and the visitor id the storefront script sends instead: one
+         budget per shopper, and a ceiling per shop that no rotation of
+         visitor ids can get past. Minting a try-on context is the costly
+         route (product resolution and an entitlement read), so its shop
+         ceiling is lower than the read routes'. */
+      proxyVisitor: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(30, '60 s'),
+        prefix: 'gc-ratelimit:proxy-visitor',
+        analytics: false,
+      }),
+      proxyShopRead: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(3000, '60 s'),
+        prefix: 'gc-ratelimit:proxy-shop-read',
+        analytics: false,
+      }),
+      proxyShopMint: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(300, '60 s'),
+        prefix: 'gc-ratelimit:proxy-shop-mint',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
       '[ratelimit] Redis initialization failed — protected requests are unavailable.',
     );
-    return { publicApi: null, tryOnPoll: null, merchantRead: null, merchantWrite: null };
+    return { ...NO_LIMITERS };
   }
 }
 
@@ -88,6 +127,9 @@ export const publicApiRatelimit = limiterFacade(limiters.publicApi);
 export const tryOnPollRatelimit = limiterFacade(limiters.tryOnPoll);
 export const merchantReadRatelimit = limiterFacade(limiters.merchantRead);
 export const merchantWriteRatelimit = limiterFacade(limiters.merchantWrite);
+export const proxyVisitorRatelimit = limiterFacade(limiters.proxyVisitor);
+export const proxyShopReadRatelimit = limiterFacade(limiters.proxyShopRead);
+export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

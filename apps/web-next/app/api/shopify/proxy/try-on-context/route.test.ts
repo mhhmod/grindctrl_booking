@@ -16,11 +16,17 @@ const { rateLimitMock, resolveStorefrontProductMock, launchMock } = vi.hoisted((
 
 vi.mock('@/lib/try-on/launch', () => ({ getTryOnLaunch: (...args: unknown[]) => launchMock(...args) }));
 
-vi.mock('@/lib/ratelimit', () => ({
-  publicApiRatelimit: { limit: (...args: unknown[]) => rateLimitMock(...args) },
-  clientIp: () => 'test-ip',
-  rateLimitedResponse: () => new Response(null, { status: 429 }),
-}));
+vi.mock('@/lib/ratelimit', () => {
+  const limiter = (name: string) => ({ limit: (id: string) => rateLimitMock(name, id) });
+  return {
+    publicApiRatelimit: limiter('publicApi'),
+    proxyVisitorRatelimit: limiter('proxyVisitor'),
+    proxyShopReadRatelimit: limiter('proxyShopRead'),
+    proxyShopMintRatelimit: limiter('proxyShopMint'),
+    clientIp: () => 'test-ip',
+    rateLimitedResponse: () => new Response(null, { status: 429 }),
+  };
+});
 vi.mock('@/lib/shopify/product-resolver', async () => {
   const actual = await vi.importActual<typeof import('@/lib/shopify/product-resolver')>(
     '@/lib/shopify/product-resolver',
@@ -126,6 +132,46 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     const response = await GET(signedRequest());
 
     expect(response.status).toBe(200);
+  });
+
+  /* Phase zero item 3: these requests come from Shopify's address, so they
+     are counted per shop and visitor, never against one shared address. */
+  it('counts a signed request against its shop and visitor, not the address', async () => {
+    rateLimitMock.mockClear();
+    await GET(signedRequest({ vid: 'visitor_0123456789abcdef' }));
+
+    expect(rateLimitMock.mock.calls).toEqual([
+      ['proxyVisitor', 'tc:demo.myshopify.com:visitor_0123456789abcdef'],
+      ['proxyShopMint', 'tc:demo.myshopify.com'],
+    ]);
+  });
+
+  it('still applies the shop ceiling when an older script sends no visitor id', async () => {
+    rateLimitMock.mockClear();
+    await GET(signedRequest());
+
+    expect(rateLimitMock.mock.calls).toEqual([['proxyShopMint', 'tc:demo.myshopify.com']]);
+  });
+
+  it('keys an unsigned request by address and refuses it', async () => {
+    rateLimitMock.mockClear();
+    const forged = signedRequest();
+    forged.nextUrl.searchParams.set('signature', '0'.repeat(64));
+    const response = await GET(new NextRequest(forged.nextUrl));
+
+    expect(response.status).toBe(401);
+    expect(rateLimitMock.mock.calls).toEqual([['publicApi', 'tc:test-ip']]);
+  });
+
+  it('answers 429 when the shop ceiling is spent', async () => {
+    rateLimitMock.mockImplementation(async (name: string) => ({
+      success: name !== 'proxyShopMint',
+      reset: Date.now() + 10_000,
+    }));
+    const response = await GET(signedRequest({ vid: 'visitor_0123456789abcdef' }));
+
+    expect(response.status).toBe(429);
+    expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
   });
 
   it('checks the signature before reading the looks', async () => {

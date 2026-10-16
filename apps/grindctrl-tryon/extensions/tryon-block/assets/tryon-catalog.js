@@ -36,6 +36,27 @@
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
   }
 
+  /* An anonymous id for this browser, shared with the catalogue script.
+     It carries no personal data; the server keys its rate limit by shop and
+     this id, because these requests reach it from Shopify's own address. */
+  var VISITOR_KEY = 'gc_tryon_vid';
+  var visitorIdCache = null;
+  function visitorId() {
+    if (visitorIdCache !== null) return visitorIdCache;
+    try {
+      var stored = window.localStorage.getItem(VISITOR_KEY);
+      if (stored && /^[A-Za-z0-9_-]{16,64}$/.test(stored)) return (visitorIdCache = stored);
+    } catch (_) { /* storage blocked: a per-page id still works */ }
+    visitorIdCache = createStorefrontNonce();
+    try { if (visitorIdCache) window.localStorage.setItem(VISITOR_KEY, visitorIdCache); } catch (_) {}
+    return visitorIdCache;
+  }
+
+  function withVisitor(url) {
+    var id = visitorId();
+    return id ? url + '&vid=' + encodeURIComponent(id) : url;
+  }
+
   /* The config's launch answer (N34), read the same way as the product-page
      block: hidden adds no pills at all; a failed read keeps today's pills,
      and the context route still refuses a store with no looks. */
@@ -58,10 +79,12 @@
 
   function getStorefrontContext(product, nonce) {
     return fetch(
-      '/apps/grindctrl/try-on-context?product=' +
-        encodeURIComponent(product) +
-        '&nonce=' +
-        encodeURIComponent(nonce),
+      withVisitor(
+        '/apps/grindctrl/try-on-context?product=' +
+          encodeURIComponent(product) +
+          '&nonce=' +
+          encodeURIComponent(nonce)
+      ),
       { credentials: 'same-origin', headers: { Accept: 'application/json' } }
     ).then(function (res) {
       if (res.status === 409) {
@@ -80,7 +103,7 @@
   }
 
   var cfg = null;
-  var cfgPromise = fetch('/apps/grindctrl/config?locale=' + LOCALE, {
+  var cfgPromise = fetch(withVisitor('/apps/grindctrl/config?locale=' + LOCALE), {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' }
   })

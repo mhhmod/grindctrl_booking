@@ -55,6 +55,27 @@
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
   }
 
+  /* An anonymous id for this browser, shared with the catalogue script.
+     It carries no personal data; the server keys its rate limit by shop and
+     this id, because these requests reach it from Shopify's own address. */
+  var VISITOR_KEY = 'gc_tryon_vid';
+  var visitorIdCache = null;
+  function visitorId() {
+    if (visitorIdCache !== null) return visitorIdCache;
+    try {
+      var stored = window.localStorage.getItem(VISITOR_KEY);
+      if (stored && /^[A-Za-z0-9_-]{16,64}$/.test(stored)) return (visitorIdCache = stored);
+    } catch (_) { /* storage blocked: a per-page id still works */ }
+    visitorIdCache = createStorefrontNonce();
+    try { if (visitorIdCache) window.localStorage.setItem(VISITOR_KEY, visitorIdCache); } catch (_) {}
+    return visitorIdCache;
+  }
+
+  function withVisitor(url) {
+    var id = visitorId();
+    return id ? url + '&vid=' + encodeURIComponent(id) : url;
+  }
+
   /* The config's launch answer (N34). `available` is the older field, read
      only if a server without `tryOn` ever answers. A failed config read is
      not "hidden": the button keeps today's defaults, and the context route
@@ -83,7 +104,7 @@
       encodeURIComponent(nonce);
     if (root.dataset.variant) url += '&variant=' + encodeURIComponent(root.dataset.variant);
 
-    return fetch(url, {
+    return fetch(withVisitor(url), {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     }).then(function (res) {
@@ -104,7 +125,7 @@
   }
 
   function applyConfig(root, btn, locale) {
-    fetch('/apps/grindctrl/config?locale=' + encodeURIComponent(locale), {
+    fetch(withVisitor('/apps/grindctrl/config?locale=' + encodeURIComponent(locale)), {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     })

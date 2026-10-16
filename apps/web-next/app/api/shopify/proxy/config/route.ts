@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
-import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
+import { proxyVisitorId, requireProxyRateLimit } from '@/lib/shopify/proxy-rate-limit';
+import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
+import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
 import {
@@ -15,9 +17,10 @@ import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
    Same-origin on the shop side, so no CORS needed.
-   ponytail: no HMAC check while this serves only public styling config and
-   the public launch answer; verify `signature` with the app secret before
-   serving anything sensitive.
+   Only a request Shopify signed may name a shop: the signature decides both
+   whose settings are served and the rate limit key (shop plus the script's
+   visitor id, phase zero item 3). An unsigned request is a browser calling
+   us directly; it gets the shared defaults under its address key.
 
    This endpoint is unauthenticated and reachable by anyone, and each
    uncached call costs ~6 Supabase queries (settings + entitlement
@@ -26,19 +29,24 @@ import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
    shop's entries, so the Try it on button follows the looks at once. */
 
 export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams;
+  /* Only a well-formed myshopify domain from a verified signature may name
+     a settings row; anything else resolves to the shared defaults. */
+  const signed = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret)) !== null;
+  const shop = signed ? normalizeShopDomain(params.get('shop')) : null;
+
   try {
-    await requireRateLimit(publicApiRatelimit, `pc:${clientIp(request) ?? 'unknown'}`);
+    await requireProxyRateLimit(request, {
+      route: 'config',
+      signedShop: shop,
+      visitorId: proxyVisitorId(params.get('vid')),
+    });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
   }
 
-  /* Only well-formed myshopify domains may name a settings row; anything
-     else resolves to the shared defaults without touching a per-shop key. */
-  const rawShop = request.nextUrl.searchParams.get('shop');
-  const shop = rawShop ? normalizeShopDomain(rawShop) : null;
-
-  const requested = request.nextUrl.searchParams.get('locale');
+  const requested = params.get('locale');
   const locale: TryOnLocale = isTryOnLocale(requested) ? requested : DEFAULT_TRYON_LOCALE;
 
   const cacheKey = proxyConfigCacheKey(shop, locale);
