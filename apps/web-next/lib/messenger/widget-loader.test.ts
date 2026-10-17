@@ -173,4 +173,22 @@ describe('storefront widget loader — config failures', () => {
     expect(loader).toContain('new PerformanceObserver');
     expect(loader).not.toMatch(/window\.fetch\s*=/);
   });
+
+  /* Phase zero item 9: launch state. */
+  it('draws nothing when the config says this visitor is outside the launch, except in the theme editor', () => {
+    expect(loader).toContain('launchHidden(config)) return;');
+    expect(loader).toContain('config.launch.show === false');
+    expect(loader).toContain('window.Shopify.designMode');
+  });
+
+  it('sends the shared visitor id and the owner\'s preview link with the config call', () => {
+    expect(loader).toContain("lsGet('gc_tryon_vid')");
+    expect(loader).toContain("'&vid=' + encodeURIComponent(launchVisitorId())");
+    expect(loader).toContain("'&preview=' + encodeURIComponent(preview)");
+    expect(loader).toContain("get('gc_preview')");
+  });
+
+  it('sends the visitor\'s holdout arm with every event', () => {
+    expect(loader).toContain('bucket: (state.config && state.config.launch && state.config.launch.bucket) || undefined');
+  });
 });

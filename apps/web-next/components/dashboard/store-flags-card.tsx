@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { setStoreFlag } from '@/app/dashboard/flags/actions';
+import { setLaunchStateAsOperator } from '@/app/dashboard/try-on/launch-actions';
+
+const LAUNCH_STATES = ['setup', 'preview', 'live', 'holdout'] as const;
 
 export type StoreFlagRow = {
   flag: string;
@@ -21,12 +24,16 @@ export function StoreFlagsCard({
   storeKey,
   storeLabel,
   rows,
+  launchState,
 }: {
   kind: 'shop' | 'site';
   storeKey: string;
   storeLabel: string;
   rows: StoreFlagRow[];
+  /** A Shopify store's launch state (N5, N6), for testing it from here. */
+  launchState?: string;
 }) {
+  const [launch, setLaunch] = useState(launchState);
   const [enabled, setEnabled] = useState<Set<string>>(
     () => new Set(rows.filter((row) => row.enabled).map((row) => row.flag)),
   );
@@ -39,6 +46,15 @@ export function StoreFlagsCard({
     startTransition(async () => {
       const result = await setStoreFlag({ kind, key: storeKey, flag, enabled: next });
       if (result.ok) setEnabled(new Set(result.flags));
+      else setError(result.message);
+    });
+  }
+
+  function setState(state: string) {
+    setError(null);
+    startTransition(async () => {
+      const result = await setLaunchStateAsOperator({ shop: storeKey, state });
+      if (result.ok) setLaunch(result.state);
       else setError(result.message);
     });
   }
@@ -77,6 +93,24 @@ export function StoreFlagsCard({
             );
           })}
         </ul>
+        {kind === 'shop' && launch !== undefined && (
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Launch state">
+            <span className="text-sm font-medium text-foreground">Launch state</span>
+            {LAUNCH_STATES.map((state) => (
+              <Button
+                key={state}
+                type="button"
+                size="sm"
+                variant={launch === state ? 'default' : 'outline'}
+                aria-pressed={launch === state}
+                disabled={pending}
+                onClick={() => setState(state)}
+              >
+                {state}
+              </Button>
+            ))}
+          </div>
+        )}
         {error && (
           <p className="text-sm text-destructive" role="alert">
             {error}

@@ -8,6 +8,7 @@ import {
   normalizeShopDomain,
 } from './shop-authorization';
 import { invalidateProxyConfig } from './proxy-config-cache';
+import { withoutTestLooks } from '@/lib/try-on/test-looks';
 
 export type TryOnShopStatus = 'installed' | 'uninstalled';
 
@@ -161,12 +162,16 @@ export async function listManagedTryOnShops(): Promise<ManagedTryOnShop[]> {
 
   return Promise.all(
     ((data ?? []) as ShopRow[]).map(async (shop) => {
-      const { data: jobs, count, error: jobsError } = await supabase
-        .from('tryon_jobs')
-        .select('created_at', { count: 'exact' })
-        .eq('shop', shop.shop_domain)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      // The owner's test looks do not count as the shop's looks.
+      const { data: jobs, count, error: jobsError } = await withoutTestLooks((excludeTestLooks) => {
+        const query = supabase
+          .from('tryon_jobs')
+          .select('created_at', { count: 'exact' })
+          .eq('shop', shop.shop_domain);
+        return (excludeTestLooks ? query.eq('is_test', false) : query)
+          .order('created_at', { ascending: false })
+          .limit(1);
+      });
 
       if (jobsError) {
         throw new Error(`Unable to load job stats for ${shop.shop_domain}: ${jobsError.message}`);

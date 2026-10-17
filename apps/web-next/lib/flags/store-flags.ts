@@ -19,6 +19,8 @@ export const STORE_FLAGS = {
   n24_assistant_down: { code: 'N24', title: 'The assistant-down fallback' },
   n25_handoff_rules: { code: 'N25', title: 'Extra handoff rules and topic tags' },
   n8_unanswered_questions: { code: 'N8', title: 'Questions the assistant could not answer' },
+  n5_preview_mode: { code: 'N5', title: 'Preview before going live, with free test looks' },
+  n6_holdout: { code: 'N6', title: 'The 50/50 holdout' },
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;

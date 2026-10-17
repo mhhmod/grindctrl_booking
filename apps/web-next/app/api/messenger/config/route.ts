@@ -9,6 +9,9 @@ import {
 } from '@/lib/messenger/public-api';
 import { recordEvent } from '@/lib/messenger/conversations';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
+import { launchAudience, launchVisitorId } from '@/lib/launch/audience';
+import { getStoreLaunch } from '@/lib/launch/store-launch';
+import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
    Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
@@ -62,7 +65,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'origin_not_allowed' }, { status: 403 });
     }
 
-    const payload = toPublicPayload(site, new Date(), await storeFlags(flagStoreForSite(site)));
+    const flagStore = flagStoreForSite(site);
+    const features = await storeFlags(flagStore);
+    const now = new Date();
+    const payload = toPublicPayload(site, now, features);
+    /* Who sees Store Chat on a Shopify store (phase zero item 9): only the
+       owner's preview link while it is in setup or preview, and not the
+       holdout's off arm. The query names the visitor, so a shared cache
+       keeps one answer per visitor. */
+    if ('shopDomain' in flagStore && features.includes('n5_preview_mode')) {
+      const audience = launchAudience({
+        launch: await getStoreLaunch(flagStore.shopDomain),
+        features,
+        preview: verifyPreviewTokenAnyApp(request.nextUrl.searchParams.get('preview'), flagStore.shopDomain),
+        visitorId: launchVisitorId(request.nextUrl.searchParams.get('vid')),
+        now,
+      });
+      payload.launch = audience;
+    }
     void recordEvent({ siteId: site.id, eventName: 'config_served', payload: { v: payload.v } }).catch(() => {});
 
     /* The widget fetches this from the merchant's storefront, so the response

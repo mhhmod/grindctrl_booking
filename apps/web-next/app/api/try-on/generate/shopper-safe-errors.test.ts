@@ -96,3 +96,22 @@ describe('POST /api/try-on/generate — shopper-safe persistence errors', () => 
     expect(body.message.length).toBeGreaterThan(0);
   });
 });
+
+/* N5: the owner used today's test looks. */
+describe('POST /api/try-on/generate — the test-look cap', () => {
+  it('answers 429 test_looks_cap with the plain unavailable sentence', async () => {
+    const { TryOnTestLooksCapError } = await import('@/lib/try-on/entitlement');
+    generateTryOnMock.mockRejectedValue(new TryOnTestLooksCapError());
+    const sessionId = demoSession();
+
+    const response = await POST(
+      makeRequest({ sessionId, attemptId: attemptFor(sessionId), productId: 'premium-ringer-tee', photoSource: 'mock' }),
+    );
+    expect(response.status).toBe(429);
+    expect(await response.json()).toEqual({
+      ok: false,
+      code: 'test_looks_cap',
+      message: 'Try-on is temporarily unavailable. Please check back soon.',
+    });
+  });
+});

@@ -286,7 +286,7 @@ export function TryOnDemo({
 
       /* The server's TRYON_UNAVAILABLE sentence is English; a shopper in
          Arabic reads this store's language instead. */
-      if (genData.code === 'TRYON_UNAVAILABLE') {
+      if (genData.code === 'TRYON_UNAVAILABLE' || genData.code === 'test_looks_cap') {
         setUnavailable(true);
         throw new Error(t.tryOnUnavailable);
       }

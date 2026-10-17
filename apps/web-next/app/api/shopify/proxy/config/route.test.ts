@@ -3,11 +3,12 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { entitlementMock, settingsMock, rateLimitMock, flagsMock } = vi.hoisted(() => ({
+const { entitlementMock, settingsMock, rateLimitMock, flagsMock, launchMock } = vi.hoisted(() => ({
   entitlementMock: vi.fn(),
   settingsMock: vi.fn(),
   rateLimitMock: vi.fn(),
   flagsMock: vi.fn(),
+  launchMock: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => {
@@ -29,12 +30,17 @@ vi.mock('@/lib/try-on/settings', () => ({
 vi.mock('@/lib/flags/store-flags', () => ({
   storeFlags: (...args: unknown[]) => flagsMock(...args),
 }));
+vi.mock('@/lib/launch/store-launch', () => ({
+  getStoreLaunch: (...args: unknown[]) => launchMock(...args),
+}));
 vi.mock('@/lib/try-on/merchant-copy', () => ({
   pickMerchantCopy: () => ({ buttonLabel: 'Try it on', catalogLabel: 'Try on', disclaimerText: '' }),
 }));
 
 import { GET } from './route';
 import { clearProxyConfigCache, invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
+import { signPreviewToken } from '@/lib/launch/preview-token';
+import { holdoutBucket } from '@/lib/launch/audience';
 
 const SHOP = 'demo.myshopify.com';
 const SECRET = 'shopify-app-secret';
@@ -67,6 +73,7 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
     entitlementMock.mockReset().mockResolvedValue(entitlement());
     flagsMock.mockReset().mockResolvedValue([]);
+    launchMock.mockReset().mockResolvedValue(null);
   });
 
   /* v16 per-store flags: the storefront scripts read them from here. */
@@ -175,3 +182,73 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     expect((await (await GET(request('ar'))).json()).tryOn).toBe('live');
   });
 });
+
+/* Phase zero item 9: who sees Try it on is decided per visitor. */
+describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
+  const SALT = '0123456789abcdef0123456789abcdef';
+  const visitors = Array.from({ length: 50 }, (_, index) => `visitor_${index}_abcdefghijkl`);
+  const preview = (state: string) => ({ state, holdoutShare: null, holdoutStartedAt: null, holdoutEndsAt: null, salt: SALT });
+
+  beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
+    process.env.SHOPIFY_API_SECRET = SECRET;
+    rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    clearProxyConfigCache();
+    settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
+    entitlementMock.mockReset().mockResolvedValue(entitlement());
+    flagsMock.mockReset().mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
+    launchMock.mockReset().mockResolvedValue(preview('preview'));
+  });
+
+  afterEach(() => {
+    delete process.env.SHOPIFY_API_KEY;
+    delete process.env.SHOPIFY_API_SECRET;
+    clearProxyConfigCache();
+  });
+
+  it('hides Try it on from shoppers while the store is in preview', async () => {
+    const body = await (await GET(request('en', { vid: visitors[0] }))).json();
+    expect(body).toMatchObject({ tryOn: 'hidden', reason: 'preview', available: false, launch: { test: false, bucket: null } });
+  });
+
+  it('shows it to the owner with a valid preview link, as test looks, even with no looks left', async () => {
+    entitlementMock.mockResolvedValue(entitlement({ available: false, totalCreditsRemaining: 0 }));
+    const { token } = signPreviewToken(SECRET, SHOP);
+    const body = await (await GET(request('en', { vid: visitors[0], preview: token }))).json();
+    expect(body).toMatchObject({ tryOn: 'live', reason: null, available: true, launch: { test: true } });
+  });
+
+  it('refuses a preview link for another shop or signed with another secret', async () => {
+    for (const token of [signPreviewToken(SECRET, 'other.myshopify.com').token, signPreviewToken('wrong', SHOP).token]) {
+      const body = await (await GET(request('en', { preview: token }))).json();
+      expect(body).toMatchObject({ tryOn: 'hidden', reason: 'preview' });
+    }
+  });
+
+  it('keeps the cached shop answer from leaking one visitor\'s access to the next', async () => {
+    const { token } = signPreviewToken(SECRET, SHOP);
+    expect((await (await GET(request('en', { preview: token }))).json()).tryOn).toBe('live');
+    expect((await (await GET(request('en'))).json()).tryOn).toBe('hidden');
+    expect(settingsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides it from the holdout\'s off arm and shows the on arm, by the visitor id', async () => {
+    launchMock.mockResolvedValue({
+      state: 'holdout', holdoutShare: 0.5, salt: SALT,
+      holdoutStartedAt: new Date(Date.now() - 86_400_000).toISOString(),
+      holdoutEndsAt: new Date(Date.now() + 13 * 86_400_000).toISOString(),
+    });
+    const off = visitors.find((id) => holdoutBucket(id, SALT, 0.5) === 'off')!;
+    const on = visitors.find((id) => holdoutBucket(id, SALT, 0.5) === 'on')!;
+    expect(await (await GET(request('en', { vid: off }))).json()).toMatchObject({ tryOn: 'hidden', reason: 'holdout', launch: { bucket: 'off' } });
+    expect(await (await GET(request('en', { vid: on }))).json()).toMatchObject({ tryOn: 'live', launch: { bucket: 'on' } });
+  });
+
+  it('changes nothing while the store\'s flag is off, and reads no launch state', async () => {
+    flagsMock.mockResolvedValue([]);
+    const body = await (await GET(request('en', { vid: visitors[0] }))).json();
+    expect(body).toMatchObject({ tryOn: 'live', launch: { test: false, bucket: null } });
+    expect(launchMock).not.toHaveBeenCalled();
+  });
+});
+

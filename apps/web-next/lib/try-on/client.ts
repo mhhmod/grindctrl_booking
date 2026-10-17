@@ -268,7 +268,9 @@ export async function runPublicTryOn({
     });
     let job = await readJson<TryOnJobApiResponse>(generateRes);
     if (!job) throw stopFor(generateRes);
-    if (job.code === 'TRYON_UNAVAILABLE') throw new TryOnStop({ kind: 'unavailable' });
+    // A capped day of the owner's test looks (N5) reads the same: try-on is
+    // not available right now.
+    if (job.code === 'TRYON_UNAVAILABLE' || job.code === 'test_looks_cap') throw new TryOnStop({ kind: 'unavailable' });
     if (!generateRes.ok) throw stopFor(generateRes, job.message || job.error);
 
     if (

@@ -17,7 +17,10 @@ import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { ConnectShopPanel } from '@/components/dashboard/connect-shop-panel';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
-import { storeFlagRows } from '@/lib/flags/store-flags';
+import { storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
+import { LaunchCard } from '@/components/dashboard/launch-card';
+import { getStoreLaunch } from '@/lib/launch/store-launch';
+import { launchView } from '@/lib/launch/audience';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +75,13 @@ export default async function DashboardTryOnPage({
   // Only the platform operator sees, or may change, a shop's v16 flags.
   const flagRows =
     canManagePlan && selectedShop !== 'default' ? await storeFlagRows({ shopDomain: selectedShop }) : null;
+  /* Try it yourself and Go live (phase zero item 9), for the owner of the
+     selected shop while its n5_preview_mode flag is on. */
+  const [shopFeatures, storeLaunch] =
+    hasShops && selectedShop !== 'default'
+      ? await Promise.all([storeFlags({ shopDomain: selectedShop }), getStoreLaunch(selectedShop)])
+      : [[], null];
+  const launch = launchView(storeLaunch, new Date());
 
   const completed = jobs.filter((j) => j.status === 'completed');
   const avgSeconds = completed.length
@@ -150,6 +160,15 @@ export default async function DashboardTryOnPage({
         </CardContent>
       </Card>
 
+      {hasShops && selectedShop !== 'default' && shopFeatures.includes('n5_preview_mode') && (
+        <LaunchCard
+          locale={pageLocale === 'ar' ? 'ar' : 'en'}
+          shop={selectedShop}
+          launch={launch}
+          holdoutAvailable={shopFeatures.includes('n6_holdout')}
+        />
+      )}
+
       {hasShops && catalog && planState && (
         <Card>
           <CardHeader>
@@ -170,7 +189,13 @@ export default async function DashboardTryOnPage({
       )}
 
       {flagRows && (
-        <StoreFlagsCard kind="shop" storeKey={selectedShop} storeLabel={selectedShop} rows={flagRows} />
+        <StoreFlagsCard
+          kind="shop"
+          storeKey={selectedShop}
+          storeLabel={selectedShop}
+          rows={flagRows}
+          launchState={launch.state}
+        />
       )}
 
       {hasShops && settings && (

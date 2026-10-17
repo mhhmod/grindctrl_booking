@@ -3,6 +3,7 @@ import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource } from './ty
 import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
 import {
+  beginTestTryOnJob,
   beginTryOnJob,
   finalizeTryOnJob,
   loadAuthorizedDurableTryOnJob,
@@ -124,14 +125,20 @@ export async function generateTryOn(
     const modelKey = (await getShopModelKey(shop)) || TRYON_IMAGE_MODEL;
     const providerModel = TRYON_IMAGE_MODEL;
     const reservedJobId = createJobId();
-    const reservation = await beginTryOnJob({
-      shop,
-      jobId: reservedJobId,
-      requestKey,
-      modelKey,
-      sessionId,
-      productId,
-    });
+    /* The owner's look from the preview link is a test look (N5): the job
+       is recorded but no look is spent, and a daily cap applies instead.
+       The flag is signed into the session, so a shopper cannot set it. */
+    const reservation =
+      authorization.test === true
+        ? await beginTestTryOnJob({ shop, jobId: reservedJobId, requestKey, sessionId, productId })
+        : await beginTryOnJob({
+            shop,
+            jobId: reservedJobId,
+            requestKey,
+            modelKey,
+            sessionId,
+            productId,
+          });
 
     if (!reservation.created) {
       const cached = getJob(reservation.jobId);

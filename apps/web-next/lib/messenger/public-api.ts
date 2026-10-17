@@ -145,6 +145,9 @@ export interface PublicMessengerPayload {
   /** The v16 features switched on for this store (lib/flags/store-flags.ts).
    *  A marked element is drawn only when its flag is listed here. */
   features: string[];
+  /** Who sees Store Chat on this store (N5, N6): the loader draws nothing
+   *  when show is false, outside the theme editor. Absent means show. */
+  launch?: import('@/lib/launch/audience').LaunchAudience;
   /** When the team is in, for the header (n23_after_hours on only). */
   team?: { open: boolean; opensAt: string | null; closesAt: string | null; timezone: string } | null;
   appearance: MessengerConfig['appearance'];

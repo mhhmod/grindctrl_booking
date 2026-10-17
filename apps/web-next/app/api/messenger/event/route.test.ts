@@ -81,3 +81,32 @@ describe('configFailurePayload', () => {
     expect(configFailurePayload({ status: 404 }, 'not a url', true)).toEqual({ reason: 'http_error', host: null, status: 404 });
   });
 });
+
+/* Phase zero item 9: each event carries the visitor's holdout arm, and
+   nothing else from the browser. */
+describe('POST /api/messenger/event holdout arm', () => {
+  beforeEach(() => {
+    Object.values(mocks).forEach((mock) => mock.mockReset());
+    mocks.loadSiteByDomain.mockResolvedValue({ id: 'site-1' });
+    mocks.recordEvent.mockResolvedValue(undefined);
+    mocks.originAllowed.mockReturnValue(true);
+  });
+
+  function postWith(extra: Record<string, unknown>) {
+    return new NextRequest('https://grindctrl.cloud/api/messenger/event', {
+      method: 'POST',
+      headers: { origin: 'https://maisonnoor.com', 'content-type': 'application/json' },
+      body: JSON.stringify({ shop: SHOP, origin: 'https://maisonnoor.com', name: 'messenger_opened', payload: { anything: 1 }, ...extra }),
+    });
+  }
+
+  it('keeps a valid bucket', async () => {
+    await POST(postWith({ bucket: 'off' }));
+    expect(mocks.recordEvent.mock.calls[0][0].payload).toEqual({ bucket: 'off' });
+  });
+
+  it('keeps nothing else', async () => {
+    await POST(postWith({ bucket: 'sideways' }));
+    expect(mocks.recordEvent.mock.calls[0][0].payload).toEqual({});
+  });
+});

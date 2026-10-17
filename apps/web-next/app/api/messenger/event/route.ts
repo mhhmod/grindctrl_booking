@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
       siteId: site.id,
       conversationId,
       eventName: name,
-      payload: {},
+      // Only the visitor's holdout arm, so both arms can be measured.
+      payload: body.bucket === 'on' || body.bucket === 'off' ? { bucket: body.bucket } : {},
     });
     return NextResponse.json({ ok: true }, { headers: corsHeaders(request) });
   } catch (error) {

@@ -13,6 +13,7 @@ import {
   finalizeCreditJob,
   getShopEntitlement,
   reserveCredit,
+  reserveTestLook,
   type CreditReservation,
   type ShopEntitlement,
 } from './entitlement';
@@ -24,6 +25,7 @@ import {
   TryOnResultSchemaNotReadyError,
   TryOnResultUnavailableError,
 } from './result-errors';
+import { withoutTestLooks } from '@/lib/try-on/test-looks';
 
 const RESULT_BUCKET = 'tryon-results';
 /* A stored look is only ever read through its try-on session, and no
@@ -626,6 +628,17 @@ export async function beginTryOnJob(input: {
   return reserveCredit(input);
 }
 
+/** The owner's test look from the preview link (N5): never billed. */
+export async function beginTestTryOnJob(input: {
+  shop: string;
+  jobId: string;
+  requestKey: string;
+  sessionId: string;
+  productId: string;
+}): Promise<CreditReservation> {
+  return reserveTestLook(input);
+}
+
 export async function finalizeTryOnJob(job: TryOnJob, durationMs: number): Promise<void> {
   await finalizeCreditJob({
     jobId: job.jobId,
@@ -667,12 +680,16 @@ export async function listRecentTryOnJobs(
   const supabase = getServiceClient();
   if (!supabase) return [];
 
-  const { data, error } = await supabase
-    .from('tryon_jobs')
-    .select('id, product_id, shop, status, provider, cost_usd, duration_ms, message, created_at')
-    .in('shop', shopDomains)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  // The owner's test looks stay out of the dashboard's list and its numbers.
+  const { data, error } = await withoutTestLooks((excludeTestLooks) => {
+    const query = supabase
+      .from('tryon_jobs')
+      .select('id, product_id, shop, status, provider, cost_usd, duration_ms, message, created_at')
+      .in('shop', shopDomains);
+    return (excludeTestLooks ? query.eq('is_test', false) : query)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+  });
 
   if (error) {
     console.error('tryon_jobs select failed:', error.message);
