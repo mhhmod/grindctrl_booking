@@ -7,27 +7,19 @@ describe('dashboard route metadata', () => {
     expect(normalizeDashboardPathname('/dashboard/store-chat/')).toBe('/dashboard/store-chat');
   });
 
-  it('returns metadata for core journey routes', () => {
-    const agents = getDashboardRouteMeta('/dashboard/agents');
-    const implementation = getDashboardRouteMeta('/dashboard/implementation');
-
-    expect(agents.title).toBe('AI Agents');
-    expect(agents.description).toContain('AI agents');
-
-    expect(implementation.title).toBe('Implementation');
-    expect(implementation.description).toContain('request form');
-  });
-
-  it('returns metadata for analytics and install routes', () => {
+  it('returns metadata for the home, Store Chat and install routes', () => {
+    const home = getDashboardRouteMeta('/dashboard');
+    const storeChat = getDashboardRouteMeta('/dashboard/store-chat');
     const install = getDashboardRouteMeta('/dashboard/install');
-    const analytics = getDashboardRouteMeta('/dashboard/analytics');
     const tryOn = getDashboardRouteMeta('/dashboard/try-on');
+
+    expect(home.title).toBe('Overview');
+    expect(home.breadcrumbs).toEqual([{ label: 'Dashboard', href: '/dashboard' }]);
+    expect(storeChat.title).toBe('Store Chat');
+    expect(storeChat.breadcrumbs.at(-1)).toEqual({ label: 'Store Chat' });
 
     expect(install.title).toBe('Widget / Embed');
     expect(install.description).toContain('Install snippet');
-
-    expect(analytics.title).toBe('Analytics');
-    expect(analytics.description).toContain('trial funnel');
 
     expect(tryOn.title).toBe('Try-On');
     expect(tryOn.description).toContain('generation history');
@@ -37,12 +29,18 @@ describe('dashboard route metadata', () => {
     expect(normalizeDashboardPathname('/dashboard/sites')).toBe('/dashboard/install');
     expect(normalizeDashboardPathname('/dashboard/branding')).toBe('/dashboard/install');
     expect(normalizeDashboardPathname('/dashboard/domains')).toBe('/dashboard/install');
-    expect(normalizeDashboardPathname('/dashboard/routing')).toBe('/dashboard/agents');
-    expect(normalizeDashboardPathname('/dashboard/intents')).toBe('/dashboard/agents');
+    expect(normalizeDashboardPathname('/dashboard/overview')).toBe('/dashboard');
   });
 
   it('does not alias the retired inbox route', () => {
     expect(normalizeDashboardPathname('/dashboard/inbox')).toBe('/dashboard/inbox');
+  });
+
+  it('no longer knows the retired preview routes', () => {
+    for (const route of ['agents', 'analytics', 'crm', 'workflows', 'integrations', 'implementation', 'leads']) {
+      const meta = getDashboardRouteMeta(`/dashboard/${route}`);
+      expect(meta.description).toBe('Workspace data for this dashboard section.');
+    }
   });
 
   it('builds a readable fallback for unknown dashboard sections', () => {

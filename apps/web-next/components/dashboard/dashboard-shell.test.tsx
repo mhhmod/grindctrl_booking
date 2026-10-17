@@ -31,9 +31,9 @@ vi.mock('next/navigation', () => ({
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const, group: 'core' as const },
-  { href: '/dashboard/agents', label: 'AI Agents', icon: {} as never, isActive: false, permissionKey: 'canViewAgents' as const, group: 'core' as const },
+  { href: '/dashboard/try-on', label: 'Try-On', icon: {} as never, isActive: false, permissionKey: 'canViewAgents' as const, group: 'core' as const },
   { href: '/dashboard/install', label: 'Widget / Embed', icon: {} as never, isActive: false, permissionKey: 'canViewInstall' as const, group: 'journey' as const },
-  { href: '/dashboard/implementation', label: 'Implementation', icon: {} as never, isActive: false, permissionKey: 'canViewImplementation' as const, group: 'platform' as const },
+  { href: '/dashboard/store-chat', label: 'Store Chat', icon: {} as never, isActive: false, permissionKey: 'canViewMessenger' as const, group: 'platform' as const },
 ];
 
 beforeEach(() => {
@@ -71,9 +71,9 @@ describe('DashboardShell', () => {
     const sidebarNav = screen.getByRole('link', { name: /GRINDCTRL\s*Operations Platform/i }).closest('[data-sidebar="sidebar"]');
     expect(sidebarNav).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Overview' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'AI Agents' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Try-On' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Widget / Embed' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Implementation' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Store Chat' })).toBeInTheDocument();
     expect(screen.getByLabelText('Dashboard content')).toBeInTheDocument();
   });
 
