@@ -21,7 +21,7 @@ import {
    read rejects for every caller; getActiveStore treats it as no stores. */
 export const listOwnedShops = cache(() => listManagedTryOnShops());
 
-const listOwnedSitesReadOnly = cache(async () => {
+export const listOwnedSitesReadOnly = cache(async () => {
   const { userId } = await auth();
   return userId ? listMessengerSitesReadOnly(userId) : [];
 });

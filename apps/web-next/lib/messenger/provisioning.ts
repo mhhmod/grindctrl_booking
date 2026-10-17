@@ -173,7 +173,7 @@ export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise
  *  dashboard's active store on any page without provisioning anything. */
 export async function listMessengerSitesReadOnly(
   clerkUserId: string,
-): Promise<Array<{ id: string; domain: string | null }>> {
+): Promise<Array<{ id: string; name: string; domain: string | null }>> {
   const supabase = getMessengerServiceClient();
   const profile = await supabase
     .from('profiles')
@@ -193,12 +193,13 @@ export async function listMessengerSitesReadOnly(
 
   const sites = await supabase
     .from('widget_sites')
-    .select('id, domain')
+    .select('id, name, domain')
     .eq('workspace_id', workspace.data.id as string)
     .order('created_at', { ascending: true });
   if (sites.error) return [];
-  return ((sites.data ?? []) as Array<{ id: string; domain: string | null }>).map((row) => ({
+  return ((sites.data ?? []) as Array<{ id: string; name: string | null; domain: string | null }>).map((row) => ({
     id: row.id,
+    name: row.name ?? '',
     domain: row.domain ?? null,
   }));
 }
