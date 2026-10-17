@@ -7,7 +7,7 @@ import {
 
 describe('safeRedirectPath', () => {
   it('accepts a same-site absolute path', () => {
-    expect(safeRedirectPath('/dashboard/leads')).toBe('/dashboard/leads');
+    expect(safeRedirectPath('/dashboard/try-on')).toBe('/dashboard/try-on');
     expect(safeRedirectPath('/dashboard/try-on?shop=a.myshopify.com')).toBe(
       '/dashboard/try-on?shop=a.myshopify.com',
     );
@@ -45,7 +45,7 @@ describe('safeRedirectPath', () => {
 
 describe('resolveSignInDestination', () => {
   it('honours a safe redirect_url so the user reaches the page they wanted', () => {
-    expect(resolveSignInDestination('/dashboard/leads')).toBe('/dashboard/leads');
+    expect(resolveSignInDestination('/dashboard/try-on')).toBe('/dashboard/try-on');
   });
 
   it('falls back to the dashboard when redirect_url is absent', () => {

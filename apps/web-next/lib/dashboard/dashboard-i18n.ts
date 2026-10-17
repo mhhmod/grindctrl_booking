@@ -28,24 +28,6 @@ const en: DashboardCopy = {
       title: 'Overview',
       description: 'The try-on business this week, across every merchant store.',
     },
-    '/dashboard/agents': {
-      title: 'AI Agents',
-      description:
-        'Preview and plan AI agents across website, social, voice, file, and CRM channels.',
-    },
-    '/dashboard/leads': {
-      title: 'Leads',
-      description:
-        'Preview lead qualification output from conversations, voice, forms, and files.',
-    },
-    '/dashboard/crm': {
-      title: 'CRM',
-      description: 'Pipeline preview from captured lead to implementation and conversion.',
-    },
-    '/dashboard/workflows': {
-      title: 'Workflows',
-      description: 'Workflow catalog and latest trial preview history.',
-    },
     '/dashboard/try-on': {
       title: 'Try-On',
       description: 'Settings, plans, and generation history for every merchant store.',
@@ -58,22 +40,9 @@ const en: DashboardCopy = {
       title: 'Widget / Embed',
       description: 'Install snippet, verification concept, and widget preview panel.',
     },
-    '/dashboard/integrations': {
-      title: 'Integrations',
-      description:
-        'Connection catalog across AI, social, CRM, support, ops, data, and automation.',
-    },
-    '/dashboard/analytics': {
-      title: 'Analytics',
-      description: 'Preview trial funnel, operations metrics, and channel breakdown.',
-    },
     '/dashboard/settings': {
       title: 'Settings',
       description: 'Workspace configuration and account-level controls.',
-    },
-    '/dashboard/implementation': {
-      title: 'Implementation',
-      description: 'Prepare implementation request form for real tool connections.',
     },
   },
 };
@@ -85,23 +54,6 @@ const ar: DashboardCopy = {
     '/dashboard': {
       title: 'نظرة عامة',
       description: 'أداء التجربة الافتراضية هذا الأسبوع عبر كل متجر.',
-    },
-    '/dashboard/agents': {
-      title: 'وكلاء الذكاء الاصطناعي',
-      description:
-        'معاينة وتخطيط وكلاء الذكاء الاصطناعي عبر الموقع والتواصل الاجتماعي والصوت والملفات وأنظمة العملاء.',
-    },
-    '/dashboard/leads': {
-      title: 'العملاء المحتملون',
-      description: 'معاينة تأهيل العملاء المحتملين من المحادثات والمكالمات والنماذج والملفات.',
-    },
-    '/dashboard/crm': {
-      title: 'إدارة العملاء',
-      description: 'معاينة المسار من التقاط العميل المحتمل حتى التنفيذ والتحويل.',
-    },
-    '/dashboard/workflows': {
-      title: 'مسارات العمل',
-      description: 'دليل مسارات العمل وسجل أحدث المعاينات التجريبية.',
     },
     '/dashboard/try-on': {
       title: 'التجربة الافتراضية',
@@ -115,22 +67,9 @@ const ar: DashboardCopy = {
       title: 'الأداة والتضمين',
       description: 'كود التثبيت والتحقق ولوحة معاينة الأداة.',
     },
-    '/dashboard/integrations': {
-      title: 'التكاملات',
-      description:
-        'دليل الاتصالات عبر الذكاء الاصطناعي والتواصل الاجتماعي وإدارة العملاء والدعم والعمليات والبيانات والأتمتة.',
-    },
-    '/dashboard/analytics': {
-      title: 'التحليلات',
-      description: 'معاينة مسار التجربة ومؤشرات التشغيل وتوزيع القنوات.',
-    },
     '/dashboard/settings': {
       title: 'الإعدادات',
       description: 'إعدادات مساحة العمل وضوابط الحساب.',
-    },
-    '/dashboard/implementation': {
-      title: 'التنفيذ',
-      description: 'تجهيز نموذج طلب التنفيذ لربط الأدوات الحقيقية.',
     },
   },
 };

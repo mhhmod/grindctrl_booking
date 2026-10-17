@@ -28,26 +28,6 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'The try-on business this week, across every merchant store.',
   },
   {
-    pathname: '/dashboard/agents',
-    title: 'AI Agents',
-    description: 'Preview and plan AI agents across website, social, voice, file, and CRM channels.',
-  },
-  {
-    pathname: '/dashboard/leads',
-    title: 'Leads',
-    description: 'Preview lead qualification output from conversations, voice, forms, and files.',
-  },
-  {
-    pathname: '/dashboard/crm',
-    title: 'CRM',
-    description: 'Pipeline preview from captured lead to implementation and conversion.',
-  },
-  {
-    pathname: '/dashboard/workflows',
-    title: 'Workflows',
-    description: 'Workflow catalog and latest trial preview history.',
-  },
-  {
     pathname: '/dashboard/try-on',
     title: 'Try-On',
     description: 'Settings, plans, and generation history for every merchant store.',
@@ -63,24 +43,9 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Install snippet, verification concept, and widget preview panel.',
   },
   {
-    pathname: '/dashboard/integrations',
-    title: 'Integrations',
-    description: 'Connection catalog across AI, social, CRM, support, ops, data, and automation.',
-  },
-  {
-    pathname: '/dashboard/analytics',
-    title: 'Analytics',
-    description: 'Preview trial funnel, operations metrics, and channel breakdown.',
-  },
-  {
     pathname: '/dashboard/settings',
     title: 'Settings',
     description: 'Workspace configuration and account-level controls.',
-  },
-  {
-    pathname: '/dashboard/implementation',
-    title: 'Implementation',
-    description: 'Prepare implementation request form for real tool connections.',
   },
 ];
 
@@ -89,8 +54,6 @@ const DASHBOARD_ROUTE_ALIASES: Record<string, string> = {
   '/dashboard/sites': '/dashboard/install',
   '/dashboard/branding': '/dashboard/install',
   '/dashboard/domains': '/dashboard/install',
-  '/dashboard/routing': '/dashboard/agents',
-  '/dashboard/intents': '/dashboard/agents',
   '/dashboard/widget': '/dashboard/install',
 };
 
