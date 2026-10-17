@@ -18,14 +18,26 @@ let cookieLocale: string | undefined;
 /* getRequestLocale falls back to Accept-Language when no cookie is set, so the
    mock has to supply headers as well as cookies. */
 let acceptLanguage: string | undefined;
+/* The dashboard's active store (phase zero item 33): the one chosen last
+   (cookie) and a link's choice the proxy passes on (header). */
+let storeCookie: string | undefined;
+let storeHeader: string | undefined;
 vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) =>
-      name === 'gc-locale' && cookieLocale ? { name, value: cookieLocale } : undefined,
+      name === 'gc-locale' && cookieLocale
+        ? { name, value: cookieLocale }
+        : name === 'gc-store' && storeCookie
+          ? { name, value: storeCookie }
+          : undefined,
   }),
   headers: async () => ({
     get: (name: string) =>
-      name.toLowerCase() === 'accept-language' ? (acceptLanguage ?? null) : null,
+      name.toLowerCase() === 'accept-language'
+        ? (acceptLanguage ?? null)
+        : name.toLowerCase() === 'x-gc-store'
+          ? (storeHeader ?? null)
+          : null,
   }),
 }));
 
@@ -117,6 +129,8 @@ import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
 beforeEach(() => {
   cookieLocale = undefined;
   acceptLanguage = undefined;
+  storeCookie = undefined;
+  storeHeader = undefined;
   session.auth.mockReset().mockResolvedValue({ userId: 'user_merchant' });
   vi.stubEnv('TRYON_PLATFORM_OPERATOR_CLERK_IDS', '');
 });
@@ -254,6 +268,59 @@ describe('DashboardTryOnPage', () => {
     await renderPage();
 
     expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+  });
+
+  describe('the active store', () => {
+    function twoShops() {
+      vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([
+        {
+          domain: 'grindctrl.myshopify.com',
+          status: 'installed' as const,
+          installedAt: '2026-07-01T00:00:00.000Z',
+          uninstalledAt: null,
+          lastSeenAt: '2026-07-16T00:00:00.000Z',
+          jobCount: 3,
+          lastJobAt: '2026-07-16T00:00:00.000Z',
+        },
+        {
+          domain: 'second.myshopify.com',
+          status: 'installed' as const,
+          installedAt: '2026-07-02T00:00:00.000Z',
+          uninstalledAt: null,
+          lastSeenAt: '2026-07-10T00:00:00.000Z',
+          jobCount: 0,
+          lastJobAt: null,
+        },
+      ]);
+    }
+
+    it('opens on the store chosen last, and its own plan', async () => {
+      twoShops();
+      storeCookie = 'shop:second.myshopify.com';
+      vi.mocked(getShopPlanState).mockClear();
+      await renderPage();
+
+      expect(screen.getByLabelText('Editing')).toHaveValue('second.myshopify.com');
+      expect(getShopPlanState).toHaveBeenCalledWith('second.myshopify.com');
+    });
+
+    it('lets a link switch store over the one chosen last', async () => {
+      twoShops();
+      storeCookie = 'shop:second.myshopify.com';
+      storeHeader = 'shop:grindctrl.myshopify.com';
+      await renderPage();
+
+      expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+    });
+
+    it('falls back to the most recently active shop from a forged remembered store', async () => {
+      twoShops();
+      storeCookie = 'shop:attacker.myshopify.com';
+      await renderPage();
+
+      expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+      expect(screen.queryByRole('option', { name: 'attacker.myshopify.com' })).not.toBeInTheDocument();
+    });
   });
 
   it("falls back to the merchant's own shop for an unknown shop", async () => {

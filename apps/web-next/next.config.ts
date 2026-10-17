@@ -21,6 +21,16 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '*.myshopify.com', pathname: '/cdn/**' },
     ],
   },
+  /* The v16 dashboard routes read like its nav (04-dashboard.md): Today is
+     /dashboard and Store Chat is /dashboard/store-chat. The old addresses
+     keep working, query and all, for bookmarks, emails and Shopify links.
+     Not permanent, so a browser never caches a move that may change again. */
+  async redirects() {
+    return [
+      { source: '/dashboard/overview', destination: '/dashboard', permanent: false },
+      { source: '/dashboard/messenger', destination: '/dashboard/store-chat', permanent: false },
+    ];
+  },
   async headers() {
     /* Baseline hardening applied to every route. Deliberately NOT included
        here: any Content-Security-Policy frame-ancestors value — the embed

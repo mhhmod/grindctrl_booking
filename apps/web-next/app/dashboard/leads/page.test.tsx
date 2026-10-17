@@ -10,6 +10,6 @@ import DashboardLeadsPage from '@/app/dashboard/leads/page';
 describe('DashboardLeadsPage', () => {
   it('redirects the retired leads route to Store Chat', () => {
     DashboardLeadsPage();
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/messenger');
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 });

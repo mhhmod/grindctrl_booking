@@ -10,6 +10,6 @@ import DashboardBrandingPage from '@/app/dashboard/branding/page';
 describe('DashboardBrandingPage', () => {
   it('redirects the retired branding route to Store Chat', () => {
     DashboardBrandingPage();
-    expect(redirectMock).toHaveBeenCalledWith('/dashboard/messenger');
+    expect(redirectMock).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 });

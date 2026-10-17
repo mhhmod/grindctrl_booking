@@ -45,7 +45,7 @@ describe('getDashboardRouteMeta', () => {
 describe('resolveDashboardNavItems', () => {
   it('labels tabs in Arabic', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions,
       locale: 'ar',
     });
@@ -57,7 +57,7 @@ describe('resolveDashboardNavItems', () => {
     // A tab reading one thing and its page heading another is the classic
     // half-translated dashboard bug.
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions,
       locale: 'ar',
     });

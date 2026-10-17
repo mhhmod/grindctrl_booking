@@ -166,6 +166,14 @@ export async function listMessengerSites(clerkUserId: string, email?: string | n
  *  looking at an unrelated page. No profile/workspace yet just means no
  *  sites yet, so short-circuit to []. */
 export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise<string[]> {
+  return (await listMessengerSitesReadOnly(clerkUserId)).map((site) => site.id);
+}
+
+/** The same read-only listing with each site's domain, for resolving the
+ *  dashboard's active store on any page without provisioning anything. */
+export async function listMessengerSitesReadOnly(
+  clerkUserId: string,
+): Promise<Array<{ id: string; domain: string | null }>> {
   const supabase = getMessengerServiceClient();
   const profile = await supabase
     .from('profiles')
@@ -185,10 +193,14 @@ export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise
 
   const sites = await supabase
     .from('widget_sites')
-    .select('id')
-    .eq('workspace_id', workspace.data.id as string);
+    .select('id, domain')
+    .eq('workspace_id', workspace.data.id as string)
+    .order('created_at', { ascending: true });
   if (sites.error) return [];
-  return ((sites.data ?? []) as Array<{ id: string }>).map((row) => row.id);
+  return ((sites.data ?? []) as Array<{ id: string; domain: string | null }>).map((row) => ({
+    id: row.id,
+    domain: row.domain ?? null,
+  }));
 }
 
 /** Adoptable when it is already this caller's, or parked under a synthetic
@@ -263,7 +275,7 @@ export async function unclaimSite(
   }
 
   /* Stamped as a best-effort follow-up, not part of adoptSite's own CAS:
-     this marker only stops app/dashboard/messenger/page.tsx's own silent
+     this marker only stops app/dashboard/store-chat/page.tsx's own silent
      "give a first-time visitor a site immediately" heuristic from handing
      this exact merchant their disconnected store back the moment Try-On
      reports the domain still installed — see wasDisconnectedBySelf below.

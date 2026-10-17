@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnSettings } from '@/lib/try-on/settings';
-import { listManagedTryOnShops } from '@/lib/shopify/shops';
+import { getActiveStore, listOwnedShops } from '@/lib/dashboard/active-store-server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
 import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
@@ -39,20 +39,22 @@ export default async function DashboardTryOnPage({
   const c = getTryOnDashboardCopy(pageLocale);
   const dateLocale = getDateLocale(pageLocale);
 
-  const [shops, canManagePlan] = await Promise.all([listManagedTryOnShops(), isTryOnPlatformOperator()]);
+  const [shops, canManagePlan] = await Promise.all([listOwnedShops(), isTryOnPlatformOperator()]);
+  const activeStore = await getActiveStore({ shop: params.shop }, { shops });
   const hasShops = shops.length > 0;
   const shopDomains = shops.map((shop) => shop.domain);
 
-  /* Only a shop we already know about may be selected; anything else falls
-     back to the merchant's own first shop (installed first). The global
-     defaults row is never an edit target here: the save action refuses it,
-     so opening on it made a merchant's first save fail and hid their plan.
-     'default' remains only for a caller with no shop, whose cards are not
-     rendered. The save action re-checks server-side. */
-  const requested = normalizeShopDomain(params.shop);
+  /* The dashboard's active store (phase zero item 33): only a shop we
+     already know about may be selected, from the link, then the one chosen
+     last, then the most recently active installed shop. An active Store
+     Chat site on another website has no shop here, so the page falls back
+     to the merchant's own first shop. The global defaults row is never an
+     edit target here: the save action refuses it, so opening on it made a
+     merchant's first save fail and hid their plan. 'default' remains only
+     for a caller with no shop, whose cards are not rendered. The save
+     action re-checks server-side. */
   const ownShop = shops.find((shop) => shop.status === 'installed') ?? shops[0];
-  const selectedShop =
-    requested && shops.some((shop) => shop.domain === requested) ? requested : ownShop?.domain ?? 'default';
+  const selectedShop = activeStore.shopDomain ?? ownShop?.domain ?? 'default';
 
   // A presentation link is never a reason to accept a query-string tenant.
   // The public client ID is verified in shopify.app.toml/app-identity.ts;

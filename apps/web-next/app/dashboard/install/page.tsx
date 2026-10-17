@@ -15,5 +15,5 @@ import { redirect } from 'next/navigation';
    land here from turning into 404s. */
 
 export default function DashboardInstallPage() {
-  redirect('/dashboard/messenger?tab=installation');
+  redirect('/dashboard/store-chat?tab=installation');
 }

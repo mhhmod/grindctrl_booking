@@ -103,7 +103,7 @@ export async function findSiteByDomain(shopDomain: string): Promise<SiteOwner | 
   return toSiteOwner(res.data as unknown as SiteOwnerRow);
 }
 
-/** app/dashboard/messenger/page.tsx catches this by type and renders its own
+/** app/dashboard/store-chat/page.tsx catches this by type and renders its own
  *  localized copy — it never reads .message — so this string is only a
  *  fallback for any other caller that lets the error escape unhandled. */
 export class StoreOwnedByAnotherAccountError extends Error {

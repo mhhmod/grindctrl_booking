@@ -25,6 +25,7 @@ import {
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
+import { getActiveStore } from '@/lib/dashboard/active-store-server';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
@@ -81,7 +82,7 @@ export default async function MessengerPage({
   searchParams?: Promise<{ site?: string; tab?: string }>;
 }) {
   const params = (await searchParams) ?? {};
-  const userId = await requireDashboardUser('/dashboard/messenger');
+  const userId = await requireDashboardUser('/dashboard/store-chat');
   const locale = await getRequestLocale();
   const copy = TAB_COPY[locale === 'ar' ? 'ar' : 'en'];
 
@@ -95,8 +96,9 @@ export default async function MessengerPage({
   // Give a first-time merchant a site immediately, and revisit provisioning
   // when Try-On later learns a domain that none of the existing sites has yet.
   let domain: string | null = null;
+  let shops: Awaited<ReturnType<typeof listManagedTryOnShops>> = [];
   try {
-    const shops = await listManagedTryOnShops();
+    shops = await listManagedTryOnShops();
     const installed = shops.find((shop) => shop.status === 'installed');
     domain = installed?.domain ?? null;
   } catch {
@@ -155,8 +157,19 @@ export default async function MessengerPage({
     }
   }
 
+  /* The dashboard's active store (phase zero item 33), so Store Chat opens
+     on the same store as Try-On: the link's site, then the active store's
+     own site or the site on its Shopify domain, then the first site with a
+     domain. Only one of this merchant's sites can be picked. */
+  const activeStore = await getActiveStore({ site: params.site }, { shops, sites });
   const selected =
-    sites.find((site) => site.id === params.site) ?? sites.find((site) => site.domain) ?? sites[0];
+    sites.find((site) => site.id === params.site) ??
+    sites.find((site) => site.id === activeStore.siteId) ??
+    (activeStore.shopDomain
+      ? sites.find((site) => site.domain?.trim().toLowerCase() === activeStore.shopDomain)
+      : undefined) ??
+    sites.find((site) => site.domain) ??
+    sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
   const canRevert = Boolean((selected.settings_json as Record<string, unknown>)._previousSettings);
   const canDisconnect = Boolean(selected.domain);
@@ -257,7 +270,7 @@ export default async function MessengerPage({
             {sites.map((site) => (
               <Link
                 key={site.id}
-                href={`/dashboard/messenger?site=${site.id}&tab=${tab}`}
+                href={`/dashboard/store-chat?site=${site.id}&tab=${tab}`}
                 className={`rounded-full border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 ${
                   site.id === selected.id
                     ? 'border-primary bg-primary text-primary-foreground'

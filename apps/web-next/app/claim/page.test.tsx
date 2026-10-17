@@ -116,7 +116,7 @@ describe('ClaimPage', () => {
     expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
     expect(screen.getByText(body)).toBeInTheDocument();
     expect(screen.getAllByRole('link')).toHaveLength(1);
-    expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', '/dashboard/messenger');
+    expect(screen.getByRole('link', { name: action })).toHaveAttribute('href', '/dashboard/store-chat');
     expect(container.querySelector('section')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     expect(ensureMessengerSite).toHaveBeenCalledWith('user_1', 'demo.myshopify.com', 'demo.myshopify.com');
     expect(getShopOwnerEmail).toHaveBeenCalledWith('demo.myshopify.com');

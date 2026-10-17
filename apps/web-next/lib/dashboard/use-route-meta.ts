@@ -16,5 +16,5 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
    regardless of whether the surrounding layout re-executes. */
 export function useDashboardRouteMeta(locale: SiteLocale): DashboardRouteMeta {
   const pathname = usePathname();
-  return getDashboardRouteMeta(pathname ?? '/dashboard/overview', locale);
+  return getDashboardRouteMeta(pathname ?? '/dashboard', locale);
 }

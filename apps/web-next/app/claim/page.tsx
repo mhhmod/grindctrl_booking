@@ -20,7 +20,7 @@ import { primaryShopifyApp } from '@/lib/shopify/app-registry';
 
    ensureMessengerSite's StoreOwnedByAnotherAccountError is the only outcome
    this page can turn into a friendly page instead of a 500 — see
-   app/dashboard/messenger/page.tsx for the same pattern. Everything else
+   app/dashboard/store-chat/page.tsx for the same pattern. Everything else
    must keep propagating. Successful adoption renders next steps below. */
 
 export const dynamic = 'force-dynamic';
@@ -166,7 +166,7 @@ export default async function ClaimPage({
       locale={locale}
       title={copy.successTitle}
       body={copy.successBody}
-      actions={[{ label: copy.goToDashboard, href: '/dashboard/messenger' }]}
+      actions={[{ label: copy.goToDashboard, href: '/dashboard/store-chat' }]}
     />
   );
 }

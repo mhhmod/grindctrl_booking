@@ -34,7 +34,7 @@ async function postThreadRead(conversationId: string): Promise<FetchMessagesResu
   }
 }
 
-/** Fetch-backed twin of app/dashboard/messenger/actions.ts, scoped by the
+/** Fetch-backed twin of app/dashboard/store-chat/actions.ts, scoped by the
  *  embedded app's verified shop session instead of a Clerk cookie. Every
  *  method's `siteId` argument is ignored on purpose: the routes behind
  *  these calls resolve the site from the session token, never from

@@ -11,7 +11,7 @@
    bounces them to sign-in. So the destination is computed here instead:
    honour redirect_url when it is safe, fall back to the dashboard otherwise. */
 
-export const DEFAULT_SIGNED_IN_PATH = '/dashboard/overview';
+export const DEFAULT_SIGNED_IN_PATH = '/dashboard';
 
 /* New accounts always route through onboarding. The onboarding page forwards
    anyone who has already completed it, so this stays correct for a returning

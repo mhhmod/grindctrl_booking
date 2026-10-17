@@ -17,14 +17,14 @@ vi.mock('@/components/icons', () => ({
   Icon: () => <span aria-hidden="true" />,
 }));
 
-let mockPathname = '/dashboard/messenger';
+let mockPathname = '/dashboard/store-chat';
 vi.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
 }));
 
 const navItems: DashboardResolvedNavItem[] = [
   {
-    href: '/dashboard/overview',
+    href: '/dashboard',
     label: 'Overview',
     icon: {} as never,
     isActive: false,
@@ -32,7 +32,7 @@ const navItems: DashboardResolvedNavItem[] = [
     group: 'core',
   },
   {
-    href: '/dashboard/messenger',
+    href: '/dashboard/store-chat',
     label: 'Store Chat',
     icon: {} as never,
     isActive: true,
@@ -43,7 +43,7 @@ const navItems: DashboardResolvedNavItem[] = [
 ];
 
 beforeEach(() => {
-  mockPathname = '/dashboard/messenger';
+  mockPathname = '/dashboard/store-chat';
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({

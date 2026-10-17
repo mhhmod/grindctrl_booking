@@ -70,5 +70,5 @@ export async function submitOnboarding(
     return { errors: {}, message: result.message, values: input };
   }
 
-  redirect('/dashboard/overview');
+  redirect('/dashboard');
 }

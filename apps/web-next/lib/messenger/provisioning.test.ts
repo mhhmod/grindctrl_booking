@@ -247,7 +247,7 @@ afterEach(() => setMessengerServiceClientForTests(null));
 describe('provisioning', () => {
   /* Production hit this twice: 2026-08-29 (profiles_clerk_user_id_key) and
      2026-09-09 (workspaces_slug_key, Sentry JAVASCRIPT-NEXTJS-K/-Q) — two
-     concurrent renders of /dashboard/messenger for a brand-new Clerk user
+     concurrent renders of /dashboard/store-chat for a brand-new Clerk user
      (Next prefetches the route while navigating to it), where the losing
      connection's read of the winner's just-committed row came back empty. A
      wider retry budget bought headroom once, then the same class of gap

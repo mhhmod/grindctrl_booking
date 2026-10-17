@@ -18,7 +18,7 @@ import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/lib/landing/landing-i18n
 
 /* Store Chat is the only nav item with a live waiting count today, so the
    refresh below is scoped to it rather than to nav badges in general. */
-const STORE_CHAT_HREF = '/dashboard/messenger';
+const STORE_CHAT_HREF = '/dashboard/store-chat';
 
 export function DashboardSidebarNav({
   navItems,

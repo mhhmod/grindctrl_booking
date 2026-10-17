@@ -31,7 +31,7 @@ describe('showLauncherFor', () => {
   it('never shows inside the dashboard', () => {
     expect(showLauncherFor('/dashboard/overview', true)).toBe(false);
     expect(showLauncherFor('/dashboard/try-on', true)).toBe(false);
-    expect(showLauncherFor('/dashboard/messenger', false)).toBe(false);
+    expect(showLauncherFor('/dashboard/store-chat', false)).toBe(false);
   });
 
   it.each([
