@@ -297,6 +297,7 @@ export default async function MessengerPage({
           assigneeName: c.assigned_profile_id ? (assigneeNames[c.assigned_profile_id] ?? null) : null,
           unreadCount: summaries[c.id]?.unread ?? 0,
       preview: summaries[c.id]?.preview ?? null,
+          tags: features.includes('n25_handoff_rules') ? (c.metadata.tags ?? []) : undefined,
         }))}
         knowledge={knowledge}
         cannedReplies={cannedReplies}

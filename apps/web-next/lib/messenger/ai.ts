@@ -1,10 +1,18 @@
 import 'server-only';
 
 import { storeChatComplete } from './chat-client';
-import { getActiveKnowledge, type KnowledgeEntry } from './knowledge';
+import type { KnowledgeEntry } from './knowledge';
 import { ACTION_SENTINEL } from './actions';
 import type { OrderFacts } from './orders';
-import type { ArabicDialect, MessengerAi, MessengerLocale } from './types';
+import type { ArabicDialect, HandoffRules, MessengerAi, MessengerLocale } from './types';
+import { detectLocale } from './language';
+import { planKnowledge } from './retrieval';
+import { takeVerdict, verdictInstructions, type ReplyVerdict } from './verdict';
+
+export { detectLocale, isFrancoArabic } from './language';
+/* Asking for a person, read by phrase in English, Arabic and Franco (phase
+   zero item 10). Kept exported here, where the send route always read it. */
+export { detectExplicitHandoffRequest } from './handoff-intent';
 
 /* The support agent's brain. Design invariants:
    - Store knowledge is UNTRUSTED reference data: it is framed as quoted
@@ -15,7 +23,8 @@ import type { ArabicDialect, MessengerAi, MessengerLocale } from './types';
      performed by application code against guarded transitions. Prompt text
      alone can never authorize anything privileged.
    - Total context is capped so a huge knowledge base cannot blow latency
-     or cost: entries are truncated per-entry and overall. */
+     or cost: entries are ranked against the shopper's message and the
+     budget goes to what matches (retrieval.ts). */
 
 const HANDOFF_SENTINEL = '[[HANDOFF]]';
 /* What the parser accepts as the sentinel. The model is taught the exact
@@ -25,8 +34,6 @@ const HANDOFF_SENTINEL = '[[HANDOFF]]';
    [[HAND...]] token means handoff and is never shown. */
 const HANDOFF_MARKER = /\[\[\s*HAND[A-Z_]*\s*\]\]/gi;
 
-const KNOWLEDGE_PER_ENTRY_CHARS = 1_200;
-const KNOWLEDGE_TOTAL_CHARS = 6_000;
 const MAX_HISTORY_MESSAGES = 16;
 
 const TONE_GUIDANCE: Record<MessengerAi['tone'], string> = {
@@ -35,13 +42,6 @@ const TONE_GUIDANCE: Record<MessengerAi['tone'], string> = {
   concise: 'Be very brief. Answer in one or two short sentences whenever possible.',
   warm: 'Sound warm and reassuring. Acknowledge how the shopper feels before answering.',
 };
-
-/* Franco-Arabic (Arabic written in Latin letters, common in Egypt): digits
-   standing for Arabic sounds inside words (3ayez, a2dar, 7aga), or everyday
-   words that are not English. Two hits, so one stray word never flips an
-   English message. */
-const FRANCO_DIGIT_WORD = /\b[a-z]*[a-z][2375][a-z]+[a-z0-9]*\b|\b[2375][a-z]{2,}\b/gi;
-const FRANCO_WORDS = /\b(ana|enta|enty|ezay|ezayak|3ayez|3ayza|3awez|3ayz|fen|feen|leh|keda|kda|mesh|msh|momken|mumkin|law|lw|b kam|bkam|shokran|el|elly|alli|wana|ya3ni|7aga|3ashan|3shan|ba2a|delwa2ty|dlw2ty)\b/gi;
 
 /* How Arabic replies should read. Shoppers in Egypt write and expect
    Egyptian Arabic; replies in formal Arabic read as a machine. */
@@ -59,18 +59,6 @@ const DIALECT_GUIDANCE: Record<ArabicDialect, string> = {
 const FRANCO_GUIDANCE =
   'The shopper writes Franco-Arabic (Arabic in Latin letters, with 2, 3, 5, 7 for Arabic sounds, e.g. "3ayez", "7aga", "a2dar"). ' +
   'Reply the same way: Arabic in Latin letters with those digits, never Arabic script. Keep numbers, prices and currencies exact (e.g. 60 EGP).';
-
-export function isFrancoArabic(text: string): boolean {
-  const hits = (text.match(FRANCO_DIGIT_WORD) ?? []).length + (text.match(FRANCO_WORDS) ?? []).length;
-  return hits >= 2;
-}
-
-export function detectLocale(text: string): MessengerLocale {
-  const arabic = (text.match(/[\u0600-\u06FF]/g) ?? []).length;
-  const latin = (text.match(/[A-Za-z]/g) ?? []).length;
-  if (arabic > latin) return 'ar';
-  return isFrancoArabic(text) ? 'ar' : 'en';
-}
 
 /** The shopper's own words decide the reply language. The storefront's
  *  locale is only a fallback for messages with no letters to go on (an order
@@ -102,15 +90,14 @@ function unknownAnswerRule(escalationEnabled: boolean): string {
         'check, follow up, or get back to them.';
 }
 
-function knowledgeBlock(entries: KnowledgeEntry[], escalationEnabled: boolean): string {
-  let total = 0;
-  const chunks: string[] = [];
-  for (const entry of entries) {
-    if (total >= KNOWLEDGE_TOTAL_CHARS) break;
-    const body = entry.content.slice(0, KNOWLEDGE_PER_ENTRY_CHARS);
-    total += body.length;
-    chunks.push(`- (${entry.title}) ${body}`);
-  }
+function knowledgeBlock(entries: KnowledgeEntry[], query: string, escalationEnabled: boolean): string {
+  /* Ranked against the shopper's message: approved answers that match come
+     first, then the best matches, each shortened to its matching passages.
+     A shortened entry ends in […], and what did not fit is counted. */
+  const plan = planKnowledge(entries, query);
+  const chunks = plan.placed.map(
+    (entry) => `- ${entry.approved ? '[approved answer] ' : ''}(${entry.title}) ${entry.text}${entry.cut ? ' […]' : ''}`,
+  );
   // An empty knowledge base must say so explicitly rather than silently
   // omit the block: a model given no signal that reference data is absent
   // tends to fill the gap with a plausible-sounding but invented answer
@@ -131,10 +118,20 @@ function knowledgeBlock(entries: KnowledgeEntry[], escalationEnabled: boolean): 
     '<<<',
     ...chunks,
     '>>>',
+    plan.placed.some((entry) => entry.approved)
+      ? 'An [approved answer] is the store\'s own answer to that question: when it fits, use it over anything else above.'
+      : '',
+    plan.placed.some((entry) => entry.cut) || plan.leftOut > 0
+      ? `Entries ending in […] were shortened to the parts that match this question${
+          plan.leftOut > 0 ? `, and ${plan.leftOut} less relevant ${plan.leftOut === 1 ? 'entry was' : 'entries were'} left out` : ''
+        }.`
+      : '',
     'If the shopper asks about something not covered above (e.g. a policy, price, timeframe, ' +
       'payment method, or location this data does not mention), do not guess or estimate; instead, ' +
       unknownAnswerRule(escalationEnabled),
-  ].join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 }
 
 export interface PromptInput {
@@ -150,6 +147,32 @@ export interface PromptInput {
   /** Teaches the action line. Off means the model is never told the action
    *  exists, so it cannot ask for something the server would refuse. */
   orderLookupEnabled?: boolean;
+  /** The shopper's message, which ranks the knowledge (item 11). */
+  query?: string;
+  /** The store's handoff rules, while n25_handoff_rules is on. */
+  handoffRules?: HandoffRules | null;
+  /** Asks for the reply verdict, while n25 or n8 is on. */
+  verdict?: boolean;
+}
+
+/** The store's rules, in words the model can follow. The server enforces
+ *  them from the verdict either way; teaching them keeps the reply honest
+ *  ("I am bringing in the team" rather than an offer it will not need). */
+function handoffRulesText(rules: HandoffRules): string {
+  const when: string[] = ['the shopper asks for a person'];
+  if (rules.orderChanges) {
+    when.push(
+      'the shopper asks to refund, return, exchange, cancel or change an order they placed (questions about how a policy works are answered, not handed off)',
+    );
+  }
+  if (rules.upset) when.push('the shopper is clearly angry or distressed');
+  if (rules.bigOrder.enabled) {
+    const amount = (rules.bigOrder.amountMinor / 100).toLocaleString('en-US');
+    when.push(
+      `the shopper wants a big order: ${rules.bigOrder.piecesOfOne} or more of one piece, or more than ${rules.bigOrder.currency} ${amount} in total`,
+    );
+  }
+  return `WHEN TO BRING IN THE TEAM (the store's rules): bring in the team when ${when.join('; when ')}.`;
 }
 
 /* The action seam, described to the model. Note what it does NOT include:
@@ -213,7 +236,7 @@ export function buildSystemPrompt(input: PromptInput): string {
   if (input.orderLookupEnabled) {
     parts.push(orderLookupInstructions(input.identity?.verifiedCustomer === true));
   }
-  const knowledge = knowledgeBlock(input.knowledge, input.ai.escalationEnabled);
+  const knowledge = knowledgeBlock(input.knowledge, input.query ?? '', input.ai.escalationEnabled);
   if (knowledge) parts.push(knowledge);
   if (input.ai.instructions.trim()) {
     parts.push(
@@ -229,6 +252,8 @@ export function buildSystemPrompt(input: PromptInput): string {
       ? `If the shopper asks to talk to a person, says yes to your offer to bring in the team, or continuing would clearly frustrate them, politely say you are bringing in the team and end your reply with exactly ${HANDOFF_SENTINEL} and nothing after it. Whenever your reply tells the shopper you are bringing in, connecting, or transferring them to the team, it must end with ${HANDOFF_SENTINEL}; without it no one is told.`
       : 'If the shopper asks to talk to a person, say a person is not available in this chat and keep helping with what you know. Never say you are bringing in the team.',
   );
+  if (input.ai.escalationEnabled && input.handoffRules) parts.push(handoffRulesText(input.handoffRules));
+  if (input.verdict) parts.push(verdictInstructions(input.handoffRules?.bigOrder.piecesOfOne ?? 5));
   return parts.filter(Boolean).join('\n\n');
 }
 
@@ -240,19 +265,30 @@ export interface HistoryTurn {
 export interface AssistantResult {
   reply: string;
   escalate: boolean;
-  /** Untouched model output, for the action parser. `reply` has had the
-   *  handoff sentinel stripped and is what a shopper would see. */
+  /** Model output for the action parser, without the verdict line. `reply`
+   *  has had the handoff sentinel stripped too and is what a shopper sees. */
   raw: string;
+  /** The reply verdict, when it was asked for and came back well formed. */
+  verdict: ReplyVerdict | null;
 }
+
+/* The model reasons before it answers, and its reasoning counts against
+   max_tokens. 400 was enough for a reply alone; with the store's rules and
+   the verdict in the prompt, a Franco reply hit 400 in a live test and came
+   back cut off or empty, so a turn asking for the verdict gets more room. */
+const REPLY_MAX_TOKENS = 400;
+const REPLY_WITH_VERDICT_MAX_TOKENS = 1_200;
 
 export async function generateAssistantReply(input: {
   prompt: string;
   history: HistoryTurn[];
   userMessage: string;
+  /** The prompt asks for the reply verdict (buildSystemPrompt's verdict). */
+  verdict?: boolean;
 }): Promise<AssistantResult> {
   const completion = await storeChatComplete('messenger.chat', {
     temperature: 0.3,
-    maxTokens: 400,
+    maxTokens: input.verdict ? REPLY_WITH_VERDICT_MAX_TOKENS : REPLY_MAX_TOKENS,
     messages: [
       { role: 'system', content: input.prompt },
       ...input.history.slice(-MAX_HISTORY_MESSAGES).map((turn) => ({
@@ -263,13 +299,14 @@ export async function generateAssistantReply(input: {
     ],
   });
 
-  const raw = completion.trim();
+  // The verdict line is never part of the reply, asked for or not.
+  const { text: raw, verdict } = takeVerdict(completion.trim());
   const escalate = raw.search(HANDOFF_MARKER) !== -1;
   const reply = raw
     .replace(HANDOFF_MARKER, '')
     .trim()
     .slice(0, 2000);
-  return { reply: reply || fallbackReply(), escalate, raw };
+  return { reply: reply || fallbackReply(), escalate, raw, verdict };
 }
 
 /* The second half of an action turn: the server has already decided what is
@@ -307,7 +344,7 @@ export async function phraseOrderAnswer(input: {
       { role: 'user', content: input.userMessage.slice(0, MESSAGE_CAP) },
     ],
   });
-  const text = completion.trim();
+  const text = takeVerdict(completion.trim()).text;
   // Never let the action line or the handoff marker survive into a
   // shopper-visible message: this turn only phrases facts, it cannot hand off.
   return (
@@ -320,13 +357,4 @@ const MESSAGE_CAP = 2000;
 
 function fallbackReply(): string {
   return "Sorry — I couldn't compose an answer just now. Please try again in a moment.";
-}
-
-/** Deterministic escalation triggers that run BEFORE the model: shoppers
- *  must reach a human without depending on the model noticing. */
-export function detectExplicitHandoffRequest(text: string): boolean {
-  const t = text.toLowerCase();
-  const en = /\b(human|real person|agent|someone|representative|support team|talk to (a )?(person|human|someone))\b/;
-  const ar = /(انسان|إنسان|بشري|موظف|ممثل|شخص حقيقي|فريق الدعم|اتكلم مع حد|أريد حد)/;
-  return en.test(t) || ar.test(t);
 }

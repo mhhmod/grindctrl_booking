@@ -75,6 +75,18 @@ export interface MessengerAi {
      merchant chooses; Egyptian by default. */
   arabicDialect: ArabicDialect;
   escalationEnabled: boolean;
+  /** When else to bring in a person (N25). Read only while the store's
+   *  n25_handoff_rules flag is on; asking for a person is always on. */
+  handoffRules: HandoffRules;
+}
+
+export interface HandoffRules {
+  /** Requests to refund, exchange or change an order. */
+  orderChanges: boolean;
+  /** The shopper seems upset. */
+  upset: boolean;
+  /** Big orders: over amountMinor in currency, or piecesOfOne or more of one piece. */
+  bigOrder: { enabled: boolean; amountMinor: number; currency: string; piecesOfOne: number };
 }
 
 export type ArabicDialect = 'egyptian' | 'gulf' | 'levantine' | 'msa';
@@ -203,6 +215,11 @@ export interface ConversationRecord {
     /** Whether someone was really alerted about the current handoff
      *  (lib/messenger/handoff-alert.ts). */
     handoff_alert?: import('./handoff-alert').HandoffAlert;
+    /** What the conversation is about, for the Inbox (N25). */
+    tags?: import('./handoff-rules').ConversationTag[];
+    /** The shopper's cart, posted by the panel (N16, phase zero item 10). */
+    cart?: import('./cart').ShopperCart;
+    cart_updated_at?: string;
   };
 }
 

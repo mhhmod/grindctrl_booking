@@ -56,6 +56,7 @@ const COPY = {
     handoffShopperAsked: 'Shopper asked for a human',
     handoffAiHandedOff: 'AI handed this off',
     handoffOther: 'Handed off to your team',
+    tags: { exchange: 'Exchange', bulk_order: 'Bulk order', franco: 'Franco' } as Record<string, string>,
     assignedTo: (name: string) => `Assigned to ${name}`,
     filterAll: 'All',
     filterMine: 'Assigned to me',
@@ -111,6 +112,7 @@ const COPY = {
     handoffShopperAsked: 'طلب العميل التحدث مع موظف',
     handoffAiHandedOff: 'حوّلها الذكاء الاصطناعي',
     handoffOther: 'تم تحويلها إلى فريقك',
+    tags: { exchange: 'استبدال', bulk_order: 'طلب بالجملة', franco: 'فرانكو' } as Record<string, string>,
     assignedTo: (name: string) => `مُسندة إلى ${name}`,
     filterAll: 'الكل',
     filterMine: 'مُسندة إليّ',
@@ -167,6 +169,10 @@ export interface ConversationListItem {
    *  no content forces the merchant to open every row to find the one that
    *  matters. */
   preview?: string | null;
+  /** What the conversation is about (N25 metadata.tags), sent only while the
+   *  store's n25_handoff_rules flag is on. A tag without Inbox copy yet is
+   *  kept but not shown. */
+  tags?: string[];
 }
 
 interface WireMessage {
@@ -621,6 +627,13 @@ export function ConversationsPanel({
                         {handoffReasonLabel(conversation.handoffReason, t)}
                       </span>
                     )}
+                    {(conversation.tags ?? [])
+                      .filter((tag) => t.tags[tag])
+                      .map((tag) => (
+                        <Badge key={tag} variant="outline">
+                          {t.tags[tag]}
+                        </Badge>
+                      ))}
                     {conversation.assigneeName && (
                       <Badge variant="outline" className="max-w-full">
                         <span className="truncate">{t.assignedTo(conversation.assigneeName)}</span>

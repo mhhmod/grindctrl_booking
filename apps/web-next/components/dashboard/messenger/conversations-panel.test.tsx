@@ -782,3 +782,33 @@ describe('ConversationsPanel teammate assignment', () => {
     expect(select.closest('[dir]')).toHaveAttribute('dir', 'rtl');
   });
 });
+
+/* N25: the Inbox shows what a conversation is about. */
+describe('ConversationsPanel topic tags', () => {
+  const TAGGED: ConversationListItem[] = [
+    { ...CONVERSATIONS[0], tags: ['exchange', 'bulk_order', 'franco', 'upset'] },
+  ];
+
+  it('shows the tags that have Inbox copy, in English and Arabic', async () => {
+    const { unmount } = render(<ConversationsPanel locale="en" siteId="site-1" conversations={TAGGED} actions={actions} />);
+    expect(screen.getByText('Exchange')).toBeInTheDocument();
+    expect(screen.getByText('Bulk order')).toBeInTheDocument();
+    expect(screen.getByText('Franco')).toBeInTheDocument();
+    // Kept on the conversation, but there is no board copy for it yet.
+    expect(screen.queryByText('upset')).not.toBeInTheDocument();
+    await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalled());
+    unmount();
+
+    render(<ConversationsPanel locale="ar" siteId="site-1" conversations={TAGGED} actions={actions} />);
+    expect(screen.getByText('استبدال')).toBeInTheDocument();
+    expect(screen.getByText('طلب بالجملة')).toBeInTheDocument();
+    expect(screen.getByText('فرانكو')).toBeInTheDocument();
+    await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalledTimes(2));
+  });
+
+  it('shows none without tags', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    expect(screen.queryByText('Exchange')).not.toBeInTheDocument();
+    await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalled());
+  });
+});

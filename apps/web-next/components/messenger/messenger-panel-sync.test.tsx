@@ -507,3 +507,81 @@ describe('MessengerPanel preview seeding', () => {
     expect(screen.queryByText('Your message is saved for the team')).not.toBeInTheDocument();
   });
 });
+
+/* Phase zero item 10: for a store with the big-order rule on, the panel
+   asks the loader for the shopper's cart and posts it once per change. */
+describe('MessengerPanel cart', () => {
+  const CART = { totalMinor: 1_250_000, currency: 'EGP', items: [{ handle: 'layla', variantId: 1, title: 'Layla', quantity: 2, priceMinor: 625_000 }] };
+
+  function cartCalls() {
+    return fetchMock.mock.calls.filter((c) => String(c[0]).includes('/api/messenger/cart'));
+  }
+
+  async function withParent(features: string[], run: (parent: { postMessage: ReturnType<typeof vi.fn> }) => Promise<void>) {
+    const originalParent = window.parent;
+    const fakeParent = { postMessage: vi.fn() };
+    Object.defineProperty(window, 'parent', { configurable: true, value: fakeParent });
+    try {
+      render(<MessengerPanel config={{ ...CONFIG, features } as PublicMessengerPayload} originToken="tok" locale="en" />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(50);
+      });
+      await run(fakeParent);
+    } finally {
+      Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    }
+  }
+
+  function sendCart(parent: unknown, cart: unknown) {
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: { type: 'grindctrl-messenger:cart', cart },
+        source: parent as MessageEventSource,
+      }),
+    );
+  }
+
+  it('asks for the cart and posts each new one with the session', async () => {
+    await withParent(['n25_handoff_rules'], async (parent) => {
+      expect(parent.postMessage).toHaveBeenCalledWith({ type: 'grindctrl-messenger:cart-request' }, '*');
+
+      await act(async () => {
+        sendCart(parent, CART);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(cartCalls()).toHaveLength(1);
+      const body = JSON.parse(String((cartCalls()[0][1] as RequestInit).body));
+      expect(body).toEqual({
+        key: 'gc_test_key',
+        origin: expect.any(String),
+        originToken: 'tok',
+        anonymousId: BOOTSTRAP.anonymousId,
+        conversationId: BOOTSTRAP.conversationId,
+        cart: CART,
+      });
+
+      // The same cart again is not posted twice; a changed one is.
+      await act(async () => {
+        sendCart(parent, CART);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(cartCalls()).toHaveLength(1);
+      await act(async () => {
+        sendCart(parent, { ...CART, totalMinor: 625_000 });
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(cartCalls()).toHaveLength(2);
+    });
+  });
+
+  it('neither asks for nor posts a cart while the rule is off', async () => {
+    await withParent([], async (parent) => {
+      expect(parent.postMessage).not.toHaveBeenCalledWith({ type: 'grindctrl-messenger:cart-request' }, '*');
+      await act(async () => {
+        sendCart(parent, CART);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(cartCalls()).toHaveLength(0);
+    });
+  });
+});

@@ -12,6 +12,7 @@ import type {
   MessengerNotifications,
   MessengerOrderLookup,
 } from './types';
+import { DEFAULT_HANDOFF_RULES, normalizeHandoffRules } from './handoff-rules';
 
 /* Normalization + defaults for the merchant-facing messenger configuration
    stored in widget_sites.settings_json.messenger. Everything the shopper
@@ -71,6 +72,7 @@ export const MESSENGER_DEFAULTS: MessengerConfig = {
     languageMode: 'auto',
     arabicDialect: 'egyptian',
     escalationEnabled: true,
+    handoffRules: DEFAULT_HANDOFF_RULES,
   },
   notifications: {
     emailOnHandoff: true,
@@ -231,6 +233,7 @@ function normalizeAi(raw: unknown): MessengerAi {
         ? r.arabicDialect
         : MESSENGER_DEFAULTS.ai.arabicDialect,
     escalationEnabled: r.escalationEnabled !== false,
+    handoffRules: normalizeHandoffRules(r.handoffRules),
   };
 }
 

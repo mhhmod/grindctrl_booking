@@ -157,6 +157,12 @@ export function MessengerPanel({
   const flushingRef = useRef(false);
   /* The outbox flush, for effects that must not re-bind on every render. */
   const flushRef = useRef<() => Promise<void>>(async () => {});
+  /* The shopper's cart, for the big-order rule (n25_handoff_rules, phase
+     zero item 10). The loader reads it on the store's own page; the panel
+     posts it whenever it changes. */
+  const cartWanted = variant === 'live' && (config.features?.includes('n25_handoff_rules') ?? false);
+  const [cart, setCart] = useState<Record<string, unknown> | null>(null);
+  const postedCartRef = useRef<string | null>(null);
 
   /* Composer */
   const [draft, setDraft] = useState('');
@@ -361,6 +367,10 @@ export function MessengerPanel({
         shopperTokenRef.current = data.token;
         return;
       }
+      if (data?.type === 'grindctrl-messenger:cart') {
+        if (data.cart && typeof data.cart === 'object' && !Array.isArray(data.cart)) setCart(data.cart);
+        return;
+      }
       if (data?.type !== 'grindctrl-messenger:viewport' || typeof data.fullBleed !== 'boolean') return;
       setFullBleed(data.fullBleed);
       scrollToEnd();
@@ -376,6 +386,31 @@ export function MessengerPanel({
       window.removeEventListener('resize', scrollToEnd);
     };
   }, [scrollToEnd, variant]);
+
+  /* Ask the loader for the cart once the listener above is in place; it
+     sends it again whenever the theme changes the cart. */
+  useEffect(() => {
+    if (!cartWanted || window.parent === window) return;
+    window.parent.postMessage({ type: 'grindctrl-messenger:cart-request' }, '*');
+  }, [cartWanted]);
+
+  useEffect(() => {
+    if (!cartWanted || !cart || !anonId || !conversationId) return;
+    const signature = `${conversationId}:${JSON.stringify(cart)}`;
+    if (postedCartRef.current === signature) return;
+    postedCartRef.current = signature;
+    void fetch('/api/messenger/cart', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: config.key, origin: effectiveOrigin, originToken, anonymousId: anonId, conversationId, cart }),
+    })
+      .then((res) => {
+        if (!res.ok) postedCartRef.current = null;
+      })
+      .catch(() => {
+        postedCartRef.current = null;
+      });
+  }, [cartWanted, cart, anonId, conversationId, config.key, effectiveOrigin, originToken]);
 
   /* Keep desktop keyboard focus, without opening a touch keyboard on boot
      (the loader can also preload this panel before the shopper opens it). */

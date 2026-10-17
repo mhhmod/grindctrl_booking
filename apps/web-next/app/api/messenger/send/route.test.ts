@@ -34,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   storeFlags: vi.fn(async (): Promise<string[]> => []),
   patchConversationMetadata: vi.fn(async () => ({})),
   claimAiTurnWhileWaiting: vi.fn(async () => true),
+  recordUnansweredQuestion: vi.fn(async () => 'stored'),
 }));
 
 vi.hoisted(() => {
@@ -88,6 +89,7 @@ vi.mock('@/lib/messenger/orders', async (importOriginal) => {
   return { ...actual, lookupOrder: mocks.lookupOrder };
 });
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
+vi.mock('@/lib/messenger/questions', () => ({ recordUnansweredQuestion: mocks.recordUnansweredQuestion }));
 vi.mock('@/lib/flags/store-flags', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/flags/store-flags')>();
   return { ...actual, storeFlags: mocks.storeFlags };
@@ -118,7 +120,7 @@ const SITE = {
   workspace_id: 'ws-1',
   config: {
     ...resolveMessengerConfig({}),
-    ai: { enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', arabicDialect: 'egyptian' as const, escalationEnabled: true },
+    ai: { ...resolveMessengerConfig({}).ai, enabled: true, tone: 'friendly', instructions: '', languageMode: 'auto', arabicDialect: 'egyptian' as const, escalationEnabled: true },
   },
   domain: null,
   security: { allow_localhost: false },
@@ -183,6 +185,7 @@ beforeEach(() => {
   mocks.storeFlags.mockResolvedValue([]);
   mocks.patchConversationMetadata.mockResolvedValue({});
   mocks.claimAiTurnWhileWaiting.mockResolvedValue(true);
+  mocks.recordUnansweredQuestion.mockResolvedValue('stored');
 });
 
 const SENT_ALERT = { status: 'sent', reason: null, channels: ['email'], at: '2026-10-16T12:00:00.000Z', attempts: 1 };
@@ -660,5 +663,249 @@ describe('item 8: when the assistant is down', () => {
     const res = await POST(makeRequest(validBody));
     expect(res.status).toBe(502);
     expect((await res.json()).error).toBe('ai_unavailable');
+  });
+});
+
+describe('item 10: the store\'s handoff rules with n25_handoff_rules on', () => {
+  const ask = (text: string) => POST(makeRequest({ ...validBody, text }));
+  const VERDICT = (verdict: Record<string, unknown>) => ({ answered: true, intent: 'other', product: null, upset: false, ...verdict });
+
+  beforeEach(() => {
+    echoTurn();
+    // A fresh row each time: the route writes tags onto the copy it read.
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Sure.', escalate: false, raw: 'Sure.', verdict: null });
+  });
+
+  it('hands a bulk order written in Franco to the team before the model runs, and tags it', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+
+    const data = await (await ask('3ayez 20 7etta men el hoodie')).json();
+
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(
+      CONVERSATION.id,
+      'rule_big_order',
+      'Big order: "3ayez 20 7etta men el hoodie"',
+      expect.anything(),
+      {},
+    );
+    expect(data.status).toBe('handoff_requested');
+    expect(data.alert.status).toBe('sent');
+    expect(mocks.patchConversationMetadata).toHaveBeenCalledWith(CONVERSATION.id, { tags: ['bulk_order', 'franco'] });
+  });
+
+  it('with the flag off, the same message goes to the assistant and nothing is tagged', async () => {
+    const data = await (await ask('3ayez 20 7etta men el hoodie')).json();
+
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(data.reply.content).toBe('Sure.');
+    expect(mocks.patchConversationMetadata).not.toHaveBeenCalledWith(CONVERSATION.id, expect.objectContaining({ tags: expect.anything() }));
+    // No rules and no verdict are taught while both flags are off.
+    const prompt = mocks.generateAssistantReply.mock.calls[0][0].prompt as string;
+    expect(prompt).not.toContain('WHEN TO BRING IN THE TEAM');
+    expect(prompt).not.toContain('[[VERDICT');
+  });
+
+  it('hands a refund request to the team, and keeps a policy question with the assistant', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+
+    await ask('عايز أرجع الطلب');
+    expect(mocks.escalateAndNotify.mock.calls[0][1]).toBe('rule_order_change');
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Exchanges take 3 days.', escalate: false, raw: 'Exchanges take 3 days.', verdict: VERDICT({ intent: 'policy_question' }) });
+    const data = await (await ask('How long do exchanges take?')).json();
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(data.reply.content).toBe('Exchanges take 3 days.');
+    const prompt = mocks.generateAssistantReply.mock.calls[0][0].prompt as string;
+    expect(prompt).toContain('WHEN TO BRING IN THE TEAM');
+    expect(prompt).toContain('[[VERDICT');
+  });
+
+  it('turns off a rule the store turned off', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.loadPublicSite.mockResolvedValue({
+      ...SITE,
+      config: { ...SITE.config, ai: { ...SITE.config.ai, handoffRules: { ...SITE.config.ai.handoffRules, orderChanges: false } } },
+    });
+
+    await ask('عايز أرجع الطلب');
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(mocks.generateAssistantReply).toHaveBeenCalledTimes(1);
+  });
+
+  it('hands off from the model\'s verdict when the reading missed it, keeping the answer', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    mocks.generateAssistantReply.mockResolvedValue({
+      reply: 'Exchanges are free within 30 days.',
+      escalate: false,
+      raw: 'Exchanges are free within 30 days.',
+      verdict: VERDICT({ intent: 'exchange_request' }),
+    });
+
+    const data = await (await ask('the hoodie is too tight, what now')).json();
+
+    expect(mocks.escalateAndNotify.mock.calls[0][1]).toBe('rule_order_change');
+    expect(data.reply.content).toBe('Exchanges are free within 30 days.');
+    expect(data.status).toBe('handoff_requested');
+    expect(mocks.patchConversationMetadata).toHaveBeenCalledWith(CONVERSATION.id, { tags: ['exchange'] });
+  });
+
+  it('keeps a policy question with the assistant even when the verdict calls it a request', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    // Seen live: "can I exchange the size?" answered from the policy, labelled exchange_request.
+    mocks.generateAssistantReply.mockResolvedValue({
+      reply: 'أيوة، تقدر تبدل المقاس خلال 30 يوم.',
+      escalate: false,
+      raw: 'أيوة، تقدر تبدل المقاس خلال 30 يوم.',
+      verdict: VERDICT({ intent: 'exchange_request' }),
+    });
+
+    const data = await (await ask('ينفع أبدل المقاس؟')).json();
+
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(data.reply.content).toBe('أيوة، تقدر تبدل المقاس خلال 30 يوم.');
+    expect(mocks.generateAssistantReply.mock.calls[0][0].verdict).toBe(true);
+  });
+
+  it('brings in the team for an upset shopper, and not when the store turned that off', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'I am sorry.', escalate: false, raw: 'I am sorry.', verdict: VERDICT({ upset: true }) });
+
+    await ask('this is ridiculous, nothing works');
+    expect(mocks.escalateAndNotify.mock.calls[0][1]).toBe('rule_upset');
+
+    vi.clearAllMocks();
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'I am sorry.', escalate: false, raw: 'I am sorry.', verdict: VERDICT({ upset: true }) });
+    mocks.loadPublicSite.mockResolvedValue({
+      ...SITE,
+      config: { ...SITE.config, ai: { ...SITE.config.ai, handoffRules: { ...SITE.config.ai.handoffRules, upset: false } } },
+    });
+    await ask('this is ridiculous, nothing works');
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
+
+  it('brings in the team once for a big cart', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    const cart = { totalMinor: 1_250_000, currency: 'EGP', items: [{ handle: 'layla', variantId: '1', title: 'Layla', quantity: 2, priceMinor: 625_000 }] };
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: { cart } });
+
+    const data = await (await ask('Do you deliver to Alexandria?')).json();
+    expect(mocks.escalateAndNotify.mock.calls[0][1]).toBe('rule_big_order');
+    expect(data.reply.content).toBe('Sure.');
+
+    vi.clearAllMocks();
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Sure.', escalate: false, raw: 'Sure.', verdict: null });
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: { cart, tags: ['bulk_order'] } });
+    await ask('And to Giza?');
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
+
+  it('lets an order lookup the model asked for run instead of a verdict handoff', async () => {
+    mocks.storeFlags.mockResolvedValue(['n25_handoff_rules']);
+    mocks.loadPublicSite.mockResolvedValue(ORDER_SITE);
+    const raw = ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' });
+    mocks.generateAssistantReply.mockResolvedValue({ reply: raw, escalate: false, raw, verdict: VERDICT({ intent: 'order_change' }) });
+    mocks.lookupOrder.mockResolvedValue({ ok: false, reason: 'not_found' });
+    mocks.orderLimit.mockResolvedValue({ success: true, reset: Date.now() + 60_000 });
+
+    const data = await (await ask('what happened with order 1234')).json();
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+    expect(mocks.lookupOrder).toHaveBeenCalledTimes(1);
+    expect(data.reply.content).not.toContain('GC_ACTION');
+  });
+});
+
+describe('item 11: unanswered questions with n8_unanswered_questions on', () => {
+  beforeEach(() => {
+    echoTurn();
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
+  });
+
+  it('keeps a question the store\'s data did not answer, with its language and product', async () => {
+    mocks.storeFlags.mockResolvedValue(['n8_unanswered_questions']);
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: { last_page_url: 'https://maison.example/products/layla-abaya' } });
+    mocks.generateAssistantReply.mockResolvedValue({
+      reply: "I don't have that detail.",
+      escalate: false,
+      raw: "I don't have that detail.",
+      verdict: { answered: false, intent: 'other', product: 'Layla abaya', upset: false },
+    });
+
+    const data = await (await POST(makeRequest({ ...validBody, text: 'betesh7no l gedda el 3abaya di?' }))).json();
+
+    expect(data.reply.content).toBe("I don't have that detail.");
+    expect(mocks.recordUnansweredQuestion).toHaveBeenCalledWith({
+      siteId: SITE.id,
+      conversationId: CONVERSATION.id,
+      messageId: 'u9',
+      question: 'betesh7no l gedda el 3abaya di?',
+      language: 'franco',
+      product: 'Layla abaya',
+      pageUrl: 'https://maison.example/products/layla-abaya',
+    });
+    // The verdict is asked for even without the handoff rules.
+    expect(mocks.generateAssistantReply.mock.calls[0][0].prompt).toContain('[[VERDICT');
+  });
+
+  it('keeps nothing for an answered question, or while the flag is off', async () => {
+    mocks.storeFlags.mockResolvedValue(['n8_unanswered_questions']);
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Yes.', escalate: false, raw: 'Yes.', verdict: { answered: true, intent: 'other', product: null, upset: false } });
+    await POST(makeRequest(validBody));
+    expect(mocks.recordUnansweredQuestion).not.toHaveBeenCalled();
+
+    mocks.storeFlags.mockResolvedValue([]);
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'No idea.', escalate: false, raw: 'No idea.', verdict: { answered: false, intent: 'other', product: null, upset: false } });
+    await POST(makeRequest(validBody));
+    expect(mocks.recordUnansweredQuestion).not.toHaveBeenCalled();
+  });
+
+  it('still answers when the question cannot be kept', async () => {
+    mocks.storeFlags.mockResolvedValue(['n8_unanswered_questions']);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    mocks.recordUnansweredQuestion.mockRejectedValue(new Error('relation "messenger_unanswered" does not exist'));
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'No idea.', escalate: false, raw: 'No idea.', verdict: { answered: false, intent: 'other', product: null, upset: false } });
+
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect((await res.json()).reply.content).toBe('No idea.');
+  });
+});
+
+describe('item 11: the model reads the newest messages', () => {
+  it('sends the last messages of a 30-message conversation, oldest of them first', async () => {
+    echoTurn();
+    mocks.generateAssistantReply.mockResolvedValue({ reply: 'Sure.', escalate: false, raw: 'Sure.', verdict: null });
+    const thread = Array.from({ length: 30 }, (_, index) => ({
+      id: `m${index + 1}`,
+      role: index % 2 === 0 ? 'user' : 'assistant',
+      content: `message ${index + 1}`,
+      created_at: new Date(Date.UTC(2026, 9, 16, 10, index)).toISOString(),
+      metadata: {},
+    }));
+    // listMessages as the database answers it: oldest first unless asked.
+    mocks.listMessages.mockImplementation(async (...args: unknown[]) => {
+      const options = args[1] as { limit?: number; newestFirst?: boolean } | undefined;
+      const ordered = options?.newestFirst ? [...thread].reverse() : thread;
+      return ordered.slice(0, options?.limit ?? 100);
+    });
+
+    await POST(makeRequest(validBody));
+
+    const history = mocks.generateAssistantReply.mock.calls[0][0].history as Array<{ content: string }>;
+    expect(history).toHaveLength(16);
+    expect(history[history.length - 1].content).toBe('message 30');
+    expect(history[0].content).toBe('message 15');
+    expect(history.map((turn) => turn.content)).not.toContain('message 1');
   });
 });

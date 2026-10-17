@@ -44,3 +44,39 @@ describe('phraseOrderAnswer', () => {
     expect(text).toBe('Your order shipped yesterday.');
   });
 });
+
+describe('the reply verdict (phase zero items 10 and 11)', () => {
+  beforeEach(() => complete.mockReset());
+
+  it('hands the verdict to the route and never shows it', async () => {
+    complete.mockResolvedValue(
+      'I am bringing in the team. [[HANDOFF]]\n[[VERDICT {"answered":true,"intent":"refund_request","product":null,"upset":false}]]',
+    );
+    const result = await generateAssistantReply(INPUT);
+    expect(result.reply).toBe('I am bringing in the team.');
+    expect(result.escalate).toBe(true);
+    expect(result.raw).not.toContain('VERDICT');
+    expect(result.verdict).toEqual({ answered: true, intent: 'refund_request', product: null, upset: false });
+  });
+
+  it('keeps an action line parseable when a verdict follows it', async () => {
+    complete.mockResolvedValue(
+      '<<GC_ACTION>>{"action":"lookup_order"}\n[[VERDICT {"answered":true,"intent":"other","product":null,"upset":false}]]',
+    );
+    const result = await generateAssistantReply(INPUT);
+    expect(result.raw).toBe('<<GC_ACTION>>{"action":"lookup_order"}');
+  });
+
+  it('gives a turn that asks for the verdict more room, since the model reasons first', async () => {
+    complete.mockResolvedValue('Sure.');
+    await generateAssistantReply(INPUT);
+    expect(complete.mock.calls[0][1].maxTokens).toBe(400);
+    await generateAssistantReply({ ...INPUT, verdict: true });
+    expect(complete.mock.calls[1][1].maxTokens).toBe(1_200);
+  });
+
+  it('drops a verdict from an order answer too', async () => {
+    complete.mockResolvedValue('Your order shipped. [[VERDICT {"answered":true,"intent":"other","product":null,"upset":false}]]');
+    expect(await phraseOrderAnswer({ ...INPUT, facts: {} as never })).toBe('Your order shipped.');
+  });
+});
