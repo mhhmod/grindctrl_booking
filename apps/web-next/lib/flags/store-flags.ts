@@ -21,6 +21,9 @@ export const STORE_FLAGS = {
   n8_unanswered_questions: { code: 'N8', title: 'Questions the assistant could not answer' },
   n5_preview_mode: { code: 'N5', title: 'Preview before going live, with free test looks' },
   n6_holdout: { code: 'N6', title: 'The 50/50 holdout' },
+  /* Screen flags turn a redesigned surface on for one store
+     (supabase/20261017_store_flags_screens.sql admits the v16_ names). */
+  v16_dashboard: { code: 'V16', title: 'The v16 dashboard shell and pages' },
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;

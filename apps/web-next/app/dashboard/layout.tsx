@@ -11,6 +11,10 @@ import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 import { countAwaitingHandoff } from '@/lib/messenger/conversations';
 import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
+import { getActiveStore } from '@/lib/dashboard/active-store-server';
+import { getV16ShellData } from '@/lib/dashboard/shell-data';
+import { storeFlags } from '@/lib/flags/store-flags';
+import { V16Shell } from '@/components/dashboard/v16/v16-shell';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
@@ -44,6 +48,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
     } catch {
       awaitingHandoff = 0;
     }
+  }
+
+  /* The v16 shell, only while the active store's v16_dashboard flag is on,
+     so the owner can switch it on for the demo store first. Every other
+     store keeps today's shell. */
+  const activeStore = await getActiveStore();
+  const flagStore = activeStore.shopDomain
+    ? { shopDomain: activeStore.shopDomain }
+    : activeStore.siteId
+      ? { widgetSiteId: activeStore.siteId }
+      : null;
+  const features = flagStore ? await storeFlags(flagStore) : [];
+  if (features.includes('v16_dashboard')) {
+    const shell = await getV16ShellData({ activeStore, locale, role: workspaceBundle.role });
+    return (
+      <MantineUiProvider dir={getDir(locale)}>
+        <div dir={getDir(locale)} lang={locale}>
+          <V16Shell locale={locale} waitingCount={awaitingHandoff} {...shell}>
+            {children}
+          </V16Shell>
+        </div>
+      </MantineUiProvider>
+    );
   }
 
   const navItems = resolveDashboardNavItems({
