@@ -112,6 +112,24 @@
   --color-gc-error: var(--gc-error);
   --color-gc-sheet-store: var(--gc-sheet-store);
   --color-gc-sheet-dark: var(--gc-sheet-dark);
+  /* Product v16 dashboard (see the token block below). */
+  --color-gc-panel: var(--gc-panel);
+  --color-gc-success: var(--gc-success);
+  --color-gc-success-soft: var(--gc-success-soft);
+  --color-gc-attention: var(--gc-attention);
+  --color-gc-attention-soft: var(--gc-attention-soft);
+  --color-gc-danger: var(--gc-danger);
+  --color-gc-danger-soft: var(--gc-danger-soft);
+  --color-gc-alert: var(--gc-alert);
+  --color-gc-on-alert: var(--gc-on-alert);
+  --radius-gc-card: var(--gc-radius-card);
+  --radius-gc-dialog: var(--gc-radius-dialog);
+  --radius-gc-pill: var(--gc-radius-pill);
+  --radius-gc-input: var(--gc-radius-input);
+  --radius-gc-segmented: var(--gc-radius-segmented);
+  --radius-gc-segment: var(--gc-radius-segment);
+  --radius-gc-icon-tile: var(--gc-radius-icon-tile);
+  --radius-gc-plan: var(--gc-radius-plan);
   --ease-gc: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-gc-wipe: cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -253,6 +271,46 @@
   --gc-wire-pulse: rgb(240 236 232 / 0.5);
   --gc-wire-node: rgb(240 236 232 / 0.16);
   --gc-line-strong: #4a4541;
+}
+
+/* Product v16 dashboard (docs/handoff/product-v16/tokens.json): the raised
+   panel, the status pairs and the unread count. Info and assistant reuse
+   --gc-input-icon-* and --gc-output-icon-*. Bridged to Mantine in
+   components/mantine/theme.ts. Status is never carried by colour alone. */
+:root,
+.light {
+  --gc-panel: oklch(0.978 0.006 78);
+  --gc-success: oklch(0.5 0.12 152);
+  --gc-success-soft: oklch(0.935 0.045 152);
+  --gc-attention: oklch(0.5 0.11 65);
+  --gc-attention-soft: oklch(0.94 0.06 85);
+  --gc-danger: oklch(0.52 0.17 27);
+  --gc-danger-soft: oklch(0.95 0.03 27);
+  /* Unread counts on Inbox and the bell only. The text on it is pure white:
+     the theme's cream gives 4.44:1 here, white 4.92:1. */
+  --gc-alert: oklch(0.56 0.15 55);
+  --gc-on-alert: oklch(1 0 0);
+  /* Radii are the same in both themes. */
+  --gc-radius-card: 1.25rem;
+  --gc-radius-dialog: 1.25rem;
+  --gc-radius-pill: 999px;
+  --gc-radius-input: 0.75rem;
+  --gc-radius-segmented: 0.875rem;
+  --gc-radius-segment: 0.625rem;
+  --gc-radius-icon-tile: 0.75rem;
+  --gc-radius-plan: 1.125rem;
+}
+
+.dark {
+  --gc-panel: oklch(0.2 0.005 68);
+  --gc-success: oklch(0.8 0.12 152);
+  --gc-success-soft: oklch(0.7 0.12 152 / 16%);
+  --gc-attention: oklch(0.84 0.11 75);
+  --gc-attention-soft: oklch(0.75 0.12 75 / 16%);
+  --gc-danger: oklch(0.8 0.13 27);
+  --gc-danger-soft: oklch(0.7 0.17 27 / 16%);
+  --gc-alert: oklch(0.56 0.15 55);
+  --gc-on-alert: oklch(1 0 0);
 }
 
 /* Landing story (site v15): values that stay the same in both themes. The

@@ -56,8 +56,57 @@ const dark: MantineColorsTuple = [
   '#1f1c1a', '#191714', '#12100e', '#090807', '#050403',
 ];
 
+/* Product v16 status colors, one virtual color each over a light and a dark
+   palette laid out by role like the ink palettes: light 6 filled and 9 text
+   are --gc-<status>, 1 is --gc-<status>-soft; dark 7 filled, 3 outline,
+   4 text and 0 light variant text are the dark --gc-<status>. The other
+   shades fill out the ramp. The light variant itself comes from the tokens
+   in the resolver below, because the dark soft fills are translucent. */
+const successLight: MantineColorsTuple = [
+  '#ecfbef', '#d4f3db', '#c1e8ca', '#9bd4aa', '#6eb883',
+  '#3f945b', '#1a763f', '#0a6633', '#005728', '#1a763f',
+];
+
+const successDark: MantineColorsTuple = [
+  '#7fd497', '#b5e6c0', '#9bddac', '#7fd497', '#7fd497',
+  '#5fb479', '#3f945b', '#7fd497', '#6fc488', '#5fb479',
+];
+
+const attentionLight: MantineColorsTuple = [
+  '#fff6e1', '#fee9be', '#f6dba3', '#e7ba8f', '#d09760',
+  '#ad7130', '#8d5406', '#7c4700', '#6b3a00', '#8d5406',
+];
+
+const attentionDark: MantineColorsTuple = [
+  '#f5c076', '#ffdfb4', '#fad096', '#f5c076', '#f5c076',
+  '#d3a056', '#b38236', '#f5c076', '#e4b066', '#d3a056',
+];
+
+const dangerLight: MantineColorsTuple = [
+  '#fff3f1', '#ffe7e4', '#fad8d3', '#ffa59a', '#f57a6f',
+  '#d24d45', '#b6322d', '#a22523', '#8e1818', '#b6322d',
+];
+
+const dangerDark: MantineColorsTuple = [
+  '#ff9c90', '#ffc4bc', '#ffb0a6', '#ff9c90', '#ff9c90',
+  '#e47c72', '#c25e55', '#ff9c90', '#f58c81', '#e47c72',
+];
+
+/* The unread count (Inbox and the bell only) is the same orange in both
+   themes, so 6 (light filled) and 7 (dark filled) are both --gc-alert. */
+const alert: MantineColorsTuple = [
+  '#ffefdd', '#fee3c5', '#faca9d', '#f2ad73', '#e58c40',
+  '#cf7015', '#b45600', '#b45600', '#9e4600', '#843a00',
+];
+
+const STATUS_COLORS = ['success', 'attention', 'danger'] as const;
+
 const PRIMARY = 'brand';
 const PRIMARY_CONTRAST = 'var(--mantine-primary-color-contrast)';
+/* White on --gc-alert is 4.92:1, the theme's cream white only 4.44:1, so
+   text on a count uses --gc-on-alert rather than Mantine's contrast pick. */
+const ALERT = 'alert';
+const ON_ALERT = 'var(--gc-on-alert)';
 
 /* These components compute their text or icon contrast in JS, assuming light
    mode, and a virtual color has no luminance to measure. For the primary
@@ -67,11 +116,23 @@ const PRIMARY_CONTRAST = 'var(--mantine-primary-color-contrast)';
 function primaryContrast(selector: string, variable: string) {
   return {
     vars: (_theme: unknown, props: { color?: string }) =>
-      !props.color || props.color === PRIMARY ? { [selector]: { [variable]: PRIMARY_CONTRAST } } : {},
+      !props.color || props.color === PRIMARY
+        ? { [selector]: { [variable]: PRIMARY_CONTRAST } }
+        : props.color === ALERT
+          ? { [selector]: { [variable]: ON_ALERT } }
+          : {},
   };
 }
 
 const components: MantineThemeComponents = {
+  /* Only a filled badge sits on the alert orange; the light and outline
+     variants keep Mantine's own text color. */
+  Badge: {
+    vars: (_theme: unknown, props: { color?: string; variant?: string }) =>
+      props.color === ALERT && (props.variant ?? 'filled') === 'filled'
+        ? { root: { '--badge-color': ON_ALERT } }
+        : {},
+  },
   Checkbox: primaryContrast('root', '--checkbox-icon-color'),
   CheckboxIndicator: primaryContrast('indicator', '--checkbox-icon-color'),
   Radio: primaryContrast('root', '--radio-icon-color'),
@@ -97,6 +158,16 @@ export const mantineTheme = createTheme({
     gray,
     dark,
     brand: virtualColor({ name: PRIMARY, light: 'inkLight', dark: 'inkDark' }),
+    successLight,
+    successDark,
+    attentionLight,
+    attentionDark,
+    dangerLight,
+    dangerDark,
+    success: virtualColor({ name: 'success', light: 'successLight', dark: 'successDark' }),
+    attention: virtualColor({ name: 'attention', light: 'attentionLight', dark: 'attentionDark' }),
+    danger: virtualColor({ name: 'danger', light: 'dangerLight', dark: 'dangerDark' }),
+    alert,
   },
   white: '#f6f3ee',
   black: '#201d1b',
@@ -122,6 +193,15 @@ export const mantineTheme = createTheme({
     md: 'calc(var(--radius) * 0.8)',
     lg: 'var(--radius)',
     xl: 'calc(var(--radius) * 1.4)',
+    /* Product v16 shapes, from the --gc-radius-* tokens: radius="card". */
+    card: 'var(--gc-radius-card)',
+    dialog: 'var(--gc-radius-dialog)',
+    pill: 'var(--gc-radius-pill)',
+    input: 'var(--gc-radius-input)',
+    segmented: 'var(--gc-radius-segmented)',
+    segment: 'var(--gc-radius-segment)',
+    'icon-tile': 'var(--gc-radius-icon-tile)',
+    plan: 'var(--gc-radius-plan)',
   },
   /* Same widths as Tailwind's sm/md/lg/xl, so `sm` means 640px in both
      systems. Media queries in component CSS must use these values too. */
@@ -151,7 +231,22 @@ const tokens = {
   '--mantine-color-disabled': 'var(--muted)',
   '--mantine-color-disabled-color': 'var(--muted-foreground)',
   '--mantine-color-disabled-border': 'var(--border)',
+  '--mantine-color-success': 'var(--gc-success)',
+  /* The light variant of each status (badges, banners, light buttons) is
+     its soft fill with the status color on it. */
+  ...Object.fromEntries(
+    STATUS_COLORS.flatMap((name) => [
+      [`--mantine-color-${name}-light`, `var(--gc-${name}-soft)`],
+      [`--mantine-color-${name}-light-hover`, `color-mix(in oklab, var(--gc-${name}-soft), var(--gc-${name}) 12%)`],
+      [`--mantine-color-${name}-light-color`, `var(--gc-${name})`],
+    ]),
+  ),
 };
+
+/* --gc-panel, the raised panel, is not bridged here yet: Mantine paints
+   cards and dialogs with --mantine-color-body, which is --card on every
+   page today, so moving it would restyle pages v16 has not reached. The
+   v16 dashboard shell sets it for its own pages. */
 
 /* The token map is the same in both schemes because the tokens themselves
    switch with `.dark`. It is repeated per scheme so it outranks Mantine's own

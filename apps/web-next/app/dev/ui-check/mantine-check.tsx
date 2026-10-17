@@ -11,6 +11,8 @@ import {
   Chip,
   Group,
   Indicator,
+  Paper,
+  Text,
   Loader,
   Pagination,
   Progress,
@@ -27,6 +29,7 @@ import {
   Timeline,
 } from '@mantine/core';
 import { Check, Plus } from 'lucide-react';
+import { GC_ICONS, GcIcon, type GcIconName } from '@/components/icons';
 
 /* Dev-only sheet of the Mantine controls the SaaS surfaces lean on, so the
    theme bridge can be checked in light, dark, LTR and RTL in one place. */
@@ -94,6 +97,48 @@ export function MantineThemeCheck() {
           <Tabs.Tab value="reports">Reports</Tabs.Tab>
         </Tabs.List>
       </Tabs>
+      <V16Check />
     </Stack>
+  );
+}
+
+/* Product v16 foundations: the status colors, the count, the raised panel,
+   the radii and the icon set, so the bridge can be read in both themes and
+   both directions. */
+function V16Check() {
+  return (
+    <Paper data-testid="v16-check" bg="var(--gc-panel)" radius="card" withBorder p="lg">
+      <Stack gap="md">
+        <Text fw={800} size="lg">v16</Text>
+        <Group gap="sm">
+          <Badge color="success">Active</Badge>
+          <Badge color="success" variant="light">Passes</Badge>
+          <Badge color="attention">Runs out soon</Badge>
+          <Badge color="attention" variant="light">Waiting</Badge>
+          <Badge color="danger">Failed</Badge>
+          <Badge color="danger" variant="light">Something broke</Badge>
+          <Badge color="alert" radius="pill">3</Badge>
+          <Indicator color="alert" label="12" size={18}>
+            <GcIcon name="bell" label="Notifications" />
+          </Indicator>
+        </Group>
+        <Group gap="sm">
+          <Button color="success" radius="pill">Go live</Button>
+          <Button color="attention" variant="light" radius="pill">Add looks</Button>
+          <Button color="danger" variant="outline" radius="pill">Remove</Button>
+          <TextInput aria-label="Search" placeholder="Search" radius="input" />
+        </Group>
+        <Alert color="success" variant="light" radius="card" title="Checked in your live theme">Try it on shows on product pages.</Alert>
+        <Alert color="danger" variant="light" radius="card" title="Something broke">The Try it on block is missing from your theme.</Alert>
+        <SimpleGrid cols={{ base: 4, sm: 8, lg: 12 }} spacing="xs">
+          {(Object.keys(GC_ICONS) as GcIconName[]).map((name) => (
+            <Stack key={name} gap={2} align="center">
+              <GcIcon name={name} size={22} />
+              <Text size="xs" c="dimmed">{name}</Text>
+            </Stack>
+          ))}
+        </SimpleGrid>
+      </Stack>
+    </Paper>
   );
 }
