@@ -8,13 +8,17 @@ const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const NONCE = 'abcdefghijklmnopqrstuvwx';
 const DISTINCT_NONCE = 'zyxwvutsrqponmlkjihgfedc';
 
-const { rateLimitMock, resolveStorefrontProductMock, launchMock } = vi.hoisted(() => ({
+const { rateLimitMock, resolveStorefrontProductMock, launchMock, flagsMock, storeLaunchMock } = vi.hoisted(() => ({
   rateLimitMock: vi.fn(),
   resolveStorefrontProductMock: vi.fn(),
   launchMock: vi.fn(),
+  flagsMock: vi.fn(async (): Promise<string[]> => []),
+  storeLaunchMock: vi.fn(async (): Promise<unknown> => null),
 }));
 
 vi.mock('@/lib/try-on/launch', () => ({ getTryOnLaunch: (...args: unknown[]) => launchMock(...args) }));
+vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: () => flagsMock() }));
+vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: () => storeLaunchMock() }));
 
 vi.mock('@/lib/ratelimit', () => {
   const limiter = (name: string) => ({ limit: (id: string) => rateLimitMock(name, id) });
@@ -44,6 +48,8 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 import { ProductResolutionError } from '@/lib/shopify/product-resolver';
+import { signPreviewToken } from '@/lib/launch/preview-token';
+import { holdoutBucket } from '@/lib/launch/audience';
 
 const RESOLVED_PRODUCT = {
   shop: 'demo.myshopify.com',
@@ -357,3 +363,77 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     await expect(response.json()).resolves.toEqual({ error: 'not_configured' });
   });
 });
+
+/* Phase zero item 9: only the owner, with the preview link, may start a
+   look on a store that is not live, and their looks are test looks. */
+describe('GET /api/shopify/proxy/try-on-context launch state (N5, N6)', () => {
+  const SALT = '0123456789abcdef0123456789abcdef';
+  const previewToken = () => signPreviewToken(SECRET, 'demo.myshopify.com', NOW_SECONDS).token;
+
+  beforeEach(() => {
+    process.env.SHOPIFY_API_KEY = 'test-only-client-id';
+    process.env.SHOPIFY_API_SECRET = SECRET;
+    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    resolveStorefrontProductMock.mockResolvedValue(RESOLVED_PRODUCT);
+    launchMock.mockReset().mockResolvedValue({ tryOn: 'live', reason: null });
+    flagsMock.mockReset().mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
+    storeLaunchMock.mockReset().mockResolvedValue({ state: 'preview', holdoutShare: null, holdoutStartedAt: null, holdoutEndsAt: null, salt: SALT });
+    vi.spyOn(Date, 'now').mockReturnValue(NOW_SECONDS * 1000);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    delete process.env.SHOPIFY_API_KEY;
+    delete process.env.SHOPIFY_API_SECRET;
+  });
+
+  it('refuses a shopper with 409 preview before asking for a photo', async () => {
+    const response = await GET(signedRequest());
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'preview' });
+    expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
+  });
+
+  it('lets the owner in with the preview link, and signs a test look through the session and the attempt', async () => {
+    const response = await GET(signedRequest({ preview: previewToken() }));
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(verifyStorefrontContext(SECRET, body.token)?.test).toBe(true);
+
+    const session = await (await createTryOnSession(sessionRequest(body.token))).json();
+    const claims = verifyTryOnSession(SECRET, session.data.sessionId);
+    expect(claims?.test).toBe(true);
+    const attempt = await (await createTryOnAttempt(attemptRequest(session.data.sessionId))).json();
+    expect(verifyTryOnAttempt(SECRET, attempt.data.attemptId, claims!)?.test).toBe(true);
+  });
+
+  it('lets the owner make test looks when the store has none left', async () => {
+    launchMock.mockResolvedValue({ tryOn: 'hidden', reason: 'out_of_looks' });
+    expect((await GET(signedRequest({ preview: previewToken() }))).status).toBe(200);
+    expect((await GET(signedRequest())).status).toBe(409);
+  });
+
+  it('refuses the holdout\'s off arm with 409 holdout', async () => {
+    storeLaunchMock.mockResolvedValue({
+      state: 'holdout', holdoutShare: 0.5, salt: SALT,
+      holdoutStartedAt: new Date((NOW_SECONDS - 86_400) * 1000).toISOString(),
+      holdoutEndsAt: new Date((NOW_SECONDS + 86_400 * 13) * 1000).toISOString(),
+    });
+    const ids = Array.from({ length: 40 }, (_, index) => `visitor_${index}_abcdefghijkl`);
+    const off = ids.find((id) => holdoutBucket(id, SALT, 0.5) === 'off')!;
+    const on = ids.find((id) => holdoutBucket(id, SALT, 0.5) === 'on')!;
+    const refused = await GET(signedRequest({ vid: off }));
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toEqual({ error: 'holdout' });
+    expect((await GET(signedRequest({ vid: on }))).status).toBe(200);
+  });
+
+  it('signs no test look while the flag is off, preview link or not', async () => {
+    flagsMock.mockResolvedValue([]);
+    const response = await GET(signedRequest({ preview: previewToken() }));
+    expect(response.status).toBe(200);
+    expect(verifyStorefrontContext(SECRET, (await response.json()).token)?.test).toBeUndefined();
+    expect(storeLaunchMock).not.toHaveBeenCalled();
+  });
+});
+

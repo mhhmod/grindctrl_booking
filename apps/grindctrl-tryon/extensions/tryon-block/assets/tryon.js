@@ -71,9 +71,31 @@
     return visitorIdCache;
   }
 
+  /* The owner's preview link (?gc_preview=..., phase zero item 9). Kept in
+     this store's own storage for its 24 hours and sent with every config
+     and try-on context call, so the owner sees try-on before it goes live
+     and their looks are free test looks. The server checks the signature. */
+  var PREVIEW_KEY = 'gc_preview';
+  var PREVIEW_TTL_MS = 24 * 60 * 60 * 1000;
+  function previewToken() {
+    try {
+      var fromUrl = new URLSearchParams(window.location.search).get('gc_preview');
+      if (fromUrl && /^[A-Za-z0-9_.-]{20,512}$/.test(fromUrl)) {
+        window.localStorage.setItem(PREVIEW_KEY, JSON.stringify({ token: fromUrl, savedAt: Date.now() }));
+        return fromUrl;
+      }
+      var saved = JSON.parse(window.localStorage.getItem(PREVIEW_KEY) || 'null');
+      if (saved && typeof saved.token === 'string' && Date.now() - saved.savedAt < PREVIEW_TTL_MS) return saved.token;
+    } catch (_) { /* storage blocked: only a link in the address bar works */ }
+    return '';
+  }
+
   function withVisitor(url) {
     var id = visitorId();
-    return id ? url + '&vid=' + encodeURIComponent(id) : url;
+    var preview = previewToken();
+    if (id) url += '&vid=' + encodeURIComponent(id);
+    if (preview) url += '&preview=' + encodeURIComponent(preview);
+    return url;
   }
 
   /* The config's launch answer (N34). `available` is the older field, read

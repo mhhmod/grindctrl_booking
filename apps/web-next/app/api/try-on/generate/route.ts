@@ -8,7 +8,7 @@ import {
   TryOnResultSchemaNotReadyError,
   TryOnResultUnavailableError,
 } from '@/lib/try-on/service';
-import { TryOnUnavailableError } from '@/lib/try-on/entitlement';
+import { TryOnTestLooksCapError, TryOnUnavailableError } from '@/lib/try-on/entitlement';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
@@ -346,6 +346,13 @@ export async function POST(request: NextRequest) {
               ? 409
               : 503,
         },
+      );
+    }
+    // The owner used today's test looks (N5).
+    if (error instanceof TryOnTestLooksCapError) {
+      return NextResponse.json(
+        { ok: false, code: 'test_looks_cap', message: error.message } satisfies TryOnJobApiResponse,
+        { status: 429 },
       );
     }
     if (error instanceof TryOnUnavailableError) {

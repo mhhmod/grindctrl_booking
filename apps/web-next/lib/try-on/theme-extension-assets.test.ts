@@ -61,4 +61,15 @@ describe('Shopify Try-On extension failure transport', () => {
     expect(catalogAsset).toContain("data.type === 'grindctrl-tryon:refresh'");
     expect(catalogAsset).not.toContain("loading.textContent = 'Try-on is unavailable.'");
   });
+
+  /* Phase zero item 9: the owner's preview link reaches both proxy calls. */
+  it.each([
+    ['product page', productAsset],
+    ['catalogue', catalogAsset],
+  ])('the %s script keeps the preview link and sends it with config and context', (_name, asset) => {
+    expect(asset).toContain("get('gc_preview')");
+    expect(asset).toContain("window.localStorage.setItem(PREVIEW_KEY");
+    expect(asset).toContain("url += '&preview=' + encodeURIComponent(preview)");
+    expect(asset).toContain('PREVIEW_TTL_MS = 24 * 60 * 60 * 1000');
+  });
 });

@@ -105,7 +105,9 @@ export interface TryOnJobApiResponse {
     | 'TRYON_FINALIZATION_PENDING'
     | 'TRYON_RESULT_UNAVAILABLE'
     | 'TRYON_RESULT_SCHEMA_NOT_READY'
-    | 'TRYON_RESULT_PERSISTENCE_FAILED';
+    | 'TRYON_RESULT_PERSISTENCE_FAILED'
+    /** The store's owner used today's test looks (N5). */
+    | 'test_looks_cap';
   jobId?: string;
   status?: TryOnJobStatus;
   resultImageUrl?: string;

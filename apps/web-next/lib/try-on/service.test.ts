@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 
 const {
   beginTryOnJobMock,
+  beginTestTryOnJobMock,
   finalizeTryOnJobMock,
   loadAuthorizedDurableTryOnJobMock,
   persistGeneratedTryOnResultMock,
@@ -10,6 +11,7 @@ const {
   getShopModelKeyMock,
 } = vi.hoisted(() => ({
   beginTryOnJobMock: vi.fn(),
+  beginTestTryOnJobMock: vi.fn(),
   finalizeTryOnJobMock: vi.fn(),
   loadAuthorizedDurableTryOnJobMock: vi.fn(),
   persistGeneratedTryOnResultMock: vi.fn(),
@@ -20,6 +22,7 @@ const {
 
 vi.mock('./persistence', () => ({
   beginTryOnJob: (...args: unknown[]) => beginTryOnJobMock(...args),
+  beginTestTryOnJob: (...args: unknown[]) => beginTestTryOnJobMock(...args),
   finalizeTryOnJob: (...args: unknown[]) => finalizeTryOnJobMock(...args),
   loadAuthorizedDurableTryOnJob: (...args: unknown[]) =>
     loadAuthorizedDurableTryOnJobMock(...args),
@@ -210,6 +213,35 @@ describe('try-on service', () => {
           expect(reservedTier).toBe(tier ?? 'meta/muse-image');
         },
       );
+
+      /* N5: the owner's look from the preview link is a test look. */
+      it('reserves a test look, never a credit, for a test session', async () => {
+        beginTestTryOnJobMock.mockImplementation((input: { jobId: string }) =>
+          Promise.resolve({
+            jobId: input.jobId, created: true, status: 'processing', modelKey: 'test', message: null,
+            provider: null, costUsd: null, durationMs: null, createdAt: '2026-08-31T00:00:00.000Z',
+          }),
+        );
+        const auth = storefrontAuthorization({ test: true });
+        const job = await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
+
+        expect(beginTryOnJobMock).not.toHaveBeenCalled();
+        expect(beginTestTryOnJobMock).toHaveBeenCalledWith({
+          shop: 'store-one.myshopify.com',
+          jobId: expect.any(String),
+          requestKey: auth.requestKey,
+          sessionId: auth.sessionId,
+          productId: auth.productId,
+        });
+        expect(job.status).toBe('completed');
+        expect(finalizeTryOnJobMock).toHaveBeenCalledTimes(1);
+      });
+
+      it('bills a session without the test claim as before', async () => {
+        await generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AAAA');
+        expect(beginTryOnJobMock).toHaveBeenCalledTimes(1);
+        expect(beginTestTryOnJobMock).not.toHaveBeenCalled();
+      });
 
       it('ignores the retired model settings', async () => {
         process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';

@@ -14,6 +14,9 @@ import { isTryOnLocale, DEFAULT_TRYON_LOCALE, type TryOnLocale } from '@/lib/try
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { storeFlags } from '@/lib/flags/store-flags';
+import { launchAudience, launchVisitorId, type LaunchAudience } from '@/lib/launch/audience';
+import { getStoreLaunch } from '@/lib/launch/store-launch';
+import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 
 /* Shopify App Proxy target: storefront calls /apps/grindctrl/config and
    Shopify forwards here, appending ?shop=<domain>&signature=... .
@@ -27,7 +30,24 @@ import { storeFlags } from '@/lib/flags/store-flags';
    uncached call costs ~6 Supabase queries (settings + entitlement
    reconciliation). Answers are cached for a minute (proxy-config-cache),
    and every path that changes a shop's looks, plan or install clears the
-   shop's entries, so the Try it on button follows the looks at once. */
+   shop's entries, so the Try it on button follows the looks at once.
+
+   Who sees it is decided per visitor after the cache (phase zero item 9):
+   while the store is in setup or preview only the owner's preview link
+   shows it, and a holdout hides it from one arm of visitors. */
+
+/** The shop-level answer, narrowed for this visitor. */
+function forVisitor(body: Record<string, unknown>, audience: LaunchAudience): Record<string, unknown> {
+  const launch = { test: audience.test, bucket: audience.bucket };
+  if (!audience.show) {
+    return { ...body, tryOn: 'hidden', reason: audience.reason, available: false, messageKey: 'tryOnTemporarilyUnavailable', launch };
+  }
+  // The owner's looks are test looks, which do not spend the store's looks.
+  if (audience.test && body.reason === 'out_of_looks') {
+    return { ...body, tryOn: 'live', reason: null, available: true, messageKey: null, launch };
+  }
+  return { ...body, launch };
+}
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -50,10 +70,26 @@ export async function GET(request: NextRequest) {
   const requested = params.get('locale');
   const locale: TryOnLocale = isTryOnLocale(requested) ? requested : DEFAULT_TRYON_LOCALE;
 
+  const visitorId = launchVisitorId(params.get('vid'));
+  const preview = shop ? verifyPreviewTokenAnyApp(params.get('preview'), shop) : false;
+  const audienceFor = async (raw: unknown) => {
+    const features = Array.isArray(raw) ? (raw as string[]) : [];
+    return launchAudience({
+      // Read only for a store whose launch flag is on.
+      launch: shop && features.includes('n5_preview_mode') ? await getStoreLaunch(shop) : null,
+      features,
+      preview,
+      visitorId,
+      now: new Date(),
+    });
+  };
+
   const cacheKey = proxyConfigCacheKey(shop, locale);
   const cached = cachedProxyConfig(cacheKey);
   if (cached) {
-    return NextResponse.json(cached, { headers: { 'Cache-Control': 'private, no-store' } });
+    return NextResponse.json(forVisitor(cached, await audienceFor(cached.features)), {
+      headers: { 'Cache-Control': 'private, no-store' },
+    });
   }
 
   const settings = await getTryOnSettings(shop);
@@ -102,5 +138,7 @@ export async function GET(request: NextRequest) {
   // instead of hiding the button for a full minute.
   if (launch.reason !== 'unavailable') storeProxyConfig(cacheKey, body);
 
-  return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
+  return NextResponse.json(forVisitor(body, await audienceFor(features)), {
+    headers: { 'Cache-Control': 'private, no-store' },
+  });
 }

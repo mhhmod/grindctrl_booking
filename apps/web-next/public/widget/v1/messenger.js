@@ -58,6 +58,36 @@
   };
 
   function lsGet(name) { try { return window.localStorage.getItem(name); } catch (e) { return null; } }
+
+  /* Launch state (phase zero item 9). The visitor id the try-on scripts
+     already keep on this store (gc_tryon_vid), so a holdout puts a visitor
+     in the same arm for Store Chat and Try it on; and the owner's preview
+     link, kept for its 24 hours, so the owner sees Store Chat before the
+     store goes live. The server checks both. */
+  function launchVisitorId() {
+    var id = lsGet('gc_tryon_vid');
+    if (id && /^[A-Za-z0-9_-]{16,64}$/.test(id)) return id;
+    id = uuid() + uuid().slice(0, 8);
+    lsSet('gc_tryon_vid', id);
+    return /^[A-Za-z0-9_-]{16,64}$/.test(id) ? id : '';
+  }
+  function previewToken() {
+    try {
+      var fromUrl = new URLSearchParams(window.location.search).get('gc_preview');
+      if (fromUrl && /^[A-Za-z0-9_.-]{20,512}$/.test(fromUrl)) {
+        lsSet('gc_preview', JSON.stringify({ token: fromUrl, savedAt: Date.now() }));
+        return fromUrl;
+      }
+      var saved = JSON.parse(lsGet('gc_preview') || 'null');
+      if (saved && typeof saved.token === 'string' && Date.now() - saved.savedAt < 24 * 60 * 60 * 1000) return saved.token;
+    } catch (e) {}
+    return '';
+  }
+  // The theme editor always shows Store Chat, so the merchant can place it.
+  function inThemeEditor() { return !!(window.Shopify && window.Shopify.designMode); }
+  function launchHidden(config) {
+    return !!(config && config.launch && config.launch.show === false) && !inThemeEditor();
+  }
   function lsSet(name, value) { try { window.localStorage.setItem(name, value); } catch (e) {} }
   function lsRemove(name) { try { window.localStorage.removeItem(name); } catch (e) {} }
   function uuid() {
@@ -100,9 +130,12 @@
 
   function fetchConfig(done) {
     if (!KEY && !SHOP) return;
+    var preview = previewToken();
     var url = APP_ORIGIN + '/api/messenger/config?' +
       (KEY ? 'key=' + encodeURIComponent(KEY) : 'shop=' + encodeURIComponent(SHOP)) +
-      '&origin=' + encodeURIComponent(ORIGIN);
+      '&origin=' + encodeURIComponent(ORIGIN) +
+      '&vid=' + encodeURIComponent(launchVisitorId()) +
+      (preview ? '&preview=' + encodeURIComponent(preview) : '');
     fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject({ status: r.status }); }).then(function (data) {
       lsSet(LS.config, JSON.stringify({ fetchedAt: Date.now(), data: data }));
       done(data);
@@ -175,7 +208,9 @@
       fetch(APP_ORIGIN + '/api/messenger/event', {
         method: 'POST', headers: { 'content-type': 'application/json' }, keepalive: true,
         body: JSON.stringify({ key: state.config ? state.config.key : KEY, shop: SHOP || undefined, origin: ORIGIN, name: name,
-          conversationId: lsGet(LS.conv) || undefined, payload: payload || {} })
+          conversationId: lsGet(LS.conv) || undefined, payload: payload || {},
+          // The visitor's holdout arm, so both arms are measured (item 22).
+          bucket: (state.config && state.config.launch && state.config.launch.bucket) || undefined })
       }).catch(function () {});
     } catch (e) {}
   }
@@ -579,7 +614,7 @@
     drainQueue(); // API available immediately; calls run when ready below.
     fetchConfig(function (config) {
       state.config = config;
-      if (!config || !config.active || pageExcluded(config)) return;
+      if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
       state.locale = resolveLocale(config);
       buildLauncher();
       attachShopperToken();

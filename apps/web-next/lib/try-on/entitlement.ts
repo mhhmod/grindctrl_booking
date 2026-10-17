@@ -161,6 +161,26 @@ export class TryOnUnavailableError extends Error {
   }
 }
 
+/** The store's owner has used today's test looks (N5). */
+export class TryOnTestLooksCapError extends Error {
+  readonly code = 'test_looks_cap';
+
+  constructor(message = 'Try-on is temporarily unavailable. Please check back soon.') {
+    super(message);
+    this.name = 'TryOnTestLooksCapError';
+  }
+}
+
+/* Test looks a store's owner may make each day from the preview link, paid
+   by GrindCTRL rather than the store's looks. An owner question; this is
+   the default built. TRYON_TEST_LOOKS_PER_DAY overrides it. */
+export const TEST_LOOKS_PER_DAY_DEFAULT = 20;
+
+export function testLooksPerDay(): number {
+  const raw = Number(process.env.TRYON_TEST_LOOKS_PER_DAY);
+  return Number.isInteger(raw) && raw >= 1 && raw <= 500 ? raw : TEST_LOOKS_PER_DAY_DEFAULT;
+}
+
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -569,6 +589,50 @@ export async function reserveCredit(input: {
 
   const row = (Array.isArray(data) ? data[0] : data) as ReservationRow | undefined;
   if (!row) throw new Error('Credit reservation returned no job');
+  return {
+    jobId: row.job_id,
+    created: row.created,
+    status: row.job_status,
+    modelKey: row.recorded_model_key,
+    message: row.job_message,
+    provider: row.job_provider,
+    costUsd: row.job_cost_usd === null ? null : Number(row.job_cost_usd),
+    durationMs: row.job_duration_ms,
+    createdAt: row.job_created_at,
+  };
+}
+
+/** A test look (N5): a job marked is_test that never touches the ledger,
+ *  capped per store per day. Same answer shape as reserveCredit, so the
+ *  generation path is the same from here on. */
+export async function reserveTestLook(input: {
+  shop: unknown;
+  jobId: string;
+  requestKey: string;
+  sessionId?: string;
+  productId?: string;
+}): Promise<CreditReservation> {
+  const domain = requireShop(input.shop);
+  if (!UUID_RE.test(input.requestKey)) throw new Error('Request key must be a UUID');
+
+  const { data, error } = await getServiceClient().rpc('reserve_tryon_test_look', {
+    p_shop_domain: domain,
+    p_job_id: input.jobId,
+    p_request_key: input.requestKey,
+    p_session_id: input.sessionId ?? '',
+    p_product_id: input.productId ?? '',
+    p_cap: testLooksPerDay(),
+  });
+  if (error?.message.includes('TRYON_TEST_CAP')) throw new TryOnTestLooksCapError();
+  if (error && isMissingFunctionError(error)) {
+    // Never fall back to a billed look: a test look is promised free.
+    console.error('[try-on] test looks need supabase/store_launch.sql');
+    throw new TryOnUnavailableError();
+  }
+  throwRpcError(error);
+
+  const row = (Array.isArray(data) ? data[0] : data) as ReservationRow | undefined;
+  if (!row) throw new Error('Test look reservation returned no job');
   return {
     jobId: row.job_id,
     created: row.created,

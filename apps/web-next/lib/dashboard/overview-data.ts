@@ -4,6 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@supabase/supabase-js';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { reportedCostUsd } from './provider-cost';
+import { withoutTestLooks } from '@/lib/try-on/test-looks';
 
 export type TryOnOverview = {
   totals: {
@@ -228,12 +229,16 @@ export async function getTryOnOverview(): Promise<TryOnOverview> {
     if (!supabase) return emptyOverview();
 
     const since = new Date(startOfUtcDay(now) - 13 * DAY_MS).toISOString();
-    const jobsResult = await supabase
-      .from('tryon_jobs')
-      .select('id, product_id, shop, status, cost_usd, duration_ms, message, created_at')
-      .in('shop', domains)
-      .gte('created_at', since)
-      .lte('created_at', now.toISOString());
+    // The owner's test looks are not looks shoppers made.
+    const jobsResult = await withoutTestLooks((excludeTestLooks) => {
+      const query = supabase
+        .from('tryon_jobs')
+        .select('id, product_id, shop, status, cost_usd, duration_ms, message, created_at')
+        .in('shop', domains)
+        .gte('created_at', since)
+        .lte('created_at', now.toISOString());
+      return excludeTestLooks ? query.eq('is_test', false) : query;
+    });
 
     if (jobsResult.error) throw jobsResult.error;
 

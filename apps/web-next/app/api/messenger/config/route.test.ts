@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => ({
   toPublicPayload: vi.fn(),
   recordEvent: vi.fn(),
   storeFlags: vi.fn(),
+  getStoreLaunch: vi.fn(),
 }));
+
+vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.getStoreLaunch }));
 
 vi.mock('@/lib/ratelimit', () => ({
   clientIp: () => '203.0.113.9',
@@ -34,6 +37,7 @@ vi.mock('@/lib/flags/store-flags', async (original) => ({
 }));
 
 import { GET } from './route';
+import { signPreviewToken } from '@/lib/launch/preview-token';
 
 const SITE = { id: 'site-1' };
 const PAYLOAD = { v: 1, site: { id: 'site-1' } };
@@ -254,3 +258,44 @@ describe('GET /api/messenger/config', () => {
     expect(body).toEqual({ error: 'not_found' });
   });
 });
+
+/* Phase zero item 9: who sees Store Chat on a Shopify store. */
+describe('GET /api/messenger/config launch state (N5)', () => {
+  const SHOP_SITE = { id: 'site-1', domain: 'maison.myshopify.com' };
+  const URL_BASE = 'https://app.example.com/api/messenger/config?shop=maison.myshopify.com';
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    process.env.SHOPIFY_API_KEY = 'client';
+    process.env.SHOPIFY_API_SECRET = 'secret';
+    mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    mocks.originAllowed.mockReturnValue(true);
+    mocks.toPublicPayload.mockImplementation(() => ({ v: 1, active: true }));
+    mocks.recordEvent.mockResolvedValue(undefined);
+    mocks.loadPublicSiteByDomain.mockResolvedValue(SHOP_SITE);
+    mocks.storeFlags.mockResolvedValue(['n5_preview_mode']);
+    mocks.getStoreLaunch.mockResolvedValue({ state: 'preview', holdoutShare: null, holdoutStartedAt: null, holdoutEndsAt: null, salt: '0123456789abcdef0123456789abcdef' });
+  });
+
+  it('tells the loader to draw nothing for a shopper while the store is in preview', async () => {
+    const body = await (await GET(req(`${URL_BASE}&vid=visitor_1_abcdefghijkl`))).json();
+    expect(body.launch).toEqual({ show: false, reason: 'preview', bucket: null, test: false });
+  });
+
+  it('shows Store Chat to the owner with a valid preview link', async () => {
+    const { token } = signPreviewToken('secret', 'maison.myshopify.com');
+    const body = await (await GET(req(`${URL_BASE}&preview=${encodeURIComponent(token)}`))).json();
+    expect(body.launch).toEqual({ show: true, reason: null, bucket: null, test: true });
+  });
+
+  it('adds nothing while the flag is off, or for a site that is not a Shopify store', async () => {
+    mocks.storeFlags.mockResolvedValue([]);
+    expect((await (await GET(req(URL_BASE))).json()).launch).toBeUndefined();
+
+    mocks.storeFlags.mockResolvedValue(['n5_preview_mode']);
+    mocks.loadPublicSite.mockResolvedValue({ id: 'site-2', domain: 'example.com' });
+    expect((await (await GET(req('https://app.example.com/api/messenger/config?key=gc_test_key'))).json()).launch).toBeUndefined();
+    expect(mocks.getStoreLaunch).not.toHaveBeenCalled();
+  });
+});
+

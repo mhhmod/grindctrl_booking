@@ -57,6 +57,9 @@ export type StorefrontContextClaims = {
   canonicalGarmentUrl: string;
   garmentUrlDigest: string;
   nonce: string;
+  /** The owner's look from the preview link (N5): a test look, never
+   *  billed. Signed in, so a browser cannot add it. */
+  test?: true;
   iat: number;
   exp: number;
   jti: string;
@@ -78,6 +81,8 @@ export type VerifiedTryOnSession = {
   garmentUrlDigest: string | null;
   nonce: string;
   requestKey: string;
+  /** Carried from the storefront context: a test look (N5). */
+  test?: true;
   iat: number;
   exp: number;
   jti: string;
@@ -249,6 +254,8 @@ export function signStorefrontContext(
     variantGid: unknown;
     canonicalGarmentUrl: unknown;
     nonce: unknown;
+    /** The owner's preview link was verified for this shop. */
+    test?: boolean;
   },
   nowSeconds = Math.floor(Date.now() / 1000),
 ): { token: string; claims: StorefrontContextClaims } {
@@ -296,6 +303,7 @@ export function signStorefrontContext(
     canonicalGarmentUrl: input.canonicalGarmentUrl,
     garmentUrlDigest,
     nonce: input.nonce,
+    ...(input.test === true ? { test: true as const } : {}),
     iat: nowSeconds,
     exp: nowSeconds + STOREFRONT_CONTEXT_TTL_SECONDS,
     jti,
@@ -361,6 +369,7 @@ export function verifyStorefrontContext(
     canonicalGarmentUrl: payload.canonicalGarmentUrl,
     garmentUrlDigest: payload.garmentUrlDigest,
     nonce: payload.nonce,
+    ...(payload.test === true ? { test: true as const } : {}),
     iat: payload.iat,
     exp: payload.exp,
     jti: payload.jti,
@@ -407,6 +416,9 @@ export function signTryOnSession(
     garmentUrlDigest: context?.garmentUrlDigest ?? null,
     nonce: context?.nonce ?? createTryOnNonce(),
     requestKey,
+    // Only a storefront session carries a test look; the demo has its own
+    // unbilled path.
+    ...(input.purpose === 'storefront' && context?.test === true ? { test: true as const } : {}),
     iat: issuedAt,
     exp: issuedAt + TRYON_SESSION_TTL_SECONDS,
     jti: storefrontIdentity ?? randomBytes(12).toString('base64url'),
@@ -494,6 +506,7 @@ export function verifyTryOnSession(
     garmentUrlDigest: payload.garmentUrlDigest as string | null,
     nonce: payload.nonce,
     requestKey: payload.requestKey,
+    ...(payload.purpose === 'storefront' && payload.test === true ? { test: true as const } : {}),
     iat: payload.iat,
     exp: payload.exp,
     jti: payload.jti,

@@ -16,6 +16,10 @@ import {
 } from '@/lib/shopify/product-resolver';
 import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
+import { storeFlags } from '@/lib/flags/store-flags';
+import { launchAudience, launchVisitorId } from '@/lib/launch/audience';
+import { getStoreLaunch } from '@/lib/launch/store-launch';
+import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 
 /* Shopify App Proxy child route:
  *   /apps/grindctrl/try-on-context -> /api/shopify/proxy/try-on-context
@@ -100,8 +104,31 @@ export async function GET(request: NextRequest) {
      as the code (N34: out_of_looks). A failed entitlement read is not a
      refusal: the credit reservation at generation is the real gate, so a
      database hiccup must not hide try-on from a store that has looks. */
-  const launch = await getTryOnLaunch(shop);
-  if (launch.tryOn === 'hidden' && launch.reason !== 'unavailable') {
+  /* Who may start a look on this store now (phase zero item 9): nobody but
+     the owner while it is in setup or preview, and nobody in the holdout's
+     off arm. The owner's looks, from the signed preview link, are test
+     looks: they never spend the store's looks, so running out does not
+     stop them. */
+  const [launch, features] = await Promise.all([getTryOnLaunch(shop), storeFlags({ shopDomain: shop })]);
+  const storeLaunch = features.includes('n5_preview_mode') ? await getStoreLaunch(shop) : null;
+  const audience = launchAudience({
+    launch: storeLaunch,
+    features,
+    preview: verifyPreviewTokenAnyApp(params.get('preview'), shop),
+    visitorId: launchVisitorId(params.get('vid')),
+    now: new Date(),
+  });
+  if (!audience.show) {
+    return NextResponse.json(
+      { error: audience.reason },
+      { status: 409, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+  const blocked =
+    launch.tryOn === 'hidden' &&
+    launch.reason !== 'unavailable' &&
+    !(audience.test && launch.reason === 'out_of_looks');
+  if (blocked) {
     return NextResponse.json(
       { error: launch.reason },
       { status: 409, headers: { 'Cache-Control': 'no-store' } },
@@ -133,6 +160,7 @@ export async function GET(request: NextRequest) {
       variantGid: resolvedProduct.variantGid,
       canonicalGarmentUrl: resolvedProduct.garmentUrl,
       nonce,
+      test: audience.test,
     },
     issuedAt,
   );
