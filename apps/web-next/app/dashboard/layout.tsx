@@ -14,7 +14,7 @@ import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
-  const pathname = headerList.get('x-pathname') ?? '/dashboard/overview';
+  const pathname = headerList.get('x-pathname') ?? '/dashboard';
 
   const clerkUserId = await requireDashboardUser(pathname);
 
@@ -50,7 +50,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     pathname,
     permissions,
     locale,
-    badges: { '/dashboard/messenger': awaitingHandoff },
+    badges: { '/dashboard/store-chat': awaitingHandoff },
   });
 
   return (

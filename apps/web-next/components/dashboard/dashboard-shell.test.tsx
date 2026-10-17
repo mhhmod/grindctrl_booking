@@ -23,21 +23,21 @@ vi.mock('@/components/dashboard/theme-toggle', () => ({
    and DashboardSidebarNav both derive title/breadcrumbs/active-tab from the
    live pathname now, not from a value resolved once server-side — see
    lib/dashboard/use-route-meta.ts. Tests set it per-case below. */
-let mockPathname = '/dashboard/overview';
+let mockPathname = '/dashboard';
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
   usePathname: () => mockPathname,
 }));
 
 const navItems = [
-  { href: '/dashboard/overview', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const, group: 'core' as const },
+  { href: '/dashboard', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const, group: 'core' as const },
   { href: '/dashboard/agents', label: 'AI Agents', icon: {} as never, isActive: false, permissionKey: 'canViewAgents' as const, group: 'core' as const },
   { href: '/dashboard/install', label: 'Widget / Embed', icon: {} as never, isActive: false, permissionKey: 'canViewInstall' as const, group: 'journey' as const },
   { href: '/dashboard/implementation', label: 'Implementation', icon: {} as never, isActive: false, permissionKey: 'canViewImplementation' as const, group: 'platform' as const },
 ];
 
 beforeEach(() => {
-  mockPathname = '/dashboard/overview';
+  mockPathname = '/dashboard';
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({

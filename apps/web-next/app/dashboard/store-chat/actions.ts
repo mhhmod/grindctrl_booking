@@ -85,7 +85,7 @@ export async function saveDraftSection(
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await saveDraftSectionForSite(site, section, payload);
-    if (result.ok) revalidatePath('/dashboard/messenger');
+    if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
   } catch (error) {
     return fail(error);
@@ -100,7 +100,7 @@ export async function saveDraftSections(
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await saveDraftSectionsForSite(site, sections);
-    if (result.ok) revalidatePath('/dashboard/messenger');
+    if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
   } catch (error) {
     return fail(error);
@@ -112,7 +112,7 @@ export async function publishConfig(siteId: string): Promise<ActionResult> {
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await publishConfigForSite(site, userId);
-    if (result.ok) revalidatePath('/dashboard/messenger');
+    if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
   } catch (error) {
     return fail(error);
@@ -124,7 +124,7 @@ export async function revertConfigAction(siteId: string): Promise<ActionResult> 
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await revertConfigForSite(site, userId);
-    if (result.ok) revalidatePath('/dashboard/messenger');
+    if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
   } catch (error) {
     return fail(error);
@@ -144,7 +144,7 @@ export async function disconnectSiteAction(siteId: string): Promise<ActionResult
       action: 'store_disconnected',
       detail: { domain: site.domain },
     });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -159,7 +159,7 @@ export async function discardDraft(siteId: string): Promise<ActionResult> {
     const res = await supabase.from('widget_sites').update({ settings_draft: null }).eq('id', site.id);
     if (res.error) throw new Error(res.error.message);
     await recordAudit({ siteId, actorClerkUserId: userId, action: 'draft_discarded' });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -171,7 +171,7 @@ export async function setMessengerEnabled(siteId: string, enabled: boolean): Pro
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     const result = await setMessengerEnabledForSite(site, userId, enabled);
-    if (result.ok) revalidatePath('/dashboard/messenger');
+    if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
   } catch (error) {
     return fail(error);
@@ -192,12 +192,12 @@ export async function addKnowledge(formData: FormData): Promise<ActionResult> {
     const site = await requireOwnedSite(userId, siteId);
     if (url) {
       await addUrlKnowledge({ site, actorClerkUserId: userId, url });
-      revalidatePath('/dashboard/messenger');
+      revalidatePath('/dashboard/store-chat');
       return { ok: true, message: 'Page added to knowledge.' };
     }
     if (!title || !content) return { ok: false, error: 'Title and content are required.' };
     await addManualKnowledge({ site, actorClerkUserId: userId, title, content });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true, message: 'Added to knowledge.' };
   } catch (error) {
     const raw = error instanceof Error ? error.message : '';
@@ -219,7 +219,7 @@ export async function updateKnowledgeStatus(
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     await setKnowledgeStatus({ site, entryId, status });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -231,7 +231,7 @@ export async function deleteKnowledge(siteId: string, entryId: string): Promise<
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     await removeKnowledge({ site, actorClerkUserId: userId, entryId });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -243,7 +243,7 @@ export async function syncKnowledge(siteId: string, entryId: string): Promise<Ac
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     await reSyncKnowledge({ site, entryId });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true, message: 'Re-synced.' };
   } catch (error) {
     const raw = error instanceof Error ? error.message : '';
@@ -268,7 +268,7 @@ export async function addCannedReply(
     const site = await requireOwnedSite(userId, siteId);
     if (!title.trim() || !content.trim()) return { ok: false, error: 'Title and content are required.' };
     await insertCannedReply({ site, actorClerkUserId: userId, title, content });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true, message: 'Canned reply added.' };
   } catch (error) {
     return fail(error);
@@ -284,7 +284,7 @@ export async function updateCannedReplyStatus(
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     await setCannedReplyStatus({ site, replyId, status });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -296,7 +296,7 @@ export async function deleteCannedReply(siteId: string, replyId: string): Promis
     const userId = await currentUser();
     const site = await requireOwnedSite(userId, siteId);
     await removeCannedReply({ site, actorClerkUserId: userId, replyId });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -405,7 +405,7 @@ export async function staffReply(
       action: 'conversation_taken_over',
       detail: { conversationId },
     });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -437,7 +437,7 @@ export async function addInternalNote(
       action: 'internal_note_added',
       detail: { conversationId },
     });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -494,7 +494,7 @@ export async function takeoverConversation(siteId: string, conversationId: strin
       action: 'conversation_taken_over',
       detail: { conversationId },
     });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -520,7 +520,7 @@ export async function assignConversationAction(
       action: 'conversation_assigned',
       detail: { conversationId, assignedProfileId: profileId },
     });
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -532,7 +532,7 @@ export async function releaseConversation(siteId: string, conversationId: string
     await ownedConversation(siteId, conversationId);
     const released = await returnConversationToAi(conversationId);
     if (!released) return { ok: false, error: 'Only an active human conversation can be returned to AI.' };
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);
@@ -544,7 +544,7 @@ export async function closeConversationAction(siteId: string, conversationId: st
     await ownedConversation(siteId, conversationId);
     const closed = await closeConversation(conversationId);
     if (!closed) return { ok: false, error: 'Conversation already closed.' };
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true };
   } catch (error) {
     return fail(error);

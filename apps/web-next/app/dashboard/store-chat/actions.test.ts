@@ -423,7 +423,7 @@ describe('assignConversationAction', () => {
     expect(mocks.listWorkspaceMembers).toHaveBeenCalledWith('ws-1');
     expect(mocks.assignConversation).toHaveBeenCalledWith('conv-1', 'p-team');
     expect(mocks.recordAudit).toHaveBeenCalledWith({ siteId: 'site-1', actorClerkUserId: 'user_owner', action: 'conversation_assigned', detail: { conversationId: 'conv-1', assignedProfileId: 'p-team' } });
-    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/messenger');
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 
   it('refuses a concurrent close without auditing success', async () => {
@@ -470,7 +470,7 @@ describe('revertConfigAction', () => {
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
     expect(mocks.update).toHaveBeenCalledWith({ settings_json: { custom: true }, settings_version: 4 });
     expect(mocks.recordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'config_reverted', actorClerkUserId: 'user_owner' }));
-    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/messenger');
+    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 
   it('maps a thrown core failure without exposing internals or revalidating', async () => {
@@ -504,7 +504,7 @@ describe('disconnectSiteAction', () => {
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.recordAudit).toHaveBeenCalledExactlyOnceWith({ siteId: SITE.id, actorClerkUserId: 'user_owner', action: 'store_disconnected', detail: { domain: SITE.domain } });
     expect(mocks.unclaimSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.recordAudit.mock.invocationCallOrder[0]);
-    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith('/dashboard/messenger');
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith('/dashboard/store-chat');
     expect(mocks.recordAudit.mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(revalidatePath).mock.invocationCallOrder[0]);
   });
 

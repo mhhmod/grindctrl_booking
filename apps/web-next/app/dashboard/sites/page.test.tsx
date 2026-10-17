@@ -9,6 +9,6 @@ import DashboardSitesPage from '@/app/dashboard/sites/page';
 describe('DashboardSitesPage', () => {
   it('redirects the retired sites route to Store Chat', () => {
     DashboardSitesPage();
-    expect(mocks.redirect).toHaveBeenCalledWith('/dashboard/messenger');
+    expect(mocks.redirect).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 });

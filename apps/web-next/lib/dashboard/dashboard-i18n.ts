@@ -24,7 +24,7 @@ const en: DashboardCopy = {
   home: 'Dashboard',
   navBadgeWaiting: (count) => `${count} waiting for a human`,
   routes: {
-    '/dashboard/overview': {
+    '/dashboard': {
       title: 'Overview',
       description: 'The try-on business this week, across every merchant store.',
     },
@@ -50,7 +50,7 @@ const en: DashboardCopy = {
       title: 'Try-On',
       description: 'Settings, plans, and generation history for every merchant store.',
     },
-    '/dashboard/messenger': {
+    '/dashboard/store-chat': {
       title: 'Store Chat',
       description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
     },
@@ -82,7 +82,7 @@ const ar: DashboardCopy = {
   home: 'لوحة التحكم',
   navBadgeWaiting: (count) => `${count} بانتظار الرد`,
   routes: {
-    '/dashboard/overview': {
+    '/dashboard': {
       title: 'نظرة عامة',
       description: 'أداء التجربة الافتراضية هذا الأسبوع عبر كل متجر.',
     },
@@ -107,7 +107,7 @@ const ar: DashboardCopy = {
       title: 'التجربة الافتراضية',
       description: 'الإعدادات والخطط وسجل الإنشاء لكل متجر.',
     },
-    '/dashboard/messenger': {
+    '/dashboard/store-chat': {
       title: 'دردشة المتجر',
       description: 'صندوق الدردشة في متجرك: المظهر، الذكاء الاصطناعي، السلوك، والتثبيت.',
     },

@@ -49,7 +49,7 @@ describe('GET /api/shopify/oauth/callback', () => {
     );
 
     const location = response.headers.get('location') ?? '';
-    expect(location).toBe(`${HOST}/dashboard/messenger?tab=behaviour&orders=failed`);
+    expect(location).toBe(`${HOST}/dashboard/store-chat?tab=behaviour&orders=failed`);
 
     // The old destination told them nothing and offered a snippet that 404s.
     expect(location).not.toContain('/dashboard/install');

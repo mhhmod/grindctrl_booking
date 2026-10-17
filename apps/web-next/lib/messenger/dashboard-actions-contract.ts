@@ -10,7 +10,7 @@ export interface FetchMessagesResult {
 }
 
 /** What the five host-agnostic editors need from whoever renders them. The
- *  dashboard passes the real server actions (app/dashboard/messenger/actions
+ *  dashboard passes the real server actions (app/dashboard/store-chat/actions
  *  already matches this shape field-for-field); the embedded Shopify shell
  *  passes a fetch-backed adapter hitting /api/shopify/store-chat/* instead.
  *  Same components either way — this interface is the only seam. */

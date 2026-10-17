@@ -22,7 +22,7 @@ export default async function OnboardingPage() {
 
   // Already done: no reason to make them fill it twice.
   if (profile?.onboardedAt) {
-    redirect('/dashboard/overview');
+    redirect('/dashboard');
   }
 
   return (

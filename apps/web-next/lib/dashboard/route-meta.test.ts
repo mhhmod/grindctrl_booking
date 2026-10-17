@@ -3,8 +3,8 @@ import { getDashboardRouteMeta, normalizeDashboardPathname } from '@/lib/dashboa
 
 describe('dashboard route metadata', () => {
   it('normalizes dashboard index and trailing slash paths', () => {
-    expect(normalizeDashboardPathname('/dashboard')).toBe('/dashboard/overview');
-    expect(normalizeDashboardPathname('/dashboard/messenger/')).toBe('/dashboard/messenger');
+    expect(normalizeDashboardPathname('/dashboard')).toBe('/dashboard');
+    expect(normalizeDashboardPathname('/dashboard/store-chat/')).toBe('/dashboard/store-chat');
   });
 
   it('returns metadata for core journey routes', () => {

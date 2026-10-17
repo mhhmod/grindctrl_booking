@@ -36,7 +36,7 @@ export type DashboardResolvedNavItem = DashboardNavItem & {
  */
 const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   {
-    href: '/dashboard/overview',
+    href: '/dashboard',
     label: 'Overview',
     icon: DashboardSquare01Icon,
     permissionKey: 'canViewOverview',
@@ -50,7 +50,7 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     group: 'core',
   },
   {
-    href: '/dashboard/messenger',
+    href: '/dashboard/store-chat',
     label: 'Store Chat',
     icon: Message01Icon,
     permissionKey: 'canViewMessenger',
@@ -59,10 +59,8 @@ const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
 ];
 
 export function isDashboardNavItemActive(pathname: string, itemHref: string) {
-  if (pathname === '/dashboard' && itemHref === '/dashboard/overview') {
-    return true;
-  }
-
+  /* Home is /dashboard itself; it is not active on the pages under it. */
+  if (itemHref === '/dashboard') return pathname === '/dashboard';
   return pathname === itemHref || pathname.startsWith(`${itemHref}/`);
 }
 

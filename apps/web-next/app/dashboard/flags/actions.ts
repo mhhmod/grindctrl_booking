@@ -56,7 +56,7 @@ export async function setStoreFlag(input: {
     // The storefront scripts read the flags from the App Proxy config.
     if ('shopDomain' in store) invalidateProxyConfig(store.shopDomain);
     revalidatePath('/dashboard/try-on');
-    revalidatePath('/dashboard/messenger');
+    revalidatePath('/dashboard/store-chat');
     return { ok: true, flags: await storeFlags(store) };
   } catch (error) {
     if (error instanceof PlatformOperatorRequiredError) return FORBIDDEN;

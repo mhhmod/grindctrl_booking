@@ -16,7 +16,7 @@ import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { toPublicPayload } from '@/lib/messenger/public-api';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 
-/* Embedded equivalent of app/dashboard/messenger/page.tsx's data assembly —
+/* Embedded equivalent of app/dashboard/store-chat/page.tsx's data assembly —
    same shape, resolved by verified shop domain instead of Clerk session +
    ?site=. Every panel is independently optional so one slow or broken read
    never takes the whole embedded tab down, matching the dashboard page's

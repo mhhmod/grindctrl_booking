@@ -10,7 +10,7 @@ describe('dashboard navigation config', () => {
     });
 
     expect(items.find((item) => item.href === '/dashboard/try-on')?.isActive).toBe(true);
-    expect(items.find((item) => item.href === '/dashboard/overview')?.isActive).toBe(false);
+    expect(items.find((item) => item.href === '/dashboard')?.isActive).toBe(false);
   });
 
   it('treats /dashboard as the overview route', () => {
@@ -19,7 +19,7 @@ describe('dashboard navigation config', () => {
       permissions: getDefaultDashboardPermissions(),
     });
 
-    expect(items.find((item) => item.href === '/dashboard/overview')?.isActive).toBe(true);
+    expect(items.find((item) => item.href === '/dashboard')?.isActive).toBe(true);
   });
 
   it('filters out entries denied by permissions', () => {
@@ -29,7 +29,7 @@ describe('dashboard navigation config', () => {
     };
 
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions,
     });
 
@@ -40,21 +40,21 @@ describe('dashboard navigation config', () => {
   // acceptance criteria in nav-config.ts before adding to this list.
   it('ships exactly Overview, Try-On, and Store Chat by default', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions: getDefaultDashboardPermissions(),
     });
 
     expect(items.map((item) => item.href)).toEqual([
-      '/dashboard/overview',
+      '/dashboard',
       '/dashboard/try-on',
-      '/dashboard/messenger',
+      '/dashboard/store-chat',
     ]);
     expect(items.map((item) => item.label)).toEqual(['Overview', 'Try-On', 'Store Chat']);
   });
 
   it('assigns group hints to nav items', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions: getDefaultDashboardPermissions(),
     });
 
@@ -63,21 +63,21 @@ describe('dashboard navigation config', () => {
 
   it('puts a waiting-conversation count on Store Chat only', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions: getDefaultDashboardPermissions(),
-      badges: { '/dashboard/messenger': 3 },
+      badges: { '/dashboard/store-chat': 3 },
     });
-    const storeChat = items.find((item) => item.href === '/dashboard/messenger');
+    const storeChat = items.find((item) => item.href === '/dashboard/store-chat');
     expect(storeChat?.badgeCount).toBe(3);
-    expect(items.find((item) => item.href === '/dashboard/overview')?.badgeCount).toBeUndefined();
+    expect(items.find((item) => item.href === '/dashboard')?.badgeCount).toBeUndefined();
   });
 
   it('drops a zero badge rather than rendering a 0', () => {
     const items = resolveDashboardNavItems({
-      pathname: '/dashboard/overview',
+      pathname: '/dashboard',
       permissions: getDefaultDashboardPermissions(),
-      badges: { '/dashboard/messenger': 0 },
+      badges: { '/dashboard/store-chat': 0 },
     });
-    expect(items.find((item) => item.href === '/dashboard/messenger')?.badgeCount).toBeUndefined();
+    expect(items.find((item) => item.href === '/dashboard/store-chat')?.badgeCount).toBeUndefined();
   });
 });

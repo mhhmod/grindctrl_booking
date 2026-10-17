@@ -19,11 +19,11 @@ type DashboardRouteDefinition = {
   description: string;
 };
 
-const DASHBOARD_HOME_PATH = '/dashboard/overview';
+const DASHBOARD_HOME_PATH = '/dashboard';
 
 const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
   {
-    pathname: '/dashboard/overview',
+    pathname: '/dashboard',
     title: 'Overview',
     description: 'The try-on business this week, across every merchant store.',
   },
@@ -53,7 +53,7 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Settings, plans, and generation history for every merchant store.',
   },
   {
-    pathname: '/dashboard/messenger',
+    pathname: '/dashboard/store-chat',
     title: 'Store Chat',
     description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
   },
@@ -85,6 +85,7 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
 ];
 
 const DASHBOARD_ROUTE_ALIASES: Record<string, string> = {
+  '/dashboard/overview': '/dashboard',
   '/dashboard/sites': '/dashboard/install',
   '/dashboard/branding': '/dashboard/install',
   '/dashboard/domains': '/dashboard/install',
@@ -137,7 +138,13 @@ export function getDashboardRouteMeta(
   const normalizedPathname = normalizeDashboardPathname(pathname);
   const copy = getDashboardCopy(locale);
 
-  const match = DASHBOARD_ROUTE_DEFINITIONS.find((route) => normalizedPathname === route.pathname || normalizedPathname.startsWith(`${route.pathname}/`));
+  /* Home is /dashboard itself, so only an exact match is home; every other
+     route also owns the paths under it. */
+  const match = DASHBOARD_ROUTE_DEFINITIONS.find(
+    (route) =>
+      normalizedPathname === route.pathname ||
+      (route.pathname !== DASHBOARD_HOME_PATH && normalizedPathname.startsWith(`${route.pathname}/`)),
+  );
 
   if (match) {
     /* The English route table stays the source of truth for which routes

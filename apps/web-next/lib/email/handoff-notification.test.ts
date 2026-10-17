@@ -32,8 +32,8 @@ describe('buildHandoffNotification', () => {
     }
     // link contains `&`: text keeps it raw, html must escape it (see the
     // markup-injection test below for why).
-    expect(text).toContain('https://grindctrl.cloud/dashboard/messenger?site=site-1&tab=conversations');
-    expect(html).toContain('https://grindctrl.cloud/dashboard/messenger?site=site-1&amp;tab=conversations');
+    expect(text).toContain('https://grindctrl.cloud/dashboard/store-chat?site=site-1&tab=conversations');
+    expect(html).toContain('https://grindctrl.cloud/dashboard/store-chat?site=site-1&amp;tab=conversations');
   });
 
   it('escapes shopper content so a message cannot inject markup', () => {

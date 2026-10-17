@@ -48,7 +48,7 @@ describe('dashboard content locale copy', () => {
     expect(screen.getByRole('link', { name: configure })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: conversations })).toHaveAttribute(
       'href',
-      '/dashboard/messenger?tab=conversations',
+      '/dashboard/store-chat?tab=conversations',
     );
     unmount();
 
@@ -56,7 +56,7 @@ describe('dashboard content locale copy', () => {
     expect(screen.getByText(trigger)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: openConversations })).toHaveAttribute(
       'href',
-      '/dashboard/messenger?tab=conversations',
+      '/dashboard/store-chat?tab=conversations',
     );
   });
 

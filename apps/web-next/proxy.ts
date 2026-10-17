@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { type NextRequest, NextResponse } from 'next/server';
+import { withPathname } from '@/lib/dashboard/forward-request';
 
 const isDashboardRoute = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)']);
 
@@ -14,12 +15,6 @@ const isDashboardRoute = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)'
    catch it — nothing had ever requested a page route from that specific
    candidate before those specs existed. */
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
-
-function withPathname(req: NextRequest) {
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set('x-pathname', req.nextUrl.pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
-}
 
 export default clerkConfigured
   ? clerkMiddleware(async (auth, req) => {

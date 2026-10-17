@@ -24,7 +24,7 @@ export const runtime = 'nodejs';
    shown installation instructions for something that does not exist, and was
    never told whether the grant had worked. */
 function ordersReturn(appUrl: string, outcome: 'connected' | 'failed'): string {
-  return `${appUrl}/dashboard/messenger?tab=behaviour&orders=${outcome}`;
+  return `${appUrl}/dashboard/store-chat?tab=behaviour&orders=${outcome}`;
 }
 
 function failure(appUrl: string, reason: string): NextResponse {
