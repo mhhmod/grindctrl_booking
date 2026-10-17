@@ -17,7 +17,7 @@ export interface HandoffNotificationInput {
 
 const COPY = {
   en: {
-    subject: (store: string) => `A shopper needs you — ${store}`,
+    subject: (store: string) => `A shopper needs you: ${store}`,
     heading: 'A shopper is waiting for a human',
     shopper: 'Shopper',
     why: 'Why it escalated',
@@ -26,7 +26,7 @@ const COPY = {
     footer: 'You are receiving this because Store Chat handed a conversation to your team.',
   },
   ar: {
-    subject: (store: string) => `عميل ينتظر ردك — ${store}`,
+    subject: (store: string) => `عميل ينتظر ردك: ${store}`,
     heading: 'عميل ينتظر التحدث مع شخص من فريقك',
     shopper: 'العميل',
     why: 'سبب التحويل',

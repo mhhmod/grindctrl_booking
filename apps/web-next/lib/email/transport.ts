@@ -20,7 +20,7 @@ function readUser(): string | null {
       warnedAboutUser = true;
       console.error(
         `[email] TRYON_EMAIL_SMTP_USER is "${user}", which is not an email address. ` +
-          'It must be the full mailbox address (for example name@gmail.com) — it is used both ' +
+          'It must be the full mailbox address (for example name@gmail.com), since it is used both ' +
           'as the SMTP login and as the From header. Mail is disabled until this is fixed.',
       );
     }

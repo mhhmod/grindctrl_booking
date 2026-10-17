@@ -134,7 +134,7 @@ const AR: PanelCopy = {
   contactInvalid: 'يرجى إدخال بريد إلكتروني صحيح.',
   attachAria: 'إرفاق صورة',
   attachUploading: 'جارٍ رفع الصورة…',
-  attachTooLarge: 'حجم الصورة كبير جداً (٥ ميجابايت كحد أقصى).',
+  attachTooLarge: 'حجم الصورة كبير جداً (5 ميجابايت كحد أقصى).',
   attachBadType: 'يمكن إرفاق صور JPEG أو PNG أو WebP فقط.',
   attachFailed: 'تعذّر إرسال الصورة.',
   attachImageAlt: 'الصورة التي أرسلتها',

@@ -11,6 +11,10 @@ vi.mock('@/lib/dashboard/overview-data', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/lib/dashboard/overview-data')>(),
   getTryOnOverview: vi.fn(),
 }));
+vi.mock('@/lib/dashboard/active-store-server', () => ({
+  getActiveStore: vi.fn(async () => ({ shopDomain: 'alpha.myshopify.com', siteId: null })),
+  getActiveStoreTimeZone: vi.fn(async () => 'Africa/Cairo'),
+}));
 
 function fixture(costs: Array<number | null>, previousCost: number | null = 0) {
   return computeOverview([
@@ -22,6 +26,15 @@ function fixture(costs: Array<number | null>, previousCost: number | null = 0) {
       cost_usd: previousCost, duration_ms: 1000, message: null, created_at: '2026-08-25T08:00:00Z' },
   ], [{ shop_domain: 'alpha.myshopify.com', status: 'installed' }], new Date('2026-09-05T12:00:00Z'));
 }
+
+describe('DashboardOverviewPage days', () => {
+  it("counts days on the active store's calendar (item 32)", async () => {
+    vi.mocked(getRequestLocale).mockResolvedValue('en');
+    vi.mocked(getTryOnOverview).mockResolvedValue(fixture([0]));
+    render(await DashboardOverviewPage());
+    expect(getTryOnOverview).toHaveBeenCalledWith({ timeZone: 'Africa/Cairo' });
+  });
+});
 
 describe('DashboardOverviewPage provider cost privacy', () => {
   it.each(['en', 'ar'] as const)('does not render provider spend in %s', async (locale) => {

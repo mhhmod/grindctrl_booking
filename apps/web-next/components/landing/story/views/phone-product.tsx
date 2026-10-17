@@ -303,7 +303,7 @@ export function PhoneProduct({ v, t }: ViewProps) {
                           ) : null}
                           {v.cvDone ? (
                             <>
-                              <p style={{ margin: "0", textAlign: "center", fontSize: "10.5px", color: "var(--muted-foreground)", animation: "gcs-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both" }}>{t("Thanks — we will reply to you there.")}</p>
+                              <p style={{ margin: "0", textAlign: "center", fontSize: "10.5px", color: "var(--muted-foreground)", animation: "gcs-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both" }}>{t("Thanks, we will reply to you there.")}</p>
                             </>
                           ) : null}
                         </div>

@@ -30,7 +30,7 @@ export async function runMockGeneration(
     shop,
     status: 'completed',
     resultImageUrl: '/try-on/mock-result.png',
-    message: 'Demo preview generated (mock mode — not a real AI result).',
+    message: 'Demo preview generated (mock mode, not a real AI result).',
     createdAt: now,
     completedAt: new Date().toISOString(),
     meta: {

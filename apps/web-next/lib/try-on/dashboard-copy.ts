@@ -7,6 +7,7 @@
 
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { MerchantActionFailure } from '@/lib/request-rate-limit';
+import { intlLocale } from '@/lib/copy/rules';
 
 export interface TryOnDashboardCopy {
   installedShops: string;
@@ -344,7 +345,7 @@ const ar: TryOnDashboardCopy = {
   appearanceBody:
     'نفس عناصر التحكم التي يراها التاجر في لوحة شوبيفاي، وتكتب في السجل نفسه. تظهر التغييرات خلال دقيقة.',
 
-  recentGenerationsBody: 'آخر ٢٥ عملية مباشرة، الأحدث أولاً، مع تكلفة كل منها.',
+  recentGenerationsBody: 'آخر 25 عملية مباشرة، الأحدث أولاً، مع تكلفة كل منها.',
   noGenerationsYet:
     'لا توجد عمليات توليد بعد. شغّل تجربة قياس من أي متجر وستظهر هنا مع تكلفتها وزمنها.',
   columnProduct: 'المنتج',
@@ -464,7 +465,7 @@ export function actionFailureLabel(c: TryOnDashboardCopy, failure: MerchantActio
    comparing it down the page, and Arabic-Indic digits make that harder.
    Dropping -u-nu-latn switches them back. */
 export function getDateLocale(locale: SiteLocale): string {
-  return locale === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US';
+  return intlLocale(locale);
 }
 
 /* Status badges render a database value, so they need translating at the

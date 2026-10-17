@@ -19,7 +19,7 @@ import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 const COPY = {
   en: {
     title: 'AI assistant',
-    subtitle: 'Answers shoppers from your store knowledge — in English and Arabic.',
+    subtitle: 'Answers shoppers from your store knowledge, in English and Arabic.',
     enable: 'Let AI answer shoppers',
     name: 'Assistant name',
     tone: 'Tone',
@@ -61,17 +61,17 @@ const COPY = {
     updatedDaysAgo: (n: number) => `Updated ${n}d ago`,
     staleSyncedDaysAgo: (n: number) => `Stale · synced ${n}d ago`,
     staleNeverSynced: 'Stale · never synced',
-    empty: 'No knowledge yet — add your first policy or FAQ so the AI can answer accurately.',
+    empty: 'No knowledge yet. Add your first policy or FAQ so the AI can answer accurately.',
   },
   ar: {
     title: 'مساعد الذكاء الاصطناعي',
-    subtitle: 'يرد على العملاء من معرفة متجرك — بالعربية والإنجليزية.',
+    subtitle: 'يرد على العملاء من معرفة متجرك، بالعربية والإنجليزية.',
     enable: 'السماح للذكاء الاصطناعي بالرد',
     name: 'اسم المساعد',
     tone: 'الأسلوب',
     tones: { friendly: 'ودود', professional: 'مهني', concise: 'مختصر', warm: 'دافئ' },
     instructions: 'ما الذي يجب أن يعرفه المساعد دائماً عن دعم عملائك؟',
-    instructionsPh: 'مثال: نشحن من الرياض خلال ١–٣ أيام. إرجاع مجاني خلال ١٤ يوماً.',
+    instructionsPh: 'مثال: نشحن من الرياض خلال 1–3 أيام. إرجاع مجاني خلال 14 يوماً.',
     language: 'لغة الردود',
     languages: { auto: 'حسب العميل', en: 'الإنجليزية', ar: 'العربية' },
     dialect: 'الردود العربية باللهجة',
@@ -105,7 +105,7 @@ const COPY = {
     updatedDaysAgo: (n: number) => `تم التحديث قبل ${n} ي`,
     staleSyncedDaysAgo: (n: number) => `قديمة · تمت المزامنة قبل ${n} ي`,
     staleNeverSynced: 'قديمة · لم تتم المزامنة أبداً',
-    empty: 'لا معرفة بعد — أضف أول سياسة أو سؤال شائع ليجيب المساعد بدقة.',
+    empty: 'لا معرفة بعد. أضف أول سياسة أو سؤال شائع ليجيب المساعد بدقة.',
   },
 };
 

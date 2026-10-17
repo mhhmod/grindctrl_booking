@@ -27,8 +27,8 @@ export class ProviderUnavailableError extends Error {
 export function describeProviderError(error: unknown): string {
   if (!(error instanceof Error)) return String(error);
   const cause = (error as { cause?: unknown }).cause;
-  if (cause instanceof Error && cause.message) return `${error.message} — ${cause.message}`;
-  if (typeof cause === 'string' && cause) return `${error.message} — ${cause}`;
+  if (cause instanceof Error && cause.message) return `${error.message} · ${cause.message}`;
+  if (typeof cause === 'string' && cause) return `${error.message} · ${cause}`;
   return error.message;
 }
 

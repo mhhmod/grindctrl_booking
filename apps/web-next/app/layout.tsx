@@ -20,7 +20,7 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL — AI Implementation & Automation',
+  title: 'GRINDCTRL | AI Implementation & Automation',
   description:
     'GrindCTRL helps businesses integrate AI into operations across text, voice, images, video, files, CRMs, Google tools, cloud systems, and dashboards.',
 };

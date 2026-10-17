@@ -155,7 +155,7 @@ export const STORY_AR = {
   "salma@example.com": "salma@example.com",
   "Not now": "ليس الآن",
   "Send": "إرسال",
-  "Thanks — we will reply to you there.": "شكرًا، سنرد عليك هناك.",
+  "Thanks, we will reply to you there.": "شكرًا، سنرد عليك هناك.",
   "Ask anything…": "اسأل أي شيء…",
   "Powered by GRINDCTRL": "بدعم من GRINDCTRL",
   "What the shopper sees in Store Chat · Demo data": "ما يراه المتسوّق في دردشة المتجر · بيانات تجريبية",

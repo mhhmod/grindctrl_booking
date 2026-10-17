@@ -23,7 +23,7 @@ describe('Shopify privacy senders', () => {
     await expect(sendShopifyDataRequest({ ...DATA, to: ['merchant@example.com'] })).resolves.toEqual({ sent: true });
     expect(sendMail.mock.calls[0][0]).toMatchObject({
       to: 'bot@grindctrl.cloud', bcc: ['merchant@example.com'], textEncoding: 'base64',
-      subject: 'Shopify customer data request — demo.myshopify.com',
+      subject: 'Shopify customer data request: demo.myshopify.com',
     });
     expect(sendMail.mock.calls[0][0].bcc).not.toContain(DATA.customerEmail);
   });

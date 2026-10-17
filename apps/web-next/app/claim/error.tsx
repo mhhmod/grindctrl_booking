@@ -21,14 +21,14 @@ import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing
 const COPY = {
   en: {
     title: 'This did not go through',
-    body: 'Something went wrong on our side. Trying again usually works — the problem is often momentary.',
+    body: 'Something went wrong on our side. Trying again usually works. The problem is often momentary.',
     retry: 'Try again',
     fallback: "If retrying doesn't help, reopen GRINDCTRL from your Shopify admin for a fresh link.",
     reference: 'Reference',
   },
   ar: {
     title: 'لم تكتمل هذه العملية',
-    body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً — فالمشكلة غالباً مؤقتة.',
+    body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً، فالمشكلة غالباً مؤقتة.',
     retry: 'إعادة المحاولة',
     fallback: 'إذا لم تنجح إعادة المحاولة، أعد فتح GRINDCTRL من لوحة تحكم Shopify للحصول على رابط جديد.',
     reference: 'الرقم المرجعي',

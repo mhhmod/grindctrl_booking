@@ -16,6 +16,8 @@ import {
   type StoreCandidateSite,
 } from './active-store';
 import type { DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
+import { getShopTimezone } from '@/lib/shopify/shop-timezone';
+import { resolveTimeZone } from '@/lib/time/store-day';
 
 /* Read once per request and shared by the layout, the page and anything
    else that asks, so every part of a page agrees on the store. Each lists
@@ -64,4 +66,10 @@ export async function getActiveStoreRole(active: ActiveStore): Promise<Dashboard
     ? shops.find((shop) => shop.domain === active.shopDomain)?.role
     : sites.find((site) => site.id === active.siteId)?.role;
   return role ?? 'member';
+}
+
+/** The active store's time zone (phase zero item 32): its Shopify shop's,
+ *  or UTC for a store without one or a zone that cannot be read. */
+export async function getActiveStoreTimeZone(active: ActiveStore): Promise<string> {
+  return resolveTimeZone(active.shopDomain ? await getShopTimezone(active.shopDomain) : null);
 }

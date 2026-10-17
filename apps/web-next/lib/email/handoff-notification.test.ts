@@ -17,7 +17,7 @@ const INPUT = {
 
 describe('buildHandoffNotification', () => {
   it('names the store in the subject so a multi-store owner can triage', () => {
-    expect(buildHandoffNotification(INPUT).subject).toBe('A shopper needs you — Sara’s Store');
+    expect(buildHandoffNotification(INPUT).subject).toBe('A shopper needs you: Sara’s Store');
   });
 
   it('includes the summary, the recent messages and a deep link', () => {

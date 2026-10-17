@@ -241,7 +241,7 @@ describe('BehaviourEditor saved replies', () => {
 
   it('adds immediately without saving the Behaviour draft and clears the inputs', async () => {
     renderEditor();
-    expect(screen.getByText('No saved replies yet — add one above.')).toBeInTheDocument();
+    expect(screen.getByText('No saved replies yet. Add one above.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Reply title…'), { target: { value: ' Shipping ' } });
     fireEvent.change(screen.getByLabelText('Reply text…'), { target: { value: ' Ships fast ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add reply' }));

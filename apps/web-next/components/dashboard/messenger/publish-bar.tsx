@@ -22,7 +22,7 @@ const COPY = {
     detail: 'Your changes are saved but shoppers still see the old version.',
     publish: 'Publish to your store',
     publishing: 'Publishing…',
-    done: 'Published — your store is serving the new version.',
+    done: 'Published. Your store is serving the new version.',
     review: (count: number) => `Review ${count} ${count === 1 ? 'change' : 'changes'}`,
     on: 'On',
     off: 'Off',
@@ -35,7 +35,7 @@ const COPY = {
     detail: 'تم حفظ تغييراتك لكن العملاء ما زالوا يرون النسخة القديمة.',
     publish: 'انشر على متجرك',
     publishing: 'جارٍ النشر…',
-    done: 'تم النشر — متجرك يعرض النسخة الجديدة الآن.',
+    done: 'تم النشر. متجرك يعرض النسخة الجديدة الآن.',
     review: (count: number) => `مراجعة ${count} تغييرات`,
     on: 'مفعّل',
     off: 'معطّل',
@@ -71,7 +71,7 @@ function humanizeField(key: string): string {
 }
 
 function formatValue(value: unknown, t: (typeof COPY)['en' | 'ar']): string {
-  if (value == null) return '—';
+  if (value == null) return '–';
   if (typeof value === 'boolean') return value ? t.on : t.off;
   if (Array.isArray(value)) return t.items(value.length);
   if (typeof value === 'object' && 'en' in value && 'ar' in value &&

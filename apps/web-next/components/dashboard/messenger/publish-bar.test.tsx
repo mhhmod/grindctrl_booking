@@ -21,7 +21,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   publishConfig.mockResolvedValue({
     ok: true,
-    message: 'Published — live on your store within a minute.',
+    message: 'Published. Live on your store within a minute.',
   });
 });
 
@@ -48,7 +48,7 @@ describe('PublishBar', () => {
 
     expect(publishConfig).toHaveBeenCalledWith('site-1');
     expect(
-      await screen.findByText('Published — live on your store within a minute.'),
+      await screen.findByText('Published. Live on your store within a minute.'),
     ).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('PublishBar', () => {
     );
 
     expect(
-      screen.getByText('Published — live on your store within a minute.'),
+      screen.getByText('Published. Live on your store within a minute.'),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole('button', { name: 'Publish to your store' }),
@@ -147,7 +147,7 @@ describe('PublishBar change review', () => {
       { key: 'delaySeconds', before: 5, after: 30 },
     ] }]);
     fireEvent.click(screen.getByText('Review 3 changes'));
-    expect(screen.getAllByText('—')).toHaveLength(2);
+    expect(screen.getAllByText('–')).toHaveLength(2);
     expect(screen.getByText('x'.repeat(80) + '…')).toBeVisible();
     expect(screen.queryByText('x'.repeat(4000))).not.toBeInTheDocument();
     expect(screen.getByText('1 item')).toBeVisible();
@@ -166,7 +166,7 @@ describe('PublishBar change review', () => {
     expect(screen.getByRole('button', { name: 'Publishing…' })).toBeDisabled();
     expect(publishConfig).toHaveBeenCalledExactlyOnceWith('site-1');
     await act(async () => { finish({ ok: true }); });
-    expect(screen.getByRole('status')).toHaveTextContent('Published — your store is serving the new version.');
+    expect(screen.getByRole('status')).toHaveTextContent('Published. Your store is serving the new version.');
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByText('Review 3 changes')).not.toBeInTheDocument();
   });
