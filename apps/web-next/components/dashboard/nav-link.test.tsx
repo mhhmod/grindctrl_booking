@@ -28,7 +28,7 @@ const navItems: DashboardResolvedNavItem[] = [
     label: 'Overview',
     icon: {} as never,
     isActive: false,
-    permissionKey: 'canViewOverview',
+    permissionKey: 'canViewToday',
     group: 'core',
   },
   {
@@ -36,7 +36,7 @@ const navItems: DashboardResolvedNavItem[] = [
     label: 'Store Chat',
     icon: {} as never,
     isActive: true,
-    permissionKey: 'canViewMessenger',
+    permissionKey: 'canViewStoreChat',
     group: 'core',
     badgeCount: 3,
   },

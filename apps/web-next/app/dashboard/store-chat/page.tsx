@@ -7,6 +7,8 @@ import {
   ensureMessengerSite,
   getProfileId,
   listMessengerSites,
+  listTeamSites,
+  provisionableShopDomain,
   resolveProvisionedSites,
   shouldEnsureMessengerSite,
   wasDisconnectedBySelf,
@@ -36,6 +38,7 @@ import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
 import { flagStoreForSite, storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
 import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { StoreFlagsCard } from '@/components/dashboard/store-flags-card';
+import { roleCan } from '@/lib/rbac/dashboard-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,8 +102,7 @@ export default async function MessengerPage({
   let shops: Awaited<ReturnType<typeof listManagedTryOnShops>> = [];
   try {
     shops = await listManagedTryOnShops();
-    const installed = shops.find((shop) => shop.status === 'installed');
-    domain = installed?.domain ?? null;
+    domain = provisionableShopDomain(shops);
   } catch {
     // Try-On lookup is optional here.
   }
@@ -157,6 +159,12 @@ export default async function MessengerPage({
     }
   }
 
+  /* Then the sites of every team this person is on (item 12), which they
+     may open but never provision. */
+  const ownSiteIds = new Set(sites.map((site) => site.id));
+  const teamSites = (await listTeamSites(userId)).filter((site) => !ownSiteIds.has(site.id));
+  sites = [...sites, ...teamSites];
+
   /* The dashboard's active store (phase zero item 33), so Store Chat opens
      on the same store as Try-On: the link's site, then the active store's
      own site or the site on its Shopify domain, then the first site with a
@@ -172,7 +180,9 @@ export default async function MessengerPage({
     sites[0];
   const { config, hasDraft } = mergeDraftOverPublished(selected.settings_json, selected.settings_draft);
   const canRevert = Boolean((selected.settings_json as Record<string, unknown>)._previousSettings);
-  const canDisconnect = Boolean(selected.domain);
+  // Only the store's owner may disconnect it (item 12).
+  const selectedRole = teamSites.find((site) => site.id === selected.id)?.role ?? 'owner';
+  const canDisconnect = Boolean(selected.domain) && roleCan(selectedRole, 'store');
   const publishedConfig = resolveMessengerConfig(selected.settings_json);
   const configDiff = diffMessengerConfig(publishedConfig, config);
   // The store's v16 flags, so the preview and the editors show what is on.

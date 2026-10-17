@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { getShellCopy } from '@/lib/dashboard/shell-copy';
 import type { ShellStore } from '@/lib/dashboard/shell-model';
+import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 
 let pathname = '/dashboard';
 const refresh = vi.fn();
@@ -30,6 +31,7 @@ function props(overrides: Partial<V16ShellProps> = {}): V16ShellProps {
     meter: { title: 'Looks this cycle', value: '150 left of 350', percent: 43, low: false },
     person: { name: 'Hana Adel', role: 'owner' },
     today: { date: 'Friday, 2 October', greeting: 'Good afternoon, Hana' },
+    permissions: resolveDashboardPermissions({ role: 'owner' }),
     waitingCount: 0,
     children: <p>Page body</p>,
     ...overrides,
@@ -51,6 +53,34 @@ describe('V16Shell', () => {
     expect(within(nav).getByRole('link', { name: 'Try-On' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
     expect(screen.queryByRole('link', { name: /Inbox|Plan|Settings/ })).not.toBeInTheDocument();
+  });
+
+  /* The nav for each of the three roles (item 12). Plan and Settings are not
+     built yet, so every role sees the same three pages; the owner alone
+     sees the looks meter, which the layout passes only for the owner. */
+  it.each([
+    ['owner', true],
+    ['admin', false],
+    ['member', false],
+  ] as const)('shows a %s their nav, and the meter only to the owner', (role, owner) => {
+    render(
+      <V16Shell
+        {...props({
+          permissions: resolveDashboardPermissions({ role }),
+          person: { name: 'Nour Saleh', role },
+          meter: owner ? props().meter : null,
+        })}
+      />,
+    );
+    const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Try-On', 'Store Chat']);
+    expect(screen.queryByRole('link', { name: /Plan|Settings/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('Looks this cycle') !== null).toBe(owner);
+  });
+
+  it('lists no page the role may not see', () => {
+    render(<V16Shell {...props({ permissions: resolveDashboardPermissions({ role: 'viewer' }) })} />);
+    expect(within(screen.getByRole('navigation', { name: 'GrindCTRL' })).queryAllByRole('link')).toHaveLength(0);
   });
 
   it('greets on Today and titles every other page, with one h1', () => {

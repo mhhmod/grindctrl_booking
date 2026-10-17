@@ -4,10 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { requireManagedTryOnShop } from '@/lib/shopify/shops';
 import { saveTryOnSettings } from '@/lib/try-on/settings';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
+import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 
 export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok: true } | MerchantActionFailure> {
   try {
-  const shop = await requireManagedTryOnShop(formData.get('shop') ?? 'default');
+  // Setting the shop up is for its owner and admins, not members (item 12).
+  const shop = await requireManagedTryOnShop(formData.get('shop') ?? 'default', { capability: 'settings' });
   await requireMerchantRateLimit(`shop:${shop}`);
   const loadingStepsRaw = String(formData.get('loading_steps') || '').trim();
   const loadingSteps = loadingStepsRaw
@@ -53,7 +55,8 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok:
   revalidatePath('/dashboard/try-on');
   return { ok: true };
   } catch (error) {
-    if (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message)) {
+    if (error instanceof RoleNotAllowedError ||
+      (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
       return { ok: false, code: 'forbidden', message: 'You do not have permission to change this shop.' };
     }
     return merchantActionFailure(error);

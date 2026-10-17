@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { MantineUiProvider } from '@/components/mantine/provider';
 import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
-import { getWorkspaceBundle } from '@/lib/adapters/workspace';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
@@ -11,7 +10,7 @@ import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 import { countAwaitingHandoff } from '@/lib/messenger/conversations';
 import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
-import { getActiveStore } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store-server';
 import { getV16ShellData } from '@/lib/dashboard/shell-data';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { V16Shell } from '@/components/dashboard/v16/v16-shell';
@@ -29,11 +28,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding');
   }
 
-  const workspaceBundle = await getWorkspaceBundle(clerkUserId);
   /* Same gc-locale cookie the marketing site and storefront demo use, so a
      language chosen anywhere carries into the dashboard. */
   const locale = await getRequestLocale();
-  const permissions = resolveDashboardPermissions({ role: workspaceBundle.role });
+  /* The person's role on the active store decides the nav (item 12). Every
+     page and action checks the same role again on the server. */
+  const activeStore = await getActiveStore();
+  const role = await getActiveStoreRole(activeStore);
+  const permissions = resolveDashboardPermissions({ role });
 
   /* Cheap, read-only, indexed lookups; a failure must never take the shell
      down, so the whole thing falls back to no badge. Skipped entirely when
@@ -41,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
      listMessengerSites) never provisions a profile/workspace as a side
      effect of an unrelated page load — see its docstring. */
   let awaitingHandoff = 0;
-  if (permissions.canViewMessenger) {
+  if (permissions.canViewStoreChat) {
     try {
       const siteIds = await listMessengerSiteIdsReadOnly(clerkUserId);
       awaitingHandoff = await countAwaitingHandoff(siteIds);
@@ -53,7 +55,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   /* The v16 shell, only while the active store's v16_dashboard flag is on,
      so the owner can switch it on for the demo store first. Every other
      store keeps today's shell. */
-  const activeStore = await getActiveStore();
   const flagStore = activeStore.shopDomain
     ? { shopDomain: activeStore.shopDomain }
     : activeStore.siteId
@@ -61,11 +62,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       : null;
   const features = flagStore ? await storeFlags(flagStore) : [];
   if (features.includes('v16_dashboard')) {
-    const shell = await getV16ShellData({ activeStore, locale, role: workspaceBundle.role });
+    const shell = await getV16ShellData({ activeStore, locale, role });
     return (
       <MantineUiProvider dir={getDir(locale)}>
         <div dir={getDir(locale)} lang={locale}>
-          <V16Shell locale={locale} waitingCount={awaitingHandoff} {...shell}>
+          <V16Shell locale={locale} permissions={permissions} waitingCount={awaitingHandoff} {...shell}>
             {children}
           </V16Shell>
         </div>

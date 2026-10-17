@@ -26,6 +26,7 @@ vi.mock('@/lib/shopify/platform-operator', async (original) => ({
 import { createPreviewLink, setLaunchState, setLaunchStateAsOperator } from './launch-actions';
 import { verifyPreviewToken } from '@/lib/launch/preview-token';
 import { PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
+import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 
 const SHOP = 'maison.myshopify.com';
 
@@ -93,5 +94,23 @@ describe('setLaunchStateAsOperator', () => {
 
     mocks.operator.mockRejectedValue(new PlatformOperatorRequiredError());
     expect(await setLaunchStateAsOperator({ shop: SHOP, state: 'live' })).toMatchObject({ ok: false, code: 'forbidden' });
+  });
+});
+
+// Item 12: going live and preview links are setting the shop up, for its owner and admins.
+describe('roles', () => {
+  it('asks for the settings role', async () => {
+    await setLaunchState({ shop: SHOP, state: 'live' });
+    await createPreviewLink({ shop: SHOP });
+    expect(mocks.owned).toHaveBeenNthCalledWith(1, SHOP, { capability: 'settings' });
+    expect(mocks.owned).toHaveBeenNthCalledWith(2, SHOP, { capability: 'settings' });
+  });
+
+  it('refuses a member before anything is read or written', async () => {
+    mocks.owned.mockRejectedValue(new RoleNotAllowedError('settings'));
+    expect(await setLaunchState({ shop: SHOP, state: 'live' })).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(await createPreviewLink({ shop: SHOP })).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(mocks.flags).not.toHaveBeenCalled();
+    expect(mocks.write).not.toHaveBeenCalled();
   });
 });

@@ -8,6 +8,7 @@ vi.mock('@/lib/request-rate-limit', async (original) => ({
   ...await original<typeof import('@/lib/request-rate-limit')>(), requireMerchantRateLimit: mocks.limit,
 }));
 import { RequestRateLimitError } from '@/lib/request-rate-limit';
+import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 import { saveTryOnSettingsAction } from './actions';
 
 beforeEach(() => {
@@ -34,5 +35,16 @@ describe('Try-On settings safe action result', () => {
     expect(await saveTryOnSettingsAction(new FormData())).toMatchObject({ ok: false, code: 'unavailable' });
     expect(mocks.revalidate).not.toHaveBeenCalled();
     expect(await saveTryOnSettingsAction(new FormData())).toEqual({ ok: true });
+  });
+  // Item 12: setting the shop up is for its owner and admins, not members.
+  it('asks for the settings role, and refuses a member before limiter or storage', async () => {
+    await saveTryOnSettingsAction(new FormData());
+    expect(mocks.owned).toHaveBeenCalledWith('default', { capability: 'settings' });
+    mocks.owned.mockRejectedValueOnce(new RoleNotAllowedError('settings'));
+    mocks.limit.mockClear();
+    mocks.save.mockClear();
+    expect(await saveTryOnSettingsAction(new FormData())).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(mocks.limit).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
   });
 });

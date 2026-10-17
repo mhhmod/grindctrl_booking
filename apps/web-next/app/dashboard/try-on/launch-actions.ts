@@ -9,12 +9,13 @@ import { writeStoreLaunch } from '@/lib/launch/store-launch';
 import { signPreviewTokenForShop } from '@/lib/launch/preview-token';
 import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
 import { LAUNCH_STATES, type LaunchState } from '@/lib/launch/audience';
+import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 
 /* Launch state from the dashboard (N5 and N6, phase zero item 9).
-   setLaunchState and createPreviewLink act for the store's owner, and only
-   while the store's n5_preview_mode flag is on (holdout also needs
-   n6_holdout). setLaunchStateAsOperator lets the platform operator put any
-   store in any state, for testing. */
+   setLaunchState and createPreviewLink act for the store's owner or an
+   admin (item 12), and only while the store's n5_preview_mode flag is on
+   (holdout also needs n6_holdout). setLaunchStateAsOperator lets the
+   platform operator put any store in any state, for testing. */
 
 export type LaunchActionResult =
   | { ok: true; state: LaunchState }
@@ -34,13 +35,14 @@ const FORBIDDEN: MerchantActionFailure = {
 const NOT_ENABLED = { ok: false as const, code: 'not_enabled' as const, message: 'This is not available for this store yet.' };
 
 function ownershipFailure(error: unknown): MerchantActionFailure | null {
+  if (error instanceof RoleNotAllowedError) return FORBIDDEN;
   return error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message) ? FORBIDDEN : null;
 }
 
 /** The owner goes live, for everyone or as a 50/50 test, or back to preview. */
 export async function setLaunchState(input: { shop: string; state: 'preview' | 'live' | 'holdout' }): Promise<LaunchActionResult> {
   try {
-    const shop = await requireManagedTryOnShop(input.shop);
+    const shop = await requireManagedTryOnShop(input.shop, { capability: 'settings' });
     if (input.state !== 'preview' && input.state !== 'live' && input.state !== 'holdout') {
       return { ok: false, code: 'invalid', message: 'Unknown launch state.' };
     }
@@ -61,7 +63,7 @@ export async function setLaunchState(input: { shop: string; state: 'preview' | '
  *  free test looks, before it is live. */
 export async function createPreviewLink(input: { shop: string }): Promise<PreviewLinkResult> {
   try {
-    const shop = await requireManagedTryOnShop(input.shop);
+    const shop = await requireManagedTryOnShop(input.shop, { capability: 'settings' });
     const features = await storeFlags({ shopDomain: shop });
     if (!features.includes('n5_preview_mode')) return NOT_ENABLED;
     await requireMerchantRateLimit(`shop:${shop}`, 'read');

@@ -4,8 +4,9 @@ import { currentUser } from '@clerk/nextjs/server';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { roleCan, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import type { ActiveStore } from './active-store';
-import { listOwnedShops, listOwnedSitesReadOnly } from './active-store-server';
+import { listDashboardShops, listDashboardSites } from './active-store-server';
 import { getShellCopy } from './shell-copy';
 import { buildShellStores, looksMeterView, shellRole, todayHeading } from './shell-model';
 
@@ -20,15 +21,17 @@ export async function getV16ShellData({
 }: {
   activeStore: ActiveStore;
   locale: SiteLocale;
-  role: unknown;
+  role: DashboardWorkspaceRole;
   now?: Date;
 }) {
   const copy = getShellCopy(locale);
   const shop = activeStore.shopDomain;
+  // The looks meter is billing, so only the store's owner sees it (item 12).
+  const meterShop = shop && roleCan(role, 'billing') ? shop : null;
   const [shops, sites, entitlement, timeZone, user] = await Promise.all([
-    listOwnedShops().catch(() => []),
-    listOwnedSitesReadOnly().catch(() => []),
-    shop ? getShopEntitlement(shop).catch(() => null) : Promise.resolve(null),
+    listDashboardShops().catch(() => []),
+    listDashboardSites().catch(() => []),
+    meterShop ? getShopEntitlement(meterShop).catch(() => null) : Promise.resolve(null),
     shop ? getShopTimezone(shop) : Promise.resolve(null),
     currentUser().catch(() => null),
   ]);

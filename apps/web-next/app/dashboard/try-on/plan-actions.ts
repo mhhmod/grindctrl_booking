@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireManagedTryOnShop } from '@/lib/shopify/shops';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
+import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 import {
   getShopEntitlement,
   listEntitlementCatalog,
@@ -25,13 +26,14 @@ async function runManualPlanAction(
 ): Promise<OwnerPlanActionResult> {
   try {
     await requireTryOnPlatformOperator();
-    const domain = await requireManagedTryOnShop(shop);
+    // Billing is the owner's alone, never an admin's or a member's (item 12).
+    const domain = await requireManagedTryOnShop(shop, { capability: 'billing' });
     await requireMerchantRateLimit(`shop:${domain}`);
     const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
     revalidatePath('/dashboard/try-on');
     return { ...result, ok: true, state: await getShopEntitlement(domain) };
   } catch (error) {
-    if (error instanceof PlatformOperatorRequiredError ||
+    if (error instanceof PlatformOperatorRequiredError || error instanceof RoleNotAllowedError ||
       (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
       return { ok: false, code: 'forbidden', message: 'You do not have permission to perform this action.' };
     }
@@ -39,10 +41,11 @@ async function runManualPlanAction(
   }
 }
 
-export async function listPlansCatalog() {
-  // Read-only: this needs "is a signed-in dashboard user", not authority over
-  // the global row, so it opts in deliberately rather than by accident.
-  await requireManagedTryOnShop('default', { allowGlobalDefault: true });
+export async function listPlansCatalog(shop: unknown) {
+  // Read-only, for the owner of the shop the plans are offered to: admins and
+  // members never see billing (item 12). The global-defaults view needs only
+  // a signed-in dashboard user, so it opts in deliberately, not by accident.
+  await requireManagedTryOnShop(shop, { allowGlobalDefault: true, capability: 'billing' });
   return listEntitlementCatalog();
 }
 
@@ -74,9 +77,10 @@ const NO_SHOP_PLAN_STATE: ShopEntitlement = {
 };
 
 export async function getShopPlanState(shop: unknown): Promise<ShopEntitlement> {
-  // Read-only: the global-defaults view resolves to a neutral, empty plan
-  // state below and never reaches a per-shop entitlement.
-  const domain = await requireManagedTryOnShop(shop, { allowGlobalDefault: true });
+  // Read-only and the owner's alone (item 12): the global-defaults view
+  // resolves to a neutral, empty plan state below and never reaches a
+  // per-shop entitlement.
+  const domain = await requireManagedTryOnShop(shop, { allowGlobalDefault: true, capability: 'billing' });
   if (domain === 'default') return NO_SHOP_PLAN_STATE;
   await requireMerchantRateLimit(`shop:${domain}`, 'read');
   await reconcileShopSubscription(domain);
