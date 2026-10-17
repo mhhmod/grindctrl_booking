@@ -17,6 +17,8 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
 export const STORE_FLAGS = {
   n23_after_hours: { code: 'N23', title: 'The assistant answers after hours' },
   n24_assistant_down: { code: 'N24', title: 'The assistant-down fallback' },
+  n25_handoff_rules: { code: 'N25', title: 'Extra handoff rules and topic tags' },
+  n8_unanswered_questions: { code: 'N8', title: 'Questions the assistant could not answer' },
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;

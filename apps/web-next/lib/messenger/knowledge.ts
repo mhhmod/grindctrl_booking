@@ -10,7 +10,9 @@ export interface KnowledgeEntry {
   id: string;
   title: string;
   content: string;
-  source: 'manual' | 'url';
+  /** approved: an answer the merchant approved (N8). policy, product and
+   *  size_chart arrive with the catalogue sync (N9). */
+  source: 'manual' | 'url' | 'approved' | 'policy' | 'product' | 'size_chart';
   source_url: string | null;
   status: 'active' | 'disabled';
   last_synced_at: string | null;
@@ -47,7 +49,12 @@ export async function listKnowledge(siteId: string): Promise<KnowledgeEntry[]> {
   return ((res.data ?? []) as Array<Record<string, unknown>>).map(mapEntry);
 }
 
-/** Grounding set for the AI: active entries only, newest-updated first. */
+/** Grounding set for the AI: every active entry, newest-updated first.
+ *  Which of them reach the prompt is decided per message by ranking them
+ *  against what the shopper asked (retrieval.ts), so an answer approved
+ *  long ago is not dropped for being old. The dashboard lists 50 entries,
+ *  but nothing stops a site adding more, so this reads up to 100 and the
+ *  ranking spends the prompt budget on the ones that match. */
 export async function getActiveKnowledge(siteId: string): Promise<KnowledgeEntry[]> {
   const supabase = getMessengerServiceClient();
   const res = await supabase
@@ -56,7 +63,7 @@ export async function getActiveKnowledge(siteId: string): Promise<KnowledgeEntry
     .eq('widget_site_id', siteId)
     .eq('status', 'active')
     .order('updated_at', { ascending: false })
-    .limit(30);
+    .limit(KNOWLEDGE_MAX_ENTRIES_PER_SITE * 2);
   if (res.error) throw new Error(`active knowledge failed: ${res.error.message}`);
   return ((res.data ?? []) as Array<Record<string, unknown>>).map(mapEntry);
 }

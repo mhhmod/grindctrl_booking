@@ -38,6 +38,16 @@ import {
 } from '@/lib/messenger/ai';
 import { getActiveKnowledge } from '@/lib/messenger/knowledge';
 import { isWithinAvailabilityHours } from '@/lib/messenger/public-api';
+import { readShopperMessage } from '@/lib/messenger/handoff-intent';
+import {
+  isBigCart,
+  mergeTags,
+  ruleHandoffReason,
+  tagsFor,
+  type HandoffRuleReason,
+} from '@/lib/messenger/handoff-rules';
+import { parseCart } from '@/lib/messenger/cart';
+import { recordUnansweredQuestion } from '@/lib/messenger/questions';
 import type { MessengerLocale } from '@/lib/messenger/types';
 
 /* POST /api/messenger/send
@@ -47,7 +57,10 @@ import type { MessengerLocale } from '@/lib/messenger/types';
    - The conversation's CURRENT status decides who may speak: AI answers
      only while status === 'open'. A handoff that lands mid-flight wins
      because the guarded transition happens before any AI text is stored.
-   - Escalation is executed by this server code, never by prompt text. */
+   - Escalation is executed by this server code, never by prompt text.
+     With n25_handoff_rules on, the store's rules decide it too: from a
+     reading of the message before the model, and from the model's reply
+     verdict after it (phase zero item 10). */
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ANON_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
@@ -193,6 +206,14 @@ export async function POST(request: NextRequest) {
     /* n24_assistant_down (phase zero item 8): when both model providers
        fail, the message reads as saved and the team is one tap away. */
     const assistantDownMode = features.includes('n24_assistant_down');
+    /* n25_handoff_rules: refunds, exchanges and order changes, an upset
+       shopper and big orders reach a person, and the conversation is tagged
+       for the Inbox. n8_unanswered_questions: what the assistant could not
+       answer is kept for Knowledge. Either one asks the model for its reply
+       verdict. */
+    const handoffRulesOn = features.includes('n25_handoff_rules');
+    const questionsOn = features.includes('n8_unanswered_questions');
+    const rules = site.config.ai.handoffRules;
 
     /** Hands the conversation to the team, deferring the alert to opening
      *  time when the team is away and n23_after_hours is on. */
@@ -222,6 +243,16 @@ export async function POST(request: NextRequest) {
         alert: toPublicHandoffAlert(escalation.alert),
         team,
       };
+    }
+
+    /** Adds topic tags (N25) to the conversation, merged with its own. */
+    async function tag(signal: Parameters<typeof tagsFor>[0]): Promise<void> {
+      if (!handoffRulesOn) return;
+      const before = conversation!.metadata.tags ?? [];
+      const next = mergeTags(before, tagsFor(signal));
+      if (next.length === before.length) return;
+      conversation!.metadata.tags = next;
+      await patchConversationMetadata(conversation!.id, { tags: next }).catch(() => {});
     }
 
     /* Order lookup needs a real Shopify store to address. A site with no
@@ -297,24 +328,46 @@ export async function POST(request: NextRequest) {
       return ok({ userMessage: toWire(userMessage), reply: priorReply ? toWire(priorReply) : null });
     }
 
+    /* What the message is about, read before the model (phase zero item
+       10): asking for a person, a request about the shopper's own order, a
+       big order, a policy question. And the cart the panel last posted. */
+    const reading = readShopperMessage(text, { piecesOfOne: rules.bigOrder.piecesOfOne });
+    const bigCart = handoffRulesOn && isBigCart(parseCart(conversation.metadata.cart), rules.bigOrder);
+    // A big cart brings in a person once; the tag records that it did.
+    const bigCartHandled = (conversation.metadata.tags ?? []).includes('bulk_order');
+    await tag({ intent: reading.intent, bigCart, language: reading.language });
+
+    /** Hands off before the model runs, answering with the handoff line. */
+    async function handOffBeforeModel(reason: string, summary: string) {
+      const escalation = site!.config.ai.escalationEnabled ? await escalate(reason, summary) : null;
+      if (!escalation) return null;
+      const handed = await handedOff(escalation, resolveReplyLocale(text, localeHint));
+      void recordEvent({ siteId: site!.id, conversationId: conversation!.id, eventName: 'handoff_triggered', payload: { reason, alert: escalation.alert.status } }).catch(() => {});
+      return ok({
+        userMessage: toWire(userMessage),
+        reply: toWire(handed.line),
+        status: escalation.conversation.status,
+        alert: handed.alert,
+        team: handed.team,
+        askContact: await contactPrompt(true),
+      });
+    }
+
     // 2) Explicit "I want a human" short-circuits the model entirely.
     if (detectExplicitHandoffRequest(text)) {
-      const summary = `Shopper asked for a person. Last message: "${text.slice(0, 160)}"`;
-      const escalation = site.config.ai.escalationEnabled
-        ? await escalate('shopper_requested_human', summary)
-        : null;
-      if (escalation) {
-        const handed = await handedOff(escalation, resolveReplyLocale(text, localeHint));
-        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'shopper_requested_human', alert: escalation.alert.status } }).catch(() => {});
-        return ok({
-          userMessage: toWire(userMessage),
-          reply: toWire(handed.line),
-          status: escalation.conversation.status,
-          alert: handed.alert,
-          team: handed.team,
-          askContact: await contactPrompt(true),
-        });
-      }
+      const handed = await handOffBeforeModel(
+        'shopper_requested_human',
+        `Shopper asked for a person. Last message: "${text.slice(0, 160)}"`,
+      );
+      if (handed) return handed;
+    }
+
+    // 2b) The store's rules (n25): a request to refund, exchange or change
+    //     an order, or a big order, goes to the team the same way.
+    const readingReason = handoffRulesOn ? ruleHandoffReason(rules, { intent: reading.intent }) : null;
+    if (readingReason) {
+      const handed = await handOffBeforeModel(`rule_${readingReason}`, ruleSummary(readingReason, text));
+      if (handed) return handed;
     }
 
     // 3) AI gate: enabled + published + within hours + still owns the mic.
@@ -339,10 +392,15 @@ export async function POST(request: NextRequest) {
     // 4) Grounded generation.
     const locale = resolveReplyLocale(text, localeHint);
     const knowledge = await getActiveKnowledge(site.id);
-    const history = (await listMessages(conversation.id, { limit: 20 }))
+    /* The newest messages, not the oldest: listMessages returns the oldest
+       first unless asked (phase zero item 11), so a long conversation used
+       to show the model its opening instead of what was just said. */
+    const history = (await listMessages(conversation.id, { limit: 20, newestFirst: true }))
+      .reverse()
       .filter((m) => m.id !== userMessage.id)
       .slice(-16)
       .map((m) => ({ role: m.role === 'user' ? ('user' as const) : ('assistant' as const), content: m.content }));
+    const askVerdict = handoffRulesOn || questionsOn;
 
     let result: Awaited<ReturnType<typeof generateAssistantReply>>;
     try {
@@ -363,9 +421,13 @@ export async function POST(request: NextRequest) {
               : undefined,
           orderLookupEnabled: orderLookupAvailable,
           franco: locale === 'ar' && isFrancoArabic(text),
+          query: text,
+          handoffRules: handoffRulesOn ? rules : null,
+          verdict: askVerdict,
         }),
         history,
         userMessage: text,
+        verdict: askVerdict,
       });
     } catch (error) {
       console.error('[messenger] ai failed:', error instanceof Error ? error.message : error);
@@ -412,10 +474,46 @@ export async function POST(request: NextRequest) {
     /* A turn that also asked for a human loses its action: the escalation
        branch below wins. Reaching a person is the more important of the two
        and dropping it to run a lookup would strand the shopper. */
-    const escalating = result.escalate && site.config.ai.escalationEnabled;
-    const turn = escalating
-      ? ({ kind: 'prose', text: result.reply } as const)
-      : parseModelTurn(result.raw || result.reply);
+    const verdict = result.verdict;
+    if (questionsOn && verdict && !verdict.answered) {
+      // Kept for Knowledge (N8). Losing the record never costs the reply.
+      await recordUnansweredQuestion({
+        siteId: site.id,
+        conversationId: conversation.id,
+        messageId: userMessage.id,
+        question: text,
+        language: reading.language,
+        product: verdict.product,
+        pageUrl: conversation.metadata.last_page_url ?? null,
+      }).catch((error) => {
+        console.error('[messenger] unanswered question not kept:', error instanceof Error ? error.message : error);
+      });
+    }
+
+    const parsedTurn = parseModelTurn(result.raw || result.reply);
+    /* The store's rules, from the verdict and the cart (n25). A shopper
+       already waiting for the team after hours has nothing new to hand
+       off, and an order lookup the model asked for runs first. */
+    /* Where the reading saw a question about a policy, a verdict calling it
+       a request is not enough on its own: in a live test the model labelled
+       "ينفع أبدل المقاس؟" (can I exchange the size?) an exchange request
+       while answering it from the policy. */
+    const verdictIntent =
+      reading.intent === 'policy_question' &&
+      (verdict?.intent === 'refund_request' || verdict?.intent === 'exchange_request' || verdict?.intent === 'order_change')
+        ? 'policy_question'
+        : (verdict?.intent ?? null);
+    await tag({ intent: verdictIntent, upset: verdict?.upset });
+    const verdictReason =
+      handoffRulesOn && !waitingAfterHours && parsedTurn.kind === 'prose'
+        ? ruleHandoffReason(rules, {
+            intent: verdictIntent,
+            upset: verdict?.upset,
+            bigCart: bigCart && !bigCartHandled,
+          })
+        : null;
+    const escalating = (result.escalate || Boolean(verdictReason)) && site.config.ai.escalationEnabled;
+    const turn = escalating ? ({ kind: 'prose', text: result.reply } as const) : parsedTurn;
 
     if (turn.kind === 'rejected' || (turn.kind === 'action' && !orderLookupAvailable)) {
       const reason = turn.kind === 'rejected' ? turn.reason : 'capability_disabled';
@@ -481,6 +579,7 @@ export async function POST(request: NextRequest) {
               locale,
               knowledge,
               franco: locale === 'ar' && isFrancoArabic(text),
+              query: text,
             }),
             history,
             userMessage: text,
@@ -527,11 +626,14 @@ export async function POST(request: NextRequest) {
 
     if (escalating) {
       // Already waiting on the team (after hours): nothing new to hand off.
+      const escalationReason = result.escalate || !verdictReason ? 'assistant_escalated' : `rule_${verdictReason}`;
       const escalation = waitingAfterHours
         ? null
         : await escalate(
-            'assistant_escalated',
-            `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
+            escalationReason,
+            verdictReason && !result.escalate
+              ? ruleSummary(verdictReason, text)
+              : `Conversation handed off after shopper message: "${text.slice(0, 160)}"`,
           );
       const saved = await appendMessage({
         conversationId: conversation.id,
@@ -541,7 +643,7 @@ export async function POST(request: NextRequest) {
       });
       if (escalation) {
         const handed = await handedOff(escalation, locale);
-        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_escalated', alert: escalation.alert.status } }).catch(() => {});
+        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: escalationReason, alert: escalation.alert.status } }).catch(() => {});
         return ok({
           userMessage: toWire(userMessage),
           reply: toWire(saved.message),
@@ -567,6 +669,14 @@ export async function POST(request: NextRequest) {
     console.error('[messenger] send failed:', error instanceof Error ? error.message : error);
     return bad('unavailable', 503);
   }
+}
+
+/** The line the team reads in the alert and the Inbox for a rule handoff. */
+function ruleSummary(reason: HandoffRuleReason, text: string): string {
+  const quoted = `"${text.slice(0, 160)}"`;
+  if (reason === 'order_change') return `Shopper asked to refund, exchange or change an order: ${quoted}`;
+  if (reason === 'big_order') return `Big order: ${quoted}`;
+  return `Shopper seems upset: ${quoted}`;
 }
 
 function toWire(m: {

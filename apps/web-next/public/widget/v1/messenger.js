@@ -441,7 +441,64 @@
     var data = event.data;
     if (data && data.type === 'grindctrl-messenger:close') close();
     if (data && data.type === 'grindctrl-messenger:ready') handleViewportChange();
+    if (data && data.type === 'grindctrl-messenger:cart-request') { sendCart(); watchCart(); }
   });
+
+  /* ── The cart (phase zero item 10) ──
+     For a store with the big-order rule on, the panel asks for the cart.
+     Only this page can read Shopify's /cart.js (it is on the store's own
+     origin), so this script reads it and hands the panel a small summary:
+     the total, the currency, and each line's handle, variant, title,
+     quantity and unit price, all in minor units as Shopify gives them. It
+     reads again shortly after the theme adds to, changes or clears the
+     cart, seen through PerformanceObserver so nothing on the page is
+     wrapped. Any failure is silent. */
+  var cartWatched = false;
+  var cartTimer = null;
+
+  function cartUrl() {
+    var root = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+    return root.replace(/\/?$/, '/') + 'cart.js';
+  }
+
+  function sendCart() {
+    if (!window.Shopify || !state.iframe || !state.iframe.contentWindow) return;
+    fetch(cartUrl(), { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cart) {
+        if (!cart || !Array.isArray(cart.items) || !state.iframe || !state.iframe.contentWindow) return;
+        var summary = {
+          totalMinor: cart.total_price,
+          currency: cart.currency,
+          items: cart.items.slice(0, 50).map(function (item) {
+            return {
+              handle: item.handle,
+              variantId: item.variant_id,
+              title: item.title,
+              quantity: item.quantity,
+              priceMinor: typeof item.final_price === 'number' ? item.final_price : item.price
+            };
+          })
+        };
+        state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:cart', cart: summary }, APP_ORIGIN);
+      })
+      .catch(function () {});
+  }
+
+  function watchCart() {
+    if (cartWatched || typeof PerformanceObserver === 'undefined') return;
+    cartWatched = true;
+    try {
+      new PerformanceObserver(function (list) {
+        var changed = list.getEntries().some(function (entry) {
+          return /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/.test(entry.name);
+        });
+        if (!changed) return;
+        clearTimeout(cartTimer);
+        cartTimer = setTimeout(sendCart, 400);
+      }).observe({ type: 'resource', buffered: false });
+    } catch (e) {}
+  }
 
   /* Opening felt slow because the iframe was created by the click itself:
      the shopper waited on a document fetch and a React hydration before

@@ -33,6 +33,13 @@ const COPY = {
     dialect: 'Arabic replies in',
     dialects: { egyptian: 'Egyptian', gulf: 'Gulf', levantine: 'Levantine', msa: 'Formal Arabic' },
     escalation: 'Offer a human when asked',
+    rulesTitle: 'When to bring in a person',
+    rulesOrderChanges: 'Requests to refund, exchange or change an order',
+    rulesOrderChangesHint: 'It still answers questions about your policies, like how long exchanges take.',
+    rulesUpset: 'The shopper seems upset',
+    rulesBigOrder: 'Big orders',
+    rulesBigOrderHint: (amount: string, currency: string, pieces: number) =>
+      `Over ${currency} ${amount}, or ${pieces} or more of one piece`,
     knowledgeTitle: 'Knowledge',
     knowledgeSubtitle: 'The AI answers only from these facts. Add policies, shipping info, FAQs.',
     addManual: 'Add note',
@@ -70,6 +77,13 @@ const COPY = {
     dialect: 'الردود العربية باللهجة',
     dialects: { egyptian: 'المصرية', gulf: 'الخليجية', levantine: 'الشامية', msa: 'الفصحى' },
     escalation: 'تحويل لموظف عند الطلب',
+    rulesTitle: 'متى يتدخل شخص من الفريق',
+    rulesOrderChanges: 'طلبات الاسترداد أو الاستبدال أو تعديل الطلب',
+    rulesOrderChangesHint: 'يظل المساعد يجيب عن أسئلة سياساتك، مثل المدة التي يستغرقها الاستبدال.',
+    rulesUpset: 'يبدو المتسوق منزعجًا',
+    rulesBigOrder: 'الطلبات الكبيرة',
+    rulesBigOrderHint: (amount: string, currency: string, pieces: number) =>
+      `أكثر من ${amount} ${currency === 'EGP' ? 'ج.م' : currency}، أو ${pieces} ${pieces > 10 ? 'قطعة' : 'قطع'} أو أكثر من الصنف نفسه`,
     knowledgeTitle: 'المعرفة',
     knowledgeSubtitle: 'يجيب المساعد من هذه المعلومات فقط. أضف السياسات والشيوخ والأسئلة الشائعة.',
     addManual: 'إضافة ملاحظة',
@@ -143,6 +157,15 @@ export function AiKnowledgeEditor({
     setValue((prev) => ({ ...prev, ...partial }));
     setSavedNote(null);
   }
+
+  /* The store's other handoff rules (N25), shown only while its
+     n25_handoff_rules flag is on. They need handoff itself to be on. */
+  const handoffRulesOn = publishedPayload.features?.includes('n25_handoff_rules') ?? false;
+  const rules = value.handoffRules;
+  function patchRules(partial: Partial<MessengerAi['handoffRules']>) {
+    patch({ handoffRules: { ...rules, ...partial } });
+  }
+  const bigOrderAmount = (rules.bigOrder.amountMinor / 100).toLocaleString('en-US');
 
   const previewPayload = useMemo<PublicMessengerPayload>(
     () => ({ ...publishedPayload, aiEnabled: value.enabled && publishedPayload.aiEnabled !== undefined }),
@@ -243,6 +266,25 @@ export function AiKnowledgeEditor({
             />
             {t.escalation}
           </label>
+
+          {handoffRulesOn && (
+            <fieldset className="grid gap-3 rounded-lg border border-border p-3" disabled={!value.escalationEnabled}>
+              <legend className="px-1 text-sm font-medium">{t.rulesTitle}</legend>
+              <RuleToggle
+                label={t.rulesOrderChanges}
+                hint={t.rulesOrderChangesHint}
+                checked={rules.orderChanges}
+                onChange={(orderChanges) => patchRules({ orderChanges })}
+              />
+              <RuleToggle label={t.rulesUpset} checked={rules.upset} onChange={(upset) => patchRules({ upset })} />
+              <RuleToggle
+                label={t.rulesBigOrder}
+                hint={t.rulesBigOrderHint(bigOrderAmount, rules.bigOrder.currency, rules.bigOrder.piecesOfOne)}
+                checked={rules.bigOrder.enabled}
+                onChange={(enabled) => patchRules({ bigOrder: { ...rules.bigOrder, enabled } })}
+              />
+            </fieldset>
+          )}
 
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={pendingForm}>
@@ -413,5 +455,32 @@ function MiniAction({
     >
       {children}
     </button>
+  );
+}
+
+function RuleToggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 size-4 shrink-0 accent-primary"
+      />
+      <span className="grid min-w-0 gap-0.5">
+        <span className="font-medium">{label}</span>
+        {hint && <span className="text-muted-foreground">{hint}</span>}
+      </span>
+    </label>
   );
 }

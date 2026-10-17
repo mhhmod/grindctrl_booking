@@ -159,4 +159,18 @@ describe('storefront widget loader — config failures', () => {
     expect(loader).toContain("track('config_fetch_failed', { status: err && typeof err.status === 'number' ? err.status : 0 })");
     expect(loader).not.toContain("track('config_fetch_failed', {})");
   });
+
+  /* Phase zero item 10: the cart for the big-order rule. Only this page can
+     read Shopify's /cart.js, so the loader reads it when the panel asks and
+     when the theme changes the cart, and hands it only to its own panel. */
+  it('reads the Shopify cart for the panel only when the panel asks', () => {
+    expect(loader).toContain("data.type === 'grindctrl-messenger:cart-request'");
+    expect(loader).toContain("+ 'cart.js'");
+    expect(loader).toContain('window.Shopify.routes.root');
+    // Sent to the panel's own origin, never to any frame that listens.
+    expect(loader).toContain("postMessage({ type: 'grindctrl-messenger:cart', cart: summary }, APP_ORIGIN)");
+    // Cart changes are seen without wrapping the page's fetch.
+    expect(loader).toContain('new PerformanceObserver');
+    expect(loader).not.toMatch(/window\.fetch\s*=/);
+  });
 });

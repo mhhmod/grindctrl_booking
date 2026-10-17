@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { AiKnowledgeEditor } from './ai-knowledge-editor';
 import type { KnowledgeEntry } from '@/lib/messenger/knowledge';
 import type { MessengerAi } from '@/lib/messenger/types';
@@ -16,6 +16,11 @@ const AI: MessengerAi = {
   languageMode: 'auto',
   arabicDialect: 'egyptian' as const,
   escalationEnabled: true,
+  handoffRules: {
+    orderChanges: true,
+    upset: true,
+    bigOrder: { enabled: true, amountMinor: 1_000_000, currency: 'EGP', piecesOfOne: 5 },
+  },
 };
 
 const PAYLOAD: PublicMessengerPayload = {
@@ -138,5 +143,61 @@ describe('AiKnowledgeEditor sync freshness', () => {
 
     expect(screen.getByText('Updated 100d ago')).toBeInTheDocument();
     expect(screen.queryByText(/Stale/)).not.toBeInTheDocument();
+  });
+});
+
+/* N25: the store's other handoff rules, behind n25_handoff_rules. */
+describe('AiKnowledgeEditor handoff rules', () => {
+  function renderWithRules(features: string[], locale: 'en' | 'ar' = 'en', ai: MessengerAi = AI) {
+    return render(
+      <AiKnowledgeEditor
+        locale={locale}
+        siteId="site-1"
+        ai={ai}
+        knowledge={[]}
+        publishedPayload={{ ...PAYLOAD, features }}
+        actions={actions}
+      />,
+    );
+  }
+
+  it('stays hidden while the store\'s flag is off', () => {
+    renderWithRules([]);
+    expect(screen.queryByText('When to bring in a person')).not.toBeInTheDocument();
+  });
+
+  it('shows the three rules with the store\'s big-order line, in English and Arabic', () => {
+    const { unmount } = renderWithRules(['n25_handoff_rules']);
+    expect(screen.getByText('When to bring in a person')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Requests to refund, exchange or change an order/)).toBeChecked();
+    expect(screen.getByText('It still answers questions about your policies, like how long exchanges take.')).toBeInTheDocument();
+    expect(screen.getByLabelText(/The shopper seems upset/)).toBeChecked();
+    expect(screen.getByText('Over EGP 10,000, or 5 or more of one piece')).toBeInTheDocument();
+    unmount();
+
+    renderWithRules(['n25_handoff_rules'], 'ar');
+    expect(screen.getByText('متى يتدخل شخص من الفريق')).toBeInTheDocument();
+    expect(screen.getByText('أكثر من 10,000 ج.م، أو 5 قطع أو أكثر من الصنف نفسه')).toBeInTheDocument();
+  });
+
+  it('saves a rule turned off with the rest of the assistant settings', async () => {
+    actions.saveDraftSection.mockResolvedValue({ ok: true });
+    renderWithRules(['n25_handoff_rules']);
+    fireEvent.click(screen.getByLabelText(/Big orders/));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    });
+    expect(actions.saveDraftSection).toHaveBeenCalledWith(
+      'site-1',
+      'ai',
+      expect.objectContaining({
+        handoffRules: { orderChanges: true, upset: true, bigOrder: { enabled: false, amountMinor: 1_000_000, currency: 'EGP', piecesOfOne: 5 } },
+      }),
+    );
+  });
+
+  it('cannot be changed while offering a person is off', () => {
+    renderWithRules(['n25_handoff_rules'], 'en', { ...AI, escalationEnabled: false });
+    expect(screen.getByLabelText(/The shopper seems upset/)).toBeDisabled();
   });
 });

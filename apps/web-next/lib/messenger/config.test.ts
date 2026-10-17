@@ -190,3 +190,20 @@ describe('opening hours on save', () => {
     expect(saved([{ day: 'x' as unknown as number, startMinute: 540, endMinute: 600 }])).toEqual([]);
   });
 });
+
+describe('ai.handoffRules (N25)', () => {
+  it('defaults every rule on for a store that never set them', () => {
+    expect(resolveMessengerConfig({}).ai.handoffRules).toEqual({
+      orderChanges: true,
+      upset: true,
+      bigOrder: { enabled: true, amountMinor: 1_000_000, currency: 'EGP', piecesOfOne: 5 },
+    });
+  });
+
+  it('keeps what the merchant saved, through a draft too', () => {
+    const published = { messenger_ai: { handoffRules: { orderChanges: false } } };
+    expect(resolveMessengerConfig(published).ai.handoffRules.orderChanges).toBe(false);
+    const { config } = mergeDraftOverPublished(published, { messenger_ai: { handoffRules: { orderChanges: true, upset: false } } });
+    expect(config.ai.handoffRules).toMatchObject({ orderChanges: true, upset: false });
+  });
+});

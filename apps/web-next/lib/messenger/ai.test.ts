@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildSystemPrompt, detectExplicitHandoffRequest, detectLocale, resolveReplyLocale } from './ai';
+import { DEFAULT_HANDOFF_RULES } from './handoff-rules';
 
 const BASE_INPUT = {
   storeName: 'Sara’s Store',
@@ -11,6 +12,7 @@ const BASE_INPUT = {
     languageMode: 'auto' as const,
     arabicDialect: 'egyptian' as const,
     escalationEnabled: true,
+    handoffRules: DEFAULT_HANDOFF_RULES,
   },
   locale: 'en' as const,
   knowledge: [],
