@@ -36,18 +36,21 @@ const CONFIG = {
 
 let parentWindow: Window;
 let sentBodies: Array<Record<string, unknown>> = [];
+let bootMessages: Array<Record<string, unknown>> = [];
 let host: HTMLIFrameElement;
 const realParent = Object.getOwnPropertyDescriptor(window, 'parent');
 
 beforeEach(() => {
   sentBodies = [];
+  bootMessages = [];
+  localStorage.clear();
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes('/send') && init?.body) sentBodies.push(JSON.parse(String(init.body)) as Record<string, unknown>);
       const body = url.includes('bootstrap')
-        ? { anonymousId: 'anon12345678', conversationId: 'b3c9d1e2-1111-4222-8333-444455556666', status: 'open', messages: [] }
+        ? { anonymousId: 'anon12345678', conversationId: 'b3c9d1e2-1111-4222-8333-444455556666', status: 'open', messages: bootMessages }
         : url.includes('/send')
           ? { userMessage: { id: 'u1', role: 'user', content: 'x', createdAt: new Date().toISOString() }, reply: null, status: 'open' }
           : { status: 'open', messages: [] };
@@ -139,7 +142,7 @@ describe('the v16 panel', () => {
     });
     const card = await screen.findByRole('region', { name: "You're viewing" });
     expect(card).toHaveTextContent('Layla Embroidered Abaya');
-    expect(card.textContent?.replace(/\u00a0/g, ' ')).toContain('Black, M · EGP 3,250');
+    expect(card.textContent?.replace(/\u00a0/g, ' ')).toContain('Black · M · EGP 3,250');
     fireEvent.click(screen.getByRole('button', { name: 'Try it on' }));
     expect(posted).toHaveBeenCalledWith({ type: 'grindctrl-messenger:try-on' }, '*');
   });
@@ -175,5 +178,60 @@ describe('the v16 panel', () => {
     } finally {
       delete (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition;
     }
+  });
+
+  it('switches between Arabic and English from the header, and remembers it on this phone', async () => {
+    await boot();
+    fireEvent.click(await screen.findByRole('button', { name: 'عربي' }));
+    expect(await screen.findByRole('button', { name: 'تتبع الطلب' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'عربي' })).toHaveAttribute('aria-pressed', 'true');
+    expect(localStorage.getItem('gc_msgr_lang_gc_test_key')).toBe('ar');
+    cleanup();
+
+    // The live embed passes no locale of its own; the page's comes in the URL.
+    render(<MessengerPanel config={CONFIG} originToken="tok" />);
+    expect(await screen.findByRole('button', { name: 'تتبع الطلب' })).toBeInTheDocument();
+  });
+
+  it('shows the piece in the header with a way back home once the conversation is going', async () => {
+    bootMessages = [
+      { id: 'u1', role: 'user', content: 'Is this in black in M?', createdAt: '2026-10-20T10:00:00Z' },
+      { id: 'a1', role: 'assistant', content: 'Yes, black is in M.', author: 'ai', createdAt: '2026-10-20T10:00:05Z' },
+    ];
+    await boot();
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source: parentWindow,
+          data: {
+            type: 'grindctrl-messenger:page-product',
+            product: { handle: 'layla-abaya', title: 'Layla Embroidered Abaya', imageUrl: '', variantId: '456', variantTitle: 'Black / M', priceMinor: 325000, currency: 'EGP', tryOn: true },
+          },
+        }),
+      );
+    });
+
+    const back = await screen.findByRole('button', { name: 'Back to chat home' });
+    expect(screen.getByRole('banner')).toHaveTextContent('Layla Embroidered Abaya');
+    // An answer was the last word, so the box asks for a follow-up.
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveAttribute('placeholder', 'Ask a follow-up');
+    // Each bubble and the box take their own direction.
+    expect(screen.getByText('Yes, black is in M.').closest('[dir]')).toHaveAttribute('dir', 'auto');
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveAttribute('dir', 'auto');
+    // The AI label sits under the assistant's turn.
+    expect(screen.getByText('Store assistant, AI')).toBeInTheDocument();
+
+    fireEvent.click(back);
+    expect(screen.getByRole('button', { name: 'Track my order' })).toBeInTheDocument();
+    expect(screen.queryByText('Yes, black is in M.')).toBeNull();
+  });
+});
+
+describe('the reply ratings, for every store', () => {
+  it('names Helpful and Not helpful in the shopper\'s language', async () => {
+    bootMessages = [{ id: 'a1', role: 'assistant', content: 'أهلاً', author: 'ai', createdAt: '2026-10-20T10:00:05Z' }];
+    render(<MessengerPanel config={{ ...CONFIG, features: [] } as PublicMessengerPayload} originToken="tok" locale="ar" />);
+    expect(await screen.findByRole('button', { name: 'مفيدة' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'غير مفيدة' })).toBeInTheDocument();
   });
 });

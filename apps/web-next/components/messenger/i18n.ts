@@ -65,6 +65,12 @@ export interface PanelCopy {
   messageLabel: string;
   speak: string;
   stopSpeaking: string;
+  helpful: string;
+  notHelpful: string;
+  /* The v16 answer view (Chat-Answer, Chat-Arabic) */
+  languageLabel: string;
+  backToHome: string;
+  askFollowUp: string;
 }
 
 const EN: PanelCopy = {
@@ -129,6 +135,11 @@ const EN: PanelCopy = {
   messageLabel: 'Message',
   speak: 'Speak your message',
   stopSpeaking: 'Stop listening',
+  helpful: 'Helpful',
+  notHelpful: 'Not helpful',
+  languageLabel: 'Language',
+  backToHome: 'Back to chat home',
+  askFollowUp: 'Ask a follow-up',
 };
 
 const AR: PanelCopy = {
@@ -195,6 +206,11 @@ const AR: PanelCopy = {
   messageLabel: 'رسالتك',
   speak: 'تسجيل الرسالة بالصوت',
   stopSpeaking: 'إيقاف الاستماع',
+  helpful: 'مفيدة',
+  notHelpful: 'غير مفيدة',
+  languageLabel: 'اللغة',
+  backToHome: 'العودة إلى الصفحة الرئيسية للدردشة',
+  askFollowUp: 'سؤال إضافي',
 };
 
 export function getPanelCopy(locale: MessengerLocale): PanelCopy {

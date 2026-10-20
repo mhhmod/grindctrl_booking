@@ -3,7 +3,7 @@
 import type { PanelCopy } from '../i18n';
 import type { PageProduct } from './page-product';
 import type { MessengerLocale } from '@/lib/messenger/types';
-import { formatStorePrice, variantName } from '@/lib/try-on/store-product';
+import { formatStorePrice } from '@/lib/try-on/store-product';
 
 /* The v16 home (Chat-Home): the piece on the page with Try it on, the
    welcome the merchant wrote with the AI label, and four quick actions,
@@ -29,14 +29,7 @@ export function ChatHome({
   onQuickAction: (message: string) => void;
   onTryOn: () => void;
 }) {
-  const details = product
-    ? [
-        variantName(product.variantTitle, locale),
-        product.priceMinor !== null && product.currency ? formatStorePrice(product.priceMinor, product.currency, locale) : '',
-      ]
-        .filter(Boolean)
-        .join(' · ')
-    : '';
+  const details = product ? productLine(product, locale) : '';
 
   return (
     <div className="space-y-5">
@@ -49,7 +42,7 @@ export function ChatHome({
           )}
           <div className="min-w-0 flex-1">
             <p className="text-[11px] text-muted-foreground">{t.youreViewing}</p>
-            <p className="truncate text-sm font-semibold">{product.title}</p>
+            <p dir="auto" className="truncate text-sm font-semibold">{product.title}</p>
             {details && <p className="truncate text-xs text-muted-foreground">{details}</p>}
           </div>
           {product.tryOn && (
@@ -86,4 +79,12 @@ export function ChatHome({
       </ul>
     </div>
   );
+}
+
+/** "Black · M · EGP 3,250", as the boards write a piece in the chat. */
+export function productLine(product: PageProduct, locale: MessengerLocale): string {
+  const variant = product.variantTitle && product.variantTitle !== 'Default Title' ? product.variantTitle.split(' / ') : [];
+  const price =
+    product.priceMinor !== null && product.currency ? formatStorePrice(product.priceMinor, product.currency, locale) : '';
+  return [...variant, price].filter(Boolean).join(' · ');
 }
