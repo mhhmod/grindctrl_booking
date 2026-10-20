@@ -291,6 +291,63 @@ describe('MessengerPanel shopper identity forwarding', () => {
     expect(body.shopperToken).toBe('tok.header.sig');
   });
 
+  describe('when the loader says a token is coming (item 15)', () => {
+    let fakeParent: { postMessage: ReturnType<typeof vi.fn> };
+    const originalParent = window.parent;
+
+    beforeEach(() => {
+      window.history.pushState({}, '', '/embed/messenger?key=gc_test_key&anonId=loader-anon-123456&identity=1');
+      fakeParent = { postMessage: vi.fn() };
+      Object.defineProperty(window, 'parent', { configurable: true, value: fakeParent });
+    });
+    afterEach(() => {
+      Object.defineProperty(window, 'parent', { configurable: true, value: originalParent });
+    });
+
+    const bootstrapBody = () => {
+      const call = fetchMock.mock.calls.find((c) => String(c[0]).includes('/api/messenger/bootstrap'));
+      return call ? JSON.parse(String((call[1] as RequestInit).body)) : null;
+    };
+    const answer = (token: string | null) =>
+      act(async () => {
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: { type: 'grindctrl-messenger:identify', token },
+            source: fakeParent as unknown as MessageEventSource,
+          }),
+        );
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+    it('asks for it and loads the conversation with it, not as nobody first', async () => {
+      await bootPanel();
+      expect(fakeParent.postMessage).toHaveBeenCalledWith({ type: 'grindctrl-messenger:identity-request' }, '*');
+      expect(bootstrapBody()).toBeNull();
+
+      await answer('tok-from-loader');
+      expect(bootstrapBody().shopperToken).toBe('tok-from-loader');
+    });
+
+    it('goes on without one as soon as the loader says none is coming', async () => {
+      await bootPanel();
+      await answer(null);
+      expect(bootstrapBody()).not.toBeNull();
+      expect(bootstrapBody().shopperToken).toBeUndefined();
+    });
+
+    it('stops waiting after three seconds', async () => {
+      await bootPanel();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_900);
+      });
+      expect(bootstrapBody()).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+      expect(bootstrapBody()).not.toBeNull();
+    });
+  });
+
   it('tops up a token that only arrives after the iframe already booted', async () => {
     const originalParent = window.parent;
     const fakeParent = { postMessage: vi.fn() };

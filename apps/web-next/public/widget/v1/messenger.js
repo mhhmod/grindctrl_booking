@@ -17,11 +17,11 @@
   var SHOP = SCRIPT && SCRIPT.getAttribute('data-shop');
   var KEY = (SCRIPT && SCRIPT.getAttribute('data-key')) || '';
   var LOCALE_HINT = (SCRIPT && SCRIPT.getAttribute('data-locale')) || '';
-  var CUSTOMER = {
-    id: (SCRIPT && SCRIPT.getAttribute('data-customer-id')) || '',
-    email: (SCRIPT && SCRIPT.getAttribute('data-customer-email')) || '',
-    name: (SCRIPT && SCRIPT.getAttribute('data-customer-name')) || ''
-  };
+  /* The signed-in Shopify customer on this page, or '' for a guest. Only a
+     hint for when to ask the App Proxy for a token: the proxy reads who is
+     signed in from Shopify itself, never from this attribute. Older theme
+     blocks also print the customer's email and name; nothing reads them. */
+  var CUSTOMER_ID = (SCRIPT && SCRIPT.getAttribute('data-customer-id')) || '';
   /* Either identifier is a valid install. The Shopify app-embed block only
      knows the shop's permanent domain (zero merchant setup, nothing to
      paste), so requiring data-key here would make that entire install path
@@ -54,6 +54,7 @@
     teaser: null,
     locale: detectLocale(),
     identified: false,
+    identityPending: false,
     loggedOut: false
   };
 
@@ -355,10 +356,10 @@
       '&locale=' + encodeURIComponent(LOCALE_HINT || state.locale) +
       '&origin=' + encodeURIComponent(ORIGIN) +
       '&anonId=' + encodeURIComponent(ensureAnonId());
-    // A token identify() already received before this first build. A later
-    // one reaches the panel over postMessage instead -- see identify().
-    var knownToken = lsGet(LS.token);
-    if (knownToken) params += '&shopperToken=' + encodeURIComponent(knownToken);
+    // The token itself never goes in the address, where logs and referrers
+    // keep it. The panel is told one is coming, asks for it once it is
+    // listening, and waits for it before loading the conversation.
+    if (currentToken() || state.identityPending) params += '&identity=1';
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
     frame.title = state.locale === 'ar' ? 'محادثة الدعم' : 'Support chat';
@@ -475,6 +476,12 @@
     if (!state.iframe || event.source !== state.iframe.contentWindow) return;
     var data = event.data;
     if (data && data.type === 'grindctrl-messenger:close') close();
+    if (data && data.type === 'grindctrl-messenger:identity-request') {
+      var token = currentToken();
+      // While the proxy is still answering, identify() sends the token when
+      // it lands; otherwise the panel learns there is none and stops waiting.
+      if (token || !state.identityPending) sendIdentity(token);
+    }
     if (data && data.type === 'grindctrl-messenger:ready') handleViewportChange();
     if (data && data.type === 'grindctrl-messenger:cart-request') { sendCart(); watchCart(); }
   });
@@ -547,33 +554,67 @@
   }
 
   /* ── Identity ── */
-  function identify(token) {
-    if (typeof token !== 'string' || token.length > 4096) return;
-    lsSet(LS.token, token);
-    state.identified = true;
-    // The panel already booted (open() was called, or warmPanel() ran)
-    // before this token existed -- its own build-time query param is long
-    // past. Storage cannot cross the origin boundary, so top it up directly.
+  /* A token speaks for one customer for 12 hours (lib/messenger/identity.ts).
+     It is kept with the customer it was issued for and when, so it is never
+     sent for anyone else: not after a logout, not after another customer
+     signs in on the same browser, and not once it has run out. */
+  var TOKEN_FRESH_MS = 11 * 60 * 60 * 1000;
+
+  function storedToken() {
+    var raw = lsGet(LS.token);
+    if (!raw) return null;
+    try {
+      var saved = JSON.parse(raw);
+      if (saved && typeof saved.t === 'string' && typeof saved.c === 'string' && typeof saved.at === 'number') return saved;
+    } catch (e) {}
+    // A bare token from an older loader: whose it is cannot be known.
+    return null;
+  }
+
+  function currentToken() {
+    var saved = storedToken();
+    if (!saved || saved.c !== CUSTOMER_ID || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
+    return saved.t;
+  }
+
+  function sendIdentity(token) {
     if (state.iframe && state.iframe.contentWindow) {
-      state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:identify', token: token }, APP_ORIGIN);
+      state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:identify', token: token || null }, APP_ORIGIN);
     }
   }
 
+  function identify(token) {
+    if (typeof token !== 'string' || token.length > 4096) return;
+    lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, at: Date.now() }));
+    state.identified = true;
+    // Storage cannot cross the origin boundary, so the panel gets it here,
+    // whether it is waiting for it or already loaded.
+    sendIdentity(token);
+  }
+
   function attachShopperToken() {
-    var token = lsGet(LS.token);
-    if (token) { state.identified = true; return; }
-    if (!(CUSTOMER.id && CUSTOMER.email)) return;
-    // Logged-in Shopify customer: ask the app proxy to sign our claims.
-    var sid = ensureAnonId();
-    var q = '/apps/grindctrl/messenger-identity?sid=' + encodeURIComponent(sid) +
-      '&customer_id=' + encodeURIComponent(CUSTOMER.id) +
-      '&customer_email=' + encodeURIComponent(CUSTOMER.email) +
-      '&customer_name=' + encodeURIComponent(CUSTOMER.name);
+    if (currentToken()) { state.identified = true; return; }
+    // Logged out, someone else, run out, or from an older loader: it must
+    // not speak for whoever is here now.
+    lsRemove(LS.token);
+    if (!CUSTOMER_ID) return;
+    // A signed-in customer, with or without an email: ask the App Proxy,
+    // which signs who Shopify says is signed in, bound to this session.
+    state.identityPending = true;
+    var done = function () {
+      state.identityPending = false;
+      // A panel waiting for a token that is not coming stops waiting.
+      if (!currentToken()) sendIdentity(null);
+    };
     try {
-      fetch(q).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
-        if (data && data.authenticated && data.token) identify(data.token);
-      }).catch(function () {});
-    } catch (e) {}
+      fetch('/apps/grindctrl/messenger-identity?sid=' + encodeURIComponent(ensureAnonId()))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (data && data.authenticated && data.token) identify(data.token);
+          done();
+        })
+        .catch(done);
+    } catch (e) { done(); }
   }
 
   /* ── Public API ── */
