@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   timezone: vi.fn(),
   user: vi.fn(),
 }));
-vi.mock('./active-store-server', () => ({ listOwnedShops: mocks.shops, listOwnedSitesReadOnly: mocks.sites }));
+vi.mock('./active-store-server', () => ({ listDashboardShops: mocks.shops, listDashboardSites: mocks.sites }));
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: mocks.entitlement }));
 vi.mock('@/lib/shopify/shop-timezone', () => ({ getShopTimezone: mocks.timezone }));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: mocks.user }));
@@ -46,12 +46,19 @@ describe('getV16ShellData', () => {
     mocks.entitlement.mockRejectedValue(new Error('db down'));
     mocks.timezone.mockResolvedValue(null);
     mocks.user.mockResolvedValue({ firstName: null, lastName: null, primaryEmailAddress: { emailAddress: 'nour@example.com' } });
-    const shell = await getV16ShellData({ activeStore: active, locale: 'ar', role: 'viewer', now });
+    const shell = await getV16ShellData({ activeStore: active, locale: 'ar', role: 'owner', now });
     expect(shell.stores).toEqual([]);
     expect(shell.meter).toBeNull();
-    expect(shell.person).toEqual({ name: 'nour@example.com', role: null });
+    expect(shell.person).toEqual({ name: 'nour@example.com', role: 'owner' });
     // No store time zone means UTC, where 10:30 is still morning, and no first name means none in the greeting.
     expect(shell.today.greeting).toBe('صباح الخير');
+  });
+
+  it.each(['admin', 'member'] as const)('shows a team %s no looks meter and reads no plan', async (role) => {
+    const shell = await getV16ShellData({ activeStore: active, locale: 'en', role, now });
+    expect(shell.meter).toBeNull();
+    expect(mocks.entitlement).not.toHaveBeenCalled();
+    expect(shell.person.role).toBe(role);
   });
 
   it('reads no plan or time zone for a store without a shop', async () => {

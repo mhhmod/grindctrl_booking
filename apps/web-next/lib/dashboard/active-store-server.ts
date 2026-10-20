@@ -15,13 +15,16 @@ import {
   type StoreCandidateShop,
   type StoreCandidateSite,
 } from './active-store';
+import type { DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 
 /* Read once per request and shared by the layout, the page and anything
-   else that asks, so every part of a page agrees on the store. A failed
-   read rejects for every caller; getActiveStore treats it as no stores. */
-export const listOwnedShops = cache(() => listManagedTryOnShops());
+   else that asks, so every part of a page agrees on the store. Each lists
+   the person's own stores, then their teams' (item 12), with their role on
+   each. A failed read rejects for every caller; getActiveStore treats it as
+   no stores. */
+export const listDashboardShops = cache(() => listManagedTryOnShops());
 
-export const listOwnedSitesReadOnly = cache(async () => {
+export const listDashboardSites = cache(async () => {
   const { userId } = await auth();
   return userId ? listMessengerSitesReadOnly(userId) : [];
 });
@@ -35,8 +38,8 @@ export async function getActiveStore(
   known: { shops?: readonly StoreCandidateShop[]; sites?: readonly StoreCandidateSite[] } = {},
 ): Promise<ActiveStore> {
   const [shops, sites, headerList, cookieStore] = await Promise.all([
-    known.shops ?? listOwnedShops().catch(() => []),
-    known.sites ?? listOwnedSitesReadOnly().catch(() => []),
+    known.shops ?? listDashboardShops().catch(() => []),
+    known.sites ?? listDashboardSites().catch(() => []),
     headers(),
     cookies(),
   ]);
@@ -45,4 +48,20 @@ export async function getActiveStore(
     parseStoreChoice(headerList.get(ACTIVE_STORE_HEADER)),
     parseStoreChoice(cookieStore.get(ACTIVE_STORE_COOKIE)?.value),
   ]);
+}
+
+/** The person's role on the active store (item 12). With no store at all
+ *  they are the owner of their own, still empty, account. A store missing
+ *  from their lists gets the least a role can do, though resolveActiveStore
+ *  only ever picks from those lists. */
+export async function getActiveStoreRole(active: ActiveStore): Promise<DashboardWorkspaceRole> {
+  if (!active.shopDomain && !active.siteId) return 'owner';
+  const [shops, sites] = await Promise.all([
+    listDashboardShops().catch(() => []),
+    listDashboardSites().catch(() => []),
+  ]);
+  const role = active.shopDomain
+    ? shops.find((shop) => shop.domain === active.shopDomain)?.role
+    : sites.find((site) => site.id === active.siteId)?.role;
+  return role ?? 'member';
 }

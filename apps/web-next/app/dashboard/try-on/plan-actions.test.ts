@@ -85,19 +85,21 @@ describe('try-on plan owner actions', () => {
   });
 
   it('requires owner authorization for catalog and shop state reads', async () => {
-    await expect(listPlansCatalog()).resolves.toEqual({ plans: [], packs: [] });
+    await expect(listPlansCatalog('default')).resolves.toEqual({ plans: [], packs: [] });
     await expect(getShopPlanState('store-one.myshopify.com')).resolves.toBe(state);
     /* Both are reads, so both opt in to the global row explicitly. The opt-in
        is the point: requireManagedTryOnShop now refuses 'default' by default,
        so a write path that forgets to ask cannot edit the platform-wide
-       baseline every merchant inherits. */
+       baseline every merchant inherits. Both are billing, so both ask for the
+       owner's role (item 12). */
     expect(mocks.requireManagedTryOnShop).toHaveBeenNthCalledWith(1, 'default', {
       allowGlobalDefault: true,
+      capability: 'billing',
     });
     expect(mocks.requireManagedTryOnShop).toHaveBeenNthCalledWith(
       2,
       'store-one.myshopify.com',
-      { allowGlobalDefault: true },
+      { allowGlobalDefault: true, capability: 'billing' },
     );
     expect(mocks.reconcileShopSubscription).toHaveBeenCalledExactlyOnceWith('store-one.myshopify.com');
   });

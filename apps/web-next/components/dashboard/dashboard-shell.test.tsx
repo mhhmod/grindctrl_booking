@@ -30,10 +30,10 @@ vi.mock('next/navigation', () => ({
 }));
 
 const navItems = [
-  { href: '/dashboard', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewOverview' as const, group: 'core' as const },
-  { href: '/dashboard/try-on', label: 'Try-On', icon: {} as never, isActive: false, permissionKey: 'canViewAgents' as const, group: 'core' as const },
-  { href: '/dashboard/install', label: 'Widget / Embed', icon: {} as never, isActive: false, permissionKey: 'canViewInstall' as const, group: 'journey' as const },
-  { href: '/dashboard/store-chat', label: 'Store Chat', icon: {} as never, isActive: false, permissionKey: 'canViewMessenger' as const, group: 'platform' as const },
+  { href: '/dashboard', label: 'Overview', icon: {} as never, isActive: true, permissionKey: 'canViewToday' as const, group: 'core' as const },
+  { href: '/dashboard/try-on', label: 'Try-On', icon: {} as never, isActive: false, permissionKey: 'canViewTryOn' as const, group: 'core' as const },
+  { href: '/dashboard/install', label: 'Widget / Embed', icon: {} as never, isActive: false, permissionKey: 'canViewSettings' as const, group: 'journey' as const },
+  { href: '/dashboard/store-chat', label: 'Store Chat', icon: {} as never, isActive: false, permissionKey: 'canViewStoreChat' as const, group: 'platform' as const },
 ];
 
 beforeEach(() => {

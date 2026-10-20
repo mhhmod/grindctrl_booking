@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
-import { getDefaultDashboardPermissions } from '@/lib/rbac/dashboard-policy';
+import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 
 describe('dashboard navigation config', () => {
   it('marks the matching route as active', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard/try-on',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
     });
 
     expect(items.find((item) => item.href === '/dashboard/try-on')?.isActive).toBe(true);
@@ -16,7 +16,7 @@ describe('dashboard navigation config', () => {
   it('treats /dashboard as the overview route', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
     });
 
     expect(items.find((item) => item.href === '/dashboard')?.isActive).toBe(true);
@@ -24,8 +24,8 @@ describe('dashboard navigation config', () => {
 
   it('filters out entries denied by permissions', () => {
     const permissions = {
-      ...getDefaultDashboardPermissions(),
-      canViewAgents: false,
+      ...resolveDashboardPermissions({ role: 'owner' }),
+      canViewTryOn: false,
     };
 
     const items = resolveDashboardNavItems({
@@ -36,12 +36,32 @@ describe('dashboard navigation config', () => {
     expect(items.some((item) => item.href === '/dashboard/try-on')).toBe(false);
   });
 
+  /* Every role sees the three pages that exist today (item 12); Plan and
+     Settings join with their pages, for owners and for owners and admins. */
+  it.each(['owner', 'admin', 'member'] as const)('shows a %s Overview, Try-On and Store Chat', (role) => {
+    const items = resolveDashboardNavItems({
+      pathname: '/dashboard',
+      permissions: resolveDashboardPermissions({ role }),
+    });
+
+    expect(items.map((item) => item.href)).toEqual(['/dashboard', '/dashboard/try-on', '/dashboard/store-chat']);
+  });
+
+  it('shows an unknown role nothing', () => {
+    const items = resolveDashboardNavItems({
+      pathname: '/dashboard',
+      permissions: resolveDashboardPermissions({ role: 'viewer' }),
+    });
+
+    expect(items).toEqual([]);
+  });
+
   // The dashboard advertises only what the service actually sells: see the
   // acceptance criteria in nav-config.ts before adding to this list.
   it('ships exactly Overview, Try-On, and Store Chat by default', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
     });
 
     expect(items.map((item) => item.href)).toEqual([
@@ -55,7 +75,7 @@ describe('dashboard navigation config', () => {
   it('assigns group hints to nav items', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
     });
 
     expect(items.every((item) => item.group === 'core')).toBe(true);
@@ -64,7 +84,7 @@ describe('dashboard navigation config', () => {
   it('puts a waiting-conversation count on Store Chat only', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
       badges: { '/dashboard/store-chat': 3 },
     });
     const storeChat = items.find((item) => item.href === '/dashboard/store-chat');
@@ -75,7 +95,7 @@ describe('dashboard navigation config', () => {
   it('drops a zero badge rather than rendering a 0', () => {
     const items = resolveDashboardNavItems({
       pathname: '/dashboard',
-      permissions: getDefaultDashboardPermissions(),
+      permissions: resolveDashboardPermissions({ role: 'owner' }),
       badges: { '/dashboard/store-chat': 0 },
     });
     expect(items.find((item) => item.href === '/dashboard/store-chat')?.badgeCount).toBeUndefined();

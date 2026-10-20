@@ -5,6 +5,8 @@ import { getMessengerServiceClient } from './db';
 import { isPlaceholderEmail, PLACEHOLDER_EMAIL_SUFFIX } from './emails';
 import { canonicalShopDomain, findSiteByDomain, isShopProfileId, shopProfileId, StoreOwnedByAnotherAccountError } from './shop-tenancy';
 import type { WidgetSiteRow } from './types';
+import { RoleNotAllowedError, roleCan, type DashboardCapability, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
+import { listTeamMemberships, teamSiteRoleFor } from '@/lib/rbac/store-role';
 
 export { isPlaceholderEmail };
 
@@ -96,6 +98,15 @@ export function shouldEnsureMessengerSite(
   return sites.length === 0 || Boolean(domain && !sites.some((site) => site.domain === domain));
 }
 
+/** The shop Store Chat may provision a site for on its own: the first
+ *  installed shop the person owns. Never a team's store (item 12), which
+ *  would hand the store's chat to the teammate's own account. */
+export function provisionableShopDomain(
+  shops: ReadonlyArray<{ domain: string; status: string; role: string }>,
+): string | null {
+  return shops.find((shop) => shop.status === 'installed' && shop.role === 'owner')?.domain ?? null;
+}
+
 /** After provisioning, the caller re-lists so a domain just attached to an
  *  existing row shows up. That re-list resolves the workspace again, and
  *  ensureWorkspace has no unique key on owner_profile_id, so a concurrent
@@ -170,8 +181,20 @@ export async function listMessengerSiteIdsReadOnly(clerkUserId: string): Promise
 }
 
 /** The same read-only listing with each site's domain, for resolving the
- *  dashboard's active store on any page without provisioning anything. */
+ *  dashboard's active store on any page without provisioning anything:
+ *  the person's own sites, then their teams' sites (item 12), each with
+ *  the person's role on it. */
 export async function listMessengerSitesReadOnly(
+  clerkUserId: string,
+): Promise<Array<{ id: string; name: string; domain: string | null; role: DashboardWorkspaceRole }>> {
+  const [own, team] = await Promise.all([listOwnSitesReadOnly(clerkUserId), listTeamSites(clerkUserId)]);
+  return [
+    ...own.map((site) => ({ ...site, role: 'owner' as const })),
+    ...team.map((site) => ({ id: site.id, name: site.name ?? '', domain: site.domain, role: site.role })),
+  ];
+}
+
+async function listOwnSitesReadOnly(
   clerkUserId: string,
 ): Promise<Array<{ id: string; name: string; domain: string | null }>> {
   const supabase = getMessengerServiceClient();
@@ -202,6 +225,30 @@ export async function listMessengerSitesReadOnly(
     name: row.name ?? '',
     domain: row.domain ?? null,
   }));
+}
+
+export type TeamSiteView = MessengerSiteView & { role: DashboardWorkspaceRole };
+
+/** The Store Chat sites of every workspace whose team this person is on
+ *  (item 12), with their role on each. Read-only, never provisions, and
+ *  fails closed to no sites, like listTeamMemberships. */
+export async function listTeamSites(clerkUserId: string): Promise<TeamSiteView[]> {
+  const memberships = await listTeamMemberships(clerkUserId);
+  if (memberships.length === 0) return [];
+  const supabase = getMessengerServiceClient();
+  const rows = await supabase
+    .from('widget_sites')
+    .select(
+      'id, workspace_id, name, embed_key, status, domain, settings_json, settings_version, settings_draft',
+    )
+    .in('workspace_id', [...new Set(memberships.map((membership) => membership.workspaceId))])
+    .order('created_at', { ascending: true });
+  if (rows.error) return [];
+  return ((rows.data ?? []) as Array<Record<string, unknown>>).flatMap((row) => {
+    const site = toView(row);
+    const role = teamSiteRoleFor(site.workspace_id, memberships);
+    return role ? [{ ...site, role }] : [];
+  });
 }
 
 /** Adoptable when it is already this caller's, or parked under a synthetic
@@ -529,6 +576,23 @@ export async function requireOwnedSite(clerkUserId: string, siteId: string): Pro
   const sites = await listMessengerSites(clerkUserId);
   const site = sites.find((candidate) => candidate.id === siteId);
   if (!site) throw new UnauthorizedError();
+  return site;
+}
+
+/** requireOwnedSite for a team (item 12): the owner's own site exactly as
+ *  before, or a site in a workspace whose team the person is on, and then
+ *  only for what their role there may do. */
+export async function requireSiteAccess(
+  clerkUserId: string,
+  siteId: string,
+  capability: DashboardCapability,
+): Promise<TeamSiteView> {
+  const own = (await listMessengerSites(clerkUserId)).find((candidate) => candidate.id === siteId);
+  const site: TeamSiteView | undefined = own
+    ? { ...own, role: 'owner' }
+    : (await listTeamSites(clerkUserId)).find((candidate) => candidate.id === siteId);
+  if (!site) throw new UnauthorizedError();
+  if (!roleCan(site.role, capability)) throw new RoleNotAllowedError(capability);
   return site;
 }
 

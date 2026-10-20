@@ -14,6 +14,7 @@ import type { LooksMeter, ShellStore } from '@/lib/dashboard/shell-model';
 import { storeSwitchHref } from '@/lib/dashboard/shell-model';
 import { getDashboardRouteMeta } from '@/lib/dashboard/route-meta';
 import { persistSiteLocale } from '@/lib/landing/site-locale-store';
+import type { DashboardPermissionKey, DashboardPermissionSet } from '@/lib/rbac/dashboard-policy';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-shell.module.css';
 
@@ -22,13 +23,24 @@ import classes from './v16-shell.module.css';
    v16 page lands, and the nav lists only pages that exist: Inbox, Plan and
    Settings join as theirs do, and so do the search field and the bell. */
 
-export type V16NavItem = { href: string; key: 'today' | 'tryOn' | 'storeChat'; icon: GcIconName };
+export type V16NavItem = {
+  href: string;
+  key: 'today' | 'tryOn' | 'storeChat';
+  icon: GcIconName;
+  /** Who sees it (item 12): Plan joins for owners only, Settings for owners and admins. */
+  permission: DashboardPermissionKey;
+};
 
 export const V16_NAV: readonly V16NavItem[] = [
-  { href: '/dashboard', key: 'today', icon: 'home' },
-  { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt' },
-  { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat' },
+  { href: '/dashboard', key: 'today', icon: 'home', permission: 'canViewToday' },
+  { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn' },
+  { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat' },
 ];
+
+/** The nav items the person's role sees. */
+export function v16NavFor(permissions: DashboardPermissionSet): V16NavItem[] {
+  return V16_NAV.filter((item) => permissions[item.permission]);
+}
 
 const STORE_CHAT_HREF = '/dashboard/store-chat';
 
@@ -55,6 +67,8 @@ export type V16ShellProps = {
   meter: LooksMeter | null;
   person: { name: string; role: ShellRole | null };
   today: { date: string; greeting: string };
+  /** From the person's role on the active store (item 12). */
+  permissions: DashboardPermissionSet;
   waitingCount: number;
   children: React.ReactNode;
 };
@@ -95,6 +109,7 @@ export function V16ShellView({
   meter,
   person,
   today,
+  permissions,
   waitingCount,
   children,
 }: V16ShellProps & { pathname: string }) {
@@ -108,6 +123,7 @@ export function V16ShellView({
   const { title } = getDashboardRouteMeta(pathname, locale);
   const mounted = React.useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
 
+  const nav = v16NavFor(permissions);
   const current = stores.find((store) => store.current) ?? stores[0] ?? null;
   const isToday = pathname === '/dashboard';
   /* Before hydration, guess the provider's default (light), like the toggle. */
@@ -190,7 +206,7 @@ export function V16ShellView({
         </Link>
         {storeSwitcher}
         <nav aria-label={copy.navLabel} className={classes.nav}>
-          {V16_NAV.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -279,7 +295,7 @@ export function V16ShellView({
       </div>
 
       <nav aria-label={copy.phoneNavLabel} className={classes.tabbar}>
-        {V16_NAV.map((item) => (
+        {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}

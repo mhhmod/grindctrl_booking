@@ -52,6 +52,7 @@ vi.mock('@/lib/shopify/shops', () => ({
       lastSeenAt: '2026-07-16T00:00:00.000Z',
       jobCount: 3,
       lastJobAt: '2026-07-16T00:00:00.000Z',
+      role: 'owner' as const,
     },
   ]),
 }));
@@ -166,7 +167,7 @@ describe('DashboardTryOnPage', () => {
 
   const ownedShop = (domain: string) => ({
     domain, status: 'installed' as const, installedAt: '2026-01-01T00:00:00.000Z', uninstalledAt: null,
-    lastSeenAt: '2026-01-01T00:00:00.000Z', jobCount: 0, lastJobAt: null,
+    lastSeenAt: '2026-01-01T00:00:00.000Z', jobCount: 0, lastJobAt: null, role: 'owner' as const,
   });
 
   it('opens the selected owned store using the configured public app ID, not the GrindCTRL store', async () => {
@@ -239,9 +240,26 @@ describe('DashboardTryOnPage', () => {
     await renderPage();
 
     expect(getShopPlanState).toHaveBeenCalledWith('grindctrl.myshopify.com');
+    expect(listPlansCatalog).toHaveBeenCalledWith('grindctrl.myshopify.com');
     const c = getTryOnDashboardCopy('en');
     const card = screen.getByText(c.planAndCredits).closest('[data-slot="card"]') as HTMLElement;
     expect(within(card).getByText(c.planRendersLeft(280, 300))).toBeInTheDocument();
+  });
+
+  /* Item 12: billing is the owner's alone, and setting the shop up is for
+     the owner and admins. The actions refuse the same roles on the server. */
+  it.each(['admin', 'member'] as const)('shows a team %s no plan, and reads none', async (role) => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([{ ...ownedShop('grindctrl.myshopify.com'), role }]);
+    vi.mocked(listPlansCatalog).mockClear();
+    vi.mocked(getShopPlanState).mockClear();
+    await renderPage();
+
+    const c = getTryOnDashboardCopy('en');
+    expect(screen.queryByText(c.planAndCredits)).not.toBeInTheDocument();
+    expect(listPlansCatalog).not.toHaveBeenCalled();
+    expect(getShopPlanState).not.toHaveBeenCalled();
+    // An admin sets the shop up; a member does not.
+    expect(screen.queryByLabelText('Editing') !== null).toBe(role === 'admin');
   });
 
   it('opens on an installed shop before an uninstalled one', async () => {
@@ -254,6 +272,7 @@ describe('DashboardTryOnPage', () => {
         lastSeenAt: '2026-06-20T00:00:00.000Z',
         jobCount: 0,
         lastJobAt: null,
+        role: 'owner' as const,
       },
       {
         domain: 'grindctrl.myshopify.com',
@@ -263,6 +282,7 @@ describe('DashboardTryOnPage', () => {
         lastSeenAt: '2026-07-16T00:00:00.000Z',
         jobCount: 3,
         lastJobAt: '2026-07-16T00:00:00.000Z',
+        role: 'owner' as const,
       },
     ]);
     await renderPage();
@@ -281,6 +301,7 @@ describe('DashboardTryOnPage', () => {
           lastSeenAt: '2026-07-16T00:00:00.000Z',
           jobCount: 3,
           lastJobAt: '2026-07-16T00:00:00.000Z',
+          role: 'owner' as const,
         },
         {
           domain: 'second.myshopify.com',
@@ -290,6 +311,7 @@ describe('DashboardTryOnPage', () => {
           lastSeenAt: '2026-07-10T00:00:00.000Z',
           jobCount: 0,
           lastJobAt: null,
+          role: 'owner' as const,
         },
       ]);
     }

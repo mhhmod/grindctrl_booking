@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnSettings } from '@/lib/try-on/settings';
-import { getActiveStore, listOwnedShops } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, listDashboardShops } from '@/lib/dashboard/active-store-server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
 import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
@@ -21,6 +21,7 @@ import { storeFlagRows, storeFlags } from '@/lib/flags/store-flags';
 import { LaunchCard } from '@/components/dashboard/launch-card';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView } from '@/lib/launch/audience';
+import { roleCan } from '@/lib/rbac/dashboard-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export default async function DashboardTryOnPage({
   const c = getTryOnDashboardCopy(pageLocale);
   const dateLocale = getDateLocale(pageLocale);
 
-  const [shops, canManagePlan] = await Promise.all([listOwnedShops(), isTryOnPlatformOperator()]);
+  const [shops, canManagePlan] = await Promise.all([listDashboardShops(), isTryOnPlatformOperator()]);
   const activeStore = await getActiveStore({ shop: params.shop }, { shops });
   const hasShops = shops.length > 0;
   const shopDomains = shops.map((shop) => shop.domain);
@@ -65,13 +66,24 @@ export default async function DashboardTryOnPage({
     ? ['https://admin.shopify.com/store', appShop.split('.')[0], 'apps', SHOPIFY_APP_CLIENT_ID].join('/')
     : null;
 
+  /* The caller's role on the selected shop (item 12): only its owner sees
+     the plan, and only the owner or an admin sets the shop up. The actions
+     behind these cards check the same role again on the server. */
+  const selectedRole = shops.find((shop) => shop.domain === selectedShop)?.role ?? null;
+  const canSeeBilling = roleCan(selectedRole, 'billing');
+  const canSetUp = roleCan(selectedRole, 'settings');
+
   const jobs = await listRecentTryOnJobs(shopDomains, 25);
   /* The global defaults row ('default') is shared, public-demo config -- a
      caller with no linked shop has nothing of their own to configure, so
      these calls (and the cards that render them) are skipped entirely
      rather than exposing that shared row to every new sign-up. */
   const [settings, catalog, planState] = hasShops
-    ? await Promise.all([getTryOnSettings(selectedShop), listPlansCatalog(), getShopPlanState(selectedShop)])
+    ? await Promise.all([
+        canSetUp ? getTryOnSettings(selectedShop) : null,
+        canSeeBilling ? listPlansCatalog(selectedShop) : null,
+        canSeeBilling ? getShopPlanState(selectedShop) : null,
+      ])
     : [null, null, null];
 
   // Only the platform operator sees, or may change, a shop's v16 flags.
@@ -162,7 +174,7 @@ export default async function DashboardTryOnPage({
         </CardContent>
       </Card>
 
-      {hasShops && selectedShop !== 'default' && shopFeatures.includes('n5_preview_mode') && (
+      {hasShops && canSetUp && selectedShop !== 'default' && shopFeatures.includes('n5_preview_mode') && (
         <LaunchCard
           locale={pageLocale === 'ar' ? 'ar' : 'en'}
           shop={selectedShop}

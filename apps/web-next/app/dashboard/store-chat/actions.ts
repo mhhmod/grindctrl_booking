@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import {
-  requireOwnedSite as loadOwnedSite,
+  requireSiteAccess,
   getProfileId,
   unclaimSite,
   UnauthorizedError,
@@ -44,11 +44,20 @@ import type { MessengerConfig } from '@/lib/messenger/types';
 import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, revertConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import { RequestRateLimitError, requireMerchantRateLimit } from '@/lib/request-rate-limit';
+import { RoleNotAllowedError, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
 
 export type { ActionResult };
 
-async function requireOwnedSite(userId: string, siteId: string, mode: 'read' | 'write' = 'write') {
-  const site = await loadOwnedSite(userId, siteId);
+/* Every action names what it needs (item 12): the store's owner may do
+   anything, an admin everything but disconnect the store, and a member only
+   answer chats and keep answers up to date. */
+async function requireOwnedSite(
+  userId: string,
+  siteId: string,
+  capability: DashboardCapability,
+  mode: 'read' | 'write' = 'write',
+) {
+  const site = await requireSiteAccess(userId, siteId, capability);
   const identity = site.domain && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(site.domain)
     ? `shop:${site.domain}`
     : `account:${userId}`;
@@ -65,7 +74,7 @@ async function currentUser(): Promise<string> {
 function fail(error: unknown): ActionResult {
   if (error instanceof RequestRateLimitError) return { ok: false, error: error.message };
   const message = error instanceof Error ? error.message : 'Something went wrong.';
-  if (error instanceof UnauthorizedError) return { ok: false, error: message };
+  if (error instanceof UnauthorizedError || error instanceof RoleNotAllowedError) return { ok: false, error: message };
   console.error('[messenger action]', message);
   // Never surface raw internals to the dashboard.
   return { ok: false, error: 'Action failed. Please try again.' };
@@ -83,7 +92,7 @@ export async function saveDraftSection(
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const result = await saveDraftSectionForSite(site, section, payload);
     if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
@@ -98,7 +107,7 @@ export async function saveDraftSections(
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const result = await saveDraftSectionsForSite(site, sections);
     if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
@@ -110,7 +119,7 @@ export async function saveDraftSections(
 export async function publishConfig(siteId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const result = await publishConfigForSite(site, userId);
     if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
@@ -122,7 +131,7 @@ export async function publishConfig(siteId: string): Promise<ActionResult> {
 export async function revertConfigAction(siteId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const result = await revertConfigForSite(site, userId);
     if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
@@ -134,7 +143,7 @@ export async function revertConfigAction(siteId: string): Promise<ActionResult> 
 export async function disconnectSiteAction(siteId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'store');
     const profileId = await getProfileId(userId);
     const result = await unclaimSite(site, profileId);
     if (!result) throw new Error('Store state changed. Refresh and try again.');
@@ -154,7 +163,7 @@ export async function disconnectSiteAction(siteId: string): Promise<ActionResult
 export async function discardDraft(siteId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const supabase = getMessengerServiceClient();
     const res = await supabase.from('widget_sites').update({ settings_draft: null }).eq('id', site.id);
     if (res.error) throw new Error(res.error.message);
@@ -169,7 +178,7 @@ export async function discardDraft(siteId: string): Promise<ActionResult> {
 export async function setMessengerEnabled(siteId: string, enabled: boolean): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'settings');
     const result = await setMessengerEnabledForSite(site, userId, enabled);
     if (result.ok) revalidatePath('/dashboard/store-chat');
     return result;
@@ -189,7 +198,7 @@ export async function addKnowledge(formData: FormData): Promise<ActionResult> {
     const url = String(formData.get('url') ?? '').trim();
 
     if (!siteId) return { ok: false, error: 'Missing site.' };
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     if (url) {
       await addUrlKnowledge({ site, actorClerkUserId: userId, url });
       revalidatePath('/dashboard/store-chat');
@@ -217,7 +226,7 @@ export async function updateKnowledgeStatus(
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     await setKnowledgeStatus({ site, entryId, status });
     revalidatePath('/dashboard/store-chat');
     return { ok: true };
@@ -229,7 +238,7 @@ export async function updateKnowledgeStatus(
 export async function deleteKnowledge(siteId: string, entryId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     await removeKnowledge({ site, actorClerkUserId: userId, entryId });
     revalidatePath('/dashboard/store-chat');
     return { ok: true };
@@ -241,7 +250,7 @@ export async function deleteKnowledge(siteId: string, entryId: string): Promise<
 export async function syncKnowledge(siteId: string, entryId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     await reSyncKnowledge({ site, entryId });
     revalidatePath('/dashboard/store-chat');
     return { ok: true, message: 'Re-synced.' };
@@ -265,7 +274,7 @@ export async function addCannedReply(
   try {
     const userId = await currentUser();
     if (!siteId) return { ok: false, error: 'Missing site.' };
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     if (!title.trim() || !content.trim()) return { ok: false, error: 'Title and content are required.' };
     await insertCannedReply({ site, actorClerkUserId: userId, title, content });
     revalidatePath('/dashboard/store-chat');
@@ -282,7 +291,7 @@ export async function updateCannedReplyStatus(
 ): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     await setCannedReplyStatus({ site, replyId, status });
     revalidatePath('/dashboard/store-chat');
     return { ok: true };
@@ -294,7 +303,7 @@ export async function updateCannedReplyStatus(
 export async function deleteCannedReply(siteId: string, replyId: string): Promise<ActionResult> {
   try {
     const userId = await currentUser();
-    const site = await requireOwnedSite(userId, siteId);
+    const site = await requireOwnedSite(userId, siteId, 'answers');
     await removeCannedReply({ site, actorClerkUserId: userId, replyId });
     revalidatePath('/dashboard/store-chat');
     return { ok: true };
@@ -307,7 +316,7 @@ export async function deleteCannedReply(siteId: string, replyId: string): Promis
 
 async function ownedConversation(siteId: string, conversationId: string, mode: 'read' | 'write' = 'write') {
   const userId = await currentUser();
-  const site = await requireOwnedSite(userId, siteId, mode);
+  const site = await requireOwnedSite(userId, siteId, 'chats', mode);
   const conversation = await getConversationForSite(conversationId, site.id);
   if (!conversation) throw new UnauthorizedError();
   return { userId, site, conversation };

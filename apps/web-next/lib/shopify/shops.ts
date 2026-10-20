@@ -9,6 +9,8 @@ import {
 } from './shop-authorization';
 import { invalidateProxyConfig } from './proxy-config-cache';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
+import { RoleNotAllowedError, roleCan, type DashboardCapability, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
+import { listTeamMemberships, shopRoleFor, teamOwnerIds } from '@/lib/rbac/store-role';
 
 export type TryOnShopStatus = 'installed' | 'uninstalled';
 
@@ -20,10 +22,13 @@ export type ManagedTryOnShop = {
   lastSeenAt: string;
   jobCount: number;
   lastJobAt: string | null;
+  /** The caller's role on this shop: its owner, or their role on its team. */
+  role: DashboardWorkspaceRole;
 };
 
 type ShopRow = {
   shop_domain: string;
+  owner_clerk_user_id: string | null;
   status: TryOnShopStatus;
   installed_at: string;
   uninstalled_at: string | null;
@@ -122,14 +127,28 @@ export async function markTryOnShopUninstalled(shop: unknown): Promise<boolean> 
  *  Writes must never opt in; see the matching guard in saveTryOnSettings. */
 export async function requireManagedTryOnShop(
   selectedShop: unknown,
-  options: { allowGlobalDefault?: boolean } = {},
+  options: {
+    allowGlobalDefault?: boolean;
+    /** What the caller is about to do. Omitted, any role on the shop's team
+     *  may read it; every write names what it needs (see dashboard-policy.ts). */
+    capability?: DashboardCapability;
+  } = {},
 ): Promise<string> {
+  return (await requireTryOnShopAccess(selectedShop, options)).domain;
+}
+
+/** requireManagedTryOnShop, also answering the caller's role on the shop. */
+export async function requireTryOnShopAccess(
+  selectedShop: unknown,
+  options: { allowGlobalDefault?: boolean; capability?: DashboardCapability } = {},
+): Promise<{ domain: string; role: DashboardWorkspaceRole | null }> {
   const clerkUserId = await requireDashboardOwner();
   if (selectedShop === 'default') {
     // Same message as an unowned domain below: a merchant has no need to learn
-    // that a privileged internal row exists.
+    // that a privileged internal row exists. Only read paths opt in, and the
+    // row has no team, so it carries no role.
     if (!options.allowGlobalDefault) throw new Error('Unknown Shopify shop');
-    return 'default';
+    return { domain: 'default', role: null };
   }
 
   const domain = normalizeShopDomain(selectedShop);
@@ -145,7 +164,34 @@ export async function requireManagedTryOnShop(
     .maybeSingle();
 
   if (error) throw new Error(`Shop authorization failed: ${error.message}`);
-  return authorizeDashboardShop(domain, data ? [data.shop_domain] : []);
+  let role: DashboardWorkspaceRole | null = data ? 'owner' : null;
+  let found = data ? [data.shop_domain as string] : [];
+
+  /* Not the owner: the shop may belong to an account whose team the caller
+     is on (item 12). The lookup is scoped to exactly those accounts. */
+  if (!data) {
+    const memberships = await listTeamMemberships(clerkUserId);
+    const owners = teamOwnerIds(memberships);
+    if (owners.length > 0) {
+      const team = await supabase
+        .from('tryon_shops')
+        .select('shop_domain, owner_clerk_user_id')
+        .eq('shop_domain', domain)
+        .eq('status', 'installed')
+        .in('owner_clerk_user_id', owners)
+        .maybeSingle();
+      if (team.error) throw new Error(`Shop authorization failed: ${team.error.message}`);
+      const row = team.data as { shop_domain: string; owner_clerk_user_id: string | null } | null;
+      role = row ? shopRoleFor(clerkUserId, row.owner_clerk_user_id, memberships) : null;
+      found = row && role ? [row.shop_domain] : [];
+    }
+  }
+
+  const authorized = authorizeDashboardShop(domain, found);
+  if (options.capability && !roleCan(role, options.capability)) {
+    throw new RoleNotAllowedError(options.capability);
+  }
+  return { domain: authorized, role };
 }
 
 export async function listManagedTryOnShops(): Promise<ManagedTryOnShop[]> {
@@ -154,14 +200,37 @@ export async function listManagedTryOnShops(): Promise<ManagedTryOnShop[]> {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('tryon_shops')
-    .select('shop_domain, status, installed_at, uninstalled_at, last_seen_at')
+    .select('shop_domain, owner_clerk_user_id, status, installed_at, uninstalled_at, last_seen_at')
     .eq('owner_clerk_user_id', clerkUserId)
     .order('last_seen_at', { ascending: false });
 
   if (error) throw new Error(`Unable to list Shopify shops: ${error.message}`);
 
+  /* Then the shops of every account whose team the caller is on (item 12),
+     after their own. */
+  const memberships = await listTeamMemberships(clerkUserId);
+  const owners = teamOwnerIds(memberships);
+  let teamRows: ShopRow[] = [];
+  if (owners.length > 0) {
+    const team = await supabase
+      .from('tryon_shops')
+      .select('shop_domain, owner_clerk_user_id, status, installed_at, uninstalled_at, last_seen_at')
+      .in('owner_clerk_user_id', owners)
+      .order('last_seen_at', { ascending: false });
+    if (team.error) throw new Error(`Unable to list Shopify shops: ${team.error.message}`);
+    teamRows = (team.data ?? []) as ShopRow[];
+  }
+
+  const rows = [
+    ...((data ?? []) as ShopRow[]).map((shop) => ({ shop, role: 'owner' as const })),
+    ...teamRows.flatMap((shop) => {
+      const role = shopRoleFor(clerkUserId, shop.owner_clerk_user_id, memberships);
+      return role ? [{ shop, role }] : [];
+    }),
+  ];
+
   return Promise.all(
-    ((data ?? []) as ShopRow[]).map(async (shop) => {
+    rows.map(async ({ shop, role }) => {
       // The owner's test looks do not count as the shop's looks.
       const { data: jobs, count, error: jobsError } = await withoutTestLooks((excludeTestLooks) => {
         const query = supabase
@@ -185,6 +254,7 @@ export async function listManagedTryOnShops(): Promise<ManagedTryOnShop[]> {
         lastSeenAt: shop.last_seen_at,
         jobCount: count ?? 0,
         lastJobAt: jobs?.[0]?.created_at ?? null,
+        role,
       };
     }),
   );

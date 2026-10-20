@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => {
   return {
     UnauthorizedError,
     auth: vi.fn(),
-    requireOwnedSite: vi.fn(),
+    requireSiteAccess: vi.fn(),
     unclaimSite: vi.fn(),
     getProfileId: vi.fn(async () => 'profile-1'),
     recordAudit: vi.fn(async () => {}),
@@ -51,7 +51,7 @@ const UnauthorizedError = mocks.UnauthorizedError;
 vi.mock('@clerk/nextjs/server', () => ({ auth: mocks.auth }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/messenger/provisioning', () => ({
-  requireOwnedSite: mocks.requireOwnedSite,
+  requireSiteAccess: mocks.requireSiteAccess,
   unclaimSite: mocks.unclaimSite,
   getProfileId: mocks.getProfileId,
   UnauthorizedError: mocks.UnauthorizedError,
@@ -105,6 +105,8 @@ vi.mock('@/lib/messenger/db', () => ({
 }));
 
 import { disconnectSiteAction, assignConversationAction, takeoverConversation, addCannedReply, addInternalNote, deleteCannedReply, fetchConversationMessages, pingStaffTyping, publishConfig, revertConfigAction, saveDraftSection, setMessengerEnabled, staffReply, updateCannedReplyStatus } from './actions';
+import * as actions from './actions';
+import { RoleNotAllowedError, roleCan, type DashboardCapability } from '@/lib/rbac/dashboard-policy';
 
 const SITE = {
   id: 'site-1',
@@ -122,7 +124,7 @@ const SITE = {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.auth.mockResolvedValue({ userId: 'user_owner' });
-  mocks.requireOwnedSite.mockResolvedValue(SITE);
+  mocks.requireSiteAccess.mockResolvedValue(SITE);
   mocks.getProfileId.mockResolvedValue('profile-1');
   mocks.result.current = { data: [{ id: 'site-1' }], error: null };
 });
@@ -136,7 +138,7 @@ describe('messenger server actions — authorization', () => {
   });
 
   it('never charges a foreign shop bucket and fails closed on unavailable protection', async () => {
-    mocks.requireOwnedSite.mockRejectedValueOnce(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValueOnce(new UnauthorizedError());
     await publishConfig('foreign');
     expect(requireMerchantRateLimit).not.toHaveBeenCalled();
     vi.mocked(requireMerchantRateLimit).mockRejectedValueOnce(new RequestRateLimitError(503, 30));
@@ -157,12 +159,12 @@ describe('messenger server actions — authorization', () => {
       const result = await run();
       expect(result.ok).toBe(false);
     }
-    expect(mocks.requireOwnedSite).not.toHaveBeenCalled();
+    expect(mocks.requireSiteAccess).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
   });
 
   it("refuses a site the caller does not own, before any write", async () => {
-    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 
     const result = await publishConfig('someone-elses-site');
 
@@ -171,7 +173,7 @@ describe('messenger server actions — authorization', () => {
   });
 
   it('checks ownership of the site for every conversation action', async () => {
-    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 
     const result = await staffReply('someone-elses-site', 'conv-1', 'hi');
 
@@ -181,7 +183,7 @@ describe('messenger server actions — authorization', () => {
 });
 
 describe('publishConfig', () => {  it('refuses to publish an empty draft', async () => {
-    mocks.requireOwnedSite.mockResolvedValue({ ...SITE, settings_draft: null });
+    mocks.requireSiteAccess.mockResolvedValue({ ...SITE, settings_draft: null });
 
     const result = await publishConfig('site-1');
 
@@ -268,7 +270,7 @@ describe('pingStaffTyping', () => {
   });
 
   it('refuses a ping on a site the caller does not own, before any write', async () => {
-    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 
     const result = await pingStaffTyping('someone-elses-site', 'conv-1');
 
@@ -332,7 +334,7 @@ describe('canned reply actions', () => {
     const result = await addCannedReply('site-1', '  Hello  ', '  Hi there  ');
 
     expect(result).toEqual({ ok: true, message: 'Canned reply added.' });
-    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', 'site-1');
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', 'site-1', 'answers');
     expect(mocks.insert).toHaveBeenCalledWith(
       expect.objectContaining({ widget_site_id: 'site-1', title: 'Hello', content: 'Hi there' }),
     );
@@ -348,7 +350,7 @@ describe('canned reply actions', () => {
   });
 
   it('refuses a canned reply add on a site the caller does not own, before any write', async () => {
-    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 
     const result = await addCannedReply('someone-elses-site', 'Hello', 'Hi there');
 
@@ -364,7 +366,7 @@ describe('canned reply actions', () => {
   });
 
   it('refuses a status update on a site the caller does not own, before any write', async () => {
-    mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
 
     const result = await updateCannedReplyStatus('someone-elses-site', 'r-1', 'disabled');
 
@@ -393,7 +395,7 @@ describe('canned reply actions', () => {
       const result = await run();
       expect(result.ok).toBe(false);
     }
-    expect(mocks.requireOwnedSite).not.toHaveBeenCalled();
+    expect(mocks.requireSiteAccess).not.toHaveBeenCalled();
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.delete).not.toHaveBeenCalled();
@@ -418,7 +420,7 @@ describe('assignConversationAction', () => {
 
   it('assigns a workspace member and records conversation_assigned with actor and assignee', async () => {
     expect(await assignConversationAction('site-1', 'conv-1', 'p-team')).toEqual({ ok: true });
-    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', 'site-1');
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', 'site-1', 'chats');
     expect(mocks.getConversationForSite).toHaveBeenCalledWith('conv-1', 'site-1');
     expect(mocks.listWorkspaceMembers).toHaveBeenCalledWith('ws-1');
     expect(mocks.assignConversation).toHaveBeenCalledWith('conv-1', 'p-team');
@@ -441,7 +443,7 @@ describe('assignConversationAction', () => {
 
   it.each(['signed out', 'foreign site', 'foreign conversation'])('rejects %s before member lookup or mutation', async (reason) => {
     if (reason === 'signed out') mocks.auth.mockResolvedValue({ userId: null });
-    if (reason === 'foreign site') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'foreign site') mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
     if (reason === 'foreign conversation') mocks.getConversationForSite.mockResolvedValue(null);
     expect((await assignConversationAction('site-1', 'conv-1', 'p-team')).ok).toBe(false);
     expect(mocks.listWorkspaceMembers).not.toHaveBeenCalled();
@@ -459,14 +461,14 @@ describe('assignConversationAction', () => {
 
 describe('revertConfigAction', () => {
   beforeEach(() => {
-    mocks.requireOwnedSite.mockResolvedValue({ ...SITE, settings_json: { _previousSettings: { custom: true }, _previousVersion: 2 } });
+    mocks.requireSiteAccess.mockResolvedValue({ ...SITE, settings_json: { _previousSettings: { custom: true }, _previousVersion: 2 } });
   });
 
   it('authorizes and rate checks before reverting through the core and revalidates success', async () => {
     expect((await revertConfigAction(SITE.id)).ok).toBe(true);
-    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', SITE.id);
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', SITE.id, 'settings');
     expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
-    expect(mocks.requireOwnedSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
+    expect(mocks.requireSiteAccess.mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.update.mock.invocationCallOrder[0]);
     expect(mocks.update).toHaveBeenCalledWith({ settings_json: { custom: true }, settings_version: 4 });
     expect(mocks.recordAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'config_reverted', actorClerkUserId: 'user_owner' }));
@@ -482,7 +484,7 @@ describe('revertConfigAction', () => {
   });
 
   it.each(['ownership', 'rate limit', 'conflict'])('does not revalidate after %s failure', async (reason) => {
-    if (reason === 'ownership') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'ownership') mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
     if (reason === 'rate limit') vi.mocked(requireMerchantRateLimit).mockRejectedValue(new RequestRateLimitError(503, 30));
     if (reason === 'conflict') mocks.result.current = { data: [], error: null };
     expect((await revertConfigAction(SITE.id)).ok).toBe(false);
@@ -497,10 +499,10 @@ describe('disconnectSiteAction', () => {
 
   it('authorizes and rate checks before unclaiming, then audits and revalidates', async () => {
     expect(await disconnectSiteAction(SITE.id)).toEqual({ ok: true });
-    expect(mocks.requireOwnedSite).toHaveBeenCalledWith('user_owner', SITE.id);
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', SITE.id, 'store');
     expect(requireMerchantRateLimit).toHaveBeenCalledWith('shop:sara.myshopify.com', 'write');
     expect(mocks.unclaimSite).toHaveBeenCalledExactlyOnceWith(SITE, 'profile-1');
-    expect(mocks.requireOwnedSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
+    expect(mocks.requireSiteAccess.mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(vi.mocked(requireMerchantRateLimit).mock.invocationCallOrder[0]).toBeLessThan(mocks.unclaimSite.mock.invocationCallOrder[0]);
     expect(mocks.recordAudit).toHaveBeenCalledExactlyOnceWith({ siteId: SITE.id, actorClerkUserId: 'user_owner', action: 'store_disconnected', detail: { domain: SITE.domain } });
     expect(mocks.unclaimSite.mock.invocationCallOrder[0]).toBeLessThan(mocks.recordAudit.mock.invocationCallOrder[0]);
@@ -510,7 +512,7 @@ describe('disconnectSiteAction', () => {
 
   it.each(['signed out', 'ownership', 'rate limit'])('blocks %s before unclaiming or auditing', async (reason) => {
     if (reason === 'signed out') mocks.auth.mockResolvedValue({ userId: null });
-    if (reason === 'ownership') mocks.requireOwnedSite.mockRejectedValue(new UnauthorizedError());
+    if (reason === 'ownership') mocks.requireSiteAccess.mockRejectedValue(new UnauthorizedError());
     if (reason === 'rate limit') vi.mocked(requireMerchantRateLimit).mockRejectedValue(new RequestRateLimitError(503, 30));
     expect((await disconnectSiteAction(SITE.id)).ok).toBe(false);
     expect(mocks.unclaimSite).not.toHaveBeenCalled();
@@ -526,5 +528,73 @@ describe('disconnectSiteAction', () => {
     expect(mocks.recordAudit).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
     log.mockRestore();
+  });
+});
+
+/* Item 12: every action names what it needs, and the site check refuses a
+   role that may not. The owner may do anything, an admin everything but
+   disconnect the store, and a member only answer chats and keep answers up
+   to date. */
+describe('roles on a team store', () => {
+  const knowledgeForm = () => {
+    const form = new FormData();
+    form.set('siteId', 'site-1');
+    form.set('title', 'Returns');
+    form.set('content', 'Within 14 days.');
+    return form;
+  };
+  const cases: Array<[string, DashboardCapability, () => Promise<unknown>]> = [
+    ['saveDraftSection', 'settings', () => actions.saveDraftSection('site-1', 'appearance', {})],
+    ['saveDraftSections', 'settings', () => actions.saveDraftSections('site-1', [])],
+    ['publishConfig', 'settings', () => actions.publishConfig('site-1')],
+    ['revertConfigAction', 'settings', () => actions.revertConfigAction('site-1')],
+    ['discardDraft', 'settings', () => actions.discardDraft('site-1')],
+    ['setMessengerEnabled', 'settings', () => actions.setMessengerEnabled('site-1', false)],
+    ['disconnectSiteAction', 'store', () => actions.disconnectSiteAction('site-1')],
+    ['addKnowledge', 'answers', () => actions.addKnowledge(knowledgeForm())],
+    ['updateKnowledgeStatus', 'answers', () => actions.updateKnowledgeStatus('site-1', 'entry-1', 'disabled')],
+    ['deleteKnowledge', 'answers', () => actions.deleteKnowledge('site-1', 'entry-1')],
+    ['syncKnowledge', 'answers', () => actions.syncKnowledge('site-1', 'entry-1')],
+    ['addCannedReply', 'answers', () => actions.addCannedReply('site-1', 'Hello', 'Hi there')],
+    ['updateCannedReplyStatus', 'answers', () => actions.updateCannedReplyStatus('site-1', 'reply-1', 'active')],
+    ['deleteCannedReply', 'answers', () => actions.deleteCannedReply('site-1', 'reply-1')],
+    ['fetchConversationMessages', 'chats', () => actions.fetchConversationMessages('site-1', 'conv-1')],
+    ['staffReply', 'chats', () => actions.staffReply('site-1', 'conv-1', 'On its way')],
+    ['addInternalNote', 'chats', () => actions.addInternalNote('site-1', 'conv-1', 'VIP')],
+    ['pingStaffTyping', 'chats', () => actions.pingStaffTyping('site-1', 'conv-1')],
+    ['markConversationRead', 'chats', () => actions.markConversationRead('site-1', 'conv-1')],
+    ['takeoverConversation', 'chats', () => actions.takeoverConversation('site-1', 'conv-1')],
+    ['assignConversationAction', 'chats', () => actions.assignConversationAction('site-1', 'conv-1', 'p-team')],
+    ['releaseConversation', 'chats', () => actions.releaseConversation('site-1', 'conv-1')],
+    ['closeConversationAction', 'chats', () => actions.closeConversationAction('site-1', 'conv-1')],
+  ];
+
+  it('covers every exported action', () => {
+    const exported = Object.entries(actions)
+      .filter(([, value]) => typeof value === 'function')
+      .map(([name]) => name)
+      .sort();
+    expect(cases.map(([name]) => name).sort()).toEqual(exported);
+  });
+
+  it.each(cases)('%s asks for %s', async (_name, capability, call) => {
+    await call();
+    expect(mocks.requireSiteAccess).toHaveBeenCalledWith('user_owner', 'site-1', capability);
+  });
+
+  describe.each(['admin', 'member'] as const)('as a team %s', (role) => {
+    it.each(cases.filter(([, capability]) => !roleCan(role, capability)))(
+      'is refused %s before anything is written',
+      async (_name, capability, call) => {
+        mocks.requireSiteAccess.mockRejectedValue(new RoleNotAllowedError(capability));
+        const result = await call();
+        expect(result).toMatchObject({ ok: false });
+        expect(result).toEqual({ ok: false, error: 'You do not have permission to perform this action.' });
+        expect(mocks.unclaimSite).not.toHaveBeenCalled();
+        expect(mocks.recordAudit).not.toHaveBeenCalled();
+        expect(mocks.insert).not.toHaveBeenCalled();
+        expect(revalidatePath).not.toHaveBeenCalled();
+      },
+    );
   });
 });
