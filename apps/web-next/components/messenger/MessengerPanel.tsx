@@ -31,6 +31,8 @@ const CONV_KEY = (key: string) => `gc_msgr_${key}_conv`;
 const SYNC_INTERVAL_MS = 15_000;
 const LIVE_SYNC_INTERVAL_MS = 4_000;
 const LIVE_STATUSES = new Set(['handoff_requested', 'handoff_active']);
+/** How long the panel waits for the loader's shopper token before loading the conversation without it. */
+const IDENTITY_WAIT_MS = 3_000;
 
 export interface WireMessage {
   id: string;
@@ -211,18 +213,27 @@ export function MessengerPanel({
   /* The storefront loader (public/widget/v1/messenger.js) generates the
      shopper's anonId and, once identified, a signed shopper token -- both on
      its own origin, before this iframe exists. Storage cannot cross that
-     origin boundary, so the loader forwards them the same way it already
-     forwards key/locale/origin: as iframe URL params, with a postMessage
-     top-up (below) for a token that arrives after the iframe already loaded.
-     shopperTokenRef is a ref, not state: a late top-up must reach the next
-     send() call without forcing a re-bootstrap. */
+     origin boundary, so the loader forwards the anonId as an iframe URL param,
+     like key/locale/origin, and the token over postMessage (below), including
+     one that arrives after the iframe already loaded. shopperTokenRef is a
+     ref, not state: a late top-up must reach the next send() call without
+     forcing a re-bootstrap. */
   const urlAnonId = useMemo(() => {
     if (typeof window === 'undefined') return null;
     return new URLSearchParams(window.location.search).get('anonId');
   }, []);
   const shopperTokenRef = useRef<string | null>(
+    // Only loaders cached from before the handshake below still put it here.
     typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('shopperToken') : null,
   );
+  /* The loader keeps the token out of the address: `identity=1` says one is
+     coming over postMessage, so bootstrap waits for it rather than loading
+     the conversation as nobody, which the server would take for a logout. */
+  const identityExpected = useMemo(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('identity') === '1',
+    [],
+  );
+  const identityArrived = useRef<(() => void) | null>(null);
 
   /* The panel cannot close itself: the loader created and positions the
      iframe, so only it can hide it. postMessage is the one channel across
@@ -257,6 +268,19 @@ export function MessengerPanel({
         // (see lib/messenger/identity.ts's sid claim) -- adopt it over our
         // own independently-generated one whenever the loader supplied it.
         const anonymousId = urlAnonId ?? storedAnon ?? undefined;
+        if (identityExpected && !shopperTokenRef.current && window.parent !== window) {
+          await new Promise<void>((resolve) => {
+            const timer = window.setTimeout(resolve, IDENTITY_WAIT_MS);
+            identityArrived.current = () => {
+              window.clearTimeout(timer);
+              resolve();
+            };
+            // No secret in the request; the token comes back only to our origin.
+            window.parent.postMessage({ type: 'grindctrl-messenger:identity-request' }, '*');
+          });
+          identityArrived.current = null;
+          if (cancelled) return;
+        }
         const res = await fetch('/api/messenger/bootstrap', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
@@ -296,7 +320,7 @@ export function MessengerPanel({
     return () => {
       cancelled = true;
     };
-  }, [config.key, effectiveOrigin, originToken, urlAnonId, variant]);
+  }, [config.key, effectiveOrigin, identityExpected, originToken, urlAnonId, variant]);
 
   /* Reconnect sync on focus/visible — cheap recovery after sleep/offline. */
   useEffect(() => {
@@ -363,8 +387,10 @@ export function MessengerPanel({
       // loaded (e.g. the App Proxy identify round trip lands late). Stored
       // in the ref so the next send() picks it up without a re-bootstrap --
       // see send/route.ts's own "identity refresh" handling of a late token.
-      if (data?.type === 'grindctrl-messenger:identify' && typeof data.token === 'string') {
-        shopperTokenRef.current = data.token;
+      if (data?.type === 'grindctrl-messenger:identify' && (typeof data.token === 'string' || data.token === null)) {
+        if (typeof data.token === 'string') shopperTokenRef.current = data.token;
+        // Bootstrap may be waiting for it; null means none is coming.
+        identityArrived.current?.();
         return;
       }
       if (data?.type === 'grindctrl-messenger:cart') {

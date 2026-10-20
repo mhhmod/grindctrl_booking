@@ -18,8 +18,11 @@ import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
      anonId       the shopper's storefront-origin anonymous id, read directly
                   by MessengerPanel (client-side, not server props) since
                   storage cannot cross this origin boundary
-     shopperToken same reasoning: a verified shopper token minted on the
-                  storefront side, forwarded so this iframe can present it */
+     identity     1 when the loader holds, or is fetching, a verified shopper
+                  token; MessengerPanel then asks for it over postMessage
+                  and waits before loading the conversation. The token
+                  itself stays out of this address (logs, referrers).
+     shopperToken read only for loaders cached from before that handshake */
 
 export const metadata: Metadata = {
   title: 'Support',

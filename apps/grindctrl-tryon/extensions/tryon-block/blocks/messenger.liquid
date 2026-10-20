@@ -8,9 +8,10 @@
   there is no key to paste. GRINDCTRL resolves the store's configuration
   from it server-side.
 
-  Customer claims are rendered SERVER-SIDE by Liquid only when a customer is
-  logged in. They travel to GRINDCTRL through the Shopify App Proxy, which
-  signs every parameter — the browser can never forge identity.
+  Only the signed-in customer's id is rendered, and only as a hint for the
+  loader to ask the Shopify App Proxy for a token. The proxy takes who is
+  signed in from Shopify's own signed parameters, never from this page, so
+  the browser can never forge identity. No email or name is printed here.
 {% endcomment %}
 
 {% unless block.settings.disable_on_this_page %}
@@ -20,9 +21,7 @@
     data-shop="{{ shop.permanent_domain }}"
     data-locale="{{ request.locale.iso_code | slice: 0, 2 }}"
     {% if customer %}
-      data-customer-id="{{ customer.id }}"
-      data-customer-email="{{ customer.email }}"
-      data-customer-name="{{ customer.first_name }} {{ customer.last_name }}"
+      data-customer-id="{{ customer.id | escape }}"
     {% endif %}
   ></script>
 {% endunless %}
