@@ -7,14 +7,16 @@ import { TryOnResult, type ResultControls } from '../try-on-result';
 import { useTryOnFlow } from '../use-try-on-flow';
 import { SheetPhotoStep } from './sheet-photo-step';
 import { SheetCheckStep } from './sheet-check-step';
+import { SheetMakingStep } from './sheet-making-step';
+import { makingProgress } from '@/lib/try-on/making-progress';
 import { phoneStore } from '@/lib/try-on/phone-store';
 import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
 
 /* The v16 try-on inside the sheet (02-try-on.md), for a store whose
-   v16_tryon flag is on. Part two builds the photo step, the on-phone check
-   and the consent; making the look and the result are today's until parts
-   three and four rebuild them. It makes a look exactly as today's embed
-   does, through the same flow. */
+   v16_tryon flag is on: the photo step, the on-phone check and the
+   consent, then making the look; the result is today's until part four
+   rebuilds it. It makes a look exactly as today's embed does, through the
+   same flow. */
 export function TryOnSheet({
   product,
   variantId,
@@ -23,6 +25,7 @@ export function TryOnSheet({
   lookSeconds,
   addressForm,
   loadingSteps,
+  loadingStyle,
   result,
 }: {
   product: { handle: string; name: string; imageUrl: string };
@@ -33,6 +36,7 @@ export function TryOnSheet({
   lookSeconds: number | null;
   addressForm: ArabicAddressForm;
   loadingSteps?: string[];
+  loadingStyle?: 'steps' | 'pulse' | 'bar';
   result?: ResultControls;
 }) {
   const { t, locale } = useTryOnLocale();
@@ -86,6 +90,18 @@ export function TryOnSheet({
     void flow.generate();
   }, [firstTime, flow, keepOnPhone]);
 
+  const making = flow.step === 'generating';
+  const now = useNow(making);
+  const steps = loadingSteps?.length ? loadingSteps : copy.makingSteps;
+  const progress = makingProgress({
+    elapsedMs: flow.generationStartedAt === null ? 0 : now - flow.generationStartedAt,
+    estimateSeconds: lookSeconds,
+    stepCount: steps.length,
+  });
+  // One polite region for the whole sheet, so each step and the ready
+  // moment are announced once.
+  const announcement = making ? steps[progress.stepIndex] : flow.step === 'result' ? copy.lookReady : '';
+
   const variantLine = variantTitle && variantTitle !== 'Default Title' ? variantTitle.split(' / ').join(' · ') : '';
 
   if (privacyOpen) {
@@ -113,6 +129,9 @@ export function TryOnSheet({
 
   return (
     <div className="flex min-h-[calc(100dvh-3rem)] flex-col gap-5">
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
       <header className="flex items-center gap-3">
         {product.imageUrl && (
           // The store's own product image, already on Shopify's CDN.
@@ -160,12 +179,15 @@ export function TryOnSheet({
           />
         )}
 
-        {flow.step === 'generating' && (
-          <div role="status" aria-live="polite" aria-busy="true" className="flex flex-col items-center gap-3 py-10 text-center">
-            <span className="size-10 animate-spin rounded-full border-2 border-primary/30 border-t-primary motion-reduce:animate-none" aria-hidden="true" />
-            <p className="text-lg font-semibold text-foreground">{t.generatingTitle}</p>
-            <p className="text-sm text-muted-foreground">{(loadingSteps?.length ? loadingSteps : t.loadingSteps)[0]}</p>
-          </div>
+        {making && (
+          <SheetMakingStep
+            copy={copy}
+            photoDataUrl={flow.photoDataUrl}
+            piece={product}
+            steps={steps}
+            progress={progress}
+            loadingStyle={loadingStyle}
+          />
         )}
 
         {flow.step === 'result' && flow.job && (
@@ -195,4 +217,16 @@ export function TryOnSheet({
       </div>
     </div>
   );
+}
+
+/** The time now, ticking only while something is counting. */
+function useNow(active: boolean, everyMs = 500): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    // Until the first tick the clock reads before the start, which counts as the start.
+    const timer = window.setInterval(() => setNow(Date.now()), everyMs);
+    return () => window.clearInterval(timer);
+  }, [active, everyMs]);
+  return now;
 }

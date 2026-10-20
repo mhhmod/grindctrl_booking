@@ -6,8 +6,8 @@
    feminine forms; the masculine and neutral forms are written here, and
    neutral is the default until a store chooses, so a shopper is never
    addressed in a form the store did not pick. Every Arabic string here is
-   a draft except "إغلاق" and "صورتكِ", which the boards approve (the
-   neutral "صورتك" drops only the vowel mark). */
+   a draft except "إغلاق", "صورتكِ" and "إطلالتكِ جاهزة", which the boards
+   approve (the neutral "صورتك" drops only the vowel mark). */
 
 import type { TryOnLocale } from './i18n';
 
@@ -63,6 +63,12 @@ export type SheetCopy = {
   agreeNote: string;
   privacyNoticeLink: string;
   checking: string;
+  makingTitle: string;
+  /** Only while the estimate lasts; never zero or less. */
+  secondsLeft: (seconds: number) => string;
+  /** The default steps, used when the store wrote none of its own. */
+  makingSteps: string[];
+  lookReady: string;
 };
 
 const EN: SheetCopy = {
@@ -111,6 +117,10 @@ const EN: SheetCopy = {
   agreeNote: 'By continuing you agree to the',
   privacyNoticeLink: 'try-on privacy notice',
   checking: 'Checking your photo',
+  makingTitle: 'Making your look',
+  secondsLeft: (seconds) => `About ${seconds} ${seconds === 1 ? 'second' : 'seconds'} left`,
+  makingSteps: ['Reading your photo', 'Fitting the garment', 'Rendering your look'],
+  lookReady: 'Your look is ready',
 };
 
 /* Shared by every Arabic form: no second-person verb or pronoun. */
@@ -133,6 +143,13 @@ const AR_COMMON = {
   nothingSent: 'لم يُرسل أي شيء بعد.',
   consentRetention: 'لا تُحفظ بشكل دائم ولا تُنشر للعامة.',
   checking: 'جارٍ فحص الصورة',
+  // 1 and 2 have their own words, 3 to 10 the plural, 11 and up the singular.
+  secondsLeft: (seconds: number) =>
+    seconds === 1
+      ? 'تبقّت ثانية واحدة تقريباً'
+      : seconds === 2
+        ? 'تبقّت ثانيتان تقريباً'
+        : `تبقّت ${seconds} ${seconds <= 10 ? 'ثوانٍ' : 'ثانية'} تقريباً`,
 } as const;
 
 const AR: Record<ArabicAddressForm, SheetCopy> = {
@@ -167,6 +184,9 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     tryItOn: 'جربيها عليكِ',
     agreeNote: 'بالمتابعة توافقين على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
+    makingTitle: 'نجهّز إطلالتكِ',
+    makingSteps: ['نحلّل صورتكِ', 'نضبط القطعة عليكِ', 'نضع اللمسات الأخيرة على إطلالتكِ'],
+    lookReady: 'إطلالتكِ جاهزة',
   },
   men: {
     ...AR_COMMON,
@@ -199,6 +219,9 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     tryItOn: 'جربها عليك',
     agreeNote: 'بالمتابعة توافق على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
+    makingTitle: 'نجهّز إطلالتك',
+    makingSteps: ['نحلّل صورتك', 'نضبط القطعة عليك', 'نضع اللمسات الأخيرة على إطلالتك'],
+    lookReady: 'إطلالتك جاهزة',
   },
   everyone: {
     ...AR_COMMON,
@@ -231,6 +254,9 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     tryItOn: 'تجربة القطعة',
     agreeNote: 'المتابعة تعني الموافقة على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
+    makingTitle: 'نجهّز الإطلالة',
+    makingSteps: ['نحلّل الصورة', 'نضبط القطعة', 'نضع اللمسات الأخيرة على الإطلالة'],
+    lookReady: 'الإطلالة جاهزة',
   },
 };
 

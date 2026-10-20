@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TryOnLocaleProvider } from '../locale-provider';
 import type { PhoneStore } from '@/lib/try-on/phone-store';
@@ -18,6 +18,7 @@ vi.mock('../use-try-on-flow', async () => {
     useTryOnFlow: () => {
       const [step, setStep] = useState<'upload' | 'consent' | 'generating'>('upload');
       const [photoDataUrl, setPhoto] = useState<string | null>(null);
+      const [generationStartedAt, setStartedAt] = useState<number | null>(null);
       const selectPhoto = useCallback((dataUrl: string) => {
         flow.selected.push(dataUrl);
         setPhoto(dataUrl);
@@ -26,6 +27,7 @@ vi.mock('../use-try-on-flow', async () => {
       return {
         step,
         photoDataUrl,
+        generationStartedAt,
         sessionState: 'ready',
         sessionError: null,
         job: null,
@@ -38,6 +40,7 @@ vi.mock('../use-try-on-flow', async () => {
         },
         generate: async () => {
           flow.generated += 1;
+          setStartedAt(Date.now());
           setStep('generating');
         },
         retrySession: () => {},
@@ -85,7 +88,10 @@ beforeEach(async () => {
   flow.selected = [];
 });
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe('the v16 try-on sheet', () => {
   it('shows the product with the variant the shopper picked', async () => {
@@ -149,5 +155,42 @@ describe('the v16 try-on sheet', () => {
     renderSheet({ addressForm: 'women' }, 'ar');
     expect(await screen.findByRole('heading', { name: 'شاهديها عليكِ' })).toBeInTheDocument();
     expect(screen.getByText(/يستغرق الأمر حوالي 20 ثانية\./)).toBeInTheDocument();
+  });
+
+  it("makes the look on the store's own estimate, step by step, and says each step once", async () => {
+    renderSheet({ lookSeconds: 12 });
+    await pickPhoto();
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+    await act(async () => {});
+
+    expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
+    expect(screen.getByText('About 12 seconds left')).toBeInTheDocument();
+    const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
+    expect(live).toHaveTextContent('Reading your photo');
+    const steps = within(screen.getByRole('list'));
+    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
+    expect(steps.getByText('Fitting the garment').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
+    expect(live).toHaveTextContent('Fitting the garment');
+
+    // Past the estimate: the last step holds and the seconds go, never zero.
+    act(() => vi.advanceTimersByTime(30_000));
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
+    expect(steps.getByText('Rendering your look').closest('li')).toHaveAttribute('aria-current', 'step');
+  });
+
+  it("uses the store's own steps and loading style, and promises no time without an estimate", async () => {
+    renderSheet({ lookSeconds: null, loadingSteps: ['Measuring', 'Draping'], loadingStyle: 'bar' });
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(screen.getAllByText('Measuring').length).toBeGreaterThan(0);
   });
 });

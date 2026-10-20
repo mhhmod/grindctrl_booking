@@ -7,8 +7,15 @@ import { DEFAULT_ADDRESS_FORM, getSheetCopy, isArabicAddressForm, type SheetCopy
 const FORMS = ['women', 'men', 'everyone'] as const;
 
 function strings(copy: SheetCopy): string[] {
-  const { variantLine, photoTime, privacyBody, ...lines } = copy;
-  return [variantLine('Black · M'), photoTime(5), photoTime(20), ...privacyBody, ...Object.values(lines)];
+  const { variantLine, photoTime, secondsLeft, privacyBody, makingSteps, ...lines } = copy;
+  return [
+    variantLine('Black · M'),
+    ...[5, 20].map(photoTime),
+    ...[1, 2, 7, 12].map(secondsLeft),
+    ...privacyBody,
+    ...makingSteps,
+    ...Object.values(lines),
+  ];
 }
 
 describe('the try-on sheet copy', () => {
@@ -43,6 +50,13 @@ describe('the try-on sheet copy', () => {
     expect(ar.photoTime(10)).toBe('يستغرق الأمر حوالي 10 ثوانٍ.');
     expect(ar.photoTime(20)).toBe('يستغرق الأمر حوالي 20 ثانية.');
     expect(getSheetCopy('en').photoTime(20)).toBe('It takes about 20 seconds.');
+    expect([1, 2, 7, 12].map(ar.secondsLeft)).toEqual([
+      'تبقّت ثانية واحدة تقريباً',
+      'تبقّت ثانيتان تقريباً',
+      'تبقّت 7 ثوانٍ تقريباً',
+      'تبقّت 12 ثانية تقريباً',
+    ]);
+    expect([1, 12].map(getSheetCopy('en').secondsLeft)).toEqual(['About 1 second left', 'About 12 seconds left']);
   });
 
   it('gives every form every line', () => {

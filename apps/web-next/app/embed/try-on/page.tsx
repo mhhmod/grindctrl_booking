@@ -122,6 +122,7 @@ export default async function EmbedTryOnPage({
               // the copy speaks to everyone.
               addressForm={DEFAULT_ADDRESS_FORM}
               loadingSteps={settings.loadingSteps ?? undefined}
+              loadingStyle={settings.loadingStyle}
               result={{
                 showDownload: settings.showDownload,
                 showWhatsapp: settings.showWhatsapp,

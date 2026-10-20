@@ -59,6 +59,8 @@ export function useTryOnFlow({
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [generationPhase, setGenerationPhase] = useState<GenerationPhase>('session-requested');
   const [isSlowGeneration, setIsSlowGeneration] = useState(false);
+  /** When the shopper tapped to make this look, for the sheet's countdown. */
+  const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
   const [job, setJob] = useState<TryOnJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   /* Set when the store cannot make looks right now (out of looks, plan
@@ -154,6 +156,7 @@ export function useTryOnFlow({
 
   const generate = useCallback(async () => {
     setStep('generating');
+    setGenerationStartedAt(Date.now());
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setError(null);
@@ -282,6 +285,7 @@ export function useTryOnFlow({
     setUnavailable(false);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
+    setGenerationStartedAt(null);
     setStep('upload');
   }, []);
 
@@ -290,6 +294,7 @@ export function useTryOnFlow({
     photoDataUrl,
     generationPhase,
     isSlowGeneration,
+    generationStartedAt,
     job,
     error,
     unavailable,
