@@ -46,12 +46,13 @@
     return root.dataset.variant || '';
   }
 
-  /* The picked variant's own name ("Black / M") for the sheet's header,
-     from the store's product JSON in the shopper's language. Empty when it
-     cannot be read; the header then shows the product alone. */
-  function variantTitle(root, variantId) {
+  /* The product as this page shows it, from the store's own product JSON
+     in the shopper's language and currency: its options, and its variants
+     with their names, availability and prices (item 19). The sheet shows
+     them on the look; null when it cannot be read. */
+  function fetchStoreProduct(root) {
     var handle = root.dataset.product || '';
-    if (!handle || !variantId) return Promise.resolve('');
+    if (!handle) return Promise.resolve(null);
     var base = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
     return fetch(base + 'products/' + encodeURIComponent(handle) + '.js', {
       credentials: 'same-origin',
@@ -59,13 +60,31 @@
     })
       .then(function (res) { return res.ok ? res.json() : null; })
       .then(function (product) {
-        var variants = (product && product.variants) || [];
-        for (var i = 0; i < variants.length; i++) {
-          if (String(variants[i].id) === String(variantId)) return variants[i].title || '';
-        }
-        return '';
+        if (!product || !Array.isArray(product.variants)) return null;
+        var options = (Array.isArray(product.options) ? product.options : []).map(function (option) {
+          return typeof option === 'string' ? option : (option && option.name) || '';
+        });
+        var variants = product.variants.slice(0, 250).map(function (v) {
+          return {
+            id: v.id,
+            title: v.title || '',
+            options: [v.option1, v.option2, v.option3].filter(function (value) { return typeof value === 'string'; }),
+            available: v.available === true,
+            price: typeof v.price === 'number' ? v.price : null
+          };
+        });
+        var currency = window.Shopify && window.Shopify.currency && window.Shopify.currency.active;
+        return { options: options, variants: variants, currency: typeof currency === 'string' ? currency : null };
       })
-      .catch(function () { return ''; });
+      .catch(function () { return null; });
+  }
+
+  function findVariant(product, variantId) {
+    var variants = (product && product.variants) || [];
+    for (var i = 0; i < variants.length; i++) {
+      if (String(variants[i].id) === String(variantId)) return variants[i];
+    }
+    return null;
   }
 
   /* After an add, the theme's cart count follows: Dawn-style themes hear
@@ -391,6 +410,12 @@
     applyConfig(root, btn, locale);
 
     var sheet = null;
+    // Read once per page, on the first tap that opens the sheet.
+    var storeProduct = null;
+    function loadStoreProduct() {
+      if (!storeProduct) storeProduct = fetchStoreProduct(root);
+      return storeProduct;
+    }
 
     btn.addEventListener('click', function () {
       // Reopening the sheet resumes whatever it held, a look included.
@@ -418,10 +443,11 @@
 
       Promise.all([
         getStorefrontContext(root, nonce, variant),
-        asSheet ? variantTitle(root, variant) : Promise.resolve('')
+        asSheet ? loadStoreProduct() : Promise.resolve(null)
       ]).then(function (ready) {
       var storefrontContext = ready[0];
-      var pickedTitle = ready[1];
+      var picked = findVariant(ready[1], variant);
+      var pickedTitle = (picked && picked.title) || '';
 
       var garment = root.dataset.garment || '';
       if (garment.indexOf('//') === 0) garment = 'https:' + garment;
@@ -484,6 +510,14 @@
           window.location.href = '/checkout';
           return;
         }
+        if (asSheet && event.data.type === 'grindctrl-tryon:product-request') {
+          loadStoreProduct().then(function (product) {
+            if (product && frame.contentWindow) {
+              frame.contentWindow.postMessage({ type: 'grindctrl-tryon:product', product: product, variant: variant }, embedOrigin);
+            }
+          });
+          return;
+        }
         // The sheet sizes the frame itself; only the inline frame follows its content.
         if (
           !asSheet &&
@@ -513,7 +547,14 @@
               embedOrigin
             );
           };
-          var variantId = parseInt(variant, 10);
+          // The sheet may name another size of this same product; anything
+          // else adds the variant the shopper tapped with.
+          var asked = asSheet && /^\d{1,20}$/.test(String(event.data.variantId || '')) ? String(event.data.variantId) : '';
+          var choose = asked && asked !== String(variant)
+            ? loadStoreProduct().then(function (product) { return findVariant(product, asked) ? asked : variant; })
+            : Promise.resolve(variant);
+          choose.then(function (chosen) {
+          var variantId = parseInt(chosen, 10);
           if (!variantId) return fail();
           fetch('/cart/add.js', {
             method: 'POST',
@@ -544,6 +585,7 @@
               );
             })
             .catch(function () { fail(); });
+          });
         }
       });
 

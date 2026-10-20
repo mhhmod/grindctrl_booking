@@ -174,6 +174,55 @@ describe('the v16 try-on sheet', () => {
     expect(window.location.href).toBe(href);
   });
 
+  it("hands the sheet the store's own product, in the shopper's currency", async () => {
+    stubFetch(['v16_tryon'], {
+      options: [{ name: 'Colour', position: 1, values: ['Black', 'Sand'] }, 'Size'],
+      variants: [
+        { id: 456, title: 'Black / M', option1: 'Black', option2: 'M', option3: null, available: true, price: 325000 },
+        { id: 457, title: 'Black / L', option1: 'Black', option2: 'L', option3: null, available: false, price: 325000 },
+      ],
+    });
+    (window as { Shopify?: unknown }).Shopify = { currency: { active: 'EGP' } };
+    const { frame } = await openSheet();
+    const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+
+    fromFrame(frame, { type: 'grindctrl-tryon:product-request' });
+
+    await waitFor(() => expect(posted).toHaveBeenCalled());
+    expect(posted).toHaveBeenCalledWith(
+      {
+        type: 'grindctrl-tryon:product',
+        variant: '456',
+        product: {
+          options: ['Colour', 'Size'],
+          currency: 'EGP',
+          variants: [
+            { id: 456, title: 'Black / M', options: ['Black', 'M'], available: true, price: 325000 },
+            { id: 457, title: 'Black / L', options: ['Black', 'L'], available: false, price: 325000 },
+          ],
+        },
+      },
+      'https://grindctrl.cloud',
+    );
+    delete (window as { Shopify?: unknown }).Shopify;
+  });
+
+  it('adds the size picked on the look, but only a variant of this product', async () => {
+    const calls = stubFetch(['v16_tryon']);
+    const { frame } = await openSheet();
+    const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+    const adds = () => calls.filter((call) => call.url === '/cart/add.js').map((call) => JSON.parse(call.body!).items[0].id);
+
+    fromFrame(frame, { type: 'grindctrl-tryon:add-to-cart', variantId: '123' });
+    await waitFor(() => expect(adds()).toEqual([123]));
+
+    fromFrame(frame, { type: 'grindctrl-tryon:add-to-cart', variantId: '999' });
+    await waitFor(() => expect(adds()).toEqual([123, 456]));
+    fromFrame(frame, { type: 'grindctrl-tryon:add-to-cart', variantId: '1 OR 1' });
+    await waitFor(() => expect(adds()).toEqual([123, 456, 456]));
+    await waitFor(() => expect(posted).toHaveBeenCalledTimes(3));
+  });
+
   it('swipes closed from the handle, and springs back from a short pull', async () => {
     stubFetch(['v16_tryon']);
     const { sheet } = await openSheet();

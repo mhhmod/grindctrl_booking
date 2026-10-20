@@ -11,12 +11,13 @@ import { TryOnSheet } from './try-on-sheet';
 /* The sheet's photo, check and consent steps (02-try-on.md) over the same
    flow today's embed uses. The flow itself is covered by try-on-demo's
    tests; here it records what the sheet asks of it. */
-const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[] }));
+const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false }));
 vi.mock('../use-try-on-flow', async () => {
   const { useCallback, useState } = await import('react');
   return {
     useTryOnFlow: () => {
-      const [step, setStep] = useState<'upload' | 'consent' | 'generating'>('upload');
+      const [step, setStep] = useState<'upload' | 'consent' | 'generating' | 'result'>('upload');
+      const [job, setJob] = useState<Record<string, unknown> | null>(null);
       const [photoDataUrl, setPhoto] = useState<string | null>(null);
       const [generationStartedAt, setStartedAt] = useState<number | null>(null);
       const selectPhoto = useCallback((dataUrl: string) => {
@@ -30,7 +31,7 @@ vi.mock('../use-try-on-flow', async () => {
         generationStartedAt,
         sessionState: 'ready',
         sessionError: null,
-        job: null,
+        job,
         error: null,
         unavailable: false,
         selectPhoto,
@@ -41,6 +42,11 @@ vi.mock('../use-try-on-flow', async () => {
         generate: async () => {
           flow.generated += 1;
           setStartedAt(Date.now());
+          if (flow.finish) {
+            setJob({ jobId: 'job-1', productId: 'layla-abaya', resultImageUrl: 'data:image/png;base64,bG9vaw==', meta: { runtime: 'live' } });
+            setStep('result');
+            return;
+          }
           setStep('generating');
         },
         retrySession: () => {},
@@ -86,6 +92,7 @@ beforeEach(async () => {
   phone.store = real.createPhoneStore(real.memoryBackend());
   flow.generated = 0;
   flow.selected = [];
+  flow.finish = false;
 });
 
 afterEach(() => {
@@ -192,5 +199,41 @@ describe('the v16 try-on sheet', () => {
     expect(screen.queryByText(/seconds? left/)).toBeNull();
     expect(screen.queryByRole('list')).toBeNull();
     expect(screen.getAllByText('Measuring').length).toBeGreaterThan(0);
+  });
+
+  it("shows the look with the store's own product, handed over by the page that holds the sheet", async () => {
+    flow.finish = true;
+    renderSheet({ variantId: '456' });
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source: window,
+          data: {
+            type: 'grindctrl-tryon:product',
+            product: {
+              options: ['Colour', 'Size'],
+              currency: 'EGP',
+              variants: [
+                { id: 456, title: 'Black / M', options: ['Black', 'M'], available: true, price: 325000 },
+                { id: 457, title: 'Black / L', options: ['Black', 'L'], available: true, price: 325000 },
+              ],
+            },
+          },
+        }),
+      );
+      // Anything else claiming to be the product is ignored.
+      window.dispatchEvent(new MessageEvent('message', { source: null, data: { type: 'grindctrl-tryon:product', product: { variants: [{ id: 1 }] } } }));
+    });
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Your look is ready' })).toBeInTheDocument();
+    expect(screen.getByText(/Layla Embroidered Abaya · EGP/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'M' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('button', { name: 'Add to cart · Black, M' })).toBeInTheDocument();
+    // The product header gives way to the look's own.
+    expect(screen.queryByText('Black · M')).toBeNull();
+    const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
+    expect(live).toHaveTextContent('Your look is ready');
   });
 });

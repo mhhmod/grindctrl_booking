@@ -6,8 +6,9 @@
    feminine forms; the masculine and neutral forms are written here, and
    neutral is the default until a store chooses, so a shopper is never
    addressed in a form the store did not pick. Every Arabic string here is
-   a draft except "إغلاق", "صورتكِ" and "إطلالتكِ جاهزة", which the boards
-   approve (the neutral "صورتك" drops only the vowel mark). */
+   a draft except the ones the boards approve: "إغلاق", "صورتكِ",
+   "إطلالتكِ جاهزة", "مقارنة", "الإطلالة", "معاينة بالذكاء الاصطناعي" and
+   "احفظي" (the neutral "صورتك" drops only the vowel mark). */
 
 import type { TryOnLocale } from './i18n';
 
@@ -69,6 +70,19 @@ export type SheetCopy = {
   /** The default steps, used when the store wrote none of its own. */
   makingSteps: string[];
   lookReady: string;
+  compare: string;
+  viewLook: string;
+  originalPhotoAlt: string;
+  lookAlt: (product: string) => string;
+  aiPreview: string;
+  changePhoto: string;
+  /** "Add to cart · Black, M"; the plain label for a product without variants. */
+  addToCart: (variant: string) => string;
+  adding: string;
+  soldOut: string;
+  soldOutOption: (value: string) => string;
+  savePhoto: string;
+  disclaimer: string;
 };
 
 const EN: SheetCopy = {
@@ -121,6 +135,18 @@ const EN: SheetCopy = {
   secondsLeft: (seconds) => `About ${seconds} ${seconds === 1 ? 'second' : 'seconds'} left`,
   makingSteps: ['Reading your photo', 'Fitting the garment', 'Rendering your look'],
   lookReady: 'Your look is ready',
+  compare: 'Compare',
+  viewLook: 'Look',
+  originalPhotoAlt: 'Your original photo',
+  lookAlt: (product) => `You wearing the ${product}`,
+  aiPreview: 'AI preview',
+  changePhoto: 'Change photo',
+  addToCart: (variant) => (variant ? `Add to cart · ${variant}` : 'Add to cart'),
+  adding: 'Adding to cart',
+  soldOut: 'Sold out',
+  soldOutOption: (value) => `${value}, sold out`,
+  savePhoto: 'Save photo',
+  disclaimer: 'This preview is a visual guide, not an exact sizing guarantee. Colours may vary slightly.',
 };
 
 /* Shared by every Arabic form: no second-person verb or pronoun. */
@@ -150,6 +176,13 @@ const AR_COMMON = {
       : seconds === 2
         ? 'تبقّت ثانيتان تقريباً'
         : `تبقّت ${seconds} ${seconds <= 10 ? 'ثوانٍ' : 'ثانية'} تقريباً`,
+  compare: 'مقارنة',
+  viewLook: 'الإطلالة',
+  aiPreview: 'معاينة بالذكاء الاصطناعي',
+  adding: 'جارٍ الإضافة إلى السلة',
+  soldOut: 'نفدت الكمية',
+  soldOutOption: (value: string) => `${value}، نفدت الكمية`,
+  disclaimer: 'هذه المعاينة دليل بصري وليست ضماناً دقيقاً للمقاس. قد تختلف الألوان قليلاً.',
 } as const;
 
 const AR: Record<ArabicAddressForm, SheetCopy> = {
@@ -187,6 +220,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     makingTitle: 'نجهّز إطلالتكِ',
     makingSteps: ['نحلّل صورتكِ', 'نضبط القطعة عليكِ', 'نضع اللمسات الأخيرة على إطلالتكِ'],
     lookReady: 'إطلالتكِ جاهزة',
+    originalPhotoAlt: 'صورتكِ الأصلية',
+    lookAlt: (product) => `أنتِ ترتدين ${product}`,
+    changePhoto: 'غيّري الصورة',
+    addToCart: (variant) => (variant ? `أضيفي إلى السلة · ${variant}` : 'أضيفي إلى السلة'),
+    savePhoto: 'احفظي',
   },
   men: {
     ...AR_COMMON,
@@ -222,6 +260,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     makingTitle: 'نجهّز إطلالتك',
     makingSteps: ['نحلّل صورتك', 'نضبط القطعة عليك', 'نضع اللمسات الأخيرة على إطلالتك'],
     lookReady: 'إطلالتك جاهزة',
+    originalPhotoAlt: 'صورتك الأصلية',
+    lookAlt: (product) => `أنت ترتدي ${product}`,
+    changePhoto: 'غيّر الصورة',
+    addToCart: (variant) => (variant ? `أضف إلى السلة · ${variant}` : 'أضف إلى السلة'),
+    savePhoto: 'احفظ',
   },
   everyone: {
     ...AR_COMMON,
@@ -257,6 +300,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     makingTitle: 'نجهّز الإطلالة',
     makingSteps: ['نحلّل الصورة', 'نضبط القطعة', 'نضع اللمسات الأخيرة على الإطلالة'],
     lookReady: 'الإطلالة جاهزة',
+    originalPhotoAlt: 'الصورة الأصلية',
+    lookAlt: (product) => `إطلالة، ${product}`,
+    changePhoto: 'تغيير الصورة',
+    addToCart: (variant) => (variant ? `إضافة إلى السلة · ${variant}` : 'إضافة إلى السلة'),
+    savePhoto: 'حفظ الصورة',
   },
 };
 

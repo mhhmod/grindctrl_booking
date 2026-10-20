@@ -3,20 +3,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import { useTryOnLocale } from '../locale-provider';
-import { TryOnResult, type ResultControls } from '../try-on-result';
+import type { ResultControls } from '../try-on-result';
 import { useTryOnFlow } from '../use-try-on-flow';
 import { SheetPhotoStep } from './sheet-photo-step';
 import { SheetCheckStep } from './sheet-check-step';
 import { SheetMakingStep } from './sheet-making-step';
+import { SheetResultStep } from './sheet-result-step';
 import { makingProgress } from '@/lib/try-on/making-progress';
+import { parseStoreProduct, type StoreProduct } from '@/lib/try-on/store-product';
 import { phoneStore } from '@/lib/try-on/phone-store';
 import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
 
 /* The v16 try-on inside the sheet (02-try-on.md), for a store whose
    v16_tryon flag is on: the photo step, the on-phone check and the
-   consent, then making the look; the result is today's until part four
-   rebuilds it. It makes a look exactly as today's embed does, through the
-   same flow. */
+   consent, making the look, and the look itself. It makes a look exactly
+   as today's embed does, through the same flow. */
 export function TryOnSheet({
   product,
   variantId,
@@ -49,6 +50,7 @@ export function TryOnSheet({
     t,
   });
   const { selectPhoto } = flow;
+  const storeProduct = useStoreProduct();
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [firstTime, setFirstTime] = useState(true);
@@ -132,17 +134,19 @@ export function TryOnSheet({
       <p role="status" className="sr-only">
         {announcement}
       </p>
-      <header className="flex items-center gap-3">
-        {product.imageUrl && (
-          // The store's own product image, already on Shopify's CDN.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.imageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover" />
-        )}
-        <div className="min-w-0">
-          <p className="truncate text-base font-semibold text-foreground">{product.name}</p>
-          {variantLine && <p className="truncate text-sm text-muted-foreground">{copy.variantLine(variantLine)}</p>}
-        </div>
-      </header>
+      {flow.step !== 'result' && (
+        <header className="flex items-center gap-3">
+          {product.imageUrl && (
+            // The store's own product image, already on Shopify's CDN.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={product.imageUrl} alt="" className="size-14 shrink-0 rounded-lg object-cover" />
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold text-foreground">{product.name}</p>
+            {variantLine && <p className="truncate text-sm text-muted-foreground">{copy.variantLine(variantLine)}</p>}
+          </div>
+        </header>
+      )}
 
       {flow.sessionState === 'error' && (
         <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
@@ -191,7 +195,19 @@ export function TryOnSheet({
         )}
 
         {flow.step === 'result' && flow.job && (
-          <TryOnResult job={flow.job} productName={product.name} shopMode controls={result} onReset={flow.reset} />
+          <SheetResultStep
+            copy={copy}
+            t={t}
+            locale={locale}
+            job={flow.job}
+            photoDataUrl={flow.photoDataUrl}
+            productName={product.name}
+            storeProduct={storeProduct}
+            triedVariantId={variantId}
+            fallbackVariantTitle={variantTitle}
+            controls={result}
+            onChangePhoto={flow.reset}
+          />
         )}
 
         {flow.step === 'error' && (
@@ -229,4 +245,22 @@ function useNow(active: boolean, everyMs = 500): number {
     return () => window.clearInterval(timer);
   }, [active, everyMs]);
   return now;
+}
+
+/** The store's own product, asked of the loader once (item 19). Only the
+ *  page holding this frame may answer, and what it sends is checked field
+ *  by field; it is shown, never trusted for anything else. */
+function useStoreProduct(): StoreProduct | null {
+  const [product, setProduct] = useState<StoreProduct | null>(null);
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || event.data?.type !== 'grindctrl-tryon:product') return;
+      const parsed = parseStoreProduct(event.data.product);
+      if (parsed) setProduct(parsed);
+    };
+    window.addEventListener('message', onMessage);
+    if (window.parent !== window) window.parent.postMessage({ type: 'grindctrl-tryon:product-request' }, '*');
+    return () => window.removeEventListener('message', onMessage);
+  }, []);
+  return product;
 }

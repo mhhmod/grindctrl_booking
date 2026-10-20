@@ -7,9 +7,13 @@ import { DEFAULT_ADDRESS_FORM, getSheetCopy, isArabicAddressForm, type SheetCopy
 const FORMS = ['women', 'men', 'everyone'] as const;
 
 function strings(copy: SheetCopy): string[] {
-  const { variantLine, photoTime, secondsLeft, privacyBody, makingSteps, ...lines } = copy;
+  const { variantLine, photoTime, secondsLeft, privacyBody, makingSteps, lookAlt, addToCart, soldOutOption, ...lines } = copy;
   return [
     variantLine('Black · M'),
+    lookAlt('Layla Embroidered Abaya'),
+    addToCart('Black, M'),
+    addToCart(''),
+    soldOutOption('L'),
     ...[5, 20].map(photoTime),
     ...[1, 2, 7, 12].map(secondsLeft),
     ...privacyBody,
