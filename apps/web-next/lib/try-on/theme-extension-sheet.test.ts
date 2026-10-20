@@ -1,0 +1,200 @@
+// @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fireEvent, waitFor } from '@testing-library/dom';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/* The v16 try-on sheet (02-try-on.md), for a store whose v16_tryon flag is
+   on: the try-on opens over the page instead of inline, closes every way a
+   shopper expects, keeps the look while closed, and adds to the cart
+   without leaving the look. */
+const productAsset = readFileSync(
+  path.resolve(process.cwd(), '../grindctrl-tryon/extensions/tryon-block/assets/tryon.js'),
+  'utf8',
+);
+
+const PAGE = `
+  <main id="theme-main">
+    <section class="shopify-section">
+      <form action="/cart/add" method="post">
+        <input type="hidden" name="id" value="456">
+      </form>
+      <div class="gc-tryon-root gc-tryon-root--pending"
+        data-product="layla-abaya"
+        data-title="Layla Embroidered Abaya"
+        data-garment="//cdn.shopify.com/s/files/garment.png"
+        data-variant="123"
+        data-shop="demo.myshopify.com"
+        data-locale="en">
+        <button type="button" class="gc-tryon-btn gc-tryon-btn--loading" aria-busy="true">
+          <span class="gc-tryon-label">Try it on</span>
+        </button>
+      </div>
+    </section>
+  </main>
+  <span data-cart-count>0</span>`;
+
+function stubFetch(features: string[]) {
+  const calls: Array<{ url: string; body?: string }> = [];
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, body: typeof init?.body === 'string' ? init.body : undefined });
+      if (url.includes('/apps/grindctrl/config')) {
+        return new Response(JSON.stringify({ tryOn: 'live', reason: null, radiusPx: 12, features }), { status: 200 });
+      }
+      if (url.includes('/apps/grindctrl/try-on-context')) {
+        const nonce = new URL(url, 'https://shop.example').searchParams.get('nonce');
+        return new Response(JSON.stringify({ token: 'signed-context', nonce }), { status: 200 });
+      }
+      if (url === '/cart/add.js') {
+        return new Response(JSON.stringify({ items: [{ id: 456, variant_title: 'Black / M' }] }), { status: 200 });
+      }
+      if (url === '/cart.js') return new Response(JSON.stringify({ item_count: 3 }), { status: 200 });
+      return new Response('{}', { status: 404 });
+    }),
+  );
+  return calls;
+}
+
+async function openSheet() {
+  window.eval(productAsset);
+  const root = document.querySelector('.gc-tryon-root')!;
+  await waitFor(() => expect(root.classList.contains('gc-tryon-root--pending')).toBe(false));
+  const button = document.querySelector<HTMLButtonElement>('.gc-tryon-btn')!;
+  fireEvent.click(button);
+  await waitFor(() => expect(document.querySelector('.gc-tryon-sheet')).not.toBeNull());
+  const sheet = document.querySelector<HTMLElement>('.gc-tryon-sheet')!;
+  const frame = sheet.querySelector('iframe')!;
+  return { root, button, sheet, frame };
+}
+
+function fromFrame(frame: HTMLIFrameElement, data: unknown) {
+  window.dispatchEvent(new MessageEvent('message', { data, origin: 'https://grindctrl.cloud', source: frame.contentWindow }));
+}
+
+describe('the v16 try-on sheet', () => {
+  beforeEach(() => {
+    document.body.innerHTML = PAGE;
+    window.history.replaceState(null, '', '/products/layla-abaya');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    document.documentElement.style.overflow = '';
+  });
+
+  it('opens the try-on over the page, with the camera and the variant the shopper picked', async () => {
+    const calls = stubFetch(['v16_tryon']);
+    const { root, sheet, frame } = await openSheet();
+
+    expect(sheet.parentElement).toBe(document.body);
+    expect(sheet).toHaveAttribute('role', 'dialog');
+    expect(sheet).toHaveAttribute('aria-modal', 'true');
+    expect(sheet).toHaveAttribute('aria-label', 'Layla Embroidered Abaya');
+    expect(sheet.hidden).toBe(false);
+    expect(root.querySelector('iframe')).toBeNull();
+    expect(frame.getAttribute('allow')).toBe('camera');
+    expect(frame.src).toContain('variant=456');
+    expect(frame.src).toContain('sheet=1');
+    expect(calls.find((call) => call.url.includes('try-on-context'))?.url).toContain('variant=456');
+    expect(sheet.querySelector('.gc-tryon-sheet__close')).toHaveAttribute('aria-label', 'Close');
+    expect(sheet.style.getPropertyValue('--gc-sheet-radius')).toBe('12px');
+  });
+
+  it('keeps the store out of reach while open, and gives focus back on close', async () => {
+    stubFetch(['v16_tryon']);
+    const { button, sheet, frame } = await openSheet();
+
+    expect(document.activeElement).toBe(frame);
+    expect((document.getElementById('theme-main') as HTMLElement & { inert: boolean }).inert).toBe(true);
+    expect(document.documentElement.style.overflow).toBe('hidden');
+
+    fireEvent.click(sheet.querySelector('.gc-tryon-sheet__close')!);
+
+    expect(sheet.hidden).toBe(true);
+    expect((document.getElementById('theme-main') as HTMLElement & { inert: boolean }).inert).toBe(false);
+    expect(document.documentElement.style.overflow).toBe('');
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('closes on the backdrop, on Escape, on the back gesture and when the try-on asks', async () => {
+    stubFetch(['v16_tryon']);
+    const { button, sheet, frame } = await openSheet();
+
+    fireEvent.click(sheet.querySelector('.gc-tryon-sheet__backdrop')!);
+    expect(sheet.hidden).toBe(true);
+
+    fireEvent.click(button);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(sheet.hidden).toBe(true);
+
+    fireEvent.click(button);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(sheet.hidden).toBe(true);
+
+    fireEvent.click(button);
+    fromFrame(frame, { type: 'grindctrl-tryon:close' });
+    expect(sheet.hidden).toBe(true);
+  });
+
+  it('keeps the same try-on when reopened, so a look is never thrown away', async () => {
+    stubFetch(['v16_tryon']);
+    const { button, sheet, frame } = await openSheet();
+    fireEvent.click(sheet.querySelector('.gc-tryon-sheet__close')!);
+    fireEvent.click(button);
+
+    expect(sheet.hidden).toBe(false);
+    expect(document.querySelectorAll('.gc-tryon-sheet')).toHaveLength(1);
+    expect(sheet.querySelector('iframe')).toBe(frame);
+  });
+
+  it('adds the picked variant without leaving, says what it added and refreshes the cart count', async () => {
+    const calls = stubFetch(['v16_tryon']);
+    const { frame } = await openSheet();
+    const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+    const href = window.location.href;
+
+    fromFrame(frame, { type: 'grindctrl-tryon:add-to-cart' });
+
+    await waitFor(() =>
+      expect(posted).toHaveBeenCalledWith(
+        { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: 'Black / M' },
+        'https://grindctrl.cloud',
+      ),
+    );
+    expect(JSON.parse(calls.find((call) => call.url === '/cart/add.js')!.body!)).toEqual({ items: [{ id: 456, quantity: 1 }] });
+    await waitFor(() => expect(document.querySelector('[data-cart-count]')).toHaveTextContent('3'));
+    expect(window.location.href).toBe(href);
+  });
+
+  it('swipes closed from the handle, and springs back from a short pull', async () => {
+    stubFetch(['v16_tryon']);
+    const { sheet } = await openSheet();
+    const bar = sheet.querySelector('.gc-tryon-sheet__bar')!;
+
+    fireEvent.pointerDown(bar, { clientY: 100, pointerId: 1 });
+    fireEvent.pointerMove(bar, { clientY: 140, pointerId: 1 });
+    fireEvent.pointerUp(bar, { clientY: 140, pointerId: 1 });
+    expect(sheet.hidden).toBe(false);
+
+    fireEvent.pointerDown(bar, { clientY: 100, pointerId: 1 });
+    fireEvent.pointerUp(bar, { clientY: 260, pointerId: 1 });
+    expect(sheet.hidden).toBe(true);
+  });
+
+  it('opens inline, as today, for a store without the flag', async () => {
+    stubFetch([]);
+    window.eval(productAsset);
+    const root = document.querySelector('.gc-tryon-root')!;
+    await waitFor(() => expect(root.classList.contains('gc-tryon-root--pending')).toBe(false));
+    fireEvent.click(document.querySelector('.gc-tryon-btn')!);
+
+    await waitFor(() => expect(root.querySelector('iframe')).not.toBeNull());
+    expect(document.querySelector('.gc-tryon-sheet')).toBeNull();
+    expect(root.querySelector('iframe')!.src).toContain('variant=123');
+    expect(root.querySelector('iframe')!.src).not.toContain('sheet=1');
+  });
+});
