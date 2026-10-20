@@ -99,7 +99,7 @@ describe('the v16 try-on sheet', () => {
     expect(sheet).toHaveAttribute('aria-label', 'Layla Embroidered Abaya');
     expect(sheet.hidden).toBe(false);
     expect(root.querySelector('iframe')).toBeNull();
-    expect(frame.getAttribute('allow')).toBe('camera');
+    expect(frame.getAttribute('allow')).toBe('camera; clipboard-write');
     expect(frame.src).toContain('variant=456');
     expect(frame.src).toContain('sheet=1');
     expect(new URL(frame.src).searchParams.get('variantTitle')).toBe('Black / M');
@@ -243,6 +243,16 @@ describe('the v16 try-on sheet', () => {
     const { frame } = await openSheet();
     expect(frame.src).toContain('variant=456');
     expect(frame.src).not.toContain('variantTitle');
+  });
+
+  it('opens the try-on by itself, once, for a shopper sent here from an in-app browser', async () => {
+    stubFetch(['v16_tryon']);
+    window.history.replaceState(null, '', '/products/layla-abaya?variant=456&gc_tryon=1');
+    window.eval(productAsset);
+
+    await waitFor(() => expect(document.querySelector('.gc-tryon-sheet')).not.toBeNull());
+    expect(document.querySelector<HTMLElement>('.gc-tryon-sheet')!.hidden).toBe(false);
+    expect(window.location.search).toBe('?variant=456');
   });
 
   it('opens inline, as today, for a store without the flag', async () => {

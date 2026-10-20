@@ -331,6 +331,21 @@
     if (root.parentNode) root.parentNode.removeChild(root);
   }
 
+  /* A shopper sent here from an in-app browser's "Open in my browser"
+     (TryOn-More) lands with gc_tryon=1: the try-on opens again by itself,
+     once, and the flag leaves the address so a reload does not repeat it. */
+  function reopenFromLink(root, btn) {
+    var params;
+    try { params = new URLSearchParams(window.location.search); } catch (_) { return; }
+    if (params.get('gc_tryon') !== '1' || root !== document.querySelector('.gc-tryon-root')) return;
+    params.delete('gc_tryon');
+    try {
+      var rest = params.toString();
+      window.history.replaceState(window.history.state, '', window.location.pathname + (rest ? '?' + rest : '') + window.location.hash);
+    } catch (_) { /* the try-on still opens */ }
+    window.setTimeout(function () { btn.click(); }, 0);
+  }
+
   function getStorefrontContext(root, nonce, variant) {
     var url =
       '/apps/grindctrl/try-on-context?product=' +
@@ -371,7 +386,10 @@
           return;
         }
         if (!cfg) return;
-        if (v16Sheet(cfg)) root.dataset.sheet = '1';
+        if (v16Sheet(cfg)) {
+          root.dataset.sheet = '1';
+          reopenFromLink(root, btn);
+        }
         if (root.dataset.labelSource !== 'theme' && cfg.buttonLabel) {
           var labelEl = btn.querySelector('.gc-tryon-label');
           if (labelEl) { labelEl.textContent = cfg.buttonLabel; }
@@ -488,8 +506,9 @@
       frame.src = src;
       frame.title = 'GrindCTRL Try-On';
       frame.className = asSheet ? 'gc-tryon-frame gc-tryon-frame--sheet' : 'gc-tryon-frame';
-      // Take a photo needs the camera inside the iframe.
-      if (asSheet) frame.setAttribute('allow', 'camera');
+      // Take a photo needs the camera inside the iframe, and the in-app
+      // browser note copies the store's link for iOS.
+      if (asSheet) frame.setAttribute('allow', 'camera; clipboard-write');
 
       var embedOrigin;
       try {

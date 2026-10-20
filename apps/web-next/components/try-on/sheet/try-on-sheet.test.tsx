@@ -236,4 +236,24 @@ describe('the v16 try-on sheet', () => {
     const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
     expect(live).toHaveTextContent('Your look is ready');
   });
+
+  it("notices an in-app browser and links to the store's own page for this variant", async () => {
+    const ua = Object.getOwnPropertyDescriptor(window.navigator, 'userAgent');
+    Object.defineProperty(window.navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36 Instagram 339.0.0.37.93 Android',
+      configurable: true,
+    });
+    Object.defineProperty(document, 'referrer', { value: 'https://maisonnoor.com/', configurable: true });
+    try {
+      renderSheet({ variantId: '456' });
+      expect(await screen.findByText(/You're in Instagram's browser/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Open in my browser' }).getAttribute('href')).toContain(
+        'maisonnoor.com/products/layla-abaya?variant=456&gc_tryon=1',
+      );
+    } finally {
+      if (ua) Object.defineProperty(window.navigator, 'userAgent', ua);
+      else delete (window.navigator as { userAgent?: string }).userAgent;
+      Object.defineProperty(document, 'referrer', { value: '', configurable: true });
+    }
+  });
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import { useTryOnLocale } from '../locale-provider';
 import type { ResultControls } from '../try-on-result';
@@ -11,6 +11,7 @@ import { SheetMakingStep } from './sheet-making-step';
 import { SheetResultStep } from './sheet-result-step';
 import { makingProgress } from '@/lib/try-on/making-progress';
 import { parseStoreProduct, type StoreProduct } from '@/lib/try-on/store-product';
+import { detectInAppBrowser, storePageUrl } from '@/lib/try-on/in-app-browser';
 import { phoneStore } from '@/lib/try-on/phone-store';
 import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
 
@@ -51,6 +52,11 @@ export function TryOnSheet({
   });
   const { selectPhoto } = flow;
   const storeProduct = useStoreProduct();
+  // Read in the browser only; the server render has neither.
+  const userAgent = useSyncExternalStore(noSubscription, () => navigator.userAgent, () => '');
+  const referrer = useSyncExternalStore(noSubscription, () => document.referrer, () => '');
+  const inApp = detectInAppBrowser(userAgent);
+  const storeLink = inApp ? storePageUrl({ referrer, shop, handle: product.handle, variantId }) : null;
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [firstTime, setFirstTime] = useState(true);
@@ -164,6 +170,8 @@ export function TryOnSheet({
             copy={copy}
             t={t}
             lookSeconds={lookSeconds}
+            inApp={inApp}
+            storeLink={storeLink}
             onPhoto={selectPhoto}
             onShowPrivacy={() => setPrivacyOpen(true)}
           />
@@ -263,4 +271,8 @@ function useStoreProduct(): StoreProduct | null {
     return () => window.removeEventListener('message', onMessage);
   }, []);
   return product;
+}
+
+function noSubscription(): () => void {
+  return () => {};
 }

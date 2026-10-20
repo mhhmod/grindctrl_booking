@@ -22,7 +22,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function photoStep(locale: 'en' | 'ar' = 'en', lookSeconds: number | null = 20) {
+function photoStep(
+  locale: 'en' | 'ar' = 'en',
+  lookSeconds: number | null = 20,
+  inApp: React.ComponentProps<typeof SheetPhotoStep>['inApp'] = null,
+) {
   const onPhoto = vi.fn();
   const onShowPrivacy = vi.fn();
   render(
@@ -30,6 +34,8 @@ function photoStep(locale: 'en' | 'ar' = 'en', lookSeconds: number | null = 20) 
       copy={getSheetCopy(locale)}
       t={getDictionary(locale)}
       lookSeconds={lookSeconds}
+      inApp={inApp}
+      storeLink={inApp ? 'https://maisonnoor.com/products/layla-abaya?variant=456&gc_tryon=1' : null}
       onPhoto={onPhoto}
       onShowPrivacy={onShowPrivacy}
     />,
@@ -99,6 +105,44 @@ describe('the photo step', () => {
     photoStep('ar', 20);
     expect(screen.getByRole('heading', { name: 'القطعة عليك' })).toBeInTheDocument();
     expect(screen.getByText(/يستغرق الأمر حوالي 20 ثانية\./)).toBeInTheDocument();
+  });
+});
+
+describe('the photo step inside an app', () => {
+  it("names the app, leads with the gallery, and keeps the camera as a second choice", () => {
+    photoStep('en', 20, { app: 'Instagram', os: 'ios' });
+    expect(screen.getByText(/You're in Instagram's browser, so the camera may not open here\./)).toBeInTheDocument();
+    const choices = screen.getAllByRole('button').map((button) => button.textContent ?? '');
+    expect(choices.findIndex((text) => text.startsWith('Choose a photo'))).toBeLessThan(choices.findIndex((text) => text.startsWith('Take a photo')));
+    expect(screen.getByText('Your piece, size and choices come with you')).toBeInTheDocument();
+  });
+
+  it("opens the store's page in Chrome on Android", () => {
+    photoStep('en', 20, { app: 'TikTok', os: 'android' });
+    const link = screen.getByRole('link', { name: 'Open in my browser' });
+    expect(link.getAttribute('href')).toMatch(/^intent:\/\/maisonnoor\.com\/products\/layla-abaya\?variant=456&gc_tryon=1#Intent;scheme=https;package=com\.android\.chrome;/);
+    expect(link).toHaveAttribute('target', '_top');
+  });
+
+  it('copies the link on iOS and says where to open it, or shows it to copy by hand', async () => {
+    const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    photoStep('en', 20, { app: 'Facebook', os: 'ios' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open in my browser' }));
+    expect(await screen.findByText('Link copied. In Facebook, open the menu at the top and choose to open it in your browser.')).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith('https://maisonnoor.com/products/layla-abaya?variant=456&gc_tryon=1');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open in my browser' }));
+    expect(await screen.findByRole('textbox', { name: 'Copy this link and open it in your browser' })).toHaveValue(
+      'https://maisonnoor.com/products/layla-abaya?variant=456&gc_tryon=1',
+    );
+  });
+
+  it('speaks Arabic inside the app too, with the app\'s own name', () => {
+    photoStep('ar', 20, { app: 'Instagram', os: 'android' });
+    expect(screen.getByText(/هذا متصفح Instagram، لذلك قد لا تفتح الكاميرا هنا\./)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'الفتح في المتصفح' })).toBeInTheDocument();
   });
 });
 

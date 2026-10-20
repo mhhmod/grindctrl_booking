@@ -83,6 +83,14 @@ export type SheetCopy = {
   soldOutOption: (value: string) => string;
   savePhoto: string;
   disclaimer: string;
+  /** Inside Instagram, Facebook or TikTok, named by app. */
+  inAppNote: (app: string) => string;
+  inAppChoose: string;
+  openInBrowser: string;
+  comesWithYou: string;
+  /** iOS cannot switch browsers from a page: the link is copied instead. */
+  linkCopied: (app: string) => string;
+  linkManual: string;
 };
 
 const EN: SheetCopy = {
@@ -147,6 +155,12 @@ const EN: SheetCopy = {
   soldOutOption: (value) => `${value}, sold out`,
   savePhoto: 'Save photo',
   disclaimer: 'This preview is a visual guide, not an exact sizing guarantee. Colours may vary slightly.',
+  inAppNote: (app) => `You're in ${app}'s browser, so the camera may not open here. A photo from your gallery works just as well.`,
+  inAppChoose: 'Choose a photo',
+  openInBrowser: 'Open in my browser',
+  comesWithYou: 'Your piece, size and choices come with you',
+  linkCopied: (app) => `Link copied. In ${app}, open the menu at the top and choose to open it in your browser.`,
+  linkManual: 'Copy this link and open it in your browser',
 };
 
 /* Shared by every Arabic form: no second-person verb or pronoun. */
@@ -183,6 +197,7 @@ const AR_COMMON = {
   soldOut: 'نفدت الكمية',
   soldOutOption: (value: string) => `${value}، نفدت الكمية`,
   disclaimer: 'هذه المعاينة دليل بصري وليست ضماناً دقيقاً للمقاس. قد تختلف الألوان قليلاً.',
+  inAppChoose: 'اختيار صورة',
 } as const;
 
 const AR: Record<ArabicAddressForm, SheetCopy> = {
@@ -225,6 +240,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     changePhoto: 'غيّري الصورة',
     addToCart: (variant) => (variant ? `أضيفي إلى السلة · ${variant}` : 'أضيفي إلى السلة'),
     savePhoto: 'احفظي',
+    inAppNote: (app) => `أنتِ في متصفح ${app}، لذلك قد لا تفتح الكاميرا هنا. صورة من معرض صوركِ تفي بالغرض تماماً.`,
+    openInBrowser: 'افتحي في متصفحكِ',
+    comesWithYou: 'قطعتكِ ومقاسكِ واختياراتكِ تنتقل معكِ',
+    linkCopied: (app) => `تم نسخ الرابط. في ${app}، افتحي القائمة في الأعلى واختاري الفتح في المتصفح.`,
+    linkManual: 'انسخي هذا الرابط وافتحيه في متصفحكِ',
   },
   men: {
     ...AR_COMMON,
@@ -265,6 +285,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     changePhoto: 'غيّر الصورة',
     addToCart: (variant) => (variant ? `أضف إلى السلة · ${variant}` : 'أضف إلى السلة'),
     savePhoto: 'احفظ',
+    inAppNote: (app) => `أنت في متصفح ${app}، لذلك قد لا تفتح الكاميرا هنا. صورة من معرض صورك تفي بالغرض تماماً.`,
+    openInBrowser: 'افتح في متصفحك',
+    comesWithYou: 'قطعتك ومقاسك واختياراتك تنتقل معك',
+    linkCopied: (app) => `تم نسخ الرابط. في ${app}، افتح القائمة في الأعلى واختر الفتح في المتصفح.`,
+    linkManual: 'انسخ هذا الرابط وافتحه في متصفحك',
   },
   everyone: {
     ...AR_COMMON,
@@ -305,6 +330,11 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     changePhoto: 'تغيير الصورة',
     addToCart: (variant) => (variant ? `إضافة إلى السلة · ${variant}` : 'إضافة إلى السلة'),
     savePhoto: 'حفظ الصورة',
+    inAppNote: (app) => `هذا متصفح ${app}، لذلك قد لا تفتح الكاميرا هنا. صورة من معرض الصور تفي بالغرض تماماً.`,
+    openInBrowser: 'الفتح في المتصفح',
+    comesWithYou: 'تنتقل القطعة والمقاس والاختيارات إلى المتصفح',
+    linkCopied: (app) => `تم نسخ الرابط. من القائمة في أعلى ${app}، يمكن اختيار الفتح في المتصفح.`,
+    linkManual: 'يمكن نسخ هذا الرابط وفتحه في المتصفح',
   },
 };
 
