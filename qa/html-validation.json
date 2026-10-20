@@ -659,8 +659,33 @@
     },
     {
       "lang": "en",
+      "time": 21.663016,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
       "time": 23.915601,
       "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 26.094058999999998,
+      "scene": "S01"
+    },
+    {
+      "lang": "en",
+      "time": 32.946667,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 34.348073,
+      "scene": "S02"
+    },
+    {
+      "lang": "en",
+      "time": 36.993967999999995,
+      "scene": "S02"
     },
     {
       "lang": "en",
@@ -705,6 +730,16 @@
     {
       "lang": "en",
       "time": 65.25968300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 68.691927,
+      "scene": "S03"
+    },
+    {
+      "lang": "en",
+      "time": 70.10768700000001,
       "scene": "S03"
     },
     {
@@ -809,6 +844,11 @@
     },
     {
       "lang": "en",
+      "time": 145.436939,
+      "scene": "S05"
+    },
+    {
+      "lang": "en",
       "time": 147.870227,
       "scene": "S05"
     },
@@ -835,6 +875,16 @@
     {
       "lang": "en",
       "time": 168.742109,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 170.740181,
+      "scene": "S06"
+    },
+    {
+      "lang": "en",
+      "time": 172.105896,
       "scene": "S06"
     },
     {
@@ -900,6 +950,11 @@
     {
       "lang": "en",
       "time": 227.151927,
+      "scene": "S08"
+    },
+    {
+      "lang": "en",
+      "time": 228.25378700000002,
       "scene": "S08"
     },
     {
@@ -1689,8 +1744,33 @@
     },
     {
       "lang": "ar",
+      "time": 21.663016,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
       "time": 23.915601,
       "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 26.094058999999998,
+      "scene": "S01"
+    },
+    {
+      "lang": "ar",
+      "time": 32.946667,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 34.348073,
+      "scene": "S02"
+    },
+    {
+      "lang": "ar",
+      "time": 36.993967999999995,
+      "scene": "S02"
     },
     {
       "lang": "ar",
@@ -1735,6 +1815,16 @@
     {
       "lang": "ar",
       "time": 65.25968300000001,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 68.691927,
+      "scene": "S03"
+    },
+    {
+      "lang": "ar",
+      "time": 70.10768700000001,
       "scene": "S03"
     },
     {
@@ -1839,6 +1929,11 @@
     },
     {
       "lang": "ar",
+      "time": 145.436939,
+      "scene": "S05"
+    },
+    {
+      "lang": "ar",
       "time": 147.870227,
       "scene": "S05"
     },
@@ -1865,6 +1960,16 @@
     {
       "lang": "ar",
       "time": 168.742109,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 170.740181,
+      "scene": "S06"
+    },
+    {
+      "lang": "ar",
+      "time": 172.105896,
       "scene": "S06"
     },
     {
@@ -1930,6 +2035,11 @@
     {
       "lang": "ar",
       "time": 227.151927,
+      "scene": "S08"
+    },
+    {
+      "lang": "ar",
+      "time": 228.25378700000002,
       "scene": "S08"
     },
     {
@@ -2071,12 +2181,30 @@
   "textOverflow": [],
   "businessStates": [
     {
+      "time": 25,
+      "expected": [
+        "Proposed solutions · Not live systems"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
+      "time": 35,
+      "expected": [
+        "An important occasion",
+        "Unsure how to build a complete look"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
       "time": 49.9,
       "expected": [
         "Blazer",
         "Shirt",
         "Trousers",
-        "Shoes"
+        "Shoes",
+        "within my budget"
       ],
       "absent": [
         "Knit"
@@ -2104,10 +2232,20 @@
       "passed": true
     },
     {
+      "time": 70,
+      "expected": [
+        "Which size fits me?",
+        "Available at a nearby branch?"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
       "time": 83.7,
       "expected": [
-        "Not available",
-        "No stock connection"
+        "Stock data",
+        "unavailable",
+        "no guess, no promise"
       ],
       "absent": [],
       "passed": true
@@ -2134,6 +2272,14 @@
       "passed": true
     },
     {
+      "time": 117,
+      "expected": [
+        "No exchange, refund or delivery-date promise"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
       "time": 149,
       "expected": [
         "Benefits must be",
@@ -2143,6 +2289,16 @@
         "VIP",
         "Gold"
       ],
+      "passed": true
+    },
+    {
+      "time": 172.5,
+      "expected": [
+        "Move quantity · B → A",
+        "Replenishment",
+        "Demand forecast"
+      ],
+      "absent": [],
       "passed": true
     },
     {
@@ -2160,8 +2316,9 @@
     {
       "time": 216,
       "expected": [
-        "DRAFT · Demo creative",
-        "Human brand review"
+        "DRAFT · Social post",
+        "DRAFT · Email header",
+        "Concrete team review"
       ],
       "absent": [],
       "passed": true
@@ -2169,6 +2326,8 @@
     {
       "time": 248,
       "expected": [
+        "Buying behavior",
+        "Permitted sources only",
         "DEMO-STOCK-A-M",
         "DEMO-CALL-1008",
         "NOT CONCRETE RESULTS"
@@ -2179,11 +2338,20 @@
       "passed": true
     },
     {
+      "time": 263.5,
+      "expected": [
+        "Not building everything at once"
+      ],
+      "absent": [],
+      "passed": true
+    },
+    {
       "time": 283,
       "expected": [
         "Authorized, scoped pilot",
         "Measure the actual result",
-        "Expand from evidence"
+        "Expand from evidence",
+        "Practical AI · Serves the brand"
       ],
       "absent": [
         "%"

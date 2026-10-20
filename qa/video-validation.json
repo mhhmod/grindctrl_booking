@@ -191,9 +191,34 @@
       "name": "encoded-553"
     },
     {
+      "frame": 643,
+      "time": 21.433333333333334,
+      "name": "encoded-643"
+    },
+    {
       "frame": 710,
       "time": 23.666666666666668,
       "name": "encoded-710"
+    },
+    {
+      "frame": 776,
+      "time": 25.866666666666667,
+      "name": "encoded-776"
+    },
+    {
+      "frame": 981,
+      "time": 32.7,
+      "name": "encoded-981"
+    },
+    {
+      "frame": 1023,
+      "time": 34.1,
+      "name": "encoded-1023"
+    },
+    {
+      "frame": 1103,
+      "time": 36.766666666666666,
+      "name": "encoded-1103"
     },
     {
       "frame": 1160,
@@ -239,6 +264,16 @@
       "frame": 1951,
       "time": 65.03333333333333,
       "name": "encoded-1951"
+    },
+    {
+      "frame": 2054,
+      "time": 68.46666666666667,
+      "name": "encoded-2054"
+    },
+    {
+      "frame": 2096,
+      "time": 69.86666666666666,
+      "name": "encoded-2096"
     },
     {
       "frame": 2177,
@@ -341,6 +376,11 @@
       "name": "encoded-4272"
     },
     {
+      "frame": 4356,
+      "time": 145.2,
+      "name": "encoded-4356"
+    },
+    {
       "frame": 4429,
       "time": 147.63333333333333,
       "name": "encoded-4429"
@@ -369,6 +409,16 @@
       "frame": 5055,
       "time": 168.5,
       "name": "encoded-5055"
+    },
+    {
+      "frame": 5115,
+      "time": 170.5,
+      "name": "encoded-5115"
+    },
+    {
+      "frame": 5156,
+      "time": 171.86666666666667,
+      "name": "encoded-5156"
     },
     {
       "frame": 5238,
@@ -434,6 +484,11 @@
       "frame": 6807,
       "time": 226.9,
       "name": "encoded-6807"
+    },
+    {
+      "frame": 6841,
+      "time": 228.03333333333333,
+      "name": "encoded-6841"
     },
     {
       "frame": 6940,
@@ -679,99 +734,99 @@
   "playback": [
     {
       "seek": 0,
-      "time": 0.152878,
+      "time": 0.217265,
       "ended": false,
       "error": null,
-      "frames": 10,
-      "audioDecodedBytes": 12194
+      "frames": 11,
+      "audioDecodedBytes": 12699
     },
     {
       "seek": 29.7,
-      "time": 29.860024,
+      "time": 29.887849,
       "ended": false,
       "error": null,
-      "frames": 161,
-      "audioDecodedBytes": 118782
+      "frames": 162,
+      "audioDecodedBytes": 115408
     },
     {
       "seek": 62,
-      "time": 62.154353,
+      "time": 62.181293,
       "ended": false,
       "error": null,
-      "frames": 281,
-      "audioDecodedBytes": 207369
+      "frames": 283,
+      "audioDecodedBytes": 198856
     },
     {
       "seek": 95,
-      "time": 95.15581,
+      "time": 95.201052,
       "ended": false,
       "error": null,
-      "frames": 391,
-      "audioDecodedBytes": 285841
+      "frames": 394,
+      "audioDecodedBytes": 274123
     },
     {
       "seek": 126,
-      "time": 126.15773,
+      "time": 126.202047,
       "ended": false,
       "error": null,
-      "frames": 431,
-      "audioDecodedBytes": 313367
+      "frames": 435,
+      "audioDecodedBytes": 302323
     },
     {
       "seek": 160,
-      "time": 160.149569,
+      "time": 160.192036,
       "ended": false,
       "error": null,
-      "frames": 491,
-      "audioDecodedBytes": 359140
+      "frames": 496,
+      "audioDecodedBytes": 346286
     },
     {
       "seek": 190,
-      "time": 190.154593,
+      "time": 190.207649,
       "ended": false,
       "error": null,
-      "frames": 701,
-      "audioDecodedBytes": 514634
+      "frames": 707,
+      "audioDecodedBytes": 492242
     },
     {
       "seek": 222,
-      "time": 222.150952,
+      "time": 222.191669,
       "ended": false,
       "error": null,
-      "frames": 871,
-      "audioDecodedBytes": 635188
+      "frames": 879,
+      "audioDecodedBytes": 606098
     },
     {
       "seek": 254,
-      "time": 254.151596,
+      "time": 254.18987,
       "ended": false,
       "error": null,
-      "frames": 1001,
-      "audioDecodedBytes": 729790
+      "frames": 1010,
+      "audioDecodedBytes": 698372
     },
     {
       "seek": 270,
-      "time": 270.160733,
+      "time": 270.184059,
       "ended": false,
       "error": null,
-      "frames": 1111,
-      "audioDecodedBytes": 811248
+      "frames": 1121,
+      "audioDecodedBytes": 776535
     },
     {
       "seek": 280,
-      "time": 280.161136,
+      "time": 280.193962,
       "ended": false,
       "error": null,
-      "frames": 1271,
-      "audioDecodedBytes": 933401
+      "frames": 1282,
+      "audioDecodedBytes": 894451
     },
     {
       "seek": 284.8,
       "time": 285.933333,
       "ended": true,
       "error": null,
-      "frames": 1349,
-      "audioDecodedBytes": 989749
+      "frames": 1360,
+      "audioDecodedBytes": 949239
     }
   ],
   "fidelityHook": {},

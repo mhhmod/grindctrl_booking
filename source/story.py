@@ -47,12 +47,25 @@ frame(s,'Genesys + Zoho Desk · Illustrative service context',until='C004');img(
 crop(s,'S05_storyboard',48,168,500,425,(480,247,680,578),'C004');box(s,48,595,500,51,fill=C['paper'],r=0,at='C004');text(s,69,609,459,27,'Customer → associate · Illustrative concept',size=17,color=C['muted'],at='C004')
 box(s,571,168,661,478,r=10,at='C004');text(s,593,193,616,44,'Across the Concrete experience',size=28,bold=True,at='C005');product(s,0,600,309,137,218,'C006');product(s,1,756,309,137,218,'C006');text(s,923,310,284,38,'Outfit proposal',size=24,bold=True,at='C006');text(s,923,365,284,77,'Occasion and\npreferences in view.',size=22,at='C007');icon(s,'file',924,466,25,'C008');text(s,963,462,244,55,'Human review\nacross teams',size=20,bold=True,at='C008')
 for x,k,n,ev in [(600,'case','Online store','C006'),(807,'actor','Stores','C007'),(1014,'settings','Teams','C008')]:icon(s,k,x,252,20,ev);text(s,x+31,248,147,29,n,size=18,bold=True,at=ev)
-text(s,598,583,607,38,'Marketing · Operations · Management',size=21,color=C['muted'],at='C008');focus(s,588,186,629,443,'C010','C011')
+# 2026-10-20 polish: the bottom row now names what C008 actually says (sales, marketing, management),
+# and C009-C011 ("not systems already working ... proposed solutions ... each one testable") get a visible signal.
+text(s,598,583,607,38,'Sales · Marketing · Management',size=21,color=C['muted'],at='C008',until='C009')
+box(s,593,573,616,54,fill=C['warm'],line=C['warm'],at='C009');icon(s,'quality',611,588,24,'C009')
+text(s,647,585,548,32,'Proposed solutions · Not live systems',size=21,bold=True,color=C['accent'],at='C009',until='C011')
+text(s,647,585,548,32,'Each one tested for its real value',size=21,bold=True,color=C['accent'],at='C011')
+focus(s,588,186,629,443,'C010','C011')
 
 # 02: customer request -> individually appearing eligible demo outfit items -> refinement / optional visit.
 s=base(1,'A complete look starts with a simple request.','AI personal stylist',57.3)
 crop(s,'S02_storyboard',48,168,403,478,(478,307,430,510));frame(s,'AI personal stylist · Demo catalog',x=475,w=757)
-icon(s,'speech',496,254,28,'C016');e=text(s,538,250,669,61,'“An evening occasion. Neutral tones.\nA complete smart-casual look.”',size=23,at='C016',until='C025');e['typing']=dict(start=TS['C016'],end=TE['C018'])
+# 2026-10-20 polish: C012-C015 previously left the panel empty for ~9 s. Show the shopper's situation instead.
+icon(s,'case',498,258,24,'C012','C016');text(s,536,253,670,32,'Concrete online store · Demo shopper',size=22,bold=True,at='C012',until='C016')
+box(s,498,306,300,44,fill=C['warm'],line=C['warm'],at='C013',until='C016');text(s,510,316,276,28,'An important occasion',size=19,bold=True,align='center',at='C013',until='C016')
+box(s,816,306,390,44,fill=C['soft'],line=C['soft'],at='C014',until='C016');text(s,828,316,366,28,'Unsure how to build a complete look',size=19,align='center',at='C014',until='C016')
+text(s,498,378,708,30,'Instead of browsing page after page…',size=20,color=C['muted'],at='C015',until='C016')
+for i,n in enumerate(['Blazers','Shirts','Trousers','Shoes']):box(s,498+i*181,424,165,118,fill=C['soft'],line=C['line'],at='C015',until='C016');text(s,510+i*181,468,141,28,n,size=18,color=C['muted'],align='center',at='C015',until='C016')
+# The typed request now reflects all three things C016-C018 say: where (occasion), what he likes, and budget.
+icon(s,'speech',496,254,28,'C016');e=text(s,538,250,669,61,'“An evening occasion. Neutral tones.\nA smart-casual look within my budget.”',size=23,at='C016',until='C025');e['typing']=dict(start=TS['C016'],end=TE['C018'])
 text(s,498,325,702,30,'Outfit proposal · Eligible demo items',size=19,color=C['muted'],at='C019')
 for i,ev in enumerate(['C020','C021','C022','C023']):product(s,i,498+i*181,368,165,198,ev,'C025' if i==1 else None)
 product(s,1,679,368,165,198,'C025',variant=True);box(s,495,248,712,65,fill=C['soft'],line=C['soft'],at='C025');icon(s,'speech',509,264,26,'C025');text(s,551,261,632,45,'Refine the look: “Make it less formal.”',size=24,bold=True,at='C025');focus(s,673,362,173,207,'C025','C026')
@@ -61,19 +74,26 @@ button(s,498,587,478,'Request store visit · If service supported','C026',k='act
 # 03: discovery, size guidance, and an honest stock-source state. No geography/prices.
 s=base(2,'Discover the product. Check the source.','AI e-commerce assistant',87.4);frame(s,'Concrete · Proposed online-store assistant')
 box(s,76,251,1128,61,fill=C['soft'],line=C['soft'],at='C029');icon(s,'search',94,271,24,'C029');e=text(s,139,267,1039,38,'A shirt for a smart-casual evening.',size=25,at='C029');e['typing']=dict(start=TS['C029'],end=TE['C029'])
+# 2026-10-20 polish: C030/C031 (size, nearby-branch availability) are now visible follow-up questions.
+for x,w,lab,ev in [(76,250,'Which size fits me?','C030'),(344,360,'Available at a nearby branch?','C031')]:box(s,x,330,w,40,fill=C['warm'],line=C['warm'],at=ev,until='C032');icon(s,'speech',x+12,340,20,ev,'C032');text(s,x+42,337,w-54,28,lab,size=18,bold=True,at=ev,until='C032')
 text(s,76,331,702,29,'Catalog options · Fictional demo records',size=19,color=C['muted'],at='C032',until='C033');product(s,1,76,381,246,231,'C032','C033');product(s,0,356,381,246,231,'C032','C033');product(s,2,636,381,246,231,'C032','C033')
 # The chart has unknown measurements rather than an invented fit recommendation.
 product(s,1,76,352,217,271,'C033');text(s,326,349,554,34,'Size-chart guidance',size=26,bold=True,at='C033');text(s,326,398,553,29,'Compare the product’s measurements.',size=21,at='C033');line(s,326,439,879,439,'C033')
 for y,lab,k in [(463,'Chest measurement','link'),(508,'Garment length','quality')]:icon(s,k,326,y+3,22,'C033');text(s,366,y,345,31,lab,size=21,at='C033');text(s,726,y,153,31,'Source required',size=17,color=C['muted'],at='C033',align='end')
 text(s,326,579,553,39,'No fit certainty from incomplete data.',size=19,color=C['muted'],at='C040')
-line(s,919,339,919,627,'C034');text(s,946,349,258,34,'Availability',size=25,bold=True,at='C034');icon(s,'link',947,407,27,'C034');text(s,946,453,258,76,'Current stock\nsource required',size=23,bold=True,at='C034',until='C036');text(s,946,453,258,72,'Not available\nin this demo',size=23,bold=True,color=C['muted'],at='C036');text(s,946,547,258,59,'No stock connection\nor delivery promise.',size=18,color=C['muted'],at='C037')
+# 2026-10-20 polish: "Not available in this demo" read as out-of-stock. C036/C037 say the information is missing,
+# so the state is shown as unknown data, not as a stock result.
+line(s,919,339,919,627,'C034');text(s,946,349,258,34,'Availability',size=25,bold=True,at='C034');icon(s,'link',947,407,27,'C034');text(s,946,453,258,76,'Current stock\nsource required',size=23,bold=True,at='C034',until='C036');text(s,946,453,258,72,'Stock data\nunavailable',size=23,bold=True,color=C['muted'],at='C036');text(s,946,547,258,59,'Shown as unknown:\nno guess, no promise.',size=18,color=C['muted'],at='C037')
 
 # 04: AI guidance and summary are visibly distinct from a human's original call note.
 s=base(3,'AI drafts. The human agent decides.','Contact center copilot',116.8);frame(s,'Genesys · Proposed copilot experience');img(s,'genesys',1000,183,132,31)
 crop(s,'S04_storyboard',73,251,245,231,(444,235,343,323));text(s,73,508,245,31,'Incoming call',size=22,bold=True,at='C042');text(s,73,552,245,37,'+20 10 •••• 4821',size=21,bold=True,ltr=True,at='C042');text(s,73,605,245,25,'Human Agent D · DEMO',size=16,color=C['muted'])
 line(s,340,249,340,623);text(s,364,251,271,36,'Customer context',size=23,bold=True,at='C043');text(s,364,304,271,39,'Ahmed M. (DEMO)',size=23,bold=True,ltr=True,at='C043');text(s,364,352,271,31,'Icons Club · ELITE',size=20,color=C['accent'],at='C043');text(s,364,405,271,33,'Prior human note',size=21,bold=True,at='C043');text(s,364,451,271,93,'Branch review\nrequested. Completion\nnot confirmed.',size=22,at='C043');text(s,364,573,271,51,'Source: DEMO-1008\nAgent A · Original note',size=16,color=C['muted'],ltr=True,at='C043')
 line(s,650,249,650,623);text(s,675,251,530,36,'AI guidance · Draft',size=25,bold=True,at='C044',until='C046');box(s,675,308,530,213,fill=C['warm'],line=C['warm'],at='C045',until='C046');text(s,697,329,486,100,'Check the original case.\nExplain the recorded review status.\nConfirm the next authorized step.',size=23,bold=True,at='C045',until='C046');icon(s,'file',697,474,21,'C045','C046');text(s,736,470,447,40,'Source: DEMO policy excerpt',size=18,color=C['accent'],at='C045',until='C046');text(s,675,570,530,47,'Approved company policy source required.',size=18,color=C['muted'],at='C044',until='C046')
-text(s,675,251,530,36,'AI call summary · DRAFT',size=25,bold=True,at='C046');box(s,675,310,530,208,fill=C['warm'],line=C['warm'],at='C046');e=text(s,697,332,486,153,'Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed.',size=24,bold=True,at='C046');e['typing']=dict(start=TS['C046'],end=TE['C046'])
+text(s,675,251,530,36,'AI call summary · DRAFT',size=25,bold=True,at='C046');box(s,675,310,530,208,fill=C['warm'],line=C['warm'],at='C046');e=text(s,697,330,486,104,'Customer asked for an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed.',size=21,bold=True,at='C046');e['typing']=dict(start=TS['C046'],end=TE['C046'])
+# 2026-10-20 polish: C048-C049 (no exchange/refund/delivery promise without confirmed data and approval) now has
+# an explicit guard inside the draft instead of only a 16 px footnote.
+line(s,697,450,1183,450,'C048',color=C['gold']);icon(s,'lock',697,466,20,'C048');text(s,729,461,454,48,'No exchange, refund or delivery-date promise\nwithout confirmed data and approval.',size=17,bold=True,color=C['accent'],at='C048')
 button(s,675,545,228,'Human edit / review','C047',k='pen');button(s,926,545,279,'Approve before saving','C047',k='check');text(s,675,603,530,28,'Demo draft · No automatic commitment or decision',size=16,color=C['muted'],at='C048');focus(s,673,542,534,50,'C047','C050')
 
 # 05: consent first; supported tier vocabulary; no invented program benefits.
@@ -82,9 +102,10 @@ crop(s,'S05_storyboard',48,168,436,371,(485,245,682,580));box(s,48,541,436,105,f
 frame(s,'Icons Club · Proposed associate view',x=507,w=725)
 icon(s,'lock',531,255,26,'C054');text(s,576,253,631,33,'Consent recorded (DEMO)',size=22,bold=True,color=C['green'],at='C054');text(s,532,305,650,37,'Ahmed M. · Neutral tailoring',size=25,bold=True,ltr=True,at='C055');text(s,532,352,650,31,'Preference / purchase sources require permission.',size=18,color=C['muted'],at='C055')
 for i,(n,ev) in enumerate([('LIFESTYLE','C057'),('PRESTIGE','C058'),('ELITE','C059')]):
- x=532+i*227;text(s,x,410,214,35,n,size=21,bold=i==2,color=C['accent'] if i==2 else C['muted'],ltr=True,align='center',at=ev)
-focus(s,980,398,228,52,'C059','C061');text(s,532,392,650,21,'Trusted membership source required · Illustrative tier',size=14,color=C['muted'],at='C056')
-product(s,0,532,479,127,145,'C061');product(s,1,680,479,127,145,'C061');text(s,831,476,370,65,'Suggested pieces\nfor this preference',size=23,bold=True,at='C061',until='C063');text(s,831,477,370,89,'Benefits must be\nvalidated against\nprogram rules.',size=23,bold=True,color=C['accent'],at='C063');text(s,831,576,370,55,'No entitlement inferred.\nCatalog and role checks apply.',size=17,color=C['muted'],at='C064')
+ # 2026-10-20 polish: tiers were 21 px floating labels crowded by a 14 px caption; now readable pills.
+ x=532+i*227;box(s,x,416,214,38,fill=C['warm'] if i==2 else C['soft'],line=C['warm'] if i==2 else C['soft'],r=19,at=ev);text(s,x,423,214,28,n,size=19,bold=True,color=C['accent'] if i==2 else C['muted'],ltr=True,align='center',at=ev)
+focus(s,982,412,222,46,'C059','C061');text(s,532,384,650,26,'Icons Club membership · Trusted source required · Illustrative tier',size=16,color=C['muted'],at='C056')
+product(s,0,532,479,127,145,'C061');product(s,1,680,479,127,145,'C061');text(s,831,476,370,65,'Suggested pieces\nfor this preference',size=23,bold=True,at='C061',until='C063');text(s,831,546,370,26,'Optional appointment · if offered',size=17,bold=True,color=C['accent'],at='C062',until='C063');text(s,831,477,370,89,'Benefits must be\nvalidated against\nprogram rules.',size=23,bold=True,color=C['accent'],at='C063');text(s,831,576,370,55,'No entitlement inferred.\nCatalog and role checks apply.',size=17,color=C['muted'],at='C064')
 
 # 06: SKU/size/branch source signals -> proposal -> accountable manager. No fake quantities/KPIs.
 s=base(5,'A stock signal becomes a reviewable proposal.','Retail operations',181.0);frame(s,'Retail operations · Synthetic SKU / branch scenario')
@@ -92,29 +113,35 @@ product(s,0,77,267,170,243);text(s,76,547,172,31,'DEMO-BLAZER',size=17,bold=True
 line(s,277,253,277,624);text(s,309,258,406,35,'Branch A · Demo',size=25,bold=True,at='C068');box(s,309,325,407,83,fill=C['soft'],at='C068');text(s,330,342,365,61,'Size requested\nAvailability unresolved',size=23,bold=True,at='C068')
 text(s,788,258,420,35,'Branch B · Demo',size=25,bold=True,at='C069');box(s,788,325,420,83,fill=C['soft'],at='C069');text(s,809,342,377,61,'Candidate surplus\nSource record to confirm',size=23,bold=True,at='C069');line(s,771,365,733,365,'C071',color=C['accent'],width=2,arrow=True)
 icon(s,'link',311,448,25,'C070');text(s,359,442,840,36,'Compare SKU, size, branch, timing and allowed stock.',size=22,color=C['muted'],at='C070',until='C074')
+# 2026-10-20 polish: C071-C073 name three proposal types (move quantity, replenish, forecast demand); show each.
+for x,w,lab,ev in [(309,280,'Move quantity · B → A','C071'),(605,250,'Replenishment','C072'),(871,337,'Demand forecast · to test','C073')]:box(s,x,486,w,32,fill=C['soft'],line=C['line'],r=16,at=ev,until='C074');text(s,x,491,w,24,lab,size=17,bold=True,align='center',at=ev,until='C074')
 box(s,307,430,901,91,fill=C['warm'],line=C['warm'],at='C074');text(s,329,446,855,60,'Proposed reallocation · Manager review required\nReason: a size request and a possible source at another branch.',size=22,bold=True,at='C074')
-button(s,309,549,310,'Review proposal','C075',k='actor');button(s,640,549,204,'Approve','C075',k='check');button(s,865,549,204,'Reject','C075',k='end');focus(s,306,546,767,49,'C075','C077');icon(s,'pointer',797,571,27,'C075','C076');text(s,309,608,899,28,'No transfer executed · Data quality and backtesting required',size=17,color=C['muted'],at='C077')
+button(s,309,549,310,'Review proposal','C075',k='actor');button(s,640,549,204,'Approve','C075',k='check');button(s,865,549,204,'Reject','C075',k='reject');focus(s,306,546,767,49,'C075','C077');icon(s,'pointer',797,571,27,'C075','C076');text(s,309,608,899,28,'No transfer executed · Data quality and backtesting required',size=17,color=C['muted'],at='C077')
 
 # 07: brief -> three genuinely layered creative concepts -> editorial gate. Imagery is demo only.
 s=base(6,'From a brief to three directions for review.','AI marketing studio',216.0);frame(s,'AI marketing studio · Draft concepts only')
 crop(s,'S07_storyboard',73,251,291,372,(670,405,323,413));text(s,387,251,815,37,'Brief: seasonal tailoring in neutral tones',size=25,bold=True,at='C081');text(s,387,298,815,28,'DEMO collection · Production assets and rights must be approved',size=18,color=C['muted'],at='C083')
-for i,(label,copy,pi) in enumerate([('Modern occasion','Tailoring for your next occasion.',0),('City layers','A considered look for the everyday.',1),('Everyday refinement','Simple pieces. Thoughtful combinations.',2)]):
- x=387+i*281;box(s,x,346,258,225,fill=C['soft'],line=C['soft'],at='C082')
+# 2026-10-20 polish: product crops no longer collide with the DRAFT label, card copy stays inside its card,
+# each card names the channel C082 mentions (social / email), and C087-C088 credit the Concrete team explicitly.
+for i,(label,copy,pi,fmt) in enumerate([('Modern occasion','Tailoring for your next occasion.',0,'DRAFT · Social post'),('City layers','A considered look for the everyday.',1,'DRAFT · Email header'),('Everyday refinement','Simple pieces. Thoughtful combinations.',2,'DRAFT · Social story')]):
+ x=387+i*281;box(s,x,346,258,250,fill=C['soft'],line=C['soft'],at='C082')
  if i==0:
-  product(s,0,x+130,371,112,141,'C082',label=False);text(s,x+14,366,105,69,'Your next\noccasion',size=22,bold=True,at='C082');line(s,x+15,460,x+103,460,'C082',color=C['accent'])
+  product(s,0,x+130,362,112,108,'C082',label=False);text(s,x+14,366,105,69,'Your next\noccasion',size=22,bold=True,at='C082');line(s,x+15,450,x+103,450,'C082',color=C['accent'])
  elif i==1:
-  product(s,1,x+30,387,107,128,'C082',label=False);text(s,x+141,366,102,66,'Style in\nmotion',size=22,bold=True,at='C082');line(s,x+146,463,x+231,463,'C082',color=C['accent'])
+  product(s,1,x+20,362,107,108,'C082',label=False);text(s,x+141,366,102,66,'Style in\nmotion',size=22,bold=True,at='C082');line(s,x+146,450,x+231,450,'C082',color=C['accent'])
  else:
-  product(s,0,x+18,376,87,115,'C082',label=False);product(s,2,x+144,378,90,114,'C082',label=False);text(s,x+14,352,230,30,'Thoughtful combinations',size=18,bold=True,at='C082')
- text(s,x+14,487,230,19,'DRAFT · Demo creative',size=13,color=C['muted'],at='C082');text(s,x+14,518,230,31,label,size=20,bold=True,at='C082');text(s,x+14,557,230,64,copy,size=18,at='C082')
-focus(s,382,343,830,253,'C086','C087')
-box(s,384,622,827,18,fill=C['paper'],line=C['paper'],r=0,at='C087');text(s,387,612,817,29,'Human brand review → approval before publication',size=19,bold=True,color=C['accent'],at='C087');focus(s,382,606,830,36,'C088')
+  product(s,0,x+18,386,87,86,'C082',label=False);product(s,2,x+144,386,90,86,'C082',label=False);text(s,x+14,354,230,28,'Thoughtful combinations',size=18,bold=True,at='C082')
+ text(s,x+14,481,230,20,fmt,size=14,bold=True,color=C['accent'],at='C082');text(s,x+14,505,230,30,label,size=20,bold=True,at='C082');text(s,x+14,538,230,50,copy,size=17,at='C082')
+focus(s,382,341,830,260,'C086','C087')
+text(s,387,608,817,29,'Concrete team review → approval before publication',size=19,bold=True,color=C['accent'],at='C087');focus(s,382,604,830,36,'C088')
 
 # 08: source-backed executive brief, not a fabricated performance dashboard.
 s=base(7,'A concise insight. A visible path to its sources.','Executive AI intelligence',246.9);frame(s,'Executive brief · ILLUSTRATIVE DEMO — NOT CONCRETE RESULTS')
 text(s,76,254,362,35,'Permitted source signals',size=24,bold=True)
-for i,(lab,k,ev) in enumerate([('Sales','invoice','C093'),('Inventory','case','C094'),('Customer service','call','C095'),('Customer permissions','lock','C096')]):
- y=321+i*63;icon(s,k,77,y+5,25,ev);text(s,125,y+1,307,36,lab,size=24,bold=True,at=ev);line(s,76,y+48,428,y+48,ev)
+# 2026-10-20 polish: C096 says سلوك شراء (buying behavior); C097 mentions permitted sources & data quality.
+for i,(lab,k,ev) in enumerate([('Sales','invoice','C093'),('Inventory','case','C094'),('Customer service','call','C095'),('Buying behavior','actor','C096')]):
+ y=312+i*58;icon(s,k,77,y+5,25,ev);text(s,125,y+1,307,34,lab,size=23,bold=True,at=ev);line(s,76,y+44,428,y+44,ev)
+icon(s,'lock',77,560,21,'C097');text(s,112,556,320,54,'Permitted sources only ·\nData quality checked first',size=17,color=C['muted'],at='C097')
 line(s,461,251,461,624);text(s,491,254,714,35,'Executive brief · Demo',size=26,bold=True,at='C098');box(s,490,316,715,182,fill=C['warm'],line=C['warm'],at='C099');text(s,513,337,668,112,'A size request needs follow-up.\nCheck branch stock and the last\nrecorded service interaction.',size=28,bold=True,at='C100')
 icon(s,'link',492,534,27,'C101');text(s,536,527,663,62,'DEMO-STOCK-A-M · DEMO-CALL-1008\nOpen source records before acting.',size=20,color=C['muted'],ltr=True,at='C101');focus(s,484,523,725,78,'C101','C103');text(s,492,608,704,29,'Next question: would an authorized transfer help?',size=20,bold=True,color=C['accent'],at='C105');focus(s,487,312,722,190,'C107')
 
@@ -124,10 +151,12 @@ crop(s,'S05_storyboard',48,168,450,383,(486,247,678,578));box(s,48,552,450,94,fi
 box(s,521,168,711,478,r=10);text(s,547,194,658,41,'Discover → pilot → measure → expand',size=27,bold=True)
 for i,(lab,k,ev) in enumerate([('Customer','actor','C110'),('Teams','speech','C111'),('Management','settings','C112')]):
  x=549+i*221;icon(s,k,x,264,27,ev);text(s,x+42,259,160,35,lab,size=21,bold=True,at=ev)
-line(s,548,313,1207,313,'C113');text(s,548,346,657,67,'Inspect existing systems\nand native capabilities first.',size=25,bold=True,at='C114',until='C118');text(s,548,427,657,53,'Prioritize by value and feasibility.',size=23,color=C['muted'],at='C115',until='C118')
+# 2026-10-20 polish: C113 ("not building everything at once") gets an explicit callout before C114,
+# and C122-C124 ("practical AI · serves the brand · improves step by step") concludes the closing state.
+line(s,548,313,1207,313,'C113');text(s,548,354,657,60,'Not building everything at once.\nA focused, phased approach.',size=24,bold=True,color=C['accent'],at='C113',until='C114');text(s,548,346,657,67,'Inspect existing systems\nand native capabilities first.',size=25,bold=True,at='C114',until='C118');text(s,548,427,657,53,'Prioritize by value and feasibility.',size=23,color=C['muted'],at='C115',until='C118')
 for i,(y,n,ev) in enumerate([(354,'Authorized, scoped pilot','C118'),(424,'Measure the actual result','C119'),(494,'Expand from evidence','C120')]):
  circle(s,550,y+5,26,C['warm'],ev);icon(s,'check' if i==1 else 'link' if i==2 else 'quality',555,y+10,16,ev);text(s,596,y,609,37,n,size=26,bold=True,at=ev)
-text(s,549,582,653,42,'GRINDCTRL × Concrete · Proposed collaboration',size=22,bold=True,color=C['accent'],ltr=True,at='C121');focus(s,542,341,667,201,'C122')
+text(s,549,568,653,32,'GRINDCTRL × Concrete · Proposed collaboration',size=22,bold=True,color=C['accent'],ltr=True,at='C121');text(s,549,604,653,26,'Practical AI · Serves the brand · Improves step by step',size=17,color=C['muted'],at='C122');focus(s,542,341,667,201,'C122')
 
 for s in slides:
  for cue in T['cues']:

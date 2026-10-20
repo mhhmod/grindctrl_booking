@@ -717,19 +717,83 @@
         {
           "type": "text",
           "at": 18.272472,
-          "until": null,
+          "until": 21.263016,
           "slot": null,
           "x": 598,
           "y": 583,
           "w": 607,
           "h": 38,
           "text": {
-            "en": "Marketing · Operations · Management",
-            "ar": "Marketing · Operations · Management"
+            "en": "Sales · Marketing · Management",
+            "ar": "Sales · Marketing · Management"
           },
           "size": 21,
           "bold": false,
           "color": "#68645E",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 21.263016,
+          "until": null,
+          "slot": null,
+          "x": 593,
+          "y": 573,
+          "w": 616,
+          "h": 54,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 7
+        },
+        {
+          "type": "image",
+          "at": 21.263016,
+          "until": null,
+          "slot": null,
+          "key": "icon-quality",
+          "x": 611,
+          "y": 588,
+          "w": 24,
+          "h": 24
+        },
+        {
+          "type": "text",
+          "at": 21.263016,
+          "until": 25.694059,
+          "slot": null,
+          "x": 647,
+          "y": 585,
+          "w": 548,
+          "h": 32,
+          "text": {
+            "en": "Proposed solutions · Not live systems",
+            "ar": "Proposed solutions · Not live systems"
+          },
+          "size": 21,
+          "bold": true,
+          "color": "#965318",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "text",
+          "at": 25.694059,
+          "until": null,
+          "slot": null,
+          "x": 647,
+          "y": 585,
+          "w": 548,
+          "h": 32,
+          "text": {
+            "en": "Each one tested for its real value",
+            "ar": "Each one tested for its real value"
+          },
+          "size": 21,
+          "bold": true,
+          "color": "#965318",
           "align": "start",
           "role": "ui",
           "ltr": false
@@ -1032,6 +1096,255 @@
         },
         {
           "type": "image",
+          "at": 29.582857,
+          "until": 38.506961,
+          "slot": null,
+          "key": "icon-case",
+          "x": 498,
+          "y": 258,
+          "w": 24,
+          "h": 24
+        },
+        {
+          "type": "text",
+          "at": 29.582857,
+          "until": 38.506961,
+          "slot": null,
+          "x": 536,
+          "y": 253,
+          "w": 670,
+          "h": 32,
+          "text": {
+            "en": "Concrete online store · Demo shopper",
+            "ar": "Concrete online store · Demo shopper"
+          },
+          "size": 22,
+          "bold": true,
+          "color": "#262626",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 32.546667,
+          "until": 38.506961,
+          "slot": null,
+          "x": 498,
+          "y": 306,
+          "w": 300,
+          "h": 44,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 32.546667,
+          "until": 38.506961,
+          "slot": null,
+          "x": 510,
+          "y": 316,
+          "w": 276,
+          "h": 28,
+          "text": {
+            "en": "An important occasion",
+            "ar": "An important occasion"
+          },
+          "size": 19,
+          "bold": true,
+          "color": "#262626",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 33.948073,
+          "until": 38.506961,
+          "slot": null,
+          "x": 816,
+          "y": 306,
+          "w": 390,
+          "h": 44,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 33.948073,
+          "until": 38.506961,
+          "slot": null,
+          "x": 828,
+          "y": 316,
+          "w": 366,
+          "h": 28,
+          "text": {
+            "en": "Unsure how to build a complete look",
+            "ar": "Unsure how to build a complete look"
+          },
+          "size": 19,
+          "bold": false,
+          "color": "#262626",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "text",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 498,
+          "y": 378,
+          "w": 708,
+          "h": 30,
+          "text": {
+            "en": "Instead of browsing page after page…",
+            "ar": "Instead of browsing page after page…"
+          },
+          "size": 20,
+          "bold": false,
+          "color": "#68645E",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 498,
+          "y": 424,
+          "w": 165,
+          "h": 118,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 510,
+          "y": 468,
+          "w": 141,
+          "h": 28,
+          "text": {
+            "en": "Blazers",
+            "ar": "Blazers"
+          },
+          "size": 18,
+          "bold": false,
+          "color": "#68645E",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 679,
+          "y": 424,
+          "w": 165,
+          "h": 118,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 691,
+          "y": 468,
+          "w": 141,
+          "h": 28,
+          "text": {
+            "en": "Shirts",
+            "ar": "Shirts"
+          },
+          "size": 18,
+          "bold": false,
+          "color": "#68645E",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 860,
+          "y": 424,
+          "w": 165,
+          "h": 118,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 872,
+          "y": 468,
+          "w": 141,
+          "h": 28,
+          "text": {
+            "en": "Trousers",
+            "ar": "Trousers"
+          },
+          "size": 18,
+          "bold": false,
+          "color": "#68645E",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 1041,
+          "y": 424,
+          "w": 165,
+          "h": 118,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 7
+        },
+        {
+          "type": "text",
+          "at": 36.593968,
+          "until": 38.506961,
+          "slot": null,
+          "x": 1053,
+          "y": 468,
+          "w": 141,
+          "h": 28,
+          "text": {
+            "en": "Shoes",
+            "ar": "Shoes"
+          },
+          "size": 18,
+          "bold": false,
+          "color": "#68645E",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "image",
           "at": 38.506961,
           "until": null,
           "slot": null,
@@ -1051,8 +1364,8 @@
           "w": 669,
           "h": 61,
           "text": {
-            "en": "“An evening occasion. Neutral tones.\nA complete smart-casual look.”",
-            "ar": "“An evening occasion. Neutral tones.\nA complete smart-casual look.”"
+            "en": "“An evening occasion. Neutral tones.\nA smart-casual look within my budget.”",
+            "ar": "“An evening occasion. Neutral tones.\nA smart-casual look within my budget.”"
           },
           "size": 23,
           "bold": false,
@@ -1799,6 +2112,94 @@
           }
         },
         {
+          "type": "rect",
+          "at": 68.291927,
+          "until": 72.393946,
+          "slot": null,
+          "x": 76,
+          "y": 330,
+          "w": 250,
+          "h": 40,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 7
+        },
+        {
+          "type": "image",
+          "at": 68.291927,
+          "until": 72.393946,
+          "slot": null,
+          "key": "icon-speech",
+          "x": 88,
+          "y": 340,
+          "w": 20,
+          "h": 20
+        },
+        {
+          "type": "text",
+          "at": 68.291927,
+          "until": 72.393946,
+          "slot": null,
+          "x": 118,
+          "y": 337,
+          "w": 196,
+          "h": 28,
+          "text": {
+            "en": "Which size fits me?",
+            "ar": "Which size fits me?"
+          },
+          "size": 18,
+          "bold": true,
+          "color": "#262626",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 69.707687,
+          "until": 72.393946,
+          "slot": null,
+          "x": 344,
+          "y": 330,
+          "w": 360,
+          "h": 40,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 7
+        },
+        {
+          "type": "image",
+          "at": 69.707687,
+          "until": 72.393946,
+          "slot": null,
+          "key": "icon-speech",
+          "x": 356,
+          "y": 340,
+          "w": 20,
+          "h": 20
+        },
+        {
+          "type": "text",
+          "at": 69.707687,
+          "until": 72.393946,
+          "slot": null,
+          "x": 386,
+          "y": 337,
+          "w": 306,
+          "h": 28,
+          "text": {
+            "en": "Available at a nearby branch?",
+            "ar": "Available at a nearby branch?"
+          },
+          "size": 18,
+          "bold": true,
+          "color": "#262626",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
           "type": "text",
           "at": 72.393946,
           "until": 74.3078,
@@ -2275,8 +2676,8 @@
           "w": 258,
           "h": 72,
           "text": {
-            "en": "Not available\nin this demo",
-            "ar": "Not available\nin this demo"
+            "en": "Stock data\nunavailable",
+            "ar": "Stock data\nunavailable"
           },
           "size": 23,
           "bold": true,
@@ -2295,8 +2696,8 @@
           "w": 258,
           "h": 59,
           "text": {
-            "en": "No stock connection\nor delivery promise.",
-            "ar": "No stock connection\nor delivery promise."
+            "en": "Shown as unknown:\nno guess, no promise.",
+            "ar": "Shown as unknown:\nno guess, no promise."
           },
           "size": 18,
           "bold": false,
@@ -2956,14 +3357,14 @@
           "until": null,
           "slot": null,
           "x": 697,
-          "y": 332,
+          "y": 330,
           "w": 486,
-          "h": 153,
+          "h": 104,
           "text": {
-            "en": "Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed.",
-            "ar": "Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
+            "en": "Customer asked for an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed.",
+            "ar": "Customer asked for an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
           },
-          "size": 24,
+          "size": 21,
           "bold": true,
           "color": "#262626",
           "align": "start",
@@ -2973,6 +3374,50 @@
             "start": 106.806236,
             "end": 109.237029
           }
+        },
+        {
+          "type": "line",
+          "at": 114.361746,
+          "until": null,
+          "slot": null,
+          "x": 697,
+          "y": 450,
+          "x2": 1183,
+          "y2": 450,
+          "color": "#FFBA65",
+          "width": 1,
+          "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 114.361746,
+          "until": null,
+          "slot": null,
+          "key": "icon-lock",
+          "x": 697,
+          "y": 466,
+          "w": 20,
+          "h": 20
+        },
+        {
+          "type": "text",
+          "at": 114.361746,
+          "until": null,
+          "slot": null,
+          "x": 729,
+          "y": 461,
+          "w": 454,
+          "h": 48,
+          "text": {
+            "en": "No exchange, refund or delivery-date promise\nwithout confirmed data and approval.",
+            "ar": "No exchange, refund or delivery-date promise\nwithout confirmed data and approval."
+          },
+          "size": 17,
+          "bold": true,
+          "color": "#965318",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
         },
         {
           "type": "rect",
@@ -3503,24 +3948,50 @@
           "ltr": false
         },
         {
+          "type": "rect",
+          "at": 137.443333,
+          "until": null,
+          "slot": null,
+          "x": 532,
+          "y": 416,
+          "w": 214,
+          "h": 38,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE",
+          "radius": 19
+        },
+        {
           "type": "text",
           "at": 137.443333,
           "until": null,
           "slot": null,
           "x": 532,
-          "y": 410,
+          "y": 423,
           "w": 214,
-          "h": 35,
+          "h": 28,
           "text": {
             "en": "LIFESTYLE",
             "ar": "LIFESTYLE"
           },
-          "size": 21,
-          "bold": false,
+          "size": 19,
+          "bold": true,
           "color": "#68645E",
           "align": "center",
           "role": "ui",
           "ltr": true
+        },
+        {
+          "type": "rect",
+          "at": 138.268889,
+          "until": null,
+          "slot": null,
+          "x": 759,
+          "y": 416,
+          "w": 214,
+          "h": 38,
+          "fill": "#F4F2EE",
+          "line": "#F4F2EE",
+          "radius": 19
         },
         {
           "type": "text",
@@ -3528,19 +3999,32 @@
           "until": null,
           "slot": null,
           "x": 759,
-          "y": 410,
+          "y": 423,
           "w": 214,
-          "h": 35,
+          "h": 28,
           "text": {
             "en": "PRESTIGE",
             "ar": "PRESTIGE"
           },
-          "size": 21,
-          "bold": false,
+          "size": 19,
+          "bold": true,
           "color": "#68645E",
           "align": "center",
           "role": "ui",
           "ltr": true
+        },
+        {
+          "type": "rect",
+          "at": 139.159841,
+          "until": null,
+          "slot": null,
+          "x": 986,
+          "y": 416,
+          "w": 214,
+          "h": 38,
+          "fill": "#FFF2DD",
+          "line": "#FFF2DD",
+          "radius": 19
         },
         {
           "type": "text",
@@ -3548,14 +4032,14 @@
           "until": null,
           "slot": null,
           "x": 986,
-          "y": 410,
+          "y": 423,
           "w": 214,
-          "h": 35,
+          "h": 28,
           "text": {
             "en": "ELITE",
             "ar": "ELITE"
           },
-          "size": 21,
+          "size": 19,
           "bold": true,
           "color": "#965318",
           "align": "center",
@@ -3567,10 +4051,10 @@
           "at": 139.159841,
           "until": 142.226803,
           "slot": null,
-          "x": 980,
-          "y": 398,
-          "w": 228,
-          "h": 52,
+          "x": 982,
+          "y": 412,
+          "w": 222,
+          "h": 46,
           "color": "#FFBA65",
           "radius": 6,
           "width": 2
@@ -3581,14 +4065,14 @@
           "until": null,
           "slot": null,
           "x": 532,
-          "y": 392,
+          "y": 384,
           "w": 650,
-          "h": 21,
+          "h": 26,
           "text": {
-            "en": "Trusted membership source required · Illustrative tier",
-            "ar": "Trusted membership source required · Illustrative tier"
+            "en": "Icons Club membership · Trusted source required · Illustrative tier",
+            "ar": "Icons Club membership · Trusted source required · Illustrative tier"
           },
-          "size": 14,
+          "size": 16,
           "bold": false,
           "color": "#68645E",
           "align": "start",
@@ -3715,6 +4199,26 @@
           "size": 23,
           "bold": true,
           "color": "#262626",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "text",
+          "at": 145.036939,
+          "until": 147.470227,
+          "slot": null,
+          "x": 831,
+          "y": 546,
+          "w": 370,
+          "h": 26,
+          "text": {
+            "en": "Optional appointment · if offered",
+            "ar": "Optional appointment · if offered"
+          },
+          "size": 17,
+          "bold": true,
+          "color": "#965318",
           "align": "start",
           "role": "ui",
           "ltr": false
@@ -4296,6 +4800,105 @@
         },
         {
           "type": "rect",
+          "at": 168.342109,
+          "until": 174.438322,
+          "slot": null,
+          "x": 309,
+          "y": 486,
+          "w": 280,
+          "h": 32,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 16
+        },
+        {
+          "type": "text",
+          "at": 168.342109,
+          "until": 174.438322,
+          "slot": null,
+          "x": 309,
+          "y": 491,
+          "w": 280,
+          "h": 24,
+          "text": {
+            "en": "Move quantity · B → A",
+            "ar": "Move quantity · B → A"
+          },
+          "size": 17,
+          "bold": true,
+          "color": "#262626",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 170.340181,
+          "until": 174.438322,
+          "slot": null,
+          "x": 605,
+          "y": 486,
+          "w": 250,
+          "h": 32,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 16
+        },
+        {
+          "type": "text",
+          "at": 170.340181,
+          "until": 174.438322,
+          "slot": null,
+          "x": 605,
+          "y": 491,
+          "w": 250,
+          "h": 24,
+          "text": {
+            "en": "Replenishment",
+            "ar": "Replenishment"
+          },
+          "size": 17,
+          "bold": true,
+          "color": "#262626",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
+          "at": 171.705896,
+          "until": 174.438322,
+          "slot": null,
+          "x": 871,
+          "y": 486,
+          "w": 337,
+          "h": 32,
+          "fill": "#F4F2EE",
+          "line": "#E6E3DE",
+          "radius": 16
+        },
+        {
+          "type": "text",
+          "at": 171.705896,
+          "until": 174.438322,
+          "slot": null,
+          "x": 871,
+          "y": 491,
+          "w": 337,
+          "h": 24,
+          "text": {
+            "en": "Demand forecast · to test",
+            "ar": "Demand forecast · to test"
+          },
+          "size": 17,
+          "bold": true,
+          "color": "#262626",
+          "align": "center",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "rect",
           "at": 174.438322,
           "until": null,
           "slot": null,
@@ -4433,7 +5036,7 @@
           "at": 176.659728,
           "until": null,
           "slot": null,
-          "key": "icon-end",
+          "key": "icon-reject",
           "x": 878,
           "y": 560,
           "w": 19,
@@ -4838,7 +5441,7 @@
           "x": 387,
           "y": 346,
           "w": 258,
-          "h": 225,
+          "h": 250,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 7
@@ -4849,9 +5452,9 @@
           "until": null,
           "slot": null,
           "x": 517,
-          "y": 371,
+          "y": 362,
           "w": 112,
-          "h": 141,
+          "h": 108,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 5
@@ -4862,10 +5465,10 @@
           "until": null,
           "slot": null,
           "key": "S02_storyboard",
-          "x": 528.0,
-          "y": 379.0806451612903,
-          "w": 90.0,
-          "h": 124.83870967741936,
+          "x": 538.3953488372093,
+          "y": 368.0,
+          "w": 69.20930232558139,
+          "h": 96.0,
           "crop": {
             "x": 971,
             "y": 360,
@@ -4901,9 +5504,9 @@
           "until": null,
           "slot": null,
           "x": 402,
-          "y": 460,
+          "y": 450,
           "x2": 490,
-          "y2": 460,
+          "y2": 450,
           "color": "#965318",
           "width": 1,
           "arrow": false
@@ -4914,16 +5517,16 @@
           "until": null,
           "slot": null,
           "x": 401,
-          "y": 487,
+          "y": 481,
           "w": 230,
-          "h": 19,
+          "h": 20,
           "text": {
-            "en": "DRAFT · Demo creative",
-            "ar": "DRAFT · Demo creative"
+            "en": "DRAFT · Social post",
+            "ar": "DRAFT · Social post"
           },
-          "size": 13,
-          "bold": false,
-          "color": "#68645E",
+          "size": 14,
+          "bold": true,
+          "color": "#965318",
           "align": "start",
           "role": "ui",
           "ltr": false
@@ -4934,9 +5537,9 @@
           "until": null,
           "slot": null,
           "x": 401,
-          "y": 518,
+          "y": 505,
           "w": 230,
-          "h": 31,
+          "h": 30,
           "text": {
             "en": "Modern occasion",
             "ar": "Modern occasion"
@@ -4954,14 +5557,14 @@
           "until": null,
           "slot": null,
           "x": 401,
-          "y": 557,
+          "y": 538,
           "w": 230,
-          "h": 64,
+          "h": 50,
           "text": {
             "en": "Tailoring for your next occasion.",
             "ar": "Tailoring for your next occasion."
           },
-          "size": 18,
+          "size": 17,
           "bold": false,
           "color": "#262626",
           "align": "start",
@@ -4976,7 +5579,7 @@
           "x": 668,
           "y": 346,
           "w": 258,
-          "h": 225,
+          "h": 250,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 7
@@ -4986,10 +5589,10 @@
           "at": 195.250884,
           "until": null,
           "slot": null,
-          "x": 698,
-          "y": 387,
+          "x": 688,
+          "y": 362,
           "w": 107,
-          "h": 128,
+          "h": 108,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 5
@@ -5000,10 +5603,10 @@
           "until": null,
           "slot": null,
           "key": "S02_storyboard",
-          "x": 709.0,
-          "y": 395.49626865671644,
-          "w": 85.00000000000001,
-          "h": 111.00746268656718,
+          "x": 704.7457142857143,
+          "y": 368.0,
+          "w": 73.50857142857143,
+          "h": 96.0,
           "crop": {
             "x": 1116,
             "y": 355,
@@ -5039,9 +5642,9 @@
           "until": null,
           "slot": null,
           "x": 814,
-          "y": 463,
+          "y": 450,
           "x2": 899,
-          "y2": 463,
+          "y2": 450,
           "color": "#965318",
           "width": 1,
           "arrow": false
@@ -5052,16 +5655,16 @@
           "until": null,
           "slot": null,
           "x": 682,
-          "y": 487,
+          "y": 481,
           "w": 230,
-          "h": 19,
+          "h": 20,
           "text": {
-            "en": "DRAFT · Demo creative",
-            "ar": "DRAFT · Demo creative"
+            "en": "DRAFT · Email header",
+            "ar": "DRAFT · Email header"
           },
-          "size": 13,
-          "bold": false,
-          "color": "#68645E",
+          "size": 14,
+          "bold": true,
+          "color": "#965318",
           "align": "start",
           "role": "ui",
           "ltr": false
@@ -5072,9 +5675,9 @@
           "until": null,
           "slot": null,
           "x": 682,
-          "y": 518,
+          "y": 505,
           "w": 230,
-          "h": 31,
+          "h": 30,
           "text": {
             "en": "City layers",
             "ar": "City layers"
@@ -5092,14 +5695,14 @@
           "until": null,
           "slot": null,
           "x": 682,
-          "y": 557,
+          "y": 538,
           "w": 230,
-          "h": 64,
+          "h": 50,
           "text": {
             "en": "A considered look for the everyday.",
             "ar": "A considered look for the everyday."
           },
-          "size": 18,
+          "size": 17,
           "bold": false,
           "color": "#262626",
           "align": "start",
@@ -5114,7 +5717,7 @@
           "x": 949,
           "y": 346,
           "w": 258,
-          "h": 225,
+          "h": 250,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 7
@@ -5125,9 +5728,9 @@
           "until": null,
           "slot": null,
           "x": 967,
-          "y": 376,
+          "y": 386,
           "w": 87,
-          "h": 115,
+          "h": 86,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 5
@@ -5138,10 +5741,10 @@
           "until": null,
           "slot": null,
           "key": "S02_storyboard",
-          "x": 978.0,
-          "y": 388.4193548387097,
-          "w": 65.0,
-          "h": 90.16129032258064,
+          "x": 983.8255813953489,
+          "y": 392.0,
+          "w": 53.348837209302324,
+          "h": 74.0,
           "crop": {
             "x": 971,
             "y": 360,
@@ -5157,9 +5760,9 @@
           "until": null,
           "slot": null,
           "x": 1093,
-          "y": 378,
+          "y": 386,
           "w": 90,
-          "h": 114,
+          "h": 86,
           "fill": "#F4F2EE",
           "line": "#F4F2EE",
           "radius": 5
@@ -5170,10 +5773,10 @@
           "until": null,
           "slot": null,
           "key": "S02_storyboard",
-          "x": 1104.0,
-          "y": 390.0075187969925,
-          "w": 68.0,
-          "h": 89.98496240601503,
+          "x": 1110.0397727272727,
+          "y": 392.0,
+          "w": 55.92045454545455,
+          "h": 74.0,
           "crop": {
             "x": 1292,
             "y": 354,
@@ -5189,9 +5792,9 @@
           "until": null,
           "slot": null,
           "x": 963,
-          "y": 352,
+          "y": 354,
           "w": 230,
-          "h": 30,
+          "h": 28,
           "text": {
             "en": "Thoughtful combinations",
             "ar": "Thoughtful combinations"
@@ -5209,16 +5812,16 @@
           "until": null,
           "slot": null,
           "x": 963,
-          "y": 487,
+          "y": 481,
           "w": 230,
-          "h": 19,
+          "h": 20,
           "text": {
-            "en": "DRAFT · Demo creative",
-            "ar": "DRAFT · Demo creative"
+            "en": "DRAFT · Social story",
+            "ar": "DRAFT · Social story"
           },
-          "size": 13,
-          "bold": false,
-          "color": "#68645E",
+          "size": 14,
+          "bold": true,
+          "color": "#965318",
           "align": "start",
           "role": "ui",
           "ltr": false
@@ -5229,9 +5832,9 @@
           "until": null,
           "slot": null,
           "x": 963,
-          "y": 518,
+          "y": 505,
           "w": 230,
-          "h": 31,
+          "h": 30,
           "text": {
             "en": "Everyday refinement",
             "ar": "Everyday refinement"
@@ -5249,14 +5852,14 @@
           "until": null,
           "slot": null,
           "x": 963,
-          "y": 557,
+          "y": 538,
           "w": 230,
-          "h": 64,
+          "h": 50,
           "text": {
             "en": "Simple pieces. Thoughtful combinations.",
             "ar": "Simple pieces. Thoughtful combinations."
           },
-          "size": 18,
+          "size": 17,
           "bold": false,
           "color": "#262626",
           "align": "start",
@@ -5269,25 +5872,12 @@
           "until": 212.294535,
           "slot": null,
           "x": 382,
-          "y": 343,
+          "y": 341,
           "w": 830,
-          "h": 253,
+          "h": 260,
           "color": "#FFBA65",
           "radius": 6,
           "width": 2
-        },
-        {
-          "type": "rect",
-          "at": 212.294535,
-          "until": null,
-          "slot": null,
-          "x": 384,
-          "y": 622,
-          "w": 827,
-          "h": 18,
-          "fill": "#FFFFFF",
-          "line": "#FFFFFF",
-          "radius": 0
         },
         {
           "type": "text",
@@ -5295,12 +5885,12 @@
           "until": null,
           "slot": null,
           "x": 387,
-          "y": 612,
+          "y": 608,
           "w": 817,
           "h": 29,
           "text": {
-            "en": "Human brand review → approval before publication",
-            "ar": "Human brand review → approval before publication"
+            "en": "Concrete team review → approval before publication",
+            "ar": "Concrete team review → approval before publication"
           },
           "size": 19,
           "bold": true,
@@ -5315,7 +5905,7 @@
           "until": null,
           "slot": null,
           "x": 382,
-          "y": 606,
+          "y": 604,
           "w": 830,
           "h": 36,
           "color": "#FFBA65",
@@ -5617,7 +6207,7 @@
           "slot": null,
           "key": "icon-invoice",
           "x": 77,
-          "y": 326,
+          "y": 317,
           "w": 25,
           "h": 25
         },
@@ -5627,14 +6217,14 @@
           "until": null,
           "slot": null,
           "x": 125,
-          "y": 322,
+          "y": 313,
           "w": 307,
-          "h": 36,
+          "h": 34,
           "text": {
             "en": "Sales",
             "ar": "Sales"
           },
-          "size": 24,
+          "size": 23,
           "bold": true,
           "color": "#262626",
           "align": "start",
@@ -5647,9 +6237,9 @@
           "until": null,
           "slot": null,
           "x": 76,
-          "y": 369,
+          "y": 356,
           "x2": 428,
-          "y2": 369,
+          "y2": 356,
           "color": "#E6E3DE",
           "width": 1,
           "arrow": false
@@ -5661,7 +6251,7 @@
           "slot": null,
           "key": "icon-case",
           "x": 77,
-          "y": 389,
+          "y": 375,
           "w": 25,
           "h": 25
         },
@@ -5671,14 +6261,14 @@
           "until": null,
           "slot": null,
           "x": 125,
-          "y": 385,
+          "y": 371,
           "w": 307,
-          "h": 36,
+          "h": 34,
           "text": {
             "en": "Inventory",
             "ar": "Inventory"
           },
-          "size": 24,
+          "size": 23,
           "bold": true,
           "color": "#262626",
           "align": "start",
@@ -5691,9 +6281,9 @@
           "until": null,
           "slot": null,
           "x": 76,
-          "y": 432,
+          "y": 414,
           "x2": 428,
-          "y2": 432,
+          "y2": 414,
           "color": "#E6E3DE",
           "width": 1,
           "arrow": false
@@ -5705,7 +6295,7 @@
           "slot": null,
           "key": "icon-call",
           "x": 77,
-          "y": 452,
+          "y": 433,
           "w": 25,
           "h": 25
         },
@@ -5715,14 +6305,14 @@
           "until": null,
           "slot": null,
           "x": 125,
-          "y": 448,
+          "y": 429,
           "w": 307,
-          "h": 36,
+          "h": 34,
           "text": {
             "en": "Customer service",
             "ar": "Customer service"
           },
-          "size": 24,
+          "size": 23,
           "bold": true,
           "color": "#262626",
           "align": "start",
@@ -5735,9 +6325,9 @@
           "until": null,
           "slot": null,
           "x": 76,
-          "y": 495,
+          "y": 472,
           "x2": 428,
-          "y2": 495,
+          "y2": 472,
           "color": "#E6E3DE",
           "width": 1,
           "arrow": false
@@ -5747,9 +6337,9 @@
           "at": 226.751927,
           "until": null,
           "slot": null,
-          "key": "icon-lock",
+          "key": "icon-actor",
           "x": 77,
-          "y": 515,
+          "y": 491,
           "w": 25,
           "h": 25
         },
@@ -5759,14 +6349,14 @@
           "until": null,
           "slot": null,
           "x": 125,
-          "y": 511,
+          "y": 487,
           "w": 307,
-          "h": 36,
+          "h": 34,
           "text": {
-            "en": "Customer permissions",
-            "ar": "Customer permissions"
+            "en": "Buying behavior",
+            "ar": "Buying behavior"
           },
-          "size": 24,
+          "size": 23,
           "bold": true,
           "color": "#262626",
           "align": "start",
@@ -5779,12 +6369,43 @@
           "until": null,
           "slot": null,
           "x": 76,
-          "y": 558,
+          "y": 530,
           "x2": 428,
-          "y2": 558,
+          "y2": 530,
           "color": "#E6E3DE",
           "width": 1,
           "arrow": false
+        },
+        {
+          "type": "image",
+          "at": 227.853787,
+          "until": null,
+          "slot": null,
+          "key": "icon-lock",
+          "x": 77,
+          "y": 560,
+          "w": 21,
+          "h": 21
+        },
+        {
+          "type": "text",
+          "at": 227.853787,
+          "until": null,
+          "slot": null,
+          "x": 112,
+          "y": 556,
+          "w": 320,
+          "h": 54,
+          "text": {
+            "en": "Permitted sources only ·\nData quality checked first",
+            "ar": "Permitted sources only ·\nData quality checked first"
+          },
+          "size": 17,
+          "bold": false,
+          "color": "#68645E",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
         },
         {
           "type": "line",
@@ -6355,6 +6976,26 @@
         },
         {
           "type": "text",
+          "at": 261.836644,
+          "until": 265.229274,
+          "slot": null,
+          "x": 548,
+          "y": 354,
+          "w": 657,
+          "h": 60,
+          "text": {
+            "en": "Not building everything at once.\nA focused, phased approach.",
+            "ar": "Not building everything at once.\nA focused, phased approach."
+          },
+          "size": 24,
+          "bold": true,
+          "color": "#965318",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
+        },
+        {
+          "type": "text",
           "at": 265.229274,
           "until": 272.825918,
           "slot": null,
@@ -6528,9 +7169,9 @@
           "until": null,
           "slot": null,
           "x": 549,
-          "y": 582,
+          "y": 568,
           "w": 653,
-          "h": 42,
+          "h": 32,
           "text": {
             "en": "GRINDCTRL × Concrete · Proposed collaboration",
             "ar": "GRINDCTRL × Concrete · Proposed collaboration"
@@ -6541,6 +7182,26 @@
           "align": "start",
           "role": "ui",
           "ltr": true
+        },
+        {
+          "type": "text",
+          "at": 281.042925,
+          "until": null,
+          "slot": null,
+          "x": 549,
+          "y": 604,
+          "w": 653,
+          "h": 26,
+          "text": {
+            "en": "Practical AI · Serves the brand · Improves step by step",
+            "ar": "Practical AI · Serves the brand · Improves step by step"
+          },
+          "size": 17,
+          "bold": false,
+          "color": "#68645E",
+          "align": "start",
+          "role": "ui",
+          "ltr": false
         },
         {
           "type": "outline",
@@ -7930,7 +8591,20 @@
           "Human review\nacross teams",
           "icon-settings",
           "Teams",
-          "Marketing · Operations · Management"
+          "Sales · Marketing · Management"
+        ]
+      },
+      {
+        "scene": "S01",
+        "at": 21.263016,
+        "cue_id": "C009",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "مش بنتكلم عن أنظمة شغالة بالفعل.",
+        "objects": [
+          "rect",
+          "icon-quality",
+          "Proposed solutions · Not live systems"
         ]
       },
       {
@@ -7945,6 +8619,60 @@
         ]
       },
       {
+        "scene": "S01",
+        "at": 25.694059,
+        "cue_id": "C011",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "كل واحدة منها نقدر نختبرها ونشوف قيمتها الحقيقية.",
+        "objects": [
+          "Each one tested for its real value"
+        ]
+      },
+      {
+        "scene": "S02",
+        "at": 32.546667,
+        "cue_id": "C013",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "وعنده مناسبة مهمة،",
+        "objects": [
+          "rect",
+          "An important occasion"
+        ]
+      },
+      {
+        "scene": "S02",
+        "at": 33.948073,
+        "cue_id": "C014",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "لكنه مش عارف يختار لوك كامل.",
+        "objects": [
+          "rect",
+          "Unsure how to build a complete look"
+        ]
+      },
+      {
+        "scene": "S02",
+        "at": 36.593968,
+        "cue_id": "C015",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "بدل ما يلف على صفحات كتير،",
+        "objects": [
+          "Instead of browsing page after page…",
+          "rect",
+          "Blazers",
+          "rect",
+          "Shirts",
+          "rect",
+          "Trousers",
+          "rect",
+          "Shoes"
+        ]
+      },
+      {
         "scene": "S02",
         "at": 38.506961,
         "cue_id": "C016",
@@ -7953,7 +8681,7 @@
         "phrase_trigger": "يقول للـAI Stylist هو رايح فين،",
         "objects": [
           "icon-speech",
-          "“An evening occasion. Neutral tones.\nA complete smart-casual look.”"
+          "“An evening occasion. Neutral tones.\nA smart-casual look within my budget.”"
         ]
       },
       {
@@ -8065,6 +8793,32 @@
       },
       {
         "scene": "S03",
+        "at": 68.291927,
+        "cue_id": "C030",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "أو المقاس المناسب،",
+        "objects": [
+          "rect",
+          "icon-speech",
+          "Which size fits me?"
+        ]
+      },
+      {
+        "scene": "S03",
+        "at": 69.707687,
+        "cue_id": "C031",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "أو إذا كان المنتج متاح في فرع قريب.",
+        "objects": [
+          "rect",
+          "icon-speech",
+          "Available at a nearby branch?"
+        ]
+      },
+      {
+        "scene": "S03",
         "at": 72.393946,
         "cue_id": "C032",
         "speech_anchor": "start",
@@ -8127,7 +8881,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "ولو المعلومات ناقصة،",
         "objects": [
-          "Not available\nin this demo"
+          "Stock data\nunavailable"
         ]
       },
       {
@@ -8138,7 +8892,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "يقول إنها غير متاحة بدل ما يخمن.",
         "objects": [
-          "No stock connection\nor delivery promise."
+          "Shown as unknown:\nno guess, no promise."
         ]
       },
       {
@@ -8216,7 +8970,7 @@
         "objects": [
           "AI call summary · DRAFT",
           "rect",
-          "Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
+          "Customer asked for an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
         ]
       },
       {
@@ -8244,6 +8998,9 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،",
         "objects": [
+          "line",
+          "icon-lock",
+          "No exchange, refund or delivery-date promise\nwithout confirmed data and approval.",
           "Demo draft · No automatic commitment or decision"
         ]
       },
@@ -8279,7 +9036,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "وكمان عضويته في Icons Club:",
         "objects": [
-          "Trusted membership source required · Illustrative tier"
+          "Icons Club membership · Trusted source required · Illustrative tier"
         ]
       },
       {
@@ -8290,6 +9047,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "Lifestyle،",
         "objects": [
+          "rect",
           "LIFESTYLE"
         ]
       },
@@ -8301,6 +9059,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "أو Prestige،",
         "objects": [
+          "rect",
           "PRESTIGE"
         ]
       },
@@ -8312,6 +9071,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "أو Elite.",
         "objects": [
+          "rect",
           "ELITE",
           "outline"
         ]
@@ -8331,6 +9091,17 @@
           "S02_storyboard",
           "Shirt",
           "Suggested pieces\nfor this preference"
+        ]
+      },
+      {
+        "scene": "S05",
+        "at": 145.036939,
+        "cue_id": "C062",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "أو يساعد في حجز موعد مناسب.",
+        "objects": [
+          "Optional appointment · if offered"
         ]
       },
       {
@@ -8401,7 +9172,33 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "نقدر نقترح نقل كمية،",
         "objects": [
-          "line"
+          "line",
+          "rect",
+          "Move quantity · B → A"
+        ]
+      },
+      {
+        "scene": "S06",
+        "at": 170.340181,
+        "cue_id": "C072",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "أو إعادة تزويد،",
+        "objects": [
+          "rect",
+          "Replenishment"
+        ]
+      },
+      {
+        "scene": "S06",
+        "at": 171.705896,
+        "cue_id": "C073",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "أو توقع الطلب على منتجات معينة.",
+        "objects": [
+          "rect",
+          "Demand forecast · to test"
         ]
       },
       {
@@ -8431,7 +9228,7 @@
           "icon-check",
           "Approve",
           "rect",
-          "icon-end",
+          "icon-reject",
           "Reject",
           "outline",
           "icon-pointer"
@@ -8472,7 +9269,7 @@
           "S02_storyboard",
           "Your next\noccasion",
           "line",
-          "DRAFT · Demo creative",
+          "DRAFT · Social post",
           "Modern occasion",
           "Tailoring for your next occasion.",
           "rect",
@@ -8480,7 +9277,7 @@
           "S02_storyboard",
           "Style in\nmotion",
           "line",
-          "DRAFT · Demo creative",
+          "DRAFT · Email header",
           "City layers",
           "A considered look for the everyday.",
           "rect",
@@ -8489,7 +9286,7 @@
           "rect",
           "S02_storyboard",
           "Thoughtful combinations",
-          "DRAFT · Demo creative",
+          "DRAFT · Social story",
           "Everyday refinement",
           "Simple pieces. Thoughtful combinations."
         ]
@@ -8524,8 +9321,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "لكن القرار النهائي والنشر،",
         "objects": [
-          "rect",
-          "Human brand review → approval before publication"
+          "Concrete team review → approval before publication"
         ]
       },
       {
@@ -8586,9 +9382,21 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "وسلوك شراء.",
         "objects": [
-          "icon-lock",
-          "Customer permissions",
+          "icon-actor",
+          "Buying behavior",
           "line"
+        ]
+      },
+      {
+        "scene": "S08",
+        "at": 227.853787,
+        "cue_id": "C097",
+        "speech_anchor": "start",
+        "anchor_difference_seconds": 0.0,
+        "phrase_trigger": "بعد ربط المصادر المسموح بيها ومراجعة جودتها،",
+        "objects": [
+          "icon-lock",
+          "Permitted sources only ·\nData quality checked first"
         ]
       },
       {
@@ -8703,7 +9511,8 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.",
         "objects": [
-          "line"
+          "line",
+          "Not building everything at once.\nA focused, phased approach."
         ]
       },
       {
@@ -8786,6 +9595,7 @@
         "anchor_difference_seconds": 0.0,
         "phrase_trigger": "حلول عملية للذكاء الاصطناعي،",
         "objects": [
+          "Practical AI · Serves the brand · Improves step by step",
           "outline"
         ]
       }

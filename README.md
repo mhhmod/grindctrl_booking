@@ -13,7 +13,7 @@ Exactly one supplied MP3 is the narration authority: `Part04_FINAL_VOICEOVER.mp3
 - `GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx` — editable native text/shapes and cropped images, with the single original audio attached. Static reference, manual advance. Native Microsoft PowerPoint playback/choreography was not tested.
 - `_en.pdf` / `_ar.pdf` — 13 static pages: nine principal scenes + four complementary workflow states. `_ar` is an optional RTL layout; system/brand labels remain English.
 - `Part04_Narration_AR.srt` — script-matched, ASR-assisted Arabic subtitles timed against the single recording. Vendor spelling normalized. No subtitles burned into the primary film; enable them in HTML or use the sidecar. Human verbatim/pronunciation certification is not claimed.
-- `actual_audio_cues.json` — nine measured scene boundaries, 124 phrase intervals and animation triggers. No invented or equal-time chapter allocation.
+- `actual_audio_cues.json` — nine measured scene boundaries, 124 phrase intervals and 82 animation triggers. No invented or equal-time chapter allocation.
 - `narration-to-animation.csv`, `STORYBOARD.md` — measured phrase-to-visual map and layered scene structure.
 - `contact-sheet.jpg`, `ending.jpg`, `review/` — actual rendered/encoded frame inspection.
 - `BRAND_EVIDENCE_AND_FIDELITY.md`, `QA_REPORT.md`, `qa/`, `research/access.json` — evidence, mandatory storyboard corrections, performed checks and limitations.
