@@ -181,9 +181,9 @@
     {
       "id": "Part04",
       "title": "AI opportunities across the business",
-      "status": "Most recent completed and delivered production; user has not yet supplied an acceptance/revision review. Current request is session export.",
+      "status": "Polished and re-verified 2026-10-20; single unchanged master MP3 preserved; visual-narration sync, S07 layout, and source reproducibility defects fixed.",
       "branch": "grindctrl-part04-ai-opportunities-2026-10-14",
-      "commit": "d93a256652b74d38ee378f03d51f6f2759572ae4",
+      "commit": "5e7109d98c529a83bd28a3691153edb52dba5df6",
       "directory": "/workspace/GRINDCTRL-Part04-delivery",
       "work": "/workspace/analysis/part04",
       "video": "GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
@@ -196,51 +196,52 @@
       "audio": "Part04_FINAL_VOICEOVER.mp3",
       "source_audio_sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a",
       "branch_url": "https://github.com/mhhmod/grindctrl_booking/tree/grindctrl-part04-ai-opportunities-2026-10-14",
-      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/",
+      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/",
       "files": {
         "video": {
           "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
-          "bytes": 14480257,
-          "sha256": "ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd"
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
+          "bytes": 15630036,
+          "sha256": "6d9fff9624d6aa3c2b62473785ef8162719db779f12f1c416b6ad2c35a048623"
         },
         "html": {
           "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
-          "bytes": 17637264,
-          "sha256": "eb8d117bf0d79a9fc11ae8a2bfbdcf4190088910e4ad17e74971f610f7a9ac01"
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
+          "bytes": 17659235,
+          "sha256": "897362af1c26a9ecd61a31c0f963ff42e9dc60e643b4aced966b166faa102081"
         },
         "package": {
           "name": "GRINDCTRL_Concrete_Part04_COMPLETE.zip",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_COMPLETE.zip",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_COMPLETE.zip",
-          "bytes": 84680342,
-          "sha256": "f15bdf82b920be94c7ea38cf3b389301fd643f8aa2fd5c808f985bf897564715"
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/GRINDCTRL_Concrete_Part04_COMPLETE.zip",
+          "bytes": 84098544,
+          "sha256": "00fd02d4ac1aba3d80e8cc4c8b2712290e32b4db9fb5763546504a034e384a65"
         },
         "pptx": {
           "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
-          "bytes": 12671347,
-          "sha256": "a97a65bd2ff848ba9a27f1adbee31a1b2897f5013f28762238a93f6d2022a23b"
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
+          "bytes": 12679458,
+          "sha256": "07afca1e38cec83e94fa2fc18bc71e33ecaaddd03ec5fd6e0dfa099886cc931d"
         },
         "pdf": {
           "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
-          "bytes": 12526119,
-          "sha256": "162e386285e2d6605386323bf91fa652ef125a2119dadfdc9cc8311f71dd63dd"
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
+          "bytes": 12621659,
+          "sha256": "75eedc021730f880e81fec4651002978b836e7e8fcbba342a11d9b124400608f"
         },
         "audio": {
           "name": "Part04_FINAL_VOICEOVER.mp3",
           "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/Part04_FINAL_VOICEOVER.mp3",
-          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/Part04_FINAL_VOICEOVER.mp3",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/5e7109d98c529a83bd28a3691153edb52dba5df6/Part04_FINAL_VOICEOVER.mp3",
           "bytes": 4592986,
           "sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a"
         }
-      }
+      },
+      "previous_commit": "d93a256652b74d38ee378f03d51f6f2759572ae4"
     }
   ],
   "original_inputs": [
@@ -333,5 +334,33 @@
     "branch": "grindctrl-part03-customer360-2026-10-12",
     "commit": "bf840a4e6017eb1d256f2d385f5ed9ea68ced50c",
     "rejected_audio_sha256": "0fd419e6f6bbed75c4bb2e0e3747b3fc3ab5f9b2864b577c4c95bcb95fe70d01"
+  },
+  "superseded_versions": {
+    "part03_customer360_rejected_audio": {
+      "branch": "grindctrl-part03-customer360-2026-10-12",
+      "commit": "bf840a4e6017eb1d256f2d385f5ed9ea68ced50c",
+      "rejected_audio_sha256": "0fd419e6f6bbed75c4bb2e0e3747b3fc3ab5f9b2864b577c4c95bcb95fe70d01",
+      "reason": "Earlier Part03 recording rejected by user; replaced by grindctrl-part03-voicefix-2026-10-12."
+    },
+    "part04_pre_polish": {
+      "branch": "grindctrl-part04-ai-opportunities-2026-10-14",
+      "commit": "d93a256652b74d38ee378f03d51f6f2759572ae4",
+      "mp4_sha256": "ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd",
+      "reason": "Initial Part04 delivery before 2026-10-20 visual-narration sync, S07 layout, and icon-mic/icon-reject polish pass."
+    },
+    "early_part01_iterations": [
+      {
+        "branch": "grindctrl-presentation-delivery-2026-10-10",
+        "commit": "321414cb24fc13daaa45b49b505287c1ca14bace"
+      },
+      {
+        "branch": "grindctrl-visual-first-presentation-2026-10-11",
+        "commit": "4437d98a4c5acebb2ba07ff11ea8ff7277241a85"
+      },
+      {
+        "branch": "grindctrl-light-presentation-2026-10-11",
+        "commit": "1c343c98842785a563c592c481f71080df8ff7b"
+      }
+    ]
   }
 }

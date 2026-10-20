@@ -1,98 +1,112 @@
-scene,seconds,cue,speech_anchor,spoken_phrase,visual_change
-S01,9.270091,C004,start,لكن دي مجرد بداية.,S05_storyboard / rect / Customer → associate · Illustrative concept / rect
-S01,11.331587,C005,start,النهارده عايزين نتخيل مع بعض فرص أكبر للذكاء الاصطناعي جوه Concrete:,Across the Concrete experience
-S01,16.600612,C006,start,في الأونلاين،,rect / S02_storyboard / Blazer / rect / S02_storyboard / Shirt / Outfit proposal / icon-case / Online store
+scene,seconds,cue,speech_anchor,spoken_phrase,visual_change
+S01,9.270091,C004,start,لكن دي مجرد بداية.,S05_storyboard / rect / Customer → associate · Illustrative concept / rect
+S01,11.331587,C005,start,النهارده عايزين نتخيل مع بعض فرص أكبر للذكاء الاصطناعي جوه Concrete:,Across the Concrete experience
+S01,16.600612,C006,start,في الأونلاين،,rect / S02_storyboard / Blazer / rect / S02_storyboard / Shirt / Outfit proposal / icon-case / Online store
 S01,17.482222,C007,start,والفروع،,"Occasion and
-preferences in view. / icon-actor / Stores"
+preferences in view. / icon-actor / Stores"
 S01,18.272472,C008,start,والمبيعات، والماركتنج، والإدارة.,"icon-file / Human review
-across teams / icon-settings / Teams / Marketing · Operations · Management"
-S01,23.515601,C010,start,بنتكلم عن حلول مقترحة،,outline
+across teams / icon-settings / Teams / Sales · Marketing · Management"
+S01,21.263016,C009,start,مش بنتكلم عن أنظمة شغالة بالفعل.,rect / icon-quality / Proposed solutions · Not live systems
+S01,23.515601,C010,start,بنتكلم عن حلول مقترحة،,outline
+S01,25.694059,C011,start,كل واحدة منها نقدر نختبرها ونشوف قيمتها الحقيقية.,Each one tested for its real value
+S02,32.546667,C013,start,وعنده مناسبة مهمة،,rect / An important occasion
+S02,33.948073,C014,start,لكنه مش عارف يختار لوك كامل.,rect / Unsure how to build a complete look
+S02,36.593968,C015,start,بدل ما يلف على صفحات كتير،,Instead of browsing page after page… / rect / Blazers / rect / Shirts / rect / Trousers / rect / Shoes
 S02,38.506961,C016,start,يقول للـAI Stylist هو رايح فين،,"icon-speech / “An evening occasion. Neutral tones.
-A complete smart-casual look.”"
-S02,43.813401,C019,start,المساعد يقترح عليه،,Outfit proposal · Eligible demo items
-S02,45.357415,C020,start,بليزر،,rect / S02_storyboard / Blazer
-S02,45.980295,C021,start,وشيرت،,rect / S02_storyboard / Shirt
-S02,46.607551,C022,start,وبنطلون،,rect / S02_storyboard / Trousers
-S02,47.3978,C023,start,وجزمة بشكل متناسق،,rect / S02_storyboard / Shoes
-S02,51.254558,C025,start,والعميل يقدر يغير الاختيارات،,rect / S05_storyboard / Knit / rect / icon-speech / Refine the look: “Make it less formal.” / outline
-S02,53.410544,C026,start,أو يحجز تجربة في الفرع لو الخدمة متاحة.,rect / icon-actor / Request store visit · If service supported / No booking made
-S03,64.859683,C029,start,العميل يسأل بشكل طبيعي عن شيرت لمناسبة معينة،,rect / icon-search / A shirt for a smart-casual evening.
-S03,72.393946,C032,start,المساعد يرشح اختيارات،,Catalog options · Fictional demo records / rect / S02_storyboard / Shirt / rect / S02_storyboard / Blazer / rect / S02_storyboard / Trousers
-S03,74.3078,C033,start,ويشرح جدول المقاسات،,rect / S02_storyboard / Shirt / Size-chart guidance / Compare the product’s measurements. / line / icon-link / Chest measurement / Source required / icon-quality / Garment length / Source required
+A smart-casual look within my budget.”"
+S02,43.813401,C019,start,المساعد يقترح عليه،,Outfit proposal · Eligible demo items
+S02,45.357415,C020,start,بليزر،,rect / S02_storyboard / Blazer
+S02,45.980295,C021,start,وشيرت،,rect / S02_storyboard / Shirt
+S02,46.607551,C022,start,وبنطلون،,rect / S02_storyboard / Trousers
+S02,47.3978,C023,start,وجزمة بشكل متناسق،,rect / S02_storyboard / Shoes
+S02,51.254558,C025,start,والعميل يقدر يغير الاختيارات،,rect / S05_storyboard / Knit / rect / icon-speech / Refine the look: “Make it less formal.” / outline
+S02,53.410544,C026,start,أو يحجز تجربة في الفرع لو الخدمة متاحة.,rect / icon-actor / Request store visit · If service supported / No booking made
+S03,64.859683,C029,start,العميل يسأل بشكل طبيعي عن شيرت لمناسبة معينة،,rect / icon-search / A shirt for a smart-casual evening.
+S03,68.291927,C030,start,أو المقاس المناسب،,rect / icon-speech / Which size fits me?
+S03,69.707687,C031,start,أو إذا كان المنتج متاح في فرع قريب.,rect / icon-speech / Available at a nearby branch?
+S03,72.393946,C032,start,المساعد يرشح اختيارات،,Catalog options · Fictional demo records / rect / S02_storyboard / Shirt / rect / S02_storyboard / Blazer / rect / S02_storyboard / Trousers
+S03,74.3078,C033,start,ويشرح جدول المقاسات،,rect / S02_storyboard / Shirt / Size-chart guidance / Compare the product’s measurements. / line / icon-link / Chest measurement / Source required / icon-quality / Garment length / Source required
 S03,76.014444,C034,start,ويعرض الـAvailability لما تكون متوصلة ببيانات ستوك،,"line / Availability / icon-link / Current stock
-source required"
-S03,80.797755,C036,start,ولو المعلومات ناقصة،,"Not available
-in this demo"
-S03,82.014127,C037,start,يقول إنها غير متاحة بدل ما يخمن.,"No stock connection
-or delivery promise."
-S03,89.880363,C040,start,من غير وعود غلط عن المقاسات أو المخزون.,No fit certainty from incomplete data.
-S04,94.989048,C042,start,الإيجنت بيستقبل Call على Genesys،,Incoming call / +20 10 •••• 4821
+source required"
+S03,80.797755,C036,start,ولو المعلومات ناقصة،,"Stock data
+unavailable"
+S03,82.014127,C037,start,يقول إنها غير متاحة بدل ما يخمن.,"Shown as unknown:
+no guess, no promise."
+S03,89.880363,C040,start,من غير وعود غلط عن المقاسات أو المخزون.,No fit certainty from incomplete data.
+S04,94.989048,C042,start,الإيجنت بيستقبل Call على Genesys،,Incoming call / +20 10 •••• 4821
 S04,97.245306,C043,start,وبيكون محتاج يفهم العميل بسرعة.,"Customer context / Ahmed M. (DEMO) / Icons Club · ELITE / Prior human note / Branch review
 requested. Completion
 not confirmed. / Source: DEMO-1008
-Agent A · Original note"
-S04,99.801655,C044,start,هنا ممكن الـAI Copilot يساعده بمعلومات من المصادر المصرح بيها،,AI guidance · Draft / Approved company policy source required.
+Agent A · Original note"
+S04,99.801655,C044,start,هنا ممكن الـAI Copilot يساعده بمعلومات من المصادر المصرح بيها،,AI guidance · Draft / Approved company policy source required.
 S04,104.54458,C045,start,ويقترح إجابة من سياسة الشركة،,"rect / Check the original case.
 Explain the recorded review status.
-Confirm the next authorized step. / icon-file / Source: DEMO policy excerpt"
-S04,106.806236,C046,start,أو يجهز مسودة Call Summary بعد المكالمة.,"AI call summary · DRAFT / rect / Customer requested an exchange update.
+Confirm the next authorized step. / icon-file / Source: DEMO policy excerpt"
+S04,106.806236,C046,start,أو يجهز مسودة Call Summary بعد المكالمة.,"AI call summary · DRAFT / rect / Customer asked for an exchange update.
 Branch review is recorded as requested.
-Completion remains unconfirmed."
-S04,109.943288,C047,start,المهم إن الموظف يراجع الاقتراح قبل استخدامه أو حفظه.,rect / icon-pen / Human edit / review / rect / icon-check / Approve before saving / outline
-S04,114.361746,C048,start,والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،,Demo draft · No automatic commitment or decision
-S05,128.918367,C054,start,لما العميل يوافق على استخدام بياناته،,icon-lock / Consent recorded (DEMO)
-S05,131.232336,C055,start,موظف المبيعات يقدر يشوف تفضيلاته ومشترياته المتاحة،,Ahmed M. · Neutral tailoring / Preference / purchase sources require permission.
-S05,135.295034,C056,start,وكمان عضويته في Icons Club:,Trusted membership source required · Illustrative tier
-S05,137.443333,C057,start,Lifestyle،,LIFESTYLE
-S05,138.268889,C058,start,أو Prestige،,PRESTIGE
-S05,139.159841,C059,start,أو Elite.,ELITE / outline
+Completion remains unconfirmed."
+S04,109.943288,C047,start,المهم إن الموظف يراجع الاقتراح قبل استخدامه أو حفظه.,rect / icon-pen / Human edit / review / rect / icon-check / Approve before saving / outline
+S04,114.361746,C048,start,والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،,"line / icon-lock / No exchange, refund or delivery-date promise
+without confirmed data and approval. / Demo draft · No automatic commitment or decision"
+S05,128.918367,C054,start,لما العميل يوافق على استخدام بياناته،,icon-lock / Consent recorded (DEMO)
+S05,131.232336,C055,start,موظف المبيعات يقدر يشوف تفضيلاته ومشترياته المتاحة،,Ahmed M. · Neutral tailoring / Preference / purchase sources require permission.
+S05,135.295034,C056,start,وكمان عضويته في Icons Club:,Icons Club membership · Trusted source required · Illustrative tier
+S05,137.443333,C057,start,Lifestyle،,rect / LIFESTYLE
+S05,138.268889,C058,start,أو Prestige،,rect / PRESTIGE
+S05,139.159841,C059,start,أو Elite.,rect / ELITE / outline
 S05,142.226803,C061,start,المساعد يقترح قطع تكمل اختياراته،,"rect / S02_storyboard / Blazer / rect / S02_storyboard / Shirt / Suggested pieces
-for this preference"
+for this preference"
+S05,145.036939,C062,start,أو يساعد في حجز موعد مناسب.,Optional appointment · if offered
 S05,147.470227,C063,start,مش معنى إن العميل Elite إننا نفترض مزايا مش مؤكدة.,"Benefits must be
 validated against
-program rules."
+program rules."
 S05,151.42068,C064,start,كل اقتراح يفضل مرتبط بسياسات Concrete،,"No entitlement inferred.
-Catalog and role checks apply."
+Catalog and role checks apply."
 S06,160.050431,C068,start,تخيلوا مدير فروع بيشوف مقاسات مطلوبة في فرع،,"Branch A · Demo / rect / Size requested
-Availability unresolved"
+Availability unresolved"
 S06,163.148934,C069,start,بينما موجودة بكميات أكبر في فرع تاني.,"Branch B · Demo / rect / Candidate surplus
-Source record to confirm"
-S06,166.268549,C070,start,باستخدام بيانات المبيعات والستوك،,"icon-link / Compare SKU, size, branch, timing and allowed stock."
-S06,168.342109,C071,start,نقدر نقترح نقل كمية،,line
+Source record to confirm"
+S06,166.268549,C070,start,باستخدام بيانات المبيعات والستوك،,"icon-link / Compare SKU, size, branch, timing and allowed stock."
+S06,168.342109,C071,start,نقدر نقترح نقل كمية،,line / rect / Move quantity · B → A
+S06,170.340181,C072,start,أو إعادة تزويد،,rect / Replenishment
+S06,171.705896,C073,start,أو توقع الطلب على منتجات معينة.,rect / Demand forecast · to test
 S06,174.438322,C074,start,الاقتراح يظهر ومعاه سببه،,"rect / Proposed reallocation · Manager review required
-Reason: a size request and a possible source at another branch."
-S06,176.659728,C075,start,والمسؤول هو اللي يراجعه ويوافق عليه.,rect / icon-actor / Review proposal / rect / icon-check / Approve / rect / icon-end / Reject / outline / icon-pointer
-S06,183.675624,C077,start,بشرط جودة البيانات،,No transfer executed · Data quality and backtesting required
-S07,193.072268,C081,start,يساعده يبدأ من فكرة كامبين،,Brief: seasonal tailoring in neutral tones
+Reason: a size request and a possible source at another branch."
+S06,176.659728,C075,start,والمسؤول هو اللي يراجعه ويوافق عليه.,rect / icon-actor / Review proposal / rect / icon-check / Approve / rect / icon-reject / Reject / outline / icon-pointer
+S06,183.675624,C077,start,بشرط جودة البيانات،,No transfer executed · Data quality and backtesting required
+S07,193.072268,C081,start,يساعده يبدأ من فكرة كامبين،,Brief: seasonal tailoring in neutral tones
 S07,195.250884,C082,start,ويطلع منها اقتراحات للـCopy، والـVisual Concepts، ونسخ مناسبة للسوشيال ميديا والإيميل.,"rect / rect / S02_storyboard / Your next
-occasion / line / DRAFT · Demo creative / Modern occasion / Tailoring for your next occasion. / rect / rect / S02_storyboard / Style in
-motion / line / DRAFT · Demo creative / City layers / A considered look for the everyday. / rect / rect / S02_storyboard / rect / S02_storyboard / Thoughtful combinations / DRAFT · Demo creative / Everyday refinement / Simple pieces. Thoughtful combinations."
-S07,201.331565,C083,start,وكل ده باستخدام الـBrand Guidelines والصور والمنتجات المعتمدة.,DEMO collection · Production assets and rights must be approved
-S07,208.514762,C086,start,والمساعد يجهز له اتجاهات إبداعية مختلفة للمراجعة.,outline
-S07,212.294535,C087,start,لكن القرار النهائي والنشر،,rect / Human brand review → approval before publication
-S07,214.150159,C088,start,يفضلوا عند فريق Concrete،,outline
-S08,224.216531,C093,start,مبيعات،,icon-invoice / Sales / line
-S08,225.065646,C094,start,وستوك،,icon-case / Inventory / line
-S08,225.814739,C095,start,وخدمة عملاء،,icon-call / Customer service / line
-S08,226.751927,C096,start,وسلوك شراء.,icon-lock / Customer permissions / line
-S08,231.163197,C098,start,ممكن نعرض Executive Brief بسيط،,Executive brief · Demo
-S08,233.365805,C099,start,يوضح الاتجاهات،,rect
+occasion / line / DRAFT · Social post / Modern occasion / Tailoring for your next occasion. / rect / rect / S02_storyboard / Style in
+motion / line / DRAFT · Email header / City layers / A considered look for the everyday. / rect / rect / S02_storyboard / rect / S02_storyboard / Thoughtful combinations / DRAFT · Social story / Everyday refinement / Simple pieces. Thoughtful combinations."
+S07,201.331565,C083,start,وكل ده باستخدام الـBrand Guidelines والصور والمنتجات المعتمدة.,DEMO collection · Production assets and rights must be approved
+S07,208.514762,C086,start,والمساعد يجهز له اتجاهات إبداعية مختلفة للمراجعة.,outline
+S07,212.294535,C087,start,لكن القرار النهائي والنشر،,Concrete team review → approval before publication
+S07,214.150159,C088,start,يفضلوا عند فريق Concrete،,outline
+S08,224.216531,C093,start,مبيعات،,icon-invoice / Sales / line
+S08,225.065646,C094,start,وستوك،,icon-case / Inventory / line
+S08,225.814739,C095,start,وخدمة عملاء،,icon-call / Customer service / line
+S08,226.751927,C096,start,وسلوك شراء.,icon-actor / Buying behavior / line
+S08,227.853787,C097,start,بعد ربط المصادر المسموح بيها ومراجعة جودتها،,"icon-lock / Permitted sources only ·
+Data quality checked first"
+S08,231.163197,C098,start,ممكن نعرض Executive Brief بسيط،,Executive brief · Demo
+S08,233.365805,C099,start,يوضح الاتجاهات،,rect
 S08,234.64619,C100,start,ويشير للمشاكل اللي محتاجة متابعة،,"A size request needs follow-up.
 Check branch stock and the last
-recorded service interaction."
+recorded service interaction."
 S08,237.080522,C101,start,ويخلّي المدير يقدر يرجع لمصدر كل رقم.,"icon-link / DEMO-STOCK-A-M · DEMO-CALL-1008
-Open source records before acting. / outline"
-S08,247.26263,C105,start,وإيه السؤال اللي محتاج يسأله بعد كده.,Next question: would an authorized transfer help?
-S08,251.001429,C107,start,لازم تكون Demo،,outline
-S09,256.579683,C110,start,تجربة أذكى للعميل،,icon-actor / Customer
-S09,258.084422,C111,start,وأدوات أفضل للموظفين،,icon-speech / Teams
-S09,259.947823,C112,start,ومعلومات أوضح للإدارة.,icon-settings / Management
-S09,261.836644,C113,start,لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.,line
+Open source records before acting. / outline"
+S08,247.26263,C105,start,وإيه السؤال اللي محتاج يسأله بعد كده.,Next question: would an authorized transfer help?
+S08,251.001429,C107,start,لازم تكون Demo،,outline
+S09,256.579683,C110,start,تجربة أذكى للعميل،,icon-actor / Customer
+S09,258.084422,C111,start,وأدوات أفضل للموظفين،,icon-speech / Teams
+S09,259.947823,C112,start,ومعلومات أوضح للإدارة.,icon-settings / Management
+S09,261.836644,C113,start,لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.,"line / Not building everything at once.
+A focused, phased approach."
 S09,265.229274,C114,start,هنبدأ بمراجعة أنظمة Concrete وإمكانياتها الموجودة،,"Inspect existing systems
-and native capabilities first."
-S09,268.546644,C115,start,ونحدد أعلى فرص من حيث القيمة،,Prioritize by value and feasibility.
-S09,272.825918,C118,start,نختار Pilot صغير،,"ellipse / icon-quality / Authorized, scoped pilot"
-S09,274.325533,C119,start,نقيس نتيجته،,ellipse / icon-check / Measure the actual result
-S09,275.29424,C120,start,ونبني عليه الخطوة اللي بعدها.,ellipse / icon-link / Expand from evidence
-S09,277.183424,C121,start,دي الرؤية اللي GRINDCTRL بتقترح تناقشها مع Concrete:,GRINDCTRL × Concrete · Proposed collaboration
-S09,281.042925,C122,start,حلول عملية للذكاء الاصطناعي،,outline
+and native capabilities first."
+S09,268.546644,C115,start,ونحدد أعلى فرص من حيث القيمة،,Prioritize by value and feasibility.
+S09,272.825918,C118,start,نختار Pilot صغير،,"ellipse / icon-quality / Authorized, scoped pilot"
+S09,274.325533,C119,start,نقيس نتيجته،,ellipse / icon-check / Measure the actual result
+S09,275.29424,C120,start,ونبني عليه الخطوة اللي بعدها.,ellipse / icon-link / Expand from evidence
+S09,277.183424,C121,start,دي الرؤية اللي GRINDCTRL بتقترح تناقشها مع Concrete:,GRINDCTRL × Concrete · Proposed collaboration
+S09,281.042925,C122,start,حلول عملية للذكاء الاصطناعي،,Practical AI · Serves the brand · Improves step by step / outline

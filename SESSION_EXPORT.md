@@ -202,7 +202,7 @@ It is one continuous locked track from 00:00 through all nine visual scenes. Nev
 
 The decoded master is 285.920 seconds: 12,609,072 samples at 44.1 kHz, mono. The MP3 container is 285.962449 seconds because of encoder padding. The MP4 video is 285.933333 seconds / 8,578 frames at 1920×1080 / 30 fps, H.264. Its one AAC audio stream is 285.920 seconds, 192 kb/s, mono, 44.1 kHz.
 
-MP4 SHA256: `ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd`.
+MP4 SHA256 (polished 2026-10-20): `6d9fff9624d6aa3c2b62473785ef8162719db779f12f1c416b6ad2c35a048623` (supersedes pre-polish `ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd`).
 
 ### Nine scenes and measured timing
 
@@ -244,13 +244,13 @@ The nine package PNGs were generative composition references, not verified inter
 
 ### QA performed and its practical limits
 
-The cue map contains 124 measured phrase intervals and 71 visual event onsets. Timing is ASR-assisted phrase/script matching, not certified individual-word forced alignment. Context recognition helped inspect negation, garment names, Club tiers, executive fields and closing brands. There was no human full Arabic-English listen-through or phonetic certification.
+The cue map contains 124 measured phrase intervals and 82 visual event onsets. Timing is ASR-assisted phrase/script matching, not certified individual-word forced alignment. Context recognition helped inspect negation, garment names, Club tiers, executive fields and closing brands. There was no human full Arabic-English listen-through or phonetic certification.
 
 Recorded technical checks:
 
-- 412 English/RTL seek states with zero text-overflow findings; 11 business-state guards; six RTL caption positions; 390px mobile layout with visible controls at least 42px.
-- 135 encoded-frame comparisons, maximum mean absolute pixel error 1.683/255.
-- 21 PCM audio windows, all zero sample lag, minimum correlation 0.9998285.
+- 434 English/RTL seek states with zero text-overflow findings; 17 business-state guards; six RTL caption positions; 390px mobile layout with visible controls at least 42px.
+- 146 encoded-frame comparisons, maximum mean absolute pixel error 1.953/255.
+- 21 PCM audio windows, all zero sample lag, minimum correlation 0.9998971.
 - Twelve unmuted software playback positions including the ending; full video and master decoded. Source peak 0.261156 and zero near-full-scale clipped samples.
 - Thirteen native/static pages reviewed through LibreOffice.
 - Twelve direct downloads returned HTTP 200 with local hash matches. Downloaded ZIP member checksums and its one-MP3 assertion passed.

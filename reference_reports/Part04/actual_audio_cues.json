@@ -1285,7 +1285,20 @@
         "Human review\nacross teams",
         "icon-settings",
         "Teams",
-        "Marketing · Operations · Management"
+        "Sales · Marketing · Management"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 21.263016,
+      "cue_id": "C009",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "مش بنتكلم عن أنظمة شغالة بالفعل.",
+      "objects": [
+        "rect",
+        "icon-quality",
+        "Proposed solutions · Not live systems"
       ]
     },
     {
@@ -1300,6 +1313,60 @@
       ]
     },
     {
+      "scene": "S01",
+      "at": 25.694059,
+      "cue_id": "C011",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "كل واحدة منها نقدر نختبرها ونشوف قيمتها الحقيقية.",
+      "objects": [
+        "Each one tested for its real value"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 32.546667,
+      "cue_id": "C013",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وعنده مناسبة مهمة،",
+      "objects": [
+        "rect",
+        "An important occasion"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 33.948073,
+      "cue_id": "C014",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لكنه مش عارف يختار لوك كامل.",
+      "objects": [
+        "rect",
+        "Unsure how to build a complete look"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 36.593968,
+      "cue_id": "C015",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بدل ما يلف على صفحات كتير،",
+      "objects": [
+        "Instead of browsing page after page…",
+        "rect",
+        "Blazers",
+        "rect",
+        "Shirts",
+        "rect",
+        "Trousers",
+        "rect",
+        "Shoes"
+      ]
+    },
+    {
       "scene": "S02",
       "at": 38.506961,
       "cue_id": "C016",
@@ -1308,7 +1375,7 @@
       "phrase_trigger": "يقول للـAI Stylist هو رايح فين،",
       "objects": [
         "icon-speech",
-        "“An evening occasion. Neutral tones.\nA complete smart-casual look.”"
+        "“An evening occasion. Neutral tones.\nA smart-casual look within my budget.”"
       ]
     },
     {
@@ -1420,6 +1487,32 @@
     },
     {
       "scene": "S03",
+      "at": 68.291927,
+      "cue_id": "C030",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو المقاس المناسب،",
+      "objects": [
+        "rect",
+        "icon-speech",
+        "Which size fits me?"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 69.707687,
+      "cue_id": "C031",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو إذا كان المنتج متاح في فرع قريب.",
+      "objects": [
+        "rect",
+        "icon-speech",
+        "Available at a nearby branch?"
+      ]
+    },
+    {
+      "scene": "S03",
       "at": 72.393946,
       "cue_id": "C032",
       "speech_anchor": "start",
@@ -1482,7 +1575,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "ولو المعلومات ناقصة،",
       "objects": [
-        "Not available\nin this demo"
+        "Stock data\nunavailable"
       ]
     },
     {
@@ -1493,7 +1586,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "يقول إنها غير متاحة بدل ما يخمن.",
       "objects": [
-        "No stock connection\nor delivery promise."
+        "Shown as unknown:\nno guess, no promise."
       ]
     },
     {
@@ -1571,7 +1664,7 @@
       "objects": [
         "AI call summary · DRAFT",
         "rect",
-        "Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
+        "Customer asked for an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
       ]
     },
     {
@@ -1599,6 +1692,9 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،",
       "objects": [
+        "line",
+        "icon-lock",
+        "No exchange, refund or delivery-date promise\nwithout confirmed data and approval.",
         "Demo draft · No automatic commitment or decision"
       ]
     },
@@ -1634,7 +1730,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "وكمان عضويته في Icons Club:",
       "objects": [
-        "Trusted membership source required · Illustrative tier"
+        "Icons Club membership · Trusted source required · Illustrative tier"
       ]
     },
     {
@@ -1645,6 +1741,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "Lifestyle،",
       "objects": [
+        "rect",
         "LIFESTYLE"
       ]
     },
@@ -1656,6 +1753,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "أو Prestige،",
       "objects": [
+        "rect",
         "PRESTIGE"
       ]
     },
@@ -1667,6 +1765,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "أو Elite.",
       "objects": [
+        "rect",
         "ELITE",
         "outline"
       ]
@@ -1686,6 +1785,17 @@
         "S02_storyboard",
         "Shirt",
         "Suggested pieces\nfor this preference"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 145.036939,
+      "cue_id": "C062",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو يساعد في حجز موعد مناسب.",
+      "objects": [
+        "Optional appointment · if offered"
       ]
     },
     {
@@ -1756,7 +1866,33 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "نقدر نقترح نقل كمية،",
       "objects": [
-        "line"
+        "line",
+        "rect",
+        "Move quantity · B → A"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 170.340181,
+      "cue_id": "C072",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو إعادة تزويد،",
+      "objects": [
+        "rect",
+        "Replenishment"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 171.705896,
+      "cue_id": "C073",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو توقع الطلب على منتجات معينة.",
+      "objects": [
+        "rect",
+        "Demand forecast · to test"
       ]
     },
     {
@@ -1786,7 +1922,7 @@
         "icon-check",
         "Approve",
         "rect",
-        "icon-end",
+        "icon-reject",
         "Reject",
         "outline",
         "icon-pointer"
@@ -1827,7 +1963,7 @@
         "S02_storyboard",
         "Your next\noccasion",
         "line",
-        "DRAFT · Demo creative",
+        "DRAFT · Social post",
         "Modern occasion",
         "Tailoring for your next occasion.",
         "rect",
@@ -1835,7 +1971,7 @@
         "S02_storyboard",
         "Style in\nmotion",
         "line",
-        "DRAFT · Demo creative",
+        "DRAFT · Email header",
         "City layers",
         "A considered look for the everyday.",
         "rect",
@@ -1844,7 +1980,7 @@
         "rect",
         "S02_storyboard",
         "Thoughtful combinations",
-        "DRAFT · Demo creative",
+        "DRAFT · Social story",
         "Everyday refinement",
         "Simple pieces. Thoughtful combinations."
       ]
@@ -1879,8 +2015,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "لكن القرار النهائي والنشر،",
       "objects": [
-        "rect",
-        "Human brand review → approval before publication"
+        "Concrete team review → approval before publication"
       ]
     },
     {
@@ -1941,9 +2076,21 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "وسلوك شراء.",
       "objects": [
-        "icon-lock",
-        "Customer permissions",
+        "icon-actor",
+        "Buying behavior",
         "line"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 227.853787,
+      "cue_id": "C097",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بعد ربط المصادر المسموح بيها ومراجعة جودتها،",
+      "objects": [
+        "icon-lock",
+        "Permitted sources only ·\nData quality checked first"
       ]
     },
     {
@@ -2058,7 +2205,8 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.",
       "objects": [
-        "line"
+        "line",
+        "Not building everything at once.\nA focused, phased approach."
       ]
     },
     {
@@ -2141,6 +2289,7 @@
       "anchor_difference_seconds": 0.0,
       "phrase_trigger": "حلول عملية للذكاء الاصطناعي،",
       "objects": [
+        "Practical AI · Serves the brand · Improves step by step",
         "outline"
       ]
     }
