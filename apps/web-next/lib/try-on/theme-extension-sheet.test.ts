@@ -34,7 +34,7 @@ const PAGE = `
   </main>
   <span data-cart-count>0</span>`;
 
-function stubFetch(features: string[]) {
+function stubFetch(features: string[], productJson: unknown = { variants: [{ id: 123, title: 'Sand / S' }, { id: 456, title: 'Black / M' }] }) {
   const calls: Array<{ url: string; body?: string }> = [];
   vi.stubGlobal(
     'fetch',
@@ -43,6 +43,9 @@ function stubFetch(features: string[]) {
       calls.push({ url, body: typeof init?.body === 'string' ? init.body : undefined });
       if (url.includes('/apps/grindctrl/config')) {
         return new Response(JSON.stringify({ tryOn: 'live', reason: null, radiusPx: 12, features }), { status: 200 });
+      }
+      if (url === '/products/layla-abaya.js') {
+        return productJson === null ? new Response('', { status: 500 }) : new Response(JSON.stringify(productJson), { status: 200 });
       }
       if (url.includes('/apps/grindctrl/try-on-context')) {
         const nonce = new URL(url, 'https://shop.example').searchParams.get('nonce');
@@ -99,6 +102,7 @@ describe('the v16 try-on sheet', () => {
     expect(frame.getAttribute('allow')).toBe('camera');
     expect(frame.src).toContain('variant=456');
     expect(frame.src).toContain('sheet=1');
+    expect(new URL(frame.src).searchParams.get('variantTitle')).toBe('Black / M');
     expect(calls.find((call) => call.url.includes('try-on-context'))?.url).toContain('variant=456');
     expect(sheet.querySelector('.gc-tryon-sheet__close')).toHaveAttribute('aria-label', 'Close');
     expect(sheet.style.getPropertyValue('--gc-sheet-radius')).toBe('12px');
@@ -185,6 +189,13 @@ describe('the v16 try-on sheet', () => {
     expect(sheet.hidden).toBe(true);
   });
 
+  it("opens with the product alone when the store's product names cannot be read", async () => {
+    stubFetch(['v16_tryon'], null);
+    const { frame } = await openSheet();
+    expect(frame.src).toContain('variant=456');
+    expect(frame.src).not.toContain('variantTitle');
+  });
+
   it('opens inline, as today, for a store without the flag', async () => {
     stubFetch([]);
     window.eval(productAsset);
@@ -196,5 +207,6 @@ describe('the v16 try-on sheet', () => {
     expect(document.querySelector('.gc-tryon-sheet')).toBeNull();
     expect(root.querySelector('iframe')!.src).toContain('variant=123');
     expect(root.querySelector('iframe')!.src).not.toContain('sheet=1');
+    expect(root.querySelector('iframe')!.src).not.toContain('variantTitle');
   });
 });

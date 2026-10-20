@@ -5,10 +5,14 @@ import { toAppearanceTokens } from '@/lib/try-on/appearance';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnDemo } from '@/components/try-on/try-on-demo';
+import { TryOnSheet } from '@/components/try-on/sheet/try-on-sheet';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { storeFlags } from '@/lib/flags/store-flags';
+import { getTypicalLookSeconds } from '@/lib/try-on/look-timing';
+import { DEFAULT_ADDRESS_FORM } from '@/lib/try-on/sheet-copy';
 import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
 import {
   DEFAULT_TRYON_LOCALE,
@@ -25,6 +29,7 @@ export const metadata: Metadata = {
 
 /* Bare try-on for embedding in an iframe (Shopify product pages).
    Query params: product=<handle> shop=<domain> locale=en|ar garment title
+   variant, and in the v16 sheet sheet=1 variantTitle.
    Journey styling and theme come from tryon_settings (dashboard-editable).
    Height is reported to the parent via postMessage (EmbedFrameBridge). */
 export default async function EmbedTryOnPage({
@@ -37,6 +42,8 @@ export default async function EmbedTryOnPage({
     garment?: string;
     title?: string;
     variant?: string;
+    sheet?: string;
+    variantTitle?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -57,7 +64,15 @@ export default async function EmbedTryOnPage({
         imageUrl: garmentOk ? params.garment! : '',
       }
     : undefined;
-  const settings = await getTryOnSettings(shop);
+  /* The v16 sheet only for a store whose v16_tryon flag is on; any other
+     store keeps today's try-on even if a loader asks for the sheet. */
+  const [settings, sheetOn] = await Promise.all([
+    getTryOnSettings(shop),
+    params.sheet === '1' && shop && shopProduct
+      ? storeFlags({ shopDomain: shop }).then((flags) => flags.includes('v16_tryon'))
+      : Promise.resolve(false),
+  ]);
+  const lookSeconds = sheetOn ? await getTypicalLookSeconds(shop) : null;
 
   /* Same fallback chain as app/try-on/page.tsx (the standalone demo): an
      explicit signal wins over a guess, and a shopper who set Arabic
@@ -94,8 +109,29 @@ export default async function EmbedTryOnPage({
       className={`${themeClass} min-h-dvh bg-background text-foreground`}
     >
       <EmbedFrameBridge />
-      <main className="gc-widget-surface px-4 py-6 sm:px-6" style={tokenOverrides}>
-        {shopProduct ? (
+      <main className={`gc-widget-surface ${sheetOn ? 'px-4 pb-6 pt-2 sm:px-8' : 'px-4 py-6 sm:px-6'}`} style={tokenOverrides}>
+        {shopProduct && sheetOn ? (
+          <div className="mx-auto w-full max-w-xl">
+            <TryOnSheet
+              product={shopProduct}
+              variantId={params.variant}
+              variantTitle={params.variantTitle?.trim().slice(0, 200) || undefined}
+              shop={shop ?? undefined}
+              lookSeconds={lookSeconds}
+              // The store's Arabic address form arrives with N26; until then
+              // the copy speaks to everyone.
+              addressForm={DEFAULT_ADDRESS_FORM}
+              loadingSteps={settings.loadingSteps ?? undefined}
+              result={{
+                showDownload: settings.showDownload,
+                showWhatsapp: settings.showWhatsapp,
+                showAddToCart: settings.showAddToCart,
+                showTryAgain: settings.showTryAgain,
+                disclaimerText: merchantCopy.disclaimerText,
+              }}
+            />
+          </div>
+        ) : shopProduct ? (
           <TryOnDemo
             productId={productHandle}
             shop={shop ?? undefined}

@@ -46,6 +46,28 @@
     return root.dataset.variant || '';
   }
 
+  /* The picked variant's own name ("Black / M") for the sheet's header,
+     from the store's product JSON in the shopper's language. Empty when it
+     cannot be read; the header then shows the product alone. */
+  function variantTitle(root, variantId) {
+    var handle = root.dataset.product || '';
+    if (!handle || !variantId) return Promise.resolve('');
+    var base = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+    return fetch(base + 'products/' + encodeURIComponent(handle) + '.js', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (product) {
+        var variants = (product && product.variants) || [];
+        for (var i = 0; i < variants.length; i++) {
+          if (String(variants[i].id) === String(variantId)) return variants[i].title || '';
+        }
+        return '';
+      })
+      .catch(function () { return ''; });
+  }
+
   /* After an add, the theme's cart count follows: Dawn-style themes hear
      their own cart update event, and any count the theme marks is set. */
   function refreshCartCount(variantId) {
@@ -394,7 +416,12 @@
       btn.disabled = true;
       btn.setAttribute('aria-busy', 'true');
 
-      getStorefrontContext(root, nonce, variant).then(function (storefrontContext) {
+      Promise.all([
+        getStorefrontContext(root, nonce, variant),
+        asSheet ? variantTitle(root, variant) : Promise.resolve('')
+      ]).then(function (ready) {
+      var storefrontContext = ready[0];
+      var pickedTitle = ready[1];
 
       var garment = root.dataset.garment || '';
       if (garment.indexOf('//') === 0) garment = 'https:' + garment;
@@ -425,6 +452,7 @@
         '&variant=' +
         encodeURIComponent(variant) +
         (asSheet ? '&sheet=1' : '') +
+        (pickedTitle ? '&variantTitle=' + encodeURIComponent(pickedTitle) : '') +
         '#storefrontContext=' +
         encodeURIComponent(storefrontContext.token) +
         '&storefrontNonce=' +
