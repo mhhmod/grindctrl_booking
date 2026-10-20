@@ -26,6 +26,7 @@ export const STORE_FLAGS = {
      (supabase/20261017_store_flags_screens.sql admits the v16_ names). */
   v16_dashboard: { code: 'V16', title: 'The v16 dashboard shell and pages' },
   v16_tryon: { code: 'V16', title: 'The v16 try-on for shoppers (needs the theme extension deployed)' },
+  v16_chat: { code: 'V16', title: 'The v16 Store Chat for shoppers' },
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;

@@ -9,6 +9,8 @@ export interface PanelCopy {
   close: string;
   messagePlaceholderFallback: string;
   poweredBy: string;
+  /** The v16 disclosure under the composer (Chat-Home), in place of poweredBy. */
+  disclosure: string;
   aiNotice: string;
   aiSenderLabel: string;
   humanSenderLabel: string;
@@ -62,6 +64,7 @@ const EN: PanelCopy = {
   close: 'Close chat',
   messagePlaceholderFallback: 'Ask anything…',
   poweredBy: 'Powered by GRINDCTRL',
+  disclosure: "Answers come from the store's AI assistant. A person from the team takes over when you ask, or when it can't help.",
   aiNotice: 'Assistant may reply automatically',
   aiSenderLabel: 'Assistant',
   humanSenderLabel: 'Team',
@@ -113,6 +116,8 @@ const AR: PanelCopy = {
   close: 'إغلاق المحادثة',
   messagePlaceholderFallback: 'اكتب سؤالك…',
   poweredBy: 'مدعوم من GRINDCTRL',
+  // The board's draft is feminine; this speaks to everyone until N26 lets a store choose.
+  disclosure: 'الإجابات من مساعد المتجر بالذكاء الاصطناعي. يتولى شخص من الفريق المحادثة عند الطلب، أو عندما لا يستطيع المساعد المساعدة.',
   aiNotice: 'قد يرد المساعد تلقائياً',
   aiSenderLabel: 'المساعد',
   humanSenderLabel: 'الفريق',

@@ -150,6 +150,10 @@ export function MessengerPanel({
   const [alert, setAlert] = useState<PublicHandoffAlert | null>(null);
   const [team, setTeam] = useState<PanelTeam | null>(config.team ?? null);
   const afterHoursMode = config.features?.includes('n23_after_hours') ?? false;
+  /* The v16 Store Chat (03-store-chat.md): the loader opens it as a sheet or
+     a docked panel; Escape here closes it, and opening it moves focus into
+     the composer. */
+  const v16Chat = config.features?.includes('v16_chat') ?? false;
   /* The assistant could not answer the last message (N24). */
   const [assistantDown, setAssistantDown] = useState(false);
   const [handingOff, setHandingOff] = useState(false);
@@ -171,6 +175,9 @@ export function MessengerPanel({
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  /* The v16 loader asks for the composer as it opens the panel, often
+     before the conversation has loaded; the request waits until it has. */
+  const focusRequested = useRef(false);
 
   /* Contact capture — offered by the server at most once per conversation. */
   const [askContact, setAskContact] = useState(false);
@@ -397,6 +404,13 @@ export function MessengerPanel({
         if (data.cart && typeof data.cart === 'object' && !Array.isArray(data.cart)) setCart(data.cart);
         return;
       }
+      if (data?.type === 'grindctrl-messenger:opened') {
+        if (!v16Chat) return;
+        const input = inputRef.current;
+        if (input && !input.disabled) input.focus({ preventScroll: true });
+        else focusRequested.current = true;
+        return;
+      }
       if (data?.type !== 'grindctrl-messenger:viewport' || typeof data.fullBleed !== 'boolean') return;
       setFullBleed(data.fullBleed);
       scrollToEnd();
@@ -411,7 +425,17 @@ export function MessengerPanel({
       window.removeEventListener('message', onParentMessage);
       window.removeEventListener('resize', scrollToEnd);
     };
-  }, [scrollToEnd, variant]);
+  }, [scrollToEnd, variant, v16Chat]);
+
+  // Escape pressed inside the panel never reaches the store page.
+  useEffect(() => {
+    if (variant !== 'live' || !v16Chat) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) closePanel();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [closePanel, v16Chat, variant]);
 
   /* Ask the loader for the cart once the listener above is in place; it
      sends it again whenever the theme changes the cart. */
@@ -441,7 +465,9 @@ export function MessengerPanel({
   /* Keep desktop keyboard focus, without opening a touch keyboard on boot
      (the loader can also preload this panel before the shopper opens it). */
   useEffect(() => {
-    if (!booting && !hasCoarsePointer()) inputRef.current?.focus();
+    if (booting) return;
+    if (focusRequested.current || !hasCoarsePointer()) inputRef.current?.focus();
+    focusRequested.current = false;
   }, [booting]);
 
   /* The latest messages for the outbox, which runs outside a render. */
@@ -1167,7 +1193,8 @@ export function MessengerPanel({
             {attachError ?? t.attachUploading}
           </p>
         )}
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">{t.poweredBy}</p>
+        {/* No GrindCTRL line on the store in v16; the shopper is told who answers instead. */}
+        <p className="mt-2 text-center text-[10px] text-muted-foreground">{v16Chat ? t.disclosure : t.poweredBy}</p>
       </footer>
     </div>
   );
