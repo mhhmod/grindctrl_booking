@@ -56,6 +56,15 @@ export interface PanelCopy {
   sendToTeam: string;
   offlineBar: string;
   waitingToSend: string;
+  /* The v16 home (Chat-Home) */
+  youreViewing: string;
+  tryItOn: string;
+  storeAssistantAi: string;
+  /** label, then the first message it sends */
+  quickActions: Array<{ id: 'order' | 'sizes' | 'delivery' | 'person'; label: string; message: string }>;
+  messageLabel: string;
+  speak: string;
+  stopSpeaking: string;
 }
 
 const EN: PanelCopy = {
@@ -108,6 +117,18 @@ const EN: PanelCopy = {
   sendToTeam: 'Send it to the team',
   offlineBar: 'You’re offline. We’ll send it when you’re back.',
   waitingToSend: 'Waiting to send',
+  youreViewing: "You're viewing",
+  tryItOn: 'Try it on',
+  storeAssistantAi: 'Store assistant, AI',
+  quickActions: [
+    { id: 'order', label: 'Track my order', message: 'Where is my order?' },
+    { id: 'sizes', label: 'Sizes and fit', message: 'Can you help me with sizes and fit?' },
+    { id: 'delivery', label: 'Delivery and exchange', message: 'How do delivery and exchanges work?' },
+    { id: 'person', label: 'Talk to a person', message: 'I want to talk to a person.' },
+  ],
+  messageLabel: 'Message',
+  speak: 'Speak your message',
+  stopSpeaking: 'Stop listening',
 };
 
 const AR: PanelCopy = {
@@ -160,6 +181,20 @@ const AR: PanelCopy = {
   sendToTeam: 'إرسالها إلى الفريق',
   offlineBar: 'لا يوجد اتصال بالإنترنت. سنرسلها عند عودة الاتصال.',
   waitingToSend: 'في انتظار الإرسال',
+  // The v16 home speaks to everyone until N26 lets a store choose a form (the
+  // board's drafts are feminine); the quick messages are the shopper's own words.
+  youreViewing: 'المعروض الآن',
+  tryItOn: 'تجربة القطعة',
+  storeAssistantAi: 'مساعد المتجر، ذكاء اصطناعي',
+  quickActions: [
+    { id: 'order', label: 'تتبع الطلب', message: 'أين طلبي؟' },
+    { id: 'sizes', label: 'المقاسات والقصّة', message: 'أحتاج مساعدة في المقاسات والقصّة.' },
+    { id: 'delivery', label: 'التوصيل والاستبدال', message: 'كيف يتم التوصيل والاستبدال؟' },
+    { id: 'person', label: 'التحدث مع شخص من الفريق', message: 'أريد التحدث مع خدمة العملاء.' },
+  ],
+  messageLabel: 'رسالتك',
+  speak: 'تسجيل الرسالة بالصوت',
+  stopSpeaking: 'إيقاف الاستماع',
 };
 
 export function getPanelCopy(locale: MessengerLocale): PanelCopy {

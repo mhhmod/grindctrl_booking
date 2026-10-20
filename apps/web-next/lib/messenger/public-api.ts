@@ -148,7 +148,7 @@ export interface PublicMessengerPayload {
   /** Who sees Store Chat on this store (N5, N6): the loader draws nothing
    *  when show is false, outside the theme editor. Absent means show. */
   launch?: import('@/lib/launch/audience').LaunchAudience;
-  /** When the team is in, for the header (n23_after_hours on only). */
+  /** When the team is in, for the header (n23_after_hours or v16_chat on only). */
   team?: { open: boolean; opensAt: string | null; closesAt: string | null; timezone: string } | null;
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
@@ -187,8 +187,11 @@ export function toPublicPayload(
     aiEnabled: active && site.config.ai.enabled,
     attachmentsEnabled: active && site.config.attachments.enabled,
     features: active ? [...features] : [],
+    /* The team's hours: for the after-hours header (N23), and for the v16
+       header's team half ("team here until 10 pm"), which follows opening
+       hours today. */
     team:
-      active && features.includes('n23_after_hours')
+      active && (features.includes('n23_after_hours') || features.includes('v16_chat'))
         ? (({ open, opensAt, closesAt, timezone }) => ({ open, opensAt, closesAt, timezone }))(
             teamHours(site.config.behaviour, now),
           )

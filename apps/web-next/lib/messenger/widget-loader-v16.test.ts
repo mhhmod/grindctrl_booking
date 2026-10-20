@@ -49,6 +49,19 @@ function boot(features: string[], behaviour: Record<string, unknown> = {}) {
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes('/api/messenger/config')) return new Response(JSON.stringify(config(features, behaviour)), { status: 200 });
+      if (url === '/products/layla-abaya.js') {
+        return new Response(
+          JSON.stringify({
+            title: 'Layla Embroidered Abaya',
+            featured_image: '//cdn.shopify.com/s/files/layla.jpg',
+            variants: [
+              { id: 456, title: 'Black / S', price: 325000 },
+              { id: 457, title: 'Black / M', price: 325000 },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
       return new Response('{}', { status: 200 });
     }),
   );
@@ -212,5 +225,56 @@ describe('the v16 Store Chat shell', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     // Escape is v16 behaviour; today's panel stays until its own close button.
     expect(frame.style.visibility).toBe('visible');
+  });
+
+  it("hands the panel the piece on this page, with the variant picked in the theme's form", async () => {
+    setWidth(390);
+    (window as { Shopify?: unknown }).Shopify = { currency: { active: 'EGP' }, routes: { root: '/' } };
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<form action="/cart/add"><input type="hidden" name="id" value="457"></form><button class="gc-tryon-btn">Try it on</button>',
+    );
+    try {
+      boot(['v16_chat']);
+      const frame = await openPanel();
+      expect(frame.getAttribute('allow')).toBe('clipboard-write; microphone');
+      const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+      window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-messenger:ready' }, source: frame.contentWindow }));
+
+      await waitFor(() =>
+        expect(posted).toHaveBeenCalledWith(
+          {
+            type: 'grindctrl-messenger:page-product',
+            product: {
+              handle: 'layla-abaya',
+              title: 'Layla Embroidered Abaya',
+              imageUrl: 'https://cdn.shopify.com/s/files/layla.jpg',
+              variantId: '457',
+              variantTitle: 'Black / M',
+              priceMinor: 325000,
+              currency: 'EGP',
+              tryOn: true,
+            },
+          },
+          'https://grindctrl.cloud',
+        ),
+      );
+    } finally {
+      delete (window as { Shopify?: unknown }).Shopify;
+    }
+  });
+
+  it("closes the chat and opens the store's try-on when the panel asks", async () => {
+    setWidth(390);
+    document.body.insertAdjacentHTML('beforeend', '<button class="gc-tryon-btn">Try it on</button>');
+    const tryOn = document.querySelector<HTMLButtonElement>('.gc-tryon-btn')!;
+    const clicked = vi.fn();
+    tryOn.addEventListener('click', clicked);
+    boot(['v16_chat']);
+    const frame = await openPanel();
+
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-messenger:try-on' }, source: frame.contentWindow }));
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(frame.style.visibility).toBe('hidden');
   });
 });

@@ -45,5 +45,9 @@ describe('toPublicPayload team hours (n23_after_hours)', () => {
       timezone: 'UTC',
     });
     expect(toPublicPayload({ ...base, config }, friday11am, []).team).toBeNull();
+    // The v16 header's team half follows the same hours.
+    expect(toPublicPayload({ ...base, config }, friday11am, ['v16_chat']).team).toEqual(
+      toPublicPayload({ ...base, config }, friday11am, ['n23_after_hours']).team,
+    );
   });
 });

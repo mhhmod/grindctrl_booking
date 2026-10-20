@@ -15,6 +15,10 @@ import {
   mergeMessages,
   type PanelTeam,
 } from './panel-state';
+import { ChatHome } from './v16/chat-home';
+import { parsePageProduct, type PageProduct } from './v16/page-product';
+import { SpeechButton } from './v16/speech-button';
+import { v16StatusLine } from './v16/status-line';
 
 /* The shopper-facing messenger surface. Rendered inside an iframe on
    grindctrl.cloud/embed/messenger so merchant theme CSS can never reach it.
@@ -178,6 +182,8 @@ export function MessengerPanel({
   /* The v16 loader asks for the composer as it opens the panel, often
      before the conversation has loaded; the request waits until it has. */
   const focusRequested = useRef(false);
+  /* The piece on the store page, for You're viewing (v16, from the loader). */
+  const [pageProduct, setPageProduct] = useState<PageProduct | null>(null);
 
   /* Contact capture — offered by the server at most once per conversation. */
   const [askContact, setAskContact] = useState(false);
@@ -402,6 +408,10 @@ export function MessengerPanel({
       }
       if (data?.type === 'grindctrl-messenger:cart') {
         if (data.cart && typeof data.cart === 'object' && !Array.isArray(data.cart)) setCart(data.cart);
+        return;
+      }
+      if (data?.type === 'grindctrl-messenger:page-product') {
+        if (v16Chat) setPageProduct(parsePageProduct(data.product));
         return;
       }
       if (data?.type === 'grindctrl-messenger:opened') {
@@ -776,6 +786,11 @@ export function MessengerPanel({
         ? `${t.assistantNow} · ${t.teamHereUntil(formatTeamTime(team.closesAt, locale))}`
         : t.assistantNow
       : `${t.assistantNow} · ${team.opensAt ? t.teamAwayUntil(formatTeamTime(team.opensAt, locale)) : t.teamAway}`;
+  const v16Status = v16StatusLine(
+    { aiEnabled: config.aiEnabled, available: config.available, afterHours: afterHoursMode, team },
+    t,
+    locale,
+  );
   const card = handoffCard(alert, afterHoursMode ? team : null);
   const lastIsOurs = messages.length > 0 && ['assistant', 'system'].includes(messages[messages.length - 1].role);
 
@@ -814,9 +829,11 @@ export function MessengerPanel({
           <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
             <span
               aria-hidden="true"
-              className={`inline-block size-1.5 rounded-full ${config.available || afterHoursMode ? 'bg-primary' : 'bg-muted-foreground'}`}
+              className={`inline-block size-1.5 rounded-full ${
+                (v16Chat ? v16Status.live : config.available || afterHoursMode) ? 'bg-[var(--gc-success,#2f6b3a)]' : 'bg-muted-foreground'
+              }`}
             />
-            {afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
+            {v16Chat ? v16Status.text : afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
           </p>
         </div>
 
@@ -866,7 +883,19 @@ export function MessengerPanel({
             <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
           </div>
         )}
-        {messages.length === 0 && !booting && (
+        {messages.length === 0 && !booting && v16Chat && (
+          <ChatHome
+            t={t}
+            locale={locale}
+            product={pageProduct}
+            welcomeTitle={welcomeTitle}
+            welcomeSubtitle={welcomeSubtitle}
+            disabled={booting}
+            onQuickAction={(message) => void send(message)}
+            onTryOn={() => window.parent.postMessage({ type: 'grindctrl-messenger:try-on' }, '*')}
+          />
+        )}
+        {messages.length === 0 && !booting && !v16Chat && (
           <div className="mx-auto max-w-[85%] pt-6 text-center">
             <p className="text-base font-semibold">{welcomeTitle}</p>
             {welcomeSubtitle && <p className="mt-1 text-xs text-muted-foreground">{welcomeSubtitle}</p>}
@@ -1130,7 +1159,7 @@ export function MessengerPanel({
           }}
         >
           <label htmlFor="gc-msgr-input" className="sr-only">
-            {placeholder}
+            {v16Chat ? t.messageLabel : placeholder}
           </label>
           {config.attachmentsEnabled && (
             <>
@@ -1175,6 +1204,17 @@ export function MessengerPanel({
             placeholder={placeholder}
             className="max-h-[120px] min-h-[42px] flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60"
           />
+          {v16Chat && (
+            <SpeechButton
+              t={t}
+              locale={locale}
+              disabled={booting}
+              onText={(heard) => {
+                setDraft((current) => (current ? `${current} ${heard}` : heard).slice(0, 2000));
+                inputRef.current?.focus();
+              }}
+            />
+          )}
           <button
             type="submit"
             aria-label={t.sendAria}

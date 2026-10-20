@@ -387,7 +387,8 @@
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
     frame.title = state.locale === 'ar' ? 'محادثة الدعم' : 'Support chat';
-    frame.allow = 'clipboard-write';
+    // v16: the composer's microphone uses the browser's own speech input.
+    frame.setAttribute('allow', v16Chat() ? 'clipboard-write; microphone' : 'clipboard-write');
     // sizeIframe writes the complete style, including the closed-state visuals.
     sizeIframe(frame);
     document.body.appendChild(frame);
@@ -550,6 +551,8 @@
     state.open = true;
     if (v16Chat()) {
       showBackdrop();
+      // The variant may have changed since the panel was built.
+      sendPageProduct();
       // The phone's back gesture closes the panel, not the store page.
       try { window.history.pushState({ gcChat: true }, ''); state.pushedHistory = true; } catch (e) {}
     }
@@ -618,9 +621,73 @@
       if (state.open && v16Chat() && state.iframe.contentWindow) {
         state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:opened' }, APP_ORIGIN);
       }
+      sendPageProduct();
+    }
+    // v16: Try it on from "You're viewing" opens the store's own try-on.
+    if (data && data.type === 'grindctrl-messenger:try-on' && v16Chat()) {
+      var tryOn = document.querySelector('.gc-tryon-btn');
+      if (tryOn) { close(); tryOn.click(); }
     }
     if (data && data.type === 'grindctrl-messenger:cart-request') { sendCart(); watchCart(); }
   });
+
+  /* ── The product on this page (v16, Chat-Home "You're viewing") ──
+     On a product page the panel shows the piece the shopper is looking at,
+     with the variant picked in the theme's own form, its price in the
+     shopper's currency, and Try it on when the store's try-on button is
+     on the page. Read from the store's own product JSON, once a page. */
+  var pageProduct = null;
+  function pageHandle() {
+    var match = window.location.pathname.match(/\/products\/([^/?#]+)/);
+    if (!match) return '';
+    try { return decodeURIComponent(match[1]); } catch (e) { return ''; }
+  }
+  function loadPageProduct() {
+    if (pageProduct) return pageProduct;
+    var handle = pageHandle();
+    if (!handle || !window.Shopify) return (pageProduct = Promise.resolve(null));
+    var root = ((window.Shopify.routes && window.Shopify.routes.root) || '/').replace(/\/?$/, '/');
+    pageProduct = fetch(root + 'products/' + encodeURIComponent(handle) + '.js', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (product) {
+        if (!product || !Array.isArray(product.variants) || !product.variants.length) return null;
+        var image = typeof product.featured_image === 'string' ? product.featured_image : '';
+        if (image.indexOf('//') === 0) image = 'https:' + image;
+        return { handle: handle, title: product.title || '', imageUrl: /^https:\/\//.test(image) ? image : '', variants: product.variants };
+      })
+      .catch(function () { return null; });
+    return pageProduct;
+  }
+  function pickedVariantId() {
+    var input = document.querySelector('form[action*="/cart/add"] [name="id"]');
+    if (input && /^\d+$/.test(input.value)) return input.value;
+    try { return new URLSearchParams(window.location.search).get('variant') || ''; } catch (e) { return ''; }
+  }
+  function sendPageProduct() {
+    if (!v16Chat() || !state.iframe || !state.iframe.contentWindow) return;
+    loadPageProduct().then(function (product) {
+      if (!product || !state.iframe || !state.iframe.contentWindow) return;
+      var wanted = pickedVariantId();
+      var variant = product.variants[0];
+      for (var i = 0; i < product.variants.length; i++) {
+        if (String(product.variants[i].id) === wanted) { variant = product.variants[i]; break; }
+      }
+      var currency = window.Shopify && window.Shopify.currency && window.Shopify.currency.active;
+      state.iframe.contentWindow.postMessage({
+        type: 'grindctrl-messenger:page-product',
+        product: {
+          handle: product.handle,
+          title: product.title,
+          imageUrl: product.imageUrl,
+          variantId: String(variant.id),
+          variantTitle: variant.title || '',
+          priceMinor: typeof variant.price === 'number' ? variant.price : null,
+          currency: typeof currency === 'string' ? currency : null,
+          tryOn: !!document.querySelector('.gc-tryon-btn')
+        }
+      }, APP_ORIGIN);
+    });
+  }
 
   /* ── The cart (phase zero item 10) ──
      For a store with the big-order rule on, the panel asks for the cart.
