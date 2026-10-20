@@ -20,6 +20,7 @@ vi.mock('../use-try-on-flow', async () => {
       const [job, setJob] = useState<Record<string, unknown> | null>(null);
       const [photoDataUrl, setPhoto] = useState<string | null>(null);
       const [generationStartedAt, setStartedAt] = useState<number | null>(null);
+      const [generationSeconds, setSeconds] = useState<number | null>(null);
       const selectPhoto = useCallback((dataUrl: string) => {
         flow.selected.push(dataUrl);
         setPhoto(dataUrl);
@@ -29,6 +30,7 @@ vi.mock('../use-try-on-flow', async () => {
         step,
         photoDataUrl,
         generationStartedAt,
+        generationSeconds,
         sessionState: 'ready',
         sessionError: null,
         job,
@@ -43,6 +45,7 @@ vi.mock('../use-try-on-flow', async () => {
           flow.generated += 1;
           setStartedAt(Date.now());
           if (flow.finish) {
+            setSeconds(14);
             setJob({ jobId: 'job-1', productId: 'layla-abaya', resultImageUrl: 'data:image/png;base64,bG9vaw==', meta: { runtime: 'live' } });
             setStep('result');
             return;
@@ -87,7 +90,22 @@ async function pickPhoto() {
   await screen.findByText('Looks great');
 }
 
+/* A phone by default: a touch screen, narrow. */
+function setScreen({ touch, wide }: { touch: boolean; wide: boolean }) {
+  window.matchMedia = ((query: string) => ({
+    matches: query.includes('pointer: coarse') ? touch : query.includes('min-width: 768px') ? wide : query.includes('prefers-reduced-motion'),
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
 beforeEach(async () => {
+  setScreen({ touch: true, wide: false });
   const real = await vi.importActual<typeof import('@/lib/try-on/phone-store')>('@/lib/try-on/phone-store');
   phone.store = real.createPhoneStore(real.memoryBackend());
   flow.generated = 0;
@@ -255,5 +273,32 @@ describe('the v16 try-on sheet', () => {
       else delete (window.navigator as { userAgent?: string }).userAgent;
       Object.defineProperty(document, 'referrer', { value: '', configurable: true });
     }
+  });
+
+  it('offers only the photo picker on a computer, where a file picker cannot open a camera', async () => {
+    setScreen({ touch: false, wide: true });
+    renderSheet();
+    await screen.findByRole('heading', { name: 'See it on you' });
+    expect(screen.queryByRole('button', { name: /Take a photo/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Choose from your photos/ })).toBeInTheDocument();
+    expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1);
+    expect(document.querySelector('input[capture]')).toBeNull();
+  });
+
+  it('shows the look beside the details on a wide screen, with how long it took', async () => {
+    flow.finish = true;
+    setScreen({ touch: false, wide: true });
+    renderSheet();
+    await screen.findByRole('heading', { name: 'See it on you' });
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+    fireEvent.change(gallery, { target: { files: [new File(['photo'], 'me.png', { type: 'image/png' })] } });
+    await screen.findByText('Looks great');
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Your look is ready, made in 14 seconds' })).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Drag to compare your photo and the look' })).toHaveAttribute('aria-valuenow', '50');
+    expect(screen.getByRole('img', { name: 'You wearing the Layla Embroidered Abaya' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Your original photo' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Compare' })).toBeNull();
   });
 });

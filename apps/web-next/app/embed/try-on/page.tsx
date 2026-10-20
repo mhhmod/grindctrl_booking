@@ -111,7 +111,7 @@ export default async function EmbedTryOnPage({
       <EmbedFrameBridge />
       <main className={`gc-widget-surface ${sheetOn ? 'px-4 pb-6 pt-2 sm:px-8' : 'px-4 py-6 sm:px-6'}`} style={tokenOverrides}>
         {shopProduct && sheetOn ? (
-          <div className="mx-auto w-full max-w-xl">
+          <div className="w-full">
             <TryOnSheet
               product={shopProduct}
               variantId={params.variant}

@@ -7,10 +7,11 @@ import { DEFAULT_ADDRESS_FORM, getSheetCopy, isArabicAddressForm, type SheetCopy
 const FORMS = ['women', 'men', 'everyone'] as const;
 
 function strings(copy: SheetCopy): string[] {
-  const { variantLine, photoTime, secondsLeft, privacyBody, makingSteps, lookAlt, addToCart, soldOutOption, inAppNote, linkCopied, ...lines } = copy;
+  const { variantLine, photoTime, secondsLeft, privacyBody, makingSteps, lookAlt, addToCart, soldOutOption, inAppNote, linkCopied, readyIn, ...lines } = copy;
   return [
     inAppNote('Instagram'),
     linkCopied('TikTok'),
+    ...[1, 2, 7, 14].map(readyIn),
     variantLine('Black · M'),
     lookAlt('Layla Embroidered Abaya'),
     addToCart('Black, M'),
@@ -63,6 +64,12 @@ describe('the try-on sheet copy', () => {
       'تبقّت 12 ثانية تقريباً',
     ]);
     expect([1, 12].map(getSheetCopy('en').secondsLeft)).toEqual(['About 1 second left', 'About 12 seconds left']);
+    expect([2, 7, 14].map(getSheetCopy('ar', 'women').readyIn)).toEqual([
+      'إطلالتكِ جاهزة، جُهّزت في ثانيتين',
+      'إطلالتكِ جاهزة، جُهّزت في 7 ثوانٍ',
+      'إطلالتكِ جاهزة، جُهّزت في 14 ثانية',
+    ]);
+    expect(getSheetCopy('en').readyIn(14)).toBe('Your look is ready, made in 14 seconds');
   });
 
   it('gives every form every line', () => {

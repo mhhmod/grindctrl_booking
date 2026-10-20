@@ -21,6 +21,7 @@ export function SheetPhotoStep({
   lookSeconds,
   inApp = null,
   storeLink = null,
+  canTakePhoto = true,
   onPhoto,
   onShowPrivacy,
 }: {
@@ -32,6 +33,8 @@ export function SheetPhotoStep({
   inApp?: InAppBrowser | null;
   /** The store's page for this piece, to open in the phone's own browser. */
   storeLink?: string | null;
+  /** False on a computer, where the file picker cannot open a camera. */
+  canTakePhoto?: boolean;
   onPhoto: (dataUrl: string) => void;
   onShowPrivacy: () => void;
 }) {
@@ -101,7 +104,15 @@ export function SheetPhotoStep({
       )}
 
       <div className="space-y-3">
-        {inApp ? (
+        {!canTakePhoto ? (
+          <ChoiceButton
+            icon={<ImageIcon className="size-5" aria-hidden="true" />}
+            primary
+            title={copy.choosePhoto}
+            hint={copy.choosePhotoHint}
+            onClick={() => galleryRef.current?.click()}
+          />
+        ) : inApp ? (
           <>
             <ChoiceButton
               icon={<ImageIcon className="size-5" aria-hidden="true" />}
@@ -134,7 +145,9 @@ export function SheetPhotoStep({
             />
           </>
         )}
-        <input ref={cameraRef} type="file" accept={accept} capture="user" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handle} />
+        {canTakePhoto && (
+          <input ref={cameraRef} type="file" accept={accept} capture="user" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handle} />
+        )}
         <input ref={galleryRef} type="file" accept={accept} className="sr-only" tabIndex={-1} aria-hidden="true" onChange={handle} />
         {error && (
           <p role="alert" className="text-sm text-destructive">

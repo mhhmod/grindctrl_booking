@@ -61,6 +61,8 @@ export function useTryOnFlow({
   const [isSlowGeneration, setIsSlowGeneration] = useState(false);
   /** When the shopper tapped to make this look, for the sheet's countdown. */
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  /** How long the look took, from the tap to the look in this page. */
+  const [generationSeconds, setGenerationSeconds] = useState<number | null>(null);
   const [job, setJob] = useState<TryOnJob | null>(null);
   const [error, setError] = useState<string | null>(null);
   /* Set when the store cannot make looks right now (out of looks, plan
@@ -155,8 +157,10 @@ export function useTryOnFlow({
   }, []);
 
   const generate = useCallback(async () => {
+    const startedAt = Date.now();
     setStep('generating');
-    setGenerationStartedAt(Date.now());
+    setGenerationStartedAt(startedAt);
+    setGenerationSeconds(null);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setError(null);
@@ -245,6 +249,7 @@ export function useTryOnFlow({
       );
 
       setGenerationPhase('result-received');
+      setGenerationSeconds(Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
 
       setJob({
         jobId: genData.jobId,
@@ -286,6 +291,7 @@ export function useTryOnFlow({
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setGenerationStartedAt(null);
+    setGenerationSeconds(null);
     setStep('upload');
   }, []);
 
@@ -295,6 +301,7 @@ export function useTryOnFlow({
     generationPhase,
     isSlowGeneration,
     generationStartedAt,
+    generationSeconds,
     job,
     error,
     unavailable,

@@ -12,6 +12,8 @@ import {
   type StoreProduct,
 } from '@/lib/try-on/store-product';
 import type { TryOnJob } from '@/lib/try-on/types';
+import { SheetCompareSlider } from './sheet-compare-slider';
+import { useMediaQuery } from './use-media-query';
 
 /* TryOn-Result (02-try-on.md): "Your look is ready" with the piece and its
    price, the look filling the top with Look and Your photo to compare,
@@ -19,7 +21,9 @@ import type { TryOnJob } from '@/lib/try-on/types';
    names the variant it will add. A size changes only what is added, so it
    needs no new look. Picking another colour makes a new look, which waits
    for asynchronous looks (N38, N40); until then the tried colour shows
-   as it is. Not right? waits for look feedback (N39). */
+   as it is. Not right? waits for look feedback (N39). On a wide frame
+   (TryOn-Desktop) the look and the photo share a before and after
+   slider beside the details, and the title says how long the look took. */
 export function SheetResultStep({
   copy,
   t,
@@ -31,6 +35,7 @@ export function SheetResultStep({
   triedVariantId,
   fallbackVariantTitle,
   controls,
+  madeInSeconds = null,
   onChangePhoto,
 }: {
   copy: SheetCopy;
@@ -45,8 +50,11 @@ export function SheetResultStep({
   /** The tried variant's name from the loader, for when the product never arrives. */
   fallbackVariantTitle?: string;
   controls?: ResultControls;
+  /** From the tap to the look in this page, for the desktop title. */
+  madeInSeconds?: number | null;
   onChangePhoto: () => void;
 }) {
+  const wide = useMediaQuery('(min-width: 768px)');
   const [view, setView] = useState<'look' | 'photo'>('look');
   const [pickedId, setPickedId] = useState<string | null>(null);
   const [cart, setCart] = useState<{ state: 'idle' | 'adding' | 'added' | 'failed'; added: string; message: string }>({
@@ -110,13 +118,39 @@ export function SheetResultStep({
 
   const otherOptions = storeProduct && tried ? storeProduct.options.map((name, index) => ({ name, index })).filter(({ index }) => index !== sizes.index) : [];
 
-  return (
-    <div className="flex flex-col gap-5">
-      <header className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.lookReady}</h2>
-        <p className="text-sm text-muted-foreground">{price ? `${productName} · ${price}` : productName}</p>
-      </header>
+  const heading = (
+    <header className="space-y-1">
+      <h2 className="text-xl font-semibold tracking-tight text-foreground">
+        {wide && madeInSeconds ? copy.readyIn(madeInSeconds) : copy.lookReady}
+      </h2>
+      <p className="text-sm text-muted-foreground">{price ? `${productName} · ${price}` : productName}</p>
+    </header>
+  );
 
+  const visual =
+    wide && photoDataUrl && job.resultImageUrl ? (
+      <div className="space-y-3">
+        <SheetCompareSlider
+          photoSrc={photoDataUrl}
+          lookSrc={job.resultImageUrl}
+          label={copy.compareLabel}
+          photoLabel={copy.yourPhoto}
+          lookLabel={copy.yourLook}
+          lookAlt={copy.lookAlt(productName)}
+          photoAlt={copy.originalPhotoAlt}
+          aiPreview={copy.aiPreview}
+          rtl={locale === 'ar'}
+        />
+        {show.changePhoto && (
+          <div className="flex justify-center">
+            <button type="button" onClick={onChangePhoto} className={SECONDARY_INLINE}>
+              <RefreshCw className="size-4" aria-hidden="true" />
+              {copy.changePhoto}
+            </button>
+          </div>
+        )}
+      </div>
+    ) : (
       <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border bg-muted/30">
         {view === 'look' ? (
           // The look lives in this page as a data or blob URL.
@@ -161,7 +195,10 @@ export function SheetResultStep({
           )
         )}
       </div>
+    );
 
+  const details = (
+    <>
       {tried && (otherOptions.length > 0 || sizes.variants.length > 0) && (
         <div className="space-y-4">
           {otherOptions.map(({ name, index }) => (
@@ -237,7 +274,7 @@ export function SheetResultStep({
           {show.download && (
             <button type="button" onClick={saveLook} className={SECONDARY}>
               <Download className="size-4" aria-hidden="true" />
-              {copy.savePhoto}
+              {wide ? copy.saveImage : copy.savePhoto}
             </button>
           )}
           {show.whatsapp && (
@@ -255,9 +292,28 @@ export function SheetResultStep({
       )}
 
       <p className="text-center text-xs leading-relaxed text-muted-foreground">{controls?.disclaimerText || copy.disclaimer}</p>
+    </>
+  );
+
+  // Desktop (TryOn-Desktop): the slider beside the details.
+  return wide ? (
+    <div className="grid grid-cols-2 items-start gap-8">
+      {visual}
+      <div className="flex flex-col gap-5">
+        {heading}
+        {details}
+      </div>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-5">
+      {heading}
+      {visual}
+      {details}
     </div>
   );
 }
 
 const SECONDARY =
   'flex h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+const SECONDARY_INLINE =
+  'flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium text-foreground focus-visible:outline-2 focus-visible:outline-ring';

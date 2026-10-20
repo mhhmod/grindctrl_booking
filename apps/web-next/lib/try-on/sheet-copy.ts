@@ -91,6 +91,11 @@ export type SheetCopy = {
   /** iOS cannot switch browsers from a page: the link is copied instead. */
   linkCopied: (app: string) => string;
   linkManual: string;
+  /** The desktop title, with the look's own measured time. */
+  readyIn: (seconds: number) => string;
+  compareLabel: string;
+  yourLook: string;
+  saveImage: string;
 };
 
 const EN: SheetCopy = {
@@ -161,6 +166,10 @@ const EN: SheetCopy = {
   comesWithYou: 'Your piece, size and choices come with you',
   linkCopied: (app) => `Link copied. In ${app}, open the menu at the top and choose to open it in your browser.`,
   linkManual: 'Copy this link and open it in your browser',
+  readyIn: (seconds) => `Your look is ready, made in ${seconds} ${seconds === 1 ? 'second' : 'seconds'}`,
+  compareLabel: 'Drag to compare your photo and the look',
+  yourLook: 'Your look',
+  saveImage: 'Save image',
 };
 
 /* Shared by every Arabic form: no second-person verb or pronoun. */
@@ -199,6 +208,13 @@ const AR_COMMON = {
   disclaimer: 'هذه المعاينة دليل بصري وليست ضماناً دقيقاً للمقاس. قد تختلف الألوان قليلاً.',
   inAppChoose: 'اختيار صورة',
 } as const;
+
+/* "جُهّزت في 14 ثانية": 1 and 2 have their own words, 3 to 10 the plural. */
+function arabicMadeIn(seconds: number): string {
+  if (seconds === 1) return 'جُهّزت في ثانية واحدة';
+  if (seconds === 2) return 'جُهّزت في ثانيتين';
+  return `جُهّزت في ${seconds} ${seconds <= 10 ? 'ثوانٍ' : 'ثانية'}`;
+}
 
 const AR: Record<ArabicAddressForm, SheetCopy> = {
   women: {
@@ -245,6 +261,10 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     comesWithYou: 'قطعتكِ ومقاسكِ واختياراتكِ تنتقل معكِ',
     linkCopied: (app) => `تم نسخ الرابط. في ${app}، افتحي القائمة في الأعلى واختاري الفتح في المتصفح.`,
     linkManual: 'انسخي هذا الرابط وافتحيه في متصفحكِ',
+    readyIn: (seconds) => `إطلالتكِ جاهزة، ${arabicMadeIn(seconds)}`,
+    compareLabel: 'اسحبي للمقارنة بين صورتكِ والإطلالة',
+    yourLook: 'إطلالتكِ',
+    saveImage: 'احفظي الصورة',
   },
   men: {
     ...AR_COMMON,
@@ -290,6 +310,10 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     comesWithYou: 'قطعتك ومقاسك واختياراتك تنتقل معك',
     linkCopied: (app) => `تم نسخ الرابط. في ${app}، افتح القائمة في الأعلى واختر الفتح في المتصفح.`,
     linkManual: 'انسخ هذا الرابط وافتحه في متصفحك',
+    readyIn: (seconds) => `إطلالتك جاهزة، ${arabicMadeIn(seconds)}`,
+    compareLabel: 'اسحب للمقارنة بين صورتك والإطلالة',
+    yourLook: 'إطلالتك',
+    saveImage: 'احفظ الصورة',
   },
   everyone: {
     ...AR_COMMON,
@@ -335,6 +359,10 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     comesWithYou: 'تنتقل القطعة والمقاس والاختيارات إلى المتصفح',
     linkCopied: (app) => `تم نسخ الرابط. من القائمة في أعلى ${app}، يمكن اختيار الفتح في المتصفح.`,
     linkManual: 'يمكن نسخ هذا الرابط وفتحه في المتصفح',
+    readyIn: (seconds) => `الإطلالة جاهزة، ${arabicMadeIn(seconds)}`,
+    compareLabel: 'السحب للمقارنة بين الصورة والإطلالة',
+    yourLook: 'الإطلالة',
+    saveImage: 'حفظ الصورة',
   },
 };
 

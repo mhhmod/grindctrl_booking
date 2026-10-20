@@ -12,6 +12,7 @@ import { SheetResultStep } from './sheet-result-step';
 import { makingProgress } from '@/lib/try-on/making-progress';
 import { parseStoreProduct, type StoreProduct } from '@/lib/try-on/store-product';
 import { detectInAppBrowser, storePageUrl } from '@/lib/try-on/in-app-browser';
+import { useMediaQuery } from './use-media-query';
 import { phoneStore } from '@/lib/try-on/phone-store';
 import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
 
@@ -56,6 +57,9 @@ export function TryOnSheet({
   const userAgent = useSyncExternalStore(noSubscription, () => navigator.userAgent, () => '');
   const referrer = useSyncExternalStore(noSubscription, () => document.referrer, () => '');
   const inApp = detectInAppBrowser(userAgent);
+  /* A computer's file picker ignores the camera hint, and the in-sheet
+     camera is not built yet, so Take a photo shows only on touch screens. */
+  const touchScreen = useMediaQuery('(pointer: coarse)', true);
   const storeLink = inApp ? storePageUrl({ referrer, shop, handle: product.handle, variantId }) : null;
 
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -136,7 +140,7 @@ export function TryOnSheet({
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-3rem)] flex-col gap-5">
+    <div className={`mx-auto flex min-h-[calc(100dvh-3rem)] w-full flex-col gap-5 ${flow.step === 'result' ? 'max-w-4xl' : 'max-w-xl'}`}>
       <p role="status" className="sr-only">
         {announcement}
       </p>
@@ -172,6 +176,7 @@ export function TryOnSheet({
             lookSeconds={lookSeconds}
             inApp={inApp}
             storeLink={storeLink}
+            canTakePhoto={touchScreen || inApp !== null}
             onPhoto={selectPhoto}
             onShowPrivacy={() => setPrivacyOpen(true)}
           />
@@ -214,6 +219,7 @@ export function TryOnSheet({
             triedVariantId={variantId}
             fallbackVariantTitle={variantTitle}
             controls={result}
+            madeInSeconds={flow.generationSeconds}
             onChangePhoto={flow.reset}
           />
         )}
