@@ -1,4 +1,7 @@
 export const TRYON_POLL_TIMEOUT_MS = 2 * 60_000;
+/* A look made after the answer (N38) is polled for the whole provider run:
+   two attempts of 120 seconds each plus the garment fetch and the save. */
+export const TRYON_ASYNC_POLL_TIMEOUT_MS = 5 * 60_000;
 export const TRYON_POLL_INITIAL_DELAY_MS = 1_000;
 export const TRYON_POLL_MAX_DELAY_MS = 5_000;
 export const TRYON_POLL_BACKOFF_FACTOR = 1.6;

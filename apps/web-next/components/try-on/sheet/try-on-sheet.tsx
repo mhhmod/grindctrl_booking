@@ -109,6 +109,7 @@ export function TryOnSheet({
     elapsedMs: flow.generationStartedAt === null ? 0 : now - flow.generationStartedAt,
     estimateSeconds: lookSeconds,
     stepCount: steps.length,
+    stage: flow.serverStage,
   });
   // One polite region for the whole sheet, so each step and the ready
   // moment are announced once.

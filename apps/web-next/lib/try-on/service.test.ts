@@ -498,6 +498,117 @@ describe('try-on service', () => {
       expect(runImageGenerationMock).toHaveBeenCalledTimes(1);
     });
 
+    describe('asynchronous looks (N38)', () => {
+      function reserve(requestKey: string) {
+        let reservedJobId = '';
+        beginTryOnJobMock.mockImplementationOnce((input: { jobId: string }) => {
+          reservedJobId = input.jobId;
+          return Promise.resolve({
+            jobId: input.jobId,
+            created: true,
+            status: 'processing',
+            modelKey: 'model-v1',
+            message: null,
+            provider: null,
+            costUsd: null,
+            durationMs: null,
+            createdAt: '2026-08-31T00:00:00.000Z',
+          });
+        });
+        return { auth: storefrontAuthorization({ requestKey }), jobId: () => reservedJobId };
+      }
+
+      it('answers once the look is reserved, then makes it after the answer with its stages', async () => {
+        process.env.TRYON_MODE = 'live';
+        const { auth, jobId } = reserve('44444444-4444-4444-8444-444444444444');
+        const tasks: Array<() => Promise<void>> = [];
+        let resolveProvider!: (job: TryOnJob) => void;
+        runImageGenerationMock.mockReturnValue(new Promise<TryOnJob>((resolve) => { resolveProvider = resolve; }));
+        let resolvePersist!: () => void;
+        persistGeneratedTryOnResultMock.mockReturnValue(new Promise<void>((resolve) => { resolvePersist = resolve; }));
+
+        const answer = await generateTryOn(auth, 'upload', 'data:image/png;base64,PHOTO', auth.canonicalGarmentUrl ?? undefined, undefined, {
+          background: (task) => tasks.push(task),
+        });
+
+        expect(answer).toMatchObject({ jobId: jobId(), status: 'processing', stage: 'received', shop: auth.shop });
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        expect(getJob(jobId())?.stage).toBe('received');
+
+        const run = tasks[0]();
+        await vi.waitFor(() => expect(getJob(jobId())?.stage).toBe('making'));
+        resolveProvider({
+          jobId: 'provider-job',
+          sessionId: auth.sessionId,
+          productId: auth.productId,
+          shop: auth.shop,
+          status: 'completed',
+          resultImageUrl: 'data:image/png;base64,LOOK',
+          createdAt: '2026-08-31T00:00:01.000Z',
+          meta: { runtime: 'live', provider: 'provider-v1', costEstimate: 0.01 },
+        });
+        await vi.waitFor(() => expect(getJob(jobId())?.stage).toBe('finishing'));
+        resolvePersist();
+        await run;
+
+        const done = getJob(jobId())!;
+        expect(done).toMatchObject({ status: 'completed', resultImageUrl: 'data:image/png;base64,LOOK' });
+        expect(done.stage).toBeUndefined();
+        expect(finalizeTryOnJobMock).toHaveBeenCalledOnce();
+      });
+
+      it('ends a failed look as failed, refunded and in the shopper\'s words, never stuck being made', async () => {
+        process.env.TRYON_MODE = 'live';
+        const { auth, jobId } = reserve('55555555-5555-4555-8555-555555555555');
+        const tasks: Array<() => Promise<void>> = [];
+        runImageGenerationMock.mockRejectedValue(new Error('Insufficient credits. Add more using https://openrouter.ai/settings/credits'));
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await generateTryOn(auth, 'upload', 'data:image/png;base64,PHOTO', auth.canonicalGarmentUrl ?? undefined, undefined, {
+          background: (task) => tasks.push(task),
+        });
+        await expect(tasks[0]()).resolves.toBeUndefined();
+
+        const failed = getJob(jobId())!;
+        expect(failed.status).toBe('failed');
+        expect(failed.message).not.toMatch(/openrouter|credits/i);
+        expect(finalizeTryOnJobMock).toHaveBeenCalledWith(expect.objectContaining({ jobId: jobId(), status: 'failed' }), expect.any(Number));
+      });
+
+      it('still ends the look when the refund itself fails', async () => {
+        process.env.TRYON_MODE = 'live';
+        const { auth, jobId } = reserve('66666666-6666-4666-8666-666666666666');
+        const tasks: Array<() => Promise<void>> = [];
+        runImageGenerationMock.mockRejectedValue(new Error('provider down'));
+        finalizeTryOnJobMock.mockRejectedValue(new Error('database down'));
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        await generateTryOn(auth, 'upload', 'data:image/png;base64,PHOTO', auth.canonicalGarmentUrl ?? undefined, undefined, {
+          background: (task) => tasks.push(task),
+        });
+        await tasks[0]();
+        expect(getJob(jobId())?.status).toBe('failed');
+      });
+
+      it('waits for the look, as before, without the option', async () => {
+        process.env.TRYON_MODE = 'live';
+        const { auth } = reserve('77777777-7777-4777-8777-777777777777');
+        runImageGenerationMock.mockResolvedValue({
+          jobId: 'provider-job',
+          sessionId: auth.sessionId,
+          productId: auth.productId,
+          shop: auth.shop,
+          status: 'completed',
+          resultImageUrl: 'data:image/png;base64,LOOK',
+          createdAt: '2026-08-31T00:00:01.000Z',
+          meta: { runtime: 'live', provider: 'provider-v1', costEstimate: 0.01 },
+        });
+        const look = await generateTryOn(auth, 'upload', 'data:image/png;base64,PHOTO', auth.canonicalGarmentUrl ?? undefined);
+        expect(look).toMatchObject({ status: 'completed', resultImageUrl: 'data:image/png;base64,LOOK' });
+        expect(look.stage).toBeUndefined();
+      });
+    });
+
     it('replays a durable completed result after an in-memory restart without invoking the provider', async () => {
       process.env.TRYON_MODE = 'live';
       const auth = storefrontAuthorization({

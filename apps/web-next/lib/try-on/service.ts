@@ -1,5 +1,5 @@
 ﻿import { randomUUID } from 'node:crypto';
-import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource } from './types';
+import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource, TryOnStage } from './types';
 import { runMockGeneration } from './mock-runner';
 import { runImageGeneration } from './image-runner';
 import {
@@ -87,12 +87,26 @@ export function getTryOnMode(): TryOnMode {
   return 'mock';
 }
 
+/** How a billable look runs. With `background`, the call answers as soon
+ *  as the look is reserved and the provider work finishes after the
+ *  response (contract N38, behind the store's n38_async_jobs flag); the
+ *  job then reports its stage until it settles. Without it, the call waits
+ *  for the look, as it always has. */
+export type GenerateOptions = {
+  background?: (task: () => Promise<void>) => void;
+};
+
+function setStage(job: TryOnJob, stage: TryOnStage): void {
+  storeJob({ ...job, stage });
+}
+
 export async function generateTryOn(
   authorization: VerifiedTryOnSession,
   photoSource: TryOnPhotoSource,
   photoData?: string,
   garmentUrl?: string,
   productName?: string,
+  options: GenerateOptions = {},
 ): Promise<TryOnJob> {
   const { sessionId, productId, shop, requestKey, purpose } = authorization;
   const sessionValidation = validateSessionId(sessionId);
@@ -179,104 +193,147 @@ export async function generateTryOn(
       return job;
     }
 
-    let generated: TryOnJob;
-    try {
-      generated = await runImageGeneration(
-        sessionId,
-        productId,
-        photoData as string,
-        shop,
-        providerModel,
-        garmentUrl,
-        productName,
-      );
-    } catch (error) {
-      /* The detail the shopper must not see is exactly the detail we need.
-         meta is returned to the storefront too, so it cannot go there either
-         — server logs only. */
-      console.error('[try-on] generation_failed_detail', {
-        jobId: reservedJobId,
-        shop,
-        provider: providerModel,
-        detail: error instanceof Error ? error.message : String(error),
-      });
-      const failedJob: TryOnJob = {
-        jobId: reservedJobId,
-        sessionId,
-        productId,
-        shop,
-        requestKey,
-        modelKey,
-        status: 'failed',
-        /* The shopper sees this string. A provider's message must never reach
-           a storefront: ours arrived as "Insufficient credits. Add more using
-           https://openrouter.ai/settings/credits" and was rendered to a
-           merchant's customers, naming our vendor and linking our billing
-           page. The real text still reaches logs and Sentry below, where it
-           is actually useful. */
-        message: toShopperFailureMessage(error),
-        createdAt: reservation.createdAt,
-        meta: { runtime: 'live', provider: providerModel, costEstimate: null },
-      };
-      await finalizeTryOnJob(failedJob, Date.now() - startedAt);
-      storeJob(failedJob);
-      throw error;
-    }
-
-    job = {
-      ...generated,
+    /* The job as it stands while the provider works, pollable by its
+       session from the moment the look is reserved. */
+    const pending: TryOnJob = {
       jobId: reservedJobId,
+      sessionId,
+      productId,
       shop,
       requestKey,
       modelKey,
+      status: 'processing',
+      stage: 'received',
       createdAt: reservation.createdAt,
+      meta: { runtime: 'live', provider: providerModel, costEstimate: null },
     };
-    if (job.status !== 'completed' || !job.resultImageUrl) {
-      await finalizeTryOnJob(job, Date.now() - startedAt);
-      storeJob(job);
-      return job;
-    }
-
-    /* Durability is a billing prerequisite: upload + bind the private result
-       to this reserved job before finalizing its credit debit.
-
-       reserve_tryon_credit writes the ledger debit up front, at reservation —
-       not at finalize. So an un-released failure here leaves a REAL debit
-       standing against the merchant with nothing delivered, until the
-       10-minute reconciliation sweep happens to run. Release it here instead,
-       exactly as the generation-failure path above does, so the debit and the
-       delivery fail together. This also makes the durable-result migration
-       safe to apply after this code ships: an unmigrated database throws
-       TryOnResultSchemaNotReadyError right here, and the merchant is not
-       charged for a result that never existed. */
-    try {
-      await persistGeneratedTryOnResult(job);
-    } catch (error) {
-      const unpersistedJob: TryOnJob = {
-        ...job,
-        status: 'failed',
-        // Same boundary: a storage failure is ours, not something to explain
-        // to a shopper in our own vocabulary.
-        message: toShopperFailureMessage(error),
-        // Refunding the merchant does not reverse the provider's own bill.
-        meta: { ...job.meta },
-      };
+    const makeLook = async (): Promise<TryOnJob> => {
+      setStage(pending, 'making');
+      let generated: TryOnJob;
       try {
-        await finalizeTryOnJob(unpersistedJob, Date.now() - startedAt);
-      } catch {
-        // The release itself failed; reconciliation is now the only net left.
-        alertReconciliationRequired('persist_refund_failed', job.jobId);
+        generated = await runImageGeneration(
+          sessionId,
+          productId,
+          photoData as string,
+          shop,
+          providerModel,
+          garmentUrl,
+          productName,
+        );
+      } catch (error) {
+        /* The detail the shopper must not see is exactly the detail we need.
+           meta is returned to the storefront too, so it cannot go there either
+           — server logs only. */
+        console.error('[try-on] generation_failed_detail', {
+          jobId: reservedJobId,
+          shop,
+          provider: providerModel,
+          detail: error instanceof Error ? error.message : String(error),
+        });
+        const failedJob: TryOnJob = {
+          jobId: reservedJobId,
+          sessionId,
+          productId,
+          shop,
+          requestKey,
+          modelKey,
+          status: 'failed',
+          /* The shopper sees this string. A provider's message must never reach
+             a storefront: ours arrived as "Insufficient credits. Add more using
+             https://openrouter.ai/settings/credits" and was rendered to a
+             merchant's customers, naming our vendor and linking our billing
+             page. The real text still reaches logs and Sentry below, where it
+             is actually useful. */
+          message: toShopperFailureMessage(error),
+          createdAt: reservation.createdAt,
+          meta: { runtime: 'live', provider: providerModel, costEstimate: null },
+        };
+        // Stored before the refund, so a poll ends even if the refund throws.
+        storeJob(failedJob);
+        await finalizeTryOnJob(failedJob, Date.now() - startedAt);
+        throw error;
       }
-      storeJob(unpersistedJob);
-      throw error;
+
+      const job: TryOnJob = {
+        ...generated,
+        jobId: reservedJobId,
+        shop,
+        requestKey,
+        modelKey,
+        createdAt: reservation.createdAt,
+      };
+      if (job.status !== 'completed' || !job.resultImageUrl) {
+        storeJob(job);
+        await finalizeTryOnJob(job, Date.now() - startedAt);
+        return job;
+      }
+      setStage(pending, 'finishing');
+
+      /* Durability is a billing prerequisite: upload + bind the private result
+         to this reserved job before finalizing its credit debit.
+
+         reserve_tryon_credit writes the ledger debit up front, at reservation —
+         not at finalize. So an un-released failure here leaves a REAL debit
+         standing against the merchant with nothing delivered, until the
+         10-minute reconciliation sweep happens to run. Release it here instead,
+         exactly as the generation-failure path above does, so the debit and the
+         delivery fail together. This also makes the durable-result migration
+         safe to apply after this code ships: an unmigrated database throws
+         TryOnResultSchemaNotReadyError right here, and the merchant is not
+         charged for a result that never existed. */
+      try {
+        await persistGeneratedTryOnResult(job);
+      } catch (error) {
+        const unpersistedJob: TryOnJob = {
+          ...job,
+          status: 'failed',
+          // Same boundary: a storage failure is ours, not something to explain
+          // to a shopper in our own vocabulary.
+          message: toShopperFailureMessage(error),
+          // Refunding the merchant does not reverse the provider's own bill.
+          meta: { ...job.meta },
+        };
+        try {
+          await finalizeTryOnJob(unpersistedJob, Date.now() - startedAt);
+        } catch {
+          // The release itself failed; reconciliation is now the only net left.
+          alertReconciliationRequired('persist_refund_failed', job.jobId);
+        }
+        storeJob(unpersistedJob);
+        throw error;
+      }
+      storeJob(job);
+      try {
+        await finalizeTryOnJob(job, Date.now() - startedAt);
+      } catch {
+        alertReconciliationRequired('finalization_failed', job.jobId);
+        throw new TryOnFinalizationPendingError(job.jobId);
+      }
+      return job;
+    };
+
+    if (options.background) {
+      /* Every outcome lands in the job store on its own (completed, failed
+         and refunded, or kept pollable while finalization is pending), so
+         the background run has nothing to hand back. */
+      storeJob(pending);
+      options.background(async () => {
+        try {
+          await makeLook();
+        } catch (error) {
+          console.error('[try-on] background_look_failed', {
+            jobId: reservedJobId,
+            errorName: error instanceof Error ? error.name : 'UnknownError',
+          });
+          // Whatever went wrong, a look still shown as being made must end.
+          if (getJob(reservedJobId)?.status === 'processing') {
+            storeJob({ ...pending, stage: undefined, status: 'failed', message: toShopperFailureMessage(error) });
+          }
+        }
+      });
+      return getJob(reservedJobId) ?? pending;
     }
-    storeJob(job);
-    try {
-      await finalizeTryOnJob(job, Date.now() - startedAt);
-    } catch {
-      alertReconciliationRequired('finalization_failed', job.jobId);
-      throw new TryOnFinalizationPendingError(job.jobId);
-    }
+    job = await makeLook();
   } else if (mode === 'live' && photoSource === 'upload' && photoData) {
     // Non-billable live path (demo/preview, not a storefront credit spend):
     // the same model as every plan.

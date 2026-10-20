@@ -53,8 +53,13 @@ export async function pollTryOnJob(
   signedSession: string,
   fallbackError: string,
   signal?: AbortSignal,
+  options: {
+    timeoutMs?: number;
+    /** Each answer while the look is still queued or being made. */
+    onProgress?: (data: TryOnJobApiResponse) => void;
+  } = {},
 ): Promise<TryOnJobApiResponse> {
-  const deadline = Date.now() + TRYON_POLL_TIMEOUT_MS;
+  const deadline = Date.now() + (options.timeoutMs ?? TRYON_POLL_TIMEOUT_MS);
   let requestCount = 0;
 
   while (Date.now() < deadline) {
@@ -89,6 +94,7 @@ export async function pollTryOnJob(
     if (data.status !== 'queued' && data.status !== 'processing') {
       throw new Error(fallbackError);
     }
+    options.onProgress?.(data);
 
     const remaining = Math.max(0, deadline - Date.now());
     await wait(Math.min(remaining, tryOnPollDelayMs(requestCount)), signal);
