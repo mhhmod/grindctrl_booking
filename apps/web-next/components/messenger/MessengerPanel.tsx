@@ -16,6 +16,8 @@ import {
   type PanelTeam,
 } from './panel-state';
 import { ChatHome, productLine } from './v16/chat-home';
+import { OrderCardView, OrderLookupForm } from './v16/order-lookup';
+import type { OrderCard } from '@/lib/messenger/order-card';
 import { parsePageProduct, type PageProduct } from './v16/page-product';
 import { SpeechButton } from './v16/speech-button';
 import { v16StatusLine } from './v16/status-line';
@@ -56,6 +58,8 @@ export interface WireMessage {
   queued?: boolean;
   /** The assistant could not answer; the message is saved (N24). */
   saved?: boolean;
+  /** The card the order lookup found (Chat-More), from the store's data. */
+  order?: OrderCard;
 }
 
 type SendOutcome = 'sent' | 'queued' | 'failed';
@@ -188,6 +192,9 @@ export function MessengerPanel({
   const [pageProduct, setPageProduct] = useState<PageProduct | null>(null);
   /* v16: back to the home view with a conversation going (Chat-Answer). */
   const [homeView, setHomeView] = useState(false);
+  /* The order lookup form (Chat-More), open from Track my order. */
+  const [orderForm, setOrderForm] = useState(false);
+  const [orderBusy, setOrderBusy] = useState(false);
 
   /* Contact capture — offered by the server at most once per conversation. */
   const [askContact, setAskContact] = useState(false);
@@ -667,6 +674,39 @@ export function MessengerPanel({
     }
   }
 
+  /* Chat-More: the order lookup form goes to its own endpoint, never the
+     model. Whatever the answer, the shopper's masked line and the reply
+     join the thread; a found order closes the form, anything else leaves
+     it open to correct a typo. */
+  async function lookupOrderFromForm(orderNumber: string, contact: string) {
+    if (!anonId || !conversationId) return;
+    setOrderBusy(true);
+    try {
+      const res = await fetch('/api/messenger/order-lookup', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin,
+          originToken,
+          anonymousId: anonId,
+          conversationId,
+          orderNumber,
+          contact,
+          locale,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; messages?: WireMessage[] } | null;
+      if (data?.messages?.length) setMessages((prev) => mergeMessages(prev, data.messages!));
+      if (data?.ok) setOrderForm(false);
+      scrollToEnd();
+    } catch {
+      // The form stays, so the shopper can try again.
+    } finally {
+      setOrderBusy(false);
+    }
+  }
+
   function resizeInput() {
     const el = inputRef.current;
     if (!el) return;
@@ -806,11 +846,16 @@ export function MessengerPanel({
       // Private mode: the switch still holds for this visit.
     }
   }
-  const showHome = v16Chat && !booting && (messages.length === 0 || homeView);
+  // An open order form takes the place of an empty home.
+  const showHome = v16Chat && !booting && ((messages.length === 0 && !orderForm) || homeView);
   const inAnswer = v16Chat && messages.length > 0 && !homeView;
   const lastMessage = messages[messages.length - 1];
   const composerHint =
-    inAnswer && lastMessage && lastMessage.role === 'assistant' ? t.askFollowUp : placeholder;
+    inAnswer && lastMessage?.order
+      ? t.askAboutOrder
+      : inAnswer && lastMessage && lastMessage.role === 'assistant'
+        ? t.askFollowUp
+        : placeholder;
 
   if (bootError) {
     return (
@@ -950,8 +995,14 @@ export function MessengerPanel({
             welcomeTitle={welcomeTitle}
             welcomeSubtitle={welcomeSubtitle}
             disabled={booting}
-            onQuickAction={(message) => {
+            onQuickAction={(message, id) => {
               setHomeView(false);
+              // Track my order opens the lookup form where the store offers it.
+              if (id === 'order' && config.orderLookup) {
+                setOrderForm(true);
+                scrollToEnd();
+                return;
+              }
               void send(message);
             }}
             onTryOn={() => window.parent.postMessage({ type: 'grindctrl-messenger:try-on' }, '*')}
@@ -1030,8 +1081,15 @@ export function MessengerPanel({
                   </span>
                 )}
               </div>
+              {v16Chat && m.order && (
+                <div className="mt-2 w-full">
+                  <OrderCardView card={m.order} t={t} locale={locale} />
+                </div>
+              )}
               {v16Chat && !mine && m.author === 'ai' && (
-                <span className="mt-1 px-1 text-[10px] font-medium text-muted-foreground">{t.storeAssistantAi}</span>
+                <span className="mt-1 px-1 text-[10px] font-medium text-muted-foreground">
+                  {m.order ? t.orderAiLabel : t.storeAssistantAi}
+                </span>
               )}
               {/* Per-reply rating: assistant bubbles only, never the
                   shopper's own messages or system lines. Same emoji and
@@ -1065,6 +1123,10 @@ export function MessengerPanel({
             </div>
           );
         })}
+
+        {v16Chat && !showHome && orderForm && (
+          <OrderLookupForm t={t} busy={orderBusy} onSubmit={(number, contact) => void lookupOrderFromForm(number, contact)} onCancel={() => setOrderForm(false)} />
+        )}
 
         {(typing || staffTyping) && (
           <div className="flex justify-start" aria-label={t.typing} role="status">

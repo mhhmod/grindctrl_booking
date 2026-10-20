@@ -128,6 +128,7 @@ export function provenOrigin(
 /** Business-hours check in the merchant's configured timezone. Lives in
  *  hours.ts, which also reads windows that run past midnight. */
 import { isWithinAvailabilityHours, teamHours } from './hours';
+import { orderShopDomain } from './order-card';
 export { isWithinAvailabilityHours };
 
 /* Public JSON payload delivered to loader + embed. Contains no secrets —
@@ -148,6 +149,9 @@ export interface PublicMessengerPayload {
   /** Who sees Store Chat on this store (N5, N6): the loader draws nothing
    *  when show is false, outside the theme editor. Absent means show. */
   launch?: import('@/lib/launch/audience').LaunchAudience;
+  /** Whether the v16 panel offers the order lookup form (Chat-More): the
+   *  store has order lookup on and is a Shopify store. v16_chat only. */
+  orderLookup?: boolean;
   /** When the team is in, for the header (n23_after_hours or v16_chat on only). */
   team?: { open: boolean; opensAt: string | null; closesAt: string | null; timezone: string } | null;
   appearance: MessengerConfig['appearance'];
@@ -173,6 +177,8 @@ export function toPublicPayload(
     status: string;
     settings_version: number;
     config: MessengerConfig;
+    /** The site's store domain; order lookup needs a myshopify one. */
+    domain?: string | null;
   },
   now: Date,
   features: readonly string[] = [],
@@ -196,6 +202,10 @@ export function toPublicPayload(
             teamHours(site.config.behaviour, now),
           )
         : null,
+    orderLookup:
+      active && features.includes('v16_chat')
+        ? site.config.orderLookup.enabled && orderShopDomain(site.domain) !== null
+        : undefined,
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,

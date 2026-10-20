@@ -71,6 +71,24 @@ export interface PanelCopy {
   languageLabel: string;
   backToHome: string;
   askFollowUp: string;
+  /* The order lookup and card (Chat-More, Chat-Order) */
+  orderNumberLabel: string;
+  orderContactLabel: string;
+  orderPrivacy: string;
+  findOrder: string;
+  findingOrder: string;
+  orderNumberInvalid: string;
+  orderStage: Record<'preparing' | 'on_its_way' | 'out_for_delivery' | 'delivered' | 'cancelled', string>;
+  orderPlaced: string;
+  orderShipped: (carrier: string | null) => string;
+  orderOutForDelivery: string;
+  orderDelivered: string;
+  orderArrives: (date: string) => string;
+  orderCashDue: string;
+  orderTotal: string;
+  orderTrack: (carrier: string | null) => string;
+  orderAiLabel: string;
+  askAboutOrder: string;
 }
 
 const EN: PanelCopy = {
@@ -140,6 +158,23 @@ const EN: PanelCopy = {
   languageLabel: 'Language',
   backToHome: 'Back to chat home',
   askFollowUp: 'Ask a follow-up',
+  orderNumberLabel: 'Order number',
+  orderContactLabel: 'Email you ordered with',
+  orderPrivacy: 'We only show an order to the email that placed it.',
+  findOrder: 'Find my order',
+  findingOrder: 'Looking for your order',
+  orderNumberInvalid: 'Enter the number from your order confirmation, like 1027.',
+  orderStage: { preparing: 'Preparing', on_its_way: 'On its way', out_for_delivery: 'Out for delivery', delivered: 'Delivered', cancelled: 'Cancelled' },
+  orderPlaced: 'Placed',
+  orderShipped: (carrier) => (carrier ? `Shipped with ${carrier}` : 'Shipped'),
+  orderOutForDelivery: 'Out for delivery',
+  orderDelivered: 'Delivered',
+  orderArrives: (date) => `Arrives ${date}`,
+  orderCashDue: 'Cash due on delivery',
+  orderTotal: 'Total',
+  orderTrack: (carrier) => (carrier ? `Track with ${carrier}` : 'Track the delivery'),
+  orderAiLabel: 'Store assistant, AI · it can read your order but not change it',
+  askAboutOrder: 'Ask about this order',
 };
 
 const AR: PanelCopy = {
@@ -211,6 +246,24 @@ const AR: PanelCopy = {
   languageLabel: 'اللغة',
   backToHome: 'العودة إلى الصفحة الرئيسية للدردشة',
   askFollowUp: 'سؤال إضافي',
+  // The order lookup speaks to everyone (the board's drafts are feminine).
+  orderNumberLabel: 'رقم الطلب',
+  orderContactLabel: 'البريد الإلكتروني المستخدم في الطلب',
+  orderPrivacy: 'لا نعرض الطلب إلا للبريد الإلكتروني الذي تم الطلب به.',
+  findOrder: 'البحث عن الطلب',
+  findingOrder: 'جارٍ البحث عن الطلب',
+  orderNumberInvalid: 'يرجى إدخال الرقم الموجود في تأكيد الطلب، مثل 1027.',
+  orderStage: { preparing: 'قيد التجهيز', on_its_way: 'في الطريق', out_for_delivery: 'خرج للتوصيل', delivered: 'تم التوصيل', cancelled: 'ملغى' },
+  orderPlaced: 'تم الطلب',
+  orderShipped: (carrier) => (carrier ? `شُحن مع ${carrier}` : 'تم الشحن'),
+  orderOutForDelivery: 'خرج للتوصيل',
+  orderDelivered: 'تم التوصيل',
+  orderArrives: (date) => `يصل ${date}`,
+  orderCashDue: 'الدفع نقداً عند الاستلام',
+  orderTotal: 'الإجمالي',
+  orderTrack: (carrier) => (carrier ? `التتبع مع ${carrier}` : 'تتبع الشحنة'),
+  orderAiLabel: 'مساعد المتجر، ذكاء اصطناعي · يمكنه قراءة طلبك دون تغييره',
+  askAboutOrder: 'سؤال عن هذا الطلب',
 };
 
 export function getPanelCopy(locale: MessengerLocale): PanelCopy {

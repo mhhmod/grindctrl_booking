@@ -235,3 +235,105 @@ describe('the reply ratings, for every store', () => {
     expect(screen.getByRole('button', { name: 'غير مفيدة' })).toBeInTheDocument();
   });
 });
+
+/* Chat-More: Track my order opens the lookup form where the store offers
+   it; the form goes to its own endpoint, never the model, and the card it
+   brings back comes from the store's order data. */
+describe('the order lookup in the v16 panel', () => {
+  const CARD = {
+    name: '#1027',
+    placedAt: '2026-10-14T09:00:00Z',
+    stage: 'on_its_way',
+    items: [{ title: 'Layla Embroidered Abaya', quantity: 1 }],
+    timeline: [
+      { kind: 'placed', at: '2026-10-14T09:00:00Z' },
+      { kind: 'shipped', at: '2026-10-15T12:00:00Z', carrier: 'Bosta' },
+    ],
+    estimatedDelivery: null,
+    carrier: 'Bosta',
+    trackingUrl: 'https://bosta.co/t/1',
+    cashDue: true,
+  };
+  let lookups: Array<Record<string, unknown>>;
+
+  beforeEach(() => {
+    lookups = [];
+    const base = fetch as unknown as (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (!String(input).includes('/api/messenger/order-lookup')) return base(input, init);
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        lookups.push(body);
+        const found = body.contact === 'mona@gmail.com';
+        return {
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              ok: found,
+              ...(found ? {} : { error: 'not_found' }),
+              messages: [
+                { id: `q${lookups.length}`, role: 'user', content: `#1027 · ${found ? 'm' : 'x'}•••••@gmail.com`, createdAt: '2026-10-20T12:00:00Z' },
+                found
+                  ? { id: `a${lookups.length}`, role: 'assistant', author: 'ai', content: "Found it. It's on its way with Bosta.", createdAt: '2026-10-20T12:00:01Z', order: CARD }
+                  : { id: `a${lookups.length}`, role: 'assistant', author: 'ai', content: "I couldn't find an order matching those details. If you'd like, I can bring in the team.", createdAt: '2026-10-20T12:00:01Z' },
+              ],
+            }),
+        } as unknown as Response;
+      }),
+    );
+  });
+
+  it('opens the form from Track my order instead of asking the model', async () => {
+    await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
+    fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+    expect(screen.getByLabelText('Order number')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email you ordered with')).toBeInTheDocument();
+    expect(screen.getByText('We only show an order to the email that placed it.')).toBeInTheDocument();
+    expect(sentBodies).toHaveLength(0);
+  });
+
+  it('checks the shape of what was typed before sending anything', async () => {
+    await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
+    fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+    fireEvent.change(screen.getByLabelText('Order number'), { target: { value: 'abc' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find my order' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Enter the number from your order confirmation, like 1027.');
+    fireEvent.change(screen.getByLabelText('Order number'), { target: { value: '#1027' } });
+    fireEvent.change(screen.getByLabelText('Email you ordered with'), { target: { value: 'nope' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find my order' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Please enter a valid email address.');
+    expect(lookups).toHaveLength(0);
+  });
+
+  it('keeps the form after a miss, and shows the card from the store after a find', async () => {
+    await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
+    fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+    fireEvent.change(screen.getByLabelText('Order number'), { target: { value: '#1027' } });
+    fireEvent.change(screen.getByLabelText('Email you ordered with'), { target: { value: 'other@gmail.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find my order' }));
+    expect(await screen.findByText(/couldn't find an order matching those details/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Order number')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Email you ordered with'), { target: { value: 'mona@gmail.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Find my order' }));
+    expect(await screen.findByText("Found it. It's on its way with Bosta.")).toBeInTheDocument();
+    expect(lookups.at(-1)).toMatchObject({ orderNumber: '1027', contact: 'mona@gmail.com', locale: 'en' });
+    expect(screen.queryByLabelText('Order number')).not.toBeInTheDocument();
+
+    expect(screen.getByText('On its way')).toBeInTheDocument();
+    expect(screen.getByText('Shipped with Bosta')).toBeInTheDocument();
+    expect(screen.getByText('Cash due on delivery')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Track with Bosta' })).toHaveAttribute('href', 'https://bosta.co/t/1');
+    expect(screen.getByText('Store assistant, AI · it can read your order but not change it')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveAttribute('placeholder', 'Ask about this order');
+  });
+
+  it('sends Track my order to the chat as before where the store has no lookup', async () => {
+    await boot();
+    fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(sentBodies[0].text).toBe('Where is my order?');
+  });
+});
