@@ -133,7 +133,7 @@ function StoreChatCheck() {
   return (
     <main className="mx-auto grid min-w-0 max-w-5xl gap-8 p-4 sm:p-6">
       <header className="grid gap-1">
-        <h1 className="text-lg font-semibold">Store Chat — layout check</h1>
+        <h1 className="text-lg font-semibold">Store Chat layout check</h1>
         <p className="text-sm text-muted-foreground">
           Dev only. Every Overview state plus the publish bar, no auth required.
         </p>
@@ -167,7 +167,7 @@ function StoreChatCheck() {
           text, at the narrowest width the panel ever gets. */}
       <section className="grid min-w-0 gap-2">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Message bubble — links and line breaks
+          Message bubble: links and line breaks
         </h2>
         <div className="w-[320px] max-w-full rounded-xl border border-border p-3">
           <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm">
@@ -202,7 +202,7 @@ function StoreChatCheck() {
             publishConfig: async () => {
               await new Promise((r) => setTimeout(r, 600));
               setHasDraft(false);
-              return { ok: true as const, message: 'Published — live on your store within a minute.' };
+              return { ok: true as const, message: 'Published. Live on your store within a minute.' };
             },
           }}
         />

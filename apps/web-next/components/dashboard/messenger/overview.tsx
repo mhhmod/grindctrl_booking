@@ -6,6 +6,7 @@ import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-con
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { MessengerTabId } from './messenger-tabs';
+import { intlLocale } from '@/lib/copy/rules';
 
 /* Overview answers one question — "is this working, and if not what do I do?"
    — and answers it once.
@@ -49,21 +50,21 @@ const COPY = {
     offAction: 'Go to Installation',
     yourStore: 'your store',
     ai: 'AI replies',
-    aiOn: 'On — the assistant answers shoppers first',
-    aiOff: 'Off — every question waits for your team',
+    aiOn: 'On: the assistant answers shoppers first',
+    aiOff: 'Off: every question waits for your team',
     aiAction: 'Turn on AI replies',
     version: 'Published version',
     versionNote: 'The settings your store is serving right now',
     revertAction: 'Revert to previous version',
     reverting: 'Reverting…',
     revertConfirm: 'Restore the previous published version? This cannot be undone.',
-    reverted: 'Reverted — your store is serving the previous version again.',
+    reverted: 'Reverted. Your store is serving the previous version again.',
     revertFailed: 'Could not revert. Please try again.',
     disconnectAction: 'Disconnect this store',
     disconnectNote: 'Remove this store from your dashboard. Store Chat in Shopify and all store data stay in place.',
     disconnecting: 'Disconnecting…',
     disconnectConfirm: 'Disconnect this store from your grindctrl.cloud dashboard? This removes your dashboard access to this store. Store Chat keeps running in your Shopify admin exactly as before. Nothing is deleted: all conversations, knowledge, saved replies and settings stay with the store. You, or anyone with access to that Shopify admin, can reconnect it later through the normal claim flow and regain access to everything. If this was your only store, your dashboard may show a new, blank “My store” draft.',
-    disconnected: 'Store disconnected — your dashboard access has been removed. Nothing was deleted.',
+    disconnected: 'Store disconnected. Your dashboard access has been removed. Nothing was deleted.',
     disconnectFailed: 'Could not disconnect. Please try again.',
     conversations: 'Conversations · 7 days',
     aiResolved: 'Closed by AI',
@@ -99,28 +100,28 @@ const COPY = {
     offAction: 'انتقل إلى التثبيت',
     yourStore: 'متجرك',
     ai: 'ردود الذكاء الاصطناعي',
-    aiOn: 'مفعّلة — المساعد يرد على العملاء أولاً',
-    aiOff: 'متوقفة — كل سؤال ينتظر فريقك',
+    aiOn: 'مفعّلة: المساعد يرد على العملاء أولاً',
+    aiOff: 'متوقفة: كل سؤال ينتظر فريقك',
     aiAction: 'فعّل ردود الذكاء الاصطناعي',
     version: 'الإصدار المنشور',
     versionNote: 'الإعدادات التي يعرضها متجرك الآن',
     revertAction: 'استعادة الإصدار السابق',
     reverting: 'جارٍ الاستعادة…',
     revertConfirm: 'هل تريد استعادة الإصدار المنشور السابق؟ لا يمكن التراجع عن هذه العملية.',
-    reverted: 'تمت الاستعادة — متجرك يعرض الإصدار السابق مجدداً.',
+    reverted: 'تمت الاستعادة. متجرك يعرض الإصدار السابق مجدداً.',
     revertFailed: 'تعذرت الاستعادة. حاول مرة أخرى.',
     disconnectAction: 'فصل هذا المتجر',
     disconnectNote: 'أزل هذا المتجر من لوحة تحكمك. ستبقى دردشة المتجر في Shopify وجميع بيانات المتجر كما هي.',
     disconnecting: 'جارٍ الفصل…',
     disconnectConfirm: 'هل تريد فصل هذا المتجر عن لوحة تحكمك في grindctrl.cloud؟ سيُزال وصولك إلى هذا المتجر من لوحة التحكم. ستستمر دردشة المتجر في العمل داخل لوحة إدارة Shopify كما كانت تماماً. لن يُحذف أي شيء: ستبقى جميع المحادثات والمعرفة والردود المحفوظة والإعدادات مرتبطة بالمتجر. يمكنك أنت، أو أي شخص لديه وصول إلى لوحة إدارة Shopify لهذا المتجر، إعادة ربطه لاحقاً عبر خطوات المطالبة المعتادة واستعادة الوصول إلى كل شيء. إذا كان هذا متجرك الوحيد، فقد تعرض لوحة تحكمك مسودة جديدة وفارغة باسم «متجري».',
-    disconnected: 'تم فصل المتجر — أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.',
+    disconnected: 'تم فصل المتجر. أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.',
     disconnectFailed: 'تعذر فصل المتجر. حاول مرة أخرى.',
-    conversations: 'المحادثات · ٧ أيام',
+    conversations: 'المحادثات · 7 أيام',
     aiResolved: 'أُغلقت بالذكاء الاصطناعي',
     handedOff: 'احتاجت فريقك',
     openNow: 'مفتوحة الآن',
-    firstResponse: 'وسيط أول رد (٧ أيام)',
-    satisfaction: 'الرضا · ٣٠ يومًا',
+    firstResponse: 'وسيط أول رد (7 أيام)',
+    satisfaction: 'الرضا · 30 يومًا',
     seconds: ' ث',
     noData: 'لا محادثات بعد. بعد تفعيل دردشة المتجر ستظهر أسئلة العملاء هنا.',
     alertsTitle: (n: number) =>
@@ -262,7 +263,7 @@ export function MessengerOverview({
         }
         footnote={
           detected && detectedAt
-            ? `${t.lastSeen}: ${new Date(detectedAt).toLocaleString()}`
+            ? `${t.lastSeen}: ${new Date(detectedAt).toLocaleString(intlLocale(locale === 'ar' ? 'ar' : 'en'))}`
             : null
         }
       />
@@ -364,7 +365,7 @@ export function MessengerOverview({
             label={t.firstResponse}
             value={
               stats.medianFirstResponseSeconds7d === null
-                ? '—'
+                ? '–'
                 : `${stats.medianFirstResponseSeconds7d}${t.seconds}`
             }
           />
@@ -373,7 +374,7 @@ export function MessengerOverview({
             value={
               stats.feedbackUp30d + stats.feedbackDown30d > 0
                 ? `${Math.round((stats.feedbackUp30d / (stats.feedbackUp30d + stats.feedbackDown30d)) * 100)}%`
-                : '—'
+                : '–'
             }
           />
         </div>

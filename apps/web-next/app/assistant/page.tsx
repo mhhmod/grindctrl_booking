@@ -6,8 +6,8 @@ import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
 import { DEFAULT_SITE_LOCALE, isSiteLocale, SITE_LOCALE_COOKIE, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 export const metadata: Metadata = {
-  title: 'AI Assistant — GRINDCTRL',
-  description: 'Talk to the GrindCTRL AI assistant by text or voice — ask questions, get help, in English or Arabic.',
+  title: 'AI Assistant | GRINDCTRL',
+  description: 'Talk to the GrindCTRL AI assistant by text or voice: ask questions, get help, in English or Arabic.',
 };
 
 export default async function AssistantPage() {

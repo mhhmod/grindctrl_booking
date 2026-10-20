@@ -23,7 +23,7 @@ const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 export const DEFAULT_WELCOME: Record<'en' | 'ar', LocalizedText> = {
   en: { en: 'Hi 👋 How can we help?', ar: 'مرحباً 👋 كيف نقدر نساعدك؟' },
-  ar: { en: 'Ask us anything — we usually reply instantly.', ar: 'اسألنا أي شيء — نرد عادةً فوراً.' },
+  ar: { en: 'Ask us anything.', ar: 'اسألنا أي شيء.' },
 };
 
 export const DEFAULT_INPUT_PLACEHOLDER: Record<'en' | 'ar', LocalizedText> = {

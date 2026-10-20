@@ -56,7 +56,7 @@ export function PhoneStore({ v, t }: ViewProps) {
             </div>
             <div data-k="sview" style={{ position: "relative", height: "432px", overflow: "hidden", background: "var(--st-bg)" }}>
               <div role="img" aria-label="The GrindCTRL demo store on Shopify: shop by category, the Abayas collection with Try on buttons, and the Riyadh abaya product page with the try-on panel and Store Chat." style={{ position: "absolute", inset: "0" }}>
-                <div style={{ height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--st-line)", fontSize: "10px", fontWeight: "500", color: "var(--st-ink)" }}>Test Store — For Demo & Evaluation Purposes Only</div>
+                <div style={{ height: "26px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--st-line)", fontSize: "10px", fontWeight: "500", color: "var(--st-ink)" }}>Test Store · For Demo & Evaluation Purposes Only</div>
                 <div style={{ height: "46px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", alignItems: "center", padding: "0 12px", color: "var(--st-ink)" }}>
                   <span style={{ display: "flex", gap: "12px" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M4 8h16M4 16h16" /></svg>

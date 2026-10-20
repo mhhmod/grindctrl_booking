@@ -92,7 +92,7 @@ const en: AssistantDict = {
   providerErrorTitle: 'Having trouble reaching the AI',
   providerErrorBody: 'This usually clears up quickly.',
   retry: 'Try again',
-  voiceReplyUnavailable: "Voice reply isn't available right now — showing text instead.",
+  voiceReplyUnavailable: "Voice reply isn't available right now. Showing text instead.",
 
   playVoiceMessage: 'Play voice message',
   pauseVoiceMessage: 'Pause voice message',
@@ -102,7 +102,7 @@ const en: AssistantDict = {
   voiceLanguageEnglish: 'English',
   voiceLanguageArabic: 'العربية',
 
-  badInputNoAudio: "We didn't catch that — try speaking again.",
+  badInputNoAudio: "We didn't catch that. Try speaking again.",
   badInputTooShort: 'That was too short to hear. Try again.',
   badInputUnsupportedFormat: "Your browser's recording format isn't supported here.",
 
@@ -141,7 +141,7 @@ const ar: AssistantDict = {
   providerErrorTitle: 'تعذّر الوصول إلى الذكاء الاصطناعي',
   providerErrorBody: 'عادةً ما تُحل هذه المشكلة سريعًا.',
   retry: 'إعادة المحاولة',
-  voiceReplyUnavailable: 'الرد الصوتي غير متاح الآن — سيظهر كنص بدلاً من ذلك.',
+  voiceReplyUnavailable: 'الرد الصوتي غير متاح الآن. سيظهر كنص بدلاً من ذلك.',
 
   playVoiceMessage: 'تشغيل الرسالة الصوتية',
   pauseVoiceMessage: 'إيقاف الرسالة الصوتية',
@@ -151,7 +151,7 @@ const ar: AssistantDict = {
   voiceLanguageEnglish: 'English',
   voiceLanguageArabic: 'العربية',
 
-  badInputNoAudio: 'لم نلتقط ذلك — حاول التحدث مرة أخرى.',
+  badInputNoAudio: 'لم نلتقط ذلك. حاول التحدث مرة أخرى.',
   badInputTooShort: 'كان ذلك قصيرًا جدًا. حاول مرة أخرى.',
   badInputUnsupportedFormat: 'صيغة التسجيل في متصفحك غير مدعومة هنا.',
 

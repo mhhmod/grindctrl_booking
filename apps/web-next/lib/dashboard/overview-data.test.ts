@@ -54,6 +54,29 @@ describe('computeOverview', () => {
     });
   });
 
+  /* Item 32: a look at 01:30 on the 19th in Cairo is the 18th in UTC, so
+     the store's calendar puts it on a different day, and the windows move
+     with the store's midnight. */
+  it("buckets days on the store's calendar when given its time zone", () => {
+    const now = new Date('2026-07-19T09:00:00.000Z');
+    const lateNight = [job({ created_at: '2026-07-18T22:30:00.000Z' })];
+
+    const utc = computeOverview(lateNight, shops, now);
+    const cairo = computeOverview(lateNight, shops, now, 'Africa/Cairo');
+
+    expect(utc.dailySeries.find((day) => day.jobs > 0)?.day).toBe('2026-07-18');
+    expect(cairo.dailySeries.find((day) => day.jobs > 0)?.day).toBe('2026-07-19');
+    expect(cairo.dailySeries.at(-1)?.day).toBe('2026-07-19');
+    expect(cairo.dailySeries[0]?.day).toBe('2026-07-06');
+    expect(cairo.dailySeries).toHaveLength(14);
+
+    // Seven Cairo days back from the 19th starts at midnight on the 13th, Cairo time.
+    const edge = [job({ created_at: '2026-07-12T21:30:00.000Z' }), job({ id: 'job-2', created_at: '2026-07-12T20:30:00.000Z' })];
+    const windows = computeOverview(edge, shops, now, 'Africa/Cairo');
+    expect(windows.totals.jobsLast7d).toBe(1);
+    expect(windows.totals.jobsPrev7d).toBe(1);
+  });
+
   it('fills all fourteen UTC days, including days without jobs', () => {
     const overview = computeOverview(
       [job({ created_at: '2026-07-18T08:00:00.000Z', cost_usd: 0.25 })],

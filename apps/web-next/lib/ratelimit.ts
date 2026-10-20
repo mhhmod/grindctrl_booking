@@ -40,7 +40,7 @@ function createRatelimiters(): {
      without crashing every importing route at boot. */
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     console.error(
-      '[ratelimit] Redis configuration missing — protected requests are unavailable.',
+      '[ratelimit] Redis configuration missing; protected requests are unavailable.',
     );
     return { ...NO_LIMITERS };
   }
@@ -105,7 +105,7 @@ function createRatelimiters(): {
     };
   } catch {
     console.error(
-      '[ratelimit] Redis initialization failed — protected requests are unavailable.',
+      '[ratelimit] Redis initialization failed; protected requests are unavailable.',
     );
     return { ...NO_LIMITERS };
   }

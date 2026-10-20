@@ -683,7 +683,7 @@
           setTimeout(function () {
             if (state.open) return;
             showTeaser(pick(config.behaviour.welcomeSubtitle) ||
-              (state.locale === 'ar' ? 'اسألنا أي شيء — نرد فوراً.' : 'Ask us anything — we reply instantly.'), 'proactive');
+              (state.locale === 'ar' ? 'اسألنا أي شيء.' : 'Ask us anything.'), 'proactive');
           }, clampDelay(config.behaviour.proactiveDelaySeconds));
         }
       }

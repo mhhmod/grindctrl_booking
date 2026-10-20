@@ -104,7 +104,7 @@ describe('publishConfigForSite', () => {
       site({ settings_version: 3, settings_draft: { messenger_ai: { enabled: true } } }),
       'actor-1',
     );
-    expect(result).toEqual({ ok: true, message: 'Published — live on your store within a minute.' });
+    expect(result).toEqual({ ok: true, message: 'Published. Live on your store within a minute.' });
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({ settings_version: 4, settings_draft: null }),
     );
@@ -214,7 +214,7 @@ describe('revertConfigForSite', () => {
     Object.defineProperty(current, 'settings_draft', { get: () => { throw new Error('Draft must never be read'); } });
     const builder = chain({ data: [{ id: current.id }], error: null });
     updateMock.mockReturnValue(builder);
-    expect(await revertConfigForSite(current, 'actor-1')).toEqual({ ok: true, message: 'Reverted — your store is serving the previous version again.' });
+    expect(await revertConfigForSite(current, 'actor-1')).toEqual({ ok: true, message: 'Reverted. Your store is serving the previous version again.' });
     expect(updateMock).toHaveBeenCalledExactlyOnceWith({ settings_json: previous, settings_version: 4 });
     expect(builder.eq).toHaveBeenCalledWith('id', current.id);
     expect(builder.eq).toHaveBeenCalledWith('settings_version', 3);

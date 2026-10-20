@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
+import { intlLocale } from '@/lib/copy/rules';
 
 /* Installation: honest status (Configured vs Detected), the one-step Shopify
    enable flow, a universal script for other platforms, and a quiet
@@ -17,7 +18,7 @@ const COPY = {
     title: 'Installation',
     subtitle: 'Put the messenger on your store.',
     statusLive: 'Live on your store',
-    statusDetected: 'Enabled — waiting to be seen on your storefront',
+    statusDetected: 'Enabled, waiting to be seen on your storefront',
     statusOff: 'Off',
     shopifyTitle: 'Shopify',
     shopifyStep1: 'Open your theme editor → App embeds.',
@@ -47,7 +48,7 @@ const COPY = {
     title: 'التثبيت',
     subtitle: 'ضع دردشة المتجر على متجرك.',
     statusLive: 'يعمل على متجرك',
-    statusDetected: 'مفعّل — في انتظار أول زيارة من متجرك',
+    statusDetected: 'مفعّل، في انتظار أول زيارة من متجرك',
     statusOff: 'متوقف',
     shopifyTitle: 'شوبيفاي',
     shopifyStep1: 'افتح محرر القالب ← App embeds.',
@@ -221,12 +222,12 @@ export function InstallCard({
         <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
           <div>
             <dt className="text-xs text-muted-foreground">{t.lastSeen}</dt>
-            <dd>{detectedAt ? new Date(detectedAt).toLocaleString() : t.never}</dd>
+            <dd>{detectedAt ? new Date(detectedAt).toLocaleString(intlLocale(locale === 'ar' ? 'ar' : 'en')) : t.never}</dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">{t.domain}</dt>
             <dd dir="ltr" className="truncate font-mono text-xs">
-              {domain ?? '—'}
+              {domain ?? '–'}
             </dd>
           </div>
           <div>

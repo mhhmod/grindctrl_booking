@@ -9,7 +9,7 @@ const request = {
 describe('Shopify privacy emails', () => {
   it('clearly reports no customer records and identifies the request', () => {
     const email = buildShopifyDataRequest(request);
-    expect(email.subject).toBe('Shopify customer data request — demo.myshopify.com');
+    expect(email.subject).toBe('Shopify customer data request: demo.myshopify.com');
     expect(email.text).toContain('No customer records were found for customer@example.com');
     expect(email.text).toContain('delivery-1');
     expect(email.text).toContain('123');

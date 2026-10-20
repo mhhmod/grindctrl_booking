@@ -20,7 +20,7 @@ const COPY = {
     claimStore: 'Claim this store',
     claimExplanation: 'Opens grindctrl.cloud to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.',
     claimAlreadyConnected: 'Already connected',
-    claimError: 'Could not connect — try again',
+    claimError: 'Could not connect. Try again',
   },
   ar: {
     tryOn: 'التجربة الافتراضية',
@@ -30,7 +30,7 @@ const COPY = {
     claimStore: 'المطالبة بهذا المتجر',
     claimExplanation: 'يفتح grindctrl.cloud لتسجيل الدخول وإدارة الإعدادات الكاملة من لوحة تحكمك؛ وتستمر دردشة المتجر بالعمل داخل Shopify في كل الأحوال.',
     claimAlreadyConnected: 'متصل بالفعل',
-    claimError: 'تعذّر الاتصال — حاول مجدداً',
+    claimError: 'تعذّر الاتصال. حاول مجدداً',
   },
 } as const;
 

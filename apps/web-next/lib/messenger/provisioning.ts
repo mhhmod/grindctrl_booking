@@ -420,7 +420,7 @@ async function reconcileDomainlessOrphans(workspaceId: string, keepSiteId: strin
     const settingsEmpty = !orphan.settings_json || Object.keys(orphan.settings_json as object).length === 0;
     const draftEmpty = !orphan.settings_draft || Object.keys(orphan.settings_draft as object).length === 0;
     if (!settingsEmpty || !draftEmpty) {
-      console.warn(`[messenger] orphan ${orphan.id} has settings/draft — leaving for manual review`);
+      console.warn(`[messenger] orphan ${orphan.id} has settings/draft, leaving for manual review`);
       continue;
     }
 
@@ -429,7 +429,7 @@ async function reconcileDomainlessOrphans(workspaceId: string, keepSiteId: strin
       supabase.from('messenger_knowledge').select('id', { count: 'exact', head: true }).eq('widget_site_id', orphan.id),
     ]);
     if ((conversations.count ?? 0) > 0 || (knowledge.count ?? 0) > 0) {
-      console.warn(`[messenger] orphan ${orphan.id} has conversation/knowledge history — leaving for manual review`);
+      console.warn(`[messenger] orphan ${orphan.id} has conversation/knowledge history, leaving for manual review`);
       continue;
     }
 

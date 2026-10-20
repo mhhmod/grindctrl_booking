@@ -94,8 +94,8 @@ export function PreviewFrame({
       <p className="mt-3 text-center text-[11px] text-muted-foreground">
         {open
           ? initialLocale === 'ar'
-            ? 'معاينة بالمكوّن الحقيقي — انشر التغييرات لتظهر على متجرك.'
-            : 'Rendered by the real widget component — publish to go live on your store.'
+            ? 'معاينة بالمكوّن الحقيقي. انشر التغييرات لتظهر على متجرك.'
+            : 'Rendered by the real widget component. Publish to go live on your store.'
           : t.hint}
       </p>
     </div>

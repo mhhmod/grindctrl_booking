@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { reportedCostUsd } from './provider-cost';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
+import { addStoreDays, startOfStoreDay, storeDayKey, UTC } from '@/lib/time/store-day';
 
 export type TryOnOverview = {
   totals: {
@@ -54,28 +55,23 @@ export type TryOnOverviewShop = {
   status: 'installed' | 'uninstalled';
 };
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-function startOfUtcDay(value: Date) {
-  return Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate());
-}
-
-function dayKey(timestamp: number) {
-  return new Date(timestamp).toISOString().slice(0, 10);
-}
-
+/* The 14-day series and the 7-day windows run on the store's calendar
+   (phase zero item 32), so "today" starts at the store's midnight, not
+   UTC's. Callers without a store zone get UTC, as before. */
 export function computeOverview(
   jobs: readonly TryOnOverviewJob[],
   shops: readonly TryOnOverviewShop[],
   now: Date,
+  timeZone: string = UTC,
 ): TryOnOverview {
-  const todayStart = startOfUtcDay(now);
-  const seriesStart = todayStart - 13 * DAY_MS;
-  const currentWindowStart = todayStart - 6 * DAY_MS;
+  const todayStart = startOfStoreDay(now, timeZone);
+  const seriesStart = addStoreDays(todayStart, -13, timeZone);
+  const currentWindowStart = addStoreDays(todayStart, -6, timeZone);
   const nowTimestamp = now.getTime();
+  const dayKey = (timestamp: number) => storeDayKey(timestamp, timeZone);
 
   const dailySeries = Array.from({ length: 14 }, (_, index) => ({
-    day: dayKey(seriesStart + index * DAY_MS),
+    day: dayKey(addStoreDays(seriesStart, index, timeZone)),
     jobs: 0,
     spendUsd: 0,
     missingCostJobs: 0,
@@ -210,11 +206,11 @@ async function requireDashboardOwner() {
   if (!userId) throw new Error('Unauthorized');
 }
 
-export async function getTryOnOverview(): Promise<TryOnOverview> {
+export async function getTryOnOverview({ timeZone = UTC }: { timeZone?: string } = {}): Promise<TryOnOverview> {
   await requireDashboardOwner();
 
   const now = new Date();
-  const emptyOverview = () => computeOverview([], [], now);
+  const emptyOverview = () => computeOverview([], [], now, timeZone);
 
   try {
     // The owned-shop list is the single source of truth for "what can this
@@ -228,7 +224,7 @@ export async function getTryOnOverview(): Promise<TryOnOverview> {
     const supabase = getServiceClient();
     if (!supabase) return emptyOverview();
 
-    const since = new Date(startOfUtcDay(now) - 13 * DAY_MS).toISOString();
+    const since = new Date(addStoreDays(startOfStoreDay(now, timeZone), -13, timeZone)).toISOString();
     // The owner's test looks are not looks shoppers made.
     const jobsResult = await withoutTestLooks((excludeTestLooks) => {
       const query = supabase
@@ -246,6 +242,7 @@ export async function getTryOnOverview(): Promise<TryOnOverview> {
       (jobsResult.data ?? []) as TryOnOverviewJob[],
       shops.map((shop) => ({ shop_domain: shop.domain, status: shop.status }) satisfies TryOnOverviewShop),
       now,
+      timeZone,
     );
   } catch (error) {
     console.error('getTryOnOverview failed:', error instanceof Error ? error.message : error);

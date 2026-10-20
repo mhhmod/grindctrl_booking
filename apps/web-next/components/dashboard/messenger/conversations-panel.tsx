@@ -46,7 +46,7 @@ const COPY = {
     unreadOne: 'unread',
     unreadTotal: (n: number) => `${n} unread`,
     allRead: 'All caught up',
-    errorRetry: 'Something went wrong — try again.',
+    errorRetry: 'Something went wrong. Try again.',
     photoAlt: 'Photo sent by the shopper',
     triageDamaged: 'Looks damaged',
     triageWrongItem: 'Looks like the wrong item',
@@ -69,7 +69,7 @@ const COPY = {
     statusResolved: 'Resolved',
     composerReply: 'Reply',
     composerNote: 'Note',
-    noteLabel: 'Private note — only your team sees this',
+    noteLabel: 'Private note: only your team sees this',
     notePh: 'Type a private note…',
     cannedInsert: 'Saved replies',
   },
@@ -102,7 +102,7 @@ const COPY = {
     unreadOne: 'غير مقروء',
     unreadTotal: (n: number) => `${n} غير مقروء`,
     allRead: 'لا جديد',
-    errorRetry: 'حدث خطأ — حاول مجدداً.',
+    errorRetry: 'حدث خطأ. حاول مجدداً.',
     photoAlt: 'صورة أرسلها العميل',
     triageDamaged: 'يبدو تالفاً',
     triageWrongItem: 'يبدو منتجاً خاطئاً',
@@ -125,7 +125,7 @@ const COPY = {
     statusResolved: 'تم الحل',
     composerReply: 'رد',
     composerNote: 'ملاحظة',
-    noteLabel: 'ملاحظة خاصة — لفريقك فقط',
+    noteLabel: 'ملاحظة خاصة: لفريقك فقط',
     notePh: 'اكتب ملاحظة خاصة…',
     cannedInsert: 'ردود محفوظة',
   },
@@ -788,7 +788,7 @@ export function ConversationsPanel({
                         <figcaption className="mt-1 text-[10px] opacity-80">
                           {triageLabel(attachments[message.id].triage!.category, t)}
                           {attachments[message.id].triage!.confidence >= 0.4
-                            ? ` — ${attachments[message.id].triage!.description}`
+                            ? ` · ${attachments[message.id].triage!.description}`
                             : ''}
                         </figcaption>
                       )}

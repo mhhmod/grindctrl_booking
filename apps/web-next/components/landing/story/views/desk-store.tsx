@@ -88,7 +88,7 @@ export function DeskStore({ v, t }: ViewProps) {
             </div>
             <div data-k="sview" style={{ position: "relative", height: "516px", overflow: "hidden", background: "var(--st-bg)" }}>
               <div role="img" aria-label="The GrindCTRL demo store on Shopify: shop by category, the Abayas collection with Try on buttons, and the Riyadh abaya product page with the try-on panel and Store Chat." style={{ position: "absolute", inset: "0" }}>
-                <div style={{ height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--st-line)", fontSize: "10.5px", fontWeight: "500", color: "var(--st-ink)" }}>Test Store — For Demo & Evaluation Purposes Only</div>
+                <div style={{ height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderBottom: "1px solid var(--st-line)", fontSize: "10.5px", fontWeight: "500", color: "var(--st-ink)" }}>Test Store · For Demo & Evaluation Purposes Only</div>
                 <div style={{ height: "54px", display: "flex", alignItems: "center", gap: "26px", padding: "0 30px", color: "var(--st-ink)" }}>
                   <span style={{ fontSize: "14.5px", fontWeight: "800" }}>GrindCTRL</span>
                   <span style={{ display: "flex", gap: "15px", fontSize: "11.5px", whiteSpace: "nowrap" }}>

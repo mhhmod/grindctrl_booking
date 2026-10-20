@@ -124,7 +124,7 @@ describe('MessengerOverview satisfaction', () => {
     expect(screen.getByText('Satisfaction · 30 days')).toBeInTheDocument();
     expect(screen.queryByText(/NaN%/)).not.toBeInTheDocument();
     expect(screen.queryByText('0%')).not.toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('–')).toBeInTheDocument();
   });
 });
 
@@ -133,7 +133,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('MessengerOverview revert', () => {
   const label = 'Revert to previous version';
-  const success = 'Reverted — your store is serving the previous version again.';
+  const success = 'Reverted. Your store is serving the previous version again.';
 
   it.each([{ canRevert: false, actions: { revertConfigAction: vi.fn() } }, { canRevert: true }, { canRevert: true, siteId: undefined, actions: { revertConfigAction: vi.fn() } }])('hides revert without a snapshot, action, or site id: %j', (props) => {
     renderOverview(props);
@@ -181,7 +181,7 @@ describe('MessengerOverview revert', () => {
     renderOverview({ locale: 'ar', canRevert: true, actions: { revertConfigAction: vi.fn().mockResolvedValue({ ok: true, message: success }) } });
     fireEvent.click(screen.getByRole('button', { name: 'استعادة الإصدار السابق' }));
     expect(confirm).toHaveBeenCalledWith('هل تريد استعادة الإصدار المنشور السابق؟ لا يمكن التراجع عن هذه العملية.');
-    expect(await screen.findByRole('status')).toHaveTextContent('تمت الاستعادة — متجرك يعرض الإصدار السابق مجدداً.');
+    expect(await screen.findByRole('status')).toHaveTextContent('تمت الاستعادة. متجرك يعرض الإصدار السابق مجدداً.');
   });
 });
 
@@ -206,7 +206,7 @@ it('keeps success through revalidation but enables revert after the next publish
 
 describe('MessengerOverview disconnect', () => {
   const label = 'Disconnect this store';
-  const success = 'Store disconnected — your dashboard access has been removed. Nothing was deleted.';
+  const success = 'Store disconnected. Your dashboard access has been removed. Nothing was deleted.';
   const confirmCopy = 'Disconnect this store from your grindctrl.cloud dashboard? This removes your dashboard access to this store. Store Chat keeps running in your Shopify admin exactly as before. Nothing is deleted: all conversations, knowledge, saved replies and settings stay with the store. You, or anyone with access to that Shopify admin, can reconnect it later through the normal claim flow and regain access to everything. If this was your only store, your dashboard may show a new, blank “My store” draft.';
   const actions = { revertConfigAction: vi.fn(), disconnectSiteAction: vi.fn() };
 
@@ -297,7 +297,7 @@ describe('MessengerOverview disconnect', () => {
     renderOverview({ locale: 'ar', canDisconnect: true, actions: { ...actions, disconnectSiteAction: vi.fn().mockResolvedValue({ ok: true }) } });
     fireEvent.click(screen.getByRole('button', { name: 'فصل هذا المتجر' }));
     expect(confirm).toHaveBeenCalledWith('هل تريد فصل هذا المتجر عن لوحة تحكمك في grindctrl.cloud؟ سيُزال وصولك إلى هذا المتجر من لوحة التحكم. ستستمر دردشة المتجر في العمل داخل لوحة إدارة Shopify كما كانت تماماً. لن يُحذف أي شيء: ستبقى جميع المحادثات والمعرفة والردود المحفوظة والإعدادات مرتبطة بالمتجر. يمكنك أنت، أو أي شخص لديه وصول إلى لوحة إدارة Shopify لهذا المتجر، إعادة ربطه لاحقاً عبر خطوات المطالبة المعتادة واستعادة الوصول إلى كل شيء. إذا كان هذا متجرك الوحيد، فقد تعرض لوحة تحكمك مسودة جديدة وفارغة باسم «متجري».');
-    expect(await screen.findByRole('status')).toHaveTextContent('تم فصل المتجر — أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.');
+    expect(await screen.findByRole('status')).toHaveTextContent('تم فصل المتجر. أُزيل وصولك إليه من لوحة التحكم. لم يُحذف أي شيء.');
   });
 });
 

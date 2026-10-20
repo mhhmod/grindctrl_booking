@@ -144,7 +144,7 @@ export async function publishConfigForSite(
     action: 'config_published',
     detail: { version: site.settings_version + 1 },
   });
-  return { ok: true, message: 'Published — live on your store within a minute.' };
+  return { ok: true, message: 'Published. Live on your store within a minute.' };
 }
 
 export async function revertConfigForSite(
@@ -182,7 +182,7 @@ export async function revertConfigForSite(
     action: 'config_reverted',
     detail: { revertedFromVersion: site.settings_version, revertedToVersion: previousVersion },
   });
-  return { ok: true, message: 'Reverted — your store is serving the previous version again.' };
+  return { ok: true, message: 'Reverted. Your store is serving the previous version again.' };
 }
 
 export async function setMessengerEnabledForSite(

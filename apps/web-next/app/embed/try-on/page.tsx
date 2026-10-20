@@ -19,7 +19,7 @@ import {
 } from '@/lib/try-on/i18n';
 
 export const metadata: Metadata = {
-  title: 'Try-On — GRINDCTRL',
+  title: 'Try-On | GRINDCTRL',
   robots: { index: false },
 };
 

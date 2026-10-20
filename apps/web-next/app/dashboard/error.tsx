@@ -21,13 +21,13 @@ import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing
 const COPY = {
   en: {
     title: 'This page did not load',
-    body: 'Something went wrong on our side. Trying again usually works — the problem is often momentary.',
+    body: 'Something went wrong on our side. Trying again usually works. The problem is often momentary.',
     retry: 'Try again',
     reference: 'Reference',
   },
   ar: {
     title: 'تعذّر تحميل هذه الصفحة',
-    body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً — فالمشكلة غالباً مؤقتة.',
+    body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً، فالمشكلة غالباً مؤقتة.',
     retry: 'إعادة المحاولة',
     reference: 'الرقم المرجعي',
   },

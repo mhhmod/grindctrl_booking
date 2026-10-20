@@ -39,7 +39,7 @@ function buildEmail(subject: string, text: string): { subject: string; html: str
 export function buildShopifyDataRequest(input: ShopifyDataRequestInput): { subject: string; html: string; text: string } {
   // JSON preserves the entire export, including newlines, without letting
   // customer-authored content masquerade as email instructions.
-  return buildEmail(`Shopify customer data request — ${input.shopDomain}`, [
+  return buildEmail(`Shopify customer data request: ${input.shopDomain}`, [
     'Shopify customer data request',
     `Shop: ${input.shopDomain}`,
     `Webhook ID: ${input.webhookId}`,
@@ -55,7 +55,7 @@ export function buildShopifyDataRequest(input: ShopifyDataRequestInput): { subje
 }
 
 export function buildShopifyPrivacyAlert(input: ShopifyPrivacyAlertInput): { subject: string; html: string; text: string } {
-  return buildEmail(`Shopify privacy request — manual handling required — ${input.shopDomain}`, [
+  return buildEmail(`Shopify privacy request, manual handling required: ${input.shopDomain}`, [
     input.reason === 'disabled' ? 'Shopify privacy processing is disabled.' : 'Shopify privacy processing failed.',
     'Manual handling is required. The request is durably recorded in shopify_privacy_requests.',
     `Shop: ${input.shopDomain}`,
