@@ -1,0 +1,2341 @@
+{
+  "duration": 286.96,
+  "container_duration": 287.007347,
+  "fps": 30,
+  "audio_filename": "Part03_Corrected_Master.mp3",
+  "audio_sha256": "167b0508b8f6f53bdfa4a4fc0b240a841c9436c10fd3484bbb6b8e768de5e1ad",
+  "chapters": [
+    {
+      "id": "S01",
+      "title": "From call context to Customer 360°",
+      "start": 0,
+      "end": 40.431814
+    },
+    {
+      "id": "S02",
+      "title": "Incoming call and four profile fields",
+      "start": 40.431814,
+      "end": 63.226916
+    },
+    {
+      "id": "S03",
+      "title": "Concrete Icons Club in context",
+      "start": 63.226916,
+      "end": 84.242109
+    },
+    {
+      "id": "S04",
+      "title": "Each call and its own notes",
+      "start": 84.242109,
+      "end": 119.347029
+    },
+    {
+      "id": "S05",
+      "title": "Read the original follow-up note",
+      "start": 119.347029,
+      "end": 162.408345
+    },
+    {
+      "id": "S06",
+      "title": "Write now; retrieve the same call later",
+      "start": 162.408345,
+      "end": 197.488549
+    },
+    {
+      "id": "S07",
+      "title": "Safe exception states",
+      "start": 197.488549,
+      "end": 222.299093
+    },
+    {
+      "id": "S08",
+      "title": "Inspect sources, then pilot",
+      "start": 222.299093,
+      "end": 286.96
+    }
+  ],
+  "cues": [
+    {
+      "id": "C001",
+      "scene_id": "S01",
+      "start": 0.0,
+      "end": 0.918231,
+      "spoken_phrase": "في الفيديو الأول،",
+      "caption_ar": "في الفيديو الأول،",
+      "raw_recognition": "في الفيديو الأول",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C002",
+      "scene_id": "S01",
+      "start": 1.083061,
+      "end": 5.786054,
+      "spoken_phrase": "شوفنا إزاي نقدر نخلي الـAgent يبدأ المكالمة وهو شايف الـCustomer Context،",
+      "caption_ar": "شوفنا إزاي نقدر نخلي الـAgent يبدأ المكالمة وهو شايف الـCustomer Context،",
+      "raw_recognition": "شوفنا الي نقدر نخلي الاجنت يبدأ المكلمة وهو شايف الكستمار كونتكست",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C003",
+      "scene_id": "S01",
+      "start": 5.939546,
+      "end": 6.861202,
+      "spoken_phrase": "والـTickets السابقة،",
+      "caption_ar": "والـTickets السابقة،",
+      "raw_recognition": "و تكتصة سابقة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C004",
+      "scene_id": "S01",
+      "start": 7.43907,
+      "end": 9.502086,
+      "spoken_phrase": "بدل ما يضطر يدور على كل حاجة بنفسه.",
+      "caption_ar": "بدل ما يضطر يدور على كل حاجة بنفسه.",
+      "raw_recognition": "بدل ما يتطر يدور على كل حاجة بنفسه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C005",
+      "scene_id": "S01",
+      "start": 10.033628,
+      "end": 10.888526,
+      "spoken_phrase": "وفي الفيديو التاني،",
+      "caption_ar": "وفي الفيديو التاني،",
+      "raw_recognition": "وفي الفيديو تاني",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C006",
+      "scene_id": "S01",
+      "start": 11.2822,
+      "end": 13.09839,
+      "spoken_phrase": "دخلنا أكتر في تفاصيل الـWorkflow،",
+      "caption_ar": "دخلنا أكتر في تفاصيل الـWorkflow،",
+      "raw_recognition": "دخلنا أكثر في تفاصيل الوركفلو",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C007",
+      "scene_id": "S01",
+      "start": 13.436145,
+      "end": 14.895624,
+      "spoken_phrase": "وشوفنا إزاي الـLookup بيتم،",
+      "caption_ar": "وشوفنا إزاي الـLookup بيتم،",
+      "raw_recognition": "وشوفنا زي لكبيتهم",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C008",
+      "scene_id": "S01",
+      "start": 15.320499,
+      "end": 17.769501,
+      "spoken_phrase": "وإزاي الـAgent يقدر يتابع الـCases المختلفة.",
+      "caption_ar": "وإزاي الـAgent يقدر يتابع الـCases المختلفة.",
+      "raw_recognition": "وزي الاجنت يقدر يتابع الكيسيز المختلفة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C009",
+      "scene_id": "S01",
+      "start": 18.461791,
+      "end": 18.966825,
+      "spoken_phrase": "النهارده،",
+      "caption_ar": "النهارده،",
+      "raw_recognition": "النهاردة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C010",
+      "scene_id": "S01",
+      "start": 19.167891,
+      "end": 20.280907,
+      "spoken_phrase": "هنكمل خطوة أبعد،",
+      "caption_ar": "هنكمل خطوة أبعد،",
+      "raw_recognition": "هنكمل خطوة أبعد",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C011",
+      "scene_id": "S01",
+      "start": 20.51644,
+      "end": 23.526077,
+      "spoken_phrase": "بفكرة جاية من احتياج فريق المبيعات في Concrete نفسه.",
+      "caption_ar": "بفكرة جاية من احتياج فريق المبيعات في Concrete نفسه.",
+      "raw_recognition": "بفكرة جاية من احتياج فريق المبيعات في كونكريت نفسه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C012",
+      "scene_id": "S01",
+      "start": 24.130408,
+      "end": 25.917506,
+      "spoken_phrase": "تخيلوا إن أول ما الـCall توصل،",
+      "caption_ar": "تخيلوا إن أول ما الـCall توصل،",
+      "raw_recognition": "تخيلوا أن أول ملكول توصل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C013",
+      "scene_id": "S01",
+      "start": 26.212971,
+      "end": 29.011315,
+      "spoken_phrase": "الـAgent يلاقي قدامه مش بس الـTickets السابقة،",
+      "caption_ar": "الـAgent يلاقي قدامه مش بس الـTickets السابقة،",
+      "raw_recognition": "الاجن تلايق ادامه مش بس تكتس السابقة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C014",
+      "scene_id": "S01",
+      "start": 29.527256,
+      "end": 31.751383,
+      "spoken_phrase": "لكن كمان الـCustomer Profile بالكامل،",
+      "caption_ar": "لكن كمان الـCustomer Profile بالكامل،",
+      "raw_recognition": "لكن كمان الكوستمار بفعيل بالكامل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C015",
+      "scene_id": "S01",
+      "start": 32.191247,
+      "end": 35.005261,
+      "spoken_phrase": "وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،",
+      "caption_ar": "وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،",
+      "raw_recognition": "وتاريخ كل المكلمات التي حصلت مع العميل قبل كذا",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C016",
+      "scene_id": "S01",
+      "start": 35.424422,
+      "end": 37.375986,
+      "spoken_phrase": "والـNotes اللي اتكتبت خلال كل مكالمة.",
+      "caption_ar": "والـNotes اللي اتكتبت خلال كل مكالمة.",
+      "raw_recognition": "و نوطس لتكتبت خلال كل مقالمة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C017",
+      "scene_id": "S01",
+      "start": 38.080612,
+      "end": 39.625737,
+      "spoken_phrase": "خلينا نشوف التجربة دي بالتفصيل.",
+      "caption_ar": "خلينا نشوف التجربة دي بالتفصيل.",
+      "raw_recognition": "خلين نتشوف التغرب الدي بالتفسير",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C018",
+      "scene_id": "S02",
+      "start": 40.431814,
+      "end": 42.960658,
+      "spoken_phrase": "أول ما العميل يتصل على الـHotline بتاع Concrete،",
+      "caption_ar": "أول ما العميل يتصل على الـHotline بتاع Concrete،",
+      "raw_recognition": "أول ما العميل يتصل على الهوتلين بدعى كونكريت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C019",
+      "scene_id": "S02",
+      "start": 43.256054,
+      "end": 45.353923,
+      "spoken_phrase": "الـCall بتوصل للـAgent على Genesys.",
+      "caption_ar": "الـCall بتوصل للـAgent على Genesys.",
+      "raw_recognition": "الكول بتوصل للأيجنت على جنسس.",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C020",
+      "scene_id": "S02",
+      "start": 45.795397,
+      "end": 46.482653,
+      "spoken_phrase": "وفي اللحظة دي،",
+      "caption_ar": "وفي اللحظة دي،",
+      "raw_recognition": "وفي اللحظة دي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C021",
+      "scene_id": "S02",
+      "start": 46.744444,
+      "end": 49.229093,
+      "spoken_phrase": "بنقترح إن النظام يستخدم رقم المتصل،",
+      "caption_ar": "بنقترح إن النظام يستخدم رقم المتصل،",
+      "raw_recognition": "بنقطرح أن النظام يستخدم رقم المتصل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C022",
+      "scene_id": "S02",
+      "start": 49.634649,
+      "end": 52.797324,
+      "spoken_phrase": "عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.",
+      "caption_ar": "عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.",
+      "raw_recognition": "لكي يعمل اوثماتك لوكوب عن الكستوم الركد المناسب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C023",
+      "scene_id": "S02",
+      "start": 53.271905,
+      "end": 55.672404,
+      "spoken_phrase": "وبمجرد ما يتم تحديد الـCustomer الصحيح،",
+      "caption_ar": "وبمجرد ما يتم تحديد الـCustomer الصحيح،",
+      "raw_recognition": "وبمجرد ما يتم تحديد الكاستمر الصحيح",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C024",
+      "scene_id": "S02",
+      "start": 56.092313,
+      "end": 58.571655,
+      "spoken_phrase": "يظهر قدام الموظف أربع معلومات أساسية.",
+      "caption_ar": "يظهر قدام الموظف أربع معلومات أساسية.",
+      "raw_recognition": "يظهر قدام المواصف 4 معلومات أساسية",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C025",
+      "scene_id": "S02",
+      "start": 59.153968,
+      "end": 59.76424,
+      "spoken_phrase": "أول حاجة،",
+      "caption_ar": "أول حاجة،",
+      "raw_recognition": "أول حاجة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C026",
+      "scene_id": "S02",
+      "start": 59.975261,
+      "end": 60.69424,
+      "spoken_phrase": "الـMobile Number.",
+      "caption_ar": "الـMobile Number.",
+      "raw_recognition": "المبال نمبر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C027",
+      "scene_id": "S02",
+      "start": 61.22746,
+      "end": 61.793605,
+      "spoken_phrase": "تاني حاجة،",
+      "caption_ar": "تاني حاجة،",
+      "raw_recognition": "تاني حاجة؟",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C028",
+      "scene_id": "S02",
+      "start": 62.010317,
+      "end": 62.763175,
+      "spoken_phrase": "الـCustomer Name.",
+      "caption_ar": "الـCustomer Name.",
+      "raw_recognition": "لكستمر name",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C029",
+      "scene_id": "S03",
+      "start": 63.226916,
+      "end": 63.838186,
+      "spoken_phrase": "تالت حاجة،",
+      "caption_ar": "تالت حاجة،",
+      "raw_recognition": "ثلت حاجة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C030",
+      "scene_id": "S03",
+      "start": 63.992222,
+      "end": 65.017755,
+      "spoken_phrase": "الـCustomer Segment،",
+      "caption_ar": "الـCustomer Segment،",
+      "raw_recognition": "\"القصومر سيغمنت\"",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C031",
+      "scene_id": "S03",
+      "start": 65.219909,
+      "end": 67.994218,
+      "spoken_phrase": "سواء كان Lifestyle أو Prestige أو Elite،",
+      "caption_ar": "سواء كان Lifestyle أو Prestige أو Elite،",
+      "raw_recognition": "سواء كان ليفس طيب أو برستيج أو إليت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C032",
+      "scene_id": "S03",
+      "start": 68.385351,
+      "end": 71.825238,
+      "spoken_phrase": "حسب الـMembership Level المسجل للعميل في Concrete Icons Club.",
+      "caption_ar": "حسب الـMembership Level المسجل للعميل في Concrete Icons Club.",
+      "raw_recognition": "حسب المنبرشب لبلغ المسجل العاميل في \"Concrete Icons Club\"",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C033",
+      "scene_id": "S03",
+      "start": 72.236689,
+      "end": 72.95966,
+      "spoken_phrase": "ورابع حاجة،",
+      "caption_ar": "ورابع حاجة،",
+      "raw_recognition": "وربح حاجة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C034",
+      "scene_id": "S03",
+      "start": 73.153243,
+      "end": 75.915873,
+      "spoken_phrase": "الـEmail Address، لو موجود بالفعل في بيانات العميل.",
+      "caption_ar": "الـEmail Address، لو موجود بالفعل في بيانات العميل.",
+      "raw_recognition": "الإيميل أدرس لو موجود بالفعل في بيانات العميل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C035",
+      "scene_id": "S03",
+      "start": 76.605896,
+      "end": 80.781882,
+      "spoken_phrase": "كل المعلومات دي هتبقى متجمعة في Customer Profile واضح ومنظم،",
+      "caption_ar": "كل المعلومات دي هتبقى متجمعة في Customer Profile واضح ومنظم،",
+      "raw_recognition": "كل المعلومات هذه هتكون متجمعة في كستمر بروفاي الواضح ومنظم",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C036",
+      "scene_id": "S03",
+      "start": 80.977211,
+      "end": 83.701088,
+      "spoken_phrase": "وسهل جدًا إن الموظف يقراه أثناء المكالمة.",
+      "caption_ar": "وسهل جدًا إن الموظف يقراه أثناء المكالمة.",
+      "raw_recognition": "وسهل جداً أن الموظف يأراه أسناء المكلمة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C037",
+      "scene_id": "S04",
+      "start": 84.242109,
+      "end": 87.344512,
+      "spoken_phrase": "لكن القيمة الحقيقية مش بس إننا نعرف مين العميل.",
+      "caption_ar": "لكن القيمة الحقيقية مش بس إننا نعرف مين العميل.",
+      "raw_recognition": "لكن القيمة الحقيقية ليس فقط أن نعرف مين العميل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C038",
+      "scene_id": "S04",
+      "start": 87.980431,
+      "end": 88.805465,
+      "spoken_phrase": "القيمة الأكبر،",
+      "caption_ar": "القيمة الأكبر،",
+      "raw_recognition": "القيمة الأكبر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C039",
+      "scene_id": "S04",
+      "start": 89.05907,
+      "end": 91.133288,
+      "spoken_phrase": "إننا نعرف إيه اللي حصل معاه قبل كده.",
+      "caption_ar": "إننا نعرف إيه اللي حصل معاه قبل كده.",
+      "raw_recognition": "لأننا نعرف ايه اللي حصل معاقب لكذا",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C040",
+      "scene_id": "S04",
+      "start": 91.730408,
+      "end": 92.089002,
+      "spoken_phrase": "وهنا،",
+      "caption_ar": "وهنا،",
+      "raw_recognition": "وهنا",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C041",
+      "scene_id": "S04",
+      "start": 92.244558,
+      "end": 93.560816,
+      "spoken_phrase": "بييجي دور الـCall Activity.",
+      "caption_ar": "بييجي دور الـCall Activity.",
+      "raw_recognition": "بيجدور الـ \"كول\" اكتبتي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C042",
+      "scene_id": "S04",
+      "start": 94.134671,
+      "end": 97.994739,
+      "spoken_phrase": "بدل ما الموظف يشوف مجرد قايمة بأرقام أو تواريخ مكالمات،",
+      "caption_ar": "بدل ما الموظف يشوف مجرد قايمة بأرقام أو تواريخ مكالمات،",
+      "raw_recognition": "بدل ملموظف يشوف مجرد قيمة بأرقام أو تواريخ مكلمات",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C043",
+      "scene_id": "S04",
+      "start": 98.406122,
+      "end": 100.686803,
+      "spoken_phrase": "بنقترح إنه يشوف Timeline واضحة،",
+      "caption_ar": "بنقترح إنه يشوف Timeline واضحة،",
+      "raw_recognition": "نقترح أن نرى \"تايم لين\"",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C044",
+      "scene_id": "S04",
+      "start": 100.933356,
+      "end": 103.219184,
+      "spoken_phrase": "فيها كل الـPrevious Calls المتاحة للعميل.",
+      "caption_ar": "فيها كل الـPrevious Calls المتاحة للعميل.",
+      "raw_recognition": "فيها كل البريفيس كولز المتاحة للعميل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C045",
+      "scene_id": "S04",
+      "start": 103.771134,
+      "end": 105.973401,
+      "spoken_phrase": "كل Call يكون لها تاريخها ووقتها،",
+      "caption_ar": "كل Call يكون لها تاريخها ووقتها،",
+      "raw_recognition": "كل كل يكون لها ترخها ووعتها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C046",
+      "scene_id": "S04",
+      "start": 106.275125,
+      "end": 109.01415,
+      "spoken_phrase": "والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.",
+      "caption_ar": "والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.",
+      "raw_recognition": "والاجنت التي تعمل معها لو البيانات دي متسبقلة.",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C047",
+      "scene_id": "S04",
+      "start": 109.486871,
+      "end": 109.996757,
+      "spoken_phrase": "والأهم،",
+      "caption_ar": "والأهم،",
+      "raw_recognition": "والأهم",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C048",
+      "scene_id": "S04",
+      "start": 110.343673,
+      "end": 112.368934,
+      "spoken_phrase": "الـNotes الخاصة بالمكالمة دي تحديدًا.",
+      "caption_ar": "الـNotes الخاصة بالمكالمة دي تحديدًا.",
+      "raw_recognition": "النوتس الخاصة بالمكلمة دي تحديداً",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C049",
+      "scene_id": "S04",
+      "start": 113.020227,
+      "end": 116.815805,
+      "spoken_phrase": "يعني كل مكالمة لها الـHistory بتاعتها والـNotes اللي اتكتبت فيها،",
+      "caption_ar": "يعني كل مكالمة لها الـHistory بتاعتها والـNotes اللي اتكتبت فيها،",
+      "raw_recognition": "يعني كل مكلمة لها الهيستري بتاعتها والنوطس اللي تكتبت فيها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C050",
+      "scene_id": "S04",
+      "start": 117.168526,
+      "end": 118.04932,
+      "spoken_phrase": "بشكل منفصل،",
+      "caption_ar": "بشكل منفصل،",
+      "raw_recognition": "بشكل منفصل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C051",
+      "scene_id": "S04",
+      "start": 118.242812,
+      "end": 118.723243,
+      "spoken_phrase": "ومنظم.",
+      "caption_ar": "ومنظم.",
+      "raw_recognition": "ومناسب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C052",
+      "scene_id": "S05",
+      "start": 119.347029,
+      "end": 120.5122,
+      "spoken_phrase": "خلينا ناخد مثال عملي.",
+      "caption_ar": "خلينا ناخد مثال عملي.",
+      "raw_recognition": "خليننا ناخذ مثال عملي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C053",
+      "scene_id": "S05",
+      "start": 121.069751,
+      "end": 125.097868,
+      "spoken_phrase": "عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.",
+      "caption_ar": "عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.",
+      "raw_recognition": "عميل من الإليد سيجمنت تصل الإسبوع اللفات بخصوص exchange request",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C054",
+      "scene_id": "S05",
+      "start": 125.658322,
+      "end": 126.452993,
+      "spoken_phrase": "خلال المكالمة،",
+      "caption_ar": "خلال المكالمة،",
+      "raw_recognition": "خلال المكلمة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C055",
+      "scene_id": "S05",
+      "start": 126.691746,
+      "end": 129.651474,
+      "spoken_phrase": "الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،",
+      "caption_ar": "الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،",
+      "raw_recognition": "الاجنت كتب نوت أن الطلب محتاج مراجعة من الفرع",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C056",
+      "scene_id": "S05",
+      "start": 129.94415,
+      "end": 131.186463,
+      "spoken_phrase": "وإن فيه Follow-up مطلوب.",
+      "caption_ar": "وإن فيه Follow-up مطلوب.",
+      "raw_recognition": "وانفعي فلوك مطلوب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C057",
+      "scene_id": "S05",
+      "start": 131.707211,
+      "end": 132.203016,
+      "spoken_phrase": "النهارده،",
+      "caption_ar": "النهارده،",
+      "raw_recognition": "اينه الهرده؟",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C058",
+      "scene_id": "S05",
+      "start": 132.370567,
+      "end": 135.099138,
+      "spoken_phrase": "نفس العميل بيتصل تاني يسأل عن آخر Update.",
+      "caption_ar": "نفس العميل بيتصل تاني يسأل عن آخر Update.",
+      "raw_recognition": "نفس العميل بيتصل تاني يسأل عن آخر update",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C059",
+      "scene_id": "S05",
+      "start": 135.743084,
+      "end": 139.089365,
+      "spoken_phrase": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول،",
+      "caption_ar": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول،",
+      "raw_recognition": "بدل ما الموظف الجديد يبدأ يسأله عن كل التفاصيل من الأول",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C060",
+      "scene_id": "S05",
+      "start": 139.535397,
+      "end": 140.985601,
+      "spoken_phrase": "يقدر يفتح الـPrevious Call،",
+      "caption_ar": "يقدر يفتح الـPrevious Call،",
+      "raw_recognition": "يقدر يفتح البريفيس كول",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C061",
+      "scene_id": "S05",
+      "start": 141.158617,
+      "end": 142.640748,
+      "spoken_phrase": "ويشوف الـNote اللي زميله كتبها.",
+      "caption_ar": "ويشوف الـNote اللي زميله كتبها.",
+      "raw_recognition": "ويشوف النوتل لزميله كتبه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C062",
+      "scene_id": "S05",
+      "start": 143.145011,
+      "end": 144.864671,
+      "spoken_phrase": "يعرف العميل كان بيتكلم في إيه،",
+      "caption_ar": "يعرف العميل كان بيتكلم في إيه،",
+      "raw_recognition": "يعرف العميل كان يتكلم فيه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C063",
+      "scene_id": "S05",
+      "start": 145.117188,
+      "end": 146.492018,
+      "spoken_phrase": "وإيه آخر خطوة تسجلت،",
+      "caption_ar": "وإيه آخر خطوة تسجلت،",
+      "raw_recognition": "وإي آخر خطوة سجلت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C064",
+      "scene_id": "S05",
+      "start": 147.008844,
+      "end": 148.488413,
+      "spoken_phrase": "وإيه الموضوع اللي محتاج Follow-up.",
+      "caption_ar": "وإيه الموضوع اللي محتاج Follow-up.",
+      "raw_recognition": "وإيه الموضوع اللي محتاج فلوة؟",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C065",
+      "scene_id": "S05",
+      "start": 149.064535,
+      "end": 149.600431,
+      "spoken_phrase": "وبالتالي،",
+      "caption_ar": "وبالتالي،",
+      "raw_recognition": "و بتلي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C066",
+      "scene_id": "S05",
+      "start": 149.822585,
+      "end": 152.15907,
+      "spoken_phrase": "يبدأ المحادثة وهو فاهم الـContext،",
+      "caption_ar": "يبدأ المحادثة وهو فاهم الـContext،",
+      "raw_recognition": "يبدأ المحتسة وهو فهم الكنتكست",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C067",
+      "scene_id": "S05",
+      "start": 152.311769,
+      "end": 155.092971,
+      "spoken_phrase": "من غير ما العميل يضطر يعيد نفس الشرح كل مرة.",
+      "caption_ar": "من غير ما العميل يضطر يعيد نفس الشرح كل مرة.",
+      "raw_recognition": "من غير ملعميل يتطر يعيد نفس الشرحة كل مر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C068",
+      "scene_id": "S05",
+      "start": 155.613741,
+      "end": 156.063651,
+      "spoken_phrase": "وطبعًا،",
+      "caption_ar": "وطبعًا،",
+      "raw_recognition": "وطبعاً",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C069",
+      "scene_id": "S05",
+      "start": 156.283673,
+      "end": 158.239433,
+      "spoken_phrase": "الـNote بتوضح اللي تسجل في المكالمة،",
+      "caption_ar": "الـNote بتوضح اللي تسجل في المكالمة،",
+      "raw_recognition": "النوت بتوضح اللي تسجل في المكلمة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C070",
+      "scene_id": "S05",
+      "start": 158.52771,
+      "end": 161.19678,
+      "spoken_phrase": "مش بالضرورة إن الإجراء المطلوب اتنفذ بالفعل.",
+      "caption_ar": "مش بالضرورة إن الإجراء المطلوب اتنفذ بالفعل.",
+      "raw_recognition": "مش بالضرورة أن الإجراء المطلوب اتنفس بالفعل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C071",
+      "scene_id": "S06",
+      "start": 162.408345,
+      "end": 165.126689,
+      "spoken_phrase": "خلينا نشوف إيه اللي هيحصل أثناء الـCurrent Call نفسها.",
+      "caption_ar": "خلينا نشوف إيه اللي هيحصل أثناء الـCurrent Call نفسها.",
+      "raw_recognition": "دعنا نرى ما يحدث في الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف الهاتف ال",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C072",
+      "scene_id": "S06",
+      "start": 165.691043,
+      "end": 167.25585,
+      "spoken_phrase": "الـAgent بيتكلم مع العميل،",
+      "caption_ar": "الـAgent بيتكلم مع العميل،",
+      "raw_recognition": "الاجنب يتكلم مع العميل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C073",
+      "scene_id": "S06",
+      "start": 167.435601,
+      "end": 170.984558,
+      "spoken_phrase": "وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،",
+      "caption_ar": "وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،",
+      "raw_recognition": "و في نفس الوقت يقدر يسجل نوتي جديدة عن تفاصيل المحادسة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C074",
+      "scene_id": "S06",
+      "start": 171.15737,
+      "end": 172.819297,
+      "spoken_phrase": "والإجراء اللي تم الاتفاق عليه،",
+      "caption_ar": "والإجراء اللي تم الاتفاق عليه،",
+      "raw_recognition": "والإجراء اللي تم اللي اتفاق عليه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C075",
+      "scene_id": "S06",
+      "start": 173.019728,
+      "end": 174.209184,
+      "spoken_phrase": "أو الـFollow-up المطلوب.",
+      "caption_ar": "أو الـFollow-up المطلوب.",
+      "raw_recognition": "أو الفلوو up المطلوب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C076",
+      "scene_id": "S06",
+      "start": 174.470499,
+      "end": 175.788753,
+      "spoken_phrase": "وبعد ما الـCall تخلص،",
+      "caption_ar": "وبعد ما الـCall تخلص،",
+      "raw_recognition": "وبعدما الكل تخلص",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C077",
+      "scene_id": "S06",
+      "start": 175.966463,
+      "end": 178.900136,
+      "spoken_phrase": "الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،",
+      "caption_ar": "الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،",
+      "raw_recognition": "الملاحظات تتحفز مرتبطة بنفس الكول اكتبتي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C078",
+      "scene_id": "S06",
+      "start": 179.246395,
+      "end": 181.95288,
+      "spoken_phrase": "حسب طريقة التسجيل والـIntegration اللي هنعتمدها.",
+      "caption_ar": "حسب طريقة التسجيل والـIntegration اللي هنعتمدها.",
+      "raw_recognition": "حسب طريقة التسجيل والانتجريشن التي نعتمدها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C079",
+      "scene_id": "S06",
+      "start": 182.372766,
+      "end": 184.0022,
+      "spoken_phrase": "ولما العميل يتصل مرة تانية،",
+      "caption_ar": "ولما العميل يتصل مرة تانية،",
+      "raw_recognition": "و لما العميل يتصل مرة تانية",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C080",
+      "scene_id": "S06",
+      "start": 184.327052,
+      "end": 187.042857,
+      "spoken_phrase": "الـAgent التالي يقدر يرجع للـPrevious Calls،",
+      "caption_ar": "الـAgent التالي يقدر يرجع للـPrevious Calls،",
+      "raw_recognition": "الأجنت التالي يقدر يرجع للبريوز كولز",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C081",
+      "scene_id": "S06",
+      "start": 187.326009,
+      "end": 189.333265,
+      "spoken_phrase": "ويشوف الـNotes الخاصة بكل مكالمة،",
+      "caption_ar": "ويشوف الـNotes الخاصة بكل مكالمة،",
+      "raw_recognition": "ويشوف النوتز الخاصة بكل موكلمة.",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C082",
+      "scene_id": "S06",
+      "start": 189.598186,
+      "end": 191.072109,
+      "spoken_phrase": "حسب الصلاحيات المتاحة له.",
+      "caption_ar": "حسب الصلاحيات المتاحة له.",
+      "raw_recognition": "حسب الصلاحيات المتاحلي",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C083",
+      "scene_id": "S06",
+      "start": 191.394603,
+      "end": 193.619819,
+      "spoken_phrase": "يعني بدل ما كل مكالمة تبدأ من الصفر،",
+      "caption_ar": "يعني بدل ما كل مكالمة تبدأ من الصفر،",
+      "raw_recognition": "يعني بدل ما كل مكلمة تبدأ من الصفر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C084",
+      "scene_id": "S06",
+      "start": 193.961973,
+      "end": 194.565782,
+      "spoken_phrase": "كل Call،",
+      "caption_ar": "كل Call،",
+      "raw_recognition": "كل كل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C085",
+      "scene_id": "S06",
+      "start": 194.718503,
+      "end": 197.100703,
+      "spoken_phrase": "بتضيف معلومات تساعد في المكالمة اللي بعدها.",
+      "caption_ar": "بتضيف معلومات تساعد في المكالمة اللي بعدها.",
+      "raw_recognition": "بضيف معلومات تساعد في المكلمة اللي بعدها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C086",
+      "scene_id": "S07",
+      "start": 197.488549,
+      "end": 201.550612,
+      "spoken_phrase": "وفي نفس الوقت لازم التجربة تتعامل بشكل واضح مع الحالات المختلفة.",
+      "caption_ar": "وفي نفس الوقت لازم التجربة تتعامل بشكل واضح مع الحالات المختلفة.",
+      "raw_recognition": "وفي نفس الوقت لازم التجربة تتعامل بشكل واضح مع الحلات المختلفة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C087",
+      "scene_id": "S07",
+      "start": 202.023379,
+      "end": 203.45449,
+      "spoken_phrase": "لو رقم العميل مش موجود،",
+      "caption_ar": "لو رقم العميل مش موجود،",
+      "raw_recognition": "لو رقم العميل مش موجود",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C088",
+      "scene_id": "S07",
+      "start": 203.733311,
+      "end": 205.774263,
+      "spoken_phrase": "الـAgent يقدر يعمل Manual Search.",
+      "caption_ar": "الـAgent يقدر يعمل Manual Search.",
+      "raw_recognition": "الأجنت يقدر يعمل منيول سرچ",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C089",
+      "scene_id": "S07",
+      "start": 206.083424,
+      "end": 208.465918,
+      "spoken_phrase": "ولو نفس الرقم مرتبط بأكتر من Customer،",
+      "caption_ar": "ولو نفس الرقم مرتبط بأكتر من Customer،",
+      "raw_recognition": "ولو نفس الرقم مرتبط بأكثر من كاستمر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C090",
+      "scene_id": "S07",
+      "start": 208.808458,
+      "end": 211.608005,
+      "spoken_phrase": "الموظف يراجع الـPossible Matches،",
+      "caption_ar": "الموظف يراجع الـPossible Matches،",
+      "raw_recognition": "الموظف يراجع الإمكانيات المحتملة للمطبقة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C091",
+      "scene_id": "S07",
+      "start": 211.80712,
+      "end": 214.465238,
+      "spoken_phrase": "ويحدد الـRecord الصحيح بعد التحقق المطلوب.",
+      "caption_ar": "ويحدد الـRecord الصحيح بعد التحقق المطلوب.",
+      "raw_recognition": "ويحدد الركد الصحيح بعد التحقق المطلوب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C092",
+      "scene_id": "S07",
+      "start": 214.888571,
+      "end": 216.857506,
+      "spoken_phrase": "ولو الـEmail أو الـSegment مش متاحة،",
+      "caption_ar": "ولو الـEmail أو الـSegment مش متاحة،",
+      "raw_recognition": "ولو الإيميل أو السجمنت مش متاح",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C093",
+      "scene_id": "S07",
+      "start": 217.190612,
+      "end": 219.356032,
+      "spoken_phrase": "النظام يوضح إن المعلومة مش موجودة،",
+      "caption_ar": "النظام يوضح إن المعلومة مش موجودة،",
+      "raw_recognition": "النظام يوضح أن المعلومة مش موجودة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C094",
+      "scene_id": "S07",
+      "start": 219.587483,
+      "end": 221.346689,
+      "spoken_phrase": "بدل ما يعرض بيانات غير مؤكدة.",
+      "caption_ar": "بدل ما يعرض بيانات غير مؤكدة.",
+      "raw_recognition": "بدل ما يعرض بيانات غير مؤكدة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C095",
+      "scene_id": "S08",
+      "start": 222.299093,
+      "end": 225.925918,
+      "spoken_phrase": "إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في Concrete؟",
+      "caption_ar": "إزاي هنطبق التجربة دي على الأنظمة الموجودة بالفعل في Concrete؟",
+      "raw_recognition": "إزاي هنطبق التجربة ديها على الأنظمة الموجودة بالفعل في كونكريت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C096",
+      "scene_id": "S08",
+      "start": 226.322268,
+      "end": 228.213719,
+      "spoken_phrase": "هنبدأ بمراجعة الـGenesys Setup،",
+      "caption_ar": "هنبدأ بمراجعة الـGenesys Setup،",
+      "raw_recognition": "سنبدأ بمرجعة الجنس الستاب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C097",
+      "scene_id": "S08",
+      "start": 228.365533,
+      "end": 229.372063,
+      "spoken_phrase": "والـZoho Integration،",
+      "caption_ar": "والـZoho Integration،",
+      "raw_recognition": "وُلزوهُ انتغريشن",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C098",
+      "scene_id": "S08",
+      "start": 229.725782,
+      "end": 232.79,
+      "spoken_phrase": "ونحدد مكان تخزين الـCall Activities والـAgent Notes،",
+      "caption_ar": "ونحدد مكان تخزين الـCall Activities والـAgent Notes،",
+      "raw_recognition": "ونحدد مكان تخزين الـ Call Activities والAgent Notes",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C099",
+      "scene_id": "S08",
+      "start": 233.057075,
+      "end": 234.888889,
+      "spoken_phrase": "ومصدر بيانات الـCustomer Segment.",
+      "caption_ar": "ومصدر بيانات الـCustomer Segment.",
+      "raw_recognition": "ومصدر بيانات الكستمر سيغمنت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C100",
+      "scene_id": "S08",
+      "start": 235.187483,
+      "end": 235.651383,
+      "spoken_phrase": "بعدها،",
+      "caption_ar": "بعدها،",
+      "raw_recognition": "بعدها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C101",
+      "scene_id": "S08",
+      "start": 235.856984,
+      "end": 238.633265,
+      "spoken_phrase": "نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،",
+      "caption_ar": "نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،",
+      "raw_recognition": "سنرى ما يمكننا استخدامه من الموجود الفيترز",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C102",
+      "scene_id": "S08",
+      "start": 238.901315,
+      "end": 240.754649,
+      "spoken_phrase": "وإيه اللي محتاج Integration إضافية،",
+      "caption_ar": "وإيه اللي محتاج Integration إضافية،",
+      "raw_recognition": "وإلا محتاج إنتاجراشي إضافية",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C103",
+      "scene_id": "S08",
+      "start": 240.998299,
+      "end": 243.203605,
+      "spoken_phrase": "من غير ما نبني System جديد لو مش محتاجينه.",
+      "caption_ar": "من غير ما نبني System جديد لو مش محتاجينه.",
+      "raw_recognition": "من غير من ابني سستم جديد لو مش محتاجينه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C104",
+      "scene_id": "S08",
+      "start": 243.546395,
+      "end": 245.956893,
+      "spoken_phrase": "وهنختبر التجربة باستخدام Test Calls،",
+      "caption_ar": "وهنختبر التجربة باستخدام Test Calls،",
+      "raw_recognition": "وحنختبر التجربة باستخدام تست كولز",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C105",
+      "scene_id": "S08",
+      "start": 246.136893,
+      "end": 249.115079,
+      "spoken_phrase": "عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،",
+      "caption_ar": "عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،",
+      "raw_recognition": "عشان نتأكد ان بيانات العميل بتظهر بشكل صحيح",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C106",
+      "scene_id": "S08",
+      "start": 249.421361,
+      "end": 251.904739,
+      "spoken_phrase": "وإن كل Call مرتبطة بالـNotes الخاصة بيها،",
+      "caption_ar": "وإن كل Call مرتبطة بالـNotes الخاصة بيها،",
+      "raw_recognition": "وأن كل كل مرتبطة بالنووطس الخاص بها",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C107",
+      "scene_id": "S08",
+      "start": 252.286893,
+      "end": 255.664467,
+      "spoken_phrase": "وإن المعلومات بتوصل للـAgent المناسب بصلاحيات واضحة.",
+      "caption_ar": "وإن المعلومات بتوصل للـAgent المناسب بصلاحيات واضحة.",
+      "raw_recognition": "وأن المعلومات بتوصل لأيجنت المناسب بصلاحيات وضحة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C108",
+      "scene_id": "S08",
+      "start": 256.029546,
+      "end": 256.684762,
+      "spoken_phrase": "وفي النهاية،",
+      "caption_ar": "وفي النهاية،",
+      "raw_recognition": "وفي النهاية",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C109",
+      "scene_id": "S08",
+      "start": 256.9239,
+      "end": 259.6061,
+      "spoken_phrase": "إحنا مش بنتكلم عن مجرد شاشة فيها بيانات أكتر.",
+      "caption_ar": "إحنا مش بنتكلم عن مجرد شاشة فيها بيانات أكتر.",
+      "raw_recognition": "نحن لا تتكلم عن مجرد شاشة فيها بانات أكثر",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C110",
+      "scene_id": "S08",
+      "start": 259.970136,
+      "end": 263.10254,
+      "spoken_phrase": "إحنا بنتكلم عن تجربة بتساعد موظف خدمة العملاء،",
+      "caption_ar": "إحنا بنتكلم عن تجربة بتساعد موظف خدمة العملاء،",
+      "raw_recognition": "نتكلم عن تجربة تساعد مواصف خدمة العمل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C111",
+      "scene_id": "S08",
+      "start": 263.312404,
+      "end": 264.356553,
+      "spoken_phrase": "يعرف مين العميل،",
+      "caption_ar": "يعرف مين العميل،",
+      "raw_recognition": "يعرف من العميل",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C112",
+      "scene_id": "S08",
+      "start": 264.582925,
+      "end": 265.593673,
+      "spoken_phrase": "ومستوى عضويته،",
+      "caption_ar": "ومستوى عضويته،",
+      "raw_recognition": "\"ومستوى عضويته\"",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C113",
+      "scene_id": "S08",
+      "start": 265.816145,
+      "end": 269.176961,
+      "spoken_phrase": "وتاريخ تواصله مع الشركة وآخر ملاحظات تسجلت عنه.",
+      "caption_ar": "وتاريخ تواصله مع الشركة وآخر ملاحظات تسجلت عنه.",
+      "raw_recognition": "وتاريخ تواصل مع الشركة وخر ملاحظات تسجلة عنه",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C114",
+      "scene_id": "S08",
+      "start": 269.4722,
+      "end": 272.121043,
+      "spoken_phrase": "وده يفتح فرصة حقيقية لتحسين الـFollow-up،",
+      "caption_ar": "وده يفتح فرصة حقيقية لتحسين الـFollow-up،",
+      "raw_recognition": "وده يفتح فرصة حقيقية لتحسين الفلو أب",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C115",
+      "scene_id": "S08",
+      "start": 272.344535,
+      "end": 273.69102,
+      "spoken_phrase": "وتسهيل شغل الـAgents،",
+      "caption_ar": "وتسهيل شغل الـAgents،",
+      "raw_recognition": "وتسهيل شغل الاجينس",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C116",
+      "scene_id": "S08",
+      "start": 273.898163,
+      "end": 277.149637,
+      "spoken_phrase": "وتقديم Customer Experience أكتر تنظيمًا واستمرارية.",
+      "caption_ar": "وتقديم Customer Experience أكتر تنظيمًا واستمرارية.",
+      "raw_recognition": "وتأديم كستمر تنظيمة أكثر تنظيمة وستمرارية",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C117",
+      "scene_id": "S08",
+      "start": 277.52746,
+      "end": 280.850975,
+      "spoken_phrase": "وده بالضبط اللي GRINDCTRL بتقترح تقدمه لـConcrete:",
+      "caption_ar": "وده بالضبط اللي GRINDCTRL بتقترح تقدمه لـConcrete:",
+      "raw_recognition": "و هذا بالضبط اللي \"Griined Control\" بتقترح تقدمه لكونكريت",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C118",
+      "scene_id": "S08",
+      "start": 281.167483,
+      "end": 282.35483,
+      "spoken_phrase": "إن كل Call جديدة،",
+      "caption_ar": "إن كل Call جديدة،",
+      "raw_recognition": "ان كل كل جديدة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C119",
+      "scene_id": "S08",
+      "start": 282.577596,
+      "end": 285.73873,
+      "spoken_phrase": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،",
+      "caption_ar": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،",
+      "raw_recognition": "تبدأ من آخر نقطة وصلت لها علاقة العاميل بالشركة",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    },
+    {
+      "id": "C120",
+      "scene_id": "S08",
+      "start": 286.020522,
+      "end": 286.617506,
+      "spoken_phrase": "مش من الصفر.",
+      "caption_ar": "مش من الصفر.",
+      "raw_recognition": "مش من الصف",
+      "timing_basis": "measured phrase onset/end; not interpolated words"
+    }
+  ],
+  "subphrase_cues": [],
+  "method": {
+    "audio_authority": "New attachment 2026-10-12T13_45_07.mp3, unchanged. Not the rejected old MP3. Wording follows the earlier expanded narrative, not the supplied corrected synthesis chapter text. This discrepancy was reported to the user. User explicitly confirmed: use newly attached MP3 exactly as supplied.",
+    "boundary_method": "Measured source waveform silence boundaries (-35dB, 150ms), Whisper-small phrase and contextual recognition reviewed against provided speech references. No equal scene allocation.",
+    "captions": "ASR-assisted normalized DRAFT, not a verified verbatim transcript. Arabic-English terms need human audition. Not word-level forced alignment.",
+    "external_listening": "No human pronunciation approval, manual listening or external participant test claimed. Full supplied voice is preserved."
+  },
+  "approval": {
+    "replacement_supplied": true,
+    "pronunciation_signoff_provided": false,
+    "scene_files_supplied": false,
+    "user_confirmed_exact_new_attachment": true
+  },
+  "visual_events": [
+    {
+      "scene": "S01",
+      "at": 11.2822,
+      "cue_id": "C006",
+      "spoken_phrase": "دخلنا أكتر في تفاصيل الـWorkflow،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-search",
+        "Lookup and safe record selection"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S01",
+      "at": 24.130408,
+      "cue_id": "C012",
+      "spoken_phrase": "تخيلوا إن أول ما الـCall توصل،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S01",
+      "at": 29.527256,
+      "cue_id": "C014",
+      "spoken_phrase": "لكن كمان الـCustomer Profile بالكامل،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S01",
+      "at": 32.191247,
+      "cue_id": "C015",
+      "spoken_phrase": "وتاريخ كل المكالمات اللي حصلت مع العميل قبل كده،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "line",
+        "ellipse",
+        "icon-call",
+        "08 Oct · 14:32",
+        "DEMO-1008",
+        "Agent A",
+        "ellipse",
+        "icon-call",
+        "03 Oct · 11:08",
+        "DEMO-1003",
+        "Agent B",
+        "ellipse",
+        "icon-call",
+        "26 Sep · 16:45",
+        "DEMO-0926",
+        "Agent C"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S01",
+      "at": 35.424422,
+      "cue_id": "C016",
+      "spoken_phrase": "والـNotes اللي اتكتبت خلال كل مكالمة.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-pen",
+        "Followed up on the exchange. Branch review requested.",
+        "icon-pen",
+        "Customer requested a size exchange.",
+        "icon-pen",
+        "Customer asked about product availability.",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 46.744444,
+      "cue_id": "C021",
+      "spoken_phrase": "بنقترح إن النظام يستخدم رقم المتصل،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-search",
+        "Lookup using the caller number",
+        "Permitted record search · Source and identity process to validate.",
+        "icon-search",
+        "+20 10 •••• 4821"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 49.634649,
+      "cue_id": "C022",
+      "spoken_phrase": "عشان يعمل Automatic Lookup عن الـCustomer Record المناسب.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "line"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 53.271905,
+      "cue_id": "C023",
+      "spoken_phrase": "وبمجرد ما يتم تحديد الـCustomer الصحيح،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-actor",
+        "A candidate record is associated",
+        "Phone association is not identity proof.\nUse the agreed checks before disclosure."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 56.092313,
+      "cue_id": "C024",
+      "spoken_phrase": "يظهر قدام الموظف أربع معلومات أساسية.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Customer profile",
+        "Associated record · Demo disclosure permitted",
+        "icon-call",
+        "Phone number",
+        "+20 10 •••• 4821",
+        "icon-actor",
+        "Customer name",
+        "Ahmed M. (DEMO)",
+        "icon-quality",
+        "Icons Club segment",
+        "ELITE · Demo",
+        "icon-mail",
+        "Email",
+        "ahmed@example.com",
+        "line",
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "line",
+        "ellipse",
+        "icon-call",
+        "08 Oct · 14:32",
+        "DEMO-1008",
+        "Agent A",
+        "icon-pen",
+        "Followed up on the exchange. Branch review requested.",
+        "ellipse",
+        "icon-call",
+        "03 Oct · 11:08",
+        "DEMO-1003",
+        "Agent B",
+        "icon-pen",
+        "Customer requested a size exchange.",
+        "ellipse",
+        "icon-call",
+        "26 Sep · 16:45",
+        "DEMO-0926",
+        "Agent C",
+        "icon-pen",
+        "Customer asked about product availability."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 59.975261,
+      "cue_id": "C026",
+      "spoken_phrase": "الـMobile Number.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S02",
+      "at": 62.010317,
+      "cue_id": "C028",
+      "spoken_phrase": "الـCustomer Name.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S03",
+      "at": 63.992222,
+      "cue_id": "C030",
+      "spoken_phrase": "الـCustomer Segment،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S03",
+      "at": 65.219909,
+      "cue_id": "C031",
+      "spoken_phrase": "سواء كان Lifestyle أو Prestige أو Elite،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "LIFESTYLE",
+        "PRESTIGE",
+        "ELITE",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S03",
+      "at": 68.385351,
+      "cue_id": "C032",
+      "spoken_phrase": "حسب الـMembership Level المسجل للعميل في Concrete Icons Club.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-link",
+        "Illustrative ELITE record · Trusted membership source to verify.\nIf no tier is available, show “Not available”."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S03",
+      "at": 73.153243,
+      "cue_id": "C034",
+      "spoken_phrase": "الـEmail Address، لو موجود بالفعل في بيانات العميل.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 98.406122,
+      "cue_id": "C043",
+      "spoken_phrase": "بنقترح إنه يشوف Timeline واضحة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Call activity",
+        "Retained · Linked · Permitted",
+        "line",
+        "ellipse",
+        "icon-call",
+        "ellipse",
+        "icon-call",
+        "ellipse",
+        "icon-call"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 103.771134,
+      "cue_id": "C045",
+      "spoken_phrase": "كل Call يكون لها تاريخها ووقتها،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "08 Oct · 14:32",
+        "DEMO-1008",
+        "03 Oct · 11:08",
+        "DEMO-1003",
+        "26 Sep · 16:45",
+        "DEMO-0926",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 106.275125,
+      "cue_id": "C046",
+      "spoken_phrase": "والـAgent اللي اتعامل معاها، لو البيانات دي متسجلة.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Agent A",
+        "Agent B",
+        "Agent C",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 110.343673,
+      "cue_id": "C048",
+      "spoken_phrase": "الـNotes الخاصة بالمكالمة دي تحديدًا.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-pen",
+        "Followed up on the exchange. Branch review requested.",
+        "icon-pen",
+        "Customer requested a size exchange.",
+        "icon-pen",
+        "Customer asked about product availability.",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 113.020227,
+      "cue_id": "C049",
+      "spoken_phrase": "يعني كل مكالمة لها الـHistory بتاعتها والـNotes اللي اتكتبت فيها،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Call activity",
+        "rect",
+        "icon-call",
+        "08 Oct",
+        "14:32",
+        "DEMO-1008",
+        "Agent A",
+        "rect",
+        "icon-call",
+        "03 Oct",
+        "11:08",
+        "DEMO-1003",
+        "Agent B",
+        "rect",
+        "icon-call",
+        "26 Sep",
+        "16:45",
+        "DEMO-0926",
+        "Agent C",
+        "line",
+        "08 Oct 2026 call · Original note",
+        "icon-actor",
+        "Agent A · DEMO-1008",
+        "Written 14:36",
+        "rect",
+        "icon-pen",
+        "Human-written agent note",
+        "Followed up on the exchange. Branch review requested.",
+        "Source: DEMO-1008 · No global-note merge"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S04",
+      "at": 117.168526,
+      "cue_id": "C050",
+      "spoken_phrase": "بشكل منفصل،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Call activity",
+        "rect",
+        "icon-call",
+        "08 Oct",
+        "14:32",
+        "DEMO-1008",
+        "Agent A",
+        "rect",
+        "icon-call",
+        "03 Oct",
+        "11:08",
+        "DEMO-1003",
+        "Agent B",
+        "rect",
+        "icon-call",
+        "26 Sep",
+        "16:45",
+        "DEMO-0926",
+        "Agent C",
+        "line",
+        "03 Oct 2026 call · Original note",
+        "icon-actor",
+        "Agent B · DEMO-1003",
+        "Written 11:12",
+        "rect",
+        "icon-pen",
+        "Human-written agent note",
+        "Customer requested a size exchange.",
+        "Source: DEMO-1003 · No global-note merge",
+        "icon-pointer"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 121.069751,
+      "cue_id": "C053",
+      "spoken_phrase": "عميل من الـElite Segment اتصل الأسبوع اللي فات بخصوص Exchange Request.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 126.691746,
+      "cue_id": "C055",
+      "spoken_phrase": "الـAgent كتب Note إن الطلب محتاج مراجعة من الفرع،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 131.707211,
+      "cue_id": "C057",
+      "spoken_phrase": "النهارده،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "rect"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 132.370567,
+      "cue_id": "C058",
+      "spoken_phrase": "نفس العميل بيتصل تاني يسأل عن آخر Update.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Today: the customer asks for the latest update."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 139.535397,
+      "cue_id": "C060",
+      "spoken_phrase": "يقدر يفتح الـPrevious Call،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Call activity",
+        "rect",
+        "icon-call",
+        "08 Oct",
+        "14:32",
+        "DEMO-1008",
+        "Agent A",
+        "rect",
+        "icon-call",
+        "03 Oct",
+        "11:08",
+        "DEMO-1003",
+        "Agent B",
+        "rect",
+        "icon-call",
+        "26 Sep",
+        "16:45",
+        "DEMO-0926",
+        "Agent C",
+        "line",
+        "icon-pointer"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 141.158617,
+      "cue_id": "C061",
+      "spoken_phrase": "ويشوف الـNote اللي زميله كتبها.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "08 Oct 2026 call · Original note",
+        "icon-actor",
+        "Agent A · DEMO-1008",
+        "Written 14:36",
+        "rect",
+        "icon-pen",
+        "Human-written agent note",
+        "Followed up on the exchange. Branch review requested.",
+        "Source: DEMO-1008 · No global-note merge",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S05",
+      "at": 156.283673,
+      "cue_id": "C069",
+      "spoken_phrase": "الـNote بتوضح اللي تسجل في المكالمة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "rect",
+        "icon-clock",
+        "Review requested · Completion not confirmed"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 167.435601,
+      "cue_id": "C073",
+      "spoken_phrase": "وفي نفس الوقت يقدر يسجل Notes جديدة عن تفاصيل المحادثة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Customer called again; awaiting a confirmed branch update."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 174.470499,
+      "cue_id": "C076",
+      "spoken_phrase": "وبعد ما الـCall تخلص،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "ellipse",
+        "icon-call",
+        "Inbound call",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "ellipse",
+        "After call (demo)",
+        "Agent D",
+        "DEMO-1012",
+        "12 Oct · 10:24",
+        "ellipse",
+        "icon-mic",
+        "ellipse",
+        "icon-pause",
+        "ellipse",
+        "icon-end"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 175.966463,
+      "cue_id": "C077",
+      "spoken_phrase": "الملاحظات تتحفظ مرتبطة بنفس الـCall Activity،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Recorded in demo · Source remains DEMO-1012",
+        "icon-pointer",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 182.372766,
+      "cue_id": "C079",
+      "spoken_phrase": "ولما العميل يتصل مرة تانية،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "ellipse",
+        "icon-call",
+        "Inbound call",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "ellipse",
+        "Call active",
+        "Agent E",
+        "DEMO-1015",
+        "15 Oct · 09:10",
+        "ellipse",
+        "icon-mic",
+        "ellipse",
+        "icon-pause",
+        "ellipse",
+        "icon-end",
+        "Call activity",
+        "rect",
+        "icon-call",
+        "12 Oct",
+        "10:24",
+        "DEMO-1012",
+        "Agent D",
+        "rect",
+        "icon-call",
+        "08 Oct",
+        "14:32",
+        "DEMO-1008",
+        "Agent A",
+        "rect",
+        "icon-call",
+        "03 Oct",
+        "11:08",
+        "DEMO-1003",
+        "Agent B",
+        "line",
+        "Later call · 15 Oct · Agent E"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 184.327052,
+      "cue_id": "C080",
+      "spoken_phrase": "الـAgent التالي يقدر يرجع للـPrevious Calls،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-pointer"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 187.326009,
+      "cue_id": "C081",
+      "spoken_phrase": "ويشوف الـNotes الخاصة بكل مكالمة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "12 Oct call · Original note",
+        "icon-actor",
+        "Agent D · DEMO-1012",
+        "Written 10:29",
+        "rect",
+        "icon-pen",
+        "Human-written agent note",
+        "Customer called again; awaiting a confirmed branch update.",
+        "Original author: Agent D · Original call: DEMO-1012",
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S06",
+      "at": 191.394603,
+      "cue_id": "C083",
+      "spoken_phrase": "يعني بدل ما كل مكالمة تبدأ من الصفر،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 202.023379,
+      "cue_id": "C087",
+      "spoken_phrase": "لو رقم العميل مش موجود،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-search",
+        "No matching record",
+        "Continue with manual search. Do not invent a customer record."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 203.733311,
+      "cue_id": "C088",
+      "spoken_phrase": "الـAgent يقدر يعمل Manual Search.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "rect",
+        "icon-search",
+        "Manual search"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 206.083424,
+      "cue_id": "C089",
+      "spoken_phrase": "ولو نفس الرقم مرتبط بأكتر من Customer،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "More than one possible customer",
+        "rect",
+        "icon-actor",
+        "Ahmed M. (DEMO)",
+        "+20 10 •••• 4821",
+        "rect",
+        "icon-actor",
+        "Customer B (DEMO)",
+        "+20 10 •••• 4821"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 208.808458,
+      "cue_id": "C090",
+      "spoken_phrase": "الموظف يراجع الـPossible Matches،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-lock",
+        "Verify, then choose the correct record.\nCandidate history stays hidden until permitted."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 214.465238,
+      "cue_id": "C091",
+      "spoken_phrase": "ويحدد الـRecord الصحيح بعد التحقق المطلوب.",
+      "speech_anchor": "end",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase end; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 214.888571,
+      "cue_id": "C092",
+      "spoken_phrase": "ولو الـEmail أو الـSegment مش متاحة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Customer profile",
+        "Associated record · Demo disclosure permitted",
+        "icon-call",
+        "Phone number",
+        "+20 10 •••• 4821",
+        "icon-actor",
+        "Customer name",
+        "Ahmed M. (DEMO)",
+        "icon-quality",
+        "Icons Club segment",
+        "Not available",
+        "icon-mail",
+        "Email",
+        "Not available",
+        "line",
+        "icon-lock",
+        "Missing fields stay “Not available”.\nHistory and notes remain subject to permissions."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 217.190612,
+      "cue_id": "C093",
+      "spoken_phrase": "النظام يوضح إن المعلومة مش موجودة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S07",
+      "at": 219.587483,
+      "cue_id": "C094",
+      "spoken_phrase": "بدل ما يعرض بيانات غير مؤكدة.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "No inference from caller number, spending, or appearance."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 226.322268,
+      "cue_id": "C096",
+      "spoken_phrase": "هنبدأ بمراجعة الـGenesys Setup،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "genesys",
+        "Genesys · Contracted screen pop",
+        "Contracted scope · Operation unverified"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 228.365533,
+      "cue_id": "C097",
+      "spoken_phrase": "والـZoho Integration،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "zoho",
+        "Zoho Desk · Records to inspect",
+        "Inspect records, permissions and display"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 229.725782,
+      "cue_id": "C098",
+      "spoken_phrase": "ونحدد مكان تخزين الـCall Activities والـAgent Notes،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "line",
+        "icon-call",
+        "Call ID ↔ Human note",
+        "Locate storage, ownership, retention and access.\nKeep call notes separate from ticket/global notes."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 233.057075,
+      "cue_id": "C099",
+      "spoken_phrase": "ومصدر بيانات الـCustomer Segment.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-quality",
+        "Icons Club segment",
+        "Trusted source and update policy: to validate."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 235.856984,
+      "cue_id": "C101",
+      "spoken_phrase": "نشوف إيه اللي نقدر نستخدمه من الـNative Features الموجودة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "rect",
+        "icon-settings",
+        "Existing native features\nif they meet the requirement"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 238.901315,
+      "cue_id": "C102",
+      "spoken_phrase": "وإيه اللي محتاج Integration إضافية،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "line",
+        "icon-link",
+        "Smallest supported integration\nonly for a verified gap"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 243.546395,
+      "cue_id": "C104",
+      "spoken_phrase": "وهنختبر التجربة باستخدام Test Calls،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "Authorized pilot · Observations to record, not claimed results"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 246.136893,
+      "cue_id": "C105",
+      "spoken_phrase": "عشان نتأكد إن بيانات العميل بتظهر بشكل صحيح،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-actor",
+        "Field accuracy"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 249.421361,
+      "cue_id": "C106",
+      "spoken_phrase": "وإن كل Call مرتبطة بالـNotes الخاصة بيها،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-pen",
+        "Call ↔ own note"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 252.286893,
+      "cue_id": "C107",
+      "spoken_phrase": "وإن المعلومات بتوصل للـAgent المناسب بصلاحيات واضحة.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "icon-lock",
+        "Permitted access"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 256.029546,
+      "cue_id": "C108",
+      "spoken_phrase": "وفي النهاية،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "rect",
+        "rect",
+        "genesys",
+        "Voice interaction",
+        "Customer 360° · Proposed workspace",
+        "icon-actor",
+        "Agent",
+        "line",
+        "line",
+        "ellipse",
+        "icon-call",
+        "Inbound call",
+        "Caller number",
+        "+20 10 •••• 4821",
+        "ellipse",
+        "Call active",
+        "Agent E",
+        "DEMO-1015",
+        "15 Oct · 09:10",
+        "ellipse",
+        "icon-mic",
+        "ellipse",
+        "icon-pause",
+        "ellipse",
+        "icon-end",
+        "Customer profile",
+        "Associated record · Demo disclosure permitted",
+        "icon-call",
+        "Phone number",
+        "+20 10 •••• 4821",
+        "icon-actor",
+        "Customer name",
+        "Ahmed M. (DEMO)",
+        "icon-quality",
+        "Icons Club segment",
+        "ELITE · Demo",
+        "icon-mail",
+        "Email",
+        "ahmed@example.com",
+        "line",
+        "Call activity",
+        "rect",
+        "icon-call",
+        "12 Oct",
+        "10:24",
+        "DEMO-1012",
+        "Agent D",
+        "rect",
+        "icon-call",
+        "08 Oct",
+        "14:32",
+        "DEMO-1008",
+        "Agent A",
+        "rect",
+        "icon-call",
+        "03 Oct",
+        "11:08",
+        "DEMO-1003",
+        "Agent B",
+        "line",
+        "12 Oct call · Original note",
+        "icon-actor",
+        "Agent D · DEMO-1012",
+        "Written 10:29",
+        "rect",
+        "icon-pen",
+        "Human-written agent note",
+        "Customer called again; awaiting a confirmed branch update.",
+        "Agent E reads Agent D’s original DEMO-1012 note.",
+        "The next call starts with the last recorded note."
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 263.312404,
+      "cue_id": "C111",
+      "spoken_phrase": "يعرف مين العميل،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 264.582925,
+      "cue_id": "C112",
+      "spoken_phrase": "ومستوى عضويته،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 265.816145,
+      "cue_id": "C113",
+      "spoken_phrase": "وتاريخ تواصله مع الشركة وآخر ملاحظات تسجلت عنه.",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 269.4722,
+      "cue_id": "C114",
+      "spoken_phrase": "وده يفتح فرصة حقيقية لتحسين الـFollow-up،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    },
+    {
+      "scene": "S08",
+      "at": 282.577596,
+      "cue_id": "C119",
+      "spoken_phrase": "تبدأ من آخر نقطة وصلت لها علاقة العميل بالشركة،",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "objects": [
+        "outline"
+      ],
+      "method": "Source waveform phrase start; not inferred individual-word time"
+    }
+  ]
+}

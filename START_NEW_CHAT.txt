@@ -1,0 +1,10 @@
+Read SESSION_EXPORT.md and ASSET_MANIFEST.json completely before responding. This is the handoff for GRINDCTRL × Concrete, with four completed narrated presentation videos and their editable sources.
+
+Repository: https://github.com/mhhmod/grindctrl_booking (underscore).
+Context branch: grindctrl-concrete-session-export-2026-10-20.
+Latest Part03: grindctrl-part03-voicefix-2026-10-12 — NOT the older customer360 branch.
+Latest Part04: grindctrl-part04-ai-opportunities-2026-10-14.
+
+Retrieve the actual completed assets from DELIVERABLE_LINKS.md, or use the attached export. Do not assume you can access an old chat's local paths or attachment IDs. Preserve the approved Part01/02 premium light-theme visual identity, proposed-versus-verified distinctions, per-call note ownership, and Part04's ONE continuous unchanged master narration across all nine visual scenes. Do not request nine narration files or regenerate speech.
+
+Do not restart completed work or produce another generic proposal. After reading, briefly confirm which current versions you found and wait for my next task. If a file is inaccessible, identify that exact file and use the available repo/download alternatives first. Speak Egyptian Arabic; keep system and brand names in English.

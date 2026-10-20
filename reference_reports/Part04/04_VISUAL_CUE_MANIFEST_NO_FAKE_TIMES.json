@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "narration_file": "Part04_FINAL_VOICEOVER.mp3",
+  "narration_files_expected": 1,
+  "narration_split_allowed": false,
+  "cue_timestamps": "derive from actual audio, not guessed",
+  "speech_script": "02_FINAL_CONTINUOUS_TTS_AR.txt",
+  "scenes": [
+    {
+      "scene_id": "S01",
+      "visual_reference": "storyboard/S01_storyboard.png",
+      "visual_topic": "Opening — The Bigger Vision",
+      "spoken_start_anchor": "في الفيديوهات اللي فاتت",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S02",
+      "visual_reference": "storyboard/S02_storyboard.png",
+      "visual_topic": "AI Personal Stylist",
+      "spoken_start_anchor": "تخيلوا عميل داخل",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S03",
+      "visual_reference": "storyboard/S03_storyboard.png",
+      "visual_topic": "AI E-commerce Assistant",
+      "spoken_start_anchor": "ونفس التجربة ممكن تكمل",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S04",
+      "visual_reference": "storyboard/S04_storyboard.png",
+      "visual_topic": "AI Contact Center Copilot",
+      "spoken_start_anchor": "نرجع بقى للـ Contact Center",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S05",
+      "visual_reference": "storyboard/S05_storyboard.png",
+      "visual_topic": "AI Loyalty & Clienteling",
+      "spoken_start_anchor": "وفي الفروع، التجربة ممكن",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S06",
+      "visual_reference": "storyboard/S06_storyboard.png",
+      "visual_topic": "AI Retail Operations",
+      "spoken_start_anchor": "بس الفرص مش كلها",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S07",
+      "visual_reference": "storyboard/S07_storyboard.png",
+      "visual_topic": "AI Marketing Studio",
+      "spoken_start_anchor": "أما فريق الماركتنج",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S08",
+      "visual_reference": "storyboard/S08_storyboard.png",
+      "visual_topic": "Executive AI Intelligence",
+      "spoken_start_anchor": "ولما نبص من ناحية الإدارة",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    },
+    {
+      "scene_id": "S09",
+      "visual_reference": "storyboard/S09_storyboard.png",
+      "visual_topic": "One Connected Vision",
+      "spoken_start_anchor": "كل الأمثلة دي بتوصلنا",
+      "start_sec": null,
+      "end_sec": null,
+      "note": "One master audio track; align visual start to phrase in final MP3. No audio splitting."
+    }
+  ]
+}

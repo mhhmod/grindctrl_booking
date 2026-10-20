@@ -1,0 +1,2742 @@
+{
+  "duration": 194.0,
+  "container_duration": 194.037551,
+  "fps": 30,
+  "audio_filename": "grindctrl-part02-voiceover-ar.mp3",
+  "audio_sha256": "3839fb67298c6c043b91683d20083349130500554a5978313639edc3f04ccf78",
+  "chapters": [
+    {
+      "id": "S1",
+      "title": "Inside the workflow",
+      "start": 0.0,
+      "end": 22.309478
+    },
+    {
+      "id": "S2",
+      "title": "Caller number and lookup",
+      "start": 22.309478,
+      "end": 45.48805
+    },
+    {
+      "id": "S3",
+      "title": "Permitted customer context",
+      "start": 45.48805,
+      "end": 70.104172
+    },
+    {
+      "id": "S4",
+      "title": "Inside exchange ticket T101",
+      "start": 70.104172,
+      "end": 94.097846
+    },
+    {
+      "id": "S5",
+      "title": "Multiple possible matches",
+      "start": 94.097846,
+      "end": 117.093061
+    },
+    {
+      "id": "S6",
+      "title": "No match versus unavailable",
+      "start": 117.093061,
+      "end": 142.326961
+    },
+    {
+      "id": "S7",
+      "title": "Supported implementation",
+      "start": 142.326961,
+      "end": 165.313265
+    },
+    {
+      "id": "S8",
+      "title": "An authorized pilot",
+      "start": 165.313265,
+      "end": 194.0
+    }
+  ],
+  "cues": [
+    {
+      "id": "C01",
+      "scene_id": "S1",
+      "start": 0.0,
+      "end": 0.992766,
+      "spoken_phrase": "Part 01 recap",
+      "visual_event": "Part 01 recap",
+      "raw_recognition": "في الفيديو الأول",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " في الفيديو الأول"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C02",
+      "scene_id": "S1",
+      "start": 1.14644,
+      "end": 2.246032,
+      "spoken_phrase": "The idea, simply",
+      "visual_event": "The idea, simply",
+      "raw_recognition": "شوفنا الفكرة بصوتا",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " شوفنا الفكرة بصوتا"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C03",
+      "scene_id": "S1",
+      "start": 2.747324,
+      "end": 3.533515,
+      "spoken_phrase": "The call arrives",
+      "visual_event": "The call arrives",
+      "raw_recognition": "الكول توصل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " الكول توصل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C04",
+      "scene_id": "S1",
+      "start": 3.788073,
+      "end": 6.001383,
+      "spoken_phrase": "The agent sees customer context",
+      "visual_event": "The agent sees customer context",
+      "raw_recognition": "سوف تجد أجن تلاقي الناس في المناسبة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.5,
+          "text": " سوف تجد أجن تلاقي الناس في المناسبة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C05",
+      "scene_id": "S1",
+      "start": 6.566327,
+      "end": 7.083379,
+      "spoken_phrase": "This time",
+      "visual_event": "This time",
+      "raw_recognition": "المرودي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " المرودي"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C06",
+      "scene_id": "S1",
+      "start": 7.485918,
+      "end": 9.187574,
+      "spoken_phrase": "Inside the workflow",
+      "visual_event": "Inside the workflow",
+      "raw_recognition": "خلين ننوط \"خلقوا\" على \"تحديد\"",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " خلين ننوط \"خلقوا\" على \"تحديد\""
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C07",
+      "scene_id": "S1",
+      "start": 9.661701,
+      "end": 12.357211,
+      "spoken_phrase": "Follow one call through Genesys",
+      "visual_event": "Follow one call through Genesys",
+      "raw_recognition": "سنتابع مكلمة واحدة من أول متدخل جانسس",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " سنتابع مكلمة واحدة من أول متدخل جانسس"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C08",
+      "scene_id": "S1",
+      "start": 12.715283,
+      "end": 14.839365,
+      "spoken_phrase": "Find the correct ticket",
+      "visual_event": "Find the correct ticket",
+      "raw_recognition": "لحدما الموظف يوصل للتكتصح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " لحدما الموظف يوصل للتكتصح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C09",
+      "scene_id": "S1",
+      "start": 15.084626,
+      "end": 15.906485,
+      "spoken_phrase": "Continue the follow-up",
+      "visual_event": "Continue the follow-up",
+      "raw_recognition": "نكمل الفلوات",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " نكمل الفلوات"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C10",
+      "scene_id": "S1",
+      "start": 16.382789,
+      "end": 18.983175,
+      "spoken_phrase": "GRINDCTRL proposes this experience",
+      "visual_event": "GRINDCTRL proposes this experience",
+      "raw_recognition": "هذا أنا موزق للتجربة اللي قرين كنطرول بتقترحها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " هذا أنا موزق للتجربة اللي قرين كنطرول بتقترحها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C11",
+      "scene_id": "S1",
+      "start": 19.30941,
+      "end": 21.643651,
+      "spoken_phrase": "This is not a deployed Concrete system",
+      "visual_event": "This is not a deployed Concrete system",
+      "raw_recognition": "ليس نظام بأن نشغل بالفعل عند The Concrete",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ليس نظام بأن نشغل بالفعل عند The Concrete"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C12",
+      "scene_id": "S2",
+      "start": 22.309478,
+      "end": 24.642766,
+      "spoken_phrase": "Call assigned to an agent",
+      "visual_event": "Call assigned to an agent",
+      "raw_recognition": "أولما الكول تتوزع على الموظف في جانسس",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " أولما الكول تتوزع على الموظف في جانسس"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C13",
+      "scene_id": "S2",
+      "start": 24.824082,
+      "end": 27.384286,
+      "spoken_phrase": "Available call information",
+      "visual_event": "Available call information",
+      "raw_recognition": "نحتاج نعرف ما المعلومات المتاحة عن المكلمة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " نحتاج نعرف ما المعلومات المتاحة عن المكلمة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C14",
+      "scene_id": "S2",
+      "start": 27.810045,
+      "end": 29.601066,
+      "spoken_phrase": "Caller number, if available",
+      "visual_event": "Caller number, if available",
+      "raw_recognition": "لو رقم المتاصل متاح في الستاب",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " لو رقم المتاصل متاح في الستاب"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C15",
+      "scene_id": "S2",
+      "start": 29.820884,
+      "end": 33.20322,
+      "spoken_phrase": "An authorized lookup key",
+      "visual_event": "An authorized lookup key",
+      "raw_recognition": "بنستخدمه كالوكوب كي للبحث عن الكاستم الركد في زوجه دسك.",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.6,
+          "text": " بنستخدمه كالوكوب كي للبحث عن الكاستم الركد في زوجه دسك."
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C16",
+      "scene_id": "S2",
+      "start": 33.663946,
+      "end": 34.83805,
+      "spoken_phrase": "A matching detail",
+      "visual_event": "A matching detail",
+      "raw_recognition": "هنا في تفصيل المهم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " هنا في تفصيل المهم"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C17",
+      "scene_id": "S2",
+      "start": 35.257551,
+      "end": 37.583243,
+      "spoken_phrase": "Different number formats",
+      "visual_event": "Different number formats",
+      "raw_recognition": "الرقم يمكن أن يكون مكتوب بأكثر منصيغة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " الرقم يمكن أن يكون مكتوب بأكثر منصيغة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C18",
+      "scene_id": "S2",
+      "start": 37.962925,
+      "end": 39.746871,
+      "spoken_phrase": "Handle formats correctly",
+      "visual_event": "Handle formats correctly",
+      "raw_recognition": "فلازم الماتشن يتعامل معها صح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " فلازم الماتشن يتعامل معها صح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C19",
+      "scene_id": "S2",
+      "start": 40.202313,
+      "end": 40.652336,
+      "spoken_phrase": "Also",
+      "visual_event": "Also",
+      "raw_recognition": "أبردو",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أبردو"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C20",
+      "scene_id": "S2",
+      "start": 40.893197,
+      "end": 42.661451,
+      "spoken_phrase": "A number associated with a record",
+      "visual_event": "A number associated with a record",
+      "raw_recognition": "مجرد أن الرقم طابق ركيد",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " مجرد أن الرقم طابق ركيد"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C21",
+      "scene_id": "S2",
+      "start": 42.864399,
+      "end": 44.902608,
+      "spoken_phrase": "Association is not identity verification",
+      "visual_event": "Association is not identity verification",
+      "raw_recognition": "دمش معنى النهوية المتصلة أكدت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.26,
+          "text": " دمش معنى النهوية المتصلة أكدت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C22",
+      "scene_id": "S3",
+      "start": 45.48805,
+      "end": 47.522494,
+      "spoken_phrase": "One clear customer record",
+      "visual_event": "One clear customer record",
+      "raw_recognition": "لو البحث يرغب بكستمركورد واضح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " لو البحث يرغب بكستمركورد واضح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C23",
+      "scene_id": "S3",
+      "start": 47.743741,
+      "end": 49.617506,
+      "spoken_phrase": "Within the agent’s permitted access",
+      "visual_event": "Within the agent’s permitted access",
+      "raw_recognition": "وبحسب الأكسس المسموح للموظف",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وبحسب الأكسس المسموح للموظف"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C24",
+      "scene_id": "S3",
+      "start": 49.874512,
+      "end": 51.822132,
+      "spoken_phrase": "Show useful call context",
+      "visual_event": "Show useful call context",
+      "raw_recognition": "بنعرض المعلومات التي تساعده في المكلمة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بنعرض المعلومات التي تساعده في المكلمة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C25",
+      "scene_id": "S3",
+      "start": 52.151927,
+      "end": 54.968458,
+      "spoken_phrase": "Previous tickets and each ticket’s status",
+      "visual_event": "Previous tickets and each ticket’s status",
+      "raw_recognition": "زي البروية تكت و الستاتس بتعكل لتكت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.0,
+          "text": " زي البروية تكت و الستاتس بتعكل لتكت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C26",
+      "scene_id": "S3",
+      "start": 55.163424,
+      "end": 57.734649,
+      "spoken_phrase": "Assigned agent and latest recorded update",
+      "visual_event": "Assigned agent and latest recorded update",
+      "raw_recognition": "ومن الأساين دا جنت وخر أبديت متسبيل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " ومن الأساين دا جنت وخر أبديت متسبيل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C27",
+      "scene_id": "S3",
+      "start": 58.215261,
+      "end": 61.240839,
+      "spoken_phrase": "Agent selects the relevant ticket",
+      "visual_event": "Agent selects the relevant ticket",
+      "raw_recognition": "الموظف يقدر يختار التكت المرتابطة بسبب الاتصال",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.16,
+          "text": " الموظف يقدر يختار التكت المرتابطة بسبب الاتصال"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C28",
+      "scene_id": "S3",
+      "start": 61.46839,
+      "end": 64.095556,
+      "spoken_phrase": "Avoid searching again across screens",
+      "visual_event": "Avoid searching again across screens",
+      "raw_recognition": "بدل ما يتنقل بن ششات ويضور من أول و جديد",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " بدل ما يتنقل بن ششات ويضور من أول و جديد"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C29",
+      "scene_id": "S3",
+      "start": 64.447347,
+      "end": 64.958095,
+      "spoken_phrase": "Most importantly",
+      "visual_event": "Most importantly",
+      "raw_recognition": "والأهم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " والأهم"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C30",
+      "scene_id": "S3",
+      "start": 65.222494,
+      "end": 66.978481,
+      "spoken_phrase": "Information stays in context",
+      "visual_event": "Information stays in context",
+      "raw_recognition": "أن كل معلومة بين في مكانها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أن كل معلومة بين في مكانها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C31",
+      "scene_id": "S3",
+      "start": 67.239524,
+      "end": 69.559705,
+      "spoken_phrase": "No unrelated dashboard",
+      "visual_event": "No unrelated dashboard",
+      "raw_recognition": "مشووس الداشبورد مليانة بيانات ملحش لزم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.2,
+          "text": " مشووس الداشبورد مليانة بيانات ملحش لزم"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C32",
+      "scene_id": "S4",
+      "start": 70.104172,
+      "end": 71.1722,
+      "spoken_phrase": "A fictional example",
+      "visual_event": "A fictional example",
+      "raw_recognition": "خلين نتشوف مثال عملي",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " خلين نتشوف مثال عملي"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C33",
+      "scene_id": "S4",
+      "start": 71.632177,
+      "end": 74.039365,
+      "spoken_phrase": "Earlier exchange request",
+      "visual_event": "Earlier exchange request",
+      "raw_recognition": "كستمر يتصل يتابع اكسشينج ركوست قديم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.56,
+          "text": " كستمر يتصل يتابع اكسشينج ركوست قديم"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C34",
+      "scene_id": "S4",
+      "start": 74.523061,
+      "end": 77.445964,
+      "spoken_phrase": "Open ticket; inspect status and owner",
+      "visual_event": "Open ticket; inspect status and owner",
+      "raw_recognition": "نفتح التكت و نشوف الستاتس الفعلي والانر",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.06,
+          "text": " نفتح التكت و نشوف الستاتس الفعلي والانر"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C35",
+      "scene_id": "S4",
+      "start": 77.609819,
+      "end": 78.682902,
+      "spoken_phrase": "Latest existing note",
+      "visual_event": "Latest existing note",
+      "raw_recognition": "وخر نوت موجودة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وخر نوت موجودة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C36",
+      "scene_id": "S4",
+      "start": 79.111995,
+      "end": 79.702585,
+      "spoken_phrase": "In this example",
+      "visual_event": "In this example",
+      "raw_recognition": "في المسلدة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " في المسلدة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C37",
+      "scene_id": "S4",
+      "start": 79.963787,
+      "end": 82.253424,
+      "spoken_phrase": "Branch review is still pending",
+      "visual_event": "Branch review is still pending",
+      "raw_recognition": "النوت بتقول أن مراجعة الفرع للسباندين",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " النوت بتقول أن مراجعة الفرع للسباندين"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C38",
+      "scene_id": "S4",
+      "start": 82.744195,
+      "end": 83.196485,
+      "spoken_phrase": "Pay attention",
+      "visual_event": "Pay attention",
+      "raw_recognition": "خليباً",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " خليباً"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C39",
+      "scene_id": "S4",
+      "start": 83.458889,
+      "end": 85.259932,
+      "spoken_phrase": "This is the ticket’s note",
+      "visual_event": "This is the ticket’s note",
+      "raw_recognition": "دي معلومة مكتوبة جوة تكت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " دي معلومة مكتوبة جوة تكت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C40",
+      "scene_id": "S4",
+      "start": 85.440816,
+      "end": 87.187574,
+      "spoken_phrase": "It need not be the status field",
+      "visual_event": "It need not be the status field",
+      "raw_recognition": "مش شر تتكون اسمي \"الستاتس نفسه\"",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " مش شر تتكون اسمي \"الستاتس نفسه\""
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C41",
+      "scene_id": "S4",
+      "start": 87.635102,
+      "end": 90.15,
+      "spoken_phrase": "Agent understands the last recorded position",
+      "visual_event": "Agent understands the last recorded position",
+      "raw_recognition": "كده الاجنت فهم آخر مقطع وصلت لها الحالة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " كده الاجنت فهم آخر مقطع وصلت لها الحالة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C42",
+      "scene_id": "S4",
+      "start": 90.443537,
+      "end": 93.644082,
+      "spoken_phrase": "Continue without restarting every question",
+      "visual_event": "Continue without restarting every question",
+      "raw_recognition": "ويقدر يكمل مع العميل من غير ما يبدأ الأسئلة كلها تانية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.4,
+          "text": " ويقدر يكمل مع العميل من غير ما يبدأ الأسئلة كلها تانية"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C43",
+      "scene_id": "S5",
+      "start": 94.097846,
+      "end": 97.381383,
+      "spoken_phrase": "One number, multiple customers",
+      "visual_event": "One number, multiple customers",
+      "raw_recognition": "طيب لو نفس رقم التلفون موجود عند أكتر من كاستم",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " طيب لو نفس رقم التلفون موجود عند أكتر من كاستم"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C44",
+      "scene_id": "S5",
+      "start": 97.968549,
+      "end": 102.386553,
+      "spoken_phrase": "Do not automatically choose and expose history",
+      "visual_event": "Do not automatically choose and expose history",
+      "raw_recognition": "هنا مش منطق النظام يختار واحد الواحده ويعرى التاريخه كأنه كل حاجة مؤكدة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.6,
+          "text": " هنا مش منطق النظام يختار واحد الواحده ويعرى التاريخه كأنه كل حاجة مؤكدة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C45",
+      "scene_id": "S5",
+      "start": 102.776667,
+      "end": 105.249002,
+      "spoken_phrase": "Possible matches",
+      "visual_event": "Possible matches",
+      "raw_recognition": "المفروض تظهر الباسب الماتشز بشكل واضح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.56,
+          "text": " المفروض تظهر الباسب الماتشز بشكل واضح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C46",
+      "scene_id": "S5",
+      "start": 105.558889,
+      "end": 107.697528,
+      "spoken_phrase": "Review permitted information",
+      "visual_event": "Review permitted information",
+      "raw_recognition": "والاجنت يراجع المعلومات المسموح بها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.3,
+          "text": " والاجنت يراجع المعلومات المسموح بها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C47",
+      "scene_id": "S5",
+      "start": 108.06449,
+      "end": 111.391111,
+      "spoken_phrase": "Select after agreed verification steps",
+      "visual_event": "Select after agreed verification steps",
+      "raw_recognition": "ويحدد الركد الصحيح بعد خطوات التحقق المتفق عليها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " ويحدد الركد الصحيح بعد خطوات التحقق المتفق عليها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C48",
+      "scene_id": "S5",
+      "start": 111.873288,
+      "end": 116.653878,
+      "spoken_phrase": "Speed without compromising accuracy or privacy",
+      "visual_event": "Speed without compromising accuracy or privacy",
+      "raw_recognition": "كده بنحافظ على سرعة الوصول المعلومة من غير من ضحي بالدقة أو خصوصية العملة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.96,
+          "text": " كده بنحافظ على سرعة الوصول المعلومة من غير من ضحي بالدقة أو خصوصية العملة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C49",
+      "scene_id": "S6",
+      "start": 117.093061,
+      "end": 119.422404,
+      "spoken_phrase": "Two different fallback conditions",
+      "visual_event": "Two different fallback conditions",
+      "raw_recognition": "وفي حلتين مختلفتين لازم منخلتش بينه",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.56,
+          "text": " وفي حلتين مختلفتين لازم منخلتش بينه"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C50",
+      "scene_id": "S6",
+      "start": 119.955488,
+      "end": 120.516735,
+      "spoken_phrase": "First condition",
+      "visual_event": "First condition",
+      "raw_recognition": "أول حالة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " أول حالة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C51",
+      "scene_id": "S6",
+      "start": 120.84644,
+      "end": 121.651973,
+      "spoken_phrase": "Lookup completed",
+      "visual_event": "Lookup completed",
+      "raw_recognition": "البحث اشتغل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " البحث اشتغل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C52",
+      "scene_id": "S6",
+      "start": 121.851882,
+      "end": 123.611723,
+      "spoken_phrase": "No matching customer record",
+      "visual_event": "No matching customer record",
+      "raw_recognition": "بس ما فيش كاستوم الركد متابق",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " بس ما فيش كاستوم الركد متابق"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C53",
+      "scene_id": "S6",
+      "start": 123.982336,
+      "end": 127.541429,
+      "spoken_phrase": "Existing manual search procedure",
+      "visual_event": "Existing manual search procedure",
+      "raw_recognition": "هنا الموظف يقدر يكمل بمانيول سرچ حسب الإجراءات الموجودة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.74,
+          "text": " هنا الموظف يقدر يكمل بمانيول سرچ حسب الإجراءات الموجودة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C54",
+      "scene_id": "S6",
+      "start": 128.021701,
+      "end": 128.557982,
+      "spoken_phrase": "Second condition",
+      "visual_event": "Second condition",
+      "raw_recognition": "تاني حيلا",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " تاني حيلا"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C55",
+      "scene_id": "S6",
+      "start": 128.862313,
+      "end": 131.034444,
+      "spoken_phrase": "Zoho Desk unavailable or lookup failed",
+      "visual_event": "Zoho Desk unavailable or lookup failed",
+      "raw_recognition": "زوه دسك مش متاح أو اللوكوب فشل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.32,
+          "text": " زوه دسك مش متاح أو اللوكوب فشل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C56",
+      "scene_id": "S6",
+      "start": 131.461678,
+      "end": 133.90449,
+      "spoken_phrase": "Show an error / unavailable state",
+      "visual_event": "Show an error / unavailable state",
+      "raw_recognition": "يجب أن تظهر كأرر أو أستيقظة مستحيلة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " يجب أن تظهر كأرر أو أستيقظة مستحيلة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C57",
+      "scene_id": "S6",
+      "start": 134.191995,
+      "end": 136.076984,
+      "spoken_phrase": "Do not report no tickets found",
+      "visual_event": "Do not report no tickets found",
+      "raw_recognition": "مش رسالة بتقول \"نو تكتس فاون\"",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " مش رسالة بتقول \"نو تكتس فاون\""
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C58",
+      "scene_id": "S6",
+      "start": 136.607415,
+      "end": 137.304467,
+      "spoken_phrase": "In either condition",
+      "visual_event": "In either condition",
+      "raw_recognition": "وفي الحلتين",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وفي الحلتين"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C59",
+      "scene_id": "S6",
+      "start": 137.515896,
+      "end": 138.694762,
+      "spoken_phrase": "The call continues",
+      "visual_event": "The call continues",
+      "raw_recognition": "المكلمة نفسها تكمبل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " المكلمة نفسها تكمبل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C60",
+      "scene_id": "S6",
+      "start": 138.974195,
+      "end": 141.328141,
+      "spoken_phrase": "Keep the usual follow-up route",
+      "visual_event": "Keep the usual follow-up route",
+      "raw_recognition": "والموظف ما يفقدش طريقة المتابعة المعتادة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.56,
+          "text": " والموظف ما يفقدش طريقة المتابعة المعتادة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C61",
+      "scene_id": "S7",
+      "start": 142.326961,
+      "end": 143.156009,
+      "spoken_phrase": "Implementation transition (short ASR uncertain)",
+      "visual_event": "Implementation transition (short ASR uncertain)",
+      "raw_recognition": "هل نفسه؟",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " هل نفسه؟"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "uncertain short phrase; not used as a detailed trigger",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C62",
+      "scene_id": "S7",
+      "start": 143.633469,
+      "end": 146.965828,
+      "spoken_phrase": "Review contracted screen pop / integration",
+      "visual_event": "Review contracted screen pop / integration",
+      "raw_recognition": "سنبدأ بمرجعة الاسكرين بوب والانتجريشن المسكورين في العوود",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " سنبدأ بمرجعة الاسكرين بوب والانتجريشن المسكورين في العوود"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C63",
+      "scene_id": "S7",
+      "start": 147.218254,
+      "end": 150.430794,
+      "spoken_phrase": "Inspect actual Genesys and Desk configuration",
+      "visual_event": "Inspect actual Genesys and Desk configuration",
+      "raw_recognition": "ونشوف الكنفجراريشن الموجود فعلاً في جنسس وزوه دسك",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.5,
+          "text": " ونشوف الكنفجراريشن الموجود فعلاً في جنسس وزوه دسك"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C64",
+      "scene_id": "S7",
+      "start": 150.888617,
+      "end": 153.536871,
+      "spoken_phrase": "Use native features if sufficient",
+      "visual_event": "Use native features if sufficient",
+      "raw_recognition": "لو الناتف تقدر تحقق التجربة المطلوبة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " لو الناتف تقدر تحقق التجربة المطلوبة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C65",
+      "scene_id": "S7",
+      "start": 153.727619,
+      "end": 154.214649,
+      "spoken_phrase": "Use the suitable native configuration",
+      "visual_event": "Use the suitable native configuration",
+      "raw_recognition": "نستخدمها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " نستخدمها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C66",
+      "scene_id": "S7",
+      "start": 154.688073,
+      "end": 155.917687,
+      "spoken_phrase": "If there is a real gap",
+      "visual_event": "If there is a real gap",
+      "raw_recognition": "ولو في جاب حيائية",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ولو في جاب حيائية"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C67",
+      "scene_id": "S7",
+      "start": 156.162766,
+      "end": 158.24712,
+      "spoken_phrase": "Smallest necessary approved integration layer",
+      "visual_event": "Smallest necessary approved integration layer",
+      "raw_recognition": "نحدد أصغر إنتجريشن لير مطلوبة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.24,
+          "text": " نحدد أصغر إنتجريشن لير مطلوبة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C68",
+      "scene_id": "S7",
+      "start": 158.67415,
+      "end": 159.520726,
+      "spoken_phrase": "In every case",
+      "visual_event": "In every case",
+      "raw_recognition": "وفكل الأحوال",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وفكل الأحوال"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C69",
+      "scene_id": "S7",
+      "start": 159.698798,
+      "end": 161.093787,
+      "spoken_phrase": "Preserve permissions",
+      "visual_event": "Preserve permissions",
+      "raw_recognition": "والتحديث عن التفضل المحفوظة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " والتحديث عن التفضل المحفوظة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C70",
+      "scene_id": "S7",
+      "start": 161.375057,
+      "end": 164.970816,
+      "spoken_phrase": "Call arrival does not change ticket status",
+      "visual_event": "Call arrival does not change ticket status",
+      "raw_recognition": "وما فيش تغيير تلقائي للتكتب ستاتس لمجرد ان المكلمة وصلت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 3.8,
+          "text": " وما فيش تغيير تلقائي للتكتب ستاتس لمجرد ان المكلمة وصلت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C71",
+      "scene_id": "S8",
+      "start": 165.313265,
+      "end": 166.772721,
+      "spoken_phrase": "How will we know it works?",
+      "visual_event": "How will we know it works?",
+      "raw_recognition": "وزي نعرف ان التقربة نجحت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وزي نعرف ان التقربة نجحت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C72",
+      "scene_id": "S8",
+      "start": 167.250884,
+      "end": 169.087347,
+      "spoken_phrase": "A good-looking animation is insufficient",
+      "visual_event": "A good-looking animation is insufficient",
+      "raw_recognition": "ليس سيكتفى أن الأنميشن شكلها حلو",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " ليس سيكتفى أن الأنميشن شكلها حلو"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C73",
+      "scene_id": "S8",
+      "start": 169.660068,
+      "end": 172.203583,
+      "spoken_phrase": "Authorized pilot test calls",
+      "visual_event": "Authorized pilot test calls",
+      "raw_recognition": "سنقوم بعمل \"Pilot\" بمكلمات اختبار مصرح بها",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.66,
+          "text": " سنقوم بعمل \"Pilot\" بمكلمات اختبار مصرح بها"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C74",
+      "scene_id": "S8",
+      "start": 172.482766,
+      "end": 175.058753,
+      "spoken_phrase": "Compare manual and proposed workflows",
+      "visual_event": "Compare manual and proposed workflows",
+      "raw_recognition": "ونقارن المانيول سرچ بالوركفلو المقترح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.8,
+          "text": " ونقارن المانيول سرچ بالوركفلو المقترح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C75",
+      "scene_id": "S8",
+      "start": 175.652109,
+      "end": 179.740771,
+      "spoken_phrase": "Measure interactions and time to correct context",
+      "visual_event": "Measure interactions and time to correct context",
+      "raw_recognition": "سنقس عدد الخطوات والوقت اللي الاجن بيخدوا عشان يوصل لمعلومة صحيحة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 4.2,
+          "text": " سنقس عدد الخطوات والوقت اللي الاجن بيخدوا عشان يوصل لمعلومة صحيحة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C76",
+      "scene_id": "S8",
+      "start": 180.146145,
+      "end": 181.075896,
+      "spoken_phrase": "Matching accuracy",
+      "visual_event": "Matching accuracy",
+      "raw_recognition": "ودقة المتحيخ",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 1.08,
+          "text": " ودقة المتحيخ"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C77",
+      "scene_id": "S8",
+      "start": 181.349093,
+      "end": 183.633946,
+      "spoken_phrase": "Shared numbers and errors",
+      "visual_event": "Shared numbers and errors",
+      "raw_recognition": "والتعامل مع الأقام المشتركة والأرز",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.4,
+          "text": " والتعامل مع الأقام المشتركة والأرز"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C78",
+      "scene_id": "S8",
+      "start": 184.168798,
+      "end": 185.33068,
+      "spoken_phrase": "When results are available",
+      "visual_event": "When results are available",
+      "raw_recognition": "لما النتائك تبقى واضحة",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " لما النتائك تبقى واضحة"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C79",
+      "scene_id": "S8",
+      "start": 185.554308,
+      "end": 187.901202,
+      "spoken_phrase": "Establish the actual value for Concrete",
+      "visual_event": "Establish the actual value for Concrete",
+      "raw_recognition": "مقدر نحدد القيمة الفعلية لكونكريت",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.56,
+          "text": " مقدر نحدد القيمة الفعلية لكونكريت"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C80",
+      "scene_id": "S8",
+      "start": 188.221156,
+      "end": 189.320317,
+      "spoken_phrase": "A sound first step",
+      "visual_event": "A sound first step",
+      "raw_recognition": "وديل بداية صح",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " وديل بداية صح"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C81",
+      "scene_id": "S8",
+      "start": 189.786009,
+      "end": 191.310816,
+      "spoken_phrase": "A testable experience",
+      "visual_event": "A testable experience",
+      "raw_recognition": "تجربة قابلة للاختبار",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.0,
+          "text": " تجربة قابلة للاختبار"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    },
+    {
+      "id": "C82",
+      "scene_id": "S8",
+      "start": 191.615034,
+      "end": 193.679365,
+      "spoken_phrase": "Built on the existing systems",
+      "visual_event": "Built on the existing systems",
+      "raw_recognition": "مبنية على الأنظمة الموجودة بالفعل",
+      "raw_segments": [
+        {
+          "start": 0.0,
+          "end": 2.24,
+          "text": " مبنية على الأنظمة الموجودة بالفعل"
+        }
+      ],
+      "trigger_method": "measured phrase boundary",
+      "semantic_confidence": "ASR-assisted semantic alignment",
+      "raw_segments_timebase": "local padded ASR analysis window; not authoritative global cue timing"
+    }
+  ],
+  "subphrase_cues": [],
+  "method": {
+    "boundaries": "Actual source PCM: FFmpeg silencedetect -35 dB, minimum 150 ms pause, checked against Arabic Whisper-small phrase and contextual ASR.",
+    "labels": "English semantic cue descriptions, not a verbatim transcript. Raw Arabic recognition retained. No assumed word timestamps. Short uncertain ASR fragments do not drive detailed reveals.",
+    "precision": "Six decimal timestamp storage describes measured segmentation; it does not imply six-decimal perceptual or word alignment accuracy. Phrase triggers normally use measured starts/ends, then 350 ms visual easing.",
+    "external_human_listening": "Not performed; no external listening or participant study claimed.",
+    "source_preservation": "Original MP3 unchanged; no cuts, replacement, time stretching or narration padding. MP4 AAC is a lossy encoding of the entire decoded master.",
+    "raw_asr_segments": "Raw ASR segment offsets are local to silence-padded analysis windows, not global film timestamps. They are retained for audit and do not drive animation."
+  },
+  "animation_events": [
+    {
+      "scene_id": "S1",
+      "time": 0.0,
+      "related_phrase_id": "C01",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · The deep dive",
+        "Inside the workflow. One call, in detail.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "01 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Customer context",
+        "Contact A",
+        "Associated customer record",
+        "+20 ••• 410",
+        "Previous tickets",
+        "T101 · Exchange follow-up",
+        "Open",
+        "Agent B",
+        "T098 · Size query",
+        "Closed",
+        "Agent C",
+        "T101 · Exchange follow-up",
+        "Status",
+        "Open",
+        "Assigned agent",
+        "Agent B",
+        "Latest recorded note",
+        "Branch review is still pending."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 59,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 2.747324,
+      "related_phrase_id": "C03",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 3.788073,
+      "related_phrase_id": "C04",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 6.566327,
+      "related_phrase_id": "C05",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 7.485918,
+      "related_phrase_id": "C06",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": [
+        {
+          "start": 7.485918,
+          "end": 9.187574,
+          "scale0": 1,
+          "scale1": 1.035,
+          "x": 640,
+          "y": 407
+        }
+      ]
+    },
+    {
+      "scene_id": "S1",
+      "time": 9.187574,
+      "related_phrase_id": "C06",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": [
+        {
+          "start": 7.485918,
+          "end": 9.187574,
+          "scale0": 1,
+          "scale1": 1.035,
+          "x": 640,
+          "y": 407
+        }
+      ]
+    },
+    {
+      "scene_id": "S1",
+      "time": 12.715283,
+      "related_phrase_id": "C08",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 15.084626,
+      "related_phrase_id": "C09",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S1",
+      "time": 16.382789,
+      "related_phrase_id": "C10",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 22.309478,
+      "related_phrase_id": "C12",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · Caller number → lookup",
+        "The caller number starts a lookup.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "02 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Lookup · Proposed"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 32,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 24.824082,
+      "related_phrase_id": "C13",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Use the available call information"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 27.810045,
+      "related_phrase_id": "C14",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Caller number, if available in this setup"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": [
+        {
+          "start": 27.810045,
+          "end": 29.601066,
+          "scale0": 1,
+          "scale1": 1.025,
+          "x": 326,
+          "y": 455
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "time": 29.601066,
+      "related_phrase_id": "C14",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": [
+        {
+          "start": 27.810045,
+          "end": 29.601066,
+          "scale0": 1,
+          "scale1": 1.025,
+          "x": 326,
+          "y": 455
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "time": 29.820884,
+      "related_phrase_id": "C15",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "+20 ••• 410",
+        "Lookup key",
+        "Existing Zoho Desk customer records"
+      ],
+      "disappearing_text": [
+        "Use the available call information",
+        "Caller number, if available in this setup"
+      ],
+      "appearing_elements": 6,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 35.257551,
+      "related_phrase_id": "C17",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "0••• 410",
+        "+20 ••• 410"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 4,
+      "camera_events": [
+        {
+          "start": 35.257551,
+          "end": 37.583243,
+          "scale0": 1.025,
+          "scale1": 1,
+          "x": 326,
+          "y": 455
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "time": 37.583243,
+      "related_phrase_id": "C17",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": [
+        {
+          "start": 35.257551,
+          "end": 37.583243,
+          "scale0": 1.025,
+          "scale1": 1,
+          "x": 326,
+          "y": 455
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "time": 37.962925,
+      "related_phrase_id": "C18",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Illustrative equivalent formats · Matching rules to validate"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 40.893197,
+      "related_phrase_id": "C20",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S2",
+      "time": 42.864399,
+      "related_phrase_id": "C21",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "A number association does not verify identity."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 45.48805,
+      "related_phrase_id": "C22",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · What the employee sees",
+        "The relevant context, beside the call.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "03 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Customer context",
+        "Contact A",
+        "Associated customer record",
+        "+20 ••• 410"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 38,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 47.743741,
+      "related_phrase_id": "C23",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Permitted\naccess"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 52.151927,
+      "related_phrase_id": "C25",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Previous tickets",
+        "T101 · Exchange follow-up",
+        "T098 · Size query"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 8,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 54.968458,
+      "related_phrase_id": "C25",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Open",
+        "Closed"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 55.163424,
+      "related_phrase_id": "C26",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Agent B",
+        "Agent C"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 57.734649,
+      "related_phrase_id": "C26",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Latest recorded note",
+        "Branch review is still pending."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 4,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 58.215261,
+      "related_phrase_id": "C27",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "T101 · Exchange follow-up",
+        "Status",
+        "Open",
+        "Assigned agent",
+        "Agent B"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 7,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 61.46839,
+      "related_phrase_id": "C28",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 64.447347,
+      "related_phrase_id": "C29",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 65.222494,
+      "related_phrase_id": "C30",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S3",
+      "time": 67.239524,
+      "related_phrase_id": "C31",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 70.104172,
+      "related_phrase_id": "C32",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · Exchange follow-up",
+        "T101: read the note, keep the status clear.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "04 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Ticket T101 · Read-only"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 32,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 71.632177,
+      "related_phrase_id": "C33",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "T101 · Exchange request",
+        "Contact A · Existing exchange follow-up"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 74.523061,
+      "related_phrase_id": "C34",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Ticket status",
+        "Open",
+        "Assigned agent",
+        "Agent B"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 5,
+      "camera_events": [
+        {
+          "start": 74.523061,
+          "end": 77.445964,
+          "scale0": 1,
+          "scale1": 1.022,
+          "x": 850,
+          "y": 422
+        }
+      ]
+    },
+    {
+      "scene_id": "S4",
+      "time": 77.445964,
+      "related_phrase_id": "C34",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": [
+        {
+          "start": 74.523061,
+          "end": 77.445964,
+          "scale0": 1,
+          "scale1": 1.022,
+          "x": 850,
+          "y": 422
+        }
+      ]
+    },
+    {
+      "scene_id": "S4",
+      "time": 77.609819,
+      "related_phrase_id": "C35",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Latest recorded note"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 79.963787,
+      "related_phrase_id": "C37",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Branch review is still pending."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 83.458889,
+      "related_phrase_id": "C39",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 85.440816,
+      "related_phrase_id": "C40",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 87.635102,
+      "related_phrase_id": "C41",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 0,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S4",
+      "time": 90.443537,
+      "related_phrase_id": "C42",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 94.097846,
+      "related_phrase_id": "C43",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · Ambiguity and human control",
+        "One number. Two possible records.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "05 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Record choice · Proposed",
+        "More than one possible customer"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 33,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 97.968549,
+      "related_phrase_id": "C44",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Ticket history stays hidden until selection."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 102.776667,
+      "related_phrase_id": "C45",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Contact A",
+        "+20 ••• 410",
+        "Contact B",
+        "+20 ••• 410"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 10,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 105.558889,
+      "related_phrase_id": "C46",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 108.06449,
+      "related_phrase_id": "C47",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Use the agreed verification steps before choosing."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 111.391111,
+      "related_phrase_id": "C47",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S5",
+      "time": 111.872925,
+      "related_phrase_id": "C48",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Contact A",
+        "Associated customer record",
+        "+20 ••• 410",
+        "Previous tickets",
+        "T101 · Exchange follow-up",
+        "Open",
+        "Agent B",
+        "T098 · Size query",
+        "Closed",
+        "Agent C",
+        "T101 · Exchange follow-up",
+        "Status",
+        "Open",
+        "Assigned agent",
+        "Agent B",
+        "Latest recorded note",
+        "Branch review is still pending."
+      ],
+      "disappearing_text": [
+        "More than one possible customer",
+        "Ticket history stays hidden until selection.",
+        "Contact A",
+        "+20 ••• 410",
+        "Contact B",
+        "+20 ••• 410",
+        "Use the agreed verification steps before choosing."
+      ],
+      "appearing_elements": 27,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 117.093061,
+      "related_phrase_id": "C49",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · No match ≠ lookup failure",
+        "Different results. The call continues.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "06 / 08",
+        "Voice",
+        "Incoming caller",
+        "Caller number",
+        "+20 ••• 410",
+        "Call active",
+        "Assigned to an agent",
+        "Zoho Desk",
+        "Lookup result · Proposed",
+        "Lookup result for +20 ••• 410"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 34,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 120.84644,
+      "related_phrase_id": "C51",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Lookup completed"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 121.851882,
+      "related_phrase_id": "C52",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "No matching customer"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 123.982336,
+      "related_phrase_id": "C53",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Use the existing manual-search procedure.",
+        "Manual search"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 4,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 128.862313,
+      "related_phrase_id": "C55",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Lookup could not complete"
+      ],
+      "disappearing_text": [
+        "Lookup completed",
+        "No matching customer",
+        "Use the existing manual-search procedure.",
+        "Manual search"
+      ],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 131.461678,
+      "related_phrase_id": "C56",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Lookup unavailable",
+        "Retry"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 4,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 134.191995,
+      "related_phrase_id": "C57",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "An availability error. Not an empty ticket list."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 137.515896,
+      "related_phrase_id": "C59",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S6",
+      "time": 138.974195,
+      "related_phrase_id": "C60",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Keep the usual follow-up route.\nManual search when available."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 142.326961,
+      "related_phrase_id": "C61",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · Implementation decision",
+        "Inspect first. Use the smallest supported change.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "07 / 08"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 10,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 143.633469,
+      "related_phrase_id": "C62",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Inspect the\nexisting setup",
+        "“CRM URL pop up\nintegration”",
+        "2023 contract · p.4"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 5,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 147.218254,
+      "related_phrase_id": "C63",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 150.888617,
+      "related_phrase_id": "C64",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Native configuration"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 5,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 153.727619,
+      "related_phrase_id": "C65",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Use it if it supports\nthe required experience."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 154.688073,
+      "related_phrase_id": "C66",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 156.162766,
+      "related_phrase_id": "C67",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Minimal approved adapter",
+        "Only for a verified gap.\nSupported mechanisms only."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 158.67415,
+      "related_phrase_id": "C68",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Read-only first scope · Actual display and configuration to validate"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 159.698798,
+      "related_phrase_id": "C69",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Permissions\npreserved"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S7",
+      "time": 161.375057,
+      "related_phrase_id": "C70",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "T101",
+        "Status stays Open",
+        "Call arrival does\nnot write to tickets."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 5,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 165.313265,
+      "related_phrase_id": "C71",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete",
+        "Part 02 · Pilot validation",
+        "Prove the value with authorized test calls.",
+        "Illustrative proposed workflow · Fictional records · Display surface subject to validation",
+        "08 / 08"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 7,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 169.660068,
+      "related_phrase_id": "C73",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Pilot observation sheet",
+        "To measure during pilot"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 172.482766,
+      "related_phrase_id": "C74",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Current manual search",
+        "+20 ••• 410",
+        "+20 ••• 410",
+        "Find Contact A → Open T101",
+        "Proposed caller context",
+        "+20 ••• 410",
+        "T101 · Exchange follow-up",
+        "Branch review is still pending."
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 23,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 175.652109,
+      "related_phrase_id": "C75",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Manual interactions · Time to correct context",
+        "To measure"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 4,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 180.146145,
+      "related_phrase_id": "C76",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Correct matching",
+        "To measure"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 181.349093,
+      "related_phrase_id": "C77",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Shared / unknown numbers · Permissions · Errors",
+        "To measure"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 185.554308,
+      "related_phrase_id": "C79",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [],
+      "disappearing_text": [],
+      "appearing_elements": 1,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 188.221156,
+      "related_phrase_id": "C80",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "GRINDCTRL × Concrete"
+      ],
+      "disappearing_text": [
+        "Pilot observation sheet",
+        "To measure during pilot",
+        "Manual interactions · Time to correct context",
+        "To measure",
+        "Correct matching",
+        "To measure",
+        "Shared / unknown numbers · Permissions · Errors",
+        "To measure"
+      ],
+      "appearing_elements": 3,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 189.786009,
+      "related_phrase_id": "C81",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Authorized configuration review"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 2,
+      "camera_events": []
+    },
+    {
+      "scene_id": "S8",
+      "time": 191.615034,
+      "related_phrase_id": "C82",
+      "timing_basis": "measured speech start/end or scene boundary; camera envelopes use measured phrase boundaries",
+      "appearing_text": [
+        "Test calls"
+      ],
+      "disappearing_text": [],
+      "appearing_elements": 3,
+      "camera_events": []
+    }
+  ],
+  "animation_easing_ms": 350,
+  "first_scope": "read-only illustrative retrieval; actual supported surface/permissions to validate"
+}

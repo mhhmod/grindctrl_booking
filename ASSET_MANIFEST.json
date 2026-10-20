@@ -1,0 +1,337 @@
+{
+  "export_date": "2026-10-20",
+  "repository": "mhhmod/grindctrl_booking",
+  "repository_url": "https://github.com/mhhmod/grindctrl_booking",
+  "context_branch": "grindctrl-concrete-session-export-2026-10-20",
+  "context_url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-concrete-session-export-2026-10-20/SESSION_EXPORT.md",
+  "scope": "Curated working handoff, not a verbatim transcript; excludes original private contracts and commercial figures.",
+  "portability": "Old local paths and uploaded file IDs are reference only; availability is not guaranteed in a new chat. Use public output links or re-upload required private originals.",
+  "parts": [
+    {
+      "id": "Part01",
+      "title": "The caller-context idea",
+      "status": "Approved visual reference in the user brief",
+      "branch": "grindctrl-narrated-presentation-2026-10-11",
+      "commit": "179e9ad4ad9310ab235aca66565cad026406a88c",
+      "directory": "/workspace/GRINDCTRL-Narrated-delivery",
+      "work": "/workspace/analysis/voiceover-handoff",
+      "video": "grindctrl-narrated-en.mp4",
+      "html": "grindctrl-narrated-presentation.html",
+      "package": "GRINDCTRL-Concrete-Narrated-Package.zip",
+      "pptx": "grindctrl-narrated-en.pptx",
+      "pdf": "grindctrl-narrated-en.pdf",
+      "duration_seconds": 137.09,
+      "branch_url": "https://github.com/mhhmod/grindctrl_booking/tree/grindctrl-narrated-presentation-2026-10-11",
+      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/",
+      "files": {
+        "video": {
+          "name": "grindctrl-narrated-en.mp4",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-narrated-presentation-2026-10-11/grindctrl-narrated-en.mp4",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/grindctrl-narrated-en.mp4",
+          "bytes": 5533173,
+          "sha256": "ca5de3349b6b48a2c408e9d08ba972fa2a9dd9296462842dcfb668cae0f70135"
+        },
+        "html": {
+          "name": "grindctrl-narrated-presentation.html",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-narrated-presentation-2026-10-11/grindctrl-narrated-presentation.html",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/grindctrl-narrated-presentation.html",
+          "bytes": 3453338,
+          "sha256": "96450036cc36b522c15eb88d4428d616ef2ca0f02fe06bfb04af2e2f051e2649"
+        },
+        "package": {
+          "name": "GRINDCTRL-Concrete-Narrated-Package.zip",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-narrated-presentation-2026-10-11/GRINDCTRL-Concrete-Narrated-Package.zip",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/GRINDCTRL-Concrete-Narrated-Package.zip",
+          "bytes": 22021617,
+          "sha256": "af35c2143f65f34c680a630ca5c18cb498535cadb420aa2fab0a847b0be7d11b"
+        },
+        "pptx": {
+          "name": "grindctrl-narrated-en.pptx",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-narrated-presentation-2026-10-11/grindctrl-narrated-en.pptx",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/grindctrl-narrated-en.pptx",
+          "bytes": 2405571,
+          "sha256": "ea5eac68b0504f2040bd3917f2734e47e5bc45d597efd6c366be6b6907c18a01"
+        },
+        "pdf": {
+          "name": "grindctrl-narrated-en.pdf",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-narrated-presentation-2026-10-11/grindctrl-narrated-en.pdf",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/179e9ad4ad9310ab235aca66565cad026406a88c/grindctrl-narrated-en.pdf",
+          "bytes": 596005,
+          "sha256": "0036bee13fc110b05a2206932014fbb09c52b5e5eb51496de391e71e195a4410"
+        }
+      }
+    },
+    {
+      "id": "Part02",
+      "title": "Inside the workflow",
+      "status": "Established series reference, described as approved in subsequent user briefs",
+      "branch": "grindctrl-part02-workflow-2026-10-11",
+      "commit": "f4c36927868655e1bdf741e4e2a95eb8c606289a",
+      "directory": "/workspace/GRINDCTRL-Part02-delivery",
+      "work": "/workspace/analysis/part02",
+      "video": "grindctrl-concrete-part02-narrated.mp4",
+      "html": "grindctrl-concrete-part02-animated.html",
+      "package": "GRINDCTRL-Concrete-Part02-complete.zip",
+      "pptx": "grindctrl-concrete-part02-en.pptx",
+      "pdf": "grindctrl-concrete-part02-en.pdf",
+      "duration_seconds": 194.0,
+      "branch_url": "https://github.com/mhhmod/grindctrl_booking/tree/grindctrl-part02-workflow-2026-10-11",
+      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/",
+      "files": {
+        "video": {
+          "name": "grindctrl-concrete-part02-narrated.mp4",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part02-workflow-2026-10-11/grindctrl-concrete-part02-narrated.mp4",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/grindctrl-concrete-part02-narrated.mp4",
+          "bytes": 8576312,
+          "sha256": "5e2a91a887dd8987aa1ada26cffccf2ce69fd27f5d749fba5f9c71364bab2169"
+        },
+        "html": {
+          "name": "grindctrl-concrete-part02-animated.html",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part02-workflow-2026-10-11/grindctrl-concrete-part02-animated.html",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/grindctrl-concrete-part02-animated.html",
+          "bytes": 4744787,
+          "sha256": "14e05728a720ad53ff8fea4adfc687b405a32451a442cf68568824487e2ef312"
+        },
+        "package": {
+          "name": "GRINDCTRL-Concrete-Part02-complete.zip",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part02-workflow-2026-10-11/GRINDCTRL-Concrete-Part02-complete.zip",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/GRINDCTRL-Concrete-Part02-complete.zip",
+          "bytes": 35591991,
+          "sha256": "449755c263d3184e790c4769644ad885ca954d5b9755b628e3e82fb7a6c6468d"
+        },
+        "pptx": {
+          "name": "grindctrl-concrete-part02-en.pptx",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part02-workflow-2026-10-11/grindctrl-concrete-part02-en.pptx",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/grindctrl-concrete-part02-en.pptx",
+          "bytes": 3335535,
+          "sha256": "85825daf324685b63193ee5ad3f9aa9b9582e01423dd4d465dcebf1162958f47"
+        },
+        "pdf": {
+          "name": "grindctrl-concrete-part02-en.pdf",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part02-workflow-2026-10-11/grindctrl-concrete-part02-en.pdf",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/f4c36927868655e1bdf741e4e2a95eb8c606289a/grindctrl-concrete-part02-en.pdf",
+          "bytes": 718460,
+          "sha256": "a69bc259b884cb4c8ffbc028fd51fa1d215202cf4682e01d20b3f5d6eaaff729"
+        }
+      }
+    },
+    {
+      "id": "Part03",
+      "title": "Customer 360° call experience — REBUILT / voice fix",
+      "status": "Latest delivered Part03; supplied replacement narration explicitly authorized. Earlier Part03 recording rejected. No later visual acceptance asserted.",
+      "branch": "grindctrl-part03-voicefix-2026-10-12",
+      "commit": "4eea5da6d4994965683422c276e75a32899a3e7c",
+      "directory": "/workspace/GRINDCTRL-Part03-VoiceFix-delivery",
+      "work": "/workspace/analysis/part03-voicefix",
+      "video": "GRINDCTRL_Concrete_Part03_Rebuilt.mp4",
+      "html": "GRINDCTRL_Concrete_Part03_Rebuilt.html",
+      "package": "GRINDCTRL_Concrete_Part03_Rebuilt_COMPLETE.zip",
+      "pptx": "GRINDCTRL_Concrete_Part03_Rebuilt_en.pptx",
+      "pdf": "GRINDCTRL_Concrete_Part03_Rebuilt_en.pdf",
+      "duration_seconds": 286.966667,
+      "audio": "Part03_Corrected_Master.mp3",
+      "source_audio_sha256": "167b0508b8f6f53bdfa4a4fc0b240a841c9436c10fd3484bbb6b8e768de5e1ad",
+      "branch_url": "https://github.com/mhhmod/grindctrl_booking/tree/grindctrl-part03-voicefix-2026-10-12",
+      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/",
+      "files": {
+        "video": {
+          "name": "GRINDCTRL_Concrete_Part03_Rebuilt.mp4",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/GRINDCTRL_Concrete_Part03_Rebuilt.mp4",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/GRINDCTRL_Concrete_Part03_Rebuilt.mp4",
+          "bytes": 12531625,
+          "sha256": "56f13f281f4a91accf8ec7e2dab45d58e33abbf0e9ef347b667ddf0ff3e3c780"
+        },
+        "html": {
+          "name": "GRINDCTRL_Concrete_Part03_Rebuilt.html",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/GRINDCTRL_Concrete_Part03_Rebuilt.html",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/GRINDCTRL_Concrete_Part03_Rebuilt.html",
+          "bytes": 6834849,
+          "sha256": "d208e3c59d15d9c20d9ac314c697fc670b0392970f81f30979b395dcf916297d"
+        },
+        "package": {
+          "name": "GRINDCTRL_Concrete_Part03_Rebuilt_COMPLETE.zip",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/GRINDCTRL_Concrete_Part03_Rebuilt_COMPLETE.zip",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/GRINDCTRL_Concrete_Part03_Rebuilt_COMPLETE.zip",
+          "bytes": 36146314,
+          "sha256": "aa1199139710684939887143de1d8e079285b9bd1915cba73a0254b5bf3eb1f8"
+        },
+        "pptx": {
+          "name": "GRINDCTRL_Concrete_Part03_Rebuilt_en.pptx",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/GRINDCTRL_Concrete_Part03_Rebuilt_en.pptx",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/GRINDCTRL_Concrete_Part03_Rebuilt_en.pptx",
+          "bytes": 4832931,
+          "sha256": "590ecaf8562ddabe2987bc18322a6d0a2b540db5345340d634a93aeb392b7e20"
+        },
+        "pdf": {
+          "name": "GRINDCTRL_Concrete_Part03_Rebuilt_en.pdf",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/GRINDCTRL_Concrete_Part03_Rebuilt_en.pdf",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/GRINDCTRL_Concrete_Part03_Rebuilt_en.pdf",
+          "bytes": 780456,
+          "sha256": "0fb6490ba9c827b2670f02d738629cf4503d32d9c9219129b7f743b5c41a414e"
+        },
+        "audio": {
+          "name": "Part03_Corrected_Master.mp3",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part03-voicefix-2026-10-12/Part03_Corrected_Master.mp3",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/4eea5da6d4994965683422c276e75a32899a3e7c/Part03_Corrected_Master.mp3",
+          "bytes": 4609705,
+          "sha256": "167b0508b8f6f53bdfa4a4fc0b240a841c9436c10fd3484bbb6b8e768de5e1ad"
+        }
+      }
+    },
+    {
+      "id": "Part04",
+      "title": "AI opportunities across the business",
+      "status": "Most recent completed and delivered production; user has not yet supplied an acceptance/revision review. Current request is session export.",
+      "branch": "grindctrl-part04-ai-opportunities-2026-10-14",
+      "commit": "d93a256652b74d38ee378f03d51f6f2759572ae4",
+      "directory": "/workspace/GRINDCTRL-Part04-delivery",
+      "work": "/workspace/analysis/part04",
+      "video": "GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
+      "html": "GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
+      "package": "GRINDCTRL_Concrete_Part04_COMPLETE.zip",
+      "pptx": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
+      "pdf": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
+      "duration_seconds": 285.933333,
+      "decoded_audio_seconds": 285.92,
+      "audio": "Part04_FINAL_VOICEOVER.mp3",
+      "source_audio_sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a",
+      "branch_url": "https://github.com/mhhmod/grindctrl_booking/tree/grindctrl-part04-ai-opportunities-2026-10-14",
+      "immutable_base_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/",
+      "files": {
+        "video": {
+          "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities.mp4",
+          "bytes": 14480257,
+          "sha256": "ddf076374e2ed47fd76f38906b3e3963922962149c15a86353548c8561efe4dd"
+        },
+        "html": {
+          "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities.html",
+          "bytes": 17637264,
+          "sha256": "eb8d117bf0d79a9fc11ae8a2bfbdcf4190088910e4ad17e74971f610f7a9ac01"
+        },
+        "package": {
+          "name": "GRINDCTRL_Concrete_Part04_COMPLETE.zip",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_COMPLETE.zip",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_COMPLETE.zip",
+          "bytes": 84680342,
+          "sha256": "f15bdf82b920be94c7ea38cf3b389301fd643f8aa2fd5c808f985bf897564715"
+        },
+        "pptx": {
+          "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pptx",
+          "bytes": 12671347,
+          "sha256": "a97a65bd2ff848ba9a27f1adbee31a1b2897f5013f28762238a93f6d2022a23b"
+        },
+        "pdf": {
+          "name": "GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/GRINDCTRL_Concrete_Part04_AI_Opportunities_en.pdf",
+          "bytes": 12526119,
+          "sha256": "162e386285e2d6605386323bf91fa652ef125a2119dadfdc9cc8311f71dd63dd"
+        },
+        "audio": {
+          "name": "Part04_FINAL_VOICEOVER.mp3",
+          "url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-part04-ai-opportunities-2026-10-14/Part04_FINAL_VOICEOVER.mp3",
+          "immutable_url": "https://raw.githubusercontent.com/mhhmod/grindctrl_booking/d93a256652b74d38ee378f03d51f6f2759572ae4/Part04_FINAL_VOICEOVER.mp3",
+          "bytes": 4592986,
+          "sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a"
+        }
+      }
+    }
+  ],
+  "original_inputs": [
+    {
+      "id": "contract-2025",
+      "historical_sediment_file_id": "file_00000000ae1c82108b70afcc8117dcae",
+      "original_filename": "Concrete contract (1-1-2025).pdf",
+      "status": "Private original contract; not bundled"
+    },
+    {
+      "id": "contract-dec2022",
+      "historical_sediment_file_id": "file_000000001b80824397bc995af6ddcc2b",
+      "original_filename": "Concrete contract (25-12-2022).pdf",
+      "status": "Private original contract; not bundled"
+    },
+    {
+      "id": "contract-sep2022",
+      "historical_sediment_file_id": "file_00000000b61081f4ba8ad40697955f78",
+      "original_filename": "Concrete contract (06-09-2022).pdf",
+      "status": "Private original contract; not bundled"
+    },
+    {
+      "id": "contract-annex2026",
+      "historical_sediment_file_id": "file_00000000b8308210a9eb2293d42c9b76",
+      "original_filename": "Concrete 2026 Annex.pdf",
+      "status": "Private original contract; not bundled"
+    },
+    {
+      "id": "contract-nov2023",
+      "historical_sediment_file_id": "file_00000000b40481f48b8992041d72c663",
+      "original_filename": "Concrete contract (29-11-2023).pdf",
+      "status": "Private original contract; not bundled"
+    },
+    {
+      "id": "part01-handoff",
+      "historical_sediment_file_id": "file_00000000c5d082108ee6d610bcb3ca19",
+      "original_filename": "GRINDCTRL_Concrete_Voiceover_Agent_Handoff.zip",
+      "status": "Historical input; current output branch authoritative"
+    },
+    {
+      "id": "part02-audio",
+      "historical_sediment_file_id": "file_0000000014d481f4b2994659f8fa0130",
+      "original_filename": "ElevenLabs_audio_elevenlabs-v4_[calmly] في الف_2026-10-11T16_12_58.mp3",
+      "status": "Part02 source narration"
+    },
+    {
+      "id": "part02-prompt",
+      "historical_sediment_file_id": "file_000000001ba88210ade03712e297f61a",
+      "original_filename": "GRINDCTRL_Concrete_Part02_FINAL_MASTER_PROMPT.md",
+      "status": "Historical final Part02 prompt"
+    },
+    {
+      "id": "part03-old-handoff",
+      "historical_sediment_file_id": "file_000000003a948230a426d9e448909471",
+      "original_filename": "GRINDCTRL_Concrete_Part03_Customer360_Handoff (1).zip",
+      "status": "Superseded by voice-fix package"
+    },
+    {
+      "id": "part03-REJECTED-audio",
+      "historical_sediment_file_id": "file_000000003f7881f499415ad2362e8e78",
+      "original_filename": "ElevenLabs_audio_elevenlabs-v4_[warmly] في الف_2026-10-12T11_41_50.mp3",
+      "status": "REJECTED; do not reuse"
+    },
+    {
+      "id": "part03-voicefix-package",
+      "historical_sediment_file_id": "file_00000000ebc881f4a4c8a59d99783181",
+      "original_filename": "GRINDCTRL_Concrete_Part03_COMPLETE_VOICE_FIX_PACKAGE.zip",
+      "status": "Latest Part03 handoff; new attached audio overrides different script wording"
+    },
+    {
+      "id": "part03-AUTHORIZED-audio",
+      "historical_sediment_file_id": "file_0000000057748210807aa1ae04f92458",
+      "original_filename": "ElevenLabs_audio_elevenlabs-v4_في الفيديو الأو_2026-10-12T13_45_07.mp3",
+      "status": "Explicit user decision: use newly attached MP3 exactly as supplied"
+    },
+    {
+      "id": "part04-audio",
+      "historical_sediment_file_id": "file_00000000c91c820ea49209d840d4658d",
+      "original_filename": "ElevenLabs_audio_elevenlabs-v4_في الفيديوهات ا_2026-10-14T14_51_19.mp3",
+      "status": "Current Part04 single master; published unchanged as Part04_FINAL_VOICEOVER.mp3"
+    },
+    {
+      "id": "part04-package",
+      "historical_sediment_file_id": "file_00000000b7d482069ffc5759eaefbea8",
+      "original_filename": "GRINDCTRL_Concrete_Part04_SINGLE_AUDIO_PACKAGE.zip",
+      "status": "9 reference PNGs, continuous script, master prompt and visual anchors"
+    }
+  ],
+  "superseded_part03": {
+    "branch": "grindctrl-part03-customer360-2026-10-12",
+    "commit": "bf840a4e6017eb1d256f2d385f5ed9ea68ced50c",
+    "rejected_audio_sha256": "0fd419e6f6bbed75c4bb2e0e3747b3fc3ab5f9b2864b577c4c95bcb95fe70d01"
+  }
+}

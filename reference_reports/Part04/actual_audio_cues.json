@@ -1,0 +1,2207 @@
+{
+  "duration": 285.92,
+  "fps": 30,
+  "audio_filename": "Part04_FINAL_VOICEOVER.mp3",
+  "audio_sha256": "3371c5f655e8f4741a0f62bb436a70439cfacf50ae7787652a4c93fc89e4a81a",
+  "audio_track_count": 1,
+  "audio_start_sec": 0,
+  "audio_locked": true,
+  "audio_edits": [],
+  "chapters": [
+    {
+      "id": "S01",
+      "title": "Across the Concrete experience",
+      "start": 0,
+      "end": 29.582857,
+      "start_sec": 0,
+      "end_sec": 29.582857,
+      "phrase_trigger": "في الفيديوهات اللي فاتت، شفنا إزاي GRINDCTRL ممكن تساعد Concrete تطور تجربة خدمة العملاء،"
+    },
+    {
+      "id": "S02",
+      "title": "AI personal stylist",
+      "start": 29.582857,
+      "end": 61.463039,
+      "start_sec": 29.582857,
+      "end_sec": 61.463039,
+      "phrase_trigger": "تخيلوا عميل داخل على متجر Concrete الأونلاين،"
+    },
+    {
+      "id": "S03",
+      "title": "AI e-commerce assistant",
+      "start": 61.463039,
+      "end": 93.034535,
+      "start_sec": 61.463039,
+      "end_sec": 93.034535,
+      "phrase_trigger": "ونفس التجربة ممكن تكمل جوه الأونلاين ستور."
+    },
+    {
+      "id": "S04",
+      "title": "AI contact center copilot",
+      "start": 93.034535,
+      "end": 125.673628,
+      "start_sec": 93.034535,
+      "end_sec": 125.673628,
+      "phrase_trigger": "نرجع بقى للـContact Center."
+    },
+    {
+      "id": "S05",
+      "title": "AI loyalty and clienteling",
+      "start": 125.673628,
+      "end": 157.510113,
+      "start_sec": 125.673628,
+      "end_sec": 157.510113,
+      "phrase_trigger": "وفي الفروع،"
+    },
+    {
+      "id": "S06",
+      "title": "AI retail operations",
+      "start": 157.510113,
+      "end": 189.095805,
+      "start_sec": 157.510113,
+      "end_sec": 189.095805,
+      "phrase_trigger": "بس الفرص مش كلها قدام العميل."
+    },
+    {
+      "id": "S07",
+      "title": "AI marketing studio",
+      "start": 189.095805,
+      "end": 220.180703,
+      "start_sec": 189.095805,
+      "end_sec": 220.180703,
+      "phrase_trigger": "أما فريق الماركتنج،"
+    },
+    {
+      "id": "S08",
+      "title": "Executive AI intelligence",
+      "start": 220.180703,
+      "end": 253.968753,
+      "start_sec": 220.180703,
+      "end_sec": 253.968753,
+      "phrase_trigger": "ولما نبص من ناحية الإدارة،"
+    },
+    {
+      "id": "S09",
+      "title": "One connected vision",
+      "start": 253.968753,
+      "end": 285.92,
+      "start_sec": 253.968753,
+      "end_sec": 285.92,
+      "phrase_trigger": "كل الأمثلة دي بتوصلنا لفكرة واحدة:"
+    }
+  ],
+  "cues": [
+    {
+      "id": "C001",
+      "scene_id": "S01",
+      "start": 0.0,
+      "end": 5.978118,
+      "spoken_phrase": "في الفيديوهات اللي فاتت، شفنا إزاي GRINDCTRL ممكن تساعد Concrete تطور تجربة خدمة العملاء،",
+      "raw_recognition": "في الفيديوهات اللي فاتت شوفنا الايق grind control ممكن تساعد كونكريت تطور تجربة خدمة العملة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C002",
+      "scene_id": "S01",
+      "start": 6.329592,
+      "end": 7.256644,
+      "spoken_phrase": "من أول المكالمة،",
+      "raw_recognition": "من أول المكلمة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C003",
+      "scene_id": "S01",
+      "start": 7.425805,
+      "end": 8.596054,
+      "spoken_phrase": "لحد متابعة العميل.",
+      "raw_recognition": "لحد متابعة العميل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C004",
+      "scene_id": "S01",
+      "start": 9.270091,
+      "end": 10.685442,
+      "spoken_phrase": "لكن دي مجرد بداية.",
+      "raw_recognition": "لكن هذا مجرد بدائعه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C005",
+      "scene_id": "S01",
+      "start": 11.331587,
+      "end": 16.025351,
+      "spoken_phrase": "النهارده عايزين نتخيل مع بعض فرص أكبر للذكاء الاصطناعي جوه Concrete:",
+      "raw_recognition": "النهاردة عايزيننا تخيل مع بعض فرص أكبر للزكاء الاستناعي جوة конкретة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C006",
+      "scene_id": "S01",
+      "start": 16.600612,
+      "end": 17.244558,
+      "spoken_phrase": "في الأونلاين،",
+      "raw_recognition": "فلونلين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C007",
+      "scene_id": "S01",
+      "start": 17.482222,
+      "end": 18.075147,
+      "spoken_phrase": "والفروع،",
+      "raw_recognition": "والفروة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C008",
+      "scene_id": "S01",
+      "start": 18.272472,
+      "end": 20.497664,
+      "spoken_phrase": "والمبيعات، والماركتنج، والإدارة.",
+      "raw_recognition": "والمبيعات والماركتنج والإضارة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C009",
+      "scene_id": "S01",
+      "start": 21.263016,
+      "end": 23.135079,
+      "spoken_phrase": "مش بنتكلم عن أنظمة شغالة بالفعل.",
+      "raw_recognition": "ونتحدث عن أنظمة شغالة بالفعل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C010",
+      "scene_id": "S01",
+      "start": 23.515601,
+      "end": 25.199977,
+      "spoken_phrase": "بنتكلم عن حلول مقترحة،",
+      "raw_recognition": "نتكلم عن حلول مقترحة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C011",
+      "scene_id": "S01",
+      "start": 25.694059,
+      "end": 28.84356,
+      "spoken_phrase": "كل واحدة منها نقدر نختبرها ونشوف قيمتها الحقيقية.",
+      "raw_recognition": "كل واحد منها نقدر نختبرها ونشوف قمتها الحيائي",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C012",
+      "scene_id": "S02",
+      "start": 29.582857,
+      "end": 32.17093,
+      "spoken_phrase": "تخيلوا عميل داخل على متجر Concrete الأونلاين،",
+      "raw_recognition": "تخياله عميل داخل على مدجر كونكريت الانلاين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C013",
+      "scene_id": "S02",
+      "start": 32.546667,
+      "end": 33.634127,
+      "spoken_phrase": "وعنده مناسبة مهمة،",
+      "raw_recognition": "وعنده مناسب مهم",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C014",
+      "scene_id": "S02",
+      "start": 33.948073,
+      "end": 35.814195,
+      "spoken_phrase": "لكنه مش عارف يختار لوك كامل.",
+      "raw_recognition": "لكنه مش عارف يخطر لوك كامل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C015",
+      "scene_id": "S02",
+      "start": 36.593968,
+      "end": 38.197029,
+      "spoken_phrase": "بدل ما يلف على صفحات كتير،",
+      "raw_recognition": "بدل ما يلف على صفحات كتير",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C016",
+      "scene_id": "S02",
+      "start": 38.506961,
+      "end": 40.737007,
+      "spoken_phrase": "يقول للـAI Stylist هو رايح فين،",
+      "raw_recognition": "يقول لل AI Stylist هو راية حفين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C017",
+      "scene_id": "S02",
+      "start": 40.892063,
+      "end": 41.624376,
+      "spoken_phrase": "وبيحب إيه،",
+      "raw_recognition": "وبحبه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C018",
+      "scene_id": "S02",
+      "start": 41.941361,
+      "end": 43.081066,
+      "spoken_phrase": "والميزانية المناسبة ليه.",
+      "raw_recognition": "والمزنية المنصبلي",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C019",
+      "scene_id": "S02",
+      "start": 43.813401,
+      "end": 45.132721,
+      "spoken_phrase": "المساعد يقترح عليه،",
+      "raw_recognition": "المساعد يقترح عليه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C020",
+      "scene_id": "S02",
+      "start": 45.357415,
+      "end": 45.714558,
+      "spoken_phrase": "بليزر،",
+      "raw_recognition": "ويوجد مدينة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C021",
+      "scene_id": "S02",
+      "start": 45.980295,
+      "end": 46.441655,
+      "spoken_phrase": "وشيرت،",
+      "raw_recognition": "و شرط",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C022",
+      "scene_id": "S02",
+      "start": 46.607551,
+      "end": 47.239819,
+      "spoken_phrase": "وبنطلون،",
+      "raw_recognition": "أبن طلون",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C023",
+      "scene_id": "S02",
+      "start": 47.3978,
+      "end": 48.921247,
+      "spoken_phrase": "وجزمة بشكل متناسق،",
+      "raw_recognition": "و جزمة بشكل متناصق",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C024",
+      "scene_id": "S02",
+      "start": 49.244943,
+      "end": 50.496825,
+      "spoken_phrase": "من المنتجات اللي في الكتالوج.",
+      "raw_recognition": "من المنتاجات اللي في الكتلو",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C025",
+      "scene_id": "S02",
+      "start": 51.254558,
+      "end": 53.25517,
+      "spoken_phrase": "والعميل يقدر يغير الاختيارات،",
+      "raw_recognition": "والعميل يقدر يغير الاختيرات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C026",
+      "scene_id": "S02",
+      "start": 53.410544,
+      "end": 55.722517,
+      "spoken_phrase": "أو يحجز تجربة في الفرع لو الخدمة متاحة.",
+      "raw_recognition": "أو يحج استجربة في الفرع لو الخدمة متاحة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C027",
+      "scene_id": "S02",
+      "start": 56.465782,
+      "end": 60.898639,
+      "spoken_phrase": "الهدف إن اختيار اللبس يبقى أسهل وأقرب لمساعدة ستايلست حقيقي.",
+      "raw_recognition": "الهدف ان اختار اللبس يبقى أسهل وأقرب لمساعدة ستايلست حقيقي",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C028",
+      "scene_id": "S03",
+      "start": 61.463039,
+      "end": 64.22161,
+      "spoken_phrase": "ونفس التجربة ممكن تكمل جوه الأونلاين ستور.",
+      "raw_recognition": "و نفس التجربة ممكن تكمل جوال اونلينستور",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C029",
+      "scene_id": "S03",
+      "start": 64.859683,
+      "end": 67.976417,
+      "spoken_phrase": "العميل يسأل بشكل طبيعي عن شيرت لمناسبة معينة،",
+      "raw_recognition": "العميل يسأل بشكل طبيعي عن شرط لمناسبة معيانة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C030",
+      "scene_id": "S03",
+      "start": 68.291927,
+      "end": 69.259388,
+      "spoken_phrase": "أو المقاس المناسب،",
+      "raw_recognition": "أو المأس المناسب",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C031",
+      "scene_id": "S03",
+      "start": 69.707687,
+      "end": 71.634739,
+      "spoken_phrase": "أو إذا كان المنتج متاح في فرع قريب.",
+      "raw_recognition": "أو إذا كان المنطقة متاحة في فرعه أريب",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C032",
+      "scene_id": "S03",
+      "start": 72.393946,
+      "end": 74.07898,
+      "spoken_phrase": "المساعد يرشح اختيارات،",
+      "raw_recognition": "المساعد يرشح اختيارات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C033",
+      "scene_id": "S03",
+      "start": 74.3078,
+      "end": 75.687778,
+      "spoken_phrase": "ويشرح جدول المقاسات،",
+      "raw_recognition": "ويشرح جدول المعسات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C034",
+      "scene_id": "S03",
+      "start": 76.014444,
+      "end": 79.090136,
+      "spoken_phrase": "ويعرض الـAvailability لما تكون متوصلة ببيانات ستوك،",
+      "raw_recognition": "ويعرض الأفيلابيليتي لما تكون متوصلة ببينات ستوك",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C035",
+      "scene_id": "S03",
+      "start": 79.243084,
+      "end": 80.111406,
+      "spoken_phrase": "محدثة فعلًا.",
+      "raw_recognition": "محدسة فعلا",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C036",
+      "scene_id": "S03",
+      "start": 80.797755,
+      "end": 81.858322,
+      "spoken_phrase": "ولو المعلومات ناقصة،",
+      "raw_recognition": "ولو المعلومات نقصة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C037",
+      "scene_id": "S03",
+      "start": 82.014127,
+      "end": 84.094512,
+      "spoken_phrase": "يقول إنها غير متاحة بدل ما يخمن.",
+      "raw_recognition": "يقول إنها غير متاحة بدل ما يخمن",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C038",
+      "scene_id": "S03",
+      "start": 84.835057,
+      "end": 86.74678,
+      "spoken_phrase": "كده بنسهّل الـProduct Discovery،",
+      "raw_recognition": "كده بنسهل البرودك ديسكوري",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C039",
+      "scene_id": "S03",
+      "start": 87.076961,
+      "end": 89.425465,
+      "spoken_phrase": "ونساعد العميل ياخد قرار وهو فاهم،",
+      "raw_recognition": "ونساعد العميل ياخد قرار وهو فاهم",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C040",
+      "scene_id": "S03",
+      "start": 89.880363,
+      "end": 92.323356,
+      "spoken_phrase": "من غير وعود غلط عن المقاسات أو المخزون.",
+      "raw_recognition": "من غير وعود غلط عن المقاسات أو المخزون",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C041",
+      "scene_id": "S04",
+      "start": 93.034535,
+      "end": 94.394739,
+      "spoken_phrase": "نرجع بقى للـContact Center.",
+      "raw_recognition": "نرجع بقى للكونتاك سمتر",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C042",
+      "scene_id": "S04",
+      "start": 94.989048,
+      "end": 97.046485,
+      "spoken_phrase": "الإيجنت بيستقبل Call على Genesys،",
+      "raw_recognition": "الاجنت يستقبل call على Genesis",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C043",
+      "scene_id": "S04",
+      "start": 97.245306,
+      "end": 99.079864,
+      "spoken_phrase": "وبيكون محتاج يفهم العميل بسرعة.",
+      "raw_recognition": "وبيكون محتاج يفهم العميل بسرعة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C044",
+      "scene_id": "S04",
+      "start": 99.801655,
+      "end": 104.096213,
+      "spoken_phrase": "هنا ممكن الـAI Copilot يساعده بمعلومات من المصادر المصرح بيها،",
+      "raw_recognition": "هنا ممكن الل AI-Copilot يساعدوا بمعلومات من المصادر المصرح بها",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C045",
+      "scene_id": "S04",
+      "start": 104.54458,
+      "end": 106.378912,
+      "spoken_phrase": "ويقترح إجابة من سياسة الشركة،",
+      "raw_recognition": "ويقترح إيجابة من سياسة الشركة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C046",
+      "scene_id": "S04",
+      "start": 106.806236,
+      "end": 109.237029,
+      "spoken_phrase": "أو يجهز مسودة Call Summary بعد المكالمة.",
+      "raw_recognition": "أو يجهز مسودة call summary بعد المكلمة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C047",
+      "scene_id": "S04",
+      "start": 109.943288,
+      "end": 113.713968,
+      "spoken_phrase": "المهم إن الموظف يراجع الاقتراح قبل استخدامه أو حفظه.",
+      "raw_recognition": "المهم أن الموظف يراجع الاختراح قبل استخدامه أو حفظه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C048",
+      "scene_id": "S04",
+      "start": 114.361746,
+      "end": 118.594218,
+      "spoken_phrase": "والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،",
+      "raw_recognition": "والAI لا يوعدش العميل بستبدال أو استرجاع أو مع التسليم",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C049",
+      "scene_id": "S04",
+      "start": 118.907234,
+      "end": 121.266236,
+      "spoken_phrase": "من غير بيانات مؤكدة وموافقة مناسبة.",
+      "raw_recognition": "من غير بيانات مؤكدة وموافقة منصبة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C050",
+      "scene_id": "S04",
+      "start": 121.921995,
+      "end": 123.50585,
+      "spoken_phrase": "إحنا بنقوّي شغل الإيجنت،",
+      "raw_recognition": "احنا بنقوي شغل الاجنت",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C051",
+      "scene_id": "S04",
+      "start": 123.701678,
+      "end": 124.963696,
+      "spoken_phrase": "مش بنشيل القرار من إيده.",
+      "raw_recognition": "مش بنشيل القرار من إيدو",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C052",
+      "scene_id": "S05",
+      "start": 125.673628,
+      "end": 126.354354,
+      "spoken_phrase": "وفي الفروع،",
+      "raw_recognition": "وفي الفروع",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C053",
+      "scene_id": "S05",
+      "start": 126.505102,
+      "end": 128.286259,
+      "spoken_phrase": "التجربة ممكن تبقى شخصية أكتر.",
+      "raw_recognition": "التجربة ممكن تبأ شخصية أكثر",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C054",
+      "scene_id": "S05",
+      "start": 128.918367,
+      "end": 131.019977,
+      "spoken_phrase": "لما العميل يوافق على استخدام بياناته،",
+      "raw_recognition": "لما العميل يوافق على استخدام بيناته",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C055",
+      "scene_id": "S05",
+      "start": 131.232336,
+      "end": 134.868231,
+      "spoken_phrase": "موظف المبيعات يقدر يشوف تفضيلاته ومشترياته المتاحة،",
+      "raw_recognition": "موظف المبعات يقدر يشوف تفضلاته ومشتريات المتاحة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C056",
+      "scene_id": "S05",
+      "start": 135.295034,
+      "end": 137.059728,
+      "spoken_phrase": "وكمان عضويته في Icons Club:",
+      "raw_recognition": "وكما عضوية في ايكونز كلاب",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C057",
+      "scene_id": "S05",
+      "start": 137.443333,
+      "end": 138.09161,
+      "spoken_phrase": "Lifestyle،",
+      "raw_recognition": "\"العيونة\"",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C058",
+      "scene_id": "S05",
+      "start": 138.268889,
+      "end": 139.005669,
+      "spoken_phrase": "أو Prestige،",
+      "raw_recognition": "أو رستيج",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C059",
+      "scene_id": "S05",
+      "start": 139.159841,
+      "end": 139.682721,
+      "spoken_phrase": "أو Elite.",
+      "raw_recognition": "أو إليت",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C060",
+      "scene_id": "S05",
+      "start": 140.248254,
+      "end": 141.870454,
+      "spoken_phrase": "وبناءً على المعلومات الصحيحة،",
+      "raw_recognition": "وبناء على المعلومات الصحيحة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C061",
+      "scene_id": "S05",
+      "start": 142.226803,
+      "end": 144.614989,
+      "spoken_phrase": "المساعد يقترح قطع تكمل اختياراته،",
+      "raw_recognition": "المساعد يقترح قطع تكمل اختياراته",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C062",
+      "scene_id": "S05",
+      "start": 145.036939,
+      "end": 146.682698,
+      "spoken_phrase": "أو يساعد في حجز موعد مناسب.",
+      "raw_recognition": "أو يساعد في حق زناوعد مناسب",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C063",
+      "scene_id": "S05",
+      "start": 147.470227,
+      "end": 150.801497,
+      "spoken_phrase": "مش معنى إن العميل Elite إننا نفترض مزايا مش مؤكدة.",
+      "raw_recognition": "مش معنى أن العميل إليت إنه نفطرد مزايا مش مؤكدة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C064",
+      "scene_id": "S05",
+      "start": 151.42068,
+      "end": 154.171134,
+      "spoken_phrase": "كل اقتراح يفضل مرتبط بسياسات Concrete،",
+      "raw_recognition": "كل اقتراح يفضل مرتابب بسياسات كونكريت",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C065",
+      "scene_id": "S05",
+      "start": 154.353764,
+      "end": 155.468753,
+      "spoken_phrase": "وتوفر المنتجات،",
+      "raw_recognition": "وتغفر المنتجات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C066",
+      "scene_id": "S05",
+      "start": 155.729456,
+      "end": 156.769501,
+      "spoken_phrase": "وصلاحيات الموظف.",
+      "raw_recognition": "وصلح حيات الموظف",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C067",
+      "scene_id": "S06",
+      "start": 157.510113,
+      "end": 159.412766,
+      "spoken_phrase": "بس الفرص مش كلها قدام العميل.",
+      "raw_recognition": "بس الفرص مش كلها قدام العميل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C068",
+      "scene_id": "S06",
+      "start": 160.050431,
+      "end": 162.941973,
+      "spoken_phrase": "تخيلوا مدير فروع بيشوف مقاسات مطلوبة في فرع،",
+      "raw_recognition": "تخيل مدير فروع بيشوف ما أسات مطلوبة فرع",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C069",
+      "scene_id": "S06",
+      "start": 163.148934,
+      "end": 165.542472,
+      "spoken_phrase": "بينما موجودة بكميات أكبر في فرع تاني.",
+      "raw_recognition": "بينما موجودة بكمية أكبر في فرع تاني",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C070",
+      "scene_id": "S06",
+      "start": 166.268549,
+      "end": 168.0122,
+      "spoken_phrase": "باستخدام بيانات المبيعات والستوك،",
+      "raw_recognition": "باستخدام بيانات المبيعات والستوك",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C071",
+      "scene_id": "S06",
+      "start": 168.342109,
+      "end": 170.105624,
+      "spoken_phrase": "نقدر نقترح نقل كمية،",
+      "raw_recognition": "نقدر نقطرح نقل كمية",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C072",
+      "scene_id": "S06",
+      "start": 170.340181,
+      "end": 171.385601,
+      "spoken_phrase": "أو إعادة تزويد،",
+      "raw_recognition": "أو إعاد التزويد",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C073",
+      "scene_id": "S06",
+      "start": 171.705896,
+      "end": 173.746667,
+      "spoken_phrase": "أو توقع الطلب على منتجات معينة.",
+      "raw_recognition": "أو توقع الطلب على منتجات معينة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C074",
+      "scene_id": "S06",
+      "start": 174.438322,
+      "end": 176.351134,
+      "spoken_phrase": "الاقتراح يظهر ومعاه سببه،",
+      "raw_recognition": "اللي اقتراح يظهر ومع سببه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C075",
+      "scene_id": "S06",
+      "start": 176.659728,
+      "end": 179.017551,
+      "spoken_phrase": "والمسؤول هو اللي يراجعه ويوافق عليه.",
+      "raw_recognition": "والمسؤول هو اللي رجع ويوافق عليه",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C076",
+      "scene_id": "S06",
+      "start": 179.69381,
+      "end": 183.137506,
+      "spoken_phrase": "وده ممكن يساعد فرق الـRetail Operations تاخد قرارات أوضح،",
+      "raw_recognition": "وده ممكن يساعد فراء الريتيل اوبرايشنز تاخد قرارات اوضح.",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C077",
+      "scene_id": "S06",
+      "start": 183.675624,
+      "end": 185.034807,
+      "spoken_phrase": "بشرط جودة البيانات،",
+      "raw_recognition": "بشارت جودة البيانات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C078",
+      "scene_id": "S06",
+      "start": 185.352404,
+      "end": 188.757596,
+      "spoken_phrase": "وتجربة النماذج على نتائج حقيقية قبل الاعتماد عليها.",
+      "raw_recognition": "وتجروجة النمازج على نتائك حقيقية قبل اللي اعتماد عليها",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C079",
+      "scene_id": "S07",
+      "start": 189.095805,
+      "end": 190.155873,
+      "spoken_phrase": "أما فريق الماركتنج،",
+      "raw_recognition": "أم بفريق الماركتين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C080",
+      "scene_id": "S07",
+      "start": 190.389909,
+      "end": 192.73771,
+      "spoken_phrase": "فممكن يبقى عنده AI Marketing Studio،",
+      "raw_recognition": "فممكن يبقى عنده AI Marketing Studio",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C081",
+      "scene_id": "S07",
+      "start": 193.072268,
+      "end": 194.826893,
+      "spoken_phrase": "يساعده يبدأ من فكرة كامبين،",
+      "raw_recognition": "يساعدوا يبدأ من فكرة كامبين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C082",
+      "scene_id": "S07",
+      "start": 195.250884,
+      "end": 200.626735,
+      "spoken_phrase": "ويطلع منها اقتراحات للـCopy، والـVisual Concepts، ونسخ مناسبة للسوشيال ميديا والإيميل.",
+      "raw_recognition": "و يطلع منها اقتراحات للكوبي والفيجوال الانسبت و نسخ منصبة للسوشي الميديا والاميل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C083",
+      "scene_id": "S07",
+      "start": 201.331565,
+      "end": 205.311111,
+      "spoken_phrase": "وكل ده باستخدام الـBrand Guidelines والصور والمنتجات المعتمدة.",
+      "raw_recognition": "وكل هذا باستخدام البراند قايدلايينز والصور والمنتجات المعتمدة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C084",
+      "scene_id": "S07",
+      "start": 205.819796,
+      "end": 206.220522,
+      "spoken_phrase": "مثلًا،",
+      "raw_recognition": "مثلاً",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C085",
+      "scene_id": "S07",
+      "start": 206.51771,
+      "end": 208.087846,
+      "spoken_phrase": "الفريق يختار Collection جديدة،",
+      "raw_recognition": "الفري اختار كولكشن جديدة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C086",
+      "scene_id": "S07",
+      "start": 208.514762,
+      "end": 211.63644,
+      "spoken_phrase": "والمساعد يجهز له اتجاهات إبداعية مختلفة للمراجعة.",
+      "raw_recognition": "والمساعد يجهز لتجهات ابداعية مختلفة للمراجعة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C087",
+      "scene_id": "S07",
+      "start": 212.294535,
+      "end": 213.874286,
+      "spoken_phrase": "لكن القرار النهائي والنشر،",
+      "raw_recognition": "لكن القرار النهائي والنشر",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C088",
+      "scene_id": "S07",
+      "start": 214.150159,
+      "end": 215.491519,
+      "spoken_phrase": "يفضلوا عند فريق Concrete،",
+      "raw_recognition": "يفضلوا عند فريق كونكريت",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C089",
+      "scene_id": "S07",
+      "start": 215.887483,
+      "end": 218.609637,
+      "spoken_phrase": "عشان الهوية البصرية والدقة وحقوق الصور،",
+      "raw_recognition": "عشان الهوية البصرية والدقة وحقوق الصور",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C090",
+      "scene_id": "S07",
+      "start": 218.808685,
+      "end": 219.682766,
+      "spoken_phrase": "يفضلوا محفوظين.",
+      "raw_recognition": "يفضلوا محفوظين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C091",
+      "scene_id": "S08",
+      "start": 220.180703,
+      "end": 221.657279,
+      "spoken_phrase": "ولما نبص من ناحية الإدارة،",
+      "raw_recognition": "و لما نبص من نحية الإدارة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C092",
+      "scene_id": "S08",
+      "start": 221.950771,
+      "end": 223.674921,
+      "spoken_phrase": "البيانات موجودة في أكتر من مكان:",
+      "raw_recognition": "البيانات موجودة في أكثر من مكان",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C093",
+      "scene_id": "S08",
+      "start": 224.216531,
+      "end": 224.837052,
+      "spoken_phrase": "مبيعات،",
+      "raw_recognition": "نهبي هاتف",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C094",
+      "scene_id": "S08",
+      "start": 225.065646,
+      "end": 225.547574,
+      "spoken_phrase": "وستوك،",
+      "raw_recognition": "وستق",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C095",
+      "scene_id": "S08",
+      "start": 225.814739,
+      "end": 226.580136,
+      "spoken_phrase": "وخدمة عملاء،",
+      "raw_recognition": "وخدمة عمله",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C096",
+      "scene_id": "S08",
+      "start": 226.751927,
+      "end": 227.350068,
+      "spoken_phrase": "وسلوك شراء.",
+      "raw_recognition": "و سلوك شرا",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C097",
+      "scene_id": "S08",
+      "start": 227.853787,
+      "end": 230.704989,
+      "spoken_phrase": "بعد ربط المصادر المسموح بيها ومراجعة جودتها،",
+      "raw_recognition": "بعد ربط المصادر المسموح بها ومراجعت جودتها",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C098",
+      "scene_id": "S08",
+      "start": 231.163197,
+      "end": 233.200726,
+      "spoken_phrase": "ممكن نعرض Executive Brief بسيط،",
+      "raw_recognition": "ممكن نارد إجاكسيف بريف بسيط",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C099",
+      "scene_id": "S08",
+      "start": 233.365805,
+      "end": 234.471723,
+      "spoken_phrase": "يوضح الاتجاهات،",
+      "raw_recognition": "يوضح للتجاهات",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C100",
+      "scene_id": "S08",
+      "start": 234.64619,
+      "end": 236.574966,
+      "spoken_phrase": "ويشير للمشاكل اللي محتاجة متابعة،",
+      "raw_recognition": "ويشير للمشاكل المحتاجة متبعة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C101",
+      "scene_id": "S08",
+      "start": 237.080522,
+      "end": 239.773129,
+      "spoken_phrase": "ويخلّي المدير يقدر يرجع لمصدر كل رقم.",
+      "raw_recognition": "ويخلي المدير يقدر يرجع لمصدر كل رقم",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C102",
+      "scene_id": "S08",
+      "start": 240.282744,
+      "end": 242.631769,
+      "spoken_phrase": "هنا مش الهدف Dashboard فيها أرقام كتير.",
+      "raw_recognition": "هنا مش الحدف داشبوردز فيها أرقام كتير",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C103",
+      "scene_id": "S08",
+      "start": 243.137687,
+      "end": 245.324286,
+      "spoken_phrase": "الهدف إن المدير يعرف إيه اللي اتغير،",
+      "raw_recognition": "الهدف ان المدير يعرف اي لتغير",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C104",
+      "scene_id": "S08",
+      "start": 245.63161,
+      "end": 246.807415,
+      "spoken_phrase": "وليه ممكن يكون مهم،",
+      "raw_recognition": "ولي ممكن يكون مهم",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C105",
+      "scene_id": "S08",
+      "start": 247.26263,
+      "end": 249.111927,
+      "spoken_phrase": "وإيه السؤال اللي محتاج يسأله بعد كده.",
+      "raw_recognition": "وإسهال المحتاجي يسأل بعدك",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C106",
+      "scene_id": "S08",
+      "start": 249.529546,
+      "end": 250.825692,
+      "spoken_phrase": "وأي نتائج على الشاشة،",
+      "raw_recognition": "و أي نتائق على الشاشة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C107",
+      "scene_id": "S08",
+      "start": 251.001429,
+      "end": 251.950952,
+      "spoken_phrase": "لازم تكون Demo،",
+      "raw_recognition": "لازم تكون دمو",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C108",
+      "scene_id": "S08",
+      "start": 252.165057,
+      "end": 253.462971,
+      "spoken_phrase": "أو بيانات متحقق منها.",
+      "raw_recognition": "أو بيانات متحقق منها",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C109",
+      "scene_id": "S09",
+      "start": 253.968753,
+      "end": 255.950816,
+      "spoken_phrase": "كل الأمثلة دي بتوصلنا لفكرة واحدة:",
+      "raw_recognition": "كل الأمسيلا دي بتوصن الفكرة واحدة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C110",
+      "scene_id": "S09",
+      "start": 256.579683,
+      "end": 257.812744,
+      "spoken_phrase": "تجربة أذكى للعميل،",
+      "raw_recognition": "تجرب أسكل العميل",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C111",
+      "scene_id": "S09",
+      "start": 258.084422,
+      "end": 259.719274,
+      "spoken_phrase": "وأدوات أفضل للموظفين،",
+      "raw_recognition": "وعدوات أفضل للمواصفين",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C112",
+      "scene_id": "S09",
+      "start": 259.947823,
+      "end": 261.371315,
+      "spoken_phrase": "ومعلومات أوضح للإدارة.",
+      "raw_recognition": "ومعلومات أوضح للإدار",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C113",
+      "scene_id": "S09",
+      "start": 261.836644,
+      "end": 264.6178,
+      "spoken_phrase": "لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.",
+      "raw_recognition": "لكن مش معنا كده اننا هننفس كل حاجة مر واحد",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C114",
+      "scene_id": "S09",
+      "start": 265.229274,
+      "end": 268.194308,
+      "spoken_phrase": "هنبدأ بمراجعة أنظمة Concrete وإمكانياتها الموجودة،",
+      "raw_recognition": "نبدأ بمرجعت أنظمة كونكريت وإمكانياتها الموجودة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C115",
+      "scene_id": "S09",
+      "start": 268.546644,
+      "end": 270.645646,
+      "spoken_phrase": "ونحدد أعلى فرص من حيث القيمة،",
+      "raw_recognition": "ونحدد أعلى فرص من حيث القيمة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C116",
+      "scene_id": "S09",
+      "start": 270.830612,
+      "end": 271.717052,
+      "spoken_phrase": "وسهولة التجربة.",
+      "raw_recognition": "أسهولي ستة غروبة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C117",
+      "scene_id": "S09",
+      "start": 272.15551,
+      "end": 272.654467,
+      "spoken_phrase": "وبعدها،",
+      "raw_recognition": "وبعده",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C118",
+      "scene_id": "S09",
+      "start": 272.825918,
+      "end": 273.91551,
+      "spoken_phrase": "نختار Pilot صغير،",
+      "raw_recognition": "نختار طريقة صغير",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C119",
+      "scene_id": "S09",
+      "start": 274.325533,
+      "end": 275.050045,
+      "spoken_phrase": "نقيس نتيجته،",
+      "raw_recognition": "نئس نتكتو",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C120",
+      "scene_id": "S09",
+      "start": 275.29424,
+      "end": 276.694354,
+      "spoken_phrase": "ونبني عليه الخطوة اللي بعدها.",
+      "raw_recognition": "ونبني علي الخطوة اللي بعده",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C121",
+      "scene_id": "S09",
+      "start": 277.183424,
+      "end": 280.522721,
+      "spoken_phrase": "دي الرؤية اللي GRINDCTRL بتقترح تناقشها مع Concrete:",
+      "raw_recognition": "هذه الرؤية اللي \"Griand Control\" بتقترح تنقشها مع \"Concrete\"",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C122",
+      "scene_id": "S09",
+      "start": 281.042925,
+      "end": 282.89093,
+      "spoken_phrase": "حلول عملية للذكاء الاصطناعي،",
+      "raw_recognition": "حلول عملية للزكاء للصطناعي",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C123",
+      "scene_id": "S09",
+      "start": 283.145011,
+      "end": 284.002766,
+      "spoken_phrase": "بتخدم البراند،",
+      "raw_recognition": "بتخدم البراند",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    },
+    {
+      "id": "C124",
+      "scene_id": "S09",
+      "start": 284.255896,
+      "end": 285.66229,
+      "spoken_phrase": "وبتتحسن خطوة بخطوة.",
+      "raw_recognition": "وبتحسن خطوة بخطوة",
+      "timing_basis": "Measured source phrase; script-matched text; not certified individual-word alignment"
+    }
+  ],
+  "subphrase_cues": [],
+  "method": {
+    "timing": "Actual source waveform phrase onsets/ends (-35dB, 150ms silence segmentation), local Whisper-small phrase/context recognition matched against the supplied continuous script. Not equal scene lengths or guessed word interpolation.",
+    "captions": "Script-matched ASR-assisted Arabic text, normalized vendor spelling. Human listening/phonetic verification not available; mixed terms and negative wording are not certified verbatim.",
+    "audio": "One uncut continuous supplied master from time zero. No synthesis, slicing, tempo change, silence insertion, normalization or music."
+  },
+  "external_listening_performed": false,
+  "visual_events": [
+    {
+      "scene": "S01",
+      "at": 9.270091,
+      "cue_id": "C004",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لكن دي مجرد بداية.",
+      "objects": [
+        "S05_storyboard",
+        "rect",
+        "Customer → associate · Illustrative concept",
+        "rect"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 11.331587,
+      "cue_id": "C005",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "النهارده عايزين نتخيل مع بعض فرص أكبر للذكاء الاصطناعي جوه Concrete:",
+      "objects": [
+        "Across the Concrete experience"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 16.600612,
+      "cue_id": "C006",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "في الأونلاين،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Blazer",
+        "rect",
+        "S02_storyboard",
+        "Shirt",
+        "Outfit proposal",
+        "icon-case",
+        "Online store"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 17.482222,
+      "cue_id": "C007",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والفروع،",
+      "objects": [
+        "Occasion and\npreferences in view.",
+        "icon-actor",
+        "Stores"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 18.272472,
+      "cue_id": "C008",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والمبيعات، والماركتنج، والإدارة.",
+      "objects": [
+        "icon-file",
+        "Human review\nacross teams",
+        "icon-settings",
+        "Teams",
+        "Marketing · Operations · Management"
+      ]
+    },
+    {
+      "scene": "S01",
+      "at": 23.515601,
+      "cue_id": "C010",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بنتكلم عن حلول مقترحة،",
+      "objects": [
+        "outline"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 38.506961,
+      "cue_id": "C016",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "يقول للـAI Stylist هو رايح فين،",
+      "objects": [
+        "icon-speech",
+        "“An evening occasion. Neutral tones.\nA complete smart-casual look.”"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 43.813401,
+      "cue_id": "C019",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "المساعد يقترح عليه،",
+      "objects": [
+        "Outfit proposal · Eligible demo items"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 45.357415,
+      "cue_id": "C020",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بليزر،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Blazer"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 45.980295,
+      "cue_id": "C021",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وشيرت،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Shirt"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 46.607551,
+      "cue_id": "C022",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وبنطلون،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Trousers"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 47.3978,
+      "cue_id": "C023",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وجزمة بشكل متناسق،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Shoes"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 51.254558,
+      "cue_id": "C025",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والعميل يقدر يغير الاختيارات،",
+      "objects": [
+        "rect",
+        "S05_storyboard",
+        "Knit",
+        "rect",
+        "icon-speech",
+        "Refine the look: “Make it less formal.”",
+        "outline"
+      ]
+    },
+    {
+      "scene": "S02",
+      "at": 53.410544,
+      "cue_id": "C026",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو يحجز تجربة في الفرع لو الخدمة متاحة.",
+      "objects": [
+        "rect",
+        "icon-actor",
+        "Request store visit · If service supported",
+        "No booking made"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 64.859683,
+      "cue_id": "C029",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "العميل يسأل بشكل طبيعي عن شيرت لمناسبة معينة،",
+      "objects": [
+        "rect",
+        "icon-search",
+        "A shirt for a smart-casual evening."
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 72.393946,
+      "cue_id": "C032",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "المساعد يرشح اختيارات،",
+      "objects": [
+        "Catalog options · Fictional demo records",
+        "rect",
+        "S02_storyboard",
+        "Shirt",
+        "rect",
+        "S02_storyboard",
+        "Blazer",
+        "rect",
+        "S02_storyboard",
+        "Trousers"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 74.3078,
+      "cue_id": "C033",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويشرح جدول المقاسات،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Shirt",
+        "Size-chart guidance",
+        "Compare the product’s measurements.",
+        "line",
+        "icon-link",
+        "Chest measurement",
+        "Source required",
+        "icon-quality",
+        "Garment length",
+        "Source required"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 76.014444,
+      "cue_id": "C034",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويعرض الـAvailability لما تكون متوصلة ببيانات ستوك،",
+      "objects": [
+        "line",
+        "Availability",
+        "icon-link",
+        "Current stock\nsource required"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 80.797755,
+      "cue_id": "C036",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ولو المعلومات ناقصة،",
+      "objects": [
+        "Not available\nin this demo"
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 82.014127,
+      "cue_id": "C037",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "يقول إنها غير متاحة بدل ما يخمن.",
+      "objects": [
+        "No stock connection\nor delivery promise."
+      ]
+    },
+    {
+      "scene": "S03",
+      "at": 89.880363,
+      "cue_id": "C040",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "من غير وعود غلط عن المقاسات أو المخزون.",
+      "objects": [
+        "No fit certainty from incomplete data."
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 94.989048,
+      "cue_id": "C042",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "الإيجنت بيستقبل Call على Genesys،",
+      "objects": [
+        "Incoming call",
+        "+20 10 •••• 4821"
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 97.245306,
+      "cue_id": "C043",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وبيكون محتاج يفهم العميل بسرعة.",
+      "objects": [
+        "Customer context",
+        "Ahmed M. (DEMO)",
+        "Icons Club · ELITE",
+        "Prior human note",
+        "Branch review\nrequested. Completion\nnot confirmed.",
+        "Source: DEMO-1008\nAgent A · Original note"
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 99.801655,
+      "cue_id": "C044",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "هنا ممكن الـAI Copilot يساعده بمعلومات من المصادر المصرح بيها،",
+      "objects": [
+        "AI guidance · Draft",
+        "Approved company policy source required."
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 104.54458,
+      "cue_id": "C045",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويقترح إجابة من سياسة الشركة،",
+      "objects": [
+        "rect",
+        "Check the original case.\nExplain the recorded review status.\nConfirm the next authorized step.",
+        "icon-file",
+        "Source: DEMO policy excerpt"
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 106.806236,
+      "cue_id": "C046",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو يجهز مسودة Call Summary بعد المكالمة.",
+      "objects": [
+        "AI call summary · DRAFT",
+        "rect",
+        "Customer requested an exchange update.\nBranch review is recorded as requested.\nCompletion remains unconfirmed."
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 109.943288,
+      "cue_id": "C047",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "المهم إن الموظف يراجع الاقتراح قبل استخدامه أو حفظه.",
+      "objects": [
+        "rect",
+        "icon-pen",
+        "Human edit / review",
+        "rect",
+        "icon-check",
+        "Approve before saving",
+        "outline"
+      ]
+    },
+    {
+      "scene": "S04",
+      "at": 114.361746,
+      "cue_id": "C048",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والـAI ما يوعدش العميل باستبدال أو استرجاع أو ميعاد تسليم،",
+      "objects": [
+        "Demo draft · No automatic commitment or decision"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 128.918367,
+      "cue_id": "C054",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لما العميل يوافق على استخدام بياناته،",
+      "objects": [
+        "icon-lock",
+        "Consent recorded (DEMO)"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 131.232336,
+      "cue_id": "C055",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "موظف المبيعات يقدر يشوف تفضيلاته ومشترياته المتاحة،",
+      "objects": [
+        "Ahmed M. · Neutral tailoring",
+        "Preference / purchase sources require permission."
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 135.295034,
+      "cue_id": "C056",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وكمان عضويته في Icons Club:",
+      "objects": [
+        "Trusted membership source required · Illustrative tier"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 137.443333,
+      "cue_id": "C057",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "Lifestyle،",
+      "objects": [
+        "LIFESTYLE"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 138.268889,
+      "cue_id": "C058",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو Prestige،",
+      "objects": [
+        "PRESTIGE"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 139.159841,
+      "cue_id": "C059",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "أو Elite.",
+      "objects": [
+        "ELITE",
+        "outline"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 142.226803,
+      "cue_id": "C061",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "المساعد يقترح قطع تكمل اختياراته،",
+      "objects": [
+        "rect",
+        "S02_storyboard",
+        "Blazer",
+        "rect",
+        "S02_storyboard",
+        "Shirt",
+        "Suggested pieces\nfor this preference"
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 147.470227,
+      "cue_id": "C063",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "مش معنى إن العميل Elite إننا نفترض مزايا مش مؤكدة.",
+      "objects": [
+        "Benefits must be\nvalidated against\nprogram rules."
+      ]
+    },
+    {
+      "scene": "S05",
+      "at": 151.42068,
+      "cue_id": "C064",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "كل اقتراح يفضل مرتبط بسياسات Concrete،",
+      "objects": [
+        "No entitlement inferred.\nCatalog and role checks apply."
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 160.050431,
+      "cue_id": "C068",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "تخيلوا مدير فروع بيشوف مقاسات مطلوبة في فرع،",
+      "objects": [
+        "Branch A · Demo",
+        "rect",
+        "Size requested\nAvailability unresolved"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 163.148934,
+      "cue_id": "C069",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بينما موجودة بكميات أكبر في فرع تاني.",
+      "objects": [
+        "Branch B · Demo",
+        "rect",
+        "Candidate surplus\nSource record to confirm"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 166.268549,
+      "cue_id": "C070",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "باستخدام بيانات المبيعات والستوك،",
+      "objects": [
+        "icon-link",
+        "Compare SKU, size, branch, timing and allowed stock."
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 168.342109,
+      "cue_id": "C071",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "نقدر نقترح نقل كمية،",
+      "objects": [
+        "line"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 174.438322,
+      "cue_id": "C074",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "الاقتراح يظهر ومعاه سببه،",
+      "objects": [
+        "rect",
+        "Proposed reallocation · Manager review required\nReason: a size request and a possible source at another branch."
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 176.659728,
+      "cue_id": "C075",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والمسؤول هو اللي يراجعه ويوافق عليه.",
+      "objects": [
+        "rect",
+        "icon-actor",
+        "Review proposal",
+        "rect",
+        "icon-check",
+        "Approve",
+        "rect",
+        "icon-end",
+        "Reject",
+        "outline",
+        "icon-pointer"
+      ]
+    },
+    {
+      "scene": "S06",
+      "at": 183.675624,
+      "cue_id": "C077",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "بشرط جودة البيانات،",
+      "objects": [
+        "No transfer executed · Data quality and backtesting required"
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 193.072268,
+      "cue_id": "C081",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "يساعده يبدأ من فكرة كامبين،",
+      "objects": [
+        "Brief: seasonal tailoring in neutral tones"
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 195.250884,
+      "cue_id": "C082",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويطلع منها اقتراحات للـCopy، والـVisual Concepts، ونسخ مناسبة للسوشيال ميديا والإيميل.",
+      "objects": [
+        "rect",
+        "rect",
+        "S02_storyboard",
+        "Your next\noccasion",
+        "line",
+        "DRAFT · Demo creative",
+        "Modern occasion",
+        "Tailoring for your next occasion.",
+        "rect",
+        "rect",
+        "S02_storyboard",
+        "Style in\nmotion",
+        "line",
+        "DRAFT · Demo creative",
+        "City layers",
+        "A considered look for the everyday.",
+        "rect",
+        "rect",
+        "S02_storyboard",
+        "rect",
+        "S02_storyboard",
+        "Thoughtful combinations",
+        "DRAFT · Demo creative",
+        "Everyday refinement",
+        "Simple pieces. Thoughtful combinations."
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 201.331565,
+      "cue_id": "C083",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وكل ده باستخدام الـBrand Guidelines والصور والمنتجات المعتمدة.",
+      "objects": [
+        "DEMO collection · Production assets and rights must be approved"
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 208.514762,
+      "cue_id": "C086",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "والمساعد يجهز له اتجاهات إبداعية مختلفة للمراجعة.",
+      "objects": [
+        "outline"
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 212.294535,
+      "cue_id": "C087",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لكن القرار النهائي والنشر،",
+      "objects": [
+        "rect",
+        "Human brand review → approval before publication"
+      ]
+    },
+    {
+      "scene": "S07",
+      "at": 214.150159,
+      "cue_id": "C088",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "يفضلوا عند فريق Concrete،",
+      "objects": [
+        "outline"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 224.216531,
+      "cue_id": "C093",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "مبيعات،",
+      "objects": [
+        "icon-invoice",
+        "Sales",
+        "line"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 225.065646,
+      "cue_id": "C094",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وستوك،",
+      "objects": [
+        "icon-case",
+        "Inventory",
+        "line"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 225.814739,
+      "cue_id": "C095",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وخدمة عملاء،",
+      "objects": [
+        "icon-call",
+        "Customer service",
+        "line"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 226.751927,
+      "cue_id": "C096",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وسلوك شراء.",
+      "objects": [
+        "icon-lock",
+        "Customer permissions",
+        "line"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 231.163197,
+      "cue_id": "C098",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ممكن نعرض Executive Brief بسيط،",
+      "objects": [
+        "Executive brief · Demo"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 233.365805,
+      "cue_id": "C099",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "يوضح الاتجاهات،",
+      "objects": [
+        "rect"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 234.64619,
+      "cue_id": "C100",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويشير للمشاكل اللي محتاجة متابعة،",
+      "objects": [
+        "A size request needs follow-up.\nCheck branch stock and the last\nrecorded service interaction."
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 237.080522,
+      "cue_id": "C101",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ويخلّي المدير يقدر يرجع لمصدر كل رقم.",
+      "objects": [
+        "icon-link",
+        "DEMO-STOCK-A-M · DEMO-CALL-1008\nOpen source records before acting.",
+        "outline"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 247.26263,
+      "cue_id": "C105",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وإيه السؤال اللي محتاج يسأله بعد كده.",
+      "objects": [
+        "Next question: would an authorized transfer help?"
+      ]
+    },
+    {
+      "scene": "S08",
+      "at": 251.001429,
+      "cue_id": "C107",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لازم تكون Demo،",
+      "objects": [
+        "outline"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 256.579683,
+      "cue_id": "C110",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "تجربة أذكى للعميل،",
+      "objects": [
+        "icon-actor",
+        "Customer"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 258.084422,
+      "cue_id": "C111",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "وأدوات أفضل للموظفين،",
+      "objects": [
+        "icon-speech",
+        "Teams"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 259.947823,
+      "cue_id": "C112",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ومعلومات أوضح للإدارة.",
+      "objects": [
+        "icon-settings",
+        "Management"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 261.836644,
+      "cue_id": "C113",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "لكن مش معنى كده إننا هننفذ كل حاجة مرة واحدة.",
+      "objects": [
+        "line"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 265.229274,
+      "cue_id": "C114",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "هنبدأ بمراجعة أنظمة Concrete وإمكانياتها الموجودة،",
+      "objects": [
+        "Inspect existing systems\nand native capabilities first."
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 268.546644,
+      "cue_id": "C115",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ونحدد أعلى فرص من حيث القيمة،",
+      "objects": [
+        "Prioritize by value and feasibility."
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 272.825918,
+      "cue_id": "C118",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "نختار Pilot صغير،",
+      "objects": [
+        "ellipse",
+        "icon-quality",
+        "Authorized, scoped pilot"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 274.325533,
+      "cue_id": "C119",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "نقيس نتيجته،",
+      "objects": [
+        "ellipse",
+        "icon-check",
+        "Measure the actual result"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 275.29424,
+      "cue_id": "C120",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "ونبني عليه الخطوة اللي بعدها.",
+      "objects": [
+        "ellipse",
+        "icon-link",
+        "Expand from evidence"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 277.183424,
+      "cue_id": "C121",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "دي الرؤية اللي GRINDCTRL بتقترح تناقشها مع Concrete:",
+      "objects": [
+        "GRINDCTRL × Concrete · Proposed collaboration"
+      ]
+    },
+    {
+      "scene": "S09",
+      "at": 281.042925,
+      "cue_id": "C122",
+      "speech_anchor": "start",
+      "anchor_difference_seconds": 0.0,
+      "phrase_trigger": "حلول عملية للذكاء الاصطناعي،",
+      "objects": [
+        "outline"
+      ]
+    }
+  ],
+  "narration_file": "Part04_FINAL_VOICEOVER.mp3",
+  "narration_files_expected": 1,
+  "narration_split_allowed": false,
+  "scenes": [
+    {
+      "scene_id": "S01",
+      "start_sec": 0,
+      "end_sec": 29.582857,
+      "phrase_trigger": "في الفيديوهات اللي فاتت، شفنا إزاي GRINDCTRL ممكن تساعد Concrete تطور تجربة خدمة العملاء،"
+    },
+    {
+      "scene_id": "S02",
+      "start_sec": 29.582857,
+      "end_sec": 61.463039,
+      "phrase_trigger": "تخيلوا عميل داخل على متجر Concrete الأونلاين،"
+    },
+    {
+      "scene_id": "S03",
+      "start_sec": 61.463039,
+      "end_sec": 93.034535,
+      "phrase_trigger": "ونفس التجربة ممكن تكمل جوه الأونلاين ستور."
+    },
+    {
+      "scene_id": "S04",
+      "start_sec": 93.034535,
+      "end_sec": 125.673628,
+      "phrase_trigger": "نرجع بقى للـContact Center."
+    },
+    {
+      "scene_id": "S05",
+      "start_sec": 125.673628,
+      "end_sec": 157.510113,
+      "phrase_trigger": "وفي الفروع،"
+    },
+    {
+      "scene_id": "S06",
+      "start_sec": 157.510113,
+      "end_sec": 189.095805,
+      "phrase_trigger": "بس الفرص مش كلها قدام العميل."
+    },
+    {
+      "scene_id": "S07",
+      "start_sec": 189.095805,
+      "end_sec": 220.180703,
+      "phrase_trigger": "أما فريق الماركتنج،"
+    },
+    {
+      "scene_id": "S08",
+      "start_sec": 220.180703,
+      "end_sec": 253.968753,
+      "phrase_trigger": "ولما نبص من ناحية الإدارة،"
+    },
+    {
+      "scene_id": "S09",
+      "start_sec": 253.968753,
+      "end_sec": 285.92,
+      "phrase_trigger": "كل الأمثلة دي بتوصلنا لفكرة واحدة:"
+    }
+  ]
+}
