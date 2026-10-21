@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import type { PanelCopy } from '../i18n';
 import type { PageProduct } from './page-product';
 import type { MessengerLocale } from '@/lib/messenger/types';
@@ -30,8 +31,6 @@ export function ChatHome({
   onQuickAction: (message: string, id: PanelCopy['quickActions'][number]['id']) => void;
   onTryOn: () => void;
 }) {
-  const details = product ? productLine(product, locale) : '';
-
   return (
     <div className="space-y-5">
       {product && (
@@ -44,7 +43,7 @@ export function ChatHome({
           <div className="min-w-0 flex-1">
             <p className="text-[11px] text-muted-foreground">{t.youreViewing}</p>
             <p dir="auto" className="truncate text-sm font-semibold">{product.title}</p>
-            {details && <p className="truncate text-xs text-muted-foreground">{details}</p>}
+            <ProductLine product={product} locale={locale} className="truncate text-xs text-muted-foreground" />
           </div>
           {product.tryOn && (
             <button
@@ -83,9 +82,35 @@ export function ChatHome({
 }
 
 /** "Black · M · EGP 3,250", as the boards write a piece in the chat. */
-export function productLine(product: PageProduct, locale: MessengerLocale): string {
+function productLineParts(product: PageProduct, locale: MessengerLocale): string[] {
   const variant = product.variantTitle && product.variantTitle !== 'Default Title' ? product.variantTitle.split(' / ') : [];
   const price =
     product.priceMinor !== null && product.currency ? formatStorePrice(product.priceMinor, product.currency, locale) : '';
-  return [...variant, price].filter(Boolean).join(' · ');
+  return [...variant, price].filter(Boolean);
+}
+
+/** The line under a piece's title. Each part is isolated, so a Latin
+ *  variant and a price keep their own order in the Arabic panel instead of
+ *  running together ("$Black · S · 79 US"). */
+export function ProductLine({
+  product,
+  locale,
+  className,
+}: {
+  product: PageProduct;
+  locale: MessengerLocale;
+  className?: string;
+}) {
+  const parts = productLineParts(product, locale);
+  if (parts.length === 0) return null;
+  return (
+    <p className={className}>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          {i > 0 && ' · '}
+          <bdi>{part}</bdi>
+        </Fragment>
+      ))}
+    </p>
+  );
 }

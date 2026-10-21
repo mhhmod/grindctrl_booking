@@ -15,7 +15,7 @@ import {
   mergeMessages,
   type PanelTeam,
 } from './panel-state';
-import { ChatHome, productLine } from './v16/chat-home';
+import { ChatHome, ProductLine } from './v16/chat-home';
 import { OrderCardView, OrderLookupForm } from './v16/order-lookup';
 import type { OrderCard } from '@/lib/messenger/order-card';
 import { parsePageProduct, type PageProduct } from './v16/page-product';
@@ -893,7 +893,7 @@ export function MessengerPanel({
             )}
             <div className="min-w-0 flex-1">
               <p dir="auto" className="truncate text-sm font-semibold leading-tight">{pageProduct.title}</p>
-              <p className="truncate text-[11px] leading-tight text-muted-foreground">{productLine(pageProduct, locale)}</p>
+              <ProductLine product={pageProduct} locale={locale} className="truncate text-[11px] leading-tight text-muted-foreground" />
             </div>
           </>
         ) : (
