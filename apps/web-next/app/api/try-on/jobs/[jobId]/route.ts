@@ -27,6 +27,7 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
     productId: job.productId,
     message: job.message,
     meta: job.meta,
+    ...(job.stage ? { stage: job.stage } : {}),
   };
 }
 

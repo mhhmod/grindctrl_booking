@@ -3,6 +3,10 @@
 /** Job status lifecycle */
 export type TryOnJobStatus = 'queued' | 'processing' | 'completed' | 'failed';
 
+/** Where a look being made stands (contract N38): the look is reserved,
+ *  the provider is making it, or it is being saved. */
+export type TryOnStage = 'received' | 'making' | 'finishing';
+
 /** Runtime mode (env-driven) */
 export type TryOnMode = 'mock' | 'live';
 
@@ -75,6 +79,8 @@ export interface TryOnJob {
   requestKey?: string;
   modelKey?: string;
   status: TryOnJobStatus;
+  /** Only while the look is being made. */
+  stage?: TryOnStage;
   resultImageUrl?: string;
   message?: string;
   createdAt: string;
@@ -110,6 +116,8 @@ export interface TryOnJobApiResponse {
     | 'test_looks_cap';
   jobId?: string;
   status?: TryOnJobStatus;
+  /** While queued or processing, when the look reports it (N38). */
+  stage?: TryOnStage;
   resultImageUrl?: string;
   productId?: string;
   message?: string;

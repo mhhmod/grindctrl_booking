@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { keepTryOnResultInPage, releaseTryOnResult } from './client';
+import { keepTryOnResultInPage, pollTryOnJob, releaseTryOnResult } from './client';
 
 /* Phase zero item 2: once this page holds the look, the server deletes its
    copy; a look this page could not read keeps its server copy until expiry. */
@@ -66,5 +66,57 @@ describe('keepTryOnResultInPage', () => {
     fetchMock.mockRejectedValue(new TypeError('offline'));
     expect(() => releaseTryOnResult('tryon_4', 'signed-session')).not.toThrow();
     await Promise.resolve();
+  });
+});
+
+/* Contract N38: a look made after the answer is polled for the whole
+   provider run, and each answer on the way reports its stage. */
+describe('pollTryOnJob for a look made after the answer', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  const answer = (body: Record<string, unknown>) =>
+    new Response(JSON.stringify({ ok: true, jobId: 'tryon_1', ...body }), { headers: { 'content-type': 'application/json' } });
+
+  it('reports each stage, then hands back the finished look', async () => {
+    fetchMock
+      .mockResolvedValueOnce(answer({ status: 'processing', stage: 'making' }))
+      .mockResolvedValueOnce(answer({ status: 'processing', stage: 'finishing' }))
+      .mockResolvedValueOnce(answer({ status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' }));
+    const stages: unknown[] = [];
+
+    const polled = pollTryOnJob('tryon_1', 'signed-session', 'Something went wrong', undefined, {
+      timeoutMs: 5 * 60_000,
+      onProgress: (data) => stages.push(data.stage),
+    });
+    await vi.runAllTimersAsync();
+
+    await expect(polled).resolves.toMatchObject({ status: 'completed' });
+    expect(stages).toEqual(['making', 'finishing']);
+  });
+
+  it('keeps polling past two minutes when given the longer window', async () => {
+    fetchMock.mockImplementation(async () => answer({ status: 'processing', stage: 'making' }));
+    let settled = false;
+    const polled = pollTryOnJob('tryon_1', 'signed-session', 'Something went wrong', undefined, { timeoutMs: 5 * 60_000 })
+      .catch((error: Error) => error)
+      .finally(() => {
+        settled = true;
+      });
+
+    await vi.advanceTimersByTimeAsync(3 * 60_000);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(3 * 60_000);
+    await expect(polled).resolves.toBeInstanceOf(Error);
   });
 });

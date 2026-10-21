@@ -7,7 +7,9 @@ import type {
   TryOnJob,
   TryOnJobApiResponse,
   TryOnSession,
+  TryOnStage,
 } from '@/lib/try-on/types';
+import { TRYON_ASYNC_POLL_TIMEOUT_MS } from '@/lib/try-on/poll-policy';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -61,6 +63,8 @@ export function useTryOnFlow({
   const [isSlowGeneration, setIsSlowGeneration] = useState(false);
   /** When the shopper tapped to make this look, for the sheet's countdown. */
   const [generationStartedAt, setGenerationStartedAt] = useState<number | null>(null);
+  /** The server's own stage, for a store whose looks are made after the answer (N38). */
+  const [serverStage, setServerStage] = useState<TryOnStage | null>(null);
   /** How long the look took, from the tap to the look in this page. */
   const [generationSeconds, setGenerationSeconds] = useState<number | null>(null);
   const [job, setJob] = useState<TryOnJob | null>(null);
@@ -161,6 +165,7 @@ export function useTryOnFlow({
     setStep('generating');
     setGenerationStartedAt(startedAt);
     setGenerationSeconds(null);
+    setServerStage(null);
     setGenerationPhase('session-requested');
     setIsSlowGeneration(false);
     setError(null);
@@ -215,7 +220,17 @@ export function useTryOnFlow({
       const genRes = await generationRequest;
       let genData: TryOnJobApiResponse = await genRes.json();
 
-      if (
+      if (genRes.status === 202 && genData.ok && genData.jobId) {
+        /* The look is made after the answer (N38): follow its stages for
+           as long as the server may take. */
+        setServerStage(genData.stage ?? 'received');
+        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, undefined, {
+          timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
+          onProgress: (progress) => {
+            if (progress.stage) setServerStage(progress.stage);
+          },
+        });
+      } else if (
         genData.jobId &&
         ((genData.ok && (genData.status === 'queued' || genData.status === 'processing')) ||
           genData.code === 'TRYON_FINALIZATION_PENDING')
@@ -292,6 +307,7 @@ export function useTryOnFlow({
     setIsSlowGeneration(false);
     setGenerationStartedAt(null);
     setGenerationSeconds(null);
+    setServerStage(null);
     setStep('upload');
   }, []);
 
@@ -302,6 +318,7 @@ export function useTryOnFlow({
     isSlowGeneration,
     generationStartedAt,
     generationSeconds,
+    serverStage,
     job,
     error,
     unavailable,

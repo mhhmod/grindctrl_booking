@@ -77,6 +77,31 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
     expect(body.data).toBeUndefined();
   });
 
+  it('reports the stage of a look still being made (N38)', async () => {
+    const session = signTryOnSession(SECRET, {
+      purpose: 'public-demo',
+      productId: 'premium-ringer-tee',
+    });
+    storeJob({
+      jobId: 'tryon_making',
+      sessionId: session.claims.sessionId,
+      productId: 'premium-ringer-tee',
+      shop: null,
+      status: 'processing',
+      stage: 'making',
+      createdAt: new Date().toISOString(),
+      meta: { runtime: 'live', provider: 'p', costEstimate: null },
+    });
+    const response = await GET(new NextRequest('http://localhost/api/try-on/jobs/tryon_making', {
+      headers: { authorization: `Bearer ${session.token}` },
+    }), {
+      params: Promise.resolve({ jobId: 'tryon_making' }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ ok: true, status: 'processing', stage: 'making' });
+  });
+
   it('does not expose a job to a different valid session', async () => {
     const owner = signTryOnSession(SECRET, {
       purpose: 'public-demo',

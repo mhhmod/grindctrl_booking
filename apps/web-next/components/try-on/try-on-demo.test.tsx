@@ -230,6 +230,67 @@ describe('TryOnDemo storefront session lifecycle', () => {
     }
   });
 
+  it('follows a look made after the answer (202) to its result', async () => {
+    const polls: string[] = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if (url.endsWith('/api/try-on/session')) {
+        return jsonResponse({
+          ok: true,
+          data: {
+            sessionId: 'signed-session-token',
+            productId: 'premium-ringer-tee',
+            shop: 'demo.myshopify.com',
+            variantId: '123',
+            garmentUrl: 'https://cdn.shopify.com/s/files/garment.png',
+            nonce: STOREFRONT_NONCE,
+            createdAt: new Date().toISOString(),
+            expiresAt: new Date(Date.now() + 600_000).toISOString(),
+          },
+        });
+      }
+      if (url.endsWith('/api/try-on/attempt')) {
+        return jsonResponse({ ok: true, data: { attemptId: 'signed-async-attempt', expiresAt: new Date(Date.now() + 600_000).toISOString() } });
+      }
+      if (url.endsWith('/api/try-on/generate')) {
+        return jsonResponse(
+          {
+            ok: true,
+            jobId: 'tryon_async',
+            status: 'processing',
+            stage: 'received',
+            productId: 'premium-ringer-tee',
+            meta: { runtime: 'live', provider: 'test', costEstimate: null },
+          },
+          202,
+        );
+      }
+      if (url.endsWith('/api/try-on/jobs/tryon_async')) {
+        polls.push(url);
+        const done = polls.length > 1;
+        return jsonResponse({
+          ok: true,
+          jobId: 'tryon_async',
+          status: done ? 'completed' : 'processing',
+          ...(done ? { resultImageUrl: 'data:image/png;base64,QVNZTkM=' } : { stage: 'making' }),
+          productId: 'premium-ringer-tee',
+          meta: { runtime: 'live', provider: 'test', costEstimate: 0.01 },
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    renderStorefront();
+    await selectPhoto('async.png');
+    const generateButton = screen.getByRole('button', { name: 'Generate Try-On Preview' });
+    await waitFor(() => expect(generateButton).toBeEnabled());
+    fireEvent.click(generateButton);
+
+    expect(await screen.findByAltText('Try-on preview of Premium tee', {}, { timeout: 3_000 })).toBeVisible();
+    expect(polls).toHaveLength(2);
+  });
+
   it('honors Retry-After and continues polling instead of failing the generation', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(Date.parse('2026-09-01T00:00:00.000Z'));

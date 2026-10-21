@@ -34,4 +34,22 @@ describe('making the look', () => {
     expect(makingProgress({ elapsedMs: -500, estimateSeconds: 10, stepCount: 1 })).toEqual({ stepIndex: 0, secondsLeft: 10, fraction: 0 });
     expect(makingProgress({ elapsedMs: 9_000, estimateSeconds: 10, stepCount: 1 }).stepIndex).toBe(0);
   });
+
+  it('follows real stages when the store reports them (N38)', () => {
+    const at = (s: number, stage: 'received' | 'making' | 'finishing', steps = 3) =>
+      makingProgress({ elapsedMs: s * 1000, estimateSeconds: 12, stepCount: steps, stage }).stepIndex;
+    // Received holds the first step however long it takes.
+    expect(at(9, 'received')).toBe(0);
+    // Making starts on the second step and moves on with the estimate.
+    expect(at(0, 'making')).toBe(1);
+    expect(at(9, 'making')).toBe(2);
+    expect(at(40, 'making')).toBe(2);
+    // Finishing shows the last step at once.
+    expect(at(1, 'finishing')).toBe(2);
+    // With five steps, making moves through the rest with time.
+    expect([0, 5, 8, 30].map((s) => at(s, 'making', 5))).toEqual([1, 2, 3, 4]);
+    expect(at(0, 'finishing', 5)).toBe(4);
+    // One step is always that step.
+    expect(at(5, 'making', 1)).toBe(0);
+  });
 });

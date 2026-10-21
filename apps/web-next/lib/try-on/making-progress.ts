@@ -1,9 +1,15 @@
 /* Where the making-the-look screen stands (02-try-on.md, TryOn-Waiting).
-   A job reports only processing, then completed or failed, so the steps
-   cannot follow real server stages yet (item 16, contract N38). They run
-   in order over the store's own estimate, and the last one holds until
-   the look arrives. The seconds count down from that estimate and are
-   dropped, never shown as zero or less, once it runs out. */
+   Without real stages the steps run in order over the store's own
+   estimate, and the last one holds until the look arrives. A store whose
+   looks are made after the answer (contract N38) reports real stages, and
+   the steps follow them: the first step until the provider starts, then
+   the others paced by the estimate while it fits and renders the piece,
+   and the last at once when the look is being saved. Polls come every few
+   seconds, so the short saving stage alone could not be relied on to show
+   the last step. The seconds count down from that estimate and are dropped,
+   never shown as zero or less, once it runs out. */
+
+import type { TryOnStage } from './types';
 
 /** Step pace when the store has too few looks for an estimate. */
 export const DEFAULT_STEP_MS = 8_000;
@@ -25,18 +31,27 @@ export function makingProgress({
   elapsedMs,
   estimateSeconds,
   stepCount,
+  stage = null,
 }: {
   elapsedMs: number;
   estimateSeconds: number | null;
   stepCount: number;
+  /** The server's own stage, when the store's looks report one. */
+  stage?: TryOnStage | null;
 }): MakingProgress {
   const elapsed = Math.max(0, elapsedMs);
   const last = Math.max(0, stepCount - 1);
   const estimateMs = estimateSeconds && estimateSeconds > 0 ? estimateSeconds * 1000 : null;
 
+  const paced =
+    estimateMs === null
+      ? Math.min(last, Math.floor(elapsed / DEFAULT_STEP_MS))
+      : Math.min(last, Math.floor((elapsed / estimateMs) * Math.max(1, stepCount)));
+  const stepIndex = stage ? stagedStep(stage, paced, last) : paced;
+
   if (estimateMs === null) {
     return {
-      stepIndex: Math.min(last, Math.floor(elapsed / DEFAULT_STEP_MS)),
+      stepIndex,
       secondsLeft: null,
       fraction: Math.min(MAX_FRACTION, 1 - Math.exp(-elapsed / UNKNOWN_PACE_MS)),
     };
@@ -44,8 +59,16 @@ export function makingProgress({
 
   const left = Math.ceil((estimateMs - elapsed) / 1000);
   return {
-    stepIndex: Math.min(last, Math.floor((elapsed / estimateMs) * Math.max(1, stepCount))),
+    stepIndex,
     secondsLeft: left >= 1 ? left : null,
     fraction: Math.min(MAX_FRACTION, elapsed / estimateMs),
   };
+}
+
+/** The step a real stage allows: received holds the first, making moves
+ *  on from the second with time, and finishing shows the last. */
+function stagedStep(stage: TryOnStage, paced: number, last: number): number {
+  if (stage === 'received') return 0;
+  if (stage === 'finishing') return last;
+  return Math.max(paced, Math.min(1, last));
 }

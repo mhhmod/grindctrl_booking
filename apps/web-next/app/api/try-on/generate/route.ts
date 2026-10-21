@@ -1,5 +1,5 @@
 ﻿import { randomUUID } from 'node:crypto';
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
 import {
   generateTryOn,
   getTryOnMode,
@@ -24,6 +24,7 @@ import {
 } from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { storeFlags } from '@/lib/flags/store-flags';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -44,6 +45,7 @@ function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
     productId: job.productId,
     message: job.message,
     meta: job.meta,
+    ...(job.stage ? { stage: job.stage } : {}),
   };
 }
 
@@ -293,6 +295,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    /* A store with n38_async_jobs gets its look made after this answer:
+       the shopper's phone polls the job, which reports its stage. */
+    const asyncLooks =
+      authorization.purpose === 'storefront' &&
+      authorization.shop !== null &&
+      (await storeFlags({ shopDomain: authorization.shop })).includes('n38_async_jobs');
+
     const job = await generateTryOn(
       authorization,
       resolvedPhotoSource,
@@ -301,10 +310,12 @@ export async function POST(request: NextRequest) {
         ? authorization.canonicalGarmentUrl ?? undefined
         : undefined,
       productName,
+      asyncLooks ? { background: (task) => after(task) } : {},
     );
 
     const res = toJobResponse(job);
-    return NextResponse.json(res, { status: 200 });
+    const accepted = job.status === 'queued' || job.status === 'processing';
+    return NextResponse.json(res, { status: asyncLooks && accepted ? 202 : 200 });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (
