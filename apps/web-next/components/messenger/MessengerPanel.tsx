@@ -15,6 +15,10 @@ import {
   mergeMessages,
   type PanelTeam,
 } from './panel-state';
+import { ChatHome, productLine } from './v16/chat-home';
+import { parsePageProduct, type PageProduct } from './v16/page-product';
+import { SpeechButton } from './v16/speech-button';
+import { v16StatusLine } from './v16/status-line';
 
 /* The shopper-facing messenger surface. Rendered inside an iframe on
    grindctrl.cloud/embed/messenger so merchant theme CSS can never reach it.
@@ -117,9 +121,11 @@ export function MessengerPanel({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- post-hydration locale resolution, see above
     setLocale(
-      localeOverride ?? detectInitialLocale(new URLSearchParams(window.location.search).get('locale')),
+      localeOverride ??
+        chosenLocale(config.key, config.features?.includes('v16_chat') ?? false) ??
+        detectInitialLocale(new URLSearchParams(window.location.search).get('locale')),
     );
-  }, [localeOverride]);
+  }, [localeOverride, config.key, config.features]);
   const t = getPanelCopy(locale);
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
@@ -150,6 +156,10 @@ export function MessengerPanel({
   const [alert, setAlert] = useState<PublicHandoffAlert | null>(null);
   const [team, setTeam] = useState<PanelTeam | null>(config.team ?? null);
   const afterHoursMode = config.features?.includes('n23_after_hours') ?? false;
+  /* The v16 Store Chat (03-store-chat.md): the loader opens it as a sheet or
+     a docked panel; Escape here closes it, and opening it moves focus into
+     the composer. */
+  const v16Chat = config.features?.includes('v16_chat') ?? false;
   /* The assistant could not answer the last message (N24). */
   const [assistantDown, setAssistantDown] = useState(false);
   const [handingOff, setHandingOff] = useState(false);
@@ -171,6 +181,13 @@ export function MessengerPanel({
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  /* The v16 loader asks for the composer as it opens the panel, often
+     before the conversation has loaded; the request waits until it has. */
+  const focusRequested = useRef(false);
+  /* The piece on the store page, for You're viewing (v16, from the loader). */
+  const [pageProduct, setPageProduct] = useState<PageProduct | null>(null);
+  /* v16: back to the home view with a conversation going (Chat-Answer). */
+  const [homeView, setHomeView] = useState(false);
 
   /* Contact capture — offered by the server at most once per conversation. */
   const [askContact, setAskContact] = useState(false);
@@ -397,6 +414,17 @@ export function MessengerPanel({
         if (data.cart && typeof data.cart === 'object' && !Array.isArray(data.cart)) setCart(data.cart);
         return;
       }
+      if (data?.type === 'grindctrl-messenger:page-product') {
+        if (v16Chat) setPageProduct(parsePageProduct(data.product));
+        return;
+      }
+      if (data?.type === 'grindctrl-messenger:opened') {
+        if (!v16Chat) return;
+        const input = inputRef.current;
+        if (input && !input.disabled) input.focus({ preventScroll: true });
+        else focusRequested.current = true;
+        return;
+      }
       if (data?.type !== 'grindctrl-messenger:viewport' || typeof data.fullBleed !== 'boolean') return;
       setFullBleed(data.fullBleed);
       scrollToEnd();
@@ -411,7 +439,17 @@ export function MessengerPanel({
       window.removeEventListener('message', onParentMessage);
       window.removeEventListener('resize', scrollToEnd);
     };
-  }, [scrollToEnd, variant]);
+  }, [scrollToEnd, variant, v16Chat]);
+
+  // Escape pressed inside the panel never reaches the store page.
+  useEffect(() => {
+    if (variant !== 'live' || !v16Chat) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) closePanel();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [closePanel, v16Chat, variant]);
 
   /* Ask the loader for the cart once the listener above is in place; it
      sends it again whenever the theme changes the cart. */
@@ -441,7 +479,9 @@ export function MessengerPanel({
   /* Keep desktop keyboard focus, without opening a touch keyboard on boot
      (the loader can also preload this panel before the shopper opens it). */
   useEffect(() => {
-    if (!booting && !hasCoarsePointer()) inputRef.current?.focus();
+    if (booting) return;
+    if (focusRequested.current || !hasCoarsePointer()) inputRef.current?.focus();
+    focusRequested.current = false;
   }, [booting]);
 
   /* The latest messages for the outbox, which runs outside a render. */
@@ -750,8 +790,27 @@ export function MessengerPanel({
         ? `${t.assistantNow} · ${t.teamHereUntil(formatTeamTime(team.closesAt, locale))}`
         : t.assistantNow
       : `${t.assistantNow} · ${team.opensAt ? t.teamAwayUntil(formatTeamTime(team.opensAt, locale)) : t.teamAway}`;
+  const v16Status = v16StatusLine(
+    { aiEnabled: config.aiEnabled, available: config.available, afterHours: afterHoursMode, team },
+    t,
+    locale,
+  );
   const card = handoffCard(alert, afterHoursMode ? team : null);
   const lastIsOurs = messages.length > 0 && ['assistant', 'system'].includes(messages[messages.length - 1].role);
+
+  function switchLocale(next: MessengerLocale) {
+    setLocale(next);
+    try {
+      localStorage.setItem(LANG_KEY(config.key), next);
+    } catch {
+      // Private mode: the switch still holds for this visit.
+    }
+  }
+  const showHome = v16Chat && !booting && (messages.length === 0 || homeView);
+  const inAnswer = v16Chat && messages.length > 0 && !homeView;
+  const lastMessage = messages[messages.length - 1];
+  const composerHint =
+    inAnswer && lastMessage && lastMessage.role === 'assistant' ? t.askFollowUp : placeholder;
 
   if (bootError) {
     return (
@@ -771,28 +830,71 @@ export function MessengerPanel({
     >
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <div
-          aria-hidden="true"
-          className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-bold text-white"
-          style={{ backgroundColor: accent }}
-        >
-          {config.appearance.assistantAvatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={config.appearance.assistantAvatarUrl} alt="" className="size-full object-cover" />
-          ) : (
-            initialOf(config.storeName)
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{config.storeName}</p>
-          <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
-            <span
+        {inAnswer && pageProduct ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setHomeView(true)}
+              aria-label={t.backToHome}
+              className="-ms-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="rtl:-scale-x-100">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+            {pageProduct.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- the store's own product image
+              <img src={pageProduct.imageUrl} alt="" className="size-9 shrink-0 rounded-md object-cover" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p dir="auto" className="truncate text-sm font-semibold leading-tight">{pageProduct.title}</p>
+              <p className="truncate text-[11px] leading-tight text-muted-foreground">{productLine(pageProduct, locale)}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div
               aria-hidden="true"
-              className={`inline-block size-1.5 rounded-full ${config.available || afterHoursMode ? 'bg-primary' : 'bg-muted-foreground'}`}
-            />
-            {afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
-          </p>
-        </div>
+              className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[13px] font-bold text-white"
+              style={{ backgroundColor: accent }}
+            >
+              {config.appearance.assistantAvatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={config.appearance.assistantAvatarUrl} alt="" className="size-full object-cover" />
+              ) : (
+                initialOf(config.storeName)
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold leading-tight">{config.storeName}</p>
+              <p className="flex items-center gap-1.5 text-[11px] leading-tight text-muted-foreground">
+                <span
+                  aria-hidden="true"
+                  className={`inline-block size-1.5 rounded-full ${
+                    (v16Chat ? v16Status.live : config.available || afterHoursMode) ? 'bg-[var(--gc-success,#2f6b3a)]' : 'bg-muted-foreground'
+                  }`}
+                />
+                {v16Chat ? v16Status.text : afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
+              </p>
+            </div>
+          </>
+        )}
+        {v16Chat && (
+          <div role="group" aria-label={t.languageLabel} className="flex shrink-0 rounded-full border border-border p-0.5 text-[11px] font-semibold">
+            {(['ar', 'en'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                lang={option}
+                aria-pressed={locale === option}
+                onClick={() => switchLocale(option)}
+                className={`min-h-8 rounded-full px-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${locale === option ? 'bg-foreground text-background' : 'text-muted-foreground'}`}
+              >
+                {option === 'ar' ? 'عربي' : 'EN'}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* The only way out on a phone. The panel is full-bleed there, so it
             covers the launcher — the control that closes it everywhere else —
@@ -840,14 +942,29 @@ export function MessengerPanel({
             <Skeleton className="h-3 w-1/2 motion-reduce:animate-none" />
           </div>
         )}
-        {messages.length === 0 && !booting && (
+        {showHome && (
+          <ChatHome
+            t={t}
+            locale={locale}
+            product={pageProduct}
+            welcomeTitle={welcomeTitle}
+            welcomeSubtitle={welcomeSubtitle}
+            disabled={booting}
+            onQuickAction={(message) => {
+              setHomeView(false);
+              void send(message);
+            }}
+            onTryOn={() => window.parent.postMessage({ type: 'grindctrl-messenger:try-on' }, '*')}
+          />
+        )}
+        {messages.length === 0 && !booting && !v16Chat && (
           <div className="mx-auto max-w-[85%] pt-6 text-center">
             <p className="text-base font-semibold">{welcomeTitle}</p>
             {welcomeSubtitle && <p className="mt-1 text-xs text-muted-foreground">{welcomeSubtitle}</p>}
           </div>
         )}
 
-        {messages.map((m) => {
+        {!showHome && messages.map((m) => {
           if (m.role === 'system') {
             return (
               /* Transcript history, not a live region: the handoff banner
@@ -863,7 +980,11 @@ export function MessengerPanel({
              (staffReply sets it, the AI paths set it) — a shopper reading a
              resolved thread previously had no way to tell them apart. */
           const senderLabel =
-            !mine && m.author === 'human' ? t.humanSenderLabel : !mine && m.author === 'ai' ? t.aiSenderLabel : null;
+            !mine && m.author === 'human'
+              ? t.humanSenderLabel
+              : !mine && m.author === 'ai' && !v16Chat
+                ? t.aiSenderLabel
+                : null;
           return (
             <div key={m.id} className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
               {senderLabel && (
@@ -876,6 +997,7 @@ export function MessengerPanel({
                     : 'max-w-[85%] whitespace-pre-wrap break-words rounded-2xl rounded-es-md border border-border bg-card px-3.5 py-2 text-sm'
                 }
                 style={mine ? { backgroundColor: accent } : undefined}
+                dir={v16Chat ? 'auto' : undefined}
               >
                 {localImages[m.id] ? (
                   // eslint-disable-next-line @next/next/no-img-element -- object URL, no loader involved
@@ -908,6 +1030,9 @@ export function MessengerPanel({
                   </span>
                 )}
               </div>
+              {v16Chat && !mine && m.author === 'ai' && (
+                <span className="mt-1 px-1 text-[10px] font-medium text-muted-foreground">{t.storeAssistantAi}</span>
+              )}
               {/* Per-reply rating: assistant bubbles only, never the
                   shopper's own messages or system lines. Same emoji and
                   button language as the end-of-conversation rating below;
@@ -922,7 +1047,7 @@ export function MessengerPanel({
                     <button
                       type="button"
                       onClick={() => giveMessageFeedback(m.id, 'up')}
-                      aria-label="Helpful"
+                      aria-label={t.helpful}
                       className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
                     >
                       👍
@@ -930,7 +1055,7 @@ export function MessengerPanel({
                     <button
                       type="button"
                       onClick={() => giveMessageFeedback(m.id, 'down')}
-                      aria-label="Not helpful"
+                      aria-label={t.notHelpful}
                       className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
                     >
                       👎
@@ -1075,7 +1200,7 @@ export function MessengerPanel({
                 <button
                   type="button"
                   onClick={() => giveFeedback('up')}
-                  aria-label="Helpful"
+                  aria-label={t.helpful}
                   className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
                 >
                   👍
@@ -1083,7 +1208,7 @@ export function MessengerPanel({
                 <button
                   type="button"
                   onClick={() => giveFeedback('down')}
-                  aria-label="Not helpful"
+                  aria-label={t.notHelpful}
                   className="rounded-full px-1.5 py-0.5 hover:bg-accent focus-visible:outline-none focus-visible:ring-2"
                 >
                   👎
@@ -1100,11 +1225,12 @@ export function MessengerPanel({
           className="flex items-end gap-2"
           onSubmit={(e) => {
             e.preventDefault();
+            setHomeView(false);
             void send();
           }}
         >
           <label htmlFor="gc-msgr-input" className="sr-only">
-            {placeholder}
+            {v16Chat ? t.messageLabel : placeholder}
           </label>
           {config.attachmentsEnabled && (
             <>
@@ -1143,12 +1269,25 @@ export function MessengerPanel({
               // Touch Return inserts a newline; the explicit Send button submits.
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !hasCoarsePointer()) {
                 e.preventDefault();
+                setHomeView(false);
                 void send();
               }
             }}
-            placeholder={placeholder}
+            placeholder={v16Chat ? composerHint : placeholder}
+            dir={v16Chat ? 'auto' : undefined}
             className="max-h-[120px] min-h-[42px] flex-1 resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-60"
           />
+          {v16Chat && (
+            <SpeechButton
+              t={t}
+              locale={locale}
+              disabled={booting}
+              onText={(heard) => {
+                setDraft((current) => (current ? `${current} ${heard}` : heard).slice(0, 2000));
+                inputRef.current?.focus();
+              }}
+            />
+          )}
           <button
             type="submit"
             aria-label={t.sendAria}
@@ -1167,10 +1306,24 @@ export function MessengerPanel({
             {attachError ?? t.attachUploading}
           </p>
         )}
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">{t.poweredBy}</p>
+        {/* No GrindCTRL line on the store in v16; the shopper is told who answers instead. */}
+        <p className="mt-2 text-center text-[10px] text-muted-foreground">{v16Chat ? t.disclosure : t.poweredBy}</p>
       </footer>
     </div>
   );
+}
+
+/* v16 (Chat-Arabic): the language a shopper picked with the header's switch
+   is remembered on this phone, per store, and outranks the page's own. */
+const LANG_KEY = (key: string) => `gc_msgr_lang_${key}`;
+function chosenLocale(key: string, v16: boolean): MessengerLocale | null {
+  if (!v16) return null;
+  try {
+    const saved = localStorage.getItem(LANG_KEY(key));
+    return saved === 'ar' || saved === 'en' ? saved : null;
+  } catch {
+    return null;
+  }
 }
 
 function pickLocalizedSafe(value: { en: string; ar: string }, locale: MessengerLocale, fallback: string): string {

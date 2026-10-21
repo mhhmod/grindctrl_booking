@@ -40,6 +40,7 @@
     conv: 'gc_msgr_' + NS + '_conv',
     token: 'gc_msgr_token_' + NS,
     greeted: 'gc_msgr_' + NS + '_greeted',
+    helloThisVisit: 'gc_msgr_' + NS + '_hello_visit',
     proactiveCount: 'gc_msgr_' + NS + '_proactive_n'
   };
   var CONFIG_TTL_MS = 5 * 60 * 1000;
@@ -52,6 +53,9 @@
     host: null,
     launcher: null,
     teaser: null,
+    backdrop: null,
+    pushedHistory: false,
+    lift: 0,
     locale: detectLocale(),
     identified: false,
     identityPending: false,
@@ -59,6 +63,21 @@
   };
 
   function lsGet(name) { try { return window.localStorage.getItem(name); } catch (e) { return null; } }
+  function ssGet(name) { try { return window.sessionStorage.getItem(name); } catch (e) { return null; } }
+  function ssSet(name, value) { try { window.sessionStorage.setItem(name, value); } catch (e) {} }
+
+  /* The v16 Store Chat (03-store-chat.md), for a store whose v16_chat flag
+     is on: a bottom sheet on phones and a full-height panel docked on the
+     bubble's side on desktop, closed by Escape and the back gesture as well
+     as its own button, a bubble that rises above the theme's sticky Add to
+     cart bar, and at most one first hello per visit. */
+  function v16Chat() {
+    var features = state.config && state.config.features;
+    return Array.isArray(features) && features.indexOf('v16_chat') !== -1;
+  }
+  function onCheckout() {
+    return /\/checkouts?(\/|$)/.test(window.location.pathname) || !!(window.Shopify && window.Shopify.Checkout);
+  }
 
   /* Launch state (phase zero item 9). The visitor id the try-on scripts
      already keep on this store (gc_tryon_vid), so a holdout puts a visitor
@@ -255,7 +274,7 @@
   function buildLauncher() {
     var hostEl = document.createElement('div');
     hostEl.className = 'pos-' + (state.config.appearance.position === 'bottom-left' ? 'bl' : 'br');
-    hostEl.style.cssText = 'position:fixed;inset:auto;bottom:20px;z-index:2147482000;' +
+    hostEl.style.cssText = 'position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
       (state.config.appearance.position === 'bottom-left' ? 'left:' : 'right:') + offset('x') +
       ';--gc-accent:' + safeColor(state.config.appearance.accentColor);
     var root = hostEl.attachShadow({ mode: 'open' });
@@ -279,6 +298,7 @@
     var size = launcherSize();
     btn.style.height = size + 'px';
     btn.style.width = size + 'px';
+    if (state.lift) btn.style.bottom = (20 + state.lift) + 'px';
     btn.style.borderRadius = launcherRadius();
     btn.addEventListener('click', function () { toggle(); });
     btn.addEventListener('pointerenter', warmPanel);
@@ -308,6 +328,9 @@
   function showTeaser(text, kind) {
     if (!state.teaserHost || state.open) return;
     if (kind === 'greeting' && lsGet(LS.greeted)) return;
+    // v16: one first hello per visit, never on checkout.
+    if (v16Chat() && (ssGet(LS.helloThisVisit) || onCheckout())) return;
+    if (v16Chat()) ssSet(LS.helloThisVisit, '1');
     if (kind === 'proactive') {
       var n = Number(lsGet(LS.proactiveCount) || 0);
       if (n >= (state.config.behaviour.proactiveCapPerVisitor || 1)) return;
@@ -325,6 +348,7 @@
     var clear = launcherSize() + 28;
     if (state.config.appearance.position === 'bottom-left') el.style.left = clear + 'px';
     else el.style.right = clear + 'px';
+    if (state.lift) el.style.bottom = (20 + state.lift) + 'px';
     el.addEventListener('click', function () { markTeaserSeen(kind); open(); });
     state.teaserHost.appendChild(el);
     state.teaser = el;
@@ -363,7 +387,8 @@
     var frame = document.createElement('iframe');
     frame.src = APP_ORIGIN + '/embed/messenger' + params;
     frame.title = state.locale === 'ar' ? 'محادثة الدعم' : 'Support chat';
-    frame.allow = 'clipboard-write';
+    // v16: the composer's microphone uses the browser's own speech input.
+    frame.setAttribute('allow', v16Chat() ? 'clipboard-write; microphone' : 'clipboard-write');
     // sizeIframe writes the complete style, including the closed-state visuals.
     sizeIframe(frame);
     document.body.appendChild(frame);
@@ -377,14 +402,19 @@
      the docked branch (which sets only bottom/right), leaving the panel
      stretched across the page. Re-sizing has to be idempotent for the resize
      listener below to be safe. */
-  var FRAME_BASE = 'position:fixed;z-index:2147482001;border:none;background:transparent;' +
-    'transition:opacity .18s ease,transform .18s ease;color-scheme:normal;';
+  /* visibility goes with opacity: a closed panel used to stay in the tab
+     order and the accessibility tree while invisible. Visibility switches
+     at the end of the fade out and at once on the way in. */
+  var FRAME_BASE = 'position:fixed;z-index:2147482001;border:none;background-color:transparent;' +
+    'transition:opacity .18s ease,transform .18s ease,visibility .18s;color-scheme:normal;';
 
   function sizeIframe(frame) {
     var small = isSmallScreen();
     var css = FRAME_BASE;
 
-    if (small) {
+    if (v16Chat()) {
+      css += v16Geometry(small);
+    } else if (small) {
       var viewport = window.visualViewport;
       // iOS keyboards resize/pan the visual viewport without window.resize.
       // Offsets are relative to the layout viewport used by position:fixed.
@@ -408,13 +438,89 @@
 
     // Rewriting cssText drops the open/closed visuals, so restate them.
     css += state.open
-      ? 'opacity:1;pointer-events:auto;transform:none;'
-      : 'opacity:0;pointer-events:none;' + (small ? '' : 'transform:translateY(6px);');
+      ? 'opacity:1;pointer-events:auto;transform:none;visibility:visible;'
+      : 'opacity:0;pointer-events:none;visibility:hidden;' + closedTransform(small);
 
     frame.style.cssText = css;
     if (frame.contentWindow) {
       frame.contentWindow.postMessage({ type: 'grindctrl-messenger:viewport', fullBleed: small }, APP_ORIGIN);
     }
+  }
+
+  function closedTransform(small) {
+    if (!v16Chat()) return small ? '' : 'transform:translateY(6px);';
+    if (small) return 'transform:translateY(24px);';
+    var posLeft = state.config && state.config.appearance.position === 'bottom-left';
+    return 'transform:translateX(' + (posLeft ? '-' : '') + '24px);';
+  }
+
+  /* v16: about 92 percent of the screen as a bottom sheet on phones, held
+     above an on-screen keyboard; on desktop 400 pixels wide on the bubble's
+     side and as tall as the window, over the page without dimming it. */
+  function v16Geometry(small) {
+    if (small) {
+      var viewport = window.visualViewport;
+      var height = viewport ? viewport.height : window.innerHeight;
+      var top = (viewport ? viewport.offsetTop : 0) + Math.round(height * 0.08);
+      return 'inset:auto;left:0;right:auto;top:' + top + 'px;width:100%;height:' + Math.round(height * 0.92) + 'px;' +
+        'border-radius:' + panelRadius() + ' ' + panelRadius() + ' 0 0;overflow:hidden;box-shadow:0 -8px 32px rgba(0,0,0,.18);';
+    }
+    var posLeft = state.config && state.config.appearance.position === 'bottom-left';
+    return 'inset:auto;top:0;bottom:0;height:100dvh;width:min(400px,100vw);' +
+      (posLeft ? 'left:0;right:auto;' : 'right:0;left:auto;') +
+      'border-radius:0;overflow:hidden;box-shadow:0 0 32px rgba(0,0,0,.16);';
+  }
+
+  /* v16 on phones: the store dims behind the sheet, and a tap on it closes. */
+  function showBackdrop() {
+    if (!v16Chat() || !isSmallScreen() || state.backdrop) return;
+    var el = document.createElement('div');
+    el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = 'position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
+    el.addEventListener('click', function () { close(); });
+    document.body.appendChild(el);
+    state.backdrop = el;
+  }
+  function hideBackdrop() {
+    if (state.backdrop && state.backdrop.parentNode) state.backdrop.parentNode.removeChild(state.backdrop);
+    state.backdrop = null;
+  }
+
+  /* v16: the bubble rises above a sticky or fixed Add to cart bar at the
+     bottom of the screen, by the bar's height plus a margin. */
+  var CART_SELECTOR = 'form[action*="/cart/add"],button[name="add"],[data-add-to-cart],.product-form__submit';
+  function stickyCartLift() {
+    var found = document.querySelectorAll(CART_SELECTOR);
+    var lift = 0;
+    for (var i = 0; i < found.length && i < 40; i++) {
+      var el = found[i];
+      while (el && el !== document.body) {
+        var position = window.getComputedStyle(el).position;
+        if (position === 'fixed' || position === 'sticky') {
+          var box = el.getBoundingClientRect();
+          if (box.height > 0 && box.top < window.innerHeight && box.bottom >= window.innerHeight - 2) {
+            lift = Math.max(lift, Math.ceil(window.innerHeight - box.top) + 12);
+          }
+          break;
+        }
+        el = el.parentElement;
+      }
+    }
+    return Math.min(lift, Math.round(window.innerHeight / 2));
+  }
+  var liftPending = false;
+  function updateLift() {
+    if (!v16Chat() || liftPending) return;
+    liftPending = true;
+    requestAnimationFrame(function () {
+      liftPending = false;
+      var lift = stickyCartLift();
+      if (lift === state.lift) return;
+      state.lift = lift;
+      if (state.host) state.host.style.bottom = (20 + lift) + 'px';
+      if (state.launcherBtn) state.launcherBtn.style.bottom = (20 + lift) + 'px';
+      if (state.teaser) state.teaser.style.bottom = (20 + lift) + 'px';
+    });
   }
 
   /* The panel was sized once, when it was first opened, and never again — so
@@ -440,26 +546,53 @@
   function open() {
     if (!state.config || !state.config.active || pageExcluded(state.config)) return;
     if (!state.iframe) buildIframe();
+    if (!state.iframe) return;
     if (state.teaser) { markTeaserSeen(state.teaserKind); removeTeaser(); }
-    requestAnimationFrame(function () {
-      sizeIframe(state.iframe);
-    });
     state.open = true;
+    if (v16Chat()) {
+      showBackdrop();
+      // The variant may have changed since the panel was built.
+      sendPageProduct();
+      // The phone's back gesture closes the panel, not the store page.
+      try { window.history.pushState({ gcChat: true }, ''); state.pushedHistory = true; } catch (e) {}
+    }
+    requestAnimationFrame(function () {
+      if (!state.iframe) return;
+      sizeIframe(state.iframe);
+      if (v16Chat()) {
+        // Focus moves into the composer.
+        try { state.iframe.focus({ preventScroll: true }); } catch (e) {}
+        if (state.iframe.contentWindow) state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:opened' }, APP_ORIGIN);
+      }
+    });
     if (state.launcherBtn) state.launcherBtn.setAttribute('aria-expanded', 'true');
     track('messenger_opened', {});
   }
 
-  function close() {
+  function close(fromHistory) {
     if (!state.iframe) return;
-    state.iframe.style.opacity = '0';
-    state.iframe.style.pointerEvents = 'none';
-    if (!isSmallScreen()) state.iframe.style.transform = 'translateY(6px)';
+    var wasOpen = state.open;
     state.open = false;
+    sizeIframe(state.iframe);
+    hideBackdrop();
+    if (state.pushedHistory) {
+      state.pushedHistory = false;
+      if (fromHistory !== true) { try { window.history.back(); } catch (e) {} }
+    }
     if (state.launcherBtn) {
       state.launcherBtn.setAttribute('aria-expanded', 'false');
-      state.launcherBtn.focus({ preventScroll: true });
+      if (wasOpen) state.launcherBtn.focus({ preventScroll: true });
     }
   }
+
+  window.addEventListener('popstate', function () {
+    if (state.open && state.pushedHistory) close(true);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && state.open && v16Chat()) close();
+  });
+  window.addEventListener('scroll', updateLift, { passive: true });
+  window.addEventListener('resize', updateLift);
 
   function toggle() { state.open ? close() : open(); }
 
@@ -482,9 +615,79 @@
       // it lands; otherwise the panel learns there is none and stops waiting.
       if (token || !state.identityPending) sendIdentity(token);
     }
-    if (data && data.type === 'grindctrl-messenger:ready') handleViewportChange();
+    if (data && data.type === 'grindctrl-messenger:ready') {
+      handleViewportChange();
+      // Built by this very open: the panel was not listening yet when asked.
+      if (state.open && v16Chat() && state.iframe.contentWindow) {
+        state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:opened' }, APP_ORIGIN);
+      }
+      sendPageProduct();
+    }
+    // v16: Try it on from "You're viewing" opens the store's own try-on.
+    if (data && data.type === 'grindctrl-messenger:try-on' && v16Chat()) {
+      var tryOn = document.querySelector('.gc-tryon-btn');
+      if (tryOn) { close(); tryOn.click(); }
+    }
     if (data && data.type === 'grindctrl-messenger:cart-request') { sendCart(); watchCart(); }
   });
+
+  /* ── The product on this page (v16, Chat-Home "You're viewing") ──
+     On a product page the panel shows the piece the shopper is looking at,
+     with the variant picked in the theme's own form, its price in the
+     shopper's currency, and Try it on when the store's try-on button is
+     on the page. Read from the store's own product JSON, once a page. */
+  var pageProduct = null;
+  function pageHandle() {
+    var match = window.location.pathname.match(/\/products\/([^/?#]+)/);
+    if (!match) return '';
+    try { return decodeURIComponent(match[1]); } catch (e) { return ''; }
+  }
+  function loadPageProduct() {
+    if (pageProduct) return pageProduct;
+    var handle = pageHandle();
+    if (!handle || !window.Shopify) return (pageProduct = Promise.resolve(null));
+    var root = ((window.Shopify.routes && window.Shopify.routes.root) || '/').replace(/\/?$/, '/');
+    pageProduct = fetch(root + 'products/' + encodeURIComponent(handle) + '.js', { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (product) {
+        if (!product || !Array.isArray(product.variants) || !product.variants.length) return null;
+        var image = typeof product.featured_image === 'string' ? product.featured_image : '';
+        if (image.indexOf('//') === 0) image = 'https:' + image;
+        return { handle: handle, title: product.title || '', imageUrl: /^https:\/\//.test(image) ? image : '', variants: product.variants };
+      })
+      .catch(function () { return null; });
+    return pageProduct;
+  }
+  function pickedVariantId() {
+    var input = document.querySelector('form[action*="/cart/add"] [name="id"]');
+    if (input && /^\d+$/.test(input.value)) return input.value;
+    try { return new URLSearchParams(window.location.search).get('variant') || ''; } catch (e) { return ''; }
+  }
+  function sendPageProduct() {
+    if (!v16Chat() || !state.iframe || !state.iframe.contentWindow) return;
+    loadPageProduct().then(function (product) {
+      if (!product || !state.iframe || !state.iframe.contentWindow) return;
+      var wanted = pickedVariantId();
+      var variant = product.variants[0];
+      for (var i = 0; i < product.variants.length; i++) {
+        if (String(product.variants[i].id) === wanted) { variant = product.variants[i]; break; }
+      }
+      var currency = window.Shopify && window.Shopify.currency && window.Shopify.currency.active;
+      state.iframe.contentWindow.postMessage({
+        type: 'grindctrl-messenger:page-product',
+        product: {
+          handle: product.handle,
+          title: product.title,
+          imageUrl: product.imageUrl,
+          variantId: String(variant.id),
+          variantTitle: variant.title || '',
+          priceMinor: typeof variant.price === 'number' ? variant.price : null,
+          currency: typeof currency === 'string' ? currency : null,
+          tryOn: !!document.querySelector('.gc-tryon-btn')
+        }
+      }, APP_ORIGIN);
+    });
+  }
 
   /* ── The cart (phase zero item 10) ──
      For a store with the big-order rule on, the panel asks for the cart.
@@ -657,6 +860,7 @@
       state.config = config;
       if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;
       state.locale = resolveLocale(config);
+      if (v16Chat()) state.lift = stickyCartLift();
       buildLauncher();
       attachShopperToken();
       track('loader_initialized', {});
@@ -666,7 +870,8 @@
          the lesser evil. */
       var conn = navigator.connection;
       var frugal = conn && (conn.saveData === true || /(^|-)2g$/.test(conn.effectiveType || ''));
-      if (!frugal) {
+      // v16 builds the panel on the first sign of intent, never on page load.
+      if (!frugal && !v16Chat()) {
         var idle = window.requestIdleCallback || function (fn) { return setTimeout(fn, 2500); };
         idle(function () { warmPanel(); }, { timeout: 6000 });
       }
