@@ -19,6 +19,219 @@
     }
   };
 
+  /* The v16 try-on sheet (02-try-on.md), for a store whose v16_tryon flag
+     is on: a bottom sheet on phones and a centred dialog on desktop,
+     instead of the iframe opening inline under the button. */
+  var SHEET_COPY = {
+    en: { close: 'Close' },
+    ar: { close: 'إغلاق' }
+  };
+
+  function v16Sheet(cfg) {
+    return !!(cfg && Array.isArray(cfg.features) && cfg.features.indexOf('v16_tryon') !== -1);
+  }
+
+  /* The variant the shopper picked with the theme's own selectors (item
+     19), read at the tap from the product form beside the block. */
+  function selectedVariant(root) {
+    var scopes = [root.closest('.shopify-section'), document];
+    for (var s = 0; s < scopes.length; s++) {
+      if (!scopes[s]) continue;
+      var forms = scopes[s].querySelectorAll('form[action*="/cart/add"]');
+      for (var f = 0; f < forms.length; f++) {
+        var input = forms[f].querySelector('[name="id"]');
+        if (input && /^\d+$/.test(input.value)) return input.value;
+      }
+    }
+    return root.dataset.variant || '';
+  }
+
+  /* The product as this page shows it, from the store's own product JSON
+     in the shopper's language and currency: its options, and its variants
+     with their names, availability and prices (item 19). The sheet shows
+     them on the look; null when it cannot be read. */
+  function fetchStoreProduct(root) {
+    var handle = root.dataset.product || '';
+    if (!handle) return Promise.resolve(null);
+    var base = (window.Shopify && window.Shopify.routes && window.Shopify.routes.root) || '/';
+    return fetch(base + 'products/' + encodeURIComponent(handle) + '.js', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (product) {
+        if (!product || !Array.isArray(product.variants)) return null;
+        var options = (Array.isArray(product.options) ? product.options : []).map(function (option) {
+          return typeof option === 'string' ? option : (option && option.name) || '';
+        });
+        var variants = product.variants.slice(0, 250).map(function (v) {
+          return {
+            id: v.id,
+            title: v.title || '',
+            options: [v.option1, v.option2, v.option3].filter(function (value) { return typeof value === 'string'; }),
+            available: v.available === true,
+            price: typeof v.price === 'number' ? v.price : null
+          };
+        });
+        var currency = window.Shopify && window.Shopify.currency && window.Shopify.currency.active;
+        return { options: options, variants: variants, currency: typeof currency === 'string' ? currency : null };
+      })
+      .catch(function () { return null; });
+  }
+
+  function findVariant(product, variantId) {
+    var variants = (product && product.variants) || [];
+    for (var i = 0; i < variants.length; i++) {
+      if (String(variants[i].id) === String(variantId)) return variants[i];
+    }
+    return null;
+  }
+
+  /* After an add, the theme's cart count follows: Dawn-style themes hear
+     their own cart update event, and any count the theme marks is set. */
+  function refreshCartCount(variantId) {
+    fetch('/cart.js', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (cart) {
+        if (!cart || typeof cart.item_count !== 'number') return;
+        try {
+          if (typeof window.publish === 'function' && window.PUB_SUB_EVENTS && window.PUB_SUB_EVENTS.cartUpdate) {
+            window.publish(window.PUB_SUB_EVENTS.cartUpdate, { source: 'grindctrl-tryon', productVariantId: variantId, cartData: cart });
+          }
+        } catch (_) { /* a theme's own handler failing must not break ours */ }
+        document.dispatchEvent(new CustomEvent('cart:refresh', { bubbles: true, detail: { cart: cart } }));
+        var counts = document.querySelectorAll('[data-cart-count], .cart-count-bubble span[aria-hidden="true"]');
+        for (var i = 0; i < counts.length; i++) counts[i].textContent = String(cart.item_count);
+      })
+      .catch(function () { /* the add itself succeeded; the count catches up on the next page */ });
+  }
+
+  /* One sheet per block. It lives at the end of <body>, outside the theme's
+     own containers, and keeps its iframe while closed so a look being made
+     is never thrown away. */
+  function createSheet(root, btn, frame, locale) {
+    var copy = SHEET_COPY[locale] || SHEET_COPY.en;
+    var sheet = document.createElement('div');
+    sheet.className = 'gc-tryon-sheet';
+    sheet.setAttribute('role', 'dialog');
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.setAttribute('aria-label', root.dataset.title || btn.textContent.trim());
+    sheet.dir = locale === 'ar' ? 'rtl' : 'ltr';
+    sheet.hidden = true;
+    if (root.dataset.radius) sheet.style.setProperty('--gc-sheet-radius', root.dataset.radius + 'px');
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'gc-tryon-sheet__backdrop';
+    var panel = document.createElement('div');
+    panel.className = 'gc-tryon-sheet__panel';
+    var bar = document.createElement('div');
+    bar.className = 'gc-tryon-sheet__bar';
+    var handle = document.createElement('span');
+    handle.className = 'gc-tryon-sheet__handle';
+    handle.setAttribute('aria-hidden', 'true');
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'gc-tryon-sheet__close';
+    close.setAttribute('aria-label', copy.close);
+    close.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
+    bar.appendChild(handle);
+    bar.appendChild(close);
+    panel.appendChild(bar);
+    panel.appendChild(frame);
+    sheet.appendChild(backdrop);
+    sheet.appendChild(panel);
+    document.body.appendChild(sheet);
+
+    var isOpen = false;
+    var pushed = false;
+    var inerted = [];
+    var previousOverflow = '';
+
+    function onKey(event) {
+      if (event.key === 'Escape') hide(false);
+    }
+
+    function show() {
+      if (isOpen) return;
+      isOpen = true;
+      sheet.hidden = false;
+      // The store behind stays put and out of reach until the sheet closes.
+      previousOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = 'hidden';
+      for (var i = 0; i < document.body.children.length; i++) {
+        var child = document.body.children[i];
+        if (child !== sheet && !child.inert) {
+          child.inert = true;
+          inerted.push(child);
+        }
+      }
+      // The phone's back gesture closes the sheet, not the product page.
+      try {
+        window.history.pushState({ gcTryOnSheet: true }, '');
+        pushed = true;
+      } catch (_) { pushed = false; }
+      document.addEventListener('keydown', onKey);
+      window.requestAnimationFrame(function () { sheet.classList.add('gc-tryon-sheet--open'); });
+      frame.focus();
+    }
+
+    function hide(fromHistory) {
+      if (!isOpen) return;
+      isOpen = false;
+      sheet.classList.remove('gc-tryon-sheet--open');
+      sheet.hidden = true;
+      panel.style.transform = '';
+      document.documentElement.style.overflow = previousOverflow;
+      while (inerted.length) inerted.pop().inert = false;
+      document.removeEventListener('keydown', onKey);
+      if (pushed) {
+        pushed = false;
+        if (!fromHistory) {
+          try { window.history.back(); } catch (_) { /* nothing to undo */ }
+        }
+      }
+      btn.focus();
+    }
+
+    window.addEventListener('popstate', function () {
+      if (isOpen && pushed) hide(true);
+    });
+    close.addEventListener('click', function () { hide(false); });
+    backdrop.addEventListener('click', function () { hide(false); });
+
+    // A swipe down on the handle bar closes it; a short one springs back.
+    var startY = null;
+    bar.addEventListener('pointerdown', function (event) {
+      if (event.target === close || close.contains(event.target)) return;
+      startY = event.clientY;
+      if (bar.setPointerCapture) bar.setPointerCapture(event.pointerId);
+    });
+    bar.addEventListener('pointermove', function (event) {
+      if (startY === null) return;
+      panel.style.transform = 'translateY(' + Math.max(0, event.clientY - startY) + 'px)';
+    });
+    function endSwipe(event) {
+      if (startY === null) return;
+      var travelled = event.clientY - startY;
+      startY = null;
+      if (travelled > 80) hide(false);
+      else panel.style.transform = '';
+    }
+    bar.addEventListener('pointerup', endSwipe);
+    bar.addEventListener('pointercancel', endSwipe);
+
+    return {
+      element: sheet,
+      open: show,
+      close: function () { hide(false); },
+      isOpen: function () { return isOpen; },
+      destroy: function () {
+        hide(false);
+        if (sheet.parentNode) sheet.parentNode.removeChild(sheet);
+      }
+    };
+  }
+
   function clearProofError(root) {
     var existing = root.querySelector('.gc-tryon-error');
     if (existing) existing.remove();
@@ -118,13 +331,28 @@
     if (root.parentNode) root.parentNode.removeChild(root);
   }
 
-  function getStorefrontContext(root, nonce) {
+  /* A shopper sent here from an in-app browser's "Open in my browser"
+     (TryOn-More) lands with gc_tryon=1: the try-on opens again by itself,
+     once, and the flag leaves the address so a reload does not repeat it. */
+  function reopenFromLink(root, btn) {
+    var params;
+    try { params = new URLSearchParams(window.location.search); } catch (_) { return; }
+    if (params.get('gc_tryon') !== '1' || root !== document.querySelector('.gc-tryon-root')) return;
+    params.delete('gc_tryon');
+    try {
+      var rest = params.toString();
+      window.history.replaceState(window.history.state, '', window.location.pathname + (rest ? '?' + rest : '') + window.location.hash);
+    } catch (_) { /* the try-on still opens */ }
+    window.setTimeout(function () { btn.click(); }, 0);
+  }
+
+  function getStorefrontContext(root, nonce, variant) {
     var url =
       '/apps/grindctrl/try-on-context?product=' +
       encodeURIComponent(root.dataset.product || '') +
       '&nonce=' +
       encodeURIComponent(nonce);
-    if (root.dataset.variant) url += '&variant=' + encodeURIComponent(root.dataset.variant);
+    if (variant) url += '&variant=' + encodeURIComponent(variant);
 
     return fetch(withVisitor(url), {
       credentials: 'same-origin',
@@ -158,6 +386,10 @@
           return;
         }
         if (!cfg) return;
+        if (v16Sheet(cfg)) {
+          root.dataset.sheet = '1';
+          reopenFromLink(root, btn);
+        }
         if (root.dataset.labelSource !== 'theme' && cfg.buttonLabel) {
           var labelEl = btn.querySelector('.gc-tryon-label');
           if (labelEl) { labelEl.textContent = cfg.buttonLabel; }
@@ -169,6 +401,7 @@
         // radius, so one setting produces one shape everywhere.
         if (typeof cfg.radiusPx === 'number') {
           btn.style.borderRadius = Math.max(0, Math.min(cfg.radiusPx, 999)) + 'px';
+          root.dataset.radius = String(Math.max(0, Math.min(cfg.radiusPx, 28)));
         }
         if (typeof cfg.buttonIconPx === 'number') {
           btn.style.setProperty('--gc-ic-size', cfg.buttonIconPx + 'px');
@@ -194,12 +427,27 @@
     var locale = normalizeLocale(root.dataset.locale);
     applyConfig(root, btn, locale);
 
+    var sheet = null;
+    // Read once per page, on the first tap that opens the sheet.
+    var storeProduct = null;
+    function loadStoreProduct() {
+      if (!storeProduct) storeProduct = fetchStoreProduct(root);
+      return storeProduct;
+    }
+
     btn.addEventListener('click', function () {
+      // Reopening the sheet resumes whatever it held, a look included.
+      if (sheet) {
+        sheet.open();
+        return;
+      }
       var existing = root.querySelector('iframe');
       if (existing) {
         existing.style.display = existing.style.display === 'none' ? '' : 'none';
         return;
       }
+      var asSheet = root.dataset.sheet === '1';
+      var variant = asSheet ? selectedVariant(root) : root.dataset.variant || '';
 
       clearProofError(root);
 
@@ -211,7 +459,13 @@
       btn.disabled = true;
       btn.setAttribute('aria-busy', 'true');
 
-      getStorefrontContext(root, nonce).then(function (storefrontContext) {
+      Promise.all([
+        getStorefrontContext(root, nonce, variant),
+        asSheet ? loadStoreProduct() : Promise.resolve(null)
+      ]).then(function (ready) {
+      var storefrontContext = ready[0];
+      var picked = findVariant(ready[1], variant);
+      var pickedTitle = (picked && picked.title) || '';
 
       var garment = root.dataset.garment || '';
       if (garment.indexOf('//') === 0) garment = 'https:' + garment;
@@ -240,7 +494,9 @@
         '&locale=' +
         encodeURIComponent(locale) +
         '&variant=' +
-        encodeURIComponent(root.dataset.variant || '') +
+        encodeURIComponent(variant) +
+        (asSheet ? '&sheet=1' : '') +
+        (pickedTitle ? '&variantTitle=' + encodeURIComponent(pickedTitle) : '') +
         '#storefrontContext=' +
         encodeURIComponent(storefrontContext.token) +
         '&storefrontNonce=' +
@@ -249,7 +505,10 @@
       var frame = document.createElement('iframe');
       frame.src = src;
       frame.title = 'GrindCTRL Try-On';
-      frame.className = 'gc-tryon-frame';
+      frame.className = asSheet ? 'gc-tryon-frame gc-tryon-frame--sheet' : 'gc-tryon-frame';
+      // Take a photo needs the camera inside the iframe, and the in-app
+      // browser note copies the store's link for iOS.
+      if (asSheet) frame.setAttribute('allow', 'camera; clipboard-write');
 
       var embedOrigin;
       try {
@@ -262,7 +521,25 @@
         if (event.source !== frame.contentWindow || event.origin !== embedOrigin || !event.data) {
           return;
         }
+        if (asSheet && event.data.type === 'grindctrl-tryon:close') {
+          if (sheet) sheet.close();
+          return;
+        }
+        if (asSheet && event.data.type === 'grindctrl-tryon:checkout') {
+          window.location.href = '/checkout';
+          return;
+        }
+        if (asSheet && event.data.type === 'grindctrl-tryon:product-request') {
+          loadStoreProduct().then(function (product) {
+            if (product && frame.contentWindow) {
+              frame.contentWindow.postMessage({ type: 'grindctrl-tryon:product', product: product, variant: variant }, embedOrigin);
+            }
+          });
+          return;
+        }
+        // The sheet sizes the frame itself; only the inline frame follows its content.
         if (
+          !asSheet &&
           event.data.type === 'grindctrl-tryon:height' &&
           typeof event.data.height === 'number' &&
           Number.isFinite(event.data.height) &&
@@ -272,7 +549,12 @@
           frame.style.height = event.data.height + 'px';
         }
         if (event.data.type === 'grindctrl-tryon:refresh') {
-          frame.remove();
+          if (sheet) {
+            sheet.destroy();
+            sheet = null;
+          } else {
+            frame.remove();
+          }
           clearProofError(root);
           btn.click();
           return;
@@ -284,7 +566,14 @@
               embedOrigin
             );
           };
-          var variantId = parseInt(root.dataset.variant, 10);
+          // The sheet may name another size of this same product; anything
+          // else adds the variant the shopper tapped with.
+          var asked = asSheet && /^\d{1,20}$/.test(String(event.data.variantId || '')) ? String(event.data.variantId) : '';
+          var choose = asked && asked !== String(variant)
+            ? loadStoreProduct().then(function (product) { return findVariant(product, asked) ? asked : variant; })
+            : Promise.resolve(variant);
+          choose.then(function (chosen) {
+          var variantId = parseInt(chosen, 10);
           if (!variantId) return fail();
           fetch('/cart/add.js', {
             method: 'POST',
@@ -293,6 +582,21 @@
             body: JSON.stringify({ items: [{ id: variantId, quantity: 1 }] })
           })
             .then(function (res) {
+              // In the sheet the shopper stays on the look: say what was added
+              // and refresh the theme's cart count, never leave for /cart.
+              if (res.ok && asSheet) {
+                return res.json().then(function (data) {
+                  var item = data && data.items && data.items[0];
+                  frame.contentWindow.postMessage(
+                    { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: (item && item.variant_title) || '' },
+                    embedOrigin
+                  );
+                  refreshCartCount(variantId);
+                }, function () {
+                  frame.contentWindow.postMessage({ type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: '' }, embedOrigin);
+                  refreshCartCount(variantId);
+                });
+              }
               if (res.ok) { window.location.href = '/cart'; return; }
               return res.json().then(
                 function (data) { fail(data && (data.description || data.message)); },
@@ -300,10 +604,16 @@
               );
             })
             .catch(function () { fail(); });
+          });
         }
       });
 
-      root.appendChild(frame);
+      if (asSheet) {
+        sheet = createSheet(root, btn, frame, locale);
+        sheet.open();
+      } else {
+        root.appendChild(frame);
+      }
       }).catch(function (error) {
         // The looks ran out after this page loaded: take the button away
         // rather than show an error the shopper cannot act on.

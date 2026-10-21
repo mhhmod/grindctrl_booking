@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import Image from 'next/image';
 import {
   Sparkles,
@@ -15,37 +15,11 @@ import { TryOnResult, type ResultControls } from './try-on-result';
 import { useTryOnLocale } from './locale-provider';
 import { getDefaultProduct, getProduct } from '@/lib/try-on/products';
 import { localizeProduct } from '@/lib/try-on/i18n';
-import type {
-  TryOnApiResponse,
-  TryOnAttempt,
-  TryOnJob,
-  TryOnJobApiResponse,
-  TryOnSession,
-} from '@/lib/try-on/types';
-import {
-  bootstrapStorefrontProof,
-  clearPendingStorefrontProof,
-  getPendingStorefrontProof,
-} from '@/lib/try-on/storefront-bootstrap';
-import {
-  createAttemptNonce,
-  fetchWithOneRetry,
-  keepTryOnResultInPage,
-  pollTryOnJob,
-} from '@/lib/try-on/client';
-import { phoneStore } from '@/lib/try-on/phone-store';
+import { pollTryOnJob } from '@/lib/try-on/client';
+import { useTryOnFlow, type GenerationPhase } from './use-try-on-flow';
 
 // Kept exported from here for the embed's existing tests.
 export { pollTryOnJob };
-
-type DemoStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
-type GenerationPhase =
-  | 'session-requested'
-  | 'session-created'
-  | 'generation-requested'
-  | 'result-received';
-
-const SLOW_GENERATION_MS = 12_000;
 
 /* Single ordered source of truth — progress percentage and loading-step
    index both derive from one phase's position here, instead of two
@@ -112,20 +86,23 @@ export function TryOnDemo({
   const loadingStyle = overrides?.loadingStyle ?? 'steps';
   const generateLabel = overrides?.generateLabel || t.generateBtn;
 
-  const [step, setStep] = useState<DemoStep>('upload');
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
-  const [generationPhase, setGenerationPhase] =
-    useState<GenerationPhase>('session-requested');
-  const [isSlowGeneration, setIsSlowGeneration] = useState(false);
-  const [job, setJob] = useState<TryOnJob | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  /* Set when the store cannot make looks right now (out of looks, plan
-     lapsed): retrying cannot help, so the error offers no retry. */
-  const [unavailable, setUnavailable] = useState(false);
-  const [session, setSession] = useState<TryOnSession | null>(null);
-  const [sessionState, setSessionState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [sessionError, setSessionError] = useState<string | null>(null);
-  const sessionInitStarted = useRef(false);
+  const {
+    step,
+    photoDataUrl,
+    generationPhase,
+    isSlowGeneration,
+    job,
+    error,
+    unavailable,
+    sessionState,
+    sessionError,
+    selectPhoto,
+    clearPhoto,
+    generate,
+    retrySession,
+    reset,
+  } = useTryOnFlow({ product, shopProduct, displayShop, variantId, t });
+  const handleFileSelected = useCallback((_file: File, dataUrl: string) => selectPhoto(dataUrl), [selectPhoto]);
 
   const loadingStepIdx = Math.min(
     generationStepIndex(generationPhase),
@@ -136,222 +113,6 @@ export function TryOnDemo({
   // this component's settings contract. The final configured step becomes the
   // calm fallback message while progress itself stays on the last real signal.
   const slowLoadingLabel = loadingSteps.at(-1) ?? currentLoadingLabel;
-
-  useEffect(() => {
-    if (step !== 'generating' || generationPhase !== 'generation-requested') return;
-
-    const slowTimer = window.setTimeout(() => {
-      setIsSlowGeneration(true);
-    }, SLOW_GENERATION_MS);
-
-    return () => window.clearTimeout(slowTimer);
-  }, [generationPhase, step]);
-
-  const initializeSession = useCallback(async () => {
-    setSessionState('loading');
-    setSessionError(null);
-    const storefrontProof = shopProduct
-      ? getPendingStorefrontProof() ?? bootstrapStorefrontProof()
-      : null;
-
-    try {
-      const sessionRes = await fetch('/api/try-on/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          storefrontProof
-            ? {
-                productId: product.id,
-                context: 'storefront',
-                storefrontContext: storefrontProof.token,
-                storefrontNonce: storefrontProof.nonce,
-                variantId,
-              }
-            : shopProduct
-              ? {
-                  // Temporary rollout bridge only. The server rejects this
-                  // unless its explicitly named compatibility flag is on.
-                  productId: product.id,
-                  shop: displayShop,
-                  variantId,
-                }
-              : { productId: product.id, context: 'public-demo' },
-        ),
-      });
-      const sessionData: TryOnApiResponse<TryOnSession> = await sessionRes.json();
-      if (!sessionRes.ok || !sessionData.ok || !sessionData.data) {
-        if (sessionRes.status === 400 || sessionRes.status === 401) {
-          clearPendingStorefrontProof();
-        }
-        throw new Error(sessionData.error || t.genericError);
-      }
-      clearPendingStorefrontProof();
-      setSession(sessionData.data);
-      setSessionState('ready');
-    } catch (err) {
-      setSession(null);
-      setSessionState('error');
-      setSessionError(
-        shopProduct ? t.storefrontProofError : err instanceof Error ? err.message : t.genericError,
-      );
-    }
-  }, [displayShop, product.id, shopProduct, t.genericError, t.storefrontProofError, variantId]);
-
-  /* Whatever this phone kept past its expiry goes on every load. */
-  useEffect(() => {
-    void phoneStore().purgeExpired();
-  }, []);
-
-  useEffect(() => {
-    if (sessionInitStarted.current) return;
-    sessionInitStarted.current = true;
-    void initializeSession();
-  }, [initializeSession]);
-
-  const handleFileSelected = useCallback((_file: File, dataUrl: string) => {
-    setPhotoDataUrl(dataUrl);
-    setStep('consent');
-    setError(null);
-  }, []);
-
-  const handleFileClear = useCallback(() => {
-    setPhotoDataUrl(null);
-    setStep('upload');
-    setError(null);
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    setStep('generating');
-    setGenerationPhase('session-requested');
-    setIsSlowGeneration(false);
-    setError(null);
-
-    try {
-      if (!session) {
-        throw new Error(shopProduct ? t.storefrontProofError : t.genericError);
-      }
-
-      // 1. Mint one idempotent attempt for this explicit user action.
-      const attemptNonce = createAttemptNonce();
-      const attemptBody = JSON.stringify({
-        sessionId: session.sessionId,
-        productId: product.id,
-        storefrontNonce: shopProduct ? session.nonce : undefined,
-        variantId: shopProduct ? session.variantId : undefined,
-        attemptNonce,
-      });
-      const attemptRes = await fetchWithOneRetry('/api/try-on/attempt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: attemptBody,
-      });
-      const attemptData: TryOnApiResponse<TryOnAttempt> = await attemptRes.json();
-
-      if (!attemptRes.ok || !attemptData.ok || !attemptData.data) {
-        throw new Error(attemptData.error || t.genericError);
-      }
-
-      setGenerationPhase('session-created');
-
-      // 2. Generate try-on
-      const generationBody = JSON.stringify({
-        sessionId: session.sessionId,
-        attemptId: attemptData.data.attemptId,
-        productId: product.id,
-        storefrontNonce: shopProduct ? session.nonce : undefined,
-        variantId: shopProduct ? session.variantId : undefined,
-        photoSource: 'upload',
-        photoReference: photoDataUrl ? 'uploaded-photo' : undefined,
-        photoData: photoDataUrl ?? undefined,
-        garmentUrl: shopProduct ? session.garmentUrl ?? undefined : undefined,
-        productName: shopProduct?.name,
-      });
-      const generationRequest = fetchWithOneRetry('/api/try-on/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: generationBody,
-      });
-      setGenerationPhase('generation-requested');
-
-      const genRes = await generationRequest;
-      let genData: TryOnJobApiResponse = await genRes.json();
-
-      if (
-        genData.jobId &&
-        ((genData.ok && (genData.status === 'queued' || genData.status === 'processing')) ||
-          genData.code === 'TRYON_FINALIZATION_PENDING')
-      ) {
-        genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError);
-      }
-
-      /* The server's TRYON_UNAVAILABLE sentence is English; a shopper in
-         Arabic reads this store's language instead. */
-      if (genData.code === 'TRYON_UNAVAILABLE' || genData.code === 'test_looks_cap') {
-        setUnavailable(true);
-        throw new Error(t.tryOnUnavailable);
-      }
-      if (
-        !genData.ok ||
-        !genData.jobId ||
-        !genData.status ||
-        !genData.productId ||
-        !genData.meta ||
-        genData.status === 'failed' ||
-        !genData.resultImageUrl
-      ) {
-        throw new Error(genData.message || genData.error || t.genericError);
-      }
-
-      /* The look now lives in this page; the server's copy is deleted. */
-      const resultImageUrl = await keepTryOnResultInPage(
-        genData.jobId,
-        session.sessionId,
-        genData.resultImageUrl,
-      );
-
-      setGenerationPhase('result-received');
-
-      setJob({
-        jobId: genData.jobId,
-        sessionId: session.sessionId,
-        productId: genData.productId,
-        shop: session.shop,
-        status: genData.status,
-        resultImageUrl,
-        message: genData.message,
-        createdAt: new Date().toISOString(),
-        meta: genData.meta,
-      });
-      setStep('result');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t.genericError);
-      setStep('error');
-    }
-  }, [photoDataUrl, product.id, session, shopProduct, t]);
-
-  const handleSessionRetry = useCallback(() => {
-    if (!shopProduct) {
-      void initializeSession();
-      return;
-    }
-    let targetOrigin = '*';
-    try {
-      if (document.referrer) targetOrigin = new URL(document.referrer).origin;
-    } catch {
-      // The parent validates event.source; no capability data is posted.
-    }
-    window.parent.postMessage({ type: 'grindctrl-tryon:refresh' }, targetOrigin);
-  }, [initializeSession, shopProduct]);
-
-  const handleReset = useCallback(() => {
-    setPhotoDataUrl(null);
-    setJob(null);
-    setError(null);
-    setUnavailable(false);
-    setGenerationPhase('session-requested');
-    setIsSlowGeneration(false);
-    setStep('upload');
-  }, []);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-10">
@@ -402,7 +163,7 @@ export function TryOnDemo({
           <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4" role="alert">
             <p className="font-medium text-foreground">{t.storefrontProofErrorTitle}</p>
             <p className="mt-1 text-sm text-muted-foreground">{sessionError}</p>
-            <Button className="mt-3" size="sm" variant="outline" onClick={handleSessionRetry}>
+            <Button className="mt-3" size="sm" variant="outline" onClick={retrySession}>
               {t.refreshTryOn}
             </Button>
           </div>
@@ -420,7 +181,7 @@ export function TryOnDemo({
             </div>
             <PhotoUpload
               onFileSelected={handleFileSelected}
-              onFileClear={handleFileClear}
+              onFileClear={clearPhoto}
               previewUrl={photoDataUrl}
             />
           </div>
@@ -457,7 +218,7 @@ export function TryOnDemo({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleFileClear}
+                onClick={clearPhoto}
                 className="shrink-0 text-xs text-muted-foreground"
               >
                 {t.changePhoto}
@@ -480,7 +241,7 @@ export function TryOnDemo({
             </div>
 
             <Button
-              onClick={handleGenerate}
+              onClick={generate}
               disabled={sessionState !== 'ready'}
               size="lg"
               className="h-12 w-full gap-2 rounded-xl text-sm font-semibold shadow-[0_0_32px_rgba(99,102,241,0.18)]"
@@ -623,7 +384,7 @@ export function TryOnDemo({
             productName={product.name}
             shopMode={!!shopProduct}
             controls={overrides?.result}
-            onReset={handleReset}
+            onReset={reset}
           />
         )}
 
@@ -647,7 +408,7 @@ export function TryOnDemo({
                 </div>
                 <Button
                   variant="outline"
-                  onClick={handleReset}
+                  onClick={reset}
                   className="rounded-xl"
                   id="tryon-retry-btn"
                 >

@@ -87,6 +87,9 @@ interface TryOnDict {
   addToCart: string;
   addedToCart: string;
   addToCartRetry: string;
+  /** After an add in the v16 sheet, naming what was added (Black, M). */
+  addedVariant: (variant: string) => string;
+  checkout: string;
   disclaimerMock: string;
   disclaimerLive: string;
   colorsVary: string;
@@ -222,6 +225,8 @@ const en: TryOnDict = {
   addToCart: 'Add to cart',
   addedToCart: 'Adding…',
   addToCartRetry: 'Could not add, try again',
+  addedVariant: (variant) => (variant ? `Added ${variant}` : 'Added to cart'),
+  checkout: 'Checkout',
   disclaimerMock:
     'This is a demo preview using a placeholder image, no real AI generation was performed. ',
   disclaimerLive:
@@ -364,6 +369,8 @@ const ar: TryOnDict = {
   addToCart: 'أضِف إلى السلة',
   addedToCart: 'جارٍ الإضافة…',
   addToCartRetry: 'تعذّرت الإضافة، حاول مجددًا',
+  addedVariant: (variant) => (variant ? `تمت الإضافة: ${variant}` : 'تمت الإضافة إلى السلة'),
+  checkout: 'إتمام الشراء',
   disclaimerMock:
     'هذه معاينة تجريبية تستخدم صورة بديلة، ولم يتم إجراء أي توليد فعلي بالذكاء الاصطناعي. ',
   disclaimerLive:

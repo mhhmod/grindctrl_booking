@@ -1,0 +1,304 @@
+// @vitest-environment jsdom
+import React from 'react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TryOnLocaleProvider } from '../locale-provider';
+import type { PhoneStore } from '@/lib/try-on/phone-store';
+import { TryOnSheet } from './try-on-sheet';
+
+(globalThis as typeof globalThis & { React: typeof React }).React = React;
+
+/* The sheet's photo, check and consent steps (02-try-on.md) over the same
+   flow today's embed uses. The flow itself is covered by try-on-demo's
+   tests; here it records what the sheet asks of it. */
+const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false }));
+vi.mock('../use-try-on-flow', async () => {
+  const { useCallback, useState } = await import('react');
+  return {
+    useTryOnFlow: () => {
+      const [step, setStep] = useState<'upload' | 'consent' | 'generating' | 'result'>('upload');
+      const [job, setJob] = useState<Record<string, unknown> | null>(null);
+      const [photoDataUrl, setPhoto] = useState<string | null>(null);
+      const [generationStartedAt, setStartedAt] = useState<number | null>(null);
+      const [generationSeconds, setSeconds] = useState<number | null>(null);
+      const selectPhoto = useCallback((dataUrl: string) => {
+        flow.selected.push(dataUrl);
+        setPhoto(dataUrl);
+        setStep('consent');
+      }, []);
+      return {
+        step,
+        photoDataUrl,
+        generationStartedAt,
+        generationSeconds,
+        sessionState: 'ready',
+        sessionError: null,
+        job,
+        error: null,
+        unavailable: false,
+        selectPhoto,
+        clearPhoto: () => {
+          setPhoto(null);
+          setStep('upload');
+        },
+        generate: async () => {
+          flow.generated += 1;
+          setStartedAt(Date.now());
+          if (flow.finish) {
+            setSeconds(14);
+            setJob({ jobId: 'job-1', productId: 'layla-abaya', resultImageUrl: 'data:image/png;base64,bG9vaw==', meta: { runtime: 'live' } });
+            setStep('result');
+            return;
+          }
+          setStep('generating');
+        },
+        retrySession: () => {},
+        reset: () => setStep('upload'),
+      };
+    },
+  };
+});
+vi.mock('@/lib/try-on/photo-check', () => ({ checkPhoto: async () => ({ light: true, sharp: true, issue: null }) }));
+const phone = vi.hoisted(() => ({ store: null as PhoneStore | null }));
+vi.mock('@/lib/try-on/phone-store', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/lib/try-on/phone-store')>();
+  return { ...real, phoneStore: () => phone.store };
+});
+
+const PRODUCT = { handle: 'layla-abaya', name: 'Layla Embroidered Abaya', imageUrl: 'https://cdn.shopify.com/s/files/garment.png' };
+
+function renderSheet(props: Partial<React.ComponentProps<typeof TryOnSheet>> = {}, locale: 'en' | 'ar' = 'en') {
+  return render(
+    <TryOnLocaleProvider initialLocale={locale}>
+      <TryOnSheet
+        product={PRODUCT}
+        variantId="456"
+        variantTitle="Black / M"
+        shop="demo.myshopify.com"
+        lookSeconds={20}
+        addressForm="everyone"
+        {...props}
+      />
+    </TryOnLocaleProvider>,
+  );
+}
+
+async function pickPhoto() {
+  await screen.findByRole('heading', { name: 'See it on you' });
+  const gallery = document.querySelectorAll<HTMLInputElement>('input[type="file"]')[1];
+  fireEvent.change(gallery, { target: { files: [new File(['photo'], 'me.png', { type: 'image/png' })] } });
+  await screen.findByText('Looks great');
+}
+
+/* A phone by default: a touch screen, narrow. */
+function setScreen({ touch, wide }: { touch: boolean; wide: boolean }) {
+  window.matchMedia = ((query: string) => ({
+    matches: query.includes('pointer: coarse') ? touch : query.includes('min-width: 768px') ? wide : query.includes('prefers-reduced-motion'),
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
+beforeEach(async () => {
+  setScreen({ touch: true, wide: false });
+  const real = await vi.importActual<typeof import('@/lib/try-on/phone-store')>('@/lib/try-on/phone-store');
+  phone.store = real.createPhoneStore(real.memoryBackend());
+  flow.generated = 0;
+  flow.selected = [];
+  flow.finish = false;
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+
+describe('the v16 try-on sheet', () => {
+  it('shows the product with the variant the shopper picked', async () => {
+    renderSheet();
+    expect(screen.getByText('Layla Embroidered Abaya')).toBeInTheDocument();
+    expect(screen.getByText('Black · M')).toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'See it on you' });
+  });
+
+  it('shows the product alone when it has no variants', async () => {
+    renderSheet({ variantTitle: 'Default Title' });
+    await screen.findByRole('heading', { name: 'See it on you' });
+    expect(screen.queryByText('Default Title')).toBeNull();
+  });
+
+  it('asks for consent once, stores it on the phone and keeps the photo', async () => {
+    const first = renderSheet();
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    await waitFor(() => expect(flow.generated).toBe(1));
+    expect(await phone.store!.hasConsent()).toBe(true);
+    const kept = await phone.store!.photo();
+    expect(kept).toMatch(/^data:image\/png;base64,/);
+    first.unmount();
+
+    // The next try-on on this phone starts at the check with the kept photo,
+    // and does not ask again.
+    renderSheet();
+    await screen.findByText('Looks great');
+    expect(flow.selected.at(-1)).toBe(kept);
+    expect(screen.queryByRole('heading', { name: 'See it on you' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Before your first try-on' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Try it on' })).toBeEnabled();
+  });
+
+  it('keeps nothing on the phone when the shopper turns it off', async () => {
+    renderSheet();
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('switch', { name: /Keep my photo on this phone/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    await waitFor(() => expect(flow.generated).toBe(1));
+    expect(await phone.store!.keepOnPhone()).toBe(false);
+    expect(await phone.store!.photo()).toBeNull();
+    // Consent is its own answer, kept apart from the photo.
+    expect(await phone.store!.hasConsent()).toBe(true);
+  });
+
+  it('opens how photos are handled, and comes back', async () => {
+    renderSheet();
+    await screen.findByRole('heading', { name: 'See it on you' });
+    fireEvent.click(screen.getByRole('button', { name: 'How photos are handled' }));
+    expect(screen.getByRole('heading', { name: 'How photos are handled' })).toBeInTheDocument();
+    expect(screen.getByText(/stays here for 24 hours/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Back to photo options' }));
+    expect(screen.getByRole('heading', { name: 'See it on you' })).toBeInTheDocument();
+  });
+
+  it('speaks Arabic in the form the store chose', async () => {
+    renderSheet({ addressForm: 'women' }, 'ar');
+    expect(await screen.findByRole('heading', { name: 'شاهديها عليكِ' })).toBeInTheDocument();
+    expect(screen.getByText(/يستغرق الأمر حوالي 20 ثانية\./)).toBeInTheDocument();
+  });
+
+  it("makes the look on the store's own estimate, step by step, and says each step once", async () => {
+    renderSheet({ lookSeconds: 12 });
+    await pickPhoto();
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+    await act(async () => {});
+
+    expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
+    expect(screen.getByText('About 12 seconds left')).toBeInTheDocument();
+    const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
+    expect(live).toHaveTextContent('Reading your photo');
+    const steps = within(screen.getByRole('list'));
+    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
+    expect(steps.getByText('Fitting the garment').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
+    expect(live).toHaveTextContent('Fitting the garment');
+
+    // Past the estimate: the last step holds and the seconds go, never zero.
+    act(() => vi.advanceTimersByTime(30_000));
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
+    expect(steps.getByText('Rendering your look').closest('li')).toHaveAttribute('aria-current', 'step');
+  });
+
+  it("uses the store's own steps and loading style, and promises no time without an estimate", async () => {
+    renderSheet({ lookSeconds: null, loadingSteps: ['Measuring', 'Draping'], loadingStyle: 'bar' });
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
+    expect(screen.queryByText(/seconds? left/)).toBeNull();
+    expect(screen.queryByRole('list')).toBeNull();
+    expect(screen.getAllByText('Measuring').length).toBeGreaterThan(0);
+  });
+
+  it("shows the look with the store's own product, handed over by the page that holds the sheet", async () => {
+    flow.finish = true;
+    renderSheet({ variantId: '456' });
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          source: window,
+          data: {
+            type: 'grindctrl-tryon:product',
+            product: {
+              options: ['Colour', 'Size'],
+              currency: 'EGP',
+              variants: [
+                { id: 456, title: 'Black / M', options: ['Black', 'M'], available: true, price: 325000 },
+                { id: 457, title: 'Black / L', options: ['Black', 'L'], available: true, price: 325000 },
+              ],
+            },
+          },
+        }),
+      );
+      // Anything else claiming to be the product is ignored.
+      window.dispatchEvent(new MessageEvent('message', { source: null, data: { type: 'grindctrl-tryon:product', product: { variants: [{ id: 1 }] } } }));
+    });
+    await pickPhoto();
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Your look is ready' })).toBeInTheDocument();
+    expect(screen.getByText(/Layla Embroidered Abaya · EGP/)).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'M' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('button', { name: 'Add to cart · Black, M' })).toBeInTheDocument();
+    // The product header gives way to the look's own.
+    expect(screen.queryByText('Black · M')).toBeNull();
+    const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
+    expect(live).toHaveTextContent('Your look is ready');
+  });
+
+  it("notices an in-app browser and links to the store's own page for this variant", async () => {
+    const ua = Object.getOwnPropertyDescriptor(window.navigator, 'userAgent');
+    Object.defineProperty(window.navigator, 'userAgent', {
+      value: 'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Chrome/126.0 Mobile Safari/537.36 Instagram 339.0.0.37.93 Android',
+      configurable: true,
+    });
+    Object.defineProperty(document, 'referrer', { value: 'https://maisonnoor.com/', configurable: true });
+    try {
+      renderSheet({ variantId: '456' });
+      expect(await screen.findByText(/You're in Instagram's browser/)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Open in my browser' }).getAttribute('href')).toContain(
+        'maisonnoor.com/products/layla-abaya?variant=456&gc_tryon=1',
+      );
+    } finally {
+      if (ua) Object.defineProperty(window.navigator, 'userAgent', ua);
+      else delete (window.navigator as { userAgent?: string }).userAgent;
+      Object.defineProperty(document, 'referrer', { value: '', configurable: true });
+    }
+  });
+
+  it('offers only the photo picker on a computer, where a file picker cannot open a camera', async () => {
+    setScreen({ touch: false, wide: true });
+    renderSheet();
+    await screen.findByRole('heading', { name: 'See it on you' });
+    expect(screen.queryByRole('button', { name: /Take a photo/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Choose from your photos/ })).toBeInTheDocument();
+    expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1);
+    expect(document.querySelector('input[capture]')).toBeNull();
+  });
+
+  it('shows the look beside the details on a wide screen, with how long it took', async () => {
+    flow.finish = true;
+    setScreen({ touch: false, wide: true });
+    renderSheet();
+    await screen.findByRole('heading', { name: 'See it on you' });
+    const gallery = document.querySelector<HTMLInputElement>('input[type="file"]')!;
+    fireEvent.change(gallery, { target: { files: [new File(['photo'], 'me.png', { type: 'image/png' })] } });
+    await screen.findByText('Looks great');
+    fireEvent.click(screen.getByRole('button', { name: 'Agree and try it on' }));
+
+    expect(await screen.findByRole('heading', { name: 'Your look is ready, made in 14 seconds' })).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Drag to compare your photo and the look' })).toHaveAttribute('aria-valuenow', '50');
+    expect(screen.getByRole('img', { name: 'You wearing the Layla Embroidered Abaya' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Your original photo' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Compare' })).toBeNull();
+  });
+});

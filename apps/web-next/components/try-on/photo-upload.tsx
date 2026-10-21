@@ -5,6 +5,7 @@ import { Upload, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
+import { photoFileError } from '@/lib/try-on/photo-file';
 
 interface PhotoUploadProps {
   onFileSelected: (file: File, dataUrl: string) => void;
@@ -28,13 +29,9 @@ export function PhotoUpload({
     (file: File) => {
       setError(null);
 
-      const allowedTypes = TRYON_FILE_CONFIG.allowedTypes as readonly string[];
-      if (!allowedTypes.includes(file.type)) {
-        setError(t.errUnsupported(TRYON_FILE_CONFIG.allowedExtensions.join(', ')));
-        return;
-      }
-      if (file.size > TRYON_FILE_CONFIG.maxSizeBytes) {
-        setError(t.errTooLarge(TRYON_FILE_CONFIG.maxSizeMB));
+      const invalid = photoFileError(file, t);
+      if (invalid) {
+        setError(invalid);
         return;
       }
 

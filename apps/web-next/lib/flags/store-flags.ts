@@ -24,6 +24,7 @@ export const STORE_FLAGS = {
   /* Screen flags turn a redesigned surface on for one store
      (supabase/20261017_store_flags_screens.sql admits the v16_ names). */
   v16_dashboard: { code: 'V16', title: 'The v16 dashboard shell and pages' },
+  v16_tryon: { code: 'V16', title: 'The v16 try-on for shoppers (needs the theme extension deployed)' },
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;

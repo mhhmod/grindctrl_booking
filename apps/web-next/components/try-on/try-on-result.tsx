@@ -26,10 +26,18 @@ interface TryOnResultProps {
   controls?: ResultControls;
 }
 
+/** Shopify's variant title ("Black / M") the way the boards write it ("Black, M").
+ *  A product with only its default variant names none. */
+export function variantLabel(title: string): string {
+  const trimmed = title.trim().slice(0, 80);
+  return trimmed === 'Default Title' ? '' : trimmed.split(' / ').join(', ');
+}
+
 export function TryOnResult({ job, productName, onReset, shopMode, controls }: TryOnResultProps) {
   const { t } = useTryOnLocale();
-  const [cartState, setCartState] = useState<'idle' | 'adding' | 'failed'>('idle');
+  const [cartState, setCartState] = useState<'idle' | 'adding' | 'added' | 'failed'>('idle');
   const [cartError, setCartError] = useState('');
+  const [addedVariant, setAddedVariant] = useState('');
   const ackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const show = {
@@ -47,6 +55,13 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === 'grindctrl-tryon:cart-result') {
         if (ackTimer.current) clearTimeout(ackTimer.current);
+        /* The v16 sheet keeps the shopper on the look and says what it
+           added; the inline block leaves for the cart and never acks ok. */
+        if (event.data.ok && typeof event.data.variantTitle === 'string') {
+          setAddedVariant(variantLabel(event.data.variantTitle));
+          setCartState('added');
+          return;
+        }
         setCartState(event.data.ok ? 'idle' : 'failed');
         setCartError(typeof event.data.message === 'string' ? event.data.message.slice(0, 160) : '');
       }
@@ -134,6 +149,18 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
               <ArrowRight className="size-4 rtl:-scale-x-100" />
             </Link>
           </Button>
+        )}
+        {shopMode && show.addToCart && cartState === 'added' && (
+          <div role="status" className="flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-sm">
+            <span className="min-w-0 truncate">{t.addedVariant(addedVariant)}</span>
+            <Button
+              size="sm"
+              className="shrink-0 rounded-lg"
+              onClick={() => window.parent.postMessage({ type: 'grindctrl-tryon:checkout' }, '*')}
+            >
+              {t.checkout}
+            </Button>
+          </div>
         )}
         {shopMode && show.addToCart && cartState === 'failed' && cartError && (
           <p className="text-center text-xs text-destructive">{cartError}</p>
