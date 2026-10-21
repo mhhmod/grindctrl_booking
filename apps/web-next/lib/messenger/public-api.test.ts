@@ -51,3 +51,21 @@ describe('toPublicPayload team hours (n23_after_hours)', () => {
     );
   });
 });
+
+describe('toPublicPayload order lookup (Chat-More)', () => {
+  const on = (domain: string | null, enabled = true) => ({
+    ...site('active'),
+    domain,
+    config: { ...site('active').config, orderLookup: { enabled } },
+  });
+
+  it('offers the lookup form to a v16 Shopify store with order lookup on', () => {
+    expect(toPublicPayload(on('maison.myshopify.com'), new Date(), ['v16_chat']).orderLookup).toBe(true);
+  });
+
+  it('withholds it from a store with lookup off, a site that is not a Shopify store, and the old panel', () => {
+    expect(toPublicPayload(on('maison.myshopify.com', false), new Date(), ['v16_chat']).orderLookup).toBe(false);
+    expect(toPublicPayload(on('maisonnoor.com'), new Date(), ['v16_chat']).orderLookup).toBe(false);
+    expect(toPublicPayload(on('maison.myshopify.com'), new Date(), []).orderLookup).toBeUndefined();
+  });
+});

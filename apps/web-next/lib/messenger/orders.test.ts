@@ -21,7 +21,7 @@ vi.mock('@/lib/shopify/admin', () => ({
   },
 }));
 
-import { lookupOrder, mapPaymentState, toOrderFacts } from './orders';
+import { lookupGuestOrderCard, lookupOrder, mapPaymentState, toOrderFacts } from './orders';
 
 const ORDER = {
   name: '#1234',
@@ -200,5 +200,46 @@ describe('lookupOrder — access', () => {
     expect(
       await lookupOrder({ shopDomain: 'demo.myshopify.com', verifiedCustomerId: '1', orderNumber: null, email: null }),
     ).toEqual({ ok: false, reason: 'provider_error' });
+  });
+});
+
+/* The lookup form's guest path (Chat-More, N48 with the email match): the
+   exact order, the email it was placed with, and the card from its data. */
+describe('lookupGuestOrderCard', () => {
+  const guest = (over: Partial<Parameters<typeof lookupGuestOrderCard>[0]> = {}) =>
+    lookupGuestOrderCard({ shopDomain: 'shop.myshopify.com', orderNumber: '1234', email: ' shopper@example.COM ', withAmounts: false, ...over });
+
+  it('returns the card for the right number and email, read with the fulfilments', async () => {
+    adminGraphql.mockResolvedValue({ orders: { nodes: [ORDER] } });
+    const outcome = await guest();
+    expect(outcome).toMatchObject({ ok: true, card: { name: '#1234', stage: 'on_its_way', carrier: 'DHL', trackingUrl: 'https://track/1' } });
+    const call = adminGraphql.mock.calls[0][0];
+    expect(call.variables).toEqual({ query: 'name:#1234' });
+    expect(call.query).toContain('fulfillments(first: 5)');
+    expect(call.query).toContain('events(first: 20)');
+    // Nothing the card does not show is asked for.
+    expect(call.query).not.toContain('shippingAddress');
+    expect(call.query).not.toContain('phone');
+  });
+
+  it('refuses another email, an order with none, and a different order the search returned', async () => {
+    adminGraphql.mockResolvedValue({ orders: { nodes: [ORDER] } });
+    expect(await guest({ email: 'someone@else.com' })).toEqual({ ok: false, reason: 'email_mismatch' });
+    adminGraphql.mockResolvedValue({ orders: { nodes: [{ ...ORDER, email: null }] } });
+    expect(await guest()).toEqual({ ok: false, reason: 'email_mismatch' });
+    adminGraphql.mockResolvedValue({ orders: { nodes: [{ ...ORDER, name: '#12345' }] } });
+    expect(await guest()).toEqual({ ok: false, reason: 'not_found' });
+    adminGraphql.mockResolvedValue({ orders: { nodes: [] } });
+    expect(await guest()).toEqual({ ok: false, reason: 'not_found' });
+  });
+
+  it('stays shut without the order scope, and says so when Shopify fails', async () => {
+    getShopToken.mockResolvedValue({ accessToken: 'tok', scopes: 'read_products' });
+    expect(await guest()).toEqual({ ok: false, reason: 'no_scope' });
+    expect(adminGraphql).not.toHaveBeenCalled();
+
+    getShopToken.mockResolvedValue({ accessToken: 'tok', scopes: 'read_orders' });
+    adminGraphql.mockRejectedValue(new Error('boom'));
+    expect(await guest()).toEqual({ ok: false, reason: 'provider_error' });
   });
 });

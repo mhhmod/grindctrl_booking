@@ -158,6 +158,8 @@ export async function POST(request: NextRequest) {
         createdAt: m.created_at,
         author: m.metadata.author ?? (m.role === 'assistant' ? 'ai' : undefined),
         feedback: m.metadata.feedback ?? undefined,
+        // The card the order lookup found (Chat-More), from the store's data.
+        order: m.metadata.order_card ?? undefined,
       })),
     });
   } catch (error) {

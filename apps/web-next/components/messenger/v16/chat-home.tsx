@@ -26,7 +26,8 @@ export function ChatHome({
   welcomeTitle: string;
   welcomeSubtitle: string;
   disabled: boolean;
-  onQuickAction: (message: string) => void;
+  /** The action's first message, and which action it was. */
+  onQuickAction: (message: string, id: PanelCopy['quickActions'][number]['id']) => void;
   onTryOn: () => void;
 }) {
   const details = product ? productLine(product, locale) : '';
@@ -69,7 +70,7 @@ export function ChatHome({
             <button
               type="button"
               disabled={disabled}
-              onClick={() => onQuickAction(action.message)}
+              onClick={() => onQuickAction(action.message, action.id)}
               className="flex min-h-12 w-full items-center justify-center rounded-xl border border-border bg-card px-3 py-2 text-center text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
             >
               {action.label}

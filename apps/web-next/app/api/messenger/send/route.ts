@@ -20,6 +20,8 @@ import {
 } from '@/lib/messenger/conversations';
 import { parseModelTurn } from '@/lib/messenger/actions';
 import { lookupOrder, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
+import { orderLookupLimiter } from '@/lib/messenger/order-limits';
+import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify, type Escalation } from '@/lib/messenger/escalate';
 import { handoffLine } from '@/lib/messenger/handoff-copy';
@@ -85,31 +87,6 @@ const sessionLimiter = redis
       analytics: false,
     })
   : null;
-
-/* Order lookups are counted per IP as well as per conversation: a new
-   conversation is one localStorage clear away, so a per-conversation budget
-   alone would not slow down someone guessing order numbers. Counted on
-   attempts, not successes — guessing is what spends it. */
-const orderLookupLimiter = redis
-  ? new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(20, '1 h'),
-      prefix: 'gc-msgr-order',
-      analytics: false,
-    })
-  : null;
-
-/* Every denial reads the same, whatever went wrong. Wrong order number,
-   wrong email, another store's order, budget exhausted — one sentence, so
-   the chat cannot be used to discover which orders or addresses exist. */
-const ORDER_DENIED = {
-  en: "I couldn't find an order matching those details. If you'd like, I can bring in the team.",
-  ar: 'لم أتمكن من العثور على طلب مطابق لهذه التفاصيل. يمكنني توصيلك بالفريق إذا أردت.',
-};
-const ORDER_UNAVAILABLE = {
-  en: "I couldn't reach the store's order system just now. The team can check it for you.",
-  ar: 'تعذّر الوصول إلى نظام الطلبات الآن. يمكن للفريق التحقق منه نيابةً عنك.',
-};
 
 export async function POST(request: NextRequest) {
   try {

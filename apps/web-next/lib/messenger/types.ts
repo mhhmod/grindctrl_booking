@@ -247,5 +247,10 @@ export interface MessageRecord {
     /** Profile id of the staff author of an internal note. Server resolves
      *  this to a display name; the id itself never leaves the server. */
     noteAuthorProfileId?: string;
+    /** The shopper's own lookup line ("#1027 · m•••••@gmail.com"), from the
+     *  lookup form rather than typed (Chat-More). */
+    order_lookup?: boolean;
+    /** The order card the lookup found, drawn from the store's data. */
+    order_card?: import('./order-card').OrderCard;
   };
 }

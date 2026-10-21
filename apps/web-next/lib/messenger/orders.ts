@@ -2,6 +2,7 @@ import 'server-only';
 
 import { adminGraphql, ShopifyAdminError } from '@/lib/shopify/admin';
 import { getShopToken, hasOrderScope } from '@/lib/shopify/tokens';
+import { toOrderCard, type OrderCard, type RawCardOrder } from './order-card';
 
 /* Order lookup.
 
@@ -119,6 +120,15 @@ const BY_CUSTOMER_QUERY = `query CustomerOrders($id: ID!, $query: String) {
   }
 }`;
 
+/* The whole anonymous path rests on this comparison. Both sides trimmed
+   and lowercased; an order with no email on it can never match, which is
+   the correct answer rather than an accident. */
+export function emailMatches(onOrder: string | null | undefined, supplied: string | null | undefined): boolean {
+  const a = (onOrder ?? '').trim().toLowerCase();
+  const b = (supplied ?? '').trim().toLowerCase();
+  return Boolean(a) && Boolean(b) && a === b;
+}
+
 export async function lookupOrder(input: {
   shopDomain: string;
   /** From the conversation record + proxy-signed token. Never from the model. */
@@ -168,17 +178,76 @@ export async function lookupOrder(input: {
     const order = data.orders?.nodes?.[0];
     if (!order) return { ok: false, reason: 'not_found' };
 
-    /* The whole anonymous path rests on this comparison. Both sides trimmed
-       and lowercased; an order with no email on it can never match, which
-       is the correct answer rather than an accident. */
-    const onOrder = (order.email ?? '').trim().toLowerCase();
-    const supplied = (input.email ?? '').trim().toLowerCase();
-    if (!onOrder || !supplied || onOrder !== supplied) return { ok: false, reason: 'email_mismatch' };
+    if (!emailMatches(order.email, input.email)) return { ok: false, reason: 'email_mismatch' };
 
     return { ok: true, facts: toOrderFacts(order) };
   } catch (error) {
     const status = error instanceof ShopifyAdminError ? error.status : 0;
     console.error('[messenger] order lookup failed:', status, error instanceof Error ? error.message : error);
+    return { ok: false, reason: 'provider_error' };
+  }
+}
+
+/* The guest lookup inside the chat (Chat-More, contract N48 with the email
+   match only): the order number and the email it was placed with, checked
+   here and never through the model. It answers with the card's own data,
+   read with the order's fulfilments, and keeps the denial reasons for the
+   audit alone. */
+const GUEST_CARD_QUERY = `query GuestOrderCard($query: String!) {
+  orders(first: 1, query: $query) {
+    nodes {
+      name
+      processedAt
+      createdAt
+      cancelledAt
+      email
+      displayFulfillmentStatus
+      paymentGatewayNames
+      totalOutstandingSet { presentmentMoney { amount currencyCode } }
+      currentTotalPriceSet { presentmentMoney { amount currencyCode } }
+      lineItems(first: 10) { nodes { title quantity } }
+      fulfillments(first: 5) {
+        createdAt
+        inTransitAt
+        deliveredAt
+        estimatedDeliveryAt
+        displayStatus
+        trackingInfo { company url }
+        events(first: 20) { nodes { status happenedAt } }
+      }
+    }
+  }
+}`;
+
+export type GuestCardOutcome =
+  | { ok: true; card: OrderCard }
+  | { ok: false; reason: LookupDenial };
+
+export async function lookupGuestOrderCard(input: {
+  shopDomain: string;
+  orderNumber: string;
+  email: string;
+  withAmounts: boolean;
+}): Promise<GuestCardOutcome> {
+  const token = await getShopToken(input.shopDomain);
+  if (!token) return { ok: false, reason: 'not_configured' };
+  if (!hasOrderScope(token.scopes)) return { ok: false, reason: 'no_scope' };
+  try {
+    const data = await adminGraphql<{ orders?: { nodes?: Array<RawCardOrder & { email?: string | null }> } }>({
+      shopDomain: input.shopDomain,
+      accessToken: token.accessToken,
+      query: GUEST_CARD_QUERY,
+      variables: { query: `name:#${input.orderNumber}` },
+    });
+    const order = data.orders?.nodes?.[0];
+    if (!order) return { ok: false, reason: 'not_found' };
+    // Shopify's name search is loose; only this exact order counts.
+    if (String(order.name ?? '').replace(/^#/, '') !== input.orderNumber) return { ok: false, reason: 'not_found' };
+    if (!emailMatches(order.email, input.email)) return { ok: false, reason: 'email_mismatch' };
+    return { ok: true, card: toOrderCard(order, { withAmounts: input.withAmounts }) };
+  } catch (error) {
+    const status = error instanceof ShopifyAdminError ? error.status : 0;
+    console.error('[messenger] guest order lookup failed:', status, error instanceof Error ? error.message : error);
     return { ok: false, reason: 'provider_error' };
   }
 }
