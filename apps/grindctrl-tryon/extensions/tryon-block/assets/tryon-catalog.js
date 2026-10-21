@@ -444,7 +444,11 @@
   // One delegated capture-phase listener: fires before theme handlers and
   // survives themes cloning/re-rendering card DOM (which drops listeners).
   // Themes cover cards with invisible stretched-link overlays; the pill can
-  // lose hit-testing even when visually on top. Resolve the pill by point.
+  // lose hit-testing even when visually on top. Resolve the pill by point,
+  // but never through a fixed or sticky layer above it: a tap on the chat
+  // bubble, a sticky Add to cart bar, a cookie banner or the try-on sheet
+  // over a pill belongs to that layer, and must reach it. Without this, the
+  // chat bubble on a phone opened the try-on of the card beneath it.
   function pillFromEvent(e) {
     var t = e.target && e.target.closest && e.target.closest('.gc-cat-btn');
     if (t) return t;
@@ -454,10 +458,16 @@
         if (els[i].closest) {
           var p = els[i].closest('.gc-cat-btn');
           if (p) return p;
+          if (floatsAbovePage(els[i])) return null;
         }
       }
     }
     return null;
+  }
+
+  function floatsAbovePage(el) {
+    var position = getComputedStyle(el).position;
+    return position === 'fixed' || position === 'sticky';
   }
 
   document.addEventListener(

@@ -143,6 +143,13 @@ describe('the v16 panel', () => {
     const card = await screen.findByRole('region', { name: "You're viewing" });
     expect(card).toHaveTextContent('Layla Embroidered Abaya');
     expect(card.textContent?.replace(/\u00a0/g, ' ')).toContain('Black · M · EGP 3,250');
+    // Each part isolated, so a Latin variant and the price cannot run
+    // together in the Arabic panel ("$Black · S · 79 US" on the live store).
+    expect([...card.querySelectorAll('bdi')].map((el) => el.textContent?.replace(/\u00a0/g, ' '))).toEqual([
+      'Black',
+      'M',
+      'EGP 3,250',
+    ]);
     fireEvent.click(screen.getByRole('button', { name: 'Try it on' }));
     expect(posted).toHaveBeenCalledWith({ type: 'grindctrl-messenger:try-on' }, '*');
   });
