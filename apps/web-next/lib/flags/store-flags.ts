@@ -10,7 +10,9 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
    only here, cached for 60 seconds like the App Proxy config, and flipped
    only by the platform operator.
 
-   Reads fail closed: a store whose flags cannot be read has none on. */
+   The v16 screens and team invites are on for every store, with no row and
+   no switch (ALWAYS_ON, the owner's call on 22 October 2026). Reads fail
+   closed for the rest: a store whose flags cannot be read has only those. */
 
 /** Every flag the code knows, with the contract it belongs to. A row for a
  *  name not listed here is ignored, so a typo can never switch anything on. */
@@ -32,6 +34,10 @@ export const STORE_FLAGS = {
 } as const;
 
 export type StoreFlag = keyof typeof STORE_FLAGS;
+
+/** On for every store, whatever its rows say, in STORE_FLAGS order. The
+ *  Store flags card does not offer them. */
+export const ALWAYS_ON: readonly StoreFlag[] = ['n21_team_invites', 'v16_dashboard', 'v16_tryon', 'v16_chat'];
 
 export type FlagStore = { shopDomain: string } | { widgetSiteId: string };
 
@@ -81,7 +87,7 @@ function isMissingTable(error: { code?: string; message?: string }): boolean {
 /** The flags on for this store, in a stable order. Never throws. */
 export async function storeFlags(store: FlagStore, now: number = Date.now()): Promise<StoreFlag[]> {
   const valid = validStore(store);
-  if (!valid) return [];
+  if (!valid) return [...ALWAYS_ON];
   const key = cacheKey(valid);
   const cached = cache.get(key);
   if (cached && cached.expiresAt > now) return cached.flags;
@@ -97,15 +103,15 @@ export async function storeFlags(store: FlagStore, now: number = Date.now()): Pr
       /* Until the owner applies the table, every store simply has no flags.
          That answer is cached like any other; a passing database error is
          not, so the next read can recover. */
-      if (isMissingTable(error)) cache.set(key, { flags: [], expiresAt: now + CACHE_TTL_MS });
-      return [];
+      if (isMissingTable(error)) cache.set(key, { flags: [...ALWAYS_ON], expiresAt: now + CACHE_TTL_MS });
+      return [...ALWAYS_ON];
     }
     const on = new Set((data ?? []).map((row: { flag?: unknown }) => row.flag));
-    const flags = STORE_FLAG_NAMES.filter((flag) => on.has(flag));
+    const flags = STORE_FLAG_NAMES.filter((flag) => on.has(flag) || ALWAYS_ON.includes(flag));
     cache.set(key, { flags, expiresAt: now + CACHE_TTL_MS });
     return flags;
   } catch {
-    return [];
+    return [...ALWAYS_ON];
   }
 }
 
@@ -164,7 +170,11 @@ export async function storeFlagRows(store: FlagStore): Promise<
   Array<{ flag: StoreFlag; code: string; title: string; enabled: boolean }>
 > {
   const on = await storeFlags(store);
-  return STORE_FLAG_NAMES.map((flag) => ({ flag, ...STORE_FLAGS[flag], enabled: on.includes(flag) }));
+  return STORE_FLAG_NAMES.filter((flag) => !ALWAYS_ON.includes(flag)).map((flag) => ({
+    flag,
+    ...STORE_FLAGS[flag],
+    enabled: on.includes(flag),
+  }));
 }
 
 export function invalidateStoreFlags(store: FlagStore): void {
