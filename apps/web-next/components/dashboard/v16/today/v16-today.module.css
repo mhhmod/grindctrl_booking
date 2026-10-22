@@ -1,0 +1,313 @@
+/* The v16 Today page (04-dashboard.md, Today and Today-States). Colours,
+   radii and type come from the tokens; layout uses logical properties so
+   Arabic mirrors. One column on phones, the board's grid from 64em. */
+
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+/* Health strip */
+.health {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 24px;
+  padding: 16px 20px;
+}
+
+.healthLead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
+.dot {
+  inline-size: 10px;
+  block-size: 10px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--gc-success);
+}
+
+.dot[data-tone='attention'] {
+  background: var(--gc-attention);
+}
+
+.dot[data-tone='danger'] {
+  background: var(--gc-danger);
+}
+
+.healthItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.healthDetails {
+  margin-inline-start: auto;
+}
+
+/* Needs you */
+.needs {
+  display: grid;
+}
+
+.needsHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 18px 20px;
+  border-block-end: 1px solid var(--border);
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.count {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 20px;
+}
+
+.row + .row {
+  border-block-start: 1px solid var(--border);
+}
+
+@media (min-width: 40em) {
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: var(--gc-radius-icon-tile);
+  background: var(--gc-attention-soft);
+  color: var(--gc-attention);
+}
+
+.rowIcon[data-tone='danger'] {
+  background: var(--gc-danger-soft);
+  color: var(--gc-danger);
+}
+
+.rowText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.rowLine {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.rowAction {
+  grid-column: 2;
+  justify-self: start;
+}
+
+@media (min-width: 40em) {
+  .rowAction {
+    grid-column: auto;
+    justify-self: end;
+  }
+}
+
+/* Nothing needs you */
+.calm {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 20px;
+  text-align: center;
+}
+
+.calmIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: 999px;
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+.calmBody {
+  max-inline-size: 46ch;
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-pill);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Last 7 days */
+.tilesSection {
+  display: grid;
+  gap: 12px;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 40em) {
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64em) {
+  .tiles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* Fewer tiles than the board's four (a tile without a source is left
+     out) share the row rather than leave a hole. */
+  .tiles[data-count='3'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tiles[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 18px 20px;
+}
+
+.tileLabel {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+:where([dir='rtl']) .tileLabel {
+  letter-spacing: 0;
+}
+
+.tileValue {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileSub {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.tileSub[data-trend='up'] {
+  color: var(--gc-success);
+}
+
+/* Health details drawer */
+.detailRows {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  padding: 14px 0;
+}
+
+.detailRow + .detailRow {
+  border-block-start: 1px solid var(--border);
+}
+
+.detailRow .dot {
+  margin-block-start: 6px;
+}
+
+.detailTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.detailState {
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.detailResult {
+  grid-column: 2;
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.notChecked {
+  margin: 16px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
