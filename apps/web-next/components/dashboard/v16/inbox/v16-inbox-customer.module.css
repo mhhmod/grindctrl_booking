@@ -1,0 +1,130 @@
+/* The v16 Inbox's customer column (the Inbox board's "About Salma"). Colours
+   and type come from the tokens; layout uses logical properties so Arabic
+   mirrors. Sections are separated by hairlines, as on the board. */
+
+.column {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+
+.section {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  min-width: 0;
+  padding: 16px 18px;
+  border-block-end: 1px solid var(--border);
+}
+
+.section:last-child {
+  border-block-end: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.muted,
+.preview,
+.strong {
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: break-word;
+}
+
+.muted {
+  color: var(--muted-foreground);
+}
+
+.strong {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.pill[data-tone='ok'] {
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+.pill[data-tone='attention'] {
+  background: var(--gc-attention-soft);
+  color: var(--gc-attention);
+}
+
+.pill[data-tone='danger'] {
+  background: var(--gc-danger-soft);
+  color: var(--gc-danger);
+}
+
+.list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-inline-start: 18px;
+  font-size: 0.875rem;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  /* Each link is already 40px tall, so wrapped rows need no gap of their own. */
+  gap: 0 16px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.cart,
+.past {
+  display: grid;
+  gap: 10px;
+  inline-size: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cart li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.cartTitle {
+  overflow-wrap: break-word;
+}
+
+.past li {
+  display: grid;
+  gap: 2px;
+}

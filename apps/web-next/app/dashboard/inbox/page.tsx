@@ -11,6 +11,7 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { getInboxData, type InboxData } from '@/lib/dashboard/inbox-data';
 import { V16Inbox, V16InboxError, V16InboxNoStoreChat } from '@/components/dashboard/v16/inbox/v16-inbox';
 import * as conversationActions from '@/app/dashboard/store-chat/actions';
+import { fetchInboxCustomer } from './actions';
 
 type Props = {
   searchParams?: Promise<SearchParams>;
@@ -59,6 +60,7 @@ export default async function DashboardInboxPage({ searchParams }: Props) {
           closeConversationAction: conversationActions.closeConversationAction,
           markConversationRead: conversationActions.markConversationRead,
         }}
+        fetchCustomer={fetchInboxCustomer}
       />
     ) : (
       <V16InboxError locale={locale} />
