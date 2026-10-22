@@ -109,6 +109,20 @@ function planPrice(item: PlanCatalogItem, currency: Currency, copy: PlanCopy, lo
   return copy.perPeriod(price, item.periodUnit, item.periodCount);
 }
 
+/** The plans on offer in one currency, in their order. A store still on a
+ *  retired plan (an earlier Free with more looks) sees its own in place of
+ *  the one that replaced it, so its plan is in the list and marked. */
+function listedPlans(catalog: PlanCatalogItem[], current: PlanCatalogItem | null, currency: Currency): PlanCatalogItem[] {
+  let listed = plansForCurrency(
+    catalog.filter((item) => item.active),
+    currency,
+  );
+  if (current && !listed.some((item) => item.planKey === current.planKey)) {
+    listed = [...listed.filter((item) => item.name !== current.name), current];
+  }
+  return listed.sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
 export function buildPlanView(facts: PlanFacts, copy: PlanCopy, locale: SiteLocale): PlanView {
   const { now, timeZone, plan } = facts;
   const start = plan.currentPeriodStart ? Date.parse(plan.currentPeriodStart) : NaN;
@@ -238,17 +252,12 @@ export function buildPlanView(facts: PlanFacts, copy: PlanCopy, locale: SiteLoca
         }
       : null,
     cycles,
-    plans: plansForCurrency(
-      facts.plans.filter((item) => item.active),
-      currency,
-    )
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((item) => ({
-        key: item.planKey,
-        name: item.name,
-        price: planPrice(item, currency, copy, locale),
-        looks: copy.looksPer(item.rendersIncluded, item.periodUnit, item.periodCount),
-        current: item.planKey === plan.planKey,
-      })),
+    plans: listedPlans(facts.plans, current, currency).map((item) => ({
+      key: item.planKey,
+      name: item.name,
+      price: planPrice(item, currency, copy, locale),
+      looks: copy.looksPer(item.rendersIncluded, item.periodUnit, item.periodCount),
+      current: item.planKey === plan.planKey,
+    })),
   };
 }

@@ -14,7 +14,7 @@ export interface ShellCopy {
   skipToContent: string;
   navLabel: string;
   phoneNavLabel: string;
-  nav: { today: string; inbox: string; tryOn: string; storeChat: string; storeChatShort: string; plan: string };
+  nav: { today: string; inbox: string; tryOn: string; storeChat: string; storeChatShort: string; plan: string; settings: string };
   switchStore: (current: string) => string;
   yourStores: string;
   looksThisCycle: string;
@@ -38,7 +38,7 @@ const en: ShellCopy = {
   skipToContent: 'Skip to content',
   navLabel: 'GrindCTRL',
   phoneNavLabel: 'Main',
-  nav: { today: 'Today', inbox: 'Inbox', tryOn: 'Try-On', storeChat: 'Store Chat', storeChatShort: 'Chat', plan: 'Plan' },
+  nav: { today: 'Today', inbox: 'Inbox', tryOn: 'Try-On', storeChat: 'Store Chat', storeChatShort: 'Chat', plan: 'Plan', settings: 'Settings' },
   switchStore: (current) => `Switch store, current ${current}`,
   yourStores: 'Your stores',
   looksThisCycle: 'Looks this cycle',
@@ -66,7 +66,7 @@ const ar: ShellCopy = {
   skipToContent: 'انتقل إلى المحتوى',
   navLabel: 'GrindCTRL',
   phoneNavLabel: 'القائمة الرئيسية',
-  nav: { today: 'اليوم', inbox: 'الرسائل', tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', storeChatShort: 'الدردشة', plan: 'الباقة' },
+  nav: { today: 'اليوم', inbox: 'الرسائل', tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', storeChatShort: 'الدردشة', plan: 'الباقة', settings: 'الإعدادات' },
   switchStore: (current) => `تبديل المتجر، الحالي ${current}`,
   yourStores: 'متاجرك',
   looksThisCycle: 'الإطلالات في هذه الدورة',
