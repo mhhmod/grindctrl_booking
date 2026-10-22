@@ -28,6 +28,10 @@ const en: DashboardCopy = {
       title: 'Overview',
       description: 'The try-on business this week, across every merchant store.',
     },
+    '/dashboard/inbox': {
+      title: 'Inbox',
+      description: 'Shopper conversations that need your team.',
+    },
     '/dashboard/try-on': {
       title: 'Try-On',
       description: 'Settings, plans, and generation history for every merchant store.',
@@ -54,6 +58,10 @@ const ar: DashboardCopy = {
     '/dashboard': {
       title: 'نظرة عامة',
       description: 'أداء التجربة الافتراضية هذا الأسبوع عبر كل متجر.',
+    },
+    '/dashboard/inbox': {
+      title: 'الرسائل',
+      description: 'محادثات المتسوقين التي تحتاج فريقك.',
     },
     '/dashboard/try-on': {
       title: 'التجربة الافتراضية',

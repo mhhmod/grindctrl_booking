@@ -72,6 +72,10 @@ const COPY = {
     noteLabel: 'Private note: only your team sees this',
     notePh: 'Type a private note…',
     cannedInsert: 'Saved replies',
+    tabsLabel: 'Conversations by status',
+    tabNeedsYou: 'Needs you',
+    tabAssistant: 'Assistant',
+    tabResolved: 'Resolved',
   },
   ar: {
     title: 'المحادثات',
@@ -128,6 +132,10 @@ const COPY = {
     noteLabel: 'ملاحظة خاصة: لفريقك فقط',
     notePh: 'اكتب ملاحظة خاصة…',
     cannedInsert: 'ردود محفوظة',
+    tabsLabel: 'المحادثات حسب الحالة',
+    tabNeedsYou: 'يحتاجك',
+    tabAssistant: 'المساعد',
+    tabResolved: 'تم الحل',
   },
 };
 
@@ -231,6 +239,7 @@ export function ConversationsPanel({
   actions,
   currentProfileId,
   assignableMembers = [],
+  inboxTabs = false,
 }: {
   locale: 'en' | 'ar';
   siteId: string;
@@ -253,6 +262,10 @@ export function ConversationsPanel({
    *  filter is not rendered at all — there is no "me" to filter by. */
   currentProfileId?: string | null;
   assignableMembers?: Array<{ profileId: string; name: string }>;
+  /** The v16 Inbox (04-dashboard.md): the board's three tabs with counts
+   *  (Needs you, Assistant, Resolved) in place of the status pills, opening
+   *  on Needs you. */
+  inboxTabs?: boolean;
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
@@ -281,16 +294,26 @@ export function ConversationsPanel({
   /* Search text and status bucket are likewise pure in-memory filters over
      the `conversations` prop — no server round trip, no query param. */
   const [search, setSearch] = useState('');
-  type StatusFilter = 'all' | 'needs_reply' | 'in_progress' | 'resolved';
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const matchesStatus = (s: string) =>
-    statusFilter === 'all'
+  type StatusFilter = 'all' | 'needs_reply' | 'in_progress' | 'resolved' | 'needs_you' | 'assistant';
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(inboxTabs ? 'needs_you' : 'all');
+  const matchesStatus = (s: string, filter: StatusFilter = statusFilter) =>
+    filter === 'all'
       ? true
-      : statusFilter === 'needs_reply'
+      : filter === 'needs_reply'
         ? s === 'handoff_requested'
-        : statusFilter === 'in_progress'
+        : filter === 'in_progress'
           ? s === 'open' || s === 'handoff_active'
-          : s === 'closed';
+          : filter === 'needs_you'
+            ? s === 'handoff_requested' || s === 'handoff_active'
+            : filter === 'assistant'
+              ? s === 'open'
+              : s === 'closed';
+  /* The Inbox tabs count what each would show, Assigned to me included, so
+     a tab's number is the rows it opens on. */
+  const tabCount = (filter: StatusFilter) =>
+    conversations.filter(
+      (c) => matchesStatus(c.status, filter) && (!mineOnly || !currentProfileId || c.assigneeId === currentProfileId),
+    ).length;
   const visibleConversations = conversations.filter((c) => {
     if (mineOnly && currentProfileId && c.assigneeId !== currentProfileId) return false;
     if (!matchesStatus(c.status)) return false;
@@ -468,7 +491,7 @@ export function ConversationsPanel({
     <div
       ref={panelRef}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
-      className="flex h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-1rem)] min-h-0 min-w-0 scroll-mt-14 flex-col gap-2"
+      className="flex h-[calc(var(--inbox-viewport,100dvh)-var(--inbox-top,0px)-var(--inbox-bottom,0px)-1rem)] min-h-0 min-w-0 scroll-mt-14 flex-col gap-2"
     >
       {displayedError && (
         <div role="alert" className="flex max-h-[20%] shrink-0 items-center justify-between gap-2 overflow-y-auto rounded-xl border border-border bg-card px-3 py-2 text-xs text-destructive">
@@ -493,6 +516,21 @@ export function ConversationsPanel({
           autoComplete="off"
         />
       </div>
+      {inboxTabs ? (
+        <div className="flex shrink-0 flex-wrap gap-1" role="group" aria-label={t.tabsLabel}>
+          {(
+            [
+              ['needs_you', t.tabNeedsYou],
+              ['assistant', t.tabAssistant],
+              ['resolved', t.tabResolved],
+            ] as const
+          ).map(([filter, label]) => (
+            <PillToggle key={filter} active={statusFilter === filter} onClick={() => setStatusFilter(filter)}>
+              {label} <span className="tabular-nums opacity-80">{tabCount(filter)}</span>
+            </PillToggle>
+          ))}
+        </div>
+      ) : (
       <div className="flex shrink-0 flex-wrap gap-1" role="group" aria-label={t.statusAll}>
         <PillToggle active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
           {t.statusAll}
@@ -507,6 +545,7 @@ export function ConversationsPanel({
           {t.statusResolved}
         </PillToggle>
       </div>
+      )}
       {canFilterByMe && (
         <div className="flex shrink-0 gap-1">
           <PillToggle active={!mineOnly} onClick={() => setMineOnly(false)}>
@@ -660,7 +699,7 @@ export function ConversationsPanel({
           </div>
           <div className="min-w-0">
             {status === 'handoff_requested' && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">↪ {t.systemHandoff}</p>
+              <p className="text-xs text-amber-800 dark:text-amber-400">↪ {t.systemHandoff}</p>
             )}
             {status ? (
               <Badge variant={statusBadge(status).variant}>{statusBadge(status).label}</Badge>
@@ -750,7 +789,7 @@ export function ConversationsPanel({
                 data-testid="internal-note"
                 className="rounded-xl border border-amber-600/30 bg-amber-500/10 px-3 py-2"
               >
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-400">
                   {t.noteLabel}
                   {message.noteAuthor ? ` · ${message.noteAuthor}` : ''}
                 </p>

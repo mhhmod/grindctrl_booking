@@ -25,7 +25,7 @@ import classes from './v16-shell.module.css';
 
 export type V16NavItem = {
   href: string;
-  key: 'today' | 'tryOn' | 'storeChat';
+  key: 'today' | 'inbox' | 'tryOn' | 'storeChat';
   icon: GcIconName;
   /** Who sees it (item 12): Plan joins for owners only, Settings for owners and admins. */
   permission: DashboardPermissionKey;
@@ -33,6 +33,8 @@ export type V16NavItem = {
 
 export const V16_NAV: readonly V16NavItem[] = [
   { href: '/dashboard', key: 'today', icon: 'home', permission: 'canViewToday' },
+  // Everyone who sees Store Chat answers its shoppers (item 12).
+  { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat' },
   { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn' },
   { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat' },
 ];
@@ -42,7 +44,8 @@ export function v16NavFor(permissions: DashboardPermissionSet): V16NavItem[] {
   return V16_NAV.filter((item) => permissions[item.permission]);
 }
 
-const STORE_CHAT_HREF = '/dashboard/store-chat';
+/* The shoppers waiting for a person show on Inbox, where they are answered. */
+const WAITING_HREF = '/dashboard/inbox';
 
 /* Whether the page has hydrated, so the theme row can read next-themes
    without a mismatch (the same pattern as components/dashboard/theme-toggle.tsx). */
@@ -136,7 +139,7 @@ export function V16ShellView({
 
   const navLabel = (item: V16NavItem) => copy.nav[item.key];
   const badge = (item: V16NavItem) =>
-    item.href === STORE_CHAT_HREF && waiting > 0 ? (
+    item.href === WAITING_HREF && waiting > 0 ? (
       <Badge color="alert" radius="pill" size="sm" aria-label={copy.waiting(waiting)}>
         {waiting}
       </Badge>
@@ -304,7 +307,7 @@ export function V16ShellView({
           >
             <GcIcon name={item.icon} size={22} />
             <span>{item.key === 'storeChat' ? copy.nav.storeChatShort : navLabel(item)}</span>
-            {item.href === STORE_CHAT_HREF && waiting > 0 && (
+            {item.href === WAITING_HREF && waiting > 0 && (
               <span className={classes.tabBadge}>
                 <Badge color="alert" radius="pill" size="xs" aria-label={copy.waiting(waiting)}>
                   {waiting}

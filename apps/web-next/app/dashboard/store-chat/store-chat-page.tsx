@@ -42,6 +42,7 @@ import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
 import { buildChatHead, buildPagesAndNotes } from '@/lib/dashboard/chat-knows-model';
 import { V16ChatFrame, V16ChatKnows, V16ChatKnowsError } from '@/components/dashboard/v16/store-chat/v16-chat-knows';
+import { toConversationListItems } from '@/lib/dashboard/inbox-data';
 
 const TAB_IDS = ['overview', 'appearance', 'ai', 'behaviour', 'conversations', 'installation'] as const;
 
@@ -357,20 +358,11 @@ export async function StoreChatPage({
         config={config}
         payload={payload}
         stats={stats}
-        conversations={conversations.map((c) => ({
-          id: c.id,
-          status: c.status,
-          startedAt: c.started_at,
-          lastMessageAt: c.last_message_at,
-          visitorEmail: c.visitor_email,
-          visitorName: c.visitor_name,
-          handoffReason: c.handoff_reason,
-          assigneeId: c.assigned_profile_id,
-          assigneeName: c.assigned_profile_id ? (assigneeNames[c.assigned_profile_id] ?? null) : null,
-          unreadCount: summaries[c.id]?.unread ?? 0,
-      preview: summaries[c.id]?.preview ?? null,
-          tags: features.includes('n25_handoff_rules') ? (c.metadata.tags ?? []) : undefined,
-        }))}
+        conversations={toConversationListItems(conversations, {
+          assigneeNames,
+          summaries,
+          withTags: features.includes('n25_handoff_rules'),
+        })}
         knowledge={knowledge}
         cannedReplies={cannedReplies}
         actions={messengerActions}

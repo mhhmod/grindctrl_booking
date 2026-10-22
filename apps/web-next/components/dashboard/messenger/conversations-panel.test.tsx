@@ -423,6 +423,48 @@ describe('ConversationsPanel search and status filters', () => {
     );
   }
 
+  /* The v16 Inbox (04-dashboard.md): the board's three tabs, mapped to the
+     statuses as 09-backend-contracts.md says. */
+  describe('as the v16 Inbox', () => {
+    const tab = (name: RegExp) => screen.getByRole('button', { name });
+    function renderInbox(locale: 'en' | 'ar' = 'en') {
+      const conversations = FILTERABLE.map((c) => (c.id === 'conv-cara' ? { ...c, assigneeId: 'me' } : c));
+      render(
+        <ConversationsPanel locale={locale} siteId="site-1" conversations={conversations} actions={actions} currentProfileId="me" inboxTabs />,
+      );
+    }
+
+    it('opens on Needs you, the shoppers waiting for a person and those a person has, with counts', () => {
+      renderInbox();
+      expect(tab(/^Needs you/)).toHaveAttribute('aria-pressed', 'true');
+      expect(tab(/^Needs you/)).toHaveTextContent('Needs you 2');
+      expect(tab(/^Assistant/)).toHaveTextContent('Assistant 1');
+      expect(tab(/^Resolved/)).toHaveTextContent('Resolved 1');
+      expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+      expect(screen.getByText('Cara')).toBeInTheDocument();
+      expect(screen.queryByText('Alice Shopper')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'All statuses' })).not.toBeInTheDocument();
+    });
+
+    it('shows the assistant’s chats and the resolved ones under their tabs, and counts only mine when asked', () => {
+      renderInbox();
+      fireEvent.click(tab(/^Assistant/));
+      expect(screen.getByText('Alice Shopper')).toBeInTheDocument();
+      expect(screen.queryByText('Cara')).not.toBeInTheDocument();
+      fireEvent.click(tab(/^Resolved/));
+      expect(screen.getByText('Dan')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
+      expect(tab(/^Needs you/)).toHaveTextContent('Needs you 1');
+      expect(tab(/^Assistant/)).toHaveTextContent('Assistant 0');
+    });
+
+    it('names the tabs in Arabic', () => {
+      renderInbox('ar');
+      expect(screen.getByRole('group', { name: 'المحادثات حسب الحالة' })).toHaveTextContent('يحتاجك 2المساعد 1تم الحل 1');
+    });
+  });
+
   it('shows every conversation before any filter is applied', () => {
     renderFilterable();
 

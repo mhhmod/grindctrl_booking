@@ -55,8 +55,8 @@ export async function setStoreFlag(input: {
     await writeStoreFlag(store, input.flag, input.enabled, operator);
     // The storefront scripts read the flags from the App Proxy config.
     if ('shopDomain' in store) invalidateProxyConfig(store.shopDomain);
-    revalidatePath('/dashboard/try-on');
-    revalidatePath('/dashboard/store-chat');
+    // A flag can change any dashboard page, and v16_dashboard the shell itself.
+    revalidatePath('/dashboard', 'layout');
     return { ok: true, flags: await storeFlags(store) };
   } catch (error) {
     if (error instanceof PlatformOperatorRequiredError) return FORBIDDEN;

@@ -30,7 +30,8 @@ async function runManualPlanAction(
     const domain = await requireManagedTryOnShop(shop, { capability: 'billing' });
     await requireMerchantRateLimit(`shop:${domain}`);
     const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
-    revalidatePath('/dashboard/try-on');
+    // Set up (/dashboard/try-on/setup) and the shell's looks meter read the plan, under the dashboard layout.
+    revalidatePath('/dashboard', 'layout');
     return { ...result, ok: true, state: await getShopEntitlement(domain) };
   } catch (error) {
     if (error instanceof PlatformOperatorRequiredError || error instanceof RoleNotAllowedError ||

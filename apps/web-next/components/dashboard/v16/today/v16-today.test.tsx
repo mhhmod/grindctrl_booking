@@ -56,7 +56,7 @@ describe('the v16 Today page', () => {
     expect(rows[0]).toHaveTextContent('2 shoppers are waiting for a person');
     expect(within(rows[0]).getByRole('link', { name: 'Open inbox' })).toHaveAttribute(
       'href',
-      '/dashboard/store-chat?tab=conversations',
+      '/dashboard/inbox',
     );
     expect(rows[1]).toHaveTextContent('Looks run out in about 10 days');
     expect(within(rows[1]).getByRole('link', { name: 'See your plan' })).toHaveAttribute('href', '/dashboard/try-on');
