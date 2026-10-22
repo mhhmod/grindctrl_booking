@@ -214,6 +214,9 @@ describe('Today in Arabic', () => {
     expect(ar.thingsCount(2)).toBe('أمران، الأكثر إلحاحاً أولاً');
     expect(ar.looksToday(14)).toBe('14 إطلالة اليوم');
     expect(ar.ofChats(5)).toBe('من 5 محادثات، والباقي حُوِّل إلى الفريق');
+    expect(ar.waitMinutes(3 * 60)).toBe('3 ساعات');
+    expect(ar.waitMinutes(1156 * 60)).toBe('48 يوماً');
+    expect(ar.waitMinutes(30 * 60)).toBe('يوم');
     expect(ar.ofChats(140)).toBe('من 140 محادثة، والباقي حُوِّل إلى الفريق');
     expect(JSON.stringify(v)).not.toMatch(/[٠-٩]/);
   });
@@ -221,6 +224,22 @@ describe('Today in Arabic', () => {
   it('writes the reset date with Western digits', () => {
     const v = view({ tryOn: { ...TRY_ON, looksLeft: 140, resetAt: '2026-10-18T11:00:00Z' } }, ar, 'ar');
     expect(v.needsYou!.rows[0].line).toContain('18 أكتوبر');
+  });
+});
+
+describe('a shopper’s wait', () => {
+  it('reads in minutes, hours, then days, so a forgotten handoff is not 1156 hours', () => {
+    const v = view({ chat: { ...CHAT, waiting: [
+      { since: minutesAgo(1156 * 60), alertSent: true, cart: null },
+      { since: minutesAgo(5), alertSent: true, cart: null },
+    ] } });
+    expect(v.needsYou!.rows[0].line).toBe('Longest wait 48 days');
+    expect([en.waitMinutes(45), en.waitMinutes(90), en.waitMinutes(5 * 60), en.waitMinutes(30 * 60)]).toEqual([
+      '45 min',
+      '1 hour',
+      '5 hours',
+      '1 day',
+    ]);
   });
 });
 

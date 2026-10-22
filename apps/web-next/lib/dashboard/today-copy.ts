@@ -14,6 +14,9 @@ export function arCount(n: number, forms: { one: string; two: string; few: (n: n
   return n >= 3 && n <= 10 ? forms.few(n) : forms.many(n);
 }
 
+/** A wait of a day or more reads in days (a forgotten handoff can be weeks old). */
+const DAY_MINUTES = 24 * 60;
+
 const arMinutes = (n: number) =>
   arCount(n, { one: 'دقيقة', two: 'دقيقتين', few: (m) => `${m} دقائق`, many: (m) => `${m} دقيقة` });
 const arHours = (n: number) => arCount(n, { one: 'ساعة', two: 'ساعتين', few: (m) => `${m} ساعات`, many: (m) => `${m} ساعة` });
@@ -115,7 +118,16 @@ const en: TodayCopy = {
   waitingFor: (wait) => `Waiting ${wait}`,
   cartsHold: (n, money) => (n === 1 ? `their cart holds ${money}` : `their carts hold ${money}`),
   teamEmailed: 'your team was emailed',
-  waitMinutes: (n) => (n < 60 ? `${Math.max(1, n)} min` : n < 120 ? '1 hour' : `${Math.floor(n / 60)} hours`),
+  waitMinutes: (n) =>
+    n < 60
+      ? `${Math.max(1, n)} min`
+      : n < 120
+        ? '1 hour'
+        : n < DAY_MINUTES
+          ? `${Math.floor(n / 60)} hours`
+          : n < 2 * DAY_MINUTES
+            ? '1 day'
+            : `${Math.floor(n / DAY_MINUTES)} days`,
   openInbox: 'Open inbox',
   runOutTitle: (days) => (days <= 1 ? 'Looks run out in about a day' : `Looks run out in about ${days} days`),
   runOutLine: (daysBefore, resetDate) =>
@@ -206,7 +218,8 @@ const ar: TodayCopy = {
   waitingFor: (wait) => `ينتظر منذ ${wait}`,
   cartsHold: (n, money) => (n === 1 ? `وفي سلته ${money}` : `وفي سلالهم ${money}`),
   teamEmailed: 'أُبلغ فريقك بالبريد الإلكتروني',
-  waitMinutes: (n) => (n < 60 ? arMinutes(Math.max(1, n)) : arHours(Math.floor(n / 60))),
+  waitMinutes: (n) =>
+    n < 60 ? arMinutes(Math.max(1, n)) : n < DAY_MINUTES ? arHours(Math.floor(n / 60)) : arDays(Math.floor(n / DAY_MINUTES)),
   openInbox: 'افتح الرسائل',
   runOutTitle: (days) =>
     days <= 1 ? 'الإطلالات تنفد خلال يوم تقريباً' : `الإطلالات تنفد خلال ${arDays(days)} تقريباً`,

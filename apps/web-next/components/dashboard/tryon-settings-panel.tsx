@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useState, useTransition } from 'react';
+import { useCallback, useState } from 'react';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { loadPage } from '@/lib/dashboard/load-page';
 import { Button, Group, NativeSelect, Stack, Text } from '@mantine/core';
 import {
   TryOnSettingsControls,
@@ -34,11 +35,10 @@ export function TryOnSettingsPanel({
   /* The dashboard operator's language, from the shared gc-locale cookie. */
   locale?: TryOnLocale;
 }) {
-  const router = useRouter();
   // Try-On's Set up tab and today's page both draw this panel; stay on the one shown.
   const pathname = usePathname() ?? '/dashboard/try-on';
   const c = getTryOnDashboardCopy(locale);
-  const [isNavigating, startNavigation] = useTransition();
+  const [isNavigating, setNavigating] = useState(false);
   const [s, setS] = useState<TryOnWidgetSettings>(settings);
   const [loadingStepsText, setLoadingStepsText] = useState(
     settings.loadingSteps?.join('\n') ?? '',
@@ -116,9 +116,11 @@ export function TryOnSettingsPanel({
         data={shopOptions}
         value={selectedShop}
         disabled={isNavigating}
-        onChange={(e) =>
-          startNavigation(() => router.push(`${pathname}?shop=${encodeURIComponent(e.currentTarget.value)}`))
-        }
+        onChange={(e) => {
+          // A page load, so the dashboard remembers this store for the next page too.
+          setNavigating(true);
+          loadPage(`${pathname}?shop=${encodeURIComponent(e.currentTarget.value)}`);
+        }}
         maw={{ sm: 448 }}
       />
 

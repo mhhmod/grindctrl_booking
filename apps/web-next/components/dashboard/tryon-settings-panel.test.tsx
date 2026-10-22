@@ -8,8 +8,9 @@ import type { TryOnWidgetSettings } from '@/components/try-on/settings-controls'
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 import type { MerchantActionFailure } from '@/lib/request-rate-limit';
 
-const nav = vi.hoisted(() => ({ push: vi.fn(), pathname: '/dashboard/try-on' }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: nav.push }), usePathname: () => nav.pathname }));
+const nav = vi.hoisted(() => ({ loadPage: vi.fn(), pathname: '/dashboard/try-on' }));
+vi.mock('next/navigation', () => ({ usePathname: () => nav.pathname }));
+vi.mock('@/lib/dashboard/load-page', () => ({ loadPage: nav.loadPage }));
 vi.mock('@/app/dashboard/try-on/actions', () => ({ saveTryOnSettingsAction: vi.fn() }));
 // This suite tests the save boundary; the sibling i18n suite renders the
 // full shared controls and all preview states without a mock.
@@ -94,11 +95,12 @@ describe('TryOnSettingsPanel safe action results', () => {
 });
 
 describe('TryOnSettingsPanel shop choice', () => {
-  it('opens the chosen shop on the page it is shown on, Set up included', () => {
+  it('opens the chosen shop as a page load on the page it is shown on, Set up included', () => {
     nav.pathname = '/dashboard/try-on/setup';
     const shops = ['alpha.myshopify.com', 'beta.myshopify.com'].map((domain) => ({ domain, status: 'installed' as const, jobCount: 0 }));
     render(<TryOnSettingsPanel shops={shops} selectedShop="alpha.myshopify.com" settings={settings} locale="en" />);
     fireEvent.change(screen.getByLabelText(getTryOnDashboardCopy('en').editing), { target: { value: 'beta.myshopify.com' } });
-    expect(nav.push).toHaveBeenCalledWith('/dashboard/try-on/setup?shop=beta.myshopify.com');
+    expect(nav.loadPage).toHaveBeenCalledWith('/dashboard/try-on/setup?shop=beta.myshopify.com');
+    expect(screen.getByLabelText(getTryOnDashboardCopy('en').editing)).toBeDisabled();
   });
 });
