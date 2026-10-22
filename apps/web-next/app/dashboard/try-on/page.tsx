@@ -22,6 +22,12 @@ import { LaunchCard } from '@/components/dashboard/launch-card';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView } from '@/lib/launch/audience';
 import { roleCan } from '@/lib/rbac/dashboard-policy';
+import { getShopEntitlement } from '@/lib/try-on/entitlement';
+import { getTryOnResultsFacts } from '@/lib/dashboard/tryon-insights-data';
+import { buildTryOnResultsView, parsePeriod, type TryOnResultsView } from '@/lib/dashboard/tryon-insights-model';
+import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
+import { getTodayCopy } from '@/lib/dashboard/today-copy';
+import { V16TryOnFrame, V16TryOnResults, V16TryOnResultsError } from '@/components/dashboard/v16/try-on/v16-tryon';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +39,7 @@ function statusTone(status: string) {
 export default async function DashboardTryOnPage({
   searchParams,
 }: {
-  searchParams: Promise<{ shop?: string }>;
+  searchParams: Promise<{ shop?: string; view?: string; period?: string }>;
 }) {
   const params = await searchParams;
   const pageLocale = await getRequestLocale();
@@ -56,6 +62,24 @@ export default async function DashboardTryOnPage({
      action re-checks server-side. */
   const ownShop = shops.find((shop) => shop.status === 'installed') ?? shops[0];
   const selectedShop = activeStore.shopDomain ?? ownShop?.domain ?? 'default';
+
+  /* The v16 Try-On (04-dashboard.md) for an active shop whose v16_dashboard
+     flag is on: Results from the shop's own looks, and Set up, which is
+     the page below until TryOnStudio lands. */
+  const v16Shop =
+    activeStore.shopDomain && (await storeFlags({ shopDomain: activeStore.shopDomain })).includes('v16_dashboard')
+      ? activeStore.shopDomain
+      : null;
+  if (v16Shop && params.view !== 'setup') {
+    let view: TryOnResultsView | null = null;
+    try {
+      const facts = await getTryOnResultsFacts({ shop: v16Shop, period: parsePeriod(params.period) });
+      view = buildTryOnResultsView(facts, getTryOnResultsCopy(pageLocale), getTodayCopy(pageLocale), pageLocale);
+    } catch (error) {
+      console.error('[try-on results] failed:', error instanceof Error ? error.message : error);
+    }
+    return view ? <V16TryOnResults view={view} locale={pageLocale} /> : <V16TryOnResultsError locale={pageLocale} />;
+  }
 
   // A presentation link is never a reason to accept a query-string tenant.
   // The public client ID is verified in shopify.app.toml/app-identity.ts;
@@ -112,7 +136,7 @@ export default async function DashboardTryOnPage({
     },
   ];
 
-  return (
+  const body = (
     <section className="grid min-w-0 gap-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {kpis.map((kpi) => (
@@ -296,5 +320,18 @@ export default async function DashboardTryOnPage({
         </Card>
       )}
     </section>
+  );
+
+  if (!v16Shop) return body;
+  const entitlement = await getShopEntitlement(v16Shop).catch(() => null);
+  const copy = getTryOnResultsCopy(pageLocale);
+  return (
+    <V16TryOnFrame
+      locale={pageLocale}
+      tab="setup"
+      status={entitlement ? { live: entitlement.available, label: entitlement.available ? copy.liveOnStore : copy.hiddenOnStore } : null}
+    >
+      {body}
+    </V16TryOnFrame>
   );
 }

@@ -120,12 +120,27 @@ vi.mock('@/lib/try-on/persistence', () => ({
   listRecentTryOnJobs: vi.fn(async () => []),
 }));
 
+/* The v16 Try-On (behind v16_dashboard): its facts are covered in
+   lib/dashboard/tryon-insights-data.test.ts; here only the page's choice. */
+vi.mock('@/lib/flags/store-flags', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/flags/store-flags')>()),
+  storeFlags: vi.fn(async () => []),
+}));
+vi.mock('@/lib/dashboard/tryon-insights-data', () => ({ getTryOnResultsFacts: vi.fn() }));
+vi.mock('@/lib/try-on/entitlement', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/try-on/entitlement')>()),
+  getShopEntitlement: vi.fn(async () => ({ available: true })),
+}));
+
 import DashboardTryOnPage from '@/app/dashboard/try-on/page';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
+import { storeFlags } from '@/lib/flags/store-flags';
+import { getTryOnResultsFacts } from '@/lib/dashboard/tryon-insights-data';
+import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
 
 beforeEach(() => {
   cookieLocale = undefined;
@@ -137,8 +152,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-async function renderPage(shop?: string) {
-  render(await DashboardTryOnPage({ searchParams: Promise.resolve({ shop }) }));
+async function renderPage(shop?: string, query: { view?: string; period?: string } = {}) {
+  render(await DashboardTryOnPage({ searchParams: Promise.resolve({ shop, ...query }) }));
 }
 
 describe('DashboardTryOnPage', () => {
@@ -388,5 +403,57 @@ describe('DashboardTryOnPage with no shop connected', () => {
     expect(screen.queryByText('Shopify app')).not.toBeInTheDocument();
     expect(listPlansCatalog).not.toHaveBeenCalled();
     expect(getShopPlanState).not.toHaveBeenCalled();
+  });
+});
+
+describe('DashboardTryOnPage, v16', () => {
+  const NOW = Date.parse('2026-10-22T12:00:00Z');
+  const results = getTryOnResultsCopy('en');
+
+  beforeEach(() => {
+    vi.mocked(storeFlags).mockResolvedValue(['v16_dashboard']);
+    vi.mocked(getTryOnResultsFacts).mockReset().mockResolvedValue({
+      now: NOW,
+      period: 30,
+      live: true,
+      jobs: [{ product_id: 'layla-abaya', status: 'completed', duration_ms: 14_000, message: null, created_at: '2026-10-21T12:00:00Z' }],
+      products: {},
+    });
+  });
+  afterEach(() => vi.mocked(storeFlags).mockResolvedValue([]));
+
+  it('opens on Results from the active shop’s own looks, for the period in the link', async () => {
+    await renderPage(undefined, { period: '7' });
+    expect(getTryOnResultsFacts).toHaveBeenCalledWith({ shop: 'grindctrl.myshopify.com', period: 7 });
+    const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
+    expect(within(tabs).getByRole('link', { name: results.results })).toHaveAttribute('aria-current', 'page');
+    expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('href', '/dashboard/try-on?view=setup');
+    expect(screen.getByText(results.looksMade)).toBeInTheDocument();
+    expect(screen.getAllByText('Layla abaya')).toHaveLength(2); // by product and recent looks
+    expect(screen.queryByLabelText('Editing')).not.toBeInTheDocument();
+  });
+
+  it('keeps today’s page as Set up, under the same tabs and badge', async () => {
+    await renderPage(undefined, { view: 'setup' });
+    expect(getTryOnResultsFacts).not.toHaveBeenCalled();
+    const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
+    expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByText(results.liveOnStore)).toBeInTheDocument();
+    expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+  });
+
+  it('says so when the looks cannot be read', async () => {
+    vi.mocked(getTryOnResultsFacts).mockRejectedValue(new Error('down'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await renderPage();
+    expect(screen.getByRole('status')).toHaveTextContent(results.couldNotLoad);
+  });
+
+  it('draws today’s page with no tabs when the flag is off', async () => {
+    vi.mocked(storeFlags).mockResolvedValue([]);
+    await renderPage();
+    expect(getTryOnResultsFacts).not.toHaveBeenCalled();
+    expect(screen.queryByRole('navigation', { name: results.tabsLabel })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Editing')).toBeInTheDocument();
   });
 });
