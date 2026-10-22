@@ -5,6 +5,7 @@ import { MessengerPanel } from '@/components/messenger/MessengerPanel';
 import { signOriginToken } from '@/lib/messenger/identity';
 import { primaryShopifyApp } from '@/lib/shopify/app-registry';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
+import { teamReplyMinutes } from '@/lib/messenger/team-reply-time';
 
 /* The GRINDCTRL Support Messenger, embedded via iframe from merchant stores.
    Loaded lazily by /widget/v1/messenger.js only when the shopper opens the
@@ -72,7 +73,12 @@ export default async function EmbedMessengerPage({
         site.status === 'active' &&
         originAllowed(site, origin, { trusted: refererOrigin !== null })
       ) {
-        payload = toPublicPayload(site, new Date(), await storeFlags(flagStoreForSite(site)));
+        const features = await storeFlags(flagStoreForSite(site));
+        /* The team's measured reply time, for the v16 handoff cards. Read
+           here, where the shopper has opened the chat, rather than on the
+           loader's config call that every page view makes. */
+        const teamReplyMinutesNow = features.includes('v16_chat') ? await teamReplyMinutes(site.id) : null;
+        payload = toPublicPayload(site, new Date(), features, { teamReplyMinutes: teamReplyMinutesNow });
         // Signed with the primary app's secret; verifyOriginTokenAnyApp
         // (lib/messenger/identity.ts) checks it against every configured
         // app, so this only needs to pick one to sign with.

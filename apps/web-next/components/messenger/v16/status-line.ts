@@ -12,6 +12,7 @@ export function v16StatusLine(
     available,
     afterHours,
     team,
+    assistantDown = false,
   }: {
     aiEnabled: boolean;
     /** Within opening hours. */
@@ -19,11 +20,14 @@ export function v16StatusLine(
     /** The assistant keeps answering outside them (N23). */
     afterHours: boolean;
     team: { open: boolean; opensAt: string | null; closesAt: string | null } | null | undefined;
+    /** The assistant just failed to answer (N24): only the team half stays,
+     *  as on the third phone of Chat-States. */
+    assistantDown?: boolean;
   },
   t: PanelCopy,
   locale: MessengerLocale,
 ): { text: string; live: boolean } {
-  const assistantAnswers = aiEnabled && (available || afterHours);
+  const assistantAnswers = aiEnabled && (available || afterHours) && !assistantDown;
   const teamOpen = team ? team.open : available;
   const teamHalf = !team
     ? null

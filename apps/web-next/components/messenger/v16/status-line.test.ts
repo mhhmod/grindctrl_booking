@@ -27,6 +27,12 @@ describe('the v16 header status (Chat-Home)', () => {
     });
   });
 
+  it('drops the assistant half while the assistant cannot answer (Chat-States, N24)', () => {
+    expect(
+      v16StatusLine({ aiEnabled: true, available: true, afterHours: false, team: open, assistantDown: true }, en, 'en'),
+    ).toEqual({ text: 'Team here until 10 pm', live: true });
+  });
+
   it('shows only the team half when the assistant is off, lit while the team is in', () => {
     expect(v16StatusLine({ aiEnabled: false, available: true, afterHours: false, team: open }, en, 'en')).toEqual({
       text: 'Team here until 10 pm',

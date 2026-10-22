@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
-import { appendMessage, recordEvent } from '@/lib/messenger/conversations';
+import { appendMessage, patchConversationMetadata, recordEvent } from '@/lib/messenger/conversations';
+import { shouldAskForContact } from '@/lib/messenger/contact';
+import { isWithinAvailabilityHours } from '@/lib/messenger/public-api';
 import { escalateAndNotify } from '@/lib/messenger/escalate';
 import { handoffLine } from '@/lib/messenger/handoff-copy';
 import { toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (!session.ok) {
       return NextResponse.json({ ok: false, error: session.code }, { status: session.status });
     }
-    const { site, conversation } = session;
+    const { site, visitor, conversation } = session;
 
     const features = await storeFlags(flagStoreForSite(site));
     if (!features.includes('n24_assistant_down')) {
@@ -90,12 +92,33 @@ export async function POST(request: NextRequest) {
       eventName: 'handoff_triggered',
       payload: { reason: 'assistant_unavailable', alert: escalation.alert.status },
     }).catch(() => {});
+    /* Where the team should reply: asked on the same terms as a handoff in
+       the send route (once per conversation, never when an address is
+       known), so the handoff card can offer it. */
+    let askContact: true | undefined;
+    if (
+      shouldAskForContact({
+        config: site.config.contactCapture,
+        alreadyPrompted: Boolean(conversation.metadata.contact_prompted_at),
+        knownEmail: conversation.metadata.identity?.email || visitor.user_email || null,
+        justEscalated: true,
+        withinHours: team ? team.open : isWithinAvailabilityHours(site.config.behaviour, new Date()),
+      })
+    ) {
+      try {
+        await patchConversationMetadata(conversation.id, { contact_prompted_at: new Date().toISOString() });
+        askContact = true;
+      } catch {
+        // Without the record there is no "once", so do not ask at all.
+      }
+    }
 
     return NextResponse.json({
       ok: true,
       status: escalation.conversation.status,
       alert: toPublicHandoffAlert(escalation.alert),
       team,
+      askContact,
       line: {
         id: line.message.id,
         role: line.message.role,

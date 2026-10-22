@@ -58,7 +58,7 @@ export async function upsertVisitor(input: {
   siteId: string;
   anonymousId: string;
   identity?: { customerId: string; email: string; name: string } | null;
-}): Promise<{ id: string }> {
+}): Promise<{ id: string; user_email: string | null }> {
   const supabase = getMessengerServiceClient();
   const metadata = input.identity ? { shopify_customer_id: input.identity.customerId } : {};
   const payload: Record<string, unknown> = {
@@ -73,11 +73,11 @@ export async function upsertVisitor(input: {
       onConflict: 'widget_site_id,anonymous_id',
       ignoreDuplicates: false,
     })
-    .select('id')
+    .select('id, user_email')
     .single();
   if (res.error) throw new Error(`visitor upsert failed: ${res.error.message}`);
   void metadata;
-  return { id: res.data.id as string };
+  return { id: res.data.id as string, user_email: (res.data.user_email as string | null | undefined) ?? null };
 }
 
 export async function getVisitor(

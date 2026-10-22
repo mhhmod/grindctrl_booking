@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   escalate: vi.fn(),
   append: vi.fn(),
   event: vi.fn(),
+  patch: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -21,7 +22,11 @@ vi.mock('@/lib/flags/store-flags', async (original) => ({
   storeFlags: mocks.flags,
 }));
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalate }));
-vi.mock('@/lib/messenger/conversations', () => ({ appendMessage: mocks.append, recordEvent: mocks.event }));
+vi.mock('@/lib/messenger/conversations', () => ({
+  appendMessage: mocks.append,
+  recordEvent: mocks.event,
+  patchConversationMetadata: mocks.patch,
+}));
 
 import { POST } from './route';
 import { resolveMessengerConfig } from '@/lib/messenger/config';
@@ -41,6 +46,7 @@ describe('POST /api/messenger/handoff (N24)', () => {
     mocks.session.mockResolvedValue({ ok: true, site: SITE, visitor: { id: 'v1' }, conversation: CONVERSATION });
     mocks.flags.mockResolvedValue(['n24_assistant_down']);
     mocks.event.mockResolvedValue(undefined);
+    mocks.patch.mockResolvedValue(undefined);
     mocks.append.mockImplementation(async (input: { content: string }) => ({
       message: { id: 's1', role: 'system', content: input.content, created_at: '2026-10-16T12:00:00Z' },
     }));
@@ -66,6 +72,36 @@ describe('POST /api/messenger/handoff (N24)', () => {
     expect(mocks.escalate).toHaveBeenCalledWith('conv-1', 'assistant_unavailable', expect.any(String), expect.objectContaining({ id: 'site-1' }), {});
     expect(data).toMatchObject({ ok: true, status: 'handoff_requested', alert: { status: 'sent', afterHours: false } });
     expect(data.line.content).toBe('Sent to the team.');
+  });
+
+  it('asks where the team should reply, once, as a handoff from the send route does (Chat-States)', async () => {
+    const data = await (await post()).json();
+    expect(data.askContact).toBe(true);
+    expect(mocks.patch).toHaveBeenCalledWith('conv-1', { contact_prompted_at: expect.any(String) });
+  });
+
+  it('does not ask when the address is known or was already asked for', async () => {
+    mocks.session.mockResolvedValue({
+      ok: true,
+      site: SITE,
+      visitor: { id: 'v1', user_email: 'salma.a@gmail.com' },
+      conversation: CONVERSATION,
+    });
+    expect((await (await post()).json()).askContact).toBeUndefined();
+    mocks.session.mockResolvedValue({
+      ok: true,
+      site: SITE,
+      visitor: { id: 'v1', user_email: null },
+      conversation: { ...CONVERSATION, metadata: { contact_prompted_at: '2026-10-16T11:00:00Z' } },
+    });
+    expect((await (await post()).json()).askContact).toBeUndefined();
+    expect(mocks.patch).not.toHaveBeenCalled();
+  });
+
+  it('does not ask where the store takes no address', async () => {
+    const off = { ...SITE, config: resolveMessengerConfig({ messenger_contact_capture: { enabled: false } }) };
+    mocks.session.mockResolvedValue({ ok: true, site: off, visitor: { id: 'v1', user_email: null }, conversation: CONVERSATION });
+    expect((await (await post()).json()).askContact).toBeUndefined();
   });
 
   it('does not hand off twice', async () => {

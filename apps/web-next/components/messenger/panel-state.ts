@@ -71,11 +71,36 @@ export function cityTime(timezone: string, locale: MessengerLocale): string | nu
   return city && timezone.includes('/') ? `${city} time` : null;
 }
 
+/** True when the team comes back on the next calendar day in the store's
+ *  own time zone, so "first thing tomorrow" is the truth; a later day (a
+ *  weekend) or later today is not "tomorrow". */
+export function opensNextDay(opensAtIso: string | null, timezone: string | null, now: Date = new Date()): boolean {
+  if (!opensAtIso || !timezone) return false;
+  const opens = new Date(opensAtIso);
+  if (Number.isNaN(opens.getTime())) return false;
+  let day: (date: Date) => string;
+  try {
+    const format = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' });
+    day = (date) => format.format(date);
+  } catch {
+    return false;
+  }
+  // The calendar day after today's, counted on the date itself, so a
+  // daylight saving change cannot skip or repeat a day.
+  const [year, month, date] = day(now).split('-').map(Number);
+  const next = new Date(Date.UTC(year, month - 1, date + 1)).toISOString().slice(0, 10);
+  return day(opens) === next;
+}
+
 export interface PanelTeam {
   open: boolean;
   opensAt: string | null;
   closesAt: string | null;
   timezone: string;
+  /** Measured minutes from an alert to the team's first reply (v16 only). */
+  replyMinutes?: number | null;
+  /** When the team is next in, as an instant (v16 only). */
+  opensAtIso?: string | null;
 }
 
 export type HandoffCard =

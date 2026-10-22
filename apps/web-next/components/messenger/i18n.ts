@@ -46,6 +46,14 @@ export interface PanelCopy {
   awayTitle: (time: string | null, zone: string | null) => string;
   awayBody: string;
   stillHelp: string;
+  /** Chat-States: the team's measured reply time, a round number of minutes. */
+  teamUsuallyReplies: (minutes: number) => string;
+  /** Chat-States: asked inside the handoff card. */
+  replyWhere: string;
+  /** After hours, when the team is back the next calendar day. */
+  awayBodyTomorrow: string;
+  sendAddressToTeam: string;
+  edit: string;
   assistantNow: string;
   teamHereUntil: (time: string) => string;
   teamAwayUntil: (time: string) => string;
@@ -131,6 +139,12 @@ const EN: PanelCopy = {
     time ? `The team is away until ${time}${zone ? ` ${zone}` : ''}` : 'The team is away right now',
   awayBody: 'Tell us where to reply and they will answer when they are back.',
   stillHelp: 'While you wait, I can still help with anything else.',
+  teamUsuallyReplies: (minutes) =>
+    minutes === 1 ? 'The team usually replies in about a minute.' : `The team usually replies in about ${minutes} minutes.`,
+  replyWhere: 'If you leave, where should they reply?',
+  awayBodyTomorrow: 'Tell us where to reply and they will answer first thing tomorrow.',
+  sendAddressToTeam: 'Send to the team',
+  edit: 'Edit',
   assistantNow: 'Assistant answers now',
   teamHereUntil: (time) => `team here until ${time}`,
   teamAwayUntil: (time) => `team away until ${time}`,
@@ -217,6 +231,16 @@ const AR: PanelCopy = {
   awayTitle: (time, zone) => (time ? `الفريق غير متاح حتى ${time}${zone ? ` ${zone}` : ''}` : 'الفريق غير متاح الآن'),
   awayBody: 'يمكنك إخبارنا أين نرد عليك، وسيرد الفريق عند عودته.',
   stillHelp: 'لحين ردهم، يمكنني مساعدتك في أي شيء آخر.',
+  // Chat-States speak to everyone (the board's drafts are feminine), with
+  // the number agreeing as Arabic counts minutes.
+  teamUsuallyReplies: (minutes) =>
+    `يرد الفريق عادةً خلال ${
+      minutes === 1 ? 'دقيقة' : minutes === 2 ? 'دقيقتين' : minutes <= 10 ? `${minutes} دقائق` : `${minutes} دقيقة`
+    } تقريباً.`,
+  replyWhere: 'إذا غادرت، أين يرد عليك الفريق؟',
+  awayBodyTomorrow: 'أخبرنا أين نرد عليك، وسيرد عليك الفريق صباح الغد مباشرة.',
+  sendAddressToTeam: 'إرسال إلى الفريق',
+  edit: 'تعديل',
   assistantNow: 'المساعد يرد الآن',
   teamHereUntil: (time) => `الفريق متاح حتى ${time}`,
   teamAwayUntil: (time) => `الفريق غير متاح حتى ${time}`,
