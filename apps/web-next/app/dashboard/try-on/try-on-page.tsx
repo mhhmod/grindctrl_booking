@@ -1,11 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
-import { getTryOnSettings } from '@/lib/try-on/settings';
+import { getTryOnSettings, getTryOnSettingsForEdit } from '@/lib/try-on/settings';
 import { getActiveStore, listDashboardShops } from '@/lib/dashboard/active-store-server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
@@ -28,6 +29,8 @@ import { buildTryOnResultsView, parsePeriod, type TryOnResultsView } from '@/lib
 import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
 import { getTodayCopy } from '@/lib/dashboard/today-copy';
 import { V16TryOnFrame, V16TryOnResults, V16TryOnResultsError } from '@/components/dashboard/v16/try-on/v16-tryon';
+import { V16TryOnStudio, V16TryOnStudioError } from '@/components/dashboard/v16/try-on/v16-tryon-studio';
+import { saveTryOnSettingsAction } from './actions';
 
 function statusTone(status: string) {
   if (status === 'completed') return 'secondary' as const;
@@ -36,7 +39,7 @@ function statusTone(status: string) {
 
 /* The Try-On page, drawn by both of its routes: /dashboard/try-on
    (Results under v16, today's page otherwise) and /dashboard/try-on/setup
-   (Set up, which is today's page under the v16 tabs). */
+   (Set up, TryOnStudio, under v16). */
 export async function TryOnPage({
   params,
   tab,
@@ -66,12 +69,63 @@ export async function TryOnPage({
   const selectedShop = activeStore.shopDomain ?? ownShop?.domain ?? 'default';
 
   /* The v16 Try-On (04-dashboard.md) for an active shop whose v16_dashboard
-     flag is on: Results from the shop's own looks, and Set up, which is
-     the page below until TryOnStudio lands. */
-  const v16Shop =
-    activeStore.shopDomain && (await storeFlags({ shopDomain: activeStore.shopDomain })).includes('v16_dashboard')
-      ? activeStore.shopDomain
-      : null;
+     flag is on: Results from the shop's own looks, and Set up (TryOnStudio)
+     for its owner and admins (item 12). */
+  const activeFlags = activeStore.shopDomain ? await storeFlags({ shopDomain: activeStore.shopDomain }) : [];
+  const v16Shop = activeStore.shopDomain && activeFlags.includes('v16_dashboard') ? activeStore.shopDomain : null;
+  const v16CanSetUp = roleCan(shops.find((shop) => shop.domain === v16Shop)?.role ?? null, 'settings');
+  if (v16Shop && tab === 'setup') {
+    // A member's Try-On is Results; the save action checks the role again.
+    if (!v16CanSetUp) redirect('/dashboard/try-on');
+    const [settings, storeLaunch, flagRows, entitlement] = await Promise.all([
+      getTryOnSettingsForEdit(v16Shop).catch((error: unknown) => {
+        console.error('[try-on set up] settings failed:', error instanceof Error ? error.message : error);
+        return null;
+      }),
+      getStoreLaunch(v16Shop),
+      canManagePlan ? storeFlagRows({ shopDomain: v16Shop }) : null,
+      getShopEntitlement(v16Shop).catch(() => null),
+    ]);
+    const launch = launchView(storeLaunch, new Date());
+    const copy = getTryOnResultsCopy(pageLocale);
+    return (
+      <V16TryOnFrame
+        locale={pageLocale}
+        tab="setup"
+        status={entitlement ? { live: entitlement.available, label: entitlement.available ? copy.liveOnStore : copy.hiddenOnStore } : null}
+      >
+        {settings ? (
+          <V16TryOnStudio locale={pageLocale} shop={v16Shop} settings={settings} saveSettings={saveTryOnSettingsAction} />
+        ) : (
+          <V16TryOnStudioError locale={pageLocale} />
+        )}
+        {/* Try it yourself and Go live (phase zero item 9), while n5_preview_mode is on. */}
+        {activeFlags.includes('n5_preview_mode') && (
+          <LaunchCard locale={pageLocale === 'ar' ? 'ar' : 'en'} shop={v16Shop} launch={launch} holdoutAvailable={activeFlags.includes('n6_holdout')} />
+        )}
+        {flagRows && <StoreFlagsCard kind="shop" storeKey={v16Shop} storeLabel={v16Shop} rows={flagRows} launchState={launch.state} />}
+        {/* Not on the board, and nowhere else under v16 yet: the Shopify app, and connecting another store. */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{c.shopifyApp}</CardTitle>
+            <CardDescription>{c.shopifyAppBody}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-start gap-3">
+            <Button asChild variant="outline" size="sm">
+              <Link
+                href={['https://admin.shopify.com/store', v16Shop.split('.')[0], 'apps', SHOPIFY_APP_CLIENT_ID].join('/')}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {c.openShopifyApp}
+              </Link>
+            </Button>
+            <ConnectShopPanel locale={pageLocale} hasShops />
+          </CardContent>
+        </Card>
+      </V16TryOnFrame>
+    );
+  }
   if (v16Shop && tab === 'results') {
     let view: TryOnResultsView | null = null;
     try {
@@ -80,7 +134,11 @@ export async function TryOnPage({
     } catch (error) {
       console.error('[try-on results] failed:', error instanceof Error ? error.message : error);
     }
-    return view ? <V16TryOnResults view={view} locale={pageLocale} /> : <V16TryOnResultsError locale={pageLocale} />;
+    return view ? (
+      <V16TryOnResults view={view} locale={pageLocale} canSetUp={v16CanSetUp} />
+    ) : (
+      <V16TryOnResultsError locale={pageLocale} canSetUp={v16CanSetUp} />
+    );
   }
 
   // A presentation link is never a reason to accept a query-string tenant.
@@ -324,16 +382,5 @@ export async function TryOnPage({
     </section>
   );
 
-  if (!v16Shop) return body;
-  const entitlement = await getShopEntitlement(v16Shop).catch(() => null);
-  const copy = getTryOnResultsCopy(pageLocale);
-  return (
-    <V16TryOnFrame
-      locale={pageLocale}
-      tab="setup"
-      status={entitlement ? { live: entitlement.available, label: entitlement.available ? copy.liveOnStore : copy.hiddenOnStore } : null}
-    >
-      {body}
-    </V16TryOnFrame>
-  );
+  return body;
 }

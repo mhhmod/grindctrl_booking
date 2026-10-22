@@ -11,6 +11,9 @@ vi.mock('@clerk/nextjs/server', () => ({ auth: session.auth }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
   usePathname: () => '/dashboard/try-on',
+  redirect: vi.fn((href: string) => {
+    throw new Error(`redirect:${href}`);
+  }),
 }));
 
 /* The page resolves the operator's language from the locale cookie, and
@@ -132,6 +135,12 @@ vi.mock('@/lib/try-on/entitlement', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/try-on/entitlement')>()),
   getShopEntitlement: vi.fn(async () => ({ available: true })),
 }));
+/* The v16 Set up reads strictly (a failed read must not show the defaults
+   a save would write); today's page keeps the forgiving reader. */
+vi.mock('@/lib/try-on/settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/try-on/settings')>();
+  return { ...actual, getTryOnSettingsForEdit: vi.fn(async () => actual.DEFAULT_SETTINGS) };
+});
 
 import DashboardTryOnPage from '@/app/dashboard/try-on/page';
 import DashboardTryOnSetupPage from '@/app/dashboard/try-on/setup/page';
@@ -143,6 +152,8 @@ import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getTryOnResultsFacts } from '@/lib/dashboard/tryon-insights-data';
 import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
+import { getTryOnStudioCopy } from '@/lib/dashboard/tryon-studio-copy';
+import { getTryOnSettingsForEdit } from '@/lib/try-on/settings';
 
 beforeEach(() => {
   cookieLocale = undefined;
@@ -435,13 +446,47 @@ describe('DashboardTryOnPage, v16', () => {
     expect(screen.queryByLabelText('Editing')).not.toBeInTheDocument();
   });
 
-  it('keeps today’s page as Set up, under the same tabs and badge', async () => {
+  it('draws TryOnStudio as Set up for an owner, under the same tabs and badge', async () => {
     render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
     const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
     expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText(results.liveOnStore)).toBeInTheDocument();
-    expect(screen.getByLabelText('Editing')).toHaveValue('grindctrl.myshopify.com');
+    const studio = getTryOnStudioCopy('en');
+    expect(screen.getByText(studio.subtitle)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: studio.button })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: studio.moveInThemeEditor })).toHaveAttribute(
+      'href',
+      'https://admin.shopify.com/store/grindctrl/themes/current/editor?template=product',
+    );
+    // Today's page (the shop picker, the tables) is not under v16; the Shopify app and connecting a store stay.
+    expect(screen.queryByLabelText('Editing')).not.toBeInTheDocument();
+    const c = getTryOnDashboardCopy('en');
+    expect(screen.getByRole('link', { name: c.openShopifyApp })).toHaveAttribute(
+      'href',
+      `https://admin.shopify.com/store/grindctrl/apps/${SHOPIFY_APP_CLIENT_ID}`,
+    );
+    expect(screen.getByRole('button', { name: c.connectAnotherStore })).toBeInTheDocument();
+  });
+
+  it('offers nothing to save when the settings cannot be read', async () => {
+    vi.mocked(getTryOnSettingsForEdit).mockRejectedValueOnce(new Error('timeout'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
+    const studio = getTryOnStudioCopy('en');
+    expect(screen.getByRole('status')).toHaveTextContent(studio.couldNotLoad);
+    expect(screen.queryByRole('heading', { name: studio.button })).not.toBeInTheDocument();
+    expect(error).toHaveBeenCalledWith('[try-on set up] settings failed:', 'timeout');
+    error.mockRestore();
+  });
+
+  it('sends a member to Results, which has no Set up tab', async () => {
+    const member = { domain: 'grindctrl.myshopify.com', status: 'installed' as const, installedAt: '2026-01-01T00:00:00.000Z', uninstalledAt: null, lastSeenAt: '2026-01-01T00:00:00.000Z', jobCount: 0, lastJobAt: null, role: 'member' as const };
+    vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([member]).mockResolvedValueOnce([member]);
+    await expect(DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) })).rejects.toThrow('redirect:/dashboard/try-on');
+    await renderPage();
+    const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
+    expect(within(tabs).queryByRole('link', { name: results.setUp })).not.toBeInTheDocument();
   });
 
   it('says so when the looks cannot be read', async () => {

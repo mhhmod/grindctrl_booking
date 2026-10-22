@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { Button, Menu } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
+import { getTryOnStudioCopy } from '@/lib/dashboard/tryon-studio-copy';
 import type { TryOnResultsView } from '@/lib/dashboard/tryon-insights-model';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { V16PageFrame } from '../page-frame';
 import classes from './v16-tryon.module.css';
 
 /* The v16 Try-On page (04-dashboard.md): Results (TryOnInsights) from the
-   store's own looks, and Set up, which is today's Try-On page until
-   TryOnStudio lands. The model in lib/dashboard/tryon-insights-model.ts
+   store's own looks, and Set up (TryOnStudio, v16-tryon-studio.tsx), for
+   owners and admins. The model in lib/dashboard/tryon-insights-model.ts
    decides what has a source; this file only lays it out. */
 
 export function V16TryOnFrame({
@@ -21,22 +22,25 @@ export function V16TryOnFrame({
   status,
   children,
   controls,
+  canSetUp = true,
 }: {
   locale: SiteLocale;
   tab: 'results' | 'setup';
   status: TryOnResultsView['status'];
   children: React.ReactNode;
   controls?: React.ReactNode;
+  /** Set up is for owners and admins (item 12); a member sees Results only. */
+  canSetUp?: boolean;
 }) {
   const copy = getTryOnResultsCopy(locale);
   return (
     <V16PageFrame
       badge={status}
-      subtitle={copy.subtitle}
+      subtitle={tab === 'setup' ? getTryOnStudioCopy(locale).subtitle : copy.subtitle}
       tabsLabel={copy.tabsLabel}
       tabs={[
         { label: copy.results, href: '/dashboard/try-on', current: tab === 'results' },
-        { label: copy.setUp, href: '/dashboard/try-on/setup', current: tab === 'setup' },
+        ...(canSetUp ? [{ label: copy.setUp, href: '/dashboard/try-on/setup', current: tab === 'setup' }] : []),
       ]}
       controls={controls}
     >
@@ -72,10 +76,10 @@ function Thumb({ src }: { src: string | null }) {
   return src ? <img src={src} alt="" className={classes.thumb} /> : <span className={classes.thumb} aria-hidden="true" />;
 }
 
-export function V16TryOnResults({ view, locale }: { view: TryOnResultsView; locale: SiteLocale }) {
+export function V16TryOnResults({ view, locale, canSetUp = true }: { view: TryOnResultsView; locale: SiteLocale; canSetUp?: boolean }) {
   const copy = getTryOnResultsCopy(locale);
   return (
-    <V16TryOnFrame locale={locale} tab="results" status={view.status} controls={<PeriodMenu view={view} locale={locale} />}>
+    <V16TryOnFrame locale={locale} tab="results" status={view.status} canSetUp={canSetUp} controls={<PeriodMenu view={view} locale={locale} />}>
       <section aria-label={view.periods.find((p) => p.current)?.label} className={classes.tiles}>
         {view.tiles.map((tile) => (
           <div key={tile.key} className={`${classes.card} ${classes.tile}`}>
@@ -189,10 +193,10 @@ export function V16TryOnResults({ view, locale }: { view: TryOnResultsView; loca
   );
 }
 
-export function V16TryOnResultsError({ locale }: { locale: SiteLocale }) {
+export function V16TryOnResultsError({ locale, canSetUp = true }: { locale: SiteLocale; canSetUp?: boolean }) {
   const copy = getTryOnResultsCopy(locale);
   return (
-    <V16TryOnFrame locale={locale} tab="results" status={null}>
+    <V16TryOnFrame locale={locale} tab="results" status={null} canSetUp={canSetUp}>
       <p className={`${classes.card} ${classes.error}`} role="status">
         {copy.couldNotLoad}
       </p>

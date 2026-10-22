@@ -151,9 +151,19 @@ export async function getTryOnSettings(shop?: string | null): Promise<TryOnSetti
   }
 }
 
-async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
+/** For an editor that saves every field, as the v16 Set up does: a failed
+    read throws rather than showing the defaults, which a save would then
+    write over the shop's own settings. */
+export async function getTryOnSettingsForEdit(shop: string): Promise<TryOnSettings> {
+  return loadSettings(shop, { strict: true });
+}
+
+async function loadSettings(shop?: string | null, { strict = false }: { strict?: boolean } = {}): Promise<TryOnSettings> {
   const supabase = getServiceClient();
-  if (!supabase) return DEFAULT_SETTINGS;
+  if (!supabase) {
+    if (strict) throw new Error('try-on settings storage is not configured');
+    return DEFAULT_SETTINGS;
+  }
 
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
   const { data, error } = await supabase
@@ -161,7 +171,10 @@ async function loadSettings(shop?: string | null): Promise<TryOnSettings> {
     .select('shop, button_label, button_label_ar, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_label_ar, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text, disclaimer_text_ar')
     .in('shop', shops);
 
-  if (error || !data) return DEFAULT_SETTINGS;
+  if (error || !data) {
+    if (strict) throw new Error(error?.message ?? 'try-on settings read returned nothing');
+    return DEFAULT_SETTINGS;
+  }
 
   const defaults = mergeSettings(DEFAULT_SETTINGS, data.find((r) => r.shop === 'default') ?? null);
   const shopRow = shop ? (data.find((r) => r.shop === shop) ?? null) : null;

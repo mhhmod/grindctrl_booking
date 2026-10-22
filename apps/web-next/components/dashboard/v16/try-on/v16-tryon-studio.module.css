@@ -1,0 +1,307 @@
+/* The v16 Try-On Set up tab (the TryOnStudio board). Colours, radii and
+   type come from the tokens; layout uses logical properties so Arabic
+   mirrors. The preview sits beside the cards on wide screens and follows
+   them below. */
+
+.studio {
+  /* Errors in the design's danger colour, which reads on the card; the
+     default destructive red measures 4.3:1 there. */
+  --mantine-color-error: var(--gc-danger);
+
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Focus lands here after Discard and on the bar after Save, by script only. */
+.studio:focus,
+.bar:focus {
+  outline: none;
+}
+
+/* The unsaved changes bar: dark, under the shell's top bar on phones. */
+.bar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  min-height: 56px;
+  padding-block: 8px;
+  padding-inline: 20px 10px;
+  border-radius: var(--gc-radius-card);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+@media (min-width: 48em) {
+  .bar {
+    top: 12px;
+  }
+}
+
+.bar[data-state='saved'] {
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+.barMessage {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 2px;
+  min-width: 0;
+}
+
+.barText {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+/* A failed save keeps the changes, so the message sits in the dark bar. */
+.barError {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.barActions {
+  display: flex;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+.bar[data-state='dirty'] .saveButton {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.layout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+  min-width: 0;
+}
+
+@media (min-width: 75em) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  }
+
+  .preview {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.head {
+  display: grid;
+  gap: 4px;
+  padding-block-end: 8px;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.block {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  min-width: 0;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.rowText {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pair {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 36em) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fieldset {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  margin-block-end: 4px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.labels {
+  gap: 14px;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  justify-content: space-between;
+  gap: 8px;
+  inline-size: 100%;
+  font-weight: 500;
+}
+
+.count {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
+/* Mantine's label is inline; let the counter reach the far edge. */
+.pair label {
+  display: block;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stepperValue {
+  min-inline-size: 7ch;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.animations {
+  max-inline-size: 100%;
+}
+
+@media (max-width: 30em) {
+  .animations {
+    inline-size: 100%;
+  }
+}
+
+.steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stepNumber {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border-radius: 50%;
+  background: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.stepInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggles {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toggles .row {
+  flex-wrap: nowrap;
+}
+
+.promise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding-block-start: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.promiseIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--gc-radius-icon-tile);
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+.preview {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}

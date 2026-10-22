@@ -46,8 +46,9 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok:
     showWhatsapp: formData.get('show_whatsapp') === 'on',
     showAddToCart: formData.get('show_add_to_cart') === 'on',
     showTryAgain: formData.get('show_try_again') === 'on',
-    disclaimerText: String(formData.get('disclaimer_text') || '').trim() || null,
-    disclaimerTextAr: String(formData.get('disclaimer_text_ar') || '').trim() || null,
+    // The note under each look is up to 300 characters (TryOnStudio).
+    disclaimerText: String(formData.get('disclaimer_text') || '').trim().slice(0, 300) || null,
+    disclaimerTextAr: String(formData.get('disclaimer_text_ar') || '').trim().slice(0, 300) || null,
     loadingSteps,
   });
   if (!saved) return merchantActionFailure(null);
