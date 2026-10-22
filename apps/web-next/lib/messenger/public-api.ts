@@ -152,8 +152,22 @@ export interface PublicMessengerPayload {
   /** Whether the v16 panel offers the order lookup form (Chat-More): the
    *  store has order lookup on and is a Shopify store. v16_chat only. */
   orderLookup?: boolean;
-  /** When the team is in, for the header (n23_after_hours or v16_chat on only). */
-  team?: { open: boolean; opensAt: string | null; closesAt: string | null; timezone: string } | null;
+  /** When the team is in, for the header (n23_after_hours or v16_chat on only).
+   *  replyMinutes is the team's measured reply time after an alert, for the
+   *  v16 handoff cards; null when there is too little history to say. */
+  team?: {
+    open: boolean;
+    opensAt: string | null;
+    closesAt: string | null;
+    timezone: string;
+    replyMinutes?: number | null;
+    /** When the team is next in, as an instant, so the v16 after-hours card
+     *  can say "first thing tomorrow" only when it is tomorrow. */
+    opensAtIso?: string | null;
+  } | null;
+  /** Whether the v16 handoff cards ask where the team should reply. The
+   *  contact route checks the same setting. v16_chat only. */
+  contactCapture?: boolean;
   appearance: MessengerConfig['appearance'];
   behaviour: Pick<
     MessengerConfig['behaviour'],
@@ -182,8 +196,12 @@ export function toPublicPayload(
   },
   now: Date,
   features: readonly string[] = [],
+  /** Read by the caller, which can wait on the database: the team's
+   *  measured reply time (lib/messenger/team-reply-time.ts). */
+  extras: { teamReplyMinutes?: number | null } = {},
 ): PublicMessengerPayload {
   const active = site.status === 'active';
+  const v16Chat = active && features.includes('v16_chat');
   return {
     v: site.settings_version,
     key: site.embed_key,
@@ -197,15 +215,17 @@ export function toPublicPayload(
        header's team half ("team here until 10 pm"), which follows opening
        hours today. */
     team:
-      active && (features.includes('n23_after_hours') || features.includes('v16_chat'))
-        ? (({ open, opensAt, closesAt, timezone }) => ({ open, opensAt, closesAt, timezone }))(
-            teamHours(site.config.behaviour, now),
-          )
+      active && (features.includes('n23_after_hours') || v16Chat)
+        ? (({ open, opensAt, closesAt, timezone, opensAtIso }) => ({
+            open,
+            opensAt,
+            closesAt,
+            timezone,
+            ...(v16Chat ? { replyMinutes: extras.teamReplyMinutes ?? null, opensAtIso } : {}),
+          }))(teamHours(site.config.behaviour, now))
         : null,
-    orderLookup:
-      active && features.includes('v16_chat')
-        ? site.config.orderLookup.enabled && orderShopDomain(site.domain) !== null
-        : undefined,
+    orderLookup: v16Chat ? site.config.orderLookup.enabled && orderShopDomain(site.domain) !== null : undefined,
+    contactCapture: v16Chat ? site.config.contactCapture.enabled : undefined,
     appearance: site.config.appearance,
     behaviour: {
       welcomeTitle: site.config.behaviour.welcomeTitle,

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { normalizeContactEmail, shouldAskForContact } from './contact';
+import { knownReplyAddress, normalizeContactEmail, shouldAskForContact } from './contact';
 
 describe('normalizeContactEmail', () => {
   it('lowercases and trims a single address', () => {
@@ -72,5 +72,16 @@ describe('shouldAskForContact', () => {
         config: { enabled: true, askOutsideHours: false },
       }),
     ).toBe(true);
+  });
+});
+
+describe('knownReplyAddress (Chat-States)', () => {
+  it('prefers a verified login, then what the shopper typed here, then on an earlier visit', () => {
+    expect(knownReplyAddress({ identity: { email: 'login@x.com' }, contact_email: 'typed@x.com' }, { user_email: 'old@x.com' })).toBe(
+      'login@x.com',
+    );
+    expect(knownReplyAddress({ contact_email: 'typed@x.com' }, { user_email: 'old@x.com' })).toBe('typed@x.com');
+    expect(knownReplyAddress({}, { user_email: 'old@x.com' })).toBe('old@x.com');
+    expect(knownReplyAddress({}, null)).toBeNull();
   });
 });

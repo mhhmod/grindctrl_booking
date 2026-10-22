@@ -49,3 +49,13 @@ export function shouldAskForContact(input: ContactPromptInput): boolean {
   if (input.justEscalated) return true;
   return input.config.askOutsideHours && !input.withinHours;
 }
+
+/** The address the team would reply to, for the shopper's own panel (the
+ *  v16 handoff cards show it with Edit): a verified login's, else the one
+ *  the shopper typed. Shown back only to the visitor it belongs to. */
+export function knownReplyAddress(
+  conversationMetadata: { identity?: { email?: string | null } | null; contact_email?: string | null },
+  visitor: { user_email?: string | null } | null,
+): string | null {
+  return conversationMetadata.identity?.email || conversationMetadata.contact_email || visitor?.user_email || null;
+}

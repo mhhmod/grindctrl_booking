@@ -4,6 +4,7 @@ import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
 import { getConversationForVisitor, getVisitor, isStaffTyping, listMessages } from '@/lib/messenger/conversations';
 import { publicAlertFor } from '@/lib/messenger/handoff-alert';
+import { knownReplyAddress } from '@/lib/messenger/contact';
 
 /* GET /api/messenger/sync?key&anonId&conversationId&after=<iso>&origin
    Cursor-based recovery used on reconnect, tab refocus, and multi-tab
@@ -63,6 +64,8 @@ export async function GET(request: NextRequest) {
         /* Whether someone was really alerted (phase zero item 6). A retried
            alert that goes out later reaches the shopper here. */
         alert: publicAlertFor(conversation),
+        /* The reply address the shopper gave, for the v16 handoff cards. */
+        contactEmail: knownReplyAddress(conversation.metadata, visitor),
         messages: messages.map((m) => ({
           id: m.id,
           role: m.role,

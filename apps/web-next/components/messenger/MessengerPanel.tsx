@@ -13,10 +13,20 @@ import {
   formatTeamTime,
   handoffCard,
   mergeMessages,
+  opensNextDay,
   type PanelTeam,
 } from './panel-state';
 import { ChatHome, ProductLine } from './v16/chat-home';
 import { OrderCardView, OrderLookupForm } from './v16/order-lookup';
+import {
+  AssistantDownCard,
+  ReplyAddress,
+  SavedForTeamCard,
+  SavedMark,
+  TeamAwayCard,
+  TeamHasItCard,
+  replyTimeLine,
+} from './v16/handoff-states';
 import type { OrderCard } from '@/lib/messenger/order-card';
 import { parsePageProduct, type PageProduct } from './v16/page-product';
 import { SpeechButton } from './v16/speech-button';
@@ -200,6 +210,9 @@ export function MessengerPanel({
   const [askContact, setAskContact] = useState(false);
   const [contactDraft, setContactDraft] = useState('');
   const [contactState, setContactState] = useState<'idle' | 'sending' | 'done' | 'invalid'>('idle');
+  /* The address the team would reply to, shown with Edit in the v16
+     handoff cards (Chat-States). */
+  const [contactEmail, setContactEmail] = useState<string | null>(null);
 
   /* Attachments. The shopper sees their own photo from a local object URL:
      they already have the bytes, so there is no reason to hand a storefront
@@ -324,6 +337,7 @@ export function MessengerPanel({
           status: string;
           staffTyping?: boolean;
           alert?: PublicHandoffAlert | null;
+          contactEmail?: string | null;
           messages: WireMessage[];
         };
         if (cancelled) return;
@@ -334,6 +348,7 @@ export function MessengerPanel({
         setStatus(data.status);
         setStaffTyping(data.staffTyping === true);
         setAlert(data.alert ?? null);
+        setContactEmail(data.contactEmail ?? null);
         setMessages(data.messages);
       } catch {
         if (!cancelled) setBootError(true);
@@ -363,6 +378,7 @@ export function MessengerPanel({
           if (typeof data?.staffTyping === 'boolean') setStaffTyping(data.staffTyping);
           // A retried alert that went out later reaches the shopper here.
           if (data && 'alert' in data) setAlert(data.alert ?? null);
+          if (data && typeof data.contactEmail === 'string') setContactEmail(data.contactEmail);
           if (!data?.messages?.length) {
             if (typeof data?.status === 'string') setStatus(data.status);
             return;
@@ -577,7 +593,7 @@ export function MessengerPanel({
       if (data.status) setStatus(data.status);
       if (data.askContact) setAskContact(true);
       if (data.alert !== undefined) setAlert(data.alert ?? null);
-      if (data.team) setTeam(data.team);
+      if (data.team) setTeam((prev) => ({ ...data.team!, replyMinutes: prev?.replyMinutes ?? null }));
       // N24: the assistant could not answer; offer to send it to the team.
       setAssistantDown(data.assistant === 'unavailable');
       return 'sent';
@@ -660,11 +676,13 @@ export function MessengerPanel({
         alert?: PublicHandoffAlert | null;
         team?: PanelTeam | null;
         line?: WireMessage;
+        askContact?: boolean;
       } | null;
       if (!res.ok || !data?.ok) return;
+      if (data.askContact) setAskContact(true);
       if (data.status) setStatus(data.status);
       if (data.alert !== undefined) setAlert(data.alert ?? null);
-      if (data.team) setTeam(data.team);
+      if (data.team) setTeam((prev) => ({ ...data.team!, replyMinutes: prev?.replyMinutes ?? null }));
       if (data.line) setMessages((prev) => mergeMessages(prev, [data.line!]));
       setAssistantDown(false);
     } catch {
@@ -739,6 +757,30 @@ export function MessengerPanel({
       setContactState('done');
     } catch {
       setContactState('invalid');
+    }
+  }
+
+  /** Chat-States: the reply address from a v16 handoff card. */
+  async function saveReplyAddress(email: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/messenger/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin,
+          originToken,
+          anonymousId: anonId,
+          conversationId,
+          email,
+        }),
+      });
+      if (!res.ok) return false;
+      setContactEmail(email.toLowerCase());
+      setAskContact(false);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -831,11 +873,26 @@ export function MessengerPanel({
         : t.assistantNow
       : `${t.assistantNow} · ${team.opensAt ? t.teamAwayUntil(formatTeamTime(team.opensAt, locale)) : t.teamAway}`;
   const v16Status = v16StatusLine(
-    { aiEnabled: config.aiEnabled, available: config.available, afterHours: afterHoursMode, team },
+    { aiEnabled: config.aiEnabled, available: config.available, afterHours: afterHoursMode, team, assistantDown },
     t,
     locale,
   );
-  const card = handoffCard(alert, afterHoursMode ? team : null);
+  /* v16 knows the team's hours whatever n23 says, so a handoff after hours
+     says when the team is back instead of only that the message is saved. */
+  const card = handoffCard(alert, afterHoursMode || v16Chat ? team : null);
+  const replyLine = v16Chat ? replyTimeLine(t, team?.replyMinutes, team?.open ?? false) : null;
+  /* Chat-States: where the team should reply, inside the handoff card, when
+     the store takes an address and the server asked or one is known. */
+  const replyAddress =
+    v16Chat && config.contactCapture && (askContact || contactEmail) ? (
+      <ReplyAddress
+        t={t}
+        heading={card.kind === 'after_hours' ? null : t.replyWhere}
+        known={contactEmail}
+        accent={accent}
+        onSave={saveReplyAddress}
+      />
+    ) : null;
   const lastIsOurs = messages.length > 0 && ['assistant', 'system'].includes(messages[messages.length - 1].role);
 
   function switchLocale(next: MessengerLocale) {
@@ -1065,7 +1122,7 @@ export function MessengerPanel({
                     {t.waitingToSend}
                   </span>
                 )}
-                {m.saved && (
+                {m.saved && !v16Chat && (
                   <span className="mt-1 block text-[11px] opacity-90">{t.savedMark}</span>
                 )}
                 {m.failed && (
@@ -1081,6 +1138,7 @@ export function MessengerPanel({
                   </span>
                 )}
               </div>
+              {v16Chat && m.saved && <SavedMark t={t} />}
               {v16Chat && m.order && (
                 <div className="mt-2 w-full">
                   <OrderCardView card={m.order} t={t} locale={locale} />
@@ -1144,7 +1202,16 @@ export function MessengerPanel({
 
         {/* N24: the assistant could not answer; the message is saved and
             the team is one tap away. */}
-        {assistantDown && status === 'open' && (
+        {v16Chat && assistantDown && status === 'open' && (
+          <AssistantDownCard
+            t={t}
+            replyLine={replyLine}
+            accent={accent}
+            busy={handingOff}
+            onSend={() => void handOffSaved()}
+          />
+        )}
+        {!v16Chat && assistantDown && status === 'open' && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3" role="status">
             <p className="text-xs font-semibold">{t.assistantDownTitle}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">{t.assistantDownBody}</p>
@@ -1162,7 +1229,34 @@ export function MessengerPanel({
 
         {/* While the team has it: only an alert that really went out says
             the team has the message (phase zero item 6). */}
-        {status === 'handoff_requested' && (
+        {v16Chat && status === 'handoff_requested' && (
+          <div className="grid gap-2">
+            {card.kind === 'alerted' ? (
+              <TeamHasItCard t={t} replyLine={replyLine}>
+                {replyAddress}
+              </TeamHasItCard>
+            ) : card.kind === 'after_hours' ? (
+              <TeamAwayCard
+                title={t.awayTitle(
+                  card.opensAt ? formatTeamTime(card.opensAt, locale) : null,
+                  card.timezone ? cityTime(card.timezone, locale) : null,
+                )}
+                body={opensNextDay(team?.opensAtIso ?? null, card.timezone) ? t.awayBodyTomorrow : t.awayBody}
+              >
+                {replyAddress}
+              </TeamAwayCard>
+            ) : (
+              <SavedForTeamCard t={t}>{replyAddress}</SavedForTeamCard>
+            )}
+            {/* Only where the assistant really keeps answering while the
+                shopper waits: after hours, with n23 on. Inside opening hours
+                it stops once the team has the conversation. */}
+            {card.kind === 'after_hours' && afterHoursMode && config.aiEnabled && (
+              <p className="px-1 text-xs text-muted-foreground">{t.stillHelp}</p>
+            )}
+          </div>
+        )}
+        {!v16Chat && status === 'handoff_requested' && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3 text-center" role="status">
             {card.kind === 'alerted' ? (
               <>
@@ -1197,7 +1291,7 @@ export function MessengerPanel({
 
         {/* Inline, never a modal: the composer stays usable and skipping
             costs nothing. Asked at most once, decided by the server. */}
-        {askContact && (
+        {askContact && !(v16Chat && status === 'handoff_requested' && config.contactCapture) && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3">
             {contactState === 'done' ? (
               <p className="text-center text-[11px] text-muted-foreground" role="status">
