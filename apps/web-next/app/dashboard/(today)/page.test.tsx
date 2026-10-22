@@ -7,6 +7,9 @@ import { computeOverview, getTryOnOverview } from '@/lib/dashboard/overview-data
 import { getOverviewCopy } from '@/lib/dashboard/overview-copy';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getTodayFacts } from '@/lib/dashboard/today-data';
+import { getTodaySetupFacts } from '@/lib/dashboard/today-setup-data';
+import { getActiveStoreRole } from '@/lib/dashboard/active-store-server';
+import { createPreviewLink, setLaunchState } from '@/app/dashboard/try-on/launch-actions';
 import { renderWithMantine } from '@/components/mantine/test-utils';
 
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn() }));
@@ -21,6 +24,9 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
 }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: vi.fn(async () => []) }));
 vi.mock('@/lib/dashboard/today-data', () => ({ getTodayFacts: vi.fn() }));
+vi.mock('@/lib/dashboard/today-setup-data', () => ({ getTodaySetupFacts: vi.fn(async () => null) }));
+vi.mock('@/app/dashboard/try-on/launch-actions', () => ({ setLaunchState: vi.fn(), createPreviewLink: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 function fixture(costs: Array<number | null>, previousCost: number | null = 0) {
   return computeOverview([
@@ -95,5 +101,55 @@ describe('DashboardOverviewPage, v16 Today', () => {
     vi.mocked(getTryOnOverview).mockResolvedValue(fixture([0]));
     render(await DashboardOverviewPage());
     expect(getTryOnOverview).toHaveBeenCalled();
+  });
+});
+
+describe('DashboardOverviewPage, v16 Today while setting up', () => {
+  const SETUP = {
+    store: 'Maison Noor',
+    shop: 'alpha.myshopify.com',
+    chatSeenAt: '2026-10-02T10:58:00Z',
+    storeLook: false,
+    testLook: false,
+    holdoutAvailable: true,
+  };
+
+  it('draws the setup checklist for the owner of a store not live yet, with the launch actions', async () => {
+    vi.mocked(getRequestLocale).mockResolvedValue('en');
+    vi.mocked(storeFlags).mockResolvedValue(['v16_dashboard', 'n5_preview_mode', 'n6_holdout']);
+    vi.mocked(getTodaySetupFacts).mockResolvedValueOnce(SETUP);
+    vi.mocked(getTodayFacts).mockClear();
+    renderWithMantine(await DashboardOverviewPage());
+    expect(getTodaySetupFacts).toHaveBeenCalledWith({
+      activeStore: { shopDomain: 'alpha.myshopify.com', siteId: null },
+      holdoutAvailable: true,
+    });
+    expect(screen.getByRole('heading', { level: 2, name: 'Get Maison Noor live' })).toBeInTheDocument();
+    expect(screen.getByText('3 steps left, about 6 minutes')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '50/50 test' })).toBeInTheDocument();
+    expect(getTodayFacts).not.toHaveBeenCalled();
+    expect(vi.mocked(setLaunchState)).not.toHaveBeenCalled();
+    expect(vi.mocked(createPreviewLink)).not.toHaveBeenCalled();
+  });
+
+  it('keeps Today for a live store, without n5_preview_mode, and for a member', async () => {
+    vi.mocked(getRequestLocale).mockResolvedValue('en');
+    vi.mocked(getTodayFacts).mockResolvedValue({ now: Date.parse('2026-10-02T11:00:00Z'), timeZone: 'Africa/Cairo', canBilling: true, tryOn: null, chat: null });
+
+    vi.mocked(storeFlags).mockResolvedValue(['v16_dashboard', 'n5_preview_mode']);
+    vi.mocked(getTodaySetupFacts).mockResolvedValueOnce(null);
+    renderWithMantine(await DashboardOverviewPage());
+    expect(screen.queryByRole('heading', { name: /live$/ })).not.toBeInTheDocument();
+
+    vi.mocked(getTodaySetupFacts).mockClear();
+    vi.mocked(storeFlags).mockResolvedValue(['v16_dashboard']);
+    renderWithMantine(await DashboardOverviewPage());
+    expect(getTodaySetupFacts).not.toHaveBeenCalled();
+
+    vi.mocked(storeFlags).mockResolvedValue(['v16_dashboard', 'n5_preview_mode']);
+    vi.mocked(getActiveStoreRole).mockResolvedValueOnce('member');
+    renderWithMantine(await DashboardOverviewPage());
+    expect(getTodaySetupFacts).not.toHaveBeenCalled();
+    expect(getTodayFacts).toHaveBeenCalledTimes(3);
   });
 });

@@ -20,3 +20,10 @@ export const SHOPIFY_APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 export function appEmbedActivationUrl(shopDomain: string, blockHandle: string): string {
   return `https://${shopDomain}/admin/themes/current/editor?context=apps&activateAppId=${SHOPIFY_APP_CLIENT_ID}/${blockHandle}`;
 }
+
+/** Theme-editor deep link that opens the product template with one of this
+ *  app's blocks already added under the product details, so the merchant
+ *  only presses Save. `blockHandle` as for appEmbedActivationUrl (`tryon`). */
+export function productBlockAddUrl(shopDomain: string, blockHandle: string): string {
+  return `https://${shopDomain}/admin/themes/current/editor?template=product&addAppBlockId=${SHOPIFY_APP_CLIENT_ID}/${blockHandle}&target=mainSection`;
+}

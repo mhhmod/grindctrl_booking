@@ -14,8 +14,7 @@ import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 import type { ConsumeShopLinkResult } from '@/lib/shopify/shop-links';
-
-const APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
+import { appEmbedActivationUrl, productBlockAddUrl } from '@/lib/shopify/app-identity';
 
 function ShopLinkCard({
   initiallyLinked,
@@ -239,12 +238,8 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     );
   }
 
-  const deepLink = shop
-    ? `https://${shop}/admin/themes/current/editor?template=product&addAppBlockId=${APP_CLIENT_ID}/tryon&target=mainSection`
-    : '#';
-  const catalogLink = shop
-    ? `https://${shop}/admin/themes/current/editor?context=apps&activateAppId=${APP_CLIENT_ID}/tryon-catalog`
-    : '#';
+  const deepLink = shop ? productBlockAddUrl(shop, 'tryon') : '#';
+  const catalogLink = shop ? appEmbedActivationUrl(shop, 'tryon-catalog') : '#';
 
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
