@@ -59,9 +59,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
   }
 
-  /* The v16 shell, only while the active store's v16_dashboard flag is on,
-     so the owner can switch it on for the demo store first. Every other
-     store keeps today's shell. */
+  /* The v16 shell for every store (v16_dashboard is always on); a person
+     with no store yet keeps today's shell until they connect one. */
   const flagStore = activeStore.shopDomain
     ? { shopDomain: activeStore.shopDomain }
     : activeStore.siteId

@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { setMessengerServiceClientForTests } from '@/lib/messenger/db';
 import {
+  ALWAYS_ON,
   clearStoreFlagCache,
   flagStoreForSite,
   isStoreFlagOn,
   storeExists,
+  storeFlagRows,
   storeFlags,
   writeStoreFlag,
 } from './store-flags';
@@ -66,7 +68,7 @@ describe('store flags', () => {
       data: [{ flag: 'n24_assistant_down' }, { flag: 'n99_typo' }, { flag: 'n23_after_hours' }],
       error: null,
     }));
-    expect(await storeFlags(SHOP, NOW)).toEqual(['n23_after_hours', 'n24_assistant_down']);
+    expect(await storeFlags(SHOP, NOW)).toEqual(['n23_after_hours', 'n24_assistant_down', ...ALWAYS_ON]);
     expect(fake.queries[0].filters).toEqual([
       ['shop_domain', 'maison.myshopify.com'],
       ['enabled', true],
@@ -93,23 +95,23 @@ describe('store flags', () => {
     const fake = use(() =>
       fail ? { data: null, error: { code: '08006', message: 'connection lost' } } : { data: [{ flag: 'n23_after_hours' }], error: null },
     );
-    expect(await storeFlags(SHOP, NOW)).toEqual([]);
+    expect(await storeFlags(SHOP, NOW)).toEqual(ALWAYS_ON);
     fail = false;
-    expect(await storeFlags(SHOP, NOW + 1)).toEqual(['n23_after_hours']);
+    expect(await storeFlags(SHOP, NOW + 1)).toEqual(['n23_after_hours', ...ALWAYS_ON]);
     expect(fake.queries).toHaveLength(2);
   });
 
-  it('answers no flags until the table exists, without asking on every request', async () => {
+  it('answers only the always-on flags until the table exists, without asking on every request', async () => {
     const fake = use(() => ({ data: null, error: { code: 'PGRST205', message: "Could not find the table 'public.store_flags' in the schema cache" } }));
-    expect(await storeFlags(SHOP, NOW)).toEqual([]);
-    expect(await storeFlags(SHOP, NOW + 1000)).toEqual([]);
+    expect(await storeFlags(SHOP, NOW)).toEqual(ALWAYS_ON);
+    expect(await storeFlags(SHOP, NOW + 1000)).toEqual(ALWAYS_ON);
     expect(fake.queries).toHaveLength(1);
   });
 
   it('never asks about a malformed store', async () => {
     const fake = use(() => ({ data: [{ flag: 'n23_after_hours' }], error: null }));
-    expect(await storeFlags({ shopDomain: 'maison.com' }, NOW)).toEqual([]);
-    expect(await storeFlags({ widgetSiteId: 'not-a-uuid' }, NOW)).toEqual([]);
+    expect(await storeFlags({ shopDomain: 'maison.com' }, NOW)).toEqual(ALWAYS_ON);
+    expect(await storeFlags({ widgetSiteId: 'not-a-uuid' }, NOW)).toEqual(ALWAYS_ON);
     expect(fake.queries).toHaveLength(0);
   });
 
@@ -122,7 +124,7 @@ describe('store flags', () => {
   it('writes one row per store and flag, and reads fresh afterwards', async () => {
     let on = false;
     const fake = use(() => ({ data: on ? [{ flag: 'n23_after_hours' }] : [], error: null }));
-    expect(await storeFlags(SHOP, NOW)).toEqual([]);
+    expect(await storeFlags(SHOP, NOW)).toEqual(ALWAYS_ON);
 
     on = true;
     await writeStoreFlag(SHOP, 'n23_after_hours', true, 'user_operator');
@@ -130,7 +132,16 @@ describe('store flags', () => {
       row: { shop_domain: 'maison.myshopify.com', flag: 'n23_after_hours', enabled: true, updated_by: 'user_operator' },
       onConflict: 'shop_domain,flag',
     });
-    expect(await storeFlags(SHOP, NOW + 1)).toEqual(['n23_after_hours']);
+    expect(await storeFlags(SHOP, NOW + 1)).toEqual(['n23_after_hours', ...ALWAYS_ON]);
+  });
+
+  it('turns the v16 screens and team invites on for every store, and leaves them off the switches', async () => {
+    use(() => ({ data: [{ flag: 'n5_preview_mode' }], error: null }));
+    expect(ALWAYS_ON).toEqual(['n21_team_invites', 'v16_dashboard', 'v16_tryon', 'v16_chat']);
+    expect(await storeFlags(SHOP, NOW)).toEqual(['n5_preview_mode', ...ALWAYS_ON]);
+    const rows = await storeFlagRows(SHOP);
+    expect(rows.some((row) => (ALWAYS_ON as string[]).includes(row.flag))).toBe(false);
+    expect(rows.find((row) => row.flag === 'n5_preview_mode')?.enabled).toBe(true);
   });
 
   it('refuses to write a flag the code does not know', async () => {
