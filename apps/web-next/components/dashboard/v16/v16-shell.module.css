@@ -170,6 +170,17 @@ button.navLink {
   border: 1px solid var(--border);
   border-radius: var(--gc-radius-segmented);
   background: var(--gc-panel);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.meter:hover {
+  border-color: var(--muted-foreground);
+}
+
+a.meter:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .meterTitle {
