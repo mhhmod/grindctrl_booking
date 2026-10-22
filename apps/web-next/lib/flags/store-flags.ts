@@ -23,6 +23,7 @@ export const STORE_FLAGS = {
   n6_holdout: { code: 'N6', title: 'The 50/50 holdout' },
   n38_async_jobs: { code: 'N38', title: 'Looks made after the answer, with real stages' },
   n47_order_cards: { code: 'N47', title: 'Order totals and cash due on Store Chat order cards' },
+  n21_team_invites: { code: 'N21', title: 'Team invites, roles and removing people (needs workspace_invites.sql)' },
   /* Screen flags turn a redesigned surface on for one store
      (supabase/20261017_store_flags_screens.sql admits the v16_ names). */
   v16_dashboard: { code: 'V16', title: 'The v16 dashboard shell and pages' },

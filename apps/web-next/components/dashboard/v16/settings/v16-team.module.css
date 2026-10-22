@@ -65,6 +65,94 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
+.person[data-edit='true'] {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status:empty {
+  display: none;
+}
+
+.status {
+  margin: 0 0 8px;
+  color: var(--gc-success);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.status[data-tone='error'] {
+  color: var(--gc-danger);
+}
+
+.inviteAvatar {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted-foreground);
+}
+
+.email[data-expired='true'] {
+  color: var(--gc-danger);
+}
+
+.rowButtons {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.rowButton {
+  min-height: 40px;
+}
+
+/* On phones Edit, and an invite's two buttons, take their own line under
+   the address, so the address keeps the width. */
+@media (max-width: 39.99em) {
+  .person[data-edit='true'] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .person[data-edit='true'] > .rowButton,
+  .person[data-edit='true'] > .rowButtons {
+    grid-column: 2 / -1;
+    justify-self: start;
+    margin-block-start: -6px;
+    margin-inline-start: -12px;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.removeButton {
+  margin-inline-end: auto;
+}
+
+.confirm {
+  display: grid;
+  gap: 12px;
+}
+
+.confirm p,
+.formError {
+  margin: 0;
+}
+
+.formError {
+  color: var(--gc-danger);
+  font-size: 0.875rem;
+}
+
 .avatar,
 .rowIcon {
   display: inline-grid;
@@ -92,13 +180,13 @@
 
 .name {
   font-weight: 700;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .email {
   color: var(--muted-foreground);
   font-size: 0.875rem;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .role {

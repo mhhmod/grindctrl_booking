@@ -56,7 +56,7 @@ export async function requireClerkUser(): Promise<{ userId: string; email: strin
    gap for a concurrent request to land in. p_placeholder_suffix is passed
    explicitly rather than hardcoded in SQL, so the definition of "placeholder"
    stays sourced from this one constant. */
-async function ensureProfile(clerkUserId: string, email: string | null): Promise<ProfileRow> {
+export async function ensureProfile(clerkUserId: string, email: string | null): Promise<ProfileRow> {
   const supabase = getMessengerServiceClient();
   const { data, error } = await supabase.rpc('bootstrap_profile', {
     p_clerk_user_id: clerkUserId,

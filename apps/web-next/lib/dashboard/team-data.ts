@@ -6,12 +6,13 @@ import { requireSiteAccess } from '@/lib/messenger/provisioning';
 import { resolveMessengerConfig } from '@/lib/messenger/config';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { normalizeDashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
+import { listPendingInvites } from '@/lib/team/invites';
 import type { TeamFacts, TeamPerson } from './team-model';
 
 type MemberRow = {
   profile_id: string;
   role: string | null;
-  profiles: { first_name?: string | null; last_name?: string | null; email?: string | null } | null;
+  profiles: { first_name?: string | null; last_name?: string | null; email?: string | null; clerk_user_id?: string | null } | null;
 };
 
 /** The workspace of the account that owns a Shopify shop: its team. */
@@ -31,11 +32,12 @@ async function shopWorkspaceId(shopDomain: string): Promise<string | null> {
   return (workspace.data as { id: string } | null)?.id ?? null;
 }
 
-/** Everyone the workspace lists, with their role and a real address. */
-async function readPeople(workspaceId: string): Promise<TeamPerson[]> {
+/** Everyone the workspace lists, with their role and a real address, and
+ *  which of them is the person reading. */
+async function readPeople(workspaceId: string, userId: string): Promise<TeamPerson[]> {
   const result = await getMessengerServiceClient()
     .from('workspace_members')
-    .select('profile_id, role, profiles(first_name, last_name, email)')
+    .select('profile_id, role, profiles(first_name, last_name, email, clerk_user_id)')
     .eq('workspace_id', workspaceId);
   if (result.error) throw new Error(result.error.message);
   const people: TeamPerson[] = [];
@@ -44,7 +46,13 @@ async function readPeople(workspaceId: string): Promise<TeamPerson[]> {
     if (!role) continue;
     const name = [row.profiles?.first_name?.trim(), row.profiles?.last_name?.trim()].filter(Boolean).join(' ');
     const email = row.profiles?.email?.trim() ?? '';
-    people.push({ profileId: row.profile_id, name: name || null, email: email && !isPlaceholderEmail(email) ? email : null, role });
+    people.push({
+      profileId: row.profile_id,
+      name: name || null,
+      email: email && !isPlaceholderEmail(email) ? email : null,
+      role,
+      you: row.profiles?.clerk_user_id === userId,
+    });
   }
   return people;
 }
@@ -59,17 +67,25 @@ export async function getTeamFacts({
   userId,
   siteId,
   shopDomain,
+  withInvites = false,
 }: {
   userId: string;
   siteId: string | null;
   shopDomain: string | null;
+  /** n21_team_invites is on: read the pending invites too. */
+  withInvites?: boolean;
 }): Promise<TeamFacts> {
   if (siteId) {
     const site = await requireSiteAccess(userId, siteId, 'team');
     const config = resolveMessengerConfig(site.settings_json);
-    const [people, flags] = await Promise.all([readPeople(site.workspace_id), storeFlags(flagStoreForSite(site))]);
+    const [people, flags, invites] = await Promise.all([
+      readPeople(site.workspace_id, userId),
+      storeFlags(flagStoreForSite(site)),
+      withInvites ? listPendingInvites(site.workspace_id) : null,
+    ]);
     return {
       people,
+      invites,
       site: {
         emailOnHandoff: config.notifications.emailOnHandoff,
         recipients: config.notifications.recipients,
@@ -81,5 +97,25 @@ export async function getTeamFacts({
     };
   }
   const workspaceId = shopDomain ? await shopWorkspaceId(shopDomain) : null;
-  return { people: workspaceId ? await readPeople(workspaceId) : [], site: null, afterHours: false };
+  const [people, invites] = workspaceId
+    ? await Promise.all([readPeople(workspaceId, userId), withInvites ? listPendingInvites(workspaceId) : null])
+    : [[], withInvites ? [] : null];
+  return { people, invites, site: null, afterHours: false };
+}
+
+/** The workspace that is the active store's team, for the team actions:
+ *  through the site after checking the person may manage the team there,
+ *  or the shop owner's for a shop without a site (the caller has checked
+ *  the person's role on the shop). */
+export async function teamWorkspaceId({
+  userId,
+  siteId,
+  shopDomain,
+}: {
+  userId: string;
+  siteId: string | null;
+  shopDomain: string | null;
+}): Promise<string | null> {
+  if (siteId) return (await requireSiteAccess(userId, siteId, 'team')).workspace_id;
+  return shopDomain ? shopWorkspaceId(shopDomain) : null;
 }

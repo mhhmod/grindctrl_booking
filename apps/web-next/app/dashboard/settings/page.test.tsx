@@ -21,9 +21,16 @@ vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: mocks.locale }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({ getActiveStore: mocks.active, getActiveStoreRole: mocks.role }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
 vi.mock('@/lib/dashboard/team-data', () => ({ getTeamFacts: mocks.facts }));
+vi.mock('./actions', () => ({
+  inviteTeammateAction: vi.fn(),
+  resendInviteAction: vi.fn(),
+  revokeInviteAction: vi.fn(),
+  changeRoleAction: vi.fn(),
+  removeMemberAction: vi.fn(),
+}));
 vi.mock('@/components/dashboard/v16/settings/v16-team', () => ({
-  V16Team: ({ view, locale }: { view: { people: Array<{ name: string }> }; locale: string }) => (
-    <div data-testid="v16-team">
+  V16Team: ({ view, locale, actions, roles }: { view: { people: Array<{ name: string }> }; locale: string; actions?: object; roles?: object }) => (
+    <div data-testid="v16-team" data-actions={actions ? Object.keys(actions).join(',') : ''} data-roles={roles ? JSON.stringify(roles) : ''}>
       {locale}:{view.people.map((person) => person.name).join(',')}
     </div>
   ),
@@ -43,6 +50,7 @@ beforeEach(() => {
   mocks.locale.mockResolvedValue('en');
   mocks.facts.mockResolvedValue({
     people: [{ profileId: 'p1', name: 'Hana Adel', email: 'hana@maisonnoor.com', role: 'owner' }],
+    invites: null,
     site: null,
     afterHours: false,
   });
@@ -52,8 +60,18 @@ describe('SettingsPage', () => {
   it('shows an admin the active store’s team', async () => {
     render(await SettingsPage());
     expect(mocks.user).toHaveBeenCalledWith('/dashboard/settings');
-    expect(mocks.facts).toHaveBeenCalledWith({ userId: 'user_123', siteId: SITE_ID, shopDomain: 'maison.myshopify.com' });
+    expect(mocks.facts).toHaveBeenCalledWith({ userId: 'user_123', siteId: SITE_ID, shopDomain: 'maison.myshopify.com', withInvites: false });
     expect(screen.getByTestId('v16-team')).toHaveTextContent('en:Hana Adel');
+    expect(screen.getByTestId('v16-team')).toHaveAttribute('data-actions', '');
+  });
+
+  it('reads the invites and hands over the team actions with n21_team_invites', async () => {
+    mocks.flags.mockResolvedValue(['v16_dashboard', 'n21_team_invites']);
+    mocks.facts.mockResolvedValue({ people: [], invites: [], site: null, afterHours: false });
+    render(await SettingsPage());
+    expect(mocks.facts).toHaveBeenCalledWith(expect.objectContaining({ withInvites: true }));
+    expect(screen.getByTestId('v16-team')).toHaveAttribute('data-actions', 'invite,resend,revoke,changeRole,remove');
+    expect(screen.getByTestId('v16-team')).toHaveAttribute('data-roles', JSON.stringify({ admin: 'Admin', member: 'Member' }));
   });
 
   it('keys the flag on the site for a store without a shop', async () => {

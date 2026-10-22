@@ -14,6 +14,8 @@ import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store
 import { getV16ShellData } from '@/lib/dashboard/shell-data';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { V16Shell } from '@/components/dashboard/v16/v16-shell';
+import { acceptInvitesForSignedIn } from '@/lib/team/accept';
+import { listTeamMemberships } from '@/lib/rbac/store-role';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const headerList = await headers();
@@ -21,10 +23,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const clerkUserId = await requireDashboardUser(pathname);
 
+  // Someone a team invited joins it on their first visit (N21).
+  await acceptInvitesForSignedIn();
+
   /* Gate here rather than in middleware: this is a database read, and
      middleware runs on every asset-adjacent request. Layouts run once per
-     navigation. hasCompletedOnboarding fails open if Supabase is down. */
-  if (!(await hasCompletedOnboarding(clerkUserId))) {
+     navigation. hasCompletedOnboarding fails open if Supabase is down. A
+     team member works on their team's stores, so the questions about a
+     store of their own do not stand in their way. */
+  if (!(await hasCompletedOnboarding(clerkUserId)) && (await listTeamMemberships(clerkUserId)).length === 0) {
     redirect('/onboarding');
   }
 

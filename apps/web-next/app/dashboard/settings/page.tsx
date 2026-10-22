@@ -16,6 +16,14 @@ import { getTeamFacts } from '@/lib/dashboard/team-data';
 import { buildTeamView, type TeamView } from '@/lib/dashboard/team-model';
 import { getTeamCopy } from '@/lib/dashboard/team-copy';
 import { V16Team, V16TeamError } from '@/components/dashboard/v16/settings/v16-team';
+import { getShellCopy } from '@/lib/dashboard/shell-copy';
+import {
+  changeRoleAction,
+  inviteTeammateAction,
+  removeMemberAction,
+  resendInviteAction,
+  revokeInviteAction,
+} from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,18 +39,37 @@ export default async function SettingsPage() {
     : activeStore.siteId
       ? { widgetSiteId: activeStore.siteId }
       : null;
-  if (!flagStore || !(await storeFlags(flagStore)).includes('v16_dashboard')) return <SettingsPlaceholder />;
+  const flags = flagStore ? await storeFlags(flagStore) : [];
+  if (!flags.includes('v16_dashboard')) return <SettingsPlaceholder />;
   if (!roleCan(await getActiveStoreRole(activeStore), 'team')) redirect('/dashboard');
 
+  // Invites, Resend and Edit (N21) come with n21_team_invites.
+  const invites = flags.includes('n21_team_invites');
   const locale = await getRequestLocale();
   let view: TeamView | null = null;
   try {
-    const facts = await getTeamFacts({ userId, siteId: activeStore.siteId, shopDomain: activeStore.shopDomain });
+    const facts = await getTeamFacts({ userId, siteId: activeStore.siteId, shopDomain: activeStore.shopDomain, withInvites: invites });
     view = buildTeamView(facts, getTeamCopy(locale), locale);
   } catch (error) {
     console.error('[settings] team failed:', error instanceof Error ? error.message : error);
   }
-  return view ? <V16Team view={view} locale={locale} /> : <V16TeamError locale={locale} />;
+  if (!view) return <V16TeamError locale={locale} />;
+  if (!invites) return <V16Team view={view} locale={locale} />;
+  const roles = getShellCopy(locale).roles;
+  return (
+    <V16Team
+      view={view}
+      locale={locale}
+      roles={{ admin: roles.admin, member: roles.member }}
+      actions={{
+        invite: inviteTeammateAction,
+        resend: resendInviteAction,
+        revoke: revokeInviteAction,
+        changeRole: changeRoleAction,
+        remove: removeMemberAction,
+      }}
+    />
+  );
 }
 
 function SettingsPlaceholder() {
