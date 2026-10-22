@@ -20,24 +20,27 @@ import classes from './v16-shell.module.css';
 
 /* The v16 dashboard shell (04-dashboard.md), shown while the active store's
    v16_dashboard flag is on. The page bodies are still today's until each
-   v16 page lands, and the nav lists only pages that exist: Inbox, Plan and
-   Settings join as theirs do, and so do the search field and the bell. */
+   v16 page lands, and the nav lists only pages that exist: the search
+   field and the bell join as theirs do. */
 
 export type V16NavItem = {
   href: string;
-  key: 'today' | 'inbox' | 'tryOn' | 'storeChat' | 'plan';
+  key: 'today' | 'inbox' | 'tryOn' | 'storeChat' | 'plan' | 'settings';
   icon: GcIconName;
   /** Who sees it (item 12): Plan joins for owners only, Settings for owners and admins. */
   permission: DashboardPermissionKey;
+  /** In the phone tab bar too; Settings sits in the phone menu instead (Owner-Phone). */
+  tab: boolean;
 };
 
 export const V16_NAV: readonly V16NavItem[] = [
-  { href: '/dashboard', key: 'today', icon: 'home', permission: 'canViewToday' },
+  { href: '/dashboard', key: 'today', icon: 'home', permission: 'canViewToday', tab: true },
   // Everyone who sees Store Chat answers its shoppers (item 12).
-  { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat' },
-  { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn' },
-  { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat' },
-  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan' },
+  { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat', tab: true },
+  { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn', tab: true },
+  { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat', tab: true },
+  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true },
+  { href: '/dashboard/settings', key: 'settings', icon: 'gear', permission: 'canViewSettings', tab: false },
 ];
 
 /** The nav items the person's role sees. */
@@ -313,7 +316,7 @@ export function V16ShellView({
       </div>
 
       <nav aria-label={copy.phoneNavLabel} className={classes.tabbar}>
-        {nav.map((item) => (
+        {nav.filter((item) => item.tab).map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -357,6 +360,20 @@ export function V16ShellView({
               {store.current && <GcIcon name="check" size={16} />}
             </a>
           ))}
+          {nav
+            .filter((item) => !item.tab)
+            .map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={classes.navLink}
+                aria-current={isV16NavActive(pathname, item.href) ? 'page' : undefined}
+                onClick={() => setDrawerOpen(false)}
+              >
+                <GcIcon name={item.icon} size={20} />
+                <span className={classes.navLabel}>{navLabel(item)}</span>
+              </Link>
+            ))}
           <span className={classes.drawerLabel}>{person.name}</span>
           <button type="button" className={classes.navLink} onClick={() => clerk.openUserProfile()}>
             {copy.account}

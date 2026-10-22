@@ -49,21 +49,21 @@ describe('V16Shell', () => {
     render(<V16Shell {...props()} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan']);
+    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan', 'Settings']);
     expect(within(nav).getByRole('link', { name: 'Try-On' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
-    // Settings waits for its page.
-    expect(screen.queryByRole('link', { name: /Settings/ })).not.toBeInTheDocument();
   });
 
   /* The nav for each of the three roles (item 12). Plan is the owner's
      alone, as is the looks meter, which the layout passes only for the
-     owner and which opens Plan; Settings is not built yet. */
+     owner and which opens Plan; Settings is for owners and admins. On
+     phones Plan is a tab and Settings is in the menu (Owner-Phone). */
   it.each([
-    ['owner', true],
-    ['admin', false],
-    ['member', false],
-  ] as const)('shows a %s their nav, and Plan and the meter only to the owner', (role, owner) => {
+    ['owner', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat', 'Plan']],
+    ['admin', ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Settings'], ['Today', 'Inbox', 'Try-On', 'Chat']],
+    ['member', ['Today', 'Inbox', 'Try-On', 'Store Chat'], ['Today', 'Inbox', 'Try-On', 'Chat']],
+  ] as const)('shows a %s their nav, and Plan and the meter only to the owner', (role, sidebar, tabs) => {
+    const owner = role === 'owner';
     render(
       <V16Shell
         {...props({
@@ -74,12 +74,16 @@ describe('V16Shell', () => {
       />,
     );
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(
-      owner ? ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan'] : ['Today', 'Inbox', 'Try-On', 'Store Chat'],
-    );
-    expect(within(screen.getByRole('navigation', { name: 'Main' })).queryByRole('link', { name: 'Plan' }) !== null).toBe(owner);
-    expect(screen.queryByRole('link', { name: /Settings/ })).not.toBeInTheDocument();
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(sidebar);
+    expect(within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link').map((link) => link.textContent)).toEqual(tabs);
     expect(screen.queryByText('Looks this cycle') !== null).toBe(owner);
+  });
+
+  it('puts Settings in the phone menu for those who may see it', () => {
+    render(<V16Shell {...props()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    const menu = screen.getByRole('dialog', { name: 'Menu' });
+    expect(within(menu).getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/dashboard/settings');
   });
 
   it('opens Plan from the meter for the owner, and keeps it a plain meter for anyone else', () => {
@@ -167,6 +171,7 @@ describe('V16Shell', () => {
       'التجربة الافتراضية',
       'دردشة المتجر',
       'الباقة',
+      'الإعدادات',
     ]);
     expect(screen.getByRole('navigation', { name: 'القائمة الرئيسية' })).toHaveTextContent('الدردشة');
     expect(screen.getByText('المالك')).toBeInTheDocument();

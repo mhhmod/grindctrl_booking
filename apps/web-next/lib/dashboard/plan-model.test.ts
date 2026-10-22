@@ -165,6 +165,18 @@ describe('the plan, the last three cycles and the plans', () => {
     ]);
   });
 
+  it('keeps a store on a retired plan in the list, in place of the plan that replaced it', () => {
+    const retiredFree = catalogItem({ id: 'f1', planKey: 'free-v1', name: 'Free', priceMinor: 0, rendersIncluded: 20, isFree: true, active: false, sortOrder: 10 });
+    const plans = [retiredFree, { ...PLANS[0], id: 'f2', planKey: 'free-v2' }, ...PLANS.slice(1)];
+    const view = buildPlanView(facts({ plans }, { planKey: 'free-v1', planName: 'Free', isFree: true, rendersIncluded: 20 }), en, 'en');
+    expect(view.plans.map((p) => [p.key, p.looks, p.current])).toEqual([
+      ['free-v1', '20 looks a month', true],
+      ['launch-v1', '150 looks a month', false],
+      ['growth-v1', '350 looks a month', false],
+    ]);
+    expect(view.plan?.line).toBe('20 looks a month, Store Chat included.');
+  });
+
   it('lists the plans in one currency, the store’s own plan’s, or the chosen one on Free', () => {
     const egp = [
       ...PLANS,

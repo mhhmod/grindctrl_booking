@@ -1,0 +1,142 @@
+/* The v16 Settings page, Team (the Team board). Colours, radii and type
+   come from the tokens; layout uses logical properties so Arabic mirrors. */
+
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.head {
+  display: grid;
+  gap: 4px;
+  padding-block-end: 12px;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.people {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person,
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding-block: 14px;
+  border-block-start: 1px solid var(--border);
+}
+
+/* The role stays beside the name at every width; a long address wraps. */
+.person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.avatar,
+.rowIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.rowIcon {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+.who {
+  display: grid;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.email {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.role {
+  padding: 3px 10px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.role[data-owner='true'] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.row {
+  padding-block-end: 0;
+}
+
+.card > .row:first-child {
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.rowText {
+  display: grid;
+  flex: 1 1 260px;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.change {
+  flex: none;
+}
+
+.error {
+  padding: 20px;
+  color: var(--muted-foreground);
+}

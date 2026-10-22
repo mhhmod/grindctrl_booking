@@ -55,6 +55,17 @@ function UsageChart({ chart, locale }: { chart: PlanChart; locale: SiteLocale })
     setActive(best);
   }
 
+  /** The baseline that keeps today's label clear of the dashed line rising
+   *  ahead of it: above where the line is at the label's far end. */
+  function earlyLabelY(label: string) {
+    const base = y(last.used) - 10;
+    const end = chart.projection[chart.projection.length - 1];
+    if (!end || end.at <= last.at) return base;
+    const far = x(last.at) + 8 + label.length * 7.5;
+    const lineY = y(last.used) + (y(end.used) - y(last.used)) * Math.min(1, (far - x(last.at)) / (x(end.at) - x(last.at)));
+    return Math.max(14, Math.min(base, lineY - 8));
+  }
+
   const point = active === null ? null : stops[active];
   return (
     <figure className={classes.figure}>
@@ -120,13 +131,13 @@ function UsageChart({ chart, locale }: { chart: PlanChart; locale: SiteLocale })
             <g>
               <circle cx={x(last.at)} cy={y(last.used)} r={4} className={classes.dot} />
               {/* Above and behind today, where the line has been, once there is room;
-                  early in the cycle, below and ahead, under the projection. */}
+                  early in the cycle, ahead of today and above the projection. */}
               {x(last.at) - PAD.left > 150 ? (
                 <text x={x(last.at) - 8} y={y(last.used) - 10} textAnchor="end" className={classes.todayLabel}>
                   {chart.todayLabel}
                 </text>
               ) : (
-                <text x={x(last.at) + 8} y={Math.min(y(last.used) + 18, y(0) - 6)} className={classes.todayLabel}>
+                <text x={x(last.at) + 8} y={earlyLabelY(chart.todayLabel)} className={classes.todayLabel}>
                   {chart.todayLabel}
                 </text>
               )}
