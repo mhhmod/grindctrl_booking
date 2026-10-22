@@ -7,6 +7,7 @@ import { GcIcon } from '@/components/icons';
 import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
 import type { TryOnResultsView } from '@/lib/dashboard/tryon-insights-model';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { V16PageFrame } from '../page-frame';
 import classes from './v16-tryon.module.css';
 
 /* The v16 Try-On page (04-dashboard.md): Results (TryOnInsights) from the
@@ -29,29 +30,18 @@ export function V16TryOnFrame({
 }) {
   const copy = getTryOnResultsCopy(locale);
   return (
-    <div className={classes.page}>
-      <div className={classes.intro}>
-        {status && (
-          <span className={classes.badge} data-live={status.live}>
-            <span className={classes.badgeDot} aria-hidden="true" />
-            {status.label}
-          </span>
-        )}
-        <span>{copy.subtitle}</span>
-      </div>
-      <div className={classes.controls}>
-        <nav aria-label={copy.tabsLabel} className={classes.tabs}>
-          <Link href="/dashboard/try-on" className={classes.tab} aria-current={tab === 'results' ? 'page' : undefined}>
-            {copy.results}
-          </Link>
-          <Link href="/dashboard/try-on/setup" className={classes.tab} aria-current={tab === 'setup' ? 'page' : undefined}>
-            {copy.setUp}
-          </Link>
-        </nav>
-        {controls}
-      </div>
+    <V16PageFrame
+      badge={status}
+      subtitle={copy.subtitle}
+      tabsLabel={copy.tabsLabel}
+      tabs={[
+        { label: copy.results, href: '/dashboard/try-on', current: tab === 'results' },
+        { label: copy.setUp, href: '/dashboard/try-on/setup', current: tab === 'setup' },
+      ]}
+      controls={controls}
+    >
       {children}
-    </div>
+    </V16PageFrame>
   );
 }
 

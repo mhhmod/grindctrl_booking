@@ -1,0 +1,86 @@
+/* The head of a v16 page with tabs. Colours and radii come from the tokens;
+   layout uses logical properties so Arabic mirrors. */
+
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+  color: var(--muted-foreground);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.badge[data-live='false'] {
+  background: var(--gc-danger-soft);
+  color: var(--gc-danger);
+}
+
+.badgeDot {
+  inline-size: 7px;
+  block-size: 7px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--muted);
+}
+
+.tab {
+  padding: 8px 18px;
+  border-radius: var(--gc-radius-pill);
+  color: var(--muted-foreground);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tab[aria-current='page'] {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

@@ -1,0 +1,202 @@
+/* The v16 Store Chat page, What it knows (the Knowledge board). Colours,
+   radii and type come from the tokens; layout uses logical properties so
+   Arabic mirrors. Rows stack their actions under the text on phones. */
+
+.card {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.section {
+  display: grid;
+  gap: 16px;
+  padding: 20px 22px 22px;
+}
+
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+  font-weight: 600;
+}
+
+.note:empty {
+  padding: 0;
+  background: none;
+}
+
+.note[data-ok='false'] {
+  background: var(--gc-attention-soft);
+  color: var(--gc-attention);
+}
+
+/* Add a page or note */
+.form {
+  display: grid;
+  gap: 14px;
+  max-inline-size: 640px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--background);
+}
+
+.kind {
+  justify-self: start;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Pages and notes */
+.tile {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.tileHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tileIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--muted);
+}
+
+.rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-block-start: 1px solid var(--border);
+}
+
+.row[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 8px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.rowText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  grid-column: 2 / -1;
+}
+
+@media (min-width: 64em) {
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .rowActions {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
+.confirm {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.pill {
+  justify-self: end;
+  padding: 3px 10px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pill[data-active='false'] {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.more {
+  justify-self: start;
+}
+
+.error {
+  padding: 20px;
+  color: var(--muted-foreground);
+}
