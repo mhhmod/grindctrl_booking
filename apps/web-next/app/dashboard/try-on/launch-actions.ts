@@ -52,7 +52,8 @@ export async function setLaunchState(input: { shop: string; state: 'preview' | '
     await requireMerchantRateLimit(`shop:${shop}`);
     const { userId } = await auth();
     const saved = await writeStoreLaunch(shop, { state: input.state }, userId ?? 'owner');
-    revalidatePath('/dashboard/try-on');
+    // Set up (/dashboard/try-on/setup) shows the launch card, under the dashboard layout.
+    revalidatePath('/dashboard', 'layout');
     return { ok: true, state: saved?.state ?? input.state };
   } catch (error) {
     return ownershipFailure(error) ?? merchantActionFailure(error);
@@ -86,7 +87,7 @@ export async function setLaunchStateAsOperator(input: { shop: string; state: str
     }
     await requireMerchantRateLimit(`operator:${operator}`);
     const saved = await writeStoreLaunch(input.shop, { state: input.state as LaunchState }, operator);
-    revalidatePath('/dashboard/try-on');
+    revalidatePath('/dashboard', 'layout');
     return { ok: true, state: saved?.state ?? (input.state as LaunchState) };
   } catch (error) {
     if (error instanceof PlatformOperatorRequiredError) return FORBIDDEN;

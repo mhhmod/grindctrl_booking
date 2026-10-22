@@ -83,7 +83,7 @@ export type TodayView = {
 };
 
 export const PLAN_HREF = '/dashboard/try-on';
-export const INBOX_HREF = '/dashboard/store-chat?tab=conversations';
+export const INBOX_HREF = '/dashboard/inbox';
 
 export function relativeAgo(iso: string, now: number, copy: TodayCopy): string {
   const minutes = Math.floor((now - Date.parse(iso)) / MINUTE);

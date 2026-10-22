@@ -14,7 +14,7 @@ export interface ShellCopy {
   skipToContent: string;
   navLabel: string;
   phoneNavLabel: string;
-  nav: { today: string; tryOn: string; storeChat: string; storeChatShort: string };
+  nav: { today: string; inbox: string; tryOn: string; storeChat: string; storeChatShort: string };
   switchStore: (current: string) => string;
   yourStores: string;
   looksThisCycle: string;
@@ -38,7 +38,7 @@ const en: ShellCopy = {
   skipToContent: 'Skip to content',
   navLabel: 'GrindCTRL',
   phoneNavLabel: 'Main',
-  nav: { today: 'Today', tryOn: 'Try-On', storeChat: 'Store Chat', storeChatShort: 'Chat' },
+  nav: { today: 'Today', inbox: 'Inbox', tryOn: 'Try-On', storeChat: 'Store Chat', storeChatShort: 'Chat' },
   switchStore: (current) => `Switch store, current ${current}`,
   yourStores: 'Your stores',
   looksThisCycle: 'Looks this cycle',
@@ -66,7 +66,7 @@ const ar: ShellCopy = {
   skipToContent: 'انتقل إلى المحتوى',
   navLabel: 'GrindCTRL',
   phoneNavLabel: 'القائمة الرئيسية',
-  nav: { today: 'اليوم', tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', storeChatShort: 'الدردشة' },
+  nav: { today: 'اليوم', inbox: 'الرسائل', tryOn: 'التجربة الافتراضية', storeChat: 'دردشة المتجر', storeChatShort: 'الدردشة' },
   switchStore: (current) => `تبديل المتجر، الحالي ${current}`,
   yourStores: 'متاجرك',
   looksThisCycle: 'الإطلالات في هذه الدورة',

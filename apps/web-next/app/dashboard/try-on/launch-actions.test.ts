@@ -44,7 +44,7 @@ describe('setLaunchState (N5, N6)', () => {
     expect(await setLaunchState({ shop: SHOP, state: 'live' })).toEqual({ ok: true, state: 'live' });
     expect(mocks.write).toHaveBeenCalledWith(SHOP, { state: 'live' }, 'user_owner');
     expect(await setLaunchState({ shop: SHOP, state: 'holdout' })).toEqual({ ok: true, state: 'holdout' });
-    expect(mocks.revalidate).toHaveBeenCalledWith('/dashboard/try-on');
+    expect(mocks.revalidate).toHaveBeenCalledWith('/dashboard', 'layout');
   });
 
   it('refuses someone else\'s shop before anything is read or written', async () => {

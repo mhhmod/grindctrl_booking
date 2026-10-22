@@ -49,10 +49,11 @@ describe('V16Shell', () => {
     render(<V16Shell {...props()} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Try-On', 'Store Chat']);
+    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat']);
     expect(within(nav).getByRole('link', { name: 'Try-On' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
-    expect(screen.queryByRole('link', { name: /Inbox|Plan|Settings/ })).not.toBeInTheDocument();
+    // Plan and Settings wait for their pages.
+    expect(screen.queryByRole('link', { name: /Plan|Settings/ })).not.toBeInTheDocument();
   });
 
   /* The nav for each of the three roles (item 12). Plan and Settings are not
@@ -73,7 +74,7 @@ describe('V16Shell', () => {
       />,
     );
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Try-On', 'Store Chat']);
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat']);
     expect(screen.queryByRole('link', { name: /Plan|Settings/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Looks this cycle') !== null).toBe(owner);
   });
@@ -124,9 +125,13 @@ describe('V16Shell', () => {
     expect(screen.queryByText('Owner')).not.toBeInTheDocument();
   });
 
-  it('shows the waiting count on Store Chat, in both navs', () => {
+  it('shows the waiting count on Inbox, in both navs', () => {
     render(<V16Shell {...props({ waitingCount: 3 })} />);
     expect(screen.getAllByLabelText('3 waiting for a person')).toHaveLength(2);
+    const sidebar = screen.getByRole('navigation', { name: 'GrindCTRL' });
+    expect(within(sidebar).getByRole('link', { name: /Inbox/ })).toHaveAttribute('href', '/dashboard/inbox');
+    expect(within(within(sidebar).getByRole('link', { name: /Inbox/ })).getByLabelText('3 waiting for a person')).toBeInTheDocument();
+    expect(within(within(sidebar).getByRole('link', { name: /Store Chat/ })).queryByLabelText('3 waiting for a person')).toBeNull();
   });
 
   it('offers the other language by its own name', () => {
@@ -144,6 +149,7 @@ describe('V16Shell', () => {
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'اليوم',
+      'الرسائل',
       'التجربة الافتراضية',
       'دردشة المتجر',
     ]);

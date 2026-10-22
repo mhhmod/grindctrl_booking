@@ -52,7 +52,8 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok:
   });
   if (!saved) return merchantActionFailure(null);
 
-  revalidatePath('/dashboard/try-on');
+  // Results, Set up (/dashboard/try-on/setup) and the shell all read these, under the dashboard layout.
+  revalidatePath('/dashboard', 'layout');
   return { ok: true };
   } catch (error) {
     if (error instanceof RoleNotAllowedError ||

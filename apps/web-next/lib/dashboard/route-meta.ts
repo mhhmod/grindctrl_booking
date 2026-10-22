@@ -28,6 +28,11 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'The try-on business this week, across every merchant store.',
   },
   {
+    pathname: '/dashboard/inbox',
+    title: 'Inbox',
+    description: 'Shopper conversations that need your team.',
+  },
+  {
     pathname: '/dashboard/try-on',
     title: 'Try-On',
     description: 'Settings, plans, and generation history for every merchant store.',
