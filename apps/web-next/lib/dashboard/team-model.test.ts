@@ -15,6 +15,7 @@ function facts(over: Partial<TeamFacts> = {}, site: Partial<NonNullable<TeamFact
       { profileId: 'p1', name: 'Hana Adel', email: 'hana@maisonnoor.com', role: 'owner' },
       { profileId: 'p2', name: null, email: 'youssef@maisonnoor.com', role: 'admin' },
     ],
+    invites: null,
     site: {
       emailOnHandoff: true,
       recipients: [],
@@ -31,10 +32,11 @@ function facts(over: Partial<TeamFacts> = {}, site: Partial<NonNullable<TeamFact
 describe('Team, people', () => {
   it('lists the owner first, then admins and members, with their role and email', () => {
     expect(buildTeamView(facts(), en, 'en').people).toEqual([
-      { key: 'p1', name: 'Hana Adel', email: 'hana@maisonnoor.com', role: 'Owner', owner: true, initials: 'HA' },
-      { key: 'p2', name: 'youssef@maisonnoor.com', email: null, role: 'Admin', owner: false, initials: 'Y' },
-      { key: 'p3', name: 'Nour Samir', email: 'nour@maisonnoor.com', role: 'Member', owner: false, initials: 'NS' },
+      { key: 'p1', name: 'Hana Adel', email: 'hana@maisonnoor.com', role: 'Owner', roleKey: 'owner', owner: true, initials: 'HA', editable: false },
+      { key: 'p2', name: 'youssef@maisonnoor.com', email: null, role: 'Admin', roleKey: 'admin', owner: false, initials: 'Y', editable: false },
+      { key: 'p3', name: 'Nour Samir', email: 'nour@maisonnoor.com', role: 'Member', roleKey: 'member', owner: false, initials: 'NS', editable: false },
     ]);
+    expect(buildTeamView(facts(), en, 'en')).toMatchObject({ manage: false, invites: [] });
   });
 
   it('leaves out someone with neither a name nor an address', () => {
@@ -98,5 +100,56 @@ describe('Team, opening hours', () => {
   it('says nobody is alerted outside the hours only where after hours is on', () => {
     expect(buildTeamView(facts(), en, 'en').outsideHours).toBe(true);
     expect(buildTeamView(facts({ afterHours: false }), en, 'en').outsideHours).toBe(false);
+  });
+});
+
+describe('Team, managing it (n21_team_invites)', () => {
+  const NOW = Date.parse('2026-10-22T09:00:00Z');
+  const DAY = 86_400_000;
+  const invite = (id: string, sentDaysAgo: number, role: 'admin' | 'member' = 'admin') => ({
+    id,
+    email: `${id}@maisonnoor.com`,
+    role,
+    invitedAt: new Date(NOW - sentDaysAgo * DAY).toISOString(),
+    expiresAt: new Date(NOW - sentDaysAgo * DAY + 7 * DAY).toISOString(),
+  });
+
+  it('offers Edit on everyone but the owner and the person reading', () => {
+    const team = facts({
+      now: NOW,
+      invites: [],
+      people: [
+        { profileId: 'p1', name: 'Hana Adel', email: 'hana@maisonnoor.com', role: 'owner' },
+        { profileId: 'p2', name: 'Youssef Hany', email: 'youssef@maisonnoor.com', role: 'admin', you: true },
+        { profileId: 'p3', name: 'Nour Samir', email: 'nour@maisonnoor.com', role: 'member' },
+      ],
+    });
+    const view = buildTeamView(team, en, 'en');
+    expect(view.manage).toBe(true);
+    expect(view.people.map((p) => [p.name, p.editable])).toEqual([
+      ['Hana Adel', false],
+      ['Youssef Hany', false],
+      ['Nour Samir', true],
+    ]);
+  });
+
+  it('lists the invites with when they went out, and says when one has expired', () => {
+    const view = buildTeamView(facts({ now: NOW, invites: [invite('youssef', 2), invite('reem', 0, 'member'), invite('omar', 1), invite('old', 9)] }), en, 'en');
+    expect(view.invites.map((i) => [i.email, i.role, i.sent, i.expired])).toEqual([
+      ['youssef@maisonnoor.com', 'Admin', 'Invited 2 days ago', false],
+      ['reem@maisonnoor.com', 'Member', 'Invited today', false],
+      ['omar@maisonnoor.com', 'Admin', 'Invited yesterday', false],
+      ['old@maisonnoor.com', 'Admin', 'Invite expired', true],
+    ]);
+  });
+
+  it('says when they went out in Arabic, with counts that agree', () => {
+    const view = buildTeamView(facts({ now: NOW, invites: [invite('a', 2), invite('b', 1), invite('c', 3), invite('d', 0)] }), ar, 'ar');
+    expect(view.invites.map((i) => i.sent)).toEqual([
+      'أُرسلت الدعوة قبل يومين',
+      'أُرسلت الدعوة أمس',
+      'أُرسلت الدعوة قبل 3 أيام',
+      'أُرسلت الدعوة اليوم',
+    ]);
   });
 });

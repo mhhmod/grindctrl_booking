@@ -4,6 +4,7 @@
    Western digits. */
 
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { arCount } from './today-copy';
 
 export interface TeamCopy {
   subtitle: string;
@@ -32,6 +33,33 @@ export interface TeamCopy {
   noStoreChat: string;
   openStoreChat: string;
   couldNotLoad: string;
+  inviteSomeone: string;
+  editButton: string;
+  edit: (name: string) => string;
+  invitedAgo: (days: number) => string;
+  inviteExpired: string;
+  notJoined: string;
+  resend: string;
+  resendTo: (email: string) => string;
+  cancelInvite: string;
+  cancelInviteTo: (email: string) => string;
+  invited: string;
+  emailLabel: string;
+  roleLabel: string;
+  roleHint: Record<'admin' | 'member', string>;
+  sendInvite: string;
+  cancel: string;
+  close: string;
+  save: string;
+  removeFromTeam: string;
+  removeConfirm: (name: string) => string;
+  remove: string;
+  sentTo: (email: string) => string;
+  resentTo: (email: string) => string;
+  saved: string;
+  removed: (name: string) => string;
+  canceled: string;
+  errors: Record<'already_member' | 'not_allowed' | 'invite_expired' | 'not_found' | 'invalid_email' | 'daily_limit' | 'failed', string>;
 }
 
 function twelveHour(minute: number): { time: string; pm: boolean } {
@@ -69,6 +97,44 @@ const en: TeamCopy = {
   noStoreChat: 'Store Chat isn’t set up for this store yet, so nobody is alerted when a shopper needs a person.',
   openStoreChat: 'Open Store Chat',
   couldNotLoad: "Your team couldn't load just now. Refresh in a minute.",
+  inviteSomeone: 'Invite someone',
+  editButton: 'Edit',
+  edit: (name) => `Edit ${name}`,
+  invitedAgo: (days) => (days === 0 ? 'Invited today' : days === 1 ? 'Invited yesterday' : `Invited ${days} days ago`),
+  inviteExpired: 'Invite expired',
+  notJoined: 'Hasn’t joined yet',
+  resend: 'Resend',
+  resendTo: (email) => `Resend the invite to ${email}`,
+  cancelInvite: 'Cancel',
+  cancelInviteTo: (email) => `Cancel the invite to ${email}`,
+  invited: 'Invited',
+  emailLabel: 'Email',
+  roleLabel: 'Role',
+  roleHint: {
+    admin: 'Manages settings, answers chats and keeps answers up to date. No billing.',
+    member: 'Answers chats and keeps answers up to date.',
+  },
+  sendInvite: 'Send invite',
+  cancel: 'Cancel',
+  close: 'Close',
+  save: 'Save',
+  removeFromTeam: 'Remove from the team',
+  removeConfirm: (name) => `Remove ${name}? They lose access to this store’s dashboard.`,
+  remove: 'Remove',
+  sentTo: (email) => `Invite sent to ${email}.`,
+  resentTo: (email) => `Invite sent again to ${email}.`,
+  saved: 'Saved.',
+  removed: (name) => `${name} is no longer on the team.`,
+  canceled: 'Invite canceled.',
+  errors: {
+    already_member: 'They’re already on your team.',
+    not_allowed: 'You can’t do that on this team.',
+    invite_expired: 'That invite has expired. Send a new one.',
+    not_found: 'That invite or person is no longer here. Refresh the page.',
+    invalid_email: 'Enter a full email address.',
+    daily_limit: 'You’ve sent 20 invites today. Try again tomorrow.',
+    failed: 'That didn’t work. Try again in a minute.',
+  },
 };
 
 const ar: TeamCopy = {
@@ -99,6 +165,49 @@ const ar: TeamCopy = {
   noStoreChat: 'دردشة المتجر غير مُعدّة لهذا المتجر بعد، فلا يُنبَّه أحد عندما تحتاج متسوقة إلى شخص من الفريق.',
   openStoreChat: 'افتح دردشة المتجر',
   couldNotLoad: 'تعذّر تحميل فريقك الآن. حدّث الصفحة بعد دقيقة.',
+  inviteSomeone: 'ادعُ شخصاً',
+  editButton: 'تعديل',
+  edit: (name) => `تعديل ${name}`,
+  invitedAgo: (days) =>
+    days === 0
+      ? 'أُرسلت الدعوة اليوم'
+      : days === 1
+        ? 'أُرسلت الدعوة أمس'
+        : `أُرسلت الدعوة قبل ${arCount(days, { one: 'يوم', two: 'يومين', few: (k) => `${k} أيام`, many: (k) => `${k} يوماً` })}`,
+  inviteExpired: 'انتهت صلاحية الدعوة',
+  notJoined: 'لم ينضم بعد',
+  resend: 'أعد الإرسال',
+  resendTo: (email) => `أعد إرسال الدعوة إلى ${email}`,
+  cancelInvite: 'إلغاء',
+  cancelInviteTo: (email) => `ألغِ الدعوة المرسلة إلى ${email}`,
+  invited: 'مدعو',
+  emailLabel: 'البريد الإلكتروني',
+  roleLabel: 'الدور',
+  roleHint: {
+    admin: 'يدير الإعدادات، ويرد على المحادثات، ويُبقي الإجابات محدّثة. دون الفوترة.',
+    member: 'يرد على المحادثات ويُبقي الإجابات محدّثة.',
+  },
+  sendInvite: 'أرسل الدعوة',
+  cancel: 'إلغاء',
+  close: 'إغلاق',
+  save: 'حفظ',
+  removeFromTeam: 'أزِل من الفريق',
+  removeConfirm: (name) => `إزالة ${name}؟ لن يتمكن من دخول لوحة تحكم هذا المتجر.`,
+  remove: 'إزالة',
+  sentTo: (email) => `أُرسلت الدعوة إلى ${email}.`,
+  resentTo: (email) => `أُعيد إرسال الدعوة إلى ${email}.`,
+  saved: 'تم الحفظ.',
+  removed: (name) => `لم يعد ${name} في الفريق.`,
+  canceled: 'أُلغيت الدعوة.',
+  errors: {
+    already_member: 'هذا الشخص في فريقك بالفعل.',
+    not_allowed: 'لا يمكنك فعل ذلك في هذا الفريق.',
+    invite_expired: 'انتهت صلاحية هذه الدعوة. أرسل دعوة جديدة.',
+    not_found: 'لم تعد هذه الدعوة أو هذا الشخص موجوداً. حدّث الصفحة.',
+    invalid_email: 'أدخل عنوان بريد إلكتروني كاملاً.',
+    daily_limit: 'أرسلت 20 دعوة اليوم. حاول مجدداً غداً.',
+    failed: 'لم ينجح ذلك. حاول مجدداً بعد دقيقة.',
+  },
 };
 
 export function getTeamCopy(locale: SiteLocale): TeamCopy {

@@ -1,14 +1,15 @@
 /* What the v16 Settings page's Team tab shows (04-dashboard.md, the Team
-   board), from the store's team, its Store Chat alert settings and its
-   opening hours. Left out until their back ends exist, rather than guessed:
-   Invite someone, the invited row with Resend, and Edit (N21); the
-   WhatsApp alert lines and Shifts and alerts (N22); and the WhatsApp card
-   (N19). */
+   board), from the store's team, its invites, its Store Chat alert
+   settings and its opening hours. Invite someone, the invited rows with
+   Resend, and Edit come with n21_team_invites (N21). Left out until their
+   back ends exist, rather than guessed: the WhatsApp alert lines and Shifts
+   and alerts (N22), and the WhatsApp card (N19). */
 
 import { intlLocale } from '@/lib/copy/rules';
 import { cityTime } from '@/components/messenger/panel-state';
 import type { AvailabilityHours, AvailabilityMode } from '@/lib/messenger/types';
 import type { DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
+import type { InviteRole, TeamInvite } from '@/lib/team/invites';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { getShellCopy } from './shell-copy';
 import type { TeamCopy } from './team-copy';
@@ -19,10 +20,15 @@ export type TeamPerson = {
   /** A real address; the reader leaves out Clerk's placeholders. */
   email: string | null;
   role: DashboardWorkspaceRole;
+  /** The person reading the page. */
+  you?: boolean;
 };
 
 export type TeamFacts = {
+  now?: number;
   people: TeamPerson[];
+  /** Pending invites, or null while n21_team_invites is off. */
+  invites: TeamInvite[] | null;
   /** The store's Store Chat site, or null when it has none. */
   site: {
     emailOnHandoff: boolean;
@@ -37,13 +43,27 @@ export type TeamFacts = {
 };
 
 export type TeamView = {
-  people: Array<{ key: string; name: string; email: string | null; role: string; owner: boolean; initials: string }>;
+  /** Invite someone, Resend and Edit (n21_team_invites). */
+  manage: boolean;
+  people: Array<{
+    key: string;
+    name: string;
+    email: string | null;
+    role: string;
+    roleKey: DashboardWorkspaceRole;
+    owner: boolean;
+    initials: string;
+    /** Edit is offered: not the owner, and not the person reading. */
+    editable: boolean;
+  }>;
+  invites: Array<{ id: string; email: string; role: string; roleKey: InviteRole; sent: string; expired: boolean }>;
   alerts: string | null;
   hours: string | null;
   outsideHours: boolean;
 };
 
 const ROLE_ORDER: Record<DashboardWorkspaceRole, number> = { owner: 0, admin: 1, member: 2 };
+const DAY = 86_400_000;
 /** The board's week, Saturday first; 0 is Sunday, as the hours store it. */
 const WEEK = [6, 0, 1, 2, 3, 4, 5];
 
@@ -99,6 +119,8 @@ export function describeHours(hours: AvailabilityHours[], timeZone: string, copy
 
 export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLocale): TeamView {
   const roles = getShellCopy(locale).roles;
+  const now = facts.now ?? Date.now();
+  const manage = facts.invites !== null;
   const people = [...facts.people]
     .sort((a, b) => ROLE_ORDER[a.role] - ROLE_ORDER[b.role] || (a.name ?? a.email ?? '').localeCompare(b.name ?? b.email ?? ''))
     .map((person) => {
@@ -108,8 +130,10 @@ export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLoca
         name,
         email: person.name?.trim() && person.email ? person.email : null,
         role: roles[person.role],
+        roleKey: person.role,
         owner: person.role === 'owner',
         initials: initials(name),
+        editable: manage && person.role !== 'owner' && !person.you,
       };
     })
     .filter((person) => person.name);
@@ -132,8 +156,22 @@ export function buildTeamView(facts: TeamFacts, copy: TeamCopy, locale: SiteLoca
           : copy.hoursNone;
   }
 
+  const invites = (facts.invites ?? []).map((invite) => {
+    const expired = Date.parse(invite.expiresAt) <= now;
+    return {
+      id: invite.id,
+      email: invite.email,
+      role: roles[invite.role],
+      roleKey: invite.role,
+      sent: expired ? copy.inviteExpired : copy.invitedAgo(Math.max(0, Math.floor((now - Date.parse(invite.invitedAt)) / DAY))),
+      expired,
+    };
+  });
+
   return {
+    manage,
     people,
+    invites,
     alerts,
     hours,
     outsideHours: Boolean(site && facts.afterHours && site.availabilityMode === 'hours' && site.availabilityHours.length),

@@ -8,6 +8,7 @@ import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { getOnboardingProfile } from '@/lib/onboarding/profile';
+import { acceptInvitesForSignedIn } from '@/lib/team/accept';
 
 export const metadata: Metadata = {
   title: 'GRINDCTRL | Set up your account',
@@ -16,6 +17,10 @@ export const metadata: Metadata = {
 
 export default async function OnboardingPage() {
   const clerkUserId = await requireDashboardUser('/onboarding');
+  // Someone who signed up from a team's invite goes straight to that team (N21).
+  if ((await acceptInvitesForSignedIn()).length > 0) {
+    redirect('/dashboard');
+  }
   const locale = await getRequestLocale();
   const copy = getAuthCopy(locale);
   const profile = await getOnboardingProfile(clerkUserId);
