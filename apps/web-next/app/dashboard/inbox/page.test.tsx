@@ -25,6 +25,7 @@ const v16 = vi.hoisted(() => ({
   active: vi.fn(),
   flags: vi.fn(async (): Promise<string[]> => []),
   data: vi.fn(),
+  customer: vi.fn(),
 }));
 vi.mock('@/lib/dashboard/active-store-server', () => ({ getActiveStore: v16.active }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: v16.flags }));
@@ -41,9 +42,10 @@ vi.mock('@/app/dashboard/store-chat/actions', () => ({
   closeConversationAction: vi.fn(),
   markConversationRead: vi.fn(),
 }));
+vi.mock('./actions', () => ({ fetchInboxCustomer: v16.customer }));
 vi.mock('@/components/dashboard/v16/inbox/v16-inbox', () => ({
-  V16Inbox: ({ data }: { data: { siteId: string; conversations: unknown[] } }) => (
-    <div data-testid="v16-inbox">
+  V16Inbox: ({ data, fetchCustomer }: { data: { siteId: string; conversations: unknown[] }; fetchCustomer?: unknown }) => (
+    <div data-testid="v16-inbox" data-customer={fetchCustomer === v16.customer ? 'yes' : 'no'}>
       {data.siteId}:{data.conversations.length}
     </div>
   ),
@@ -102,6 +104,8 @@ describe('DashboardInboxPage', () => {
       expect(v16.active).toHaveBeenCalledWith({ site: 'site_1' });
       expect(v16.data).toHaveBeenCalledWith({ userId: 'user_123', siteId: 'site_1', withTags: false });
       expect(screen.getByTestId('v16-inbox')).toHaveTextContent('site_1:2');
+      // The customer column reads the open conversation's shopper through this action.
+      expect(screen.getByTestId('v16-inbox')).toHaveAttribute('data-customer', 'yes');
       expect(getWorkspaceBundle).not.toHaveBeenCalled();
     });
 

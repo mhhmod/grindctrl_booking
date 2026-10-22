@@ -854,3 +854,36 @@ describe('ConversationsPanel topic tags', () => {
     await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalled());
   });
 });
+
+describe('ConversationsPanel customer column (the v16 Inbox)', () => {
+  it('renders the aside for the open conversation as a third column, and in a sheet from the header below wide screens', async () => {
+    const renderAside = vi.fn((id: string) => <p>About the shopper of {id}</p>);
+    render(
+      <ConversationsPanel
+        locale="en"
+        siteId="site-1"
+        conversations={CONVERSATIONS}
+        actions={actions}
+        aside={{ label: 'About the shopper', closeLabel: 'Close', render: renderAside }}
+      />,
+    );
+    const column = screen.getByRole('complementary', { name: 'About the shopper' });
+    expect(column).toHaveTextContent('About the shopper of conv-1');
+    expect(column.className).toContain('xl:flex');
+    const open = screen.getByRole('button', { name: 'About the shopper' });
+    fireEvent.click(open);
+    expect(await screen.findByRole('dialog')).toHaveTextContent('About the shopper of conv-1');
+    // Closing returns focus to the header button, which sits outside the sheet.
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(open).toHaveFocus());
+    await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalled());
+  });
+
+  it('has two columns and no button without one', async () => {
+    render(<ConversationsPanel locale="en" siteId="site-1" conversations={CONVERSATIONS} actions={actions} />);
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'About the shopper' })).not.toBeInTheDocument();
+    await waitFor(() => expect(fetchConversationMessages).toHaveBeenCalled());
+  });
+});

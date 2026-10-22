@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react';
-import { MessageSquareText } from 'lucide-react';
+import { MessageSquareText, X } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Sheet, SheetClose, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Textarea } from './textarea';
 import { PillToggle } from './appearance-editor';
 import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
@@ -240,6 +241,7 @@ export function ConversationsPanel({
   currentProfileId,
   assignableMembers = [],
   inboxTabs = false,
+  aside,
 }: {
   locale: 'en' | 'ar';
   siteId: string;
@@ -266,13 +268,19 @@ export function ConversationsPanel({
    *  (Needs you, Assistant, Resolved) in place of the status pills, opening
    *  on Needs you. */
   inboxTabs?: boolean;
+  /** The v16 Inbox's customer column for the open conversation: a third
+   *  column on wide screens, and a sheet from a header button below them,
+   *  as Owner-Phone keeps the customer details. */
+  aside?: { label: string; closeLabel: string; render: (conversationId: string) => React.ReactNode };
 }) {
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [selectedId, setSelectedId] = useState<string | null>(conversations[0]?.id ?? null);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
+  const [asideOpen, setAsideOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(MESSAGE_WINDOW);
   const panelRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLButtonElement>(null);
+  const asideButtonRef = useRef<HTMLButtonElement>(null);
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
@@ -499,7 +507,11 @@ export function ConversationsPanel({
           <Button size="sm" variant="outline" className="min-h-11" onClick={() => void load()}>{t.retry}</Button>
         </div>
       )}
-      <div className="grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <div
+        className={`grid min-h-0 min-w-0 flex-1 grid-rows-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)] ${
+          aside ? 'xl:grid-cols-[300px_minmax(0,1fr)_300px]' : ''
+        }`}
+      >
       {/* List */}
       <div className={`${mobileThreadOpen ? 'hidden lg:flex' : 'flex'} h-full min-h-0 min-w-0 flex-col gap-2`}>
       <div className="shrink-0">
@@ -711,6 +723,11 @@ export function ConversationsPanel({
             ) : null}
           </div>
           <div className="flex min-w-0 flex-wrap gap-2">
+            {aside && selectedId && (
+              <Button ref={asideButtonRef} size="sm" className="min-h-11 xl:hidden" variant="outline" onClick={() => setAsideOpen(true)}>
+                {aside.label}
+              </Button>
+            )}
             {(status === 'open' || status === 'handoff_requested') && selectedId && (
               <Button size="sm" className="min-h-11" variant="outline" disabled={pending} onClick={() => selectedId && act(() => actions.takeoverConversation(siteId, selectedId))}>
                 {t.takeOver}
@@ -951,7 +968,40 @@ export function ConversationsPanel({
           </footer>
         )}
       </section>
+      {aside && selectedId && (
+        <aside
+          aria-label={aside.label}
+          className="hidden h-full min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain rounded-xl border border-border bg-card xl:flex"
+        >
+          {aside.render(selectedId)}
+        </aside>
+      )}
       </div>
+      {aside && selectedId && (
+        <Sheet open={asideOpen} onOpenChange={setAsideOpen}>
+          <SheetContent
+            side="bottom"
+            dir={locale === 'ar' ? 'rtl' : 'ltr'}
+            showCloseButton={false}
+            aria-describedby={undefined}
+            onCloseAutoFocus={(event) => {
+              // The header button sits outside the Sheet, so Radix has no
+              // SheetTrigger to return focus to.
+              event.preventDefault();
+              asideButtonRef.current?.focus();
+            }}
+            className="max-h-[85dvh] overflow-y-auto pb-[env(safe-area-inset-bottom)] xl:hidden"
+          >
+            <SheetTitle className="sr-only">{aside.label}</SheetTitle>
+            {asideOpen && aside.render(selectedId)}
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon-sm" className="absolute top-4 end-4" aria-label={aside.closeLabel}>
+                <X aria-hidden="true" />
+              </Button>
+            </SheetClose>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
