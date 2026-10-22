@@ -36,6 +36,13 @@ describe('Try-On settings safe action result', () => {
     expect(mocks.revalidate).not.toHaveBeenCalled();
     expect(await saveTryOnSettingsAction(new FormData())).toEqual({ ok: true });
   });
+  it('keeps the note under each look to 300 characters, as TryOnStudio shows', async () => {
+    const fd = new FormData();
+    fd.set('disclaimer_text', `  ${'a'.repeat(320)}  `);
+    fd.set('disclaimer_text_ar', 'ملاحظة');
+    await saveTryOnSettingsAction(fd);
+    expect(mocks.save).toHaveBeenCalledWith('owned.myshopify.com', expect.objectContaining({ disclaimerText: 'a'.repeat(300), disclaimerTextAr: 'ملاحظة' }));
+  });
   // Item 12: setting the shop up is for its owner and admins, not members.
   it('asks for the settings role, and refuses a member before limiter or storage', async () => {
     await saveTryOnSettingsAction(new FormData());

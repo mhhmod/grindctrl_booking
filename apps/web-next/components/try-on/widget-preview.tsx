@@ -271,10 +271,26 @@ function ResultsMock({ s, t, copy }: { s: WidgetPreviewSettings; t: (typeof TOKE
   );
 }
 
-type PreviewTab = 'button' | 'catalog' | 'upload' | 'generating' | 'results';
+export type PreviewTab = 'button' | 'catalog' | 'upload' | 'generating' | 'results';
 
-export function WidgetPreview({ s, copy }: { s: WidgetPreviewSettings; copy: SettingsFormCopy }) {
-  const [tab, setTab] = useState<PreviewTab>('button');
+export function WidgetPreview({
+  s,
+  copy,
+  tab: shownTab,
+  onTabChange,
+}: {
+  s: WidgetPreviewSettings;
+  copy: SettingsFormCopy;
+  /** Set by a host that opens a screen itself, as the v16 Set up's "See what they see" does. */
+  tab?: PreviewTab;
+  onTabChange?: (tab: PreviewTab) => void;
+}) {
+  const [ownTab, setOwnTab] = useState<PreviewTab>('button');
+  const tab = shownTab ?? ownTab;
+  const setTab = (next: PreviewTab) => {
+    setOwnTab(next);
+    onTabChange?.(next);
+  };
   const [expanded, setExpanded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const dark = s.widgetTheme === 'dark';
