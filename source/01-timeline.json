@@ -1,0 +1,570 @@
+{
+  "id": "01",
+  "title": "The call arrives. The context appears.",
+  "stem": "01_Concrete_Genesys_ZohoDesk_ScreenPop_150s",
+  "duration": 150,
+  "fps": 30,
+  "frames": 4500,
+  "source_audio": "01_Concrete_Genesys_ZohoDesk_ScreenPop_EN.mp3",
+  "source_sha256": "174dddeeb08dcf83dc324ce1dd8b960fb1ddc6852c9585e7f35cf8d050c74114",
+  "source_duration": 147.76,
+  "source_container_duration": 147.800816,
+  "cold_open_sec": 0.24,
+  "outro_sec": 2.0,
+  "extra_visual_only_sec": 2.240000000000009,
+  "narration_segments": [
+    {
+      "source_start_sec": 0.0,
+      "source_end_sec": 147.76,
+      "target_start_sec": 0.24,
+      "target_end_sec": 148.0,
+      "samples": 6516216,
+      "source_pcm_sha256": "844db78a5d7e0692b26934abb9467be83d82bcda2b78156216fb309598d5625c"
+    }
+  ],
+  "visual_only_intervals": [
+    [
+      0,
+      0.24
+    ],
+    [
+      148.0,
+      150.0
+    ]
+  ],
+  "scenes": [
+    {
+      "id": "01-B01",
+      "start": 0,
+      "end": 17.730068027210883,
+      "kind": "arrival",
+      "source_start": 0,
+      "source_end": 17.490062,
+      "visual_only": false
+    },
+    {
+      "id": "01-B02",
+      "start": 17.730068027210883,
+      "end": 35.9384126984127,
+      "kind": "manual",
+      "source_start": 17.490062,
+      "source_end": 35.698406,
+      "visual_only": false
+    },
+    {
+      "id": "01-B03",
+      "start": 35.9384126984127,
+      "end": 57.03274376417234,
+      "kind": "lookup",
+      "source_start": 35.698406,
+      "source_end": 56.7927505,
+      "visual_only": false
+    },
+    {
+      "id": "01-B04",
+      "start": 57.03274376417234,
+      "end": 79.12575963718821,
+      "kind": "ticket",
+      "source_start": 56.7927505,
+      "source_end": 78.8857505,
+      "visual_only": false
+    },
+    {
+      "id": "01-B05",
+      "start": 79.12575963718821,
+      "end": 95.1921768707483,
+      "kind": "fallback",
+      "source_start": 78.8857505,
+      "source_end": 94.9521875,
+      "visual_only": false
+    },
+    {
+      "id": "01-B06",
+      "start": 95.1921768707483,
+      "end": 122.00056689342404,
+      "kind": "value",
+      "source_start": 94.9521875,
+      "source_end": 121.76056249999999,
+      "visual_only": false
+    },
+    {
+      "id": "01-B07",
+      "start": 122.00056689342404,
+      "end": 136.66038548752834,
+      "kind": "pilot",
+      "source_start": 121.76056249999999,
+      "source_end": 136.420375,
+      "visual_only": false
+    },
+    {
+      "id": "01-B08",
+      "start": 136.66038548752834,
+      "end": 148.0,
+      "kind": "ready",
+      "source_start": 136.420375,
+      "source_end": 147.76,
+      "visual_only": false
+    },
+    {
+      "id": "01-CLOSE",
+      "start": 148.0,
+      "end": 150.0,
+      "kind": "close",
+      "visual_only": true
+    }
+  ],
+  "captions": [
+    {
+      "source_start": 0.0,
+      "source_end": 3.7619689999999997,
+      "text": "Imagine a call arriving at Concrete's Customer Service Center.",
+      "raw_recognition": "Imagine a call arriving at Concrete's Customer Service Center.",
+      "start": 0.24,
+      "end": 4.001972789115646
+    },
+    {
+      "source_start": 3.7619689999999997,
+      "source_end": 6.1255315,
+      "text": "The agent answers through Genesys.",
+      "raw_recognition": "The agent answers through Genesis.",
+      "start": 4.001972789115646,
+      "end": 6.365532879818594
+    },
+    {
+      "source_start": 6.1255315,
+      "source_end": 10.235719,
+      "text": "but the caller is following up on an exchange request made last week.",
+      "raw_recognition": "but the caller is following up on an exchange request made last week.",
+      "start": 6.365532879818594,
+      "end": 10.475714285714286
+    },
+    {
+      "source_start": 10.235719,
+      "source_end": 13.065438,
+      "text": "The information exists in Zoho Desk.",
+      "raw_recognition": "The information exists in Zoho Desk.",
+      "start": 10.475714285714286,
+      "end": 13.305442176870748
+    },
+    {
+      "source_start": 13.065438,
+      "source_end": 15.979593999999999,
+      "text": "The challenge is getting it to the right employee.",
+      "raw_recognition": "The challenge is getting it to the right employee.",
+      "start": 13.305442176870748,
+      "end": 16.219591836734693
+    },
+    {
+      "source_start": 15.979593999999999,
+      "source_end": 17.490062,
+      "text": "at the right moment.",
+      "raw_recognition": "at the right moment.",
+      "start": 16.219591836734693,
+      "end": 17.730068027210883
+    },
+    {
+      "source_start": 17.490062,
+      "source_end": 23.3668435,
+      "text": "Today, as described in Concrete's current workflow, the agent may have to copy the phone number,",
+      "raw_recognition": "Today, as described in concrete's current workflow, the agent may have to copy the phone number,",
+      "start": 17.730068027210883,
+      "end": 23.606848072562357
+    },
+    {
+      "source_start": 23.3668435,
+      "source_end": 25.5644065,
+      "text": "Search Zoho Desk manually.",
+      "raw_recognition": "Search Soho Desk manually.",
+      "start": 23.606848072562357,
+      "end": 25.80439909297052
+    },
+    {
+      "source_start": 25.5644065,
+      "source_end": 30.602218999999998,
+      "text": "Open the customer's previous tickets and then look for the most recent update.",
+      "raw_recognition": "Open the customer's previous tickets and then look for the most recent update.",
+      "start": 25.80439909297052,
+      "end": 30.842222222222222
+    },
+    {
+      "source_start": 30.602218999999998,
+      "source_end": 32.2253125,
+      "text": "The search is possible.",
+      "raw_recognition": "The search is possible.",
+      "start": 30.842222222222222,
+      "end": 32.46530612244898
+    },
+    {
+      "source_start": 32.2253125,
+      "source_end": 35.698406,
+      "text": "but every extra step interrupts the conversation.",
+      "raw_recognition": "but every extra step interrupts the conversation.",
+      "start": 32.46530612244898,
+      "end": 35.9384126984127
+    },
+    {
+      "source_start": 35.698406,
+      "source_end": 38.9141875,
+      "text": "Now imagine a more connected experience.",
+      "raw_recognition": "Now imagine a more connected experience.",
+      "start": 35.9384126984127,
+      "end": 39.15419501133787
+    },
+    {
+      "source_start": 38.9141875,
+      "source_end": 41.4701565,
+      "text": "When an inbound call arrives in Genesys,",
+      "raw_recognition": "When an inbound call arrives in Genesis,",
+      "start": 39.15419501133787,
+      "end": 41.71015873015873
+    },
+    {
+      "source_start": 41.4701565,
+      "source_end": 44.713187500000004,
+      "text": "the caller number starts an authorized customer lookup.",
+      "raw_recognition": "the caller number starts an authorized customer lookup.",
+      "start": 41.71015873015873,
+      "end": 44.95319727891157
+    },
+    {
+      "source_start": 44.713187500000004,
+      "source_end": 46.962844000000004,
+      "text": "if it finds one reliable match,",
+      "raw_recognition": "if it finds one reliable match,",
+      "start": 44.95319727891157,
+      "end": 47.202834467120184
+    },
+    {
+      "source_start": 46.962844000000004,
+      "source_end": 50.2939375,
+      "text": "A screen pop opens the relevant customer context.",
+      "raw_recognition": "A screen pop opens the relevant customer context.",
+      "start": 47.202834467120184,
+      "end": 50.5339455782313
+    },
+    {
+      "source_start": 50.2939375,
+      "source_end": 51.675374500000004,
+      "text": "the contact record,",
+      "raw_recognition": "the contact record,",
+      "start": 50.5339455782313,
+      "end": 51.91537414965987
+    },
+    {
+      "source_start": 51.675374500000004,
+      "source_end": 53.27431300000001,
+      "text": "Previous Support Tickets",
+      "raw_recognition": "Previous Support Tickets",
+      "start": 51.91537414965987,
+      "end": 53.51430839002268
+    },
+    {
+      "source_start": 53.27431300000001,
+      "source_end": 54.747031500000006,
+      "text": "their current statuses,",
+      "raw_recognition": "their current statuses,",
+      "start": 53.51430839002268,
+      "end": 54.987029478458055
+    },
+    {
+      "source_start": 54.747031500000006,
+      "source_end": 56.7927505,
+      "text": "and the latest recorded update.",
+      "raw_recognition": "and the latest recorded update.",
+      "start": 54.987029478458055,
+      "end": 57.03274376417234
+    },
+    {
+      "source_start": 56.7927505,
+      "source_end": 59.2714065,
+      "text": "Let's follow a realistic example.",
+      "raw_recognition": "Let's follow a realistic example.",
+      "start": 57.03274376417234,
+      "end": 59.51140589569161
+    },
+    {
+      "source_start": 59.2714065,
+      "source_end": 61.954594,
+      "text": "The customer is asking about an exchange.",
+      "raw_recognition": "The customer is asking about an exchange.",
+      "start": 59.51140589569161,
+      "end": 62.194603174603174
+    },
+    {
+      "source_start": 61.954594,
+      "source_end": 67.6763125,
+      "text": "The agent can see an earlier ticket and a note saying the request is still pending branch review.",
+      "raw_recognition": "The agent can see an earlier ticket and a note saying the request is still pending branch review.",
+      "start": 62.194603174603174,
+      "end": 67.91630385487528
+    },
+    {
+      "source_start": 67.6763125,
+      "source_end": 69.4932815,
+      "text": "That's a recorded status.",
+      "raw_recognition": "That's a recorded status.",
+      "start": 67.91630385487528,
+      "end": 69.7332879818594
+    },
+    {
+      "source_start": 69.4932815,
+      "source_end": 71.98596900000001,
+      "text": "not a promise that the review has happened.",
+      "raw_recognition": "not a promise that the review has happened.",
+      "start": 69.7332879818594,
+      "end": 72.22596371882085
+    },
+    {
+      "source_start": 71.98596900000001,
+      "source_end": 75.445719,
+      "text": "Instead of making the customer explain everything again,",
+      "raw_recognition": "Instead of making the customer explain everything again,",
+      "start": 72.22596371882085,
+      "end": 75.68571428571428
+    },
+    {
+      "source_start": 75.445719,
+      "source_end": 78.8857505,
+      "text": "The agent can continue from the last documented point.",
+      "raw_recognition": "The agent can continue from the last documented point.",
+      "start": 75.68571428571428,
+      "end": 79.12575963718821
+    },
+    {
+      "source_start": 78.8857505,
+      "source_end": 81.106781,
+      "text": "If several contacts share a number,",
+      "raw_recognition": "If several contacts share a number,",
+      "start": 79.12575963718821,
+      "end": 81.34678004535147
+    },
+    {
+      "source_start": 81.106781,
+      "source_end": 83.585219,
+      "text": "the employee chooses the correct record.",
+      "raw_recognition": "the employee chooses the correct record.",
+      "start": 81.34678004535147,
+      "end": 83.82521541950113
+    },
+    {
+      "source_start": 83.585219,
+      "source_end": 84.926688,
+      "text": "If there's no match,",
+      "raw_recognition": "If there's no match,",
+      "start": 83.82521541950113,
+      "end": 85.16668934240363
+    },
+    {
+      "source_start": 84.926688,
+      "source_end": 87.4620625,
+      "text": "a safe manual search remains available.",
+      "raw_recognition": "a safe manual search remains available.",
+      "start": 85.16668934240363,
+      "end": 87.70206349206349
+    },
+    {
+      "source_start": 87.4620625,
+      "source_end": 89.439438,
+      "text": "and if the lookup service fails,",
+      "raw_recognition": "and if the lookup service fails,",
+      "start": 87.70206349206349,
+      "end": 89.67943310657596
+    },
+    {
+      "source_start": 89.439438,
+      "source_end": 91.611625,
+      "text": "The call itself must continue.",
+      "raw_recognition": "The call itself must continue.",
+      "start": 89.67943310657596,
+      "end": 91.85163265306122
+    },
+    {
+      "source_start": 91.611625,
+      "source_end": 94.9521875,
+      "text": "A phone number alone never proves someone's identity.",
+      "raw_recognition": "A phone number alone never proves someone's identity.",
+      "start": 91.85163265306122,
+      "end": 95.1921768707483
+    },
+    {
+      "source_start": 94.9521875,
+      "source_end": 96.992469,
+      "text": "Notice what's changing here.",
+      "raw_recognition": "Notice what's changing here.",
+      "start": 95.1921768707483,
+      "end": 97.2324716553288
+    },
+    {
+      "source_start": 96.992469,
+      "source_end": 100.006938,
+      "text": "We're not replacing Genesys or Zoho Desk.",
+      "raw_recognition": "We're not replacing Genesis or Zoho Desk.",
+      "start": 97.2324716553288,
+      "end": 100.2469387755102
+    },
+    {
+      "source_start": 100.006938,
+      "source_end": 103.41081249999999,
+      "text": "and we're not pretending a new integration is already live.",
+      "raw_recognition": "and we're not pretending a new integration is already live.",
+      "start": 100.2469387755102,
+      "end": 103.6508163265306
+    },
+    {
+      "source_start": 103.41081249999999,
+      "source_end": 108.5257815,
+      "text": "we're proposing a clearer way to connect systems that Concrete already uses.",
+      "raw_recognition": "we're proposing a clearer way to connect systems that concrete already uses.",
+      "start": 103.6508163265306,
+      "end": 108.76578231292517
+    },
+    {
+      "source_start": 108.5257815,
+      "source_end": 110.9782185,
+      "text": "The potential benefit is straightforward.",
+      "raw_recognition": "The potential benefit is straightforward.",
+      "start": 108.76578231292517,
+      "end": 111.21820861678005
+    },
+    {
+      "source_start": 110.9782185,
+      "source_end": 112.734875,
+      "text": "fewer manual searches,",
+      "raw_recognition": "fewer manual searches,",
+      "start": 111.21820861678005,
+      "end": 112.9748752834467
+    },
+    {
+      "source_start": 112.734875,
+      "source_end": 114.013844,
+      "text": "easier follow-up.",
+      "raw_recognition": "easier follow-up.",
+      "start": 112.9748752834467,
+      "end": 114.25385487528344
+    },
+    {
+      "source_start": 114.013844,
+      "source_end": 116.1595935,
+      "text": "and more attention on the customer.",
+      "raw_recognition": "and more attention on the customer.",
+      "start": 114.25385487528344,
+      "end": 116.39959183673469
+    },
+    {
+      "source_start": 116.1595935,
+      "source_end": 119.31225,
+      "text": "Those benefits must be measured in a real pilot.",
+      "raw_recognition": "Those benefits must be measured in a real pilot.",
+      "start": 116.39959183673469,
+      "end": 119.55224489795918
+    },
+    {
+      "source_start": 119.31225,
+      "source_end": 121.76056249999999,
+      "text": "not presented as guaranteed savings.",
+      "raw_recognition": "not presented as guaranteed savings.",
+      "start": 119.55224489795918,
+      "end": 122.00056689342404
+    },
+    {
+      "source_start": 121.76056249999999,
+      "source_end": 126.384875,
+      "text": "First, we'll review Concrete's existing Genesys pop-up configuration.",
+      "raw_recognition": "First, we'll review concrete's existing Genesis pop-up configuration.",
+      "start": 122.00056689342404,
+      "end": 126.62487528344671
+    },
+    {
+      "source_start": 126.384875,
+      "source_end": 128.11675050000002,
+      "text": "Zoho Desk Access,",
+      "raw_recognition": "Zoho Desk Access,",
+      "start": 126.62487528344671,
+      "end": 128.3567573696145
+    },
+    {
+      "source_start": 128.11675050000002,
+      "source_end": 129.093125,
+      "text": "permissions",
+      "raw_recognition": "permissions",
+      "start": 128.3567573696145,
+      "end": 129.33312925170068
+    },
+    {
+      "source_start": 129.093125,
+      "source_end": 131.4224375,
+      "text": "and the supported integration options.",
+      "raw_recognition": "and the supported integration options.",
+      "start": 129.33312925170068,
+      "end": 131.6624263038549
+    },
+    {
+      "source_start": 131.4224375,
+      "source_end": 136.420375,
+      "text": "Then, we'll test the experience with authorized sample calls and validate the results.",
+      "raw_recognition": "Then, we'll test the experience with authorized sample calls and validate the results.",
+      "start": 131.6624263038549,
+      "end": 136.66038548752834
+    },
+    {
+      "source_start": 136.420375,
+      "source_end": 138.052156,
+      "text": "The goal is simple.",
+      "raw_recognition": "The goal is simple.",
+      "start": 136.66038548752834,
+      "end": 138.29215419501134
+    },
+    {
+      "source_start": 138.052156,
+      "source_end": 139.915125,
+      "text": "when the conversation begins,",
+      "raw_recognition": "when the conversation begins,",
+      "start": 138.29215419501134,
+      "end": 140.1551247165533
+    },
+    {
+      "source_start": 139.915125,
+      "source_end": 141.8305935,
+      "text": "the context should be ready.",
+      "raw_recognition": "the context should be ready.",
+      "start": 140.1551247165533,
+      "end": 142.070589569161
+    },
+    {
+      "source_start": 141.8305935,
+      "source_end": 147.76,
+      "text": "This is the Genesys and Zoho Desk experience proposed by GRINDCTRL for Concrete.",
+      "raw_recognition": "This is the Genesis and Zoho Desk experience proposed by Grind Control for concrete.",
+      "start": 142.070589569161,
+      "end": 148.0
+    }
+  ],
+  "loudness": {
+    "source": {
+      "input_i": "-22.37",
+      "input_tp": "-1.42",
+      "input_lra": "3.90",
+      "input_thresh": "-32.87",
+      "output_i": "-18.10",
+      "output_tp": "-1.50",
+      "output_lra": "3.50",
+      "output_thresh": "-28.58",
+      "normalization_type": "dynamic",
+      "target_offset": "0.10"
+    },
+    "pre_mix_voice_gain_db": 4.370000000000001,
+    "output": {
+      "input_i": "-14.95",
+      "input_tp": "2.97",
+      "input_lra": "4.20",
+      "input_thresh": "-25.58",
+      "output_i": "-16.03",
+      "output_tp": "-1.50",
+      "output_lra": "4.00",
+      "output_thresh": "-26.58",
+      "normalization_type": "dynamic",
+      "target_offset": "0.03"
+    }
+  },
+  "exception": null
+}

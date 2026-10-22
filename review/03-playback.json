@@ -1,0 +1,257 @@
+{
+  "film": "03",
+  "sha256": "b340a5344d893e176b045c799aa88bf353ed46dd67213f87df2d0918985b6feb",
+  "wallSeconds": 150.171,
+  "time": 150,
+  "duration": 150,
+  "width": 1920,
+  "height": 1080,
+  "ended": true,
+  "muted": false,
+  "rate": 1,
+  "audioBytes": 3584320,
+  "samples": [
+    {
+      "time": 4.852232,
+      "ready": 4,
+      "decodedFrames": 151,
+      "dropped": 0,
+      "audioBytes": 106467,
+      "error": null
+    },
+    {
+      "time": 9.85307,
+      "ready": 4,
+      "decodedFrames": 301,
+      "dropped": 0,
+      "audioBytes": 229026,
+      "error": null
+    },
+    {
+      "time": 14.851804,
+      "ready": 4,
+      "decodedFrames": 451,
+      "dropped": 0,
+      "audioBytes": 349330,
+      "error": null
+    },
+    {
+      "time": 19.851807,
+      "ready": 4,
+      "decodedFrames": 601,
+      "dropped": 0,
+      "audioBytes": 470451,
+      "error": null
+    },
+    {
+      "time": 24.8518,
+      "ready": 4,
+      "decodedFrames": 751,
+      "dropped": 0,
+      "audioBytes": 590636,
+      "error": null
+    },
+    {
+      "time": 29.85175,
+      "ready": 4,
+      "decodedFrames": 901,
+      "dropped": 0,
+      "audioBytes": 709043,
+      "error": null
+    },
+    {
+      "time": 34.851821,
+      "ready": 4,
+      "decodedFrames": 1051,
+      "dropped": 0,
+      "audioBytes": 830072,
+      "error": null
+    },
+    {
+      "time": 39.851806,
+      "ready": 4,
+      "decodedFrames": 1201,
+      "dropped": 0,
+      "audioBytes": 950890,
+      "error": null
+    },
+    {
+      "time": 44.851848,
+      "ready": 4,
+      "decodedFrames": 1351,
+      "dropped": 0,
+      "audioBytes": 1072399,
+      "error": null
+    },
+    {
+      "time": 49.851815,
+      "ready": 4,
+      "decodedFrames": 1501,
+      "dropped": 0,
+      "audioBytes": 1192538,
+      "error": null
+    },
+    {
+      "time": 54.851807,
+      "ready": 4,
+      "decodedFrames": 1651,
+      "dropped": 0,
+      "audioBytes": 1312650,
+      "error": null
+    },
+    {
+      "time": 59.851794,
+      "ready": 4,
+      "decodedFrames": 1801,
+      "dropped": 0,
+      "audioBytes": 1434207,
+      "error": null
+    },
+    {
+      "time": 64.85177,
+      "ready": 4,
+      "decodedFrames": 1951,
+      "dropped": 0,
+      "audioBytes": 1554285,
+      "error": null
+    },
+    {
+      "time": 69.851805,
+      "ready": 4,
+      "decodedFrames": 2101,
+      "dropped": 0,
+      "audioBytes": 1675845,
+      "error": null
+    },
+    {
+      "time": 74.851796,
+      "ready": 4,
+      "decodedFrames": 2251,
+      "dropped": 0,
+      "audioBytes": 1796247,
+      "error": null
+    },
+    {
+      "time": 79.851795,
+      "ready": 4,
+      "decodedFrames": 2401,
+      "dropped": 0,
+      "audioBytes": 1917284,
+      "error": null
+    },
+    {
+      "time": 84.851743,
+      "ready": 4,
+      "decodedFrames": 2551,
+      "dropped": 0,
+      "audioBytes": 2037971,
+      "error": null
+    },
+    {
+      "time": 89.851782,
+      "ready": 4,
+      "decodedFrames": 2701,
+      "dropped": 0,
+      "audioBytes": 2157891,
+      "error": null
+    },
+    {
+      "time": 94.851797,
+      "ready": 4,
+      "decodedFrames": 2851,
+      "dropped": 0,
+      "audioBytes": 2271142,
+      "error": null
+    },
+    {
+      "time": 99.851814,
+      "ready": 4,
+      "decodedFrames": 3001,
+      "dropped": 0,
+      "audioBytes": 2393341,
+      "error": null
+    },
+    {
+      "time": 104.851919,
+      "ready": 4,
+      "decodedFrames": 3151,
+      "dropped": 0,
+      "audioBytes": 2513190,
+      "error": null
+    },
+    {
+      "time": 109.851729,
+      "ready": 4,
+      "decodedFrames": 3301,
+      "dropped": 0,
+      "audioBytes": 2634746,
+      "error": null
+    },
+    {
+      "time": 114.851799,
+      "ready": 4,
+      "decodedFrames": 3451,
+      "dropped": 0,
+      "audioBytes": 2756564,
+      "error": null
+    },
+    {
+      "time": 119.851891,
+      "ready": 4,
+      "decodedFrames": 3601,
+      "dropped": 0,
+      "audioBytes": 2877867,
+      "error": null
+    },
+    {
+      "time": 124.851775,
+      "ready": 4,
+      "decodedFrames": 3751,
+      "dropped": 0,
+      "audioBytes": 2998326,
+      "error": null
+    },
+    {
+      "time": 129.851782,
+      "ready": 4,
+      "decodedFrames": 3901,
+      "dropped": 0,
+      "audioBytes": 3118882,
+      "error": null
+    },
+    {
+      "time": 134.851781,
+      "ready": 4,
+      "decodedFrames": 4051,
+      "dropped": 0,
+      "audioBytes": 3239072,
+      "error": null
+    },
+    {
+      "time": 139.851786,
+      "ready": 4,
+      "decodedFrames": 4201,
+      "dropped": 0,
+      "audioBytes": 3359314,
+      "error": null
+    },
+    {
+      "time": 144.851741,
+      "ready": 4,
+      "decodedFrames": 4351,
+      "dropped": 0,
+      "audioBytes": 3481046,
+      "error": null
+    },
+    {
+      "time": 149.851795,
+      "ready": 4,
+      "decodedFrames": 4500,
+      "dropped": 0,
+      "audioBytes": 3584320,
+      "error": null
+    }
+  ],
+  "error": null,
+  "scope": "Complete actual MP4 software playback from start to end at natural rate and unmuted; not a human audition"
+}

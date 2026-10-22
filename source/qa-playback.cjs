@@ -1,0 +1,13 @@
+const fs=require('fs'),path=require('path'),crypto=require('crypto');let pw;try{pw=require('playwright');}catch{pw=require('/workspace/grindctrl_booking/apps/web-next/node_modules/playwright');}
+const root=process.env.GRINDCTRL_OUTPUT||path.resolve(__dirname,'..');const films=JSON.parse(fs.readFileSync(path.join(root,'source/films.json')));const selected=process.argv.find(x=>/^0[123]$/.test(x));
+(async()=>{const browser=await pw.chromium.launch({executablePath:process.env.GRINDCTRL_CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--autoplay-policy=no-user-gesture-required','--disable-dev-shm-usage']});let results=[];try{
+ const ready=films.filter(f=>(!selected||f.id===selected)&&fs.existsSync(path.join(root,'review',f.id+'-render.json')));
+ await Promise.all(ready.map(async f=>{
+  const p=await browser.newPage({viewport:{width:1000,height:700}});const fileBytes=fs.readFileSync(path.join(root,f.stem+'.mp4')),sha256=crypto.createHash('sha256').update(fileBytes).digest('hex'),bytes=fileBytes.toString('base64');await p.setContent('<video controls width="960" src="data:video/mp4;base64,'+bytes+'"></video>');await p.waitForFunction(()=>document.querySelector('video')?.readyState>=2);
+  const start=Date.now();await p.evaluate(async()=>{const v=document.querySelector('video');window.log=[];window.timer=setInterval(()=>{let q=v.getVideoPlaybackQuality();window.log.push({time:v.currentTime,ready:v.readyState,decodedFrames:q.totalVideoFrames,dropped:q.droppedVideoFrames,audioBytes:v.webkitAudioDecodedByteCount,error:v.error?.message??null});},5000);v.muted=false;v.volume=1;v.playbackRate=1;await v.play();});
+  await p.waitForFunction(()=>document.querySelector('video').ended,null,{timeout:210000});
+  const check=await p.evaluate(()=>{const v=document.querySelector('video');clearInterval(window.timer);return {time:v.currentTime,duration:v.duration,width:v.videoWidth,height:v.videoHeight,ended:v.ended,muted:v.muted,rate:v.playbackRate,audioBytes:v.webkitAudioDecodedByteCount,samples:window.log,error:v.error?.message??null};});
+  if(!check.ended||check.muted||check.error||check.rate!==1||check.time!==150)throw Error('Incomplete playback '+f.id);
+  const report={film:f.id,sha256,wallSeconds:(Date.now()-start)/1000,...check,scope:'Complete actual MP4 software playback from start to end at natural rate and unmuted; not a human audition'};fs.writeFileSync(path.join(root,'review',f.id+'-playback.json'),JSON.stringify(report,null,2));results.push(report);console.log('FULL PLAYBACK COMPLETE',f.id,JSON.stringify({duration:check.duration,width:check.width,height:check.height,audioBytes:check.audioBytes}));await p.close();
+ }));
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exit(1)});

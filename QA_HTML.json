@@ -1,0 +1,116 @@
+[
+  {
+    "film": "01",
+    "seekStates": 189,
+    "overflow": [],
+    "errors": [],
+    "audio": {
+      "count": 1,
+      "duration": 150
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttonHeights": [
+        44,
+        44,
+        44,
+        44,
+        44
+      ]
+    },
+    "guards": [
+      {
+        "historyNotShownDuringLookup": true
+      },
+      {
+        "pendingReview": true
+      },
+      {
+        "ambiguousHistoryHidden": true
+      },
+      {
+        "lookupFailureCallContinues": true
+      }
+    ]
+  },
+  {
+    "film": "02",
+    "seekStates": 195,
+    "overflow": [],
+    "errors": [],
+    "audio": {
+      "count": 1,
+      "duration": 150
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttonHeights": [
+        44,
+        44,
+        44,
+        44,
+        44
+      ]
+    },
+    "guards": [
+      {
+        "lookupHidesContact": true
+      },
+      {
+        "call": "CALL-101",
+        "author": "Maya",
+        "text": "CALL-101 / Maya 15 Oct · 11:12 · Human-authored Customer requested an exchange. Branch review pending."
+      },
+      {
+        "call": "CALL-102",
+        "author": "Salma",
+        "text": "CALL-102 / Salma 22 Oct · 14:39 · Human-authored Customer followed up; awaiting a confirmed branch update. Demo linked to CALL-102"
+      },
+      {
+        "call": "CALL-102",
+        "author": "Salma",
+        "text": "CALL-102 / Salma 22 Oct · 14:39 · Human-authored Customer followed up; awaiting a confirmed branch update."
+      },
+      {
+        "missingTierUnavailable": true
+      },
+      {
+        "callUnaffected": true
+      }
+    ]
+  },
+  {
+    "film": "03",
+    "seekStates": 192,
+    "overflow": [],
+    "errors": [],
+    "audio": {
+      "count": 1,
+      "duration": 150
+    },
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttonHeights": [
+        44,
+        44,
+        44,
+        44,
+        44
+      ]
+    },
+    "guards": [
+      {
+        "fitLimitVisible": true
+      },
+      {
+        "orderCondition": true
+      },
+      {
+        "humanPrivateNote": true
+      }
+    ]
+  }
+]

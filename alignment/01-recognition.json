@@ -1,0 +1,1269 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 3.7619689999999997,
+    "text": "Imagine a call arriving at Concrete's Customer Service Center.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Imagine a call arriving at Concrete's Customer Service Center.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Imagine",
+        " a",
+        " call",
+        " arriving",
+        " at",
+        " Conc",
+        "rete",
+        "'s",
+        " Customer",
+        " Service",
+        " Center",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.72
+      ],
+      "segment_texts": [
+        " Imagine a call arriving at Concrete's Customer Service Center."
+      ]
+    }
+  },
+  {
+    "index": 1,
+    "start": 3.7619689999999997,
+    "end": 10.235719,
+    "text": "The agent answers through Genesis, but the caller is following up on an exchange request made last week.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The agent answers through Genesis, but the caller is following up on an exchange request made last week.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " agent",
+        " answers",
+        " through",
+        " Genesis",
+        ",",
+        " but",
+        " the",
+        " caller",
+        " is",
+        " following",
+        " up",
+        " on",
+        " an",
+        " exchange",
+        " request",
+        " made",
+        " last",
+        " week",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.5
+      ],
+      "segment_texts": [
+        " The agent answers through Genesis, but the caller is following up on an exchange request made last week."
+      ]
+    }
+  },
+  {
+    "index": 2,
+    "start": 10.235719,
+    "end": 13.065438,
+    "text": "The information exists in Zoho Desk.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The information exists in Zoho Desk.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " information",
+        " exists",
+        " in",
+        " Zo",
+        "ho",
+        " Des",
+        "k",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " The information exists in Zoho Desk."
+      ]
+    }
+  },
+  {
+    "index": 3,
+    "start": 13.065438,
+    "end": 17.490062,
+    "text": "The challenge is getting it to the right employee at the right moment.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The challenge is getting it to the right employee at the right moment.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " challenge",
+        " is",
+        " getting",
+        " it",
+        " to",
+        " the",
+        " right",
+        " employee",
+        " at",
+        " the",
+        " right",
+        " moment",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.32
+      ],
+      "segment_texts": [
+        " The challenge is getting it to the right employee at the right moment."
+      ]
+    }
+  },
+  {
+    "index": 4,
+    "start": 17.490062,
+    "end": 25.5644065,
+    "text": "Today, as described in concrete's current workflow, the agent may have to copy the phone number, search SoHoDesk manually,",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Today, as described in concrete's current workflow, the agent may have to copy the phone number, search SoHoDesk manually,",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Today",
+        ",",
+        " as",
+        " described",
+        " in",
+        " concrete",
+        "'s",
+        " current",
+        " workflow",
+        ",",
+        " the",
+        " agent",
+        " may",
+        " have",
+        " to",
+        " copy",
+        " the",
+        " phone",
+        " number",
+        ",",
+        " search",
+        " So",
+        "Ho",
+        "Des",
+        "k",
+        " manually",
+        ","
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        6.0
+      ],
+      "segment_durations": [
+        6.0,
+        2.0
+      ],
+      "segment_texts": [
+        " Today, as described in concrete's current workflow, the agent may have to copy the phone number,",
+        " search SoHoDesk manually,"
+      ]
+    }
+  },
+  {
+    "index": 5,
+    "start": 25.5644065,
+    "end": 30.602218999999998,
+    "text": "Open the customer's previous tickets and then look for the most recent update.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Open the customer's previous tickets and then look for the most recent update.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Open",
+        " the",
+        " customer",
+        "'s",
+        " previous",
+        " tickets",
+        " and",
+        " then",
+        " look",
+        " for",
+        " the",
+        " most",
+        " recent",
+        " update",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " Open the customer's previous tickets and then look for the most recent update."
+      ]
+    }
+  },
+  {
+    "index": 6,
+    "start": 30.602218999999998,
+    "end": 35.698406,
+    "text": "The search is possible, but every extra step interrupts the conversation.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The search is possible, but every extra step interrupts the conversation.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " search",
+        " is",
+        " possible",
+        ",",
+        " but",
+        " every",
+        " extra",
+        " step",
+        " interrupt",
+        "s",
+        " the",
+        " conversation",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " The search is possible, but every extra step interrupts the conversation."
+      ]
+    }
+  },
+  {
+    "index": 7,
+    "start": 35.698406,
+    "end": 38.9141875,
+    "text": "Now imagine a more connected experience.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Now imagine a more connected experience.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Now",
+        " imagine",
+        " a",
+        " more",
+        " connected",
+        " experience",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Now imagine a more connected experience."
+      ]
+    }
+  },
+  {
+    "index": 8,
+    "start": 38.9141875,
+    "end": 44.713187500000004,
+    "text": "When an inbound call arrives in Genesis, the caller number starts an authorized customer lookup.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "When an inbound call arrives in Genesis, the caller number starts an authorized customer lookup.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " When",
+        " an",
+        " in",
+        "bound",
+        " call",
+        " arrives",
+        " in",
+        " Genesis",
+        ",",
+        " the",
+        " caller",
+        " number",
+        " starts",
+        " an",
+        " authorized",
+        " customer",
+        " look",
+        "up",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " When an inbound call arrives in Genesis, the caller number starts an authorized customer lookup."
+      ]
+    }
+  },
+  {
+    "index": 9,
+    "start": 44.713187500000004,
+    "end": 56.7927505,
+    "text": "If it finds one reliable match, a ScreenPOP opens the relevant customer context, the contact record, previous support tickets, their current statuses, and the latest recorded update.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "If it finds one reliable match, a ScreenPOP opens the relevant customer context, the contact record, previous support tickets, their current statuses, and the latest recorded update.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " If",
+        " it",
+        " finds",
+        " one",
+        " reliable",
+        " match",
+        ",",
+        " a",
+        " Screen",
+        "P",
+        "OP",
+        " opens",
+        " the",
+        " relevant",
+        " customer",
+        " context",
+        ",",
+        " the",
+        " contact",
+        " record",
+        ",",
+        " previous",
+        " support",
+        " tickets",
+        ",",
+        " their",
+        " current",
+        " status",
+        "es",
+        ",",
+        " and",
+        " the",
+        " latest",
+        " recorded",
+        " update",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        5.52
+      ],
+      "segment_durations": [
+        5.52,
+        6.48
+      ],
+      "segment_texts": [
+        " If it finds one reliable match, a ScreenPOP opens the relevant customer context,",
+        " the contact record, previous support tickets, their current statuses, and the latest recorded update."
+      ]
+    }
+  },
+  {
+    "index": 10,
+    "start": 56.7927505,
+    "end": 59.2714065,
+    "text": "Let's follow a realistic example.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Let's follow a realistic example.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Let",
+        "'s",
+        " follow",
+        " a",
+        " realistic",
+        " example",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Let's follow a realistic example."
+      ]
+    }
+  },
+  {
+    "index": 11,
+    "start": 59.2714065,
+    "end": 61.954594,
+    "text": "The customer is asking about an exchange.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The customer is asking about an exchange.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " customer",
+        " is",
+        " asking",
+        " about",
+        " an",
+        " exchange",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " The customer is asking about an exchange."
+      ]
+    }
+  },
+  {
+    "index": 12,
+    "start": 61.954594,
+    "end": 67.6763125,
+    "text": "The agent can see an earlier ticket and a note saying the request is still pending branch review.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The agent can see an earlier ticket and a note saying the request is still pending branch review.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " agent",
+        " can",
+        " see",
+        " an",
+        " earlier",
+        " ticket",
+        " and",
+        " a",
+        " note",
+        " saying",
+        " the",
+        " request",
+        " is",
+        " still",
+        " pending",
+        " branch",
+        " review",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.6
+      ],
+      "segment_texts": [
+        " The agent can see an earlier ticket and a note saying the request is still pending branch review."
+      ]
+    }
+  },
+  {
+    "index": 13,
+    "start": 67.6763125,
+    "end": 71.98596900000001,
+    "text": "That's a recorded status, not a promise that the review has happened.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "That's a recorded status, not a promise that the review has happened.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " That",
+        "'s",
+        " a",
+        " recorded",
+        " status",
+        ",",
+        " not",
+        " a",
+        " promise",
+        " that",
+        " the",
+        " review",
+        " has",
+        " happened",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " That's a recorded status, not a promise that the review has happened."
+      ]
+    }
+  },
+  {
+    "index": 14,
+    "start": 71.98596900000001,
+    "end": 78.8857505,
+    "text": "Instead of making the customer explain everything again, the agent can continue from the last documented point.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Instead of making the customer explain everything again, the agent can continue from the last documented point.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Instead",
+        " of",
+        " making",
+        " the",
+        " customer",
+        " explain",
+        " everything",
+        " again",
+        ",",
+        " the",
+        " agent",
+        " can",
+        " continue",
+        " from",
+        " the",
+        " last",
+        " documented",
+        " point",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        7.0
+      ],
+      "segment_texts": [
+        " Instead of making the customer explain everything again, the agent can continue from the last documented point."
+      ]
+    }
+  },
+  {
+    "index": 15,
+    "start": 78.8857505,
+    "end": 83.585219,
+    "text": "If several contacts share a number, the employee chooses the correct record.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "If several contacts share a number, the employee chooses the correct record.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " If",
+        " several",
+        " contacts",
+        " share",
+        " a",
+        " number",
+        ",",
+        " the",
+        " employee",
+        " chooses",
+        " the",
+        " correct",
+        " record",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " If several contacts share a number, the employee chooses the correct record."
+      ]
+    }
+  },
+  {
+    "index": 16,
+    "start": 83.585219,
+    "end": 87.4620625,
+    "text": "If there's no match, a safe manual search remains available.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "If there's no match, a safe manual search remains available.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " If",
+        " there",
+        "'s",
+        " no",
+        " match",
+        ",",
+        " a",
+        " safe",
+        " manual",
+        " search",
+        " remains",
+        " available",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " If there's no match, a safe manual search remains available."
+      ]
+    }
+  },
+  {
+    "index": 17,
+    "start": 87.4620625,
+    "end": 91.611625,
+    "text": "and if the lookup service fails, the call itself must continue.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and if the lookup service fails, the call itself must continue.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " if",
+        " the",
+        " look",
+        "up",
+        " service",
+        " fails",
+        ",",
+        " the",
+        " call",
+        " itself",
+        " must",
+        " continue",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " and if the lookup service fails, the call itself must continue."
+      ]
+    }
+  },
+  {
+    "index": 18,
+    "start": 91.611625,
+    "end": 94.9521875,
+    "text": "A phone number alone never proves someone's identity.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "A phone number alone never proves someone's identity.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " A",
+        " phone",
+        " number",
+        " alone",
+        " never",
+        " proves",
+        " someone",
+        "'s",
+        " identity",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " A phone number alone never proves someone's identity."
+      ]
+    }
+  },
+  {
+    "index": 19,
+    "start": 94.9521875,
+    "end": 96.992469,
+    "text": "Notice what's changing here.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Notice what's changing here.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Notice",
+        " what",
+        "'s",
+        " changing",
+        " here",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Notice what's changing here."
+      ]
+    }
+  },
+  {
+    "index": 20,
+    "start": 96.992469,
+    "end": 103.41081249999999,
+    "text": "We're not replacing Genesis or Zoho Desk, and we're not pretending a new integration is already live.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "We're not replacing Genesis or Zoho Desk, and we're not pretending a new integration is already live.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " We",
+        "'re",
+        " not",
+        " replacing",
+        " Genesis",
+        " or",
+        " Zo",
+        "ho",
+        " Des",
+        "k",
+        ",",
+        " and",
+        " we",
+        "'re",
+        " not",
+        " pretending",
+        " a",
+        " new",
+        " integration",
+        " is",
+        " already",
+        " live",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.4
+      ],
+      "segment_texts": [
+        " We're not replacing Genesis or Zoho Desk, and we're not pretending a new integration is already live."
+      ]
+    }
+  },
+  {
+    "index": 21,
+    "start": 103.41081249999999,
+    "end": 108.5257815,
+    "text": "we're proposing a clearer way to connect systems that concrete already uses.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "we're proposing a clearer way to connect systems that concrete already uses.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " we",
+        "'re",
+        " proposing",
+        " a",
+        " clearer",
+        " way",
+        " to",
+        " connect",
+        " systems",
+        " that",
+        " concrete",
+        " already",
+        " uses",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " we're proposing a clearer way to connect systems that concrete already uses."
+      ]
+    }
+  },
+  {
+    "index": 22,
+    "start": 108.5257815,
+    "end": 110.9782185,
+    "text": "The potential benefit is straightforward.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The potential benefit is straightforward.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " potential",
+        " benefit",
+        " is",
+        " straightforward",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.56
+      ],
+      "segment_texts": [
+        " The potential benefit is straightforward."
+      ]
+    }
+  },
+  {
+    "index": 23,
+    "start": 110.9782185,
+    "end": 116.1595935,
+    "text": "Fewer manual searches, easier follow-up, and more attention on the customer.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Fewer manual searches, easier follow-up, and more attention on the customer.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Few",
+        "er",
+        " manual",
+        " searches",
+        ",",
+        " easier",
+        " follow",
+        "-",
+        "up",
+        ",",
+        " and",
+        " more",
+        " attention",
+        " on",
+        " the",
+        " customer",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " Fewer manual searches, easier follow-up, and more attention on the customer."
+      ]
+    }
+  },
+  {
+    "index": 24,
+    "start": 116.1595935,
+    "end": 121.76056249999999,
+    "text": "Those benefits must be measured in a real pilot, not presented as guaranteed savings.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Those benefits must be measured in a real pilot, not presented as guaranteed savings.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Those",
+        " benefits",
+        " must",
+        " be",
+        " measured",
+        " in",
+        " a",
+        " real",
+        " pilot",
+        ",",
+        " not",
+        " presented",
+        " as",
+        " guaranteed",
+        " savings",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.6
+      ],
+      "segment_texts": [
+        " Those benefits must be measured in a real pilot, not presented as guaranteed savings."
+      ]
+    }
+  },
+  {
+    "index": 25,
+    "start": 121.76056249999999,
+    "end": 131.4224375,
+    "text": "First, we'll review concrete's existing Genesis pop-up configuration, Zoho Desk access, permissions, and the supported integration options.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "First, we'll review concrete's existing Genesis pop-up configuration, Zoho Desk access, permissions, and the supported integration options.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " First",
+        ",",
+        " we",
+        "'ll",
+        " review",
+        " concrete",
+        "'s",
+        " existing",
+        " Genesis",
+        " pop",
+        "-",
+        "up",
+        " configuration",
+        ",",
+        " Zo",
+        "ho",
+        " Des",
+        "k",
+        " access",
+        ",",
+        " permissions",
+        ",",
+        " and",
+        " the",
+        " supported",
+        " integration",
+        " options",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        10.0
+      ],
+      "segment_texts": [
+        " First, we'll review concrete's existing Genesis pop-up configuration, Zoho Desk access, permissions, and the supported integration options."
+      ]
+    }
+  },
+  {
+    "index": 26,
+    "start": 131.4224375,
+    "end": 136.420375,
+    "text": "Then, we'll test the experience with authorized sample calls and validate the results.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Then, we'll test the experience with authorized sample calls and validate the results.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Then",
+        ",",
+        " we",
+        "'ll",
+        " test",
+        " the",
+        " experience",
+        " with",
+        " authorized",
+        " sample",
+        " calls",
+        " and",
+        " validate",
+        " the",
+        " results",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " Then, we'll test the experience with authorized sample calls and validate the results."
+      ]
+    }
+  },
+  {
+    "index": 27,
+    "start": 136.420375,
+    "end": 138.052156,
+    "text": "The goal is simple.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The goal is simple.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " goal",
+        " is",
+        " simple",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " The goal is simple."
+      ]
+    }
+  },
+  {
+    "index": 28,
+    "start": 138.052156,
+    "end": 141.8305935,
+    "text": "When the conversation begins, the context should be ready.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "When the conversation begins, the context should be ready.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " When",
+        " the",
+        " conversation",
+        " begins",
+        ",",
+        " the",
+        " context",
+        " should",
+        " be",
+        " ready",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " When the conversation begins, the context should be ready."
+      ]
+    }
+  },
+  {
+    "index": 29,
+    "start": 141.8305935,
+    "end": 147.76,
+    "text": "This is the Genesis and Zoho Desk experience proposed by Grind Control for concrete.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "This is the Genesis and Zoho Desk experience proposed by Grind Control for concrete.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " This",
+        " is",
+        " the",
+        " Genesis",
+        " and",
+        " Zo",
+        "ho",
+        " Des",
+        "k",
+        " experience",
+        " proposed",
+        " by",
+        " Grind",
+        " Control",
+        " for",
+        " concrete",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " This is the Genesis and Zoho Desk experience proposed by Grind Control for concrete."
+      ]
+    }
+  }
+]

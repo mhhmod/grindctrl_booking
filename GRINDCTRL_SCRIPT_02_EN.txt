@@ -1,0 +1,19 @@
+A customer calls Concrete again. What should the next customer service agent know before asking the first question? Not just a phone number, but the correct customer profile, the available history, and the notes attached to previous calls.
+
+Here's the second experience Grind Control is proposing for Concrete: a clearer customer view, connected to incoming calls through Genesys and the appropriate Zoho records.
+
+The caller number initiates a lookup. After a reliable match, the agent sees the customer's name and permitted contact details, including email when available. Missing information is marked unavailable.
+
+The same proposed view can show the customer segment from Concrete Icons Club: Lifestyle, Prestige, or Elite. That membership information must come from a trusted, updated source. It cannot be guessed from the caller's number, and no membership benefit should be assumed without confirmation.
+
+But a profile is only the starting point. Call-level history matters more. Imagine a simple timeline showing every available Call Activity, its date, agent, and notes for that specific interaction.
+
+For example, last week's call concerned an exchange request. The employee recorded that the branch would review the matter. When the customer calls again today, the new agent opens that particular call and reads its actual note. They see what was documented, without confusing a call note with a ticket comment, AI summary, or completed action.
+
+During today's conversation, the agent records a new note against the right interaction, if supported. Notes should belong to the call they describe, not a generic summary.
+
+And the interface must handle uncertainty honestly. No matching contact? Offer a manual search. Multiple matches? Ask the agent to select the right record. Missing membership data? Mark it unavailable. Lookup temporarily down? Never block the incoming call.
+
+Before implementation, we'll verify where call activities and notes actually live, which integrations are supported, and who is allowed to see each field. Then we'll test with authorized, fictional customer records.
+
+The outcome we're aiming for is continuity: a more informed employee and a customer who doesn't have to start from zero, every single time.

@@ -1,0 +1,115 @@
+# GRINDCTRL × CONCRETE — COMPLETE ENGLISH VOICEOVER MASTER PROMPT
+# NEW SESSION — THREE DIFFERENT STORIES — SINGLE COORDINATED PRODUCTION
+
+ROLE: You are the ElevenLabs Studio audio producer, an expert English voice director and narration editor. This instruction and the three exact scripts below are self-contained. Do not demand old Arabic videos, the previous chat, or other source files.
+
+SOURCE AUTHORITY AND SCOPE (LOCKED):
+- VIDEO 01: Concrete's CURRENT Genesys call workflow requires a manual phone lookup in Zoho Desk to review prior ticket statuses/notes. Show the PROPOSED screen-pop / automated, permissioned customer and ticket-history lookup. The existing CRM URL screen-pop configuration must be AUDITED; it is NOT proof a finished integrated view is deployed.
+- VIDEO 02: Concrete proposed Genesys-to-authorized-Zoho Customer 360 view: validated contact match, phone/name/email, Concrete Icons Club tier (Lifestyle / Prestige / Elite only if sourced), distinct timestamped per-CALL activities and call-specific human notes. No mixing call notes with ticket comments or AI summaries. Missing/ambiguous records and safe call continuation matter. Zoho Desk vs Zoho CRM and note storage must not be conflated.
+- VIDEO 03: GRINDCTRL's ACTUAL Shopify-fashion-store AI Virtual Try-On + Store Chat customer journey, grounded in https://grindctrl.cloud/; Store Chat uses merchant knowledge, with human handoff/shared inbox. Read-only order info is conditional. Try-on is a visual PREVIEW, not accurate sizing prediction.
+- Videos 01–02 are GRINDCTRL's PROPOSALS for Concrete, not a claim that integrations have been implemented. Video 03 explains GRINDCTRL product capabilities, not that Concrete already adopted them.
+- Ignore / NEVER reuse or paraphrase the REJECTED voiceovers 'Future of Online Fashion Shopping' and 'AI Store Support and Operations', or prior English GRINDCTRL videos. These scripts supersede every earlier draft.
+
+NARRATOR (select once, keep all three consistent):
+- Choose a NEW high-quality, available female narrator with a sophisticated natural North American/neutral international English accent, mature and calm, exceptional intelligibility, premium B2B product-film cadence, and a restrained human warmth. This is a Concrete executive presentation + premium product film, NOT high-energy retail advertising.
+- Do NOT assume the narrator or settings of any earlier account or audio. Select using the actual available voice library/metadata and existing free previews; minimize spending on auditions. Record selected voice name and ID when exposed.
+- Use the most reliable high-quality English speech model supported by the account for that selected voice. Lock voice/model/settings across all three recordings. No background music, FX, artificial reverberation or additional speakers.
+- Natural connected phrasing, gentle emphasis on contrast, deliberate but not slow. Avoid robotic pauses, theatrical trailers, monotonous newsreading, and random emotion tags. Do not speak scene names, headings or formatting.
+
+PRONUNCIATIONS:
+Spoken "Grind Control"; on-screen brand will be "GRINDCTRL". Say "JEN-uh-sis" for Genesys, "ZOH-hoh Desk" for Zoho Desk, "Concrete" as the retail brand, "Icons Club" and tiers "Lifestyle", "Prestige", "Elite" naturally. Use Studio Pronunciations Editor if supported rather than reading letters or phonetic instructions aloud. Keep spoken English terminology natural, not spelled out letter by letter.
+
+DURATION & COST CONTROL:
+- THREE separate, COMPLETE continuous MP3 files, ONE per video, not scene files or one combined 7.5-minute export.
+- Each will fit EXACTLY 150 s of final video: target 145–149 s of actual audio, allowing 1–5 s for the final visual brand frame.
+- Scripts are approximately 340–360 words, meant for natural speech around 140–150 spoken words/minute, but runtime MUST be MEASURED, not inferred from count.
+- Preserve key points. If necessary, carefully condense or expand ONLY to fix timing without altering facts or theme. Keep any edits in a delivered exact transcript.
+- No blind retakes, no extra paid audition batches, no multiple unrelated exports. Prefer one three-chapter Studio Audio project or three separate projects with identical saved voice settings. Reuse paragraph corrections rather than regenerating the whole script when feasible.
+- If Studio cannot actually generate or export a file, state it plainly; don't fabricate a download link. Do not ask the owner for scripts: all scripts are below.
+
+OUTPUTS (exact content between BEGIN/END markers only; do not narrate markers):
+
+### VIDEO 01 — INCOMING CALL → ZOHO DESK TICKETS / PROPOSED SCREEN POP
+[BEGIN SCRIPT 01]
+Imagine a call arriving at Concrete's customer service center. The agent answers through Genesys, but the caller is following up on an exchange request made last week. The information exists in Zoho Desk. The challenge is getting it to the right employee, at the right moment.
+
+Today, as described in Concrete's current workflow, the agent may have to copy the phone number, search Zoho Desk manually, open the customer's previous tickets, and then look for the most recent update. The search is possible, but every extra step interrupts the conversation.
+
+Now imagine a more connected experience. When an inbound call arrives in Genesys, the caller number starts an authorized customer lookup. If it finds one reliable match, a screen pop opens the relevant customer context: the contact record, previous support tickets, their current statuses, and the latest recorded update.
+
+Let's follow a realistic example. The customer is asking about an exchange. The agent can see an earlier ticket and a note saying the request is still pending branch review. That's a recorded status, not a promise that the review has happened. Instead of making the customer explain everything again, the agent can continue from the last documented point.
+
+If several contacts share a number, the employee chooses the correct record. If there's no match, a safe manual search remains available. And if the lookup service fails, the call itself must continue. A phone number alone never proves someone's identity.
+
+Notice what's changing here. We're not replacing Genesys or Zoho Desk, and we're not pretending a new integration is already live. We're proposing a clearer way to connect systems that Concrete already uses.
+
+The potential benefit is straightforward: fewer manual searches, easier follow-up, and more attention on the customer. Those benefits must be measured in a real pilot, not presented as guaranteed savings.
+
+First, we'll review Concrete's existing Genesys pop-up configuration, Zoho Desk access, permissions, and the supported integration options. Then we'll test the experience with authorized sample calls and validate the results.
+
+The goal is simple: when the conversation begins, the context should be ready. This is the Genesys and Zoho Desk experience proposed by Grind Control for Concrete.
+[END SCRIPT 01]
+
+### VIDEO 02 — CUSTOMER PROFILE → DISTINCT CALL ACTIVITIES & NOTES
+[BEGIN SCRIPT 02]
+A customer calls Concrete again. What should the next customer service agent know before asking the first question? Not just a phone number, but the correct customer profile, the available history, and the notes attached to previous calls.
+
+Here's the second experience Grind Control is proposing for Concrete: a clearer customer view, connected to incoming calls through Genesys and the appropriate Zoho records.
+
+The caller number initiates a lookup. After a reliable match, the agent sees the customer's name and permitted contact details, including email when available. Missing information is marked unavailable.
+
+The same proposed view can show the customer segment from Concrete Icons Club: Lifestyle, Prestige, or Elite. That membership information must come from a trusted, updated source. It cannot be guessed from the caller's number, and no membership benefit should be assumed without confirmation.
+
+But a profile is only the starting point. Call-level history matters more. Imagine a simple timeline showing every available Call Activity, its date, agent, and notes for that specific interaction.
+
+For example, last week's call concerned an exchange request. The employee recorded that the branch would review the matter. When the customer calls again today, the new agent opens that particular call and reads its actual note. They see what was documented, without confusing a call note with a ticket comment, AI summary, or completed action.
+
+During today's conversation, the agent records a new note against the right interaction, if supported. Notes should belong to the call they describe, not a generic summary.
+
+And the interface must handle uncertainty honestly. No matching contact? Offer a manual search. Multiple matches? Ask the agent to select the right record. Missing membership data? Mark it unavailable. Lookup temporarily down? Never block the incoming call.
+
+Before implementation, we'll verify where call activities and notes actually live, which integrations are supported, and who is allowed to see each field. Then we'll test with authorized, fictional customer records.
+
+The outcome we're aiming for is continuity: a more informed employee and a customer who doesn't have to start from zero, every single time.
+[END SCRIPT 02]
+
+### VIDEO 03 — AI VIRTUAL TRY-ON + STORE CHAT
+[BEGIN SCRIPT 03]
+Picture someone browsing a fashion store online. They find a dress, a jacket, or a linen shirt they love. The photographs look beautiful, but one question remains: what could this actually look like on me?
+
+Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience. On a supported Shopify product page, the shopper selects an item, taps Try it on with AI, and uploads a photo. The system generates a visual preview of that shopper wearing the selected garment.
+
+It's important to understand what this means. The preview helps someone explore a style. It isn't an exact measurement, a fit guarantee, or a replacement for real product information.
+
+Now the shopper has another question. Does the shirt run oversized? Is there a size guide? What is the delivery policy? This is where Store Chat enters the same shopping journey.
+
+Instead of leaving the product page and searching across the website, the shopper opens the store assistant. Store Chat answers in English or Arabic using the information the merchant has supplied. Accurate answers come from store knowledge, not from made-up stock levels or promises.
+
+If human help is needed, the AI hands off with a reason. The team picks up the conversation in a shared inbox, assigns it, adds a private note, and replies in context.
+
+Where appropriately configured and verified, read-only order information can also support relevant questions. But the assistant shouldn't change orders, promise refunds, or imply an integration exists when it hasn't been enabled.
+
+Let's connect the experience. A shopper sees a garment, previews it on their own photo, asks about the size, and gets a helpful answer. If the question needs judgment, a real person continues from the conversation already started.
+
+For a fashion brand, the two tools belong to one journey. Virtual Try-On helps people picture the product. Store Chat helps them understand it. The merchant's team stays in control when it matters.
+
+See the live product experience, explore the demo, and discover how Grind Control can fit your Shopify fashion store.
+
+Grind Control. Let shoppers see it. Let them ask.
+[END SCRIPT 03]
+
+
+PRODUCTION EXECUTION & QA:
+1. Analyze each script and verify the three DIFFERENT topics remain intact. Do not turn Videos 01/02 into generic GRINDCTRL promotions.
+2. Select one premium English narrator and lock it.
+3. Produce one uninterrupted English voiceover for each script; do not insert audio tags unless the chosen model natively understands them.
+4. Inspect pronunciation at the beginning/middle/end of each audio, particularly Genesys / Zoho Desk / Concrete / Icons Club / Grind Control.
+5. Check that no phrase is missing/repeated; no jump in voice identity; no clicks, sentence truncation or language drift.
+6. Measure the ACTUAL durations; aim for 145–149s. Make targeted corrections if possible; do not alter playback speed unnaturally to hit runtime.
+7. Export exactly three individually downloadable MP3s, with these labels or a clear mapping if the interface assigns filenames:
+   01_Concrete_Genesys_ZohoDesk_ScreenPop_EN.mp3
+   02_Concrete_Customer360_CallActivities_EN.mp3
+   03_GRINDCTRL_TryOn_StoreChat_EN.mp3
+8. Also deliver the exact final scripts (including any timing edits), voice/model identity, observed duration for each file, and any actual limitations. MP3 is sufficient. Audio ONLY; do not create video.
+
+BEGIN PRODUCTION FOR ALL THREE. Do not stop after one chapter or ask for the Arabic originals.

@@ -1,0 +1,611 @@
+{
+  "id": "03",
+  "title": "Let shoppers see it. Let them ask.",
+  "stem": "03_GRINDCTRL_TryOn_StoreChat_150s",
+  "duration": 150,
+  "fps": 30,
+  "frames": 4500,
+  "source_audio": "03_GRINDCTRL_TryOn_StoreChat_EN.mp3",
+  "source_sha256": "35cbc90f37d7e74aa8a35d4f4834a30d03d1e4a85d618f803b2da7211221c4aa",
+  "source_duration": 138.88,
+  "source_container_duration": 138.919184,
+  "cold_open_sec": 1.12,
+  "outro_sec": 4.0,
+  "extra_visual_only_sec": 11.120000000000005,
+  "narration_segments": [
+    {
+      "source_start_sec": 0.0,
+      "source_end_sec": 28.096009070294784,
+      "target_start_sec": 1.12,
+      "target_end_sec": 29.216009070294785,
+      "samples": 1239034,
+      "source_pcm_sha256": "cf561244be2bbcac76f29da066d182a764288593cd989b9d2ef9fa8899a92daa"
+    },
+    {
+      "source_start_sec": 28.096009070294784,
+      "source_end_sec": 45.417687074829935,
+      "target_start_sec": 31.216009070294785,
+      "target_end_sec": 48.53768707482993,
+      "samples": 763886,
+      "source_pcm_sha256": "17b93bad96eb723e6ca1e4132a0a32e4d1e0539da6de6bc71490a3c728ee9466"
+    },
+    {
+      "source_start_sec": 45.417687074829935,
+      "source_end_sec": 85.43866213151928,
+      "target_start_sec": 50.53768707482993,
+      "target_end_sec": 90.55866213151927,
+      "samples": 1764925,
+      "source_pcm_sha256": "4e6311f7150de9ff08a663856de1119a532f566ccbd2a51b539c71f0adb0d7a7"
+    },
+    {
+      "source_start_sec": 85.43866213151928,
+      "source_end_sec": 138.88,
+      "target_start_sec": 92.55866213151927,
+      "target_end_sec": 146.0,
+      "samples": 2356763,
+      "source_pcm_sha256": "1df135982d62de7614121b4940eb27c7ce65e28d025f49730770e6ce8fc24b20"
+    }
+  ],
+  "visual_only_intervals": [
+    [
+      0,
+      1.12
+    ],
+    [
+      29.216009070294785,
+      31.216009070294785
+    ],
+    [
+      48.53768707482993,
+      50.53768707482993
+    ],
+    [
+      90.55866213151928,
+      92.55866213151928
+    ],
+    [
+      146.0,
+      150.0
+    ]
+  ],
+  "scenes": [
+    {
+      "id": "03-B01",
+      "start": 0,
+      "end": 21.32421768707483,
+      "kind": "product",
+      "source_start": 0,
+      "source_end": 20.204219000000002,
+      "visual_only": false
+    },
+    {
+      "id": "03-B02",
+      "start": 21.32421768707483,
+      "end": 29.216009070294785,
+      "kind": "upload",
+      "source_start": 20.204219000000002,
+      "source_end": 28.096,
+      "visual_only": false
+    },
+    {
+      "id": "03-DEMO1",
+      "start": 29.216009070294785,
+      "end": 31.216009070294785,
+      "kind": "preview",
+      "visual_only": true
+    },
+    {
+      "id": "03-B03",
+      "start": 31.216009070294785,
+      "end": 48.53768707482993,
+      "kind": "preview",
+      "source_start": 28.096,
+      "source_end": 45.4176875,
+      "visual_only": false
+    },
+    {
+      "id": "03-DEMO2",
+      "start": 48.53768707482993,
+      "end": 50.53768707482993,
+      "kind": "chat",
+      "visual_only": true
+    },
+    {
+      "id": "03-B04",
+      "start": 50.53768707482993,
+      "end": 79.03725623582767,
+      "kind": "chat",
+      "source_start": 45.4176875,
+      "source_end": 73.91725,
+      "visual_only": false
+    },
+    {
+      "id": "03-B05",
+      "start": 79.03725623582767,
+      "end": 90.55866213151928,
+      "kind": "handoff",
+      "source_start": 73.91725,
+      "source_end": 85.43865650000001,
+      "visual_only": false
+    },
+    {
+      "id": "03-DEMO3",
+      "start": 90.55866213151928,
+      "end": 92.55866213151928,
+      "kind": "order",
+      "visual_only": true
+    },
+    {
+      "id": "03-B06",
+      "start": 92.55866213151928,
+      "end": 106.63845804988662,
+      "kind": "order",
+      "source_start": 85.43865650000001,
+      "source_end": 99.51846900000001,
+      "visual_only": false
+    },
+    {
+      "id": "03-B07",
+      "start": 106.63845804988662,
+      "end": 133.97421768707483,
+      "kind": "journey",
+      "source_start": 99.51846900000001,
+      "source_end": 126.854219,
+      "visual_only": false
+    },
+    {
+      "id": "03-B08",
+      "start": 133.97421768707483,
+      "end": 146.0,
+      "kind": "brand",
+      "source_start": 126.854219,
+      "source_end": 138.88,
+      "visual_only": false
+    },
+    {
+      "id": "03-CLOSE",
+      "start": 146.0,
+      "end": 150.0,
+      "kind": "close",
+      "visual_only": true
+    }
+  ],
+  "captions": [
+    {
+      "source_start": 0.0,
+      "source_end": 2.8716559999999998,
+      "text": "Picture someone browsing a fashion store online.",
+      "raw_recognition": "Picture someone browsing a fashion store online.",
+      "start": 1.12,
+      "end": 3.991655328798186
+    },
+    {
+      "source_start": 2.8716559999999998,
+      "source_end": 6.8451249999999995,
+      "text": "They find a dress, a jacket, or a linen shirt they love.",
+      "raw_recognition": "They find a dress, a jacket, or a linen shirt they love.",
+      "start": 3.991655328798186,
+      "end": 7.965124716553288
+    },
+    {
+      "source_start": 6.8451249999999995,
+      "source_end": 8.055906,
+      "text": "The photographs look",
+      "raw_recognition": "The photographs looked...",
+      "start": 7.965124716553288,
+      "end": 9.175895691609977
+    },
+    {
+      "source_start": 8.055906,
+      "source_end": 9.1316875,
+      "text": "beautiful.",
+      "raw_recognition": "beautiful.",
+      "start": 9.175895691609977,
+      "end": 10.251678004535147
+    },
+    {
+      "source_start": 9.1316875,
+      "source_end": 11.152469,
+      "text": "But one question remains.",
+      "raw_recognition": "But one question remains.",
+      "start": 10.251678004535147,
+      "end": 12.272471655328797
+    },
+    {
+      "source_start": 11.152469,
+      "source_end": 13.7361875,
+      "text": "What could this actually look like on me?",
+      "raw_recognition": "What could this actually look like on me?",
+      "start": 12.272471655328797,
+      "end": 14.856190476190477
+    },
+    {
+      "source_start": 13.7361875,
+      "source_end": 20.204219000000002,
+      "text": "GRINDCTRL's AI Virtual Try-On brings that moment closer to a personal shopping experience.",
+      "raw_recognition": "Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience.",
+      "start": 14.856190476190477,
+      "end": 21.32421768707483
+    },
+    {
+      "source_start": 20.204219000000002,
+      "source_end": 24.448031,
+      "text": "On a supported Shopify product page, the shopper selects an item.",
+      "raw_recognition": "On a supported Shopify product page, the shopper selects an item.",
+      "start": 21.32421768707483,
+      "end": 25.568027210884356
+    },
+    {
+      "source_start": 24.448031,
+      "source_end": 26.626281499999997,
+      "text": "Taps try it on with AI.",
+      "raw_recognition": "Taps try it on with AI.",
+      "start": 25.568027210884356,
+      "end": 27.74628117913832
+    },
+    {
+      "source_start": 26.626281499999997,
+      "source_end": 28.096,
+      "text": "and uploads a photo.",
+      "raw_recognition": "and upload the photo.",
+      "start": 27.74628117913832,
+      "end": 29.216009070294785
+    },
+    {
+      "source_start": 28.096,
+      "source_end": 33.3204375,
+      "text": "The system generates a visual preview of that shopper wearing the selected garment.",
+      "raw_recognition": "The system generates a visual preview of that shopper wearing the selected garment.",
+      "start": 31.216009070294785,
+      "end": 36.44043083900227
+    },
+    {
+      "source_start": 33.3204375,
+      "source_end": 35.979219,
+      "text": "It's important to understand what this means.",
+      "raw_recognition": "It's important to understand what this means.",
+      "start": 36.44043083900227,
+      "end": 39.099229024943305
+    },
+    {
+      "source_start": 35.979219,
+      "source_end": 39.057906,
+      "text": "The preview helps someone explore a style.",
+      "raw_recognition": "The preview helps someone explore a style.",
+      "start": 39.099229024943305,
+      "end": 42.17791383219954
+    },
+    {
+      "source_start": 39.057906,
+      "source_end": 42.390593499999994,
+      "text": "It isn't an exact measurement, a fit guarantee.",
+      "raw_recognition": "It isn't an exact measurement, a fit guarantee.",
+      "start": 42.17791383219954,
+      "end": 45.51058956916099
+    },
+    {
+      "source_start": 42.390593499999994,
+      "source_end": 45.4176875,
+      "text": "or a replacement for real product information.",
+      "raw_recognition": "or a replacement for real product information.",
+      "start": 45.51058956916099,
+      "end": 48.53768707482993
+    },
+    {
+      "source_start": 45.4176875,
+      "source_end": 47.7664375,
+      "text": "Now the shopper has another question.",
+      "raw_recognition": "Now the shopper has another question.",
+      "start": 50.53768707482993,
+      "end": 52.88643990929705
+    },
+    {
+      "source_start": 47.7664375,
+      "source_end": 49.887,
+      "text": "Does the shirt run oversized?",
+      "raw_recognition": "Does the shirt run oversized?",
+      "start": 52.88643990929705,
+      "end": 55.00700680272109
+    },
+    {
+      "source_start": 49.887,
+      "source_end": 51.3359375,
+      "text": "Is there a size guide?",
+      "raw_recognition": "Is there a size guide?",
+      "start": 55.00700680272109,
+      "end": 56.4559410430839
+    },
+    {
+      "source_start": 51.3359375,
+      "source_end": 53.232749999999996,
+      "text": "What is the delivery policy?",
+      "raw_recognition": "What is the delivery policy?",
+      "start": 56.4559410430839,
+      "end": 58.35274376417233
+    },
+    {
+      "source_start": 53.232749999999996,
+      "source_end": 57.005469000000005,
+      "text": "This is where Store Chat enters the same shopping journey.",
+      "raw_recognition": "This is where Store Chat enters the same shopping journey.",
+      "start": 58.35274376417233,
+      "end": 62.125464852607706
+    },
+    {
+      "source_start": 57.005469000000005,
+      "source_end": 60.7074375,
+      "text": "Instead of leaving the product page and searching across the website,",
+      "raw_recognition": "Instead of leaving the product page and searching across the website,",
+      "start": 62.125464852607706,
+      "end": 65.82743764172335
+    },
+    {
+      "source_start": 60.7074375,
+      "source_end": 63.1016875,
+      "text": "The shopper opens the store assistant.",
+      "raw_recognition": "The shopper opens the store assistant.",
+      "start": 65.82743764172335,
+      "end": 68.22167800453515
+    },
+    {
+      "source_start": 63.1016875,
+      "source_end": 68.53440599999999,
+      "text": "Store Chat answers in English or Arabic using the information the merchant has supplied.",
+      "raw_recognition": "Store Chat answers in English or Arabic using the information the merchant has supplied.",
+      "start": 68.22167800453515,
+      "end": 73.65439909297052
+    },
+    {
+      "source_start": 68.53440599999999,
+      "source_end": 71.09774999999999,
+      "text": "Accurate answers come from store knowledge.",
+      "raw_recognition": "Accurate answers come from store knowledge.",
+      "start": 73.65439909297052,
+      "end": 76.21775510204083
+    },
+    {
+      "source_start": 71.09774999999999,
+      "source_end": 73.91725,
+      "text": "not from made-up stock levels or promises.",
+      "raw_recognition": "not from made-up stock levels or promises.",
+      "start": 76.21775510204083,
+      "end": 79.03725623582767
+    },
+    {
+      "source_start": 73.91725,
+      "source_end": 75.5371875,
+      "text": "If human help is needed,",
+      "raw_recognition": "If human help is needed,",
+      "start": 79.03725623582767,
+      "end": 80.65718820861679
+    },
+    {
+      "source_start": 75.5371875,
+      "source_end": 77.8926875,
+      "text": "the AI hands off with a reason.",
+      "raw_recognition": "the AI hands off with a reason.",
+      "start": 80.65718820861679,
+      "end": 83.01269841269841
+    },
+    {
+      "source_start": 77.8926875,
+      "source_end": 81.1273125,
+      "text": "The team picks up the conversation in a shared inbox.",
+      "raw_recognition": "The team picks up the conversation in a shared inbox.",
+      "start": 83.01269841269841,
+      "end": 86.24730158730159
+    },
+    {
+      "source_start": 81.1273125,
+      "source_end": 82.0468125,
+      "text": "Assigns it.",
+      "raw_recognition": "Assigns it.",
+      "start": 86.24730158730159,
+      "end": 87.16680272108844
+    },
+    {
+      "source_start": 82.0468125,
+      "source_end": 83.4067815,
+      "text": "adds a private note.",
+      "raw_recognition": "adds a private node.",
+      "start": 87.16680272108844,
+      "end": 88.52678004535147
+    },
+    {
+      "source_start": 83.4067815,
+      "source_end": 85.43865650000001,
+      "text": "and replies in context.",
+      "raw_recognition": "and replies in context.",
+      "start": 88.52678004535147,
+      "end": 90.55866213151928
+    },
+    {
+      "source_start": 85.43865650000001,
+      "source_end": 88.0324375,
+      "text": "Where appropriately configured and verified.",
+      "raw_recognition": "were appropriately configured and verified.",
+      "start": 92.55866213151928,
+      "end": 95.15242630385488
+    },
+    {
+      "source_start": 88.0324375,
+      "source_end": 92.08878150000001,
+      "text": "Read-only order information can also support relevant questions.",
+      "raw_recognition": "Read-only order information can also support relevant questions.",
+      "start": 95.15242630385488,
+      "end": 99.20877551020409
+    },
+    {
+      "source_start": 92.08878150000001,
+      "source_end": 95.659469,
+      "text": "But the assistant shouldn't change orders. Promise refunds...",
+      "raw_recognition": "But the assistant shouldn't change orders. Promise refunds...",
+      "start": 99.20877551020409,
+      "end": 102.7794784580499
+    },
+    {
+      "source_start": 95.659469,
+      "source_end": 99.51846900000001,
+      "text": "or imply an integration exists when it hasn't been enabled.",
+      "raw_recognition": "or imply an integration exists when it hasn't been enabled.",
+      "start": 102.7794784580499,
+      "end": 106.63845804988662
+    },
+    {
+      "source_start": 99.51846900000001,
+      "source_end": 101.563875,
+      "text": "Let's connect the experience.",
+      "raw_recognition": "Let's connect the experience.",
+      "start": 106.63845804988662,
+      "end": 108.68387755102042
+    },
+    {
+      "source_start": 101.563875,
+      "source_end": 103.3706875,
+      "text": "A shopper sees a garment.",
+      "raw_recognition": "A shopper sees a garment.",
+      "start": 108.68387755102042,
+      "end": 110.49068027210885
+    },
+    {
+      "source_start": 103.3706875,
+      "source_end": 105.313594,
+      "text": "previews it on their own photo.",
+      "raw_recognition": "previews it on their own photo.",
+      "start": 110.49068027210885,
+      "end": 112.43358276643991
+    },
+    {
+      "source_start": 105.313594,
+      "source_end": 108.3450315,
+      "text": "asks about the size and gets a helpful answer.",
+      "raw_recognition": "asks about the size and gets a helpful answer.",
+      "start": 112.43358276643991,
+      "end": 115.46503401360545
+    },
+    {
+      "source_start": 108.3450315,
+      "source_end": 110.2195315,
+      "text": "If the question needs judgment,",
+      "raw_recognition": "If the question needs judgment,",
+      "start": 115.46503401360545,
+      "end": 117.33952380952381
+    },
+    {
+      "source_start": 110.2195315,
+      "source_end": 114.04528099999999,
+      "text": "a real person continues from the conversation already started.",
+      "raw_recognition": "a real person continues from the conversation already started.",
+      "start": 117.33952380952381,
+      "end": 121.16528344671202
+    },
+    {
+      "source_start": 114.04528099999999,
+      "source_end": 115.4249065,
+      "text": "for a fashion brand.",
+      "raw_recognition": "for a fashion brand.",
+      "start": 121.16528344671202,
+      "end": 122.54489795918367
+    },
+    {
+      "source_start": 115.4249065,
+      "source_end": 118.01440600000001,
+      "text": "The two tools belong to one journey.",
+      "raw_recognition": "The two tools belong to one journey.",
+      "start": 122.54489795918367,
+      "end": 125.13439909297053
+    },
+    {
+      "source_start": 118.01440600000001,
+      "source_end": 121.1301875,
+      "text": "Virtual Try-On helps people picture the product.",
+      "raw_recognition": "Virtual Try-On helps people picture the product.",
+      "start": 125.13439909297053,
+      "end": 128.25018140589572
+    },
+    {
+      "source_start": 121.1301875,
+      "source_end": 123.469875,
+      "text": "Store Chat helps them understand it.",
+      "raw_recognition": "Store Chat helps them understand it.",
+      "start": 128.25018140589572,
+      "end": 130.58986394557823
+    },
+    {
+      "source_start": 123.469875,
+      "source_end": 126.854219,
+      "text": "The merchant's team stays in control when it matters.",
+      "raw_recognition": "The merchant's team stays in control when it matters.",
+      "start": 130.58986394557823,
+      "end": 133.97421768707483
+    },
+    {
+      "source_start": 126.854219,
+      "source_end": 129.12996850000002,
+      "text": "See the live product experience.",
+      "raw_recognition": "See the live product experience.",
+      "start": 133.97421768707483,
+      "end": 136.24997732426306
+    },
+    {
+      "source_start": 129.12996850000002,
+      "source_end": 134.718875,
+      "text": "Explore the demo and discover how GRINDCTRL can fit your Shopify fashion store.",
+      "raw_recognition": "Explore the demo and discover how Grime Control can fit your Shopify fashion store.",
+      "start": 136.24997732426306,
+      "end": 141.83886621315193
+    },
+    {
+      "source_start": 134.718875,
+      "source_end": 135.988563,
+      "text": "GRINDCTRL.",
+      "raw_recognition": "Grind control.",
+      "start": 141.83886621315193,
+      "end": 143.10857142857142
+    },
+    {
+      "source_start": 135.988563,
+      "source_end": 137.586188,
+      "text": "Let shoppers see it.",
+      "raw_recognition": "Let shoppers see it.",
+      "start": 143.10857142857142,
+      "end": 144.70619047619047
+    },
+    {
+      "source_start": 137.586188,
+      "source_end": 138.88,
+      "text": "Let them ask.",
+      "raw_recognition": "Let them ask.",
+      "start": 144.70619047619047,
+      "end": 146.0
+    }
+  ],
+  "loudness": {
+    "source": {
+      "input_i": "-22.95",
+      "input_tp": "-2.43",
+      "input_lra": "3.40",
+      "input_thresh": "-33.38",
+      "output_i": "-18.16",
+      "output_tp": "-1.50",
+      "output_lra": "3.20",
+      "output_thresh": "-28.56",
+      "normalization_type": "dynamic",
+      "target_offset": "0.16"
+    },
+    "pre_mix_voice_gain_db": 4.949999999999999,
+    "output": {
+      "input_i": "-15.04",
+      "input_tp": "2.52",
+      "input_lra": "3.80",
+      "input_thresh": "-25.85",
+      "output_i": "-16.09",
+      "output_tp": "-1.50",
+      "output_lra": "4.00",
+      "output_thresh": "-26.82",
+      "normalization_type": "dynamic",
+      "target_offset": "0.09"
+    }
+  },
+  "exception": "User explicitly approved supplied138.88s narration plus11.12s of distributed purposeful visual content"
+}

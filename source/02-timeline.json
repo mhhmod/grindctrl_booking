@@ -1,0 +1,586 @@
+{
+  "id": "02",
+  "title": "Every call has its own story.",
+  "stem": "02_Concrete_Customer360_CallActivities_150s",
+  "duration": 150,
+  "fps": 30,
+  "frames": 4500,
+  "source_audio": "02_Concrete_Customer360_CallActivities_EN.mp3",
+  "source_sha256": "1c8ef685b0cfbcc5ca50e00e503b9247a4d1ce670e0ee6c8a741b48a80fba448",
+  "source_duration": 144.88,
+  "source_container_duration": 144.927347,
+  "cold_open_sec": 0.12,
+  "outro_sec": 5.0,
+  "extra_visual_only_sec": 5.1200000000000045,
+  "narration_segments": [
+    {
+      "source_start_sec": 0.0,
+      "source_end_sec": 144.88,
+      "target_start_sec": 0.12,
+      "target_end_sec": 145.0,
+      "samples": 6389208,
+      "source_pcm_sha256": "ccc388195ad7f1a7e43bf0198d69913403f7a0d0ff75fbc2aaa3408e8d3f993c"
+    }
+  ],
+  "visual_only_intervals": [
+    [
+      0,
+      0.12
+    ],
+    [
+      145.0,
+      150.0
+    ]
+  ],
+  "scenes": [
+    {
+      "id": "02-B01",
+      "start": 0,
+      "end": 39.90043083900226,
+      "kind": "profile",
+      "source_start": 0,
+      "source_end": 39.780437,
+      "visual_only": false
+    },
+    {
+      "id": "02-B02",
+      "start": 39.90043083900226,
+      "end": 58.1934693877551,
+      "kind": "membership",
+      "source_start": 39.780437,
+      "source_end": 58.073468500000004,
+      "visual_only": false
+    },
+    {
+      "id": "02-B03",
+      "start": 58.1934693877551,
+      "end": 72.07165532879819,
+      "kind": "timeline",
+      "source_start": 58.073468500000004,
+      "source_end": 71.951656,
+      "visual_only": false
+    },
+    {
+      "id": "02-B04",
+      "start": 72.07165532879819,
+      "end": 93.55882086167802,
+      "kind": "callnote",
+      "source_start": 71.951656,
+      "source_end": 93.4388125,
+      "visual_only": false
+    },
+    {
+      "id": "02-B05",
+      "start": 93.55882086167802,
+      "end": 104.3230612244898,
+      "kind": "write",
+      "source_start": 93.4388125,
+      "source_end": 104.2030625,
+      "visual_only": false
+    },
+    {
+      "id": "02-B06",
+      "start": 104.3230612244898,
+      "end": 122.3246485260771,
+      "kind": "fallback",
+      "source_start": 104.2030625,
+      "source_end": 122.204656,
+      "visual_only": false
+    },
+    {
+      "id": "02-B07",
+      "start": 122.3246485260771,
+      "end": 135.82337868480727,
+      "kind": "pilot",
+      "source_start": 122.204656,
+      "source_end": 135.7033755,
+      "visual_only": false
+    },
+    {
+      "id": "02-B08",
+      "start": 135.82337868480727,
+      "end": 145.0,
+      "kind": "future",
+      "source_start": 135.7033755,
+      "source_end": 144.88,
+      "visual_only": false
+    },
+    {
+      "id": "02-CLOSE",
+      "start": 145.0,
+      "end": 150.0,
+      "kind": "close",
+      "visual_only": true
+    }
+  ],
+  "captions": [
+    {
+      "source_start": 0.0,
+      "source_end": 2.3541565,
+      "text": "A customer calls Concrete again.",
+      "raw_recognition": "A customer calls concrete again.",
+      "start": 0.12,
+      "end": 2.474149659863946
+    },
+    {
+      "source_start": 2.3541565,
+      "source_end": 7.456625000000001,
+      "text": "What should the next customer service agent know before asking the first question?",
+      "raw_recognition": "What should the next customer service agent know before asking the first question?",
+      "start": 2.474149659863946,
+      "end": 7.576621315192744
+    },
+    {
+      "source_start": 7.456625000000001,
+      "source_end": 9.263125,
+      "text": "Not just a phone number.",
+      "raw_recognition": "Not just a phone number.",
+      "start": 7.576621315192744,
+      "end": 9.38312925170068
+    },
+    {
+      "source_start": 9.263125,
+      "source_end": 11.354094,
+      "text": "but the correct customer profile",
+      "raw_recognition": "but the correct customer profile",
+      "start": 9.38312925170068,
+      "end": 11.474104308390022
+    },
+    {
+      "source_start": 11.354094,
+      "source_end": 12.853563000000001,
+      "text": "the available history,",
+      "raw_recognition": "the available history,",
+      "start": 11.474104308390022,
+      "end": 12.973560090702946
+    },
+    {
+      "source_start": 12.853563000000001,
+      "source_end": 15.7957815,
+      "text": "and the notes attached to previous calls.",
+      "raw_recognition": "and the notes attached to previous calls.",
+      "start": 12.973560090702946,
+      "end": 15.915782312925169
+    },
+    {
+      "source_start": 15.7957815,
+      "source_end": 19.901875,
+      "text": "Here's the second experience GRINDCTRL is proposing for Concrete.",
+      "raw_recognition": "Here's the second experience grind control is proposing for concrete.",
+      "start": 15.915782312925169,
+      "end": 20.0218820861678
+    },
+    {
+      "source_start": 19.901875,
+      "source_end": 21.9461565,
+      "text": "A clearer customer view.",
+      "raw_recognition": "A clearer customer view.",
+      "start": 20.0218820861678,
+      "end": 22.066167800453517
+    },
+    {
+      "source_start": 21.9461565,
+      "source_end": 26.755906000000003,
+      "text": "connected to incoming calls through Genesys and the appropriate Zoho records.",
+      "raw_recognition": "connected to incoming calls through Genesis and the appropriate Zoho records.",
+      "start": 22.066167800453517,
+      "end": 26.87589569160998
+    },
+    {
+      "source_start": 26.755906000000003,
+      "source_end": 29.1901875,
+      "text": "The caller number initiates a lookup.",
+      "raw_recognition": "The caller number initiates a lookup.",
+      "start": 26.87589569160998,
+      "end": 29.310181405895694
+    },
+    {
+      "source_start": 29.1901875,
+      "source_end": 31.0928125,
+      "text": "After a reliable match,",
+      "raw_recognition": "After a reliable match,",
+      "start": 29.310181405895694,
+      "end": 31.21281179138322
+    },
+    {
+      "source_start": 31.0928125,
+      "source_end": 34.925812500000006,
+      "text": "The agent sees the customer's name and permitted contact details.",
+      "raw_recognition": "The agent sees the customer's name and permitted contact details.",
+      "start": 31.21281179138322,
+      "end": 35.04580498866213
+    },
+    {
+      "source_start": 34.925812500000006,
+      "source_end": 36.9326875,
+      "text": "including email when available.",
+      "raw_recognition": "including email when available.",
+      "start": 35.04580498866213,
+      "end": 37.05269841269841
+    },
+    {
+      "source_start": 36.9326875,
+      "source_end": 39.780437,
+      "text": "Missing information is marked unavailable.",
+      "raw_recognition": "Missing information is marked unavailable.",
+      "start": 37.05269841269841,
+      "end": 39.90043083900226
+    },
+    {
+      "source_start": 39.780437,
+      "source_end": 44.333656500000004,
+      "text": "The same proposed view can show the customer segment from Concrete Icons Club.",
+      "raw_recognition": "The same proposed view can show the customer segment from Concrete Icons Club.",
+      "start": 39.90043083900226,
+      "end": 44.453650793650795
+    },
+    {
+      "source_start": 44.333656500000004,
+      "source_end": 45.309312500000004,
+      "text": "Lifestyle.",
+      "raw_recognition": "Lifestyle.",
+      "start": 44.453650793650795,
+      "end": 45.429319727891155
+    },
+    {
+      "source_start": 45.309312500000004,
+      "source_end": 46.999375,
+      "text": "Prestige or Elite.",
+      "raw_recognition": "prestige or elite.",
+      "start": 45.429319727891155,
+      "end": 47.119365079365075
+    },
+    {
+      "source_start": 46.999375,
+      "source_end": 51.653000500000005,
+      "text": "That membership information must come from a trusted, updated source.",
+      "raw_recognition": "That membership information must come from a trusted, updated source.",
+      "start": 47.119365079365075,
+      "end": 51.77299319727891
+    },
+    {
+      "source_start": 51.653000500000005,
+      "source_end": 54.075937499999995,
+      "text": "It cannot be guessed from the caller's number.",
+      "raw_recognition": "It cannot be guessed from the caller's number.",
+      "start": 51.77299319727891,
+      "end": 54.1959410430839
+    },
+    {
+      "source_start": 54.075937499999995,
+      "source_end": 58.073468500000004,
+      "text": "and no membership benefit should be assumed without confirmation.",
+      "raw_recognition": "and no membership benefit should be assumed without confirmation.",
+      "start": 54.1959410430839,
+      "end": 58.1934693877551
+    },
+    {
+      "source_start": 58.073468500000004,
+      "source_end": 60.996812500000004,
+      "text": "But a profile is only the starting point.",
+      "raw_recognition": "But a profile is only the starting point.",
+      "start": 58.1934693877551,
+      "end": 61.11680272108843
+    },
+    {
+      "source_start": 60.996812500000004,
+      "source_end": 63.3459685,
+      "text": "Call level history matters more.",
+      "raw_recognition": "Call level history matters more.",
+      "start": 61.11680272108843,
+      "end": 63.46596371882086
+    },
+    {
+      "source_start": 63.3459685,
+      "source_end": 67.54009400000001,
+      "text": "Imagine a simple timeline showing every available call activity.",
+      "raw_recognition": "Imagine a simple timeline showing every available call activity.",
+      "start": 63.46596371882086,
+      "end": 67.66009070294785
+    },
+    {
+      "source_start": 67.54009400000001,
+      "source_end": 68.531656,
+      "text": "Its date?",
+      "raw_recognition": "Its date?",
+      "start": 67.66009070294785,
+      "end": 68.65165532879818
+    },
+    {
+      "source_start": 68.531656,
+      "source_end": 69.2950625,
+      "text": "agent",
+      "raw_recognition": "agent",
+      "start": 68.65165532879818,
+      "end": 69.4150566893424
+    },
+    {
+      "source_start": 69.2950625,
+      "source_end": 71.951656,
+      "text": "and notes for that specific interaction.",
+      "raw_recognition": "and notes for that specific interaction.",
+      "start": 69.4150566893424,
+      "end": 72.07165532879819
+    },
+    {
+      "source_start": 71.951656,
+      "source_end": 73.09231249999999,
+      "text": "For example,",
+      "raw_recognition": "For example,",
+      "start": 72.07165532879819,
+      "end": 73.21231292517007
+    },
+    {
+      "source_start": 73.09231249999999,
+      "source_end": 76.0968125,
+      "text": "Last week's call concerned an exchange request.",
+      "raw_recognition": "Last week's call concerned an exchange request.",
+      "start": 73.21231292517007,
+      "end": 76.21680272108844
+    },
+    {
+      "source_start": 76.0968125,
+      "source_end": 79.2775625,
+      "text": "The employee recorded that the branch would review the matter.",
+      "raw_recognition": "The employee recorded that the branch would review the matter.",
+      "start": 76.21680272108844,
+      "end": 79.39757369614513
+    },
+    {
+      "source_start": 79.2775625,
+      "source_end": 81.39834400000001,
+      "text": "When the customer calls again today,",
+      "raw_recognition": "When the customer calls again today,",
+      "start": 79.39757369614513,
+      "end": 81.51834467120182
+    },
+    {
+      "source_start": 81.39834400000001,
+      "source_end": 85.863,
+      "text": "The new agent opens that particular call and reads its actual note.",
+      "raw_recognition": "The new agent opens that particular call and reads its actual note.",
+      "start": 81.51834467120182,
+      "end": 85.98299319727892
+    },
+    {
+      "source_start": 85.863,
+      "source_end": 87.8557815,
+      "text": "They see what was documented.",
+      "raw_recognition": "They see what was documented.",
+      "start": 85.98299319727892,
+      "end": 87.97578231292518
+    },
+    {
+      "source_start": 87.8557815,
+      "source_end": 90.804625,
+      "text": "Without confusing a call note with a ticket comment...",
+      "raw_recognition": "Without confusing a call note with a ticket comment...",
+      "start": 87.97578231292518,
+      "end": 90.92462585034014
+    },
+    {
+      "source_start": 90.804625,
+      "source_end": 91.9140005,
+      "text": "AI summary,",
+      "raw_recognition": "AI summary,",
+      "start": 90.92462585034014,
+      "end": 92.03399092970523
+    },
+    {
+      "source_start": 91.9140005,
+      "source_end": 93.4388125,
+      "text": "or a completed action.",
+      "raw_recognition": "or a completed action.",
+      "start": 92.03399092970523,
+      "end": 93.55882086167802
+    },
+    {
+      "source_start": 93.4388125,
+      "source_end": 95.33375000000001,
+      "text": "During today's conversation,",
+      "raw_recognition": "During today's conversation,",
+      "start": 93.55882086167802,
+      "end": 95.45374149659864
+    },
+    {
+      "source_start": 95.33375000000001,
+      "source_end": 99.6317185,
+      "text": "The agent records a new note against the right interaction if supported.",
+      "raw_recognition": "The agent records a new note against the right interaction if supported.",
+      "start": 95.45374149659864,
+      "end": 99.75172335600908
+    },
+    {
+      "source_start": 99.6317185,
+      "source_end": 102.412844,
+      "text": "Notes should belong to the call they describe.",
+      "raw_recognition": "Notes should belong to the call they describe.",
+      "start": 99.75172335600908,
+      "end": 102.53283446712018
+    },
+    {
+      "source_start": 102.412844,
+      "source_end": 104.2030625,
+      "text": "not a generic summary.",
+      "raw_recognition": "not a generic summary.",
+      "start": 102.53283446712018,
+      "end": 104.3230612244898
+    },
+    {
+      "source_start": 104.2030625,
+      "source_end": 107.838438,
+      "text": "And the interface must handle uncertainty honestly.",
+      "raw_recognition": "And the interface must handle uncertainty honestly.",
+      "start": 104.3230612244898,
+      "end": 107.95843537414966
+    },
+    {
+      "source_start": 107.838438,
+      "source_end": 109.43424999999999,
+      "text": "No matching contact?",
+      "raw_recognition": "No matching contact?",
+      "start": 107.95843537414966,
+      "end": 109.5542403628118
+    },
+    {
+      "source_start": 109.43424999999999,
+      "source_end": 111.0975,
+      "text": "offer a manual search.",
+      "raw_recognition": "offer a manual search.",
+      "start": 109.5542403628118,
+      "end": 111.21750566893425
+    },
+    {
+      "source_start": 111.0975,
+      "source_end": 112.554187,
+      "text": "Multiple matches?",
+      "raw_recognition": "Multiple matches?",
+      "start": 111.21750566893425,
+      "end": 112.67419501133787
+    },
+    {
+      "source_start": 112.554187,
+      "source_end": 115.179,
+      "text": "Ask the agent to select the right record.",
+      "raw_recognition": "Ask the agent to select the right record.",
+      "start": 112.67419501133787,
+      "end": 115.2990022675737
+    },
+    {
+      "source_start": 115.179,
+      "source_end": 116.81031250000001,
+      "text": "Missing membership data?",
+      "raw_recognition": "Missing membership data?",
+      "start": 115.2990022675737,
+      "end": 116.93031746031747
+    },
+    {
+      "source_start": 116.81031250000001,
+      "source_end": 118.3105625,
+      "text": "Mark it unavailable.",
+      "raw_recognition": "Market unavailable.",
+      "start": 116.93031746031747,
+      "end": 118.43056689342404
+    },
+    {
+      "source_start": 118.3105625,
+      "source_end": 120.0924065,
+      "text": "Lookup temporarily down?",
+      "raw_recognition": "Look up temporarily down.",
+      "start": 118.43056689342404,
+      "end": 120.21240362811791
+    },
+    {
+      "source_start": 120.0924065,
+      "source_end": 122.204656,
+      "text": "Never block the incoming call.",
+      "raw_recognition": "Never block the incoming call.",
+      "start": 120.21240362811791,
+      "end": 122.3246485260771
+    },
+    {
+      "source_start": 122.204656,
+      "source_end": 127.597906,
+      "text": "Before implementation, we'll verify where call activities and notes actually live.",
+      "raw_recognition": "Before implementation, we'll verify where call activities and notes actually live.",
+      "start": 122.3246485260771,
+      "end": 127.71791383219956
+    },
+    {
+      "source_start": 127.597906,
+      "source_end": 129.427344,
+      "text": "which integrations are supported,",
+      "raw_recognition": "which integrations are supported,",
+      "start": 127.71791383219956,
+      "end": 129.54734693877552
+    },
+    {
+      "source_start": 129.427344,
+      "source_end": 131.8644995,
+      "text": "and who is allowed to see each field.",
+      "raw_recognition": "and who is allowed to see each field.",
+      "start": 129.54734693877552,
+      "end": 131.98448979591836
+    },
+    {
+      "source_start": 131.8644995,
+      "source_end": 135.7033755,
+      "text": "Then we'll test with authorized fictional customer records.",
+      "raw_recognition": "Then we'll test with authorized fictional customer records.",
+      "start": 131.98448979591836,
+      "end": 135.82337868480727
+    },
+    {
+      "source_start": 135.7033755,
+      "source_end": 138.566344,
+      "text": "The outcome we're aiming for is continuity.",
+      "raw_recognition": "The outcome we're aiming for is continuity.",
+      "start": 135.82337868480727,
+      "end": 138.6863492063492
+    },
+    {
+      "source_start": 138.566344,
+      "source_end": 143.1251565,
+      "text": "a more informed employee, and a customer who doesn't have to start from zero.",
+      "raw_recognition": "a more informed employee, and a customer who doesn't have to start from zero.",
+      "start": 138.6863492063492,
+      "end": 143.24514739229025
+    },
+    {
+      "source_start": 143.1251565,
+      "source_end": 144.88,
+      "text": "every single time.",
+      "raw_recognition": "every single time.",
+      "start": 143.24514739229025,
+      "end": 145.0
+    }
+  ],
+  "loudness": {
+    "source": {
+      "input_i": "-22.95",
+      "input_tp": "-3.21",
+      "input_lra": "3.60",
+      "input_thresh": "-33.47",
+      "output_i": "-18.28",
+      "output_tp": "-1.50",
+      "output_lra": "3.40",
+      "output_thresh": "-28.81",
+      "normalization_type": "dynamic",
+      "target_offset": "0.28"
+    },
+    "pre_mix_voice_gain_db": 4.949999999999999,
+    "output": {
+      "input_i": "-14.97",
+      "input_tp": "1.74",
+      "input_lra": "3.60",
+      "input_thresh": "-25.72",
+      "output_i": "-16.20",
+      "output_tp": "-1.50",
+      "output_lra": "3.50",
+      "output_thresh": "-26.87",
+      "normalization_type": "dynamic",
+      "target_offset": "0.20"
+    }
+  },
+  "exception": null
+}

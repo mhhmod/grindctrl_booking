@@ -1,0 +1,428 @@
+[
+  {
+    "film": "01",
+    "file": "01_Concrete_Genesys_ZohoDesk_ScreenPop_150s.mp4",
+    "bytes": 8166091,
+    "sha256": "46012d5225f93c692056a38333ba88bbf4d03e12d516df6992d876b81618a5fc",
+    "video": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 4500,
+      "decoded_frames": 4500,
+      "duration": 150.0,
+      "codec": "h264"
+    },
+    "audio": {
+      "duration": 150.0,
+      "codec": "aac",
+      "channels": 2,
+      "integrated_lufs": -16.06,
+      "true_peak_dbtp": -1.4,
+      "windows": [
+        {
+          "source_sec": 4.1328,
+          "target_sec": 4.372789115646259,
+          "lag_samples": 0,
+          "correlation": 0.998913320025505
+        },
+        {
+          "source_sec": 17.659563636363636,
+          "target_sec": 17.899569160997732,
+          "lag_samples": 0,
+          "correlation": 0.9995011575236765
+        },
+        {
+          "source_sec": 29.086327272727267,
+          "target_sec": 29.326326530612246,
+          "lag_samples": 0,
+          "correlation": 0.9990692514324003
+        },
+        {
+          "source_sec": 42.01309090909091,
+          "target_sec": 42.253083900226756,
+          "lag_samples": 0,
+          "correlation": 0.9994125241305076
+        },
+        {
+          "source_sec": 54.939854545454544,
+          "target_sec": 55.179863945578234,
+          "lag_samples": 0,
+          "correlation": 0.9993252173156836
+        },
+        {
+          "source_sec": 68.16661818181817,
+          "target_sec": 68.40662131519274,
+          "lag_samples": 0,
+          "correlation": 0.9995010425795628
+        },
+        {
+          "source_sec": 80.19338181818182,
+          "target_sec": 80.43337868480725,
+          "lag_samples": 0,
+          "correlation": 0.9995224098286734
+        },
+        {
+          "source_sec": 92.22014545454546,
+          "target_sec": 92.46013605442177,
+          "lag_samples": 0,
+          "correlation": 0.9996490152971966
+        },
+        {
+          "source_sec": 104.8469090909091,
+          "target_sec": 105.08691609977325,
+          "lag_samples": 0,
+          "correlation": 0.9993544055407992
+        },
+        {
+          "source_sec": 117.47367272727273,
+          "target_sec": 117.71367346938776,
+          "lag_samples": 0,
+          "correlation": 0.9992265280140697
+        },
+        {
+          "source_sec": 131.30043636363635,
+          "target_sec": 131.54043083900225,
+          "lag_samples": 0,
+          "correlation": 0.9887977097124006
+        },
+        {
+          "source_sec": 143.02719999999997,
+          "target_sec": 143.26721088435374,
+          "lag_samples": 0,
+          "correlation": 0.9995615110024434
+        }
+      ],
+      "minimum_correlation": 0.9887977097124006
+    },
+    "source": {
+      "file": "01_Concrete_Genesys_ZohoDesk_ScreenPop_EN.mp3",
+      "sha256": "174dddeeb08dcf83dc324ce1dd8b960fb1ddc6852c9585e7f35cf8d050c74114",
+      "decoded_duration": 147.76,
+      "samples": 6516216,
+      "all_source_samples_included_exactly_once": true,
+      "continuous_uncut": true
+    },
+    "inserted_pause_checks": [],
+    "music_backed_intervals": [
+      {
+        "start": 148.0,
+        "end": 150.0,
+        "rms_dbfs": -44.91427962209738
+      }
+    ],
+    "subtitle_cues": 53,
+    "exception": null
+  },
+  {
+    "film": "02",
+    "file": "02_Concrete_Customer360_CallActivities_150s.mp4",
+    "bytes": 8254859,
+    "sha256": "e6899249a6cd276cc02ac9f8a93fac2fd8ac116eb444dfaabca9026a3c68cbf8",
+    "video": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 4500,
+      "decoded_frames": 4500,
+      "duration": 150.0,
+      "codec": "h264"
+    },
+    "audio": {
+      "duration": 150.0,
+      "codec": "aac",
+      "channels": 2,
+      "integrated_lufs": -16.22,
+      "true_peak_dbtp": -1.46,
+      "windows": [
+        {
+          "source_sec": 4.9464,
+          "target_sec": 5.066394557823129,
+          "lag_samples": 0,
+          "correlation": 0.9992488086413944
+        },
+        {
+          "source_sec": 16.12705454545454,
+          "target_sec": 16.24705215419501,
+          "lag_samples": 0,
+          "correlation": 0.9997762611275718
+        },
+        {
+          "source_sec": 29.70770909090909,
+          "target_sec": 29.827709750566893,
+          "lag_samples": 0,
+          "correlation": 0.9994410251429857
+        },
+        {
+          "source_sec": 41.18836363636364,
+          "target_sec": 41.30836734693877,
+          "lag_samples": 0,
+          "correlation": 0.9991518472391977
+        },
+        {
+          "source_sec": 54.469018181818186,
+          "target_sec": 54.589024943310655,
+          "lag_samples": 0,
+          "correlation": 0.999844192644082
+        },
+        {
+          "source_sec": 65.64967272727273,
+          "target_sec": 65.76968253968253,
+          "lag_samples": 0,
+          "correlation": 0.9993859992727244
+        },
+        {
+          "source_sec": 79.23032727272727,
+          "target_sec": 79.35031746031746,
+          "lag_samples": 0,
+          "correlation": 0.9994950041182136
+        },
+        {
+          "source_sec": 91.01098181818182,
+          "target_sec": 91.13097505668934,
+          "lag_samples": 0,
+          "correlation": 0.9993674935168035
+        },
+        {
+          "source_sec": 103.99163636363636,
+          "target_sec": 104.11163265306122,
+          "lag_samples": 0,
+          "correlation": 0.9991092407396267
+        },
+        {
+          "source_sec": 115.4722909090909,
+          "target_sec": 115.5922902494331,
+          "lag_samples": 0,
+          "correlation": 0.9996053125950193
+        },
+        {
+          "source_sec": 127.85294545454546,
+          "target_sec": 127.972947845805,
+          "lag_samples": 0,
+          "correlation": 0.9997462781122682
+        },
+        {
+          "source_sec": 140.53359999999998,
+          "target_sec": 140.65360544217688,
+          "lag_samples": 0,
+          "correlation": 0.9995999533255806
+        }
+      ],
+      "minimum_correlation": 0.9991092407396267
+    },
+    "source": {
+      "file": "02_Concrete_Customer360_CallActivities_EN.mp3",
+      "sha256": "1c8ef685b0cfbcc5ca50e00e503b9247a4d1ce670e0ee6c8a741b48a80fba448",
+      "decoded_duration": 144.88,
+      "samples": 6389208,
+      "all_source_samples_included_exactly_once": true,
+      "continuous_uncut": true
+    },
+    "inserted_pause_checks": [],
+    "music_backed_intervals": [
+      {
+        "start": 145.0,
+        "end": 150.0,
+        "rms_dbfs": -38.97886713638321
+      }
+    ],
+    "subtitle_cues": 55,
+    "exception": null
+  },
+  {
+    "film": "03",
+    "file": "03_GRINDCTRL_TryOn_StoreChat_150s.mp4",
+    "bytes": 10030406,
+    "sha256": "b340a5344d893e176b045c799aa88bf353ed46dd67213f87df2d0918985b6feb",
+    "video": {
+      "width": 1920,
+      "height": 1080,
+      "fps": "30/1",
+      "frames": 4500,
+      "decoded_frames": 4500,
+      "duration": 150.0,
+      "codec": "h264"
+    },
+    "audio": {
+      "duration": 150.0,
+      "codec": "aac",
+      "channels": 2,
+      "integrated_lufs": -16.12,
+      "true_peak_dbtp": -1.4,
+      "windows": [
+        {
+          "source_sec": 1.3667206349206351,
+          "target_sec": 2.4867120181405897,
+          "lag_samples": 0,
+          "correlation": 0.9989821595830889
+        },
+        {
+          "source_sec": 7.324002267573696,
+          "target_sec": 8.443990929705215,
+          "lag_samples": 0,
+          "correlation": 0.9994331618160769
+        },
+        {
+          "source_sec": 14.048004535147392,
+          "target_sec": 15.168004535147393,
+          "lag_samples": 0,
+          "correlation": 0.9998102058356642
+        },
+        {
+          "source_sec": 20.472006802721086,
+          "target_sec": 21.59201814058957,
+          "lag_samples": -1,
+          "correlation": 0.99955893873462
+        },
+        {
+          "source_sec": 26.72928843537415,
+          "target_sec": 27.849297052154196,
+          "lag_samples": 0,
+          "correlation": 0.9973746048993636
+        },
+        {
+          "source_sec": 28.708526530612243,
+          "target_sec": 31.828526077097507,
+          "lag_samples": 0,
+          "correlation": 0.9997785599829702
+        },
+        {
+          "source_sec": 33.026428571428575,
+          "target_sec": 36.14643990929705,
+          "lag_samples": 0,
+          "correlation": 0.9990813157359343
+        },
+        {
+          "source_sec": 36.15684807256236,
+          "target_sec": 39.27684807256236,
+          "lag_samples": 0,
+          "correlation": 0.9996401487246918
+        },
+        {
+          "source_sec": 41.38726757369614,
+          "target_sec": 44.50725623582766,
+          "lag_samples": 0,
+          "correlation": 0.9991533531518599
+        },
+        {
+          "source_sec": 43.60516961451247,
+          "target_sec": 46.72517006802721,
+          "lag_samples": 0,
+          "correlation": 0.9989760972888352
+        },
+        {
+          "source_sec": 48.21915532879819,
+          "target_sec": 53.33916099773243,
+          "lag_samples": 0,
+          "correlation": 0.9994496937182147
+        },
+        {
+          "source_sec": 55.42293083900227,
+          "target_sec": 60.542925170068024,
+          "lag_samples": 0,
+          "correlation": 0.999381616048202
+        },
+        {
+          "source_sec": 66.0281746031746,
+          "target_sec": 71.14816326530612,
+          "lag_samples": 0,
+          "correlation": 0.9997359116649482
+        },
+        {
+          "source_sec": 74.83341836734695,
+          "target_sec": 79.95342403628118,
+          "lag_samples": 0,
+          "correlation": 0.9997315383089982
+        },
+        {
+          "source_sec": 82.33719387755103,
+          "target_sec": 87.45718820861678,
+          "lag_samples": 0,
+          "correlation": 0.9991842104912887
+        },
+        {
+          "source_sec": 88.57955578231294,
+          "target_sec": 95.69954648526077,
+          "lag_samples": 0,
+          "correlation": 0.9993116590096598
+        },
+        {
+          "source_sec": 99.39899659863946,
+          "target_sec": 106.5190022675737,
+          "lag_samples": 0,
+          "correlation": 0.9994759409754854
+        },
+        {
+          "source_sec": 111.55933106575964,
+          "target_sec": 118.67931972789115,
+          "lag_samples": 0,
+          "correlation": 0.9994664192223115
+        },
+        {
+          "source_sec": 124.91966553287982,
+          "target_sec": 132.0396598639456,
+          "lag_samples": 0,
+          "correlation": 0.9995019550091293
+        },
+        {
+          "source_sec": 134.83910634920633,
+          "target_sec": 141.9591156462585,
+          "lag_samples": 0,
+          "correlation": 0.995868419225335
+        }
+      ],
+      "minimum_correlation": 0.995868419225335
+    },
+    "source": {
+      "file": "03_GRINDCTRL_TryOn_StoreChat_EN.mp3",
+      "sha256": "35cbc90f37d7e74aa8a35d4f4834a30d03d1e4a85d618f803b2da7211221c4aa",
+      "decoded_duration": 138.88,
+      "samples": 6124608,
+      "all_source_samples_included_exactly_once": true,
+      "continuous_uncut": false
+    },
+    "inserted_pause_checks": [
+      {
+        "source_cut_sec": 28.096009070294784,
+        "near_cut_rms_dbfs": -63.45003439939698
+      },
+      {
+        "source_cut_sec": 45.417687074829935,
+        "near_cut_rms_dbfs": -60.29022389867859
+      },
+      {
+        "source_cut_sec": 85.43866213151928,
+        "near_cut_rms_dbfs": -62.80556407918518
+      }
+    ],
+    "music_backed_intervals": [
+      {
+        "start": 0,
+        "end": 1.12,
+        "rms_dbfs": -53.12127881716804
+      },
+      {
+        "start": 29.216009070294785,
+        "end": 31.216009070294785,
+        "rms_dbfs": -39.6580218788371
+      },
+      {
+        "start": 48.53768707482993,
+        "end": 50.53768707482993,
+        "rms_dbfs": -38.06503013274403
+      },
+      {
+        "start": 90.55866213151928,
+        "end": 92.55866213151928,
+        "rms_dbfs": -39.240458330587515
+      },
+      {
+        "start": 146.0,
+        "end": 150.0,
+        "rms_dbfs": -41.30037114358376
+      }
+    ],
+    "subtitle_cues": 51,
+    "exception": "User explicitly approved supplied138.88s narration plus11.12s of distributed purposeful visual content"
+  }
+]

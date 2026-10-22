@@ -1,0 +1,21 @@
+Picture someone browsing a fashion store online. They find a dress, a jacket, or a linen shirt they love. The photographs look beautiful, but one question remains: what could this actually look like on me?
+
+Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience. On a supported Shopify product page, the shopper selects an item, taps Try it on with AI, and uploads a photo. The system generates a visual preview of that shopper wearing the selected garment.
+
+It's important to understand what this means. The preview helps someone explore a style. It isn't an exact measurement, a fit guarantee, or a replacement for real product information.
+
+Now the shopper has another question. Does the shirt run oversized? Is there a size guide? What is the delivery policy? This is where Store Chat enters the same shopping journey.
+
+Instead of leaving the product page and searching across the website, the shopper opens the store assistant. Store Chat answers in English or Arabic using the information the merchant has supplied. Accurate answers come from store knowledge, not from made-up stock levels or promises.
+
+If human help is needed, the AI hands off with a reason. The team picks up the conversation in a shared inbox, assigns it, adds a private note, and replies in context.
+
+Where appropriately configured and verified, read-only order information can also support relevant questions. But the assistant shouldn't change orders, promise refunds, or imply an integration exists when it hasn't been enabled.
+
+Let's connect the experience. A shopper sees a garment, previews it on their own photo, asks about the size, and gets a helpful answer. If the question needs judgment, a real person continues from the conversation already started.
+
+For a fashion brand, the two tools belong to one journey. Virtual Try-On helps people picture the product. Store Chat helps them understand it. The merchant's team stays in control when it matters.
+
+See the live product experience, explore the demo, and discover how Grind Control can fit your Shopify fashion store.
+
+Grind Control. Let shoppers see it. Let them ask.

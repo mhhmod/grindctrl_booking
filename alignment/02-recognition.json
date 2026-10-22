@@ -1,0 +1,1149 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 2.3541565,
+    "text": "A customer calls concrete again.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "A customer calls concrete again.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " A",
+        " customer",
+        " calls",
+        " concrete",
+        " again",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " A customer calls concrete again."
+      ]
+    }
+  },
+  {
+    "index": 1,
+    "start": 2.3541565,
+    "end": 7.456625000000001,
+    "text": "What should the next customer service agent know before asking the first question?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "What should the next customer service agent know before asking the first question?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " What",
+        " should",
+        " the",
+        " next",
+        " customer",
+        " service",
+        " agent",
+        " know",
+        " before",
+        " asking",
+        " the",
+        " first",
+        " question",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " What should the next customer service agent know before asking the first question?"
+      ]
+    }
+  },
+  {
+    "index": 2,
+    "start": 7.456625000000001,
+    "end": 15.7957815,
+    "text": "Not just a phone number, but the correct customer profile, the available history, and the notes attached to previous calls.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Not just a phone number, but the correct customer profile, the available history, and the notes attached to previous calls.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Not",
+        " just",
+        " a",
+        " phone",
+        " number",
+        ",",
+        " but",
+        " the",
+        " correct",
+        " customer",
+        " profile",
+        ",",
+        " the",
+        " available",
+        " history",
+        ",",
+        " and",
+        " the",
+        " notes",
+        " attached",
+        " to",
+        " previous",
+        " calls",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        8.0
+      ],
+      "segment_texts": [
+        " Not just a phone number, but the correct customer profile, the available history, and the notes attached to previous calls."
+      ]
+    }
+  },
+  {
+    "index": 3,
+    "start": 15.7957815,
+    "end": 19.901875,
+    "text": "Here's the second experience grind control is proposing for concrete.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Here's the second experience grind control is proposing for concrete.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Here",
+        "'s",
+        " the",
+        " second",
+        " experience",
+        " grind",
+        " control",
+        " is",
+        " proposing",
+        " for",
+        " concrete",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " Here's the second experience grind control is proposing for concrete."
+      ]
+    }
+  },
+  {
+    "index": 4,
+    "start": 19.901875,
+    "end": 26.755906000000003,
+    "text": "A clearer customer view, connected to incoming calls through Genesis and the appropriate Zoho records.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "A clearer customer view, connected to incoming calls through Genesis and the appropriate Zoho records.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " A",
+        " clearer",
+        " customer",
+        " view",
+        ",",
+        " connected",
+        " to",
+        " incoming",
+        " calls",
+        " through",
+        " Genesis",
+        " and",
+        " the",
+        " appropriate",
+        " Zo",
+        "ho",
+        " records",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        7.0
+      ],
+      "segment_texts": [
+        " A clearer customer view, connected to incoming calls through Genesis and the appropriate Zoho records."
+      ]
+    }
+  },
+  {
+    "index": 5,
+    "start": 26.755906000000003,
+    "end": 29.1901875,
+    "text": "The caller number initiates a lookup.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The caller number initiates a lookup.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " caller",
+        " number",
+        " initi",
+        "ates",
+        " a",
+        " look",
+        "up",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " The caller number initiates a lookup."
+      ]
+    }
+  },
+  {
+    "index": 6,
+    "start": 29.1901875,
+    "end": 36.9326875,
+    "text": "After a reliable match, the agent sees the customer's name and permitted contact details, including email when available.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "After a reliable match, the agent sees the customer's name and permitted contact details, including email when available.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " After",
+        " a",
+        " reliable",
+        " match",
+        ",",
+        " the",
+        " agent",
+        " sees",
+        " the",
+        " customer",
+        "'s",
+        " name",
+        " and",
+        " permitted",
+        " contact",
+        " details",
+        ",",
+        " including",
+        " email",
+        " when",
+        " available",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        8.0
+      ],
+      "segment_texts": [
+        " After a reliable match, the agent sees the customer's name and permitted contact details, including email when available."
+      ]
+    }
+  },
+  {
+    "index": 7,
+    "start": 36.9326875,
+    "end": 39.780437,
+    "text": "Missing information is marked unavailable.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Missing information is marked unavailable.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Miss",
+        "ing",
+        " information",
+        " is",
+        " marked",
+        " unav",
+        "ailable",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Missing information is marked unavailable."
+      ]
+    }
+  },
+  {
+    "index": 8,
+    "start": 39.780437,
+    "end": 44.333656500000004,
+    "text": "The same proposed view can show the customer segment from Concrete Icons Club.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The same proposed view can show the customer segment from Concrete Icons Club.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " same",
+        " proposed",
+        " view",
+        " can",
+        " show",
+        " the",
+        " customer",
+        " segment",
+        " from",
+        " Conc",
+        "rete",
+        " I",
+        "cons",
+        " Club",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.5
+      ],
+      "segment_texts": [
+        " The same proposed view can show the customer segment from Concrete Icons Club."
+      ]
+    }
+  },
+  {
+    "index": 9,
+    "start": 44.333656500000004,
+    "end": 58.073468500000004,
+    "text": "lifestyle, prestige, or elite. That membership information must come from a trusted, updated source. It cannot be guessed from the caller's number, and no membership benefit should be assumed without confirmation.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "lifestyle, prestige, or elite. That membership information must come from a trusted, updated source. It cannot be guessed from the caller's number, and no membership benefit should be assumed without confirmation.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " lifestyle",
+        ",",
+        " prestige",
+        ",",
+        " or",
+        " elite",
+        ".",
+        " That",
+        " membership",
+        " information",
+        " must",
+        " come",
+        " from",
+        " a",
+        " trusted",
+        ",",
+        " updated",
+        " source",
+        ".",
+        " It",
+        " cannot",
+        " be",
+        " guessed",
+        " from",
+        " the",
+        " caller",
+        "'s",
+        " number",
+        ",",
+        " and",
+        " no",
+        " membership",
+        " benefit",
+        " should",
+        " be",
+        " assumed",
+        " without",
+        " confirmation",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        2.8,
+        7.4,
+        9.9
+      ],
+      "segment_durations": [
+        2.8,
+        4.6,
+        2.5,
+        4.0
+      ],
+      "segment_texts": [
+        " lifestyle, prestige, or elite.",
+        " That membership information must come from a trusted, updated source.",
+        " It cannot be guessed from the caller's number,",
+        " and no membership benefit should be assumed without confirmation."
+      ]
+    }
+  },
+  {
+    "index": 10,
+    "start": 58.073468500000004,
+    "end": 60.996812500000004,
+    "text": "But a profile is only the starting point.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "But a profile is only the starting point.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " But",
+        " a",
+        " profile",
+        " is",
+        " only",
+        " the",
+        " starting",
+        " point",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " But a profile is only the starting point."
+      ]
+    }
+  },
+  {
+    "index": 11,
+    "start": 60.996812500000004,
+    "end": 63.3459685,
+    "text": "Call level history matters more.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Call level history matters more.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Call",
+        " level",
+        " history",
+        " matters",
+        " more",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Call level history matters more."
+      ]
+    }
+  },
+  {
+    "index": 12,
+    "start": 63.3459685,
+    "end": 71.951656,
+    "text": "Imagine a simple timeline showing every available call activity, its date, agent, and notes for that specific interaction.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Imagine a simple timeline showing every available call activity, its date, agent, and notes for that specific interaction.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Imagine",
+        " a",
+        " simple",
+        " timeline",
+        " showing",
+        " every",
+        " available",
+        " call",
+        " activity",
+        ",",
+        " its",
+        " date",
+        ",",
+        " agent",
+        ",",
+        " and",
+        " notes",
+        " for",
+        " that",
+        " specific",
+        " interaction",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        8.5
+      ],
+      "segment_texts": [
+        " Imagine a simple timeline showing every available call activity, its date, agent, and notes for that specific interaction."
+      ]
+    }
+  },
+  {
+    "index": 13,
+    "start": 71.951656,
+    "end": 73.09231249999999,
+    "text": "For example,",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "For example,",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " For",
+        " example",
+        ","
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " For example,"
+      ]
+    }
+  },
+  {
+    "index": 14,
+    "start": 73.09231249999999,
+    "end": 76.0968125,
+    "text": "Last week's call concerned an exchange request.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Last week's call concerned an exchange request.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Last",
+        " week",
+        "'s",
+        " call",
+        " concerned",
+        " an",
+        " exchange",
+        " request",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Last week's call concerned an exchange request."
+      ]
+    }
+  },
+  {
+    "index": 15,
+    "start": 76.0968125,
+    "end": 79.2775625,
+    "text": "The employee recorded that the branch would review the matter.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The employee recorded that the branch would review the matter.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " employee",
+        " recorded",
+        " that",
+        " the",
+        " branch",
+        " would",
+        " review",
+        " the",
+        " matter",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " The employee recorded that the branch would review the matter."
+      ]
+    }
+  },
+  {
+    "index": 16,
+    "start": 79.2775625,
+    "end": 93.4388125,
+    "text": "When the customer calls again today, the new agent opens that particular call and reads its actual note. They see what was documented, without confusing a call note with a ticket comment, AI summary, or a completed action.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "When the customer calls again today, the new agent opens that particular call and reads its actual note. They see what was documented, without confusing a call note with a ticket comment, AI summary, or a completed action.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " When",
+        " the",
+        " customer",
+        " calls",
+        " again",
+        " today",
+        ",",
+        " the",
+        " new",
+        " agent",
+        " opens",
+        " that",
+        " particular",
+        " call",
+        " and",
+        " reads",
+        " its",
+        " actual",
+        " note",
+        ".",
+        " They",
+        " see",
+        " what",
+        " was",
+        " documented",
+        ",",
+        " without",
+        " confusing",
+        " a",
+        " call",
+        " note",
+        " with",
+        " a",
+        " ticket",
+        " comment",
+        ",",
+        " AI",
+        " summary",
+        ",",
+        " or",
+        " a",
+        " completed",
+        " action",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        6.64,
+        11.52
+      ],
+      "segment_durations": [
+        6.64,
+        4.88,
+        2.8
+      ],
+      "segment_texts": [
+        " When the customer calls again today, the new agent opens that particular call and reads its actual note.",
+        " They see what was documented, without confusing a call note with a ticket comment,",
+        " AI summary, or a completed action."
+      ]
+    }
+  },
+  {
+    "index": 17,
+    "start": 93.4388125,
+    "end": 99.6317185,
+    "text": "During today's conversation, the agent records a new note against the right interaction if supported.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "During today's conversation, the agent records a new note against the right interaction if supported.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " During",
+        " today",
+        "'s",
+        " conversation",
+        ",",
+        " the",
+        " agent",
+        " records",
+        " a",
+        " new",
+        " note",
+        " against",
+        " the",
+        " right",
+        " interaction",
+        " if",
+        " supported",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " During today's conversation, the agent records a new note against the right interaction if supported."
+      ]
+    }
+  },
+  {
+    "index": 18,
+    "start": 99.6317185,
+    "end": 104.2030625,
+    "text": "Notes should belong to the call they describe, not a generic summary.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Notes should belong to the call they describe, not a generic summary.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Notes",
+        " should",
+        " belong",
+        " to",
+        " the",
+        " call",
+        " they",
+        " describe",
+        ",",
+        " not",
+        " a",
+        " generic",
+        " summary",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " Notes should belong to the call they describe, not a generic summary."
+      ]
+    }
+  },
+  {
+    "index": 19,
+    "start": 104.2030625,
+    "end": 107.838438,
+    "text": "And the interface must handle uncertainty honestly.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "And the interface must handle uncertainty honestly.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " And",
+        " the",
+        " interface",
+        " must",
+        " handle",
+        " uncertainty",
+        " honestly",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " And the interface must handle uncertainty honestly."
+      ]
+    }
+  },
+  {
+    "index": 20,
+    "start": 107.838438,
+    "end": 111.0975,
+    "text": "No matching contact? Offer a manual search.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "No matching contact? Offer a manual search.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " No",
+        " matching",
+        " contact",
+        "?",
+        " Off",
+        "er",
+        " a",
+        " manual",
+        " search",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " No matching contact? Offer a manual search."
+      ]
+    }
+  },
+  {
+    "index": 21,
+    "start": 111.0975,
+    "end": 115.179,
+    "text": "Multiple matches, ask the agent to select the right record.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Multiple matches, ask the agent to select the right record.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Multiple",
+        " matches",
+        ",",
+        " ask",
+        " the",
+        " agent",
+        " to",
+        " select",
+        " the",
+        " right",
+        " record",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " Multiple matches, ask the agent to select the right record."
+      ]
+    }
+  },
+  {
+    "index": 22,
+    "start": 115.179,
+    "end": 118.3105625,
+    "text": "Missing membership data, market unavailable.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Missing membership data, market unavailable.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Miss",
+        "ing",
+        " membership",
+        " data",
+        ",",
+        " market",
+        " unav",
+        "ailable",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Missing membership data, market unavailable."
+      ]
+    }
+  },
+  {
+    "index": 23,
+    "start": 118.3105625,
+    "end": 122.204656,
+    "text": "Look up temporarily down. Never block the incoming call.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Look up temporarily down. Never block the incoming call.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Look",
+        " up",
+        " temporarily",
+        " down",
+        ".",
+        " Never",
+        " block",
+        " the",
+        " incoming",
+        " call",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " Look up temporarily down. Never block the incoming call."
+      ]
+    }
+  },
+  {
+    "index": 24,
+    "start": 122.204656,
+    "end": 138.566344,
+    "text": "Before implementation, we'll verify where call activities and notes actually live, which integrations are supported and who is allowed to see each field. Then we'll test with authorized fictional customer records. The outcome we're aiming for is continuity.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Before implementation, we'll verify where call activities and notes actually live, which integrations are supported and who is allowed to see each field. Then we'll test with authorized fictional customer records. The outcome we're aiming for is continuity.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Before",
+        " implementation",
+        ",",
+        " we",
+        "'ll",
+        " verify",
+        " where",
+        " call",
+        " activities",
+        " and",
+        " notes",
+        " actually",
+        " live",
+        ",",
+        " which",
+        " integr",
+        "ations",
+        " are",
+        " supported",
+        " and",
+        " who",
+        " is",
+        " allowed",
+        " to",
+        " see",
+        " each",
+        " field",
+        ".",
+        " Then",
+        " we",
+        "'ll",
+        " test",
+        " with",
+        " authorized",
+        " fictional",
+        " customer",
+        " records",
+        ".",
+        " The",
+        " outcome",
+        " we",
+        "'re",
+        " aiming",
+        " for",
+        " is",
+        " continuity",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        5.44,
+        9.76,
+        13.52
+      ],
+      "segment_durations": [
+        5.44,
+        4.32,
+        3.76,
+        2.88
+      ],
+      "segment_texts": [
+        " Before implementation, we'll verify where call activities and notes actually live,",
+        " which integrations are supported and who is allowed to see each field.",
+        " Then we'll test with authorized fictional customer records.",
+        " The outcome we're aiming for is continuity."
+      ]
+    }
+  },
+  {
+    "index": 25,
+    "start": 138.566344,
+    "end": 144.88,
+    "text": "a more informed employee, and a customer who doesn't have to start from zero every single time.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "a more informed employee, and a customer who doesn't have to start from zero every single time.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " a",
+        " more",
+        " informed",
+        " employee",
+        ",",
+        " and",
+        " a",
+        " customer",
+        " who",
+        " doesn",
+        "'t",
+        " have",
+        " to",
+        " start",
+        " from",
+        " zero",
+        " every",
+        " single",
+        " time",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.24
+      ],
+      "segment_texts": [
+        " a more informed employee, and a customer who doesn't have to start from zero every single time."
+      ]
+    }
+  }
+]

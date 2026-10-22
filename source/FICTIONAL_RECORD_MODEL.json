@@ -1,0 +1,46 @@
+{
+  "customer": {
+    "id": "DEMO-AHMED",
+    "name": "Ahmed M.",
+    "phone": "+20 10 \u2022\u2022\u2022\u2022 4821",
+    "email": "ahmed@example.com",
+    "membership": "Elite \u2014 illustrative trusted record"
+  },
+  "current_call": {
+    "id": "CALL-102",
+    "date": "2026-10-22 14:32",
+    "agent": "Salma"
+  },
+  "call_notes": [
+    {
+      "sourceSystem": "demo.interactions",
+      "interactionId": "CALL-101",
+      "callTime": "2026-10-15 11:08",
+      "author": "Maya",
+      "noteTime": "2026-10-15 11:12",
+      "text": "Customer requested an exchange. Branch review pending."
+    },
+    {
+      "sourceSystem": "demo.interactions",
+      "interactionId": "CALL-102",
+      "callTime": "2026-10-22 14:32",
+      "author": "Salma",
+      "noteTime": "2026-10-22 14:39",
+      "text": "Customer followed up; awaiting a confirmed branch update."
+    }
+  ],
+  "future_reader": {
+    "interactionId": "CALL-103",
+    "date": "2026-10-29",
+    "agent": "Youssef",
+    "retrieves_original_note_from": "CALL-102",
+    "original_author_remains": "Salma"
+  },
+  "separate_ticket_update": {
+    "ticketId": "DESK-2048",
+    "noteTime": "2026-10-20 14:05",
+    "text": "Awaiting branch review.",
+    "status": "Pending branch review"
+  },
+  "warning": "Entirely fictional. Call notes are not ticket updates, contact-global notes, AI summaries, transcripts or recordings."
+}

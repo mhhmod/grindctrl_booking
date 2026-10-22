@@ -1,0 +1,64 @@
+{
+  "checked_date": "2026-10-22",
+  "sources": [
+    {
+      "url": "https://help.mypurecloud.com/articles/screen-pop-in-the-genesys-cloud-browser-extensions/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://help.mypurecloud.com/articles/set-screen-pop-action/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://help.zoho.com/portal/en/kb/desk/activities/articles/adding-editing-and-deleting-calls",
+      "status": 200,
+      "final_url": "https://help.zoho.com/portal/en/kb/desk/activities/articles/adding-editing-and-deleting-calls",
+      "bytes": 34114,
+      "file": "source-02.txt"
+    },
+    {
+      "url": "https://help.zoho.com/portal/en/kb/desk/faqs/tickets/articles/faqs-working-on-tickets",
+      "status": 200,
+      "final_url": "https://help.zoho.com/portal/en/kb/desk/faqs/tickets/articles/faqs-working-on-tickets",
+      "bytes": 34114,
+      "file": "source-03.txt"
+    },
+    {
+      "url": "https://grindctrl.cloud/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://grindctrl.cloud/try-on",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://concrete.store/",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://developer.apple.com/design/human-interface-guidelines/motion",
+      "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/MyPureCloud/client-app-sdk/master/README.md",
+      "bytes": 7408,
+      "file": "source-08.txt"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ConversationsApi.md",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ConversationsApi.md",
+      "bytes": 667863,
+      "file": "source-09.txt"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ExternalContactsApi.md",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/MyPureCloud/platform-client-sdk-javascript/master/build/docs/ExternalContactsApi.md",
+      "bytes": 292150,
+      "file": "source-10.txt"
+    }
+  ]
+}

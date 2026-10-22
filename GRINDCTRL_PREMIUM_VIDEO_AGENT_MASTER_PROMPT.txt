@@ -1,0 +1,85 @@
+# GRINDCTRL × CONCRETE — 3 PREMIUM ENGLISH PRODUCT FILMS
+# COMPLETE VIDEO AGENT MASTER PROMPT — AFTER ELEVENLABS VOICEOVERS ARE READY
+
+ROLE: Work as a top-tier creative director, senior product UX/UI designer, motion-design engineer, factual-researcher and professional video editor. Produce ACTUAL finished renders, not just storyboards. Inspect the three ATTACHED approved English MP3 voiceovers and use each as the audio master. No narration regeneration, no artificial voice replacement, no unauthorized cuts or speed changes.
+
+ONLY THESE THREE FILMS, in order:
+01. CONCRETE — "The Call Arrives. The Context Appears." Genesys inbound call; documented current friction of manual phone lookup in Zoho Desk; proposed permissioned screen-pop surfacing the correct contact, prior tickets/statuses and latest recorded updates, with correct handling of multiple/no matches and service downtime. Use a fictional exchange-follow-up example: review still PENDING, never imply completed.
+02. CONCRETE — "Every Call Has Its Own Story." Proposed verified Customer 360/profile from Genesys + authorized Zoho sources: incoming number -> match -> name/phone/email when actually stored -> Icons Club Lifestyle/Prestige/Elite tier ONLY from authoritative permitted records -> unique timestamped Call Activities with individual human notes belonging to their own call -> new call-specific note and next-call continuity, only where technical mechanism actually supports it. Distinguish Call Notes, Ticket Notes and AI Summaries.
+03. GRINDCTRL — "Let Shoppers See It. Let Them Ask." An authentic Shopify product page -> choose ONE beautiful garment -> upload a shopper photo -> personalized AI virtual try-on of the SAME person and SAME garment -> open Store Chat -> question grounded in store knowledge -> AI reply in context -> optional reasoned human handoff -> team inbox assignment/private note/reply -> branded end-card. This film explains current GRINDCTRL product, NOT an asserted Concrete deployment.
+
+AUTHORITY / FACTUAL PRE-FLIGHT:
+- Read the actual MP3s and their exact transcripts; use speech-forced-alignment or human-verified time cues. Never invent timecodes or pretend a guessed word-level alignment is real.
+- Research official currently available documentation FIRST: Genesys Cloud CX Screen Pop (Architect Set Screen Pop; browser-extension BR_URLPop behavior), Zoho Desk contacts/tickets/activities/calls and ticket history; GRINDCTRL's actual https://grindctrl.cloud/ and /try-on pages; Concrete's real public identity/authorized assets where accessible; motion/accessibility principles (Apple HIG). Record evidence links/last-checked date.
+- Optionally review the supplied original GRINDCTRL × Concrete ZIP, Arabic scripts, or old decks ONLY as historical TOPIC/FACT references, never as editable templates to re-skin. The source order is fixed above; the old file names 'Part 03/04' may not match these NEW 01/02/03 deliverables.
+- Trace each on-screen feature claim to a source, marked VERIFIED LIVE PRODUCT, VENDOR-SUPPORTED BUT DEPLOYMENT UNVERIFIED, CONCRETE PROPOSED, or ILLUSTRATIVE DEMO. In particular: contracted Genesys CRM URL popup is NOT evidence that an automated Zoho Desk integration already works. Don't show invented native side panels as actual integrated Genesys or Zoho Desk screens.
+- Zoho Desk Calls/Activities and ticket-linked notes may exist but storage, author, call association, permission, and telephony integration must be checked. Zoho CRM isn't automatically interchangeable with Zoho Desk.
+- Telephone number is NOT sufficient authentication. Never leak real customer phone/email/order data, mock only or anonymized authorized screenshots. Missing, multiple matches and lookup failure must be handled visibly and correctly. Don't make refund promises or invented resolutions.
+- Official GRINDCTRL product demo metrics, fake conversion uplift, new CRM sync, revenue attribution etc cannot be presented as verified business results. Order status lookup is conditional on verified read-only access.
+- When business-specific interfaces are unavailable, design a HIGH-QUALITY vendor-informed illustrative CONCEPT and make its proposed/demo status visible subtly on-screen. Preserve genuine product logos only when sourced from authorized official assets; don't invent imitation logos or fake brand partnerships.
+
+THE CREATIVE BAR — SIGNIFICANTLY ABOVE THE REJECTED VIDEOS:
+Deliver the polished level of an Apple-grade product film and premium enterprise SaaS launch, with extreme CLARITY and impressive but understated craft. This is a product-storytelling film, not a video made from slides, screenshots, contact sheets, or generic stock montages. No cheap 3D, fake glowing robots, psychedelic transitions, floating charts, meaningless gradients, huge repeated arrows, repeated 3-card grids, text-heavy slides, or slow pan/zoom over still images.
+
+VISUAL SYSTEM:
+- 1920x1080 16:9 primary, 30fps, professionally antialiased, full-resolution vector/HTML/SVG/React or equivalent UI layers. If 4K production is feasible without sacrifice to quality, optional 4K master; always supply 1080p.
+- LIGHT PREMIUM identity: warm ivory/off-white / delicate neutral backgrounds, charcoal-black ink, subtle brushed graphite and a very selective warm bronze/champagne accent. Design must respect actual Concrete/GRINDCTRL branding if supplied, not impose a made-up company palette. Dark full-screen scenes only if uniquely purposeful; default light throughout.
+- Refined modern typography with strong hierarchy: e.g. Geist/Inter or accessible alternatives, crisp vector rendering, genuine readable UI labels. Main headline usually 52–78px, supporting 28–36px, UI key fields >=26px at 1080p; test that all important things remain readable when downscaled to phone preview. Never rely on microscopic interface text.
+- Grid system and spacing: 96–120px safe side margins for major headings, alignment consistent, balanced negative space, one strong focal point per shot. Brand logos sharp and undistorted.
+- Realistic, purpose-built UI not generic rectangles: actual Genesys-like incoming call controls, separate Zoho Desk search/ticket view, credible caller context screen-pop shown in a placement compatible with researched configuration, detailed per-call activity rows with correct timestamps/author/note ownership, authentic Shopify product card/button/photo upload and STORE CHAT, team inbox handoff.
+- Keep screen geography consistent: one agent/workstation/story per Concrete film; one shopper/garment through the Try-On film. Do not swap customers, dates, ticket IDs, voices or garments between related shots.
+- Subtle state-driven micro-motion: clear cursor interaction when needed; 180–400ms ease-outs for clicks/highlights, 350–800ms transitions for scene changes, reveal only as narration mentions. Motion must explain cause and effect: call rings -> phone highlights -> validated match -> customer's tickets appear -> specific ticket opens -> correct note revealed. Use elegant depth/shadows sparingly. No busy moving backgrounds. Honor reduced-motion where interactive previews are supported.
+- Premium FABRIC rendering: for Video 03 garment product photography, believable weave, drape, seams, embroidery, shadows, and consistent color/shape/details across product -> upload -> try-on. Same shopper face/body/pose integrity; do not claim exact fit. Product demo should dominate, not AI-generated editorial portraits.
+- Mix real branded illustrative UI with short credible live-action/fashion inserts where they add meaning; all footage properly licensed. Use subtle background music with appropriate license and low ducked level under narration, and extremely selective interface SFX.
+
+FILM 01 — SHOT LOGIC (NOT RIGID TIMECODES):
+A. Visual hook: incoming GENESYS call and the missing customer context.
+B. Real current steps: agent copies number, switches to Zoho Desk, searches and opens ticket; show friction without insulting staff.
+C. Clear visual before/after: same caller, same issue, same ticket; proposed automated lookup and correctly framed screen pop.
+D. Customer record with matched phone and ticket list; highlight last update for exchange request, status "Pending branch review"; don't invent action.
+E. Edge cases: ambiguous match requires selection; no record -> manual lookup; lookup down -> Genesys call unaffected.
+F. End with lightweight "Review current setup → Validate integration → Pilot" and a polished GRINDCTRL × Concrete proposal closing.
+
+FILM 02 — SHOT LOGIC:
+A. Visual hook: repeat caller, correct identity with a thoughtful "known context" experience.
+B. Profile resolves phone/name/email and optional Icons Club tier from a trusted source. Tier names exactly Lifestyle / Prestige / Elite.
+C. Call Timeline: interaction 101, interaction 102 etc, each with timestamp/agent/its OWN note and individual detail view.
+D. Existing exchange follow-up shows last week's human note with "Pending branch review"; do not confuse it with a ticket-level note. Difference can be shown elegantly via two labeled tabs (Call note vs Ticket update), never merging them.
+E. New current-call human note saved to correct interaction (proposed if technical mechanism unverified), linked and then seen on following call.
+F. Honest fallback states for multiple matches/missing tier/backend outage and privacy/permission limitations.
+G. Controlled pilot and elegant Concrete proposal closing. Do NOT replace with 11-category call-reason classification; that is a different proposal.
+
+FILM 03 — SHOT LOGIC:
+A. Beautiful premium Shopify fashion product detail in motion, with ONE clearly legible "Try it on with AI" call to action.
+B. Shopper uploads her OWN image in visibly functioning photo upload UI; preserve privacy wording.
+C. Original garment and resulting personalized visualization must match with visually convincing material/fit depiction, no magical body alteration.
+D. Realistic Store Chat overlay asks "Does this run true to size?"; assistant answers ONLY with approved example knowledge. If illustrative, mark Demo.
+E. If asked for a human, handoff reason -> team inbox shows named fictional assignment, private note and agent reply.
+F. Wide but meaningful joint view of Try-On + chat + human inbox; simple cinematic logo outro with official GRINDCTRL wordmark and grindctrl.cloud.
+
+AUDIO-LED EDIT & TIMELINE:
+- Input MP3 01 maps ONLY to Film 01, etc. Copy approved narration exactly once; no retakes, no synthetic substitute, no changing names.
+- Measure input audio with ffprobe or equivalent BEFORE editing. Use speech-to-text / forced alignment with actual listen/check for names and pauses. Generate cue sheet in JSON/CSV for major semantic beats. No equal-length slides or invented sync.
+- Output target EXACT 150.000 seconds (4500 frames at 30fps), not 120 seconds or 144 seconds. VO goal is 145–149 seconds. Use remaining 1–5s for the branded closing visual if needed. If any input narration is shorter than 140s or longer than 150s, do NOT hide the mismatch with long padding, speedups or cut-offs: make that a clear audio timing blocker and request a re-export of that specific recording; continue the other films without needless questions.
+- Match visible UI actions to their relevant spoken moments, especially caller-number search, open ticket, note, upload, generate preview and handoff.
+- 5–8 coherent story beats per film, not a fixed count of image slides. On-screen text acts as clear visual support, not a word-for-word karaoke presentation. Provide an accurate separate English SRT based on audio; tasteful optional burned-in captions within safe margins.
+- Dynamic transitions must honor UI cause/effect and continuity; no 27 seconds of frozen outro or padding to disguise short narration.
+
+PRODUCTION WORKFLOW (EXECUTE, DON'T SIMPLY DESCRIBE):
+1. Inventory input MP3s and useful genuine logos/screenshots, verify files and timing.
+2. Research relevant interfaces and source facts, keep concise evidence ledger and annotate proposals vs existing.
+3. Write 3 audio-to-shot edit decision lists including true phrase cue timings.
+4. Create an original design system, reusable UI components and 3 storyboards; actual key labels as typeset vector text, not text baked into AI images.
+5. Build high-quality motion scenes using a real renderer such as Remotion/React+SVG+CSS, After Effects, Blender (only when justified), or an equivalent tool available in the environment. Use FFmpeg and ffprobe for deterministic sequencing/render validation. Never claim to have rendered unless MP4 file exists.
+6. Render drafts, visually inspect representative frames and watch/listen full outputs. Fix cut-off elements, clipping, blurry icons, illegible panels, unnatural photos, wrong logos/terms, scene timing errors or silent gaps. Confirm exact export duration/frame count/audio mix.
+7. Export 3 individually downloadable finished MP4 files; editable project/source if supported, three English SRTs, cue timelines, and a compact QA + evidence report. Bundle project assets in one organized ZIP if possible.
+
+EXPORT SPEC:
+- 01_Concrete_Genesys_ZohoDesk_ScreenPop_150s.mp4
+- 02_Concrete_Customer360_CallActivities_150s.mp4
+- 03_GRINDCTRL_TryOn_StoreChat_150s.mp4
+- All EXACTLY 150 seconds, 1920x1080, 30fps, H.264 high bitrate, AAC clear narration/music, no watermark, stable loudness, no black-frame errors. Include MP4 duration/frame count measured from actual files.
+- First 2 seconds must communicate the actual subject, last visual elegantly branded. No fabricated results or other company representations.
+- If tools cannot make an actual video or a required source cannot be used lawfully, be transparent, produce the maximum real usable assets, and identify the precise blocker rather than claiming completed MP4s or making up unavailable UI.
+
+START WITH FILE/TIMING INSPECTION, RESEARCH, THEN EXECUTE ALL THREE IN THE CURRENT RUN. NO UNNECESSARY USER QUESTIONS, NO REPEAT OF REJECTED OLD DESIGNS, NO REGENERATION OF APPROVED VOICES, NO GENERIC SLIDESHOWS.

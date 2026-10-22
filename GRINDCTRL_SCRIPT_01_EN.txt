@@ -1,0 +1,17 @@
+Imagine a call arriving at Concrete's customer service center. The agent answers through Genesys, but the caller is following up on an exchange request made last week. The information exists in Zoho Desk. The challenge is getting it to the right employee, at the right moment.
+
+Today, as described in Concrete's current workflow, the agent may have to copy the phone number, search Zoho Desk manually, open the customer's previous tickets, and then look for the most recent update. The search is possible, but every extra step interrupts the conversation.
+
+Now imagine a more connected experience. When an inbound call arrives in Genesys, the caller number starts an authorized customer lookup. If it finds one reliable match, a screen pop opens the relevant customer context: the contact record, previous support tickets, their current statuses, and the latest recorded update.
+
+Let's follow a realistic example. The customer is asking about an exchange. The agent can see an earlier ticket and a note saying the request is still pending branch review. That's a recorded status, not a promise that the review has happened. Instead of making the customer explain everything again, the agent can continue from the last documented point.
+
+If several contacts share a number, the employee chooses the correct record. If there's no match, a safe manual search remains available. And if the lookup service fails, the call itself must continue. A phone number alone never proves someone's identity.
+
+Notice what's changing here. We're not replacing Genesys or Zoho Desk, and we're not pretending a new integration is already live. We're proposing a clearer way to connect systems that Concrete already uses.
+
+The potential benefit is straightforward: fewer manual searches, easier follow-up, and more attention on the customer. Those benefits must be measured in a real pilot, not presented as guaranteed savings.
+
+First, we'll review Concrete's existing Genesys pop-up configuration, Zoho Desk access, permissions, and the supported integration options. Then we'll test the experience with authorized sample calls and validate the results.
+
+The goal is simple: when the conversation begins, the context should be ready. This is the Genesys and Zoho Desk experience proposed by Grind Control for Concrete.

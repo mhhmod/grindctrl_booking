@@ -1,0 +1,224 @@
+1
+00:00:00,120 --> 00:00:02,474
+A customer calls Concrete again.
+
+2
+00:00:02,474 --> 00:00:07,577
+What should the next customer service agent know before asking the first
+question?
+
+3
+00:00:07,577 --> 00:00:09,383
+Not just a phone number.
+
+4
+00:00:09,383 --> 00:00:11,474
+but the correct customer profile
+
+5
+00:00:11,474 --> 00:00:12,974
+the available history,
+
+6
+00:00:12,974 --> 00:00:15,916
+and the notes attached to previous calls.
+
+7
+00:00:15,916 --> 00:00:20,022
+Here's the second experience GRINDCTRL is proposing for Concrete.
+
+8
+00:00:20,022 --> 00:00:22,066
+A clearer customer view.
+
+9
+00:00:22,066 --> 00:00:26,876
+connected to incoming calls through Genesys and the appropriate Zoho
+records.
+
+10
+00:00:26,876 --> 00:00:29,310
+The caller number initiates a lookup.
+
+11
+00:00:29,310 --> 00:00:31,213
+After a reliable match,
+
+12
+00:00:31,213 --> 00:00:35,046
+The agent sees the customer's name and permitted contact details.
+
+13
+00:00:35,046 --> 00:00:37,053
+including email when available.
+
+14
+00:00:37,053 --> 00:00:39,900
+Missing information is marked unavailable.
+
+15
+00:00:39,900 --> 00:00:44,454
+The same proposed view can show the customer segment from Concrete Icons
+Club.
+
+16
+00:00:44,454 --> 00:00:45,429
+Lifestyle.
+
+17
+00:00:45,429 --> 00:00:47,119
+Prestige or Elite.
+
+18
+00:00:47,119 --> 00:00:51,773
+That membership information must come from a trusted, updated source.
+
+19
+00:00:51,773 --> 00:00:54,196
+It cannot be guessed from the caller's number.
+
+20
+00:00:54,196 --> 00:00:58,193
+and no membership benefit should be assumed without confirmation.
+
+21
+00:00:58,193 --> 00:01:01,117
+But a profile is only the starting point.
+
+22
+00:01:01,117 --> 00:01:03,466
+Call level history matters more.
+
+23
+00:01:03,466 --> 00:01:07,660
+Imagine a simple timeline showing every available call activity.
+
+24
+00:01:07,660 --> 00:01:08,652
+Its date?
+
+25
+00:01:08,652 --> 00:01:09,415
+agent
+
+26
+00:01:09,415 --> 00:01:12,072
+and notes for that specific interaction.
+
+27
+00:01:12,072 --> 00:01:13,212
+For example,
+
+28
+00:01:13,212 --> 00:01:16,217
+Last week's call concerned an exchange request.
+
+29
+00:01:16,217 --> 00:01:19,398
+The employee recorded that the branch would review the matter.
+
+30
+00:01:19,398 --> 00:01:21,518
+When the customer calls again today,
+
+31
+00:01:21,518 --> 00:01:25,983
+The new agent opens that particular call and reads its actual note.
+
+32
+00:01:25,983 --> 00:01:27,976
+They see what was documented.
+
+33
+00:01:27,976 --> 00:01:30,925
+Without confusing a call note with a ticket comment...
+
+34
+00:01:30,925 --> 00:01:32,034
+AI summary,
+
+35
+00:01:32,034 --> 00:01:33,559
+or a completed action.
+
+36
+00:01:33,559 --> 00:01:35,454
+During today's conversation,
+
+37
+00:01:35,454 --> 00:01:39,752
+The agent records a new note against the right interaction if supported.
+
+38
+00:01:39,752 --> 00:01:42,533
+Notes should belong to the call they describe.
+
+39
+00:01:42,533 --> 00:01:44,323
+not a generic summary.
+
+40
+00:01:44,323 --> 00:01:47,958
+And the interface must handle uncertainty honestly.
+
+41
+00:01:47,958 --> 00:01:49,554
+No matching contact?
+
+42
+00:01:49,554 --> 00:01:51,218
+offer a manual search.
+
+43
+00:01:51,218 --> 00:01:52,674
+Multiple matches?
+
+44
+00:01:52,674 --> 00:01:55,299
+Ask the agent to select the right record.
+
+45
+00:01:55,299 --> 00:01:56,930
+Missing membership data?
+
+46
+00:01:56,930 --> 00:01:58,431
+Mark it unavailable.
+
+47
+00:01:58,431 --> 00:02:00,212
+Lookup temporarily down?
+
+48
+00:02:00,212 --> 00:02:02,325
+Never block the incoming call.
+
+49
+00:02:02,325 --> 00:02:07,718
+Before implementation, we'll verify where call activities and notes
+actually live.
+
+50
+00:02:07,718 --> 00:02:09,547
+which integrations are supported,
+
+51
+00:02:09,547 --> 00:02:11,984
+and who is allowed to see each field.
+
+52
+00:02:11,984 --> 00:02:15,823
+Then we'll test with authorized fictional customer records.
+
+53
+00:02:15,823 --> 00:02:18,686
+The outcome we're aiming for is continuity.
+
+54
+00:02:18,686 --> 00:02:23,245
+a more informed employee, and a customer who doesn't have to start from
+zero.
+
+55
+00:02:23,245 --> 00:02:25,000
+every single time.

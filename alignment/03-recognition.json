@@ -1,0 +1,965 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 2.8716559999999998,
+    "text": "Picture someone browsing a fashion store online.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Picture someone browsing a fashion store online.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Picture",
+        " someone",
+        " browsing",
+        " a",
+        " fashion",
+        " store",
+        " online",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " Picture someone browsing a fashion store online."
+      ]
+    }
+  },
+  {
+    "index": 1,
+    "start": 2.8716559999999998,
+    "end": 6.8451249999999995,
+    "text": "They find a dress, a jacket, or a linen shirt they love.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "They find a dress, a jacket, or a linen shirt they love.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " They",
+        " find",
+        " a",
+        " dress",
+        ",",
+        " a",
+        " jacket",
+        ",",
+        " or",
+        " a",
+        " linen",
+        " shirt",
+        " they",
+        " love",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " They find a dress, a jacket, or a linen shirt they love."
+      ]
+    }
+  },
+  {
+    "index": 2,
+    "start": 6.8451249999999995,
+    "end": 9.1316875,
+    "text": "The photographs look beautiful.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The photographs look beautiful.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " photographs",
+        " look",
+        " beautiful",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " The photographs look beautiful."
+      ]
+    }
+  },
+  {
+    "index": 3,
+    "start": 9.1316875,
+    "end": 11.152469,
+    "text": "But one question remains.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "But one question remains.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " But",
+        " one",
+        " question",
+        " remains",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " But one question remains."
+      ]
+    }
+  },
+  {
+    "index": 4,
+    "start": 11.152469,
+    "end": 13.7361875,
+    "text": "What could this actually look like on me?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "What could this actually look like on me?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " What",
+        " could",
+        " this",
+        " actually",
+        " look",
+        " like",
+        " on",
+        " me",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.5
+      ],
+      "segment_texts": [
+        " What could this actually look like on me?"
+      ]
+    }
+  },
+  {
+    "index": 5,
+    "start": 13.7361875,
+    "end": 28.096,
+    "text": "Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience. On a supported Shopify product page, the shopper selects an item, taps \"Try it on with AI\" and uploads a photo.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience. On a supported Shopify product page, the shopper selects an item, taps \"Try it on with AI\" and uploads a photo.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Grind",
+        " Control",
+        "'s",
+        " AI",
+        " Virtual",
+        " Try",
+        "-",
+        "On",
+        " brings",
+        " that",
+        " moment",
+        " closer",
+        " to",
+        " a",
+        " personal",
+        " shopping",
+        " experience",
+        ".",
+        " On",
+        " a",
+        " supported",
+        " Shopify",
+        " product",
+        " page",
+        ",",
+        " the",
+        " shop",
+        "per",
+        " select",
+        "s",
+        " an",
+        " item",
+        ",",
+        " taps",
+        " \"",
+        "T",
+        "ry",
+        " it",
+        " on",
+        " with",
+        " AI",
+        "\"",
+        " and",
+        " uploads",
+        " a",
+        " photo",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        6.5
+      ],
+      "segment_durations": [
+        6.5,
+        8.0
+      ],
+      "segment_texts": [
+        " Grind Control's AI Virtual Try-On brings that moment closer to a personal shopping experience.",
+        " On a supported Shopify product page, the shopper selects an item, taps \"Try it on with AI\" and uploads a photo."
+      ]
+    }
+  },
+  {
+    "index": 6,
+    "start": 28.096,
+    "end": 33.3204375,
+    "text": "The system generates a visual preview of that shopper wearing the selected garment.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The system generates a visual preview of that shopper wearing the selected garment.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " system",
+        " generates",
+        " a",
+        " visual",
+        " preview",
+        " of",
+        " that",
+        " shop",
+        "per",
+        " wearing",
+        " the",
+        " selected",
+        " garment",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.28
+      ],
+      "segment_texts": [
+        " The system generates a visual preview of that shopper wearing the selected garment."
+      ]
+    }
+  },
+  {
+    "index": 7,
+    "start": 33.3204375,
+    "end": 35.979219,
+    "text": "It's important to understand what this means.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It's important to understand what this means.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        "'s",
+        " important",
+        " to",
+        " understand",
+        " what",
+        " this",
+        " means",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " It's important to understand what this means."
+      ]
+    }
+  },
+  {
+    "index": 8,
+    "start": 35.979219,
+    "end": 39.057906,
+    "text": "The preview helps someone explore a style.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The preview helps someone explore a style.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " preview",
+        " helps",
+        " someone",
+        " explore",
+        " a",
+        " style",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " The preview helps someone explore a style."
+      ]
+    }
+  },
+  {
+    "index": 9,
+    "start": 39.057906,
+    "end": 45.4176875,
+    "text": "It isn't an exact measurement, a fit guarantee, or a replacement for real product information.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It isn't an exact measurement, a fit guarantee, or a replacement for real product information.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        " isn",
+        "'t",
+        " an",
+        " exact",
+        " measurement",
+        ",",
+        " a",
+        " fit",
+        " guarantee",
+        ",",
+        " or",
+        " a",
+        " replacement",
+        " for",
+        " real",
+        " product",
+        " information",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.32
+      ],
+      "segment_texts": [
+        " It isn't an exact measurement, a fit guarantee, or a replacement for real product information."
+      ]
+    }
+  },
+  {
+    "index": 10,
+    "start": 45.4176875,
+    "end": 47.7664375,
+    "text": "Now the shopper has another question.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Now the shopper has another question.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Now",
+        " the",
+        " shop",
+        "per",
+        " has",
+        " another",
+        " question",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Now the shopper has another question."
+      ]
+    }
+  },
+  {
+    "index": 11,
+    "start": 47.7664375,
+    "end": 53.232749999999996,
+    "text": "Does the shirt run oversized? Is there a size guide? What is the delivery policy?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Does the shirt run oversized? Is there a size guide? What is the delivery policy?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Does",
+        " the",
+        " shirt",
+        " run",
+        " oversized",
+        "?",
+        " Is",
+        " there",
+        " a",
+        " size",
+        " guide",
+        "?",
+        " What",
+        " is",
+        " the",
+        " delivery",
+        " policy",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.6
+      ],
+      "segment_texts": [
+        " Does the shirt run oversized? Is there a size guide? What is the delivery policy?"
+      ]
+    }
+  },
+  {
+    "index": 12,
+    "start": 53.232749999999996,
+    "end": 71.09774999999999,
+    "text": "This is where Store Chat enters the same shopping journey. Instead of leaving the product page and searching across the website, the shopper opens the Store Assistant. Store Chat enters in English or Arabic using the information the merchant has supplied. Accurate answers come from store knowledge.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "This is where Store Chat enters the same shopping journey. Instead of leaving the product page and searching across the website, the shopper opens the Store Assistant. Store Chat enters in English or Arabic using the information the merchant has supplied. Accurate answers come from store knowledge.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " This",
+        " is",
+        " where",
+        " Store",
+        " Chat",
+        " enters",
+        " the",
+        " same",
+        " shopping",
+        " journey",
+        ".",
+        " Instead",
+        " of",
+        " leaving",
+        " the",
+        " product",
+        " page",
+        " and",
+        " searching",
+        " across",
+        " the",
+        " website",
+        ",",
+        " the",
+        " shop",
+        "per",
+        " opens",
+        " the",
+        " Store",
+        " Assistant",
+        ".",
+        " Store",
+        " Chat",
+        " enters",
+        " in",
+        " English",
+        " or",
+        " Arabic",
+        " using",
+        " the",
+        " information",
+        " the",
+        " merchant",
+        " has",
+        " supplied",
+        ".",
+        " Acc",
+        "urate",
+        " answers",
+        " come",
+        " from",
+        " store",
+        " knowledge",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        3.8,
+        7.5,
+        9.9,
+        15.3
+      ],
+      "segment_durations": [
+        3.8,
+        3.7,
+        2.4,
+        5.4,
+        2.7
+      ],
+      "segment_texts": [
+        " This is where Store Chat enters the same shopping journey.",
+        " Instead of leaving the product page and searching across the website,",
+        " the shopper opens the Store Assistant.",
+        " Store Chat enters in English or Arabic using the information the merchant has supplied.",
+        " Accurate answers come from store knowledge."
+      ]
+    }
+  },
+  {
+    "index": 13,
+    "start": 71.09774999999999,
+    "end": 88.0324375,
+    "text": "not from made-up stock levels or promises. If human help is needed, the AI hands off with a reason. The team picks up the conversation in a shared inbox, assigns it, adds a private note, and replies in context. We're appropriately configured and verified",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "not from made-up stock levels or promises. If human help is needed, the AI hands off with a reason. The team picks up the conversation in a shared inbox, assigns it, adds a private note, and replies in context. We're appropriately configured and verified",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " not",
+        " from",
+        " made",
+        "-",
+        "up",
+        " stock",
+        " levels",
+        " or",
+        " promises",
+        ".",
+        " If",
+        " human",
+        " help",
+        " is",
+        " needed",
+        ",",
+        " the",
+        " AI",
+        " hands",
+        " off",
+        " with",
+        " a",
+        " reason",
+        ".",
+        " The",
+        " team",
+        " picks",
+        " up",
+        " the",
+        " conversation",
+        " in",
+        " a",
+        " shared",
+        " inbox",
+        ",",
+        " assign",
+        "s",
+        " it",
+        ",",
+        " adds",
+        " a",
+        " private",
+        " note",
+        ",",
+        " and",
+        " replies",
+        " in",
+        " context",
+        ".",
+        " We",
+        "'re",
+        " appropriately",
+        " configured",
+        " and",
+        " verified"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        2.96,
+        6.96,
+        10.08,
+        14.48
+      ],
+      "segment_durations": [
+        2.96,
+        4.0,
+        3.12,
+        4.4,
+        2.4
+      ],
+      "segment_texts": [
+        " not from made-up stock levels or promises.",
+        " If human help is needed, the AI hands off with a reason.",
+        " The team picks up the conversation in a shared inbox,",
+        " assigns it, adds a private note, and replies in context.",
+        " We're appropriately configured and verified"
+      ]
+    }
+  },
+  {
+    "index": 14,
+    "start": 88.0324375,
+    "end": 99.51846900000001,
+    "text": "Read-only order information can also support relevant questions. But the assistant shouldn't change orders, promise refunds, or imply an integration exists when it hasn't been enabled.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Read-only order information can also support relevant questions. But the assistant shouldn't change orders, promise refunds, or imply an integration exists when it hasn't been enabled.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Read",
+        "-",
+        "only",
+        " order",
+        " information",
+        " can",
+        " also",
+        " support",
+        " relevant",
+        " questions",
+        ".",
+        " But",
+        " the",
+        " assistant",
+        " shouldn",
+        "'t",
+        " change",
+        " orders",
+        ",",
+        " promise",
+        " refund",
+        "s",
+        ",",
+        " or",
+        " imply",
+        " an",
+        " integration",
+        " exists",
+        " when",
+        " it",
+        " hasn",
+        "'t",
+        " been",
+        " enabled",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        4.1,
+        6.4
+      ],
+      "segment_durations": [
+        4.1,
+        2.3,
+        5.0
+      ],
+      "segment_texts": [
+        " Read-only order information can also support relevant questions.",
+        " But the assistant shouldn't change orders,",
+        " promise refunds, or imply an integration exists when it hasn't been enabled."
+      ]
+    }
+  },
+  {
+    "index": 15,
+    "start": 99.51846900000001,
+    "end": 118.01440600000001,
+    "text": "Let's connect the experience. A shopper sees a garment, previews it on their own photo, asks about the size, and gets a helpful answer. If the question needs judgment, a real person continues from the conversation already started. For a fashion brand, the two tools belong to one journey.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Let's connect the experience. A shopper sees a garment, previews it on their own photo, asks about the size, and gets a helpful answer. If the question needs judgment, a real person continues from the conversation already started. For a fashion brand, the two tools belong to one journey.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Let",
+        "'s",
+        " connect",
+        " the",
+        " experience",
+        ".",
+        " A",
+        " shop",
+        "per",
+        " sees",
+        " a",
+        " garment",
+        ",",
+        " preview",
+        "s",
+        " it",
+        " on",
+        " their",
+        " own",
+        " photo",
+        ",",
+        " asks",
+        " about",
+        " the",
+        " size",
+        ",",
+        " and",
+        " gets",
+        " a",
+        " helpful",
+        " answer",
+        ".",
+        " If",
+        " the",
+        " question",
+        " needs",
+        " judgment",
+        ",",
+        " a",
+        " real",
+        " person",
+        " continues",
+        " from",
+        " the",
+        " conversation",
+        " already",
+        " started",
+        ".",
+        " For",
+        " a",
+        " fashion",
+        " brand",
+        ",",
+        " the",
+        " two",
+        " tools",
+        " belong",
+        " to",
+        " one",
+        " journey",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        2.0,
+        5.8,
+        8.8,
+        10.6,
+        14.5
+      ],
+      "segment_durations": [
+        2.0,
+        3.8,
+        3.0,
+        1.8,
+        3.9,
+        4.0
+      ],
+      "segment_texts": [
+        " Let's connect the experience.",
+        " A shopper sees a garment, previews it on their own photo,",
+        " asks about the size, and gets a helpful answer.",
+        " If the question needs judgment,",
+        " a real person continues from the conversation already started.",
+        " For a fashion brand, the two tools belong to one journey."
+      ]
+    }
+  },
+  {
+    "index": 16,
+    "start": 118.01440600000001,
+    "end": 138.88,
+    "text": "Virtual Try-On helps people picture the product. Store Chat helps them understand it. The Merchants team stays in control when it matters. See the live product experience. Explore the demo and discover how Grind Control can fit your Shopify fashion store. Grind Control. Let Shoppers see it. Let them ask.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Virtual Try-On helps people picture the product. Store Chat helps them understand it. The Merchants team stays in control when it matters. See the live product experience. Explore the demo and discover how Grind Control can fit your Shopify fashion store. Grind Control. Let Shoppers see it. Let them ask.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Virtual",
+        " Try",
+        "-",
+        "On",
+        " helps",
+        " people",
+        " picture",
+        " the",
+        " product",
+        ".",
+        " Store",
+        " Chat",
+        " helps",
+        " them",
+        " understand",
+        " it",
+        ".",
+        " The",
+        " Mer",
+        "ch",
+        "ants",
+        " team",
+        " stays",
+        " in",
+        " control",
+        " when",
+        " it",
+        " matters",
+        ".",
+        " See",
+        " the",
+        " live",
+        " product",
+        " experience",
+        ".",
+        " Expl",
+        "ore",
+        " the",
+        " demo",
+        " and",
+        " discover",
+        " how",
+        " Grind",
+        " Control",
+        " can",
+        " fit",
+        " your",
+        " Shopify",
+        " fashion",
+        " store",
+        ".",
+        " Grind",
+        " Control",
+        ".",
+        " Let",
+        " Shop",
+        "pers",
+        " see",
+        " it",
+        ".",
+        " Let",
+        " them",
+        " ask",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        3.0,
+        5.5,
+        9.0,
+        11.0,
+        16.5,
+        18.0,
+        19.5
+      ],
+      "segment_durations": [
+        3.0,
+        2.5,
+        3.5,
+        2.0,
+        5.5,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "segment_texts": [
+        " Virtual Try-On helps people picture the product.",
+        " Store Chat helps them understand it.",
+        " The Merchants team stays in control when it matters.",
+        " See the live product experience.",
+        " Explore the demo and discover how Grind Control can fit your Shopify fashion store.",
+        " Grind Control.",
+        " Let Shoppers see it.",
+        " Let them ask."
+      ]
+    }
+  }
+]

@@ -1,0 +1,207 @@
+1
+00:00:01,120 --> 00:00:03,992
+Picture someone browsing a fashion store online.
+
+2
+00:00:03,992 --> 00:00:07,965
+They find a dress, a jacket, or a linen shirt they love.
+
+3
+00:00:07,965 --> 00:00:09,176
+The photographs look
+
+4
+00:00:09,176 --> 00:00:10,252
+beautiful.
+
+5
+00:00:10,252 --> 00:00:12,272
+But one question remains.
+
+6
+00:00:12,272 --> 00:00:14,856
+What could this actually look like on me?
+
+7
+00:00:14,856 --> 00:00:21,324
+GRINDCTRL's AI Virtual Try-On brings that moment closer to a personal
+shopping experience.
+
+8
+00:00:21,324 --> 00:00:25,568
+On a supported Shopify product page, the shopper selects an item.
+
+9
+00:00:25,568 --> 00:00:27,746
+Taps try it on with AI.
+
+10
+00:00:27,746 --> 00:00:29,216
+and uploads a photo.
+
+11
+00:00:31,216 --> 00:00:36,440
+The system generates a visual preview of that shopper wearing the selected
+garment.
+
+12
+00:00:36,440 --> 00:00:39,099
+It's important to understand what this means.
+
+13
+00:00:39,099 --> 00:00:42,178
+The preview helps someone explore a style.
+
+14
+00:00:42,178 --> 00:00:45,511
+It isn't an exact measurement, a fit guarantee.
+
+15
+00:00:45,511 --> 00:00:48,538
+or a replacement for real product information.
+
+16
+00:00:50,538 --> 00:00:52,886
+Now the shopper has another question.
+
+17
+00:00:52,886 --> 00:00:55,007
+Does the shirt run oversized?
+
+18
+00:00:55,007 --> 00:00:56,456
+Is there a size guide?
+
+19
+00:00:56,456 --> 00:00:58,353
+What is the delivery policy?
+
+20
+00:00:58,353 --> 00:01:02,125
+This is where Store Chat enters the same shopping journey.
+
+21
+00:01:02,125 --> 00:01:05,827
+Instead of leaving the product page and searching across the website,
+
+22
+00:01:05,827 --> 00:01:08,222
+The shopper opens the store assistant.
+
+23
+00:01:08,222 --> 00:01:13,654
+Store Chat answers in English or Arabic using the information the merchant
+has supplied.
+
+24
+00:01:13,654 --> 00:01:16,218
+Accurate answers come from store knowledge.
+
+25
+00:01:16,218 --> 00:01:19,037
+not from made-up stock levels or promises.
+
+26
+00:01:19,037 --> 00:01:20,657
+If human help is needed,
+
+27
+00:01:20,657 --> 00:01:23,013
+the AI hands off with a reason.
+
+28
+00:01:23,013 --> 00:01:26,247
+The team picks up the conversation in a shared inbox.
+
+29
+00:01:26,247 --> 00:01:27,167
+Assigns it.
+
+30
+00:01:27,167 --> 00:01:28,527
+adds a private note.
+
+31
+00:01:28,527 --> 00:01:30,559
+and replies in context.
+
+32
+00:01:32,559 --> 00:01:35,152
+Where appropriately configured and verified.
+
+33
+00:01:35,152 --> 00:01:39,209
+Read-only order information can also support relevant questions.
+
+34
+00:01:39,209 --> 00:01:42,779
+But the assistant shouldn't change orders. Promise refunds...
+
+35
+00:01:42,779 --> 00:01:46,638
+or imply an integration exists when it hasn't been enabled.
+
+36
+00:01:46,638 --> 00:01:48,684
+Let's connect the experience.
+
+37
+00:01:48,684 --> 00:01:50,491
+A shopper sees a garment.
+
+38
+00:01:50,491 --> 00:01:52,434
+previews it on their own photo.
+
+39
+00:01:52,434 --> 00:01:55,465
+asks about the size and gets a helpful answer.
+
+40
+00:01:55,465 --> 00:01:57,340
+If the question needs judgment,
+
+41
+00:01:57,340 --> 00:02:01,165
+a real person continues from the conversation already started.
+
+42
+00:02:01,165 --> 00:02:02,545
+for a fashion brand.
+
+43
+00:02:02,545 --> 00:02:05,134
+The two tools belong to one journey.
+
+44
+00:02:05,134 --> 00:02:08,250
+Virtual Try-On helps people picture the product.
+
+45
+00:02:08,250 --> 00:02:10,590
+Store Chat helps them understand it.
+
+46
+00:02:10,590 --> 00:02:13,974
+The merchant's team stays in control when it matters.
+
+47
+00:02:13,974 --> 00:02:16,250
+See the live product experience.
+
+48
+00:02:16,250 --> 00:02:21,839
+Explore the demo and discover how GRINDCTRL can fit your Shopify fashion
+store.
+
+49
+00:02:21,839 --> 00:02:23,109
+GRINDCTRL.
+
+50
+00:02:23,109 --> 00:02:24,706
+Let shoppers see it.
+
+51
+00:02:24,706 --> 00:02:26,000
+Let them ask.
