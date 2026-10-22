@@ -27,18 +27,24 @@ export function V16ChatFrame({
   locale,
   tab,
   head,
+  subtitle,
+  canSetUp = true,
   children,
 }: {
   locale: SiteLocale;
   tab: 'knows' | 'setup';
   head: ChatHead;
+  /** Set up's own line in place of the 7-day numbers. */
+  subtitle?: string;
+  /** Set up is for owners and admins (item 12). */
+  canSetUp?: boolean;
   children: React.ReactNode;
 }) {
   const copy = getChatKnowsCopy(locale);
   return (
     <V16PageFrame
       badge={head.badge}
-      subtitle={head.subtitle}
+      subtitle={subtitle ?? head.subtitle}
       action={
         head.storeUrl && (
           <Button
@@ -57,7 +63,7 @@ export function V16ChatFrame({
       tabsLabel={copy.tabsLabel}
       tabs={[
         { label: copy.whatItKnows, href: '/dashboard/store-chat', current: tab === 'knows' },
-        { label: copy.setUp, href: '/dashboard/store-chat/setup', current: tab === 'setup' },
+        ...(canSetUp ? [{ label: copy.setUp, href: '/dashboard/store-chat/setup', current: tab === 'setup' }] : []),
       ]}
     >
       {children}
@@ -250,12 +256,14 @@ export function V16ChatKnows({
   pages,
   siteId,
   actions,
+  canSetUp = true,
 }: {
   locale: SiteLocale;
   head: ChatHead;
   pages: PagesAndNotes;
   siteId: string;
   actions: KnowledgeActions;
+  canSetUp?: boolean;
 }) {
   const copy = getChatKnowsCopy(locale);
   const [adding, setAdding] = React.useState(false);
@@ -266,7 +274,7 @@ export function V16ChatKnows({
   const report = (text: string | null, ok: boolean) => setNote(text ? { text, ok } : null);
 
   return (
-    <V16ChatFrame locale={locale} tab="knows" head={head}>
+    <V16ChatFrame locale={locale} tab="knows" head={head} canSetUp={canSetUp}>
       <section aria-labelledby="chat-learns" className={`${classes.card} ${classes.section}`}>
         <div className={classes.sectionHead}>
           <h2 id="chat-learns" className={classes.h2}>
@@ -331,10 +339,10 @@ export function V16ChatKnows({
   );
 }
 
-export function V16ChatKnowsError({ locale, head }: { locale: SiteLocale; head: ChatHead }) {
+export function V16ChatKnowsError({ locale, head, canSetUp = true }: { locale: SiteLocale; head: ChatHead; canSetUp?: boolean }) {
   const copy = getChatKnowsCopy(locale);
   return (
-    <V16ChatFrame locale={locale} tab="knows" head={head}>
+    <V16ChatFrame locale={locale} tab="knows" head={head} canSetUp={canSetUp}>
       <p className={`${classes.card} ${classes.error}`} role="status">
         {copy.couldNotLoad}
       </p>

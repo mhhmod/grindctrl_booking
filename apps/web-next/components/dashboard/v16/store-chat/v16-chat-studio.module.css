@@ -1,0 +1,340 @@
+/* The v16 Store Chat Set up tab (the ChatStudio board). Colours, radii and
+   type come from the tokens; layout uses logical properties so Arabic
+   mirrors. The preview sits beside the cards on wide screens and follows
+   them below. */
+
+.studio {
+  /* Errors in the design's danger colour, which reads on the card. */
+  --mantine-color-error: var(--gc-danger);
+
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Focus lands here after Discard and on the bar after Publish, by script only. */
+.studio:focus,
+.bar:focus {
+  outline: none;
+}
+
+.liveRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* The draft bar: dark, under the shell's top bar on phones. */
+.bar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 64px);
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  min-height: 56px;
+  padding-block: 10px;
+  padding-inline: 20px 10px;
+  border-radius: var(--gc-radius-card);
+  background: var(--foreground);
+  color: var(--background);
+}
+
+@media (min-width: 48em) {
+  .bar {
+    top: 12px;
+  }
+}
+
+.bar[data-state='done'] {
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+}
+
+.bar[data-state='error'] {
+  background: var(--gc-danger-soft);
+  color: var(--gc-danger);
+}
+
+.barMessage {
+  display: grid;
+  flex: 1 1 240px;
+  gap: 2px;
+  min-width: 0;
+}
+
+.barText {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.barSub {
+  font-size: 0.8125rem;
+  opacity: 0.85;
+}
+
+.barActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+.bar .barLink {
+  color: inherit;
+}
+
+.bar[data-state='pending'] .publishButton {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.review {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.review th,
+.review td {
+  padding: 8px 6px;
+  border-block-end: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.review thead th {
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.srOnly {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.confirmText {
+  margin: 0 0 16px;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.layout {
+  display: grid;
+  /* The preview's own toolbar must not widen the page on a phone. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  min-width: 0;
+}
+
+@media (min-width: 75em) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  }
+
+  .preview {
+    position: sticky;
+    top: 88px;
+  }
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  min-width: 0;
+  padding: 20px 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.head {
+  display: grid;
+  gap: 4px;
+  padding-block-end: 8px;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  color: var(--gc-success);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.count {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.block {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  min-width: 0;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--border);
+}
+
+.rowText {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.choice {
+  max-inline-size: 100%;
+}
+
+@media (max-width: 30em) {
+  .choice {
+    inline-size: 100%;
+  }
+}
+
+.colour {
+  inline-size: 180px;
+}
+
+.fieldset {
+  margin: 0;
+  padding-inline: 0;
+  padding-block-end: 16px;
+  border: 0;
+  border-block-start: 1px solid var(--border);
+}
+
+.legend {
+  float: inline-start;
+  inline-size: 100%;
+  padding: 0;
+  margin-block-end: 4px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.legend + * {
+  clear: both;
+}
+
+.pair {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 36em) {
+  .pair {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.chips {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.chipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-inline-size: 100%;
+  padding-block: 2px;
+  padding-inline: 12px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-pill);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.addRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.addInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inlineButton {
+  justify-self: start;
+  padding-inline: 4px;
+}
+
+.preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}

@@ -34,7 +34,7 @@ export function PreviewFrame({
         <p className="text-sm font-semibold">
           {initialLocale === 'ar' ? 'معاينة مباشرة' : 'Live preview'}
         </p>
-        <div className="flex gap-1" role="group" aria-label={initialLocale === 'ar' ? 'الجهاز واللغة' : 'Device and language'}>
+        <div className="flex flex-wrap gap-1" role="group" aria-label={initialLocale === 'ar' ? 'الجهاز واللغة' : 'Device and language'}>
           <Toggle active={device === 'desktop'} onClick={() => setDevice('desktop')}>
             {initialLocale === 'ar' ? 'سطح المكتب' : 'Desktop'}
           </Toggle>

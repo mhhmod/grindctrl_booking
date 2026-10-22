@@ -7,7 +7,13 @@ import { renderWithMantine as render } from '@/components/mantine/test-utils';
    behind them are stubbed: each has its own tests. */
 
 vi.mock('server-only', () => ({}));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }), usePathname: () => '/dashboard/store-chat' }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => '/dashboard/store-chat',
+  redirect: vi.fn((href: string) => {
+    throw new Error(`redirect:${href}`);
+  }),
+}));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: vi.fn(async () => ({ primaryEmailAddress: { emailAddress: 'hana@maisonnoor.com' }, emailAddresses: [] })) }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: vi.fn(async () => 'user_owner') }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn(async () => 'en') }));
@@ -61,6 +67,20 @@ vi.mock('./actions', () => ({
   updateKnowledgeStatus: vi.fn(),
   deleteKnowledge: vi.fn(),
   syncKnowledge: vi.fn(),
+  saveDraftSections: vi.fn(),
+  publishConfig: vi.fn(),
+  revertConfigAction: vi.fn(),
+  setMessengerEnabled: vi.fn(),
+  disconnectSiteAction: vi.fn(),
+  discardDraft: vi.fn(),
+}));
+// ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
+vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
+  V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null }; actions: object }) => (
+    <div data-testid="chat-studio" data-actions={Object.keys(actions).sort().join(',')}>
+      {meta.domain}:{meta.version}
+    </div>
+  ),
 }));
 // Today's tabs are covered by messenger-tabs.test.tsx; here only which tab opens.
 vi.mock('@/components/dashboard/messenger/messenger-tabs', () => ({
@@ -72,6 +92,7 @@ import StoreChatSetupPage from './setup/page';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listConversationsForSite } from '@/lib/messenger/conversations';
+import { listMessengerSites, listTeamSites } from '@/lib/messenger/provisioning';
 
 const knows = (query: { tab?: string } = {}) => MessengerPage({ searchParams: Promise.resolve(query) });
 const setup = (query: { tab?: string } = {}) => StoreChatSetupPage({ searchParams: Promise.resolve(query) });
@@ -94,10 +115,30 @@ describe('the Store Chat routes under v16_dashboard', () => {
     expect(screen.queryByTestId('todays-store-chat')).not.toBeInTheDocument();
   });
 
-  it('draws today’s page as Set up, and opens a linked tab there, so old links keep working', async () => {
+  it('draws ChatStudio as Set up, on the draft and publish actions, without today’s reads', async () => {
     render(await setup());
     expect(within(tabs()!).getByRole('link', { name: 'Set up' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByTestId('todays-store-chat')).toHaveTextContent('overview');
+    expect(screen.getByText('Every change shows in the preview first. Shoppers see it when you publish.')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3');
+    expect(screen.getByTestId('chat-studio')).toHaveAttribute(
+      'data-actions',
+      'discardDraft,disconnectSiteAction,publishConfig,revertConfigAction,saveDraftSections,setMessengerEnabled',
+    );
+    expect(screen.queryByTestId('todays-store-chat')).not.toBeInTheDocument();
+    expect(listConversationsForSite).not.toHaveBeenCalled();
+  });
+
+  it('sends a member to What it knows, which has no Set up tab', async () => {
+    vi.mocked(listMessengerSites).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    vi.mocked(listTeamSites).mockResolvedValueOnce([{ ...SITE, role: 'member' }] as never).mockResolvedValueOnce([{ ...SITE, role: 'member' }] as never);
+    await expect(setup()).rejects.toThrow('redirect:/dashboard/store-chat');
+    render(await knows());
+    expect(within(tabs()!).queryByRole('link', { name: 'Set up' })).not.toBeInTheDocument();
+  });
+
+  it('opens a linked tab of today’s page under Set up, so old links keep working', async () => {
+    render(await setup({ tab: 'behaviour' }));
+    expect(screen.getByTestId('todays-store-chat')).toHaveTextContent('behaviour');
     cleanup();
 
     render(await knows({ tab: 'conversations' }));

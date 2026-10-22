@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { currentUser } from '@clerk/nextjs/server';
 import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
@@ -42,6 +43,9 @@ import { roleCan } from '@/lib/rbac/dashboard-policy';
 import { getChatKnowsCopy } from '@/lib/dashboard/chat-knows-copy';
 import { buildChatHead, buildPagesAndNotes } from '@/lib/dashboard/chat-knows-model';
 import { V16ChatFrame, V16ChatKnows, V16ChatKnowsError } from '@/components/dashboard/v16/store-chat/v16-chat-knows';
+import { V16ChatStudio } from '@/components/dashboard/v16/store-chat/v16-chat-studio';
+import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
+import { minutesSince } from '@/lib/dashboard/chat-studio-model';
 import { toConversationListItems } from '@/lib/dashboard/inbox-data';
 
 const TAB_IDS = ['overview', 'appearance', 'ai', 'behaviour', 'conversations', 'installation'] as const;
@@ -221,6 +225,8 @@ export async function StoreChatPage({
      numbers cannot be read; the knowledge is required. */
   const v16 = features.includes('v16_dashboard');
   const knowsCopy = getChatKnowsCopy(locale);
+  // Setting Store Chat up is for owners and admins (item 12); the actions check it again.
+  const canSetUp = roleCan(selectedRole, 'settings');
   if (v16 && route === 'knows' && !linkedTab) {
     const [statsRead, knowledgeRead] = await Promise.allSettled([getOverviewStats(selected.id), listKnowledge(selected.id)]);
     const head = buildChatHead(
@@ -235,13 +241,14 @@ export async function StoreChatPage({
     for (const failed of [statsRead, knowledgeRead]) {
       if (failed.status === 'rejected') console.error('[store chat] what it knows failed:', failed.reason);
     }
-    if (knowledgeRead.status === 'rejected') return <V16ChatKnowsError locale={locale} head={head} />;
+    if (knowledgeRead.status === 'rejected') return <V16ChatKnowsError locale={locale} head={head} canSetUp={canSetUp} />;
     return (
       <V16ChatKnows
         locale={locale}
         head={head}
         pages={buildPagesAndNotes(knowledgeRead.value, knowsCopy)}
         siteId={selected.id}
+        canSetUp={canSetUp}
         actions={{
           addKnowledge: messengerActions.addKnowledge,
           updateKnowledgeStatus: messengerActions.updateKnowledgeStatus,
@@ -249,6 +256,75 @@ export async function StoreChatPage({
           syncKnowledge: messengerActions.syncKnowledge,
         }}
       />
+    );
+  }
+
+  /* Set up under v16 is ChatStudio, on the same draft and publish. A link
+     with today's ?tab= still opens today's tabs below. */
+  if (v16 && route === 'setup' && !linkedTab) {
+    if (!canSetUp) redirect('/dashboard/store-chat');
+    const [statsRead, detectedRead, ordersRead, flagRows] = await Promise.allSettled([
+      getOverviewStats(selected.id),
+      getWidgetLastSeenAt(selected.id),
+      selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
+      isTryOnPlatformOperator().then((operator) => (operator ? storeFlagRows(flagStore) : null)),
+    ]);
+    for (const failed of [statsRead, detectedRead, ordersRead, flagRows]) {
+      if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
+    }
+    const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
+    const operatorFlags = flagRows.status === 'fulfilled' ? flagRows.value : null;
+    const lastSeenMinutes = minutesSince(detectedRead.status === 'fulfilled' ? detectedRead.value : null, new Date().getTime());
+    return (
+      <V16ChatFrame
+        locale={locale}
+        tab="setup"
+        subtitle={getChatStudioCopy(locale).subtitle}
+        head={buildChatHead(
+          {
+            active: selected.status === 'active',
+            domain: selected.domain,
+            solved7: stats?.aiResolved7d ?? null,
+            handedOff7: stats?.handedOff7d ?? null,
+          },
+          knowsCopy,
+        )}
+      >
+        <V16ChatStudio
+          locale={locale}
+          siteId={selected.id}
+          published={publishedConfig}
+          config={config}
+          payload={payload}
+          meta={{
+            domain: selected.domain,
+            embedKey: selected.embed_key,
+            active: selected.status === 'active',
+            version: selected.settings_version,
+            canRevert,
+            canDisconnect,
+            ordersAuthorized: ordersRead.status === 'fulfilled' ? ordersRead.value : false,
+            lastSeenMinutes,
+            handoffRules: features.includes('n25_handoff_rules'),
+          }}
+          actions={{
+            saveDraftSections: messengerActions.saveDraftSections,
+            publishConfig: messengerActions.publishConfig,
+            revertConfigAction: messengerActions.revertConfigAction,
+            setMessengerEnabled: messengerActions.setMessengerEnabled,
+            disconnectSiteAction: messengerActions.disconnectSiteAction,
+            discardDraft: messengerActions.discardDraft,
+          }}
+        />
+        {operatorFlags && (
+          <StoreFlagsCard
+            kind={'shopDomain' in flagStore ? 'shop' : 'site'}
+            storeKey={'shopDomain' in flagStore ? flagStore.shopDomain : flagStore.widgetSiteId}
+            storeLabel={selected.domain ?? selected.name}
+            rows={operatorFlags}
+          />
+        )}
+      </V16ChatFrame>
     );
   }
 
