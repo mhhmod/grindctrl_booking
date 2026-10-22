@@ -18,6 +18,8 @@ const arMinutes = (n: number) =>
   arCount(n, { one: 'دقيقة', two: 'دقيقتين', few: (m) => `${m} دقائق`, many: (m) => `${m} دقيقة` });
 const arHours = (n: number) => arCount(n, { one: 'ساعة', two: 'ساعتين', few: (m) => `${m} ساعات`, many: (m) => `${m} ساعة` });
 const arDays = (n: number) => arCount(n, { one: 'يوم', two: 'يومين', few: (m) => `${m} أيام`, many: (m) => `${m} يوماً` });
+const arChats = (n: number) =>
+  arCount(n, { one: 'محادثة واحدة', two: 'محادثتين', few: (m) => `${m} محادثات`, many: (m) => `${m} محادثة` });
 
 export interface TodayCopy {
   storeHealth: string;
@@ -239,7 +241,7 @@ const ar: TodayCopy = {
   fewerThanBefore: (pct) => `أقل بنسبة ${pct}% من الـ 7 أيام السابقة`,
   sameAsBefore: 'مثل الـ 7 أيام السابقة',
   chatsSolved: 'محادثات أنهاها المساعد',
-  ofChats: (n) => `من ${n} محادثة، والباقي حُوِّل إلى الفريق`,
+  ofChats: (n) => `من ${arChats(n)}، والباقي حُوِّل إلى الفريق`,
   noFinishedChats: 'لا محادثات منتهية بعد',
   teamFirstReply: 'أول رد من الفريق',
   minutesValue: (n) => arMinutes(n),

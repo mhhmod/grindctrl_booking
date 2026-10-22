@@ -213,6 +213,8 @@ describe('Today in Arabic', () => {
     expect(v.tiles[2].value).toBe('9 دقائق');
     expect(ar.thingsCount(2)).toBe('أمران، الأكثر إلحاحاً أولاً');
     expect(ar.looksToday(14)).toBe('14 إطلالة اليوم');
+    expect(ar.ofChats(5)).toBe('من 5 محادثات، والباقي حُوِّل إلى الفريق');
+    expect(ar.ofChats(140)).toBe('من 140 محادثة، والباقي حُوِّل إلى الفريق');
     expect(JSON.stringify(v)).not.toMatch(/[٠-٩]/);
   });
 
