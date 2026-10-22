@@ -50,21 +50,27 @@ describe('withPathname', () => {
     expect(response.headers.get('set-cookie')).toBeNull();
   });
 
+  /* What reaches the proxy: Next strips its own router headers first, so a
+     router prefetch and a client-side navigation both arrive as fetches. */
   it.each<Record<string, string>>([
-    { 'next-router-prefetch': '1' },
-    { 'next-router-prefetch': '1', 'next-router-segment-prefetch': '/_tree' },
+    { 'sec-fetch-mode': 'cors', 'sec-fetch-dest': 'empty' },
+    { 'sec-fetch-mode': 'same-origin' },
     { 'sec-purpose': 'prefetch' },
+    { 'sec-purpose': 'prefetch;prerender', 'sec-fetch-mode': 'navigate' },
     { purpose: 'prefetch' },
-  ])('renders a prefetched store link without remembering it (%j)', (headers) => {
+  ])('renders a store a fetch or prefetch names without remembering it (%j)', (headers) => {
     const response = forward(`/dashboard/store-chat?site=${SITE}&tab=ai`, headers);
     expect(forwarded(response, ACTIVE_STORE_HEADER)).toBe(`site:${SITE}`);
     expect(response.headers.get('set-cookie')).toBeNull();
   });
 
-  it('remembers the store when the merchant actually follows the link', () => {
-    const response = forward(`/dashboard/store-chat?site=${SITE}`, { rsc: '1' });
-    expect(response.headers.get('set-cookie') ?? '').toContain(ACTIVE_STORE_COOKIE);
-  });
+  it.each<Record<string, string>>([{ 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' }, {}])(
+    'remembers the store when a page loads with the link (%j)',
+    (headers) => {
+      const response = forward(`/dashboard/store-chat?site=${SITE}`, headers);
+      expect(response.headers.get('set-cookie') ?? '').toContain(ACTIVE_STORE_COOKIE);
+    },
+  );
 
   it('drops a client’s own copy of the header', () => {
     const response = forward('/dashboard/try-on', { [ACTIVE_STORE_HEADER]: 'shop:someone-else.myshopify.com' });

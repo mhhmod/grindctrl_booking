@@ -323,8 +323,11 @@ export async function StoreChatPage({
         </div>
         {sites.length > 1 && (
           <nav aria-label={locale === 'ar' ? 'اختر المتجر' : 'Choose store'} className="flex flex-wrap gap-1">
+            {/* Plain links: choosing a store loads the page, so the dashboard
+                remembers it, and showing them prefetches nothing
+                (lib/dashboard/forward-request.ts remembers only page loads). */}
             {sites.map((site) => (
-              <Link
+              <a
                 key={site.id}
                 href={`/dashboard/store-chat?site=${site.id}&tab=${tab}`}
                 className={`rounded-full border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 ${
@@ -334,7 +337,7 @@ export async function StoreChatPage({
                 }`}
               >
                 {site.name}
-              </Link>
+              </a>
             ))}
           </nav>
         )}

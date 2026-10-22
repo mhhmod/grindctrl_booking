@@ -19,19 +19,24 @@ const ACTIVE_STORE_MAX_AGE_S = 60 * 60 * 24 * 365;
    (lib/dashboard/active-store.ts). A client's own copy of the header is
    always dropped. */
 
-/* A prefetch is the router warming a link nobody has chosen yet: Next marks
-   its own with next-router-prefetch (and its segment prefetches with
-   next-router-segment-prefetch), browsers mark theirs with Sec-Purpose.
-   Remembering one would switch the store just by showing a page that links
-   to other stores, as Store Chat's store picker does. */
-function isPrefetch(req: NextRequest): boolean {
+/* Only a page load is remembered: a link opened from an email or a
+   bookmark, a store chosen in the switcher (plain links, so they load the
+   page), or an address typed in. Next removes its own router headers
+   (next-router-prefetch among them) before this proxy runs (FLIGHT_HEADERS
+   in next/dist/server/web/adapter.js), so a prefetch cannot be told from a
+   client-side navigation here. Both are fetches, which browsers mark with a
+   Sec-Fetch-Mode other than navigate, and remembering a prefetch switched
+   the store just by showing a page that links to other stores, as Store
+   Chat's store picker does. A fetch still renders the store it names,
+   through the header. A browser too old to send Sec-Fetch-Mode is
+   remembered as before, unless it marks its own prefetch. */
+function isPageLoad(req: NextRequest): boolean {
   const { headers } = req;
-  return (
-    headers.has('next-router-prefetch') ||
-    headers.has('next-router-segment-prefetch') ||
-    /prefetch/i.test(headers.get('sec-purpose') ?? headers.get('purpose') ?? '')
-  );
+  if (/prefetch/i.test(headers.get('sec-purpose') ?? headers.get('purpose') ?? '')) return false;
+  const mode = headers.get('sec-fetch-mode');
+  return mode === null || mode === 'navigate';
 }
+
 export function withPathname(req: NextRequest) {
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-pathname', req.nextUrl.pathname);
@@ -48,7 +53,7 @@ export function withPathname(req: NextRequest) {
   if (choice) requestHeaders.set(ACTIVE_STORE_HEADER, formatStoreChoice(choice));
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  if (choice && !isPrefetch(req)) {
+  if (choice && isPageLoad(req)) {
     response.cookies.set(ACTIVE_STORE_COOKIE, formatStoreChoice(choice), {
       path: '/dashboard',
       httpOnly: true,
