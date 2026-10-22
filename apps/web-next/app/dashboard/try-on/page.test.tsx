@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, within } from '@testing-library/react';
+import { cleanup, screen, within } from '@testing-library/react';
 import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,6 +10,7 @@ vi.mock('@clerk/nextjs/server', () => ({ auth: session.auth }));
    change; stub those edges so the test covers what the owner actually sees. */
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/dashboard/try-on',
 }));
 
 /* The page resolves the operator's language from the locale cookie, and
@@ -133,6 +134,7 @@ vi.mock('@/lib/try-on/entitlement', async (importOriginal) => ({
 }));
 
 import DashboardTryOnPage from '@/app/dashboard/try-on/page';
+import DashboardTryOnSetupPage from '@/app/dashboard/try-on/setup/page';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
@@ -152,7 +154,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
-async function renderPage(shop?: string, query: { view?: string; period?: string } = {}) {
+async function renderPage(shop?: string, query: { period?: string } = {}) {
   render(await DashboardTryOnPage({ searchParams: Promise.resolve({ shop, ...query }) }));
 }
 
@@ -427,14 +429,14 @@ describe('DashboardTryOnPage, v16', () => {
     expect(getTryOnResultsFacts).toHaveBeenCalledWith({ shop: 'grindctrl.myshopify.com', period: 7 });
     const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
     expect(within(tabs).getByRole('link', { name: results.results })).toHaveAttribute('aria-current', 'page');
-    expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('href', '/dashboard/try-on?view=setup');
+    expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('href', '/dashboard/try-on/setup');
     expect(screen.getByText(results.looksMade)).toBeInTheDocument();
     expect(screen.getAllByText('Layla abaya')).toHaveLength(2); // by product and recent looks
     expect(screen.queryByLabelText('Editing')).not.toBeInTheDocument();
   });
 
   it('keeps today’s page as Set up, under the same tabs and badge', async () => {
-    await renderPage(undefined, { view: 'setup' });
+    render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
     const tabs = screen.getByRole('navigation', { name: results.tabsLabel });
     expect(within(tabs).getByRole('link', { name: results.setUp })).toHaveAttribute('aria-current', 'page');
@@ -449,10 +451,15 @@ describe('DashboardTryOnPage, v16', () => {
     expect(screen.getByRole('status')).toHaveTextContent(results.couldNotLoad);
   });
 
-  it('draws today’s page with no tabs when the flag is off', async () => {
+  it('draws today’s page with no tabs when the flag is off, on either route', async () => {
     vi.mocked(storeFlags).mockResolvedValue([]);
     await renderPage();
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
+    expect(screen.queryByRole('navigation', { name: results.tabsLabel })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Editing')).toBeInTheDocument();
+    cleanup();
+
+    render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
     expect(screen.queryByRole('navigation', { name: results.tabsLabel })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Editing')).toBeInTheDocument();
   });

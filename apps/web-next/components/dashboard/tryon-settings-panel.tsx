@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useCallback, useState, useTransition } from 'react';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button, Group, NativeSelect, Stack, Text } from '@mantine/core';
 import {
   TryOnSettingsControls,
@@ -35,6 +35,8 @@ export function TryOnSettingsPanel({
   locale?: TryOnLocale;
 }) {
   const router = useRouter();
+  // Try-On's Set up tab and today's page both draw this panel; stay on the one shown.
+  const pathname = usePathname() ?? '/dashboard/try-on';
   const c = getTryOnDashboardCopy(locale);
   const [isNavigating, startNavigation] = useTransition();
   const [s, setS] = useState<TryOnWidgetSettings>(settings);
@@ -115,7 +117,7 @@ export function TryOnSettingsPanel({
         value={selectedShop}
         disabled={isNavigating}
         onChange={(e) =>
-          startNavigation(() => router.push(`/dashboard/try-on?shop=${encodeURIComponent(e.currentTarget.value)}`))
+          startNavigation(() => router.push(`${pathname}?shop=${encodeURIComponent(e.currentTarget.value)}`))
         }
         maw={{ sm: 448 }}
       />

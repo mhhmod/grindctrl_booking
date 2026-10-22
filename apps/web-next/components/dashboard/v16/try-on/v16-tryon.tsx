@@ -44,7 +44,7 @@ export function V16TryOnFrame({
           <Link href="/dashboard/try-on" className={classes.tab} aria-current={tab === 'results' ? 'page' : undefined}>
             {copy.results}
           </Link>
-          <Link href="/dashboard/try-on?view=setup" className={classes.tab} aria-current={tab === 'setup' ? 'page' : undefined}>
+          <Link href="/dashboard/try-on/setup" className={classes.tab} aria-current={tab === 'setup' ? 'page' : undefined}>
             {copy.setUp}
           </Link>
         </nav>

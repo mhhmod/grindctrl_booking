@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from 'vitest';
    clicks the select; the stub only has to exist. */
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/dashboard/try-on',
 }));
 
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
