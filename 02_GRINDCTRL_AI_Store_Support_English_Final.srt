@@ -1,0 +1,178 @@
+1
+00:00:03,500 --> 00:00:06,316
+When a shopper contacts an online fashion store,
+
+2
+00:00:06,316 --> 00:00:08,111
+the question may sound simple.
+
+3
+00:00:08,111 --> 00:00:10,256
+Is this available in my size?
+
+4
+00:00:10,256 --> 00:00:12,260
+How should I care for the fabric?
+
+5
+00:00:12,260 --> 00:00:14,005
+Can you help me check an order?
+
+6
+00:00:14,005 --> 00:00:17,344
+But behind each question is a real workflow.
+
+7
+00:00:17,344 --> 00:00:19,836
+Someone needs to understand the request,
+
+8
+00:00:19,836 --> 00:00:21,604
+find accurate information,
+
+9
+00:00:21,604 --> 00:00:23,339
+decide what can be answered,
+
+10
+00:00:23,339 --> 00:00:26,070
+and recognize when a team member should take over.
+
+11
+00:00:26,070 --> 00:00:30,186
+That's where a thoughtful AI support experience becomes valuable.
+
+12
+00:00:33,686 --> 00:00:35,671
+With GRINDCTRL’s Store Chat,
+
+13
+00:00:35,671 --> 00:00:39,523
+shoppers can ask questions directly inside a Shopify store.
+
+14
+00:00:39,523 --> 00:00:42,927
+The assistant works from the store knowledge the merchant provides,
+
+15
+00:00:42,927 --> 00:00:45,115
+including information about products,
+
+16
+00:00:45,115 --> 00:00:47,384
+sizing, delivery, and care.
+
+17
+00:00:47,384 --> 00:00:51,004
+And support doesn't have to stop when a question gets complicated.
+
+18
+00:00:54,504 --> 00:00:56,362
+If the shopper needs a person,
+
+19
+00:00:56,362 --> 00:00:58,996
+the conversation can be handed to the merchant’s team,
+
+20
+00:00:58,996 --> 00:01:01,265
+together with the reason for the handoff.
+
+21
+00:01:01,265 --> 00:01:04,741
+The team can review the conversation in a shared inbox,
+
+22
+00:01:04,741 --> 00:01:05,596
+assign it,
+
+23
+00:01:05,596 --> 00:01:06,904
+add private notes,
+
+24
+00:01:06,904 --> 00:01:09,602
+and respond with saved replies when appropriate.
+
+25
+00:01:09,602 --> 00:01:13,275
+The goal isn't to make every conversation sound automated.
+
+26
+00:01:13,275 --> 00:01:17,788
+It's to keep context and make the transition from AI to human support
+
+27
+00:01:17,788 --> 00:01:18,568
+feel organized.
+
+28
+00:01:22,562 --> 00:01:25,862
+Some workflows can also work with order information.
+
+29
+00:01:25,862 --> 00:01:29,590
+Where access is configured and the shopper's details are verified,
+
+30
+00:01:29,590 --> 00:01:33,274
+the assistant can look up order status on a read-only basis.
+
+31
+00:01:33,274 --> 00:01:35,069
+It does not change orders,
+
+32
+00:01:35,069 --> 00:01:38,802
+issue refunds, or make decisions beyond its approved scope.
+
+33
+00:01:42,302 --> 00:01:44,148
+For the people running the store,
+
+34
+00:01:44,148 --> 00:01:49,614
+this means customer conversations and support actions can be easier to
+follow in one place.
+
+35
+00:01:49,614 --> 00:01:55,661
+The experience can be adapted to the merchant's actual policies, rather
+than relying on generic answers.
+
+36
+00:01:55,661 --> 00:01:58,186
+And the same principle applies to setup.
+
+37
+00:01:58,186 --> 00:02:01,502
+The right configuration depends on the store's catalog,
+
+38
+00:02:01,502 --> 00:02:03,353
+theme, support process,
+
+39
+00:02:03,353 --> 00:02:05,905
+and the questions customers ask most often.
+
+40
+00:02:09,405 --> 00:02:11,011
+To see what this looks like,
+
+41
+00:02:11,011 --> 00:02:13,506
+open the GRINDCTRL Demonstration Store.
+
+42
+00:02:13,506 --> 00:02:17,588
+You can explore the shopper experience and discuss the setup with the
+team.
+
+43
+00:02:17,588 --> 00:02:18,903
+GRINDCTRL
+
+44
+00:02:18,903 --> 00:02:23,400
+AI that helps the store respond and knows when people should take over.

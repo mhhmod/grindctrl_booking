@@ -1,0 +1,194 @@
+GRINDCTRL — THREE COMPLETE ENGLISH MARKETING VIDEOS
+SINGLE-SESSION MASTER PRODUCTION PROMPT | AUDIO LOCKED | EXACTLY 150 SECONDS EACH
+
+ROLE
+Act as a premium commercial film director, editor, motion designer, sound mixer, factual product demonstrator, and hands-on rendering engineer. I want THREE ACTUAL COMPLETED, SEPARATELY DOWNLOADABLE MP4 VIDEOS, not three concepts, descriptions, slides, or scripts. All production directions and the reference scripts are provided here; the three supplied MP3 voiceovers are authoritative. Do not ask me to describe the topics, find prior chats, regenerate narration, select a narrator, or approve routine editing decisions. Make professional defaults.
+
+WHAT IS PROVIDED / FIXED INPUT MANIFEST
+I am uploading exactly three ElevenLabs MP3 voiceovers. Identify them by the opening phrase (even if their filenames are changed). All three are already approved English voiceovers; do not re-record, regenerate, translate, dub, speed up, pitch shift, or change the narrator. The voice is Lola – Engaging American News & Ads Pro.
+
+VIDEO 01 — opening “A shopper can love a fashion brand…”
+  Audio identifier: 01_GRINDCTRL_The_Future_of_Online_Fashion_Shopping.mp3
+  Measured source duration: 122.358 seconds.
+  Subject: THE FUTURE OF ONLINE FASHION SHOPPING / brand positioning.
+
+VIDEO 02 — opening “When a shopper contacts an online fashion store…”
+  Audio identifier: 02_GRINDCTRL_AI_Customer_Support_and_Store_Operations.mp3
+  Measured source duration: 122.436 seconds.
+  Subject: AI CUSTOMER SUPPORT AND STORE OPERATIONS / store knowledge, safe support, human handoff, team inbox.
+
+VIDEO 03 — opening “Picture this. You're shopping online…”
+  Audio identifier: 03_GRINDCTRL_AI_TryOn_and_StoreChat.mp3
+  Measured source duration: 123.716 seconds.
+  Subject: AI VIRTUAL TRY-ON + STORE CHAT / complete customer journey.
+
+IMPORTANT TIMING CORRECTION: These audio files are approximately 2:02 each, NOT 2:25 or 2:30. Their total shortfalls versus 150.000 seconds are respectively 27.642, 27.564, and 26.284 seconds. The FINAL VIDEOS must still be exactly 150.000 seconds each. Preserve every word of the originals and preserve a natural narration speed. Fill the extra time with PURPOSEFUL, SHORT, DISTRIBUTED, MUSIC-BACKED VISUAL-ONLY INTERLUDES at appropriate natural topic/paragraph boundaries, plus a tasteful brief cold open and a concise closing brand card. DO NOT put a 25-second silent black screen or static logo at the end. DO NOT claim narration is 150 seconds. Do not create additional spoken narration. Do not truncate or mask words. If splitting and rejoining source audio is necessary for visual interludes, perform cuts only at verified natural pauses, preserve the exact audible speech, and maintain phase/level consistency. A reasonable initial pacing plan is 4-second silent cinematic cold open, four or five 3–4-second intentional visual-demo beats across the film at semantic transitions, and a 5–8-second branded outro; automatically adjust to the EXACT measured deficit. These visual-only beats must have meaningful motion, licensed quiet music/appropriate SFX, and changing visuals. They should not appear as unexplained gaps. Never force a cut in the middle of a phrase. If you can achieve more elegant pacing by distributing the inserted time differently, do so and document it.
+
+FIXED OUTPUTS
+- 01_GRINDCTRL_Future_of_Fashion_English_Final.mp4
+- 02_GRINDCTRL_AI_Store_Support_English_Final.mp4
+- 03_GRINDCTRL_TryOn_StoreChat_English_Final.mp4
+
+All 3: EXACTLY 150.000 seconds / 4,500 frames at 30 fps, 1920x1080, 16:9 landscape, H.264 video and AAC audio in MP4, premium-quality bitrate, natural English speech, English captions, accessible safe margins, no burned-in watermarks. Export also 01/02/03 matching .srt subtitles, and an editable project/timeline if the tools support it. Deliver finished files, not just a storyboard. Videos may be rendered one by one, but finish all 3 within this assignment subject to real tool limits.
+
+NON-NEGOTIABLE HONESTY ABOUT TOOLS: Use the actual available image/video generation and editing/rendering capabilities (including a working cloud browser, renderer, FFmpeg, Remotion, or equivalent if available). Do not merely send a video-generator prompt instead of producing MP4s when rendering is possible. If you cannot access a required tool, first use available supported alternatives. If producing final MP4s is genuinely impossible in this environment, do not lie; deliver the closest fully actionable editable project + assets and explicitly identify the missing capability. Never claim you exported a file that does not exist. Do not initiate paid subscriptions or purchases without authorization.
+
+BRAND AND FACTUAL SOURCES
+Written logo and on-screen branding: GRINDCTRL (uppercase, exactly).
+Website CTA: https://grindctrl.cloud
+Official factual sources: https://grindctrl.cloud and https://grindctrl.cloud/try-on and https://grindctrl.cloud/pricing
+Demonstration Shopify storefront: https://grindctrl.myshopify.com — only access publicly viewable pages when available; do not require owner credentials.
+The official site documents Shopify fashion try-on from an uploaded photo; Arabic/English Store Chat using the merchant's store knowledge; read-only order status with order number/email verification; human handoff; shared team inbox, assignment, private notes, saved replies; demo storefront. Label demo data and illustrative interfaces appropriately. CRM sync and revenue attribution are PLANNED, not a released feature. Never present garment prices in the demo shop as GRINDCTRL subscription prices. No fake conversion lifts, revenue, KPIs, customer testimonials, checkout screenshots or unverified endorsements. Verify any screen/claim against official sources; if the site is unreachable, stick to the voiceover's existing modest claims without adding facts.
+The narration may say “Grind Control” aloud; the SCREEN must write “GRINDCTRL”.
+
+VISUAL QUALITY / ART DIRECTION
+Aim for a high-end international SaaS/commerce launch film, not generic AI stock footage. Art direction: luxury Shopify fashion + trustworthy business software; ink-black/graphite, clean white UI, restrained light champagne metal, sophisticated typography, physically convincing clothing and studio light, smooth spatial transitions, crisp charts with no fabricated statistics, restrained cinematic macro closeups, real product understanding. No robots, random tech holograms, unrelated space footage, neon noise, fake logos, random stock boardrooms, generic people smiling at laptops, garbled text, unreadable fake dashboard data, or endlessly zooming static images.
+Prioritize real official logo and authentic product screens when available. For concept reconstructions, clearly treat them as illustrative and NEVER claim they're screenshots of a shipped interface. Show legible, fully spellchecked UI typeset/composited by the editor, not baked-in garbled AI text. Use cohesive layout, soft product-focused motion, physically consistent try-on images, editorial high-value fashion cinematography, subtle 2.5D depth, motion tracked devices, polished callouts and real UI storytelling.
+
+AUDIO / EDITORIAL
+The exact uploaded MP3 audio is the only spoken narration. It must remain intelligible and uncut, including its natural voice. Original English is locked, no new speech. Background music can be a licensed/rights-cleared restrained cinematic ambient tech/fashion track; gently duck during voiceover, expose it slightly in visual-only demonstration beats. No copyright-risk famous songs. Avoid loud sound design. Even out speech level without clipping; aim around -16 LUFS integrated where appropriate, true peak below -1 dBTP. All visual animation needs to be lip-independent (no talking faces required). Produce tightly synchronized English subtitles from the ACTUAL audio, not from a guessed transcript; if a supplied reference line differs from the spoken words, the sound wins. Maintain subtitles through audio time shifts after interludes. Keep 1–2 lines readable, not giant karaoke words, and never obstruct product controls.
+
+MASTER POSTPRODUCTION ORDER
+1) Inspect and map the 3 attached audio files by opening words and their measured duration.
+2) Review the authoritative audio and the reference scripts below. Extract the exact spoken transcript (and speech timecodes) wherever tools support this; otherwise use the scripts for editorial planning and manually check discrepancies by listening.
+3) For EACH VIDEO, create a beat sheet of sentence/scene/time ranges spanning the ENTIRE 150-second target, explicitly showing the 26–28 seconds of deliberate additional visual-only time.
+4) Capture or generate suitable unique B-roll, fashion/Shopify product scenes, illustrative product flow animations and legitimate product screenshots. Do not rely only on generic stock footage or title cards. Prefer 18–28 purposeful, evolving visual sequences per film with meaningful changes every 4–8 seconds. Do not recycle the same clip excessively.
+5) Edit each film exactly to the ORIGINAL VO, strategically insert brief narration-free demo transitions at natural speech/paragraph boundaries, and complete the closing end card.
+6) Add high-end English kinetic titles, restrained motion graphics, carefully placed subtitles and proofread all text.
+7) Mix voice, licensed music and subtle UI SFX. Do not let music hide narration.
+8) Export all three MP4s and SRTs. Verify with ffprobe (or equivalent) that VIDEO tracks contain exactly 4500 frames at 30fps / 150.000s, audio has no chopped speech, audio stream lasts through the intended end, no black frames/placeholder UI/visible watermark, and the file plays.
+9) Open and inspect representative frames from beginning, middle, end, and EVERY major UI/product stage of each video. Correct observable issues before delivering.
+10) Deliver all three finished file links, optional ZIP, SRTs, project file if supported, QA table showing exact rendered durations, audio source matching and verification. Do NOT wait for approval between videos or produce only one.
+
+VIDEO 01 — CREATIVE DIRECTION / COMPLETE VOICEOVER REFERENCE
+TITLE: THE FUTURE OF ONLINE FASHION SHOPPING
+Primary narrative: relatable hesitation → missing fitting room → brand opportunity → GRINDCTRL concept → try-on + store chat → shopping journey → responsible AI/human support → invitation to demo.
+
+Recommended visual beats in voice order:
+- Opening: beautiful product photos, lingering unpurchased cart, shopper hesitation; use tasteful framing, not manipulative stock video.
+- Contrast: real in-store fitting room vs abstracted e-commerce product screen (avoid claiming online fitting is physically exact).
+- Show sizing/delivery/product doubts in clean, legible UI callouts.
+- Brand reveal: official GRINDCTRL logo and responsive fashion storefront design.
+- From isolated clicks to connected customer journey: elegant horizontal/vertical UI timeline.
+- Illustrate product → one user photo → try-on preview (consistent exact person and exact garment).
+- Store Chat questions backed by merchant knowledge, and handoff to human when needed.
+- Show merchant team interacting with shared support context; do not fabricate KPIs.
+- Unique mood: editorial, fashion-forward, aspirational. Make visuals distinct from the operational Video 02.
+- Closing: customer value/merchant value split followed by premium GRINDCTRL website CTA.
+
+Full SCRIPT REFERENCE (for scene alignment, not permission to regenerate VO):
+A shopper can love a fashion brand, admire the photography, and still hesitate at the most important moment: deciding whether to buy.
+
+Online, customers don't get the fitting room. They can't easily imagine how a garment will look on them. And when they have a question about sizing, delivery, or the product itself, they need a clear answer, not another reason to leave.
+
+For fashion brands, this creates a challenge that goes far beyond building a beautiful website. The experience has to help people explore with confidence, and it has to feel personal, even when the store is busy.
+
+That's the thinking behind Grind Control.
+
+Grind Control brings practical AI experiences into Shopify fashion stores. It connects product discovery with helpful, store-specific conversations, giving shoppers better ways to explore what they're considering.
+
+Instead of treating shopping as a series of disconnected clicks, the goal is to make each step more useful. A shopper sees a product. They want to picture it on themselves. They have a question. They want an answer that actually relates to that store.
+
+The virtual try-on experience helps them visualize a selected garment using a photo. Store Chat helps answer questions using information supplied by the merchant, with a route to the team when a human response is needed.
+
+And this is important: the AI is not meant to invent product details or replace a brand's judgment. Its answers depend on the information the store provides, and more complex cases can move to a person.
+
+For merchants, the value is a more connected way to present products and support shoppers. For customers, it's a shopping journey that feels easier to understand.
+
+You can explore the experience in the live demonstration store, see the features in action, and discuss how they fit your own Shopify setup.
+
+Because great online fashion should do more than display products beautifully. It should help people make sense of what they're buying.
+
+Discover Grind Control at Grind Control dot cloud.
+
+VIDEO 02 — CREATIVE DIRECTION / COMPLETE VOICEOVER REFERENCE
+TITLE: AI CUSTOMER SUPPORT AND STORE OPERATIONS
+Primary narrative: simple shopper question → real support workflow → store-specific AI chat → team handoff → shared inbox → read-only order checks → safe boundary → merchant-configured operations → demo.
+
+Recommended visual beats in voice order:
+- Cinematic closeups of customer queries on phone: “Is this available in my size?” etc.
+- Behind the question: structured layered flow: question → store knowledge → AI answer or human escalation.
+- Demonstrate authentic Store Chat UI from the official site where possible; Arabic/English language toggle can be shown visually, but all editorial captions English.
+- Clean cards for merchant-supplied product, sizing, shipping and care knowledge.
+- Handoff showing reason/context passed to human. Animate only verified UI functions.
+- Shared inbox: assign, private notes, saved replies, human continuation. Keep detailed readable UI legible.
+- Order status: verify order number/email context; clearly read-only, no refunds/edits. Never include actual user data; use unmistakably fictional/demo identities.
+- Internal workflow diagram from shopper to safe assistant to human team.
+- Quality: operational, precise, empathetic and credible, not an abstract 'AI magic' film.
+- End with demo and professional GRINDCTRL CTA, unique from Video 01's final styling.
+
+Full SCRIPT REFERENCE:
+When a shopper contacts an online fashion store, the question may sound simple. Is this available in my size? How should I care for the fabric? Can you help me check an order?
+
+But behind each question is a real workflow. Someone needs to understand the request, find accurate information, decide what can be answered, and recognize when a team member should take over.
+
+That's where a thoughtful AI support experience becomes valuable.
+
+With Grind Control's Store Chat, shoppers can ask questions directly inside a Shopify store. The assistant works from the store knowledge the merchant provides, including information about products, sizing, delivery, and care.
+
+And support doesn't have to stop when a question gets complicated.
+
+If the shopper needs a person, the conversation can be handed to the merchant's team, together with the reason for the handoff. The team can review the conversation in a shared inbox, assign it, add private notes, and respond with saved replies when appropriate.
+
+The goal isn't to make every conversation sound automated. It's to keep context and make the transition from AI to human support feel organized.
+
+Some workflows can also work with order information. Where access is configured and the shopper's details are verified, the assistant can look up order status on a read-only basis. It does not change orders, issue refunds, or make decisions beyond its approved scope.
+
+For the people running the store, this means customer conversations and support actions can be easier to follow in one place. The experience can be adapted to the merchant's actual policies rather than relying on generic answers.
+
+And the same principle applies to setup. The right configuration depends on the store's catalog, theme, support process, and the questions customers ask most often.
+
+To see what this looks like, open the Grind Control demonstration store. You can explore the shopper experience and discuss the setup with the team.
+
+Grind Control: AI that helps the store respond, and knows when people should take over.
+
+VIDEO 03 — CREATIVE DIRECTION / COMPLETE VOICEOVER REFERENCE
+TITLE: AI VIRTUAL TRY-ON + STORE CHAT
+Primary narrative: garment doubt → try-on interaction → photo upload → actual visual preview → understanding limitations → shopper chat question → store-specific answer → human handoff → integrated journey → demo CTA.
+
+Recommended visual beats in voice order:
+- Opening: beautiful and highly specific apparel product in a premium Shopify fashion product page; garment has memorable, consistent shape/pattern/details.
+- Shopper selects try-on option on product page, uploads one appropriate photo. Never show invented real-user private photos; use synthetic consenting/demonstration model imagery.
+- Show generation process precisely as an illustrative flow, not fake footage labeled real-time captured software.
+- Show same adult shopper in same body/face pose wearing the SAME selected garment, clearly recognizable garment seams/material/color details. This visual consistency is critical. Do not morph to a different person or garment.
+- Introduce “Not an exact physical fit guarantee” visually subtly if appropriate, no false sizing precision.
+- Show typed size/delivery/fabric question → Store Chat answering from uploaded store knowledge in authentic or clearly labeled illustrative UI.
+- Show English/Arabic support as a product capability without making all editorial subtitles Arabic.
+- Human handoff to merchant's team inbox, preserved context, notes/assignment and next action.
+- Dual-panel animation explaining complementary purposes of Try-On and Store Chat.
+- Final integrated phone-to-team journey and premium GRINDCTRL + grindctrl.cloud end card.
+- Make this the most product-demonstrative of the three films, not a generic fashion editorial.
+
+Full SCRIPT REFERENCE:
+Picture this. You're shopping online, and you find a jacket, a dress, or an abaya you really like. The photos look great. But you still have a question: what would it look like on me?
+
+That's where Grind Control's AI Virtual Try-On comes in.
+
+Inside a supported Shopify fashion store, a shopper chooses a product and selects the try-on option. They upload a photo of themselves, then request a personalized preview.
+
+The system generates an image showing how the selected garment could look on that person. It's a visual exploration tool, not a promise of an exact physical fit. But it gives shoppers a more personal way to explore clothing than product photography alone.
+
+Now imagine the next question.
+
+Does this item run true to size? What are the delivery options? How should the fabric be cared for?
+
+Instead of searching through multiple pages, the shopper can open Store Chat and ask.
+
+The assistant uses the information the merchant has provided to answer relevant questions, in English or Arabic. If a situation needs human judgment, the conversation can be handed to the store's team.
+
+The team can review the thread, understand why it was handed over, and continue the conversation from the shared inbox.
+
+Together, these two experiences connect two important moments in fashion shopping.
+
+Virtual Try-On helps the customer explore a garment visually. Store Chat helps them understand the product and find the information they need. And the human team remains part of the experience when personal support matters.
+
+For the merchant, both features are designed around the Shopify store they already operate. The demonstration lets you explore a real storefront, try the product journey, and see how the chat works with store knowledge.
+
+There are no imaginary performance numbers here, and no magic promises. Just practical tools built to make the online shopping journey more useful.
+
+See AI Virtual Try-On and Store Chat together at Grind Control dot cloud.
+
+Grind Control. Let shoppers see it. Let them ask.
+
+FINAL DELIVERY CONTRACT
+Return THREE separate actual video download links. Report the exact audio source matching, exact visual-only added duration, source audio duration, final video duration, 1920x1080 resolution, 30 fps / 4500 frames, audio verification, subtitle sync, and factual/logo QA results for each. Never invent a link or report 'rendered' unless the actual MP4 exists and is readable. If you have working editing/visual generation tools, make the videos now. No extra questions, no extra narration, no new subscriptions. Do not ask for the Arabic originals: the three authoritative English voiceovers and the reference scripts are provided.

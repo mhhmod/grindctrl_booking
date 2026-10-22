@@ -1,0 +1,760 @@
+{
+  "id": "01",
+  "title": "The future of fashion",
+  "stem": "01_GRINDCTRL_Future_of_Fashion_English_Final",
+  "audio_file": "01_GRINDCTRL_The_Future_of_Online_Fashion_Shopping.mp3",
+  "source_audio_sha256": "98005b9f3e324284e9895601b31f1882aad3a3fb2bfb69fae9fc026d312871f2",
+  "source_decoded_duration": 122.32,
+  "source_container_duration": 122.357551,
+  "duration": 150,
+  "fps": 30,
+  "frames": 4500,
+  "cold_open_sec": 3.5,
+  "interludes_sec": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+  ],
+  "outro_sec": 6.680000000000007,
+  "additional_visual_only_sec": 27.680000000000007,
+  "narration_segments": [
+    {
+      "source_start_sec": 0.0,
+      "source_end_sec": 23.35934240362812,
+      "target_start_sec": 3.5,
+      "target_end_sec": 26.85934240362812,
+      "samples": 1030147,
+      "source_pcm_sha256": "e897841b93c871fba49bcd46a3a7ec670bbbf21f4cdefeeb39e8eb21fcb89288"
+    },
+    {
+      "source_start_sec": 23.35934240362812,
+      "source_end_sec": 38.86412698412698,
+      "target_start_sec": 30.35934240362812,
+      "target_end_sec": 45.86412698412698,
+      "samples": 683761,
+      "source_pcm_sha256": "4d529df707e2b9299a9dab2f939289ef3a38e763d2453437366282bfd543acde"
+    },
+    {
+      "source_start_sec": 38.86412698412698,
+      "source_end_sec": 67.90741496598639,
+      "target_start_sec": 49.36412698412698,
+      "target_end_sec": 78.40741496598639,
+      "samples": 1280809,
+      "source_pcm_sha256": "eafa0c83d1a1df4d1cd60b74b71bc69fd5a732ca275717321c87fe6ce9f01d42"
+    },
+    {
+      "source_start_sec": 67.90741496598639,
+      "source_end_sec": 93.52283446712018,
+      "target_start_sec": 81.90741496598639,
+      "target_end_sec": 107.52283446712018,
+      "samples": 1129640,
+      "source_pcm_sha256": "bbf2c752d245e406a50267462e96705d9fde1da3c3042a99b6f268ef5d46b32a"
+    },
+    {
+      "source_start_sec": 93.52283446712018,
+      "source_end_sec": 111.43886621315193,
+      "target_start_sec": 111.02283446712018,
+      "target_end_sec": 128.93886621315193,
+      "samples": 790097,
+      "source_pcm_sha256": "792c0df267ddf36278d4456e27ca9adafe916020f7e42ee896ab8feba911f9d1"
+    },
+    {
+      "source_start_sec": 111.43886621315193,
+      "source_end_sec": 122.32,
+      "target_start_sec": 132.43886621315193,
+      "target_end_sec": 143.32,
+      "samples": 479858,
+      "source_pcm_sha256": "45baae1a38ade9cff6966ee7030c0d9d7a74481ad1f625ea499c24a340cc683e"
+    }
+  ],
+  "visual_only_intervals": [
+    [
+      0,
+      3.5
+    ],
+    [
+      26.85934240362812,
+      30.35934240362812
+    ],
+    [
+      45.86412698412698,
+      49.36412698412698
+    ],
+    [
+      78.40741496598639,
+      81.90741496598639
+    ],
+    [
+      107.52283446712018,
+      111.02283446712018
+    ],
+    [
+      128.93886621315193,
+      132.43886621315193
+    ],
+    [
+      143.32,
+      150
+    ]
+  ],
+  "scenes": [
+    {
+      "start": 0.0,
+      "end": 3.5,
+      "kind": "cold",
+      "mode": "intro",
+      "title": "The future of fashion",
+      "visual_only": true,
+      "id": "01-SHOT-01"
+    },
+    {
+      "start": 3.5,
+      "end": 12.490272108843538,
+      "kind": "editorial",
+      "mode": "hesitation",
+      "source_start": 0.0,
+      "source_end": 8.9902815,
+      "phrase_index": 0,
+      "visual_only": false,
+      "id": "01-SHOT-02"
+    },
+    {
+      "start": 12.490272108843538,
+      "end": 18.54358276643991,
+      "kind": "fitting",
+      "mode": "missing",
+      "source_start": 8.9902815,
+      "source_end": 15.0435935,
+      "phrase_index": 2,
+      "visual_only": false,
+      "id": "01-SHOT-03"
+    },
+    {
+      "start": 18.54358276643991,
+      "end": 26.85934240362812,
+      "kind": "questions",
+      "mode": "doubts",
+      "source_start": 15.0435935,
+      "source_end": 23.359344,
+      "phrase_index": 4,
+      "visual_only": false,
+      "id": "01-SHOT-04"
+    },
+    {
+      "start": 26.85934240362812,
+      "end": 30.35934240362812,
+      "kind": "fitting",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "01-SHOT-05"
+    },
+    {
+      "start": 30.35934240362812,
+      "end": 36.100680272108846,
+      "kind": "editorial",
+      "mode": "brand",
+      "source_start": 23.359344,
+      "source_end": 29.1006875,
+      "phrase_index": 6,
+      "visual_only": false,
+      "id": "01-SHOT-06"
+    },
+    {
+      "start": 36.100680272108846,
+      "end": 43.31884353741496,
+      "kind": "storefront",
+      "mode": "confidence",
+      "source_start": 29.1006875,
+      "source_end": 36.3188435,
+      "phrase_index": 7,
+      "visual_only": false,
+      "id": "01-SHOT-07"
+    },
+    {
+      "start": 43.31884353741496,
+      "end": 45.86412698412698,
+      "kind": "reveal",
+      "mode": "brand",
+      "source_start": 36.3188435,
+      "source_end": 38.864125,
+      "phrase_index": 8,
+      "visual_only": false,
+      "id": "01-SHOT-08"
+    },
+    {
+      "start": 45.86412698412698,
+      "end": 49.36412698412698,
+      "kind": "journey",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "01-SHOT-09"
+    },
+    {
+      "start": 49.36412698412698,
+      "end": 59.33278911564626,
+      "kind": "storefront",
+      "mode": "connected",
+      "source_start": 38.864125,
+      "source_end": 48.832781,
+      "phrase_index": 9,
+      "visual_only": false,
+      "id": "01-SHOT-10"
+    },
+    {
+      "start": 59.33278911564626,
+      "end": 62.806938775510204,
+      "kind": "product",
+      "mode": "explore",
+      "source_start": 48.832781,
+      "source_end": 52.306937500000004,
+      "phrase_index": 10,
+      "visual_only": false,
+      "id": "01-SHOT-11"
+    },
+    {
+      "start": 62.806938775510204,
+      "end": 69.66421768707482,
+      "kind": "journey",
+      "mode": "discovery",
+      "source_start": 52.306937500000004,
+      "source_end": 59.164219,
+      "phrase_index": 11,
+      "visual_only": false,
+      "id": "01-SHOT-12"
+    },
+    {
+      "start": 69.66421768707482,
+      "end": 75.04528344671202,
+      "kind": "product",
+      "mode": "product",
+      "source_start": 59.164219,
+      "source_end": 64.54528099999999,
+      "phrase_index": 12,
+      "visual_only": false,
+      "id": "01-SHOT-13"
+    },
+    {
+      "start": 75.04528344671202,
+      "end": 78.40741496598639,
+      "kind": "chat",
+      "mode": "specific",
+      "source_start": 64.54528099999999,
+      "source_end": 67.90740600000001,
+      "phrase_index": 13,
+      "visual_only": false,
+      "id": "01-SHOT-14"
+    },
+    {
+      "start": 78.40741496598639,
+      "end": 81.90741496598639,
+      "kind": "upload",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "01-SHOT-15"
+    },
+    {
+      "start": 81.90741496598639,
+      "end": 87.24473922902494,
+      "kind": "tryon",
+      "mode": "preview",
+      "source_start": 67.90740600000001,
+      "source_end": 73.24475000000001,
+      "phrase_index": 14,
+      "visual_only": false,
+      "id": "01-SHOT-16"
+    },
+    {
+      "start": 87.24473922902494,
+      "end": 94.9244671201814,
+      "kind": "chat",
+      "mode": "knowledge",
+      "source_start": 73.24475000000001,
+      "source_end": 80.924469,
+      "phrase_index": 15,
+      "visual_only": false,
+      "id": "01-SHOT-17"
+    },
+    {
+      "start": 94.9244671201814,
+      "end": 101.28485260770975,
+      "kind": "knowledge",
+      "mode": "guardrails",
+      "source_start": 80.924469,
+      "source_end": 87.28484399999999,
+      "phrase_index": 16,
+      "visual_only": false,
+      "id": "01-SHOT-18"
+    },
+    {
+      "start": 101.28485260770975,
+      "end": 107.52283446712018,
+      "kind": "handoff",
+      "mode": "human",
+      "source_start": 87.28484399999999,
+      "source_end": 93.5228435,
+      "phrase_index": 17,
+      "visual_only": false,
+      "id": "01-SHOT-19"
+    },
+    {
+      "start": 107.52283446712018,
+      "end": 111.02283446712018,
+      "kind": "handoff",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "01-SHOT-20"
+    },
+    {
+      "start": 111.02283446712018,
+      "end": 116.68090702947846,
+      "kind": "inbox",
+      "mode": "merchant",
+      "source_start": 93.5228435,
+      "source_end": 99.1809065,
+      "phrase_index": 18,
+      "visual_only": false,
+      "id": "01-SHOT-21"
+    },
+    {
+      "start": 116.68090702947846,
+      "end": 120.8095918367347,
+      "kind": "journey",
+      "mode": "customer",
+      "source_start": 99.1809065,
+      "source_end": 103.309594,
+      "phrase_index": 19,
+      "visual_only": false,
+      "id": "01-SHOT-22"
+    },
+    {
+      "start": 120.8095918367347,
+      "end": 128.93886621315193,
+      "kind": "demo",
+      "mode": "store",
+      "source_start": 103.309594,
+      "source_end": 111.4388755,
+      "phrase_index": 20,
+      "visual_only": false,
+      "id": "01-SHOT-23"
+    },
+    {
+      "start": 128.93886621315193,
+      "end": 132.43886621315193,
+      "kind": "demo",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "01-SHOT-24"
+    },
+    {
+      "start": 132.43886621315193,
+      "end": 136.85968253968252,
+      "kind": "editorial",
+      "mode": "beautiful",
+      "source_start": 111.4388755,
+      "source_end": 115.8596875,
+      "phrase_index": 21,
+      "visual_only": false,
+      "id": "01-SHOT-25"
+    },
+    {
+      "start": 136.85968253968252,
+      "end": 139.70108843537415,
+      "kind": "pair",
+      "mode": "understand",
+      "source_start": 115.8596875,
+      "source_end": 118.701094,
+      "phrase_index": 22,
+      "visual_only": false,
+      "id": "01-SHOT-26"
+    },
+    {
+      "start": 139.70108843537415,
+      "end": 143.32,
+      "kind": "cta",
+      "mode": "discover",
+      "source_start": 118.701094,
+      "source_end": 122.32,
+      "phrase_index": 23,
+      "visual_only": false,
+      "id": "01-SHOT-27"
+    },
+    {
+      "start": 143.32,
+      "end": 150.0,
+      "kind": "outro",
+      "mode": "cta",
+      "title": "The future of fashion",
+      "visual_only": true,
+      "id": "01-SHOT-28"
+    }
+  ],
+  "captions": [
+    {
+      "start": 3.5,
+      "end": 5.668412698412698,
+      "text": "A shopper can love a fashion brand,",
+      "source_start": 0.0,
+      "source_end": 2.168406,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 5.668412698412698,
+      "end": 7.237755102040817,
+      "text": "admire the photography,",
+      "source_start": 2.168406,
+      "source_end": 3.7377504999999998,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 7.237755102040817,
+      "end": 10.125850340136054,
+      "text": "and still hesitate at the most important moment.",
+      "source_start": 3.7377504999999998,
+      "source_end": 6.625844,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 10.501383219954649,
+      "end": 12.490272108843538,
+      "text": "Deciding whether to buy.",
+      "source_start": 7.0013749999999995,
+      "source_end": 8.9902815,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 12.490272108843538,
+      "end": 13.463378684807257,
+      "text": "Online,",
+      "source_start": 8.9902815,
+      "source_end": 9.963375,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 13.463378684807257,
+      "end": 15.367868480725624,
+      "text": "customers don't get the fitting room.",
+      "source_start": 9.963375,
+      "source_end": 11.867875000000002,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 15.367868480725624,
+      "end": 18.54358276643991,
+      "text": "They can't easily imagine how a garment will look on them.",
+      "source_start": 11.867875000000002,
+      "source_end": 15.0435935,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 18.54358276643991,
+      "end": 23.143492063492065,
+      "text": "And when they have a question about sizing, delivery, or the product itself,",
+      "source_start": 15.0435935,
+      "source_end": 19.6435,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 23.143492063492065,
+      "end": 24.865215419501133,
+      "text": "they need a clear answer.",
+      "source_start": 19.6435,
+      "source_end": 21.365219,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 24.865215419501133,
+      "end": 26.85934240362812,
+      "text": "Not another reason to leave.",
+      "source_start": 21.365219,
+      "source_end": 23.359344,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 30.35934240362812,
+      "end": 33.623129251700675,
+      "text": "For fashion brands, this creates a challenge that goes far",
+      "source_start": 23.359344,
+      "source_end": 26.623125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 33.623129251700675,
+      "end": 36.100680272108846,
+      "text": "beyond building a beautiful website.",
+      "source_start": 26.623125,
+      "source_end": 29.1006875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 36.100680272108846,
+      "end": 39.588820861678,
+      "text": "The experience has to help people explore with confidence,",
+      "source_start": 29.1006875,
+      "source_end": 32.5888125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 39.95643990929705,
+      "end": 41.65047619047619,
+      "text": "and it has to feel personal,",
+      "source_start": 32.9564375,
+      "source_end": 34.650469,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 41.65047619047619,
+      "end": 43.31884353741496,
+      "text": "even when the store is busy.",
+      "source_start": 34.650469,
+      "source_end": 36.3188435,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 43.31884353741496,
+      "end": 45.86412698412698,
+      "text": "That's the thinking behind GRINDCTRL.",
+      "source_start": 36.3188435,
+      "source_end": 38.864125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 49.36412698412698,
+      "end": 54.80124716553288,
+      "text": "GRINDCTRL brings practical AI experiences into Shopify fashion stores.",
+      "source_start": 38.864125,
+      "source_end": 44.3012495,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 54.80124716553288,
+      "end": 59.33278911564626,
+      "text": "It connects product discovery with helpful store-specific conversations.",
+      "source_start": 44.3012495,
+      "source_end": 48.832781,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 59.33278911564626,
+      "end": 62.806938775510204,
+      "text": "Giving shoppers better ways to explore what they're considering.",
+      "source_start": 48.832781,
+      "source_end": 52.306937500000004,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 62.806938775510204,
+      "end": 66.6724036281179,
+      "text": "Instead of treating shopping as a series of disconnected clicks,",
+      "source_start": 52.306937500000004,
+      "source_end": 56.1724065,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 66.6724036281179,
+      "end": 67.88238095238096,
+      "text": "the goal is to make",
+      "source_start": 56.1724065,
+      "source_end": 57.382374999999996,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 67.88238095238096,
+      "end": 69.66421768707482,
+      "text": "each step more useful.",
+      "source_start": 57.382374999999996,
+      "source_end": 59.164219,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 69.66421768707482,
+      "end": 71.29725623582766,
+      "text": "A shopper sees a product.",
+      "source_start": 59.164219,
+      "source_end": 60.797250000000005,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 71.63009070294785,
+      "end": 73.81337868480725,
+      "text": "They want to picture it on themselves.",
+      "source_start": 61.1300935,
+      "source_end": 63.31337550000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 73.81337868480725,
+      "end": 75.04528344671202,
+      "text": "They have a question.",
+      "source_start": 63.31337550000001,
+      "source_end": 64.54528099999999,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 75.04528344671202,
+      "end": 78.40741496598639,
+      "text": "They want an answer that actually relates to that store.",
+      "source_start": 64.54528099999999,
+      "source_end": 67.90740600000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 81.90741496598639,
+      "end": 87.24473922902494,
+      "text": "The virtual try-on experience helps them visualize a selected garment using a photo.",
+      "source_start": 67.90740600000001,
+      "source_end": 73.24475000000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 87.24473922902494,
+      "end": 91.88891156462586,
+      "text": "Store Chat helps answer questions using information supplied by the merchant,",
+      "source_start": 73.24475000000001,
+      "source_end": 77.88890599999999,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 91.88891156462586,
+      "end": 94.9244671201814,
+      "text": "with a route to the team when a human response is needed.",
+      "source_start": 77.88890599999999,
+      "source_end": 80.924469,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 94.9244671201814,
+      "end": 96.48637188208617,
+      "text": "And this is important.",
+      "source_start": 80.924469,
+      "source_end": 82.4863745,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 96.48637188208617,
+      "end": 101.28485260770975,
+      "text": "The AI is not meant to invent product details or replace a brand's judgment.",
+      "source_start": 82.4863745,
+      "source_end": 87.28484399999999,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 101.28485260770975,
+      "end": 104.70795918367347,
+      "text": "Its answers depend on the information the store provides,",
+      "source_start": 87.28484399999999,
+      "source_end": 90.70796899999999,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 104.70795918367347,
+      "end": 107.52283446712018,
+      "text": "and more complex cases can move to a person.",
+      "source_start": 90.70796899999999,
+      "source_end": 93.5228435,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 111.02283446712018,
+      "end": 112.1281179138322,
+      "text": "For merchants,",
+      "source_start": 93.5228435,
+      "source_end": 94.628125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 112.1281179138322,
+      "end": 116.68090702947846,
+      "text": "the value is a more connected way to present products and support shoppers.",
+      "source_start": 94.628125,
+      "source_end": 99.1809065,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 116.68090702947846,
+      "end": 120.8095918367347,
+      "text": "For customers, it's a shopping journey that feels easier to understand.",
+      "source_start": 99.1809065,
+      "source_end": 103.309594,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 120.8095918367347,
+      "end": 124.38097505668934,
+      "text": "You can explore the experience in the live demonstration store,",
+      "source_start": 103.309594,
+      "source_end": 106.8809685,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 124.38097505668934,
+      "end": 126.00333333333333,
+      "text": "see the features in action,",
+      "source_start": 106.8809685,
+      "source_end": 108.503344,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 126.00333333333333,
+      "end": 128.93886621315193,
+      "text": "and discuss how they fit your own Shopify setup.",
+      "source_start": 108.503344,
+      "source_end": 111.4388755,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 132.43886621315193,
+      "end": 136.85968253968252,
+      "text": "Because great online fashion should do more than display products beautifully.",
+      "source_start": 111.4388755,
+      "source_end": 115.8596875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 136.85968253968252,
+      "end": 139.70108843537415,
+      "text": "It should help people make sense of what they're buying.",
+      "source_start": 115.8596875,
+      "source_end": 118.701094,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 139.70108843537415,
+      "end": 143.32,
+      "text": "Discover GRINDCTRL at grindctrl.cloud.",
+      "source_start": 118.701094,
+      "source_end": 122.32,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    }
+  ],
+  "loudness": {
+    "source": {
+      "input_i": "-25.42",
+      "input_tp": "-5.62",
+      "input_lra": "3.30",
+      "input_thresh": "-35.96",
+      "output_i": "-18.41",
+      "output_tp": "-1.00",
+      "output_lra": "3.10",
+      "output_thresh": "-28.97",
+      "normalization_type": "dynamic",
+      "target_offset": "0.41"
+    },
+    "constant_voice_gain_db": 7.420000000000002,
+    "floating_stage_peak": 1.2252532243728638,
+    "global_mix_leveling": {
+      "input_i": "-15.07",
+      "input_tp": "1.76",
+      "input_lra": "10.20",
+      "input_thresh": "-26.55",
+      "output_i": "-16.36",
+      "output_tp": "-1.50",
+      "output_lra": "9.30",
+      "output_thresh": "-27.65",
+      "normalization_type": "dynamic",
+      "target_offset": "0.36"
+    }
+  },
+  "evidence": "Official public sites and demo storefront attempted but blocked by proxy 403. Interfaces are illustrative reconstructions; claims limited to supplied authoritative narration. No claimed live capture or real stock/order/customer data."
+}

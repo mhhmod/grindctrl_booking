@@ -1,0 +1,18 @@
+[
+  {
+    "url": "https://grindctrl.cloud",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "url": "https://grindctrl.cloud/try-on",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "url": "https://grindctrl.cloud/pricing",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  },
+  {
+    "url": "https://grindctrl.myshopify.com",
+    "error": "<urlopen error Tunnel connection failed: 403 Forbidden>"
+  }
+]

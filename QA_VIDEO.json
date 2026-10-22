@@ -1,0 +1,671 @@
+[
+  {
+    "film": "01",
+    "frames": [
+      {
+        "scene": "01-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "actual": "encoded-review/01/01-SHOT-01-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-01-reference.png"
+      },
+      {
+        "scene": "01-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "actual": "encoded-review/01/01-SHOT-02-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-02-reference.png"
+      },
+      {
+        "scene": "01-SHOT-03",
+        "frame": 471,
+        "time": 15.7,
+        "actual": "encoded-review/01/01-SHOT-03-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-03-reference.png"
+      },
+      {
+        "scene": "01-SHOT-04",
+        "frame": 652,
+        "time": 21.733333333333334,
+        "actual": "encoded-review/01/01-SHOT-04-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-04-reference.png"
+      },
+      {
+        "scene": "01-SHOT-05",
+        "frame": 885,
+        "time": 29.5,
+        "actual": "encoded-review/01/01-SHOT-05-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-05-reference.png"
+      },
+      {
+        "scene": "01-SHOT-06",
+        "frame": 1007,
+        "time": 33.56666666666667,
+        "actual": "encoded-review/01/01-SHOT-06-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-06-reference.png"
+      },
+      {
+        "scene": "01-SHOT-07",
+        "frame": 1179,
+        "time": 39.3,
+        "actual": "encoded-review/01/01-SHOT-07-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-07-reference.png"
+      },
+      {
+        "scene": "01-SHOT-08",
+        "frame": 1357,
+        "time": 45.233333333333334,
+        "actual": "encoded-review/01/01-SHOT-08-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-08-reference.png"
+      },
+      {
+        "scene": "01-SHOT-09",
+        "frame": 1455,
+        "time": 48.5,
+        "actual": "encoded-review/01/01-SHOT-09-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-09-reference.png"
+      },
+      {
+        "scene": "01-SHOT-10",
+        "frame": 1577,
+        "time": 52.56666666666667,
+        "actual": "encoded-review/01/01-SHOT-10-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-10-reference.png"
+      },
+      {
+        "scene": "01-SHOT-11",
+        "frame": 1858,
+        "time": 61.93333333333333,
+        "actual": "encoded-review/01/01-SHOT-11-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-11-reference.png"
+      },
+      {
+        "scene": "01-SHOT-12",
+        "frame": 1980,
+        "time": 66,
+        "actual": "encoded-review/01/01-SHOT-12-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-12-reference.png"
+      },
+      {
+        "scene": "01-SHOT-13",
+        "frame": 2186,
+        "time": 72.86666666666666,
+        "actual": "encoded-review/01/01-SHOT-13-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-13-reference.png"
+      },
+      {
+        "scene": "01-SHOT-14",
+        "frame": 2327,
+        "time": 77.56666666666666,
+        "actual": "encoded-review/01/01-SHOT-14-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-14-reference.png"
+      },
+      {
+        "scene": "01-SHOT-15",
+        "frame": 2431,
+        "time": 81.03333333333333,
+        "actual": "encoded-review/01/01-SHOT-15-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-15-reference.png"
+      },
+      {
+        "scene": "01-SHOT-16",
+        "frame": 2553,
+        "time": 85.1,
+        "actual": "encoded-review/01/01-SHOT-16-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-16-reference.png"
+      },
+      {
+        "scene": "01-SHOT-17",
+        "frame": 2713,
+        "time": 90.43333333333334,
+        "actual": "encoded-review/01/01-SHOT-17-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-17-reference.png"
+      },
+      {
+        "scene": "01-SHOT-18",
+        "frame": 2944,
+        "time": 98.13333333333334,
+        "actual": "encoded-review/01/01-SHOT-18-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-18-reference.png"
+      },
+      {
+        "scene": "01-SHOT-19",
+        "frame": 3135,
+        "time": 104.5,
+        "actual": "encoded-review/01/01-SHOT-19-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-19-reference.png"
+      },
+      {
+        "scene": "01-SHOT-20",
+        "frame": 3304,
+        "time": 110.13333333333334,
+        "actual": "encoded-review/01/01-SHOT-20-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-20-reference.png"
+      },
+      {
+        "scene": "01-SHOT-21",
+        "frame": 3427,
+        "time": 114.23333333333333,
+        "actual": "encoded-review/01/01-SHOT-21-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-21-reference.png"
+      },
+      {
+        "scene": "01-SHOT-22",
+        "frame": 3593,
+        "time": 119.76666666666667,
+        "actual": "encoded-review/01/01-SHOT-22-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-22-reference.png"
+      },
+      {
+        "scene": "01-SHOT-23",
+        "frame": 3720,
+        "time": 124,
+        "actual": "encoded-review/01/01-SHOT-23-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-23-reference.png"
+      },
+      {
+        "scene": "01-SHOT-24",
+        "frame": 3947,
+        "time": 131.56666666666666,
+        "actual": "encoded-review/01/01-SHOT-24-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-24-reference.png"
+      },
+      {
+        "scene": "01-SHOT-25",
+        "frame": 4069,
+        "time": 135.63333333333333,
+        "actual": "encoded-review/01/01-SHOT-25-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-25-reference.png"
+      },
+      {
+        "scene": "01-SHOT-26",
+        "frame": 4170,
+        "time": 139,
+        "actual": "encoded-review/01/01-SHOT-26-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-26-reference.png"
+      },
+      {
+        "scene": "01-SHOT-27",
+        "frame": 4272,
+        "time": 142.4,
+        "actual": "encoded-review/01/01-SHOT-27-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-27-reference.png"
+      },
+      {
+        "scene": "01-SHOT-28",
+        "frame": 4396,
+        "time": 146.53333333333333,
+        "actual": "encoded-review/01/01-SHOT-28-encoded.jpg",
+        "reference": "encoded-review/01/01-SHOT-28-reference.png"
+      }
+    ],
+    "samples": [
+      {
+        "time": 0.301074,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 14,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 74.815981,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 264,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 150,
+        "duration": 150,
+        "ended": true,
+        "error": null,
+        "decodedFrames": 572,
+        "dropped": 0,
+        "muted": false
+      }
+    ]
+  },
+  {
+    "film": "02",
+    "frames": [
+      {
+        "scene": "02-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "actual": "encoded-review/02/02-SHOT-01-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-01-reference.png"
+      },
+      {
+        "scene": "02-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "actual": "encoded-review/02/02-SHOT-02-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-02-reference.png"
+      },
+      {
+        "scene": "02-SHOT-03",
+        "frame": 495,
+        "time": 16.5,
+        "actual": "encoded-review/02/02-SHOT-03-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-03-reference.png"
+      },
+      {
+        "scene": "02-SHOT-04",
+        "frame": 616,
+        "time": 20.533333333333335,
+        "actual": "encoded-review/02/02-SHOT-04-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-04-reference.png"
+      },
+      {
+        "scene": "02-SHOT-05",
+        "frame": 875,
+        "time": 29.166666666666668,
+        "actual": "encoded-review/02/02-SHOT-05-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-05-reference.png"
+      },
+      {
+        "scene": "02-SHOT-06",
+        "frame": 984,
+        "time": 32.8,
+        "actual": "encoded-review/02/02-SHOT-06-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-06-reference.png"
+      },
+      {
+        "scene": "02-SHOT-07",
+        "frame": 1107,
+        "time": 36.9,
+        "actual": "encoded-review/02/02-SHOT-07-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-07-reference.png"
+      },
+      {
+        "scene": "02-SHOT-08",
+        "frame": 1282,
+        "time": 42.733333333333334,
+        "actual": "encoded-review/02/02-SHOT-08-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-08-reference.png"
+      },
+      {
+        "scene": "02-SHOT-09",
+        "frame": 1503,
+        "time": 50.1,
+        "actual": "encoded-review/02/02-SHOT-09-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-09-reference.png"
+      },
+      {
+        "scene": "02-SHOT-10",
+        "frame": 1609,
+        "time": 53.63333333333333,
+        "actual": "encoded-review/02/02-SHOT-10-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-10-reference.png"
+      },
+      {
+        "scene": "02-SHOT-11",
+        "frame": 1731,
+        "time": 57.7,
+        "actual": "encoded-review/02/02-SHOT-11-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-11-reference.png"
+      },
+      {
+        "scene": "02-SHOT-12",
+        "frame": 1934,
+        "time": 64.46666666666667,
+        "actual": "encoded-review/02/02-SHOT-12-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-12-reference.png"
+      },
+      {
+        "scene": "02-SHOT-13",
+        "frame": 2171,
+        "time": 72.36666666666666,
+        "actual": "encoded-review/02/02-SHOT-13-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-13-reference.png"
+      },
+      {
+        "scene": "02-SHOT-14",
+        "frame": 2294,
+        "time": 76.46666666666667,
+        "actual": "encoded-review/02/02-SHOT-14-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-14-reference.png"
+      },
+      {
+        "scene": "02-SHOT-15",
+        "frame": 2451,
+        "time": 81.7,
+        "actual": "encoded-review/02/02-SHOT-15-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-15-reference.png"
+      },
+      {
+        "scene": "02-SHOT-16",
+        "frame": 2551,
+        "time": 85.03333333333333,
+        "actual": "encoded-review/02/02-SHOT-16-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-16-reference.png"
+      },
+      {
+        "scene": "02-SHOT-17",
+        "frame": 2672,
+        "time": 89.06666666666666,
+        "actual": "encoded-review/02/02-SHOT-17-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-17-reference.png"
+      },
+      {
+        "scene": "02-SHOT-18",
+        "frame": 2894,
+        "time": 96.46666666666667,
+        "actual": "encoded-review/02/02-SHOT-18-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-18-reference.png"
+      },
+      {
+        "scene": "02-SHOT-19",
+        "frame": 3043,
+        "time": 101.43333333333334,
+        "actual": "encoded-review/02/02-SHOT-19-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-19-reference.png"
+      },
+      {
+        "scene": "02-SHOT-20",
+        "frame": 3165,
+        "time": 105.5,
+        "actual": "encoded-review/02/02-SHOT-20-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-20-reference.png"
+      },
+      {
+        "scene": "02-SHOT-21",
+        "frame": 3527,
+        "time": 117.56666666666666,
+        "actual": "encoded-review/02/02-SHOT-21-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-21-reference.png"
+      },
+      {
+        "scene": "02-SHOT-22",
+        "frame": 3642,
+        "time": 121.4,
+        "actual": "encoded-review/02/02-SHOT-22-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-22-reference.png"
+      },
+      {
+        "scene": "02-SHOT-23",
+        "frame": 3856,
+        "time": 128.53333333333333,
+        "actual": "encoded-review/02/02-SHOT-23-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-23-reference.png"
+      },
+      {
+        "scene": "02-SHOT-24",
+        "frame": 3974,
+        "time": 132.46666666666667,
+        "actual": "encoded-review/02/02-SHOT-24-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-24-reference.png"
+      },
+      {
+        "scene": "02-SHOT-25",
+        "frame": 4097,
+        "time": 136.56666666666666,
+        "actual": "encoded-review/02/02-SHOT-25-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-25-reference.png"
+      },
+      {
+        "scene": "02-SHOT-26",
+        "frame": 4224,
+        "time": 140.8,
+        "actual": "encoded-review/02/02-SHOT-26-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-26-reference.png"
+      },
+      {
+        "scene": "02-SHOT-27",
+        "frame": 4398,
+        "time": 146.6,
+        "actual": "encoded-review/02/02-SHOT-27-encoded.jpg",
+        "reference": "encoded-review/02/02-SHOT-27-reference.png"
+      }
+    ],
+    "samples": [
+      {
+        "time": 0.322374,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 15,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 74.823959,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 265,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 150,
+        "duration": 150,
+        "ended": true,
+        "error": null,
+        "decodedFrames": 515,
+        "dropped": 0,
+        "muted": false
+      }
+    ]
+  },
+  {
+    "film": "03",
+    "frames": [
+      {
+        "scene": "03-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "actual": "encoded-review/03/03-SHOT-01-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-01-reference.png"
+      },
+      {
+        "scene": "03-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "actual": "encoded-review/03/03-SHOT-02-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-02-reference.png"
+      },
+      {
+        "scene": "03-SHOT-03",
+        "frame": 553,
+        "time": 18.433333333333334,
+        "actual": "encoded-review/03/03-SHOT-03-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-03-reference.png"
+      },
+      {
+        "scene": "03-SHOT-04",
+        "frame": 661,
+        "time": 22.033333333333335,
+        "actual": "encoded-review/03/03-SHOT-04-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-04-reference.png"
+      },
+      {
+        "scene": "03-SHOT-05",
+        "frame": 784,
+        "time": 26.133333333333333,
+        "actual": "encoded-review/03/03-SHOT-05-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-05-reference.png"
+      },
+      {
+        "scene": "03-SHOT-06",
+        "frame": 980,
+        "time": 32.666666666666664,
+        "actual": "encoded-review/03/03-SHOT-06-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-06-reference.png"
+      },
+      {
+        "scene": "03-SHOT-07",
+        "frame": 1092,
+        "time": 36.4,
+        "actual": "encoded-review/03/03-SHOT-07-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-07-reference.png"
+      },
+      {
+        "scene": "03-SHOT-08",
+        "frame": 1214,
+        "time": 40.46666666666667,
+        "actual": "encoded-review/03/03-SHOT-08-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-08-reference.png"
+      },
+      {
+        "scene": "03-SHOT-09",
+        "frame": 1361,
+        "time": 45.36666666666667,
+        "actual": "encoded-review/03/03-SHOT-09-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-09-reference.png"
+      },
+      {
+        "scene": "03-SHOT-10",
+        "frame": 1501,
+        "time": 50.03333333333333,
+        "actual": "encoded-review/03/03-SHOT-10-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-10-reference.png"
+      },
+      {
+        "scene": "03-SHOT-11",
+        "frame": 1641,
+        "time": 54.7,
+        "actual": "encoded-review/03/03-SHOT-11-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-11-reference.png"
+      },
+      {
+        "scene": "03-SHOT-12",
+        "frame": 1763,
+        "time": 58.766666666666666,
+        "actual": "encoded-review/03/03-SHOT-12-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-12-reference.png"
+      },
+      {
+        "scene": "03-SHOT-13",
+        "frame": 2017,
+        "time": 67.23333333333333,
+        "actual": "encoded-review/03/03-SHOT-13-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-13-reference.png"
+      },
+      {
+        "scene": "03-SHOT-14",
+        "frame": 2177,
+        "time": 72.56666666666666,
+        "actual": "encoded-review/03/03-SHOT-14-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-14-reference.png"
+      },
+      {
+        "scene": "03-SHOT-15",
+        "frame": 2380,
+        "time": 79.33333333333333,
+        "actual": "encoded-review/03/03-SHOT-15-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-15-reference.png"
+      },
+      {
+        "scene": "03-SHOT-16",
+        "frame": 2531,
+        "time": 84.36666666666666,
+        "actual": "encoded-review/03/03-SHOT-16-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-16-reference.png"
+      },
+      {
+        "scene": "03-SHOT-17",
+        "frame": 2724,
+        "time": 90.8,
+        "actual": "encoded-review/03/03-SHOT-17-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-17-reference.png"
+      },
+      {
+        "scene": "03-SHOT-18",
+        "frame": 2846,
+        "time": 94.86666666666666,
+        "actual": "encoded-review/03/03-SHOT-18-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-18-reference.png"
+      },
+      {
+        "scene": "03-SHOT-19",
+        "frame": 3400,
+        "time": 113.33333333333333,
+        "actual": "encoded-review/03/03-SHOT-19-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-19-reference.png"
+      },
+      {
+        "scene": "03-SHOT-20",
+        "frame": 3553,
+        "time": 118.43333333333334,
+        "actual": "encoded-review/03/03-SHOT-20-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-20-reference.png"
+      },
+      {
+        "scene": "03-SHOT-21",
+        "frame": 3777,
+        "time": 125.9,
+        "actual": "encoded-review/03/03-SHOT-21-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-21-reference.png"
+      },
+      {
+        "scene": "03-SHOT-22",
+        "frame": 3910,
+        "time": 130.33333333333334,
+        "actual": "encoded-review/03/03-SHOT-22-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-22-reference.png"
+      },
+      {
+        "scene": "03-SHOT-23",
+        "frame": 4031,
+        "time": 134.36666666666667,
+        "actual": "encoded-review/03/03-SHOT-23-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-23-reference.png"
+      },
+      {
+        "scene": "03-SHOT-24",
+        "frame": 4154,
+        "time": 138.46666666666667,
+        "actual": "encoded-review/03/03-SHOT-24-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-24-reference.png"
+      },
+      {
+        "scene": "03-SHOT-25",
+        "frame": 4310,
+        "time": 143.66666666666666,
+        "actual": "encoded-review/03/03-SHOT-25-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-25-reference.png"
+      },
+      {
+        "scene": "03-SHOT-26",
+        "frame": 4436,
+        "time": 147.86666666666667,
+        "actual": "encoded-review/03/03-SHOT-26-encoded.jpg",
+        "reference": "encoded-review/03/03-SHOT-26-reference.png"
+      }
+    ],
+    "samples": [
+      {
+        "time": 0.301857,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 14,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 74.820284,
+        "duration": 150,
+        "ended": false,
+        "error": null,
+        "decodedFrames": 108,
+        "dropped": 0,
+        "muted": false
+      },
+      {
+        "time": 150,
+        "duration": 150,
+        "ended": true,
+        "error": null,
+        "decodedFrames": 452,
+        "dropped": 0,
+        "muted": false
+      }
+    ]
+  }
+]

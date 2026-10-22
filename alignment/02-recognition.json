@@ -1,0 +1,1063 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 4.6108125,
+    "text": "When a shopper contacts an online fashion store, the question may sound simple.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "When a shopper contacts an online fashion store, the question may sound simple.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " When",
+        " a",
+        " shop",
+        "per",
+        " contacts",
+        " an",
+        " online",
+        " fashion",
+        " store",
+        ",",
+        " the",
+        " question",
+        " may",
+        " sound",
+        " simple",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.5
+      ],
+      "segment_texts": [
+        " When a shopper contacts an online fashion store, the question may sound simple."
+      ]
+    }
+  },
+  {
+    "index": 1,
+    "start": 4.6108125,
+    "end": 6.7557185,
+    "text": "Is this available in my size?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Is this available in my size?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Is",
+        " this",
+        " available",
+        " in",
+        " my",
+        " size",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Is this available in my size?"
+      ]
+    }
+  },
+  {
+    "index": 2,
+    "start": 6.7557185,
+    "end": 8.7598755,
+    "text": "How should I care for the fabric?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "How should I care for the fabric?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " How",
+        " should",
+        " I",
+        " care",
+        " for",
+        " the",
+        " fabric",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " How should I care for the fabric?"
+      ]
+    }
+  },
+  {
+    "index": 3,
+    "start": 8.7598755,
+    "end": 10.505281,
+    "text": "Can you help me check an order?",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Can you help me check an order?",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Can",
+        " you",
+        " help",
+        " me",
+        " check",
+        " an",
+        " order",
+        "?"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Can you help me check an order?"
+      ]
+    }
+  },
+  {
+    "index": 4,
+    "start": 10.505281,
+    "end": 13.844406,
+    "text": "But behind each question is a real workflow.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "But behind each question is a real workflow.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " But",
+        " behind",
+        " each",
+        " question",
+        " is",
+        " a",
+        " real",
+        " workflow",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.5
+      ],
+      "segment_texts": [
+        " But behind each question is a real workflow."
+      ]
+    }
+  },
+  {
+    "index": 5,
+    "start": 13.844406,
+    "end": 22.569875,
+    "text": "Someone needs to understand the request, find accurate information, decide what can be answered, and recognize when a team member should take over.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Someone needs to understand the request, find accurate information, decide what can be answered, and recognize when a team member should take over.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Someone",
+        " needs",
+        " to",
+        " understand",
+        " the",
+        " request",
+        ",",
+        " find",
+        " accurate",
+        " information",
+        ",",
+        " decide",
+        " what",
+        " can",
+        " be",
+        " answered",
+        ",",
+        " and",
+        " recognize",
+        " when",
+        " a",
+        " team",
+        " member",
+        " should",
+        " take",
+        " over",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        6.0
+      ],
+      "segment_durations": [
+        6.0,
+        3.0
+      ],
+      "segment_texts": [
+        " Someone needs to understand the request, find accurate information, decide what can be answered,",
+        " and recognize when a team member should take over."
+      ]
+    }
+  },
+  {
+    "index": 6,
+    "start": 22.569875,
+    "end": 26.6859065,
+    "text": "That's where a thoughtful AI support experience becomes valuable.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "That's where a thoughtful AI support experience becomes valuable.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " That",
+        "'s",
+        " where",
+        " a",
+        " thoughtful",
+        " AI",
+        " support",
+        " experience",
+        " becomes",
+        " valuable",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " That's where a thoughtful AI support experience becomes valuable."
+      ]
+    }
+  },
+  {
+    "index": 7,
+    "start": 26.6859065,
+    "end": 32.5233125,
+    "text": "With Grind Control's Store Chat, shoppers can ask questions directly inside a Shopify store.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "With Grind Control's Store Chat, shoppers can ask questions directly inside a Shopify store.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " With",
+        " Grind",
+        " Control",
+        "'s",
+        " Store",
+        " Chat",
+        ",",
+        " shop",
+        "pers",
+        " can",
+        " ask",
+        " questions",
+        " directly",
+        " inside",
+        " a",
+        " Shopify",
+        " store",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " With Grind Control's Store Chat, shoppers can ask questions directly inside a Shopify store."
+      ]
+    }
+  },
+  {
+    "index": 8,
+    "start": 32.5233125,
+    "end": 40.383875,
+    "text": "The assistant works from the store knowledge the merchant provides, including information about products, sizing, delivery, and care.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The assistant works from the store knowledge the merchant provides, including information about products, sizing, delivery, and care.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " assistant",
+        " works",
+        " from",
+        " the",
+        " store",
+        " knowledge",
+        " the",
+        " merchant",
+        " provides",
+        ",",
+        " including",
+        " information",
+        " about",
+        " products",
+        ",",
+        " sizing",
+        ",",
+        " delivery",
+        ",",
+        " and",
+        " care",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        4.56
+      ],
+      "segment_durations": [
+        4.56,
+        3.44
+      ],
+      "segment_texts": [
+        " The assistant works from the store knowledge the merchant provides, including information",
+        " about products, sizing, delivery, and care."
+      ]
+    }
+  },
+  {
+    "index": 9,
+    "start": 40.383875,
+    "end": 44.004281,
+    "text": "and support doesn't have to stop when a question gets complicated.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and support doesn't have to stop when a question gets complicated.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " support",
+        " doesn",
+        "'t",
+        " have",
+        " to",
+        " stop",
+        " when",
+        " a",
+        " question",
+        " gets",
+        " complicated",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " and support doesn't have to stop when a question gets complicated."
+      ]
+    }
+  },
+  {
+    "index": 10,
+    "start": 44.004281,
+    "end": 50.7652815,
+    "text": "If the shopper needs a person, the conversation can be handed to the merchants team, together with the reason for the handoff.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "If the shopper needs a person, the conversation can be handed to the merchants team, together with the reason for the handoff.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " If",
+        " the",
+        " shop",
+        "per",
+        " needs",
+        " a",
+        " person",
+        ",",
+        " the",
+        " conversation",
+        " can",
+        " be",
+        " handed",
+        " to",
+        " the",
+        " merchants",
+        " team",
+        ",",
+        " together",
+        " with",
+        " the",
+        " reason",
+        " for",
+        " the",
+        " hand",
+        "off",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        4.5
+      ],
+      "segment_durations": [
+        4.5,
+        2.5
+      ],
+      "segment_texts": [
+        " If the shopper needs a person, the conversation can be handed to the merchants team,",
+        " together with the reason for the handoff."
+      ]
+    }
+  },
+  {
+    "index": 11,
+    "start": 50.7652815,
+    "end": 59.102125,
+    "text": "The team can review the conversation in a shared inbox, assign it, add private notes, and respond with saved replies when appropriate.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The team can review the conversation in a shared inbox, assign it, add private notes, and respond with saved replies when appropriate.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " team",
+        " can",
+        " review",
+        " the",
+        " conversation",
+        " in",
+        " a",
+        " shared",
+        " inbox",
+        ",",
+        " assign",
+        " it",
+        ",",
+        " add",
+        " private",
+        " notes",
+        ",",
+        " and",
+        " respond",
+        " with",
+        " saved",
+        " replies",
+        " when",
+        " appropriate",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        8.5
+      ],
+      "segment_texts": [
+        " The team can review the conversation in a shared inbox, assign it, add private notes, and respond with saved replies when appropriate."
+      ]
+    }
+  },
+  {
+    "index": 12,
+    "start": 59.102125,
+    "end": 62.774625,
+    "text": "The goal isn't to make every conversation sound automated.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The goal isn't to make every conversation sound automated.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " goal",
+        " isn",
+        "'t",
+        " to",
+        " make",
+        " every",
+        " conversation",
+        " sound",
+        " automated",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " The goal isn't to make every conversation sound automated."
+      ]
+    }
+  },
+  {
+    "index": 13,
+    "start": 62.774625,
+    "end": 68.56243749999999,
+    "text": "It's to keep context and make the transition from AI to human support feel organized.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It's to keep context and make the transition from AI to human support feel organized.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        "'s",
+        " to",
+        " keep",
+        " context",
+        " and",
+        " make",
+        " the",
+        " transition",
+        " from",
+        " AI",
+        " to",
+        " human",
+        " support",
+        " feel",
+        " organized",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " It's to keep context and make the transition from AI to human support feel organized."
+      ]
+    }
+  },
+  {
+    "index": 14,
+    "start": 68.56243749999999,
+    "end": 71.862375,
+    "text": "Some workflows can also work with order information.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Some workflows can also work with order information.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Some",
+        " workflows",
+        " can",
+        " also",
+        " work",
+        " with",
+        " order",
+        " information",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.5
+      ],
+      "segment_texts": [
+        " Some workflows can also work with order information."
+      ]
+    }
+  },
+  {
+    "index": 15,
+    "start": 71.862375,
+    "end": 79.273719,
+    "text": "Where access is configured and the shopper's details are verified, the assistant can look up order status on a read-only basis.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Where access is configured and the shopper's details are verified, the assistant can look up order status on a read-only basis.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Where",
+        " access",
+        " is",
+        " configured",
+        " and",
+        " the",
+        " shop",
+        "per",
+        "'s",
+        " details",
+        " are",
+        " verified",
+        ",",
+        " the",
+        " assistant",
+        " can",
+        " look",
+        " up",
+        " order",
+        " status",
+        " on",
+        " a",
+        " read",
+        "-",
+        "only",
+        " basis",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        3.7
+      ],
+      "segment_durations": [
+        3.7,
+        3.8
+      ],
+      "segment_texts": [
+        " Where access is configured and the shopper's details are verified,",
+        " the assistant can look up order status on a read-only basis."
+      ]
+    }
+  },
+  {
+    "index": 16,
+    "start": 79.273719,
+    "end": 84.8020315,
+    "text": "It does not change orders, issue refunds, or make decisions beyond its approved scope.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It does not change orders, issue refunds, or make decisions beyond its approved scope.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        " does",
+        " not",
+        " change",
+        " orders",
+        ",",
+        " issue",
+        " refund",
+        "s",
+        ",",
+        " or",
+        " make",
+        " decisions",
+        " beyond",
+        " its",
+        " approved",
+        " scope",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        6.0
+      ],
+      "segment_texts": [
+        " It does not change orders, issue refunds, or make decisions beyond its approved scope."
+      ]
+    }
+  },
+  {
+    "index": 17,
+    "start": 84.8020315,
+    "end": 98.1611875,
+    "text": "For the people running the store, this means customer conversations and support actions can be easier to follow in one place. The experience can be adapted to the merchant's actual policies, rather than relying on generic answers.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "For the people running the store, this means customer conversations and support actions can be easier to follow in one place. The experience can be adapted to the merchant's actual policies, rather than relying on generic answers.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " For",
+        " the",
+        " people",
+        " running",
+        " the",
+        " store",
+        ",",
+        " this",
+        " means",
+        " customer",
+        " conversations",
+        " and",
+        " support",
+        " actions",
+        " can",
+        " be",
+        " easier",
+        " to",
+        " follow",
+        " in",
+        " one",
+        " place",
+        ".",
+        " The",
+        " experience",
+        " can",
+        " be",
+        " adapted",
+        " to",
+        " the",
+        " merchant",
+        "'s",
+        " actual",
+        " policies",
+        ",",
+        " rather",
+        " than",
+        " relying",
+        " on",
+        " generic",
+        " answers",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        7.0
+      ],
+      "segment_durations": [
+        7.0,
+        6.0
+      ],
+      "segment_texts": [
+        " For the people running the store, this means customer conversations and support actions can be easier to follow in one place.",
+        " The experience can be adapted to the merchant's actual policies, rather than relying on generic answers."
+      ]
+    }
+  },
+  {
+    "index": 18,
+    "start": 98.1611875,
+    "end": 100.6858435,
+    "text": "and the same principle applies to setup.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and the same principle applies to setup.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " the",
+        " same",
+        " principle",
+        " applies",
+        " to",
+        " setup",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.56
+      ],
+      "segment_texts": [
+        " and the same principle applies to setup."
+      ]
+    }
+  },
+  {
+    "index": 19,
+    "start": 100.6858435,
+    "end": 108.40453149999999,
+    "text": "The right configuration depends on the store's catalog, theme, support process, and the questions customers ask most often.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The right configuration depends on the store's catalog, theme, support process, and the questions customers ask most often.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " right",
+        " configuration",
+        " depends",
+        " on",
+        " the",
+        " store",
+        "'s",
+        " catalog",
+        ",",
+        " theme",
+        ",",
+        " support",
+        " process",
+        ",",
+        " and",
+        " the",
+        " questions",
+        " customers",
+        " ask",
+        " most",
+        " often",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        5.46
+      ],
+      "segment_durations": [
+        5.46,
+        2.12
+      ],
+      "segment_texts": [
+        " The right configuration depends on the store's catalog, theme, support process, and the",
+        " questions customers ask most often."
+      ]
+    }
+  },
+  {
+    "index": 20,
+    "start": 108.40453149999999,
+    "end": 112.506,
+    "text": "To see what this looks like, open the Grind Control Demonstration Store.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "To see what this looks like, open the Grind Control Demonstration Store.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " To",
+        " see",
+        " what",
+        " this",
+        " looks",
+        " like",
+        ",",
+        " open",
+        " the",
+        " Grind",
+        " Control",
+        " Dem",
+        "onst",
+        "ration",
+        " Store",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " To see what this looks like, open the Grind Control Demonstration Store."
+      ]
+    }
+  },
+  {
+    "index": 21,
+    "start": 112.506,
+    "end": 116.587625,
+    "text": "You can explore the shopper experience and discuss the setup with the team.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "You can explore the shopper experience and discuss the setup with the team.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " You",
+        " can",
+        " explore",
+        " the",
+        " shop",
+        "per",
+        " experience",
+        " and",
+        " discuss",
+        " the",
+        " setup",
+        " with",
+        " the",
+        " team",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " You can explore the shopper experience and discuss the setup with the team."
+      ]
+    }
+  },
+  {
+    "index": 22,
+    "start": 116.587625,
+    "end": 117.90293750000001,
+    "text": "Grand Control",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Grand Control",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Grand",
+        " Control"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Grand Control"
+      ]
+    }
+  },
+  {
+    "index": 23,
+    "start": 117.90293750000001,
+    "end": 122.4,
+    "text": "AI that helps the store respond and knows when people should take over.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "AI that helps the store respond and knows when people should take over.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " AI",
+        " that",
+        " helps",
+        " the",
+        " store",
+        " respond",
+        " and",
+        " knows",
+        " when",
+        " people",
+        " should",
+        " take",
+        " over",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.5
+      ],
+      "segment_texts": [
+        " AI that helps the store respond and knows when people should take over."
+      ]
+    }
+  }
+]

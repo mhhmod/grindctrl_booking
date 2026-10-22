@@ -1,0 +1,185 @@
+1
+00:00:03,500 --> 00:00:04,596
+Picture this.
+
+2
+00:00:04,596 --> 00:00:05,869
+You're shopping online
+
+3
+00:00:05,869 --> 00:00:10,068
+and you find a jacket, a dress, or an abaya you really like.
+
+4
+00:00:10,068 --> 00:00:11,823
+The photos look great.
+
+5
+00:00:11,823 --> 00:00:13,744
+But you still have a question.
+
+6
+00:00:13,744 --> 00:00:15,498
+What would it look like on me?
+
+7
+00:00:15,498 --> 00:00:19,423
+That's where GRINDCTRL’s AI Virtual Try-On comes in.
+
+8
+00:00:22,923 --> 00:00:25,894
+Inside a supported Shopify fashion store,
+
+9
+00:00:25,894 --> 00:00:27,467
+a shopper chooses a product
+
+10
+00:00:27,467 --> 00:00:29,450
+and selects the Try-On option.
+
+11
+00:00:29,450 --> 00:00:33,761
+They upload a photo of themselves, then request a personalized preview.
+
+12
+00:00:37,261 --> 00:00:42,157
+The system generates an image showing how the selected garment could look
+on that person.
+
+13
+00:00:42,157 --> 00:00:44,236
+It's a visual exploration tool,
+
+14
+00:00:44,236 --> 00:00:46,835
+not a promise of an exact physical fit.
+
+15
+00:00:46,835 --> 00:00:52,063
+But it gives shoppers a more personal way to explore clothing than product
+photography alone.
+
+16
+00:00:55,563 --> 00:00:57,768
+Now imagine the next question.
+
+17
+00:00:57,768 --> 00:01:00,154
+Does this item run true to size?
+
+18
+00:01:00,154 --> 00:01:01,636
+What are the delivery options?
+
+19
+00:01:02,012 --> 00:01:04,047
+How should the fabric be cared for?
+
+20
+00:01:04,047 --> 00:01:06,583
+Instead of searching through multiple pages,
+
+21
+00:01:06,583 --> 00:01:09,366
+the shopper can open Store Chat and ask.
+
+22
+00:01:09,366 --> 00:01:14,081
+The assistant uses the information the merchant has provided to answer
+relevant questions
+
+23
+00:01:14,325 --> 00:01:16,128
+in English or Arabic.
+
+24
+00:01:16,128 --> 00:01:18,412
+If a situation needs human judgment,
+
+25
+00:01:18,412 --> 00:01:21,175
+the conversation can be handed to the store's team.
+
+26
+00:01:21,175 --> 00:01:23,042
+The team can review the thread,
+
+27
+00:01:23,042 --> 00:01:25,069
+understand why it was handed over,
+
+28
+00:01:25,069 --> 00:01:27,710
+and continue the conversation from the shared inbox.
+
+29
+00:01:31,662 --> 00:01:32,525
+Together,
+
+30
+00:01:32,525 --> 00:01:36,827
+these two experiences connect two important moments in fashion shopping.
+
+31
+00:01:36,827 --> 00:01:40,822
+Virtual Try-On helps the customer explore a garment visually.
+
+32
+00:01:40,822 --> 00:01:45,286
+Store Chat helps them understand the product and find the information they
+need.
+
+33
+00:01:45,286 --> 00:01:50,121
+And the human team remains part of the experience when personal support
+matters.
+
+34
+00:01:50,121 --> 00:01:51,132
+For the merchant,
+
+35
+00:01:51,132 --> 00:01:55,249
+both features are designed around the Shopify store they already operate.
+
+36
+00:01:55,249 --> 00:01:58,431
+The demonstration lets you explore a real storefront.
+
+37
+00:01:58,431 --> 00:01:59,899
+Try the product journey
+
+38
+00:01:59,899 --> 00:02:02,269
+and see how the chat works with store knowledge.
+
+39
+00:02:02,697 --> 00:02:05,415
+There are no imaginary performance numbers here
+
+40
+00:02:05,415 --> 00:02:07,119
+and no magic promises.
+
+41
+00:02:07,119 --> 00:02:11,756
+Just practical tools built to make the online shopping journey more
+useful.
+
+42
+00:02:15,256 --> 00:02:20,598
+See AI Virtual Try-On and Store Chat together at grindctrl.cloud.
+
+43
+00:02:20,598 --> 00:02:21,868
+GRINDCTRL.
+
+44
+00:02:21,868 --> 00:02:23,357
+Let shoppers see it.
+
+45
+00:02:23,357 --> 00:02:24,680
+Let them ask.

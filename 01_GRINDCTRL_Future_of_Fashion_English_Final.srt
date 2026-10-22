@@ -1,0 +1,173 @@
+1
+00:00:03,500 --> 00:00:05,668
+A shopper can love a fashion brand,
+
+2
+00:00:05,668 --> 00:00:07,238
+admire the photography,
+
+3
+00:00:07,238 --> 00:00:10,126
+and still hesitate at the most important moment.
+
+4
+00:00:10,501 --> 00:00:12,490
+Deciding whether to buy.
+
+5
+00:00:12,490 --> 00:00:13,463
+Online,
+
+6
+00:00:13,463 --> 00:00:15,368
+customers don't get the fitting room.
+
+7
+00:00:15,368 --> 00:00:18,544
+They can't easily imagine how a garment will look on them.
+
+8
+00:00:18,544 --> 00:00:23,143
+And when they have a question about sizing, delivery, or the product
+itself,
+
+9
+00:00:23,143 --> 00:00:24,865
+they need a clear answer.
+
+10
+00:00:24,865 --> 00:00:26,859
+Not another reason to leave.
+
+11
+00:00:30,359 --> 00:00:33,623
+For fashion brands, this creates a challenge that goes far
+
+12
+00:00:33,623 --> 00:00:36,101
+beyond building a beautiful website.
+
+13
+00:00:36,101 --> 00:00:39,589
+The experience has to help people explore with confidence,
+
+14
+00:00:39,956 --> 00:00:41,650
+and it has to feel personal,
+
+15
+00:00:41,650 --> 00:00:43,319
+even when the store is busy.
+
+16
+00:00:43,319 --> 00:00:45,864
+That's the thinking behind GRINDCTRL.
+
+17
+00:00:49,364 --> 00:00:54,801
+GRINDCTRL brings practical AI experiences into Shopify fashion stores.
+
+18
+00:00:54,801 --> 00:00:59,333
+It connects product discovery with helpful store-specific conversations.
+
+19
+00:00:59,333 --> 00:01:02,807
+Giving shoppers better ways to explore what they're considering.
+
+20
+00:01:02,807 --> 00:01:06,672
+Instead of treating shopping as a series of disconnected clicks,
+
+21
+00:01:06,672 --> 00:01:07,882
+the goal is to make
+
+22
+00:01:07,882 --> 00:01:09,664
+each step more useful.
+
+23
+00:01:09,664 --> 00:01:11,297
+A shopper sees a product.
+
+24
+00:01:11,630 --> 00:01:13,813
+They want to picture it on themselves.
+
+25
+00:01:13,813 --> 00:01:15,045
+They have a question.
+
+26
+00:01:15,045 --> 00:01:18,407
+They want an answer that actually relates to that store.
+
+27
+00:01:21,907 --> 00:01:27,245
+The virtual try-on experience helps them visualize a selected garment
+using a photo.
+
+28
+00:01:27,245 --> 00:01:31,889
+Store Chat helps answer questions using information supplied by the
+merchant,
+
+29
+00:01:31,889 --> 00:01:34,924
+with a route to the team when a human response is needed.
+
+30
+00:01:34,924 --> 00:01:36,486
+And this is important.
+
+31
+00:01:36,486 --> 00:01:41,285
+The AI is not meant to invent product details or replace a brand's
+judgment.
+
+32
+00:01:41,285 --> 00:01:44,708
+Its answers depend on the information the store provides,
+
+33
+00:01:44,708 --> 00:01:47,523
+and more complex cases can move to a person.
+
+34
+00:01:51,023 --> 00:01:52,128
+For merchants,
+
+35
+00:01:52,128 --> 00:01:56,681
+the value is a more connected way to present products and support
+shoppers.
+
+36
+00:01:56,681 --> 00:02:00,810
+For customers, it's a shopping journey that feels easier to understand.
+
+37
+00:02:00,810 --> 00:02:04,381
+You can explore the experience in the live demonstration store,
+
+38
+00:02:04,381 --> 00:02:06,003
+see the features in action,
+
+39
+00:02:06,003 --> 00:02:08,939
+and discuss how they fit your own Shopify setup.
+
+40
+00:02:12,439 --> 00:02:16,860
+Because great online fashion should do more than display products
+beautifully.
+
+41
+00:02:16,860 --> 00:02:19,701
+It should help people make sense of what they're buying.
+
+42
+00:02:19,701 --> 00:02:23,320
+Discover GRINDCTRL at grindctrl.cloud.

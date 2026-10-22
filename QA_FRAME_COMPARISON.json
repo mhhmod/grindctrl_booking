@@ -1,0 +1,506 @@
+[
+  {
+    "film": "01",
+    "frames": [
+      {
+        "scene": "01-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "mean_absolute_pixel_error": 0.9192881944444444
+      },
+      {
+        "scene": "01-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "mean_absolute_pixel_error": 0.5598165830761317
+      },
+      {
+        "scene": "01-SHOT-03",
+        "frame": 471,
+        "time": 15.7,
+        "mean_absolute_pixel_error": 0.7702014210390946
+      },
+      {
+        "scene": "01-SHOT-04",
+        "frame": 652,
+        "time": 21.733333333333334,
+        "mean_absolute_pixel_error": 0.7032592271090535
+      },
+      {
+        "scene": "01-SHOT-05",
+        "frame": 885,
+        "time": 29.5,
+        "mean_absolute_pixel_error": 0.723300379372428
+      },
+      {
+        "scene": "01-SHOT-06",
+        "frame": 1007,
+        "time": 33.56666666666667,
+        "mean_absolute_pixel_error": 0.8833778613683128
+      },
+      {
+        "scene": "01-SHOT-07",
+        "frame": 1179,
+        "time": 39.3,
+        "mean_absolute_pixel_error": 0.5083937757201646
+      },
+      {
+        "scene": "01-SHOT-08",
+        "frame": 1357,
+        "time": 45.233333333333334,
+        "mean_absolute_pixel_error": 0.9162397119341564
+      },
+      {
+        "scene": "01-SHOT-09",
+        "frame": 1455,
+        "time": 48.5,
+        "mean_absolute_pixel_error": 0.5182182355967078
+      },
+      {
+        "scene": "01-SHOT-10",
+        "frame": 1577,
+        "time": 52.56666666666667,
+        "mean_absolute_pixel_error": 0.47996399176954735
+      },
+      {
+        "scene": "01-SHOT-11",
+        "frame": 1858,
+        "time": 61.93333333333333,
+        "mean_absolute_pixel_error": 0.5065898276748971
+      },
+      {
+        "scene": "01-SHOT-12",
+        "frame": 1980,
+        "time": 66,
+        "mean_absolute_pixel_error": 0.5681841563786009
+      },
+      {
+        "scene": "01-SHOT-13",
+        "frame": 2186,
+        "time": 72.86666666666666,
+        "mean_absolute_pixel_error": 0.4853750321502058
+      },
+      {
+        "scene": "01-SHOT-14",
+        "frame": 2327,
+        "time": 77.56666666666666,
+        "mean_absolute_pixel_error": 0.6012262088477366
+      },
+      {
+        "scene": "01-SHOT-15",
+        "frame": 2431,
+        "time": 81.03333333333333,
+        "mean_absolute_pixel_error": 0.5269537680041152
+      },
+      {
+        "scene": "01-SHOT-16",
+        "frame": 2553,
+        "time": 85.1,
+        "mean_absolute_pixel_error": 0.6292467206790123
+      },
+      {
+        "scene": "01-SHOT-17",
+        "frame": 2713,
+        "time": 90.43333333333334,
+        "mean_absolute_pixel_error": 0.5821231995884774
+      },
+      {
+        "scene": "01-SHOT-18",
+        "frame": 2944,
+        "time": 98.13333333333334,
+        "mean_absolute_pixel_error": 0.4625544945987654
+      },
+      {
+        "scene": "01-SHOT-19",
+        "frame": 3135,
+        "time": 104.5,
+        "mean_absolute_pixel_error": 0.5263702417695473
+      },
+      {
+        "scene": "01-SHOT-20",
+        "frame": 3304,
+        "time": 110.13333333333334,
+        "mean_absolute_pixel_error": 0.4735218942901235
+      },
+      {
+        "scene": "01-SHOT-21",
+        "frame": 3427,
+        "time": 114.23333333333333,
+        "mean_absolute_pixel_error": 0.5300784465020576
+      },
+      {
+        "scene": "01-SHOT-22",
+        "frame": 3593,
+        "time": 119.76666666666667,
+        "mean_absolute_pixel_error": 0.5758106674382716
+      },
+      {
+        "scene": "01-SHOT-23",
+        "frame": 3720,
+        "time": 124,
+        "mean_absolute_pixel_error": 0.6394045781893004
+      },
+      {
+        "scene": "01-SHOT-24",
+        "frame": 3947,
+        "time": 131.56666666666666,
+        "mean_absolute_pixel_error": 0.6335548482510288
+      },
+      {
+        "scene": "01-SHOT-25",
+        "frame": 4069,
+        "time": 135.63333333333333,
+        "mean_absolute_pixel_error": 0.8409223894032922
+      },
+      {
+        "scene": "01-SHOT-26",
+        "frame": 4170,
+        "time": 139,
+        "mean_absolute_pixel_error": 0.5143843235596708
+      },
+      {
+        "scene": "01-SHOT-27",
+        "frame": 4272,
+        "time": 142.4,
+        "mean_absolute_pixel_error": 0.6989676568930041
+      },
+      {
+        "scene": "01-SHOT-28",
+        "frame": 4396,
+        "time": 146.53333333333333,
+        "mean_absolute_pixel_error": 0.6899856931584362
+      }
+    ],
+    "maximum_mae": 0.9192881944444444
+  },
+  {
+    "film": "02",
+    "frames": [
+      {
+        "scene": "02-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "mean_absolute_pixel_error": 0.8895961934156379
+      },
+      {
+        "scene": "02-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "mean_absolute_pixel_error": 0.5530941358024691
+      },
+      {
+        "scene": "02-SHOT-03",
+        "frame": 495,
+        "time": 16.5,
+        "mean_absolute_pixel_error": 0.5543587641460905
+      },
+      {
+        "scene": "02-SHOT-04",
+        "frame": 616,
+        "time": 20.533333333333335,
+        "mean_absolute_pixel_error": 0.42868087705761315
+      },
+      {
+        "scene": "02-SHOT-05",
+        "frame": 875,
+        "time": 29.166666666666668,
+        "mean_absolute_pixel_error": 0.7662620563271605
+      },
+      {
+        "scene": "02-SHOT-06",
+        "frame": 984,
+        "time": 32.8,
+        "mean_absolute_pixel_error": 0.5582725694444445
+      },
+      {
+        "scene": "02-SHOT-07",
+        "frame": 1107,
+        "time": 36.9,
+        "mean_absolute_pixel_error": 0.6285996977880658
+      },
+      {
+        "scene": "02-SHOT-08",
+        "frame": 1282,
+        "time": 42.733333333333334,
+        "mean_absolute_pixel_error": 0.4113633294753086
+      },
+      {
+        "scene": "02-SHOT-09",
+        "frame": 1503,
+        "time": 50.1,
+        "mean_absolute_pixel_error": 0.5557129308127572
+      },
+      {
+        "scene": "02-SHOT-10",
+        "frame": 1609,
+        "time": 53.63333333333333,
+        "mean_absolute_pixel_error": 0.4889231288580247
+      },
+      {
+        "scene": "02-SHOT-11",
+        "frame": 1731,
+        "time": 57.7,
+        "mean_absolute_pixel_error": 0.5335325038580246
+      },
+      {
+        "scene": "02-SHOT-12",
+        "frame": 1934,
+        "time": 64.46666666666667,
+        "mean_absolute_pixel_error": 0.35938191229423866
+      },
+      {
+        "scene": "02-SHOT-13",
+        "frame": 2171,
+        "time": 72.36666666666666,
+        "mean_absolute_pixel_error": 0.5904398148148148
+      },
+      {
+        "scene": "02-SHOT-14",
+        "frame": 2294,
+        "time": 76.46666666666667,
+        "mean_absolute_pixel_error": 0.4983584104938272
+      },
+      {
+        "scene": "02-SHOT-15",
+        "frame": 2451,
+        "time": 81.7,
+        "mean_absolute_pixel_error": 0.4060833011831276
+      },
+      {
+        "scene": "02-SHOT-16",
+        "frame": 2551,
+        "time": 85.03333333333333,
+        "mean_absolute_pixel_error": 0.41296553497942384
+      },
+      {
+        "scene": "02-SHOT-17",
+        "frame": 2672,
+        "time": 89.06666666666666,
+        "mean_absolute_pixel_error": 0.4818335262345679
+      },
+      {
+        "scene": "02-SHOT-18",
+        "frame": 2894,
+        "time": 96.46666666666667,
+        "mean_absolute_pixel_error": 0.5042944637345679
+      },
+      {
+        "scene": "02-SHOT-19",
+        "frame": 3043,
+        "time": 101.43333333333334,
+        "mean_absolute_pixel_error": 0.3692986432613169
+      },
+      {
+        "scene": "02-SHOT-20",
+        "frame": 3165,
+        "time": 105.5,
+        "mean_absolute_pixel_error": 0.5549096579218107
+      },
+      {
+        "scene": "02-SHOT-21",
+        "frame": 3527,
+        "time": 117.56666666666666,
+        "mean_absolute_pixel_error": 0.7138753858024691
+      },
+      {
+        "scene": "02-SHOT-22",
+        "frame": 3642,
+        "time": 121.4,
+        "mean_absolute_pixel_error": 0.785004983281893
+      },
+      {
+        "scene": "02-SHOT-23",
+        "frame": 3856,
+        "time": 128.53333333333333,
+        "mean_absolute_pixel_error": 0.7408191872427984
+      },
+      {
+        "scene": "02-SHOT-24",
+        "frame": 3974,
+        "time": 132.46666666666667,
+        "mean_absolute_pixel_error": 0.676911490483539
+      },
+      {
+        "scene": "02-SHOT-25",
+        "frame": 4097,
+        "time": 136.56666666666666,
+        "mean_absolute_pixel_error": 0.61861529063786
+      },
+      {
+        "scene": "02-SHOT-26",
+        "frame": 4224,
+        "time": 140.8,
+        "mean_absolute_pixel_error": 0.7442100694444445
+      },
+      {
+        "scene": "02-SHOT-27",
+        "frame": 4398,
+        "time": 146.6,
+        "mean_absolute_pixel_error": 0.6203321116255144
+      }
+    ],
+    "maximum_mae": 0.8895961934156379
+  },
+  {
+    "film": "03",
+    "frames": [
+      {
+        "scene": "03-SHOT-01",
+        "frame": 79,
+        "time": 2.6333333333333333,
+        "mean_absolute_pixel_error": 0.7524463091563786
+      },
+      {
+        "scene": "03-SHOT-02",
+        "frame": 201,
+        "time": 6.7,
+        "mean_absolute_pixel_error": 0.5009484310699589
+      },
+      {
+        "scene": "03-SHOT-03",
+        "frame": 553,
+        "time": 18.433333333333334,
+        "mean_absolute_pixel_error": 0.889285300925926
+      },
+      {
+        "scene": "03-SHOT-04",
+        "frame": 661,
+        "time": 22.033333333333335,
+        "mean_absolute_pixel_error": 0.4572876478909465
+      },
+      {
+        "scene": "03-SHOT-05",
+        "frame": 784,
+        "time": 26.133333333333333,
+        "mean_absolute_pixel_error": 0.4527922453703704
+      },
+      {
+        "scene": "03-SHOT-06",
+        "frame": 980,
+        "time": 32.666666666666664,
+        "mean_absolute_pixel_error": 0.5795463605967078
+      },
+      {
+        "scene": "03-SHOT-07",
+        "frame": 1092,
+        "time": 36.4,
+        "mean_absolute_pixel_error": 0.5513157471707819
+      },
+      {
+        "scene": "03-SHOT-08",
+        "frame": 1214,
+        "time": 40.46666666666667,
+        "mean_absolute_pixel_error": 0.6418704989711934
+      },
+      {
+        "scene": "03-SHOT-09",
+        "frame": 1361,
+        "time": 45.36666666666667,
+        "mean_absolute_pixel_error": 0.6004192386831275
+      },
+      {
+        "scene": "03-SHOT-10",
+        "frame": 1501,
+        "time": 50.03333333333333,
+        "mean_absolute_pixel_error": 0.5498763824588477
+      },
+      {
+        "scene": "03-SHOT-11",
+        "frame": 1641,
+        "time": 54.7,
+        "mean_absolute_pixel_error": 0.5585691550925926
+      },
+      {
+        "scene": "03-SHOT-12",
+        "frame": 1763,
+        "time": 58.766666666666666,
+        "mean_absolute_pixel_error": 0.5837003279320988
+      },
+      {
+        "scene": "03-SHOT-13",
+        "frame": 2017,
+        "time": 67.23333333333333,
+        "mean_absolute_pixel_error": 0.582345357510288
+      },
+      {
+        "scene": "03-SHOT-14",
+        "frame": 2177,
+        "time": 72.56666666666666,
+        "mean_absolute_pixel_error": 0.4280978330761317
+      },
+      {
+        "scene": "03-SHOT-15",
+        "frame": 2380,
+        "time": 79.33333333333333,
+        "mean_absolute_pixel_error": 0.5248307291666666
+      },
+      {
+        "scene": "03-SHOT-16",
+        "frame": 2531,
+        "time": 84.36666666666666,
+        "mean_absolute_pixel_error": 0.4820719200102881
+      },
+      {
+        "scene": "03-SHOT-17",
+        "frame": 2724,
+        "time": 90.8,
+        "mean_absolute_pixel_error": 0.44107847865226335
+      },
+      {
+        "scene": "03-SHOT-18",
+        "frame": 2846,
+        "time": 94.86666666666666,
+        "mean_absolute_pixel_error": 0.5230762924382716
+      },
+      {
+        "scene": "03-SHOT-19",
+        "frame": 3400,
+        "time": 113.33333333333333,
+        "mean_absolute_pixel_error": 0.7811135223765432
+      },
+      {
+        "scene": "03-SHOT-20",
+        "frame": 3553,
+        "time": 118.43333333333334,
+        "mean_absolute_pixel_error": 0.6528509194958848
+      },
+      {
+        "scene": "03-SHOT-21",
+        "frame": 3777,
+        "time": 125.9,
+        "mean_absolute_pixel_error": 0.9915289030349794
+      },
+      {
+        "scene": "03-SHOT-22",
+        "frame": 3910,
+        "time": 130.33333333333334,
+        "mean_absolute_pixel_error": 0.5366396604938272
+      },
+      {
+        "scene": "03-SHOT-23",
+        "frame": 4031,
+        "time": 134.36666666666667,
+        "mean_absolute_pixel_error": 0.6177162101337449
+      },
+      {
+        "scene": "03-SHOT-24",
+        "frame": 4154,
+        "time": 138.46666666666667,
+        "mean_absolute_pixel_error": 0.7274638310185185
+      },
+      {
+        "scene": "03-SHOT-25",
+        "frame": 4310,
+        "time": 143.66666666666666,
+        "mean_absolute_pixel_error": 0.5494873649691357
+      },
+      {
+        "scene": "03-SHOT-26",
+        "frame": 4436,
+        "time": 147.86666666666667,
+        "mean_absolute_pixel_error": 0.5013949974279835
+      }
+    ],
+    "maximum_mae": 0.9915289030349794
+  }
+]

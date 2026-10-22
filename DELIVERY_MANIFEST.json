@@ -1,0 +1,326 @@
+{
+  "branch": "grindctrl-three-english-videos-2026-10-22",
+  "base_url": "https://github.com/mhhmod/grindctrl_booking/raw/refs/heads/grindctrl-three-english-videos-2026-10-22/",
+  "files": [
+    {
+      "file": "01_EDIT_TIMELINE.csv",
+      "bytes": 3646,
+      "sha256": "7bd3bb8f234696ff75498e100b55d6f7fc53f13c07e72cfb8520705ac46fd738"
+    },
+    {
+      "file": "01_GRINDCTRL_Future_of_Fashion_English_Final.html",
+      "bytes": 11564178,
+      "sha256": "ae4e267a66a09aa0e7214486e052390b0cb9b7f267e2ce859d4b7bf93c59a98a"
+    },
+    {
+      "file": "01_GRINDCTRL_Future_of_Fashion_English_Final.m4a",
+      "bytes": 3640983,
+      "sha256": "eb523003ca0e99b41c915884ccb074d0009332be907c9f08ca845465e527ad3a"
+    },
+    {
+      "file": "01_GRINDCTRL_Future_of_Fashion_English_Final.mp4",
+      "bytes": 17491000,
+      "sha256": "a93dcf8263e2ce98c86e48e64d55a9d411de82531329695fcea6ea7ad71acda5"
+    },
+    {
+      "file": "01_GRINDCTRL_Future_of_Fashion_English_Final.srt",
+      "bytes": 3404,
+      "sha256": "c54046ae541335aec91716e3bc7e788595a3c8e1ec9c2df8a3fbe50c8ea7ec69"
+    },
+    {
+      "file": "01_GRINDCTRL_The_Future_of_Online_Fashion_Shopping.mp3",
+      "bytes": 1975307,
+      "sha256": "98005b9f3e324284e9895601b31f1882aad3a3fb2bfb69fae9fc026d312871f2"
+    },
+    {
+      "file": "02_EDIT_TIMELINE.csv",
+      "bytes": 3451,
+      "sha256": "8c3717f5940ac0e519303b6edd49b3f5dfb99f5e9e89d75d542315eb26832ea1"
+    },
+    {
+      "file": "02_GRINDCTRL_AI_Customer_Support_and_Store_Operations.mp3",
+      "bytes": 1976561,
+      "sha256": "f4af9ee7e5c6f18584b5c089c67faefec844ed435b5a4b6d99c7d80948d55054"
+    },
+    {
+      "file": "02_GRINDCTRL_AI_Store_Support_English_Final.html",
+      "bytes": 11564069,
+      "sha256": "211ec6e438545e6a7a52fad39de05c5f2b06c97f2de5e5fc358f1927dd1f76a5"
+    },
+    {
+      "file": "02_GRINDCTRL_AI_Store_Support_English_Final.m4a",
+      "bytes": 3640720,
+      "sha256": "837ec461fdbdd80025238ef3f5cb3b441ffe2a84f5c2a72b0a54ece63bd80f45"
+    },
+    {
+      "file": "02_GRINDCTRL_AI_Store_Support_English_Final.mp4",
+      "bytes": 15160055,
+      "sha256": "a82fcfbad8aee0a014684abac2b6519b1bcfa34879559f47b52b31d23368fcc6"
+    },
+    {
+      "file": "02_GRINDCTRL_AI_Store_Support_English_Final.srt",
+      "bytes": 3514,
+      "sha256": "2386ff574db3e146b9de2a6a0542d538a4f24f8afcc60170f0b9f999367d9dbc"
+    },
+    {
+      "file": "03_EDIT_TIMELINE.csv",
+      "bytes": 3292,
+      "sha256": "31e6eac4dded7f1f62026563713aedd6f0760f1609df57b7d842f4fa7f1d205c"
+    },
+    {
+      "file": "03_GRINDCTRL_AI_TryOn_and_StoreChat.mp3",
+      "bytes": 1997041,
+      "sha256": "cb9b869cdb4d9cbed7e5d83adfc1f40aba07859dc32fe5f306a9bf7ba5c2f278"
+    },
+    {
+      "file": "03_GRINDCTRL_TryOn_StoreChat_English_Final.html",
+      "bytes": 11553415,
+      "sha256": "5d3214df70221305c46276d5e925f35c759bf2021d3e69bcac4b710cbb3cebae"
+    },
+    {
+      "file": "03_GRINDCTRL_TryOn_StoreChat_English_Final.m4a",
+      "bytes": 3632647,
+      "sha256": "23d629d4fd3cda0e19b52c4ea62b52739bc38e5de3fed2319062d42ece5e91a8"
+    },
+    {
+      "file": "03_GRINDCTRL_TryOn_StoreChat_English_Final.mp4",
+      "bytes": 16976207,
+      "sha256": "06a47910bf445fab4655feb6eaf7aa34650f1eb082a955b28ccf4e76506be039"
+    },
+    {
+      "file": "03_GRINDCTRL_TryOn_StoreChat_English_Final.srt",
+      "bytes": 3510,
+      "sha256": "6b08d41788d326956c4ad9ae5f43e78f8f59fb5ccad9a0a1ddab51b14f64c403"
+    },
+    {
+      "file": "ASSET_PROVENANCE.md",
+      "bytes": 1886,
+      "sha256": "2f61e6e8747c561f0d6863d594e82f9c4a4ade7e4430ee0ac555cff472922138"
+    },
+    {
+      "file": "GRINDCTRL_3_VIDEOS_AUDIO_MANIFEST.json",
+      "bytes": 1182,
+      "sha256": "d5ad8f0e38a9e47aaa71377914472f49f1e32ae8678b91113cd8a369f184ba90"
+    },
+    {
+      "file": "GRINDCTRL_3_VIDEOS_MASTER_PROMPT.txt",
+      "bytes": 21590,
+      "sha256": "4ebb97d03a8f09114fd81ae7151ca3003cf2fe60ae8764886cdea653a000bb10"
+    },
+    {
+      "file": "QA_FRAME_COMPARISON.json",
+      "bytes": 13043,
+      "sha256": "cd7008664cffb3f74dc5dc3874bfa2d50615bda313f3022cdeec94387f1e7526"
+    },
+    {
+      "file": "QA_HTML.json",
+      "bytes": 2289,
+      "sha256": "0b21e50738651b5a185c0b67bcff8a899cb614652a91d6a24b1ccf382c290a57"
+    },
+    {
+      "file": "QA_MEDIA.json",
+      "bytes": 15992,
+      "sha256": "09900fc9fccc2d3df32e053c33865f293a6672984abcccabc50eb95ebe820321"
+    },
+    {
+      "file": "QA_PORTABLE_SOURCE.json",
+      "bytes": 1091,
+      "sha256": "9109d58dcb7d8bc903310da18b87f44fb4d76d104a96825fc1890731cabc3d48"
+    },
+    {
+      "file": "QA_REPORT.md",
+      "bytes": 4987,
+      "sha256": "06e0145b94e9ac1e651df4e967007e04123d0e6a1b3691db58230e7b690418cc"
+    },
+    {
+      "file": "QA_VIDEO.json",
+      "bytes": 20521,
+      "sha256": "aebc6202ce6484a795380224da0e148d224110d53261b150e892dd6ac3b082a4"
+    },
+    {
+      "file": "README.md",
+      "bytes": 3066,
+      "sha256": "c7d3b3dcacf75131e6a636986c0ddb621ac2212151352bc0ea82557efe8bdcf3"
+    },
+    {
+      "file": "alignment/01-fine-recognition.json",
+      "bytes": 35349,
+      "sha256": "046ab2ea7bb8ee1cba163a44fd9b89c928884bf16e4cf19ec0a977e6b462fb13"
+    },
+    {
+      "file": "alignment/01-recognition.json",
+      "bytes": 23668,
+      "sha256": "8b569b48de8fce88543a5cafca6a4db5e857a5549e02df76052052332300bc2b"
+    },
+    {
+      "file": "alignment/01-silences.log",
+      "bytes": 7215,
+      "sha256": "eeed11b38467f14407c4e564ef206e9047f3efd0e7d1b933500ac1d70cd22d9f"
+    },
+    {
+      "file": "alignment/02-fine-recognition.json",
+      "bytes": 34282,
+      "sha256": "5b5989a41acbfc8f13cc13f9f354ccbfe0215d25bfd1ef888340aaedbc0cf0e7"
+    },
+    {
+      "file": "alignment/02-recognition.json",
+      "bytes": 23937,
+      "sha256": "4fdfb3619134449af90f525388f0ac592da7b8730e80526c7bbae8c380882c56"
+    },
+    {
+      "file": "alignment/02-silences.log",
+      "bytes": 7218,
+      "sha256": "f58e280e17636a153120687b79dfe03b586eefb5558d53a942784e2239923e09"
+    },
+    {
+      "file": "alignment/03-fine-recognition.json",
+      "bytes": 36751,
+      "sha256": "6729f977e35061b943a5b085d1227396315119361d3ff15b02c29e65cb27fed5"
+    },
+    {
+      "file": "alignment/03-recognition.json",
+      "bytes": 25952,
+      "sha256": "e5e87686e55379bd727aa852ba13005a12a70815d1407180659a8a39398f61b5"
+    },
+    {
+      "file": "alignment/03-silences.log",
+      "bytes": 7773,
+      "sha256": "82eee76e788c162648272e263e674c64831e2f899110798bc8507436271ab4f2"
+    },
+    {
+      "file": "research/access.json",
+      "bytes": 497,
+      "sha256": "b3698cf677d6b044b00b535d5b7ccde591ca6345fac90cca9d6bd7cc54d8b4db"
+    },
+    {
+      "file": "review/01-encoded-contact-sheet.jpg",
+      "bytes": 705216,
+      "sha256": "40497c9cf5e9fa0752b072061e7d620d4c81c9f27204d886fd888f478d57d2b4"
+    },
+    {
+      "file": "review/01-poster.jpg",
+      "bytes": 156234,
+      "sha256": "c1345092d73ab17ce67b30c033e10692544cf16880bcf2bf66ffd880113f8544"
+    },
+    {
+      "file": "review/02-encoded-contact-sheet.jpg",
+      "bytes": 662813,
+      "sha256": "e9589ce7c42a63af4cf6fb565ef3498b3e00d0973d1ecfffc25fdbc6ca3a1a44"
+    },
+    {
+      "file": "review/02-poster.jpg",
+      "bytes": 153836,
+      "sha256": "ceb1882eccadaa194b0a1a2e1fb2cc8acbe6a25668427f783b24d541ab5ebc6c"
+    },
+    {
+      "file": "review/03-encoded-contact-sheet.jpg",
+      "bytes": 626452,
+      "sha256": "98a846467ffdd76300d89c62436c9f5242428237a02ad1c93bb0c600e36bcde2"
+    },
+    {
+      "file": "review/03-poster.jpg",
+      "bytes": 160297,
+      "sha256": "6efe439626dcce83d5bedbcd945e0b970cf714ea151ac44236ca12da613255bd"
+    },
+    {
+      "file": "source/01-timeline.json",
+      "bytes": 26987,
+      "sha256": "ba931e16b25ee8d5458970a09b2bb1dd1ca8b07fa076a80a23978a1ab6226000"
+    },
+    {
+      "file": "source/02-timeline.json",
+      "bytes": 27254,
+      "sha256": "1fe72cad73b7f25148f1cf75d1d29aefb5ee7d8ca124d0ec07f42deee3e00f4e"
+    },
+    {
+      "file": "source/03-timeline.json",
+      "bytes": 27354,
+      "sha256": "08c29537246f63bd59c19c2806787ee203e4b56c3f69cfaf622c5228618a141f"
+    },
+    {
+      "file": "source/README.md",
+      "bytes": 1967,
+      "sha256": "c4beabf683ca8bc1860f8ef0d5fccb3e8da9c2f22b75af3416b899b470d557dd"
+    },
+    {
+      "file": "source/assets/Manrope-OFL.txt",
+      "bytes": 4387,
+      "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+    },
+    {
+      "file": "source/assets/brand-white.png",
+      "bytes": 14184,
+      "sha256": "f3466d9536ce81f8e2bb78ebb0923fb6fd0492b08d5f757a950e34ba97a2bf94"
+    },
+    {
+      "file": "source/assets/brand.png",
+      "bytes": 15093,
+      "sha256": "3c75fad406205c7d6cc4959a88f5fc98a533cad03af080e2f154928e821d54c8"
+    },
+    {
+      "file": "source/assets/details-board.png",
+      "bytes": 2753002,
+      "sha256": "9795ba81e8af01e0718aedbee0f60dae7e4bfaa79d26d5db6c103c81be421668"
+    },
+    {
+      "file": "source/assets/fashion-board.png",
+      "bytes": 2188480,
+      "sha256": "95d18bb193d06d4d8ebbc7c293badd5272a0ddea7d415f8a83a939d2e027feb1"
+    },
+    {
+      "file": "source/assets/manrope.woff2",
+      "bytes": 24836,
+      "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972"
+    },
+    {
+      "file": "source/build-html.py",
+      "bytes": 3034,
+      "sha256": "b609b2071c242e5cd5fc80244456461a56ba86691b106920f130a685bef1419c"
+    },
+    {
+      "file": "source/films.json",
+      "bytes": 86177,
+      "sha256": "61616f4cc61ba35918c41b27f3b05d1de8dbb87d12146145ad1430e83b239d64"
+    },
+    {
+      "file": "source/package.json",
+      "bytes": 138,
+      "sha256": "4a99cddf6629b760c92f275ae17c2ebaa754d7b527f57bf5d58f8ce279a45686"
+    },
+    {
+      "file": "source/player.js",
+      "bytes": 23587,
+      "sha256": "83b8084406c96cb2bfd5488d7dd438edf6587d03cfe1cc252f7adae8377fe4e4"
+    },
+    {
+      "file": "source/qa-html.cjs",
+      "bytes": 4198,
+      "sha256": "40af410e8dcc05eb9c009cbae374ed492d3d691a6c5c7ddcd8965f49519b4fa2"
+    },
+    {
+      "file": "source/qa-media.py",
+      "bytes": 5623,
+      "sha256": "cb4627785d101323ea7bd4f3ea3df4eef09b2ee7f830ac3e6f152f9deba0bc1f"
+    },
+    {
+      "file": "source/qa-video.cjs",
+      "bytes": 3574,
+      "sha256": "5a876c94439f0f476644197df05c08407a7f697a868c329210bb25af6acf7731"
+    },
+    {
+      "file": "source/rebuild-audio.py",
+      "bytes": 3575,
+      "sha256": "aa5b3e23890ad4f988762398691ac4b0d7a8321134fe6dfcc737e316fd43c300"
+    },
+    {
+      "file": "source/render.cjs",
+      "bytes": 3912,
+      "sha256": "b0e5902c8902a6e5d92c12c94bbd403e4d687fcc29aaa57851b2ecaa762a3770"
+    },
+    {
+      "file": "source/requirements.txt",
+      "bytes": 60,
+      "sha256": "1edae854602bfe8d9a0eea6289c91c96b7ca62650f4542f857f7e7b48752065a"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+[
+  {
+    "film": "01",
+    "seekStates": 128,
+    "overflows": [],
+    "errors": [],
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttons": [
+        {
+          "label": "Play",
+          "h": 44
+        },
+        {
+          "label": "Replay",
+          "h": 44
+        },
+        {
+          "label": "Next shot",
+          "h": 44
+        },
+        {
+          "label": "Motion on",
+          "h": 44
+        }
+      ]
+    },
+    "audio": {
+      "audio": 1,
+      "duration": 150,
+      "source": "data:audio/mp4;base64,AAA"
+    },
+    "guards": []
+  },
+  {
+    "film": "02",
+    "seekStates": 127,
+    "overflows": [],
+    "errors": [],
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttons": [
+        {
+          "label": "Play",
+          "h": 44
+        },
+        {
+          "label": "Replay",
+          "h": 44
+        },
+        {
+          "label": "Next shot",
+          "h": 44
+        },
+        {
+          "label": "Motion on",
+          "h": 44
+        }
+      ]
+    },
+    "audio": {
+      "audio": 1,
+      "duration": 150,
+      "source": "data:audio/mp4;base64,AAA"
+    },
+    "guards": [
+      {
+        "scene": "02-SHOT-15",
+        "mode": "demo_beat",
+        "earlyStatusVisible": false
+      },
+      {
+        "scene": "02-SHOT-16",
+        "mode": "verify",
+        "earlyStatusVisible": false
+      },
+      {
+        "scene": "02-SHOT-17",
+        "mode": "readonly",
+        "earlyStatusVisible": false
+      },
+      {
+        "scene": "02-SHOT-18",
+        "mode": "boundary",
+        "earlyStatusVisible": true
+      },
+      {
+        "privateNote": true
+      }
+    ]
+  },
+  {
+    "film": "03",
+    "seekStates": 125,
+    "overflows": [],
+    "errors": [],
+    "mobile": {
+      "viewport": 390,
+      "width": 390,
+      "buttons": [
+        {
+          "label": "Play",
+          "h": 44
+        },
+        {
+          "label": "Replay",
+          "h": 44
+        },
+        {
+          "label": "Next shot",
+          "h": 44
+        },
+        {
+          "label": "Motion on",
+          "h": 44
+        }
+      ]
+    },
+    "audio": {
+      "audio": 1,
+      "duration": 150,
+      "source": "data:audio/mp4;base64,AAA"
+    },
+    "guards": [
+      {
+        "fitBoundary": true
+      }
+    ]
+  }
+]

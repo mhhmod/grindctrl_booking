@@ -1,0 +1,1722 @@
+[
+  {
+    "index": 0,
+    "start": 0.0,
+    "end": 2.168406,
+    "text": "A shopper can love a fashion brand.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "A shopper can love a fashion brand.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " A",
+        " shop",
+        "per",
+        " can",
+        " love",
+        " a",
+        " fashion",
+        " brand",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " A shopper can love a fashion brand."
+      ]
+    }
+  },
+  {
+    "index": 1,
+    "start": 2.168406,
+    "end": 3.7377504999999998,
+    "text": "admire the photography",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "admire the photography",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " admire",
+        " the",
+        " photography"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " admire the photography"
+      ]
+    }
+  },
+  {
+    "index": 2,
+    "start": 3.7377504999999998,
+    "end": 6.625844,
+    "text": "and still hesitate at the most important moment.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and still hesitate at the most important moment.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " still",
+        " hesitate",
+        " at",
+        " the",
+        " most",
+        " important",
+        " moment",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " and still hesitate at the most important moment."
+      ]
+    }
+  },
+  {
+    "index": 3,
+    "start": 6.625844,
+    "end": 7.0013749999999995,
+    "text": "[BLANK_AUDIO]",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "[BLANK_AUDIO]",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " [",
+        "BLANK",
+        "_",
+        "AUDIO",
+        "]"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        10.0
+      ],
+      "segment_texts": [
+        " [BLANK_AUDIO]"
+      ]
+    }
+  },
+  {
+    "index": 4,
+    "start": 7.0013749999999995,
+    "end": 8.9902815,
+    "text": "deciding whether to buy.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "deciding whether to buy.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " deciding",
+        " whether",
+        " to",
+        " buy",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " deciding whether to buy."
+      ]
+    }
+  },
+  {
+    "index": 5,
+    "start": 8.9902815,
+    "end": 9.963375,
+    "text": "online",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "online",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " online"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " online"
+      ]
+    }
+  },
+  {
+    "index": 6,
+    "start": 9.963375,
+    "end": 11.867875000000002,
+    "text": "Customers don't get the fitting room.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Customers don't get the fitting room.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Custom",
+        "ers",
+        " don",
+        "'t",
+        " get",
+        " the",
+        " fitting",
+        " room",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Customers don't get the fitting room."
+      ]
+    }
+  },
+  {
+    "index": 7,
+    "start": 11.867875000000002,
+    "end": 15.0435935,
+    "text": "They can't easily imagine how a garment will look on them.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "They can't easily imagine how a garment will look on them.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " They",
+        " can",
+        "'t",
+        " easily",
+        " imagine",
+        " how",
+        " a",
+        " garment",
+        " will",
+        " look",
+        " on",
+        " them",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.28
+      ],
+      "segment_texts": [
+        " They can't easily imagine how a garment will look on them."
+      ]
+    }
+  },
+  {
+    "index": 8,
+    "start": 15.0435935,
+    "end": 19.6435,
+    "text": "And when they have a question about sizing, delivery, or the product itself,",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "And when they have a question about sizing, delivery, or the product itself,",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " And",
+        " when",
+        " they",
+        " have",
+        " a",
+        " question",
+        " about",
+        " sizing",
+        ",",
+        " delivery",
+        ",",
+        " or",
+        " the",
+        " product",
+        " itself",
+        ","
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " And when they have a question about sizing, delivery, or the product itself,"
+      ]
+    }
+  },
+  {
+    "index": 9,
+    "start": 19.6435,
+    "end": 21.365219,
+    "text": "they need a clear answer.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "they need a clear answer.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " they",
+        " need",
+        " a",
+        " clear",
+        " answer",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " they need a clear answer."
+      ]
+    }
+  },
+  {
+    "index": 10,
+    "start": 21.365219,
+    "end": 23.359344,
+    "text": "Not another reason to leave.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Not another reason to leave.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Not",
+        " another",
+        " reason",
+        " to",
+        " leave",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " Not another reason to leave."
+      ]
+    }
+  },
+  {
+    "index": 11,
+    "start": 23.359344,
+    "end": 26.623125,
+    "text": "For fashion brands, this creates a challenge that goes far.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "For fashion brands, this creates a challenge that goes far.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " For",
+        " fashion",
+        " brands",
+        ",",
+        " this",
+        " creates",
+        " a",
+        " challenge",
+        " that",
+        " goes",
+        " far",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " For fashion brands, this creates a challenge that goes far."
+      ]
+    }
+  },
+  {
+    "index": 12,
+    "start": 26.623125,
+    "end": 29.1006875,
+    "text": "far beyond building a beautiful website.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "far beyond building a beautiful website.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " far",
+        " beyond",
+        " building",
+        " a",
+        " beautiful",
+        " website",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.56
+      ],
+      "segment_texts": [
+        " far beyond building a beautiful website."
+      ]
+    }
+  },
+  {
+    "index": 13,
+    "start": 29.1006875,
+    "end": 32.5888125,
+    "text": "The experience has to help people explore with confidence.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The experience has to help people explore with confidence.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " experience",
+        " has",
+        " to",
+        " help",
+        " people",
+        " explore",
+        " with",
+        " confidence",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " The experience has to help people explore with confidence."
+      ]
+    }
+  },
+  {
+    "index": 14,
+    "start": 32.5888125,
+    "end": 32.9564375,
+    "text": "[no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "[no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " ["
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        8.0,
+        11.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0,
+        20.0
+      ],
+      "segment_durations": [
+        8.0,
+        3.0,
+        4.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.0
+      ],
+      "segment_texts": [
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " ["
+      ]
+    }
+  },
+  {
+    "index": 15,
+    "start": 32.9564375,
+    "end": 34.650469,
+    "text": "and it has to feel personal.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and it has to feel personal.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " it",
+        " has",
+        " to",
+        " feel",
+        " personal",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " and it has to feel personal."
+      ]
+    }
+  },
+  {
+    "index": 16,
+    "start": 34.650469,
+    "end": 36.3188435,
+    "text": "even when the store is busy.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "even when the store is busy.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " even",
+        " when",
+        " the",
+        " store",
+        " is",
+        " busy",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " even when the store is busy."
+      ]
+    }
+  },
+  {
+    "index": 17,
+    "start": 36.3188435,
+    "end": 38.864125,
+    "text": "That's the thinking behind grand control.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "That's the thinking behind grand control.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " That",
+        "'s",
+        " the",
+        " thinking",
+        " behind",
+        " grand",
+        " control",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " That's the thinking behind grand control."
+      ]
+    }
+  },
+  {
+    "index": 18,
+    "start": 38.864125,
+    "end": 44.3012495,
+    "text": "Grind Control brings practical AI experiences into Shopify fashion stores.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Grind Control brings practical AI experiences into Shopify fashion stores.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Grind",
+        " Control",
+        " brings",
+        " practical",
+        " AI",
+        " experiences",
+        " into",
+        " Shopify",
+        " fashion",
+        " stores",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.5
+      ],
+      "segment_texts": [
+        " Grind Control brings practical AI experiences into Shopify fashion stores."
+      ]
+    }
+  },
+  {
+    "index": 19,
+    "start": 44.3012495,
+    "end": 48.832781,
+    "text": "It connects product discovery with helpful store-specific conversations.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It connects product discovery with helpful store-specific conversations.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        " connects",
+        " product",
+        " discovery",
+        " with",
+        " helpful",
+        " store",
+        "-",
+        "specific",
+        " conversations",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.8
+      ],
+      "segment_texts": [
+        " It connects product discovery with helpful store-specific conversations."
+      ]
+    }
+  },
+  {
+    "index": 20,
+    "start": 48.832781,
+    "end": 52.306937500000004,
+    "text": "giving shoppers better ways to explore what they're considering.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "giving shoppers better ways to explore what they're considering.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " giving",
+        " shop",
+        "pers",
+        " better",
+        " ways",
+        " to",
+        " explore",
+        " what",
+        " they",
+        "'re",
+        " considering",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.5
+      ],
+      "segment_texts": [
+        " giving shoppers better ways to explore what they're considering."
+      ]
+    }
+  },
+  {
+    "index": 21,
+    "start": 52.306937500000004,
+    "end": 56.1724065,
+    "text": "Instead of treating shopping as a series of disconnected clicks,",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Instead of treating shopping as a series of disconnected clicks,",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Instead",
+        " of",
+        " treating",
+        " shopping",
+        " as",
+        " a",
+        " series",
+        " of",
+        " disconnected",
+        " clicks",
+        ","
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " Instead of treating shopping as a series of disconnected clicks,"
+      ]
+    }
+  },
+  {
+    "index": 22,
+    "start": 56.1724065,
+    "end": 57.382374999999996,
+    "text": "The goal is to make it.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The goal is to make it.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " goal",
+        " is",
+        " to",
+        " make",
+        " it",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " The goal is to make it."
+      ]
+    }
+  },
+  {
+    "index": 23,
+    "start": 57.382374999999996,
+    "end": 59.164219,
+    "text": "each step more useful.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "each step more useful.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " each",
+        " step",
+        " more",
+        " useful",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " each step more useful."
+      ]
+    }
+  },
+  {
+    "index": 24,
+    "start": 59.164219,
+    "end": 60.797250000000005,
+    "text": "A shopper sees a product.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "A shopper sees a product.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " A",
+        " shop",
+        "per",
+        " sees",
+        " a",
+        " product",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " A shopper sees a product."
+      ]
+    }
+  },
+  {
+    "index": 25,
+    "start": 60.797250000000005,
+    "end": 61.1300935,
+    "text": "[no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio]",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "[no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio] [no audio]",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]",
+        " [",
+        "no",
+        " audio",
+        "]"
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0,
+        8.0,
+        11.0,
+        15.0,
+        16.0,
+        17.0,
+        18.0,
+        19.0
+      ],
+      "segment_durations": [
+        8.0,
+        3.0,
+        4.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "segment_texts": [
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]",
+        " [no audio]"
+      ]
+    }
+  },
+  {
+    "index": 26,
+    "start": 61.1300935,
+    "end": 63.31337550000001,
+    "text": "They want to picture it on themselves.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "They want to picture it on themselves.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " They",
+        " want",
+        " to",
+        " picture",
+        " it",
+        " on",
+        " themselves",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " They want to picture it on themselves."
+      ]
+    }
+  },
+  {
+    "index": 27,
+    "start": 63.31337550000001,
+    "end": 64.54528099999999,
+    "text": "They have a question.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "They have a question.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " They",
+        " have",
+        " a",
+        " question",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " They have a question."
+      ]
+    }
+  },
+  {
+    "index": 28,
+    "start": 64.54528099999999,
+    "end": 67.90740600000001,
+    "text": "They want an answer that actually relates to that store.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "They want an answer that actually relates to that store.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " They",
+        " want",
+        " an",
+        " answer",
+        " that",
+        " actually",
+        " relates",
+        " to",
+        " that",
+        " store",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.6
+      ],
+      "segment_texts": [
+        " They want an answer that actually relates to that store."
+      ]
+    }
+  },
+  {
+    "index": 29,
+    "start": 67.90740600000001,
+    "end": 73.24475000000001,
+    "text": "The virtual try-on experience helps them visualize a selected garment using a photo.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The virtual try-on experience helps them visualize a selected garment using a photo.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " virtual",
+        " try",
+        "-",
+        "on",
+        " experience",
+        " helps",
+        " them",
+        " visualize",
+        " a",
+        " selected",
+        " garment",
+        " using",
+        " a",
+        " photo",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.6
+      ],
+      "segment_texts": [
+        " The virtual try-on experience helps them visualize a selected garment using a photo."
+      ]
+    }
+  },
+  {
+    "index": 30,
+    "start": 73.24475000000001,
+    "end": 77.88890599999999,
+    "text": "Store Chat helps answer questions using information supplied by the merchant.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Store Chat helps answer questions using information supplied by the merchant.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Store",
+        " Chat",
+        " helps",
+        " answer",
+        " questions",
+        " using",
+        " information",
+        " supplied",
+        " by",
+        " the",
+        " merchant",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.0
+      ],
+      "segment_texts": [
+        " Store Chat helps answer questions using information supplied by the merchant."
+      ]
+    }
+  },
+  {
+    "index": 31,
+    "start": 77.88890599999999,
+    "end": 80.924469,
+    "text": "with a route to the team when a human response is needed.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "with a route to the team when a human response is needed.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " with",
+        " a",
+        " route",
+        " to",
+        " the",
+        " team",
+        " when",
+        " a",
+        " human",
+        " response",
+        " is",
+        " needed",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.2
+      ],
+      "segment_texts": [
+        " with a route to the team when a human response is needed."
+      ]
+    }
+  },
+  {
+    "index": 32,
+    "start": 80.924469,
+    "end": 82.4863745,
+    "text": "And this is important.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "And this is important.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " And",
+        " this",
+        " is",
+        " important",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " And this is important."
+      ]
+    }
+  },
+  {
+    "index": 33,
+    "start": 82.4863745,
+    "end": 87.28484399999999,
+    "text": "The AI is not meant to invent product details or replace a brand's judgment.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The AI is not meant to invent product details or replace a brand's judgment.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " AI",
+        " is",
+        " not",
+        " meant",
+        " to",
+        " invent",
+        " product",
+        " details",
+        " or",
+        " replace",
+        " a",
+        " brand",
+        "'s",
+        " judgment",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        5.04
+      ],
+      "segment_texts": [
+        " The AI is not meant to invent product details or replace a brand's judgment."
+      ]
+    }
+  },
+  {
+    "index": 34,
+    "start": 87.28484399999999,
+    "end": 90.70796899999999,
+    "text": "Its answers depend on the information the store provides.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Its answers depend on the information the store provides.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Its",
+        " answers",
+        " depend",
+        " on",
+        " the",
+        " information",
+        " the",
+        " store",
+        " provides",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.5
+      ],
+      "segment_texts": [
+        " Its answers depend on the information the store provides."
+      ]
+    }
+  },
+  {
+    "index": 35,
+    "start": 90.70796899999999,
+    "end": 93.5228435,
+    "text": "and more complex cases can move to a person.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and more complex cases can move to a person.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " more",
+        " complex",
+        " cases",
+        " can",
+        " move",
+        " to",
+        " a",
+        " person",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.88
+      ],
+      "segment_texts": [
+        " and more complex cases can move to a person."
+      ]
+    }
+  },
+  {
+    "index": 36,
+    "start": 93.5228435,
+    "end": 94.628125,
+    "text": "for merchants.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "for merchants.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " for",
+        " merchants",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " for merchants."
+      ]
+    }
+  },
+  {
+    "index": 37,
+    "start": 94.628125,
+    "end": 99.1809065,
+    "text": "The value is a more connected way to present products and support shoppers.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "The value is a more connected way to present products and support shoppers.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " The",
+        " value",
+        " is",
+        " a",
+        " more",
+        " connected",
+        " way",
+        " to",
+        " present",
+        " products",
+        " and",
+        " support",
+        " shop",
+        "pers",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.48
+      ],
+      "segment_texts": [
+        " The value is a more connected way to present products and support shoppers."
+      ]
+    }
+  },
+  {
+    "index": 38,
+    "start": 99.1809065,
+    "end": 103.309594,
+    "text": "For customers, it's a shopping journey that feels easier to understand.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "For customers, it's a shopping journey that feels easier to understand.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " For",
+        " customers",
+        ",",
+        " it",
+        "'s",
+        " a",
+        " shopping",
+        " journey",
+        " that",
+        " feels",
+        " easier",
+        " to",
+        " understand",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " For customers, it's a shopping journey that feels easier to understand."
+      ]
+    }
+  },
+  {
+    "index": 39,
+    "start": 103.309594,
+    "end": 106.8809685,
+    "text": "You can explore the experience in the live demonstration store.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "You can explore the experience in the live demonstration store.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " You",
+        " can",
+        " explore",
+        " the",
+        " experience",
+        " in",
+        " the",
+        " live",
+        " demonstration",
+        " store",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " You can explore the experience in the live demonstration store."
+      ]
+    }
+  },
+  {
+    "index": 40,
+    "start": 106.8809685,
+    "end": 108.503344,
+    "text": "See the features in action.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "See the features in action.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " See",
+        " the",
+        " features",
+        " in",
+        " action",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        2.0
+      ],
+      "segment_texts": [
+        " See the features in action."
+      ]
+    }
+  },
+  {
+    "index": 41,
+    "start": 108.503344,
+    "end": 111.4388755,
+    "text": "and discuss how they fit your own Shopify setup.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "and discuss how they fit your own Shopify setup.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " and",
+        " discuss",
+        " how",
+        " they",
+        " fit",
+        " your",
+        " own",
+        " Shopify",
+        " setup",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.04
+      ],
+      "segment_texts": [
+        " and discuss how they fit your own Shopify setup."
+      ]
+    }
+  },
+  {
+    "index": 42,
+    "start": 111.4388755,
+    "end": 115.8596875,
+    "text": "because great online fashion should do more than display products beautifully.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "because great online fashion should do more than display products beautifully.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " because",
+        " great",
+        " online",
+        " fashion",
+        " should",
+        " do",
+        " more",
+        " than",
+        " display",
+        " products",
+        " beautifully",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.48
+      ],
+      "segment_texts": [
+        " because great online fashion should do more than display products beautifully."
+      ]
+    }
+  },
+  {
+    "index": 43,
+    "start": 115.8596875,
+    "end": 118.701094,
+    "text": "It should help people make sense of what they're buying.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "It should help people make sense of what they're buying.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " It",
+        " should",
+        " help",
+        " people",
+        " make",
+        " sense",
+        " of",
+        " what",
+        " they",
+        "'re",
+        " buying",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        3.0
+      ],
+      "segment_texts": [
+        " It should help people make sense of what they're buying."
+      ]
+    }
+  },
+  {
+    "index": 44,
+    "start": 118.701094,
+    "end": 122.32,
+    "text": "Discover Grind Control at grindcontrol.cloud.",
+    "result": {
+      "lang": "en",
+      "emotion": "",
+      "event": "",
+      "text": "Discover Grind Control at grindcontrol.cloud.",
+      "timestamps": [],
+      "durations": [],
+      "tokens": [
+        " Discover",
+        " Grind",
+        " Control",
+        " at",
+        " grind",
+        "control",
+        ".",
+        "cloud",
+        "."
+      ],
+      "ys_log_probs": [],
+      "words": [],
+      "segment_timestamps": [
+        0.0
+      ],
+      "segment_durations": [
+        4.0
+      ],
+      "segment_texts": [
+        " Discover Grind Control at grindcontrol.cloud."
+      ]
+    }
+  }
+]

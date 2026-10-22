@@ -1,0 +1,765 @@
+{
+  "id": "02",
+  "title": "Support, with context",
+  "stem": "02_GRINDCTRL_AI_Store_Support_English_Final",
+  "audio_file": "02_GRINDCTRL_AI_Customer_Support_and_Store_Operations.mp3",
+  "source_audio_sha256": "f4af9ee7e5c6f18584b5c089c67faefec844ed435b5a4b6d99c7d80948d55054",
+  "source_decoded_duration": 122.4,
+  "source_container_duration": 122.435918,
+  "duration": 150,
+  "fps": 30,
+  "frames": 4500,
+  "cold_open_sec": 3.5,
+  "interludes_sec": [
+    3.5,
+    3.5,
+    3.5,
+    3.5,
+    3.5
+  ],
+  "outro_sec": 6.599999999999994,
+  "additional_visual_only_sec": 27.599999999999994,
+  "narration_segments": [
+    {
+      "source_start_sec": 0.0,
+      "source_end_sec": 26.68589569160998,
+      "target_start_sec": 3.5,
+      "target_end_sec": 30.18589569160998,
+      "samples": 1176848,
+      "source_pcm_sha256": "058258e5e74322c3d823f7cbfe2baf886bfa8f9912abd10a3dc2fb3e9e017296"
+    },
+    {
+      "source_start_sec": 26.68589569160998,
+      "source_end_sec": 44.004285714285714,
+      "target_start_sec": 33.68589569160998,
+      "target_end_sec": 51.004285714285714,
+      "samples": 763741,
+      "source_pcm_sha256": "fcb4d686ab6c3061fbb4ba11c3e62e6da6de95ad77027c599f392a4ef326c424"
+    },
+    {
+      "source_start_sec": 44.004285714285714,
+      "source_end_sec": 68.56242630385488,
+      "target_start_sec": 54.504285714285714,
+      "target_end_sec": 79.06242630385488,
+      "samples": 1083014,
+      "source_pcm_sha256": "13c2013f7a850f422638a57f78eb863bcc944cdca651f92cfd7ee4d0fd570887"
+    },
+    {
+      "source_start_sec": 68.56242630385488,
+      "source_end_sec": 84.80204081632652,
+      "target_start_sec": 82.56242630385488,
+      "target_end_sec": 98.80204081632652,
+      "samples": 716167,
+      "source_pcm_sha256": "2b25a1f4176d2d07ffb063886dc11f5d294c3afb45998bd76352642da7ddaf6a"
+    },
+    {
+      "source_start_sec": 84.80204081632652,
+      "source_end_sec": 108.4045351473923,
+      "target_start_sec": 102.30204081632652,
+      "target_end_sec": 125.9045351473923,
+      "samples": 1040870,
+      "source_pcm_sha256": "bf034ab4b86efc60fb5c16fb729cad20f03d2e1e62e2ebaf73d3bcd7963b6293"
+    },
+    {
+      "source_start_sec": 108.4045351473923,
+      "source_end_sec": 122.4,
+      "target_start_sec": 129.4045351473923,
+      "target_end_sec": 143.4,
+      "samples": 617200,
+      "source_pcm_sha256": "f5a9f1ebb43081739f772fe38a5868883668c8f88204a07b87363aeb021f3c8d"
+    }
+  ],
+  "visual_only_intervals": [
+    [
+      0,
+      3.5
+    ],
+    [
+      30.18589569160998,
+      33.68589569160998
+    ],
+    [
+      51.004285714285714,
+      54.504285714285714
+    ],
+    [
+      79.06242630385488,
+      82.56242630385488
+    ],
+    [
+      98.80204081632652,
+      102.30204081632652
+    ],
+    [
+      125.9045351473923,
+      129.4045351473923
+    ],
+    [
+      143.4,
+      150
+    ]
+  ],
+  "scenes": [
+    {
+      "start": 0.0,
+      "end": 3.5,
+      "kind": "cold",
+      "mode": "intro",
+      "title": "Support, with context",
+      "visual_only": true,
+      "id": "02-SHOT-01"
+    },
+    {
+      "start": 3.5,
+      "end": 14.005283446712019,
+      "kind": "questions",
+      "mode": "intro",
+      "source_start": 0.0,
+      "source_end": 10.505281,
+      "phrase_index": 0,
+      "visual_only": false,
+      "id": "02-SHOT-02"
+    },
+    {
+      "start": 14.005283446712019,
+      "end": 17.34439909297052,
+      "kind": "journey",
+      "mode": "workflow",
+      "source_start": 10.505281,
+      "source_end": 13.844406,
+      "phrase_index": 4,
+      "visual_only": false,
+      "id": "02-SHOT-03"
+    },
+    {
+      "start": 17.34439909297052,
+      "end": 26.06986394557823,
+      "kind": "knowledge",
+      "mode": "routing",
+      "source_start": 13.844406,
+      "source_end": 22.569875,
+      "phrase_index": 5,
+      "visual_only": false,
+      "id": "02-SHOT-04"
+    },
+    {
+      "start": 26.06986394557823,
+      "end": 30.18589569160998,
+      "kind": "reveal",
+      "mode": "support",
+      "source_start": 22.569875,
+      "source_end": 26.6859065,
+      "phrase_index": 6,
+      "visual_only": false,
+      "id": "02-SHOT-05"
+    },
+    {
+      "start": 30.18589569160998,
+      "end": 33.68589569160998,
+      "kind": "chat",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "02-SHOT-06"
+    },
+    {
+      "start": 33.68589569160998,
+      "end": 39.52331065759637,
+      "kind": "chat",
+      "mode": "ask",
+      "source_start": 26.6859065,
+      "source_end": 32.5233125,
+      "phrase_index": 7,
+      "visual_only": false,
+      "id": "02-SHOT-07"
+    },
+    {
+      "start": 39.52331065759637,
+      "end": 47.38387755102041,
+      "kind": "knowledge",
+      "mode": "sources",
+      "source_start": 32.5233125,
+      "source_end": 40.383875,
+      "phrase_index": 8,
+      "visual_only": false,
+      "id": "02-SHOT-08"
+    },
+    {
+      "start": 47.38387755102041,
+      "end": 51.004285714285714,
+      "kind": "chat",
+      "mode": "complex",
+      "source_start": 40.383875,
+      "source_end": 44.004281,
+      "phrase_index": 9,
+      "visual_only": false,
+      "id": "02-SHOT-09"
+    },
+    {
+      "start": 51.004285714285714,
+      "end": 54.504285714285714,
+      "kind": "handoff",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "02-SHOT-10"
+    },
+    {
+      "start": 54.504285714285714,
+      "end": 61.26528344671202,
+      "kind": "handoff",
+      "mode": "reason",
+      "source_start": 44.004281,
+      "source_end": 50.7652815,
+      "phrase_index": 10,
+      "visual_only": false,
+      "id": "02-SHOT-11"
+    },
+    {
+      "start": 61.26528344671202,
+      "end": 69.60213151927438,
+      "kind": "inbox",
+      "mode": "tools",
+      "source_start": 50.7652815,
+      "source_end": 59.102125,
+      "phrase_index": 11,
+      "visual_only": false,
+      "id": "02-SHOT-12"
+    },
+    {
+      "start": 69.60213151927438,
+      "end": 73.27462585034013,
+      "kind": "chat",
+      "mode": "natural",
+      "source_start": 59.102125,
+      "source_end": 62.774625,
+      "phrase_index": 12,
+      "visual_only": false,
+      "id": "02-SHOT-13"
+    },
+    {
+      "start": 73.27462585034013,
+      "end": 79.06242630385488,
+      "kind": "handoff",
+      "mode": "continuity",
+      "source_start": 62.774625,
+      "source_end": 68.56243749999999,
+      "phrase_index": 13,
+      "visual_only": false,
+      "id": "02-SHOT-14"
+    },
+    {
+      "start": 79.06242630385488,
+      "end": 82.56242630385488,
+      "kind": "order",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "02-SHOT-15"
+    },
+    {
+      "start": 82.56242630385488,
+      "end": 85.86238095238095,
+      "kind": "order",
+      "mode": "verify",
+      "source_start": 68.56243749999999,
+      "source_end": 71.862375,
+      "phrase_index": 14,
+      "visual_only": false,
+      "id": "02-SHOT-16"
+    },
+    {
+      "start": 85.86238095238095,
+      "end": 93.27371882086167,
+      "kind": "order",
+      "mode": "readonly",
+      "source_start": 71.862375,
+      "source_end": 79.273719,
+      "phrase_index": 15,
+      "visual_only": false,
+      "id": "02-SHOT-17"
+    },
+    {
+      "start": 93.27371882086167,
+      "end": 98.80204081632652,
+      "kind": "order",
+      "mode": "boundary",
+      "source_start": 79.273719,
+      "source_end": 84.8020315,
+      "phrase_index": 16,
+      "visual_only": false,
+      "id": "02-SHOT-18"
+    },
+    {
+      "start": 98.80204081632652,
+      "end": 102.30204081632652,
+      "kind": "inbox",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "02-SHOT-19"
+    },
+    {
+      "start": 102.30204081632652,
+      "end": 115.661179138322,
+      "kind": "inbox",
+      "mode": "policies",
+      "source_start": 84.8020315,
+      "source_end": 98.1611875,
+      "phrase_index": 17,
+      "visual_only": false,
+      "id": "02-SHOT-20"
+    },
+    {
+      "start": 115.661179138322,
+      "end": 118.18585034013606,
+      "kind": "setup",
+      "mode": "merchant",
+      "source_start": 98.1611875,
+      "source_end": 100.6858435,
+      "phrase_index": 18,
+      "visual_only": false,
+      "id": "02-SHOT-21"
+    },
+    {
+      "start": 118.18585034013606,
+      "end": 125.9045351473923,
+      "kind": "setup",
+      "mode": "configure",
+      "source_start": 100.6858435,
+      "source_end": 108.40453149999999,
+      "phrase_index": 19,
+      "visual_only": false,
+      "id": "02-SHOT-22"
+    },
+    {
+      "start": 125.9045351473923,
+      "end": 129.4045351473923,
+      "kind": "setup",
+      "mode": "demo_beat",
+      "visual_only": true,
+      "id": "02-SHOT-23"
+    },
+    {
+      "start": 129.4045351473923,
+      "end": 133.5060090702948,
+      "kind": "demo",
+      "mode": "visit",
+      "source_start": 108.40453149999999,
+      "source_end": 112.506,
+      "phrase_index": 20,
+      "visual_only": false,
+      "id": "02-SHOT-24"
+    },
+    {
+      "start": 133.5060090702948,
+      "end": 137.58761904761906,
+      "kind": "chat",
+      "mode": "explore",
+      "source_start": 112.506,
+      "source_end": 116.587625,
+      "phrase_index": 21,
+      "visual_only": false,
+      "id": "02-SHOT-25"
+    },
+    {
+      "start": 137.58761904761906,
+      "end": 143.4,
+      "kind": "cta",
+      "mode": "people",
+      "source_start": 116.587625,
+      "source_end": 122.4,
+      "phrase_index": 22,
+      "visual_only": false,
+      "id": "02-SHOT-26"
+    },
+    {
+      "start": 143.4,
+      "end": 150.0,
+      "kind": "outro",
+      "mode": "cta",
+      "title": "Support, with context",
+      "visual_only": true,
+      "id": "02-SHOT-27"
+    }
+  ],
+  "captions": [
+    {
+      "start": 3.5,
+      "end": 6.316371882086168,
+      "text": "When a shopper contacts an online fashion store,",
+      "source_start": 0.0,
+      "source_end": 2.8163755000000004,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 6.316371882086168,
+      "end": 8.110816326530612,
+      "text": "the question may sound simple.",
+      "source_start": 2.8163755000000004,
+      "source_end": 4.6108125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 8.110816326530612,
+      "end": 10.255714285714285,
+      "text": "Is this available in my size?",
+      "source_start": 4.6108125,
+      "source_end": 6.7557185,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 10.255714285714285,
+      "end": 12.259886621315193,
+      "text": "How should I care for the fabric?",
+      "source_start": 6.7557185,
+      "source_end": 8.7598755,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 12.259886621315193,
+      "end": 14.005283446712019,
+      "text": "Can you help me check an order?",
+      "source_start": 8.7598755,
+      "source_end": 10.505281,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 14.005283446712019,
+      "end": 17.34439909297052,
+      "text": "But behind each question is a real workflow.",
+      "source_start": 10.505281,
+      "source_end": 13.844406,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 17.34439909297052,
+      "end": 19.835873015873016,
+      "text": "Someone needs to understand the request,",
+      "source_start": 13.844406,
+      "source_end": 16.335875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 19.835873015873016,
+      "end": 21.60371882086168,
+      "text": "find accurate information,",
+      "source_start": 16.335875,
+      "source_end": 18.103718999999998,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 21.60371882086168,
+      "end": 23.338843537414967,
+      "text": "decide what can be answered,",
+      "source_start": 18.103718999999998,
+      "source_end": 19.838843500000003,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 23.338843537414967,
+      "end": 26.06986394557823,
+      "text": "and recognize when a team member should take over.",
+      "source_start": 19.838843500000003,
+      "source_end": 22.569875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 26.06986394557823,
+      "end": 30.18589569160998,
+      "text": "That's where a thoughtful AI support experience becomes valuable.",
+      "source_start": 22.569875,
+      "source_end": 26.6859065,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 33.68589569160998,
+      "end": 35.67133786848073,
+      "text": "With GRINDCTRL\u2019s Store Chat,",
+      "source_start": 26.6859065,
+      "source_end": 28.6713435,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 35.67133786848073,
+      "end": 39.52331065759637,
+      "text": "shoppers can ask questions directly inside a Shopify store.",
+      "source_start": 28.6713435,
+      "source_end": 32.5233125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 39.52331065759637,
+      "end": 42.92727891156463,
+      "text": "The assistant works from the store knowledge the merchant provides,",
+      "source_start": 32.5233125,
+      "source_end": 35.92728150000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 42.92727891156463,
+      "end": 45.11496598639456,
+      "text": "including information about products,",
+      "source_start": 35.92728150000001,
+      "source_end": 38.1149685,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 45.11496598639456,
+      "end": 47.38387755102041,
+      "text": "sizing, delivery, and care.",
+      "source_start": 38.1149685,
+      "source_end": 40.383875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 47.38387755102041,
+      "end": 51.004285714285714,
+      "text": "And support doesn't have to stop when a question gets complicated.",
+      "source_start": 40.383875,
+      "source_end": 44.004281,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 54.504285714285714,
+      "end": 56.36179138321995,
+      "text": "If the shopper needs a person,",
+      "source_start": 44.004281,
+      "source_end": 45.861781,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 56.36179138321995,
+      "end": 58.995714285714286,
+      "text": "the conversation can be handed to the merchant\u2019s team,",
+      "source_start": 45.861781,
+      "source_end": 48.495718499999995,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 58.995714285714286,
+      "end": 61.26528344671202,
+      "text": "together with the reason for the handoff.",
+      "source_start": 48.495718499999995,
+      "source_end": 50.7652815,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 61.26528344671202,
+      "end": 64.74131519274377,
+      "text": "The team can review the conversation in a shared inbox,",
+      "source_start": 50.7652815,
+      "source_end": 54.241312,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 64.74131519274377,
+      "end": 65.59555555555556,
+      "text": "assign it,",
+      "source_start": 54.241312,
+      "source_end": 55.0955625,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 65.59555555555556,
+      "end": 66.90356009070294,
+      "text": "add private notes,",
+      "source_start": 55.0955625,
+      "source_end": 56.403563000000005,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 66.90356009070294,
+      "end": 69.60213151927438,
+      "text": "and respond with saved replies when appropriate.",
+      "source_start": 56.403563000000005,
+      "source_end": 59.102125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 69.60213151927438,
+      "end": 73.27462585034013,
+      "text": "The goal isn't to make every conversation sound automated.",
+      "source_start": 59.102125,
+      "source_end": 62.774625,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 73.27462585034013,
+      "end": 77.78820861678004,
+      "text": "It's to keep context and make the transition from AI to human support",
+      "source_start": 62.774625,
+      "source_end": 67.2882185,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 77.78820861678004,
+      "end": 78.56816326530613,
+      "text": "feel organized.",
+      "source_start": 67.2882185,
+      "source_end": 68.0681565,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 82.56242630385488,
+      "end": 85.86238095238095,
+      "text": "Some workflows can also work with order information.",
+      "source_start": 68.56243749999999,
+      "source_end": 71.862375,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 85.86238095238095,
+      "end": 89.59040816326531,
+      "text": "Where access is configured and the shopper's details are verified,",
+      "source_start": 71.862375,
+      "source_end": 75.5904065,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 89.59040816326531,
+      "end": 93.27371882086167,
+      "text": "the assistant can look up order status on a read-only basis.",
+      "source_start": 75.5904065,
+      "source_end": 79.273719,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 93.27371882086167,
+      "end": 95.06918367346938,
+      "text": "It does not change orders,",
+      "source_start": 79.273719,
+      "source_end": 81.0691875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 95.06918367346938,
+      "end": 98.80204081632652,
+      "text": "issue refunds, or make decisions beyond its approved scope.",
+      "source_start": 81.0691875,
+      "source_end": 84.8020315,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 102.30204081632652,
+      "end": 104.14795918367346,
+      "text": "For the people running the store,",
+      "source_start": 84.8020315,
+      "source_end": 86.647969,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 104.14795918367346,
+      "end": 109.6135827664399,
+      "text": "this means customer conversations and support actions can be easier to follow in one place.",
+      "source_start": 86.647969,
+      "source_end": 92.113594,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 109.6135827664399,
+      "end": 115.661179138322,
+      "text": "The experience can be adapted to the merchant's actual policies, rather than relying on generic answers.",
+      "source_start": 92.113594,
+      "source_end": 98.1611875,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 115.661179138322,
+      "end": 118.18585034013606,
+      "text": "And the same principle applies to setup.",
+      "source_start": 98.1611875,
+      "source_end": 100.6858435,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 118.18585034013606,
+      "end": 121.50213151927437,
+      "text": "The right configuration depends on the store's catalog,",
+      "source_start": 100.6858435,
+      "source_end": 104.002125,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 121.50213151927437,
+      "end": 123.35328798185941,
+      "text": "theme, support process,",
+      "source_start": 104.002125,
+      "source_end": 105.85328100000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 123.35328798185941,
+      "end": 125.9045351473923,
+      "text": "and the questions customers ask most often.",
+      "source_start": 105.85328100000001,
+      "source_end": 108.40453149999999,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 129.4045351473923,
+      "end": 131.0105215419501,
+      "text": "To see what this looks like,",
+      "source_start": 108.40453149999999,
+      "source_end": 110.010531,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 131.0105215419501,
+      "end": 133.5060090702948,
+      "text": "open the GRINDCTRL Demonstration Store.",
+      "source_start": 110.010531,
+      "source_end": 112.506,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 133.5060090702948,
+      "end": 137.58761904761906,
+      "text": "You can explore the shopper experience and discuss the setup with the team.",
+      "source_start": 112.506,
+      "source_end": 116.587625,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 137.58761904761906,
+      "end": 138.902947845805,
+      "text": "GRINDCTRL",
+      "source_start": 116.587625,
+      "source_end": 117.90293750000001,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    },
+    {
+      "start": 138.902947845805,
+      "end": 143.4,
+      "text": "AI that helps the store respond and knows when people should take over.",
+      "source_start": 117.90293750000001,
+      "source_end": 122.4,
+      "method": "Whisper-small context transcript reconciled with short silence-bounded recognition; brand spelling normalized; no certified individual-word alignment"
+    }
+  ],
+  "loudness": {
+    "source": {
+      "input_i": "-25.36",
+      "input_tp": "-5.01",
+      "input_lra": "3.00",
+      "input_thresh": "-35.89",
+      "output_i": "-18.41",
+      "output_tp": "-1.00",
+      "output_lra": "2.60",
+      "output_thresh": "-28.97",
+      "normalization_type": "dynamic",
+      "target_offset": "0.41"
+    },
+    "constant_voice_gain_db": 7.359999999999999,
+    "floating_stage_peak": 1.311874508857727,
+    "global_mix_leveling": {
+      "input_i": "-15.01",
+      "input_tp": "2.36",
+      "input_lra": "10.40",
+      "input_thresh": "-26.48",
+      "output_i": "-16.37",
+      "output_tp": "-1.50",
+      "output_lra": "11.50",
+      "output_thresh": "-27.64",
+      "normalization_type": "dynamic",
+      "target_offset": "0.37"
+    }
+  },
+  "evidence": "Official public sites and demo storefront attempted but blocked by proxy 403. Interfaces are illustrative reconstructions; claims limited to supplied authoritative narration. No claimed live capture or real stock/order/customer data."
+}

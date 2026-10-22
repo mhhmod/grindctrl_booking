@@ -1,0 +1,26 @@
+[
+  {
+    "audio_file": "01_GRINDCTRL_The_Future_of_Online_Fashion_Shopping.mp3",
+    "source_uploaded_file": "ElevenLabs_audio_elevenlabs-v4_A shopper can l_2026-10-22T17_53_01.mp3",
+    "topic": "Video 01 — Future of Online Fashion Shopping",
+    "duration_s": 122.358,
+    "visual_only_additional_s": 27.642,
+    "sha256": "98005b9f3e324284e9895601b31f1882aad3a3fb2bfb69fae9fc026d312871f2"
+  },
+  {
+    "audio_file": "02_GRINDCTRL_AI_Customer_Support_and_Store_Operations.mp3",
+    "source_uploaded_file": "ElevenLabs_audio_elevenlabs-v4_When a shopper _2026-10-22T17_52_25.mp3",
+    "topic": "Video 02 — AI Customer Support and Store Operations",
+    "duration_s": 122.436,
+    "visual_only_additional_s": 27.564,
+    "sha256": "f4af9ee7e5c6f18584b5c089c67faefec844ed435b5a4b6d99c7d80948d55054"
+  },
+  {
+    "audio_file": "03_GRINDCTRL_AI_TryOn_and_StoreChat.mp3",
+    "source_uploaded_file": "ElevenLabs_audio_elevenlabs-v4_Picture this. Y_2026-10-22T17_53_33.mp3",
+    "topic": "Video 03 — AI Try-On and Store Chat",
+    "duration_s": 123.716,
+    "visual_only_additional_s": 26.284,
+    "sha256": "cb9b869cdb4d9cbed7e5d83adfc1f40aba07859dc32fe5f306a9bf7ba5c2f278"
+  }
+]
