@@ -49,21 +49,21 @@ describe('V16Shell', () => {
     render(<V16Shell {...props()} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat']);
+    expect(links.map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan']);
     expect(within(nav).getByRole('link', { name: 'Try-On' })).toHaveAttribute('aria-current', 'page');
     expect(within(nav).getByRole('link', { name: 'Today' })).not.toHaveAttribute('aria-current');
-    // Plan and Settings wait for their pages.
-    expect(screen.queryByRole('link', { name: /Plan|Settings/ })).not.toBeInTheDocument();
+    // Settings waits for its page.
+    expect(screen.queryByRole('link', { name: /Settings/ })).not.toBeInTheDocument();
   });
 
-  /* The nav for each of the three roles (item 12). Plan and Settings are not
-     built yet, so every role sees the same three pages; the owner alone
-     sees the looks meter, which the layout passes only for the owner. */
+  /* The nav for each of the three roles (item 12). Plan is the owner's
+     alone, as is the looks meter, which the layout passes only for the
+     owner and which opens Plan; Settings is not built yet. */
   it.each([
     ['owner', true],
     ['admin', false],
     ['member', false],
-  ] as const)('shows a %s their nav, and the meter only to the owner', (role, owner) => {
+  ] as const)('shows a %s their nav, and Plan and the meter only to the owner', (role, owner) => {
     render(
       <V16Shell
         {...props({
@@ -74,9 +74,23 @@ describe('V16Shell', () => {
       />,
     );
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
-    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat']);
-    expect(screen.queryByRole('link', { name: /Plan|Settings/ })).not.toBeInTheDocument();
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(
+      owner ? ['Today', 'Inbox', 'Try-On', 'Store Chat', 'Plan'] : ['Today', 'Inbox', 'Try-On', 'Store Chat'],
+    );
+    expect(within(screen.getByRole('navigation', { name: 'Main' })).queryByRole('link', { name: 'Plan' }) !== null).toBe(owner);
+    expect(screen.queryByRole('link', { name: /Settings/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Looks this cycle') !== null).toBe(owner);
+  });
+
+  it('opens Plan from the meter for the owner, and keeps it a plain meter for anyone else', () => {
+    const { unmount } = render(<V16Shell {...props()} />);
+    expect(screen.getByTestId('looks-meter').tagName).toBe('A');
+    expect(screen.getByTestId('looks-meter')).toHaveAttribute('href', '/dashboard/plan');
+    unmount();
+    // The layout passes the meter only to the owner; were it passed to an
+    // admin, it would still not link to a page they may not open.
+    render(<V16Shell {...props({ permissions: resolveDashboardPermissions({ role: 'admin' }) })} />);
+    expect(screen.getByTestId('looks-meter').tagName).toBe('DIV');
   });
 
   it('lists no page the role may not see', () => {
@@ -152,6 +166,7 @@ describe('V16Shell', () => {
       'الرسائل',
       'التجربة الافتراضية',
       'دردشة المتجر',
+      'الباقة',
     ]);
     expect(screen.getByRole('navigation', { name: 'القائمة الرئيسية' })).toHaveTextContent('الدردشة');
     expect(screen.getByText('المالك')).toBeInTheDocument();

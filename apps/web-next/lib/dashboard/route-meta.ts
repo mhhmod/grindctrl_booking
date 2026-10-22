@@ -38,6 +38,11 @@ const DASHBOARD_ROUTE_DEFINITIONS: DashboardRouteDefinition[] = [
     description: 'Settings, plans, and generation history for every merchant store.',
   },
   {
+    pathname: '/dashboard/plan',
+    title: 'Plan and looks',
+    description: 'Your plan and the try-on looks this cycle.',
+  },
+  {
     pathname: '/dashboard/store-chat',
     title: 'Store Chat',
     description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',

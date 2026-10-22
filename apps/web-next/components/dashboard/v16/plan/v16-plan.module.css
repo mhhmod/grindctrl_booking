@@ -1,0 +1,485 @@
+/* The v16 Plan page (the Plan board). Colours, radii and type come from the
+   tokens; layout uses logical properties so Arabic mirrors. The chart keeps
+   time running left to right in both languages, and gives way to a meter
+   on phones. */
+
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card {
+  min-width: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+}
+
+.section {
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px;
+}
+
+.cols {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+@media (min-width: 64em) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 34%);
+    align-items: start;
+  }
+}
+
+.side {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.headRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.headline {
+  display: grid;
+  gap: 4px;
+}
+
+.big {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--gc-success-soft);
+  color: var(--gc-success);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.badge[data-tone='attention'] {
+  background: var(--gc-attention-soft);
+  color: var(--gc-attention);
+}
+
+.badge[data-tone='danger'] {
+  background: var(--gc-danger-soft);
+  color: var(--gc-danger);
+}
+
+.panel {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--muted);
+}
+
+.panel p {
+  margin: 0;
+}
+
+/* The chart, from 40em; the meter below it */
+.chartWide {
+  display: none;
+}
+
+.meterNarrow {
+  display: grid;
+  gap: 6px;
+}
+
+@media (min-width: 40em) {
+  .chartWide {
+    display: block;
+  }
+
+  .meterNarrow {
+    display: none;
+  }
+}
+
+.meter {
+  block-size: 10px;
+  border-radius: 999px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.meter span {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--foreground);
+}
+
+.figure {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keyLine {
+  inline-size: 16px;
+  block-size: 0;
+  border-block-start: 2px solid var(--foreground);
+}
+
+.keyDashed {
+  border-block-start-style: dashed;
+}
+
+.keyBand {
+  inline-size: 14px;
+  block-size: 10px;
+  border-radius: 3px;
+  background: var(--gc-attention-soft);
+}
+
+.plot {
+  position: relative;
+}
+
+.svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.svg:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.limit {
+  stroke: var(--muted-foreground);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.limitLabel,
+.tick,
+.bandLabel {
+  fill: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.bandLabel {
+  fill: var(--foreground);
+  font-weight: 600;
+}
+
+.todayLabel {
+  fill: var(--foreground);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.band {
+  fill: var(--gc-attention-soft);
+}
+
+.area {
+  fill: var(--foreground);
+  opacity: 0.1;
+}
+
+.line {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dashed {
+  stroke-dasharray: 6 5;
+  opacity: 0.75;
+}
+
+.dot {
+  fill: var(--foreground);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+
+.crosshair {
+  stroke: var(--muted-foreground);
+  stroke-width: 1;
+}
+
+.tooltip {
+  position: absolute;
+  inset-block-start: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+  pointer-events: none;
+}
+
+.table summary {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.table table {
+  margin-block-start: 8px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 4px 16px 4px 0;
+  text-align: start;
+}
+
+.table th {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+/* Your plan */
+.planName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 800;
+}
+
+.price {
+  color: var(--muted-foreground);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.link {
+  justify-self: start;
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+/* Last 3 cycles */
+.cycles {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cycle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.cycleLabel {
+  grid-column: 1 / -1;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.cycle[data-current='true'] .cycleLabel {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.cycleBar {
+  position: relative;
+  block-size: 12px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+
+.cycleBar span:first-child {
+  display: block;
+  block-size: 100%;
+  border-radius: 999px;
+  background: var(--foreground);
+  opacity: 0.85;
+}
+
+.cycleLimit {
+  position: absolute;
+  inset-block: -3px;
+  inline-size: 2px;
+  background: var(--muted-foreground);
+}
+
+.cycleValue {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* If you run out */
+.facts {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 48em) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.facts li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.facts li > span {
+  color: var(--muted-foreground);
+}
+
+.facts strong {
+  display: block;
+  color: var(--foreground);
+}
+
+/* Plans */
+.plans {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 40em) {
+  .plans {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+.planCard {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.planCard[data-current='true'] {
+  border-color: var(--foreground);
+  border-width: 2px;
+  padding: 13px 15px;
+}
+
+.planCardName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.current {
+  padding: 2px 8px;
+  border-radius: var(--gc-radius-pill);
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.planCardPrice {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.error {
+  padding: 20px;
+  color: var(--muted-foreground);
+}

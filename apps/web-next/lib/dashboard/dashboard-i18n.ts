@@ -36,6 +36,10 @@ const en: DashboardCopy = {
       title: 'Try-On',
       description: 'Settings, plans, and generation history for every merchant store.',
     },
+    '/dashboard/plan': {
+      title: 'Plan and looks',
+      description: 'Your plan and the try-on looks this cycle.',
+    },
     '/dashboard/store-chat': {
       title: 'Store Chat',
       description: 'The chat box on your storefront: appearance, AI, behaviour, installation.',
@@ -66,6 +70,10 @@ const ar: DashboardCopy = {
     '/dashboard/try-on': {
       title: 'التجربة الافتراضية',
       description: 'الإعدادات والخطط وسجل الإنشاء لكل متجر.',
+    },
+    '/dashboard/plan': {
+      title: 'الباقة والإطلالات',
+      description: 'باقتك وإطلالات التجربة في هذه الدورة.',
     },
     '/dashboard/store-chat': {
       title: 'دردشة المتجر',

@@ -82,7 +82,7 @@ export type TodayView = {
   tiles: Tile[];
 };
 
-export const PLAN_HREF = '/dashboard/try-on';
+export const PLAN_HREF = '/dashboard/plan';
 export const INBOX_HREF = '/dashboard/inbox';
 
 export function relativeAgo(iso: string, now: number, copy: TodayCopy): string {

@@ -59,7 +59,7 @@ describe('the v16 Today page', () => {
       '/dashboard/inbox',
     );
     expect(rows[1]).toHaveTextContent('Looks run out in about 10 days');
-    expect(within(rows[1]).getByRole('link', { name: 'See your plan' })).toHaveAttribute('href', '/dashboard/try-on');
+    expect(within(rows[1]).getByRole('link', { name: 'See your plan' })).toHaveAttribute('href', '/dashboard/plan');
 
     const week = screen.getByRole('region', { name: 'Last 7 days' });
     expect(week).toHaveTextContent('98');

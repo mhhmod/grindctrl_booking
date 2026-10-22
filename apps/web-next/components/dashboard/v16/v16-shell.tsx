@@ -25,7 +25,7 @@ import classes from './v16-shell.module.css';
 
 export type V16NavItem = {
   href: string;
-  key: 'today' | 'inbox' | 'tryOn' | 'storeChat';
+  key: 'today' | 'inbox' | 'tryOn' | 'storeChat' | 'plan';
   icon: GcIconName;
   /** Who sees it (item 12): Plan joins for owners only, Settings for owners and admins. */
   permission: DashboardPermissionKey;
@@ -37,6 +37,7 @@ export const V16_NAV: readonly V16NavItem[] = [
   { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat' },
   { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn' },
   { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat' },
+  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan' },
 ];
 
 /** The nav items the person's role sees. */
@@ -197,6 +198,32 @@ export function V16ShellView({
     </>
   );
 
+  const meterBody = meter && (
+    <>
+      <span className={classes.meterTitle}>{meter.title}</span>
+      <span className={classes.meterValue}>{meter.value}</span>
+      <Progress
+        value={meter.percent}
+        size={6}
+        radius="pill"
+        color={meter.low ? 'attention' : 'brand'}
+        aria-label={`${meter.title}: ${meter.value}`}
+      />
+    </>
+  );
+  // The meter opens Plan for whoever may see it (the owner, item 12).
+  const meterCard =
+    meterBody &&
+    (permissions.canViewPlan ? (
+      <Link href="/dashboard/plan" className={classes.meter} data-testid="looks-meter">
+        {meterBody}
+      </Link>
+    ) : (
+      <div className={classes.meter} data-testid="looks-meter">
+        {meterBody}
+      </div>
+    ));
+
   return (
     <div className={classes.shell} data-testid="v16-shell">
       <a href="#v16-main" className={classes.skip}>
@@ -223,19 +250,7 @@ export function V16ShellView({
           ))}
         </nav>
         <div className={classes.spacer} />
-        {meter && (
-          <div className={classes.meter} data-testid="looks-meter">
-            <span className={classes.meterTitle}>{meter.title}</span>
-            <span className={classes.meterValue}>{meter.value}</span>
-            <Progress
-              value={meter.percent}
-              size={6}
-              radius="pill"
-              color={meter.low ? 'attention' : 'brand'}
-              aria-label={`${meter.title}: ${meter.value}`}
-            />
-          </div>
-        )}
+        {meterCard}
         <Menu position="top-start" width="target" withinPortal>
           <Menu.Target>
             <button type="button" className={classes.person}>
