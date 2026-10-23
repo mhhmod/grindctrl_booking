@@ -1,0 +1,128 @@
+{
+  "film": "03",
+  "file": "03_GRINDCTRL_TryOn_StoreChat_PREMIUM_V2.mp4",
+  "sha256": "6b9f3b96aaec9f8ffe9b28b6a4e66f3ad8c7e3f72478218376895965080a809f",
+  "bytes": 22182668,
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30/1",
+    "codec": "h264",
+    "duration": 150.0,
+    "decoded_frames": 4500
+  },
+  "audio": {
+    "duration": 150.0,
+    "codec": "aac",
+    "channels": 2,
+    "sample_rate": "44100",
+    "lufs": -16.12,
+    "true_peak_dbtp": -1.45,
+    "lra": 4.0,
+    "original_voice_windows": [
+      {
+        "source_sec": 0.4,
+        "target_sec": 1.52,
+        "lag_samples": 0,
+        "correlation": 0.999623356775283
+      },
+      {
+        "source_sec": 14.098004535147393,
+        "target_sec": 15.218004535147392,
+        "lag_samples": 0,
+        "correlation": 0.9998254476773814
+      },
+      {
+        "source_sec": 27.096009070294784,
+        "target_sec": 28.216009070294785,
+        "lag_samples": 0,
+        "correlation": 0.9991816565274613
+      },
+      {
+        "source_sec": 28.496009070294786,
+        "target_sec": 31.616009070294783,
+        "lag_samples": 0,
+        "correlation": 0.999752552422369
+      },
+      {
+        "source_sec": 36.40684807256236,
+        "target_sec": 39.52684807256236,
+        "lag_samples": 0,
+        "correlation": 0.9996062668408815
+      },
+      {
+        "source_sec": 44.417687074829935,
+        "target_sec": 47.53768707482993,
+        "lag_samples": 0,
+        "correlation": 0.994945389782391
+      },
+      {
+        "source_sec": 46.317687074829934,
+        "target_sec": 51.43768707482993,
+        "lag_samples": 0,
+        "correlation": 0.9995170432468471
+      },
+      {
+        "source_sec": 58.958004535147396,
+        "target_sec": 64.07800453514739,
+        "lag_samples": 0,
+        "correlation": 0.999484826485081
+      },
+      {
+        "source_sec": 71.59834467120182,
+        "target_sec": 76.71834467120182,
+        "lag_samples": 0,
+        "correlation": 0.9995756325728224
+      },
+      {
+        "source_sec": 84.53866213151927,
+        "target_sec": 89.65866213151928,
+        "lag_samples": 0,
+        "correlation": 0.997404004751074
+      },
+      {
+        "source_sec": 85.93866213151928,
+        "target_sec": 93.05866213151927,
+        "lag_samples": 0,
+        "correlation": 0.9996841109421413
+      },
+      {
+        "source_sec": 96.92693877551021,
+        "target_sec": 104.0469387755102,
+        "lag_samples": 0,
+        "correlation": 0.9991183663276254
+      },
+      {
+        "source_sec": 106.61519274376417,
+        "target_sec": 113.73519274376417,
+        "lag_samples": 0,
+        "correlation": 0.999196364911725
+      },
+      {
+        "source_sec": 117.0034693877551,
+        "target_sec": 124.12346938775511,
+        "lag_samples": 0,
+        "correlation": 0.9982371816421457
+      },
+      {
+        "source_sec": 127.39172335600907,
+        "target_sec": 134.51172335600907,
+        "lag_samples": 0,
+        "correlation": 0.9995643801990703
+      },
+      {
+        "source_sec": 137.98,
+        "target_sec": 145.1,
+        "lag_samples": 0,
+        "correlation": 0.9996984580875259
+      }
+    ],
+    "max_alignment_lag_samples": 0,
+    "minimum_original_voice_correlation": 0.994945389782391
+  },
+  "full_decode_errors": "",
+  "black_sequences": [],
+  "source_sha256": "35cbc90f37d7e74aa8a35d4f4834a30d03d1e4a85d618f803b2da7211221c4aa",
+  "source_seconds": 138.88,
+  "human_audition": false
+}

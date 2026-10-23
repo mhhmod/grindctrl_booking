@@ -1,0 +1,795 @@
+{
+  "film": "02",
+  "samples": 98,
+  "sha256": "ac71f9c1e7e0bb83464994ac450756436b786410d5a4e2920b9d589e92246626",
+  "h264_stream_sha256": "SHA256=e0863f519ae84797d424c1c384c2d7b5701232e50e12f6e3bd1d8ea5e5cb9049",
+  "preview_sha256": "45262ecb51a7657956b80fa2d1a25635320e9693da3ca53209031c4eaf9e553b",
+  "max_mean_absolute_pixel_error_255": 1.2065247235082304,
+  "frames": [
+    {
+      "frame": 0,
+      "time_sec": 0,
+      "reference": "qa/frame-parity/02/0-preview.png",
+      "encoded": "qa/frame-parity/02/0-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0511620691872428,
+      "pixel_error_p99": 2.0
+    },
+    {
+      "frame": 1,
+      "time_sec": 0.03333333333333333,
+      "reference": "qa/frame-parity/02/1-preview.png",
+      "encoded": "qa/frame-parity/02/1-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9043569958847737,
+      "pixel_error_p99": 6.0
+    },
+    {
+      "frame": 5,
+      "time_sec": 0.16666666666666666,
+      "reference": "qa/frame-parity/02/5-preview.png",
+      "encoded": "qa/frame-parity/02/5-encoded.png",
+      "mean_absolute_pixel_error_255": 1.2065247235082304,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 22,
+      "time_sec": 0.7333333333333333,
+      "reference": "qa/frame-parity/02/22-preview.png",
+      "encoded": "qa/frame-parity/02/22-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0888192836934156,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 30,
+      "time_sec": 1,
+      "reference": "qa/frame-parity/02/30-preview.png",
+      "encoded": "qa/frame-parity/02/30-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0901184735082305,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 239,
+      "time_sec": 7.966666666666667,
+      "reference": "qa/frame-parity/02/239-preview.png",
+      "encoded": "qa/frame-parity/02/239-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0448011509773663,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 476,
+      "time_sec": 15.866666666666667,
+      "reference": "qa/frame-parity/02/476-preview.png",
+      "encoded": "qa/frame-parity/02/476-encoded.png",
+      "mean_absolute_pixel_error_255": 1.089992605452675,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 477,
+      "time_sec": 15.9,
+      "reference": "qa/frame-parity/02/477-preview.png",
+      "encoded": "qa/frame-parity/02/477-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0919925090020577,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 482,
+      "time_sec": 16.066666666666666,
+      "reference": "qa/frame-parity/02/482-preview.png",
+      "encoded": "qa/frame-parity/02/482-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0295912101337448,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 499,
+      "time_sec": 16.633333333333333,
+      "reference": "qa/frame-parity/02/499-preview.png",
+      "encoded": "qa/frame-parity/02/499-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8749665637860082,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 642,
+      "time_sec": 21.4,
+      "reference": "qa/frame-parity/02/642-preview.png",
+      "encoded": "qa/frame-parity/02/642-encoded.png",
+      "mean_absolute_pixel_error_255": 0.940098058127572,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 805,
+      "time_sec": 26.833333333333332,
+      "reference": "qa/frame-parity/02/805-preview.png",
+      "encoded": "qa/frame-parity/02/805-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9255549125514403,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 806,
+      "time_sec": 26.866666666666667,
+      "reference": "qa/frame-parity/02/806-preview.png",
+      "encoded": "qa/frame-parity/02/806-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9255549125514403,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 811,
+      "time_sec": 27.033333333333335,
+      "reference": "qa/frame-parity/02/811-preview.png",
+      "encoded": "qa/frame-parity/02/811-encoded.png",
+      "mean_absolute_pixel_error_255": 1.12256060313786,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 828,
+      "time_sec": 27.6,
+      "reference": "qa/frame-parity/02/828-preview.png",
+      "encoded": "qa/frame-parity/02/828-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9665806648662552,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 857,
+      "time_sec": 28.566666666666666,
+      "reference": "qa/frame-parity/02/857-preview.png",
+      "encoded": "qa/frame-parity/02/857-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9667872299382716,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 871,
+      "time_sec": 29.033333333333335,
+      "reference": "qa/frame-parity/02/871-preview.png",
+      "encoded": "qa/frame-parity/02/871-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9667357896090535,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 916,
+      "time_sec": 30.533333333333335,
+      "reference": "qa/frame-parity/02/916-preview.png",
+      "encoded": "qa/frame-parity/02/916-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9618261316872428,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 930,
+      "time_sec": 31,
+      "reference": "qa/frame-parity/02/930-preview.png",
+      "encoded": "qa/frame-parity/02/930-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9503068737139918,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 983,
+      "time_sec": 32.766666666666666,
+      "reference": "qa/frame-parity/02/983-preview.png",
+      "encoded": "qa/frame-parity/02/983-encoded.png",
+      "mean_absolute_pixel_error_255": 0.861650591563786,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 997,
+      "time_sec": 33.233333333333334,
+      "reference": "qa/frame-parity/02/997-preview.png",
+      "encoded": "qa/frame-parity/02/997-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8619817386831276,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1002,
+      "time_sec": 33.4,
+      "reference": "qa/frame-parity/02/1002-preview.png",
+      "encoded": "qa/frame-parity/02/1002-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8553996270576132,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1070,
+      "time_sec": 35.666666666666664,
+      "reference": "qa/frame-parity/02/1070-preview.png",
+      "encoded": "qa/frame-parity/02/1070-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8527832433127572,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1084,
+      "time_sec": 36.13333333333333,
+      "reference": "qa/frame-parity/02/1084-preview.png",
+      "encoded": "qa/frame-parity/02/1084-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8528190907921811,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1168,
+      "time_sec": 38.93333333333333,
+      "reference": "qa/frame-parity/02/1168-preview.png",
+      "encoded": "qa/frame-parity/02/1168-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8613360018004115,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1182,
+      "time_sec": 39.4,
+      "reference": "qa/frame-parity/02/1182-preview.png",
+      "encoded": "qa/frame-parity/02/1182-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8611316872427983,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1196,
+      "time_sec": 39.86666666666667,
+      "reference": "qa/frame-parity/02/1196-preview.png",
+      "encoded": "qa/frame-parity/02/1196-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8395052083333333,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1197,
+      "time_sec": 39.9,
+      "reference": "qa/frame-parity/02/1197-preview.png",
+      "encoded": "qa/frame-parity/02/1197-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8404200424382716,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1202,
+      "time_sec": 40.06666666666667,
+      "reference": "qa/frame-parity/02/1202-preview.png",
+      "encoded": "qa/frame-parity/02/1202-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9198156185699589,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1219,
+      "time_sec": 40.63333333333333,
+      "reference": "qa/frame-parity/02/1219-preview.png",
+      "encoded": "qa/frame-parity/02/1219-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9923939043209876,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1340,
+      "time_sec": 44.666666666666664,
+      "reference": "qa/frame-parity/02/1340-preview.png",
+      "encoded": "qa/frame-parity/02/1340-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9907466885288065,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1354,
+      "time_sec": 45.13333333333333,
+      "reference": "qa/frame-parity/02/1354-preview.png",
+      "encoded": "qa/frame-parity/02/1354-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9941644161522634,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1364,
+      "time_sec": 45.46666666666667,
+      "reference": "qa/frame-parity/02/1364-preview.png",
+      "encoded": "qa/frame-parity/02/1364-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9508580889917696,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1378,
+      "time_sec": 45.93333333333333,
+      "reference": "qa/frame-parity/02/1378-preview.png",
+      "encoded": "qa/frame-parity/02/1378-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9612892232510288,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1393,
+      "time_sec": 46.43333333333333,
+      "reference": "qa/frame-parity/02/1393-preview.png",
+      "encoded": "qa/frame-parity/02/1393-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9612488747427984,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1407,
+      "time_sec": 46.9,
+      "reference": "qa/frame-parity/02/1407-preview.png",
+      "encoded": "qa/frame-parity/02/1407-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9526813271604938,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1472,
+      "time_sec": 49.06666666666667,
+      "reference": "qa/frame-parity/02/1472-preview.png",
+      "encoded": "qa/frame-parity/02/1472-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0915179719650205,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 1493,
+      "time_sec": 49.766666666666666,
+      "reference": "qa/frame-parity/02/1493-preview.png",
+      "encoded": "qa/frame-parity/02/1493-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0915303497942386,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 1507,
+      "time_sec": 50.233333333333334,
+      "reference": "qa/frame-parity/02/1507-preview.png",
+      "encoded": "qa/frame-parity/02/1507-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0957851080246914,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 1745,
+      "time_sec": 58.166666666666664,
+      "reference": "qa/frame-parity/02/1745-preview.png",
+      "encoded": "qa/frame-parity/02/1745-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0664449909979423,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1746,
+      "time_sec": 58.2,
+      "reference": "qa/frame-parity/02/1746-preview.png",
+      "encoded": "qa/frame-parity/02/1746-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9164118762860082,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 1751,
+      "time_sec": 58.36666666666667,
+      "reference": "qa/frame-parity/02/1751-preview.png",
+      "encoded": "qa/frame-parity/02/1751-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8849964634773663,
+      "pixel_error_p99": 7.0
+    },
+    {
+      "frame": 1768,
+      "time_sec": 58.93333333333333,
+      "reference": "qa/frame-parity/02/1768-preview.png",
+      "encoded": "qa/frame-parity/02/1768-encoded.png",
+      "mean_absolute_pixel_error_255": 0.7340018968621399,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 1939,
+      "time_sec": 64.63333333333334,
+      "reference": "qa/frame-parity/02/1939-preview.png",
+      "encoded": "qa/frame-parity/02/1939-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9505082947530864,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 1953,
+      "time_sec": 65.1,
+      "reference": "qa/frame-parity/02/1953-preview.png",
+      "encoded": "qa/frame-parity/02/1953-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9506290187757201,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 1954,
+      "time_sec": 65.13333333333334,
+      "reference": "qa/frame-parity/02/1954-preview.png",
+      "encoded": "qa/frame-parity/02/1954-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9505711484053498,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2041,
+      "time_sec": 68.03333333333333,
+      "reference": "qa/frame-parity/02/2041-preview.png",
+      "encoded": "qa/frame-parity/02/2041-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9430897955246914,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2055,
+      "time_sec": 68.5,
+      "reference": "qa/frame-parity/02/2055-preview.png",
+      "encoded": "qa/frame-parity/02/2055-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9430897955246914,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2091,
+      "time_sec": 69.7,
+      "reference": "qa/frame-parity/02/2091-preview.png",
+      "encoded": "qa/frame-parity/02/2091-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9193381880144033,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2105,
+      "time_sec": 70.16666666666667,
+      "reference": "qa/frame-parity/02/2105-preview.png",
+      "encoded": "qa/frame-parity/02/2105-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0215121849279836,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2161,
+      "time_sec": 72.03333333333333,
+      "reference": "qa/frame-parity/02/2161-preview.png",
+      "encoded": "qa/frame-parity/02/2161-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0218250064300411,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2162,
+      "time_sec": 72.06666666666666,
+      "reference": "qa/frame-parity/02/2162-preview.png",
+      "encoded": "qa/frame-parity/02/2162-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0224729938271604,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2167,
+      "time_sec": 72.23333333333333,
+      "reference": "qa/frame-parity/02/2167-preview.png",
+      "encoded": "qa/frame-parity/02/2167-encoded.png",
+      "mean_absolute_pixel_error_255": 1.121230870627572,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 2184,
+      "time_sec": 72.8,
+      "reference": "qa/frame-parity/02/2184-preview.png",
+      "encoded": "qa/frame-parity/02/2184-encoded.png",
+      "mean_absolute_pixel_error_255": 0.7852719907407407,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 2250,
+      "time_sec": 75,
+      "reference": "qa/frame-parity/02/2250-preview.png",
+      "encoded": "qa/frame-parity/02/2250-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9439171810699588,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2401,
+      "time_sec": 80.03333333333333,
+      "reference": "qa/frame-parity/02/2401-preview.png",
+      "encoded": "qa/frame-parity/02/2401-encoded.png",
+      "mean_absolute_pixel_error_255": 0.937647890946502,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2477,
+      "time_sec": 82.56666666666666,
+      "reference": "qa/frame-parity/02/2477-preview.png",
+      "encoded": "qa/frame-parity/02/2477-encoded.png",
+      "mean_absolute_pixel_error_255": 0.972972929526749,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2491,
+      "time_sec": 83.03333333333333,
+      "reference": "qa/frame-parity/02/2491-preview.png",
+      "encoded": "qa/frame-parity/02/2491-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9370318930041153,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2638,
+      "time_sec": 87.93333333333334,
+      "reference": "qa/frame-parity/02/2638-preview.png",
+      "encoded": "qa/frame-parity/02/2638-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9312763631687243,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2639,
+      "time_sec": 87.96666666666667,
+      "reference": "qa/frame-parity/02/2639-preview.png",
+      "encoded": "qa/frame-parity/02/2639-encoded.png",
+      "mean_absolute_pixel_error_255": 0.93,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 2644,
+      "time_sec": 88.13333333333334,
+      "reference": "qa/frame-parity/02/2644-preview.png",
+      "encoded": "qa/frame-parity/02/2644-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1639327739197531,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2661,
+      "time_sec": 88.7,
+      "reference": "qa/frame-parity/02/2661-preview.png",
+      "encoded": "qa/frame-parity/02/2661-encoded.png",
+      "mean_absolute_pixel_error_255": 1.139517103909465,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2723,
+      "time_sec": 90.76666666666667,
+      "reference": "qa/frame-parity/02/2723-preview.png",
+      "encoded": "qa/frame-parity/02/2723-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1394127764917696,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2806,
+      "time_sec": 93.53333333333333,
+      "reference": "qa/frame-parity/02/2806-preview.png",
+      "encoded": "qa/frame-parity/02/2806-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1133159722222221,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 2807,
+      "time_sec": 93.56666666666666,
+      "reference": "qa/frame-parity/02/2807-preview.png",
+      "encoded": "qa/frame-parity/02/2807-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0585043724279835,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 2812,
+      "time_sec": 93.73333333333333,
+      "reference": "qa/frame-parity/02/2812-preview.png",
+      "encoded": "qa/frame-parity/02/2812-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1463207304526748,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2829,
+      "time_sec": 94.3,
+      "reference": "qa/frame-parity/02/2829-preview.png",
+      "encoded": "qa/frame-parity/02/2829-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9429354745370371,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2881,
+      "time_sec": 96.03333333333333,
+      "reference": "qa/frame-parity/02/2881-preview.png",
+      "encoded": "qa/frame-parity/02/2881-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9687609310699589,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2895,
+      "time_sec": 96.5,
+      "reference": "qa/frame-parity/02/2895-preview.png",
+      "encoded": "qa/frame-parity/02/2895-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9760566165123457,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 2969,
+      "time_sec": 98.96666666666667,
+      "reference": "qa/frame-parity/02/2969-preview.png",
+      "encoded": "qa/frame-parity/02/2969-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0102224794238683,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 3036,
+      "time_sec": 101.2,
+      "reference": "qa/frame-parity/02/3036-preview.png",
+      "encoded": "qa/frame-parity/02/3036-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9720199974279835,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 3050,
+      "time_sec": 101.66666666666667,
+      "reference": "qa/frame-parity/02/3050-preview.png",
+      "encoded": "qa/frame-parity/02/3050-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9698855452674897,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 3129,
+      "time_sec": 104.3,
+      "reference": "qa/frame-parity/02/3129-preview.png",
+      "encoded": "qa/frame-parity/02/3129-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9377136381172839,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 3130,
+      "time_sec": 104.33333333333333,
+      "reference": "qa/frame-parity/02/3130-preview.png",
+      "encoded": "qa/frame-parity/02/3130-encoded.png",
+      "mean_absolute_pixel_error_255": 0.984522890946502,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 3135,
+      "time_sec": 104.5,
+      "reference": "qa/frame-parity/02/3135-preview.png",
+      "encoded": "qa/frame-parity/02/3135-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9368410815329218,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 3152,
+      "time_sec": 105.06666666666666,
+      "reference": "qa/frame-parity/02/3152-preview.png",
+      "encoded": "qa/frame-parity/02/3152-encoded.png",
+      "mean_absolute_pixel_error_255": 0.7811366705246914,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 3400,
+      "time_sec": 113.33333333333333,
+      "reference": "qa/frame-parity/02/3400-preview.png",
+      "encoded": "qa/frame-parity/02/3400-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8120386445473251,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 3600,
+      "time_sec": 120,
+      "reference": "qa/frame-parity/02/3600-preview.png",
+      "encoded": "qa/frame-parity/02/3600-encoded.png",
+      "mean_absolute_pixel_error_255": 0.7751710390946502,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 3669,
+      "time_sec": 122.3,
+      "reference": "qa/frame-parity/02/3669-preview.png",
+      "encoded": "qa/frame-parity/02/3669-encoded.png",
+      "mean_absolute_pixel_error_255": 0.7550318287037037,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 3670,
+      "time_sec": 122.33333333333333,
+      "reference": "qa/frame-parity/02/3670-preview.png",
+      "encoded": "qa/frame-parity/02/3670-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9343311149691358,
+      "pixel_error_p99": 7.0
+    },
+    {
+      "frame": 3675,
+      "time_sec": 122.5,
+      "reference": "qa/frame-parity/02/3675-preview.png",
+      "encoded": "qa/frame-parity/02/3675-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0294655028292181,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 3692,
+      "time_sec": 123.06666666666666,
+      "reference": "qa/frame-parity/02/3692-preview.png",
+      "encoded": "qa/frame-parity/02/3692-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0570056905864198,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 3873,
+      "time_sec": 129.1,
+      "reference": "qa/frame-parity/02/3873-preview.png",
+      "encoded": "qa/frame-parity/02/3873-encoded.png",
+      "mean_absolute_pixel_error_255": 1.035241930298354,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 4074,
+      "time_sec": 135.8,
+      "reference": "qa/frame-parity/02/4074-preview.png",
+      "encoded": "qa/frame-parity/02/4074-encoded.png",
+      "mean_absolute_pixel_error_255": 1.0405483217592593,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4075,
+      "time_sec": 135.83333333333334,
+      "reference": "qa/frame-parity/02/4075-preview.png",
+      "encoded": "qa/frame-parity/02/4075-encoded.png",
+      "mean_absolute_pixel_error_255": 0.8817922132201647,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 4080,
+      "time_sec": 136,
+      "reference": "qa/frame-parity/02/4080-preview.png",
+      "encoded": "qa/frame-parity/02/4080-encoded.png",
+      "mean_absolute_pixel_error_255": 1.033247170781893,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4097,
+      "time_sec": 136.56666666666666,
+      "reference": "qa/frame-parity/02/4097-preview.png",
+      "encoded": "qa/frame-parity/02/4097-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9526951517489712,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 4128,
+      "time_sec": 137.6,
+      "reference": "qa/frame-parity/02/4128-preview.png",
+      "encoded": "qa/frame-parity/02/4128-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9541674704218107,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 4142,
+      "time_sec": 138.06666666666666,
+      "reference": "qa/frame-parity/02/4142-preview.png",
+      "encoded": "qa/frame-parity/02/4142-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9541711676954733,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 4200,
+      "time_sec": 140,
+      "reference": "qa/frame-parity/02/4200-preview.png",
+      "encoded": "qa/frame-parity/02/4200-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9795007073045268,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 4213,
+      "time_sec": 140.43333333333334,
+      "reference": "qa/frame-parity/02/4213-preview.png",
+      "encoded": "qa/frame-parity/02/4213-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9795532728909465,
+      "pixel_error_p99": 10.0
+    },
+    {
+      "frame": 4349,
+      "time_sec": 144.96666666666667,
+      "reference": "qa/frame-parity/02/4349-preview.png",
+      "encoded": "qa/frame-parity/02/4349-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9181669560185185,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4350,
+      "time_sec": 145,
+      "reference": "qa/frame-parity/02/4350-preview.png",
+      "encoded": "qa/frame-parity/02/4350-encoded.png",
+      "mean_absolute_pixel_error_255": 0.9181721000514403,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4355,
+      "time_sec": 145.16666666666666,
+      "reference": "qa/frame-parity/02/4355-preview.png",
+      "encoded": "qa/frame-parity/02/4355-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1880830439814816,
+      "pixel_error_p99": 8.0
+    },
+    {
+      "frame": 4372,
+      "time_sec": 145.73333333333332,
+      "reference": "qa/frame-parity/02/4372-preview.png",
+      "encoded": "qa/frame-parity/02/4372-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1810635288065843,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4425,
+      "time_sec": 147.5,
+      "reference": "qa/frame-parity/02/4425-preview.png",
+      "encoded": "qa/frame-parity/02/4425-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1813459683641976,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4440,
+      "time_sec": 148,
+      "reference": "qa/frame-parity/02/4440-preview.png",
+      "encoded": "qa/frame-parity/02/4440-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1813459683641976,
+      "pixel_error_p99": 9.0
+    },
+    {
+      "frame": 4499,
+      "time_sec": 149.96666666666667,
+      "reference": "qa/frame-parity/02/4499-preview.png",
+      "encoded": "qa/frame-parity/02/4499-encoded.png",
+      "mean_absolute_pixel_error_255": 1.1814922518004116,
+      "pixel_error_p99": 9.0
+    }
+  ],
+  "method": "Actual final encoded frame vs synchronized standalone HTML Player at same frame,1920\u00d71080,local fonts/data assets. AAC rendering not inferred from pixel parity. A final audio-only mux preserves the measured H.264 stream unchanged."
+}

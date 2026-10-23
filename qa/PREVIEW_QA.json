@@ -1,0 +1,1113 @@
+[
+  {
+    "film": "01",
+    "shots": 12,
+    "sampledStates": 60,
+    "errors": [],
+    "mobile": {
+      "scroll": 390,
+      "width": 390,
+      "buttons": true
+    },
+    "states": [
+      {
+        "frame": 0,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 75,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 300,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 375,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 450,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 525,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 600,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 675,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 750,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 825,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1125,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1200,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1275,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1350,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1425,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1500,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1575,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1650,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1725,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1800,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1875,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1950,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2025,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2100,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2175,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2250,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2325,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2400,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2475,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2550,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2625,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2700,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2775,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2850,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2925,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3000,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3075,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3300,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3375,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3450,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3525,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3600,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3675,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3750,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3825,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4125,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4200,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4275,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4350,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4425,
+        "overflow": [],
+        "notes": []
+      }
+    ]
+  },
+  {
+    "film": "02",
+    "shots": 12,
+    "sampledStates": 60,
+    "errors": [],
+    "mobile": {
+      "scroll": 390,
+      "width": 390,
+      "buttons": true
+    },
+    "states": [
+      {
+        "frame": 0,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 75,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 300,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 375,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 450,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 525,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 600,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 675,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 750,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 825,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1125,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1200,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1275,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1350,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1425,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1500,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1575,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1650,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1725,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1800,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1875,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1950,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2025,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2100,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2175,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          },
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2250,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2325,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2400,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2475,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2550,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2625,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2700,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2775,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-101",
+            "author": "Maya",
+            "text": "Human call note11:12Customer requested an exchange. Branch review pending.MMaya · 15 Oct 2026 · CALL-101"
+          }
+        ]
+      },
+      {
+        "frame": 2850,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "frame": 2925,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Customer followed up; awaitin"
+          }
+        ]
+      },
+      {
+        "frame": 3000,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Customer followed up; awaiting a confirmed branch update."
+          }
+        ]
+      },
+      {
+        "frame": 3075,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Customer followed up; awaiting a confirmed branch update."
+          }
+        ]
+      },
+      {
+        "frame": 3150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3300,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3375,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3450,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3525,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3600,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3675,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3750,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3825,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4125,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          }
+        ]
+      },
+      {
+        "frame": 4200,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          }
+        ]
+      },
+      {
+        "frame": 4275,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          }
+        ]
+      },
+      {
+        "frame": 4350,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          },
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          }
+        ]
+      },
+      {
+        "frame": 4425,
+        "overflow": [],
+        "notes": [
+          {
+            "call": "CALL-102",
+            "author": "Salma",
+            "text": "Human call note14:39Customer followed up; awaiting a confirmed branch update.SSalma · 22 Oct 2026 · CALL-102"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "film": "03",
+    "shots": 12,
+    "sampledStates": 60,
+    "errors": [],
+    "mobile": {
+      "scroll": 390,
+      "width": 390,
+      "buttons": true
+    },
+    "states": [
+      {
+        "frame": 0,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 75,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 300,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 375,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 450,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 525,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 600,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 675,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 750,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 825,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1125,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1200,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1275,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1350,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1425,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1500,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1575,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1650,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1725,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1800,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1875,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 1950,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2025,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2100,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2175,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2250,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2325,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2400,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2475,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2550,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2625,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2700,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2775,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2850,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 2925,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3000,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3075,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3150,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3225,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3300,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3375,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3450,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3525,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3600,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3675,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3750,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3825,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3900,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 3975,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4050,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4125,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4200,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4275,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4350,
+        "overflow": [],
+        "notes": []
+      },
+      {
+        "frame": 4425,
+        "overflow": [],
+        "notes": []
+      }
+    ]
+  }
+]

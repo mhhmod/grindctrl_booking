@@ -1,0 +1,40 @@
+[
+  {
+    "film": "01",
+    "captions": 49,
+    "first_start_sec": 0.295572109375,
+    "last_end_sec": 147.6393124817276,
+    "timeline_monotonic_no_overlap": true,
+    "replacement_characters": 0,
+    "script_reconciliation": [],
+    "note": "Film02 retains the spoken article in \u201cor a completed action\u201d; labels retain correct English product spellings. Timing is automated CTC alignment, not a human-certified transcript."
+  },
+  {
+    "film": "02",
+    "captions": 50,
+    "first_start_sec": 0.21581225819672134,
+    "last_end_sec": 144.85822523369566,
+    "timeline_monotonic_no_overlap": true,
+    "replacement_characters": 0,
+    "script_reconciliation": [
+      {
+        "op": "insert",
+        "script": [],
+        "caption": [
+          "a"
+        ]
+      }
+    ],
+    "note": "Film02 retains the spoken article in \u201cor a completed action\u201d; labels retain correct English product spellings. Timing is automated CTC alignment, not a human-certified transcript."
+  },
+  {
+    "film": "03",
+    "captions": 46,
+    "first_start_sec": 1.175393783783784,
+    "last_end_sec": 145.73659704347827,
+    "timeline_monotonic_no_overlap": true,
+    "replacement_characters": 0,
+    "script_reconciliation": [],
+    "note": "Film02 retains the spoken article in \u201cor a completed action\u201d; labels retain correct English product spellings. Timing is automated CTC alignment, not a human-certified transcript."
+  }
+]

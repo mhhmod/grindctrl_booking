@@ -1,0 +1,128 @@
+{
+  "film": "01",
+  "file": "01_Concrete_Genesys_ZohoDesk_PREMIUM_V2.mp4",
+  "sha256": "441ca2b60f703af4f48dacec45d28dcb4d1ad840b7f0e42119eb98ed500e7114",
+  "bytes": 16278871,
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30/1",
+    "codec": "h264",
+    "duration": 150.0,
+    "decoded_frames": 4500
+  },
+  "audio": {
+    "duration": 150.0,
+    "codec": "aac",
+    "channels": 2,
+    "sample_rate": "44100",
+    "lufs": -16.07,
+    "true_peak_dbtp": -1.41,
+    "lra": 4.0,
+    "original_voice_windows": [
+      {
+        "source_sec": 0.4,
+        "target_sec": 0.64,
+        "lag_samples": 0,
+        "correlation": 0.9998627713545959
+      },
+      {
+        "source_sec": 10.550657596371883,
+        "target_sec": 10.790657596371883,
+        "lag_samples": 0,
+        "correlation": 0.9997855769381666
+      },
+      {
+        "source_sec": 19.901337868480727,
+        "target_sec": 20.141337868480726,
+        "lag_samples": 0,
+        "correlation": 0.9994025147916287
+      },
+      {
+        "source_sec": 29.651995464852607,
+        "target_sec": 29.89199546485261,
+        "lag_samples": 0,
+        "correlation": 0.9978454273344316
+      },
+      {
+        "source_sec": 39.40267573696145,
+        "target_sec": 39.64267573696145,
+        "lag_samples": 0,
+        "correlation": 0.9998567600443349
+      },
+      {
+        "source_sec": 49.45333333333333,
+        "target_sec": 49.693333333333335,
+        "lag_samples": 0,
+        "correlation": 0.997504524623325
+      },
+      {
+        "source_sec": 59.60399092970521,
+        "target_sec": 59.843990929705214,
+        "lag_samples": 0,
+        "correlation": 0.9997099031599785
+      },
+      {
+        "source_sec": 68.75467120181406,
+        "target_sec": 68.99467120181406,
+        "lag_samples": 0,
+        "correlation": 0.9990378795303669
+      },
+      {
+        "source_sec": 79.10532879818594,
+        "target_sec": 79.34532879818595,
+        "lag_samples": 0,
+        "correlation": 0.9985555931271147
+      },
+      {
+        "source_sec": 88.35600907029479,
+        "target_sec": 88.59600907029478,
+        "lag_samples": 0,
+        "correlation": 0.9995926573636909
+      },
+      {
+        "source_sec": 98.50666666666666,
+        "target_sec": 98.74666666666667,
+        "lag_samples": 0,
+        "correlation": 0.999599712108781
+      },
+      {
+        "source_sec": 108.35732426303855,
+        "target_sec": 108.59732426303854,
+        "lag_samples": 0,
+        "correlation": 0.9949508807176307
+      },
+      {
+        "source_sec": 117.4080045351474,
+        "target_sec": 117.6480045351474,
+        "lag_samples": 0,
+        "correlation": 0.9995269361955891
+      },
+      {
+        "source_sec": 127.85866213151927,
+        "target_sec": 128.09866213151926,
+        "lag_samples": 0,
+        "correlation": 0.9992580063798734
+      },
+      {
+        "source_sec": 136.90934240362813,
+        "target_sec": 137.1493424036281,
+        "lag_samples": 0,
+        "correlation": 0.9995470267902422
+      },
+      {
+        "source_sec": 146.66,
+        "target_sec": 146.9,
+        "lag_samples": 0,
+        "correlation": 0.9949328109947023
+      }
+    ],
+    "max_alignment_lag_samples": 0,
+    "minimum_original_voice_correlation": 0.9949328109947023
+  },
+  "full_decode_errors": "",
+  "black_sequences": [],
+  "source_sha256": "174dddeeb08dcf83dc324ce1dd8b960fb1ddc6852c9585e7f35cf8d050c74114",
+  "source_seconds": 147.76,
+  "human_audition": false
+}

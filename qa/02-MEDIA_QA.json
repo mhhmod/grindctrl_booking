@@ -1,0 +1,128 @@
+{
+  "film": "02",
+  "file": "02_Concrete_Customer360_CallActivities_PREMIUM_V2.mp4",
+  "sha256": "ac71f9c1e7e0bb83464994ac450756436b786410d5a4e2920b9d589e92246626",
+  "bytes": 14004979,
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "fps": "30/1",
+    "codec": "h264",
+    "duration": 150.0,
+    "decoded_frames": 4500
+  },
+  "audio": {
+    "duration": 150.0,
+    "codec": "aac",
+    "channels": 2,
+    "sample_rate": "44100",
+    "lufs": -16.23,
+    "true_peak_dbtp": -1.45,
+    "lra": 3.6,
+    "original_voice_windows": [
+      {
+        "source_sec": 0.4,
+        "target_sec": 0.52,
+        "lag_samples": 0,
+        "correlation": 0.9997679991113194
+      },
+      {
+        "source_sec": 10.158662131519275,
+        "target_sec": 10.278662131519274,
+        "lag_samples": 0,
+        "correlation": 0.9997171541961198
+      },
+      {
+        "source_sec": 20.21732426303855,
+        "target_sec": 20.33732426303855,
+        "lag_samples": 0,
+        "correlation": 0.999044192742021
+      },
+      {
+        "source_sec": 29.376009070294785,
+        "target_sec": 29.496009070294786,
+        "lag_samples": 0,
+        "correlation": 0.993244564147106
+      },
+      {
+        "source_sec": 38.63467120181406,
+        "target_sec": 38.75467120181406,
+        "lag_samples": 0,
+        "correlation": 0.9993283186812153
+      },
+      {
+        "source_sec": 48.49333333333333,
+        "target_sec": 48.61333333333334,
+        "lag_samples": 0,
+        "correlation": 0.9995601027144271
+      },
+      {
+        "source_sec": 58.35199546485261,
+        "target_sec": 58.47199546485261,
+        "lag_samples": 0,
+        "correlation": 0.9995959380071096
+      },
+      {
+        "source_sec": 67.71065759637189,
+        "target_sec": 67.83065759637188,
+        "lag_samples": 0,
+        "correlation": 0.9991567624038185
+      },
+      {
+        "source_sec": 76.86934240362812,
+        "target_sec": 76.98934240362811,
+        "lag_samples": 0,
+        "correlation": 0.9994555973067486
+      },
+      {
+        "source_sec": 86.4280045351474,
+        "target_sec": 86.5480045351474,
+        "lag_samples": 0,
+        "correlation": 0.9996394685479457
+      },
+      {
+        "source_sec": 96.28666666666666,
+        "target_sec": 96.40666666666667,
+        "lag_samples": 0,
+        "correlation": 0.9998657536645716
+      },
+      {
+        "source_sec": 105.54532879818593,
+        "target_sec": 105.66532879818594,
+        "lag_samples": 0,
+        "correlation": 0.9993051909917108
+      },
+      {
+        "source_sec": 115.50399092970521,
+        "target_sec": 115.62399092970522,
+        "lag_samples": 0,
+        "correlation": 0.9995393749431429
+      },
+      {
+        "source_sec": 124.66267573696145,
+        "target_sec": 124.78267573696145,
+        "lag_samples": 0,
+        "correlation": 0.9992038835036303
+      },
+      {
+        "source_sec": 134.22133786848073,
+        "target_sec": 134.34133786848074,
+        "lag_samples": 0,
+        "correlation": 0.9983619962715248
+      },
+      {
+        "source_sec": 143.78,
+        "target_sec": 143.9,
+        "lag_samples": 0,
+        "correlation": 0.9986423638832074
+      }
+    ],
+    "max_alignment_lag_samples": 0,
+    "minimum_original_voice_correlation": 0.993244564147106
+  },
+  "full_decode_errors": "",
+  "black_sequences": [],
+  "source_sha256": "1c8ef685b0cfbcc5ca50e00e503b9247a4d1ce670e0ee6c8a741b48a80fba448",
+  "source_seconds": 144.88,
+  "human_audition": false
+}

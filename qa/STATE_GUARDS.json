@@ -1,0 +1,174 @@
+{
+  "checks": [
+    {
+      "film": "01",
+      "sec": 3,
+      "label": "Call is incoming before answer",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 5.6,
+      "label": "Call connects on the spoken answer",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 22.1,
+      "label": "Number not yet marked copied",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 22.8,
+      "label": "Number copied on actual spoken copy",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 43.5,
+      "label": "No customer history during lookup",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 56.6,
+      "label": "Pending status and recorded update visible",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 80.5,
+      "label": "Ambiguous match hides ticket history",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 88.6,
+      "label": "Lookup failure preserves call",
+      "pass": true
+    },
+    {
+      "film": "01",
+      "sec": 93.5,
+      "label": "Phone is not identity",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 28.8,
+      "label": "Private profile withheld before match",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 36,
+      "label": "Permitted customer profile fields",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 50.5,
+      "label": "Trusted-source tier example, no entitlement",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 84,
+      "label": "Historical note retains original call/author",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 100.7,
+      "label": "New note linked only to current interaction",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 106,
+      "label": "Permission limitation hides notes",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 116.5,
+      "label": "Missing tier explicitly unavailable",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 119.7,
+      "label": "Lookup failure never blocks call",
+      "pass": true
+    },
+    {
+      "film": "02",
+      "sec": 140,
+      "label": "Later call reads Salma note without reassignment",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 28,
+      "label": "No uploaded photo before actual upload word",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 28.9,
+      "label": "Uploaded photo paired with selected garment",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 34,
+      "label": "Preview clearly authored demonstration",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 44.5,
+      "label": "No exact-fit claim",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 72.6,
+      "label": "Answer grounded in merchant content",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 86.8,
+      "label": "Conversation assigned to fictional human",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 88.5,
+      "label": "Private note only team-visible",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 89.6,
+      "label": "Human reply in existing thread",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 97,
+      "label": "Conditional verified read-only context",
+      "pass": true
+    },
+    {
+      "film": "03",
+      "sec": 145,
+      "label": "Correct official brand spelling",
+      "pass": true
+    }
+  ],
+  "reducedMotionStartsPaused": true,
+  "allPassed": true
+}

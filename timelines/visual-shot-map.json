@@ -1,0 +1,296 @@
+{
+  "01": [
+    {
+      "id": "arrival",
+      "title": "Incoming call",
+      "start_sec": 0.0,
+      "end_sec": 10.476,
+      "start_frame": 0,
+      "end_frame_exclusive": 314
+    },
+    {
+      "id": "missing",
+      "title": "Context exists elsewhere",
+      "start_sec": 10.476,
+      "end_sec": 17.73,
+      "start_frame": 314,
+      "end_frame_exclusive": 532
+    },
+    {
+      "id": "manual",
+      "title": "Copy and search",
+      "start_sec": 17.73,
+      "end_sec": 25.804,
+      "start_frame": 532,
+      "end_frame_exclusive": 774
+    },
+    {
+      "id": "history",
+      "title": "Find the latest update",
+      "start_sec": 25.804,
+      "end_sec": 35.938,
+      "start_frame": 774,
+      "end_frame_exclusive": 1078
+    },
+    {
+      "id": "lookup",
+      "title": "Authorized lookup",
+      "start_sec": 35.938,
+      "end_sec": 47.203,
+      "start_frame": 1078,
+      "end_frame_exclusive": 1416
+    },
+    {
+      "id": "pop",
+      "title": "Customer context opens",
+      "start_sec": 47.203,
+      "end_sec": 57.033,
+      "start_frame": 1416,
+      "end_frame_exclusive": 1711
+    },
+    {
+      "id": "exchange",
+      "title": "Continue from a recorded status",
+      "start_sec": 57.033,
+      "end_sec": 79.126,
+      "start_frame": 1711,
+      "end_frame_exclusive": 2374
+    },
+    {
+      "id": "fallback",
+      "title": "Safe fallback",
+      "start_sec": 79.126,
+      "end_sec": 95.192,
+      "start_frame": 2374,
+      "end_frame_exclusive": 2856
+    },
+    {
+      "id": "connect",
+      "title": "Build on existing systems",
+      "start_sec": 95.192,
+      "end_sec": 108.766,
+      "start_frame": 2856,
+      "end_frame_exclusive": 3263
+    },
+    {
+      "id": "value",
+      "title": "Validate the benefit",
+      "start_sec": 108.766,
+      "end_sec": 122.001,
+      "start_frame": 3263,
+      "end_frame_exclusive": 3660
+    },
+    {
+      "id": "pilot",
+      "title": "Inspect before implementation",
+      "start_sec": 122.001,
+      "end_sec": 136.66,
+      "start_frame": 3660,
+      "end_frame_exclusive": 4100
+    },
+    {
+      "id": "close",
+      "title": "Context ready for the conversation",
+      "start_sec": 136.66,
+      "end_sec": 150.0,
+      "start_frame": 4100,
+      "end_frame_exclusive": 4500
+    }
+  ],
+  "02": [
+    {
+      "id": "arrival",
+      "title": "A repeat call",
+      "start_sec": 0.0,
+      "end_sec": 15.916,
+      "start_frame": 0,
+      "end_frame_exclusive": 477
+    },
+    {
+      "id": "overview",
+      "title": "A more useful target view",
+      "start_sec": 15.916,
+      "end_sec": 26.876,
+      "start_frame": 477,
+      "end_frame_exclusive": 806
+    },
+    {
+      "id": "profile",
+      "title": "Match then show permitted fields",
+      "start_sec": 26.876,
+      "end_sec": 39.9,
+      "start_frame": 806,
+      "end_frame_exclusive": 1197
+    },
+    {
+      "id": "tiers",
+      "title": "Trusted membership source",
+      "start_sec": 39.9,
+      "end_sec": 58.193,
+      "start_frame": 1197,
+      "end_frame_exclusive": 1746
+    },
+    {
+      "id": "timeline",
+      "title": "An individual story for each call",
+      "start_sec": 58.193,
+      "end_sec": 72.072,
+      "start_frame": 1746,
+      "end_frame_exclusive": 2162
+    },
+    {
+      "id": "historical",
+      "title": "Open the original human note",
+      "start_sec": 72.072,
+      "end_sec": 87.976,
+      "start_frame": 2162,
+      "end_frame_exclusive": 2639
+    },
+    {
+      "id": "kinds",
+      "title": "Keep record types distinct",
+      "start_sec": 87.976,
+      "end_sec": 93.559,
+      "start_frame": 2639,
+      "end_frame_exclusive": 2807
+    },
+    {
+      "id": "write",
+      "title": "Write against the current interaction",
+      "start_sec": 93.559,
+      "end_sec": 104.323,
+      "start_frame": 2807,
+      "end_frame_exclusive": 3130
+    },
+    {
+      "id": "fallback",
+      "title": "Handle uncertainty",
+      "start_sec": 104.323,
+      "end_sec": 122.325,
+      "start_frame": 3130,
+      "end_frame_exclusive": 3670
+    },
+    {
+      "id": "pilot",
+      "title": "Verify storage and permissions",
+      "start_sec": 122.325,
+      "end_sec": 135.823,
+      "start_frame": 3670,
+      "end_frame_exclusive": 4075
+    },
+    {
+      "id": "future",
+      "title": "Retrieve without reassigning authorship",
+      "start_sec": 135.823,
+      "end_sec": 145.0,
+      "start_frame": 4075,
+      "end_frame_exclusive": 4350
+    },
+    {
+      "id": "close",
+      "title": "Every call has its own story",
+      "start_sec": 145.0,
+      "end_sec": 150.0,
+      "start_frame": 4350,
+      "end_frame_exclusive": 4500
+    }
+  ],
+  "03": [
+    {
+      "id": "editorial",
+      "title": "The garment, then the question",
+      "start_sec": 0.0,
+      "end_sec": 14.856,
+      "start_frame": 0,
+      "end_frame_exclusive": 446
+    },
+    {
+      "id": "store",
+      "title": "A supported Shopify product page",
+      "start_sec": 14.856,
+      "end_sec": 25.568,
+      "start_frame": 446,
+      "end_frame_exclusive": 767
+    },
+    {
+      "id": "upload",
+      "title": "Choose the garment and add a photo",
+      "start_sec": 25.568,
+      "end_sec": 31.216,
+      "start_frame": 767,
+      "end_frame_exclusive": 936
+    },
+    {
+      "id": "reveal",
+      "title": "A personal visual preview",
+      "start_sec": 31.216,
+      "end_sec": 39.099,
+      "start_frame": 936,
+      "end_frame_exclusive": 1173
+    },
+    {
+      "id": "fit",
+      "title": "Style preview, not a fit guarantee",
+      "start_sec": 39.099,
+      "end_sec": 48.538,
+      "start_frame": 1173,
+      "end_frame_exclusive": 1456
+    },
+    {
+      "id": "question",
+      "title": "Ask within the shopping journey",
+      "start_sec": 48.538,
+      "end_sec": 68.222,
+      "start_frame": 1456,
+      "end_frame_exclusive": 2047
+    },
+    {
+      "id": "answer",
+      "title": "Answers grounded in store knowledge",
+      "start_sec": 68.222,
+      "end_sec": 79.037,
+      "start_frame": 2047,
+      "end_frame_exclusive": 2371
+    },
+    {
+      "id": "handoff",
+      "title": "A person continues with context",
+      "start_sec": 79.037,
+      "end_sec": 90.559,
+      "start_frame": 2371,
+      "end_frame_exclusive": 2717
+    },
+    {
+      "id": "order",
+      "title": "Configured verified read-only lookup",
+      "start_sec": 90.559,
+      "end_sec": 106.638,
+      "start_frame": 2717,
+      "end_frame_exclusive": 3199
+    },
+    {
+      "id": "journey",
+      "title": "One connected customer journey",
+      "start_sec": 106.638,
+      "end_sec": 121.165,
+      "start_frame": 3199,
+      "end_frame_exclusive": 3635
+    },
+    {
+      "id": "brand",
+      "title": "See it, understand it, stay in control",
+      "start_sec": 121.165,
+      "end_sec": 133.974,
+      "start_frame": 3635,
+      "end_frame_exclusive": 4019
+    },
+    {
+      "id": "close",
+      "title": "Explore GRINDCTRL",
+      "start_sec": 133.974,
+      "end_sec": 150.0,
+      "start_frame": 4019,
+      "end_frame_exclusive": 4500
+    }
+  ]
+}

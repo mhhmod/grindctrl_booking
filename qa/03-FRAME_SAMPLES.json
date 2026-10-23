@@ -1,0 +1,596 @@
+[
+  {
+    "frame": 0,
+    "time_sec": 0,
+    "reference": "qa/frame-parity/03/0-preview.png",
+    "encoded": "qa/frame-parity/03/0-encoded.png"
+  },
+  {
+    "frame": 1,
+    "time_sec": 0.03333333333333333,
+    "reference": "qa/frame-parity/03/1-preview.png",
+    "encoded": "qa/frame-parity/03/1-encoded.png"
+  },
+  {
+    "frame": 5,
+    "time_sec": 0.16666666666666666,
+    "reference": "qa/frame-parity/03/5-preview.png",
+    "encoded": "qa/frame-parity/03/5-encoded.png"
+  },
+  {
+    "frame": 22,
+    "time_sec": 0.7333333333333333,
+    "reference": "qa/frame-parity/03/22-preview.png",
+    "encoded": "qa/frame-parity/03/22-encoded.png"
+  },
+  {
+    "frame": 30,
+    "time_sec": 1,
+    "reference": "qa/frame-parity/03/30-preview.png",
+    "encoded": "qa/frame-parity/03/30-encoded.png"
+  },
+  {
+    "frame": 223,
+    "time_sec": 7.433333333333334,
+    "reference": "qa/frame-parity/03/223-preview.png",
+    "encoded": "qa/frame-parity/03/223-encoded.png"
+  },
+  {
+    "frame": 445,
+    "time_sec": 14.833333333333334,
+    "reference": "qa/frame-parity/03/445-preview.png",
+    "encoded": "qa/frame-parity/03/445-encoded.png"
+  },
+  {
+    "frame": 446,
+    "time_sec": 14.866666666666667,
+    "reference": "qa/frame-parity/03/446-preview.png",
+    "encoded": "qa/frame-parity/03/446-encoded.png"
+  },
+  {
+    "frame": 451,
+    "time_sec": 15.033333333333333,
+    "reference": "qa/frame-parity/03/451-preview.png",
+    "encoded": "qa/frame-parity/03/451-encoded.png"
+  },
+  {
+    "frame": 468,
+    "time_sec": 15.6,
+    "reference": "qa/frame-parity/03/468-preview.png",
+    "encoded": "qa/frame-parity/03/468-encoded.png"
+  },
+  {
+    "frame": 607,
+    "time_sec": 20.233333333333334,
+    "reference": "qa/frame-parity/03/607-preview.png",
+    "encoded": "qa/frame-parity/03/607-encoded.png"
+  },
+  {
+    "frame": 732,
+    "time_sec": 24.4,
+    "reference": "qa/frame-parity/03/732-preview.png",
+    "encoded": "qa/frame-parity/03/732-encoded.png"
+  },
+  {
+    "frame": 746,
+    "time_sec": 24.866666666666667,
+    "reference": "qa/frame-parity/03/746-preview.png",
+    "encoded": "qa/frame-parity/03/746-encoded.png"
+  },
+  {
+    "frame": 766,
+    "time_sec": 25.533333333333335,
+    "reference": "qa/frame-parity/03/766-preview.png",
+    "encoded": "qa/frame-parity/03/766-encoded.png"
+  },
+  {
+    "frame": 767,
+    "time_sec": 25.566666666666666,
+    "reference": "qa/frame-parity/03/767-preview.png",
+    "encoded": "qa/frame-parity/03/767-encoded.png"
+  },
+  {
+    "frame": 770,
+    "time_sec": 25.666666666666668,
+    "reference": "qa/frame-parity/03/770-preview.png",
+    "encoded": "qa/frame-parity/03/770-encoded.png"
+  },
+  {
+    "frame": 772,
+    "time_sec": 25.733333333333334,
+    "reference": "qa/frame-parity/03/772-preview.png",
+    "encoded": "qa/frame-parity/03/772-encoded.png"
+  },
+  {
+    "frame": 784,
+    "time_sec": 26.133333333333333,
+    "reference": "qa/frame-parity/03/784-preview.png",
+    "encoded": "qa/frame-parity/03/784-encoded.png"
+  },
+  {
+    "frame": 789,
+    "time_sec": 26.3,
+    "reference": "qa/frame-parity/03/789-preview.png",
+    "encoded": "qa/frame-parity/03/789-encoded.png"
+  },
+  {
+    "frame": 842,
+    "time_sec": 28.066666666666666,
+    "reference": "qa/frame-parity/03/842-preview.png",
+    "encoded": "qa/frame-parity/03/842-encoded.png"
+  },
+  {
+    "frame": 852,
+    "time_sec": 28.4,
+    "reference": "qa/frame-parity/03/852-preview.png",
+    "encoded": "qa/frame-parity/03/852-encoded.png"
+  },
+  {
+    "frame": 856,
+    "time_sec": 28.533333333333335,
+    "reference": "qa/frame-parity/03/856-preview.png",
+    "encoded": "qa/frame-parity/03/856-encoded.png"
+  },
+  {
+    "frame": 935,
+    "time_sec": 31.166666666666668,
+    "reference": "qa/frame-parity/03/935-preview.png",
+    "encoded": "qa/frame-parity/03/935-encoded.png"
+  },
+  {
+    "frame": 936,
+    "time_sec": 31.2,
+    "reference": "qa/frame-parity/03/936-preview.png",
+    "encoded": "qa/frame-parity/03/936-encoded.png"
+  },
+  {
+    "frame": 941,
+    "time_sec": 31.366666666666667,
+    "reference": "qa/frame-parity/03/941-preview.png",
+    "encoded": "qa/frame-parity/03/941-encoded.png"
+  },
+  {
+    "frame": 958,
+    "time_sec": 31.933333333333334,
+    "reference": "qa/frame-parity/03/958-preview.png",
+    "encoded": "qa/frame-parity/03/958-encoded.png"
+  },
+  {
+    "frame": 972,
+    "time_sec": 32.4,
+    "reference": "qa/frame-parity/03/972-preview.png",
+    "encoded": "qa/frame-parity/03/972-encoded.png"
+  },
+  {
+    "frame": 1055,
+    "time_sec": 35.166666666666664,
+    "reference": "qa/frame-parity/03/1055-preview.png",
+    "encoded": "qa/frame-parity/03/1055-encoded.png"
+  },
+  {
+    "frame": 1172,
+    "time_sec": 39.06666666666667,
+    "reference": "qa/frame-parity/03/1172-preview.png",
+    "encoded": "qa/frame-parity/03/1172-encoded.png"
+  },
+  {
+    "frame": 1173,
+    "time_sec": 39.1,
+    "reference": "qa/frame-parity/03/1173-preview.png",
+    "encoded": "qa/frame-parity/03/1173-encoded.png"
+  },
+  {
+    "frame": 1178,
+    "time_sec": 39.266666666666666,
+    "reference": "qa/frame-parity/03/1178-preview.png",
+    "encoded": "qa/frame-parity/03/1178-encoded.png"
+  },
+  {
+    "frame": 1195,
+    "time_sec": 39.833333333333336,
+    "reference": "qa/frame-parity/03/1195-preview.png",
+    "encoded": "qa/frame-parity/03/1195-encoded.png"
+  },
+  {
+    "frame": 1243,
+    "time_sec": 41.43333333333333,
+    "reference": "qa/frame-parity/03/1243-preview.png",
+    "encoded": "qa/frame-parity/03/1243-encoded.png"
+  },
+  {
+    "frame": 1257,
+    "time_sec": 41.9,
+    "reference": "qa/frame-parity/03/1257-preview.png",
+    "encoded": "qa/frame-parity/03/1257-encoded.png"
+  },
+  {
+    "frame": 1315,
+    "time_sec": 43.833333333333336,
+    "reference": "qa/frame-parity/03/1315-preview.png",
+    "encoded": "qa/frame-parity/03/1315-encoded.png"
+  },
+  {
+    "frame": 1340,
+    "time_sec": 44.666666666666664,
+    "reference": "qa/frame-parity/03/1340-preview.png",
+    "encoded": "qa/frame-parity/03/1340-encoded.png"
+  },
+  {
+    "frame": 1354,
+    "time_sec": 45.13333333333333,
+    "reference": "qa/frame-parity/03/1354-preview.png",
+    "encoded": "qa/frame-parity/03/1354-encoded.png"
+  },
+  {
+    "frame": 1455,
+    "time_sec": 48.5,
+    "reference": "qa/frame-parity/03/1455-preview.png",
+    "encoded": "qa/frame-parity/03/1455-encoded.png"
+  },
+  {
+    "frame": 1456,
+    "time_sec": 48.53333333333333,
+    "reference": "qa/frame-parity/03/1456-preview.png",
+    "encoded": "qa/frame-parity/03/1456-encoded.png"
+  },
+  {
+    "frame": 1461,
+    "time_sec": 48.7,
+    "reference": "qa/frame-parity/03/1461-preview.png",
+    "encoded": "qa/frame-parity/03/1461-encoded.png"
+  },
+  {
+    "frame": 1478,
+    "time_sec": 49.266666666666666,
+    "reference": "qa/frame-parity/03/1478-preview.png",
+    "encoded": "qa/frame-parity/03/1478-encoded.png"
+  },
+  {
+    "frame": 1752,
+    "time_sec": 58.4,
+    "reference": "qa/frame-parity/03/1752-preview.png",
+    "encoded": "qa/frame-parity/03/1752-encoded.png"
+  },
+  {
+    "frame": 1998,
+    "time_sec": 66.6,
+    "reference": "qa/frame-parity/03/1998-preview.png",
+    "encoded": "qa/frame-parity/03/1998-encoded.png"
+  },
+  {
+    "frame": 2012,
+    "time_sec": 67.06666666666666,
+    "reference": "qa/frame-parity/03/2012-preview.png",
+    "encoded": "qa/frame-parity/03/2012-encoded.png"
+  },
+  {
+    "frame": 2046,
+    "time_sec": 68.2,
+    "reference": "qa/frame-parity/03/2046-preview.png",
+    "encoded": "qa/frame-parity/03/2046-encoded.png"
+  },
+  {
+    "frame": 2047,
+    "time_sec": 68.23333333333333,
+    "reference": "qa/frame-parity/03/2047-preview.png",
+    "encoded": "qa/frame-parity/03/2047-encoded.png"
+  },
+  {
+    "frame": 2052,
+    "time_sec": 68.4,
+    "reference": "qa/frame-parity/03/2052-preview.png",
+    "encoded": "qa/frame-parity/03/2052-encoded.png"
+  },
+  {
+    "frame": 2069,
+    "time_sec": 68.96666666666667,
+    "reference": "qa/frame-parity/03/2069-preview.png",
+    "encoded": "qa/frame-parity/03/2069-encoded.png"
+  },
+  {
+    "frame": 2146,
+    "time_sec": 71.53333333333333,
+    "reference": "qa/frame-parity/03/2146-preview.png",
+    "encoded": "qa/frame-parity/03/2146-encoded.png"
+  },
+  {
+    "frame": 2160,
+    "time_sec": 72,
+    "reference": "qa/frame-parity/03/2160-preview.png",
+    "encoded": "qa/frame-parity/03/2160-encoded.png"
+  },
+  {
+    "frame": 2209,
+    "time_sec": 73.63333333333334,
+    "reference": "qa/frame-parity/03/2209-preview.png",
+    "encoded": "qa/frame-parity/03/2209-encoded.png"
+  },
+  {
+    "frame": 2250,
+    "time_sec": 75,
+    "reference": "qa/frame-parity/03/2250-preview.png",
+    "encoded": "qa/frame-parity/03/2250-encoded.png"
+  },
+  {
+    "frame": 2370,
+    "time_sec": 79,
+    "reference": "qa/frame-parity/03/2370-preview.png",
+    "encoded": "qa/frame-parity/03/2370-encoded.png"
+  },
+  {
+    "frame": 2371,
+    "time_sec": 79.03333333333333,
+    "reference": "qa/frame-parity/03/2371-preview.png",
+    "encoded": "qa/frame-parity/03/2371-encoded.png"
+  },
+  {
+    "frame": 2376,
+    "time_sec": 79.2,
+    "reference": "qa/frame-parity/03/2376-preview.png",
+    "encoded": "qa/frame-parity/03/2376-encoded.png"
+  },
+  {
+    "frame": 2393,
+    "time_sec": 79.76666666666667,
+    "reference": "qa/frame-parity/03/2393-preview.png",
+    "encoded": "qa/frame-parity/03/2393-encoded.png"
+  },
+  {
+    "frame": 2442,
+    "time_sec": 81.4,
+    "reference": "qa/frame-parity/03/2442-preview.png",
+    "encoded": "qa/frame-parity/03/2442-encoded.png"
+  },
+  {
+    "frame": 2456,
+    "time_sec": 81.86666666666666,
+    "reference": "qa/frame-parity/03/2456-preview.png",
+    "encoded": "qa/frame-parity/03/2456-encoded.png"
+  },
+  {
+    "frame": 2468,
+    "time_sec": 82.26666666666667,
+    "reference": "qa/frame-parity/03/2468-preview.png",
+    "encoded": "qa/frame-parity/03/2468-encoded.png"
+  },
+  {
+    "frame": 2482,
+    "time_sec": 82.73333333333333,
+    "reference": "qa/frame-parity/03/2482-preview.png",
+    "encoded": "qa/frame-parity/03/2482-encoded.png"
+  },
+  {
+    "frame": 2544,
+    "time_sec": 84.8,
+    "reference": "qa/frame-parity/03/2544-preview.png",
+    "encoded": "qa/frame-parity/03/2544-encoded.png"
+  },
+  {
+    "frame": 2565,
+    "time_sec": 85.5,
+    "reference": "qa/frame-parity/03/2565-preview.png",
+    "encoded": "qa/frame-parity/03/2565-encoded.png"
+  },
+  {
+    "frame": 2579,
+    "time_sec": 85.96666666666667,
+    "reference": "qa/frame-parity/03/2579-preview.png",
+    "encoded": "qa/frame-parity/03/2579-encoded.png"
+  },
+  {
+    "frame": 2590,
+    "time_sec": 86.33333333333333,
+    "reference": "qa/frame-parity/03/2590-preview.png",
+    "encoded": "qa/frame-parity/03/2590-encoded.png"
+  },
+  {
+    "frame": 2604,
+    "time_sec": 86.8,
+    "reference": "qa/frame-parity/03/2604-preview.png",
+    "encoded": "qa/frame-parity/03/2604-encoded.png"
+  },
+  {
+    "frame": 2640,
+    "time_sec": 88,
+    "reference": "qa/frame-parity/03/2640-preview.png",
+    "encoded": "qa/frame-parity/03/2640-encoded.png"
+  },
+  {
+    "frame": 2654,
+    "time_sec": 88.46666666666667,
+    "reference": "qa/frame-parity/03/2654-preview.png",
+    "encoded": "qa/frame-parity/03/2654-encoded.png"
+  },
+  {
+    "frame": 2663,
+    "time_sec": 88.76666666666667,
+    "reference": "qa/frame-parity/03/2663-preview.png",
+    "encoded": "qa/frame-parity/03/2663-encoded.png"
+  },
+  {
+    "frame": 2677,
+    "time_sec": 89.23333333333333,
+    "reference": "qa/frame-parity/03/2677-preview.png",
+    "encoded": "qa/frame-parity/03/2677-encoded.png"
+  },
+  {
+    "frame": 2716,
+    "time_sec": 90.53333333333333,
+    "reference": "qa/frame-parity/03/2716-preview.png",
+    "encoded": "qa/frame-parity/03/2716-encoded.png"
+  },
+  {
+    "frame": 2717,
+    "time_sec": 90.56666666666666,
+    "reference": "qa/frame-parity/03/2717-preview.png",
+    "encoded": "qa/frame-parity/03/2717-encoded.png"
+  },
+  {
+    "frame": 2722,
+    "time_sec": 90.73333333333333,
+    "reference": "qa/frame-parity/03/2722-preview.png",
+    "encoded": "qa/frame-parity/03/2722-encoded.png"
+  },
+  {
+    "frame": 2739,
+    "time_sec": 91.3,
+    "reference": "qa/frame-parity/03/2739-preview.png",
+    "encoded": "qa/frame-parity/03/2739-encoded.png"
+  },
+  {
+    "frame": 2859,
+    "time_sec": 95.3,
+    "reference": "qa/frame-parity/03/2859-preview.png",
+    "encoded": "qa/frame-parity/03/2859-encoded.png"
+  },
+  {
+    "frame": 2873,
+    "time_sec": 95.76666666666667,
+    "reference": "qa/frame-parity/03/2873-preview.png",
+    "encoded": "qa/frame-parity/03/2873-encoded.png"
+  },
+  {
+    "frame": 2958,
+    "time_sec": 98.6,
+    "reference": "qa/frame-parity/03/2958-preview.png",
+    "encoded": "qa/frame-parity/03/2958-encoded.png"
+  },
+  {
+    "frame": 3198,
+    "time_sec": 106.6,
+    "reference": "qa/frame-parity/03/3198-preview.png",
+    "encoded": "qa/frame-parity/03/3198-encoded.png"
+  },
+  {
+    "frame": 3199,
+    "time_sec": 106.63333333333334,
+    "reference": "qa/frame-parity/03/3199-preview.png",
+    "encoded": "qa/frame-parity/03/3199-encoded.png"
+  },
+  {
+    "frame": 3204,
+    "time_sec": 106.8,
+    "reference": "qa/frame-parity/03/3204-preview.png",
+    "encoded": "qa/frame-parity/03/3204-encoded.png"
+  },
+  {
+    "frame": 3221,
+    "time_sec": 107.36666666666666,
+    "reference": "qa/frame-parity/03/3221-preview.png",
+    "encoded": "qa/frame-parity/03/3221-encoded.png"
+  },
+  {
+    "frame": 3417,
+    "time_sec": 113.9,
+    "reference": "qa/frame-parity/03/3417-preview.png",
+    "encoded": "qa/frame-parity/03/3417-encoded.png"
+  },
+  {
+    "frame": 3600,
+    "time_sec": 120,
+    "reference": "qa/frame-parity/03/3600-preview.png",
+    "encoded": "qa/frame-parity/03/3600-encoded.png"
+  },
+  {
+    "frame": 3634,
+    "time_sec": 121.13333333333334,
+    "reference": "qa/frame-parity/03/3634-preview.png",
+    "encoded": "qa/frame-parity/03/3634-encoded.png"
+  },
+  {
+    "frame": 3635,
+    "time_sec": 121.16666666666667,
+    "reference": "qa/frame-parity/03/3635-preview.png",
+    "encoded": "qa/frame-parity/03/3635-encoded.png"
+  },
+  {
+    "frame": 3640,
+    "time_sec": 121.33333333333333,
+    "reference": "qa/frame-parity/03/3640-preview.png",
+    "encoded": "qa/frame-parity/03/3640-encoded.png"
+  },
+  {
+    "frame": 3657,
+    "time_sec": 121.9,
+    "reference": "qa/frame-parity/03/3657-preview.png",
+    "encoded": "qa/frame-parity/03/3657-encoded.png"
+  },
+  {
+    "frame": 3827,
+    "time_sec": 127.56666666666666,
+    "reference": "qa/frame-parity/03/3827-preview.png",
+    "encoded": "qa/frame-parity/03/3827-encoded.png"
+  },
+  {
+    "frame": 3968,
+    "time_sec": 132.26666666666668,
+    "reference": "qa/frame-parity/03/3968-preview.png",
+    "encoded": "qa/frame-parity/03/3968-encoded.png"
+  },
+  {
+    "frame": 3982,
+    "time_sec": 132.73333333333332,
+    "reference": "qa/frame-parity/03/3982-preview.png",
+    "encoded": "qa/frame-parity/03/3982-encoded.png"
+  },
+  {
+    "frame": 4018,
+    "time_sec": 133.93333333333334,
+    "reference": "qa/frame-parity/03/4018-preview.png",
+    "encoded": "qa/frame-parity/03/4018-encoded.png"
+  },
+  {
+    "frame": 4019,
+    "time_sec": 133.96666666666667,
+    "reference": "qa/frame-parity/03/4019-preview.png",
+    "encoded": "qa/frame-parity/03/4019-encoded.png"
+  },
+  {
+    "frame": 4024,
+    "time_sec": 134.13333333333333,
+    "reference": "qa/frame-parity/03/4024-preview.png",
+    "encoded": "qa/frame-parity/03/4024-encoded.png"
+  },
+  {
+    "frame": 4041,
+    "time_sec": 134.7,
+    "reference": "qa/frame-parity/03/4041-preview.png",
+    "encoded": "qa/frame-parity/03/4041-encoded.png"
+  },
+  {
+    "frame": 4200,
+    "time_sec": 140,
+    "reference": "qa/frame-parity/03/4200-preview.png",
+    "encoded": "qa/frame-parity/03/4200-encoded.png"
+  },
+  {
+    "frame": 4260,
+    "time_sec": 142,
+    "reference": "qa/frame-parity/03/4260-preview.png",
+    "encoded": "qa/frame-parity/03/4260-encoded.png"
+  },
+  {
+    "frame": 4262,
+    "time_sec": 142.06666666666666,
+    "reference": "qa/frame-parity/03/4262-preview.png",
+    "encoded": "qa/frame-parity/03/4262-encoded.png"
+  },
+  {
+    "frame": 4276,
+    "time_sec": 142.53333333333333,
+    "reference": "qa/frame-parity/03/4276-preview.png",
+    "encoded": "qa/frame-parity/03/4276-encoded.png"
+  },
+  {
+    "frame": 4440,
+    "time_sec": 148,
+    "reference": "qa/frame-parity/03/4440-preview.png",
+    "encoded": "qa/frame-parity/03/4440-encoded.png"
+  },
+  {
+    "frame": 4499,
+    "time_sec": 149.96666666666667,
+    "reference": "qa/frame-parity/03/4499-preview.png",
+    "encoded": "qa/frame-parity/03/4499-encoded.png"
+  }
+]

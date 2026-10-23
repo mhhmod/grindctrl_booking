@@ -1,0 +1,10 @@
+{
+  "film": "01",
+  "file": "01_Concrete_Genesys_ZohoDesk_PREMIUM_V2.mp4",
+  "method": "H.264 stream copy; authoritative approved mix encoded once for final mux; trim only terminal codec padding to150.000s. Original narration placement and words unchanged.",
+  "container_seconds": 150.0,
+  "video_stream_sha256_before": "SHA256=b1d6e60e1b53b0c0aa64ea83a0a02709c2708ae2bfbc92f265a542b53ac2f1f8",
+  "video_stream_sha256_after": "SHA256=b1d6e60e1b53b0c0aa64ea83a0a02709c2708ae2bfbc92f265a542b53ac2f1f8",
+  "approved_mix_sha256": "be5dd7976c53785576c15c0e5b9805dc6075f65fb49baf0a56a7a62584cd19a3",
+  "final_sha256": "441ca2b60f703af4f48dacec45d28dcb4d1ad840b7f0e42119eb98ed500e7114"
+}

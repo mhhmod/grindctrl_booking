@@ -1,0 +1,195 @@
+1
+00:00:00,296 --> 00:00:03,780
+Imagine a call arriving at Concrete's Customer Service Center.
+
+2
+00:00:04,261 --> 00:00:06,202
+The agent answers through Genesys.
+
+3
+00:00:06,461 --> 00:00:10,134
+but the caller is following up on an exchange request made last week.
+
+4
+00:00:10,732 --> 00:00:13,044
+The information exists in Zoho Desk.
+
+5
+00:00:13,502 --> 00:00:16,199
+The challenge is getting it to the right employee.
+
+6
+00:00:16,356 --> 00:00:17,407
+at the right moment.
+
+7
+00:00:18,006 --> 00:00:23,546
+Today, as described in Concrete's current workflow, the agent may have to copy the phone number,
+
+8
+00:00:23,845 --> 00:00:25,662
+Search Zoho Desk manually.
+
+9
+00:00:26,061 --> 00:00:30,601
+Open the customer's previous tickets and then look for the most recent update.
+
+10
+00:00:31,082 --> 00:00:32,382
+The search is possible.
+
+11
+00:00:32,581 --> 00:00:35,657
+but every extra step interrupts the conversation.
+
+12
+00:00:36,376 --> 00:00:38,852
+Now imagine a more connected experience.
+
+13
+00:00:39,371 --> 00:00:41,609
+When an inbound call arrives in Genesys,
+
+14
+00:00:41,807 --> 00:00:44,690
+the caller number starts an authorized customer lookup.
+
+15
+00:00:45,230 --> 00:00:47,062
+if it finds one reliable match,
+
+16
+00:00:47,399 --> 00:00:51,872
+A screen pop opens the relevant customer context. the contact record,
+
+17
+00:00:52,053 --> 00:00:53,371
+previous support tickets
+
+18
+00:00:53,611 --> 00:00:54,905
+their current statuses,
+
+19
+00:00:55,103 --> 00:00:56,792
+and the latest recorded update.
+
+20
+00:00:57,291 --> 00:00:59,349
+Let's follow a realistic example.
+
+21
+00:00:59,729 --> 00:01:01,911
+The customer is asking about an exchange.
+
+22
+00:01:02,391 --> 00:01:07,735
+The agent can see an earlier ticket and a note saying the request is still pending branch review.
+
+23
+00:01:08,134 --> 00:01:09,591
+That's a recorded status.
+
+24
+00:01:09,890 --> 00:01:11,964
+not a promise that the review has happened.
+
+25
+00:01:12,503 --> 00:01:15,604
+Instead of making the customer explain everything again,
+
+26
+00:01:15,822 --> 00:01:18,843
+The agent can continue from the last documented point.
+
+27
+00:01:19,404 --> 00:01:21,305
+If several contacts share a number,
+
+28
+00:01:21,443 --> 00:01:25,022
+the employee chooses the correct record. If there's no match,
+
+29
+00:01:25,303 --> 00:01:27,580
+a safe manual search remains available.
+
+30
+00:01:27,920 --> 00:01:29,577
+and if the lookup service fails,
+
+31
+00:01:29,756 --> 00:01:31,730
+The call itself must continue.
+
+32
+00:01:32,089 --> 00:01:35,010
+A phone number alone never proves someone's identity.
+
+33
+00:01:35,532 --> 00:01:37,029
+Notice what's changing here.
+
+34
+00:01:37,409 --> 00:01:40,085
+We're not replacing Genesys or Zoho Desk.
+
+35
+00:01:40,424 --> 00:01:43,368
+and we're not pretending a new integration is already live.
+
+36
+00:01:43,867 --> 00:01:48,545
+we're proposing a clearer way to connect systems that Concrete already uses.
+
+37
+00:01:48,942 --> 00:01:51,016
+The potential benefit is straightforward.
+
+38
+00:01:51,456 --> 00:01:54,231
+fewer manual searches, easier follow-up.
+
+39
+00:01:54,369 --> 00:01:56,159
+and more attention on the customer.
+
+40
+00:01:56,596 --> 00:01:59,511
+Those benefits must be measured in a real pilot.
+
+41
+00:01:59,708 --> 00:02:01,739
+not presented as guaranteed savings.
+
+42
+00:02:02,258 --> 00:02:06,523
+First, we'll review Concrete's existing Genesys pop-up configuration.
+
+43
+00:02:06,822 --> 00:02:09,209
+Zoho Desk Access, permissions
+
+44
+00:02:09,429 --> 00:02:11,441
+and the supported integration options.
+
+45
+00:02:11,879 --> 00:02:16,419
+Then, we'll test the experience with authorized sample calls and validate the results.
+
+46
+00:02:16,837 --> 00:02:18,150
+The goal is simple.
+
+47
+00:02:18,471 --> 00:02:20,052
+when the conversation begins,
+
+48
+00:02:20,252 --> 00:02:21,928
+the context should be ready.
+
+49
+00:02:22,326 --> 00:02:27,639
+This is the Genesys and Zoho Desk experience proposed by GRINDCTRL for Concrete.

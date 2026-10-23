@@ -1,0 +1,134 @@
+{
+  "film": "02",
+  "decoded_samples": 300,
+  "method": "2 fps actual encoded luma, central 1920x800 workflow area downsampled to480x200; excludes captions and header/footer. Descriptive motion metric, not a comprehension or creative-quality score.",
+  "mean_absolute_change_255": 0.7353744425863991,
+  "holds_over_2_seconds": [
+    {
+      "start_sec": 2.5,
+      "end_sec": 9.0,
+      "seconds": 6.5
+    },
+    {
+      "start_sec": 13.5,
+      "end_sec": 15.5,
+      "seconds": 2.0
+    },
+    {
+      "start_sec": 22.5,
+      "end_sec": 26.5,
+      "seconds": 4.0
+    },
+    {
+      "start_sec": 31.0,
+      "end_sec": 34.5,
+      "seconds": 3.5
+    },
+    {
+      "start_sec": 37.0,
+      "end_sec": 39.5,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 40.5,
+      "end_sec": 46.5,
+      "seconds": 6.0
+    },
+    {
+      "start_sec": 47.5,
+      "end_sec": 49.5,
+      "seconds": 2.0
+    },
+    {
+      "start_sec": 50.0,
+      "end_sec": 57.5,
+      "seconds": 7.5
+    },
+    {
+      "start_sec": 58.5,
+      "end_sec": 63.0,
+      "seconds": 4.5
+    },
+    {
+      "start_sec": 64.5,
+      "end_sec": 69.0,
+      "seconds": 4.5
+    },
+    {
+      "start_sec": 73.0,
+      "end_sec": 81.0,
+      "seconds": 8.0
+    },
+    {
+      "start_sec": 85.0,
+      "end_sec": 87.5,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 88.5,
+      "end_sec": 93.0,
+      "seconds": 4.5
+    },
+    {
+      "start_sec": 94.0,
+      "end_sec": 96.0,
+      "seconds": 2.0
+    },
+    {
+      "start_sec": 100.0,
+      "end_sec": 104.0,
+      "seconds": 4.0
+    },
+    {
+      "start_sec": 105.0,
+      "end_sec": 107.5,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 108.0,
+      "end_sec": 110.5,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 111.0,
+      "end_sec": 113.5,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 115.5,
+      "end_sec": 118.0,
+      "seconds": 2.5
+    },
+    {
+      "start_sec": 118.5,
+      "end_sec": 122.0,
+      "seconds": 3.5
+    },
+    {
+      "start_sec": 123.0,
+      "end_sec": 127.0,
+      "seconds": 4.0
+    },
+    {
+      "start_sec": 129.5,
+      "end_sec": 131.5,
+      "seconds": 2.0
+    },
+    {
+      "start_sec": 132.0,
+      "end_sec": 135.5,
+      "seconds": 3.5
+    },
+    {
+      "start_sec": 136.5,
+      "end_sec": 144.5,
+      "seconds": 8.0
+    },
+    {
+      "start_sec": 145.5,
+      "end_sec": 149.5,
+      "seconds": 4.0
+    }
+  ],
+  "interpretation": "A focused UI reading hold is intentional when the narration is explaining the visible record. Original short visual-only intervals are identified separately in AUDIO_SOURCE_VERIFICATION.json. Motion alone does not prove quality."
+}

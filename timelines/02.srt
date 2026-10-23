@@ -1,0 +1,199 @@
+1
+00:00:00,216 --> 00:00:02,232
+A customer calls Concrete again.
+
+2
+00:00:02,771 --> 00:00:07,395
+What should the next customer service agent know before asking the first question?
+
+3
+00:00:07,913 --> 00:00:09,282
+Not just a phone number.
+
+4
+00:00:09,479 --> 00:00:11,433
+but the correct customer profile
+
+5
+00:00:11,572 --> 00:00:12,911
+the available history,
+
+6
+00:00:13,231 --> 00:00:15,552
+and the notes attached to previous calls.
+
+7
+00:00:16,171 --> 00:00:19,801
+Here's the second experience GRINDCTRL is proposing for Concrete.
+
+8
+00:00:20,301 --> 00:00:21,963
+A clearer customer view.
+
+9
+00:00:22,242 --> 00:00:26,595
+connected to incoming calls through Genesys and the appropriate Zoho records.
+
+10
+00:00:27,073 --> 00:00:29,068
+The caller number initiates a lookup.
+
+11
+00:00:29,590 --> 00:00:30,948
+After a reliable match,
+
+12
+00:00:31,248 --> 00:00:34,905
+The agent sees the customer's name and permitted contact details.
+
+13
+00:00:35,182 --> 00:00:36,912
+including email when available.
+
+14
+00:00:37,309 --> 00:00:39,740
+Missing information is marked unavailable.
+
+15
+00:00:40,116 --> 00:00:45,447
+The same proposed view can show the customer segment from Concrete Icons Club. Lifestyle.
+
+16
+00:00:45,485 --> 00:00:46,877
+Prestige or Elite.
+
+17
+00:00:47,335 --> 00:00:51,552
+That membership information must come from a trusted, updated source.
+
+18
+00:00:52,032 --> 00:00:54,194
+It cannot be guessed from the caller's number.
+
+19
+00:00:54,473 --> 00:00:58,032
+and no membership benefit should be assumed without confirmation.
+
+20
+00:00:58,391 --> 00:01:00,853
+But a profile is only the starting point.
+
+21
+00:01:01,353 --> 00:01:03,265
+Call-level history matters more.
+
+22
+00:01:03,722 --> 00:01:09,308
+Imagine a simple timeline showing every available call activity. its date, agent
+
+23
+00:01:09,511 --> 00:01:13,067
+and notes for that specific interaction. For example,
+
+24
+00:01:13,450 --> 00:01:15,974
+Last week's call concerned an exchange request.
+
+25
+00:01:16,394 --> 00:01:19,256
+The employee recorded that the branch would review the matter.
+
+26
+00:01:19,555 --> 00:01:21,416
+When the customer calls again today,
+
+27
+00:01:21,655 --> 00:01:25,781
+The new agent opens that particular call and reads its actual note.
+
+28
+00:01:26,140 --> 00:01:27,894
+They see what was documented.
+
+29
+00:01:28,112 --> 00:01:31,932
+Without confusing a call note with a ticket comment... AI summary,
+
+30
+00:01:32,173 --> 00:01:33,455
+or a completed action.
+
+31
+00:01:33,797 --> 00:01:35,392
+During today's conversation,
+
+32
+00:01:35,570 --> 00:01:39,631
+The agent records a new note against the right interaction if supported.
+
+33
+00:01:40,030 --> 00:01:42,411
+Notes should belong to the call they describe.
+
+34
+00:01:42,730 --> 00:01:44,081
+not a generic summary.
+
+35
+00:01:44,560 --> 00:01:47,817
+And the interface must handle uncertainty honestly.
+
+36
+00:01:48,217 --> 00:01:49,351
+No matching contact?
+
+37
+00:01:49,774 --> 00:01:50,952
+offer a manual search.
+
+38
+00:01:51,456 --> 00:01:52,491
+Multiple matches?
+
+39
+00:01:52,913 --> 00:01:55,176
+Ask the agent to select the right record.
+
+40
+00:01:55,556 --> 00:01:56,829
+Missing membership data?
+
+41
+00:01:57,150 --> 00:01:58,327
+Mark it unavailable.
+
+42
+00:01:58,650 --> 00:02:00,130
+Lookup temporarily down?
+
+43
+00:02:00,470 --> 00:02:02,183
+Never block the incoming call.
+
+44
+00:02:02,541 --> 00:02:07,557
+Before implementation, we'll verify where call activities and notes actually live.
+
+45
+00:02:07,894 --> 00:02:09,567
+which integrations are supported,
+
+46
+00:02:09,765 --> 00:02:11,762
+and who is allowed to see each field.
+
+47
+00:02:12,221 --> 00:02:15,581
+Then we'll test with authorized fictional customer records.
+
+48
+00:02:15,981 --> 00:02:18,564
+The outcome we're aiming for is continuity.
+
+49
+00:02:18,923 --> 00:02:23,204
+a more informed employee, and a customer who doesn't have to start from zero.
+
+50
+00:02:23,483 --> 00:02:24,858
+every single time.

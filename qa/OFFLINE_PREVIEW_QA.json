@@ -1,0 +1,116 @@
+[
+  {
+    "film": "01",
+    "fileProtocol": false,
+    "fileProtocolLimitation": "Managed Chromium administrator policy blocks file:// navigation. Not bypassed; direct file opening remains unverified here.",
+    "externalAssetRequestsBlocked": true,
+    "externalRequests": [],
+    "errors": [],
+    "frame": 51,
+    "fontLoaded": true,
+    "audioElements": [
+      {
+        "duration": 150,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      }
+    ],
+    "method": "Standalone HTML local-server fallback; only initial document GET allowed. All subsequent HTTP(S) asset requests blocked; embedded font, images and audio playback progress verified. This does not certify direct file:// opening in this managed browser or a full human audition."
+  },
+  {
+    "film": "02",
+    "fileProtocol": false,
+    "fileProtocolLimitation": "Managed Chromium administrator policy blocks file:// navigation. Not bypassed; direct file opening remains unverified here.",
+    "externalAssetRequestsBlocked": true,
+    "externalRequests": [],
+    "errors": [],
+    "frame": 50,
+    "fontLoaded": true,
+    "audioElements": [
+      {
+        "duration": 150,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      }
+    ],
+    "method": "Standalone HTML local-server fallback; only initial document GET allowed. All subsequent HTTP(S) asset requests blocked; embedded font, images and audio playback progress verified. This does not certify direct file:// opening in this managed browser or a full human audition."
+  },
+  {
+    "film": "03",
+    "fileProtocol": false,
+    "fileProtocolLimitation": "Managed Chromium administrator policy blocks file:// navigation. Not bypassed; direct file opening remains unverified here.",
+    "externalAssetRequestsBlocked": true,
+    "externalRequests": [],
+    "errors": [],
+    "frame": 50,
+    "fontLoaded": true,
+    "audioElements": [
+      {
+        "duration": 150,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      },
+      {
+        "duration": 0.216,
+        "error": null,
+        "sourceIsDataUrl": true
+      }
+    ],
+    "method": "Standalone HTML local-server fallback; only initial document GET allowed. All subsequent HTTP(S) asset requests blocked; embedded font, images and audio playback progress verified. This does not certify direct file:// opening in this managed browser or a full human audition."
+  }
+]

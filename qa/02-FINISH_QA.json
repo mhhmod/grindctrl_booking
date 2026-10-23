@@ -1,0 +1,10 @@
+{
+  "film": "02",
+  "file": "02_Concrete_Customer360_CallActivities_PREMIUM_V2.mp4",
+  "method": "H.264 stream copy; authoritative approved mix encoded once for final mux; trim only terminal codec padding to150.000s. Original narration placement and words unchanged.",
+  "container_seconds": 150.0,
+  "video_stream_sha256_before": "SHA256=e0863f519ae84797d424c1c384c2d7b5701232e50e12f6e3bd1d8ea5e5cb9049",
+  "video_stream_sha256_after": "SHA256=e0863f519ae84797d424c1c384c2d7b5701232e50e12f6e3bd1d8ea5e5cb9049",
+  "approved_mix_sha256": "9d8c4113f976bc5e7eefdf91eca25197bacc0fef2df19fb548f8a2f8ce96fa2e",
+  "final_sha256": "ac71f9c1e7e0bb83464994ac450756436b786410d5a4e2920b9d589e92246626"
+}

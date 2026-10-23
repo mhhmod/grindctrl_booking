@@ -1,0 +1,10 @@
+{
+  "film": "03",
+  "file": "03_GRINDCTRL_TryOn_StoreChat_PREMIUM_V2.mp4",
+  "method": "H.264 stream copy; authoritative approved mix encoded once for final mux; trim only terminal codec padding to150.000s. Original narration placement and words unchanged.",
+  "container_seconds": 150.0,
+  "video_stream_sha256_before": "SHA256=24b0282511728863495124e145209aaab1607dd832ec67aa6a80ab6f6b5ca9d2",
+  "video_stream_sha256_after": "SHA256=24b0282511728863495124e145209aaab1607dd832ec67aa6a80ab6f6b5ca9d2",
+  "approved_mix_sha256": "7f0dfa4242b8bbd9250d3bacfbe0e84a4c56ae72caab76ab3c2f2764baa06671",
+  "final_sha256": "6b9f3b96aaec9f8ffe9b28b6a4e66f3ad8c7e3f72478218376895965080a809f"
+}

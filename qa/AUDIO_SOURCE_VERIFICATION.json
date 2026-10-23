@@ -1,0 +1,131 @@
+[
+  {
+    "film": "01",
+    "file": "01_Concrete_Genesys_ZohoDesk_ScreenPop_EN.mp3",
+    "sha256": "174dddeeb08dcf83dc324ce1dd8b960fb1ddc6852c9585e7f35cf8d050c74114",
+    "container_duration": 147.800816,
+    "decoded_seconds": 147.76,
+    "decoded_samples": 6516216,
+    "sample_rate": 44100,
+    "original_source_samples_preserved_in_order": true,
+    "narration_segments": [
+      {
+        "source_start_sec": 0.0,
+        "source_end_sec": 147.76,
+        "target_start_sec": 0.24,
+        "target_end_sec": 148.0,
+        "samples": 6516216,
+        "source_pcm_sha256": "844db78a5d7e0692b26934abb9467be83d82bcda2b78156216fb309598d5625c"
+      }
+    ],
+    "visual_only_intervals": [
+      [
+        0,
+        0.24
+      ],
+      [
+        148.0,
+        150.0
+      ]
+    ],
+    "exception": null
+  },
+  {
+    "film": "02",
+    "file": "02_Concrete_Customer360_CallActivities_EN.mp3",
+    "sha256": "1c8ef685b0cfbcc5ca50e00e503b9247a4d1ce670e0ee6c8a741b48a80fba448",
+    "container_duration": 144.927347,
+    "decoded_seconds": 144.88,
+    "decoded_samples": 6389208,
+    "sample_rate": 44100,
+    "original_source_samples_preserved_in_order": true,
+    "narration_segments": [
+      {
+        "source_start_sec": 0.0,
+        "source_end_sec": 144.88,
+        "target_start_sec": 0.12,
+        "target_end_sec": 145.0,
+        "samples": 6389208,
+        "source_pcm_sha256": "ccc388195ad7f1a7e43bf0198d69913403f7a0d0ff75fbc2aaa3408e8d3f993c"
+      }
+    ],
+    "visual_only_intervals": [
+      [
+        0,
+        0.12
+      ],
+      [
+        145.0,
+        150.0
+      ]
+    ],
+    "exception": null
+  },
+  {
+    "film": "03",
+    "file": "03_GRINDCTRL_TryOn_StoreChat_EN.mp3",
+    "sha256": "35cbc90f37d7e74aa8a35d4f4834a30d03d1e4a85d618f803b2da7211221c4aa",
+    "container_duration": 138.919184,
+    "decoded_seconds": 138.88,
+    "decoded_samples": 6124608,
+    "sample_rate": 44100,
+    "original_source_samples_preserved_in_order": true,
+    "narration_segments": [
+      {
+        "source_start_sec": 0.0,
+        "source_end_sec": 28.096009070294784,
+        "target_start_sec": 1.12,
+        "target_end_sec": 29.216009070294785,
+        "samples": 1239034,
+        "source_pcm_sha256": "cf561244be2bbcac76f29da066d182a764288593cd989b9d2ef9fa8899a92daa"
+      },
+      {
+        "source_start_sec": 28.096009070294784,
+        "source_end_sec": 45.417687074829935,
+        "target_start_sec": 31.216009070294785,
+        "target_end_sec": 48.53768707482993,
+        "samples": 763886,
+        "source_pcm_sha256": "17b93bad96eb723e6ca1e4132a0a32e4d1e0539da6de6bc71490a3c728ee9466"
+      },
+      {
+        "source_start_sec": 45.417687074829935,
+        "source_end_sec": 85.43866213151928,
+        "target_start_sec": 50.53768707482993,
+        "target_end_sec": 90.55866213151927,
+        "samples": 1764925,
+        "source_pcm_sha256": "4e6311f7150de9ff08a663856de1119a532f566ccbd2a51b539c71f0adb0d7a7"
+      },
+      {
+        "source_start_sec": 85.43866213151928,
+        "source_end_sec": 138.88,
+        "target_start_sec": 92.55866213151927,
+        "target_end_sec": 146.0,
+        "samples": 2356763,
+        "source_pcm_sha256": "1df135982d62de7614121b4940eb27c7ce65e28d025f49730770e6ce8fc24b20"
+      }
+    ],
+    "visual_only_intervals": [
+      [
+        0,
+        1.12
+      ],
+      [
+        29.216009070294785,
+        31.216009070294785
+      ],
+      [
+        48.53768707482993,
+        50.53768707482993
+      ],
+      [
+        90.55866213151928,
+        92.55866213151928
+      ],
+      [
+        146.0,
+        150.0
+      ]
+    ],
+    "exception": "User explicitly approved supplied138.88s narration plus11.12s of distributed purposeful visual content"
+  }
+]
