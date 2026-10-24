@@ -112,3 +112,16 @@ gate 8's "commercial claims remain evidence-gated" stance is unchanged.
 ## Handoff rule
 
 Update this file with actual final command results and remaining gates. Keep staged, tested and deployed states separate. Do not mark the existing goal complete or call the product production-ready until the mandatory gates have evidence.
+
+
+## Continuation — 2026-10-24, Shopify milestone 1
+
+Owner authorized feature-branch implementation and Draft PR only, with an independent review gate before milestone 2. Baseline/fetched main: `4f5467fa80f73dde26f98f435ef1606488a68864`. Draft PR: https://github.com/mhhmod/grindctrl_booking/pull/75. No deployment, production SQL, real merchant setup, paid AI or payments occurred.
+
+Installation-scoped credentials/refresh leases, lifecycle receipts/fencing, app-aware embedded routing, independent core capability signing, and manual-only privacy escalation are implemented locally. Legacy token provenance is never guessed; credentials require reauthorization. Existing AI/dashboard/credit/entitlement engines remain. Runtime dependency audit patches yield zero production Next dependency vulnerabilities.
+
+Final local evidence: **3191 tests / 332 files passed** via `npm test -- --maxWorkers=2 --testTimeout=30000`; typecheck, full lint plus late-file lint and production standalone build passed. Dedicated local Chromium checks **4/4 passed**, with App Bridge stubbed and external browser requests blocked. SQL tested only in isolated PGlite PostgreSQL; no live Supabase migration was applied.
+
+**NO-GO for merchant rollout.** Shared-data privacy ownership/retention/fulfillment approval, live database/project/schema/RLS/backups, real Development Store installation/refresh/permissions/theme/product E2E and CI/container/deployment evidence remain open. Do not construe a local build or stubbed browser as closure of the existing production gates. Milestone 2+ has not begun.
+
+See [the full milestone report](../../audits/2026-10-24-shopify-m1.md), [migration and recovery runbook](../../audits/2026-10-24-shopify-m1-runbook.md) and [readiness matrix](../../audits/2026-10-24-readiness-matrix.md) for exact files, tests, limitations and rollback.
