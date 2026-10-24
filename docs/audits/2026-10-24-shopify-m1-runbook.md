@@ -13,7 +13,7 @@ The installation table is service-role-only with RLS and no browser policies. Cr
 1. Independently audit the feature branch and the SQL. Confirm the actual production/staging database project, schema, backups and rollback image. Current environment cannot establish any of these.
 2. Run the read-only preflight below on the correct environment, using approved database tooling. Review counts/schema without exporting customer records or secrets.
 3. Document backup/recovery ownership. Do not presume development-store data is disposable.
-4. After separate authorization, apply `supabase/20261024_shopify_installation_isolation.sql` using repository-approved manual Supabase SQL tooling, NOT automatic app-startup migration or Supabase CLI deployment.
+4. After separate authorization and legacy-schema preflight, apply `supabase/20261024_shopify_installation_isolation.sql`, then `supabase/20261024_shopify_review_remediation.sql`, then `supabase/20261024_shopify_privacy_casework.sql` using repository-approved manual Supabase SQL tooling. The casework delta requires `20260909_shopify_privacy_requests.sql` to exist. Do not use automatic app-startup migration or Supabase CLI deployment. Do not reapply earlier function definitions over the follow-up deltas.
 5. Verify grants, RLS, functions and indexes in the target database, including that service_role has its expected RLS bypass. The local PGlite fixture is not proof of live Supabase policies.
 6. Configure an independent random `GRINDCTRL_CAPABILITY_SECRET` (at least 32 bytes of entropy; the code enforces minimum string length, not entropy). Do not reuse a Shopify secret. This change requires approved runtime configuration; this branch neither creates nor rotates live secrets.
 7. For additional Shopify registrations, configure their own app URL `/shopify/app/<clientId>`, matching OAuth redirect URLs, proxy configuration and separately released extensions. The original `/shopify/app` works only for one configured registration, or with a valid ID token identifying the app. A path chooses App Bridge's initializer; it never authorizes API operations.
@@ -46,7 +46,7 @@ Single-app compatibility does not establish historical token ownership. The fall
 
 ## Token acquisition, refresh and reauthorization
 
-All acquisition and refresh paths use a shared database lease for the same app/store, covering provider request plus persistence. Leases are fenced, bounded longer than the request timeout, and invalidated by lifecycle changes. Expired abandoned leases require reauthorization rather than blind background refresh. Refresh responses replace both encrypted tokens and their response-defined expiration metadata. No token operation retries a potentially consumed code/refresh token automatically.
+Acquisition and refresh share a fenced database lease for the same app/store. Refresh now retries network/timeout/429/5xx failures at most three times under that lease, with bounded in-request waits and a distributed cooldown honoring longer Retry-After values. Transient exhaustion/persistence failure preserves encrypted refresh credentials and active status, while returning unavailable until recovery; it does not invent fresh access. Abandoned expired leases can be recovered with a new fence. Shopify permits retry of the presented refresh token until its replacement is used, within provider expiry/grace; no fixed retry window is assumed. Terminal 401 requires reauthorization; other permanent rejections do not loop. Successful responses atomically replace encrypted access/refresh tokens and response-defined expiry metadata. Authorization-code acquisition is not blindly retried.
 
 Expiring is the default. Explicit `tokenMode: "non-expiring"` is accepted only on a registration declaring `distribution: "custom"`; actual eligibility must still be checked in Dev Dashboard. Never configure it for Public. A 401 from the Admin client retires only the matching credential version; a late rejection must not invalidate a replacement.
 
@@ -66,13 +66,13 @@ Check the actual deployed definitions and schedule for `reconcile_tryon_entitlem
 
 ## Lifecycle event handling and limits
 
-HMAC resolution retains the app registration. The signed uninstall body must match the supplied shop. Receipts and lifecycle state changes are transactional and deduplicated by app + delivery ID; identity conflicts fail instead of being acknowledged. Uninstall only clears that installation's credentials. Store status becomes uninstalled only if no other active installation remains.
+HMAC resolution retains app identity. Receipt persistence uses the follow-up v2 RPC, so a missing remediation migration fails before any old timestamp-driven mutation. Neither delivery ID nor Triggered-At is authority for lifecycle changes; both are unsigned metadata. Receipts remain pending while the backend verifies the current app's credential against Shopify under the shared acquisition/refresh lease. A successful currentAppInstallation probe ignores the old uninstall; a definitive 401 for that exact still-unexpired credential permits an installation/version/lease-fenced disconnect. The evidence records installation ID, credential version, outcome and verification time. B is never mutated by A's event.
 
-Ordering uses Shopify Triggered-At as a conservative hint: missing/future timestamps are manual cases; events predating authorization are ignored. Shopify's body HMAC does not bind delivery headers. This is not proof against every captured-valid-message/header-replay scenario. Development Store event-order evidence and a review of this residual threat are release gates. Scopes events are recorded for authoritative re-verification and never globally reactivate stores.
+Expired credentials first pass through the serialized refresh path. A terminal refresh disables that credential but does not prove uninstall generation; that event remains pending for manual reconciliation. Network/429/5xx/403, missing credentials, parse/GraphQL errors or a lost fence cannot delete credentials. The handler returns 503 for retry after the receipt is durable. If Shopify exhausts retries, the pending queue still needs a named operator. Duplicate or altered-header bodies cannot by themselves retire a newer valid credential. A 401 proves current credential rejection, not its unique underlying cause; generation ambiguity when no usable credential exists remains a documented external reconciliation gate. Scope events never reactivate an installation.
 
-## Privacy: explicit unresolved launch blocker
+## Privacy: casework implementation and unresolved operating approval
 
-The old automatic domain-wide deletion executor is removed from the request path, regardless of `SHOPIFY_PRIVACY_PROCESSING_ENABLED`. That path could delete shared records for a different live integration. All three mandatory topics now record verified app provenance, raw payload and manual_required state. Alert success is tracked separately from fulfillment; an unavailable alert asks Shopify to retry.
+The old automatic domain-wide deletion executor is removed from the request path, regardless of `SHOPIFY_PRIVACY_PROCESSING_ENABLED`. That path could delete shared records for a different live integration. All three mandatory topics record verified app provenance, raw payload and manual_required state. The follow-up casework delta adds a restricted new/legacy deadline queue and append-only operator evidence. The reviewed implementation contract and operating procedure are in [privacy fulfillment procedure](2026-10-24-shopify-privacy-procedure.md); organizational/legal approval and hosted rehearsal remain unresolved. Alert success is tracked separately from fulfillment; an unavailable alert asks Shopify to retry.
 
 A duplicate request may retry a failed alert, but cannot trigger shared deletion. Concurrent SMTP delivery can still produce duplicate notifications; exactly-once email delivery is not claimed. No customer export or deletion is considered completed by merely recording or emailing an alert.
 
@@ -91,7 +91,7 @@ where status in ('manual_required','failed','received')
 group by app_client_id,topic,status;
 ```
 
-Review the legacy `shopify_privacy_requests` backlog too. This branch does not migrate, erase, or mark old requests fulfilled. An operator must record separately reviewed fulfillment evidence before any completed status; no destructive execution command is provided here.
+Review new and legacy requests through `shopify_privacy_work_queue`, including legacy completion_unverified cases. Casework does not guess ownership or execute erasure. Its restricted operator RPC requires reviewed scope, independent reviewer and execution/verification references before atomically recording fulfillment and closing the source request. A notification or approval alone cannot complete a request. See the procedure for exact ownership joins, storage ordering, deadlines, retention, partial failure and evidence requirements; no live deletion was executed.
 
 ## Rollback
 
@@ -108,6 +108,8 @@ GRINDCTRL signup, merchant ownership claim, Shopify installation, OAuth authoriz
 Current [Shopify billing guidance](https://shopify.dev/docs/apps/launch/billing) makes Shopify App Pricing the default for new Public submissions, with documented exceptions for unsupported models. The owner must separately approve any paid pricing and applicable submission configuration. This milestone preserves limited entitlements and implements no alternative checkout. Custom distribution does not provide Shopify App Store billing eligibility.
 
 ## Development Store acceptance plan — NOT EXECUTED
+
+Also execute the [per-registration proxy coexistence checklist](2026-10-24-shopify-proxy-coexistence.md). Current code supports distinct validated proxy paths; actual Shopify routing and extension releases are unverified.
 
 Run only after independent M1 review and explicit authorization for the named nonproduction target, migration, runtime configuration and Development Store changes. Use existing legitimate registrations; this plan does not authorize creating apps, changing distribution, installing on a real merchant store, or spending money. Record target store IDs/domains, registration IDs, release SHA, migration checksum, scope grants, extension versions, tester and timestamps in restricted evidence. Never include secrets, bearer tokens, shopper photos or protected customer fields in the PR.
 
