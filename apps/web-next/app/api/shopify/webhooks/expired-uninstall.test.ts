@@ -30,6 +30,21 @@ async function installation(app: string) {
 }
 const exchange = async () => ({ access_token: 'synthetic-access', refresh_token: 'synthetic-refresh',
   expires_in: 3600, refresh_token_expires_in: 86400, scope: 'read_products' });
+async function manualCase() {
+  const a = await installation('app-a');
+  const ids = (await db.query<{id: string}>('select id from shopify_installation_events')).rows.map(row => row.id);
+  return { shop_domain: shop, app_client_id: 'app-a', installation_id: a.id,
+    credential_version: a.credential_version, receipt_ids: ids, store_id: 'synthetic-shop-123',
+    observed_at: (await db.query<{time: string}>('select clock_timestamp()::text as time')).rows[0].time,
+    operator_id: 'approved-test-operator', reviewer_id: 'independent-test-reviewer',
+    ticket_ref: 'synthetic-incident', approval_ref: 'synthetic-operation-approval',
+    authority: 'shopify_authenticated_admin_and_registration', evidence_ref: 'restricted-synthetic-evidence', evidence_sha256: 'a'.repeat(64) };
+}
+async function reconcile(input: object) {
+  const template = await readFile(resolve(process.cwd(), '../../supabase/operations/shopify_uninstall_reconciliation.sql'), 'utf8');
+  try { await db.exec(template.replace('__APPROVED_CASE_JSON__', JSON.stringify(input))); }
+  catch (error) { await db.exec('rollback'); throw error; }
+}
 
 beforeAll(async () => {
   db = new PGlite();
@@ -122,5 +137,41 @@ describe('uninstall after access expiry and failed refresh following revocation'
     expect(await installation('app-b')).toEqual(beforeB);
     expect((await db.query("select status,reason from shopify_installation_events where webhook_id='original'")).rows[0])
       .toMatchObject({ status: 'ignored', reason: 'current_installation_verified_active' });
+  });
+  it('rehearses separately approved manual closure of disabled A without affecting B, including duplicate closure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"error":"invalid_request"}', { status: 401 })));
+    expect((await POST(request())).status).toBe(503);
+    const a = await installation('app-a'); const b = await installation('app-b');
+    const merchant = (await db.query('select * from tryon_shops')).rows;
+    const input = await manualCase();
+    await reconcile(input);
+    const closed = await installation('app-a');
+    expect(closed.status).toBe('uninstalled');
+    expect(closed.credential_version).toBe(Number(a.credential_version) + 1);
+    expect(closed.access_token_ciphertext).toBeNull(); expect(closed.refresh_token_ciphertext).toBeNull();
+    expect(await installation('app-b')).toEqual(b);
+    expect((await db.query('select * from tryon_shops')).rows).toEqual(merchant);
+    const receipt = (await db.query<{status: string; verification: Record<string, unknown>}>('select status,verification from shopify_installation_events')).rows[0];
+    expect(receipt.status).toBe('completed');
+    expect(receipt.verification).toMatchObject({ mode: 'approved_manual_reconciliation', installation_id: a.id,
+      credential_version: a.credential_version, ticket_ref: input.ticket_ref, evidence_sha256: input.evidence_sha256 });
+    await expect(reconcile(input)).rejects.toThrow('manual_reconciliation_fence_lost');
+    expect(await installation('app-a')).toEqual(closed);
+    expect((await POST(request())).status).toBe(200); // Already completed receipt, no second mutation.
+    expect(await installation('app-b')).toEqual(b);
+  });
+  it('rejects stale/mismatched evidence, foreign receipts and a newly reauthorized generation during manual closure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{"error":"invalid_request"}', { status: 401 })));
+    expect((await POST(request())).status).toBe(503);
+    const input = await manualCase(); const a = await installation('app-a'); const b = await installation('app-b');
+    await expect(reconcile({ ...input, reviewer_id: input.operator_id })).rejects.toThrow('manual_reconciliation_evidence_required');
+    await expect(reconcile({ ...input, observed_at: '2000-01-01T00:00:00Z' })).rejects.toThrow('manual_reconciliation_observation_stale');
+    await expect(reconcile({ ...input, credential_version: Number(a.credential_version) + 1 })).rejects.toThrow('manual_reconciliation_fence_lost');
+    await expect(reconcile({ ...input, receipt_ids: ['00000000-0000-0000-0000-000000000001'] })).rejects.toThrow('manual_reconciliation_receipt_mismatch');
+    expect(await installation('app-a')).toEqual(a); expect(await installation('app-b')).toEqual(b);
+    await acquireShopToken({ shopDomain: shop, appClientId: 'app-a', exchange });
+    const fresh = await installation('app-a');
+    await expect(reconcile(input)).rejects.toThrow('manual_reconciliation_fence_lost');
+    expect(await installation('app-a')).toEqual(fresh); expect(await installation('app-b')).toEqual(b);
   });
 });
