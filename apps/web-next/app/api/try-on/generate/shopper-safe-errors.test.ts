@@ -15,6 +15,7 @@ import {
    existing. These must always resolve to a plain, safe sentence instead. */
 
 const rateLimitMock = vi.fn();
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: vi.fn(async () => true) }));
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { configured: true, limit: (...args: unknown[]) => rateLimitMock(...args) },
   clientIp: () => 'test-ip',

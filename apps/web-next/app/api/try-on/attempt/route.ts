@@ -1,4 +1,5 @@
 import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
@@ -74,6 +75,10 @@ export async function POST(request: NextRequest) {
         { ok: false, error: 'Invalid or expired try-on session.' } satisfies TryOnApiResponse,
         { status: 401 },
       );
+    }
+    if (session.purpose === 'storefront' &&
+      (!session.shop || !(await isActiveShopifyInstallation(session.shop, resolved.app.clientId)))) {
+      return NextResponse.json({ ok: false, error: 'Store integration is unavailable.' }, { status: 401 });
     }
 
     const attempt = signTryOnAttempt(resolved.app.secret, {

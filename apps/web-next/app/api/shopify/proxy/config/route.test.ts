@@ -3,13 +3,15 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { entitlementMock, settingsMock, rateLimitMock, flagsMock, launchMock } = vi.hoisted(() => ({
+const { entitlementMock, settingsMock, rateLimitMock, flagsMock, launchMock, activeInstallationMock } = vi.hoisted(() => ({
   entitlementMock: vi.fn(),
   settingsMock: vi.fn(),
   rateLimitMock: vi.fn(),
   flagsMock: vi.fn(),
   launchMock: vi.fn(),
+  activeInstallationMock: vi.fn(),
 }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
 
 vi.mock('@/lib/ratelimit', () => {
   const limiter = (name: string) => ({ limit: (id: string) => rateLimitMock(name, id) });
@@ -51,7 +53,7 @@ function entitlement(overrides: Record<string, unknown> = {}) {
 }
 
 /* Signed the way Shopify's App Proxy signs: every query pair, sorted. */
-function request(locale = 'en', extra: Record<string, string> = {}) {
+function request(locale = 'en', extra: Record<string, string> = {}, secret = SECRET) {
   const params = new URLSearchParams({
     locale,
     shop: SHOP,
@@ -61,7 +63,7 @@ function request(locale = 'en', extra: Record<string, string> = {}) {
     ...extra,
   });
   const pairs = Array.from(params.entries()).map(([key, value]) => `${key}=${value}`).sort();
-  params.set('signature', createHmac('sha256', SECRET).update(pairs.join('')).digest('hex'));
+  params.set('signature', createHmac('sha256', secret).update(pairs.join('')).digest('hex'));
   return new NextRequest(`https://app.example.com/api/shopify/proxy/config?${params}`);
 }
 
@@ -76,6 +78,7 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     entitlementMock.mockReset().mockResolvedValue(entitlement());
     flagsMock.mockReset().mockResolvedValue([]);
     launchMock.mockReset().mockResolvedValue(null);
+    activeInstallationMock.mockReset().mockResolvedValue(true);
   });
 
   /* v16 per-store flags: the storefront scripts read them from here. */
@@ -94,10 +97,24 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_APPS;
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     clearProxyConfigCache();
+  });
+
+  it('never serves B\'s cached availability to an uninstalled A', async () => {
+    process.env.SHOPIFY_APPS = JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]);
+    activeInstallationMock.mockImplementation(async (_shop: string, app: string) => app === 'app-b');
+    const active = await (await GET(request('en', {}, 'secret-b'))).json();
+    expect(active.available).toBe(true);
+    settingsMock.mockClear();
+    const inactive = await (await GET(request())).json();
+    expect(inactive).toMatchObject({ available: false, tryOn: 'hidden', reason: 'not_installed' });
+    expect(inactive).not.toHaveProperty('features');
+    expect(settingsMock).not.toHaveBeenCalled();
+    expect(activeInstallationMock).toHaveBeenLastCalledWith(SHOP, 'test-only-client-id');
   });
 
   it('answers live while the store has looks', async () => {

@@ -21,6 +21,7 @@ import {
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
 import { getConfiguredShopifyApps, primaryShopifyApp, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
 
 /**
@@ -161,7 +162,7 @@ export async function POST(request: NextRequest) {
           nonce,
         }),
       );
-      if (!resolved) {
+      if (!resolved || !(await isActiveShopifyInstallation(resolved.value.shop, resolved.app.clientId))) {
         const res: TryOnApiResponse = { ok: false, error: 'Invalid storefront context.' };
         return NextResponse.json(res, { status: 401 });
       }
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
     } else {
       // The public demo is deliberately a different capability. It cannot
       // name a shop and is limited to the app's seeded demo catalog, so
-      // there is no per-app signal either: the primary app signs it.
+      // the independent core key signs it.
       if (
         body.storefrontContext !== undefined ||
         body.storefrontNonce !== undefined ||

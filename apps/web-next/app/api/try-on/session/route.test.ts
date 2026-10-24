@@ -2,11 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { rateLimitMock, rateLimitState, resolveStorefrontProductMock } = vi.hoisted(() => ({
+const { rateLimitMock, rateLimitState, resolveStorefrontProductMock, activeInstallationMock } = vi.hoisted(() => ({
   rateLimitMock: vi.fn(),
   rateLimitState: { configured: true },
   resolveStorefrontProductMock: vi.fn(),
+  activeInstallationMock: vi.fn(),
 }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: {
@@ -42,8 +44,8 @@ function request(body: Record<string, unknown>) {
   });
 }
 
-function storefrontToken() {
-  return signStorefrontContext(SECRET, {
+function storefrontToken(secret = SECRET) {
+  return signStorefrontContext(secret, {
     shop: 'proven.myshopify.com',
     productId: 'premium-ringer-tee',
     variantId: '123456789',
@@ -60,6 +62,7 @@ describe('POST /api/try-on/session', () => {
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
+    activeInstallationMock.mockReset().mockResolvedValue(true);
     rateLimitState.configured = true;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     resolveStorefrontProductMock.mockResolvedValue({
@@ -156,6 +159,19 @@ describe('POST /api/try-on/session', () => {
 
     expect(response.status).toBe(400);
     expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['test-only-client-id', SECRET, 401], ['app-b', 'secret-b', 200],
+  ] as const)('checks the signing installation %s before minting a new session', async (clientId, secret, status) => {
+    process.env.SHOPIFY_APPS = JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]);
+    activeInstallationMock.mockImplementation(async (_shop: string, app: string) => app === 'app-b');
+    const response = await POST(request({
+      context: 'storefront', productId: 'premium-ringer-tee', storefrontNonce: NONCE,
+      storefrontContext: storefrontToken(secret),
+    }));
+    expect(response.status).toBe(status);
+    expect(activeInstallationMock).toHaveBeenCalledWith('proven.myshopify.com', clientId);
   });
 
   it('allows the explicitly enabled temporary legacy bridge without logging secrets', async () => {

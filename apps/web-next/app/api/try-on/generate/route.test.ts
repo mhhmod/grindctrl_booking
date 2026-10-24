@@ -7,10 +7,12 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 
-const { rateLimitMock, rateLimitState } = vi.hoisted(() => ({
+const { rateLimitMock, rateLimitState, activeInstallationMock } = vi.hoisted(() => ({
   rateLimitMock: vi.fn(),
   rateLimitState: { configured: true },
+  activeInstallationMock: vi.fn(),
 }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
 
 /* This suite exercises generation logic, not the rate limiter — real limiter
    calls @upstash/redis over the network, which vitest can't do (it doesn't
@@ -83,15 +85,30 @@ describe('POST /api/try-on/generate', () => {
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     rateLimitState.configured = true;
+    activeInstallationMock.mockReset().mockResolvedValue(true);
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_APPS;
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     vi.restoreAllMocks();
+  });
+
+  it('refuses new generation from A after uninstall while B keeps the merchant installed', async () => {
+    process.env.SHOPIFY_APPS = JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]);
+    activeInstallationMock.mockImplementation(async (_shop: string, app: string) => app === 'app-b');
+    const session = storefrontSession();
+    const response = await POST(makeRequest({
+      sessionId: session.token, attemptId: attemptFor(session.token), productId: 'premium-ringer-tee',
+      storefrontNonce: STOREFRONT_NONCE, variantId: '123', useMockPhoto: true,
+    }));
+    expect(response.status).toBe(401);
+    expect(activeInstallationMock).toHaveBeenCalledWith('proven.myshopify.com', 'test-only-client-id');
+    expect(await response.json()).toMatchObject({ ok: false, error: 'Store integration is unavailable.' });
   });
 
   it('rejects generation without a photo after validating its signed attempt', async () => {

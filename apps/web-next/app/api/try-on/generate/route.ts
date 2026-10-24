@@ -1,5 +1,6 @@
 import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 ﻿import { randomUUID } from 'node:crypto';
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
@@ -161,6 +162,14 @@ export async function POST(request: NextRequest) {
     // The attempt token, if any, was minted from this same session and so
     // must verify against the same app's secret.
     const secret = resolvedSession.app.secret;
+    // A still-valid signature cannot spend merchant credits after this
+    // installation is disconnected, even if another app keeps the shop active.
+    // Already-reserved jobs settle independently in the service/reconciler.
+    if (sessionAuthorization.purpose === 'storefront' &&
+      (!sessionAuthorization.shop || !(await isActiveShopifyInstallation(sessionAuthorization.shop, resolvedSession.app.clientId)))) {
+      const message = 'Store integration is unavailable.';
+      return NextResponse.json({ ok: false, message, error: message }, { status: 401 });
+    }
     if (
       sessionAuthorization.purpose === 'legacy-compat' &&
       !legacyStorefrontCompatEnabled()

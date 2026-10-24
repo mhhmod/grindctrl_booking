@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+const { activeInstallationMock } = vi.hoisted(() => ({ activeInstallationMock: vi.fn() }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: vi.fn(async () => ({ success: true, reset: Date.now() + 10_000 })) },
@@ -10,6 +12,7 @@ vi.mock('@/lib/ratelimit', () => ({
 
 import { POST } from './route';
 import {
+  signStorefrontContext,
   signTryOnSession,
   verifyTryOnAttempt,
   verifyTryOnSession,
@@ -37,12 +40,37 @@ describe('POST /api/try-on/attempt', () => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
+    activeInstallationMock.mockReset().mockResolvedValue(true);
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_APPS;
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.GRINDCTRL_CAPABILITY_SECRET;
+  });
+
+  it.each([
+    ['test-only-client-id', SECRET, 401], ['app-b', 'secret-b', 200],
+  ] as const)('authorizes a new attempt only for the active signing app %s', async (clientId, secret, status) => {
+    process.env.SHOPIFY_APPS = JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]);
+    activeInstallationMock.mockImplementation(async (_shop: string, app: string) => app === 'app-b');
+    const context = signStorefrontContext(secret, {
+      shop: 'proven.myshopify.com', productId: 'premium-ringer-tee', variantId: '123',
+      productGid: 'gid://shopify/Product/99', variantGid: 'gid://shopify/ProductVariant/123',
+      canonicalGarmentUrl: 'https://cdn.shopify.com/s/files/garment.png', nonce: ATTEMPT_NONCE,
+    });
+    const session = signTryOnSession(secret, { purpose: 'storefront', context: context.claims });
+    const response = await POST(new NextRequest('https://app.example.com/api/try-on/attempt', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: session.token, productId: 'premium-ringer-tee',
+        storefrontNonce: ATTEMPT_NONCE, attemptNonce: OTHER_ATTEMPT_NONCE,
+      }),
+    }));
+    expect(response.status).toBe(status);
+    expect(activeInstallationMock).toHaveBeenCalledWith('proven.myshopify.com', clientId);
+    if (status === 401) expect(await response.json()).not.toHaveProperty('data');
   });
 
   it('reuses one signed attempt for an exact HTTP retry', async () => {
