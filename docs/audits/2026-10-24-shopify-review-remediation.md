@@ -2,7 +2,7 @@
 
 Milestone 1 remains **not approved**. Reviewed starting HEAD: `209340229572c36a631a352f4244adbd29c80ee4`; main remains the original audited baseline `4f5467fa80f73dde26f98f435ef1606488a68864`. Work stays on `feat/shopify-installation-isolation` and [Draft PR 75](https://github.com/mhhmod/grindctrl_booking/pull/75). AGENTS.md was reread and the clean starting worktree verified. No hosted credentials/database state/Shopify settings were available to inspect; none is assumed empty or correctly configured.
 
-This follow-up changes runtime code and manual SQL. The previously passing 3,202 tests/207 browser checks are historical evidence for the reviewed starting code, not proof of these fixes. Final tested SHA/results are recorded below once executed. No merge/deployment/hosted SQL/app setting change/real merchant installation/paid AI/M2 occurred.
+This follow-up changes runtime code and manual SQL. The previously passing 3,202 tests/207 browser checks are historical evidence for the reviewed starting code, not proof of these fixes. New full-CI evidence is recorded below against code HEAD `901462944251ef03d450459337f183765d670526`. No merge/deployment/hosted SQL/app setting change/real merchant installation/paid AI/M2 occurred.
 
 ## Code findings and remediation
 
@@ -48,6 +48,39 @@ Final cutover inspection also found a domain-only shopper-token cache: B could r
 
 Full-graph audit fell from **13 to 8 findings** (3 moderate, 3 high, 2 critical); production-only remains zero. Vitest/Tinypool critical chains, mocker, nested Zod/shadcn/registry and typography/parser remain explicit toolchain review gates. Node/JSDOM run mode, trusted checkouts, isolated CI and absent production credentials bound exposure; they do not neutralize a compromised dependency. A supported patched Vitest/pool/mocker migration and coordinated upstream consumer upgrades need a separate justified change or explicit reviewer disposition before merge. No blanket risk acceptance is assumed.
 
+## Exact changed files since reviewed HEAD
+
+28 files; changes are confined to Shopify runtime/tests, storefront connection routing, compatible tooling lockfile entries, two additive SQL deltas and operating/report documents.
+
+- `apps/grindctrl-tryon/extensions/tryon-block/assets/tryon-catalog.js`
+- `apps/grindctrl-tryon/extensions/tryon-block/assets/tryon.js`
+- `apps/grindctrl-tryon/extensions/tryon-block/blocks/messenger.liquid`
+- `apps/grindctrl-tryon/extensions/tryon-block/blocks/tryon-catalog.liquid`
+- `apps/grindctrl-tryon/extensions/tryon-block/blocks/tryon.liquid`
+- `apps/web-next/app/api/shopify/proxy/try-on-context/route.test.ts`
+- `apps/web-next/app/api/shopify/webhooks/route.test.ts`
+- `apps/web-next/app/api/shopify/webhooks/route.ts`
+- `apps/web-next/lib/messenger/widget-loader-identity.test.ts`
+- `apps/web-next/lib/shopify/installation-database.test.ts`
+- `apps/web-next/lib/shopify/installation-events.ts`
+- `apps/web-next/lib/shopify/privacy-casework.test.ts`
+- `apps/web-next/lib/shopify/tokens.test.ts`
+- `apps/web-next/lib/shopify/tokens.ts`
+- `apps/web-next/lib/try-on/theme-extension-catalog-launch.test.ts`
+- `apps/web-next/lib/try-on/theme-extension-launch.test.ts`
+- `apps/web-next/package-lock.json`
+- `apps/web-next/public/widget/v1/messenger.js`
+- `docs/audits/2026-10-24-development-dependency-triage.md`
+- `docs/audits/2026-10-24-readiness-matrix.md`
+- `docs/audits/2026-10-24-shopify-m1-runbook.md`
+- `docs/audits/2026-10-24-shopify-m1.md`
+- `docs/audits/2026-10-24-shopify-privacy-procedure.md`
+- `docs/audits/2026-10-24-shopify-proxy-coexistence.md`
+- `docs/audits/2026-10-24-shopify-review-remediation.md`
+- `docs/superpowers/checkpoints/2026-09-05-production-risk-closure.md`
+- `supabase/20261024_shopify_privacy_casework.sql`
+- `supabase/20261024_shopify_review_remediation.sql`
+
 ## Database and rollback
 
 Manual additive order: existing `20260909_shopify_privacy_requests.sql` schema verified -> `20261024_shopify_installation_isolation.sql` -> **`20261024_shopify_review_remediation.sql`** -> **`20261024_shopify_privacy_casework.sql`**. Hosted preflight must inspect table/function/grant drift, exact projects, data counts, RLS/bypass behavior, backups, old privacy backlog and pending jobs. No hosted SQL was run.
@@ -62,9 +95,32 @@ Executed before the final late fence regression: **470 tests / 46 affected files
 
 | Decision | Current recommendation |
 |---|---|
-| Source approval | Ready for independent re-review after new full CI; **not approved**. Reviewer must examine real code/SQL changes, privacy procedure and remaining critical-tooling disposition. |
+| Source approval | Ready for independent re-review with completed new full CI; **not approved**. Reviewer must examine real code/SQL changes, privacy procedure and remaining critical-tooling disposition. |
 | Controlled Development Store testing | Conditional after source review and separate authorization of named isolated project, manual migrations, real app/proxy/theme operations, synthetic data and noncharging AI stub. No such operations authorized/executed here. |
 | Merge | **NO-GO pending independent approval**, final checks and explicit toolchain/security disposition; main triggers deployment workflows. |
 | Real merchant rollout | **NO-GO**: privacy operating/legal approval, hosted data/schema/backup/RBAC validation, actual proxy/extension/distribution/permissions evidence and financial/job reconciliation remain open. |
 
-Final validation record is appended after completion. No M2 work is authorized by these recommendations.
+## Final validation — 2026-10-24
+
+Frozen runtime/test/migration HEAD: **`901462944251ef03d450459337f183765d670526`**. [Full release CI run 98](https://github.com/mhhmod/grindctrl_booking/actions/runs/40138085737), job `121003793492`, completed **successfully** at 22:30 UTC. GitHub checked out synthetic PR merge `94966434fade05479faac93f277520cf61c41451` (parents: baseline main and that branch HEAD). Its tree `ddba3c1788b5665194d9524e5d3f8977de9ca80d` was verified identical to the frozen branch tree. This synthetic test commit is not a merge into main. The following closeout edits change documentation only; no untested runtime or SQL change is hidden behind the tested SHA.
+
+| Executed gate | Actual result |
+|---|---|
+| Locked CI install, `npm ci` | Passed |
+| Production dependency audit, `npm audit --omit=dev --audit-level=moderate` | Passed, zero vulnerabilities |
+| Full unit/route suite, `npm test -- --maxWorkers=2` | **3,244 tests / 333 files passed** |
+| `npm run typecheck` and `npm run lint` | Both passed |
+| Credential-free Docker production candidate build | Passed; candidate release matched the synthetic PR SHA |
+| Trivy OS/runtime-library scan, configured HIGH/CRITICAL, including unfixed findings | Passed; zero findings at those configured severities |
+| Isolated candidate health/release/static/non-root startup checks | Passed; disposable container removed |
+| Golden/mobile Chromium suite, 207 tests | **206 passed, 1 flaky**. English landing 1440px screenshot timed out at 5 seconds on its first attempt and passed retry #1. CI passed; this is not represented as 207 first-attempt passes. Assertions/baselines/timeouts were not changed. |
+| Local affected-path suite before the last fence/cache regressions | 470 tests / 46 files passed; overlaps full CI |
+| Final focused reruns | 43 refresh/fence tests across 2 files; 12 shopper-identity tests; 6 privacy SQL tests passed. These overlap the full suite and are not additional totals. |
+| Local static checks | Full lint/typecheck passed; final selected-source lint and Liquid schema parsing passed. Current full CI reran typecheck/lint on the frozen source. |
+| Full-graph development audit | Exit 1, **8 findings: 3 moderate, 3 high, 2 critical**. Explicit unresolved security review, not a passing gate. |
+
+The browser retry is a P2 test-stability observation. CI also reported a non-fatal post-checkout cleanup warning for the existing `.audit-main` gitlink and cache contention; these did not change test conclusions. No unrelated workflow or screenshot changes were made to obtain a green result.
+
+**Not executed:** hosted Supabase migration/preflight/RLS/backup recovery; real Shopify token rotation/uninstall delivery; actual A/B proxy and Theme Extension coexistence; protected customer/order permission verification; an actual privacy export/deletion/retention rehearsal; real financial/vendor reconciliation or paid AI. SQL execution evidence is isolated PGlite only. The new privacy procedure still requires independent operating/legal approval and named operators; recording, alerting or a structurally valid evidence reference is not fulfillment.
+
+Remaining blockers: **P0 rollout** — privacy ownership/retention/operator approval and actual fulfillment evidence; **P1 source/merge** — independent review and explicit remaining critical-toolchain disposition; **P1 environment/rollout** — authorized hosted preflight, migration, Shopify installation/refresh/proxy/theme/permissions acceptance and financial/job reconciliation. Production SQL, deployment, real merchant rollout and Milestone 2 remain unauthorized. No M2 work is authorized by these recommendations.
