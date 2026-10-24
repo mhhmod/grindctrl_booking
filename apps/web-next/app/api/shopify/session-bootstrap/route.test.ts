@@ -1,264 +1,56 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-
-/* GET /api/shopify/session-bootstrap ensures a shop has a stored, correctly-
-   scoped Admin API token by exchanging the already-verified App Bridge
-   session token for one -- no redirect. This is the fix for the bug where
-   no shop, ever, had a token stored: nothing previously triggered any kind
-   of exchange automatically on install. */
-
-const verifySessionTokenMock = vi.fn();
-vi.mock('@/lib/shopify/session-token', () => ({
-  verifySessionTokenResolved: (...args: unknown[]) => verifySessionTokenMock(...args),
-}));
-
-const getShopTokenMock = vi.fn();
-const storeShopTokenMock = vi.fn();
-vi.mock('@/lib/shopify/tokens', () => ({
-  getShopToken: (...args: unknown[]) => getShopTokenMock(...args),
-  storeShopToken: (...args: unknown[]) => storeShopTokenMock(...args),
-  hasRequiredScopes: (scopes: string) =>
-    ['read_products', 'read_orders', 'write_app_proxy'].every((scope) =>
-      scopes.split(',').map((s) => s.trim()).includes(scope),
-    ),
-}));
-
-const syncDomainsMock = vi.fn();
-vi.mock('@/lib/messenger/shop-domain-sync', () => ({
-  syncShopStorefrontDomains: (...args: unknown[]) => syncDomainsMock(...args),
-}));
-
-const rateLimitMock = vi.fn();
-vi.mock('@/lib/ratelimit', () => ({
-  publicApiRatelimit: { limit: (...args: unknown[]) => rateLimitMock(...args) },
-  clientIp: () => 'test-ip',
-}));
-
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+const m = vi.hoisted(() => ({ verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), limit: vi.fn() }));
+vi.mock('@/lib/shopify/session-token', () => ({ verifySessionTokenResolved: m.verify }));
+vi.mock('@/lib/shopify/tokens', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/shopify/tokens')>('@/lib/shopify/tokens');
+  return { ...actual, acquireShopToken: m.acquire, requestShopifyToken: m.requestToken };
+});
+vi.mock('@/lib/messenger/shop-domain-sync', () => ({ syncShopStorefrontDomains: m.sync }));
+vi.mock('@/lib/ratelimit', () => ({ publicApiRatelimit: { limit: m.limit }, clientIp: () => 'test-ip' }));
 import { GET } from './route';
-
-function req(url: string, headers?: Record<string, string>) {
-  return new NextRequest(new Request(url, { headers }));
-}
-
-describe('GET /api/shopify/session-bootstrap', () => {
-  beforeEach(() => {
-    process.env.SHOPIFY_API_SECRET = 'secret';
-    process.env.SHOPIFY_API_KEY = 'client-id';
-    rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
-    getShopTokenMock.mockResolvedValue(null);
+import { ShopifyCredentialError } from '@/lib/shopify/tokens';
+function req(auth = 'Bearer id-token') { return new NextRequest('https://grindctrl.cloud/api/shopify/session-bootstrap', { headers: { authorization: auth } }); }
+beforeEach(() => {
+  vi.resetAllMocks(); vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{ clientId: 'app-a', secret: 'a' }, { clientId: 'app-b', secret: 'b' }]));
+  vi.stubEnv('SHOPIFY_API_KEY', ''); vi.stubEnv('SHOPIFY_API_SECRET', '');
+  m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b' } });
+  m.limit.mockResolvedValue({ success: true, reset: Date.now() + 1000 });
+  m.acquire.mockResolvedValue({ accessToken: 'stored-b', appClientId: 'app-b' });
+});
+afterEach(() => vi.unstubAllEnvs());
+describe('installation-aware token bootstrap', () => {
+  it('binds acquisition and expiring exchange to the verified second app', async () => {
+    expect((await GET(req())).status).toBe(200);
+    const args = m.acquire.mock.calls[0][0];
+    expect(args).toMatchObject({ shopDomain: 'demo.myshopify.com', appClientId: 'app-b' });
+    await args.exchange();
+    expect(m.requestToken).toHaveBeenCalledWith('demo.myshopify.com', expect.objectContaining({
+      client_id: 'app-b', client_secret: 'b', subject_token: 'id-token', expiring: 1,
+    }));
+    expect(m.sync).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
   });
-
-  afterEach(() => {
-    // No path that fails to hold a usable token may sync with it.
-    if (expect.getState().currentTestName?.match(/401|502|503|429/)) {
-      expect(syncDomainsMock).not.toHaveBeenCalled();
-    }
-    vi.resetAllMocks();
-    vi.unstubAllGlobals();
-    delete process.env.SHOPIFY_API_SECRET;
-    delete process.env.SHOPIFY_API_KEY;
+  it('allows explicit eligible custom non-expiring mode without changing public defaults', async () => {
+    m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', tokenMode: 'non-expiring' } });
+    await GET(req()); await m.acquire.mock.calls[0][0].exchange();
+    expect(m.requestToken.mock.calls[0][1].expiring).toBe(0);
   });
-
-  it('returns 401 without exchanging when the authorization header is missing', async () => {
-    const response = await GET(req('https://app.example.com/api/shopify/session-bootstrap'));
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body).toEqual({ error: 'unauthorized' });
-    expect(getShopTokenMock).not.toHaveBeenCalled();
+  it('rejects invalid identity before acquisition or domain sync', async () => {
+    m.verify.mockReturnValue(null);
+    expect((await GET(req())).status).toBe(401);
+    expect(m.acquire).not.toHaveBeenCalled(); expect(m.sync).not.toHaveBeenCalled();
   });
-
-  it('returns 401 without exchanging when the session token is invalid', async () => {
-    verifySessionTokenMock.mockReturnValue(null);
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer bad' }),
-    );
-
-    expect(response.status).toBe(401);
-    expect(getShopTokenMock).not.toHaveBeenCalled();
+  it('does not acquire when the shared limiter is unavailable', async () => {
+    m.limit.mockResolvedValue(null);
+    expect((await GET(req())).status).toBe(503);
+    expect(m.acquire).not.toHaveBeenCalled();
   });
-
-  it('skips the exchange when a sufficiently-scoped token already exists', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    getShopTokenMock.mockResolvedValue({
-      accessToken: 'existing',
-      scopes: 'read_products,read_orders,write_app_proxy',
-    });
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, provisioned: 'existing' });
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(storeShopTokenMock).not.toHaveBeenCalled();
-    // Phase zero item 5: every admin open syncs the store's domains.
-    expect(syncDomainsMock).toHaveBeenCalledWith('demo.myshopify.com', 'existing');
-  });
-
-  it('re-exchanges when the existing token is missing a required scope', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    getShopTokenMock.mockResolvedValue({ accessToken: 'stale', scopes: 'read_products' });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({ access_token: 'fresh-token', scope: 'read_products,read_orders,write_app_proxy' }),
-          { status: 200 },
-        ),
-      ),
-    );
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, provisioned: 'exchanged' });
-    expect(storeShopTokenMock).toHaveBeenCalledWith({
-      shopDomain: 'demo.myshopify.com',
-      accessToken: 'fresh-token',
-      scopes: 'read_products,read_orders,write_app_proxy',
-    });
-  });
-
-  it('exchanges the verified session token against Shopify with the correct grant, then stores the result', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ access_token: 'granted-token', scope: 'read_products,read_orders,write_app_proxy' }), {
-          status: 200,
-        }),
-      );
-    vi.stubGlobal('fetch', fetchMock);
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer the-id-token' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body).toEqual({ ok: true, provisioned: 'exchanged' });
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://demo.myshopify.com/admin/oauth/access_token');
-    expect(init.method).toBe('POST');
-    const sentBody = JSON.parse(init.body as string);
-    expect(sentBody).toEqual({
-      client_id: 'client-id',
-      client_secret: 'secret',
-      grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
-      subject_token: 'the-id-token',
-      subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
-      requested_token_type: 'urn:shopify:params:oauth:token-type:offline-access-token',
-    });
-
-    expect(storeShopTokenMock).toHaveBeenCalledWith({
-      shopDomain: 'demo.myshopify.com',
-      accessToken: 'granted-token',
-      scopes: 'read_products,read_orders,write_app_proxy',
-    });
-    // The first open after install syncs with the new token.
-    expect(syncDomainsMock).toHaveBeenCalledWith('demo.myshopify.com', 'granted-token');
-  });
-
-  it('returns 502 without storing when Shopify rejects the exchange', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('', { status: 400 })));
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(502);
-    expect(body).toEqual({ error: 'exchange_failed' });
-    expect(storeShopTokenMock).not.toHaveBeenCalled();
-    consoleError.mockRestore();
-  });
-
-  it('returns 502 when the exchange call itself throws (network failure)', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-
-    expect(response.status).toBe(502);
-    expect(storeShopTokenMock).not.toHaveBeenCalled();
-    consoleError.mockRestore();
-  });
-
-  it('returns 503 when storing the exchanged token fails', async () => {
-    verifySessionTokenMock.mockReturnValue({
-      shop: 'demo.myshopify.com',
-      app: { clientId: 'client-id', secret: 'secret' },
-    });
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({ access_token: 'tok', scope: 'read_products' }), { status: 200 })),
-    );
-    storeShopTokenMock.mockRejectedValue(new Error('encryption key missing'));
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(503);
-    expect(body).toEqual({ error: 'store_failed' });
-    consoleError.mockRestore();
-  });
-
-  it('returns 503 when SHOPIFY_API_SECRET is not configured, without verifying the token', async () => {
-    delete process.env.SHOPIFY_API_SECRET;
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(503);
-    expect(body).toEqual({ error: 'not_configured' });
-    expect(verifySessionTokenMock).not.toHaveBeenCalled();
-  });
-
-  it('returns 429 and never exchanges when the caller is rate-limited', async () => {
-    rateLimitMock.mockResolvedValue({ success: false, reset: Date.now() + 30_000 });
-
-    const response = await GET(
-      req('https://app.example.com/api/shopify/session-bootstrap', { authorization: 'Bearer good' }),
-    );
-
-    expect(response.status).toBe(429);
-    expect(verifySessionTokenMock).not.toHaveBeenCalled();
+  it.each(['busy','storage_unavailable','exchange_failed'] as const)('reports %s without exposing secrets', async code => {
+    m.acquire.mockRejectedValue(new ShopifyCredentialError(code));
+    const response = await GET(req());
+    expect(response.status).toBe(code === 'busy' ? 409 : 503);
+    expect(m.sync).not.toHaveBeenCalled();
+    expect(response.headers.get('cache-control')).toBe('no-store');
   });
 });

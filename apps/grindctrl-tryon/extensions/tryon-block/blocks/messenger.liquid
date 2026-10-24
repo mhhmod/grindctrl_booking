@@ -18,6 +18,7 @@
   <script
     async
     src="https://grindctrl.cloud/widget/v1/messenger.js"
+    data-proxy-path="{{ block.settings.proxy_path | default: '/apps/grindctrl' | escape }}"
     data-shop="{{ shop.permanent_domain }}"
     data-locale="{{ request.locale.iso_code | slice: 0, 2 }}"
     {% if customer %}
@@ -31,6 +32,13 @@
   "name": "GRINDCTRL Store Chat",
   "target": "body",
   "settings": [
+    {
+      "type": "text",
+      "id": "proxy_path",
+      "label": "Store connection path",
+      "info": "Must match this app's App Proxy URL in Shopify. Keep different paths for overlapping connections.",
+      "default": "/apps/grindctrl"
+    },
     {
       "type": "checkbox",
       "id": "disable_on_this_page",

@@ -112,3 +112,42 @@ gate 8's "commercial claims remain evidence-gated" stance is unchanged.
 ## Handoff rule
 
 Update this file with actual final command results and remaining gates. Keep staged, tested and deployed states separate. Do not mark the existing goal complete or call the product production-ready until the mandatory gates have evidence.
+
+
+## Continuation — 2026-10-24, Shopify milestone 1
+
+Owner authorized feature-branch implementation and Draft PR only, with an independent review gate before milestone 2. Baseline/fetched main: `4f5467fa80f73dde26f98f435ef1606488a68864`. Draft PR: https://github.com/mhhmod/grindctrl_booking/pull/75. No deployment, production SQL, real merchant setup, paid AI or payments occurred.
+
+Installation-scoped credentials/refresh leases, lifecycle receipts/fencing, app-aware embedded routing, independent core capability signing, and manual-only privacy escalation are implemented locally. Legacy token provenance is never guessed; credentials require reauthorization. Existing AI/dashboard/credit/entitlement engines remain. Runtime dependency audit patches yield zero production Next dependency vulnerabilities.
+
+Final local evidence: **3191 tests / 332 files passed** via `npm test -- --maxWorkers=2 --testTimeout=30000`; typecheck, full lint plus late-file lint and production standalone build passed. Dedicated local Chromium checks **4/4 passed**, with App Bridge stubbed and external browser requests blocked. SQL tested only in isolated PGlite PostgreSQL; no live Supabase migration was applied.
+
+**NO-GO for merchant rollout.** Shared-data privacy ownership/retention/fulfillment approval, live database/project/schema/RLS/backups, real Development Store installation/refresh/permissions/theme/product E2E and CI/container/deployment evidence remain open. Do not construe a local build or stubbed browser as closure of the existing production gates. Milestone 2+ has not begun.
+
+See [the full milestone report](../../audits/2026-10-24-shopify-m1.md), [migration and recovery runbook](../../audits/2026-10-24-shopify-m1-runbook.md) and [readiness matrix](../../audits/2026-10-24-readiness-matrix.md) for exact files, tests, limitations and rollback.
+
+### Milestone 1 continuation — follow-up requirements
+
+Reverified clean feature HEAD `aac5a9e1aeb30d6ba06218765a30eb5f4dc27057` and remote main still at the audited baseline; reused Draft PR #75. Runtime/test source now `05f38c75ecc9acbc5dcba1639c0392eef2fbace6`. The optional unsigned legacy signer refuses multiple registrations while preserving single-app compatibility. New storefront sessions, attempts, generations and proxy availability verify the signing installation remains active; an active B cannot authorize disconnected A. Existing reserved-job completion/recovery stays merchant-scoped. Added eleven regression cases, including paused-provider transition outcomes.
+
+Follow-up evidence: 146/146 affected-path tests across 11 files; 6/6 Try-On UI tests without competing local work; local typecheck, full lint plus final-fixture lint and standalone build passed; local Chromium 4/4 with stubbed App Bridge. CI run https://github.com/mhhmod/grindctrl_booking/actions/runs/40130723607 passed the complete unit gate, typecheck and lint on the tested source; remaining candidate/build/browser CI status is tracked in the PR. Earlier CI fixture failures and local UI timing failures/interrupted runs are documented in the report and are not labelled full local passes. No assertions or committed test timeouts were relaxed.
+
+The runbook now includes a 14-step unexecuted Development Store acceptance plan, old-image drain and verification-key handling for in-flight jobs, and actual scheduler verification (checked-in entitlement reconciliation is daily). The report maps all 18 required scenarios to bounded evidence and provides separate NO-GO recommendations for merge pending independent audit, staging execution pending authorization/target review, production migration and merchant onboarding. Privacy ownership/retention/fulfillment remains P0; hosted database/settings, real Dev Store E2E and financial reconciliation remain unverified. No deployment, hosted SQL, live configuration/credentials, real merchant activation, paid AI or payments occurred. M2 has not begun.
+
+### Milestone 1 CI closeout — verified HEAD 85c9ae89b4c54e66255dbac47e87da4e86329492
+
+CI https://github.com/mhhmod/grindctrl_booking/actions/runs/40131237866 completed successfully: 3202 tests / 332 files, typecheck, lint, production dependency audit, credential-free container build, configured HIGH/CRITICAL OS/runtime scan, startup/release checks and 207 golden/mobile browser checks. Run 40130723607 on the runtime/test commit also completed successfully. No runtime code or migration changed after the tested source; this closeout is documentation only.
+
+Separate full-graph dependency audit found 13 findings (5 moderate, 6 high, 2 critical), including Vitest/Tinypool toolchain chains; production-only audit remains zero. Toolchain remediation/exploitability review is open and is not represented as fixed by the Shopify changes. See the report closeout for advisory links and exact evidence. All privacy, hosted environment, real Development Store and financial-reconciliation gates remain open; no independent audit approval or production readiness is claimed.
+
+### Independent-review remediation — 2026-10-24, code HEAD 9014629
+
+The owner did **not** approve M1 at `209340229572c36a631a352f4244adbd29c80ee4`. Follow-up commits make actual runtime/SQL changes: bounded transient refresh recovery with durable cooldown and preserved rotating credentials; shared lease/version fencing including null-fence rejection; lifecycle receipts without unsigned-header mutation authority; current-credential verification before uninstall; new/legacy privacy casework with append-only reviewed fulfillment evidence; configurable validated proxy roots and publisher-bound shopper-token caching. Compatible development patches reduce the full audit from 13 to 8 findings, with **2 critical still open**. No major upgrade or risk acceptance is implied.
+
+Frozen code/test/migration HEAD: `901462944251ef03d450459337f183765d670526`. Full CI [run 40138085737](https://github.com/mhhmod/grindctrl_booking/actions/runs/40138085737) completed successfully: **3,244 tests / 333 files**, typecheck, lint, production-only dependency audit (zero), credential-free release-image build, configured HIGH/CRITICAL image scan, isolated release/startup checks and **206 browser passes plus 1 flaky test passing retry #1**. CI tested synthetic PR merge `94966434fade05479faac93f277520cf61c41451`; its tree was verified identical to the branch HEAD. The flaky check was the English landing screenshot at 1440px; no assertion, timeout or baseline was relaxed. Final focused SQL/refresh/cache regressions also passed locally. Closeout after the frozen revision is documentation only.
+
+Two additional manual deltas follow installation isolation: `supabase/20261024_shopify_review_remediation.sql`, then `supabase/20261024_shopify_privacy_casework.sql`; existing legacy privacy schema must first be verified. Neither was applied to hosted data. Keep additive audit/schema on rollback; never restore unsafe domain-only writers/timestamp-driven lifecycle mutation into a two-app deployment. Privacy deletion and retired credentials are not reversible by a code rollback.
+
+Source is ready for independent re-review, **not approved**. Controlled Development Store operations are conditional on source review and separately authorized isolated setup/configuration/migrations. **Merge and real merchant rollout remain NO-GO** pending independent approval/toolchain disposition and actual privacy operating/legal approval, named operators, hosted preflight/RLS/backups, real Shopify A/B proxy/theme/auth/permissions tests and financial/job reconciliation. The privacy procedure is an actionable review candidate, not actual fulfillment. No hosted SQL, deployment, Shopify settings/credentials, real merchant activation, paid AI/payment or M2 occurred.
+
+Exact files, bounded local/full-CI evidence, remaining blockers and rollback are in the [review-remediation report](../../audits/2026-10-24-shopify-review-remediation.md); linked privacy, proxy and dependency reports contain the detailed procedures and decisions.

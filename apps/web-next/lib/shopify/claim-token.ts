@@ -21,6 +21,7 @@ interface ClaimPayload {
   iat: number;
   exp: number;
   jti: string;
+  appClientId?: string;
 }
 
 function b64url(input: string): string {
@@ -31,7 +32,7 @@ function sign(secret: string, data: string): string {
   return createHmac('sha256', secret).update(data, 'utf8').digest('base64url');
 }
 
-export function signClaimToken(secret: string, rawShop: string): string {
+export function signClaimToken(secret: string, rawShop: string, appClientId?: string): string {
   // A missing SHOPIFY_API_SECRET at runtime must fail loudly here, not mint
   // a token both sides would happily verify with "" as the key.
   if (!secret) throw new Error('Refusing to mint a claim token without a secret');
@@ -45,6 +46,7 @@ export function signClaimToken(secret: string, rawShop: string): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: ClaimPayload = {
     iss: ISSUER,
+    ...(appClientId ? { appClientId } : {}),
     shop,
     iat: now,
     exp: now + CLAIM_TTL_SECONDS,
@@ -62,7 +64,7 @@ export function signClaimToken(secret: string, rawShop: string): string {
   return `${body}.${sign(secret, body)}`;
 }
 
-export function verifyClaimToken(secret: string, token: string): { shop: string } | null {
+export function verifyClaimToken(secret: string, token: string): { shop: string; appClientId?: string } | null {
   if (!secret || !token) return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;

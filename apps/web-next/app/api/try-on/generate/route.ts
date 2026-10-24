@@ -1,3 +1,6 @@
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
+import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 ﻿import { randomUUID } from 'node:crypto';
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
@@ -23,7 +26,7 @@ import {
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
-import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { storeFlags } from '@/lib/flags/store-flags';
 import type {
   TryOnJob,
@@ -121,7 +124,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    if (getConfiguredShopifyApps().length === 0) {
+    if (getConfiguredShopifyApps().length === 0 && !coreCapabilitySecret()) {
       const message = 'Try-on is not configured.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const resolvedSession = resolveShopifyApp((secret) =>
+    const resolvedSession = resolveTryOnSessionKey((secret) =>
       verifyTryOnSession(secret, sessionId, {
         productId,
         variantId: rawVariantId === undefined ? undefined : variantId,
@@ -159,6 +162,14 @@ export async function POST(request: NextRequest) {
     // The attempt token, if any, was minted from this same session and so
     // must verify against the same app's secret.
     const secret = resolvedSession.app.secret;
+    // A still-valid signature cannot spend merchant credits after this
+    // installation is disconnected, even if another app keeps the shop active.
+    // Already-reserved jobs settle independently in the service/reconciler.
+    if (sessionAuthorization.purpose === 'storefront' &&
+      (!sessionAuthorization.shop || !(await isActiveShopifyInstallation(sessionAuthorization.shop, resolvedSession.app.clientId)))) {
+      const message = 'Store integration is unavailable.';
+      return NextResponse.json({ ok: false, message, error: message }, { status: 401 });
+    }
     if (
       sessionAuthorization.purpose === 'legacy-compat' &&
       !legacyStorefrontCompatEnabled()

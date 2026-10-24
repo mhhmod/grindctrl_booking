@@ -4,6 +4,8 @@
 (function () {
   var EMBED_ORIGIN = 'https://grindctrl.cloud';
   var script = document.currentScript;
+  var PROXY_PATH = (script && script.dataset.gcProxyPath) || '/apps/grindctrl';
+  if (!/^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(PROXY_PATH)) return;
   var SHOP = (script && script.dataset.gcShop) || '';
   var LOCALE =
     String((script && script.dataset.gcLocale) || '').toLowerCase().split('-')[0] === 'ar'
@@ -102,7 +104,7 @@
   function getStorefrontContext(product, nonce) {
     return fetch(
       withVisitor(
-        '/apps/grindctrl/try-on-context?product=' +
+        PROXY_PATH + '/try-on-context?product=' +
           encodeURIComponent(product) +
           '&nonce=' +
           encodeURIComponent(nonce)
@@ -125,7 +127,7 @@
   }
 
   var cfg = null;
-  var cfgPromise = fetch(withVisitor('/apps/grindctrl/config?locale=' + LOCALE), {
+  var cfgPromise = fetch(withVisitor(PROXY_PATH + '/config?locale=' + LOCALE), {
     credentials: 'same-origin',
     headers: { Accept: 'application/json' }
   })

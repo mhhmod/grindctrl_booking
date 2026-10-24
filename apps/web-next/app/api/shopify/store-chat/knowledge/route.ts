@@ -19,7 +19,7 @@ type KnowledgeBody =
   | { op: 'sync'; entryId: string };
 
 export async function POST(request: NextRequest) {
-  const session = authenticateShopifyRequest(request);
+  const session = await authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   const limited = await merchantRateLimitResponse(
     `shop:${session.shop}`, 'write',

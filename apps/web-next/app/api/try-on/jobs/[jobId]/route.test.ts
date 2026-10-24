@@ -37,12 +37,14 @@ import {
   signTryOnSession,
 } from '@/lib/try-on/storefront-context';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 
 describe('GET /api/try-on/jobs/[jobId]', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     durableLoadMock.mockResolvedValue(null);
   });
@@ -50,11 +52,12 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     vi.restoreAllMocks();
   });
 
   it('returns the job fields in the top-level response envelope', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -78,7 +81,7 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('reports the stage of a look still being made (N38)', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -103,11 +106,11 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('does not expose a job to a different valid session', async () => {
-    const owner = signTryOnSession(SECRET, {
+    const owner = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
-    const other = signTryOnSession(SECRET, {
+    const other = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -122,7 +125,7 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('returns an explicit reconciliation error for a completed job with no result', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -160,7 +163,7 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('recovers a durable finalizer-pending result after an in-memory restart', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -196,15 +199,15 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('masks durable session, product, and shop mismatches as not found', async () => {
-    const owner = signTryOnSession(SECRET, {
+    const owner = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
-    const differentSession = signTryOnSession(SECRET, {
+    const differentSession = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
-    const differentProduct = signTryOnSession(SECRET, {
+    const differentProduct = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'different-product',
     });
@@ -267,8 +270,7 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
   });
 
   it('rejects an expired bearer token', async () => {
-    const expired = signTryOnSession(
-      SECRET,
+    const expired = signTryOnSession(CORE_SECRET,
       { purpose: 'public-demo', productId: 'premium-ringer-tee' },
       Math.floor(Date.now() / 1000) - 601,
     );
@@ -289,6 +291,7 @@ describe('DELETE /api/try-on/jobs/[jobId]', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     durableReleaseMock.mockReset().mockResolvedValue('released');
   });
@@ -296,6 +299,7 @@ describe('DELETE /api/try-on/jobs/[jobId]', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     vi.restoreAllMocks();
   });
 
@@ -310,7 +314,7 @@ describe('DELETE /api/try-on/jobs/[jobId]', () => {
   }
 
   it('drops the memory copy and the stored copy of its own session', async () => {
-    const session = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const session = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
     const job = await generateTryOn(session.claims, 'mock');
     expect(getJob(job.jobId)).toBeDefined();
 
@@ -325,8 +329,8 @@ describe('DELETE /api/try-on/jobs/[jobId]', () => {
   });
 
   it("leaves another session's job in place and answers the same way", async () => {
-    const owner = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
-    const other = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const owner = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const other = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
     const job = await generateTryOn(owner.claims, 'mock');
 
     const response = await release(job.jobId, other.token);
@@ -342,7 +346,7 @@ describe('DELETE /api/try-on/jobs/[jobId]', () => {
   });
 
   it('answers 503 when storage cannot delete it, leaving the expiry to finish the job', async () => {
-    const session = signTryOnSession(SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
+    const session = signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId: 'premium-ringer-tee' });
     durableReleaseMock.mockRejectedValueOnce(new TryOnResultPersistenceError('tryon_x'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
 

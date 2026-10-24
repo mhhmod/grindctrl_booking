@@ -41,12 +41,12 @@ describe('Store Chat install instructions', () => {
   });
 
   it('deep-links to the App embeds panel rather than the theme list', () => {
-    const url = appEmbedActivationUrl('grindctrl.myshopify.com', 'messenger');
+    const url = appEmbedActivationUrl('grindctrl.myshopify.com', 'messenger', 'verified-registration');
 
     expect(url).toContain('/admin/themes/current/editor');
     expect(url).toContain('context=apps');
     // <client-id>/<block handle>, where the handle is the block's filename.
-    expect(url).toContain('activateAppId=fc095fe656d9029fdc249a4af2315f19/messenger');
+    expect(url).toContain('activateAppId=verified-registration/messenger');
     // The generic theme list is what left the merchant to navigate themselves.
     expect(installCard).not.toContain('/themes`');
   });

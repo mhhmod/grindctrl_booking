@@ -1,29 +1,20 @@
-/* The app's Shopify client id. Public by design — it appears in the OAuth
-   authorize URL and in theme-editor deep links — so unlike the API secret it
-   is safe in a client bundle.
-
-   It lives here rather than in lib/shopify/session-token.ts because that
-   module is `server-only`: importing it from a client component to build a
-   deep link would break the build. admin-settings.tsx had already worked
-   around that with its own local copy, so this is the shared source both
-   client surfaces use instead of a third literal drifting out of sync.
-
-   session-token.ts deliberately keeps its own constant: there it is an
-   authentication parameter (the expected `aud`), and coupling an auth check to
-   a UI constant would let a presentation-layer edit change what verifies. */
-
-export const SHOPIFY_APP_CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
-
-/** Theme-editor deep link that opens the current theme's App embeds panel with
- *  one of this app's blocks pre-selected. `blockHandle` is the block's file
- *  name under extensions/tryon-block/blocks (e.g. `messenger`). */
-export function appEmbedActivationUrl(shopDomain: string, blockHandle: string): string {
-  return `https://${shopDomain}/admin/themes/current/editor?context=apps&activateAppId=${SHOPIFY_APP_CLIENT_ID}/${blockHandle}`;
+/** Public link helpers. Client IDs select UI only and never grant API access. */
+function themeLink(shop: string, block: string, product: boolean, appClientId?: string): string {
+  const clientId = appClientId ?? (typeof document !== 'undefined'
+    ? document.querySelector('meta[name="shopify-api-key"]')?.getAttribute('content') : null);
+  if (!clientId) return `/api/shopify/theme-link?${new URLSearchParams({ shop, block, mode: product ? 'product' : 'embed' })}`;
+  const base = `https://${shop}/admin/themes/current/editor`;
+  return product
+    ? `${base}?template=product&addAppBlockId=${encodeURIComponent(clientId)}/${encodeURIComponent(block)}&target=mainSection`
+    : `${base}?context=apps&activateAppId=${encodeURIComponent(clientId)}/${encodeURIComponent(block)}`;
+}
+export function appEmbedActivationUrl(shop: string, block: string, appClientId?: string): string {
+  return themeLink(shop, block, false, appClientId);
+}
+export function productBlockAddUrl(shop: string, block: string, appClientId?: string): string {
+  return themeLink(shop, block, true, appClientId);
 }
 
-/** Theme-editor deep link that opens the product template with one of this
- *  app's blocks already added under the product details, so the merchant
- *  only presses Save. `blockHandle` as for appEmbedActivationUrl (`tryon`). */
-export function productBlockAddUrl(shopDomain: string, blockHandle: string): string {
-  return `https://${shopDomain}/admin/themes/current/editor?template=product&addAppBlockId=${SHOPIFY_APP_CLIENT_ID}/${blockHandle}&target=mainSection`;
+export function shopifyAdminAppUrl(shop: string): string {
+  return `/api/shopify/admin-link?${new URLSearchParams({ shop })}`;
 }

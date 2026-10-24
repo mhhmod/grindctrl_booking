@@ -1,14 +1,13 @@
 import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { primaryShopifyApp, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 
 /* The owner's preview link (N5, phase zero item 9). While a store is in
    setup or preview only its owner sees Try it on and Store Chat, by opening
    the store from the dashboard with ?gc_preview=<token>. The token names
-   the shop and a purpose and lasts 24 hours; it is signed with a key
-   derived from the Shopify app secret, like the origin token, so it cannot
+   the shop and a purpose and lasts 24 hours; it is signed with an independent GRINDCTRL key, like the origin token, so it cannot
    be replayed as any other capability. The storefront scripts keep it in
    the store's own storage and send it with their config calls. */
 
@@ -72,15 +71,16 @@ export function verifyPreviewToken(
   );
 }
 
-/** Checks the token against every configured Shopify app's secret. */
+/** Verifies core-owned preview capabilities; the export name is retained for callers. */
 export function verifyPreviewTokenAnyApp(token: unknown, shop: string): boolean {
   if (typeof token !== 'string' || !token) return false;
-  return resolveShopifyApp((secret) => (verifyPreviewToken(secret, token, shop) ? true : null)) !== null;
+  const secret = coreCapabilitySecret();
+  return secret ? verifyPreviewToken(secret, token, shop) : false;
 }
 
-/** Signs with the primary app's secret, as the origin token does. */
+/** Signs with the independent core key. */
 export function signPreviewTokenForShop(shop: string): { token: string; expiresAt: string } | null {
-  const app = primaryShopifyApp();
-  if (!app) return null;
-  return signPreviewToken(app.secret, shop);
+  const secret = coreCapabilitySecret();
+  if (!secret) return null;
+  return signPreviewToken(secret, shop);
 }
