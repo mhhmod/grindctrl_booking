@@ -15,6 +15,7 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 const ATTEMPT_NONCE = 'abcdefghijklmnopqrstuvwx';
 const OTHER_ATTEMPT_NONCE = 'zyxwvutsrqponmlkjihgfedc';
@@ -35,30 +36,32 @@ describe('POST /api/try-on/attempt', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
   });
 
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
   });
 
   it('reuses one signed attempt for an exact HTTP retry', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
     const first = await (await POST(request(session.token))).json();
     const retry = await (await POST(request(session.token))).json();
-    const verifiedSession = verifyTryOnSession(SECRET, session.token)!;
-    const firstClaims = verifyTryOnAttempt(SECRET, first.data.attemptId, verifiedSession);
-    const retryClaims = verifyTryOnAttempt(SECRET, retry.data.attemptId, verifiedSession);
+    const verifiedSession = verifyTryOnSession(CORE_SECRET, session.token)!;
+    const firstClaims = verifyTryOnAttempt(CORE_SECRET, first.data.attemptId, verifiedSession);
+    const retryClaims = verifyTryOnAttempt(CORE_SECRET, retry.data.attemptId, verifiedSession);
 
     expect(retry.data.attemptId).toBe(first.data.attemptId);
     expect(retryClaims?.requestKey).toBe(firstClaims?.requestKey);
   });
 
   it('mints a new request key for a new explicit generation nonce', async () => {
-    const session = signTryOnSession(SECRET, {
+    const session = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });
@@ -66,24 +69,23 @@ describe('POST /api/try-on/attempt', () => {
     const second = await (
       await POST(request(session.token, OTHER_ATTEMPT_NONCE))
     ).json();
-    const verifiedSession = verifyTryOnSession(SECRET, session.token)!;
+    const verifiedSession = verifyTryOnSession(CORE_SECRET, session.token)!;
 
     expect(
-      verifyTryOnAttempt(SECRET, second.data.attemptId, verifiedSession)?.requestKey,
+      verifyTryOnAttempt(CORE_SECRET, second.data.attemptId, verifiedSession)?.requestKey,
     ).not.toBe(
-      verifyTryOnAttempt(SECRET, first.data.attemptId, verifiedSession)?.requestKey,
+      verifyTryOnAttempt(CORE_SECRET, first.data.attemptId, verifiedSession)?.requestKey,
     );
   });
 
   it('rejects an attempt for an expired session and client authority fields', async () => {
-    const expired = signTryOnSession(
-      SECRET,
+    const expired = signTryOnSession(CORE_SECRET,
       { purpose: 'public-demo', productId: 'premium-ringer-tee' },
       Math.floor(Date.now() / 1000) - 601,
     );
     expect((await POST(request(expired.token))).status).toBe(401);
 
-    const current = signTryOnSession(SECRET, {
+    const current = signTryOnSession(CORE_SECRET, {
       purpose: 'public-demo',
       productId: 'premium-ringer-tee',
     });

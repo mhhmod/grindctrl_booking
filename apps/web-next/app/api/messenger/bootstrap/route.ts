@@ -1,3 +1,4 @@
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
@@ -77,12 +78,14 @@ export async function POST(request: NextRequest) {
     // Verified shopper identity (optional): short-lived JWT previously issued
     // by the Shopify proxy route. Bound to this session and the loaded site,
     // never a shop supplied in the request body or an old metadata flag.
-    let identity: { customerId: string; email: string; name: string } | null = null;
+    let identity: { customerId: string; email: string; name: string; appClientId: string } | null = null;
     if (typeof body.shopperToken === 'string') {
       const claims = verifyShopperTokenAnyApp(body.shopperToken, anonymousId, site.domain);
-      if (claims?.customerId) {
+      if (claims?.customerId && claims.appClientId && site.domain
+        && await isActiveShopifyInstallation(site.domain, claims.appClientId)) {
         identity = {
           customerId: claims.customerId,
+          appClientId: claims.appClientId,
           email: claims.email ?? '',
           name: claims.name ?? '',
         };
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
       // ever looked at, which is what defeated the binding check.
       conversation.metadata.identity = {
         customer_id: identity.customerId,
+        app_client_id: identity.appClientId,
         email: identity.email,
         name: identity.name,
         verified: true,

@@ -27,18 +27,19 @@ vi.mock('@/lib/ratelimit', () => ({
 
 import { POST } from '@/app/api/try-on/generate/route';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 const STOREFRONT_NONCE = 'abcdefghijklmnopqrstuvwx';
 const GARMENT_URL = 'https://cdn.shopify.com/s/files/garment.png';
 
 function demoSession(productId = 'premium-ringer-tee', now = Math.floor(Date.now() / 1000)) {
-  return signTryOnSession(SECRET, { purpose: 'public-demo', productId }, now).token;
+  return signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId }, now).token;
 }
 
 function attemptFor(sessionToken: string, attemptNonce = 'zyxwvutsrqponmlkjihgfedc') {
-  const session = verifyTryOnSession(SECRET, sessionToken);
+  const session = verifyTryOnSession(CORE_SECRET, sessionToken) ?? verifyTryOnSession(SECRET, sessionToken);
   if (!session) return 'invalid-attempt';
-  return signTryOnAttempt(SECRET, { session, attemptNonce }).token;
+  return signTryOnAttempt(session.purpose === 'public-demo' ? CORE_SECRET : SECRET, { session, attemptNonce }).token;
 }
 
 function storefrontSession() {
@@ -79,6 +80,7 @@ describe('POST /api/try-on/generate', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     rateLimitState.configured = true;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
@@ -87,6 +89,7 @@ describe('POST /api/try-on/generate', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     vi.restoreAllMocks();
   });
@@ -254,6 +257,7 @@ describe('POST /api/try-on/generate', () => {
   it('fails closed when the signing secret is missing', async () => {
     const token = demoSession();
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     const response = await POST(
       makeRequest({ sessionId: token, productId: 'premium-ringer-tee', useMockPhoto: true }),
     );

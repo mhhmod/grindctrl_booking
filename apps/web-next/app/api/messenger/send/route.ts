@@ -1,3 +1,4 @@
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
@@ -273,7 +274,9 @@ export async function POST(request: NextRequest) {
 
     // Identity refresh (token may have just been issued by the proxy).
     let identityName: string | null = conversation.metadata.identity?.name ?? null;
-    let verifiedCustomer = conversation.metadata.identity?.verified === true;
+    let verifiedAppClientId = conversation.metadata.identity?.app_client_id;
+    let verifiedCustomer = Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
+      && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
     if (shopperToken) {
       const claims = verifyShopperTokenAnyApp(shopperToken, anonymousId, site.domain);
       const bound = conversation.metadata.identity?.customer_id ?? null;
@@ -282,7 +285,9 @@ export async function POST(request: NextRequest) {
          else means the browser changed hands — refuse the upgrade and let
          the next bootstrap rotate the session rather than answering as the
          previous customer. */
-      if (claims?.customerId && (!bound || bound === claims.customerId)) {
+      if (claims?.customerId && claims.appClientId && site.domain && (!bound || bound === claims.customerId)
+        && await isActiveShopifyInstallation(site.domain, claims.appClientId)) {
+        verifiedAppClientId = claims.appClientId;
         verifiedCustomer = true;
         identityName = claims.name ?? identityName;
       }
@@ -530,6 +535,7 @@ export async function POST(request: NextRequest) {
         ? ({ ok: false, reason: 'rate_limited' } as const)
         : await lookupOrder({
             shopDomain: orderShopDomain,
+            appClientId: verifiedCustomer ? verifiedAppClientId : undefined,
             // Server-derived. A model that invents a customer id cannot
             // reach this argument — there is no field for it in the schema.
             verifiedCustomerId:

@@ -13,7 +13,7 @@ import 'server-only';
    existing single-app deployments need no change. Duplicate client ids
    (fallback pair reappearing inside SHOPIFY_APPS) resolve to one entry. */
 
-export type ShopifyAppCredentials = { clientId: string; secret: string };
+export type ShopifyAppCredentials = { clientId: string; secret: string; distribution?: 'custom' | 'public'; tokenMode?: 'expiring' | 'non-expiring' };
 
 /** Every configured Shopify app, fallback pair included. Recomputed on
  *  every call (env vars are a handful of cheap reads + a short JSON.parse)
@@ -37,9 +37,19 @@ export function getConfiguredShopifyApps(): ShopifyAppCredentials[] {
           ) {
             const clientId = (entry as Record<string, string>).clientId.trim();
             const secret = (entry as Record<string, string>).secret.trim();
+            if (clientId && secret && seen.has(clientId) && apps.find(app => app.clientId === clientId)?.secret !== secret) {
+              console.error('[shopify] conflicting app registration; refusing configuration');
+              return [];
+            }
             if (clientId && secret && !seen.has(clientId)) {
               seen.add(clientId);
-              apps.push({ clientId, secret });
+              const record = entry as Record<string, unknown>;
+              // Expiring is the default. Non-expiring is an explicit custom-only opt-in.
+              if (record.tokenMode === 'non-expiring' && record.distribution !== 'custom') continue;
+              apps.push({ clientId, secret,
+                ...(record.distribution === 'custom' || record.distribution === 'public' ? { distribution: record.distribution } : {}),
+                ...(record.tokenMode === 'expiring' || record.tokenMode === 'non-expiring' ? { tokenMode: record.tokenMode } : {}),
+              });
             }
           }
         }
@@ -53,11 +63,16 @@ export function getConfiguredShopifyApps(): ShopifyAppCredentials[] {
 
   const fallbackId = process.env.SHOPIFY_API_KEY?.trim();
   const fallbackSecret = process.env.SHOPIFY_API_SECRET?.trim();
+  if (fallbackId && fallbackSecret && seen.has(fallbackId) && apps.find(app => app.clientId === fallbackId)?.secret !== fallbackSecret) return [];
   if (fallbackId && fallbackSecret && !seen.has(fallbackId)) {
     seen.add(fallbackId);
     apps.push({ clientId: fallbackId, secret: fallbackSecret });
   }
 
+  if (new Set(apps.map(app => app.secret)).size !== apps.length) {
+    console.error('[shopify] app secrets must be distinct; refusing configuration');
+    return [];
+  }
   return apps;
 }
 
@@ -80,9 +95,13 @@ export function primaryShopifyApp(): ShopifyAppCredentials | null {
 export function resolveShopifyApp<T>(
   verify: (secret: string) => T | null | undefined | false,
 ): { app: ShopifyAppCredentials; value: T } | null {
+  let matched: { app: ShopifyAppCredentials; value: T } | null = null;
   for (const app of getConfiguredShopifyApps()) {
     const value = verify(app.secret);
-    if (value) return { app, value: value as T };
+    if (value) {
+      if (matched) return null; // Shared secrets cannot establish app provenance.
+      matched = { app, value: value as T };
+    }
   }
-  return null;
+  return matched;
 }

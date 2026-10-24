@@ -1,3 +1,4 @@
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { validateProductId } from '@/lib/try-on/validator';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    if (getConfiguredShopifyApps().length === 0) {
+    if (getConfiguredShopifyApps().length === 0 && !coreCapabilitySecret()) {
       const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
       return NextResponse.json(res, { status: 503 });
     }
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
         const res: TryOnApiResponse = { ok: false, error: 'Invalid public demo context.' };
         return NextResponse.json(res, { status: 400 });
       }
-      const demoSecret = primaryShopifyApp()?.secret;
+      const demoSecret = coreCapabilitySecret();
       if (!demoSecret) {
         const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
         return NextResponse.json(res, { status: 503 });

@@ -3,6 +3,7 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'shopify-app-secret';
 const NOW_SECONDS = Math.floor(Date.now() / 1000);
 const NONCE = 'abcdefghijklmnopqrstuvwx';
@@ -111,6 +112,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     // Reinstall after the previous test's restoreAllMocks so this suite is
     // order-independent when run with the wider focused group.
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
@@ -192,6 +194,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     vi.restoreAllMocks();
   });
 
@@ -222,6 +225,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     expect(resolveStorefrontProductMock).toHaveBeenCalledWith({
       shop: 'demo.myshopify.com',
       handle: 'premium-ringer-tee',
+      appClientId: 'test-only-client-id',
       variantId: '123456789',
     });
   });
@@ -303,6 +307,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     expect(resolveStorefrontProductMock).toHaveBeenCalledWith({
       shop: 'demo.myshopify.com',
       handle: 'premium-ringer-tee',
+      appClientId: 'test-only-client-id',
       variantId: null,
     });
   });
@@ -357,6 +362,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
 
   it('returns 503 when the Shopify app secret is missing', async () => {
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     const response = await GET(signedRequest());
 
     expect(response.status).toBe(503);
@@ -368,11 +374,12 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
    look on a store that is not live, and their looks are test looks. */
 describe('GET /api/shopify/proxy/try-on-context launch state (N5, N6)', () => {
   const SALT = '0123456789abcdef0123456789abcdef';
-  const previewToken = () => signPreviewToken(SECRET, 'demo.myshopify.com', NOW_SECONDS).token;
+  const previewToken = () => signPreviewToken(CORE_SECRET, 'demo.myshopify.com', NOW_SECONDS).token;
 
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     resolveStorefrontProductMock.mockResolvedValue(RESOLVED_PRODUCT);
     launchMock.mockReset().mockResolvedValue({ tryOn: 'live', reason: null });
@@ -385,6 +392,7 @@ describe('GET /api/shopify/proxy/try-on-context launch state (N5, N6)', () => {
     vi.restoreAllMocks();
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
   });
 
   it('refuses a shopper with 409 preview before asking for a photo', async () => {

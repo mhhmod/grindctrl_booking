@@ -1,79 +1,58 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { markTryOnShopUninstalled, recordTryOnShopSeen } from '@/lib/shopify/shops';
-import { deleteShopToken } from '@/lib/shopify/tokens';
 import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { recordInstallationEvent } from '@/lib/shopify/installation-events';
 
-function verifiesWebhookHmac(body: string, hmacHeader: string) {
-  return (secret: string): boolean => {
-    const digest = createHmac('sha256', secret).update(body, 'utf8').digest('base64');
-    const a = Buffer.from(digest);
-    const b = Buffer.from(hmacHeader);
-    return a.length === b.length && timingSafeEqual(a, b);
-  };
-}
-
-/* Shopify lifecycle receiver and durable mandatory privacy processing.
-   Settings survive lifecycle events; privacy requests use the gated processor. */
 export async function POST(request: NextRequest) {
-  const hmacHeader = request.headers.get('x-shopify-hmac-sha256') ?? '';
-  const body = await request.text();
-
-  if (!hmacHeader) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // A webhook carries no client id, only the shop it's about (below) --
-  // check it against every configured app's secret and accept whichever
-  // one it verifies against.
-  if (!resolveShopifyApp(verifiesWebhookHmac(body, hmacHeader))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+  const reader = request.body?.getReader();
+  if (!reader) return NextResponse.json({ error: 'Missing body' }, { status: 400 });
+  const chunks: Uint8Array[] = [];
+  let bytes = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 1024 * 1024) { await reader.cancel(); return NextResponse.json({ error: 'Payload too large' }, { status: 413 }); }
+      chunks.push(value);
+    }
+  } finally { reader.releaseLock(); }
+  const body = Buffer.concat(chunks, bytes).toString('utf8');
+  const hmac = request.headers.get('x-shopify-hmac-sha256') ?? '';
+  const resolved = hmac ? resolveShopifyApp((secret) => {
+    const expected = createHmac('sha256', secret).update(body).digest('base64');
+    const a = Buffer.from(hmac), b = Buffer.from(expected);
+    return a.length === b.length && timingSafeEqual(a, b);
+  }) : null;
+  if (!resolved) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const shop = normalizeShopDomain(request.headers.get('x-shopify-shop-domain'));
   const topic = request.headers.get('x-shopify-topic');
-  const shop = request.headers.get('x-shopify-shop-domain');
-  let recorded = true;
-
-  if (topic === 'customers/data_request' || topic === 'customers/redact' || topic === 'shop/redact') {
-    const webhookId = request.headers.get('x-shopify-webhook-id');
-    if (!webhookId?.trim() || !shop?.trim()) {
-      return NextResponse.json({ error: 'Missing privacy request headers' }, { status: 400 });
+  const webhookId = request.headers.get('x-shopify-webhook-id');
+  if (!shop || !topic || !webhookId) return NextResponse.json({ error: 'Missing event identity' }, { status: 400 });
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(body);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('invalid');
+    const claimed = topic === 'app/uninstalled' ? payload.myshopify_domain : payload.shop_domain;
+    const privacy = ['customers/data_request','customers/redact','shop/redact'].includes(topic);
+    if ((topic === 'app/uninstalled' || privacy) && claimed !== shop) throw new Error('wrong shop');
+    if (claimed !== undefined && claimed !== shop) throw new Error('wrong shop');
+  } catch { return NextResponse.json({ error: 'Invalid event payload' }, { status: 400 }); }
+  const event = { appClientId: resolved.app.clientId, shopDomain: shop, webhookId,
+    payload, triggeredAt: request.headers.get('x-shopify-triggered-at') };
+  try {
+    if (topic === 'customers/data_request' || topic === 'customers/redact' || topic === 'shop/redact') {
+      await processShopifyPrivacyRequest({ ...event, topic });
+    } else {
+      await recordInstallationEvent({ ...event, topic });
     }
-    let payload: unknown;
-    try {
-      payload = JSON.parse(body);
-      if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error('Invalid payload');
-    } catch {
-      return NextResponse.json({ error: 'Invalid privacy request payload' }, { status: 400 });
-    }
-    try {
-      await processShopifyPrivacyRequest({ webhookId, topic, shopDomain: shop, payload });
-      return NextResponse.json({ ok: true });
-    } catch {
-      // The processor rejects only before durable recording succeeds.
-      console.error('[shopify] privacy webhook recording unavailable', { topic });
-      return NextResponse.json(
-        { error: 'Privacy request recording unavailable' },
-        { status: 503, headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' } },
-      );
-    }
+    return NextResponse.json({ ok: true });
+  } catch {
+    console.error('[shopify] installation event requires retry', { topic });
+    return NextResponse.json({ error: 'Event processing unavailable' }, {
+      status: 503, headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' },
+    });
   }
-
-  if (topic === 'app/uninstalled') {
-    recorded = await markTryOnShopUninstalled(shop);
-    // A token we can no longer use is a credential we should no longer
-    // hold. Do not acknowledge a failed cleanup: Shopify must retry.
-    // Deleting an already-absent token is an idempotent success.
-    const tokenDeleted = await deleteShopToken(String(shop ?? ''));
-    recorded = recorded && tokenDeleted;
-  } else if (topic === 'app/scopes_update') {
-    recorded = await recordTryOnShopSeen(shop);
-  }
-
-  if (!recorded) {
-    return NextResponse.json({ error: 'Shop lifecycle update failed' }, { status: 500 });
-  }
-
-  return NextResponse.json({ ok: true });
 }

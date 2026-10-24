@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => ({
   recordTryOnShopSeen: vi.fn(async () => {}),
 }));
 
-vi.mock('@/lib/shopify/tokens', () => ({ storeShopToken: mocks.storeShopToken }));
+vi.mock('@/lib/shopify/tokens', () => ({ acquireShopToken: mocks.storeShopToken, requestShopifyToken: vi.fn() }));
 vi.mock('@/lib/shopify/shops', () => ({ recordTryOnShopSeen: mocks.recordTryOnShopSeen }));
 
 import { GET } from './route';

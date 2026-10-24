@@ -1,3 +1,4 @@
+import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
@@ -8,7 +9,6 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
-import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
 
 /** Mints one server-authorized generation attempt from a valid base session.
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const resolved = resolveShopifyApp((secret) =>
+    const resolved = resolveTryOnSessionKey((secret) =>
       verifyTryOnSession(secret, sessionId, {
         productId,
         variantId: rawVariantId === undefined ? undefined : variantId,

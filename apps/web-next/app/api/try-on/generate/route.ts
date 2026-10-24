@@ -1,3 +1,5 @@
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
+import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
 ﻿import { randomUUID } from 'node:crypto';
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
@@ -23,7 +25,7 @@ import {
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
-import { getConfiguredShopifyApps, resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { storeFlags } from '@/lib/flags/store-flags';
 import type {
   TryOnJob,
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(res, { status: 400 });
     }
 
-    if (getConfiguredShopifyApps().length === 0) {
+    if (getConfiguredShopifyApps().length === 0 && !coreCapabilitySecret()) {
       const message = 'Try-on is not configured.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const resolvedSession = resolveShopifyApp((secret) =>
+    const resolvedSession = resolveTryOnSessionKey((secret) =>
       verifyTryOnSession(secret, sessionId, {
         productId,
         variantId: rawVariantId === undefined ? undefined : variantId,

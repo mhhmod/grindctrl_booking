@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
-import { recordTryOnShopSeen } from '@/lib/shopify/shops';
-import { storeShopToken } from '@/lib/shopify/tokens';
+import { acquireShopToken, requestShopifyToken } from '@/lib/shopify/tokens';
 import { OAUTH_APP_COOKIE, OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
-import { findShopifyAppByClientId, primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { findShopifyAppByClientId, getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/oauth/callback
    Completes authorization and stores the offline Admin token, encrypted.
@@ -53,7 +52,7 @@ export async function GET(request: NextRequest) {
   // became multi-app-aware) falls back to the primary app, same as a
   // single-app deployment always resolved.
   const cookieAppId = request.cookies.get(OAUTH_APP_COOKIE)?.value;
-  const app = cookieAppId ? findShopifyAppByClientId(cookieAppId) : primaryShopifyApp();
+  const app = cookieAppId ? findShopifyAppByClientId(cookieAppId) : (getConfiguredShopifyApps().length === 1 ? getConfiguredShopifyApps()[0] : null);
   if (!app) return failure(appUrl, 'oauth is not configured');
   const { clientId, secret } = app;
 
@@ -66,36 +65,21 @@ export async function GET(request: NextRequest) {
   if (!statesMatch(cookieState, params.get('state'))) return failure(appUrl, 'state mismatch');
   if (!verifyOAuthHmac(request.nextUrl.search, secret)) return failure(appUrl, 'hmac mismatch');
 
-  let granted: { access_token?: string; scope?: string };
+  // Consume browser state before exchanging. The DB lease serializes this
+  // acquisition with embedded exchange and offline refresh across processes.
   try {
-    const exchange = await fetch(`https://${shopDomain}/admin/oauth/access_token`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ client_id: clientId, client_secret: secret, code }),
-      signal: AbortSignal.timeout(10_000),
-      cache: 'no-store',
+    await acquireShopToken({ shopDomain, appClientId: clientId, force: true,
+      exchange: () => requestShopifyToken(shopDomain, {
+        client_id: clientId, client_secret: secret, code,
+        expiring: app.tokenMode === 'non-expiring' ? 0 : 1,
+      }),
     });
-    if (!exchange.ok) return failure(appUrl, `token exchange returned ${exchange.status}`);
-    granted = (await exchange.json()) as { access_token?: string; scope?: string };
-  } catch (error) {
-    return failure(appUrl, `token exchange failed: ${error instanceof Error ? error.message : error}`);
+  } catch {
+    const response = failure(appUrl, 'authorization could not be completed');
+    response.cookies.delete(OAUTH_STATE_COOKIE);
+    response.cookies.delete(OAUTH_APP_COOKIE);
+    return response;
   }
-
-  if (!granted.access_token) return failure(appUrl, 'token exchange returned no token');
-
-  try {
-    await storeShopToken({
-      shopDomain,
-      accessToken: granted.access_token,
-      scopes: granted.scope ?? '',
-    });
-  } catch (error) {
-    // Most likely SHOPIFY_TOKEN_ENC_KEY is missing, which is deliberately
-    // fatal here rather than storing a credential in the clear.
-    return failure(appUrl, `token store failed: ${error instanceof Error ? error.message : error}`);
-  }
-
-  void recordTryOnShopSeen(shopDomain);
 
   const response = NextResponse.redirect(ordersReturn(appUrl, 'connected'));
   response.cookies.delete(OAUTH_STATE_COOKIE);

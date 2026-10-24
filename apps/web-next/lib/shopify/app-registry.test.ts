@@ -114,3 +114,15 @@ describe('resolveShopifyApp', () => {
     expect(resolveShopifyApp(() => 'x')).toBeNull();
   });
 });
+
+// Distinct registration identity is essential to lifecycle/credential isolation.
+it('rejects shared-secret provenance and conflicting duplicate registrations', () => {
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'same'},{clientId:'app-b',secret:'same'}]);
+  expect(resolveShopifyApp(secret => secret === 'same' ? true : null)).toBeNull();
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'one'},{clientId:'app-a',secret:'two'}]);
+  expect(getConfiguredShopifyApps()).toEqual([]);
+});
+it('never allows non-expiring mode for a public registration', () => {
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'a',distribution:'public',tokenMode:'non-expiring'}]);
+  expect(getConfiguredShopifyApps()).toEqual([]);
+});

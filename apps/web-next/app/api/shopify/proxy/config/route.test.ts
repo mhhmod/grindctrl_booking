@@ -43,6 +43,7 @@ import { signPreviewToken } from '@/lib/launch/preview-token';
 import { holdoutBucket } from '@/lib/launch/audience';
 
 const SHOP = 'demo.myshopify.com';
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'shopify-app-secret';
 
 function entitlement(overrides: Record<string, unknown> = {}) {
@@ -68,6 +69,7 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     clearProxyConfigCache();
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
@@ -94,6 +96,7 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     clearProxyConfigCache();
   });
 
@@ -192,6 +195,7 @@ describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     clearProxyConfigCache();
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
@@ -203,6 +207,7 @@ describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     clearProxyConfigCache();
   });
 
@@ -213,20 +218,20 @@ describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
 
   it('shows it to the owner with a valid preview link, as test looks, even with no looks left', async () => {
     entitlementMock.mockResolvedValue(entitlement({ available: false, totalCreditsRemaining: 0 }));
-    const { token } = signPreviewToken(SECRET, SHOP);
+    const { token } = signPreviewToken(CORE_SECRET, SHOP);
     const body = await (await GET(request('en', { vid: visitors[0], preview: token }))).json();
     expect(body).toMatchObject({ tryOn: 'live', reason: null, available: true, launch: { test: true } });
   });
 
   it('refuses a preview link for another shop or signed with another secret', async () => {
-    for (const token of [signPreviewToken(SECRET, 'other.myshopify.com').token, signPreviewToken('wrong', SHOP).token]) {
+    for (const token of [signPreviewToken(CORE_SECRET, 'other.myshopify.com').token, signPreviewToken('wrong', SHOP).token]) {
       const body = await (await GET(request('en', { preview: token }))).json();
       expect(body).toMatchObject({ tryOn: 'hidden', reason: 'preview' });
     }
   });
 
   it('keeps the cached shop answer from leaking one visitor\'s access to the next', async () => {
-    const { token } = signPreviewToken(SECRET, SHOP);
+    const { token } = signPreviewToken(CORE_SECRET, SHOP);
     expect((await (await GET(request('en', { preview: token }))).json()).tryOn).toBe('live');
     expect((await (await GET(request('en'))).json()).tryOn).toBe('hidden');
     expect(settingsMock).toHaveBeenCalledTimes(1);

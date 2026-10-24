@@ -29,6 +29,7 @@ import {
   verifyTryOnSession,
 } from '@/lib/try-on/storefront-context';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 const NONCE = 'abcdefghijklmnopqrstuvwx';
 const GARMENT_URL = 'https://cdn.shopify.com/s/files/garment.png';
@@ -57,6 +58,7 @@ describe('POST /api/try-on/session', () => {
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     rateLimitState.configured = true;
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
@@ -73,6 +75,7 @@ describe('POST /api/try-on/session', () => {
   afterEach(() => {
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     delete process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT;
     vi.restoreAllMocks();
   });
@@ -234,6 +237,7 @@ describe('POST /api/try-on/session', () => {
 
   it('fails closed when the signing secret is missing', async () => {
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     const response = await POST(
       request({ context: 'public-demo', productId: 'premium-ringer-tee' }),
     );

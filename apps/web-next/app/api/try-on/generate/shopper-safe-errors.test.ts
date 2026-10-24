@@ -34,16 +34,17 @@ import {
   TryOnResultUnavailableError,
 } from '@/lib/try-on/result-errors';
 
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 const SECRET = 'test-shopify-secret';
 
 function demoSession(productId = 'premium-ringer-tee', now = Math.floor(Date.now() / 1000)) {
-  return signTryOnSession(SECRET, { purpose: 'public-demo', productId }, now).token;
+  return signTryOnSession(CORE_SECRET, { purpose: 'public-demo', productId }, now).token;
 }
 
 function attemptFor(sessionToken: string, attemptNonce = 'zyxwvutsrqponmlkjihgfedc') {
-  const session = verifyTryOnSession(SECRET, sessionToken);
+  const session = verifyTryOnSession(CORE_SECRET, sessionToken) ?? verifyTryOnSession(SECRET, sessionToken);
   if (!session) throw new Error('bad fixture');
-  return signTryOnAttempt(SECRET, { session, attemptNonce }).token;
+  return signTryOnAttempt(session.purpose === 'public-demo' ? CORE_SECRET : SECRET, { session, attemptNonce }).token;
 }
 
 function makeRequest(body: Record<string, unknown>) {
@@ -57,12 +58,14 @@ function makeRequest(body: Record<string, unknown>) {
 beforeEach(() => {
   process.env.SHOPIFY_API_KEY = 'test-only-client-id';
   process.env.SHOPIFY_API_SECRET = SECRET;
+    process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
   rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
 });
 
 afterEach(() => {
   delete process.env.SHOPIFY_API_KEY;
   delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
   vi.clearAllMocks();
 });
 
