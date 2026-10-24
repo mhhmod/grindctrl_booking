@@ -20,6 +20,12 @@ const { rateLimitMock, resolveStorefrontProductMock, launchMock, flagsMock, stor
 vi.mock('@/lib/try-on/launch', () => ({ getTryOnLaunch: (...args: unknown[]) => launchMock(...args) }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: () => flagsMock() }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: () => storeLaunchMock() }));
+// The downstream session/attempt routes now require the same installation
+// as the proxy fixture, independently of merchant-level launch availability.
+vi.mock('@/lib/shopify/tokens', () => ({
+  isActiveShopifyInstallation: vi.fn(async (shop: string, app: string) =>
+    shop === 'demo.myshopify.com' && app === 'test-only-client-id'),
+}));
 
 vi.mock('@/lib/ratelimit', () => {
   const limiter = (name: string) => ({ limit: (id: string) => rateLimitMock(name, id) });
