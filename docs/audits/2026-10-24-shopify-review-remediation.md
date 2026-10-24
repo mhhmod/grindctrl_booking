@@ -38,6 +38,8 @@ The RPC validates evidence structure and trusted operator declarations; it does 
 
 All three storefront loaders hardcoded `/apps/grindctrl`, so two registrations could not be assumed to use independently configured roots. Product Try-On, catalog and Store Chat blocks now pass a configurable, validated same-origin connection root to their loaders. Existing defaults remain compatible. Config, product proof and shopper identity use the selected root; URLs/traversal/query paths are refused. Signatures, not browser path selection, establish backend app identity.
 
+Final cutover inspection also found a domain-only shopper-token cache: B could reuse A's still-fresh cached identity without asking B's proxy. Cache entries now retain the selected proxy root, and a changed/unknown root forces signed identity reacquisition; a verified same-root cache stays compatible. This does not change merchant, conversation, credit or job identity.
+
 [The exact configuration/acceptance document](2026-10-24-shopify-proxy-coexistence.md) requires distinct actual roots (A `/apps/grindctrl`, B `/apps/grindctrl-public` examples), per-app URLs/scopes/releases and matching fields in all three blocks. Existing Shopify merchant-customized paths must be inspected; TOML changes do not prove installed paths changed. One storefront publisher at a time is required; overlapping installations do not mean duplicate global chat/catalog loaders were redesigned. Real A/B proxy routing, theme releases and coexistence are **unverified until Development Store evidence**.
 
 ### 5. Dependency triage — compatible patches, explicit remaining risk

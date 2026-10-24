@@ -778,7 +778,7 @@
 
   function currentToken() {
     var saved = storedToken();
-    if (!saved || saved.c !== CUSTOMER_ID || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
+    if (!saved || saved.c !== CUSTOMER_ID || saved.p !== PROXY_PATH || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
     return saved.t;
   }
 
@@ -790,7 +790,7 @@
 
   function identify(token) {
     if (typeof token !== 'string' || token.length > 4096) return;
-    lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, at: Date.now() }));
+    lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, p: PROXY_PATH, at: Date.now() }));
     state.identified = true;
     // Storage cannot cross the origin boundary, so the panel gets it here,
     // whether it is waiting for it or already loaded.
