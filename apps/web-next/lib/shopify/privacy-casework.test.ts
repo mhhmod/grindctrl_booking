@@ -41,6 +41,7 @@ it('requires reviewed scope and actual execution/verification references before 
   await act(id,'assigned',{ticket_ref:evidence.ticket_ref});
   await act(id,'scoped');
   await expect(act(id,'fulfilled',{...evidence,verification_ref:''})).rejects.toThrow('privacy_execution_evidence_required');
+  await expect(act(id,'fulfilled',{...evidence,verification_passed:'true'})).rejects.toThrow('privacy_execution_evidence_required');
   await expect(act(id,'fulfilled',{...evidence,scope_sha256:'b'.repeat(64)})).rejects.toThrow('approved_privacy_scope_required');
   expect((await db.query<{status:string}>('select status from shopify_installation_events where id=$1',[id])).rows[0].status).toBe('manual_required');
   await act(id,'fulfilled');

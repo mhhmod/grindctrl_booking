@@ -82,7 +82,7 @@ begin
    if existing_scope is null or existing_scope->>'scope_sha256'<>p_evidence->>'scope_sha256'
      or last_action='retention_hold' then raise exception 'approved_privacy_scope_required'; end if;
    if coalesce(p_evidence->>'execution_ref','')='' or coalesce(p_evidence->>'verification_ref','')=''
-     or coalesce(p_evidence->>'verification_passed','false')<>'true' then raise exception 'privacy_execution_evidence_required'; end if;
+     or (p_evidence->'verification_passed') is distinct from 'true'::jsonb then raise exception 'privacy_execution_evidence_required'; end if;
    if topic_name='customers/data_request' then
      if coalesce(p_evidence->>'delivery_ref','')='' then raise exception 'privacy_delivery_evidence_required'; end if;
    elsif coalesce(p_evidence->>'deletion_ref','')='' or coalesce(p_evidence->>'retained_records_ref','')='' then
