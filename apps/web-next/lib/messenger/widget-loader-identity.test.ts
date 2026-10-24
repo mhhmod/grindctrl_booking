@@ -87,6 +87,15 @@ describe('the signed-in shopper token (item 15)', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
+  it('uses a distinct configured B proxy path instead of falling back to A',async()=>{
+    boot({'data-customer-id':'1001','data-proxy-path':'/apps/grindctrl-public'});
+    await waitFor(()=>expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith('/apps/grindctrl-public/messenger-identity?'))).toBe(true));
+    expect(identityCalls()).toHaveLength(0);
+  });
+  it('does not fetch with an unsafe configured proxy path',()=>{
+    boot({'data-customer-id':'1001','data-proxy-path':'https://evil.example'});
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   it('asks the App Proxy with the session alone, and keeps the token with its customer', async () => {
     boot({ 'data-customer-id': '1001', 'data-customer-email': 'salma@example.com', 'data-customer-name': 'Salma A' });

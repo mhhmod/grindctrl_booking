@@ -67,7 +67,7 @@ const RESOLVED_PRODUCT = {
   garmentUrl: 'https://cdn.shopify.com/s/files/garment.png',
 };
 
-function signedRequest(overrides: Record<string, string> = {}) {
+function signedRequest(overrides: Record<string, string> = {}, secret = SECRET) {
   const params = new URLSearchParams({
     product: 'premium-ringer-tee',
     variant: '123456789',
@@ -82,7 +82,7 @@ function signedRequest(overrides: Record<string, string> = {}) {
     `${key}=${value.replace(/&/g, '%26').replace(/=/g, '%3D')}`,
   );
   pairs.sort();
-  params.set('signature', createHmac('sha256', SECRET).update(pairs.join('')).digest('hex'));
+  params.set('signature', createHmac('sha256', secret).update(pairs.join('')).digest('hex'));
   return new NextRequest(`https://app.example.com/api/shopify/proxy/try-on-context?${params}`);
 }
 
@@ -115,6 +115,17 @@ function attemptRequest(sessionId: string, nonce = NONCE) {
 }
 
 describe('GET /api/shopify/proxy/try-on-context', () => {
+  it('keeps B proof/product credentials on B when A and B share a store',async()=>{
+    vi.stubEnv('SHOPIFY_APPS',JSON.stringify([{clientId:'app-b',secret:'secret-b'}]));
+    try {
+      const response=await GET(signedRequest({path_prefix:'/apps/grindctrl-public'},'secret-b'));
+      expect(response.status).toBe(200);
+      expect(resolveStorefrontProductMock).toHaveBeenCalledWith(expect.objectContaining({appClientId:'app-b'}));
+      const data=await response.json();
+      expect(verifyStorefrontContext('secret-b',data.token)).not.toBeNull();
+      expect(verifyStorefrontContext(SECRET,data.token)).toBeNull();
+    } finally {vi.unstubAllEnvs();}
+  });
   beforeEach(() => {
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;

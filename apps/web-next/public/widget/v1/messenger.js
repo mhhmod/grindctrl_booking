@@ -14,6 +14,8 @@
   'use strict';
 
   var SCRIPT = document.currentScript;
+  var PROXY_PATH = (SCRIPT && SCRIPT.getAttribute('data-proxy-path')) || '/apps/grindctrl';
+  if (!/^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(PROXY_PATH)) return;
   var SHOP = SCRIPT && SCRIPT.getAttribute('data-shop');
   var KEY = (SCRIPT && SCRIPT.getAttribute('data-key')) || '';
   var LOCALE_HINT = (SCRIPT && SCRIPT.getAttribute('data-locale')) || '';
@@ -810,7 +812,7 @@
       if (!currentToken()) sendIdentity(null);
     };
     try {
-      fetch('/apps/grindctrl/messenger-identity?sid=' + encodeURIComponent(ensureAnonId()))
+      fetch(PROXY_PATH + '/messenger-identity?sid=' + encodeURIComponent(ensureAnonId()))
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (data && data.authenticated && data.token) identify(data.token);

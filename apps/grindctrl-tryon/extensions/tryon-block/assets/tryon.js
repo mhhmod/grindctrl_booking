@@ -346,9 +346,16 @@
     window.setTimeout(function () { btn.click(); }, 0);
   }
 
+  function proxyPath(root) {
+    var path = root.dataset.proxyPath || '/apps/grindctrl';
+    return /^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(path) ? path : null;
+  }
+
   function getStorefrontContext(root, nonce, variant) {
+    var base = proxyPath(root);
+    if (!base) return Promise.reject(new Error('invalid_proxy_path'));
     var url =
-      '/apps/grindctrl/try-on-context?product=' +
+      base + '/try-on-context?product=' +
       encodeURIComponent(root.dataset.product || '') +
       '&nonce=' +
       encodeURIComponent(nonce);
@@ -375,7 +382,9 @@
   }
 
   function applyConfig(root, btn, locale) {
-    fetch(withVisitor('/apps/grindctrl/config?locale=' + encodeURIComponent(locale)), {
+    var base = proxyPath(root);
+    if (!base) { removeBlock(root); return; }
+    fetch(withVisitor(base + '/config?locale=' + encodeURIComponent(locale)), {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     })
