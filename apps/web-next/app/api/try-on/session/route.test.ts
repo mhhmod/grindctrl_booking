@@ -58,6 +58,7 @@ function storefrontToken(secret = SECRET) {
 
 describe('POST /api/try-on/session', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;

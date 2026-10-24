@@ -1,5 +1,27 @@
 # Development dependency triage for PR 75
 
+## Current independent re-review disposition
+
+Starting re-review HEAD: `1c5f31a3634db61abc9051556c5013f29d3b3e31` (8 findings). A separate targeted toolchain commit upgrades **Vitest 3.2.7 → 4.1.12**, including mocker 4.1.12, and removes Tinypool entirely. Vite is pinned through an override to the already patched **7.3.7** line, which Vitest 4 explicitly supports; npm's otherwise selected Vite 8/Rolldown major migration was avoided. No application dependency range, runtime service or UI changed. Node 24 local/CI satisfies the declared Node >=20 requirement. The [official v4 migration guide](https://v4.vitest.dev/guide/migration.html#pool-rework) documents Tinypool removal; the repository uses no custom pool/browser provider/coverage plugin needing migration.
+
+Vitest 4 no longer clears automock history as a side effect of `restoreAllMocks()`. The full-suite migration run exposed existing fixture leakage in service, context, session and job route tests. Those fixtures now explicitly reset the test-entitlement mock or clear module-mock histories in `beforeEach`; existing deny/no-charge assertions were retained. No assertions, snapshots or committed timeouts were relaxed. Final validation results and exact tested SHA are recorded in the review-remediation report.
+
+| Previous remaining finding | Current security disposition |
+|---|---|
+| `tinypool` 1.1.1, critical | **Removed from the lockfile/dependency graph** by the supported Vitest pool migration. No forced transitive major override. |
+| `vitest` 3.2.7, critical aggregate | **Remediated** by pinned 4.1.12; current audit has no Vitest finding. |
+| `@vitest/mocker` 3.2.7, moderate | **Remediated** by 4.1.12; current audit has no mocker finding. |
+| Nested `zod` 3.25.76, `@shadcn/registry` 0.1.2, `shadcn` 4.21.3 — 3 high package-chain findings | **Deferred upstream-compatible consumer migration**, not fixed/ignored. Oversized untrusted collections can cause tool-process denial of service. Root Zod 4 is patched; overriding Zod 4 into consumers declaring Zod 3 would be an unverified API break. No registry generation, CLI/MCP server or untrusted registry input is needed for controlled Shopify validation. |
+| `postcss-selector-parser` 6.0.10 and typography 0.5.20 — 2 moderate chain findings | **Deferred coordinated typography/parser upgrade**. Malicious oversized CSS selectors can exhaust build CPU; the isolated candidate consumes reviewed repository CSS. No remote/user-generated CSS build is permitted. Parser 7 override and the audit-suggested old typography downgrade remain unjustified. |
+
+Executed full-graph audit now reports **5 findings: 2 moderate, 3 high, 0 critical** (exit 1); production-only audit reports **zero** (exit 0). These are five overlapping package-chain findings, not five independently demonstrated exploits. This is not an all-clear or organizational risk acceptance.
+
+**Security recommendation for the controlled test decision:** the remaining development-only denial-of-service chains need not require a further unrelated major migration before synthetic Shopify testing **if** the reviewer explicitly accepts the narrow test boundary: reviewed source/lockfile, immutable CI-built image without development dependencies, isolated test project, no production secrets/connectivity, no untrusted registry/CSS input, and no exposed watch/UI/API/HMR/MCP tooling. Stop and reopen this disposition if any condition changes. A dependency maintainer must own the two upstream consumer migrations in the approved evidence ticket; owner/target date are not assigned by this document. Review again before merge/merchant rollout, whenever the lockfile changes, or before any untrusted generation/tool-server use. No automatic suppression, exception expiry waiver or acceptance on the owner's behalf is introduced.
+
+The original 13-package inventory and first remediation decisions below are **historical**. “Open” references for Vitest/Tinypool/mocker there are superseded by the actual targeted upgrade above.
+
+## Historical baseline and first remediation
+
 Baseline reviewed: `209340229572c36a631a352f4244adbd29c80ee4`. `npm audit --json` reported **13 affected package findings: 5 moderate, 6 high, 2 critical**. All affected lockfile nodes were marked `dev: true`; `npm audit --omit=dev --audit-level=moderate` reported zero. That is inventory evidence, not proof that a build tool cannot affect production artifacts. This triage does not declare the critical findings harmless or accepted.
 
 The dependency tree was inspected with `npm ls ... --all`; checked-in workflows invoke `vitest run` and a credential-free candidate build. The Next app runs through Next.js, not Vite. No application import of these vulnerable tool APIs was found in app/lib/components/scripts; `shadcn/tailwind.css` is a build stylesheet import. This is bounded repository inspection, not an exploit demonstration or inspection of every developer machine.

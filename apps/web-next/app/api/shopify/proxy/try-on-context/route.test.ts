@@ -127,6 +127,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
     } finally {vi.unstubAllEnvs();}
   });
   beforeEach(() => {
+    vi.clearAllMocks(); // Vitest 4 restoreAllMocks restores spies, not module-mock history.
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
@@ -394,6 +395,7 @@ describe('GET /api/shopify/proxy/try-on-context launch state (N5, N6)', () => {
   const previewToken = () => signPreviewToken(CORE_SECRET, 'demo.myshopify.com', NOW_SECONDS).token;
 
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;

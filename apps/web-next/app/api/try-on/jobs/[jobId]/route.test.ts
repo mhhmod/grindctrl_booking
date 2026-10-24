@@ -42,6 +42,7 @@ const SECRET = 'test-shopify-secret';
 
 describe('GET /api/try-on/jobs/[jobId]', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;
@@ -289,6 +290,7 @@ describe('GET /api/try-on/jobs/[jobId]', () => {
    copies go. */
 describe('DELETE /api/try-on/jobs/[jobId]', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     process.env.SHOPIFY_API_KEY = 'test-only-client-id';
     process.env.SHOPIFY_API_SECRET = SECRET;
     process.env.GRINDCTRL_CAPABILITY_SECRET = CORE_SECRET;

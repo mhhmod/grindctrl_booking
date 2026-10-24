@@ -102,6 +102,7 @@ describe('try-on service', () => {
   beforeEach(() => {
     delete process.env.TRYON_MODE;
     beginTryOnJobMock.mockReset();
+    beginTestTryOnJobMock.mockReset();
     finalizeTryOnJobMock.mockReset();
     loadAuthorizedDurableTryOnJobMock.mockReset().mockResolvedValue(null);
     persistGeneratedTryOnResultMock.mockReset().mockResolvedValue({
