@@ -61,7 +61,7 @@ describe('V16ChatStudio', () => {
     expect(screen.getByText(en.orderAccess)).toBeInTheDocument();
     expect(screen.getByText('Last storefront check 2 min ago.')).toBeInTheDocument();
     expect(screen.getByText('Published version 14')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: en.openThemeEditor })).toHaveAttribute('href', expect.stringContaining('maison-noor.myshopify.com/admin/themes/current/editor'));
+    expect(screen.getByRole('link', { name: en.openThemeEditor })).toHaveAttribute('href', '/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=messenger&mode=embed');
     expect(screen.getByText('Always open.')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: en.changesLabel })).not.toBeInTheDocument();
   });
