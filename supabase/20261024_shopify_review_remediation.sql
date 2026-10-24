@@ -130,9 +130,10 @@ begin
  if not found or e.topic <> 'app/uninstalled' then raise exception 'invalid_uninstall_event'; end if;
  perform pg_advisory_xact_lock(hashtextextended('shopify:' || e.shop_domain,0));
  select * into r from public.shopify_installations where id=p_installation for update;
- if not found or r.shop_domain <> e.shop_domain or r.app_client_id <> e.app_client_id
-   or r.credential_version <> p_version or r.lease_id is distinct from p_lease
-   or r.lease_expires_at <= clock_timestamp() or r.status <> 'active'
+ if not found or p_lease is null or p_version is null
+   or r.shop_domain <> e.shop_domain or r.app_client_id <> e.app_client_id
+   or r.credential_version is distinct from p_version or r.lease_id is distinct from p_lease
+   or r.lease_expires_at is null or r.lease_expires_at <= clock_timestamp() or r.status <> 'active'
    or r.access_token_ciphertext is null
    or (r.access_expires_at is not null and r.access_expires_at <= clock_timestamp()) then
    raise exception 'uninstall_verification_fence_lost';

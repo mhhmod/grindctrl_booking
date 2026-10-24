@@ -122,10 +122,11 @@ function usable(row: CredentialRow, marginMs = 30_000): InstallationToken | null
 
 /** One bounded call. Only refresh grants may be retried by the lease owner. */
 export async function requestShopifyToken(shop: string, body: Record<string, string | number>): Promise<ShopifyTokenResponse> {
-  if (!normalizeShopDomain(shop)) throw new ShopifyTokenRequestError('rejected');
+  const domain = normalizeShopDomain(shop);
+  if (!domain) throw new ShopifyTokenRequestError('rejected');
   let response: Response;
   try {
-    response = await fetch(`https://${shop}/admin/oauth/access_token`, {
+    response = await fetch(`https://${domain}/admin/oauth/access_token`, {
       method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify(body), signal: AbortSignal.timeout(10_000), cache: 'no-store', redirect: 'error',
     });
@@ -262,7 +263,7 @@ export async function verifyShopifyUninstall(shopDomain: string, appClientId: st
     if (response.status === 401) outcome = 'revoked';
     else if (response.ok) {
       const data = await response.json();
-      if (!data?.data?.currentAppInstallation?.id || data.errors?.length) throw new Error('verification_unavailable');
+      if (typeof data?.data?.currentAppInstallation?.id !== 'string' || !data.data.currentAppInstallation.id || data.errors?.length) throw new Error('verification_unavailable');
       outcome = 'active';
     } else throw new Error('verification_unavailable'); // 403/429/5xx are not uninstall proof.
     const { data, error } = await getServiceClient().rpc('resolve_shopify_uninstall', {

@@ -156,6 +156,13 @@ describe('real PostgreSQL installation lifecycle and credential transactions', (
       [receipt.id,old!.id,old!.credential_version,lease,'revoked'])).rejects.toThrow('uninstall_verification_fence_lost');
     expect((await state('app-a')).status).toBe('active');
   });
+  it('rejects null verification versions and null/missing leases rather than relying on SQL unknown comparisons',async()=>{
+    const receipt=await event('app-a','app/uninstalled');const row=await state('app-a');
+    await expect(db.query('select resolve_shopify_uninstall($1,$2,$3,$4,$5)',[receipt.id,row.id,row.credential_version,null,'revoked'])).rejects.toThrow('uninstall_verification_fence_lost');
+    const lease=randomUUID();await op('app-a','acquire',lease);
+    await expect(db.query('select resolve_shopify_uninstall($1,$2,$3,$4,$5)',[receipt.id,row.id,null,lease,'revoked'])).rejects.toThrow('uninstall_verification_fence_lost');
+    expect((await state('app-a')).status).toBe('active');await op('app-a','release',lease);
+  });
   it('preserves refresh credentials/status during distributed cooldown and honors new authorization', async () => {
     const before = await state('app-a');
     const lease=randomUUID(); await op('app-a','acquire',lease);
