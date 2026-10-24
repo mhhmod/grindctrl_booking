@@ -10,9 +10,11 @@ export default defineConfig({
       ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH, args: ['--no-sandbox'] } : {},
   },
   webServer: {
-    command: 'npm run start -- -p 3191', url: 'http://127.0.0.1:3191/api/health',
+    command: 'node scripts/shopify-isolation-server.mjs', url: 'http://127.0.0.1:3191/api/health',
     reuseExistingServer: false, timeout: 120000,
     env: {
+      GC_SHOPIFY_MULTI_APP_TEST:'1',PORT:'3191',HOSTNAME:'127.0.0.1',
+      UPSTASH_REDIS_REST_URL:'',UPSTASH_REDIS_REST_TOKEN:'',SENTRY_DSN:'',NEXT_PUBLIC_SENTRY_DSN:'',
       SHOPIFY_APPS: JSON.stringify([{clientId:'app-a',secret:'local-test-a'},{clientId:'app-b',secret:'local-test-b'}]),
       SHOPIFY_API_KEY:'',SHOPIFY_API_SECRET:'',NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:'',CLERK_SECRET_KEY:'',
       NEXT_PUBLIC_SUPABASE_URL:'',SUPABASE_SERVICE_ROLE_KEY:'',OPENROUTER_API_KEY:'',GROQ_API_KEY:'',

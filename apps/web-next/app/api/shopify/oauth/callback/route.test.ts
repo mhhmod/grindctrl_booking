@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { createHmac } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -11,15 +12,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
    exist, and was never told whether the grant had succeeded or failed. */
 
 const mocks = vi.hoisted(() => ({
-  storeShopToken: vi.fn(async () => {}),
+  storeShopToken: vi.fn(async (_input: unknown) => {}),
+  requestToken: vi.fn(),
   recordTryOnShopSeen: vi.fn(async () => {}),
 }));
 
-vi.mock('@/lib/shopify/tokens', () => ({ acquireShopToken: mocks.storeShopToken, requestShopifyToken: vi.fn() }));
+vi.mock('@/lib/shopify/tokens', () => ({ acquireShopToken: mocks.storeShopToken, requestShopifyToken: mocks.requestToken }));
 vi.mock('@/lib/shopify/shops', () => ({ recordTryOnShopSeen: mocks.recordTryOnShopSeen }));
 
 import { GET } from './route';
-import { OAUTH_STATE_COOKIE } from '@/lib/shopify/oauth';
+import { OAUTH_STATE_COOKIE, OAUTH_APP_COOKIE } from '@/lib/shopify/oauth';
 
 const HOST = 'https://grindctrl.cloud';
 
@@ -63,4 +65,22 @@ describe('GET /api/shopify/oauth/callback', () => {
     // Same URL either way — a precise reason tells a prober what to defeat.
     expect(misconfigured.headers.get('location')).toBe(unconfigured.headers.get('location'));
   });
+});
+
+it('exchanges a valid callback with the app bound to the authorization cookie', async () => {
+  vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{clientId:'app-b',secret:'secret-b'}]));
+  const pairs=['shop=demo.myshopify.com','code=test-code','state=test-state'];
+  const hmac=createHmac('sha256','secret-b').update([...pairs].sort().join('&')).digest('hex');
+  const request=callbackRequest(`?${pairs.join('&')}&hmac=${hmac}`,'test-state');
+  request.cookies.set(OAUTH_APP_COOKIE,'app-b');
+  const response=await GET(request);
+  expect(response.headers.get('location')).toContain('orders=connected');
+  const args=vi.mocked(mocks.storeShopToken).mock.calls.at(-1)?.[0] as unknown as {
+    appClientId:string;shopDomain:string;exchange:()=>Promise<unknown>;force:boolean;
+  };
+  expect(args).toMatchObject({appClientId:'app-b',shopDomain:'demo.myshopify.com',force:true});
+  await args.exchange();
+  expect(mocks.requestToken).toHaveBeenCalledWith('demo.myshopify.com',expect.objectContaining({
+    client_id:'app-b',client_secret:'secret-b',code:'test-code',expiring:1,
+  }));
 });

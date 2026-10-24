@@ -24,7 +24,7 @@ for (const app of ['app-a','app-b']) {
 test('refuses to guess the first app on the ambiguous original URL', async ({ page }) => {
   await page.goto('/shopify/app');
   await expect(page.locator('meta[name="shopify-api-key"]')).toHaveCount(0);
-  await expect(page.getByRole('alert')).toContainText('configured Shopify app');
+  await expect(page.locator('main[role="alert"]')).toContainText('configured Shopify app');
 });
 test('rejects an unknown registration', async ({ page }) => {
   await page.goto('/shopify/app/unknown');
