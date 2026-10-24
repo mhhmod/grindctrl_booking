@@ -180,6 +180,16 @@ describe('installation-scoped credentials', () => {
     expect(rows.get(`${shop}:app-a`)!.refresh_token_ciphertext).toBe(r.ciphertext);
     expect(pendingLease).toBeNull();expect(JSON.stringify(rows.get(`${shop}:app-b`))).toBe(other);
   });
+  it('never converts cooldown persistence failure into a terminal credential retirement',async()=>{
+    vi.useFakeTimers();const r=encryptToken('refresh');seed('app-a',{access_expires_at:new Date(Date.now()-1).toISOString(),refresh_expires_at:new Date(Date.now()+900000).toISOString(),refresh_token_ciphertext:r.ciphertext,refresh_token_iv:r.iv,refresh_token_tag:r.tag});
+    const implementation=rpc.getMockImplementation()!;
+    rpc.mockImplementation(async(name,args)=>args.p_operation==='defer'?{data:null,error:{message:'DB timeout'}}:implementation(name,args));
+    vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('network timeout')));
+    const pending=getShopToken(shop,'app-a');await vi.runAllTimersAsync();expect(await pending).toBeNull();
+    expect(rows.get(`${shop}:app-a`)!.status).toBe('active');
+    expect(rows.get(`${shop}:app-a`)!.refresh_token_ciphertext).toBe(r.ciphertext);
+    expect(rpc.mock.calls.some(([,args])=>args.p_operation==='reauthorize')).toBe(false);
+  });
   it.each([200,401,403,429,500])('verifies current installation with a fenced provider probe (%s)',async status=>{
     seed('app-a'); seed('app-b');
     const fetchMock=vi.fn().mockResolvedValue(new Response(JSON.stringify({data:{currentAppInstallation:{id:'gid://shopify/AppInstallation/1'}}}),{status}));

@@ -190,7 +190,8 @@ export async function getShopToken(shopDomain: string, appClientId?: string): Pr
   try {
     const fresh = usable(locked);
     if (fresh) { await operation(shop, app.clientId, 'release', lease); return fresh; }
-    if (locked.status !== 'active' || !locked.refresh_token_ciphertext || !locked.refresh_token_iv || !locked.refresh_token_tag
+    if (locked.status !== 'active') { await operation(shop, app.clientId, 'release', lease); return null; }
+    if (!locked.refresh_token_ciphertext || !locked.refresh_token_iv || !locked.refresh_token_tag
       || !locked.refresh_expires_at || !(Date.parse(locked.refresh_expires_at) > Date.now())) {
       await operation(shop, app.clientId, 'reauthorize', lease); return null;
     }
@@ -227,7 +228,9 @@ export async function getShopToken(shopDomain: string, appClientId?: string): Pr
     const updated = await credentialRow(shop, app.clientId);
     return updated ? usable(updated) : null;
   } catch (error) {
-    const action = error instanceof ShopifyTokenRequestError && error.kind === 'transient' ? 'defer' : 'reauthorize';
+    // A database outage, malformed/lost success response or crypto/configuration
+    // failure is not evidence that Shopify rejected the refresh token.
+    const action = error instanceof ShopifyTokenRequestError && error.kind !== 'transient' ? 'reauthorize' : 'defer';
     await operation(shop, app.clientId, action, lease, { retry_after: new Date(Date.now() + 60000).toISOString() }).catch(() => {});
     return null;
   }
