@@ -16,7 +16,7 @@ export async function recordInstallationEvent(input: InstallationEvent): Promise
     throw new Error('invalid_installation_event');
   }
   const client = installationEventClient();
-  const { data, error } = await client.rpc('record_shopify_installation_event', {
+  const { data, error } = await client.rpc('record_shopify_installation_event_v2', {
     p_app: input.appClientId, p_shop: shop, p_webhook: input.webhookId,
     p_topic: input.topic, p_payload: input.payload,
     p_digest: createHash('sha256').update(JSON.stringify(input.payload)).digest('hex'),

@@ -3,7 +3,8 @@ import { createHmac } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { recordEvent, processPrivacy } = vi.hoisted(() => ({ recordEvent: vi.fn(), processPrivacy: vi.fn() }));
+const { recordEvent, processPrivacy, verifyUninstall } = vi.hoisted(() => ({ recordEvent: vi.fn(), processPrivacy: vi.fn(), verifyUninstall: vi.fn() }));
+vi.mock('@/lib/shopify/tokens', () => ({ verifyShopifyUninstall: verifyUninstall }));
 vi.mock('@/lib/shopify/installation-events', () => ({ recordInstallationEvent: recordEvent }));
 vi.mock('@/lib/shopify/privacy', () => ({ processShopifyPrivacyRequest: processPrivacy }));
 
@@ -26,7 +27,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv('SHOPIFY_API_KEY', 'test-only-client-id');
   vi.stubEnv('SHOPIFY_API_SECRET', 'test-only-secret');
-  recordEvent.mockResolvedValue({ id: 'event', status: 'completed' });
+  recordEvent.mockResolvedValue({ id: 'event', status: 'manual_required' });
+  verifyUninstall.mockResolvedValue(undefined);
   processPrivacy.mockResolvedValue(undefined);
 });
 
@@ -45,6 +47,7 @@ describe('Shopify lifecycle delivery', () => {
     expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({
       appClientId: 'test-only-client-id', shopDomain: 'demo.myshopify.com', topic: 'app/uninstalled', webhookId: 'delivery-1',
     }));
+    expect(verifyUninstall).toHaveBeenCalledWith('demo.myshopify.com','test-only-client-id','event');
   });
   it('requests retry when atomic persistence fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -56,6 +59,14 @@ describe('Shopify lifecycle delivery', () => {
   it('passes scopes events without globally reactivating a shop', async () => {
     expect((await POST(request('app/scopes_update'))).status).toBe(200);
     expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({ topic: 'app/scopes_update' }));
+    expect(verifyUninstall).not.toHaveBeenCalled();
+  });
+  it('does not acknowledge authoritative verification failure as a completed uninstall', async () => {
+    vi.spyOn(console,'error').mockImplementation(()=>{});
+    verifyUninstall.mockRejectedValue(new Error('provider secret'));
+    const response=await POST(request('app/uninstalled'));
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('provider secret');
   });
   it('preserves the app that verified a second registration', async () => {
     vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{ clientId: 'other-app', secret: 'other-secret' }]));

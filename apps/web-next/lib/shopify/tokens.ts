@@ -37,10 +37,18 @@ type CredentialRow = {
   access_token_ciphertext: string | null; token_iv: string | null; token_tag: string | null;
   refresh_token_ciphertext: string | null; refresh_token_iv: string | null; refresh_token_tag: string | null;
   access_expires_at: string | null; refresh_expires_at: string | null;
+  credential_version: number;
+  refresh_retry_after?: string | null;
 };
 export class ShopifyCredentialError extends Error {
   constructor(readonly code: 'busy' | 'reauthorization_required' | 'storage_unavailable' | 'exchange_failed') {
     super(code); this.name = 'ShopifyCredentialError';
+  }
+}
+/** Never include provider bodies or credentials in an error. */
+export class ShopifyTokenRequestError extends ShopifyCredentialError {
+  constructor(readonly kind: 'transient' | 'terminal' | 'rejected', readonly retryAfterMs = 1000) {
+    super('exchange_failed');
   }
 }
 
@@ -101,9 +109,9 @@ function encryptedResponse(response: ShopifyTokenResponse, expiring: boolean, ac
     refresh_expires_at: refresh ? expiry(response.refresh_token_expires_in, now) : null,
   };
 }
-function usable(row: CredentialRow): InstallationToken | null {
+function usable(row: CredentialRow, marginMs = 30_000): InstallationToken | null {
   if (row.status !== 'active' || !row.access_token_ciphertext || !row.token_iv || !row.token_tag) return null;
-  if (row.access_expires_at && Date.parse(row.access_expires_at) <= Date.now() + 30_000) return null;
+  if (row.access_expires_at && Date.parse(row.access_expires_at) <= Date.now() + marginMs) return null;
   try {
     return {
       accessToken: decryptToken({ ciphertext: row.access_token_ciphertext, iv: row.token_iv, tag: row.token_tag }),
@@ -112,16 +120,26 @@ function usable(row: CredentialRow): InstallationToken | null {
   } catch { return null; }
 }
 
-/** One network call, bounded, no automatic retries, no response/credential logs. */
+/** One bounded call. Only refresh grants may be retried by the lease owner. */
 export async function requestShopifyToken(shop: string, body: Record<string, string | number>): Promise<ShopifyTokenResponse> {
+  if (!normalizeShopDomain(shop)) throw new ShopifyTokenRequestError('rejected');
+  let response: Response;
   try {
-    const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
+    response = await fetch(`https://${shop}/admin/oauth/access_token`, {
       method: 'POST', headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify(body), signal: AbortSignal.timeout(10_000), cache: 'no-store', redirect: 'error',
     });
-    if (!response.ok) throw new Error('denied');
-    return await response.json() as ShopifyTokenResponse;
-  } catch { throw new ShopifyCredentialError('exchange_failed'); }
+  } catch { throw new ShopifyTokenRequestError('transient'); }
+  if (response.status === 429 || response.status >= 500) {
+    const header = response.headers.get('retry-after');
+    const seconds = header && /^\d+(\.\d+)?$/.test(header) ? Number(header) * 1000 : NaN;
+    const dateDelay = header ? Date.parse(header) - Date.now() : NaN;
+    const delay = Number.isFinite(seconds) ? seconds : Number.isFinite(dateDelay) ? dateDelay : 1000;
+    throw new ShopifyTokenRequestError('transient', Math.max(1000, Math.min(delay, 365 * 86400000)));
+  }
+  if (!response.ok) throw new ShopifyTokenRequestError(response.status === 401 ? 'terminal' : 'rejected');
+  try { return await response.json() as ShopifyTokenResponse; }
+  catch { throw new ShopifyTokenRequestError('transient'); } // Lost/truncated refresh response is recoverable.
 }
 
 /** Acquisition and refresh share the same distributed DB lease, including the
@@ -167,7 +185,7 @@ export async function getShopToken(shopDomain: string, appClientId?: string): Pr
     || !row.refresh_expires_at || !(Date.parse(row.refresh_expires_at) > Date.now())) return null;
   const app = findShopifyAppByClientId(row.app_client_id)!;
   const lease = randomUUID();
-  const locked = await operation(shop, app.clientId, 'acquire', lease) as CredentialRow | null;
+  const locked = await operation(shop, app.clientId, 'acquire', lease, { refresh: true }) as CredentialRow | null;
   if (!locked) return null; // Another acquisition/refresh is in flight; fail closed.
   try {
     const fresh = usable(locked);
@@ -177,15 +195,79 @@ export async function getShopToken(shopDomain: string, appClientId?: string): Pr
       await operation(shop, app.clientId, 'reauthorize', lease); return null;
     }
     const refresh = decryptToken({ ciphertext: locked.refresh_token_ciphertext, iv: locked.refresh_token_iv, tag: locked.refresh_token_tag });
-    const granted = await requestShopifyToken(shop, {
-      client_id: app.clientId, client_secret: app.secret, grant_type: 'refresh_token', refresh_token: refresh,
-    });
-    await operation(shop, app.clientId, 'commit', lease, encryptedResponse(granted, true, false));
+    // Shopify permits replay of the presented refresh token until its replacement
+    // is used (subject to provider expiry/grace). Do not invent a grace lifetime.
+    let granted: ShopifyTokenResponse | undefined;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        granted = await requestShopifyToken(shop, {
+          client_id: app.clientId, client_secret: app.secret, grant_type: 'refresh_token', refresh_token: refresh,
+        });
+        break;
+      } catch (error) {
+        if (!(error instanceof ShopifyTokenRequestError) || error.kind !== 'transient') throw error;
+        if (attempt === 2 || error.retryAfterMs > 2000) {
+          await operation(shop, app.clientId, 'defer', lease, {
+            retry_after: new Date(Date.now() + Math.max(60000, error.retryAfterMs)).toISOString(),
+          });
+          return null; // Do not hand out a near-expiry credential during cooldown.
+        }
+        await new Promise(resolve => setTimeout(resolve, error.retryAfterMs));
+      }
+    }
+    if (!granted) return null;
+    const encrypted = encryptedResponse(granted, true, false);
+    // Persistence can fail after Shopify rotated. Preserve the old encrypted
+    // refresh token and release/defer under the SAME fence for safe recovery.
+    try { await operation(shop, app.clientId, 'commit', lease, encrypted); }
+    catch {
+      await operation(shop, app.clientId, 'defer', lease, { retry_after: new Date(Date.now() + 60000).toISOString() }).catch(() => {});
+      return null;
+    }
     const updated = await credentialRow(shop, app.clientId);
     return updated ? usable(updated) : null;
-  } catch {
-    await operation(shop, app.clientId, 'reauthorize', lease).catch(() => {});
+  } catch (error) {
+    const action = error instanceof ShopifyTokenRequestError && error.kind === 'transient' ? 'defer' : 'reauthorize';
+    await operation(shop, app.clientId, action, lease, { retry_after: new Date(Date.now() + 60000).toISOString() }).catch(() => {});
     return null;
+  }
+}
+
+/** Uninstall verification uses the current app's credential under the shared
+ * lease. A valid old body/unsigned header cannot itself retire a newer token. */
+export async function verifyShopifyUninstall(shopDomain: string, appClientId: string, eventId: string): Promise<void> {
+  const shop = normalizeShopDomain(shopDomain);
+  if (!shop || !findShopifyAppByClientId(appClientId)) throw new ShopifyCredentialError('reauthorization_required');
+  // Resolve expiry through the same serialized refresh path first. A terminal
+  // refresh retires only this credential; it is not fabricated uninstall proof.
+  // A successful refresh must be persisted before probing its replacement.
+  await getShopToken(shop, appClientId);
+  const lease = randomUUID();
+  const row = await operation(shop, appClientId, 'acquire', lease) as CredentialRow | null;
+  if (!row) throw new ShopifyCredentialError('busy');
+  try {
+    // Expired/unknown credentials cannot prove current uninstall. Keep the
+    // durable request pending for refresh/re-authorization/manual inspection.
+    const token = usable(row, 0);
+    if (!token) throw new ShopifyCredentialError('reauthorization_required');
+    const response = await fetch(`https://${shop}/admin/api/2026-07/graphql.json`, {
+      method: 'POST', redirect: 'error', cache: 'no-store', signal: AbortSignal.timeout(8000),
+      headers: { 'content-type': 'application/json', 'X-Shopify-Access-Token': token.accessToken },
+      body: JSON.stringify({ query: '{ currentAppInstallation { id } }' }),
+    });
+    let outcome: 'revoked' | 'active';
+    if (response.status === 401) outcome = 'revoked';
+    else if (response.ok) {
+      const data = await response.json();
+      if (!data?.data?.currentAppInstallation?.id || data.errors?.length) throw new Error('verification_unavailable');
+      outcome = 'active';
+    } else throw new Error('verification_unavailable'); // 403/429/5xx are not uninstall proof.
+    const { data, error } = await getServiceClient().rpc('resolve_shopify_uninstall', {
+      p_event: eventId, p_installation: row.id, p_version: row.credential_version, p_lease: lease, p_outcome: outcome,
+    });
+    if (error || data?.ok !== true) throw new ShopifyCredentialError('storage_unavailable');
+  } finally {
+    await operation(shop, appClientId, 'release', lease).catch(() => {});
   }
 }
 

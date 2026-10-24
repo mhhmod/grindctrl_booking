@@ -19,11 +19,17 @@ async function authorize(app: string, shop = SHOP) {
   await op(app, 'commit', lease, { acquisition: true, scopes: 'read_products',
     access_token_ciphertext: `cipher-${app}`, token_iv: 'iv', token_tag: 'tag' }, shop);
 }
-async function event(app: string, topic: string, id = randomUUID(), date: string | null = new Date().toISOString(), digest = id) {
-  const result = await db.query<{ value: { status: string; duplicate: boolean } }>(
-    'select record_shopify_installation_event($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz) as value',
+async function event(app: string, topic: string, id = randomUUID(), date: string | null = new Date().toISOString(), digest: string = id) {
+  const result = await db.query<{ value: { id: string; status: string; duplicate: boolean } }>(
+    'select record_shopify_installation_event_v2($1,$2,$3,$4,$5::jsonb,$6,$7::timestamptz) as value',
     [app, SHOP, id, topic, '{}', digest, date]);
   return result.rows[0].value;
+}
+async function verifiedUninstall(app: string, eventId: string, outcome = 'revoked') {
+  const lease = randomUUID();
+  const row = await op(app, 'acquire', lease);
+  await db.query('select resolve_shopify_uninstall($1,$2,$3,$4,$5)', [eventId,row!.id,row!.credential_version,lease,outcome]);
+  if (outcome === 'active') await op(app,'release',lease);
 }
 async function state(app: string, shop = SHOP) {
   return (await db.query<Record<string, unknown>>('select * from shopify_installations where shop_domain=$1 and app_client_id=$2', [shop, app])).rows[0];
@@ -37,6 +43,8 @@ beforeAll(async () => {
     insert into shopify_shop_tokens values ('demo.myshopify.com','unknown-legacy-owner');`);
   const sql = await readFile(migration, 'utf8');
   await db.exec(sql); await db.exec(sql); // Manual delta is safely re-applicable.
+  const remediation = await readFile(resolve(process.cwd(), '../../supabase/20261024_shopify_review_remediation.sql'), 'utf8');
+  await db.exec(remediation); await db.exec(remediation);
 }, 60000);
 afterAll(async () => { await db?.close(); });
 
@@ -59,7 +67,10 @@ describe('real PostgreSQL installation lifecycle and credential transactions', (
     await op('app-a', 'release', first);
   });
   it('uninstalls only A, preserves B and leaves the merchant installed', async () => {
-    expect((await event('app-a', 'app/uninstalled')).status).toBe('completed');
+    const receipt = await event('app-a', 'app/uninstalled');
+    expect(receipt.status).toBe('manual_required');
+    expect((await state('app-a')).status).toBe('active');
+    await verifiedUninstall('app-a',receipt.id);
     expect((await state('app-a')).access_token_ciphertext).toBeNull();
     expect((await state('app-b')).access_token_ciphertext).toBe('cipher-app-b');
     expect((await db.query<{status:string}>('select status from tryon_shops where shop_domain=$1', [SHOP])).rows[0].status).toBe('installed');
@@ -73,7 +84,9 @@ describe('real PostgreSQL installation lifecycle and credential transactions', (
   it('ignores delayed pre-reinstall uninstall without reviving or affecting another app', async () => {
     const old = new Date(Date.now()-60000).toISOString();
     await authorize('app-a');
-    expect((await event('app-a','app/uninstalled',randomUUID(),old)).status).toBe('ignored');
+    const receipt = await event('app-a','app/uninstalled',randomUUID(),old);
+    expect(receipt.status).toBe('manual_required');
+    await verifiedUninstall('app-a',receipt.id,'active');
     expect((await state('app-a')).status).toBe('active');
     expect((await state('app-b')).status).toBe('active');
   });
@@ -88,10 +101,12 @@ describe('real PostgreSQL installation lifecycle and credential transactions', (
     expect((await state('app-b')).status).toBe('active');
     expect((await db.query('select * from shopify_shop_tokens')).rows).toHaveLength(1);
   });
-  it('fences an exchange that was in flight when uninstall was processed', async () => {
+  it('never lets unsigned uninstall metadata fence an in-flight authorization', async () => {
     const lease = randomUUID(); await op('app-a','acquire',lease);
     await event('app-a','app/uninstalled');
-    await expect(op('app-a','commit',lease,{ acquisition:true, scopes:'' })).rejects.toThrow('credential_lease_lost');
+    await expect(op('app-a','commit',lease,{ acquisition:true, scopes:'', access_token_ciphertext:'new',token_iv:'iv',token_tag:'tag' })).resolves.toMatchObject({ok:true});
+    const receipt = await event('app-a','app/uninstalled');
+    await verifiedUninstall('app-a',receipt.id);
   });
   it('scope updates never reactivate an uninstalled app or touch B', async () => {
     await event('app-a','app/scopes_update');
@@ -119,5 +134,47 @@ describe('real PostgreSQL installation lifecycle and credential transactions', (
       await expect(db.query('select * from shopify_installation_events')).rejects.toThrow(/permission denied/);
       await expect(db.query(`select shopify_credential_operation('demo.myshopify.com','app-a','acquire',gen_random_uuid())`)).rejects.toThrow(/permission denied/);
     } finally { await db.exec('reset role'); }
+  });
+  it('altered delivery IDs and timestamps on the same valid body cannot invalidate a replacement installation', async () => {
+    await authorize('app-a');
+    const original = await state('app-a');
+    for (const date of [null,new Date(Date.now()+86400000).toISOString(),new Date().toISOString()]) {
+      const receipt = await event('app-a','app/uninstalled',randomUUID(),date,'same-signed-body');
+      expect(receipt.status).toBe('manual_required');
+      await verifiedUninstall('app-a',receipt.id,'active');
+    }
+    expect((await state('app-a')).credential_version).toBe(original.credential_version);
+    expect((await state('app-b')).status).toBe('active');
+  });
+  it('refuses a revocation result obtained for an old credential version or lost lease', async () => {
+    const receipt = await event('app-a','app/uninstalled');
+    const lease = randomUUID();
+    const old = await op('app-a','acquire',lease);
+    await op('app-a','release',lease);
+    await authorize('app-a');
+    await expect(db.query('select resolve_shopify_uninstall($1,$2,$3,$4,$5)',
+      [receipt.id,old!.id,old!.credential_version,lease,'revoked'])).rejects.toThrow('uninstall_verification_fence_lost');
+    expect((await state('app-a')).status).toBe('active');
+  });
+  it('preserves refresh credentials/status during distributed cooldown and honors new authorization', async () => {
+    const before = await state('app-a');
+    const lease=randomUUID(); await op('app-a','acquire',lease);
+    await op('app-a','defer',lease,{retry_after:new Date(Date.now()+60000).toISOString()});
+    expect((await state('app-a')).status).toBe('active');
+    expect((await state('app-a')).access_token_ciphertext).toBe(before.access_token_ciphertext);
+    expect(await op('app-a','acquire',randomUUID(),{refresh:true})).toBeNull();
+    await authorize('app-a');
+    expect((await state('app-a')).refresh_retry_after).toBeNull();
+  });
+  it('recovers an abandoned expired lease without discarding credentials and fences the former writer',async()=>{
+    const old=randomUUID();const next=randomUUID();
+    await op('app-a','acquire',old);
+    const before=await state('app-a');
+    await db.query("update shopify_installations set lease_expires_at=now()-interval '1 second' where id=$1",[before.id]);
+    const recovered=await op('app-a','acquire',next,{refresh:true});
+    expect(recovered!.status).toBe('active');
+    expect(recovered!.access_token_ciphertext).toBe(before.access_token_ciphertext);
+    await expect(op('app-a','commit',old,{scopes:''})).rejects.toThrow('credential_lease_lost');
+    await op('app-a','release',next);
   });
 });

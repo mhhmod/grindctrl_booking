@@ -4,6 +4,7 @@ import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { recordInstallationEvent } from '@/lib/shopify/installation-events';
+import { verifyShopifyUninstall } from '@/lib/shopify/tokens';
 
 export async function POST(request: NextRequest) {
   const reader = request.body?.getReader();
@@ -46,7 +47,12 @@ export async function POST(request: NextRequest) {
     if (topic === 'customers/data_request' || topic === 'customers/redact' || topic === 'shop/redact') {
       await processShopifyPrivacyRequest({ ...event, topic });
     } else {
-      await recordInstallationEvent({ ...event, topic });
+      const receipt = await recordInstallationEvent({ ...event, topic });
+      if (topic === 'app/uninstalled' && receipt.status !== 'completed') {
+        // The signed body does not bind delivery headers or an installation
+        // generation. Even an old/duplicate receipt must verify CURRENT state.
+        await verifyShopifyUninstall(shop, resolved.app.clientId, receipt.id);
+      }
     }
     return NextResponse.json({ ok: true });
   } catch {
