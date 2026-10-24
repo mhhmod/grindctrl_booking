@@ -82,12 +82,18 @@ describe('findShopifyAppByClientId', () => {
 });
 
 describe('primaryShopifyApp', () => {
-  it('is the first configured app', () => {
+  it('refuses an unsigned initializer with multiple configured apps', () => {
     process.env.SHOPIFY_APPS = JSON.stringify([
       { clientId: 'app-a', secret: 'secret-a' },
       { clientId: 'app-b', secret: 'secret-b' },
     ]);
-    expect(primaryShopifyApp()).toEqual({ clientId: 'app-a', secret: 'secret-a' });
+    expect(primaryShopifyApp()).toBeNull();
+  });
+
+  it('preserves the legacy single-app initializer', () => {
+    process.env.SHOPIFY_API_KEY = 'legacy-id';
+    process.env.SHOPIFY_API_SECRET = 'legacy-secret';
+    expect(primaryShopifyApp()).toEqual({ clientId: 'legacy-id', secret: 'legacy-secret' });
   });
 
   it('is null when nothing is configured', () => {

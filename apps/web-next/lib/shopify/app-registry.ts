@@ -1,9 +1,9 @@
 import 'server-only';
 
-/* Multiple Shopify apps in play: today's single custom app
-   (SHOPIFY_API_KEY/SHOPIFY_API_SECRET, one pair per shopify.app.toml) plus
-   any number of additional per-store custom apps, each with its own
-   client id and secret. Every route that verifies something Shopify (or
+/* Multiple legitimate Shopify registrations can share this backend:
+   a merchant-specific Custom integration and a future approved Public app,
+   each with its own client ID and secret. This registry is not a public
+   distribution or review bypass. Every route that verifies something Shopify (or
    we, on Shopify's behalf) signed must check it against the RIGHT app's
    secret, not just the one legacy pair.
 
@@ -80,16 +80,16 @@ export function findShopifyAppByClientId(clientId: string): ShopifyAppCredential
   return getConfiguredShopifyApps().find((app) => app.clientId === clientId) ?? null;
 }
 
-/** The app used for capabilities that carry no cryptographic signal of
- *  which app they belong to (the public try-on demo, the legacy
- *  compatibility bridge, and the store-claim handoff token): the first
- *  configured app, so a single-app deployment behaves exactly as before. */
+/** Compatibility-only initializer when no signed app context exists.
+ *  Preserve single-app configuration; never guess among registrations.
+ *  Core demo and claim capabilities use the independent core key. */
 export function primaryShopifyApp(): ShopifyAppCredentials | null {
-  return getConfiguredShopifyApps()[0] ?? null;
+  const apps = getConfiguredShopifyApps();
+  return apps.length === 1 ? apps[0] : null;
 }
 
-/** Tries `verify` against every configured app's secret, in order, and
- *  returns the first app whose secret it accepts. `verify` must be a pure
+/** Tries `verify` against every configured app's secret and
+ *  returns the sole verified match. `verify` must be a pure
  *  function of the secret (a signature/HMAC check or similar) — safe to
  *  call once per configured app, since the app count is small and fixed. */
 export function resolveShopifyApp<T>(

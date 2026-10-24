@@ -104,22 +104,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(res, { status: 400 });
       }
 
+      // An unsigned legacy request cannot choose between registrations.
+      // Reject ambiguity before fetching any platform data.
+      const legacyApp = primaryShopifyApp();
+      if (!legacyApp) {
+        return NextResponse.json({ ok: false, error: 'Try-on is not configured.' }, { status: 503 });
+      }
       try {
         const resolved = await resolveStorefrontProduct({
           shop,
+          appClientId: legacyApp.clientId,
           handle: productId,
           variantId,
         });
-        // No Shopify-signed proof here (legacy compat trusts body.shop
-        // directly, see warnLegacyStorefrontCompat below), so there is no
-        // cryptographic signal for which app this is: the primary
-        // (first-configured) app signs it, same as a single-app deployment
-        // always did.
-        const legacySecret = primaryShopifyApp()?.secret;
-        if (!legacySecret) {
-          const res: TryOnApiResponse = { ok: false, error: 'Try-on is not configured.' };
-          return NextResponse.json(res, { status: 503 });
-        }
+        const legacySecret = legacyApp.secret;
         const context = signStorefrontContext(legacySecret, {
           shop,
           productId: resolved.handle,

@@ -73,6 +73,7 @@ describe('POST /api/try-on/session', () => {
   });
 
   afterEach(() => {
+    delete process.env.SHOPIFY_APPS;
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
     delete process.env.GRINDCTRL_CAPABILITY_SECRET;
@@ -167,6 +168,9 @@ describe('POST /api/try-on/session', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    expect(resolveStorefrontProductMock).toHaveBeenCalledWith(expect.objectContaining({
+      appClientId: 'test-only-client-id',
+    }));
     expect(body.data).toMatchObject({
       shop: null,
       productId: 'premium-ringer-tee',
@@ -185,6 +189,20 @@ describe('POST /api/try-on/session', () => {
       }),
     );
     expect(JSON.stringify(warning.mock.calls)).not.toContain(body.data.sessionId);
+  });
+
+  it('refuses unsigned legacy app ambiguity before product retrieval', async () => {
+    process.env.TRYON_TEMP_LEGACY_STOREFRONT_COMPAT =
+      'allow-unsigned-nonbillable-storefront';
+    process.env.SHOPIFY_APPS = JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]);
+
+    const response = await POST(
+      request({ productId: 'premium-ringer-tee', shop: 'proven.myshopify.com' }),
+    );
+
+    expect(response.status).toBe(503);
+    expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
+    expect(await response.json()).not.toHaveProperty('data');
   });
 
   it('fails the compatibility bridge closed when rate limiting is unavailable', async () => {
