@@ -3,6 +3,8 @@
   "synthetic_only": true,
   "run_id": null,
   "approval_ref": null,
+  "source_release": null,
+  "harness_revision": null,
   "expires_at": null,
   "drain_until": null,
   "project_ref": null,

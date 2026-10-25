@@ -9,6 +9,7 @@ test('local preparation never overwrites an existing budget and leaves migration
   const dir=mkdtempSync(join(tmpdir(),'gc-prepare-'));t.after(()=>rmSync(dir,{recursive:true,force:true}));
   const source=join(dir,'approved.json'),output=join(dir,'output');
   const c={environment:'controlled-test',synthetic_only:true,run_id:'synthetic-run-prepare',approval_ref:'synthetic-review',
+    source_release:'c'.repeat(40),harness_revision:'d'.repeat(40),
     expires_at:new Date(Date.now()+3600_000).toISOString(),drain_until:new Date(Date.now()+4200_000).toISOString(),
     project_ref:'abcdefghijklmnopqrst',preview_origin:'https://preview.example.org',shops:['synthetic.myshopify.com'],
     app_client_ids:['a'.repeat(32),'b'.repeat(32)],additional_hosts:[],max_calls:24,max_concurrent:2};

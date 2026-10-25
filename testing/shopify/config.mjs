@@ -19,6 +19,7 @@ export function validateManifest(c, now = Date.now()) {
   if (!c || c.environment !== 'controlled-test' || c.synthetic_only !== true ||
     !/^[A-Za-z0-9_-]{8,80}$/.test(c.run_id ?? '') ||
     typeof c.approval_ref !== 'string' || !c.approval_ref.trim() ||
+    !/^[a-f0-9]{40}$/.test(c.source_release ?? '') || !/^[a-f0-9]{40}$/.test(c.harness_revision ?? '') ||
     !/^[a-z0-9]{20}$/.test(c.project_ref ?? '') || EXCLUDED_PROJECTS.includes(c.project_ref) ||
     !Array.isArray(c.shops) || c.shops.length < 1 || c.shops.length > 2 ||
     c.shops.some(s => !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(s)) ||
@@ -45,6 +46,7 @@ export function readManifest(file) { return validateManifest(JSON.parse(readFile
 
 export function validateEnvironment(c, env) {
   if (env.GRINDCTRL_CONTROLLED_TEST !== '1' || env.TRYON_MODE !== 'live' ||
+    env.SENTRY_RELEASE !== c.source_release || env.GRINDCTRL_HARNESS_REVISION !== c.harness_revision ||
     env.NEXT_PUBLIC_SUPABASE_URL !== `https://${c.project_ref}.supabase.co` ||
     env.NEXT_PUBLIC_APP_URL !== c.preview_origin || !env.SUPABASE_SERVICE_ROLE_KEY ||
     !env.SHOPIFY_TOKEN_ENC_KEY || !env.GRINDCTRL_CAPABILITY_SECRET ||
@@ -71,4 +73,8 @@ export function validateEnvironment(c, env) {
   if (!Array.isArray(apps) || apps.length !== 2 || apps.some(a => !a.secret || !c.app_client_ids.includes(a.clientId)) ||
     new Set(apps.map(a => a.clientId)).size !== 2 || new Set(apps.map(a => a.secret)).size !== 2 ||
     env.SHOPIFY_API_KEY || env.SHOPIFY_API_SECRET) throw new Error('controlled_apps_invalid');
+  if (Buffer.from(env.SHOPIFY_TOKEN_ENC_KEY,'base64').length !== 32 ||
+    env.GRINDCTRL_CAPABILITY_SECRET.length < 32 ||
+    apps.some(a => a.secret === env.GRINDCTRL_CAPABILITY_SECRET) ||
+    env.SHOPIFY_TOKEN_ENC_KEY === env.GRINDCTRL_CAPABILITY_SECRET) throw new Error('controlled_independent_keys_required');
 }

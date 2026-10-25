@@ -9,6 +9,7 @@ import { createProviderHarness, SYNTHETIC_PNG } from './provider-harness.mjs';
 
 export function manifest(extra = {}) {
   return {environment:'controlled-test',synthetic_only:true,run_id:'synthetic-run-01',approval_ref:'synthetic-approval',
+    source_release:'c'.repeat(40),harness_revision:'d'.repeat(40),
     expires_at:new Date(Date.now()+3600_000).toISOString(),drain_until:new Date(Date.now()+4200_000).toISOString(),project_ref:'abcdefghijklmnopqrst',
     preview_origin:'https://preview.example.org',shops:['synthetic.myshopify.com'],
     app_client_ids:['a'.repeat(32),'b'.repeat(32)],additional_hosts:['test.upstash.io'],max_calls:24,max_concurrent:2,...extra};
@@ -43,7 +44,8 @@ test('runtime rejects real provider keys, production auth, app mismatches and pr
   const c=validateManifest(manifest());
   const env={GRINDCTRL_CONTROLLED_TEST:'1',TRYON_MODE:'live',NEXT_PUBLIC_APP_URL:c.preview_origin,
     NEXT_PUBLIC_SUPABASE_URL:`https://${c.project_ref}.supabase.co`,SUPABASE_SERVICE_ROLE_KEY:'synthetic-only',
-    SHOPIFY_TOKEN_ENC_KEY:'synthetic-only',GRINDCTRL_CAPABILITY_SECRET:'synthetic-only',
+    SHOPIFY_TOKEN_ENC_KEY:Buffer.alloc(32,1).toString('base64'),GRINDCTRL_CAPABILITY_SECRET:'synthetic-only-independent-core-key-1234',
+    SENTRY_RELEASE:c.source_release,GRINDCTRL_HARNESS_REVISION:c.harness_revision,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:'pk_test_synthetic',CLERK_SECRET_KEY:'sk_test_synthetic',
     UPSTASH_REDIS_REST_URL:'https://test.upstash.io',UPSTASH_REDIS_REST_TOKEN:'synthetic-only',
     SHOPIFY_APPS:JSON.stringify(c.app_client_ids.map((clientId,i)=>({clientId,secret:`synthetic-${i}`}))),
@@ -52,7 +54,9 @@ test('runtime rejects real provider keys, production auth, app mismatches and pr
   for(const override of [{OPENROUTER_API_KEY:'should-never-leave-test'},{GROQ_API_KEY:'should-never-leave-test'},
     {CLERK_SECRET_KEY:'sk_live_forbidden'},{NEXT_PUBLIC_SUPABASE_URL:'https://prsusuwxbzaekynonifl.supabase.co'},
     {TRYON_MODE:'mock'},{HTTPS_PROXY:'http://elsewhere:8080'},{NO_PROXY:'*'},
-    {SHOPIFY_API_KEY:'legacy-app'},{SHOPIFY_APPS:'[]'},{NODE_TLS_REJECT_UNAUTHORIZED:'0'}]) {
+    {SHOPIFY_API_KEY:'legacy-app'},{SHOPIFY_APPS:'[]'},{NODE_TLS_REJECT_UNAUTHORIZED:'0'},
+    {SENTRY_RELEASE:'e'.repeat(40)},{GRINDCTRL_HARNESS_REVISION:'e'.repeat(40)},
+    {GRINDCTRL_CAPABILITY_SECRET:'too-short'},{SHOPIFY_TOKEN_ENC_KEY:'bad'}]) {
     assert.throws(()=>validateEnvironment(c,{...env,...override}));
   }
 });

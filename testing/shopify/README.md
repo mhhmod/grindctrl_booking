@@ -22,7 +22,7 @@ Positive image-service wiring and failed-job finalizer/refund-contract tests run
 
 ## Exact preparation artifacts and environment names
 
-1. `manifest.example.json`: deliberately invalid null target fields. Fill only verified project/store/app IDs, preview origin, approved Clerk/Upstash/CDN hosts, run/evidence reference, <=24h provider cutoff and <=15m drain. No wildcard/production/provider hosts. `shopify-m1-dev.grindctrl.cloud` is a permitted **proposal only** for the preview origin, not an established DNS/service or outbound exception. This is a reviewed manifest, not authentication or permission by itself.
+1. `manifest.example.json`: deliberately invalid null target fields. Fill only verified project/store/app IDs, preview origin, approved Clerk/Upstash/CDN hosts, run/evidence reference, exact source release/harness revisions, <=24h provider cutoff and <=15m drain. Startup checks the image's `SENTRY_RELEASE` and baked `GRINDCTRL_HARNESS_REVISION` against those revisions; the independent image-digest review is still required. No wildcard/production/provider hosts. `shopify-m1-dev.grindctrl.cloud` is a permitted **proposal only** for the preview origin, not an established DNS/service or outbound exception. This is a reviewed manifest, not authentication or permission by itself.
 2. `runtime.env.names`: environment variable **names only**. Supply isolated values through approved secret management, not Git/chat/PR. `SHOPIFY_APPS` must contain exactly verified A/B with distinct secrets. No legacy fallback registration or live Clerk keys. Test app/encryption/capability keys are independent; never rotate live keys.
 3. Local-only preparation after manifest review:
 
@@ -32,7 +32,7 @@ Positive image-service wiring and failed-job finalizer/refund-contract tests run
 
    It creates config/control/budget and a hashed, **BLOCKED** migration plan; no network/resource/SQL operation. It refuses an existing directory/budget. Files are mode 600/directories 700; before approved runtime start, the dedicated operator must arrange access for container UID 1000 without exposing them to other users. Do not run preparation inside production paths.
 4. Compose input names: `GRINDCTRL_PREVIEW_IMAGE`, `GRINDCTRL_GATEWAY_IMAGE` (immutable approved digests), `GRINDCTRL_TEST_ENV_FILE`, `GRINDCTRL_TEST_CONFIG_DIR`, `GRINDCTRL_TEST_STATE_DIR`. TLS input: `GRINDCTRL_PREVIEW_HOSTNAME`. Template has no production defaults, registry publish, SQL or app installation automation. Images require independent scan and exact source/harness digest evidence before execution approval.
-5. `Dockerfile.preview`, `Dockerfile.gateway`, `compose.yml`, `Caddyfile.example`: ready for review, **not built/deployed here as infrastructure**. Host must have no production services/credentials, and no Docker socket/host networking/extra outbound network may be mounted into the app. Run one replica only.
+5. `Dockerfile.preview`, `Dockerfile.gateway`, `compose.yml`, `Caddyfile.example`: ready for review, **not built/deployed here as infrastructure**. Build inputs are approved `CANDIDATE_IMAGE` digest and exact `HARNESS_REVISION`; do not override either baked revision through runtime env files. Host must have no production services/credentials, and no Docker socket/host networking/extra outbound network may be mounted into the app. Run one replica only.
 
 ## Database baseline, sequence and seed — actual blocker
 
