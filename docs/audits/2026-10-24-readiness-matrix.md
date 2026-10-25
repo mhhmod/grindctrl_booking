@@ -1,5 +1,7 @@
 # Platform readiness — milestone 1
 
+Latest decision: **APPROVE WITH CHANGES** at `1c5f31a`, final approval pending; PR remains Draft. The [controlled-test decision report](2026-10-24-shopify-controlled-test-decision.md) records new source `77ae80e`, passing full CI (3,248 tests/334 files; 207 browser tests), zero remaining critical development findings, five residual development findings and the isolated-test authorization packet. No platform E2E status in this matrix is upgraded by those automated checks. Privacy Fulfillment remains P0 for merchant launch.
+
 Local implementation evidence only. No real merchant onboarding or production migration occurred. Verified unit/SQL tests are not end-to-end installation verification. Current external settings are unavailable to this environment.
 
 | Platform | Installation | Chat | Try-On | Products | Cart | Orders | Credits | End-to-end tested |

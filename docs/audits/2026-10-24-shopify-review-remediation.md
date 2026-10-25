@@ -1,5 +1,7 @@
 # PR 75 — independent-review remediation
 
+**Latest status, verified 2026-10-25:** independent re-review of `1c5f31a` was **APPROVE WITH CHANGES; keep Draft**, not final M1 approval. The [controlled-test decision report](2026-10-24-shopify-controlled-test-decision.md) records the subsequent expired-token uninstall regression, guarded manual reconciliation template, targeted Vitest upgrade (five development findings, zero critical), final source `77ae80e` and completed new CI (3,248 tests/334 files, 207 browser tests). It supersedes the older eight-finding/critical-toolchain status and 3,244-test source evidence below. Privacy Fulfillment remains P0 for merchant launch. Controlled testing is a conditional recommendation requiring separate explicit target/operation authorization; no external operation has been performed.
+
 Milestone 1 remains **not approved**. Reviewed starting HEAD: `209340229572c36a631a352f4244adbd29c80ee4`; main remains the original audited baseline `4f5467fa80f73dde26f98f435ef1606488a68864`. Work stays on `feat/shopify-installation-isolation` and [Draft PR 75](https://github.com/mhhmod/grindctrl_booking/pull/75). AGENTS.md was reread and the clean starting worktree verified. No hosted credentials/database state/Shopify settings were available to inspect; none is assumed empty or correctly configured.
 
 This follow-up changes runtime code and manual SQL. The previously passing 3,202 tests/207 browser checks are historical evidence for the reviewed starting code, not proof of these fixes. New full-CI evidence is recorded below against code HEAD `901462944251ef03d450459337f183765d670526`. No merge/deployment/hosted SQL/app setting change/real merchant installation/paid AI/M2 occurred.
@@ -50,7 +52,7 @@ Full-graph audit fell from **13 to 8 findings** (3 moderate, 3 high, 2 critical)
 
 ## Exact changed files since reviewed HEAD
 
-28 files; changes are confined to Shopify runtime/tests, storefront connection routing, compatible tooling lockfile entries, two additive SQL deltas and operating/report documents.
+37 files since `2093402`, including the subsequent re-review delta. Changes cover scoped Shopify remediation/tests, storefront routing, targeted tooling dependencies, two additive schema deltas, one separately authorized operator casework template and reports.
 
 - `apps/grindctrl-tryon/extensions/tryon-block/assets/tryon-catalog.js`
 - `apps/grindctrl-tryon/extensions/tryon-block/assets/tryon.js`
@@ -58,20 +60,28 @@ Full-graph audit fell from **13 to 8 findings** (3 moderate, 3 high, 2 critical)
 - `apps/grindctrl-tryon/extensions/tryon-block/blocks/tryon-catalog.liquid`
 - `apps/grindctrl-tryon/extensions/tryon-block/blocks/tryon.liquid`
 - `apps/web-next/app/api/shopify/proxy/try-on-context/route.test.ts`
+- `apps/web-next/app/api/shopify/webhooks/expired-uninstall.test.ts`
 - `apps/web-next/app/api/shopify/webhooks/route.test.ts`
 - `apps/web-next/app/api/shopify/webhooks/route.ts`
+- `apps/web-next/app/api/try-on/jobs/[jobId]/route.test.ts`
+- `apps/web-next/app/api/try-on/session/route.test.ts`
+- `apps/web-next/components/assistant/use-voice-message-player.test.ts`
+- `apps/web-next/components/assistant/voice-message-player.test.tsx`
 - `apps/web-next/lib/messenger/widget-loader-identity.test.ts`
 - `apps/web-next/lib/shopify/installation-database.test.ts`
 - `apps/web-next/lib/shopify/installation-events.ts`
 - `apps/web-next/lib/shopify/privacy-casework.test.ts`
 - `apps/web-next/lib/shopify/tokens.test.ts`
 - `apps/web-next/lib/shopify/tokens.ts`
+- `apps/web-next/lib/try-on/service.test.ts`
 - `apps/web-next/lib/try-on/theme-extension-catalog-launch.test.ts`
 - `apps/web-next/lib/try-on/theme-extension-launch.test.ts`
 - `apps/web-next/package-lock.json`
+- `apps/web-next/package.json`
 - `apps/web-next/public/widget/v1/messenger.js`
 - `docs/audits/2026-10-24-development-dependency-triage.md`
 - `docs/audits/2026-10-24-readiness-matrix.md`
+- `docs/audits/2026-10-24-shopify-controlled-test-decision.md`
 - `docs/audits/2026-10-24-shopify-m1-runbook.md`
 - `docs/audits/2026-10-24-shopify-m1.md`
 - `docs/audits/2026-10-24-shopify-privacy-procedure.md`
@@ -80,6 +90,7 @@ Full-graph audit fell from **13 to 8 findings** (3 moderate, 3 high, 2 critical)
 - `docs/superpowers/checkpoints/2026-09-05-production-risk-closure.md`
 - `supabase/20261024_shopify_privacy_casework.sql`
 - `supabase/20261024_shopify_review_remediation.sql`
+- `supabase/operations/shopify_uninstall_reconciliation.sql`
 
 ## Database and rollback
 
