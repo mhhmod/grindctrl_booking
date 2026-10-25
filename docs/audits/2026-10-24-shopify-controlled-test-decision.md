@@ -1,5 +1,7 @@
 # Milestone 1 — controlled Development Store test decision
 
+Latest owner direction, 25 October 2026: `94b2a57` accepted for controlled preparation, followed by authorization for branch-only environment/harness preparation and the five-finding isolated-testing exception. See [preparation evidence](2026-10-25-controlled-prep-evidence.md) and [implementation instructions](../../testing/shopify/README.md) for the subsequent tested delta. Historical source counts/inventories below remain scoped to their stated revision. No external execution, final merchant readiness, merge or M2 authorization follows from preparation.
+
 Independent re-review at `1c5f31a3634db61abc9051556c5013f29d3b3e31`: **APPROVE WITH CHANGES; keep Draft PR 75**. This document supports the next review/authorization decision. It does not grant final M1 approval or permission for any external operation. No M2 work is included.
 
 Prepared code/test/operations revision: **`77ae80ec865dd0d36464563cb95dc636bee5aae0`**. New full CI completed successfully, with the exact evidence below; older 3,244-test evidence is not substituted for these changes. Final report closeout after this revision is documentation only.
