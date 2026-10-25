@@ -1,0 +1,7 @@
+# Build only after exact credential-free candidate digest is approved.
+ARG CANDIDATE_IMAGE
+FROM ${CANDIDATE_IMAGE}
+COPY --chown=node:node testing/shopify/*.mjs /opt/grindctrl-controlled/
+ENV GRINDCTRL_CONTROLLED_TEST=1 TRYON_MODE=live NODE_USE_ENV_PROXY=1
+ENTRYPOINT ["node", "--use-env-proxy", "--import", "/opt/grindctrl-controlled/preload.mjs"]
+CMD ["server.js"]

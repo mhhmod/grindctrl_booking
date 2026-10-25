@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'apps/web-next/**'
+      - 'testing/shopify/**'
       - '.dockerignore'
       - '.github/workflows/next-release-check.yml'
   workflow_dispatch:
@@ -29,6 +30,10 @@ jobs:
       - name: Dependency audit
         working-directory: apps/web-next
         run: npm audit --omit=dev --audit-level=moderate
+      - name: Controlled Shopify harness contracts (local only)
+        run: node --test testing/shopify/*.test.mjs
+      - name: Controlled Shopify topology contract (render only)
+        run: node testing/shopify/check-compose.mjs
       - name: Unit and route contracts
         working-directory: apps/web-next
         run: npm test -- --maxWorkers=2
