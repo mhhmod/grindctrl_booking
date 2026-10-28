@@ -66,4 +66,17 @@ class LocalTargetSafety(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'^local Docker operation failed: exec$'):
                 stack.docker('exec','local',data='sensitive')
 
+    def test_only_fixed_router_has_ingress_and_internal_alias(self):
+        with patch.object(stack,'docker') as call:
+            stack.run({'prefix':'gc-m1-12345678'},'gateway',stack.IMAGES['node'])
+            run=call.call_args_list[0].args
+            self.assertEqual(run[run.index('--network')+1],'gc-m1-12345678-edge')
+            self.assertEqual(call.call_args_list[1].args,
+              ('network','connect','--alias','gateway','gc-m1-12345678','gc-m1-12345678-gateway'))
+        with patch.object(stack,'docker') as call:
+            stack.run({'prefix':'gc-m1-12345678'},'app','synthetic-local-image')
+            run=call.call_args.args
+            self.assertEqual(run[run.index('--network')+1],'gc-m1-12345678')
+            self.assertEqual(call.call_count,1)
+
 if __name__=='__main__':unittest.main()

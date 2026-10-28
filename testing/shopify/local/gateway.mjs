@@ -14,6 +14,7 @@ const server = http.createServer(async (req, res) => {
       ...(req.method === 'GET' || req.method === 'HEAD' ? {} : { body: req, duplex: 'half' }),
       redirect: 'manual', signal: AbortSignal.timeout(30000) });
     const out = Object.fromEntries(response.headers);
+    if(response.headers.getSetCookie().length)out['set-cookie']=response.headers.getSetCookie();
     delete out['transfer-encoding']; delete out['content-encoding']; delete out['content-length'];
     res.writeHead(response.status, out);
     if (response.body) for await (const chunk of response.body) res.write(chunk);
@@ -25,11 +26,13 @@ server.listen(8000, '0.0.0.0');
 // application itself has no external Docker network or published port.
 http.createServer(async(req,res)=>{
   const headers={...req.headers};delete headers.host;delete headers.connection;
+  headers['x-forwarded-host']='127.0.0.1:3102';headers['x-forwarded-proto']='http';
   try{
     const response=await fetch('http://app:3000'+req.url,{method:req.method,headers,
       ...(req.method==='GET'||req.method==='HEAD'?{}:{body:req,duplex:'half'}),
       redirect:'manual',signal:AbortSignal.timeout(30000)});
     const out=Object.fromEntries(response.headers);
+    if(response.headers.getSetCookie().length)out['set-cookie']=response.headers.getSetCookie();
     delete out['transfer-encoding'];delete out['content-encoding'];delete out['content-length'];
     res.writeHead(response.status,out);
     if(response.body)for await(const chunk of response.body)res.write(chunk);

@@ -37,6 +37,7 @@ jobs:
       - name: Real disposable PostgreSQL, REST and Storage integration (no external credentials)
         run: |
           python3 -m unittest discover -s testing/shopify/local -p 'test_*.py'
+          node --test testing/shopify/local/*.test.mjs
           python3 testing/shopify/local/stack.py up
           python3 testing/shopify/local/stack.py test
           python3 testing/shopify/local/stack.py rehearse
