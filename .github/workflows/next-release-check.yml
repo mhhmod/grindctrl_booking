@@ -34,6 +34,18 @@ jobs:
         run: node --test testing/shopify/*.test.mjs
       - name: Controlled Shopify topology contract (render only)
         run: node testing/shopify/check-compose.mjs
+      - name: Real disposable PostgreSQL, REST and Storage integration (no external credentials)
+        run: |
+          python3 -m unittest discover -s testing/shopify/local -p 'test_*.py'
+          python3 testing/shopify/local/stack.py up
+          python3 testing/shopify/local/stack.py test
+          python3 testing/shopify/local/stack.py rehearse
+      - name: Stop only the disposable local database stack
+        if: always()
+        run: |
+          if test -f ../work/grindctrl-m1-local/state.json; then
+            python3 testing/shopify/local/stack.py stop
+          fi
       - name: Unit and route contracts
         working-directory: apps/web-next
         run: npm test -- --maxWorkers=2

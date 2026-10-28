@@ -1,5 +1,12 @@
 # Controlled Shopify preview — preparation only
 
+**Local execution update:** the owner now authorizes the zero-cost Docker fallback.
+The [executable local profile](local/README.md) runs real PostgreSQL/REST/Storage,
+credit settlement and recovery without hosted resources. Synthetic Shopify
+fixtures are not Development Store E2E. Hosted baseline parity and genuine
+Shopify/Clerk/Redis connections remain unverified. The earlier hosted-only
+restrictions below do not block these now-authorized disposable local tests.
+
 Owner authorizes branch-only preparation and the five-development-finding exception **only inside the isolated testing constraints**. No external resource, deploy, SQL, credential, install or Shopify setting action is authorized. PR #75 stays Draft; no M2. The current product/runtime feature code is unchanged.
 
 ## Selected setup
@@ -58,7 +65,11 @@ Before execution approval, bind the exact test project/host/apps/image/harness, 
 
 ## Minimal responsibilities / decisions
 
-Owner selects/binds the isolated resources and exact operation window/spending ceiling. Minimum humans: **one named test operator** with a backup/recovery responsibility, and **one different independent reviewer**; the owner authorizes execution and case-specific changes. DBA/hosting/Shopify/privacy/dependency duties may be explicitly assigned to those people where qualified; reviewer must not self-review their own manual action. All identities are **OWNER ASSIGNMENT REQUIRED**. No placeholder grants authority.
+Owner/operator/recovery owner are **mhhmod**, per the Solo Owner decision. Do not
+request or invent a second GitHub user/approval for local preparation or read-only
+verification. Solo execution is not independent human review. Live Shopify actions,
+hosted operations and unresolved privacy fulfillment retain their specific
+authorization/evidence requirements; synthetic tests do not waive those gates.
 
 Recommended defaults requiring later approval: separate free-tier projects where eligible; existing verified nonproduction Docker host or a dedicated 2 GB VM under an approved cap; 12 synthetic credits/store, two stores max, 24 total stub calls, two concurrent provider calls, <=24h run. The owner already accepts the five development-only findings **only** inside the documented isolated scope; do not ask again for that decision. Their coordinated Zod-consumer/typography-parser remediation is still required before production release, with a named maintainer/date. Any new input/exposure/dependency change reopens the exception. No exposed watch/UI/HMR/MCP or untrusted code/registry/CSS generation.
 

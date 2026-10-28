@@ -16,5 +16,6 @@
   "synthetic_seed_review_ref": null,
   "synthetic_credit_limit_per_store": 12,
   "automatic_renewals_or_topups": false,
-  "warning": "No complete production base ledger/tryon_shops DDL is available in this checkout. Test fixtures and the M1 deltas are not a baseline. Obtain schema-only definitions, review ownership/RLS/RPC contracts, and create a synthetic-only seed before hosted authorization. Do not invent an alternative ledger."
+  "local_contract_profile": "testing/shopify/local/README.md",
+  "warning": "A complete captured Production baseline is unavailable. Root shops/plans SQL contains the real ledger; local prerequisites define undocumented base tables from application contracts solely for disposable Docker tests. Local success does not establish hosted schema parity. Never apply local prerequisites to a hosted/existing database. Review schema-only definitions and ownership/RLS/RPC drift before hosted authorization."
 }
