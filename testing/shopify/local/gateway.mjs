@@ -21,10 +21,9 @@ const server = http.createServer(async (req, res) => {
     res.end();
   } catch { res.writeHead(502).end('local_upstream_unavailable'); }
 });
-server.listen(8000, '0.0.0.0');
 // A separate loopback-published port serves only the actual local app. The
 // application itself has no external Docker network or published port.
-http.createServer(async(req,res)=>{
+const appServer=http.createServer(async(req,res)=>{
   const headers={...req.headers};delete headers.host;delete headers.connection;
   headers['x-forwarded-host']='127.0.0.1:3102';headers['x-forwarded-proto']='http';
   try{
@@ -38,4 +37,8 @@ http.createServer(async(req,res)=>{
     if(response.body)for await(const chunk of response.body)res.write(chunk);
     res.end();
   }catch{res.writeHead(502).end('local_app_unavailable');}
-}).listen(8001,'0.0.0.0');
+});
+// Import completion is a real readiness barrier for the local router fixture.
+await Promise.all([server,appServer].map((s,i)=>new Promise((resolve,reject)=>{
+  s.once('error',reject);s.listen(8000+i,'0.0.0.0',resolve);
+})));
