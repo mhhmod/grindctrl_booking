@@ -3,11 +3,13 @@
 import http from 'node:http';
 const server = http.createServer(async (req, res) => {
   const prefix = req.url?.startsWith('/rest/v1/') ? '/rest/v1/'
-    : req.url?.startsWith('/storage/v1/') ? '/storage/v1/' : null;
+    : req.url?.startsWith('/storage/v1/') ? '/storage/v1/'
+    : req.url==='/redis' || req.url?.startsWith('/redis/') ? '/redis' : null;
   if (!prefix) { res.writeHead(404).end(); return; }
-  const target = prefix === '/rest/v1/' ? 'http://rest:3000/' : 'http://storage:5000/';
+  const target = prefix === '/rest/v1/' ? 'http://rest:3000/'
+    : prefix === '/storage/v1/' ? 'http://storage:5000/' : 'http://redis-http:8080';
   // Concatenation cannot turn a path/Host header into another upstream origin.
-  const url = target + req.url.slice(prefix.length);
+  const url = target + (req.url.slice(prefix.length) || (prefix==='/redis'?'/':''));
   const headers = { ...req.headers }; delete headers.host; delete headers.connection;
   try {
     const response = await fetch(url, { method: req.method, headers,

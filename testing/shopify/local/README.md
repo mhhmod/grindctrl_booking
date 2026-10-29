@@ -10,8 +10,13 @@ python3 -m unittest discover -s testing/shopify/local -p 'test_*.py' -v
 python3 testing/shopify/local/stack.py up
 python3 testing/shopify/local/stack.py test
 python3 testing/shopify/local/stack.py rehearse
+# Real local Redis, no Upstash account or hosted API credential:
+python3 testing/shopify/local/stack.py redis
+python3 testing/shopify/local/stack.py test-redis
 # After a credential-free build in apps/web-next, optional local UI:
 python3 testing/shopify/local/stack.py preview
+# Repackage an existing LOCAL preview after Redis binding, preserving all data:
+python3 testing/shopify/local/stack.py refresh-preview
 python3 testing/shopify/local/stack.py stop
 ```
 
@@ -30,6 +35,17 @@ Missing external TEST runtime access has one native intake: the existing Cloud
 environment's Environment variables > Manage editor, using the names in
 [`test-runtime-intake.env.example`](../test-runtime-intake.env.example). No
 management/Production credentials or GitHub secret export is requested.
+
+Redis uses the actual Redis server plus the community SRH adapter
+[recommended by Upstash](https://upstash.com/docs/redis/sdks/ts/developing), with
+both images digest-pinned and internal-only. Its per-run password/token are
+generated privately. `test-redis` exercises real SDK/Lua concurrency and limits,
+wrong-token rejection, the original strict helper during an actual Redis outage,
+and quota preservation after restart. No limiter responses are mocked.
+The preview accepts only `http://gateway:8000/redis` and the generated token's
+SHA-256 binding in its private manifest; hosted credentials/URLs are rejected.
+`refresh-preview` refuses processing jobs, retains DB/storage/provider counters,
+and privately archives the former preview environment/image configuration.
 
 Pinned official PostgreSQL/PostgREST/Storage API/Node images; database, REST,
 storage and app have only an internal Docker network. A credential-free router
@@ -52,7 +68,10 @@ There is no actual Shopify OAuth or Clerk login, nor any paid provider call.
 contracts. Financial functions are loaded unchanged in the explicit `DELTAS`
 order. This is a usable disposable contract schema, **not a verified Production
 baseline**. Never apply local prerequisites to a hosted/existing database.
-Clerk/workspace/messenger schema and hosted drift remain unverified. The real
+Tracked workspace/messenger foundations can be validated with `python3
+testing/shopify/local/foundations.py` in a separate disposable database. This
+checks source ordering, bootstrap/site RPCs, service-only grants and index guards;
+it does not establish hosted schema parity or genuine Clerk authentication. The real
 activation RPC issues 12 credits/store; other plans/packs are inactive. No
 payment, automatic free enrollment, renewal, top-up or scheduler runs.
 
@@ -62,8 +81,9 @@ and launches a fresh worker. It proves no duplicate debit/provider call. A
 separate restored Storage API instance/file restore and actual Shopify rollback
 are not claimed. Keep dumps/objects/synthetic capabilities private.
 
-The preview boots the actual standalone app. Missing Clerk/Redis/Shopify retain
-their original fail-closed behavior. `http://127.0.0.1:3102` is **not shareable**
+The preview boots the actual standalone app. Missing Clerk/Shopify retain
+their original fail-closed behavior; local Redis uses the original strict shared
+limiter. `http://127.0.0.1:3102` is **not shareable**
 and is not a working merchant installation. Never publicly deploy this profile.
 
 ## Fourteen real acceptance gates

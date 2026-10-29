@@ -79,4 +79,20 @@ class LocalTargetSafety(unittest.TestCase):
             self.assertEqual(run[run.index('--network')+1],'gc-m1-12345678')
             self.assertEqual(call.call_count,1)
 
+    def test_local_redis_binding_cannot_select_a_hosted_endpoint_or_another_run(self):
+        with tempfile.TemporaryDirectory() as d,patch.object(stack,'STATE',Path(d)):
+            s={'prefix':'gc-m1-12345678','expires_at':1234}
+            valid={'kind':'disposable-local-redis',**s,'url':'http://127.0.0.1:54380/redis','token':'synthetic'}
+            p=Path(d)/'redis-state.json';p.write_text(json.dumps(valid))
+            self.assertEqual(stack.local_redis_config(s)['prefix'],s['prefix'])
+            for change in [{'url':'https://production.upstash.io'},{'prefix':'gc-m1-foreign'},{'expires_at':9999}]:
+                p.write_text(json.dumps({**valid,**change}))
+                with self.assertRaisesRegex(RuntimeError,'target mismatch'):stack.local_redis_config(s)
+
+    def test_preview_refresh_cannot_interrupt_an_inflight_reserved_job(self):
+        with patch.object(stack,'state',return_value={'prefix':'gc-m1-12345678'}), \
+          patch.object(stack,'sql',return_value='1'),patch.object(stack,'docker') as call:
+            with self.assertRaisesRegex(RuntimeError,'reserved-job drain'):stack.refresh_preview()
+            call.assert_not_called()
+
 if __name__=='__main__':unittest.main()

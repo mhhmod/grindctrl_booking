@@ -36,6 +36,11 @@ test('multiple OAuth cookies are forwarded separately, not joined into one cooki
   assert.deepEqual(result.headers['set-cookie'],[
     'state=synthetic; HttpOnly; SameSite=Lax','app=synthetic; HttpOnly; SameSite=Lax']);
 });
+test('Redis SDK body and pipeline paths have one fixed internal upstream',async()=>{
+ assert.equal(JSON.parse((await request('/redis')).body).url,'http://redis-http:8080/');
+ assert.equal(JSON.parse((await request('/redis/pipeline')).body).url,'http://redis-http:8080/pipeline');
+ assert.equal((await request('/redis-foreign')).status,404);
+});
 test('app upstream and forwarded host are fixed; hostile Origin is preserved for auth checks',async()=>{
   const result=await request('/api/shopify/oauth/start',8001,{host:'attacker.invalid',origin:'https://attacker.invalid','x-forwarded-host':'attacker.invalid'});
   const data=JSON.parse(result.body);
