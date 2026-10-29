@@ -15,6 +15,22 @@ python3 testing/shopify/local/stack.py preview
 python3 testing/shopify/local/stack.py stop
 ```
 
+For the local screenshot checks, use the same pinned browser as release CI:
+
+```sh
+cd apps/web-next
+node node_modules/@playwright/test/cli.js install chromium
+node node_modules/@playwright/test/cli.js test --config playwright.shopify-preview.config.ts
+```
+
+The six earlier differences reproduced with system Chromium 151. With the
+locked Playwright Chromium 153, all 12 unchanged screenshot assertions pass.
+No UI, snapshot, pixel threshold or retry was changed to obtain that result.
+Missing external TEST runtime access has one native intake: the existing Cloud
+environment's Environment variables > Manage editor, using the names in
+[`test-runtime-intake.env.example`](../test-runtime-intake.env.example). No
+management/Production credentials or GitHub secret export is requested.
+
 Pinned official PostgreSQL/PostgREST/Storage API/Node images; database, REST,
 storage and app have only an internal Docker network. A credential-free router
 with fixed upstreams publishes loopback ports 54380 (REST/storage) and 3102 (app).
