@@ -97,7 +97,8 @@ services:
     pids_limit: 64
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    tmpfs: [/tmp:size=16m,mode=1777]
+    tmpfs:
+      - "/tmp:size=16m,mode=1777"
     networks: [data]
     depends_on:
       redis:
