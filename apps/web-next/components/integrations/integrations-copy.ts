@@ -62,12 +62,20 @@ const en: IntegrationsCopy = {
 
   storefrontEyebrow: 'Storefront',
   storefrontTitle: 'Where GrindCTRL lives in your store',
-  storefrontBody: 'The core storefront integration is implemented and shipping today.',
+  storefrontBody:
+    'Shopify has the full integration, Try-On included. On WooCommerce or your own website, Store Chat runs on a domain you verify.',
   storefrontItems: [
     {
       id: 'shopify',
       description: 'Embedded app, App Proxy, webhooks, and theme-extension blocks.',
     },
+    {
+      id: 'woocommerce',
+      description: 'Store Chat through the GRINDCTRL plugin, available on request, with the product and cart shoppers see. Try-On is not available yet.',
+    },
+    { id: 'custom-website', description: 'Store Chat with one script tag on a domain you verify. No Try-On or order lookup.' },
+    { id: 'salla', description: 'Not available yet. No code path exists.' },
+    { id: 'zid', description: 'Not available yet. No code path exists.' },
   ],
 
   channelsEyebrow: 'Customer channels',
@@ -140,12 +148,20 @@ const ar: IntegrationsCopy = {
 
   storefrontEyebrow: 'المتجر',
   storefrontTitle: 'أين يعمل GrindCTRL داخل متجرك',
-  storefrontBody: 'تكامل المتجر الأساسي مُفعّل ويعمل اليوم.',
+  storefrontBody:
+    'يتوفر لـ Shopify التكامل الكامل بما فيه التجربة الافتراضية. وعلى WooCommerce أو موقعك الخاص، تعمل دردشة المتجر على نطاق تتحقق من ملكيته.',
   storefrontItems: [
     {
       id: 'shopify',
       description: 'تطبيق مدمج، وApp Proxy، وWebhooks، وأدوات ثيم جاهزة.',
     },
+    {
+      id: 'woocommerce',
+      description: 'دردشة المتجر عبر إضافة GRINDCTRL المتاحة عند الطلب، مع المنتج والسلة كما يراهما العميل. التجربة الافتراضية غير متاحة بعد.',
+    },
+    { id: 'custom-website', description: 'دردشة المتجر بسطر كود واحد على نطاق تتحقق من ملكيته. بدون التجربة الافتراضية أو تتبع الطلبات.' },
+    { id: 'salla', description: 'غير متاح بعد. لا يوجد مسار برمجي لها.' },
+    { id: 'zid', description: 'غير متاح بعد. لا يوجد مسار برمجي لها.' },
   ],
 
   channelsEyebrow: 'قنوات التواصل مع العملاء',

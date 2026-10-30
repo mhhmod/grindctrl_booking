@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   findPublicIntegration,
@@ -29,6 +31,24 @@ describe('public integration truth', () => {
   it('never labels an evidence-free relationship as implemented or setup-ready', () => {
     for (const integration of PUBLIC_INTEGRATIONS.filter((item) => item.evidenceRef === null)) {
       expect(['implemented', 'setup-required']).not.toContain(integration.state);
+    }
+  });
+
+  /* A store platform named at signup is not a connection. Shopify is the
+     only full integration; WooCommerce and a merchant's own site get Store
+     Chat on a DNS-verified domain and nothing more; Salla and Zid have no
+     code path at all. */
+  it('keeps every non-Shopify store platform below implemented, with evidence on disk', () => {
+    expect(findPublicIntegration('shopify')?.state).toBe('implemented');
+    expect(findPublicIntegration('woocommerce')?.state).toBe('setup-required');
+    expect(findPublicIntegration('custom-website')?.state).toBe('setup-required');
+    expect(findPublicIntegration('salla')?.state).toBe('evidence-required');
+    expect(findPublicIntegration('zid')?.state).toBe('evidence-required');
+    for (const id of ['woocommerce', 'custom-website']) {
+      const ref = findPublicIntegration(id)?.evidenceRef;
+      expect(ref).toBeTruthy();
+      expect(existsSync(path.resolve(process.cwd(), '../..', ref!))).toBe(true);
+      expect(findPublicIntegration(id)?.note).toMatch(/Store Chat only/);
     }
   });
 

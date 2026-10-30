@@ -490,7 +490,7 @@
 
   /* v16: the bubble rises above a sticky or fixed Add to cart bar at the
      bottom of the screen, by the bar's height plus a margin. */
-  var CART_SELECTOR = 'form[action*="/cart/add"],button[name="add"],[data-add-to-cart],.product-form__submit';
+  var CART_SELECTOR = 'form[action*="/cart/add"],button[name="add"],[data-add-to-cart],.product-form__submit,form.cart,.single_add_to_cart_button';
   function stickyCartLift() {
     var found = document.querySelectorAll(CART_SELECTOR);
     var lift = 0;
@@ -639,6 +639,61 @@
      shopper's currency, and Try it on when the store's try-on button is
      on the page. Read from the store's own product JSON, once a page. */
   var pageProduct = null;
+
+  /* WooCommerce: the GRINDCTRL plugin (integrations/woocommerce) prints
+     window.grindctrlWoo with the product on a product page and the store's
+     Store API root. Like Shopify's JSON it is the store's own page data,
+     used for display only. */
+  function woo() {
+    var w = window.grindctrlWoo;
+    return w && typeof w === 'object' && w.platform === 'woocommerce' ? w : null;
+  }
+  function currencyDigits(currency) {
+    try { return new Intl.NumberFormat('en', { style: 'currency', currency: currency }).resolvedOptions().maximumFractionDigits; } catch (e) { return 2; }
+  }
+  // The panel and the cart contract count in the currency's ISO minor unit.
+  function decimalToMinor(amount, currency) {
+    var value = Number(amount);
+    if (amount === '' || amount === null || !isFinite(value) || value < 0) return null;
+    return Math.round(value * Math.pow(10, currencyDigits(currency)));
+  }
+  // The Store API counts in the store's own minor unit, which a merchant can set.
+  function storeMinorToMinor(amount, unit, currency) {
+    var value = parseInt(amount, 10);
+    if (!isFinite(value) || value < 0 || typeof unit !== 'number') return null;
+    return Math.round(value * Math.pow(10, currencyDigits(currency) - unit));
+  }
+  function slugFrom(url) {
+    try {
+      var parts = new URL(url, window.location.href).pathname.split('/').filter(Boolean);
+      return parts.length ? decodeURIComponent(parts[parts.length - 1]) : '';
+    } catch (e) { return ''; }
+  }
+  function sameOriginUrl(url) {
+    try {
+      var parsed = new URL(url, window.location.href);
+      return parsed.origin === window.location.origin ? parsed.href : '';
+    } catch (e) { return ''; }
+  }
+  function wooPageProduct(w) {
+    var p = w.product;
+    if (!p || typeof p !== 'object' || !/^\d{1,20}$/.test(String(p.id)) || typeof p.name !== 'string') return null;
+    var currency = typeof p.currency === 'string' ? p.currency : '';
+    var variants = (Array.isArray(p.variations) ? p.variations : []).slice(0, 50).map(function (v) {
+      var attributes = v && v.attributes && typeof v.attributes === 'object' ? v.attributes : {};
+      var title = Object.keys(attributes).map(function (k) { return attributes[k]; }).filter(Boolean).join(' / ');
+      return { id: v && v.id, title: String(title), price: decimalToMinor(v && v.price, currency), imageUrl: v && v.image };
+    });
+    if (!variants.length) variants = [{ id: p.id, title: '', price: decimalToMinor(p.price, currency) }];
+    var image = typeof p.image === 'string' ? p.image : '';
+    return {
+      handle: slugFrom(p.url) || String(p.id),
+      title: p.name,
+      imageUrl: /^https:\/\//.test(image) ? image : '',
+      variants: variants,
+      currency: currency
+    };
+  }
   function pageHandle() {
     var match = window.location.pathname.match(/\/products\/([^/?#]+)/);
     if (!match) return '';
@@ -646,6 +701,8 @@
   }
   function loadPageProduct() {
     if (pageProduct) return pageProduct;
+    var w = woo();
+    if (w) return (pageProduct = Promise.resolve(wooPageProduct(w)));
     var handle = pageHandle();
     if (!handle || !window.Shopify) return (pageProduct = Promise.resolve(null));
     var root = ((window.Shopify.routes && window.Shopify.routes.root) || '/').replace(/\/?$/, '/');
@@ -661,6 +718,8 @@
     return pageProduct;
   }
   function pickedVariantId() {
+    var variation = document.querySelector('form.variations_form [name="variation_id"]');
+    if (variation && /^[1-9]\d*$/.test(variation.value)) return variation.value;
     var input = document.querySelector('form[action*="/cart/add"] [name="id"]');
     if (input && /^\d+$/.test(input.value)) return input.value;
     try { return new URLSearchParams(window.location.search).get('variant') || ''; } catch (e) { return ''; }
@@ -674,13 +733,14 @@
       for (var i = 0; i < product.variants.length; i++) {
         if (String(product.variants[i].id) === wanted) { variant = product.variants[i]; break; }
       }
-      var currency = window.Shopify && window.Shopify.currency && window.Shopify.currency.active;
+      var currency = product.currency || (window.Shopify && window.Shopify.currency && window.Shopify.currency.active);
+      var image = typeof variant.imageUrl === 'string' && /^https:\/\//.test(variant.imageUrl) ? variant.imageUrl : product.imageUrl;
       state.iframe.contentWindow.postMessage({
         type: 'grindctrl-messenger:page-product',
         product: {
           handle: product.handle,
           title: product.title,
-          imageUrl: product.imageUrl,
+          imageUrl: image,
           variantId: String(variant.id),
           variantTitle: variant.title || '',
           priceMinor: typeof variant.price === 'number' ? variant.price : null,
@@ -708,8 +768,44 @@
     return root.replace(/\/?$/, '/') + 'cart.js';
   }
 
+  function postCart(summary) {
+    if (!state.iframe || !state.iframe.contentWindow) return;
+    state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:cart', cart: summary }, APP_ORIGIN);
+  }
+
+  // WooCommerce's Store API cart, read from the store's own origin only.
+  function sendWooCart(w) {
+    var url = sameOriginUrl(typeof w.storeApi === 'string' ? w.storeApi.replace(/\/?$/, '/') + 'cart' : '');
+    if (!url) return;
+    fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (cart) {
+        var totals = cart && cart.totals;
+        if (!totals || !Array.isArray(cart.items)) return;
+        var currency = totals.currency_code;
+        postCart({
+          totalMinor: storeMinorToMinor(totals.total_price, totals.currency_minor_unit, currency),
+          currency: currency,
+          items: cart.items.slice(0, 50).map(function (item) {
+            var prices = item.prices || {};
+            return {
+              handle: slugFrom(item.permalink),
+              variantId: item.id,
+              title: item.name,
+              quantity: item.quantity,
+              priceMinor: storeMinorToMinor(prices.price, prices.currency_minor_unit, currency)
+            };
+          })
+        });
+      })
+      .catch(function () {});
+  }
+
   function sendCart() {
-    if (!window.Shopify || !state.iframe || !state.iframe.contentWindow) return;
+    if (!state.iframe || !state.iframe.contentWindow) return;
+    var w = woo();
+    if (w) return sendWooCart(w);
+    if (!window.Shopify) return;
     fetch(cartUrl(), { credentials: 'same-origin', headers: { accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (cart) {
@@ -727,7 +823,7 @@
             };
           })
         };
-        state.iframe.contentWindow.postMessage({ type: 'grindctrl-messenger:cart', cart: summary }, APP_ORIGIN);
+        postCart(summary);
       })
       .catch(function () {});
   }
@@ -738,7 +834,11 @@
     try {
       new PerformanceObserver(function (list) {
         var changed = list.getEntries().some(function (entry) {
-          return /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/.test(entry.name);
+          // Shopify's cart endpoints, and WooCommerce's AJAX and Store API
+          // writes (its cart reads are left out: this script makes them).
+          return /\/cart\/(add|change|update|clear)(\.js)?(\?|$)/.test(entry.name) ||
+            /[?&]wc-ajax=(add_to_cart|remove_from_cart)(&|$)/.test(entry.name) ||
+            /\/wc\/store\/v1\/(cart\/(add-item|remove-item|update-item)|batch)(\?|$)/.test(entry.name);
         });
         if (!changed) return;
         clearTimeout(cartTimer);

@@ -314,6 +314,10 @@ export async function StoreChatPage({
             setMessengerEnabled: messengerActions.setMessengerEnabled,
             disconnectSiteAction: messengerActions.disconnectSiteAction,
             discardDraft: messengerActions.discardDraft,
+            listDomainsAction: messengerActions.listDomainsAction,
+            addDomainAction: messengerActions.addDomainAction,
+            checkDomainAction: messengerActions.checkDomainAction,
+            removeDomainAction: messengerActions.removeDomainAction,
           }}
         />
         {operatorFlags && (
