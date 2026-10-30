@@ -1,0 +1,42 @@
+name: grindctrl-m1-controlled
+services:
+  app:
+    image: ${GRINDCTRL_PREVIEW_IMAGE:?approved preview digest required}
+    env_file: ${GRINDCTRL_TEST_ENV_FILE:?isolated runtime env file required}
+    environment:
+      GRINDCTRL_CONTROLLED_TEST: '1'
+      TRYON_MODE: live
+      NODE_USE_ENV_PROXY: '1'
+      HTTP_PROXY: http://egress:3128
+      HTTPS_PROXY: http://egress:3128
+      NO_PROXY: localhost,127.0.0.1,::1
+    networks: [isolated]
+    ports: ['127.0.0.1:3102:3000']
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /app/apps/web-next/.next/cache:size=64m,uid=1000,gid=1000,mode=0700
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 128
+    volumes:
+      - ${GRINDCTRL_TEST_CONFIG_DIR:?approved config directory required}:/run/controlled:ro
+      - ${GRINDCTRL_TEST_STATE_DIR:?durable budget directory required}:/run/controlled-state
+    depends_on: [egress]
+  egress:
+    image: ${GRINDCTRL_GATEWAY_IMAGE:?approved gateway digest required}
+    networks: [isolated, outbound]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 32
+    volumes:
+      - ${GRINDCTRL_TEST_CONFIG_DIR:?approved config directory required}:/run/controlled:ro
+networks:
+  isolated:
+    internal: true
+  outbound: {}

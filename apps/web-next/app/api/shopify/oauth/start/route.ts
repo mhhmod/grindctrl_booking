@@ -8,7 +8,7 @@ import {
   OAUTH_STATE_COOKIE,
   OAUTH_STATE_TTL_SECONDS,
 } from '@/lib/shopify/oauth';
-import { findShopifyAppByClientId, primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { findShopifyAppByClientId, getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 
 /* GET /api/shopify/oauth/start?shop=<store>.myshopify.com
    Begins the merchant's authorization so the app can read their orders.
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   // from Shopify -- verifies and exchanges against that SAME app, not
   // whichever happens to be primary by the time the callback lands.
   const requestedAppId = request.nextUrl.searchParams.get('app');
-  const app = requestedAppId ? findShopifyAppByClientId(requestedAppId) : primaryShopifyApp();
+  const app = requestedAppId ? findShopifyAppByClientId(requestedAppId) : (getConfiguredShopifyApps().length === 1 ? getConfiguredShopifyApps()[0] : null);
   if (!app) {
     console.error('[shopify] oauth start: no matching Shopify app is configured');
     return NextResponse.json({ error: 'oauth_not_configured' }, { status: 503 });

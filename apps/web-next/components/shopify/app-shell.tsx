@@ -134,7 +134,7 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
         </ul>
       </nav>
 
-      {tab === 'try-on' ? <ShopifyAdminSettings locale={locale} /> : <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} />}
+      {tokenBootstrapped && (tab === 'try-on' ? <ShopifyAdminSettings locale={locale} /> : <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} />)}
     </div>
   );
 }

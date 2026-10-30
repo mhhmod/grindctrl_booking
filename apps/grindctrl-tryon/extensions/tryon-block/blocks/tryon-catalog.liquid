@@ -7,6 +7,7 @@
 <script
   src="{{ 'tryon-catalog.js' | asset_url }}"
   defer
+  data-gc-proxy-path="{{ block.settings.proxy_path | default: '/apps/grindctrl' | escape }}"
   data-gc-shop="{{ shop.permanent_domain }}"
   data-gc-locale="{{ request.locale.iso_code }}"
 ></script>
@@ -15,6 +16,14 @@
 {
   "name": "Try-On on product cards",
   "target": "body",
-  "settings": []
+  "settings": [
+    {
+      "type": "text",
+      "id": "proxy_path",
+      "label": "Store connection path",
+      "info": "Must match this app's App Proxy URL in Shopify. Keep different paths for overlapping connections.",
+      "default": "/apps/grindctrl"
+    }
+  ]
 }
 {% endschema %}

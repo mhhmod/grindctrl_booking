@@ -3,21 +3,15 @@ import { createHmac } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { markUninstalled, recordSeen, deleteToken, processPrivacy } = vi.hoisted(() => ({
-  markUninstalled: vi.fn(), recordSeen: vi.fn(), deleteToken: vi.fn(), processPrivacy: vi.fn(),
-}));
-vi.mock('@/lib/shopify/shops', () => ({
-  markTryOnShopUninstalled: markUninstalled,
-  recordTryOnShopSeen: recordSeen,
-}));
-vi.mock('@/lib/shopify/tokens', () => ({ deleteShopToken: deleteToken }));
-
+const { recordEvent, processPrivacy, verifyUninstall } = vi.hoisted(() => ({ recordEvent: vi.fn(), processPrivacy: vi.fn(), verifyUninstall: vi.fn() }));
+vi.mock('@/lib/shopify/tokens', () => ({ verifyShopifyUninstall: verifyUninstall }));
+vi.mock('@/lib/shopify/installation-events', () => ({ recordInstallationEvent: recordEvent }));
 vi.mock('@/lib/shopify/privacy', () => ({ processShopifyPrivacyRequest: processPrivacy }));
 
 import { POST } from './route';
 
 function request(topic: string, signature?: string) {
-  const body = JSON.stringify({ id: 123, domain: 'demo.myshopify.com' });
+  const body = JSON.stringify({ id: 123, myshopify_domain: 'demo.myshopify.com', shop_domain: 'demo.myshopify.com' });
   return new NextRequest('https://app.example/api/shopify/webhooks', {
     method: 'POST', body,
     headers: {
@@ -33,9 +27,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv('SHOPIFY_API_KEY', 'test-only-client-id');
   vi.stubEnv('SHOPIFY_API_SECRET', 'test-only-secret');
-  markUninstalled.mockResolvedValue(true);
-  recordSeen.mockResolvedValue(true);
-  deleteToken.mockResolvedValue(true);
+  recordEvent.mockResolvedValue({ id: 'event', status: 'manual_required' });
+  verifyUninstall.mockResolvedValue(undefined);
   processPrivacy.mockResolvedValue(undefined);
 });
 
@@ -45,36 +38,43 @@ afterEach(() => {
 });
 
 describe('Shopify lifecycle delivery', () => {
-  it('rejects invalid signatures before any lifecycle or token mutation', async () => {
-    const response = await POST(request('app/uninstalled', 'invalid'));
-    expect(response.status).toBe(401);
-    expect(markUninstalled).not.toHaveBeenCalled();
-    expect(deleteToken).not.toHaveBeenCalled();
+  it('rejects invalid signatures before recording or mutation', async () => {
+    expect((await POST(request('app/uninstalled', 'invalid'))).status).toBe(401);
+    expect(recordEvent).not.toHaveBeenCalled();
   });
-
-  it('acknowledges uninstall only when both scoped operations succeeded', async () => {
+  it('records verified app identity with the uninstall event', async () => {
     expect((await POST(request('app/uninstalled'))).status).toBe(200);
-    expect(markUninstalled).toHaveBeenCalledWith('demo.myshopify.com');
-    expect(deleteToken).toHaveBeenCalledWith('demo.myshopify.com');
+    expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({
+      appClientId: 'test-only-client-id', shopDomain: 'demo.myshopify.com', topic: 'app/uninstalled', webhookId: 'delivery-1',
+    }));
+    expect(verifyUninstall).toHaveBeenCalledWith('demo.myshopify.com','test-only-client-id','event');
   });
-
-  it('allows retry after failed token cleanup and acknowledges its successful retry', async () => {
-    deleteToken.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    expect((await POST(request('app/uninstalled'))).status).toBe(500);
-    expect((await POST(request('app/uninstalled'))).status).toBe(200);
-    expect(deleteToken).toHaveBeenCalledTimes(2);
+  it('requests retry when atomic persistence fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    recordEvent.mockRejectedValueOnce(new Error('secret storage detail'));
+    const response = await POST(request('app/uninstalled'));
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('secret storage detail');
   });
-
-  it('still cleans up the token when lifecycle persistence failed, without acknowledging success', async () => {
-    markUninstalled.mockResolvedValue(false);
-    expect((await POST(request('app/uninstalled'))).status).toBe(500);
-    expect(deleteToken).toHaveBeenCalled();
-  });
-
-  it('records scope lifecycle without deleting credentials', async () => {
+  it('passes scopes events without globally reactivating a shop', async () => {
     expect((await POST(request('app/scopes_update'))).status).toBe(200);
-    expect(recordSeen).toHaveBeenCalledWith('demo.myshopify.com');
-    expect(deleteToken).not.toHaveBeenCalled();
+    expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({ topic: 'app/scopes_update' }));
+    expect(verifyUninstall).not.toHaveBeenCalled();
+  });
+  it('does not acknowledge authoritative verification failure as a completed uninstall', async () => {
+    vi.spyOn(console,'error').mockImplementation(()=>{});
+    verifyUninstall.mockRejectedValue(new Error('provider secret'));
+    const response=await POST(request('app/uninstalled'));
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('provider secret');
+  });
+  it('preserves the app that verified a second registration', async () => {
+    vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{ clientId: 'other-app', secret: 'other-secret' }]));
+    const req = request('app/uninstalled');
+    const body = await req.clone().text();
+    req.headers.set('x-shopify-hmac-sha256', createHmac('sha256', 'other-secret').update(body).digest('base64'));
+    expect((await POST(req)).status).toBe(200);
+    expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({ appClientId: 'other-app' }));
   });
 });
 
@@ -83,12 +83,12 @@ describe('durable mandatory privacy processing', () => {
     'records and acknowledges %s through the privacy processor', async (topic) => {
       expect((await POST(request(topic))).status).toBe(200);
       expect(processPrivacy).toHaveBeenCalledWith({
-        webhookId: 'delivery-1', topic, shopDomain: 'demo.myshopify.com',
-        payload: { id: 123, domain: 'demo.myshopify.com' },
+        appClientId: 'test-only-client-id', triggeredAt: null, webhookId: 'delivery-1', topic, shopDomain: 'demo.myshopify.com',
+        payload: { id: 123, myshopify_domain: 'demo.myshopify.com', shop_domain: 'demo.myshopify.com' },
       });
-      expect(deleteToken).not.toHaveBeenCalled();
-      expect(markUninstalled).not.toHaveBeenCalled();
-      expect(recordSeen).not.toHaveBeenCalled();
+
+
+
     },
   );
 

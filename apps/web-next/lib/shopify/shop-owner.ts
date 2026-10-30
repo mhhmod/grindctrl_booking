@@ -6,8 +6,8 @@ import { getShopToken } from './tokens';
 /** Null means the owner could not be verified. Claim redemption must treat
  *  every null result as a denial, whether the token is absent, Shopify is
  *  unavailable, or the shop has no contact email. */
-export async function getShopOwnerEmail(shopDomain: string): Promise<string | null> {
-  const stored = await getShopToken(shopDomain);
+export async function getShopOwnerEmail(shopDomain: string, appClientId?: string): Promise<string | null> {
+  const stored = await (appClientId ? getShopToken(shopDomain, appClientId) : getShopToken(shopDomain));
   if (!stored) return null;
 
   try {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { verifySessionTokenResolved } from '@/lib/shopify/session-token';
-import { getShopToken, hasRequiredScopes, storeShopToken } from '@/lib/shopify/tokens';
+import { acquireShopToken, requestShopifyToken, ShopifyCredentialError } from '@/lib/shopify/tokens';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { syncShopStorefrontDomains } from '@/lib/messenger/shop-domain-sync';
@@ -52,64 +52,25 @@ export async function GET(request: NextRequest) {
   const clientId = session.app.clientId;
   const secret = session.app.secret;
 
-  const existing = await getShopToken(session.shop);
-  if (existing && hasRequiredScopes(existing.scopes)) {
-    // Every admin open: keep Store Chat's allowed storefront domains in step
-    // with the store's (phase zero item 5). Never awaited, never throws.
-    void syncShopStorefrontDomains(session.shop, existing.accessToken);
-    return NextResponse.json({ ok: true, provisioned: 'existing' });
-  }
-
-  let granted: { access_token?: string; scope?: string };
   try {
-    const exchange = await fetch(`https://${session.shop}/admin/oauth/access_token`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: secret,
+    const token = await acquireShopToken({
+      shopDomain: session.shop, appClientId: clientId,
+      exchange: () => requestShopifyToken(session.shop, {
+        client_id: clientId, client_secret: secret,
         grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
         subject_token: sessionToken,
         subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
         requested_token_type: 'urn:shopify:params:oauth:token-type:offline-access-token',
+        expiring: session.app.tokenMode === 'non-expiring' ? 0 : 1,
       }),
-      signal: AbortSignal.timeout(10_000),
-      cache: 'no-store',
     });
-    if (!exchange.ok) {
-      console.error('[shopify] session bootstrap: token exchange returned', exchange.status);
-      return NextResponse.json({ error: 'exchange_failed' }, { status: 502 });
-    }
-    granted = (await exchange.json()) as { access_token?: string; scope?: string };
+    void syncShopStorefrontDomains(session.shop, token.accessToken);
+    return NextResponse.json({ ok: true, provisioned: 'ready', appClientId: clientId }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
-    console.error(
-      '[shopify] session bootstrap: token exchange failed:',
-      error instanceof Error ? error.message : error,
-    );
-    return NextResponse.json({ error: 'exchange_failed' }, { status: 502 });
-  }
-
-  if (!granted.access_token) {
-    return NextResponse.json({ error: 'exchange_failed' }, { status: 502 });
-  }
-
-  try {
-    await storeShopToken({
-      shopDomain: session.shop,
-      accessToken: granted.access_token,
-      scopes: granted.scope ?? '',
+    const code = error instanceof ShopifyCredentialError ? error.code : 'storage_unavailable';
+    return NextResponse.json({ error: code }, {
+      status: code === 'busy' ? 409 : 503,
+      headers: { 'Cache-Control': 'no-store', 'Retry-After': '2' },
     });
-  } catch (error) {
-    // Most likely SHOPIFY_TOKEN_ENC_KEY is missing, which is deliberately
-    // fatal here rather than storing a credential in the clear.
-    console.error(
-      '[shopify] session bootstrap: token store failed:',
-      error instanceof Error ? error.message : error,
-    );
-    return NextResponse.json({ error: 'store_failed' }, { status: 503 });
   }
-
-  // First open after install: the same domain sync, with the new token.
-  void syncShopStorefrontDomains(session.shop, granted.access_token);
-  return NextResponse.json({ ok: true, provisioned: 'exchanged' });
 }

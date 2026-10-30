@@ -244,6 +244,7 @@ export async function resolveStorefrontProduct(input: {
   shop: unknown;
   handle: unknown;
   variantId?: unknown;
+  appClientId?: string;
 }): Promise<ResolvedStorefrontProduct> {
   const shop = normalizeShopDomain(input.shop);
   const handle = typeof input.handle === 'string' ? input.handle : '';
@@ -255,12 +256,12 @@ export async function resolveStorefrontProduct(input: {
     throw new ProductResolutionError('variant_not_found');
   }
 
-  const token = await getShopToken(shop);
+  const token = await (input.appClientId ? getShopToken(shop, input.appClientId) : getShopToken(shop));
   if (!token || !hasReadProducts(token.scopes)) {
     throw new ProductResolutionError('product_resolution_unavailable');
   }
 
-  const key = resolutionCacheKey(shop, handle, variantId);
+  const key = JSON.stringify([token.appClientId, resolutionCacheKey(shop, handle, variantId)]);
   const cached = cachedProduct(key);
   if (cached) return cached;
 

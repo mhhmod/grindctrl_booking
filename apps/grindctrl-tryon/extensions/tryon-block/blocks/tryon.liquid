@@ -9,6 +9,7 @@
   {% endif %}
   <div
     class="gc-tryon-root gc-tryon-root--pending"
+    data-proxy-path="{{ block.settings.proxy_path | default: '/apps/grindctrl' | escape }}"
     data-product="{{ product.handle }}"
     data-title="{{ product.title | escape }}"
     data-garment="{{ product.featured_image | image_url: width: 1200 }}"
@@ -51,6 +52,13 @@
   "name": "GrindCTRL Try-On",
   "target": "section",
   "settings": [
+    {
+      "type": "text",
+      "id": "proxy_path",
+      "label": "Store connection path",
+      "info": "Must match this app's App Proxy URL in Shopify. Keep different paths for overlapping connections.",
+      "default": "/apps/grindctrl"
+    },
     {
       "type": "select",
       "id": "button_label_source",

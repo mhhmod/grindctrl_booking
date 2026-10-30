@@ -1,0 +1,21 @@
+{
+  "status": "BLOCKED_MISSING_REVIEWED_BASELINE",
+  "required_tables": [
+    "profiles", "workspaces", "workspace_members", "widget_sites", "tryon_shops",
+    "tryon_jobs", "tryon_plans", "tryon_credit_packs", "tryon_subscriptions", "tryon_credit_ledger"
+  ],
+  "required_credit_rpcs": [
+    "reserve_tryon_credit", "reserve_tryon_test_look", "finalize_tryon_job", "refund_tryon_credit",
+    "reconcile_tryon_subscription", "reconcile_tryon_entitlements", "tryon_credit_balance",
+    "activate_tryon_plan", "renew_tryon_plan", "apply_tryon_top_up"
+  ],
+  "storage": { "bucket": "tryon-results", "public": false },
+  "baseline_sha256": null,
+  "baseline_review_ref": null,
+  "synthetic_seed_sha256": null,
+  "synthetic_seed_review_ref": null,
+  "synthetic_credit_limit_per_store": 12,
+  "automatic_renewals_or_topups": false,
+  "local_contract_profile": "testing/shopify/local/README.md",
+  "warning": "A complete captured Production baseline is unavailable. Root shops/plans SQL contains the real ledger; local prerequisites define undocumented base tables from application contracts solely for disposable Docker tests. Local success does not establish hosted schema parity. Never apply local prerequisites to a hosted/existing database. Review schema-only definitions and ownership/RLS/RPC drift before hosted authorization."
+}

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'apps/web-next/**'
+      - 'testing/shopify/**'
       - '.dockerignore'
       - '.github/workflows/next-release-check.yml'
   workflow_dispatch:
@@ -29,6 +30,26 @@ jobs:
       - name: Dependency audit
         working-directory: apps/web-next
         run: npm audit --omit=dev --audit-level=moderate
+      - name: Controlled Shopify harness contracts (local only)
+        run: node --test testing/shopify/*.test.mjs
+      - name: Controlled Shopify topology contract (render only)
+        run: node testing/shopify/check-compose.mjs
+      - name: Real disposable PostgreSQL, REST and Storage integration (no external credentials)
+        run: |
+          python3 -m unittest discover -s testing/shopify/local -p 'test_*.py'
+          node --test testing/shopify/local/*.test.mjs
+          python3 testing/shopify/local/stack.py up
+          python3 testing/shopify/local/stack.py test
+          python3 testing/shopify/local/stack.py rehearse
+          python3 testing/shopify/local/stack.py redis
+          python3 testing/shopify/local/stack.py test-redis
+          python3 testing/shopify/local/foundations.py
+      - name: Stop only the disposable local database stack
+        if: always()
+        run: |
+          if test -f ../work/grindctrl-m1-local/state.json; then
+            python3 testing/shopify/local/stack.py stop
+          fi
       - name: Unit and route contracts
         working-directory: apps/web-next
         run: npm test -- --maxWorkers=2

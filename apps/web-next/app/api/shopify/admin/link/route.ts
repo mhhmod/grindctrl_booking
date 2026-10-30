@@ -33,7 +33,7 @@ async function adoptStoreChat(
 }
 
 export async function POST(request: NextRequest) {
-  const session = authenticate(request);
+  const session = await authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = (await request.json()) as { code?: string; replace?: boolean };

@@ -1,4 +1,6 @@
 import 'server-only';
+import { normalizeShopDomain } from './shop-authorization';
+import { retireRejectedShopToken } from './tokens';
 
 /* Shopify Admin GraphQL client. Read-only by construction: nothing in this
    codebase calls it with a mutation, and the app requests no write scopes
@@ -34,7 +36,9 @@ export async function adminGraphql<T>(input: {
   query: string;
   variables?: Record<string, unknown>;
 }): Promise<T> {
-  const url = `https://${input.shopDomain}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/graphql.json`;
+  const shop = normalizeShopDomain(input.shopDomain);
+  if (!shop) throw new ShopifyAdminError('Invalid shop', 400);
+  const url = `https://${shop}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/graphql.json`;
   const body = JSON.stringify({ query: input.query, variables: input.variables ?? {} });
 
   let lastStatus = 0;
@@ -48,7 +52,7 @@ export async function adminGraphql<T>(input: {
       },
       body,
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      cache: 'no-store',
+      cache: 'no-store', redirect: 'error',
     });
 
     if (response.status === 429 || response.status >= 500) {
@@ -61,6 +65,7 @@ export async function adminGraphql<T>(input: {
     }
 
     if (!response.ok) {
+      if (response.status === 401) await retireRejectedShopToken(shop, input.accessToken).catch(() => {});
       // 401/403 here means the merchant revoked access or the scope is gone.
       throw new ShopifyAdminError(`Shopify Admin API returned ${response.status}`, response.status);
     }
