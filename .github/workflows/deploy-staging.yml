@@ -1,0 +1,156 @@
+name: Deploy isolated staging
+
+on:
+  push:
+    branches: ['staging/**']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+      - name: Install locked dependencies
+        working-directory: apps/web-next
+        run: npm ci
+      # Same inexpensive commands as next-release-check; no duplicate Docker build.
+      - name: Unit and route contracts
+        working-directory: apps/web-next
+        run: npm test -- --maxWorkers=2
+      - name: Typecheck
+        working-directory: apps/web-next
+        run: npx tsc --noEmit -p .
+      - name: Validate staging YAML and shell
+        run: |
+          node -e 'const fs=require("fs"),y=require("./apps/web-next/node_modules/js-yaml");for(const p of [".github/workflows/deploy-staging.yml","deploy/staging/compose.yml"]){y.load(fs.readFileSync(p,"utf8"));console.log("YAML OK: "+p)}'
+          bash -n deploy/staging/deploy.sh
+
+  build:
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: staging
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    env:
+      NEXT_PUBLIC_APP_URL: https://shopify-m1-dev.grindctrl.cloud
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.STAGING_CLERK_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.STAGING_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Refuse live or missing build configuration
+        run: node --experimental-strip-types --input-type=module -e 'import {assertStagingBuildEnv} from "./apps/web-next/lib/staging-env.ts"; assertStagingBuildEnv(process.env)'
+      - name: Select staging image repository
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "name=ghcr.io/${REPOSITORY,,}-staging" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: deploy/staging/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}:${{ github.sha }}
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          cache-from: type=gha,scope=grindctrl-staging
+          cache-to: type=gha,mode=max,scope=grindctrl-staging
+      - name: Scan exact staging image
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          ignore-unfixed: false
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: staging
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      # Same names as deploy-next.yml, DIFFERENT staging-environment key value.
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      STAGING_SSH_KEY_FINGERPRINT: ${{ vars.STAGING_SSH_KEY_FINGERPRINT }}
+      STAGING_SSH_KNOWN_HOSTS: ${{ vars.STAGING_SSH_KNOWN_HOSTS }}
+      EXPECTED_RELEASE: ${{ github.sha }}
+      IMAGE_DIGEST: ${{ needs.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Prepare verified staging-only SSH identity
+        id: identity
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOY_HOST"
+          test "$DEPLOY_USER" = root
+          test -n "$STAGING_SSH_KEY_FINGERPRINT"
+          test -n "$STAGING_SSH_KNOWN_HOSTS"
+          umask 077
+          mkdir -p "$RUNNER_TEMP/staging-ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/staging-ssh/key"
+          printf '%s\n' "$STAGING_SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/staging-ssh/known_hosts"
+          ssh-keygen -y -f "$RUNNER_TEMP/staging-ssh/key" > "$RUNNER_TEMP/staging-ssh/key.pub"
+          actual=$(ssh-keygen -lf "$RUNNER_TEMP/staging-ssh/key.pub" -E sha256 | awk '{print $2}')
+          # Missing environment secret must not fall back to the production key.
+          test "$actual" = "$STAGING_SSH_KEY_FINGERPRINT"
+      - name: Copy approved compose and deploy exact digest
+        run: |
+          ssh -i "$RUNNER_TEMP/staging-ssh/key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/staging-ssh/known_hosts" -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=60 \
+            "$DEPLOY_USER@$DEPLOY_HOST" "deploy-staging $EXPECTED_RELEASE $IMAGE_DIGEST" < deploy/staging/compose.yml
+      - name: Verify public SHA and search exclusion
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 15 -D "$RUNNER_TEMP/staging-headers" https://shopify-m1-dev.grindctrl.cloud/api/health -o "$RUNNER_TEMP/staging-health" &&
+              node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));process.exit(j.ok===true&&j.release===process.env.EXPECTED_RELEASE?0:1)' "$RUNNER_TEMP/staging-health" &&
+              grep -Eiq '^x-robots-tag:[[:space:]]*noindex,[[:space:]]*nofollow[[:space:]]*$' "$RUNNER_TEMP/staging-headers"; then
+              echo "Staging verified: $EXPECTED_RELEASE"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Staging public SHA/header check failed.' >&2
+          exit 1
+      - name: Print redacted staging logs on failure
+        if: failure() && steps.identity.outcome == 'success'
+        run: |
+          ssh -i "$RUNNER_TEMP/staging-ssh/key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$RUNNER_TEMP/staging-ssh/known_hosts" -o ConnectTimeout=20 \
+            "$DEPLOY_USER@$DEPLOY_HOST" staging-logs
+      - name: Remove runner SSH files
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/staging-ssh/key" "$RUNNER_TEMP/staging-ssh/key.pub" "$RUNNER_TEMP/staging-ssh/known_hosts"

@@ -1,5 +1,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const { assertStagingEnv } = await import('./lib/staging-env');
+    assertStagingEnv(process.env);
     await import('./sentry.server.config');
     if (process.env.TRYON_MODE?.toLowerCase() === 'live') {
       const { reportRetiredModelSettings } = await import('./lib/try-on/models');
