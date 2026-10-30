@@ -84,6 +84,7 @@ jobs:
             NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            STAGING_SHARED_PRODUCTION_SUPABASE_REF=${{ env.STAGING_SHARED_PRODUCTION_SUPABASE_REF }}
           cache-from: type=gha,scope=grindctrl-staging
           cache-to: type=gha,mode=max,scope=grindctrl-staging
       - name: Scan exact staging image
