@@ -1,6 +1,20 @@
 import type { TriageResult } from './attachments';
 import type { ActionResult } from './actions-core';
 import type { MessengerSection } from './config';
+import type { DomainView } from './domains';
+
+export type DomainActionResult =
+  | { ok: true; domain?: DomainView; domains?: DomainView[] }
+  | { ok: false; error: string };
+
+/** DNS-verified storefront domains (lib/messenger/domains.ts). Dashboard
+ *  only: a Shopify store's domains come from Shopify. */
+export interface DomainActions {
+  listDomainsAction(siteId: string): Promise<DomainActionResult>;
+  addDomainAction(siteId: string, domain: string): Promise<DomainActionResult>;
+  checkDomainAction(siteId: string, domainId: string): Promise<DomainActionResult>;
+  removeDomainAction(siteId: string, domainId: string): Promise<DomainActionResult>;
+}
 
 export interface FetchMessagesResult {
   ok: true;
