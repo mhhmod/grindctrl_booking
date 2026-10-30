@@ -31,6 +31,16 @@ describe('staging boot isolation', () => {
     expect(() => assertStagingEnv(valid())).not.toThrow();
     expect(() => assertStagingBuildEnv(valid())).not.toThrow();
   });
+  it('allows the try-on production project only when named explicitly, and never the widget project', () => {
+    const shared = { ...valid(), NEXT_PUBLIC_SUPABASE_URL: 'https://prsusuwxbzaekynonifl.supabase.co' };
+    expect(() => assertStagingEnv(shared)).toThrow('NEXT_PUBLIC_SUPABASE_URL');
+    expect(() => assertStagingEnv({ ...shared, STAGING_SHARED_PRODUCTION_SUPABASE_REF: 'prsusuwxbzaekynonifl' })).not.toThrow();
+    expect(() => assertStagingEnv({
+      ...valid(),
+      NEXT_PUBLIC_SUPABASE_URL: 'https://egvdxshlbcqndrcnzcdn.supabase.co',
+      STAGING_SHARED_PRODUCTION_SUPABASE_REF: 'egvdxshlbcqndrcnzcdn',
+    })).toThrow('NEXT_PUBLIC_SUPABASE_URL');
+  });
   it('refuses a live Clerk secret in workflow/build validation too', () => {
     expect(() => assertStagingBuildEnv({ ...valid(), CLERK_SECRET_KEY: 'sk_live_sensitive' })).toThrow('CLERK_SECRET_KEY');
   });

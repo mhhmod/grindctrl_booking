@@ -43,7 +43,11 @@ export function assertStagingBuildEnv(env: Env): void {
       ref = /^([a-z0-9]{20})\.supabase\.co$/.exec(url.hostname)?.[1] ?? '';
     }
   } catch { /* Invalid URLs fail below without printing them. */ }
-  requireSafe(ref && !PRODUCTION_REFS.includes(ref), 'NEXT_PUBLIC_SUPABASE_URL');
+  /* Owner decision (2026-10-31): staging may share the try-on app's own
+     production project, named explicitly. The widget production project is
+     never allowed, and no other production ref is implied by the override. */
+  const sharedProduction = ref === 'prsusuwxbzaekynonifl' && env.STAGING_SHARED_PRODUCTION_SUPABASE_REF === ref;
+  requireSafe(ref && (sharedProduction || !PRODUCTION_REFS.includes(ref)), 'NEXT_PUBLIC_SUPABASE_URL');
   // Do not accidentally bake a service-role secret into a public client bundle.
   assertSupabaseKey(env, 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon');
   for (const name of ['NEXT_PUBLIC_SENTRY_DSN', 'NEXT_PUBLIC_POSTHOG_KEY', 'SENTRY_DSN', 'SENTRY_AUTH_TOKEN']) {
