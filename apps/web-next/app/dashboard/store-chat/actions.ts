@@ -402,9 +402,9 @@ export async function staffReply(
     const trimmed = text.trim().slice(0, 2000);
     if (!trimmed) return { ok: false, error: 'Message is empty.' };
 
-    // Replying IS taking ownership when the thread is still queued for AI.
+    // Replying IS taking ownership while the AI or the handoff queue holds it.
     let current = conversation;
-    if (current.status === 'open') {
+    if (current.status === 'open' || current.status === 'handoff_requested') {
       const taken = await takeOverConversation(conversationId, await getProfileId(userId));
       if (!taken) return { ok: false, error: 'Conversation state changed. Refresh and retry.' };
       current = taken;
