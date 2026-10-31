@@ -228,6 +228,7 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface MessageRecord {
   id: string;
+  client_key?: string | null;
   conversation_id: string;
   role: MessageRole;
   content: string;

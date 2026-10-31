@@ -34,6 +34,7 @@ const COPY = {
     copy: 'Copy',
     copied: 'Copied!',
     toggleOn: 'Turn on Store Chat',
+    offHint: 'Store Chat is off. Turn it on here, even if the theme embed is already enabled.',
     toggling: 'Working…',
     testNow: 'Test it now',
     troubleshoot: 'Troubleshoot installation',
@@ -60,6 +61,7 @@ const COPY = {
     copy: 'نسخ',
     copied: 'تم النسخ!',
     toggleOn: 'تشغيل دردشة المتجر',
+    offHint: 'دردشة المتجر متوقفة. شغّلها هنا حتى لو كانت إضافة القالب مفعّلة بالفعل.',
     toggling: 'جارٍ التنفيذ…',
     testNow: 'جرّبه الآن',
     troubleshoot: 'فحص التثبيت',
@@ -161,6 +163,7 @@ export function InstallCard({
             <li>{t.shopifyStep1}</li>
             <li>{t.shopifyStep2}</li>
           </ol>
+          {!active && <p className="mt-3 text-sm text-muted-foreground">{t.offHint}</p>}
           <div className="mt-3 flex flex-wrap items-center gap-3">
             {domain ? (
               <Button asChild size="sm" variant="outline">

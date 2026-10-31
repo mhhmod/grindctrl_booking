@@ -509,7 +509,7 @@ describe('POST /api/messenger/send — after the merchant resolves', () => {
 /* ── v16 phase zero items 6, 7 and 8 ─────────────────────────────────── */
 
 function echoTurn(reply: { id: string; role: string; content: string } | null = null) {
-  const user = { id: 'u9', role: 'user', content: validBody.text, created_at: new Date().toISOString(), metadata: {} };
+  const user = { id: 'u9', role: 'user', content: validBody.text, created_at: new Date().toISOString(), client_key: validBody.clientKey, metadata: {} };
   mocks.appendMessage.mockImplementation(async (input: { role: string; content: string }) => ({
     message:
       input.role === 'user'
@@ -639,30 +639,154 @@ describe('item 7: after hours with n23_after_hours on', () => {
     expect(mocks.claimAiTurnWhileWaiting).toHaveBeenCalledWith(CONVERSATION.id);
     expect(mocks.claimAiTurn).not.toHaveBeenCalled();
   });
+
+  it('does not escalate again when the assistant also fails while the shopper waits overnight', async () => {
+    mocks.storeFlags.mockResolvedValue(['n23_after_hours']);
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, status: 'handoff_requested' });
+    echoTurn();
+    mocks.generateAssistantReply.mockRejectedValue(new Error('provider unavailable'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data).toMatchObject({ saved: true, assistant: 'unavailable', status: 'handoff_requested' });
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
 });
 
 describe('item 8: when the assistant is down', () => {
   beforeEach(() => {
     echoTurn();
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
     mocks.generateAssistantReply.mockRejectedValue(new Error('both providers failed'));
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('with n24_assistant_down on, answers that the message is saved', async () => {
-    mocks.storeFlags.mockResolvedValue(['n24_assistant_down']);
+  it('hands the saved message to the team without a rollout flag', async () => {
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
 
     const res = await POST(makeRequest(validBody));
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data).toMatchObject({ reply: null, saved: true, assistant: 'unavailable', status: 'open' });
+    expect(data).toMatchObject({ saved: true, assistant: 'unavailable', status: 'handoff_requested', handoffAvailable: true });
     expect(data.userMessage.id).toBe('u9');
+    expect(data.userMessage.clientKey).toBe(validBody.clientKey);
+    expect(data.reply).toMatchObject({ role: 'system', content: 'Sent to the team.' });
+    expect(data.alert).toEqual({ status: 'sent', channels: ['email'], at: SENT_ALERT.at, afterHours: false });
+    expect(mocks.escalateAndNotify).toHaveBeenCalledWith(CONVERSATION.id, 'assistant_unavailable', expect.any(String), expect.anything(), {});
+    expect(mocks.appendMessage.mock.invocationCallOrder[0]).toBeLessThan(mocks.generateAssistantReply.mock.invocationCallOrder[0]);
   });
 
-  it('with the flag off, keeps today\'s 502', async () => {
+  it('does not claim that the team was alerted when only the handoff was saved', async () => {
+    mocks.escalateAndNotify.mockResolvedValue(
+      escalation({ status: 'none', reason: 'no_recipient', channels: [], at: SENT_ALERT.at, attempts: 1 }),
+    );
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data).toMatchObject({ saved: true, status: 'handoff_requested', alert: { status: 'none' } });
+    expect(data.reply.content).toBe('Saved for the team.');
+    expect(JSON.stringify(data)).not.toContain('no_recipient');
+  });
+
+  it('keeps a second distinct message with the team without repeating the failed AI turn or alert', async () => {
+    const handedOff = { ...CONVERSATION, status: 'handoff_requested', metadata: { handoff_alert: SENT_ALERT } };
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    mocks.getConversationForVisitor
+      .mockResolvedValueOnce({ ...CONVERSATION, metadata: {} })
+      .mockResolvedValue(handedOff);
+
+    const first = await (await POST(makeRequest(validBody))).json();
+    const second = await (await POST(makeRequest({
+      ...validBody,
+      text: 'Is anyone there?',
+      clientKey: 'b3c9d1e2-1111-4222-8333-444455556666',
+    }))).json();
+
+    expect(first.status).toBe('handoff_requested');
+    expect(second).toMatchObject({ reply: null, status: 'handoff_requested' });
+    expect(mocks.generateAssistantReply).toHaveBeenCalledOnce();
+    expect(mocks.escalateAndNotify).toHaveBeenCalledOnce();
+    expect(mocks.appendMessage.mock.calls.filter(([input]) => input.role === 'user')).toHaveLength(2);
+  });
+
+  it('keeps the message sent without promising a handoff when escalation is disabled', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, config: { ...SITE.config, ai: { ...SITE.config.ai, escalationEnabled: false } } });
+
     const res = await POST(makeRequest(validBody));
-    expect(res.status).toBe(502);
-    expect((await res.json()).error).toBe('ai_unavailable');
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data).toMatchObject({ reply: null, saved: true, assistant: 'unavailable', status: 'open', alert: null, handoffAvailable: false });
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
+
+  it.each(['no_transition', 'write_failed', 'refresh_failed'])('keeps delivery truthful when handoff returns %s', async (outcome) => {
+    if (outcome !== 'no_transition') mocks.escalateAndNotify.mockRejectedValue(new Error('handoff failed'));
+    if (outcome === 'refresh_failed') {
+      mocks.getConversationForVisitor.mockResolvedValueOnce({ ...CONVERSATION, metadata: {} }).mockRejectedValue(new Error('read failed'));
+    }
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data).toMatchObject({ userMessage: { id: 'u9' }, reply: null, saved: true, assistant: 'unavailable', status: 'open', alert: null });
+    expect(mocks.appendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a concurrent team takeover from the recorded conversation', async () => {
+    mocks.getConversationForVisitor
+      .mockResolvedValueOnce({ ...CONVERSATION, metadata: {} })
+      .mockResolvedValueOnce({ ...CONVERSATION, status: 'handoff_active', metadata: { handoff_alert: SENT_ALERT } });
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data).toMatchObject({ saved: true, assistant: 'unavailable', status: 'handoff_active', alert: { status: 'sent' } });
+    expect(data.reply).toBeNull();
+    expect(mocks.appendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a recorded handoff even if its transcript line cannot be stored', async () => {
+    mocks.escalateAndNotify.mockResolvedValue(escalation());
+    const user = { id: 'u9', role: 'user', content: validBody.text, created_at: new Date().toISOString(), metadata: {} };
+    mocks.appendMessage.mockResolvedValueOnce({ message: user, replayed: false }).mockRejectedValue(new Error('system line failed'));
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data).toMatchObject({ userMessage: { id: 'u9' }, reply: null, saved: true, status: 'handoff_requested', alert: { status: 'sent' } });
+  });
+
+  it('keeps the recorded AI failure handoff on a retried send without escalating twice', async () => {
+    mocks.getConversationForVisitor.mockResolvedValue({
+      ...CONVERSATION,
+      status: 'handoff_requested',
+      handoff_reason: 'assistant_unavailable',
+      metadata: { handoff_alert: SENT_ALERT },
+    });
+    const user = { id: 'u9', role: 'user', content: validBody.text, created_at: new Date().toISOString(), metadata: {} };
+    mocks.appendMessage.mockResolvedValue({ message: user, replayed: true });
+
+    const data = await (await POST(makeRequest(validBody))).json();
+
+    expect(data).toMatchObject({ userMessage: { id: 'u9' }, assistant: 'unavailable', status: 'handoff_requested', alert: { status: 'sent' } });
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
+  });
+
+  it('still fails for retry when the shopper message could not be stored', async () => {
+    mocks.appendMessage.mockRejectedValue(new Error('message write failed'));
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+
+    expect(res.status).toBe(503);
+    expect(data).toEqual({ error: 'unavailable' });
+    expect(mocks.generateAssistantReply).not.toHaveBeenCalled();
+    expect(mocks.escalateAndNotify).not.toHaveBeenCalled();
   });
 });
 

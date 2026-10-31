@@ -18,7 +18,7 @@ const COPY = {
     sections: 'GRINDCTRL sections',
     themeToggle: 'Switch between light and dark',
     claimStore: 'Claim this store',
-    claimExplanation: 'Opens grindctrl.cloud to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.',
+    claimExplanation: 'Opens {host} to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.',
     claimAlreadyConnected: 'Already connected',
     claimError: 'Could not connect. Try again',
   },
@@ -28,7 +28,7 @@ const COPY = {
     sections: 'أقسام GRINDCTRL',
     themeToggle: 'التبديل بين الوضع الفاتح والداكن',
     claimStore: 'المطالبة بهذا المتجر',
-    claimExplanation: 'يفتح grindctrl.cloud لتسجيل الدخول وإدارة الإعدادات الكاملة من لوحة تحكمك؛ وتستمر دردشة المتجر بالعمل داخل Shopify في كل الأحوال.',
+    claimExplanation: 'يفتح {host} لتسجيل الدخول وإدارة الإعدادات الكاملة من لوحة تحكمك؛ وتستمر دردشة المتجر بالعمل داخل Shopify في كل الأحوال.',
     claimAlreadyConnected: 'متصل بالفعل',
     claimError: 'تعذّر الاتصال. حاول مجدداً',
   },
@@ -38,6 +38,14 @@ type ClaimButtonState = 'idle' | 'loading' | 'already-connected' | 'error';
 
 type ShellTab = 'try-on' | 'store-chat';
 const SHELL_TABS: readonly ShellTab[] = ['try-on', 'store-chat'];
+
+function publicAppHost() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://grindctrl.cloud').host || 'grindctrl.cloud';
+  } catch {
+    return 'grindctrl.cloud';
+  }
+}
 
 export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const [tab, setTab] = useState<ShellTab>('try-on');
@@ -107,8 +115,8 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
           </Button>
         </div>
         {claimState === 'idle' && (
-          <span className="min-w-0 basis-full text-xs leading-relaxed text-foreground">
-            {t.claimExplanation}
+          <span className="min-w-0 basis-full break-words text-xs leading-relaxed text-foreground">
+            {t.claimExplanation.replace('{host}', publicAppHost())}
           </span>
         )}
       </header>

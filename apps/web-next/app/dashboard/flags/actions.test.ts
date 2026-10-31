@@ -22,7 +22,7 @@ vi.mock('@/lib/request-rate-limit', () => ({
 }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: mocks.invalidateProxy }));
 vi.mock('@/lib/flags/store-flags', () => ({
-  isStoreFlag: (value: unknown) => value === 'n23_after_hours' || value === 'n24_assistant_down',
+  isStoreFlag: (value: unknown) => value === 'n23_after_hours' || value === 'n25_handoff_rules',
   storeExists: mocks.exists,
   writeStoreFlag: mocks.write,
   storeFlags: mocks.flags,
@@ -57,8 +57,8 @@ describe('setStoreFlag', () => {
 
   it('keys a Store Chat site by its id and leaves the App Proxy cache alone', async () => {
     const key = '11111111-1111-4111-8111-111111111111';
-    await setStoreFlag({ kind: 'site', key, flag: 'n24_assistant_down', enabled: false });
-    expect(mocks.write).toHaveBeenCalledWith({ widgetSiteId: key }, 'n24_assistant_down', false, 'user_operator');
+    await setStoreFlag({ kind: 'site', key, flag: 'n25_handoff_rules', enabled: false });
+    expect(mocks.write).toHaveBeenCalledWith({ widgetSiteId: key }, 'n25_handoff_rules', false, 'user_operator');
     expect(mocks.invalidateProxy).not.toHaveBeenCalled();
   });
 

@@ -109,6 +109,34 @@ afterEach(() => {
 });
 
 describe('MessengerPanel reply delivery', () => {
+  it('reconciles the saved shopper echo while Enter is still waiting for AI', async () => {
+    let finishSend!: (response: Response) => void;
+    let echo: WireMessage;
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/send')) {
+        const body = JSON.parse(String(init?.body));
+        echo = { id: 'stored-user', role: 'user', content: body.text, clientKey: body.clientKey, createdAt: new Date().toISOString() };
+        return new Promise<Response>((resolve) => { finishSend = resolve; });
+      }
+      const body = url.includes('/bootstrap') ? BOOTSTRAP : { status: 'open', messages: [echo] };
+      return { ok: true, json: () => Promise.resolve(body) } as Response;
+    });
+    await bootPanel();
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'One question' } });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(16_000); });
+
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/send'))).toHaveLength(1);
+    expect(screen.getAllByText('One question')).toHaveLength(1);
+    await act(async () => {
+      finishSend({ ok: true, json: () => Promise.resolve({ userMessage: echo, saved: true, assistant: 'unavailable', status: 'open' }) } as Response);
+    });
+    expect(screen.getAllByText('One question')).toHaveLength(1);
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+  });
+
   it('polls for replies while the shopper sits waiting with the panel open', async () => {
     await bootPanel();
 

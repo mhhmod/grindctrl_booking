@@ -299,6 +299,17 @@ describe('appendMessage conversation ordering', () => {
     created_at: '2026-09-12T00:00:00.000Z',
   };
 
+  it('preserves the client key through storage and sync reads', async () => {
+    const row = { ...baseRow, role: 'user', content: 'hi', metadata: {}, client_key: 'client-key' };
+    const { client } = stubAppendMessageClient(row);
+    setMessengerServiceClientForTests(client);
+    const { message } = await appendMessage({ conversationId: 'conv-1', role: 'user', content: 'hi', clientKey: 'client-key' });
+    expect(message.client_key).toBe('client-key');
+
+    setMessengerServiceClientForTests(stubQueryClient({ data: [row], error: null }).client);
+    expect((await listMessages('conv-1'))[0].client_key).toBe('client-key');
+  });
+
   it('does not touch last_message_at for an internal note', async () => {
     const { client, conversationUpdates } = stubAppendMessageClient({
       ...baseRow,

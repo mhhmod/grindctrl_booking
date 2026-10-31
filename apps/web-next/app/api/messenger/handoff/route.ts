@@ -2,21 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
-import { appendMessage, patchConversationMetadata, recordEvent } from '@/lib/messenger/conversations';
+import { appendMessage, getConversationForVisitor, patchConversationMetadata, recordEvent } from '@/lib/messenger/conversations';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { isWithinAvailabilityHours } from '@/lib/messenger/public-api';
 import { escalateAndNotify } from '@/lib/messenger/escalate';
 import { handoffLine } from '@/lib/messenger/handoff-copy';
-import { toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
+import { publicAlertFor, toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
 import { teamHours } from '@/lib/messenger/hours';
 import { pickLocalized } from '@/lib/messenger/ai';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 
-/* POST /api/messenger/handoff  (N24, flag n24_assistant_down)
+/* POST /api/messenger/handoff
    "Send it to the team" after the assistant could not answer: the saved
    message goes to the team through the same alert flow as any handoff
-   (phase zero item 6), and the panel learns whether someone was alerted.
-   Answers 404 not_enabled while the store's flag is off. */
+   (phase zero item 6), and the panel learns whether someone was alerted. */
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,16 +48,16 @@ export async function POST(request: NextRequest) {
     }
     const { site, visitor, conversation } = session;
 
-    const features = await storeFlags(flagStoreForSite(site));
-    if (!features.includes('n24_assistant_down')) {
+    if (!site.config.ai.escalationEnabled) {
       return NextResponse.json({ ok: false, error: 'not_enabled' }, { status: 404 });
     }
 
     // Already with the team: nothing to send twice.
     if (conversation.status !== 'open') {
-      return NextResponse.json({ ok: true, status: conversation.status, alert: null });
+      return NextResponse.json({ ok: true, status: conversation.status, alert: publicAlertFor(conversation) });
     }
 
+    const features = await storeFlags(flagStoreForSite(site));
     const team = features.includes('n23_after_hours') ? teamHours(site.config.behaviour, new Date()) : null;
     const escalation = await escalateAndNotify(
       conversation.id,
@@ -75,7 +74,8 @@ export async function POST(request: NextRequest) {
       team && !team.open ? { deferUntil: team.opensAtIso } : {},
     );
     if (!escalation) {
-      return NextResponse.json({ ok: true, status: 'handoff_requested', alert: null });
+      const current = await getConversationForVisitor(conversation.id, visitor.id);
+      return NextResponse.json({ ok: true, status: current?.status ?? conversation.status, alert: publicAlertFor(current ?? conversation) });
     }
 
     const locale = body.locale === 'ar' ? 'ar' : 'en';

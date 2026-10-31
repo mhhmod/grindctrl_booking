@@ -249,6 +249,7 @@ export function AssistantDownCard({
   replyLine,
   accent,
   busy,
+  handoffAvailable = true,
   onSend,
 }: {
   t: PanelCopy;
@@ -256,6 +257,7 @@ export function AssistantDownCard({
   replyLine: string | null;
   accent: string;
   busy: boolean;
+  handoffAvailable?: boolean;
   onSend: () => void;
 }) {
   return (
@@ -269,10 +271,12 @@ export function AssistantDownCard({
         </span>
         <div className="grid gap-1">
           <p className="text-sm font-semibold">{t.assistantDownTitle}</p>
-          <p className="text-xs text-muted-foreground">{[t.assistantDownBody, replyLine].filter(Boolean).join(' ')}</p>
+          <p className="text-xs text-muted-foreground">
+            {handoffAvailable ? [t.assistantDownBody, replyLine].filter(Boolean).join(' ') : t.assistantSavedBody}
+          </p>
         </div>
       </div>
-      <button
+      {handoffAvailable && <button
         type="button"
         onClick={onSend}
         disabled={busy}
@@ -281,7 +285,7 @@ export function AssistantDownCard({
       >
         <PeopleIcon />
         {t.sendToTeam}
-      </button>
+      </button>}
     </section>
   );
 }

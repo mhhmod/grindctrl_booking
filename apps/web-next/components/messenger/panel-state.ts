@@ -8,6 +8,8 @@ export interface PanelMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   createdAt: string;
+  author?: string;
+  escalated?: boolean;
   /** The idempotency key the message was sent with; a retry reuses it, so
    *  the server stores it once and answers once. */
   clientKey?: string;
@@ -20,25 +22,43 @@ export interface PanelMessage {
 }
 
 /**
- * Merges messages from sync into what the panel shows, by id. Messages the
+ * Merges messages from sync by id and the shopper's idempotency key. Messages the
  * shopper wrote that are not confirmed yet (sending, failed or waiting to
  * send) stay where they are; a staff reply arriving meanwhile no longer
  * wipes them out. Anything already shown is not added twice.
  */
 export function mergeMessages<T extends PanelMessage>(shown: T[], incoming: T[]): T[] {
   const ids = new Set(shown.map((message) => message.id));
-  const fresh = incoming.filter((message) => !ids.has(message.id));
+  const fresh = incoming.filter((message) => {
+    if (ids.has(message.id)) return false;
+    ids.add(message.id);
+    return true;
+  });
   if (fresh.length === 0) return shown;
-  const confirmed = shown.filter((message) => !message.pending && !message.failed && !message.queued);
-  const unconfirmed = shown.filter((message) => message.pending || message.failed || message.queued);
+  const echoedKeys = new Set(incoming.filter((message) => message.role === 'user' && message.clientKey).map((message) => message.clientKey));
+  const remaining = shown.filter((message) => !(message.role === 'user' && message.clientKey && echoedKeys.has(message.clientKey)));
+  const confirmed = remaining.filter((message) => !message.pending && !message.failed && !message.queued);
+  const unconfirmed = remaining.filter((message) => message.pending || message.failed || message.queued);
   return [...confirmed, ...fresh, ...unconfirmed];
 }
 
 /** Replaces an optimistic message with the server's copy, once, even when
  *  sync already brought that copy in. */
 export function confirmMessage<T extends PanelMessage>(shown: T[], optimisticId: string, confirmed: T): T[] {
-  const withoutDuplicate = shown.filter((message) => message.id !== confirmed.id);
-  return withoutDuplicate.map((message) => (message.id === optimisticId ? confirmed : message));
+  let replaced = false;
+  const next = shown.flatMap((message) => {
+    if (message.id !== optimisticId && message.id !== confirmed.id) return [message];
+    if (replaced) return [];
+    replaced = true;
+    return [confirmed];
+  });
+  return replaced ? next : mergeMessages(shown, [confirmed]);
+}
+
+/** A reply to an earlier handoff does not dismiss a new request for help. */
+export function teamAnsweredHandoff(messages: PanelMessage[]): boolean {
+  const lastHandoff = messages.findLastIndex((message) => message.escalated === true);
+  return messages.slice(lastHandoff + 1).some((message) => message.role === 'assistant' && message.author === 'human');
 }
 
 /** "10:00" as the store's shoppers read it: "10 am" or "10 صباحاً". */
