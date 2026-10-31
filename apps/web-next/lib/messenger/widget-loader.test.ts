@@ -28,6 +28,13 @@ describe('storefront widget loader', () => {
     expect(loader).not.toMatch(/(^|[^(]);?\.pos-bl \.btn\{/);
   });
 
+  it('keeps its empty shadow hosts displayed on themes that hide div:empty', () => {
+    // Dawn ships `div:empty { display: none }`. A shadow host has no light-DOM
+    // children, so the launcher built and fired loader_initialized at 0x0.
+    expect(loader).toContain("hostEl.style.cssText = 'display:block!important;position:fixed;");
+    expect(loader).toContain("el.style.cssText = 'display:block!important;position:fixed;inset:0;");
+  });
+
   it('re-sizes the panel when the viewport changes instead of latching the first size', () => {
     // The panel used to be sized once, on first open, and never again: opening
     // it in a short preview pane left it full-bleed for the rest of the

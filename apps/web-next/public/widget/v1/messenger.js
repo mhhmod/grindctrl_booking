@@ -274,7 +274,9 @@
   function buildLauncher() {
     var hostEl = document.createElement('div');
     hostEl.className = 'pos-' + (state.config.appearance.position === 'bottom-left' ? 'bl' : 'br');
-    hostEl.style.cssText = 'position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
+    // Themes such as Dawn hide div:empty, and a shadow host has no light-DOM
+    // children, so the display must be explicit or the launcher renders 0x0.
+    hostEl.style.cssText = 'display:block!important;position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
       (state.config.appearance.position === 'bottom-left' ? 'left:' : 'right:') + offset('x') +
       ';--gc-accent:' + safeColor(state.config.appearance.accentColor);
     var root = hostEl.attachShadow({ mode: 'open' });
@@ -476,7 +478,7 @@
     if (!v16Chat() || !isSmallScreen() || state.backdrop) return;
     var el = document.createElement('div');
     el.setAttribute('aria-hidden', 'true');
-    el.style.cssText = 'position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
+    el.style.cssText = 'display:block!important;position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
     el.addEventListener('click', function () { close(); });
     document.body.appendChild(el);
     state.backdrop = el;
