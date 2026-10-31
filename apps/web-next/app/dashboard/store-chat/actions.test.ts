@@ -450,6 +450,13 @@ describe('assignConversationAction', () => {
     expect(mocks.assignConversation).not.toHaveBeenCalled();
   });
 
+  it.each(['open', 'handoff_requested'])('claims a %s conversation when staff reply', async (status) => {
+    mocks.getConversationForSite.mockResolvedValue({ id: 'conv-1', status });
+    mocks.takeOverConversation.mockResolvedValue({ id: 'conv-1', status: 'handoff_active' });
+    expect(await staffReply('site-1', 'conv-1', 'On its way')).toEqual({ ok: true });
+    expect(mocks.takeOverConversation).toHaveBeenCalledWith('conv-1', 'profile-1');
+  });
+
   it('preserves takeover as a claim for the current staff profile', async () => {
     mocks.takeOverConversation.mockResolvedValue({ id: 'conv-1' });
     expect(await takeoverConversation('site-1', 'conv-1')).toEqual({ ok: true });

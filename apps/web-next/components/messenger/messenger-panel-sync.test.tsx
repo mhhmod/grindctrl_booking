@@ -467,10 +467,11 @@ describe('MessengerPanel per-message feedback', () => {
     expect(feedbackCalls()).toHaveLength(0);
   });
 
-  it('never renders rating buttons under shopper or system messages', async () => {
+  it('never renders rating buttons under shopper, team or system messages', async () => {
     stubThread([
       { id: 'm-user-1', role: 'user', content: 'My own question', createdAt: new Date().toISOString() },
       { id: 'm-sys-1', role: 'system', content: 'You are being connected', createdAt: new Date().toISOString() },
+      { ...ASSISTANT_REPLY, id: 'm-team-1', author: 'human' },
     ]);
     await bootPanel();
 

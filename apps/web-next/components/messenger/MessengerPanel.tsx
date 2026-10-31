@@ -1153,11 +1153,11 @@ export function MessengerPanel({
                   {m.order ? t.orderAiLabel : t.storeAssistantAi}
                 </span>
               )}
-              {/* Per-reply rating: assistant bubbles only, never the
-                  shopper's own messages or system lines. Same emoji and
+              {/* Per-reply rating: AI answers only, never the shopper's own
+                  messages, team replies or system lines. Same emoji and
                   button language as the end-of-conversation rating below;
                   once rated, the buttons give way to the thanks line. */}
-              {!mine &&
+              {!mine && m.author === 'ai' &&
                 (m.feedback ? (
                   <span className="mt-1 px-1 text-[11px] text-muted-foreground" role="status">
                     {t.feedbackThanks}

@@ -157,8 +157,8 @@ describe('POST /api/shopify/store-chat/thread', () => {
     expect(appendMessageMock).not.toHaveBeenCalled();
   });
 
-  it('op=reply takes over an open conversation before appending, using the shop as actor', async () => {
-    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status: 'open' });
+  it.each(['open', 'handoff_requested'])('op=reply takes over a %s conversation before appending, using the shop as actor', async (status) => {
+    getConversationForSiteMock.mockResolvedValue({ id: 'c-1', status });
     getSiteAssigneeProfileIdMock.mockResolvedValue('profile-owner-1');
     takeOverConversationMock.mockResolvedValue({ id: 'c-1', status: 'handoff_active' });
     appendMessageMock.mockResolvedValue({ message: {}, replayed: false });
