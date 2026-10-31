@@ -34,6 +34,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   process.env.SHOPIFY_API_KEY = 'client';
   process.env.SHOPIFY_API_SECRET = 'secret';
+    process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
   mocks.owned.mockResolvedValue(SHOP);
   mocks.flags.mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
   mocks.write.mockImplementation(async (_shop: string, input: { state: string }) => ({ state: input.state }));
@@ -74,7 +75,7 @@ describe('createPreviewLink (N5)', () => {
     if (!result.ok) return;
     const url = new URL(result.url);
     expect(url.origin).toBe(`https://${SHOP}`);
-    expect(verifyPreviewToken('secret', url.searchParams.get('gc_preview'), SHOP)).toBe(true);
+    expect(verifyPreviewToken('test-only-independent-core-signing-key-2026', url.searchParams.get('gc_preview'), SHOP)).toBe(true);
     expect(Date.parse(result.expiresAt) - Date.now()).toBeGreaterThan(23 * 3_600_000);
   });
 

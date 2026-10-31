@@ -85,7 +85,7 @@ describe('InstallCard overflow guards', () => {
     const { container } = renderInstallCard();
 
     const adminLinks = Array.from(container.querySelectorAll('a')).filter((anchor) =>
-      /myshopify\.com\/admin\/|admin\.shopify\.com/.test(anchor.getAttribute('href') ?? ''),
+      /myshopify\.com\/admin\/|admin\.shopify\.com|\/api\/shopify\/theme-link\?/.test(anchor.getAttribute('href') ?? ''),
     );
 
     expect(adminLinks.length).toBeGreaterThan(0);

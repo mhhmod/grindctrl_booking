@@ -35,7 +35,7 @@ function boot(attrs: Record<string, string> = {}) {
   fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.includes('/api/messenger/config')) return new Response(JSON.stringify(config), { status: 200 });
-    if (url.startsWith('/apps/grindctrl/messenger-identity')) return identityAnswer();
+    if (url.startsWith((attrs['data-proxy-path'] || '/apps/grindctrl') + '/messenger-identity')) return identityAnswer();
     return new Response('{}', { status: 200 });
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -86,6 +86,15 @@ describe('the signed-in shopper token (item 15)', () => {
     (window as { GRINDCTRL_MESSENGER?: { close?: () => void } }).GRINDCTRL_MESSENGER?.close?.();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+  it('uses a distinct configured B proxy path instead of falling back to A',async()=>{
+    boot({'data-customer-id':'1001','data-proxy-path':'/apps/grindctrl-public'});
+    await waitFor(()=>expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith('/apps/grindctrl-public/messenger-identity?'))).toBe(true));
+    expect(identityCalls()).toHaveLength(0);
+  });
+  it('does not fetch with an unsafe configured proxy path',()=>{
+    boot({'data-customer-id':'1001','data-proxy-path':'https://evil.example'});
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('asks the App Proxy with the session alone, and keeps the token with its customer', async () => {
@@ -152,12 +161,26 @@ describe('the signed-in shopper token (item 15)', () => {
   });
 
   it('keeps a fresh token for the same customer without asking again', async () => {
-    window.localStorage.setItem(TOKEN_KEY, JSON.stringify({ t: 'tok-for-1001', c: '1001', at: Date.now() }));
+    window.localStorage.setItem(TOKEN_KEY, JSON.stringify({ t: 'tok-for-1001', c: '1001', p:'/apps/grindctrl', at: Date.now() }));
     boot({ 'data-customer-id': '1001' });
 
     const frame = await openPanel();
     expect(identityCalls()).toHaveLength(0);
     expect(askForIdentity(frame)).toHaveBeenCalledWith({ type: 'grindctrl-messenger:identify', token: 'tok-for-1001' }, APP);
+  });
+  it('reacquires B identity after a proxy publisher cutover instead of reusing A cache',async()=>{
+    window.localStorage.setItem(TOKEN_KEY,JSON.stringify({t:'token-a',c:'1001',p:'/apps/grindctrl',at:Date.now()}));
+    identityAnswer=async()=>new Response(JSON.stringify({authenticated:true,token:'token-b'}));
+    boot({'data-customer-id':'1001','data-proxy-path':'/apps/grindctrl-public'});
+    await waitFor(()=>expect(stored()).toEqual(expect.objectContaining({t:'token-b',p:'/apps/grindctrl-public'})));
+    expect(identityCalls()).toHaveLength(0);
+    expect(fetchMock.mock.calls.some(c=>String(c[0]).startsWith('/apps/grindctrl-public/messenger-identity?'))).toBe(true);
+  });
+  it('reverifies cached identity with unknown legacy app-path provenance',async()=>{
+    window.localStorage.setItem(TOKEN_KEY,JSON.stringify({t:'unknown-app-token',c:'1001',at:Date.now()}));
+    boot({'data-customer-id':'1001'});
+    await waitFor(()=>expect(stored()).toEqual(expect.objectContaining({t:'tok-for-1001',p:'/apps/grindctrl'})));
+    expect(identityCalls()).toHaveLength(1);
   });
 
   it('lets a waiting panel go when the App Proxy gives no token', async () => {

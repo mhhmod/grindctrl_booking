@@ -14,6 +14,8 @@
   'use strict';
 
   var SCRIPT = document.currentScript;
+  var PROXY_PATH = (SCRIPT && SCRIPT.getAttribute('data-proxy-path')) || '/apps/grindctrl';
+  if (!/^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(PROXY_PATH)) return;
   var SHOP = SCRIPT && SCRIPT.getAttribute('data-shop');
   var KEY = (SCRIPT && SCRIPT.getAttribute('data-key')) || '';
   var LOCALE_HINT = (SCRIPT && SCRIPT.getAttribute('data-locale')) || '';
@@ -274,7 +276,9 @@
   function buildLauncher() {
     var hostEl = document.createElement('div');
     hostEl.className = 'pos-' + (state.config.appearance.position === 'bottom-left' ? 'bl' : 'br');
-    hostEl.style.cssText = 'position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
+    // Themes such as Dawn hide div:empty, and a shadow host has no light-DOM
+    // children, so the display must be explicit or the launcher renders 0x0.
+    hostEl.style.cssText = 'display:block!important;position:fixed;inset:auto;bottom:' + (20 + state.lift) + 'px;z-index:2147482000;' +
       (state.config.appearance.position === 'bottom-left' ? 'left:' : 'right:') + offset('x') +
       ';--gc-accent:' + safeColor(state.config.appearance.accentColor);
     var root = hostEl.attachShadow({ mode: 'open' });
@@ -476,7 +480,7 @@
     if (!v16Chat() || !isSmallScreen() || state.backdrop) return;
     var el = document.createElement('div');
     el.setAttribute('aria-hidden', 'true');
-    el.style.cssText = 'position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
+    el.style.cssText = 'display:block!important;position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.4);';
     el.addEventListener('click', function () { close(); });
     document.body.appendChild(el);
     state.backdrop = el;
@@ -776,7 +780,7 @@
 
   function currentToken() {
     var saved = storedToken();
-    if (!saved || saved.c !== CUSTOMER_ID || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
+    if (!saved || saved.c !== CUSTOMER_ID || saved.p !== PROXY_PATH || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
     return saved.t;
   }
 
@@ -788,7 +792,7 @@
 
   function identify(token) {
     if (typeof token !== 'string' || token.length > 4096) return;
-    lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, at: Date.now() }));
+    lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, p: PROXY_PATH, at: Date.now() }));
     state.identified = true;
     // Storage cannot cross the origin boundary, so the panel gets it here,
     // whether it is waiting for it or already loaded.
@@ -810,7 +814,7 @@
       if (!currentToken()) sendIdentity(null);
     };
     try {
-      fetch('/apps/grindctrl/messenger-identity?sid=' + encodeURIComponent(ensureAnonId()))
+      fetch(PROXY_PATH + '/messenger-identity?sid=' + encodeURIComponent(ensureAnonId()))
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           if (data && data.authenticated && data.token) identify(data.token);

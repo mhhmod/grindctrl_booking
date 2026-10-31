@@ -131,12 +131,13 @@ export function emailMatches(onOrder: string | null | undefined, supplied: strin
 
 export async function lookupOrder(input: {
   shopDomain: string;
+  appClientId?: string;
   /** From the conversation record + proxy-signed token. Never from the model. */
   verifiedCustomerId: string | null;
   orderNumber: string | null;
   email: string | null;
 }): Promise<LookupOutcome> {
-  const token = await getShopToken(input.shopDomain);
+  const token = await (input.appClientId ? getShopToken(input.shopDomain, input.appClientId) : getShopToken(input.shopDomain));
   if (!token) return { ok: false, reason: 'not_configured' };
   // Holding a token issued before the scope change is not permission to
   // read orders. Re-consent is required, and until then this stays shut.
@@ -225,11 +226,12 @@ export type GuestCardOutcome =
 
 export async function lookupGuestOrderCard(input: {
   shopDomain: string;
+  appClientId?: string;
   orderNumber: string;
   email: string;
   withAmounts: boolean;
 }): Promise<GuestCardOutcome> {
-  const token = await getShopToken(input.shopDomain);
+  const token = await (input.appClientId ? getShopToken(input.shopDomain, input.appClientId) : getShopToken(input.shopDomain));
   if (!token) return { ok: false, reason: 'not_configured' };
   if (!hasOrderScope(token.scopes)) return { ok: false, reason: 'no_scope' };
   try {

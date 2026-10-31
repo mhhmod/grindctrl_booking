@@ -268,6 +268,7 @@ describe('GET /api/messenger/config launch state (N5)', () => {
     vi.resetAllMocks();
     process.env.SHOPIFY_API_KEY = 'client';
     process.env.SHOPIFY_API_SECRET = 'secret';
+    process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
     mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     mocks.originAllowed.mockReturnValue(true);
     mocks.toPublicPayload.mockImplementation(() => ({ v: 1, active: true }));
@@ -283,7 +284,7 @@ describe('GET /api/messenger/config launch state (N5)', () => {
   });
 
   it('shows Store Chat to the owner with a valid preview link', async () => {
-    const { token } = signPreviewToken('secret', 'maison.myshopify.com');
+    const { token } = signPreviewToken('test-only-independent-core-signing-key-2026', 'maison.myshopify.com');
     const body = await (await GET(req(`${URL_BASE}&preview=${encodeURIComponent(token)}`))).json();
     expect(body.launch).toEqual({ show: true, reason: null, bucket: null, test: true });
   });

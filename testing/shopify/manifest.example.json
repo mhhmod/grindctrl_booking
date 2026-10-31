@@ -1,0 +1,17 @@
+{
+  "environment": "controlled-test",
+  "synthetic_only": true,
+  "run_id": null,
+  "approval_ref": null,
+  "source_release": null,
+  "harness_revision": null,
+  "expires_at": null,
+  "drain_until": null,
+  "project_ref": null,
+  "preview_origin": null,
+  "shops": [],
+  "app_client_ids": [],
+  "additional_hosts": [],
+  "max_calls": 24,
+  "max_concurrent": 2
+}

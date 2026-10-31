@@ -190,6 +190,7 @@ export interface ConversationRecord {
   metadata: {
     shopper_locale?: MessengerLocale;
     identity?: {
+      app_client_id?: string;
       customer_id?: string;
       email?: string;
       name?: string;

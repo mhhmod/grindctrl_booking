@@ -113,7 +113,7 @@ begin
       join pg_class ic on ic.oid = i.indexrelid
       join pg_class tc on tc.oid = i.indrelid
       join pg_am am on am.oid = ic.relam
-      where i.indexrelid = 'public.idx_widget_sites_id_workspace'::regclass
+      where i.indexrelid = to_regclass('public.idx_widget_sites_id_workspace')
         and tc.oid = 'public.widget_sites'::regclass
         and am.amname = 'btree'
         and i.indisunique
@@ -263,7 +263,9 @@ begin
         and i.indnatts = i.indnkeyatts
         and i.indexprs is null
         and not exists (
-          select 1 from pg_constraint c where c.conindid = i.indexrelid
+          -- Foreign keys record their referenced index here too. They do not
+          -- make this index constraint-owned; this migration creates those FKs.
+          select 1 from pg_constraint c where c.conindid = i.indexrelid and c.contype <> 'f'
         )
         and pg_get_indexdef(i.indexrelid, 1, true) = v_index.key_1
         and (v_index.key_2 is null or pg_get_indexdef(i.indexrelid, 2, true) = v_index.key_2)
