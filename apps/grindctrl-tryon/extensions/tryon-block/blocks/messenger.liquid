@@ -15,9 +15,14 @@
 {% endcomment %}
 
 {% unless block.settings.disable_on_this_page %}
+  {% assign app_origin = app.metafields.grindctrl.app_origin.value | default: 'https://grindctrl.cloud' %}
+  {% assign app_origin_prefix = app_origin | slice: 0, 8 %}
+  {% unless app_origin_prefix == 'https://' %}
+    {% assign app_origin = 'https://grindctrl.cloud' %}
+  {% endunless %}
   <script
     async
-    src="https://grindctrl.cloud/widget/v1/messenger.js"
+    src="{{ app_origin | escape }}/widget/v1/messenger.js"
     data-proxy-path="{{ block.settings.proxy_path | default: '/apps/grindctrl' | escape }}"
     data-shop="{{ shop.permanent_domain }}"
     data-locale="{{ request.locale.iso_code | slice: 0, 2 }}"

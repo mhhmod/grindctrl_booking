@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const m = vi.hoisted(() => ({ verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), limit: vi.fn() }));
+const m = vi.hoisted(() => ({ verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), syncOrigin: vi.fn(), limit: vi.fn() }));
+vi.mock('@/lib/shopify/admin', () => ({ syncShopifyAppOrigin: m.syncOrigin }));
 vi.mock('@/lib/shopify/session-token', () => ({ verifySessionTokenResolved: m.verify }));
 vi.mock('@/lib/shopify/tokens', async () => {
   const actual = await vi.importActual<typeof import('@/lib/shopify/tokens')>('@/lib/shopify/tokens');
@@ -30,6 +31,7 @@ describe('installation-aware token bootstrap', () => {
       client_id: 'app-b', client_secret: 'b', subject_token: 'id-token', expiring: 1,
     }));
     expect(m.sync).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
+    expect(m.syncOrigin).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
   });
   it('allows explicit eligible custom non-expiring mode without changing public defaults', async () => {
     m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', tokenMode: 'non-expiring' } });
@@ -40,17 +42,20 @@ describe('installation-aware token bootstrap', () => {
     m.verify.mockReturnValue(null);
     expect((await GET(req())).status).toBe(401);
     expect(m.acquire).not.toHaveBeenCalled(); expect(m.sync).not.toHaveBeenCalled();
+    expect(m.syncOrigin).not.toHaveBeenCalled();
   });
   it('does not acquire when the shared limiter is unavailable', async () => {
     m.limit.mockResolvedValue(null);
     expect((await GET(req())).status).toBe(503);
     expect(m.acquire).not.toHaveBeenCalled();
+    expect(m.syncOrigin).not.toHaveBeenCalled();
   });
   it.each(['busy','storage_unavailable','exchange_failed'] as const)('reports %s without exposing secrets', async code => {
     m.acquire.mockRejectedValue(new ShopifyCredentialError(code));
     const response = await GET(req());
     expect(response.status).toBe(code === 'busy' ? 409 : 503);
     expect(m.sync).not.toHaveBeenCalled();
+    expect(m.syncOrigin).not.toHaveBeenCalled();
     expect(response.headers.get('cache-control')).toBe('no-store');
   });
 });

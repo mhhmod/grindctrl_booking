@@ -2,8 +2,6 @@
    API (dashboard-editable); clicking expands an iframe to the GrindCTRL
    embed inline. Height auto-syncs via postMessage from the embed. */
 (function () {
-  var EMBED_ORIGIN = 'https://grindctrl.cloud';
-
   function normalizeLocale(value) {
     return String(value || '').toLowerCase().split('-')[0] === 'ar' ? 'ar' : 'en';
   }
@@ -433,6 +431,12 @@
     var btn = root.querySelector('.gc-tryon-btn');
     if (!btn) return;
 
+    var embedOrigin = 'https://grindctrl.cloud';
+    try {
+      var appUrl = new URL(root.dataset.appOrigin);
+      if (appUrl.protocol === 'https:') embedOrigin = appUrl.origin;
+    } catch (_) { /* use the production default */ }
+
     var locale = normalizeLocale(root.dataset.locale);
     applyConfig(root, btn, locale);
 
@@ -491,7 +495,7 @@
       } catch (_) { /* keep as-is; embed validates */ }
 
       var src =
-        EMBED_ORIGIN +
+        embedOrigin +
         '/embed/try-on?product=' +
         encodeURIComponent(root.dataset.product || '') +
         '&title=' +
@@ -518,13 +522,6 @@
       // Take a photo needs the camera inside the iframe, and the in-app
       // browser note copies the store's link for iOS.
       if (asSheet) frame.setAttribute('allow', 'camera; clipboard-write');
-
-      var embedOrigin;
-      try {
-        embedOrigin = new URL(src, window.location.href).origin;
-      } catch (_) {
-        return;
-      }
 
       window.addEventListener('message', function (event) {
         if (event.source !== frame.contentWindow || event.origin !== embedOrigin || !event.data) {

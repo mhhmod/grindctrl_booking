@@ -1,11 +1,11 @@
 import 'server-only';
+import { getAppUrl } from '../env';
 import { normalizeShopDomain } from './shop-authorization';
 import { retireRejectedShopToken } from './tokens';
 
-/* Shopify Admin GraphQL client. Read-only by construction: nothing in this
-   codebase calls it with a mutation, and the app requests no write scopes
-   for orders. Version is pinned to the one shopify.app.toml declares for
-   webhooks, so the two never drift apart. */
+/* Shopify Admin GraphQL client. The app requests no write scopes for
+   orders; app-data metafields need no additional scope. Version is pinned
+   to the one shopify.app.toml declares for webhooks. */
 
 export const SHOPIFY_ADMIN_API_VERSION = '2026-07';
 
@@ -78,4 +78,41 @@ export async function adminGraphql<T>(input: {
     return payload.data;
   }
   throw new ShopifyAdminError(`Shopify Admin API returned ${lastStatus}`, lastStatus);
+}
+
+export async function syncShopifyAppOrigin(shopDomain: string, accessToken: string): Promise<void> {
+  let stage = 'configuration';
+  try {
+    // Use this deployment's configured public URL, never request headers.
+    const url = new URL(getAppUrl());
+    if (url.protocol !== 'https:' || url.username || url.password) throw new Error('Invalid app origin');
+    stage = 'installation_lookup';
+    const data = await adminGraphql<{
+      currentAppInstallation: { id: string; metafield: { value: string } | null } | null;
+    }>({
+      shopDomain, accessToken,
+      query: '{ currentAppInstallation { id metafield(namespace: "grindctrl", key: "app_origin") { value } } }',
+    });
+    const installation = data.currentAppInstallation;
+    if (!installation?.id) throw new Error('Missing app installation');
+    if (installation.metafield?.value === url.origin) return;
+
+    stage = 'metafield_write';
+    const result = await adminGraphql<{
+      metafieldsSet: { metafields: Array<{ id: string }> | null; userErrors: Array<{ message: string }> } | null;
+    }>({
+      shopDomain, accessToken,
+      query: `mutation SetAppOrigin($metafields: [MetafieldsSetInput!]!) {
+        metafieldsSet(metafields: $metafields) { metafields { id } userErrors { message } }
+      }`,
+      variables: { metafields: [{
+        ownerId: installation.id, namespace: 'grindctrl', key: 'app_origin', type: 'url', value: url.origin,
+      }] },
+    });
+    if (result.metafieldsSet?.userErrors?.length || !result.metafieldsSet?.metafields?.[0]?.id) {
+      throw new Error('App origin write failed');
+    }
+  } catch {
+    console.warn('[shopify] app origin sync failed', { shopDomain, stage });
+  }
 }
