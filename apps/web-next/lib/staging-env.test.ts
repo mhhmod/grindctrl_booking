@@ -42,6 +42,16 @@ describe('staging boot isolation', () => {
       STAGING_SHARED_PRODUCTION_SUPABASE_REF: 'egvdxshlbcqndrcnzcdn',
     })).toThrow('NEXT_PUBLIC_SUPABASE_URL');
   });
+  it('allows only OPENROUTER_API_KEY, and only inside a short AI smoke window', () => {
+    const key = { ...valid(), OPENROUTER_API_KEY: 'sensitive' };
+    const inOneHour = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    expect(() => assertStagingEnv({ ...key, STAGING_AI_SMOKE_UNTIL: inOneHour })).not.toThrow();
+    expect(() => assertStagingEnv(key)).toThrow('OPENROUTER_API_KEY');
+    expect(() => assertStagingEnv({ ...key, STAGING_AI_SMOKE_UNTIL: new Date(Date.now() - 1000).toISOString() })).toThrow('OPENROUTER_API_KEY');
+    expect(() => assertStagingEnv({ ...key, STAGING_AI_SMOKE_UNTIL: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString() })).toThrow('OPENROUTER_API_KEY');
+    expect(() => assertStagingEnv({ ...valid(), GROQ_API_KEY: 'sensitive', STAGING_AI_SMOKE_UNTIL: inOneHour })).toThrow('GROQ_API_KEY');
+  });
+
   it('refuses a live Clerk secret in workflow/build validation too', () => {
     expect(() => assertStagingBuildEnv({ ...valid(), CLERK_SECRET_KEY: 'sk_live_sensitive' })).toThrow('CLERK_SECRET_KEY');
   });

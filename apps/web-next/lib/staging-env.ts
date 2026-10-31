@@ -82,11 +82,16 @@ export function assertStagingEnv(env: Env): void {
   requireSafe(env.GRINDCTRL_TEST_PREVIEW_ORIGIN === ORIGIN, 'GRINDCTRL_TEST_PREVIEW_ORIGIN');
   requireSafe(env.TRYON_MODE === 'mock', 'TRYON_MODE');
   requireSafe(env.LANDING_SANDBOX_MODE === 'mock', 'LANDING_SANDBOX_MODE');
+  // A one-off AI smoke test may boot with OPENROUTER_API_KEY alone, and only
+  // while STAGING_AI_SMOKE_UNTIL is at most 2 hours away. The check runs at
+  // boot, so the key must still be removed and the container restarted after.
+  const smokeUntil = Date.parse(env.STAGING_AI_SMOKE_UNTIL ?? '');
+  const aiSmoke = smokeUntil > Date.now() && smokeUntil - Date.now() <= 2 * 60 * 60 * 1000;
   for (const name of [
     'OPENROUTER_API_KEY', 'GROQ_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY',
     'GOOGLE_API_KEY', 'GEMINI_API_KEY', 'FAL_KEY', 'REPLICATE_API_TOKEN',
     'CLOUDFLARE_API_TOKEN', 'CF_API_TOKEN', 'LANDING_TRIAL_INFLOW_URL', 'LANDING_TRIAL_INFLOW_TOKEN',
-  ]) requireSafe(!env[name]?.trim(), name);
+  ]) if (!(aiSmoke && name === 'OPENROUTER_API_KEY')) requireSafe(!env[name]?.trim(), name);
   requireSafe(env.UPSTASH_REDIS_REST_URL === 'http://srh:8080', 'UPSTASH_REDIS_REST_URL');
   requireSafe(/^[a-f0-9]{64}$/.test(env.UPSTASH_REDIS_REST_TOKEN ?? ''), 'UPSTASH_REDIS_REST_TOKEN');
   requireSafe(/^[a-f0-9]{64}$/.test(env.STAGING_REDIS_PASSWORD ?? '') && env.STAGING_REDIS_PASSWORD !== env.UPSTASH_REDIS_REST_TOKEN, 'STAGING_REDIS_PASSWORD');
