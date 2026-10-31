@@ -160,6 +160,8 @@ export async function POST(request: NextRequest) {
       v: site.settings_version,
       messages: messages.map((m) => ({
         id: m.id,
+        clientKey: m.client_key ?? undefined,
+        escalated: m.metadata.escalated ?? undefined,
         role: m.role,
         content: m.content,
         createdAt: m.created_at,

@@ -60,6 +60,8 @@ export interface PanelCopy {
   teamAway: string;
   savedMark: string;
   assistantDownTitle: string;
+  assistantUnavailable: string;
+  assistantSavedBody: string;
   assistantDownBody: string;
   sendToTeam: string;
   offlineBar: string;
@@ -151,6 +153,8 @@ const EN: PanelCopy = {
   teamAway: 'team away',
   savedMark: 'Saved',
   assistantDownTitle: 'The assistant can’t answer right now',
+  assistantUnavailable: 'Assistant unavailable',
+  assistantSavedBody: 'Your message is saved.',
   assistantDownBody: 'Your message is saved. Send it to the team and they reply here.',
   sendToTeam: 'Send it to the team',
   offlineBar: 'You’re offline. We’ll send it when you’re back.',
@@ -247,6 +251,8 @@ const AR: PanelCopy = {
   teamAway: 'الفريق غير متاح',
   savedMark: 'تم الحفظ',
   assistantDownTitle: 'المساعد لا يستطيع الرد الآن',
+  assistantUnavailable: 'المساعد غير متاح',
+  assistantSavedBody: 'رسالتك محفوظة.',
   assistantDownBody: 'رسالتك محفوظة. يمكنك إرسالها إلى الفريق وسيردون هنا.',
   sendToTeam: 'إرسالها إلى الفريق',
   offlineBar: 'لا يوجد اتصال بالإنترنت. سنرسلها عند عودة الاتصال.',

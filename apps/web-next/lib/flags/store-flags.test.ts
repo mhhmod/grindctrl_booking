@@ -7,6 +7,7 @@ import {
   clearStoreFlagCache,
   flagStoreForSite,
   isStoreFlagOn,
+  isStoreFlag,
   storeExists,
   storeFlagRows,
   storeFlags,
@@ -65,10 +66,10 @@ describe('store flags', () => {
 
   it('reports the known flags that are on, and ignores names the code does not know', async () => {
     const fake = use(() => ({
-      data: [{ flag: 'n24_assistant_down' }, { flag: 'n99_typo' }, { flag: 'n23_after_hours' }],
+      data: [{ flag: 'n25_handoff_rules' }, { flag: 'n99_typo' }, { flag: 'n23_after_hours' }],
       error: null,
     }));
-    expect(await storeFlags(SHOP, NOW)).toEqual(['n23_after_hours', 'n24_assistant_down', ...ALWAYS_ON]);
+    expect(await storeFlags(SHOP, NOW)).toEqual(['n23_after_hours', 'n25_handoff_rules', ...ALWAYS_ON]);
     expect(fake.queries[0].filters).toEqual([
       ['shop_domain', 'maison.myshopify.com'],
       ['enabled', true],
@@ -147,6 +148,16 @@ describe('store flags', () => {
   it('refuses to write a flag the code does not know', async () => {
     use(() => ({ data: [], error: null }));
     await expect(writeStoreFlag(SHOP, 'n99_typo' as never, true, 'user_operator')).rejects.toThrow();
+  });
+
+  it('ignores the retired assistant-down flag and no longer offers or writes it', async () => {
+    const fake = use(() => ({ data: [{ flag: 'n24_assistant_down' }], error: null }));
+
+    expect(isStoreFlag('n24_assistant_down')).toBe(false);
+    expect(await storeFlags(SHOP, NOW)).toEqual(ALWAYS_ON);
+    expect(await storeFlagRows(SHOP)).not.toContainEqual(expect.objectContaining({ flag: 'n24_assistant_down' }));
+    await expect(writeStoreFlag(SHOP, 'n24_assistant_down' as never, true, 'user_operator')).rejects.toThrow();
+    expect(fake.upserts).toHaveLength(0);
   });
 
   it('knows a store only when the app does', async () => {

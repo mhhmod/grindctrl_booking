@@ -91,10 +91,10 @@ describe('StoreChatEmbedded', () => {
   });
 
   it('re-pulls /state after a successful mutation, since there is no server revalidatePath here', async () => {
-    fetchMock.mockResolvedValue({
+    fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ ...STATE_RESPONSE, site: { ...STATE_RESPONSE.site, active: false } }),
-    });
+    }).mockResolvedValue({ ok: true, json: () => Promise.resolve(STATE_RESPONSE) });
     setMessengerEnabledMock.mockResolvedValue({ ok: true });
 
     render(<StoreChatEmbedded locale="en" />);
@@ -102,6 +102,7 @@ describe('StoreChatEmbedded', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Installation' }));
+    expect(screen.getByText(/Store Chat is off/)).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Turn on Store Chat' }));
 
     await waitFor(() => expect(setMessengerEnabledMock).toHaveBeenCalledWith('site-1', true));
@@ -109,5 +110,6 @@ describe('StoreChatEmbedded', () => {
     // loadState() call does, so a second /state call proves the wrapper
     // actually re-pulled fresh data rather than trusting the stale prop.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByText(/Store Chat is off/)).not.toBeInTheDocument());
   });
 });

@@ -33,8 +33,10 @@ const claimExplanation = 'Opens grindctrl.cloud to sign in and manage full setti
 describe('ShopifyAppShell claim button', () => {
   beforeEach(() => {
     ensureShopTokenMock.mockResolvedValue(undefined);
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', '');
   });
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
 
@@ -44,6 +46,23 @@ describe('ShopifyAppShell claim button', () => {
   ] as const)('explains the claim while idle in %s', async (locale, explanation) => {
     render(<ShopifyAppShell locale={locale} />);
     expect(screen.getByText(explanation)).toBeVisible();
+    await screen.findByTestId('auto-claim-mounted');
+  });
+
+  it.each(['en', 'ar'] as const)('names the configured public host in %s', async (locale) => {
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://staging.grindctrl.cloud:8443/app');
+    render(<ShopifyAppShell locale={locale} />);
+
+    expect(screen.getByText(/staging\.grindctrl\.cloud:8443/)).toBeVisible();
+    expect(screen.queryByText(/https:\/\/staging|\/app/)).not.toBeInTheDocument();
+    await screen.findByTestId('auto-claim-mounted');
+  });
+
+  it('falls back to the production host if the configured URL is invalid', async () => {
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'invalid-url');
+    render(<ShopifyAppShell locale="en" />);
+
+    expect(screen.getByText(claimExplanation)).toBeVisible();
     await screen.findByTestId('auto-claim-mounted');
   });
 

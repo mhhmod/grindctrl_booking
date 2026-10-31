@@ -7,14 +7,14 @@ import { InstallCard } from './install-card';
 const EMBED_KEY = 'gc_521d5a81_1f8e3392_b06c804d';
 const SNIPPET = `<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="${EMBED_KEY}"></script>`;
 
-function renderInstallCard(domain: string | null = 'grindctrl.myshopify.com') {
+function renderInstallCard(domain: string | null = 'grindctrl.myshopify.com', active = true, locale = 'en') {
   return render(
     <InstallCard
-      locale="en"
+      locale={locale}
       siteId="site-1"
       embedKey={EMBED_KEY}
       domain={domain}
-      active
+      active={active}
       detectedAt="2026-08-30T10:00:00.000Z"
       version={3}
       actions={{ setMessengerEnabled: vi.fn() }}
@@ -23,6 +23,24 @@ function renderInstallCard(domain: string | null = 'grindctrl.myshopify.com') {
 }
 
 describe('InstallCard overflow guards', () => {
+  it.each([
+    ['en', 'Store Chat is off. Turn it on here, even if the theme embed is already enabled.', 'Turn on Store Chat'],
+    ['ar', 'دردشة المتجر متوقفة. شغّلها هنا حتى لو كانت إضافة القالب مفعّلة بالفعل.', 'تشغيل دردشة المتجر'],
+  ])('explains the separate Store Chat enable step beside its control in %s', (locale, hint, button) => {
+    renderInstallCard('grindctrl.myshopify.com', false, locale);
+
+    const note = screen.getByText(hint);
+    expect(note).toBeVisible();
+    expect(note.parentElement).toContainElement(screen.getByRole('button', { name: button }));
+  });
+
+  it('hides the enable hint when Store Chat is already active', () => {
+    renderInstallCard();
+
+    expect(screen.queryByText(/Store Chat is off/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Turn on Store Chat' })).not.toBeInTheDocument();
+  });
+
   it('renders the long install snippet inside min-width guarded cards and grid', () => {
     const { container } = renderInstallCard();
 

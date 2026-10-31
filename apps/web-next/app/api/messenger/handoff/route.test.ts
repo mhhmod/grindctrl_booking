@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   append: vi.fn(),
   event: vi.fn(),
   patch: vi.fn(),
+  conversation: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -26,6 +27,7 @@ vi.mock('@/lib/messenger/conversations', () => ({
   appendMessage: mocks.append,
   recordEvent: mocks.event,
   patchConversationMetadata: mocks.patch,
+  getConversationForVisitor: mocks.conversation,
 }));
 
 import { POST } from './route';
@@ -39,12 +41,13 @@ function post(body: Record<string, unknown> = BODY) {
   return POST(new NextRequest('http://localhost/api/messenger/handoff', { method: 'POST', body: JSON.stringify(body) }));
 }
 
-describe('POST /api/messenger/handoff (N24)', () => {
+describe('POST /api/messenger/handoff', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.limit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     mocks.session.mockResolvedValue({ ok: true, site: SITE, visitor: { id: 'v1' }, conversation: CONVERSATION });
-    mocks.flags.mockResolvedValue(['n24_assistant_down']);
+    mocks.flags.mockResolvedValue([]);
+    mocks.conversation.mockResolvedValue(CONVERSATION);
     mocks.event.mockResolvedValue(undefined);
     mocks.patch.mockResolvedValue(undefined);
     mocks.append.mockImplementation(async (input: { content: string }) => ({
@@ -56,15 +59,16 @@ describe('POST /api/messenger/handoff (N24)', () => {
     });
   });
 
-  it('answers 404 not_enabled while the store\'s flag is off', async () => {
-    mocks.flags.mockResolvedValue([]);
+  it('refuses handoff when the merchant has disabled escalation', async () => {
+    const site = { ...SITE, config: { ...SITE.config, ai: { ...SITE.config.ai, escalationEnabled: false } } };
+    mocks.session.mockResolvedValue({ ok: true, site, visitor: { id: 'v1' }, conversation: CONVERSATION });
     const res = await post();
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ ok: false, error: 'not_enabled' });
     expect(mocks.escalate).not.toHaveBeenCalled();
   });
 
-  it('sends the saved message to the team and says whether someone was alerted', async () => {
+  it('sends the saved message to the team without a rollout flag and says whether someone was alerted', async () => {
     const res = await post();
     const data = await res.json();
 
@@ -109,6 +113,18 @@ describe('POST /api/messenger/handoff (N24)', () => {
     const data = await (await post()).json();
     expect(data).toMatchObject({ ok: true, status: 'handoff_requested', alert: null });
     expect(mocks.escalate).not.toHaveBeenCalled();
+  });
+
+  it.each(['open', 'handoff_active', 'closed'])('reports only the recorded %s status when the transition loses', async (status) => {
+    mocks.escalate.mockResolvedValue(null);
+    mocks.conversation.mockResolvedValue({ ...CONVERSATION, status });
+
+    const data = await (await post()).json();
+
+    expect(data).toEqual({ ok: true, status, alert: null });
+    expect(mocks.conversation).toHaveBeenCalledWith(CONVERSATION.id, 'v1');
+    expect(mocks.append).not.toHaveBeenCalled();
+    expect(mocks.event).not.toHaveBeenCalled();
   });
 
   it('refuses a request without the shopper session, or for another reason', async () => {

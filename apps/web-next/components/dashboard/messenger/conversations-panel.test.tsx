@@ -177,6 +177,31 @@ describe('ConversationsPanel canned replies', () => {
 /* A moderator with no technical background cannot parse a raw handoff_reason
    code like 'shopper_requested_human' — it must never render verbatim. */
 describe('ConversationsPanel handoff reason', () => {
+  it.each([
+    ['en', 'shopper_requested_human', 'Shopper asked for a human'],
+    ['ar', 'shopper_requested_human', 'طلب العميل التحدث مع موظف'],
+    ['en', 'assistant_escalated', 'AI handed this off'],
+    ['ar', 'assistant_escalated', 'حوّلها الذكاء الاصطناعي'],
+    ['en', 'assistant_unavailable', 'Handed off to your team'],
+    ['ar', 'assistant_unavailable', 'تم تحويلها إلى فريقك'],
+    ['en', null, 'Handed off to your team'],
+    ['ar', null, 'تم تحويلها إلى فريقك'],
+  ] as const)('attributes the thread header to %s / %s', async (locale, handoffReason, label) => {
+    fetchConversationMessages.mockResolvedValue({ ok: true, status: 'handoff_requested', messages: [], attachments: {} });
+    render(
+      <ConversationsPanel
+        locale={locale}
+        siteId="site-1"
+        conversations={[{ ...CONVERSATIONS[0], status: 'handoff_requested', handoffReason }]}
+        actions={actions}
+      />,
+    );
+
+    expect(await screen.findByText(label, { selector: 'header p' })).toBeInTheDocument();
+    expect(screen.queryByText('AI handed this conversation to your team')).not.toBeInTheDocument();
+    expect(screen.queryByText('حوّل المساعد هذه المحادثة إلى فريقك')).not.toBeInTheDocument();
+  });
+
   it('shows a human-readable label for a known handoff reason, never the raw code', async () => {
     render(
       <ConversationsPanel
