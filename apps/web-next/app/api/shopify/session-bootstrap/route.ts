@@ -5,6 +5,7 @@ import { acquireShopToken, requestShopifyToken, ShopifyCredentialError } from '@
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { syncShopStorefrontDomains } from '@/lib/messenger/shop-domain-sync';
+import { syncShopifyAppOrigin } from '@/lib/shopify/admin';
 
 /* GET /api/shopify/session-bootstrap
    Ensures this shop has a stored, sufficiently-scoped Admin API access
@@ -65,6 +66,7 @@ export async function GET(request: NextRequest) {
       }),
     });
     void syncShopStorefrontDomains(session.shop, token.accessToken);
+    void syncShopifyAppOrigin(session.shop, token.accessToken);
     return NextResponse.json({ ok: true, provisioned: 'ready', appClientId: clientId }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const code = error instanceof ShopifyCredentialError ? error.code : 'storage_unavailable';

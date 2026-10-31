@@ -3,6 +3,7 @@ import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { acquireShopToken, requestShopifyToken } from '@/lib/shopify/tokens';
 import { OAUTH_APP_COOKIE, OAUTH_STATE_COOKIE, resolveCallbackBase, statesMatch, verifyOAuthHmac } from '@/lib/shopify/oauth';
 import { findShopifyAppByClientId, getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
+import { syncShopifyAppOrigin } from '@/lib/shopify/admin';
 
 /* GET /api/shopify/oauth/callback
    Completes authorization and stores the offline Admin token, encrypted.
@@ -68,12 +69,13 @@ export async function GET(request: NextRequest) {
   // Consume browser state before exchanging. The DB lease serializes this
   // acquisition with embedded exchange and offline refresh across processes.
   try {
-    await acquireShopToken({ shopDomain, appClientId: clientId, force: true,
+    const token = await acquireShopToken({ shopDomain, appClientId: clientId, force: true,
       exchange: () => requestShopifyToken(shopDomain, {
         client_id: clientId, client_secret: secret, code,
         expiring: app.tokenMode === 'non-expiring' ? 0 : 1,
       }),
     });
+    await syncShopifyAppOrigin(shopDomain, token.accessToken);
   } catch {
     const response = failure(appUrl, 'authorization could not be completed');
     response.cookies.delete(OAUTH_STATE_COOKIE);

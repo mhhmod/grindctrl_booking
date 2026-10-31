@@ -4,6 +4,10 @@
 (function () {
   var EMBED_ORIGIN = 'https://grindctrl.cloud';
   var script = document.currentScript;
+  try {
+    var appUrl = new URL(script && script.dataset.appOrigin);
+    if (appUrl.protocol === 'https:') EMBED_ORIGIN = appUrl.origin;
+  } catch (_) { /* use the production default */ }
   var PROXY_PATH = (script && script.dataset.gcProxyPath) || '/apps/grindctrl';
   if (!/^\/(apps|a|community|tools)\/[A-Za-z0-9_-]{1,30}$/.test(PROXY_PATH)) return;
   var SHOP = (script && script.dataset.gcShop) || '';
