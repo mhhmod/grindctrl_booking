@@ -17,8 +17,9 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'GRINDCTRL_SC_VERSION', '0.1.0' );
-define( 'GRINDCTRL_SC_SCRIPT', 'https://grindctrl.cloud/widget/v1/messenger.js' );
-define( 'GRINDCTRL_SC_DASHBOARD', 'https://grindctrl.cloud/dashboard/store-chat/setup' );
+// Overridable from wp-config.php to point a test site at a GRINDCTRL staging server.
+defined( 'GRINDCTRL_SC_SCRIPT' ) || define( 'GRINDCTRL_SC_SCRIPT', 'https://grindctrl.cloud/widget/v1/messenger.js' );
+defined( 'GRINDCTRL_SC_DASHBOARD' ) || define( 'GRINDCTRL_SC_DASHBOARD', 'https://grindctrl.cloud/dashboard/store-chat/setup' );
 
 /*
  * The embed key names the store's Store Chat. It is public: it ships in the
