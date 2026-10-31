@@ -73,6 +73,9 @@
   "overrides": {
     "next": {
       "postcss": "8.5.23"
+    },
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.3"
     }
   }
 }
