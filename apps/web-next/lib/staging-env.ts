@@ -73,6 +73,9 @@ export function assertStagingEnv(env: Env): void {
   requireSafe(!env.SHOPIFY_API_KEY?.trim(), 'SHOPIFY_API_KEY');
   requireSafe(!env.SHOPIFY_API_SECRET?.trim(), 'SHOPIFY_API_SECRET');
   requireSafe(Buffer.from(env.SHOPIFY_TOKEN_ENC_KEY ?? '', 'base64').length === 32, 'SHOPIFY_TOKEN_ENC_KEY');
+  // Signs storefront origin tokens; without it every chat panel is refused.
+  requireSafe(Buffer.byteLength(env.GRINDCTRL_CAPABILITY_SECRET?.trim() ?? '', 'utf8') >= 32 &&
+    !env.GRINDCTRL_CAPABILITY_SECRET?.startsWith('REPLACE'), 'GRINDCTRL_CAPABILITY_SECRET');
   const shops = jsonArray(env.GRINDCTRL_TEST_SHOPS, 'GRINDCTRL_TEST_SHOPS');
   requireSafe(shops.length >= 1 && shops.length <= 2 && new Set(shops).size === shops.length &&
     shops.every(shop => typeof shop === 'string' && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)), 'GRINDCTRL_TEST_SHOPS');
