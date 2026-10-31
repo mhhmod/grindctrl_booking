@@ -76,23 +76,35 @@ export async function storeChatComplete(operation: string, input: StoreChatReque
 }
 
 async function openRouterComplete(operation: string, input: StoreChatRequest): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
-  if (!apiKey) throw new ProviderUnavailableError(undefined, { cause: new StoreChatNotConfiguredError() });
-
   const started = Date.now();
-  const fail = (status: number | null, cause: unknown): never => {
-    console.error('[store-chat] failure', { operation, durationMs: Date.now() - started, status });
+  const fail = (
+    reason: 'missing_primary_key' | 'http_error' | 'provider_error' | 'invalid_response' | 'timeout' | 'network_error',
+    status: number | null,
+    cause: unknown,
+  ): never => {
+    console.error('[store-chat] failure', {
+      operation,
+      reason,
+      durationMs: Date.now() - started,
+      status,
+      fallback: process.env.GROQ_API_KEY?.trim() ? 'groq' : 'missing_fallback_key',
+    });
     throw new ProviderUnavailableError(undefined, { cause });
   };
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  if (!apiKey) return fail('missing_primary_key', null, new StoreChatNotConfiguredError());
+  const signal = AbortSignal.timeout(STORE_CHAT_TIMEOUT_MS);
 
   let response: Response;
   let payload: {
     model?: unknown;
     provider?: unknown;
-    choices?: Array<{ message?: { content?: unknown } }>;
+    choices?: Array<{ message?: { content?: unknown }; finish_reason?: unknown }>;
     usage?: Record<string, unknown> | null;
     error?: { message?: string };
   } | null;
+  let readingBody = false;
+  let responseStatus: number | null = null;
   try {
     response = await fetch(OPENROUTER_CHAT_URL, {
       method: 'POST',
@@ -104,22 +116,27 @@ async function openRouterComplete(operation: string, input: StoreChatRequest): P
         'X-Title': 'GRINDCTRL Store Chat',
       },
       body: JSON.stringify(storeChatRequestBody(input)),
-      signal: AbortSignal.timeout(STORE_CHAT_TIMEOUT_MS),
+      signal,
       cache: 'no-store',
     });
+    responseStatus = response.status;
     if (!response.ok) {
       const body = await response.text().catch(() => '');
-      return fail(response.status, new Error(`${response.status} ${body.slice(0, 600)}`));
+      return fail('http_error', response.status, new Error(`${response.status} ${body.slice(0, 600)}`));
     }
-    payload = await response.json().catch(() => null);
+    // A timeout while reading the body must not become a successful empty reply.
+    readingBody = true;
+    payload = await response.json();
   } catch (error) {
     if (error instanceof ProviderUnavailableError) throw error;
-    return fail(null, error);
+    const timedOut = signal.aborted ||
+      (error && typeof error === 'object' && 'name' in error && error.name === 'TimeoutError');
+    return fail(timedOut ? 'timeout' : readingBody ? 'invalid_response' : 'network_error', responseStatus, error);
   }
 
   /* OpenRouter can return 200 with an error body when a downstream provider
      rejects the request: treat it as a failure, not as an empty reply. */
-  if (payload?.error?.message) return fail(response.status, new Error(payload.error.message));
+  if (payload?.error?.message) return fail('provider_error', response.status, new Error(payload.error.message));
 
   const usage = payload?.usage ?? null;
   const count = (field: string) => {
@@ -131,6 +148,9 @@ async function openRouterComplete(operation: string, input: StoreChatRequest): P
     durationMs: Date.now() - started,
     model: typeof payload?.model === 'string' ? payload.model : null,
     provider: typeof payload?.provider === 'string' ? payload.provider : null,
+    finishReason: ['stop', 'length', 'tool_calls', 'content_filter', 'error'].includes(
+      String(payload?.choices?.[0]?.finish_reason),
+    ) ? payload?.choices?.[0]?.finish_reason : null,
     promptTokens: count('prompt_tokens'),
     completionTokens: count('completion_tokens'),
     costUsd: count('cost'),
