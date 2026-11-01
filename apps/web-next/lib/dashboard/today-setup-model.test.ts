@@ -49,11 +49,9 @@ describe('buildTodaySetupView', () => {
 
   it('links each piece where it is turned on', () => {
     const view = buildTodaySetupView(FACTS, en);
-    expect(view.pieces[0].href).toContain('context=apps&activateAppId=');
-    expect(view.pieces[0].href).toMatch(/\/messenger$/);
+    expect(view.pieces[0].href).toBe('/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=messenger&mode=embed');
     expect(view.pieces[1].href).toBeNull();
-    expect(view.addButtonHref).toContain('template=product&addAppBlockId=');
-    expect(view.addButtonHref).toContain('/tryon&target=mainSection');
+    expect(view.addButtonHref).toBe('/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=tryon&mode=product');
   });
 
   it('counts steps and minutes in Arabic', () => {

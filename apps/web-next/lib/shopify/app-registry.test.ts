@@ -82,12 +82,18 @@ describe('findShopifyAppByClientId', () => {
 });
 
 describe('primaryShopifyApp', () => {
-  it('is the first configured app', () => {
+  it('refuses an unsigned initializer with multiple configured apps', () => {
     process.env.SHOPIFY_APPS = JSON.stringify([
       { clientId: 'app-a', secret: 'secret-a' },
       { clientId: 'app-b', secret: 'secret-b' },
     ]);
-    expect(primaryShopifyApp()).toEqual({ clientId: 'app-a', secret: 'secret-a' });
+    expect(primaryShopifyApp()).toBeNull();
+  });
+
+  it('preserves the legacy single-app initializer', () => {
+    process.env.SHOPIFY_API_KEY = 'legacy-id';
+    process.env.SHOPIFY_API_SECRET = 'legacy-secret';
+    expect(primaryShopifyApp()).toEqual({ clientId: 'legacy-id', secret: 'legacy-secret' });
   });
 
   it('is null when nothing is configured', () => {
@@ -113,4 +119,16 @@ describe('resolveShopifyApp', () => {
   it('returns null when nothing is configured', () => {
     expect(resolveShopifyApp(() => 'x')).toBeNull();
   });
+});
+
+// Distinct registration identity is essential to lifecycle/credential isolation.
+it('rejects shared-secret provenance and conflicting duplicate registrations', () => {
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'same'},{clientId:'app-b',secret:'same'}]);
+  expect(resolveShopifyApp(secret => secret === 'same' ? true : null)).toBeNull();
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'one'},{clientId:'app-a',secret:'two'}]);
+  expect(getConfiguredShopifyApps()).toEqual([]);
+});
+it('never allows non-expiring mode for a public registration', () => {
+  process.env.SHOPIFY_APPS = JSON.stringify([{clientId:'app-a',secret:'a',distribution:'public',tokenMode:'non-expiring'}]);
+  expect(getConfiguredShopifyApps()).toEqual([]);
 });

@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/public-api';
 import { MessengerPanel } from '@/components/messenger/MessengerPanel';
 import { signOriginToken } from '@/lib/messenger/identity';
-import { primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { teamReplyMinutes } from '@/lib/messenger/team-reply-time';
 
@@ -85,7 +85,7 @@ export default async function EmbedMessengerPage({
         originToken =
           refererOrigin === null
             ? null
-            : signOriginToken(primaryShopifyApp()?.secret ?? '', {
+            : signOriginToken(coreCapabilitySecret() ?? '', {
                 key: site.embed_key,
                 origin: refererOrigin,
               });

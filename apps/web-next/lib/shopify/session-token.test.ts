@@ -1,16 +1,19 @@
 // apps/web-next/lib/shopify/session-token.test.ts
 // @vitest-environment node
 import { NextRequest } from 'next/server';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { authenticateShopifyRequest, verifySessionTokenResolved } from './session-token';
 import { createHmac } from 'node:crypto';
+
+const activeInstallation = vi.hoisted(() => vi.fn(async () => true));
+vi.mock('./tokens', () => ({ isActiveShopifyInstallation: activeInstallation }));
 
 const SECRET = 'test-secret';
 const CLIENT_ID = 'fc095fe656d9029fdc249a4af2315f19';
 
 function makeToken(
   secret: string,
-  overrides: Partial<{ aud: string; dest: string; exp: number; nbf: number }> = {},
+  overrides: Partial<{ aud: string; dest: string; iss: string; sub: string; exp: number; nbf: number; iat: number }> = {},
 ): string {
   const b64url = (input: string) => Buffer.from(input).toString('base64url');
   const now = Math.floor(Date.now() / 1000);
@@ -19,6 +22,7 @@ function makeToken(
     JSON.stringify({
       aud: CLIENT_ID,
       dest: 'https://demo.myshopify.com',
+      iss: 'https://demo.myshopify.com/admin', sub: '42',
       exp: now + 60,
       nbf: now - 5,
       ...overrides,
@@ -44,26 +48,26 @@ afterEach(() => {
 });
 
 describe('authenticateShopifyRequest', () => {
-  it('accepts a valid Bearer token', () => {
-    const session = authenticateShopifyRequest(req({ authorization: `Bearer ${makeToken(SECRET)}` }));
-    expect(session).toEqual({ shop: 'demo.myshopify.com' });
+  it('accepts a valid Bearer token', async () => {
+    const session = await authenticateShopifyRequest(req({ authorization: `Bearer ${makeToken(SECRET)}` }));
+    expect(session).toEqual({ shop: 'demo.myshopify.com', appClientId: CLIENT_ID, subject: '42' });
   });
 
-  it('accepts a lowercase bearer prefix', () => {
-    const session = authenticateShopifyRequest(req({ authorization: `bearer ${makeToken(SECRET)}` }));
-    expect(session).toEqual({ shop: 'demo.myshopify.com' });
+  it('accepts a lowercase bearer prefix', async () => {
+    const session = await authenticateShopifyRequest(req({ authorization: `bearer ${makeToken(SECRET)}` }));
+    expect(session).toEqual({ shop: 'demo.myshopify.com', appClientId: CLIENT_ID, subject: '42' });
   });
 
-  it('rejects a missing Authorization header', () => {
-    expect(authenticateShopifyRequest(req())).toBeNull();
+  it('rejects a missing Authorization header', async () => {
+    expect(await authenticateShopifyRequest(req())).toBeNull();
   });
 
-  it('rejects a header with no token after the prefix', () => {
-    expect(authenticateShopifyRequest(req({ authorization: 'Bearer ' }))).toBeNull();
+  it('rejects a header with no token after the prefix', async () => {
+    expect(await authenticateShopifyRequest(req({ authorization: 'Bearer ' }))).toBeNull();
   });
 
-  it('rejects an invalid signature', () => {
-    const session = authenticateShopifyRequest(req({ authorization: `Bearer ${makeToken(SECRET)}xx` }));
+  it('rejects an invalid signature', async () => {
+    const session = await authenticateShopifyRequest(req({ authorization: `Bearer ${makeToken(SECRET)}xx` }));
     expect(session).toBeNull();
   });
 });
@@ -81,7 +85,7 @@ describe('verifySessionTokenResolved (multi-app)', () => {
   it('verifies a token against the app named by its own aud, not the first configured one', () => {
     const token = makeToken('secret-b', { aud: 'app-b' });
     const resolved = verifySessionTokenResolved(token);
-    expect(resolved).toEqual({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'secret-b' } });
+    expect(resolved).toEqual({ shop: 'demo.myshopify.com', appClientId: 'app-b', subject: '42', app: { clientId: 'app-b', secret: 'secret-b' } });
   });
 
   it('rejects a token whose aud names no configured app', () => {
@@ -94,4 +98,31 @@ describe('verifySessionTokenResolved (multi-app)', () => {
     const token = makeToken('secret-b', { aud: 'app-a' });
     expect(verifySessionTokenResolved(token)).toBeNull();
   });
+});
+
+describe('required Shopify ID token claims', () => {
+  it.each([
+    { iss: 'https://other.myshopify.com/admin' },
+    { iss: 'http://demo.myshopify.com/admin' },
+    { dest: 'https://demo.myshopify.com/other' },
+    { dest: 'https://evil@demo.myshopify.com' },
+    { iss: 'https://demo.myshopify.com:8443/admin' },
+    { sub: '' }, { sub: 'not-a-user' },
+    { exp: 0 }, { nbf: Number.MAX_SAFE_INTEGER },
+  ])('rejects invalid claims %j', (claims) => {
+    expect(verifySessionTokenResolved(makeToken(SECRET, claims))).toBeNull();
+  });
+  it('rejects a token explicitly declaring a different algorithm', () => {
+    const valid = makeToken(SECRET);
+    const header = Buffer.from(JSON.stringify({ alg: 'none' })).toString('base64url');
+    const body = `${header}.${valid.split('.')[1]}`;
+    const signed = `${body}.${createHmac('sha256', SECRET).update(body).digest('base64url')}`;
+    expect(verifySessionTokenResolved(signed)).toBeNull();
+  });
+});
+
+it('rejects a signed session when its own installation is inactive', async () => {
+  activeInstallation.mockResolvedValueOnce(false);
+  expect(await authenticateShopifyRequest(req({ authorization: `Bearer ${makeToken(SECRET)}` }))).toBeNull();
+  expect(activeInstallation).toHaveBeenCalledWith('demo.myshopify.com', CLIENT_ID);
 });

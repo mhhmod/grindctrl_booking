@@ -9,7 +9,7 @@ import { StoreFlagsCard } from './store-flags-card';
 
 const ROWS = [
   { flag: 'n23_after_hours', code: 'N23', title: 'The assistant answers after hours', enabled: false },
-  { flag: 'n24_assistant_down', code: 'N24', title: 'The assistant-down fallback', enabled: true },
+  { flag: 'n25_handoff_rules', code: 'N25', title: 'Extra handoff rules and topic tags', enabled: true },
 ];
 
 describe('StoreFlagsCard', () => {
@@ -23,7 +23,7 @@ describe('StoreFlagsCard', () => {
   });
 
   it('flips a flag through the operator action and shows what the server answered', async () => {
-    mocks.setStoreFlag.mockResolvedValue({ ok: true, flags: ['n23_after_hours', 'n24_assistant_down'] });
+    mocks.setStoreFlag.mockResolvedValue({ ok: true, flags: ['n23_after_hours', 'n25_handoff_rules'] });
     render(<StoreFlagsCard kind="shop" storeKey="maison.myshopify.com" storeLabel="maison.myshopify.com" rows={ROWS} />);
 
     fireEvent.click(screen.getAllByRole('button')[0]);

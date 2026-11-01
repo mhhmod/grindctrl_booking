@@ -1,3 +1,4 @@
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
 import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -22,6 +23,7 @@ const AUDIENCE = 'messenger-api';
 const TOKEN_TTL_SECONDS = 60 * 60 * 12;
 
 export interface VerifiedShopperIdentity {
+  appClientId?: string;
   customerId: string | null;
   email: string | null;
   name: string | null;
@@ -164,10 +166,8 @@ export function verifyShopperTokenAnyApp(
   expectedSessionId: string,
   expectedShop: unknown,
 ): VerifiedShopperIdentity | null {
-  return (
-    resolveShopifyApp((secret) => verifyShopperToken(secret, token, expectedSessionId, expectedShop))
-      ?.value ?? null
-  );
+  const resolved = resolveShopifyApp((secret) => verifyShopperToken(secret, token, expectedSessionId, expectedShop));
+  return resolved ? { ...resolved.value, appClientId: resolved.app.clientId } : null;
 }
 
 export const MESSENGER_TOKEN_TTL_SECONDS = TOKEN_TTL_SECONDS;
@@ -251,7 +251,8 @@ export function verifyOriginToken(
 /** Same check as verifyOriginToken, but against whichever configured app's
  *  secret signed the token (see verifyShopperTokenAnyApp). */
 export function verifyOriginTokenAnyApp(token: unknown, expectedKey: string): string | null {
-  return resolveShopifyApp((secret) => verifyOriginToken(secret, token, expectedKey))?.value ?? null;
+  const secret = coreCapabilitySecret();
+  return secret ? verifyOriginToken(secret, token, expectedKey) : null;
 }
 
 export const MESSENGER_ORIGIN_TOKEN_TTL_SECONDS = ORIGIN_TOKEN_TTL_SECONDS;

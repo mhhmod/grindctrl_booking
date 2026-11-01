@@ -3,6 +3,7 @@ import { RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rat
 import { proxyVisitorId, requireProxyRateLimit } from '@/lib/shopify/proxy-rate-limit';
 import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
 import {
@@ -53,8 +54,8 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   /* Only a well-formed myshopify domain from a verified signature may name
      a settings row; anything else resolves to the shared defaults. */
-  const signed = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret)) !== null;
-  const shop = signed ? normalizeShopDomain(params.get('shop')) : null;
+  const resolved = resolveShopifyApp((secret) => verifyShopifyProxySignature(params, secret));
+  const shop = resolved ? normalizeShopDomain(params.get('shop')) : null;
 
   try {
     await requireProxyRateLimit(request, {
@@ -65,6 +66,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     throw error;
+  }
+  // Check before the shared merchant cache. B's cached availability must
+  // never make a disconnected A look active.
+  if (shop && resolved && !(await isActiveShopifyInstallation(shop, resolved.app.clientId))) {
+    return NextResponse.json({
+      tryOn: 'hidden', reason: 'not_installed', available: false,
+      messageKey: 'tryOnTemporarilyUnavailable',
+    }, { headers: { 'Cache-Control': 'private, no-store' } });
   }
 
   const requested = params.get('locale');

@@ -12,7 +12,7 @@ import { getShopLinkedAccountHint, isShopLinked } from '@/lib/shopify/shop-links
 const authenticate = authenticateShopifyRequest;
 
 export async function GET(request: NextRequest) {
-  const session = authenticate(request);
+  const session = await authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const limited = await merchantRateLimitResponse(`shop:${session.shop}`, 'read');
   if (limited) return limited;
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const session = authenticate(request);
+  const session = await authenticate(request);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const limited = await merchantRateLimitResponse(`shop:${session.shop}`);
   if (limited) return limited;

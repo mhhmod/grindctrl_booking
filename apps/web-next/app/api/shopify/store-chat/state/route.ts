@@ -23,7 +23,7 @@ import { hasShopOrderAccess } from '@/lib/shopify/tokens';
    Promise.allSettled behavior. */
 
 export async function GET(request: NextRequest) {
-  const session = authenticateShopifyRequest(request);
+  const session = await authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   const limited = await merchantRateLimitResponse(
     `shop:${session.shop}`, 'read',
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     listKnowledge(site.id),
     listCannedReplies(site.id),
     getWidgetLastSeenAt(site.id),
-    site.domain ? hasShopOrderAccess(site.domain) : Promise.resolve(false),
+    site.domain ? hasShopOrderAccess(site.domain, session.appClientId) : Promise.resolve(false),
   ]);
 
   const stats = statsRes.status === 'fulfilled' ? statsRes.value : null;

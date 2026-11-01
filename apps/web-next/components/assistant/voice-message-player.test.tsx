@@ -49,7 +49,7 @@ describe('VoiceMessagePlayer seeking', () => {
     HTMLMediaElement.prototype.play = vi.fn().mockResolvedValue(undefined);
     HTMLMediaElement.prototype.pause = vi.fn();
     createdAudios = [];
-    window.Audio = vi.fn((src?: string) => {
+    window.Audio = vi.fn(function MockAudio(src?: string) {
       const audio = new OriginalAudio(src);
       createdAudios.push(audio);
       return audio;

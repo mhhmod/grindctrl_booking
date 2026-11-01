@@ -306,7 +306,7 @@ export async function generateAssistantReply(input: {
     .replace(HANDOFF_MARKER, '')
     .trim()
     .slice(0, 2000);
-  return { reply: reply || fallbackReply(), escalate, raw, verdict };
+  return { reply: reply || fallbackReply('messenger.chat', completion), escalate, raw, verdict };
 }
 
 /* The second half of an action turn: the server has already decided what is
@@ -349,12 +349,16 @@ export async function phraseOrderAnswer(input: {
   // shopper-visible message: this turn only phrases facts, it cannot hand off.
   return (
     text.replaceAll(ACTION_SENTINEL, '').replace(HANDOFF_MARKER, '').trim().slice(0, 2000) ||
-    fallbackReply()
+    fallbackReply('messenger.order-answer', completion)
   );
 }
 
 const MESSAGE_CAP = 2000;
 
-function fallbackReply(): string {
+function fallbackReply(operation: string, completion: string): string {
+  console.warn('[store-chat] reply-fallback', {
+    operation,
+    reason: completion.trim() ? 'empty_visible_content' : 'empty_content',
+  });
   return "Sorry, I couldn't compose an answer just now. Please try again in a moment.";
 }

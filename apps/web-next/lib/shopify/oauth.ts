@@ -38,7 +38,8 @@ export function verifyOAuthHmac(rawQuery: string, secret: string): boolean {
   for (const pair of query.split('&')) {
     if (!pair) continue;
     if (pair.startsWith('hmac=')) {
-      provided = decodeURIComponent(pair.slice('hmac='.length));
+      if (provided) return false;
+      try { provided = decodeURIComponent(pair.slice('hmac='.length)); } catch { return false; }
       continue;
     }
     if (pair.startsWith('signature=')) continue; // legacy, excluded like hmac

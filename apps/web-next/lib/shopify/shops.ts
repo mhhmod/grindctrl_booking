@@ -7,7 +7,6 @@ import {
   authorizeDashboardShop,
   normalizeShopDomain,
 } from './shop-authorization';
-import { invalidateProxyConfig } from './proxy-config-cache';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 import { RoleNotAllowedError, roleCan, type DashboardCapability, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { listTeamMemberships, shopRoleFor, teamOwnerIds } from '@/lib/rbac/store-role';
@@ -64,55 +63,13 @@ export async function recordTryOnShopSeen(shop: unknown): Promise<boolean> {
 
     if (selectError) throw selectError;
 
-    const payload: Record<string, unknown> = {
-      shop_domain: domain,
-      status: 'installed',
-      uninstalled_at: null,
-      last_seen_at: now,
-      updated_at: now,
-    };
-    if (!current || current.status === 'uninstalled') payload.installed_at = now;
-
-    const { error } = await supabase
-      .from('tryon_shops')
-      .upsert(payload, { onConflict: 'shop_domain' });
-
+    if (!current || current.status !== 'installed') return false;
+    const { error } = await supabase.from('tryon_shops')
+      .update({ last_seen_at: now, updated_at: now }).eq('shop_domain', domain).eq('status', 'installed');
     if (error) throw error;
-    // A (re)install can make the storefront button live again.
-    if (!current || current.status === 'uninstalled') invalidateProxyConfig(domain);
     return true;
   } catch (error) {
     console.error('tryon_shops seen update failed:', error instanceof Error ? error.message : error);
-    return false;
-  }
-}
-
-export async function markTryOnShopUninstalled(shop: unknown): Promise<boolean> {
-  const domain = normalizeShopDomain(shop);
-  if (!domain) return false;
-
-  try {
-    const supabase = getServiceClient();
-    const now = new Date().toISOString();
-    const { error } = await supabase.from('tryon_shops').upsert(
-      {
-        shop_domain: domain,
-        status: 'uninstalled',
-        uninstalled_at: now,
-        last_seen_at: now,
-        updated_at: now,
-      },
-      { onConflict: 'shop_domain' },
-    );
-
-    if (error) throw error;
-    invalidateProxyConfig(domain);
-    return true;
-  } catch (error) {
-    console.error(
-      'tryon_shops uninstall update failed:',
-      error instanceof Error ? error.message : error,
-    );
     return false;
   }
 }

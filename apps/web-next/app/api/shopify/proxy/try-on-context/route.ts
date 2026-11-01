@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
 
   let resolvedProduct;
   try {
-    resolvedProduct = await resolveStorefrontProduct({ shop, handle: productId, variantId });
+    resolvedProduct = await resolveStorefrontProduct({ shop, handle: productId, variantId, appClientId: resolved.app.clientId });
   } catch (error) {
     if (error instanceof ProductResolutionError) {
       const status = error.code === 'product_resolution_unavailable'

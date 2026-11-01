@@ -47,6 +47,7 @@ import {
 } from './service';
 import type { VerifiedTryOnSession } from './storefront-context';
 import type { TryOnJob } from './types';
+import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 
 function authorization(
   overrides: Partial<VerifiedTryOnSession> = {},
@@ -101,6 +102,7 @@ describe('try-on service', () => {
   beforeEach(() => {
     delete process.env.TRYON_MODE;
     beginTryOnJobMock.mockReset();
+    beginTestTryOnJobMock.mockReset();
     finalizeTryOnJobMock.mockReset();
     loadAuthorizedDurableTryOnJobMock.mockReset().mockResolvedValue(null);
     persistGeneratedTryOnResultMock.mockReset().mockResolvedValue({
@@ -517,6 +519,86 @@ describe('try-on service', () => {
         });
         return { auth: storefrontAuthorization({ requestKey }), jobId: () => reservedJobId };
       }
+
+      it.each(['completed', 'provider-failed', 'finalization-pending'] as const)(
+        'preserves an in-flight merchant reservation across app-registration replacement: %s',
+        async (outcome) => {
+          // The provider and persistence are mocked; this checks orchestration,
+          // not a live Shopify uninstall or actual SQL ledger reconciliation.
+          vi.stubEnv('SHOPIFY_API_KEY', '');
+          vi.stubEnv('SHOPIFY_API_SECRET', '');
+          vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{ clientId: 'app-a', secret: 'secret-a' }]));
+          process.env.TRYON_MODE = 'live';
+          const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+          try {
+            const keys = {
+              completed: '81818181-8181-4181-8181-818181818181',
+              'provider-failed': '82828282-8282-4282-8282-828282828282',
+              'finalization-pending': '83838383-8383-4383-8383-838383838383',
+            };
+            const { auth, jobId } = reserve(keys[outcome]);
+            const tasks: Array<() => Promise<void>> = [];
+            let finish!: (job: TryOnJob) => void;
+            let fail!: (error: Error) => void;
+            runImageGenerationMock.mockReturnValue(new Promise<TryOnJob>((resolve, reject) => {
+              finish = resolve;
+              fail = reject;
+            }));
+            if (outcome === 'finalization-pending') {
+              finalizeTryOnJobMock.mockRejectedValueOnce(new Error('synthetic database unavailable'));
+            }
+            const pending = await generateTryOn(
+              auth, 'upload', 'data:image/png;base64,PHOTO', auth.canonicalGarmentUrl ?? undefined,
+              undefined, { background: (task) => tasks.push(task) },
+            );
+            const run = tasks[0]();
+            await vi.waitFor(() => expect(runImageGenerationMock).toHaveBeenCalledOnce());
+
+            // Model the registration cutover while an already authorized job
+            // is running. Its merchant account and reservation must not move.
+            vi.stubEnv('SHOPIFY_APPS', JSON.stringify([{ clientId: 'app-b', secret: 'secret-b' }]));
+            expect(getConfiguredShopifyApps().map(app => app.clientId)).toEqual(['app-b']);
+            if (outcome === 'provider-failed') {
+              fail(new Error('synthetic provider unavailable'));
+            } else {
+              finish({
+                ...pending, status: 'completed', resultImageUrl: 'data:image/png;base64,TRANSITION',
+                meta: { runtime: 'live', provider: 'provider-v1', costEstimate: null },
+              });
+            }
+            await run;
+
+            expect(beginTryOnJobMock).toHaveBeenCalledOnce();
+            expect(finalizeTryOnJobMock).toHaveBeenCalledOnce();
+            expect(finalizeTryOnJobMock).toHaveBeenCalledWith(expect.objectContaining({
+              jobId: jobId(), shop: auth.shop, requestKey: auth.requestKey,
+              status: outcome === 'provider-failed' ? 'failed' : 'completed',
+              meta: expect.objectContaining({ costEstimate: null }),
+            }), expect.any(Number));
+            expect(persistGeneratedTryOnResultMock).toHaveBeenCalledTimes(outcome === 'provider-failed' ? 0 : 1);
+            expect(getJob(jobId())?.shop).toBe(auth.shop);
+            if (outcome === 'finalization-pending') {
+              expect(log).toHaveBeenCalledWith('[try-on] reconciliation_required', {
+                reason: 'finalization_failed', jobId: jobId(),
+              });
+              beginTryOnJobMock.mockResolvedValueOnce({
+                jobId: jobId(), created: false, status: 'processing', modelKey: 'model-v1',
+                createdAt: pending.createdAt,
+              });
+              const replay = await generateTryOn(auth, 'upload', 'data:image/png;base64,PHOTO');
+              expect(replay.resultImageUrl).toContain('TRANSITION');
+              expect(finalizeTryOnJobMock).toHaveBeenCalledOnce();
+            }
+            expect(runImageGenerationMock).toHaveBeenCalledOnce();
+            const logs = JSON.stringify(log.mock.calls);
+            for (const sensitive of ['secret-a', 'secret-b', auth.sessionId, 'base64,PHOTO', 'base64,TRANSITION']) {
+              expect(logs).not.toContain(sensitive);
+            }
+          } finally {
+            vi.unstubAllEnvs();
+          }
+        },
+      );
 
       it('answers once the look is reserved, then makes it after the answer with its stages', async () => {
         process.env.TRYON_MODE = 'live';

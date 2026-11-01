@@ -6,13 +6,14 @@ import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { NextRequest } from 'next/server';
-import { findShopifyAppByClientId, primaryShopifyApp, type ShopifyAppCredentials } from './app-registry';
+import { isActiveShopifyInstallation } from './tokens';
+import { findShopifyAppByClientId, getConfiguredShopifyApps, type ShopifyAppCredentials } from './app-registry';
 
 function b64urlDecode(input: string): Buffer {
   return Buffer.from(input.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 }
 
-export type VerifiedSession = { shop: string };
+export type VerifiedSession = { shop: string; appClientId: string; subject: string };
 
 /**
  * Verifies a Shopify session token (from App Bridge idToken() or the
@@ -29,7 +30,7 @@ export type VerifiedSession = { shop: string };
 export function verifySessionTokenResolved(
   token: string,
 ): (VerifiedSession & { app: ShopifyAppCredentials }) | null {
-  if (!token) return null;
+  if (!token || token.length > 8192 || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token)) return null;
 
   const parts = token.split('.');
   if (parts.length !== 3) return null;
@@ -39,9 +40,15 @@ export function verifySessionTokenResolved(
     dest?: string;
     exp?: number;
     nbf?: number;
+    iss?: string;
+    sub?: string;
+    iat?: number;
   };
   try {
+    const header = JSON.parse(b64urlDecode(parts[0]).toString('utf8'));
+    if (header.alg !== 'HS256' || (header.typ !== undefined && header.typ !== 'JWT')) return null;
     payload = JSON.parse(b64urlDecode(parts[1]).toString('utf8'));
+    if (!payload || typeof payload !== 'object') return null;
   } catch {
     return null;
   }
@@ -59,13 +66,23 @@ export function verifySessionTokenResolved(
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (typeof payload.exp !== 'number' || payload.exp < now - 5) return null;
-  if (typeof payload.nbf === 'number' && payload.nbf > now + 5) return null;
-
-  const shop = payload.dest?.replace(/^https:\/\//, '');
-  if (!shop || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) return null;
-
-  return { shop, app };
+  if (!Number.isSafeInteger(payload.exp) || payload.exp! <= now) return null;
+  if (!Number.isSafeInteger(payload.nbf) || payload.nbf! > now + 5) return null;
+  if (payload.iat !== undefined && (!Number.isSafeInteger(payload.iat) || payload.iat > now + 5)) return null;
+  if (typeof payload.sub !== 'string' || !/^[1-9][0-9]*$/.test(payload.sub)) return null;
+  if (typeof payload.dest !== 'string' || typeof payload.iss !== 'string') return null;
+  let shop: string;
+  try {
+    const dest = new URL(payload.dest);
+    const issuer = new URL(payload.iss);
+    if (dest.protocol !== 'https:' || issuer.protocol !== 'https:' || dest.hostname !== issuer.hostname
+      || dest.username || dest.password || dest.port || issuer.username || issuer.password || issuer.port
+      || dest.search || dest.hash || issuer.search || issuer.hash
+      || !['', '/'].includes(dest.pathname) || issuer.pathname !== '/admin') return null;
+    shop = dest.hostname;
+  } catch { return null; }
+  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) return null;
+  return { shop, appClientId: app.clientId, subject: payload.sub, app };
 }
 
 /**
@@ -76,28 +93,23 @@ export function verifySessionTokenResolved(
  */
 export function verifySessionToken(token: string): VerifiedSession | null {
   const resolved = verifySessionTokenResolved(token);
-  return resolved ? { shop: resolved.shop } : null;
+  return resolved ? { shop: resolved.shop, appClientId: resolved.app.clientId, subject: resolved.subject } : null;
 }
 
 /** Every Shopify-embedded route handler authenticates the same way: a
  *  Bearer session token from App Bridge's idToken(). One place to get the
  *  prefix-stripping right, instead of every route re-deriving it. */
-export function authenticateShopifyRequest(request: NextRequest): VerifiedSession | null {
+export async function authenticateShopifyRequest(request: NextRequest): Promise<VerifiedSession | null> {
   const header = request.headers.get('authorization') ?? '';
   const token = header.replace(/^bearer\s+/i, '').trim();
   if (!token) return null;
-  return verifySessionToken(token);
+  const session = verifySessionToken(token);
+  return session && await isActiveShopifyInstallation(session.shop, session.appClientId) ? session : null;
 }
 
-/* The embedded-admin shell (app/shopify/app/[[...rest]]/page.tsx) needs one
-   client id up front, before any shop or session token is known, to hand
-   App Bridge. With more than one app configured this is necessarily a
-   guess — the primary (first-configured) app — same as every other
-   capability in this codebase that has no per-request signal to resolve
-   against. Routing a given shop's embedded admin at the app it actually
-   installed is multi-app UI work this PR does not attempt; every
-   *verification* path (session tokens, HMAC, proxy signatures, webhooks)
-   is multi-app correct regardless of what this constant resolves to. */
+/** A sole configured registration is safe for the original one-app entry.
+ * Multiple apps require an explicit configured route or verified ID token. */
 export function currentShopifyClientId(): string | null {
-  return primaryShopifyApp()?.clientId ?? null;
+  const apps = getConfiguredShopifyApps();
+  return apps.length === 1 ? apps[0].clientId : null;
 }

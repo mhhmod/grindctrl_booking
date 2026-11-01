@@ -13,6 +13,7 @@ import {
   StoreChatNotConfiguredError,
   storeChatComplete,
 } from './chat-client';
+import { generateAssistantReply } from './ai';
 
 const request = {
   temperature: 0.3,
@@ -94,6 +95,9 @@ describe('Store Chat completions', () => {
     expect(failure).toBeInstanceOf(ProviderUnavailableError);
     expect(failure.cause).toBeInstanceOf(StoreChatNotConfiguredError);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'missing_primary_key', status: null, fallback: 'missing_fallback_key',
+    }));
   });
 
   it('fails as provider unavailable on an HTTP error, keeping the status as the cause', async () => {
@@ -103,7 +107,9 @@ describe('Store Chat completions', () => {
 
     expect(failure).toBeInstanceOf(ProviderUnavailableError);
     expect(String(failure.cause.message)).toMatch(/^402 /);
-    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'http_error', status: 402, fallback: 'missing_fallback_key',
+    }));
   });
 
   it('treats a 200 carrying an error as a failure, not an empty reply', async () => {
@@ -113,12 +119,80 @@ describe('Store Chat completions', () => {
 
     expect(failure).toBeInstanceOf(ProviderUnavailableError);
     expect(failure.cause.message).toBe('No endpoints found matching your data policy');
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'provider_error', status: 200, fallback: 'missing_fallback_key',
+    }));
   });
 
   it('fails as provider unavailable when the request never completes', async () => {
     fetchMock.mockRejectedValue(new DOMException('The operation timed out.', 'TimeoutError'));
 
     await expect(storeChatComplete('messenger.chat', request)).rejects.toBeInstanceOf(ProviderUnavailableError);
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'timeout', status: null, fallback: 'missing_fallback_key',
+    }));
+  });
+
+  it('logs a body timeout after headers instead of swallowing it into fallbackReply', async () => {
+    const deadline = new AbortController();
+    vi.spyOn(AbortSignal, 'timeout').mockReturnValue(deadline.signal);
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => {
+        deadline.abort(new DOMException('private provider body', 'TimeoutError'));
+        throw new DOMException('private provider body', 'AbortError');
+      },
+    });
+
+    await expect(generateAssistantReply({ prompt: 'private prompt', history: [], userMessage: 'private message' }))
+      .rejects.toBeInstanceOf(ProviderUnavailableError);
+
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'timeout', status: 200, fallback: 'missing_fallback_key',
+    }));
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.info).not.toHaveBeenCalled();
+    expect(groq.create).not.toHaveBeenCalled();
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toContain('private');
+  });
+
+  it('reports an invalid response body instead of claiming a completion', async () => {
+    fetchMock.mockResolvedValue(new Response('private malformed body'));
+
+    await expect(storeChatComplete('messenger.chat', request)).rejects.toBeInstanceOf(ProviderUnavailableError);
+
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'invalid_response', status: 200, fallback: 'missing_fallback_key',
+    }));
+    expect(console.info).not.toHaveBeenCalled();
+  });
+
+  it.each(['network', 'http', 'provider'])('keeps %s failure diagnostics free of keys, text and provider bodies', async (failure) => {
+    const privateText = 'test-key Do you ship to Cairo? private-provider-body';
+    if (failure === 'network') fetchMock.mockRejectedValue(new Error(privateText));
+    else fetchMock.mockResolvedValue(reply({ error: { message: privateText } }, failure === 'http' ? 502 : 200));
+
+    await expect(storeChatComplete('messenger.chat', request)).rejects.toBeInstanceOf(ProviderUnavailableError);
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(vi.mocked(console.error).mock.calls)).not.toMatch(/test-key|Cairo|private-provider-body/);
+    if (failure === 'network') {
+      expect(console.error).toHaveBeenCalledWith('[store-chat] failure', expect.objectContaining({ reason: 'network_error' }));
+    }
+  });
+
+  it('logs one terminal reason for an empty OpenRouter reply and records the safe finish reason', async () => {
+    fetchMock.mockResolvedValue(reply({ choices: [{ message: { content: '' }, finish_reason: 'length' }] }));
+
+    const result = await generateAssistantReply({ prompt: 'private prompt', history: [], userMessage: 'private message' });
+
+    expect(result.reply).toContain("Sorry, I couldn't compose an answer just now.");
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith('[store-chat] reply-fallback', {
+      operation: 'messenger.chat', reason: 'empty_content',
+    });
+    expect(console.error).not.toHaveBeenCalled();
+    expect(console.info).toHaveBeenCalledWith('[store-chat] completion', expect.objectContaining({ finishReason: 'length' }));
   });
 
   it('answers through Groq when OpenRouter cannot, for example out of credit', async () => {
@@ -132,6 +206,20 @@ describe('Store Chat completions', () => {
       expect.anything(),
     );
     expect(console.warn).toHaveBeenCalledWith('[store-chat] fallback', { operation: 'messenger.chat', to: 'groq' });
+    expect(console.error).toHaveBeenCalledExactlyOnceWith('[store-chat] failure', expect.objectContaining({
+      reason: 'http_error', status: 402, fallback: 'groq',
+    }));
+  });
+
+  it('also diagnoses an empty reply from the Groq fallback', async () => {
+    process.env.GROQ_API_KEY = 'groq-key';
+    fetchMock.mockResolvedValue(reply({}, 503));
+    groq.create.mockResolvedValue({ choices: [{ message: { content: ' ' } }] });
+
+    await generateAssistantReply({ prompt: 'private prompt', history: [], userMessage: 'private message' });
+
+    const terminalLogs = vi.mocked(console.warn).mock.calls.filter(([event]) => event === '[store-chat] reply-fallback');
+    expect(terminalLogs).toEqual([['[store-chat] reply-fallback', { operation: 'messenger.chat', reason: 'empty_content' }]]);
   });
 
   it('does not call Groq when OpenRouter answers', async () => {

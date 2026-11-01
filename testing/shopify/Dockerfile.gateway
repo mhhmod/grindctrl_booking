@@ -1,0 +1,5 @@
+FROM node:24.21.0-alpine@sha256:333f6b3eca25980d5682c26207665b93c9417786b21760b2764d5821d9704c8a
+RUN apk upgrade --no-cache && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+COPY --chown=node:node testing/shopify/config.mjs testing/shopify/egress.mjs /opt/grindctrl-controlled/
+USER node
+ENTRYPOINT ["node", "/opt/grindctrl-controlled/egress.mjs"]

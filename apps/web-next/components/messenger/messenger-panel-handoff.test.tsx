@@ -2,8 +2,9 @@ import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MessengerPanel } from './MessengerPanel';
-import { mergeMessages, formatTeamTime, handoffCard, type PanelMessage } from './panel-state';
+import { confirmMessage, mergeMessages, formatTeamTime, handoffCard, type PanelMessage } from './panel-state';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
+import { getPanelCopy } from './i18n';
 
 /* v16 phase zero items 6, 7 and 8, as the shopper sees them. */
 
@@ -87,6 +88,29 @@ function userMessage(body: Record<string, unknown>, id = `u-${sent.length}`) {
 }
 
 describe('item 6: the card follows whether someone was really alerted', () => {
+  it.each(['en', 'ar'] as const)('removes the waiting card and email prompt once the team answers in %s', async (locale) => {
+    const t = getPanelCopy(locale);
+    const line = { id: 'handoff', role: 'system', content: 'Handoff recorded', createdAt: '2026-10-31T10:00:00Z', escalated: true };
+    handlers.send = (_url, body) => ({
+      body: { userMessage: userMessage(body), reply: line, status: 'handoff_requested', askContact: true },
+    });
+    await boot({ ...CONFIG, features: ['v16_chat'], contactCapture: true } as PublicMessengerPayload, locale);
+    await type('a person please');
+    expect(await screen.findByText(t.savedTitle)).toBeInTheDocument();
+    expect(screen.getByLabelText(t.contactLabel)).toBeInTheDocument();
+
+    handlers.sync = () => ({ body: {
+      status: 'handoff_requested',
+      messages: [{ id: 'team-reply', role: 'assistant', author: 'human', content: 'hello', createdAt: '2026-10-31T10:01:00Z' }],
+    } });
+    await act(async () => { window.dispatchEvent(new Event('focus')); });
+
+    expect(await screen.findByText('hello')).toBeInTheDocument();
+    expect(screen.queryByText(t.savedTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(t.replyWhere)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(t.contactLabel)).not.toBeInTheDocument();
+  });
+
   it('says the team has the message only after an alert went out', async () => {
     handlers.send = (_url, body) => ({
       body: {
@@ -160,6 +184,73 @@ describe('item 7: after hours with n23_after_hours on', () => {
 });
 
 describe('item 8: when the assistant is down, and retries', () => {
+  it.each(['en', 'ar'] as const)('keeps a confirmed AI failure sent and handed off in %s without N24', async (locale) => {
+    const t = getPanelCopy(locale);
+    handlers.send = (_url, body) => ({
+      body: {
+        userMessage: userMessage(body),
+        reply: null,
+        saved: true,
+        assistant: 'unavailable',
+        status: 'handoff_requested',
+        alert: { status: 'pending', channels: [], afterHours: false },
+      },
+    });
+    await boot({ ...CONFIG, features: ['v16_chat'] } as PublicMessengerPayload, locale);
+    await type('hi');
+
+    expect(await screen.findByText(t.savedTitle)).toBeInTheDocument();
+    expect(screen.getByText(t.savedBody)).toBeInTheDocument();
+    expect(screen.getByText(t.savedMark)).toBeInTheDocument();
+    expect(screen.queryByText(t.sendFailed)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: t.retry })).not.toBeInTheDocument();
+    expect(screen.queryByText(t.alertedTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(t.assistantNow)).not.toBeInTheDocument();
+
+    // Another accepted message is not evidence that the assistant recovered.
+    handlers.send = (_url, body) => ({ body: { userMessage: userMessage(body), reply: null, status: 'handoff_requested' } });
+    await type('thanks');
+    await waitFor(() => expect(sent).toHaveLength(2));
+    await waitFor(() => expect(screen.getByText('thanks').textContent).toBe('thanks'));
+    expect(screen.queryByText(t.assistantNow)).not.toBeInTheDocument();
+  });
+
+  it.each(['en', 'ar'] as const)('does not claim a handoff or offer a disabled one in %s', async (locale) => {
+    const t = getPanelCopy(locale);
+    handlers.send = (_url, body) => ({
+      body: { userMessage: userMessage(body), reply: null, saved: true, assistant: 'unavailable', status: 'open', handoffAvailable: false },
+    });
+    await boot({ ...CONFIG, features: ['v16_chat'] } as PublicMessengerPayload, locale);
+    await type('hi');
+
+    expect(await screen.findByText(t.savedMark)).toBeInTheDocument();
+    expect(screen.getByText(t.assistantDownTitle)).toBeInTheDocument();
+    expect(screen.queryByText(t.savedTitle)).not.toBeInTheDocument();
+    expect(screen.queryByText(t.alertedTitle)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: t.sendToTeam })).not.toBeInTheDocument();
+    expect(screen.queryByText(t.sendFailed)).not.toBeInTheDocument();
+    expect(screen.queryByText(t.assistantNow)).not.toBeInTheDocument();
+  });
+
+  it.each([['v16_chat', 'n23_after_hours'], ['n23_after_hours']])('does not promise more AI help after an after-hours failure (%s)', async (...features) => {
+    handlers.send = (_url, body) => ({
+      body: {
+        userMessage: userMessage(body), reply: null, saved: true, assistant: 'unavailable', status: 'handoff_requested',
+        alert: { status: 'pending', channels: [], afterHours: true },
+      },
+    });
+    await boot({
+      ...CONFIG, features, available: false,
+      team: { open: false, opensAt: '10:00', closesAt: null, timezone: 'Africa/Cairo' },
+    } as PublicMessengerPayload);
+    await type('hi');
+
+    expect(await screen.findByText('The team is away until 10 am Cairo time')).toBeInTheDocument();
+    expect(screen.queryByText(/Assistant answers now/)).not.toBeInTheDocument();
+    expect(screen.queryByText('While you wait, I can still help with anything else.')).not.toBeInTheDocument();
+    expect(screen.getByText('Team away until 10 am')).toBeInTheDocument();
+  });
+
   it('marks the message saved and sends it to the team in one tap (N24)', async () => {
     handlers.send = (_url, body) => ({
       body: { userMessage: userMessage(body, 'u-saved'), reply: null, saved: true, assistant: 'unavailable', status: 'open' },
@@ -182,6 +273,7 @@ describe('item 8: when the assistant is down, and retries', () => {
 
     expect(await screen.findByText('The team has your message')).toBeInTheDocument();
     expect(screen.queryByText('The assistant can’t answer right now')).not.toBeInTheDocument();
+    expect(screen.queryByText('Assistant may reply automatically')).not.toBeInTheDocument();
     const handoffCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/api/messenger/handoff'));
     expect(JSON.parse(String((handoffCall?.[1] as RequestInit).body))).toMatchObject({ reason: 'assistant_unavailable' });
   });
@@ -191,7 +283,7 @@ describe('item 8: when the assistant is down, and retries', () => {
     handlers.send = (_url, body) => {
       if (first) {
         first = false;
-        return { status: 502, body: { error: 'ai_unavailable' } };
+        return { status: 500, body: { error: 'server_error' } };
       }
       return { body: { userMessage: userMessage(body), reply: null, status: 'open' } };
     };
@@ -233,6 +325,17 @@ describe('item 8: when the assistant is down, and retries', () => {
 
 describe('panel state helpers', () => {
   const at = new Date().toISOString();
+  it('matches shopper echoes by client key without merging distinct messages with the same text', () => {
+    const pending: PanelMessage = { id: 'pending-1', role: 'user', content: 'hi', createdAt: at, clientKey: 'key-1', pending: true };
+    const other = { ...pending, id: 'pending-2', clientKey: 'key-2' };
+    const stored = { ...pending, id: 'stored-1', pending: undefined };
+    const merged = mergeMessages([pending, other], [stored]);
+    expect(merged.map((m) => m.id)).toEqual(['stored-1', 'pending-2']);
+    const confirmed = confirmMessage(merged, pending.id, { ...stored, saved: true });
+    expect(confirmed.map((m) => m.id)).toEqual(['stored-1', 'pending-2']);
+    expect(confirmed[0].saved).toBe(true);
+  });
+
   it('keeps unsent messages when a staff reply arrives through sync', () => {
     const shown: PanelMessage[] = [
       { id: 'a', role: 'assistant', content: 'hi', createdAt: at },

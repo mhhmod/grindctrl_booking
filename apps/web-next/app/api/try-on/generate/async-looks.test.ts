@@ -18,6 +18,7 @@ vi.mock('@/lib/ratelimit', () => ({
   rateLimitedResponse: () => new Response(null, { status: 429 }),
 }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: async () => flags.on }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: vi.fn(async () => true) }));
 vi.mock('next/server', async (importOriginal) => {
   const real = await importOriginal<typeof import('next/server')>();
   return { ...real, after: (task: () => unknown) => afterTasks.push(task) };

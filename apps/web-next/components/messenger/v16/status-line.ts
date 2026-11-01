@@ -39,7 +39,7 @@ export function v16StatusLine(
         ? t.teamAwayUntil(formatTeamTime(team.opensAt, locale))
         : t.teamAway;
   const parts = [assistantAnswers ? t.assistantNow : null, teamHalf].filter((part): part is string => !!part);
-  if (!parts.length) return { text: teamOpen ? '' : t.offlineNote, live: teamOpen };
+  if (!parts.length) return { text: teamOpen ? (assistantDown ? t.assistantUnavailable : '') : t.offlineNote, live: teamOpen };
   const text = parts.join(' · ');
   // "team away until 10 am" leads the line when the assistant is not answering.
   return { text: text.charAt(0).toUpperCase() + text.slice(1), live: assistantAnswers || teamOpen };

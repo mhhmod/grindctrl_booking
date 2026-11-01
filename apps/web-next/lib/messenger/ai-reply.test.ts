@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const complete = vi.hoisted(() => vi.fn());
 vi.mock('./chat-client', () => ({ storeChatComplete: complete }));
@@ -6,6 +6,43 @@ vi.mock('./chat-client', () => ({ storeChatComplete: complete }));
 import { generateAssistantReply, phraseOrderAnswer } from './ai';
 
 const INPUT = { prompt: 'system', history: [], userMessage: 'yes please' };
+
+describe('empty reply diagnostics', () => {
+  beforeEach(() => {
+    complete.mockReset();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it.each([
+    ['', 'empty_content'],
+    [' \n ', 'empty_content'],
+    ['[[HANDOFF]]', 'empty_visible_content'],
+    ['[[VERDICT {"answered":true,"intent":"other","product":"private product","upset":false}]]', 'empty_visible_content'],
+  ])('logs one safe reason for a chat reply with no visible answer (%s)', async (completion, reason) => {
+    complete.mockResolvedValue(completion);
+
+    const result = await generateAssistantReply(INPUT);
+
+    expect(result.reply).toContain("Sorry, I couldn't compose an answer just now.");
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith('[store-chat] reply-fallback', {
+      operation: 'messenger.chat', reason,
+    });
+    expect(JSON.stringify(vi.mocked(console.warn).mock.calls)).not.toMatch(/private product|system|yes please/);
+  });
+
+  it.each([
+    ['', 'empty_content'],
+    ['<<GC_ACTION>>[[HANDOFF]][[VERDICT {"answered":true,"intent":"other","product":null,"upset":false}]]', 'empty_visible_content'],
+  ])('logs the order-answer fallback too (%s)', async (completion, reason) => {
+    complete.mockResolvedValue(completion);
+
+    expect(await phraseOrderAnswer({ ...INPUT, facts: {} as never })).toContain("Sorry, I couldn't compose an answer just now.");
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith('[store-chat] reply-fallback', {
+      operation: 'messenger.order-answer', reason,
+    });
+  });
+});
 
 describe('generateAssistantReply handoff marker', () => {
   beforeEach(() => complete.mockReset());

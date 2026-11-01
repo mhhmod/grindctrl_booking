@@ -62,7 +62,7 @@ describe('V16TodaySetup', () => {
     expect(tryOn).not.toHaveTextContent(en.ready);
     expect(within(theme).getByRole('link', { name: en.addButton })).toHaveAttribute(
       'href',
-      'https://maison-noor.myshopify.com/admin/themes/current/editor?template=product&addAppBlockId=fc095fe656d9029fdc249a4af2315f19/tryon&target=mainSection',
+      '/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=tryon&mode=product',
     );
     expect(within(theme).queryByRole('link', { name: en.openThemeEditor })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: en.book })).toHaveAttribute('href', BOOKING_URL);
@@ -73,7 +73,7 @@ describe('V16TodaySetup', () => {
     const theme = step(en.theme);
     expect(within(theme).getByRole('link', { name: en.openThemeEditor })).toHaveAttribute(
       'href',
-      'https://maison-noor.myshopify.com/admin/themes/current/editor?context=apps&activateAppId=fc095fe656d9029fdc249a4af2315f19/messenger',
+      '/api/shopify/theme-link?shop=maison-noor.myshopify.com&block=messenger&mode=embed',
     );
     expect(within(theme).queryByText(en.ready)).not.toBeInTheDocument();
   });

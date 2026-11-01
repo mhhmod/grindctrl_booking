@@ -1,3 +1,4 @@
+import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
@@ -25,7 +26,7 @@ import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
 import { escalateAndNotify, type Escalation } from '@/lib/messenger/escalate';
 import { handoffLine } from '@/lib/messenger/handoff-copy';
-import { toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
+import { publicAlertFor, toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
 import { teamHours } from '@/lib/messenger/hours';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
@@ -180,9 +181,6 @@ export async function POST(request: NextRequest) {
     const afterHoursMode = features.includes('n23_after_hours');
     const team = afterHoursMode ? teamHours(site.config.behaviour, now) : null;
     const teamIsIn = team ? team.open : withinHours;
-    /* n24_assistant_down (phase zero item 8): when both model providers
-       fail, the message reads as saved and the team is one tap away. */
-    const assistantDownMode = features.includes('n24_assistant_down');
     /* n25_handoff_rules: refunds, exchanges and order changes, an upset
        shopper and big orders reach a person, and the conversation is tagged
        for the Inbox. n8_unanswered_questions: what the assistant could not
@@ -273,7 +271,9 @@ export async function POST(request: NextRequest) {
 
     // Identity refresh (token may have just been issued by the proxy).
     let identityName: string | null = conversation.metadata.identity?.name ?? null;
-    let verifiedCustomer = conversation.metadata.identity?.verified === true;
+    let verifiedAppClientId = conversation.metadata.identity?.app_client_id;
+    let verifiedCustomer = Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
+      && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
     if (shopperToken) {
       const claims = verifyShopperTokenAnyApp(shopperToken, anonymousId, site.domain);
       const bound = conversation.metadata.identity?.customer_id ?? null;
@@ -282,7 +282,9 @@ export async function POST(request: NextRequest) {
          else means the browser changed hands — refuse the upgrade and let
          the next bootstrap rotate the session rather than answering as the
          previous customer. */
-      if (claims?.customerId && (!bound || bound === claims.customerId)) {
+      if (claims?.customerId && claims.appClientId && site.domain && (!bound || bound === claims.customerId)
+        && await isActiveShopifyInstallation(site.domain, claims.appClientId)) {
+        verifiedAppClientId = claims.appClientId;
         verifiedCustomer = true;
         identityName = claims.name ?? identityName;
       }
@@ -302,7 +304,14 @@ export async function POST(request: NextRequest) {
       // the caller converges without re-running the model.
       const existing = await listMessages(conversation.id, { afterIso: new Date(Date.now() - 120_000).toISOString(), limit: 10 });
       const priorReply = [...existing].reverse().find((m) => m.role === 'assistant' && m.created_at >= userMessage.created_at);
-      return ok({ userMessage: toWire(userMessage), reply: priorReply ? toWire(priorReply) : null });
+      return ok({
+        userMessage: toWire(userMessage),
+        reply: priorReply ? toWire(priorReply) : null,
+        status: conversation.status,
+        alert: publicAlertFor(conversation),
+        saved: true,
+        assistant: conversation.handoff_reason === 'assistant_unavailable' ? 'unavailable' : undefined,
+      });
     }
 
     /* What the message is about, read before the model (phase zero item
@@ -409,18 +418,38 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       console.error('[messenger] ai failed:', error instanceof Error ? error.message : error);
       void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'ai_failed' }).catch(() => {});
-      if (assistantDownMode) {
-        // The message was stored before the model ran: it is saved, and the
-        // panel offers to send it to the team.
+      // The shopper's message is already stored. Only a recorded transition
+      // can promise a handoff, but a failed handoff must not undo delivery.
+      const escalation = site.config.ai.escalationEnabled && !waitingAfterHours
+        ? await escalate('assistant_unavailable', 'The assistant could not reply. The shopper needs a team response.').catch(() => null)
+        : null;
+      if (escalation) {
+        const handed = await handedOff(escalation, locale).catch(() => null);
+        void recordEvent({ siteId: site.id, conversationId: conversation.id, eventName: 'handoff_triggered', payload: { reason: 'assistant_unavailable', alert: escalation.alert.status } }).catch(() => {});
         return ok({
           userMessage: toWire(userMessage),
-          reply: null,
+          reply: handed ? toWire(handed.line) : null,
           saved: true,
           assistant: 'unavailable',
-          status: conversation.status,
+          handoffAvailable: site.config.ai.escalationEnabled,
+          status: escalation.conversation.status,
+          alert: toPublicHandoffAlert(escalation.alert),
+          team,
+          askContact: await contactPrompt(true),
         });
       }
-      return NextResponse.json({ userMessage: toWire(userMessage), error: 'ai_unavailable' }, { status: 502 });
+      // A concurrent takeover may have won while the model was running.
+      const current = await getConversationForVisitor(conversation.id, visitor.id).catch(() => null);
+      return ok({
+        userMessage: toWire(userMessage),
+        reply: null,
+        saved: true,
+        assistant: 'unavailable',
+        handoffAvailable: site.config.ai.escalationEnabled,
+        status: current?.status ?? conversation.status,
+        alert: publicAlertFor(current ?? conversation),
+        team,
+      });
     }
 
     /* The model takes seconds; `ownsMic` above is a read from before it ran.
@@ -530,6 +559,7 @@ export async function POST(request: NextRequest) {
         ? ({ ok: false, reason: 'rate_limited' } as const)
         : await lookupOrder({
             shopDomain: orderShopDomain,
+            appClientId: verifiedCustomer ? verifiedAppClientId : undefined,
             // Server-derived. A model that invents a customer id cannot
             // reach this argument — there is no field for it in the schema.
             verifiedCustomerId:
@@ -661,6 +691,7 @@ function toWire(m: {
   role: string;
   content: string;
   created_at: string;
+  client_key?: string | null;
   metadata?: { author?: string; escalated?: boolean; feedback?: 'up' | 'down' };
 }) {
   return {
@@ -668,6 +699,7 @@ function toWire(m: {
     role: m.role,
     content: m.content,
     createdAt: m.created_at,
+    clientKey: m.client_key ?? undefined,
     author:
       m.metadata?.author ??
       (m.role === 'assistant' ? 'ai' : m.role === 'system' ? 'system' : 'shopper'),

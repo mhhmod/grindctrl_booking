@@ -1,0 +1,48 @@
+# TEST registration "GRINDCTRL TEST A", served by the isolated staging copy.
+# Never point this at grindctrl.cloud; production is shopify.app.toml.
+
+client_id = "46ea8d140186e3b2076224cd66a59e60"
+name = "GRINDCTRL TEST A"
+application_url = "https://shopify-m1-dev.grindctrl.cloud/shopify/app"
+embedded = true
+
+[access_scopes]
+scopes = "read_products,read_orders,write_app_proxy"
+
+[app_proxy]
+url = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/proxy"
+prefix = "apps"
+subpath = "grindctrl"
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "shop/redact" ]
+
+[auth]
+# Staging only; OAuth state cookies stay on this exact host.
+redirect_urls = [
+  "https://shopify-m1-dev.grindctrl.cloud/shopify/app",
+  "https://shopify-m1-dev.grindctrl.cloud/api/shopify/oauth/callback"
+]
+
+[build]
+automatically_update_urls_on_dev = false

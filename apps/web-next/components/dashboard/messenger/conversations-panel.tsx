@@ -38,7 +38,6 @@ const COPY = {
     assignLabel: 'Assign conversation to a teammate',
     returnToAi: 'Return to AI',
     resolve: 'Mark resolved',
-    systemHandoff: 'AI handed this conversation to your team',
     justNow: 'now',
     minutesAgo: (n: number) => `${n}m ago`,
     hoursAgo: (n: number) => `${n}h ago`,
@@ -98,7 +97,6 @@ const COPY = {
     assignLabel: 'إسناد المحادثة إلى زميل',
     returnToAi: 'إعادة للذكاء الاصطناعي',
     resolve: 'إغلاق المحادثة',
-    systemHandoff: 'حوّل المساعد هذه المحادثة إلى فريقك',
     justNow: 'الآن',
     minutesAgo: (n: number) => `قبل ${n} د`,
     hoursAgo: (n: number) => `قبل ${n} س`,
@@ -145,7 +143,7 @@ const COPY = {
    technical background has no way to parse 'shopper_requested_human'.
    Unknown/future codes fall back to a plain, still-useful label instead of
    leaking another raw snake_case string. */
-function handoffReasonLabel(reason: string, t: (typeof COPY)['en']): string {
+function handoffReasonLabel(reason: string | null | undefined, t: (typeof COPY)['en']): string {
   if (reason === 'shopper_requested_human') return t.handoffShopperAsked;
   if (reason === 'assistant_escalated') return t.handoffAiHandedOff;
   return t.handoffOther;
@@ -342,7 +340,8 @@ export function ConversationsPanel({
   // Keep assignment failures visible after act() refreshes the thread.
   const [assignmentError, setAssignmentError] = useState<{ conversationId: string; text: string } | null>(null);
   const displayedError = error || (assignmentError?.conversationId === selectedId ? assignmentError.text : null);
-  const assigneeId = conversations.find((conversation) => conversation.id === selectedId)?.assigneeId ?? '';
+  const selectedConversation = conversations.find((conversation) => conversation.id === selectedId);
+  const assigneeId = selectedConversation?.assigneeId ?? '';
   const [pending, startTransition] = useTransition();
   /* Reply vs private note. Reset to Reply whenever another conversation is
      picked below — a mode that silently persists across threads is how a
@@ -711,7 +710,7 @@ export function ConversationsPanel({
           </div>
           <div className="min-w-0">
             {status === 'handoff_requested' && (
-              <p className="text-xs text-amber-800 dark:text-amber-400">↪ {t.systemHandoff}</p>
+              <p className="text-xs text-amber-800 dark:text-amber-400">{handoffReasonLabel(selectedConversation?.handoffReason, t)}</p>
             )}
             {status ? (
               <Badge variant={statusBadge(status).variant}>{statusBadge(status).label}</Badge>

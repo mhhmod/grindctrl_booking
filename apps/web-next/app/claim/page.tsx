@@ -7,7 +7,7 @@ import { ensureMessengerSite } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { verifyClaimToken } from '@/lib/shopify/claim-token';
 import { getShopOwnerEmail } from '@/lib/shopify/shop-owner';
-import { primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { coreCapabilitySecret } from '@/lib/security/capability-key';
 
 /* Redeem side of the claim flow — see app/api/shopify/claim/start/route.ts
    for the mint side. Order matters:
@@ -118,9 +118,8 @@ export default async function ClaimPage({
   const locale = await getRequestLocale();
   const copy = COPY[locale === 'ar' ? 'ar' : 'en'];
 
-  // Claim tokens are always signed with the primary app's secret (see
-  // app/api/shopify/claim/start/route.ts) -- verify against that same one.
-  const claim = verifyClaimToken(primaryShopifyApp()?.secret ?? '', token);
+  // Claim redemption uses the independent GRINDCTRL key.
+  const claim = verifyClaimToken(coreCapabilitySecret() ?? '', token);
   if (!claim) {
     return <MessagePage locale={locale} title={copy.expiredTitle} body={copy.expiredBody} />;
   }
@@ -129,7 +128,7 @@ export default async function ClaimPage({
   const clerkUser = await currentUser();
   const merchantEmail =
     clerkUser?.primaryEmailAddress?.emailAddress ?? clerkUser?.emailAddresses[0]?.emailAddress ?? null;
-  const ownerEmail = await getShopOwnerEmail(claim.shop);
+  const ownerEmail = await (claim.appClientId ? getShopOwnerEmail(claim.shop, claim.appClientId) : getShopOwnerEmail(claim.shop));
   const manualConnectAction = { label: copy.connectManually, href: '/dashboard/try-on' };
   if (!ownerEmail) {
     /* getShopOwnerEmail needs the shop's Admin API token, which is fetched

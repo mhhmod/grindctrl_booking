@@ -48,6 +48,7 @@ function req(url: string, headers?: Record<string, string>) {
 describe('GET /api/shopify/claim/start', () => {
   beforeEach(() => {
     // Every test not specifically about the limiter needs it open by default.
+    process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
     rateLimitMock.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     findSiteByDomainMock.mockResolvedValue({
       id: 'site-1',
@@ -59,6 +60,7 @@ describe('GET /api/shopify/claim/start', () => {
     vi.resetAllMocks();
     delete process.env.SHOPIFY_API_KEY;
     delete process.env.SHOPIFY_API_SECRET;
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
   });
 
   it('returns 401 and never provisions when the authorization header is missing', async () => {
@@ -111,7 +113,7 @@ describe('GET /api/shopify/claim/start', () => {
     expect(ensureShopOwnedSiteMock).toHaveBeenCalledWith('demo.myshopify.com');
     expect(ensureShopOwnedSiteMock).not.toHaveBeenCalledWith('evil.myshopify.com');
     expect(findSiteByDomainMock).toHaveBeenCalledWith('demo.myshopify.com');
-    expect(signClaimTokenMock).toHaveBeenCalledWith('secret', 'demo.myshopify.com');
+    expect(signClaimTokenMock).toHaveBeenCalledWith('test-only-independent-core-signing-key-2026', 'demo.myshopify.com', undefined);
   });
 
   it('returns alreadyLinked without minting when a real Clerk account owns the site', async () => {
@@ -183,7 +185,8 @@ describe('GET /api/shopify/claim/start', () => {
     consoleError.mockRestore();
   });
 
-  it('returns 503 when SHOPIFY_API_SECRET is not configured', async () => {
+  it('returns 503 when the independent core key is not configured', async () => {
+    delete process.env.GRINDCTRL_CAPABILITY_SECRET;
     // Deliberately not set.
     const response = await GET(
       req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
@@ -196,8 +199,8 @@ describe('GET /api/shopify/claim/start', () => {
     expect(ensureShopOwnedSiteMock).not.toHaveBeenCalled();
   });
 
-  it('returns 503 when SHOPIFY_API_SECRET is whitespace-only, not a 401', async () => {
-    process.env.SHOPIFY_API_SECRET = '   ';
+  it('returns 503 when the independent core key is whitespace-only, not a 401', async () => {
+    process.env.GRINDCTRL_CAPABILITY_SECRET = '   ';
     const response = await GET(
       req('https://app.example.com/api/shopify/claim/start', { authorization: 'Bearer good-token' }),
     );

@@ -36,9 +36,11 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 describe('Try-On catalogue pills launch answer', () => {
   afterEach(() => {
+    Object.defineProperty(document,'currentScript',{value:null,configurable:true});
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
+
 
   it('adds no pills and no styles when try-on is hidden', async () => {
     document.head.innerHTML = '';
@@ -81,5 +83,14 @@ describe('Try-On catalogue pills launch answer', () => {
       expect(new URL(url, 'https://shop.example').searchParams.get('vid')).toBe(stored);
     }
     expect(document.querySelector('.gc-cat-overlay [role="alert"]')).toBeNull();
+  });
+  it('reads configuration from the explicitly selected B proxy',async()=>{
+    document.body.innerHTML=GRID;
+    const script=document.createElement('script');script.dataset.gcProxyPath='/apps/grindctrl-public';
+    Object.defineProperty(document,'currentScript',{value:script,configurable:true});
+    const fetch=vi.fn(async(_input:RequestInfo|URL)=>new Response(JSON.stringify({tryOn:'hidden'})));
+    vi.stubGlobal('fetch',fetch);window.eval(catalogAsset);
+    await settle();
+    expect(String(fetch.mock.calls[0]?.[0])).toContain('/apps/grindctrl-public/config?');
   });
 });

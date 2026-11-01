@@ -10,7 +10,7 @@ import { getTryOnSettings, getTryOnSettingsForEdit } from '@/lib/try-on/settings
 import { getActiveStore, listDashboardShops } from '@/lib/dashboard/active-store-server';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
-import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
+import { shopifyAdminAppUrl } from '@/lib/shopify/app-identity';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDateLocale, getTryOnDashboardCopy, statusLabel } from '@/lib/try-on/dashboard-copy';
@@ -113,7 +113,7 @@ export async function TryOnPage({
           <CardContent className="flex flex-wrap items-start gap-3">
             <Button asChild variant="outline" size="sm">
               <Link
-                href={['https://admin.shopify.com/store', v16Shop.split('.')[0], 'apps', SHOPIFY_APP_CLIENT_ID].join('/')}
+                href={shopifyAdminAppUrl(v16Shop)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -147,7 +147,7 @@ export async function TryOnPage({
   const appShop = selectedShop !== 'default' ? selectedShop
     : shops.length === 1 ? normalizeShopDomain(shops[0].domain) : null;
   const shopifyAppUrl = appShop
-    ? ['https://admin.shopify.com/store', appShop.split('.')[0], 'apps', SHOPIFY_APP_CLIENT_ID].join('/')
+    ? shopifyAdminAppUrl(appShop)
     : null;
 
   /* The caller's role on the selected shop (item 12): only its owner sees

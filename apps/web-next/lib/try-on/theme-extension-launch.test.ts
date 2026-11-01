@@ -49,6 +49,28 @@ describe('Try-On product block launch answer', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
+  it.each(['/apps/grindctrl','/apps/grindctrl-public','/tools/brand-custom'])(
+    'uses the configured proxy path for config and proof: %s',async base=>{
+      const calls:string[]=[];
+      document.querySelector<HTMLElement>('.gc-tryon-root')!.dataset.proxyPath=base;
+      vi.stubGlobal('fetch',vi.fn(async(input:RequestInfo|URL)=>{
+        const url=String(input);calls.push(url);
+        return url.includes('/config?') ? new Response(JSON.stringify({tryOn:'live'})) : new Response('{}',{status:409});
+      }));
+      window.eval(productAsset);
+      await waitFor(()=>expect(document.querySelector('.gc-tryon-root--pending')).toBeNull());
+      fireEvent.click(document.querySelector('.gc-tryon-btn')!);
+      await waitFor(()=>expect(calls.some(url=>url.startsWith(base+'/try-on-context?'))).toBe(true));
+      expect(calls.every(url=>url.startsWith(base+'/'))).toBe(true);
+    },
+  );
+  it.each(['https://evil.example/path','//evil.example/path','/apps/grindctrl?next=evil','/apps/../admin'])(
+    'refuses unsafe proxy configuration: %s',base=>{
+      document.querySelector<HTMLElement>('.gc-tryon-root')!.dataset.proxyPath=base;
+      const fetch=vi.fn();vi.stubGlobal('fetch',fetch);window.eval(productAsset);
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
 
   it('starts out of the layout, not as an invisible gap', () => {
     stubFetch({ tryOn: 'live', reason: null });

@@ -48,7 +48,7 @@ type ThreadBody =
    lookup threw and every Take over and reply failed. The workspace owner
    covers both shapes — see getSiteAssigneeProfileId. */
 export async function POST(request: NextRequest) {
-  const session = authenticateShopifyRequest(request);
+  const session = await authenticateShopifyRequest(request);
   if (!session) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
   const limited = await merchantRateLimitResponse(
     `shop:${session.shop}`, 'read',
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       case 'reply': {
         const trimmed = body.text.trim().slice(0, 2000);
         if (!trimmed) return NextResponse.json({ ok: false, error: 'Message is empty.' }, { status: 400 });
-        if (conversation.status === 'open') {
+        if (conversation.status === 'open' || conversation.status === 'handoff_requested') {
           const taken = await takeOverConversation(conversation.id, await getSiteAssigneeProfileId(site.workspace_id));
           if (!taken) {
             return NextResponse.json({ ok: false, error: 'Conversation state changed. Refresh and retry.' }, { status: 400 });

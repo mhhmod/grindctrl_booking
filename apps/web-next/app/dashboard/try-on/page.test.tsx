@@ -148,7 +148,7 @@ import { listManagedTryOnShops } from '@/lib/shopify/shops';
 import { getShopPlanState, listPlansCatalog } from './plan-actions';
 import { listRecentTryOnJobs } from '@/lib/try-on/persistence';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
-import { SHOPIFY_APP_CLIENT_ID } from '@/lib/shopify/app-identity';
+import { shopifyAdminAppUrl } from '@/lib/shopify/app-identity';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { getTryOnResultsFacts } from '@/lib/dashboard/tryon-insights-data';
 import { getTryOnResultsCopy } from '@/lib/dashboard/tryon-insights-copy';
@@ -204,7 +204,7 @@ describe('DashboardTryOnPage', () => {
     ]);
     await renderPage('BETA.MYSHOPIFY.COM');
     expect(screen.getByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp }))
-      .toHaveAttribute('href', 'https://admin.shopify.com/store/beta/apps/' + SHOPIFY_APP_CLIENT_ID);
+      .toHaveAttribute('href', shopifyAdminAppUrl('beta.myshopify.com'));
     expect(document.body.innerHTML).not.toContain('/store/grindctrl/apps/grindctrl-tryon');
   });
 
@@ -212,7 +212,7 @@ describe('DashboardTryOnPage', () => {
     vi.mocked(listManagedTryOnShops).mockResolvedValueOnce([ownedShop('alpha.myshopify.com')]);
     await renderPage();
     expect(screen.getByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp }))
-      .toHaveAttribute('href', 'https://admin.shopify.com/store/alpha/apps/' + SHOPIFY_APP_CLIENT_ID);
+      .toHaveAttribute('href', shopifyAdminAppUrl('alpha.myshopify.com'));
   });
 
   it.each(['en', 'ar'] as const)('links the merchant\'s own shop in %s, never a forged selection', async (locale) => {
@@ -223,7 +223,7 @@ describe('DashboardTryOnPage', () => {
     await renderPage('attacker.myshopify.com');
     const c = getTryOnDashboardCopy(locale);
     expect(screen.getByRole('link', { name: c.openShopifyApp }))
-      .toHaveAttribute('href', 'https://admin.shopify.com/store/alpha/apps/' + SHOPIFY_APP_CLIENT_ID);
+      .toHaveAttribute('href', shopifyAdminAppUrl('alpha.myshopify.com'));
     expect(document.body.innerHTML).not.toContain('/store/attacker/');
   });
 
@@ -464,7 +464,7 @@ describe('DashboardTryOnPage, v16', () => {
     const c = getTryOnDashboardCopy('en');
     expect(screen.getByRole('link', { name: c.openShopifyApp })).toHaveAttribute(
       'href',
-      `https://admin.shopify.com/store/grindctrl/apps/${SHOPIFY_APP_CLIENT_ID}`,
+      shopifyAdminAppUrl('grindctrl.myshopify.com'),
     );
     expect(screen.getByRole('button', { name: c.connectAnotherStore })).toBeInTheDocument();
   });

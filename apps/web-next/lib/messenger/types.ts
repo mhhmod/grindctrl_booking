@@ -190,6 +190,7 @@ export interface ConversationRecord {
   metadata: {
     shopper_locale?: MessengerLocale;
     identity?: {
+      app_client_id?: string;
       customer_id?: string;
       email?: string;
       name?: string;
@@ -227,6 +228,7 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface MessageRecord {
   id: string;
+  client_key?: string | null;
   conversation_id: string;
   role: MessageRole;
   content: string;

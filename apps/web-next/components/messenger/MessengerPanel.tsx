@@ -14,6 +14,7 @@ import {
   handoffCard,
   mergeMessages,
   opensNextDay,
+  teamAnsweredHandoff,
   type PanelTeam,
 } from './panel-state';
 import { ChatHome, ProductLine } from './v16/chat-home';
@@ -174,8 +175,9 @@ export function MessengerPanel({
      a docked panel; Escape here closes it, and opening it moves focus into
      the composer. */
   const v16Chat = config.features?.includes('v16_chat') ?? false;
-  /* The assistant could not answer the last message (N24). */
+  /* A failed assistant stays unavailable for this panel session. */
   const [assistantDown, setAssistantDown] = useState(false);
+  const [handoffAvailable, setHandoffAvailable] = useState(true);
   const [handingOff, setHandingOff] = useState(false);
   /* Offline outbox (item 8): messages wait and go out in order. */
   const [online, setOnline] = useState(true);
@@ -365,7 +367,7 @@ export function MessengerPanel({
   useEffect(() => {
     function sync() {
       if (document.visibilityState !== 'visible' || !conversationId || !anonId) return;
-      const last = messages[messages.length - 1]?.createdAt;
+      const last = messages.filter((message) => !message.pending && !message.failed && !message.queued).at(-1)?.createdAt;
       fetch(
         `/api/messenger/sync?key=${encodeURIComponent(config.key)}&origin=${encodeURIComponent(
           effectiveOrigin ?? '',
@@ -574,6 +576,7 @@ export function MessengerPanel({
             team?: PanelTeam | null;
             saved?: boolean;
             assistant?: 'unavailable';
+            handoffAvailable?: boolean;
           }
         | null;
       if (!res.ok || !data?.userMessage) throw new Error(data?.error ?? 'send_failed');
@@ -587,15 +590,15 @@ export function MessengerPanel({
         localStorage.setItem(CONV_KEY(config.key), data.conversationId);
       }
 
-      const confirmed: WireMessage = { ...data.userMessage, saved: data.saved === true || undefined };
+      const confirmed: WireMessage = { ...data.userMessage, clientKey, saved: data.saved === true || undefined };
       setMessages((prev) => confirmMessage(prev, optimistic.id, confirmed));
       if (data.reply) setMessages((prev) => mergeMessages(prev, [data.reply!]));
       if (data.status) setStatus(data.status);
       if (data.askContact) setAskContact(true);
       if (data.alert !== undefined) setAlert(data.alert ?? null);
       if (data.team) setTeam((prev) => ({ ...data.team!, replyMinutes: prev?.replyMinutes ?? null }));
-      // N24: the assistant could not answer; offer to send it to the team.
-      setAssistantDown(data.assistant === 'unavailable');
+      if (data.assistant === 'unavailable') setAssistantDown(true);
+      if (data.handoffAvailable !== undefined) setHandoffAvailable(data.handoffAvailable);
       return 'sent';
     } catch (error) {
       // A fetch that never reached us is a dropped connection, not a refusal.
@@ -684,7 +687,6 @@ export function MessengerPanel({
       if (data.alert !== undefined) setAlert(data.alert ?? null);
       if (data.team) setTeam((prev) => ({ ...data.team!, replyMinutes: prev?.replyMinutes ?? null }));
       if (data.line) setMessages((prev) => mergeMessages(prev, [data.line!]));
-      setAssistantDown(false);
     } catch {
       // The card stays, so the shopper can try again.
     } finally {
@@ -863,6 +865,8 @@ export function MessengerPanel({
 
   const showHandoffBanner =
     status === 'handoff_requested' || status === 'handoff_active' || status === 'closed';
+  const teamHasAnswered = teamAnsweredHandoff(messages);
+  const waitingForTeam = status === 'handoff_requested' && !teamHasAnswered;
   /* n23_after_hours: the assistant answers now, and the header says when the
      team is in. */
   const teamLine = !team
@@ -884,7 +888,7 @@ export function MessengerPanel({
   /* Chat-States: where the team should reply, inside the handoff card, when
      the store takes an address and the server asked or one is known. */
   const replyAddress =
-    v16Chat && config.contactCapture && (askContact || contactEmail) ? (
+    v16Chat && !teamHasAnswered && config.contactCapture && (askContact || contactEmail) ? (
       <ReplyAddress
         t={t}
         heading={card.kind === 'after_hours' ? null : t.replyWhere}
@@ -973,10 +977,10 @@ export function MessengerPanel({
                 <span
                   aria-hidden="true"
                   className={`inline-block size-1.5 rounded-full ${
-                    (v16Chat ? v16Status.live : config.available || afterHoursMode) ? 'bg-[var(--gc-success,#2f6b3a)]' : 'bg-muted-foreground'
+                    (v16Chat || assistantDown ? v16Status.live : config.available || afterHoursMode) ? 'bg-[var(--gc-success,#2f6b3a)]' : 'bg-muted-foreground'
                   }`}
                 />
-                {v16Chat ? v16Status.text : afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
+                {v16Chat || assistantDown ? v16Status.text : afterHoursMode && team ? teamLine : config.available ? t.aiNotice : t.offlineNote}
               </p>
             </div>
           </>
@@ -1149,11 +1153,11 @@ export function MessengerPanel({
                   {m.order ? t.orderAiLabel : t.storeAssistantAi}
                 </span>
               )}
-              {/* Per-reply rating: assistant bubbles only, never the
-                  shopper's own messages or system lines. Same emoji and
+              {/* Per-reply rating: AI answers only, never the shopper's own
+                  messages, team replies or system lines. Same emoji and
                   button language as the end-of-conversation rating below;
                   once rated, the buttons give way to the thanks line. */}
-              {!mine &&
+              {!mine && m.author === 'ai' &&
                 (m.feedback ? (
                   <span className="mt-1 px-1 text-[11px] text-muted-foreground" role="status">
                     {t.feedbackThanks}
@@ -1208,28 +1212,31 @@ export function MessengerPanel({
             replyLine={replyLine}
             accent={accent}
             busy={handingOff}
+            handoffAvailable={handoffAvailable}
             onSend={() => void handOffSaved()}
           />
         )}
         {!v16Chat && assistantDown && status === 'open' && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3" role="status">
             <p className="text-xs font-semibold">{t.assistantDownTitle}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">{t.assistantDownBody}</p>
-            <button
-              type="button"
-              onClick={() => void handOffSaved()}
-              disabled={handingOff}
-              className="mt-2 rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
-              style={{ backgroundColor: accent }}
-            >
-              {t.sendToTeam}
-            </button>
+            <p className="mt-1 text-[11px] text-muted-foreground">{handoffAvailable ? t.assistantDownBody : t.assistantSavedBody}</p>
+            {handoffAvailable && (
+              <button
+                type="button"
+                onClick={() => void handOffSaved()}
+                disabled={handingOff}
+                className="mt-2 rounded-full px-3 py-1.5 text-[11px] text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 disabled:opacity-50"
+                style={{ backgroundColor: accent }}
+              >
+                {t.sendToTeam}
+              </button>
+            )}
           </div>
         )}
 
         {/* While the team has it: only an alert that really went out says
             the team has the message (phase zero item 6). */}
-        {v16Chat && status === 'handoff_requested' && (
+        {v16Chat && waitingForTeam && (
           <div className="grid gap-2">
             {card.kind === 'alerted' ? (
               <TeamHasItCard t={t} replyLine={replyLine}>
@@ -1251,12 +1258,12 @@ export function MessengerPanel({
             {/* Only where the assistant really keeps answering while the
                 shopper waits: after hours, with n23 on. Inside opening hours
                 it stops once the team has the conversation. */}
-            {card.kind === 'after_hours' && afterHoursMode && config.aiEnabled && (
+            {card.kind === 'after_hours' && afterHoursMode && config.aiEnabled && !assistantDown && (
               <p className="px-1 text-xs text-muted-foreground">{t.stillHelp}</p>
             )}
           </div>
         )}
-        {!v16Chat && status === 'handoff_requested' && (
+        {!v16Chat && waitingForTeam && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3 text-center" role="status">
             {card.kind === 'alerted' ? (
               <>
@@ -1272,7 +1279,7 @@ export function MessengerPanel({
                   )}
                 </p>
                 <p className="mt-1 text-[11px] text-muted-foreground">{t.awayBody}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{t.stillHelp}</p>
+                {!assistantDown && <p className="mt-1 text-[11px] text-muted-foreground">{t.stillHelp}</p>}
               </>
             ) : (
               <>
@@ -1283,15 +1290,15 @@ export function MessengerPanel({
           </div>
         )}
 
-        {showHandoffBanner && status !== 'handoff_requested' && (
+        {showHandoffBanner && !waitingForTeam && (
           <p className="text-center text-[11px] text-muted-foreground" role="status">
-            {status === 'handoff_active' ? t.teamReplied : t.resolved}
+            {status === 'closed' ? t.resolved : t.teamReplied}
           </p>
         )}
 
         {/* Inline, never a modal: the composer stays usable and skipping
             costs nothing. Asked at most once, decided by the server. */}
-        {askContact && !(v16Chat && status === 'handoff_requested' && config.contactCapture) && (
+        {askContact && !teamHasAnswered && !contactEmail && !(v16Chat && waitingForTeam && config.contactCapture) && (
           <div className="mx-auto w-full max-w-[92%] rounded-xl border border-border bg-card p-3">
             {contactState === 'done' ? (
               <p className="text-center text-[11px] text-muted-foreground" role="status">

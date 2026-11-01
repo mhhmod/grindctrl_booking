@@ -43,6 +43,7 @@ function mapConversation(row: Record<string, unknown>): ConversationRecord {
 function mapMessage(row: Record<string, unknown>): MessageRecord {
   return {
     id: row.id as string,
+    client_key: typeof row.client_key === 'string' ? row.client_key : undefined,
     conversation_id: row.conversation_id as string,
     role: row.role as MessageRole,
     content: row.content as string,

@@ -68,6 +68,8 @@ export async function GET(request: NextRequest) {
         contactEmail: knownReplyAddress(conversation.metadata, visitor),
         messages: messages.map((m) => ({
           id: m.id,
+          clientKey: m.client_key ?? undefined,
+          escalated: m.metadata.escalated ?? undefined,
           role: m.role,
           content: m.content,
           createdAt: m.created_at,

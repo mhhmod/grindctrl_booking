@@ -1,3 +1,4 @@
+import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
 import { NextRequest, NextResponse } from 'next/server';
 import { forgetJob, getJob } from '@/lib/try-on/service';
 import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
@@ -7,7 +8,6 @@ import {
   loadAuthorizedDurableTryOnJob,
   releaseDurableTryOnResult,
 } from '@/lib/try-on/persistence';
-import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import {
   TryOnResultPersistenceError,
   TryOnResultSchemaNotReadyError,
@@ -60,7 +60,7 @@ export async function GET(
   const authorizationHeader = request.headers.get('authorization') ?? '';
   const token = authorizationHeader.replace(/^bearer\s+/i, '');
   const session = token
-    ? resolveShopifyApp((secret) => verifyTryOnSession(secret, token))?.value
+    ? resolveTryOnSessionKey((secret) => verifyTryOnSession(secret, token))?.value
     : null;
   if (!session) {
     return NextResponse.json(
@@ -173,7 +173,7 @@ export async function DELETE(
   const authorizationHeader = request.headers.get('authorization') ?? '';
   const token = authorizationHeader.replace(/^bearer\s+/i, '');
   const session = token
-    ? resolveShopifyApp((secret) => verifyTryOnSession(secret, token))?.value
+    ? resolveTryOnSessionKey((secret) => verifyTryOnSession(secret, token))?.value
     : null;
   if (!session) {
     return NextResponse.json(

@@ -1,0 +1,5 @@
+# Dedicated preview host only; no production DNS/service changes.
+{$GRINDCTRL_PREVIEW_HOSTNAME} {
+  header X-Robots-Tag "noindex, nofollow"
+  reverse_proxy 127.0.0.1:3102
+}
