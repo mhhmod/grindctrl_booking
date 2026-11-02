@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { processShopifyPrivacyRequest } from '@/lib/shopify/privacy';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
-import { recordInstallationEvent } from '@/lib/shopify/installation-events';
+import { markShopifyPricingEvent, recordInstallationEvent } from '@/lib/shopify/installation-events';
 import { verifyShopifyUninstall } from '@/lib/shopify/tokens';
+import { reconcileShopifyAppPricing } from '@/lib/shopify/app-pricing';
 
 export async function POST(request: NextRequest) {
   const reader = request.body?.getReader();
@@ -52,6 +53,16 @@ export async function POST(request: NextRequest) {
         // The signed body does not bind delivery headers or an installation
         // generation. Even an old/duplicate receipt must verify CURRENT state.
         await verifyShopifyUninstall(shop, resolved.app.clientId, receipt.id);
+      }
+      if (topic === 'app_subscriptions/update' && resolved.app.distribution === 'public') {
+        // Delivery order and webhook payloads are not entitlement authority.
+        // Replays also re-read Shopify so a previously failed sync can recover.
+        const pricingEvent = { shopDomain: shop, appClientId: resolved.app.clientId, eventId: receipt.id };
+        await markShopifyPricingEvent(pricingEvent, 'received');
+        await reconcileShopifyAppPricing({
+          shopDomain: shop, appClientId: resolved.app.clientId, source: 'webhook',
+        });
+        await markShopifyPricingEvent(pricingEvent, 'completed');
       }
     }
     return NextResponse.json({ ok: true });

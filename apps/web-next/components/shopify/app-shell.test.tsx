@@ -25,6 +25,11 @@ vi.mock('@/components/shopify/ensure-shop-token', () => ({
 }));
 vi.mock('@/components/shopify/admin-settings', () => ({ ShopifyAdminSettings: () => null }));
 vi.mock('@/components/shopify/store-chat-embedded', () => ({ StoreChatEmbedded: () => null }));
+vi.mock('@/components/shopify/plans', () => ({
+  ShopifyPlans: ({ locale, appPricing }: { locale: string; appPricing: { distribution: string } | null }) => (
+    <div data-testid="plans-page">{locale}:{appPricing?.distribution ?? 'unavailable'}</div>
+  ),
+}));
 
 import { ShopifyAppShell } from './app-shell';
 
@@ -155,5 +160,17 @@ describe('ShopifyAppShell claim/token bootstrap ordering', () => {
     render(<ShopifyAppShell locale="en" />);
 
     expect(await screen.findByTestId('auto-claim-mounted')).toBeInTheDocument();
+  });
+
+  it.each([['en', 'Plans'], ['ar', 'الباقات']] as const)('exposes Plans after authoritative bootstrap settles in %s', async (locale, label) => {
+    let resolveBootstrap: (value: unknown) => void = () => {};
+    ensureShopTokenMock.mockReturnValue(new Promise((resolve) => { resolveBootstrap = resolve; }));
+    render(<ShopifyAppShell locale={locale} />);
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(screen.queryByTestId('plans-page')).not.toBeInTheDocument();
+    await act(async () => {
+      resolveBootstrap({ ok: true, appClientId: 'public-app', appPricing: { distribution: 'public', pricingPlansUrl: null, plans: [] } });
+    });
+    expect(await screen.findByTestId('plans-page')).toHaveTextContent(`${locale}:public`);
   });
 });

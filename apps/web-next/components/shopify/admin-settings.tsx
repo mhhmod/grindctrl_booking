@@ -9,7 +9,6 @@ import {
   TryOnSettingsControls,
   type TryOnWidgetSettings,
 } from '@/components/try-on/settings-controls';
-import { MerchantPlanCard, type MerchantPlan } from '@/components/shopify/merchant-plan-card';
 import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
@@ -157,7 +156,6 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
   const c = getSettingsFormCopy(locale);
   const [shop, setShop] = useState('');
   const [s, setS] = useState<TryOnWidgetSettings | null>(null);
-  const [plan, setPlan] = useState<MerchantPlan | null>(null);
   const [linked, setLinked] = useState(false);
   const [linkedAccount, setLinkedAccount] = useState<string | null>(null);
   const [loadingStepsText, setLoadingStepsText] = useState('');
@@ -176,14 +174,12 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
         const data = (await res.json()) as {
           shop: string;
           settings: TryOnWidgetSettings;
-          plan?: MerchantPlan;
           linked: boolean;
           linkedAccount?: string | null;
         };
         if (cancelled) return;
         setShop(data.shop);
         setS(data.settings);
-        if (data.plan) setPlan(data.plan);
         setLinked(data.linked);
         setLinkedAccount(data.linkedAccount ?? null);
         setLoadingStepsText(data.settings.loadingSteps?.join('\n') ?? '');
@@ -244,8 +240,6 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
   return (
     <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
       <ShopLinkCard initiallyLinked={linked} linkedAccount={linkedAccount} c={c} />
-
-      {plan && <MerchantPlanCard plan={plan} shop={shop} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>

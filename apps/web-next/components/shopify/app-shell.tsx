@@ -9,12 +9,16 @@ import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
 import { AutoClaim, startShopifyClaim } from '@/components/shopify/auto-claim';
 import { ensureShopToken } from '@/components/shopify/ensure-shop-token';
 import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
+import { ShopifyPlans } from '@/components/shopify/plans';
+import { MantineUiProvider } from '@/components/mantine/provider';
+import type { ShopifyAppPricingPresentation } from '@/lib/shopify/app-pricing';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 
 const COPY = {
   en: {
     tryOn: 'Try-On',
     storeChat: 'Store Chat',
+    plans: 'Plans',
     sections: 'GRINDCTRL sections',
     themeToggle: 'Switch between light and dark',
     claimStore: 'Claim this store',
@@ -25,6 +29,7 @@ const COPY = {
   ar: {
     tryOn: 'التجربة الافتراضية',
     storeChat: 'دردشة المتجر',
+    plans: 'الباقات',
     sections: 'أقسام GRINDCTRL',
     themeToggle: 'التبديل بين الوضع الفاتح والداكن',
     claimStore: 'المطالبة بهذا المتجر',
@@ -36,8 +41,8 @@ const COPY = {
 
 type ClaimButtonState = 'idle' | 'loading' | 'already-connected' | 'error';
 
-type ShellTab = 'try-on' | 'store-chat';
-const SHELL_TABS: readonly ShellTab[] = ['try-on', 'store-chat'];
+type ShellTab = 'try-on' | 'store-chat' | 'plans';
+const SHELL_TABS: readonly ShellTab[] = ['try-on', 'store-chat', 'plans'];
 
 function publicAppHost() {
   try {
@@ -58,14 +63,19 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
      first (success or failure -- either way it's had its chance) removes
      the race instead of hoping the timing works out. */
   const [tokenBootstrapped, setTokenBootstrapped] = useState(false);
+  const [appPricing, setAppPricing] = useState<ShopifyAppPricingPresentation | null>(null);
+  const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
+    let cancelled = false;
     void ensureShopToken()
+      .then((result) => { if (!cancelled) setAppPricing(result?.appPricing ?? null); })
       .catch(() => {})
-      .finally(() => setTokenBootstrapped(true));
-  }, []);
+      .finally(() => { if (!cancelled) setTokenBootstrapped(true); });
+    return () => { cancelled = true; };
+  }, [bootstrapAttempt]);
 
   return (
     <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
@@ -135,14 +145,26 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {id === 'try-on' ? t.tryOn : t.storeChat}
+                {id === 'try-on' ? t.tryOn : id === 'store-chat' ? t.storeChat : t.plans}
               </button>
             </li>
           ))}
         </ul>
       </nav>
 
-      {tokenBootstrapped && (tab === 'try-on' ? <ShopifyAdminSettings locale={locale} /> : <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} />)}
+      {tokenBootstrapped && (tab === 'try-on' ? <ShopifyAdminSettings locale={locale} /> : tab === 'store-chat' ? <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} /> : (
+        <MantineUiProvider dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+          <ShopifyPlans
+            locale={locale === 'ar' ? 'ar' : 'en'}
+            appPricing={appPricing}
+            onRetry={() => {
+              setTokenBootstrapped(false);
+              setAppPricing(null);
+              setBootstrapAttempt((attempt) => attempt + 1);
+            }}
+          />
+        </MantineUiProvider>
+      ))}
     </div>
   );
 }

@@ -1,8 +1,14 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const m = vi.hoisted(() => ({ verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), syncOrigin: vi.fn(), limit: vi.fn() }));
+const m = vi.hoisted(() => ({
+  verify: vi.fn(), acquire: vi.fn(), requestToken: vi.fn(), sync: vi.fn(), syncOrigin: vi.fn(), limit: vi.fn(),
+  reconcilePricing: vi.fn(), pricingPresentation: vi.fn(),
+}));
 vi.mock('@/lib/shopify/admin', () => ({ syncShopifyAppOrigin: m.syncOrigin }));
+vi.mock('@/lib/shopify/app-pricing', () => ({
+  reconcileShopifyAppPricing: m.reconcilePricing, getShopifyAppPricingPresentation: m.pricingPresentation,
+}));
 vi.mock('@/lib/shopify/session-token', () => ({ verifySessionTokenResolved: m.verify }));
 vi.mock('@/lib/shopify/tokens', async () => {
   const actual = await vi.importActual<typeof import('@/lib/shopify/tokens')>('@/lib/shopify/tokens');
@@ -19,6 +25,8 @@ beforeEach(() => {
   m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b' } });
   m.limit.mockResolvedValue({ success: true, reset: Date.now() + 1000 });
   m.acquire.mockResolvedValue({ accessToken: 'stored-b', appClientId: 'app-b' });
+  m.reconcilePricing.mockResolvedValue(undefined);
+  m.pricingPresentation.mockResolvedValue({ distribution: 'development', pricingPlansUrl: null, plans: [] });
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('installation-aware token bootstrap', () => {
@@ -32,6 +40,8 @@ describe('installation-aware token bootstrap', () => {
     }));
     expect(m.sync).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
     expect(m.syncOrigin).toHaveBeenCalledWith('demo.myshopify.com', 'stored-b');
+    expect(m.reconcilePricing).not.toHaveBeenCalled();
+    expect(m.pricingPresentation).toHaveBeenCalledWith({ shopDomain: 'demo.myshopify.com', appClientId: 'app-b' });
   });
   it('allows explicit eligible custom non-expiring mode without changing public defaults', async () => {
     m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', tokenMode: 'non-expiring' } });
@@ -43,6 +53,50 @@ describe('installation-aware token bootstrap', () => {
     expect((await GET(req())).status).toBe(401);
     expect(m.acquire).not.toHaveBeenCalled(); expect(m.sync).not.toHaveBeenCalled();
     expect(m.syncOrigin).not.toHaveBeenCalled();
+    expect(m.reconcilePricing).not.toHaveBeenCalled();
+    expect(m.pricingPresentation).not.toHaveBeenCalled();
+  });
+
+  it('reconciles public pricing after token acquisition and returns installation-specific plan metadata', async () => {
+    m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', distribution: 'public' } });
+    const appPricing = { distribution: 'public', pricingPlansUrl: 'https://admin.shopify.com/store/demo/charges/grindctrl/pricing_plans', plans: [] };
+    m.pricingPresentation.mockResolvedValue(appPricing);
+    const response = await GET(req());
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, provisioned: 'ready', appClientId: 'app-b', appPricing });
+    expect(m.reconcilePricing).toHaveBeenCalledExactlyOnceWith({
+      shopDomain: 'demo.myshopify.com', appClientId: 'app-b', source: 'bootstrap',
+    });
+    expect(m.acquire.mock.invocationCallOrder[0]).toBeLessThan(m.reconcilePricing.mock.invocationCallOrder[0]);
+    expect(m.reconcilePricing.mock.invocationCallOrder[0]).toBeLessThan(m.pricingPresentation.mock.invocationCallOrder[0]);
+  });
+
+  it('keeps custom pricing on the manual path', async () => {
+    m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', distribution: 'custom' } });
+    m.pricingPresentation.mockResolvedValue({ distribution: 'custom', pricingPlansUrl: null, plans: [] });
+    const response = await GET(req());
+    expect(response.status).toBe(200);
+    expect((await response.json()).appPricing.distribution).toBe('custom');
+    expect(m.reconcilePricing).not.toHaveBeenCalled();
+  });
+
+  it('still loads the app when public pricing cannot be reconciled, without leaking the error', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', distribution: 'public' } });
+    m.reconcilePricing.mockRejectedValue(new Error('provider token secret'));
+    const response = await GET(req());
+    expect(response.status).toBe(200);
+    expect(await response.text()).not.toContain('provider token secret');
+    expect(m.pricingPresentation).toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith('[shopify-pricing] bootstrap reconciliation deferred', 'unknown');
+    log.mockRestore();
+  });
+  it('returns no pricing when the presentation cannot be read', async () => {
+    m.verify.mockReturnValue({ shop: 'demo.myshopify.com', app: { clientId: 'app-b', secret: 'b', distribution: 'public' } });
+    m.pricingPresentation.mockRejectedValue(new Error('shopify_pricing_storage_unavailable'));
+    const response = await GET(req());
+    expect(response.status).toBe(200);
+    expect((await response.json()).appPricing).toBeNull();
   });
   it('does not acquire when the shared limiter is unavailable', async () => {
     m.limit.mockResolvedValue(null);

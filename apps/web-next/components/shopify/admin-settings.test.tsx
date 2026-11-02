@@ -11,9 +11,6 @@ vi.mock('@/lib/shopify/app-bridge-client', () => ({
 vi.mock('@/components/try-on/settings-controls', () => ({
   TryOnSettingsControls: () => <div data-testid="settings-controls" />,
 }));
-vi.mock('@/components/shopify/merchant-plan-card', () => ({
-  MerchantPlanCard: () => <div data-testid="merchant-plan" />,
-}));
 
 import { ShopifyAdminSettings } from './admin-settings';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
