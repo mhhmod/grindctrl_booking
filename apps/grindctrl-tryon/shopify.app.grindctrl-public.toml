@@ -1,0 +1,48 @@
+# PUBLIC registration "GRINDCTRL Public" (App Store), served by production.
+# The custom app is shopify.app.toml; never deploy one config for the other.
+
+client_id = "1315c224e79851016153f5ebc14604ef"
+name = "GRINDCTRL Public"
+# The client id in the path tells the shared backend which app framed it.
+application_url = "https://grindctrl.cloud/shopify/app/1315c224e79851016153f5ebc14604ef"
+embedded = true
+
+[access_scopes]
+scopes = "read_products,read_orders,write_app_proxy"
+
+[app_proxy]
+url = "https://grindctrl.cloud/api/shopify/proxy"
+prefix = "apps"
+subpath = "grindctrl"
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "shop/redact" ]
+
+[auth]
+redirect_urls = [
+  "https://grindctrl.cloud/shopify/app/1315c224e79851016153f5ebc14604ef",
+  "https://grindctrl.cloud/api/shopify/oauth/callback"
+]
+
+[build]
+automatically_update_urls_on_dev = false

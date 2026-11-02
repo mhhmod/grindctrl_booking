@@ -42,6 +42,12 @@ export function SiteFooter({
   className?: string;
 }) {
   const currentName = locale === 'ar' ? 'العربية' : 'English';
+  const legalLinks: SiteFooterLink[] = [
+    { id: 'privacy', href: '/privacy', label: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy policy' },
+    { id: 'terms', href: '/terms', label: locale === 'ar' ? 'شروط الخدمة' : 'Terms of service' },
+  ];
+  // Legal links sit with the copyright, so the page nav keeps one row on desktop.
+  const footerLegal = legalLinks.filter((legal) => !links.some((link) => link.href === legal.href));
 
   return (
     <footer
@@ -89,10 +95,21 @@ export function SiteFooter({
             <ThemeToggle locale={locale} className="h-11 min-w-11" />
           </div>
         </div>
-        <p className="text-center text-xs text-gc-text-2 lg:text-[13px]">
-          <span className="lg:hidden">{copy.copyrightShort ?? copy.copyright}</span>
-          <span className="hidden lg:inline">{copy.copyright}</span>
-        </p>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 text-center text-xs text-gc-text-2 lg:text-[13px]">
+          <p>
+            <span className="lg:hidden">{copy.copyrightShort ?? copy.copyright}</span>
+            <span className="hidden lg:inline">{copy.copyright}</span>
+          </p>
+          {footerLegal.map((link) => (
+            <Link
+              key={link.id}
+              href={link.href}
+              className="inline-flex min-h-11 items-center hover:text-foreground hover:underline focus-visible:underline"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </footer>
   );

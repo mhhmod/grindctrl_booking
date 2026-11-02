@@ -13,6 +13,8 @@ const APP_ROOT = path.resolve(__dirname, '..', '..');
 const EXTENSION_ASSETS = path.resolve(APP_ROOT, '..', 'grindctrl-tryon', 'extensions', 'tryon-block', 'assets');
 const LOOK_MARKERS = /resultImageUrl|result_storage_path|result_persisted_at|tryon-results/;
 const ALLOWED_PREFIXES = ['app/api/try-on/', 'components/try-on/', 'lib/try-on/'];
+// shop/redact erases a shop's result objects; it lists paths to delete and never reads a look.
+const ERASERS = ['lib/shopify/privacy.ts', 'lib/shopify/privacy-database-fixture.ts'];
 
 function sourceFiles(dir: string): string[] {
   const found: string[] = [];
@@ -35,7 +37,7 @@ describe('who can read a finished look', () => {
       .map((file) => path.relative(APP_ROOT, file).split(path.sep).join('/'));
 
     expect(readers.length).toBeGreaterThan(0);
-    expect(readers.filter((file) => !ALLOWED_PREFIXES.some((prefix) => file.startsWith(prefix)))).toEqual([]);
+    expect(readers.filter((file) => !ALLOWED_PREFIXES.some((prefix) => file.startsWith(prefix)) && !ERASERS.includes(file))).toEqual([]);
   });
 
   it('never includes the storefront scripts that run in the merchant page', () => {

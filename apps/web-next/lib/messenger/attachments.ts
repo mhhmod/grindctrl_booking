@@ -12,7 +12,6 @@ import { ATTACHMENT_EXTENSIONS, type AttachmentMime } from './image';
    after the ownership check the caller has already performed. */
 
 export const ATTACHMENT_BUCKET = 'messenger-attachments';
-export const ATTACHMENT_RETENTION_DAYS = 90;
 export const SIGNED_URL_TTL_SECONDS = 300;
 
 /** Uploads per conversation: a burst limit and a lifetime limit. Both are
@@ -38,10 +37,6 @@ export interface AttachmentRecord {
   bytes: number;
   triage: TriageResult | null;
   created_at: string;
-}
-
-function retentionCutoffIso(): string {
-  return new Date(Date.now() - ATTACHMENT_RETENTION_DAYS * 86_400_000).toISOString();
 }
 
 export type AttachmentQuota = 'ok' | 'burst' | 'lifetime';
@@ -134,10 +129,9 @@ export async function saveTriage(attachmentId: string, triage: TriageResult): Pr
   if (res.error) console.error('[messenger] triage save failed:', res.error.message);
 }
 
-/** Staff-side listing. Rows past retention are neither returned nor kept:
- *  there is no scheduled sweep, so the moment someone looks at a
- *  conversation is the moment its expired objects get reclaimed. Stores
- *  nobody opens keep their objects — a documented limitation. */
+/** Staff-side listing. Attachments follow their conversation's 12-month
+ * inactivity retention. The internal retention job removes Storage objects
+ * and their rows, so opening an active thread never deletes its older files. */
 export async function listConversationAttachments(conversationId: string): Promise<AttachmentRecord[]> {
   const supabase = getMessengerServiceClient();
   const res = await supabase
@@ -148,20 +142,7 @@ export async function listConversationAttachments(conversationId: string): Promi
     .limit(ATTACHMENT_LIFETIME_LIMIT * 2);
   if (res.error) throw new Error(`attachment list failed: ${res.error.message}`);
 
-  const cutoff = retentionCutoffIso();
-  const rows = (res.data ?? []) as unknown as AttachmentRecord[];
-  const expired = rows.filter((row) => row.created_at < cutoff);
-  if (expired.length > 0) void purgeAttachments(expired).catch(() => {});
-  return rows.filter((row) => row.created_at >= cutoff);
-}
-
-async function purgeAttachments(rows: AttachmentRecord[]): Promise<void> {
-  const supabase = getMessengerServiceClient();
-  await supabase.storage.from(ATTACHMENT_BUCKET).remove(rows.map((row) => row.storage_path));
-  await supabase
-    .from('messenger_attachments')
-    .delete()
-    .in('id', rows.map((row) => row.id));
+  return (res.data ?? []) as unknown as AttachmentRecord[];
 }
 
 /** Short-lived read URLs, one round trip for the whole thread. Never

@@ -31,4 +31,6 @@ export const GOLDEN_PAGES: GoldenPage[] = [
   { name: 'operations', path: '/operations', usesLandingRoot: true },
   { name: 'integrations', path: '/integrations', usesLandingRoot: true },
   { name: 'security', path: '/security', usesLandingRoot: true },
+  { name: 'privacy', path: '/privacy', usesLandingRoot: true },
+  { name: 'terms', path: '/terms', usesLandingRoot: true },
 ];

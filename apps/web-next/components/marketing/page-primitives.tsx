@@ -91,7 +91,7 @@ export function ProductHero({
   eyebrow: string;
   title: string;
   lead: string;
-  cta: {
+  cta?: false | {
     bookCallLabel: string;
     section: string;
     secondary?: CtaLink[];
@@ -121,7 +121,7 @@ export function ProductHero({
           <p className="gc-fade-in-up mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
             {lead}
           </p>
-          <CtaRow {...cta} className="gc-fade-in-up mt-8" />
+          {cta ? <CtaRow {...cta} className="gc-fade-in-up mt-8" /> : null}
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-name: Try-On Result Cleanup
+name: Data Cleanup and Shopify Privacy
 
 on:
   schedule:
@@ -41,5 +41,43 @@ jobs:
 
           if [[ "${status}" -lt 200 || "${status}" -ge 300 ]]; then
             echo "Try-on cleanup endpoint returned HTTP ${status}."
+            exit 1
+          fi
+
+  privacy-and-retention:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        endpoint: [privacy, retention]
+    steps:
+      - name: Run bounded Shopify privacy work
+        env:
+          TRYON_CLEANUP_URL: ${{ secrets.TRYON_CLEANUP_URL }}
+          TRYON_CLEANUP_SECRET: ${{ secrets.TRYON_CLEANUP_SECRET }}
+          ENDPOINT: ${{ matrix.endpoint }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${TRYON_CLEANUP_URL:?Missing TRYON_CLEANUP_URL GitHub secret}"
+          : "${TRYON_CLEANUP_SECRET:?Missing TRYON_CLEANUP_SECRET GitHub secret}"
+          # Reuse the existing scheduler's reviewed origin and bearer. Fail
+          # visibly if its URL is not the documented cleanup route.
+          base="${TRYON_CLEANUP_URL%/api/internal/try-on/cleanup}"
+          if [[ "${base}" == "${TRYON_CLEANUP_URL}" || "${base}" != https://* ]]; then
+            echo "TRYON_CLEANUP_URL must end in /api/internal/try-on/cleanup on HTTPS."
+            exit 1
+          fi
+          status="$(curl --silent --show-error \
+            --output privacy-response.json \
+            --write-out '%{http_code}' \
+            --max-time 60 \
+            --request POST \
+            --header "Authorization: Bearer ${TRYON_CLEANUP_SECRET}" \
+            --header 'Content-Type: application/json' \
+            "${base}/api/internal/shopify/${ENDPOINT}")"
+          if [[ "${status}" -lt 200 || "${status}" -ge 300 ]]; then
+            echo "Shopify ${ENDPOINT} endpoint returned HTTP ${status}."
             exit 1
           fi
