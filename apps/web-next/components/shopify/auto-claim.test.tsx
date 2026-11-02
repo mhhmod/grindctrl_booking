@@ -57,7 +57,7 @@ describe('startShopifyClaim', () => {
       headers: { authorization: 'Bearer session-token' },
     });
     expect(navigate).toHaveBeenCalledWith(
-      'https://grindctrl.cloud/claim?token=claim%20token%2Fwith%20symbols',
+      `${window.location.origin}/claim?token=claim%20token%2Fwith%20symbols`,
     );
     expect(outcome).toBe('navigated');
   });
