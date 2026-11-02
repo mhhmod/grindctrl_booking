@@ -1,4 +1,4 @@
-﻿-- Manual additive delta: privacy fulfilment and Store Chat retention.
+-- Manual additive delta: privacy fulfilment and Store Chat retention.
 -- Apply after the 20261024 installation/casework deltas. No billing ledger is modified.
 begin;
 alter table public.shopify_installation_events add column if not exists reminder_sent_at timestamptz;
