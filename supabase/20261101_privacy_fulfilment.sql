@@ -63,7 +63,7 @@ do $$ declare t text; begin
  foreach t in array array['shopify_installations','widget_sites','widget_visitors','widget_conversations','widget_messages',
  'messenger_attachments','widget_events','messenger_feedback','messenger_unanswered','widget_leads',
  'tryon_jobs','tryon_settings','tryon_subscriptions','shopify_shop_tokens','shopify_shops'] loop
-  if not exists(select 1 from pg_trigger where tgrelid=('public.'||t)::regclass and tgname='shopify_privacy_write_fence') then
+  if to_regclass('public.'||t) is not null and not exists(select 1 from pg_trigger where tgrelid=('public.'||t)::regclass and tgname='shopify_privacy_write_fence') then
    execute format('create trigger shopify_privacy_write_fence before insert or update or delete on public.%I for each row execute function public.shopify_privacy_write_guard()',t);
   end if;
  end loop;
@@ -107,7 +107,7 @@ create or replace function public.shopify_privacy_prepare(p_source text,p_case u
 returns jsonb language plpgsql security definer set search_path=pg_catalog,public as $$
 declare e public.shopify_installation_events; s public.shopify_privacy_deletion_scopes;
  sites uuid[]; visitors uuid[]; convs uuid[]; customer_id text; customer_email text;
- exported jsonb; storage_objects jsonb; own public.shopify_installations; n integer;
+ exported jsonb; storage_objects jsonb; own public.shopify_installations; n integer; shared boolean;
 begin
  if p_source='legacy' then return jsonb_build_object('kind','manual','reason','legacy_provenance_required'); end if;
  if p_source<>'installation' then raise exception 'invalid_privacy_source'; end if;
@@ -142,11 +142,15 @@ begin
  if e.topic='shop/redact' and own.status<>'uninstalled' then
   return jsonb_build_object('kind','manual','reason','shop_still_installed');
  end if;
- select coalesce(array_agg(distinct ws.id),'{}') into sites from public.widget_sites ws
- left join public.shopify_shops ss on ss.widget_site_id=ws.id
- where ws.domain=e.shop_domain or ss.shop_domain=e.shop_domain;
- if exists(select 1 from public.shopify_shops where widget_site_id=any(sites) and shop_domain<>e.shop_domain) then
-  return jsonb_build_object('kind','manual','reason','shared_site_ownership');
+ select coalesce(array_agg(distinct ws.id),'{}') into sites from public.widget_sites ws where ws.domain=e.shop_domain;
+ -- shopify_shops ships with the unapplied try-on foundation; check it only
+ -- where it exists so this function stays valid on either schema.
+ if to_regclass('public.shopify_shops') is not null then
+  execute 'select coalesce(array_agg(distinct x),''{}'') from unnest($1 || array(
+     select widget_site_id from public.shopify_shops where shop_domain=$2)) x' into sites using sites,e.shop_domain;
+  execute 'select exists(select 1 from public.shopify_shops where widget_site_id=any($1) and shop_domain<>$2)'
+   into shared using sites,e.shop_domain;
+  if shared then return jsonb_build_object('kind','manual','reason','shared_site_ownership'); end if;
  end if;
  if e.topic='shop/redact' then
   select coalesce(array_agg(id),'{}') into visitors from public.widget_visitors where widget_site_id=any(sites);
