@@ -35,16 +35,18 @@ describe('Shopify privacy emails', () => {
     expect(email.html).toContain('overflow-wrap:anywhere');
   });
 
-  it.each(['disabled', 'failed'] as const)('explains %s requests needing manual handling', (reason) => {
+  it.each(['receipt', 'reminder'] as const)('explains %s requests and their deadline', (reason) => {
     const email = buildShopifyPrivacyAlert({
       webhookId: request.webhookId, shopDomain: request.shopDomain,
-      topic: 'customers/redact', reason, error: '<database unavailable>',
+      topic: 'customers/redact', reason, receivedAt: '2026-11-01T00:00:00Z',
+      caseSource: 'installation', caseId: '<case-1>',
     });
-    expect(email.text).toContain('Manual handling is required');
+    expect(email.text).toContain('require manual casework');
     expect(email.text).toContain('customers/redact');
     expect(email.text).toContain('delivery-1');
-    expect(email.text).toContain(reason === 'disabled' ? 'processing is disabled' : 'processing failed');
-    expect(email.html).not.toContain('<database unavailable>');
+    expect(email.text).toContain(reason === 'receipt' ? 'durably recorded' : 'at least 21 days old');
+    expect(email.text).toContain('2026-12-01T00:00:00.000Z');
+    expect(email.html).not.toContain('<case-1>');
   });
 
   it('keeps request-controlled newlines out of email subjects', () => {

@@ -42,6 +42,11 @@ export function SiteFooter({
   className?: string;
 }) {
   const currentName = locale === 'ar' ? 'العربية' : 'English';
+  const legalLinks: SiteFooterLink[] = [
+    { id: 'privacy', href: '/privacy', label: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy policy' },
+    { id: 'terms', href: '/terms', label: locale === 'ar' ? 'شروط الخدمة' : 'Terms of service' },
+  ];
+  const footerLinks = [...links, ...legalLinks.filter((legal) => !links.some((link) => link.href === legal.href))];
 
   return (
     <footer
@@ -63,7 +68,7 @@ export function SiteFooter({
           </Link>
           <nav aria-label={copy.footerNav}>
             <ul className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm lg:gap-x-6">
-              {links.map((link) => (
+              {footerLinks.map((link) => (
                 <li key={link.id}>
                   <Link
                     href={link.href}

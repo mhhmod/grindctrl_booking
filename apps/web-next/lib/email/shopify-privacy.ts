@@ -19,8 +19,10 @@ export interface ShopifyPrivacyAlertInput {
   webhookId: string;
   shopDomain: string;
   topic: string;
-  reason: 'disabled' | 'failed';
-  error?: string;
+  reason: 'receipt' | 'reminder';
+  receivedAt: string;
+  caseId: string;
+  caseSource: 'installation' | 'legacy';
 }
 
 function escapeHtml(value: string): string {
@@ -50,18 +52,24 @@ export function buildShopifyDataRequest(input: ShopifyDataRequestInput): { subje
       ? `Customer records found: ${input.visitors.length} visitor(s).\n\n${JSON.stringify(input.visitors, null, 2)}`
       : `No customer records were found for ${input.customerEmail}.`,
     '',
-    'Provided to the merchant contact for fulfillment of this privacy request.',
+    'Provided to Grind CTRL, the privacy operator. Forward this export securely to the requesting merchant.',
+    'This email is not proof of merchant delivery. Record delivery evidence through the restricted operator RPC within 30 days of receipt.',
   ].join('\n'));
 }
 
 export function buildShopifyPrivacyAlert(input: ShopifyPrivacyAlertInput): { subject: string; html: string; text: string } {
-  return buildEmail(`Shopify privacy request, manual handling required: ${input.shopDomain}`, [
-    input.reason === 'disabled' ? 'Shopify privacy processing is disabled.' : 'Shopify privacy processing failed.',
-    'Manual handling is required. The request is durably recorded in shopify_privacy_requests.',
+  const due = new Date(Date.parse(input.receivedAt) + 30 * 86_400_000).toISOString();
+  return buildEmail(`Shopify privacy ${input.reason === 'reminder' ? '21-day reminder' : 'request received'}: ${input.shopDomain}`, [
+    input.reason === 'reminder' ? 'This privacy request is at least 21 days old and is not complete.' : 'A Shopify privacy request has been durably recorded.',
+    'Privacy operator: Grind CTRL. Complete this request within 30 days of receipt.',
+    `Case: ${input.caseSource}/${input.caseId}`,
+    `Received: ${input.receivedAt}`,
+    `Deadline: ${due}`,
     `Shop: ${input.shopDomain}`,
     `Topic: ${input.topic}`,
     `Webhook ID: ${input.webhookId}`,
-    ...(input.error ? [`Error: ${input.error}`] : []),
-    'Redeliveries are deduplicated and do not retry processing. Review the recorded request manually.',
+    'Review the case status and completion evidence. Verified single-owner redactions run automatically; ambiguous ownership, retention holds and legacy cases require manual casework.',
+    'Customer exports are emailed separately to this operator mailbox and remain pending until merchant delivery is recorded through the restricted operator RPC.',
+    'The scheduled worker retries pending work. Never interpret this receipt or reminder as completion.',
   ].join('\n'));
 }

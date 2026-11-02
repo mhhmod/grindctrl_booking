@@ -97,3 +97,15 @@ describe('the approved motion vocabulary still exists', () => {
     },
   );
 });
+
+it('legal pages compose the shared marketing shell and section primitives', () => {
+  const src = read('components/marketing/legal-page-content.tsx');
+  expect(src).toMatch(/from\s*'@\/components\/marketing\/page-primitives'/);
+  expect(src).toMatch(/<MarketingPage/);
+  expect(src).toMatch(/<ProductHero/);
+  expect(src).toMatch(/<ProductSection/);
+  expect(src).not.toMatch(/import.*(?:SiteHeader|SiteFooter|AmbientBackground)/);
+  for (const name of ['privacy', 'terms']) {
+    expect(read(`app/${name}/page.tsx`)).toContain(`<LegalPageContent page="${name}"`);
+  }
+});

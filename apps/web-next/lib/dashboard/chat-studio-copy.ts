@@ -197,7 +197,7 @@ const en: ChatStudioCopy = {
   },
   photos: {
     label: 'Let shoppers send a photo',
-    body: 'JPEG, PNG or WebP up to 5 MB. Location data is removed and photos are kept 90 days.',
+    body: 'JPEG, PNG or WebP up to 5 MB. Location data is removed. Photos are deleted 12 months after the conversation’s last activity.',
   },
   describePhotos: {
     label: 'Describe what the photo shows',
@@ -324,7 +324,7 @@ const ar: ChatStudioCopy = {
   askWhere: { label: 'اسأل أين نرد عندما لا يتوفر أحد للرد الآن', body: 'يطلب المساعد عنوان البريد الإلكتروني مرة واحدة، ليتمكن فريقك من الرد لاحقًا.' },
   askOutsideHours: 'اسأل أيضًا خارج ساعات العمل',
   photosOrders: { label: 'الصور والطلبات', body: 'يمكن للمتسوقين عرض المشكلة ومتابعة الطلب دون انتظار فريقك.' },
-  photos: { label: 'اسمح للمتسوقين بإرسال صورة', body: 'JPEG أو PNG أو WebP حتى 5 ميجابايت. تُحذف بيانات الموقع وتُحفظ الصور 90 يومًا.' },
+  photos: { label: 'اسمح للمتسوقين بإرسال صورة', body: 'JPEG أو PNG أو WebP حتى 5 ميجابايت. تُحذف بيانات الموقع. تُحذف الصور بعد 12 شهرًا من آخر نشاط في المحادثة.' },
   describePhotos: { label: 'صِف ما تُظهره الصورة', body: 'تصنيفات لفريقك مثل «يبدو تالفًا» أو «تبدو مشكلة مقاس».' },
   orderLookup: { label: 'استعلم عن حالة الطلب وتتبّعه', body: 'برقم الطلب والبريد الإلكتروني المسجل في الطلب.' },
   orderAccess: 'تمت الموافقة على الوصول إلى الطلبات لهذا المتجر',
