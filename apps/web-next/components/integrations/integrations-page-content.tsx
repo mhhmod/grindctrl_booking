@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Check } from 'lucide-react';
+import { ShopifyMark, SallaMark, WooCommerceMark } from '@/components/brand-marks';
 import { useLandingLocale } from '@/components/landing/landing-locale';
 import {
   CtaRow,
@@ -11,24 +12,41 @@ import {
   ProductSection,
   type NotLiveItem,
 } from '@/components/marketing/page-primitives';
+import { GlobeIcon } from '@/components/site/icons';
 import { findPublicIntegration, type PublicIntegrationState } from '@/lib/product-truth/public-integrations';
 import type { LandingTranslator } from '@/lib/landing/landing-i18n';
 import { getIntegrationsCopy, type IntegrationCopyRow } from './integrations-copy';
+
+/* Marks for the platform rows. Monochrome, like the story: Salla's own colour
+   is nearly invisible on a light page. Zid has no official mark, so its row
+   carries the name alone. Each sits beside the label and the status badge. */
+const PLATFORM_MARKS: Record<string, React.ReactNode> = {
+  shopify: <ShopifyMark monochrome decorative className="size-4 shrink-0" />,
+  woocommerce: <WooCommerceMark monochrome decorative className="size-4 shrink-0" />,
+  'custom-website': <GlobeIcon size={16} className="shrink-0" />,
+  salla: <SallaMark monochrome decorative className="size-4 shrink-0" />,
+};
 
 /* State badge text always comes from the register (single source of truth),
    never hardcoded per row here — see lib/product-truth/public-integrations.ts. */
 function integrationRows(rows: IntegrationCopyRow[], landingT: LandingTranslator): NotLiveItem[] {
   const stateLabel: Record<PublicIntegrationState, string> = {
     implemented: landingT.integrationStateImplemented,
+    'in-testing': landingT.integrationStateInTesting,
     'setup-required': landingT.integrationStateSetupRequired,
     'evidence-required': landingT.integrationStateEvidenceRequired,
     planned: landingT.integrationStatePlanned,
     infrastructure: landingT.integrationStateInfrastructure,
   };
-  return rows.map(({ id, description }) => {
+  return rows.map(({ id, description, label }) => {
     const integration = findPublicIntegration(id);
     if (!integration) throw new Error(`integrations-copy.ts references unknown register id: ${id}`);
-    return { label: integration.name, note: description, status: stateLabel[integration.state] };
+    return {
+      label: label ?? integration.name,
+      note: description,
+      status: stateLabel[integration.state],
+      mark: PLATFORM_MARKS[id],
+    };
   });
 }
 

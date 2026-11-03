@@ -9,6 +9,7 @@ import * as React from 'react';
 import { GrindctrlMark } from '@/components/site/marks';
 import { D_HUBSPOT, D_N8N, D_SHOPIFY } from '../story-marks';
 import { StoryImg } from '../story-img';
+import { PlatformRows, StatusChip } from '../platform-rows';
 import type { V, ViewProps } from '../story-types';
 
 export function PhoneStack({ v, t }: ViewProps) {
@@ -21,11 +22,13 @@ export function PhoneStack({ v, t }: ViewProps) {
         </div>
       </div>
       <div data-reveal="">
-        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
+        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce and your website are in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
+          <span style={{ display: "block", marginBottom: "8px", marginInlineStart: "4px", fontSize: "11.5px", fontWeight: "700", color: "var(--muted-foreground)" }}>{t("Your store")}</span>
           <div style={{ boxSizing: "border-box", padding: "16px", borderRadius: "20px", border: "1px solid var(--border)", background: "var(--card)", boxShadow: "0 24px 50px -36px color-mix(in srgb, var(--foreground) 50%, transparent)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--foreground)" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_SHOPIFY} /></svg>
-              <span style={{ flex: "1", fontSize: "15px", fontWeight: "700" }}>{t("Your Shopify store")}</span>
+              <span style={{ flex: "1", fontSize: "15px", fontWeight: "700" }}>{t("Shopify")}</span>
+              <StatusChip label="Live" live t={t} />
             </div>
             <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
               <StoryImg src="/landing/v15/st-riyadh-abaya.webp" w={480} h={720} alt="" sizes="52px" style={{ width: "52px", height: "64px", objectFit: "cover", borderRadius: "9px", background: "var(--gc-studio)" }} />
@@ -50,6 +53,9 @@ export function PhoneStack({ v, t }: ViewProps) {
                 {t("Theme blocks")}
               </span>
             </div>
+          </div>
+          <div style={{ marginTop: "8px" }}>
+            <PlatformRows t={t} />
           </div>
           <div style={{ position: "relative", height: "64px" }}>
             <svg aria-hidden="true" width="40" height="64" viewBox="0 0 40 64" style={{ position: "absolute", insetInlineStart: "50%", top: "0", marginInlineStart: "-20px" }}>

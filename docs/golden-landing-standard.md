@@ -47,6 +47,10 @@ per section. It exports:
   with `trackClick` wired in.
 - `NotLiveList` — the honesty list: what's built vs. what isn't yet, used
   wherever a page would otherwise imply more than the product currently does.
+  A row can carry an optional decorative `mark` (a brand or line icon) beside
+  its label; the status word stays the accessible text. Platform rows take
+  their state from `lib/product-truth/public-integrations.ts`, and a platform
+  that is not live is labelled In testing or Planned, never "supported".
 
 The home page (`components/landing/site-landing.tsx`) uses the same
 container width, spacing rhythm, `Eyebrow`, and CTA button styling as

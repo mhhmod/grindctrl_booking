@@ -5,7 +5,7 @@ import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { ConversationsPageContent } from '@/components/conversations/conversations-page-content';
 import { getConversationsCopy } from '@/components/conversations/conversations-copy';
 import { BOOKING_URL } from '@/lib/booking';
-import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { getLandingDictionary, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 vi.mock('@/components/dashboard/theme-toggle', () => ({
   ThemeToggle: () => <button type="button">Theme</button>,
@@ -40,6 +40,17 @@ describe('ConversationsPageContent', () => {
       expect(screen.getByText(item.label)).toBeInTheDocument();
       expect(screen.getByText(item.note)).toBeInTheDocument();
     }
+  });
+
+  it.each<SiteLocale>(['en', 'ar'])('lists WooCommerce and your website as in testing and Salla and Zid as planned in %s', (locale) => {
+    renderPage(locale);
+    const t = getConversationsCopy(locale);
+    const landing = getLandingDictionary(locale);
+    const rowOf = (label: string) => screen.getByText(label).closest('li');
+
+    const [woo, salla] = t.notLiveItems.slice(-2);
+    expect(rowOf(woo.label)).toHaveTextContent(landing.integrationStateInTesting);
+    expect(rowOf(salla.label)).toHaveTextContent(landing.integrationStatePlanned);
   });
 
   it('flips to RTL in Arabic', () => {

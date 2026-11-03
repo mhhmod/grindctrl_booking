@@ -29,8 +29,8 @@ const COPY = {
        found nothing and the widget looked impossible to enable. */
     shopifyStep2: 'Toggle “GRINDCTRL Store Chat” on and save.',
     openThemeEditor: 'Enable in Shopify',
-    scriptTitle: 'Other platforms',
-    scriptNote: 'Paste this just before </body>. Works on any website.',
+    scriptTitle: 'Manual install',
+    scriptNote: 'Paste this just before </body>. It only loads on the domains of your connected store.',
     copy: 'Copy',
     copied: 'Copied!',
     toggleOn: 'Turn on Store Chat',
@@ -56,8 +56,8 @@ const COPY = {
     // The block name is not translated: the theme editor shows it in English.
     shopifyStep2: 'فعّل “GRINDCTRL Store Chat” واحفظ.',
     openThemeEditor: 'التفعيل من شوبيفاي',
-    scriptTitle: 'منصات أخرى',
-    scriptNote: 'الصق هذا الكود قبل نهاية الصفحة. يعمل على أي موقع.',
+    scriptTitle: 'تثبيت يدوي',
+    scriptNote: 'الصق هذا الكود قبل نهاية الصفحة. يعمل فقط على نطاقات متجرك المتصل.',
     copy: 'نسخ',
     copied: 'تم النسخ!',
     toggleOn: 'تشغيل دردشة المتجر',

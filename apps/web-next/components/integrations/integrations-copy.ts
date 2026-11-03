@@ -6,6 +6,8 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 export interface IntegrationCopyRow {
   id: string;
   description: string;
+  /** Replaces the register's name for a row that is not a brand, so it can be translated. */
+  label?: string;
 }
 
 export interface IntegrationsCopy {
@@ -62,12 +64,27 @@ const en: IntegrationsCopy = {
 
   storefrontEyebrow: 'Storefront',
   storefrontTitle: 'Where GrindCTRL lives in your store',
-  storefrontBody: 'The core storefront integration is implemented and shipping today.',
+  storefrontBody:
+    'Shopify is the one storefront integration shipping today. WooCommerce and your website are in testing, for Store Chat only. Salla and Zid are planned.',
   storefrontItems: [
     {
       id: 'shopify',
-      description: 'Embedded app, App Proxy, webhooks, and theme-extension blocks.',
+      description:
+        'Embedded app, App Proxy, webhooks, and theme-extension blocks. Try-On, order lookup and billing are available on Shopify only.',
     },
+    {
+      id: 'woocommerce',
+      description:
+        'Store Chat only, through a GRINDCTRL WordPress plugin. Not available to merchants yet. Try-On, order lookup and billing stay Shopify-only.',
+    },
+    {
+      id: 'custom-website',
+      label: 'Your website',
+      description:
+        'Store Chat only, by script tag on a domain you verify with DNS. Not available to merchants yet. No Try-On, order lookup or product sync.',
+    },
+    { id: 'salla', description: 'Next in the build order. No code connects a Salla store yet.' },
+    { id: 'zid', description: 'After Salla in the build order. No code connects a Zid store yet.' },
   ],
 
   channelsEyebrow: 'Customer channels',
@@ -80,26 +97,23 @@ const en: IntegrationsCopy = {
   ],
 
   crmEyebrow: 'CRM',
-  crmTitle: 'Send conversations to your CRM',
-  crmBody: 'One CRM is available through implementation today; another is on the roadmap.',
+  crmTitle: 'CRM connections are not built yet',
+  crmBody: 'No CRM connector exists in the product today.',
   crmItems: [
-    {
-      id: 'hubspot',
-      description: 'Available through implementation. Not pre-connected automatically for every store.',
-    },
-    { id: 'notion', description: 'On the roadmap. No code path exists yet.' },
+    { id: 'hubspot', description: 'No HubSpot connector exists in the product yet.' },
+    { id: 'notion', description: 'No code path exists in the product yet.' },
   ],
 
   automationEyebrow: 'Automation',
   automationTitle: 'Connect your own workflows',
-  automationBody: 'n8n is supported today through a documented pattern; two others are on the roadmap.',
+  automationBody: 'n8n works through a documented pattern. Zapier and Make have no code path yet.',
   automationItems: [
     {
       id: 'n8n',
       description: 'Supported through a documented workflow-queue pattern, not a native one-click connector.',
     },
-    { id: 'zapier', description: 'On the roadmap. No code path exists yet.' },
-    { id: 'make', description: 'On the roadmap. No code path exists yet.' },
+    { id: 'zapier', description: 'No code path exists in the product yet.' },
+    { id: 'make', description: 'No code path exists in the product yet.' },
   ],
 
   aiEyebrow: 'AI infrastructure',
@@ -140,12 +154,27 @@ const ar: IntegrationsCopy = {
 
   storefrontEyebrow: 'المتجر',
   storefrontTitle: 'أين يعمل GrindCTRL داخل متجرك',
-  storefrontBody: 'تكامل المتجر الأساسي مُفعّل ويعمل اليوم.',
+  storefrontBody:
+    'Shopify هو تكامل المتجر الوحيد المُفعّل اليوم. WooCommerce وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
   storefrontItems: [
     {
       id: 'shopify',
-      description: 'تطبيق مدمج، وApp Proxy، وWebhooks، وأدوات ثيم جاهزة.',
+      description:
+        'تطبيق مدمج، وApp Proxy، وWebhooks، وأدوات ثيم جاهزة. التجربة الافتراضية والاستعلام عن الطلبات والفوترة متاحة على Shopify فقط.',
     },
+    {
+      id: 'woocommerce',
+      description:
+        'دردشة المتجر فقط، عبر إضافة ووردبريس من GRINDCTRL. غير متاح للتجار بعد. التجربة الافتراضية والاستعلام عن الطلبات والفوترة تبقى على Shopify فقط.',
+    },
+    {
+      id: 'custom-website',
+      label: 'موقعك',
+      description:
+        'دردشة المتجر فقط، عبر وسم سكريبت على نطاق تتحقق منه عبر DNS. غير متاح للتجار بعد. بلا تجربة افتراضية أو استعلام عن الطلبات أو مزامنة للمنتجات.',
+    },
+    { id: 'salla', label: 'سلة', description: 'التالية في ترتيب البناء. لا يوجد كود يربط متجر سلة حتى الآن.' },
+    { id: 'zid', label: 'زد', description: 'بعد سلة في ترتيب البناء. لا يوجد كود يربط متجر زد حتى الآن.' },
   ],
 
   channelsEyebrow: 'قنوات التواصل مع العملاء',
@@ -158,26 +187,23 @@ const ar: IntegrationsCopy = {
   ],
 
   crmEyebrow: 'إدارة علاقات العملاء',
-  crmTitle: 'أرسل المحادثات إلى نظام إدارة علاقات العملاء',
-  crmBody: 'نظام واحد متاح عبر التنفيذ اليوم، وآخر على خارطة الطريق.',
+  crmTitle: 'ربط أنظمة إدارة علاقات العملاء غير مبني بعد',
+  crmBody: 'لا يوجد في المنتج اليوم موصّل لأي نظام إدارة علاقات عملاء.',
   crmItems: [
-    {
-      id: 'hubspot',
-      description: 'متاح عبر التنفيذ. غير متصل تلقائيًا بشكل جاهز لكل متجر.',
-    },
-    { id: 'notion', description: 'على خارطة الطريق. لا يوجد مسار برمجي لها بعد.' },
+    { id: 'hubspot', description: 'لا يوجد موصّل HubSpot في المنتج حتى الآن.' },
+    { id: 'notion', description: 'لا يوجد مسار برمجي لها في المنتج حتى الآن.' },
   ],
 
   automationEyebrow: 'الأتمتة',
   automationTitle: 'اربط سير العمل الخاص بك',
-  automationBody: 'n8n مدعوم اليوم عبر نمط موثّق، واثنان آخران على خارطة الطريق.',
+  automationBody: 'يعمل n8n عبر نمط موثّق. ولا يوجد مسار برمجي لـ Zapier وMake حتى الآن.',
   automationItems: [
     {
       id: 'n8n',
       description: 'مدعوم عبر نمط طابور سير عمل موثّق، وليس موصّلًا جاهزًا بنقرة واحدة.',
     },
-    { id: 'zapier', description: 'على خارطة الطريق. لا يوجد مسار برمجي لها بعد.' },
-    { id: 'make', description: 'على خارطة الطريق. لا يوجد مسار برمجي لها بعد.' },
+    { id: 'zapier', description: 'لا يوجد مسار برمجي لها في المنتج حتى الآن.' },
+    { id: 'make', description: 'لا يوجد مسار برمجي لها في المنتج حتى الآن.' },
   ],
 
   aiEyebrow: 'البنية التحتية للذكاء الاصطناعي',

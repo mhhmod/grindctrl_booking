@@ -1,6 +1,6 @@
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 
-export type NotLiveStatusKind = 'notBuilt' | 'evidenceRequired' | 'planned';
+export type NotLiveStatusKind = 'notBuilt' | 'evidenceRequired' | 'inTesting' | 'planned';
 
 export interface ConversationsCopy {
   heroEyebrow: string;
@@ -43,7 +43,7 @@ const en: ConversationsCopy = {
     },
     {
       title: 'Verified order lookup, read-only',
-      body: 'One real order per request, matched to a signed-in customer or an order number plus matching email. Only fulfillment, tracking, and line-item facts come back, never price, address, phone, or customer ID.',
+      body: 'On Shopify, one real order per request, matched to a signed-in customer or an order number plus matching email. Only fulfillment, tracking, and line-item facts come back, never price, address, phone, or customer ID.',
     },
     {
       title: 'Team handoff, on request or after hours',
@@ -64,7 +64,7 @@ const en: ConversationsCopy = {
   ],
   notLiveEyebrow: 'Where it stops today',
   notLiveTitle: "What's not live yet",
-  notLiveBody: "Store Chat runs on your storefront today. Here's what it doesn't do yet.",
+  notLiveBody: "Store Chat runs on your Shopify storefront today. Here's what it doesn't do yet.",
   notBuiltStatus: 'Not built',
   notLiveItems: [
     {
@@ -85,6 +85,16 @@ const en: ConversationsCopy = {
     {
       label: 'Telegram',
       note: 'On the roadmap, not built.',
+      statusKind: 'planned',
+    },
+    {
+      label: 'WooCommerce and your website',
+      note: 'In testing for Store Chat only, and not available to merchants yet. Order lookup and Try-On stay Shopify-only.',
+      statusKind: 'inTesting',
+    },
+    {
+      label: 'Salla and Zid',
+      note: 'Planned. No code connects either platform yet.',
       statusKind: 'planned',
     },
   ],
@@ -111,7 +121,7 @@ const ar: ConversationsCopy = {
     },
     {
       title: 'بحث موثّق عن الطلبات، للقراءة فقط',
-      body: 'طلب حقيقي واحد لكل استعلام، يُطابَق مع عميل مسجّل دخوله أو رقم طلب مع بريد إلكتروني مطابق. تعود فقط حقائق الشحن والتتبع وبنود الطلب، ولا يظهر أبدًا السعر أو العنوان أو الهاتف أو هوية العميل.',
+      body: 'على Shopify، طلب حقيقي واحد لكل استعلام، يُطابَق مع عميل مسجّل دخوله أو رقم طلب مع بريد إلكتروني مطابق. تعود فقط حقائق الشحن والتتبع وبنود الطلب، ولا يظهر أبدًا السعر أو العنوان أو الهاتف أو هوية العميل.',
     },
     {
       title: 'تحويل إلى فريقك، عند الطلب أو خارج ساعات العمل',
@@ -132,7 +142,7 @@ const ar: ConversationsCopy = {
   ],
   notLiveEyebrow: 'أين يتوقف اليوم',
   notLiveTitle: 'ما لم يُطلَق بعد',
-  notLiveBody: 'يعمل Store Chat على واجهة متجرك اليوم. إليك ما لا يفعله بعد.',
+  notLiveBody: 'يعمل Store Chat على واجهة متجرك على Shopify اليوم. إليك ما لا يفعله بعد.',
   notBuiltStatus: 'غير مطوَّر',
   notLiveItems: [
     {
@@ -153,6 +163,16 @@ const ar: ConversationsCopy = {
     {
       label: 'تيليغرام',
       note: 'على خارطة الطريق، ولم يُبنَ بعد.',
+      statusKind: 'planned',
+    },
+    {
+      label: 'WooCommerce وموقعك الخاص',
+      note: 'قيد الاختبار لدردشة المتجر فقط، وغير متاح للتجار بعد. الاستعلام عن الطلبات والتجربة الافتراضية يبقيان على Shopify فقط.',
+      statusKind: 'inTesting',
+    },
+    {
+      label: 'سلة وزد',
+      note: 'مخطط لهما. لا يوجد كود يربط أيًّا من المنصتين حتى الآن.',
       statusKind: 'planned',
     },
   ],
