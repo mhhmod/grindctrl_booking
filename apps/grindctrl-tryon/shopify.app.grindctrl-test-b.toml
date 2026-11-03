@@ -1,20 +1,53 @@
-# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+# TEST registration "GRINDCTRL TEST B", served by the isolated staging copy.
+# Second tenant for the store A/B isolation test, on grindctrl-m1-test-b only.
+# Never point this at grindctrl.cloud; production is shopify.app.toml.
 
 client_id = "e91e8bdb9247cd37d22df35c5dbc4032"
 name = "GRINDCTRL TEST B"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://shopify-m1-dev.grindctrl.cloud/shopify/app"
 embedded = true
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_orders,read_products,write_app_proxy"
+scopes = "read_products,read_orders,write_app_proxy"
 
-[auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+[app_proxy]
+url = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/proxy"
+prefix = "apps"
+subpath = "grindctrl"
 
 [webhooks]
-api_version = "2027-01"
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app/scopes_update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app_subscriptions/update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  compliance_topics = [ "shop/redact" ]
+
+[auth]
+# Staging only; OAuth state cookies stay on this exact host.
+redirect_urls = [
+  "https://shopify-m1-dev.grindctrl.cloud/shopify/app",
+  "https://shopify-m1-dev.grindctrl.cloud/api/shopify/oauth/callback"
+]
 
 [build]
-include_config_on_deploy = true
-automatically_update_urls_on_dev = true
+automatically_update_urls_on_dev = false

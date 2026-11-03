@@ -21,7 +21,8 @@ export async function startShopifyClaim(navigate: Navigate = navigateTop): Promi
 
   if (body.alreadyLinked) return 'already-linked';
   if (body.token) {
-    navigate(`https://grindctrl.cloud/claim?token=${encodeURIComponent(body.token)}`);
+    // Redeem on the deployment that minted the token: staging tokens are not valid on production.
+    navigate(`${window.location.origin}/claim?token=${encodeURIComponent(body.token)}`);
     return 'navigated';
   }
   return 'unavailable';
