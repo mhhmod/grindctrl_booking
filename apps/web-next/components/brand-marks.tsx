@@ -32,6 +32,7 @@ import {
   siN8n,
   siNotion,
   siOpenrouter,
+  siSalla,
   siShopify,
   siStripe,
   siSupabase,
@@ -107,12 +108,17 @@ export const AirtableMark = makeMark(siAirtable);
 export const LinearMark = makeMark(siLinear);
 export const WooCommerceMark = makeMark(siWoocommerce);
 export const OpenRouterMark = makeMark(siOpenrouter);
+/* Salla's official colour is a pale mint that disappears on a light page, so
+   callers render this one with `monochrome`. Zid has no simple-icons mark and
+   is shown as its name in text rather than a drawn imitation. */
+export const SallaMark = makeMark(siSalla);
 
 /* Lookup used by the landing strips. Keys match the untranslated brand names
    in the copy dictionaries, which stay Latin script in Arabic too. */
 export const BRAND_MARKS: Record<string, ((props: MarkProps) => React.JSX.Element) | undefined> = {
   Shopify: ShopifyMark,
   WooCommerce: WooCommerceMark,
+  Salla: SallaMark,
   Gemini: GeminiMark,
   Claude: ClaudeMark,
   Anthropic: AnthropicMark,

@@ -1,5 +1,6 @@
 export const PUBLIC_INTEGRATION_STATES = [
   'implemented',
+  'in-testing',
   'setup-required',
   'evidence-required',
   'planned',
@@ -19,6 +20,11 @@ export type PublicIntegration = {
 /**
  * Public relationship depth for the brand marks shown on the landing page.
  * A listed technology is not automatically a native or live tenant connection.
+ *
+ * `in-testing` means built on a branch and tried on a staging store, but not
+ * shipped on `main` and not available to merchants. Never word it as
+ * supported, available or works with. `docs/platform-readiness-matrix.md` is
+ * the evidence behind the platform rows.
  */
 export const PUBLIC_INTEGRATIONS = [
   {
@@ -27,6 +33,34 @@ export const PUBLIC_INTEGRATIONS = [
     state: 'implemented',
     evidenceRef: 'apps/grindctrl-tryon',
     note: 'Embedded app, app proxy, webhooks and theme-extension blocks exist.',
+  },
+  {
+    id: 'woocommerce',
+    name: 'WooCommerce',
+    state: 'in-testing',
+    evidenceRef: 'docs/platform-readiness-matrix.md',
+    note: 'Store Chat only, through a GRINDCTRL WordPress plugin. Built on a branch and tried on a staging store; not shipped on main and not available to merchants. Try-On, order lookup and billing are Shopify-only.',
+  },
+  {
+    id: 'custom-website',
+    name: 'Your website',
+    state: 'in-testing',
+    evidenceRef: 'docs/platform-readiness-matrix.md',
+    note: 'Store Chat only, by script tag on a DNS-verified domain. Built on a branch and tried on a staging store; not shipped on main and not available to merchants. No Try-On, order lookup or native product sync.',
+  },
+  {
+    id: 'salla',
+    name: 'Salla',
+    state: 'planned',
+    evidenceRef: 'docs/platform-readiness-matrix.md',
+    note: 'Next in the build order. No code connects a Salla store yet.',
+  },
+  {
+    id: 'zid',
+    name: 'Zid',
+    state: 'planned',
+    evidenceRef: 'docs/platform-readiness-matrix.md',
+    note: 'After Salla in the build order. No code connects a Zid store yet.',
   },
   {
     id: 'whatsapp',
@@ -46,22 +80,22 @@ export const PUBLIC_INTEGRATIONS = [
     id: 'telegram',
     name: 'Telegram',
     state: 'planned',
-    evidenceRef: 'apps/web-next/lib/dashboard/integration-catalog.ts',
-    note: 'The current integration catalogue marks this relationship as planned.',
+    evidenceRef: 'docs/grindctrl-product-roadmap.md',
+    note: 'The product roadmap names this as a planned channel. No code exists yet.',
   },
   {
     id: 'zapier',
     name: 'Zapier',
-    state: 'planned',
-    evidenceRef: 'apps/web-next/lib/dashboard/integration-catalog.ts',
-    note: 'The current integration catalogue marks this relationship as planned.',
+    state: 'evidence-required',
+    evidenceRef: null,
+    note: 'No repository evidence currently supports presenting this as planned, ready for setup or in use.',
   },
   {
     id: 'make',
     name: 'Make',
-    state: 'planned',
-    evidenceRef: 'apps/web-next/lib/dashboard/integration-catalog.ts',
-    note: 'The current integration catalogue marks this relationship as planned.',
+    state: 'evidence-required',
+    evidenceRef: null,
+    note: 'No repository evidence currently supports presenting this as planned, ready for setup or in use.',
   },
   {
     id: 'n8n',
@@ -87,16 +121,16 @@ export const PUBLIC_INTEGRATIONS = [
   {
     id: 'notion',
     name: 'Notion',
-    state: 'planned',
-    evidenceRef: 'apps/web-next/lib/dashboard/integration-catalog.ts',
-    note: 'The current integration catalogue marks this relationship as planned.',
+    state: 'evidence-required',
+    evidenceRef: null,
+    note: 'No repository evidence currently supports presenting this as planned, ready for setup or in use.',
   },
   {
     id: 'hubspot',
     name: 'HubSpot',
-    state: 'setup-required',
-    evidenceRef: 'apps/web-next/lib/dashboard/integration-catalog.ts',
-    note: 'Available through implementation; not proven as connected for every tenant.',
+    state: 'evidence-required',
+    evidenceRef: null,
+    note: 'No HubSpot connector exists in the product, and no repository evidence supports presenting one as ready for setup or use.',
   },
   {
     id: 'supabase',

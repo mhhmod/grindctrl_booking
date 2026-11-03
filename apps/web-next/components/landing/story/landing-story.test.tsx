@@ -55,11 +55,21 @@ describe('the landing story page', () => {
     const { container, unmount } = renderStory('en');
     expect(container.textContent).not.toContain('We set it up and keep it running.');
     expect(container.textContent).not.toContain('Setup, tuning and ongoing care are part of the service.');
-    expect(await screen.findByText("Demo data. Order status needs read access to your store's orders.")).toBeInTheDocument();
+    expect(await screen.findByText("Demo data. Order status works on Shopify and needs read access to your store's orders.")).toBeInTheDocument();
     unmount();
     const ar = renderStory('ar');
     expect(ar.container.textContent).not.toContain('نحن نجهّز كل شيء ونبقيه يعمل');
     expect(ar.container.textContent).not.toContain('الإعداد والضبط والمتابعة المستمرة');
+  });
+
+  it('does not tie the hero to one platform, in either language', () => {
+    const en = renderStory('en');
+    expect(en.container.textContent).toContain('For fashion stores');
+    expect(en.container.textContent).not.toContain('Shopify fashion stores');
+    en.unmount();
+    const ar = renderStory('ar');
+    expect(ar.container.textContent).toContain('لمتاجر الأزياء');
+    expect(ar.container.textContent).not.toContain('متاجر أزياء Shopify');
   });
 
   it('lets the product tabs and the operations list be used by click', async () => {

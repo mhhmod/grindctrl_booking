@@ -335,6 +335,55 @@ function StoryProgress() {
   );
 }
 
+/* ---------------------------------------------------------------- header */
+/* The header owns the current-scene state. The director reports it while the
+   page scrolls, and holding it here re-renders the header alone: held by
+   LandingStory it re-rendered every scene each time a scene boundary passed,
+   in the middle of a scroll. */
+function StoryHeader({ controller }: { controller: StoryController }) {
+  const { locale, t: lt, toggleLocale } = useLandingLocale();
+  const [activeScene, setActiveScene] = React.useState(-1);
+  React.useEffect(() => {
+    controller.setCallbacks({ onScene: setActiveScene });
+    return () => controller.setCallbacks({});
+  }, [controller]);
+  const onScene = React.useCallback(
+    (id: StorySceneId, event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      controller.goScene(SCENE_OF[id]);
+    },
+    [controller],
+  );
+  const { nav, menu } = storyNavigation(lt, {
+    onScene,
+    onJourney: (event) => {
+      event.preventDefault();
+      controller.goSection('journey');
+    },
+    onChat: (event) => {
+      event.preventDefault();
+      controller.goSection('chat');
+    },
+  });
+  const activeId = activeScene >= 0 ? (['try', 'store', 'ops', 'product', 'results'] as const)[activeScene] : null;
+  return (
+    <SiteHeader
+      locale={locale}
+      copy={siteHeaderCopy(lt)}
+      nav={nav}
+      menuItems={menu}
+      activeId={activeId}
+      onSwitchLocale={toggleLocale}
+      onBrandClick={(event) => {
+        event.preventDefault();
+        controller.goTop();
+      }}
+      onMenuOpenChange={(open) => controller.setMenuOpen(open)}
+      phoneExtra={<StoryProgress />}
+    />
+  );
+}
+
 /* ---------------------------------------------------------------- the page */
 export function LandingStory() {
   const { locale, t: lt, toggleLocale } = useLandingLocale();
@@ -346,7 +395,6 @@ export function LandingStory() {
      render cannot cause a hydration mismatch; it saves a second measuring pass. */
   const [stacked, setStacked] = React.useState(() => matches(STACK_QUERY));
   const [reduce, setReduce] = React.useState(() => matches(REDUCE_QUERY));
-  const [activeScene, setActiveScene] = React.useState(-1);
   const rootRef = React.useRef<HTMLDivElement>(null);
   const [controller] = React.useState(
     () => new StoryController({ layout: 'desk', stacked: false, reduce: false, rtl }, locale),
@@ -368,11 +416,6 @@ export function LandingStory() {
     lists.forEach((list) => list?.addEventListener('change', sync));
     return () => lists.forEach((list) => list?.removeEventListener('change', sync));
   }, []);
-
-  React.useEffect(() => {
-    controller.setCallbacks({ onScene: setActiveScene });
-    return () => controller.setCallbacks({});
-  }, [controller]);
 
   /* Mount once, then measure again whenever the layout, stacking or language changes. */
   const lastLocale = React.useRef(locale);
@@ -437,26 +480,6 @@ export function LandingStory() {
     };
   }, [controller, lt, locale]);
 
-  const onScene = React.useCallback(
-    (id: StorySceneId, event: React.MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-      controller.goScene(SCENE_OF[id]);
-    },
-    [controller],
-  );
-  const { nav, menu } = storyNavigation(lt, {
-    onScene,
-    onJourney: (event) => {
-      event.preventDefault();
-      controller.goSection('journey');
-    },
-    onChat: (event) => {
-      event.preventDefault();
-      controller.goSection('chat');
-    },
-  });
-  const activeId = activeScene >= 0 ? (['try', 'store', 'ops', 'product', 'results'] as const)[activeScene] : null;
-
   const footerLinks: SiteFooterLink[] = [
     {
       id: 'product',
@@ -488,20 +511,7 @@ export function LandingStory() {
   return (
     <div ref={rootRef} className="gc-story" data-layout={layout ?? undefined}>
       <SkipLink />
-      <SiteHeader
-        locale={locale}
-        copy={siteHeaderCopy(lt)}
-        nav={nav}
-        menuItems={menu}
-        activeId={activeId}
-        onSwitchLocale={toggleLocale}
-        onBrandClick={(event) => {
-          event.preventDefault();
-          controller.goTop();
-        }}
-        onMenuOpenChange={(open) => controller.setMenuOpen(open)}
-        phoneExtra={<StoryProgress />}
-      />
+      <StoryHeader controller={controller} />
       <StoryRail t={t} onGo={(i) => controller.goSceneIndex(i)} />
       <StorySprites />
       <div data-k="vhProbe" aria-hidden="true" className="pointer-events-none invisible absolute top-0 h-svh w-px" />

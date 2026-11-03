@@ -38,6 +38,7 @@ interface LandingDict {
   testimonials: { quote: string; name: string; role: string; photo: string }[];
 
   integrationStateImplemented: string;
+  integrationStateInTesting: string;
   integrationStateSetupRequired: string;
   integrationStateEvidenceRequired: string;
   integrationStatePlanned: string;
@@ -45,7 +46,6 @@ interface LandingDict {
 
 
   ctaTitle: string;
-  ctaBody: string;
 
   /* Site v15 chrome: header, phone menu and footer (copy/landing.json). */
   siteMainNav: string;
@@ -110,6 +110,7 @@ const en: LandingDict = {
   testimonials: [],
 
   integrationStateImplemented: 'Implemented',
+  integrationStateInTesting: 'In testing',
   integrationStateSetupRequired: 'Setup required',
   integrationStateEvidenceRequired: 'Evidence required',
   integrationStatePlanned: 'Planned',
@@ -117,8 +118,6 @@ const en: LandingDict = {
 
 
   ctaTitle: 'Give shoppers a reason to feel sure before checkout.',
-  ctaBody:
-    'Book a call and we will map the try-on experience to your Shopify theme, catalog, and customer journey.',
 
   siteMainNav: 'Main',
   siteOpenMenu: 'Open menu',
@@ -134,7 +133,7 @@ const en: LandingDict = {
   footerProduct: 'Product',
   footerLiveStore: 'Live store',
   footerTryOnPage: 'Try-on page',
-  footerCopyright: '© 2026 GrindCTRL. AI commerce experiences for Shopify fashion stores.',
+  footerCopyright: '© 2026 GrindCTRL. AI commerce experiences for fashion stores.',
   footerCopyrightShort: '© 2026 GrindCTRL',
   passwordLabel: 'Store password',
   passwordCopy: 'Copy',
@@ -185,6 +184,7 @@ const ar: LandingDict = {
   testimonials: [],
 
   integrationStateImplemented: 'مطبق',
+  integrationStateInTesting: 'قيد الاختبار',
   integrationStateSetupRequired: 'يتطلب إعدادًا',
   integrationStateEvidenceRequired: 'يتطلب دليلاً',
   integrationStatePlanned: 'مخطط له',
@@ -192,8 +192,6 @@ const ar: LandingDict = {
 
 
   ctaTitle: 'امنح عملاءك سببًا للثقة قبل إتمام الشراء.',
-  ctaBody:
-    'احجز مكالمة وسنحدد كيف تتكامل تجربة الملابس مع قالب Shopify والكتالوج ورحلة عملائك.',
 
   siteMainNav: 'القائمة الرئيسية',
   siteOpenMenu: 'فتح القائمة',
@@ -209,7 +207,7 @@ const ar: LandingDict = {
   footerProduct: 'المنتج',
   footerLiveStore: 'المتجر المباشر',
   footerTryOnPage: 'صفحة التجربة',
-  footerCopyright: '© 2026 GrindCTRL. تجارب تسوّق بالذكاء الاصطناعي لمتاجر الأزياء على Shopify.',
+  footerCopyright: '© 2026 GrindCTRL. تجارب تسوّق بالذكاء الاصطناعي لمتاجر الأزياء.',
   footerCopyrightShort: '© 2026 GrindCTRL',
   passwordLabel: 'كلمة مرور المتجر',
   passwordCopy: 'نسخ',

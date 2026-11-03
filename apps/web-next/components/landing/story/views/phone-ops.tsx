@@ -50,6 +50,9 @@ export function PhoneOps({ v, t }: ViewProps) {
           <p style={{ margin: "4px 0 0", minHeight: "40px", fontSize: "13px", lineHeight: "1.5", color: "color-mix(in srgb, var(--gc-cream) 66%, transparent)" }}>{v.obDesc}</p>
         </div>
         <div role="img" aria-label={t("Animated demo of support run by the AI and your team: questions answered from store knowledge, order status looked up read-only, a photo described and handed to the team with the reason, and a teammate taking over with a private note and a saved reply.")} style={{ marginTop: "12px", boxSizing: "border-box", padding: "12px", borderRadius: "20px", border: "1px solid color-mix(in srgb, var(--gc-cream) 10%, transparent)", background: "var(--gc-panel-dark)" }}>
+          {/* The stack always takes the room of all five steps (5 x 50px + 4 x 12px), so a beat with fewer steps
+              (Your team takes over has three) does not pull the dashboard tiles below it upward. */}
+          <div style={{ minHeight: "298px" }}>
           {v.opS0Show ? (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", height: "50px", boxSizing: "border-box", padding: "0 12px", borderRadius: "14px", border: `1px solid ${v.opS0Line}`, background: v.opS0Bg, color: v.opS0Fg, boxShadow: v.opS0Sh, transition: "background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.45s ease" }}>
@@ -152,6 +155,7 @@ export function PhoneOps({ v, t }: ViewProps) {
               </div>
             </>
           ) : null}
+          </div>
           <div style={{ marginTop: "12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "9px" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontSize: "12px", fontWeight: "700", color: "color-mix(in srgb, var(--gc-cream) 82%, transparent)" }}>

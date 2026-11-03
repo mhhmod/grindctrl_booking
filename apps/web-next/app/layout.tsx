@@ -18,11 +18,13 @@ import { AssistantLauncher } from '@/components/assistant/launcher';
 import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
+import { siteUrl } from '@/lib/site-metadata';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL | AI Implementation & Automation',
+  metadataBase: new URL(siteUrl()),
+  title: 'GRINDCTRL | AI try-on and Store Chat for fashion stores',
   description:
-    'GrindCTRL helps businesses integrate AI into operations across text, voice, images, video, files, CRMs, Google tools, cloud systems, and dashboards.',
+    'GRINDCTRL gives fashion stores AI virtual try-on and Store Chat in English and Arabic. Live on Shopify today. WooCommerce and your own website are in testing, and Salla and Zid are planned.',
 };
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {

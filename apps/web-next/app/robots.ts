@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { siteUrl } from '@/lib/site-metadata';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/dashboard', '/onboarding', '/embed/', '/shopify/', '/dev/', '/assistant'],
       },
     ],
-    sitemap: 'https://grindctrl.cloud/sitemap.xml',
+    sitemap: `${siteUrl()}/sitemap.xml`,
   };
 }

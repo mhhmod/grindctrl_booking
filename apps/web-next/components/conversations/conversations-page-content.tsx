@@ -27,6 +27,8 @@ function statusLabel(
   switch (kind) {
     case 'evidenceRequired':
       return landingT.integrationStateEvidenceRequired;
+    case 'inTesting':
+      return landingT.integrationStateInTesting;
     case 'planned':
       return landingT.integrationStatePlanned;
     default:

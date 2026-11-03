@@ -8,7 +8,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { BOOKING_URL } from '@/lib/booking';
-import { D_SHOPIFY } from '../story-marks';
+import { HangerIcon } from '@/components/site/icons';
 import { StoryImg } from '../story-img';
 import type { V, ViewProps } from '../story-types';
 
@@ -71,24 +71,24 @@ export function PhoneTry({ v, t }: ViewProps) {
         <div style={{ width: "390px", maxWidth: "100%", margin: "0 auto" }}>
           <div style={{ position: "relative", padding: "clamp(92px, 12.5svh, 108px) 20px 0", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: "7px", height: "30px", padding: "0 12px 0 10px", borderRadius: "26px", border: "1px solid var(--border)", background: "var(--gc-chip)", fontSize: "12px", fontWeight: "600", color: "var(--foreground)", animation: "gcs-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both" }}>
-              <span style={{ position: "relative", width: "6px", height: "6px", borderRadius: "50%", background: "var(--foreground)", boxShadow: "0 0 8px 1px color-mix(in srgb, var(--foreground) 18%, transparent)" }}>
+              <span className="max-[389px]:hidden" style={{ position: "relative", width: "6px", height: "6px", borderRadius: "50%", background: "var(--foreground)", boxShadow: "0 0 8px 1px color-mix(in srgb, var(--foreground) 18%, transparent)" }}>
                 <span aria-hidden="true" style={{ position: "absolute", inset: "0", borderRadius: "50%", background: "var(--foreground)", opacity: "0", animation: "gcs-ping 2.4s ease-out 0s infinite" }} />
               </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M8.5 4.5L12 6l3.5-1.5 4.5 3-2.3 3.4-2.2-1.2V19.5h-7V9.7l-2.2 1.2L4 7.5l4.5-3z" /></svg>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                <svg className="max-[389px]:hidden" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}><path d="M8.5 4.5L12 6l3.5-1.5 4.5 3-2.3 3.4-2.2-1.2V19.5h-7V9.7l-2.2 1.2L4 7.5l4.5-3z" /></svg>
                 {t("AI try-on")}
               </span>
               <span aria-hidden="true" style={{ width: "1px", height: "14px", background: "var(--gc-inactive)" }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                <svg className="max-[389px]:hidden" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: "0" }}>
                   <path d="M5 5.5h14a1.5 1.5 0 011.5 1.5v8.5A1.5 1.5 0 0119 17H10l-4.5 3.5V17H5a1.5 1.5 0 01-1.5-1.5V7A1.5 1.5 0 015 5.5z" />
                 </svg>
                 {t("Store Chat")}
               </span>
               <span aria-hidden="true" style={{ width: "1px", height: "14px", background: "var(--gc-inactive)" }} />
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_SHOPIFY} /></svg>
-                {t("Shopify")}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
+                <HangerIcon className="max-[389px]:hidden" size={15} style={{ flexShrink: "0" }} />
+                {t("For fashion stores")}
               </span>
             </div>
             <h1 id="m-hero-title" style={{ margin: "20px 0 0", fontSize: "40px", lineHeight: "1.08", fontWeight: "700", letterSpacing: "calc(-0.04em * var(--gc-ls, 1))", color: "var(--foreground)", animation: "gcs-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both" }}>{t("The fitting room your online store was missing.")}</h1>

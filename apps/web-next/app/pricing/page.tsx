@@ -6,12 +6,17 @@ import { getRequestLocale } from '@/lib/auth/locale';
 import { regionFromAcceptLanguage } from '@/lib/landing/accept-language';
 import { CURRENCY_COOKIE, plansForCurrency, resolveCurrency } from '@/lib/pricing/currency';
 import { clientIpFromHeader, countryFromIp, countryFromIpApi } from '@/lib/pricing/geo';
+import { socialMetadata } from '@/lib/site-metadata';
 import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
+const title = 'GrindCTRL AI Try-On Pricing';
+const description =
+  'Compare GrindCTRL AI Try-On plans, monthly render credits, premium setup, and top-up packs. Try-On and billing run through Shopify today.';
+
 export const metadata: Metadata = {
-  title: 'GrindCTRL AI Try-On Pricing',
-  description:
-    'Compare GrindCTRL AI Try-On plans, monthly render credits, premium setup, and top-up packs for Shopify stores.',
+  title,
+  description,
+  ...socialMetadata({ title, description, path: '/pricing' }),
 };
 
 export default async function PricingPage() {

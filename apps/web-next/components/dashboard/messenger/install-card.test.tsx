@@ -34,6 +34,19 @@ describe('InstallCard overflow guards', () => {
     expect(note.parentElement).toContainElement(screen.getByRole('button', { name: button }));
   });
 
+  /* The server admits the loader only on the connected store's own domains
+     (lib/messenger/origins.ts), so the pasted snippet does not work on any
+     website and the card must not say it does. */
+  it.each([
+    ['en', /connected store/, /any website/i],
+    ['ar', /نطاقات متجرك المتصل/, /أي موقع/],
+  ])('says the manual snippet only loads on the connected store in %s', (locale, truth, overclaim) => {
+    const { container } = renderInstallCard('grindctrl.myshopify.com', true, locale);
+
+    expect(container).toHaveTextContent(truth);
+    expect(container).not.toHaveTextContent(overclaim);
+  });
+
   it('hides the enable hint when Store Chat is already active', () => {
     renderInstallCard();
 
@@ -52,7 +65,7 @@ describe('InstallCard overflow guards', () => {
     const shopifyCard = screen.getByRole('heading', { name: 'Shopify' }).parentElement;
     // On a Shopify store the snippet is collapsed behind a summary rather
     // than presented as a second heading of equal standing — see below.
-    const otherPlatformsCard = screen.getByText('Other platforms').parentElement;
+    const otherPlatformsCard = screen.getByText('Manual install').parentElement;
     const installMethodsGrid = shopifyCard?.parentElement;
 
     expect(installMethodsGrid).toHaveClass('min-w-0');
@@ -67,7 +80,7 @@ describe('InstallCard overflow guards', () => {
   it('collapses the manual snippet on a Shopify store', () => {
     renderInstallCard('grindctrl.myshopify.com');
 
-    const summary = screen.getByText('Other platforms');
+    const summary = screen.getByText('Manual install');
     expect(summary.tagName).toBe('SUMMARY');
     expect(summary.closest('details')).toBeInTheDocument();
     expect(summary.closest('details')).not.toHaveAttribute('open');
@@ -76,7 +89,7 @@ describe('InstallCard overflow guards', () => {
   it('leaves the manual snippet expanded when there is no Shopify store to install into', () => {
     renderInstallCard(null);
 
-    const heading = screen.getByRole('heading', { name: 'Other platforms' });
+    const heading = screen.getByRole('heading', { name: 'Manual install' });
     expect(heading.closest('details')).toBeNull();
   });
 

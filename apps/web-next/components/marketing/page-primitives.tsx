@@ -176,6 +176,9 @@ export interface NotLiveItem {
   note?: string;
   /** Localized status word, e.g. t.integrationStatePlanned. */
   status: string;
+  /** A decorative brand or line mark beside the label. The label and status
+   *  stay the accessible text, so pass it with `decorative`. */
+  mark?: React.ReactNode;
 }
 
 /* Honest "not live yet" list — every /shopping, /conversations, /operations,
@@ -196,7 +199,10 @@ export function NotLiveList({ title, items }: { title?: string; items: NotLiveIt
             className="flex min-w-0 flex-wrap items-start justify-between gap-3 p-5 sm:p-6"
           >
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">{item.label}</p>
+              <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                {item.mark}
+                {item.label}
+              </p>
               {item.note ? (
                 <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{item.note}</p>
               ) : null}

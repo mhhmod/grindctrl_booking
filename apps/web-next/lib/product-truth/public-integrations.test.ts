@@ -1,9 +1,13 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   findPublicIntegration,
   PUBLIC_INTEGRATIONS,
   PUBLIC_INTEGRATION_STATES,
 } from './public-integrations';
+
+const REPO_ROOT = join(__dirname, '../../../..');
 
 describe('public integration truth', () => {
   it('uses unique stable ids and an explicit relationship state', () => {
@@ -19,11 +23,57 @@ describe('public integration truth', () => {
 
   it('does not present planned, credential-dependent, or evidence-free tools as implemented', () => {
     expect(findPublicIntegration('telegram')?.state).toBe('planned');
-    expect(findPublicIntegration('zapier')?.state).toBe('planned');
-    expect(findPublicIntegration('make')?.state).toBe('planned');
-    expect(findPublicIntegration('notion')?.state).toBe('planned');
     expect(findPublicIntegration('whatsapp')?.state).toBe('evidence-required');
     expect(findPublicIntegration('instagram')?.state).toBe('evidence-required');
+  });
+
+  it('keeps tools with no code and no roadmap entry at evidence-required, HubSpot included', () => {
+    // The dashboard catalogue that once marked Zapier, Make and Notion as
+    // planned was deleted, and no code connects HubSpot.
+    for (const id of ['zapier', 'make', 'notion', 'hubspot']) {
+      expect(findPublicIntegration(id), id).toMatchObject({ state: 'evidence-required', evidenceRef: null });
+    }
+  });
+
+  it('lists the platforms with a state that matches what main ships', () => {
+    expect(findPublicIntegration('shopify')?.state).toBe('implemented');
+    expect(findPublicIntegration('woocommerce')).toMatchObject({ name: 'WooCommerce', state: 'in-testing' });
+    expect(findPublicIntegration('custom-website')).toMatchObject({ name: 'Your website', state: 'in-testing' });
+    expect(findPublicIntegration('salla')).toMatchObject({ name: 'Salla', state: 'planned' });
+    expect(findPublicIntegration('zid')).toMatchObject({ name: 'Zid', state: 'planned' });
+    // Only Shopify may be implemented among the platforms.
+    const implemented = PUBLIC_INTEGRATIONS.filter((item) => item.state === 'implemented').map((item) => item.id);
+    expect(implemented).toEqual(['shopify']);
+  });
+
+  it('says Store Chat only for the in-testing platforms and never words them as shipped', () => {
+    for (const id of ['woocommerce', 'custom-website']) {
+      const note = findPublicIntegration(id)!.note;
+      expect(note, id).toMatch(/Store Chat only/);
+      expect(note, id).toMatch(/not available to merchants/i);
+      expect(note, id).not.toMatch(/\b(supported|works with|available now|live)\b/i);
+    }
+    expect(findPublicIntegration('woocommerce')!.note).toMatch(/Try-On, order lookup and billing are Shopify-only/);
+    for (const id of ['salla', 'zid']) {
+      expect(findPublicIntegration(id)!.note, id).toMatch(/No code connects/);
+    }
+  });
+
+  it('points every evidence reference at a file or folder that exists', () => {
+    // Stale references once went unnoticed after the files they named were deleted.
+    for (const integration of PUBLIC_INTEGRATIONS) {
+      if (integration.evidenceRef === null) continue;
+      expect(existsSync(join(REPO_ROOT, integration.evidenceRef)), `${integration.id}: ${integration.evidenceRef}`).toBe(true);
+    }
+  });
+
+  it('keeps the readiness matrix consistent with the register for the platform rows', () => {
+    const matrix = readFileSync(join(REPO_ROOT, 'docs/platform-readiness-matrix.md'), 'utf8');
+    const rowFor = (name: string) => matrix.split('\n').find((line) => line.startsWith(`| ${name} |`)) ?? '';
+    expect(rowFor('WooCommerce')).toMatch(/\| in testing/);
+    expect(rowFor('Custom website')).toMatch(/\| in testing/);
+    expect(rowFor('Salla')).toMatch(/\| planned \|/);
+    expect(rowFor('Zid')).toMatch(/\| planned \|/);
   });
 
   it('never labels an evidence-free relationship as implemented or setup-ready', () => {

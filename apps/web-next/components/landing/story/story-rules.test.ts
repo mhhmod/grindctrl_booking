@@ -1,18 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { BEATS, LEN, SCENE_ORDER } from './story-data';
-import {
-  beatDuration,
-  buildStops,
-  keyDirection,
-  nearestStop,
-  settleDuration,
-  stepTarget,
-  WheelGate,
-  wheelPixels,
-} from './story-rules';
+import { buildStops, keyDirection, nearestStop, stepTarget } from './story-rules';
 
-/* The pacing rules from 02-landing.md: where the stops are, and how a
-   gesture becomes exactly one beat. */
+/* The story's stops, and how a key press moves between them. Wheel and touch
+   input are not part of it: the browser scrolls. */
 
 describe('story stops', () => {
   it('has 21 beats plus one stop where the rest of the page starts', () => {
@@ -42,7 +33,7 @@ describe('story stops', () => {
   });
 });
 
-describe('one gesture, one beat', () => {
+describe('one key press, one beat', () => {
   const stops = [0, 540, 945, 1350, 2250];
 
   it('moves to the neighbouring stop from a stop', () => {
@@ -61,56 +52,8 @@ describe('one gesture, one beat', () => {
     expect(stepTarget(stops, 2250, 1)).toBe(-1);
   });
 
-  it('finds the nearest stop for settling', () => {
+  it('finds the nearest stop to a scroll position', () => {
     expect(nearestStop(stops, 900)).toEqual([2, 45]);
-  });
-
-  it('steps once a wheel stream adds up to 24px in one direction', () => {
-    const gate = new WheelGate();
-    expect(gate.feed(10, 0, false)).toBe(0);
-    expect(gate.feed(10, 16, false)).toBe(0);
-    expect(gate.feed(10, 32, false)).toBe(1);
-  });
-
-  it('swallows the long tail of a trackpad fling after the move lands', () => {
-    const gate = new WheelGate();
-    let t = 0;
-    let steps = 0;
-    /* The fling starts: one step. */
-    steps += Math.abs(gate.feed(40, t, false));
-    /* While the move runs (900ms), events are ignored. */
-    for (t = 16; t < 900; t += 16) steps += Math.abs(gate.feed(30, t, true));
-    gate.landed(t);
-    /* The tail keeps decaying for another second, every event inside the lock extends it. */
-    for (let mag = 28; t < 1900; t += 16, mag = Math.max(1, mag * 0.97)) steps += Math.abs(gate.feed(mag, t, false));
-    expect(steps).toBe(1);
-  });
-
-  /** One gesture that stepped at 0ms and kept sending small deltas until 896ms, landing at 900ms. */
-  function afterOneMove() {
-    const gate = new WheelGate();
-    expect(gate.feed(30, 0, false)).toBe(1);
-    for (let t = 16; t < 900; t += 16) gate.feed(8, t, true);
-    gate.landed(900);
-    return gate;
-  }
-
-  it('takes a new gesture after 240ms of quiet', () => {
-    const gate = afterOneMove();
-    expect(gate.feed(8, 910, false)).toBe(0);
-    expect(gate.feed(30, 1300, false)).toBe(1);
-  });
-
-  it('takes a new gesture when the magnitude jumps sharply inside the lock', () => {
-    const gate = afterOneMove();
-    expect(gate.feed(8, 910, false)).toBe(0);
-    expect(gate.feed(40, 926, false)).toBe(1);
-  });
-
-  it('scales line and page wheel modes to pixels', () => {
-    expect(wheelPixels(3, 1, 900)).toBe(96);
-    expect(wheelPixels(1, 2, 900)).toBe(900);
-    expect(wheelPixels(120, 0, 900)).toBe(120);
   });
 });
 
@@ -141,19 +84,5 @@ describe('keys', () => {
     expect(key(' ', { target: document.createElement('button') })).toBe(0);
     expect(key(' ', { target: document.createElement('a') })).toBe(0);
     expect(key('ArrowDown', { target: document.createElement('button') })).toBe(1);
-  });
-});
-
-describe('move timing', () => {
-  it('takes 0.7 to 1.3 seconds from beat to beat', () => {
-    expect(beatDuration(100)).toBe(700);
-    expect(beatDuration(900)).toBe(870);
-    expect(beatDuration(5000)).toBe(1300);
-  });
-
-  it('settles in 0.38 to 0.9 seconds', () => {
-    expect(settleDuration(10)).toBe(380);
-    expect(settleDuration(300)).toBe(470);
-    expect(settleDuration(2000)).toBe(900);
   });
 });

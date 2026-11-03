@@ -883,6 +883,11 @@ html[data-story='pinned'] [data-assistant-launcher] {
   opacity: 0;
   pointer-events: none;
 }
+/* Its looping marks animate stroke offsets on the main thread; hidden, they
+   have nothing to show, so they stop costing a style pass per frame. */
+html[data-story='pinned'] [data-assistant-launcher] * {
+  animation-play-state: paused !important;
+}
 
 /* Elements the landing story writes every frame opt out of the global 220ms
    colour and shadow transition, or they would trail the scroll. */

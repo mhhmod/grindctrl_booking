@@ -2,11 +2,16 @@ import type { Metadata } from 'next';
 import { LandingLocaleProvider } from '@/components/landing/landing-locale';
 import { LandingStory } from '@/components/landing/story/landing-story';
 import { getRequestLocale } from '@/lib/auth/locale';
+import { socialMetadata } from '@/lib/site-metadata';
+
+const title = 'GRINDCTRL | AI try-on and Store Chat for fashion stores';
+const description =
+  'Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English. AI try-on and Store Chat, live on Shopify. More platforms are in testing.';
 
 export const metadata: Metadata = {
-  title: 'GRINDCTRL | AI try-on and store chat for Shopify fashion stores',
-  description:
-    'Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English. AI try-on and Store Chat for Shopify fashion stores.',
+  title,
+  description,
+  ...socialMetadata({ title, description, path: '/' }),
 };
 
 export default async function LandingPage() {

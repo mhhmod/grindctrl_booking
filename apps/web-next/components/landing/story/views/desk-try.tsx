@@ -8,7 +8,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { BOOKING_URL } from '@/lib/booking';
-import { D_SHOPIFY } from '../story-marks';
+import { HangerIcon } from '@/components/site/icons';
 import { StoryImg } from '../story-img';
 import type { V, ViewProps } from '../story-types';
 
@@ -116,8 +116,8 @@ export function DeskTry({ v, t }: ViewProps) {
             </span>
             <span aria-hidden="true" style={{ width: "1px", height: "14px", background: "var(--gc-inactive)" }} />
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_SHOPIFY} /></svg>
-              {t("Shopify fashion stores")}
+              <HangerIcon size={15} style={{ flexShrink: "0" }} />
+              {t("For fashion stores")}
             </span>
           </div>
           <h1 id="hero-title" style={{ margin: "26px 0 0", fontSize: "66px", lineHeight: "1.06", fontWeight: "700", letterSpacing: "calc(-0.04em * var(--gc-ls, 1))", color: "var(--foreground)" }}>

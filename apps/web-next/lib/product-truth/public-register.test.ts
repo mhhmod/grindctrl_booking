@@ -1,9 +1,13 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   findPublicTruthRecord,
   isPublishableWithoutOwnerReview,
   PUBLIC_TRUTH_REGISTER,
 } from './public-register';
+
+const REPO_ROOT = join(__dirname, '../../../..');
 
 describe('public truth register', () => {
   it('uses unique stable claim and evidence ids with repository-relative source paths', () => {
@@ -69,5 +73,30 @@ describe('public truth register', () => {
     for (const id of hiddenIds) {
       expect(findPublicTruthRecord(id)?.handling).toBe('hide');
     }
+  });
+
+  it('points every source and every code, test or checkpoint reference at a file that exists', () => {
+    // A record that names a deleted file looks evidenced while proving nothing.
+    const missing: string[] = [];
+    for (const record of PUBLIC_TRUTH_REGISTER) {
+      for (const source of record.sources) {
+        if (!existsSync(join(REPO_ROOT, source.path))) missing.push(`${record.id} source ${source.path}`);
+      }
+      for (const evidence of record.evidence) {
+        if (['code', 'test', 'checkpoint'].includes(evidence.kind) && !existsSync(join(REPO_ROOT, evidence.ref))) {
+          missing.push(`${record.id} evidence ${evidence.ref}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('records the platform presentation as a qualified claim backed by the readiness matrix', () => {
+    const record = findPublicTruthRecord('integration.public-logo-strip');
+    expect(record).toMatchObject({ handling: 'qualify', status: 'documented-evidence' });
+    expect(record?.statement).toMatch(/Shopify is live/);
+    expect(record?.statement).toMatch(/WooCommerce and your own website are in testing, for Store Chat only/);
+    expect(record?.statement).toMatch(/Salla and Zid are planned/);
+    expect(record?.evidence.map((evidence) => evidence.ref)).toContain('docs/platform-readiness-matrix.md');
   });
 });
