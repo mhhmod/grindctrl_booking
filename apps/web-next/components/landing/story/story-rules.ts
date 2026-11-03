@@ -1,8 +1,9 @@
-/* The pure rules of the paced story, kept apart from the DOM so they can be
-   tested: where the stops are, which stop a gesture moves to, how a wheel
-   stream becomes exactly one beat, and how long a move takes. Ported from
-   the prototype's director (design/prototype/logic/director11.js in the
-   site-v15 handoff bundle). */
+/* The pure rules of the story, kept apart from the DOM so they can be
+   tested: where the stops are, which stop a key press moves to, and which
+   stop a scroll position belongs to. Scrolling itself is the browser's: the
+   prototype's wheel gate, touch pacing and settle tween (design/prototype/
+   logic/director11.js in the site-v15 handoff bundle) were removed because
+   intercepting wheel and touch input blocks native scrolling. */
 
 export const clamp = (x: number, a: number, b: number) => Math.min(b, Math.max(a, x));
 export const smooth = (a: number, b: number, x: number) => {
@@ -10,8 +11,6 @@ export const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 export const easeIO = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-/** Quartic in and out: every beat-to-beat and settle move. */
-export const easeQ = (t: number) => (t < 0.5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2);
 export const lerpStops = (st: readonly number[], x: number) => {
   const i = Math.min(st.length - 2, Math.floor(x));
   const f = clamp(x - i, 0, 1);
@@ -46,7 +45,7 @@ export function nearestStop(stops: readonly number[], y: number): [index: number
   return [k, best];
 }
 
-/** The stop one gesture moves to from `y`, or -1 when there is none that way.
+/** The stop one key press moves to from `y`, or -1 when there is none that way.
  *  On a stop it moves to the neighbour; between stops, to the next one ahead. */
 export function stepTarget(stops: readonly number[], y: number, dir: 1 | -1): number {
   const [k, best] = nearestStop(stops, y);
@@ -60,52 +59,6 @@ export function stepTarget(stops: readonly number[], y: number, dir: 1 | -1): nu
     });
   }
   return t < 0 || t >= stops.length ? -1 : t;
-}
-
-/** Beat to beat: longer moves take longer, within 0.7 to 1.3 seconds. */
-export const beatDuration = (distance: number) => clamp(420 + distance * 0.5, 700, 1300);
-/** Settling after free scrolling. */
-export const settleDuration = (distance: number) => clamp(260 + distance * 0.7, 380, 900);
-
-/** Turns a stream of wheel events into single beats. One trackpad fling,
- *  however long its tail, moves one beat. */
-export class WheelGate {
-  private acc = 0;
-  private lockUntil = 0;
-  private lastWheel = -Infinity;
-  private lastMag = 0;
-
-  /** Call when a move lands: the tail of the gesture that caused it is swallowed. */
-  landed(now: number) {
-    this.lockUntil = now + 170;
-  }
-
-  /**
-   * @returns the direction to move one beat, or 0 for nothing.
-   * The caller has already decided the event is the story's and prevented it.
-   */
-  feed(dy: number, now: number, moving: boolean): 1 | -1 | 0 {
-    const mag = Math.abs(dy);
-    const quiet = now - this.lastWheel;
-    const prevMag = this.lastMag;
-    this.lastWheel = now;
-    this.lastMag = mag;
-    if (moving) return 0;
-    if (now < this.lockUntil && !(quiet > 240 || (mag > prevMag * 1.6 && mag > 30))) {
-      this.lockUntil = now + 170;
-      return 0;
-    }
-    this.acc = (quiet > 240 ? 0 : this.acc) + dy;
-    if (Math.abs(this.acc) < 24) return 0;
-    const dir = this.acc > 0 ? 1 : -1;
-    this.acc = 0;
-    return dir;
-  }
-}
-
-/** Wheel delta in pixels: line mode is 32px a line, page mode a viewport. */
-export function wheelPixels(deltaY: number, deltaMode: number, vh: number) {
-  return deltaY * (deltaMode === 1 ? 32 : deltaMode === 2 ? vh : 1);
 }
 
 type KeyLike = {

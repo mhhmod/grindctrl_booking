@@ -136,9 +136,13 @@ v15: the landing story". It is the prototype's own vocabulary
   `gcs-prog-a/b`, `gcs-type-a/b`, `gcs-flow-a/b`, `gcs-oflow-a/b`,
   `gcs-grow-a/b`, `gcs-pop-a/b` (switching between the identical halves of
   a pair is how a beat replays a tap, a wipe or a progress bar).
-- Scroll pacing is not an animation class: `components/landing/story`
-  moves between beats with a quartic tween of `window.scrollTo` and writes
-  per-frame transforms straight to elements, never through React state.
+- Scrolling is not an animation class and stays the browser's:
+  `components/landing/story` listens to one passive `scroll` event, reads
+  the position once per frame, writes per-frame transforms straight to
+  elements (never through React state) and measures the layout only when it
+  changes. It never handles wheel or touch input and never re-times the
+  visitor's scroll; a key press, nav item or hash link moves the page with
+  the browser's own smooth scroll (`story-controller.test.ts` guards this).
 
 Under reduced motion every one of these stops: the entrances resolve to
 their end frame, the loops stop, and the landing story does not pace at all

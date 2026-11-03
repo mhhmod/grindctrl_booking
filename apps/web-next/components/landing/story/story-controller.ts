@@ -1,17 +1,26 @@
 /* The landing story's runtime: its state, the scene scripts and the
-   director that paces scrolling. A port of the prototype's logic class and
+   director that follows the scroll. A port of the prototype's logic class and
    director (design/prototype/boards/Scroll.dc.html and
    design/prototype/logic/director11.js in the site-v15 handoff bundle), with the production changes from
    02-landing.md: reduced motion and short screens stack the scenes instead
    of pacing them, covered sheets are inert, timers pause while the tab is
    hidden, and hash links land on scenes.
 
+   Scrolling is the browser's. The director never listens to wheel or touch
+   input (a non-passive listener holds every scroll until the main thread
+   answers) and never re-times the visitor's scroll. It reads the scroll
+   position once per animation frame, from one passive scroll listener, and
+   works out everything else from measurements cached at layout time. Only
+   explicit requests (a key press, a nav item, a hash link) move the page,
+   with the browser's own smooth scroll.
+
    Per-frame values never go through React. The director writes transforms,
    opacity and clip paths straight to the elements marked data-k, through a
    small cache so an unchanged value is never written twice. React state
    holds only discrete things: the current look, captions, the active tab,
-   counters. Views subscribe with useStorySlice so a tick in one scene does
-   not re-render the others. */
+   counters. A beat is entered once the scroll has dwelt near its stop, so
+   passing over a beat costs nothing. Views subscribe with useStorySlice so
+   a tick in one scene does not re-render the others. */
 
 import {
   BEATS,
@@ -37,11 +46,9 @@ import {
   type SceneKey,
 } from './story-data';
 import {
-  beatDuration,
   buildStops,
   clamp,
   easeIO,
-  easeQ,
   keyDirection,
   lerpStops,
   nearestStop,
@@ -49,12 +56,8 @@ import {
   r2,
   r3,
   r4,
-  settleDuration,
   smooth,
   stepTarget,
-  STOP_SLOP,
-  WheelGate,
-  wheelPixels,
   type Beat,
 } from './story-rules';
 import { PausableTimers } from './story-timers';
@@ -137,7 +140,12 @@ type Director = {
   L: (typeof LAYOUT)['desk'] | (typeof LAYOUT)['phone'];
   secs: Partial<Record<SceneKey, HTMLElement>>;
   live: string;
+  /** Each scene section's distance from the top of the page, measured once per layout. */
+  secY: Partial<Record<SceneKey, number>>;
+  /** Each scene section's top relative to the viewport, from secY and the latest scroll position. */
   tops: Partial<Record<SceneKey, number>>;
+  /** The scroll position the latest frame read. */
+  y: number;
   raf: number;
   cur: Record<string, number>;
   tgt: Record<string, number>;
@@ -158,20 +166,26 @@ type Director = {
   cpos: number;
   upto: number;
   dataA: string;
+  /** A requested move (a key, a nav item, a hash link) is under way. */
   anim: boolean;
-  tw: number;
-  settleT: ReturnType<typeof setTimeout> | undefined;
+  /** The scroll position a smooth move is heading for, or -1 when none is (including the fade cut). */
+  target: number;
+  moveT: ReturnType<typeof setTimeout> | undefined;
+  /** The stop the scroll position is nearest to, and the timer that enters its beat once it has stayed. */
+  zone: number;
+  dwellT: ReturnType<typeof setTimeout> | undefined;
+  /** The visitor is scrolling right now: beat scripts wait so no re-render lands mid-scroll. */
+  scrolling: boolean;
+  lastScroll: number;
+  idleT: ReturnType<typeof setTimeout> | undefined;
   hold: number;
   navAct: number;
-  touching: boolean;
-  tStart: { x: number; y: number } | null;
-  tMode: 'x' | 'story' | 'page' | null;
-  tDy: number;
-  noClickUntil: number;
   lastStore: number;
   inert: string;
+  /** The sizes the layout was last measured at; a change in them is a real resize. */
   lastW: number;
   lastH: number;
+  lastRootH: number;
   pinned: boolean | null;
   /* measured geometry */
   fitA: number;
@@ -201,6 +215,13 @@ export type StoryCallbacks = {
   onScene?: (index: number) => void;
 };
 
+/** How long the scroll must stay nearest a stop before that beat is entered. */
+const BEAT_DWELL_MS = 160;
+/** Quiet time after the last scroll event before beat scripts run again. */
+const SCROLL_IDLE_MS = 160;
+/** A smooth move that has not reported its end by now is treated as over. */
+const MOVE_GUARD_MS = 1600;
+
 export class StoryController {
   state: StoryState;
   env: StoryEnv;
@@ -212,8 +233,6 @@ export class StoryController {
   private d: Director | null = null;
   private beatTimers = new PausableTimers();
   private chatTimers = new PausableTimers();
-  private wheel = new WheelGate();
-  private nativeRun = 0;
   private tapTimer: ReturnType<typeof setTimeout> | undefined;
   private sTapTimer: ReturnType<typeof setTimeout> | undefined;
   private lateMeasure: ReturnType<typeof setTimeout> | undefined;
@@ -221,7 +240,9 @@ export class StoryController {
   private inputOn = false;
   private io: IntersectionObserver | null = null;
   private chatIo: IntersectionObserver | null = null;
+  private ro: ResizeObserver | null = null;
   private hidden = false;
+  private chatInView = false;
   private savedScrollBehavior = '';
 
   constructor(env: StoryEnv, lang: ChatLang) {
@@ -286,8 +307,10 @@ export class StoryController {
 
   /** The layout, language or stacking changed: measure again and stay on the same beat. */
   relayout(root: HTMLElement, env: StoryEnv, { restartChat }: { restartChat?: ChatLang } = {}) {
-    const at = this.d ? this.d.beat : -1;
     const y = window.scrollY || 0;
+    /* The beat under the visitor now, even if they only just stopped and its
+       dwell has not run out. */
+    const at = this.d?.stops.length ? nearestStop(this.d.stops, y)[0] : -1;
     const stackedChanged = env.stacked !== this.env.stacked;
     this.env = env;
     if (restartChat) this.resetChat(restartChat);
@@ -302,15 +325,20 @@ export class StoryController {
     this.hidden = hidden;
     const root = this.d?.root;
     if (hidden) {
-      this.beatTimers.pause();
       this.chatTimers.pause();
       if (root) root.dataset.paused = '';
     } else {
-      this.beatTimers.resume();
       this.chatTimers.resume();
       if (root) delete root.dataset.paused;
     }
+    this.syncTimers();
   };
+
+  /** Beat scripts run only while the tab is visible and the visitor is not mid-scroll. */
+  private syncTimers() {
+    if (this.hidden || this.d?.scrolling) this.beatTimers.pause();
+    else this.beatTimers.resume();
+  }
 
   /* ---------------------------------------------------------------- director */
   private st(k: string, prop: string, val: string) {
@@ -351,27 +379,34 @@ export class StoryController {
     });
     this.d = {
       root, k, phone, L: LAYOUT[phone ? 'phone' : 'desk'], secs,
-      live: '', tops: {}, raf: 0, cur: {}, tgt: {}, last: {}, force: true, vw: 1, vh: 1,
+      live: '', secY: {}, tops: {}, y: 0, raf: 0, cur: {}, tgt: {}, last: {}, force: true, vw: 1, vh: 1,
       beats: [], stops: [], restY: 1e9, beat: -1, capWant: 0, capLine: -1,
       ptr: -1, tapN: 0, chat: false, flips: '', cpos: 0, upto: -1, dataA: '',
-      anim: false, tw: 0, settleT: undefined, hold: 0, navAct: -2,
-      touching: false, tStart: null, tMode: null, tDy: 0, noClickUntil: 0, lastStore: -1, inert: '', lastW: -1, lastH: -1, pinned: null,
+      anim: false, target: -1, moveT: undefined, zone: -1, dwellT: undefined,
+      scrolling: false, lastScroll: 0, idleT: undefined, hold: 0, navAct: -2,
+      lastStore: -1, inert: '', lastW: -1, lastH: -1, lastRootH: -1, pinned: null,
       fitA: 1, capY: 0, y0: 0, y1: 0, fitS: 1, fitO: 1, fitB: 1, fitC: 1, cy: 0, ky: 0, ty: 0, spread: 1,
     };
     root.toggleAttribute('data-stacked', this.env.stacked);
     this.savedScrollBehavior = document.documentElement.style.scrollBehavior;
     document.documentElement.style.scrollBehavior = 'auto';
     window.addEventListener('scroll', this.onScroll, { passive: true });
-    window.addEventListener('resize', this.onResize);
+    window.addEventListener('scrollend', this.endMove, { passive: true });
     this.directorMeasure();
+    /* Size changes (a window resize, a rotation, content that grows when the
+       scenes are stacked) re-measure. The first report only repeats the
+       measurement just taken and is dropped by the size check. */
+    if (typeof ResizeObserver !== 'undefined') {
+      this.ro = new ResizeObserver(this.onResize);
+      this.ro.observe(root);
+      if (this.d.k.vhProbe) this.ro.observe(this.d.k.vhProbe);
+    }
     if (this.env.stacked) this.showEndStates();
+    if (opts.fallbackY !== undefined) window.scrollTo(0, opts.fallbackY);
     const keep = opts.keepBeat ?? -1;
     if (!this.env.stacked && keep >= 0 && keep < this.d.stops.length) {
-      window.scrollTo(0, this.d.stops[keep]);
       this.d.beat = -1;
       this.enterBeat(keep, false);
-    } else if (opts.fallbackY !== undefined) {
-      window.scrollTo(0, opts.fallbackY);
     }
     this.kick(true);
     this.lateMeasure = setTimeout(() => {
@@ -388,7 +423,7 @@ export class StoryController {
       .catch(() => {});
     if (opts.keepBeat === undefined) {
       this.arriveT = setTimeout(() => {
-        if (!this.applyHash(window.location.hash, true)) this.settle();
+        if (!this.applyHash(window.location.hash, true)) this.syncBeat();
       }, 120);
     }
     window.addEventListener('hashchange', this.onHash);
@@ -417,11 +452,9 @@ export class StoryController {
       this.chatIo = new IntersectionObserver(
         (entries) => {
           entries.forEach((en) => {
-            if (en.isIntersecting) {
-              this.startChat();
-              this.chatIo?.disconnect();
-            }
+            this.chatInView = en.isIntersecting;
           });
+          this.startChatIfSeen();
         },
         { threshold: 0.35 },
       );
@@ -434,39 +467,50 @@ export class StoryController {
     this.clearBeat();
     if (!d) return;
     cancelAnimationFrame(d.raf);
-    cancelAnimationFrame(d.tw);
-    clearTimeout(d.settleT);
+    clearTimeout(d.moveT);
+    clearTimeout(d.dwellT);
+    clearTimeout(d.idleT);
     clearTimeout(this.lateMeasure);
     clearTimeout(this.arriveT);
     window.removeEventListener('scroll', this.onScroll);
-    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('scrollend', this.endMove);
     window.removeEventListener('hashchange', this.onHash);
+    this.ro?.disconnect();
+    this.ro = null;
     this.io?.disconnect();
     this.io = null;
     this.chatIo?.disconnect();
     this.chatIo = null;
+    this.chatInView = false;
     document.documentElement.style.scrollBehavior = this.savedScrollBehavior;
     this.d = null;
+    this.syncTimers();
   }
 
   private onResize = () => {
     const d = this.d;
     if (!d) return;
-    /* Mobile browsers fire resize while a swipe shows or hides the address
-       bar. The sheets are sized in svh, which that never changes, so a resize
-       that keeps the width and the svh height is not a layout change: re-
-       measuring and snapping back to the beat there fights the finger and
-       flashes the sheet underneath on alternate frames. */
-    const w = window.innerWidth;
-    const h = d.k.vhProbe?.offsetHeight || 0;
-    if (w === d.lastW && h === d.lastH) return;
-    d.lastW = w;
-    d.lastH = h;
-    const at = d.beat;
+    /* Mobile browsers resize the window while a swipe shows or hides the
+       address bar. The sheets are sized in svh, which that never changes, so
+       a change that keeps the width and the svh height is not a layout
+       change: re-measuring there would fight the finger. The page height
+       counts only when the scenes are stacked, where it follows content. */
+    const [w, h, rh] = this.sizes();
+    if (w === d.lastW && h === d.lastH && rh === d.lastRootH) return;
+    const before = d.lastH;
     this.directorMeasure();
-    if (!this.env.stacked && !d.touching && at >= 0 && at < d.stops.length && !d.anim) window.scrollTo(0, d.stops[at]);
+    /* Every stop is a multiple of the svh height, so a taller or shorter
+       screen keeps the visitor at the same place in the story. */
+    if (!this.env.stacked && before > 0 && h > 0 && h !== before) window.scrollTo(0, Math.round(((window.scrollY || 0) * h) / before));
     this.kick(true);
   };
+
+  /** Width, svh height and (stacked only) page height: what a real resize changes. */
+  private sizes(): [number, number, number] {
+    const d = this.d;
+    if (!d) return [0, 0, 0];
+    return [window.innerWidth, d.k.vhProbe?.offsetHeight || 0, this.env.stacked ? d.root.offsetHeight : 0];
+  }
 
   /** The viewport height the sheets use (100svh), measured from a probe so it matches the CSS. */
   private viewportHeight(phone: boolean) {
@@ -557,7 +601,14 @@ export class StoryController {
     this.st('counter', 'transform', `translate3d(0, ${r1(d.ky)}px, 0)`);
     this.st('track', 'transform', `translate3d(0, ${r1(d.ty)}px, 0)`);
     for (let i = 0; i < 8; i++) this.st(`card${i}`, 'top', `${r1(-cardH / 2)}px`);
+    /* Everything the frame loop needs from the layout is read here, once per
+       layout, so a frame never asks the browser to measure anything. */
     const scrollY = window.scrollY || 0;
+    d.y = scrollY;
+    SCENE_ORDER.forEach((key) => {
+      const el = d.secs[key];
+      if (el) d.secY[key] = el.getBoundingClientRect().top + scrollY;
+    });
     const beats: Beat[] = [];
     d.root.querySelectorAll<HTMLElement>('[data-beat]').forEach((el) => {
       const p = (el.getAttribute('data-beat') as string).split(':');
@@ -567,6 +618,8 @@ export class StoryController {
     const built = buildStops(beats, d.restY);
     d.beats = built.beats;
     d.stops = this.env.stacked ? [] : built.stops;
+    d.zone = -1;
+    [d.lastW, d.lastH, d.lastRootH] = this.sizes();
     d.ptr = -2;
     this.setGallery(d.cpos, d.upto);
   }
@@ -582,16 +635,22 @@ export class StoryController {
     const d = this.d;
     if (!d) return;
     d.raf = 0;
+    /* Positions come from the cached measurements and the scroll position the
+       scroll event read (onScroll). Reading scrollY here, after the browser
+       has ticked the page's CSS animations, would flush a style recalculation
+       before this frame's writes and cost a second one at the end of it. */
+    if (d.force) d.y = window.scrollY || 0;
+    const y = d.y;
     SCENE_ORDER.forEach((key) => {
-      const el = d.secs[key];
-      if (!el) return;
-      const top = el.getBoundingClientRect().top;
+      const secY = d.secY[key];
+      if (secY === undefined) return;
+      const top = secY - y;
       const T = LEN[key] * d.vh;
       d.tops[key] = top;
       d.tgt[`p${key}`] = this.env.stacked ? 1 : clamp(-top / T, 0, 1);
       d.tgt[`o${key}`] = this.env.stacked ? 0 : clamp((-top - T) / d.vh, 0, 1);
     });
-    d.tgt.rest = clamp(((window.scrollY || 0) - (d.restY - d.vh)) / (0.6 * d.vh), 0, 1);
+    d.tgt.rest = clamp((y - (d.restY - d.vh)) / (0.6 * d.vh), 0, 1);
     const a = this.env.reduce || d.force ? 1 : 0.3;
     let moving = false;
     Object.keys(d.tgt).forEach((key) => {
@@ -604,8 +663,32 @@ export class StoryController {
     d.force = false;
     this.envLive();
     this.apply();
+    this.followScroll(y);
     if (moving) d.raf = requestAnimationFrame(this.tick);
   };
+
+  /** Notes which stop the scroll is nearest and enters that beat once it has stayed. */
+  private followScroll(y: number) {
+    const d = this.d;
+    if (!d || !d.stops.length) return;
+    if (d.target >= 0 && Math.abs(y - d.target) < 1) this.endMove();
+    const zone = nearestStop(d.stops, y)[0];
+    if (zone === d.zone) return;
+    d.zone = zone;
+    clearTimeout(d.dwellT);
+    /* While the page is moving to a requested place, the beat waits for the
+       arrival (endMove) instead of playing for every beat on the way. */
+    if (!d.anim) d.dwellT = setTimeout(() => this.syncBeat(), BEAT_DWELL_MS);
+  }
+
+  /** Enters the beat the page is on: the nearest stop, or the rest of the page past the last beat. */
+  private syncBeat() {
+    const d = this.d;
+    if (!d || !d.stops.length) return;
+    const k = nearestStop(d.stops, window.scrollY || 0)[0];
+    if (k === d.stops.length - 1) this.enterRest();
+    else this.enterBeat(k);
+  }
 
   private apply() {
     const d = this.d;
@@ -674,16 +757,21 @@ export class StoryController {
     const fills = [clamp((pA - FLAT_END) / (1 - FLAT_END), 0, 1), pS, pO, pB, pC];
     const at = oB > 0.5 ? 4 : oO > 0.5 ? 3 : oS > 0.5 ? 2 : oA > 0.5 ? 1 : 0;
     const ink = at === 2 && vis > 0 ? 'var(--gc-cream)' : 'var(--foreground)';
-    this.st('rail', 'opacity', r3(vis));
-    this.st('rail', 'transform', `translate3d(${r1((1 - vis) * 14 * (this.env.rtl ? -1 : 1))}px, -50%, 0)`);
-    this.st('rail', 'visibility', vis > 0.01 ? 'visible' : 'hidden');
-    this.st('rail', 'color', ink);
-    this.st('prog', 'opacity', r3(vis));
-    this.st('prog', 'color', ink);
-    for (let i = 0; i < 5; i++) {
-      this.st(`rf${i}`, 'transform', `scaleY(${r3(fills[i])})`);
-      this.st(`pf${i}`, 'transform', `scaleX(${r3(fills[i])})`);
-      this.st(`rn${i}`, 'opacity', i === at ? '1' : '0.45');
+    /* The rail is for wide screens and the progress bar for phones; CSS hides
+       the other, so it is not written. */
+    if (d.phone) {
+      this.st('prog', 'opacity', r3(vis));
+      this.st('prog', 'color', ink);
+      for (let i = 0; i < 5; i++) this.st(`pf${i}`, 'transform', `scaleX(${r3(fills[i])})`);
+    } else {
+      this.st('rail', 'opacity', r3(vis));
+      this.st('rail', 'transform', `translate3d(${r1((1 - vis) * 14 * (this.env.rtl ? -1 : 1))}px, -50%, 0)`);
+      this.st('rail', 'visibility', vis > 0.01 ? 'visible' : 'hidden');
+      this.st('rail', 'color', ink);
+      for (let i = 0; i < 5; i++) {
+        this.st(`rf${i}`, 'transform', `scaleY(${r3(fills[i])})`);
+        this.st(`rn${i}`, 'opacity', i === at ? '1' : '0.45');
+      }
     }
     const navAt = vis > 0.4 ? at : -1;
     if (navAt !== d.navAct) {
@@ -727,7 +815,7 @@ export class StoryController {
       }
       return;
     }
-    const restTop = d.restY - (window.scrollY || 0);
+    const restTop = d.restY - d.y;
     let sig = '';
     FRAMES.forEach(([scene], i) => {
       const top = d.tops[scene];
@@ -752,7 +840,7 @@ export class StoryController {
   private syncPinned() {
     const d = this.d;
     if (!d) return;
-    const pinned = !this.env.stacked && (window.scrollY || 0) < d.restY - 3;
+    const pinned = !this.env.stacked && d.y < d.restY - 3;
     if (pinned === d.pinned) return;
     d.pinned = pinned;
     if (pinned) document.documentElement.dataset.story = 'pinned';
@@ -764,7 +852,7 @@ export class StoryController {
     if (!d) return;
     const vh = d.vh;
     const T = d.tops;
-    const restTop = d.restY - (window.scrollY || 0);
+    const restTop = d.restY - d.y;
     let live = '';
     FRAMES.forEach(([scene, key], i) => {
       const top = T[scene];
@@ -783,40 +871,20 @@ export class StoryController {
     });
   }
 
-  /* ---------------------------------------------------------------- paced input: one gesture, one beat */
+  /* ---------------------------------------------------------------- input: keys, and the scroll itself */
   private inputMount() {
     if (this.inputOn) return;
     this.inputOn = true;
-    window.addEventListener('wheel', this.onWheel, { passive: false });
     window.addEventListener('keydown', this.onKey);
-    window.addEventListener('touchstart', this.onTouchStart, { passive: true });
-    window.addEventListener('touchmove', this.onTouchMove, { passive: false });
-    window.addEventListener('touchend', this.onTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', this.onTouchEnd, { passive: true });
-    window.addEventListener('click', this.onClickCapture, true);
   }
 
   private inputUnmount() {
     if (!this.inputOn) return;
     this.inputOn = false;
-    window.removeEventListener('wheel', this.onWheel);
     window.removeEventListener('keydown', this.onKey);
-    window.removeEventListener('touchstart', this.onTouchStart);
-    window.removeEventListener('touchmove', this.onTouchMove);
-    window.removeEventListener('touchend', this.onTouchEnd);
-    window.removeEventListener('touchcancel', this.onTouchEnd);
-    window.removeEventListener('click', this.onClickCapture, true);
   }
 
-  private onClickCapture = (e: MouseEvent) => {
-    const d = this.d;
-    if (d && performance.now() < d.noClickUntil) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-  };
-
-  /** Whether input at this scroll position belongs to the story. */
+  /** Whether a key at this scroll position belongs to the story. */
   private controlled(dy: number) {
     const d = this.d;
     if (!d || !d.stops.length || this.menuOpen || this.env.stacked) return false;
@@ -825,20 +893,8 @@ export class StoryController {
     return y <= d.restY + 3 && dy < 0;
   }
 
-  private onWheel = (e: WheelEvent) => {
-    const d = this.d;
-    if (!d || e.ctrlKey) return;
-    const dy = wheelPixels(e.deltaY, e.deltaMode, d.vh);
-    if (Math.abs(dy) < Math.abs(e.deltaX)) return;
-    if (!this.controlled(dy)) return;
-    e.preventDefault();
-    /* The event's own time, not when the handler ran: a busy main thread
-       delivers a fling in bursts, and the gaps between bursts must not read
-       as new gestures. */
-    const dir = this.wheel.feed(dy, e.timeStamp || performance.now(), d.anim);
-    if (dir) this.step(dir);
-  };
-
+  /* Wheel and touch are never handled: scrolling stays with the browser. The
+     keys that used to page the story keep doing so, one beat per press. */
   private onKey = (e: KeyboardEvent) => {
     const d = this.d;
     if (!d) return;
@@ -848,86 +904,50 @@ export class StoryController {
     if (!d.anim) this.step(dir);
   };
 
-  private onTouchStart = (e: TouchEvent) => {
-    const d = this.d;
-    if (!d) return;
-    if (!e.touches || e.touches.length !== 1) {
-      d.tStart = null;
-      return;
-    }
-    d.tStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    d.tDy = 0;
-    d.tMode = null;
-    d.touching = true;
-  };
-
-  private onTouchMove = (e: TouchEvent) => {
-    const d = this.d;
-    if (!d || !d.tStart || !e.touches || e.touches.length !== 1) return;
-    const dy = d.tStart.y - e.touches[0].clientY;
-    const dx = d.tStart.x - e.touches[0].clientX;
-    if (d.tMode === null && (Math.abs(dy) > 6 || Math.abs(dx) > 6)) {
-      d.tMode = Math.abs(dx) > Math.abs(dy) ? 'x' : this.controlled(dy) ? 'story' : 'page';
-    }
-    if (d.tMode === 'story') {
-      if (e.cancelable) e.preventDefault();
-      d.tDy = dy;
-    }
-  };
-
-  private onTouchEnd = () => {
-    const d = this.d;
-    if (!d) return;
-    d.touching = false;
-    if (d.tMode === 'story' && Math.abs(d.tDy) > 10) d.noClickUntil = performance.now() + 450;
-    if (d.tMode === 'story' && !d.anim && Math.abs(d.tDy) > 34) this.step(d.tDy > 0 ? 1 : -1);
-    d.tStart = null;
-    d.tMode = null;
-    if (!d.anim) {
-      clearTimeout(d.settleT);
-      d.settleT = setTimeout(() => this.settle(), 220);
-    }
-  };
-
   private onScroll = () => {
+    const d = this.d;
+    if (!d) return;
+    /* Scroll events run before the frame's animations tick, so the page has no
+       pending style work here and the read costs nothing. */
+    d.y = window.scrollY || 0;
     this.kick(false);
-    const d = this.d;
-    if (!d || d.anim || this.env.stacked) return;
-    clearTimeout(d.settleT);
-    d.settleT = setTimeout(() => this.settle(), 160);
+    d.lastScroll = performance.now();
+    if (d.scrolling) return;
+    d.scrolling = true;
+    this.syncTimers();
+    /* One timer re-armed per quiet check, not one per scroll event. */
+    const watch = () => {
+      d.idleT = setTimeout(() => {
+        if (this.d !== d) return;
+        if (performance.now() - d.lastScroll < SCROLL_IDLE_MS) {
+          watch();
+          return;
+        }
+        d.scrolling = false;
+        this.syncTimers();
+        this.startChatIfSeen();
+      }, SCROLL_IDLE_MS);
+    };
+    watch();
   };
-
-  private settle() {
-    const d = this.d;
-    if (!d || d.anim || d.touching || !d.stops.length) return;
-    const y = window.scrollY || 0;
-    if (y >= d.restY - 3) {
-      this.arrive();
-      return;
-    }
-    const [k, best] = nearestStop(d.stops, y);
-    if (best <= STOP_SLOP) this.arrive();
-    else this.tweenTo(d.stops[k], settleDuration(best));
-  }
 
   private step(dir: 1 | -1) {
     const d = this.d;
     if (!d || !d.stops.length) return;
     const t = stepTarget(d.stops, window.scrollY || 0, dir);
-    if (t >= 0) this.tweenTo(d.stops[t]);
+    if (t >= 0) this.moveTo(d.stops[t]);
   }
 
-  private tweenTo(y1: number, dur?: number) {
+  /** Moves the page to `y` because something asked for it (a key, a nav item, a hash link). */
+  private moveTo(y1: number) {
     const d = this.d;
     if (!d) return;
-    const y0 = window.scrollY || 0;
-    const dist = Math.abs(y1 - y0);
-    cancelAnimationFrame(d.tw);
+    const dist = Math.abs(y1 - (window.scrollY || 0));
     /* A jump across scenes (a nav item, a hash link, back to the top) would
        race through every sheet in between, strobing light and dark and
        redrawing each scene on the way. It cuts instead: the page fades to its
-       background, moves, and fades back in. Beat to beat stays a tween. */
-    if (!dur && !this.env.reduce && dist > window.innerHeight * 1.5) {
+       background, moves, and fades back in. Beat to beat is a smooth scroll. */
+    if (!this.env.reduce && dist > window.innerHeight * 1.5) {
       this.cutTo(y1);
       return;
     }
@@ -936,51 +956,31 @@ export class StoryController {
       this.arrive();
       return;
     }
-    const D = this.env.reduce ? 0 : dur || beatDuration(dist);
-    if (!D) {
+    if (this.env.reduce) {
       window.scrollTo(0, y1);
-      d.anim = false;
       this.arrive();
       return;
     }
+    /* The browser's own smooth scroll: it runs on the compositor with the
+       sticky sheets. A requestAnimationFrame tween that calls scrollTo moves
+       the page on the main thread, and on Android the two drift a frame
+       apart so the sheet underneath shows through. The move ends on
+       scrollend, on reaching the target, or at the guard. */
     d.anim = true;
-    /* Android browsers place position: sticky on the compositor thread. A
-       tween that calls scrollTo from requestAnimationFrame moves the page on
-       the main thread, and the two drift a frame apart, so the sheet
-       underneath shows through for single frames. A native smooth scroll runs
-       on the compositor with the sheets, so touch devices use it and finish
-       on scrollend. */
-    if ('onscrollend' in window && window.matchMedia('(pointer: coarse)').matches) {
-      const run = ++this.nativeRun;
-      const end = () => {
-        if (run !== this.nativeRun) return;
-        this.nativeRun++;
-        window.removeEventListener('scrollend', end);
-        clearTimeout(guard);
-        if (!this.d) return;
-        d.anim = false;
-        this.wheel.landed(performance.now());
-        this.arrive();
-      };
-      const guard = setTimeout(end, 1400);
-      window.addEventListener('scrollend', end);
-      window.scrollTo({ top: y1, behavior: 'smooth' });
-      return;
-    }
-    const t0 = performance.now();
-    const frame = (t: number) => {
-      if (!this.d) return;
-      const p = clamp((t - t0) / D, 0, 1);
-      window.scrollTo(0, y0 + (y1 - y0) * easeQ(p));
-      if (p < 1) d.tw = requestAnimationFrame(frame);
-      else {
-        d.anim = false;
-        this.wheel.landed(performance.now());
-        this.arrive();
-      }
-    };
-    d.tw = requestAnimationFrame(frame);
+    d.target = y1;
+    clearTimeout(d.moveT);
+    d.moveT = setTimeout(this.endMove, MOVE_GUARD_MS);
+    window.scrollTo({ top: y1, behavior: 'smooth' });
   }
+
+  private endMove = () => {
+    const d = this.d;
+    if (!d || d.target < 0) return;
+    clearTimeout(d.moveT);
+    d.target = -1;
+    d.anim = false;
+    this.arrive();
+  };
 
   private cutTo(y1: number) {
     const d = this.d;
@@ -998,28 +998,21 @@ export class StoryController {
         const fadeOut = veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
         fadeOut.onfinish = () => {
           veil.remove();
-          if (!this.d) return;
-          this.d.anim = false;
-          this.wheel.landed(performance.now());
+          if (this.d) this.d.anim = false;
         };
       });
     };
   }
 
+  /** The page has arrived where something asked it to go: play the beat it is on. */
   private arrive() {
     const d = this.d;
     if (!d) return;
-    const y = window.scrollY || 0;
-    const [k, best] = nearestStop(d.stops, y);
-    if (k < 0) return;
-    if (y >= d.restY - 3) {
-      this.enterRest();
-      return;
-    }
-    if (best <= STOP_SLOP) this.enterBeat(k);
+    clearTimeout(d.dwellT);
+    this.syncBeat();
   }
 
-  /** Moves to a scene's beat: a tween when paced, the beat's state when stacked. */
+  /** Moves to a scene's beat: a scroll to it when paced, the beat's state when stacked. */
   goBeat(scene: string, i: number) {
     const d = this.d;
     if (!d) return;
@@ -1028,7 +1021,7 @@ export class StoryController {
       return;
     }
     const b = d.beats.findIndex((x) => x.scene === scene && x.i === i);
-    if (b >= 0) this.tweenTo(d.beats[b].y);
+    if (b >= 0) this.moveTo(d.beats[b].y);
   }
 
   /** A header, rail or hash request for a scene: Try it on lands after the hero. */
@@ -1046,7 +1039,7 @@ export class StoryController {
 
   goTop() {
     if (this.env.stacked || !this.d?.stops.length) window.scrollTo({ top: 0, behavior: 'auto' });
-    else this.tweenTo(0);
+    else this.moveTo(0);
   }
 
   /** Scrolls to a section after the story (How it works, Ask the store). */
@@ -1070,7 +1063,7 @@ export class StoryController {
     if (!el || !d) return;
     const y = el.getBoundingClientRect().top + (window.scrollY || 0) - (exact ? 0 : d.phone ? 84 : 92);
     if (this.env.stacked || !d.stops.length) window.scrollTo(0, Math.max(0, y));
-    else this.tweenTo(Math.max(d.restY, y));
+    else this.moveTo(Math.max(d.restY, y));
   }
 
   private onHash = () => {
@@ -1098,7 +1091,7 @@ export class StoryController {
       if (instant) {
         window.scrollTo(0, d.beats[b].y);
         this.arrive();
-      } else this.tweenTo(d.beats[b].y);
+      } else this.moveTo(d.beats[b].y);
       return true;
     }
     const el = this.sectionById(id);
@@ -1546,6 +1539,16 @@ export class StoryController {
     if (lang === this.state.lang) return;
     this.setState({ chatTouched: true });
     this.resetChat(lang);
+  }
+
+  /** The demo conversation starts once its section is in view and the visitor has stopped scrolling:
+   *  its messages re-render and push each other up, which does not belong in the middle of a scroll. */
+  private startChatIfSeen() {
+    if (!this.chatInView || this.d?.scrolling) return;
+    this.chatIo?.disconnect();
+    this.chatIo = null;
+    this.chatInView = false;
+    this.startChat();
   }
 
   startChat() {

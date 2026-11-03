@@ -1,11 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 import { waitForPageReady } from './page-ready';
 
-/* The landing's paced story (docs/handoff/site-v15/02-landing.md): sheets
-   really pin, one gesture moves exactly one beat, nav items and hash links
-   land on the right scene, a language switch mid-story keeps the beat and
-   flips <html> at once, covered sheets are inert, and with reduced motion
-   nothing is pinned at all. */
+/* The landing's story (docs/handoff/site-v15/02-landing.md): sheets really
+   pin, scrolling stays native (a wheel is never intercepted) while a key
+   press moves exactly one beat, nav items and hash links land on the right
+   scene, a language switch mid-story keeps the beat and flips <html> at
+   once, covered sheets are inert, and with reduced motion nothing is pinned
+   at all. */
 
 async function openStory(page: Page, path = '/', { width = 1440, height = 900 } = {}) {
   await page.setViewportSize({ width, height });
@@ -31,7 +32,7 @@ async function settleAt(page: Page, y: number) {
   await expect.poll(() => scrollY(page), { timeout: 5000 }).toBe(y);
 }
 
-test.describe('landing story, paced', () => {
+test.describe('landing story, pinned scenes', () => {
   test('a sheet really pins while its scene plays', async ({ page }) => {
     await openStory(page);
     const { beats } = await stops(page);
@@ -43,38 +44,52 @@ test.describe('landing story, paced', () => {
     expect(await page.locator('[data-k="sheetS"]').evaluate((el) => getComputedStyle(el).position)).toBe('sticky');
   });
 
-  test('one wheel gesture and one arrow key each move exactly one beat', async ({ page }) => {
+  test('a wheel gesture scrolls natively and one arrow key moves exactly one beat', async ({ page }) => {
     await openStory(page);
     const { beats } = await stops(page);
     await page.mouse.move(720, 450);
+
+    /* Nothing intercepts the wheel: the event is not cancelled, the page goes
+       where the browser takes it (not to a stop), and nothing snaps it back. */
+    const cancelled = await page.evaluate(() => {
+      const e = new WheelEvent('wheel', { deltaY: 120, deltaMode: 0, bubbles: true, cancelable: true });
+      window.dispatchEvent(e);
+      return e.defaultPrevented;
+    });
+    expect(cancelled).toBe(false);
     await page.mouse.wheel(0, 120);
-    await settleAt(page, beats[1].y);
+    await expect.poll(() => scrollY(page)).toBeGreaterThan(0);
+    await page.waitForTimeout(700);
+    const after = await scrollY(page);
+    expect(after).toBeGreaterThan(0);
+    expect(after).toBeLessThan(beats[1].y);
+    expect(beats.map((b) => b.y)).not.toContain(after);
 
-    /* A trackpad fling: forty decaying deltas, one every 16ms for about
-       two thirds of a second, still move one beat. Replayed inside the page
-       so the cadence is a trackpad's, not the test runner's round trips. */
-    await page.waitForTimeout(400);
-    await page.evaluate(
-      () =>
-        new Promise<void>((resolve) => {
-          let i = 0;
-          const tick = () => {
-            window.dispatchEvent(new WheelEvent('wheel', { deltaY: 40 - i * 0.8, deltaMode: 0, bubbles: true, cancelable: true }));
-            i += 1;
-            if (i < 40) window.setTimeout(tick, 16);
-            else resolve();
-          };
-          tick();
-        }),
-    );
-    await settleAt(page, beats[2].y);
-    await page.waitForTimeout(600);
-    expect(await scrollY(page)).toBe(beats[2].y);
-
+    /* Keys still page the story, one beat per press, with the browser's smooth scroll. */
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await settleAt(page, 0);
     await page.keyboard.press('ArrowDown');
-    await settleAt(page, beats[3].y);
-    await page.keyboard.press('ArrowUp');
+    await settleAt(page, beats[1].y);
+    await page.keyboard.press('ArrowDown');
     await settleAt(page, beats[2].y);
+    await page.keyboard.press('ArrowUp');
+    await settleAt(page, beats[1].y);
+  });
+
+  test('on a phone the operations dashboard tiles stay put as the beats change', async ({ page }) => {
+    /* Beats are entered while the visitor scrolls, so a beat that resized its
+       scene would shift the layout under their finger. The last beat shows
+       three steps instead of five and used to pull the tiles up with it. */
+    await openStory(page, '/', { width: 390, height: 844 });
+    const { beats } = await stops(page);
+    const tiles = page.locator('#ops :text("Today in your dashboard"):visible').first();
+    const top = () => tiles.evaluate((el) => Math.round(el.getBoundingClientRect().top));
+    await page.evaluate((y) => window.scrollTo(0, y), beats.find((b) => b.id === 'ops:0')!.y);
+    await expect(page.getByRole('button', { name: 'Answers from what you teach it', pressed: true })).toBeVisible();
+    const first = await top();
+    await page.evaluate((y) => window.scrollTo(0, y), beats.find((b) => b.id === 'ops:3')!.y);
+    await expect(page.getByRole('button', { name: 'Your team takes over', pressed: true })).toBeVisible();
+    expect(await top()).toBe(first);
   });
 
   test('nav items and hash links land on the first beat of their scene', async ({ page }) => {
