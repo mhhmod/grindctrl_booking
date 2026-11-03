@@ -8,12 +8,12 @@ import { redirect } from 'next/navigation';
    purpose; the OAuth callback simply dropped merchants here, and they were
    handed installation instructions for a widget that does not exist.
 
-   The real installation surface is the Store Chat Installation tab, which
+   The real installation surface is Installation under Store Chat's Set up, which
    serves this store's actual embed key and the loader that is actually
    deployed. Sending people there rather than deleting the route keeps old
    bookmarks and the /sites, /branding, /domains and /widget redirects that
    land here from turning into 404s. */
 
 export default function DashboardInstallPage() {
-  redirect('/dashboard/store-chat?tab=installation');
+  redirect('/dashboard/store-chat/setup');
 }

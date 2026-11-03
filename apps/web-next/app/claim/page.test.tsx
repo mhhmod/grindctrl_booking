@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* Dead tokens must be rejected before sign-in; successful claims give
@@ -34,6 +34,7 @@ vi.mock('@/lib/messenger/provisioning', () => ({
   ensureMessengerSite: vi.fn(),
 }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import ClaimPage from '@/app/claim/page';
 import { currentUser } from '@clerk/nextjs/server';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
@@ -102,8 +103,8 @@ describe('ClaimPage', () => {
   });
 
   it.each([
-    ['en', "You're connected", 'Start with Behaviour to set how chat works, then AI & Knowledge to guide replies. Review customer chats in Conversations. Your changes stay invisible to shoppers until you press Publish to your store.', 'Go to dashboard'],
-    ['ar', 'متجرك متصل الآن', 'ابدأ بتبويب السلوك لضبط الدردشة، ثم الذكاء والمعرفة لتوجيه الردود. راجع دردشات العملاء في المحادثات. لن تظهر تغييراتك للعملاء حتى تضغط على انشر على متجرك.', 'الانتقال إلى لوحة التحكم'],
+    ['en', "You're connected", 'Open Set up to choose how chat looks and works, and What it knows to teach it your store. Answer shoppers in Inbox. Your changes stay invisible to shoppers until you publish them.', 'Go to dashboard'],
+    ['ar', 'متجرك متصل الآن', 'افتح الإعداد لاختيار شكل الدردشة وطريقة عملها، وما يعرفه ليتعلم عن متجرك. أجب عن المتسوقين من الرسائل. لن تظهر تغييراتك للمتسوقين حتى تنشرها.', 'الانتقال إلى لوحة التحكم'],
   ] as const)('adopts the store and renders next steps without redirecting in %s', async (locale, title, body, action) => {
     vi.mocked(getRequestLocale).mockResolvedValue(locale);
     vi.mocked(verifyClaimToken).mockReturnValue({ shop: 'demo.myshopify.com' });

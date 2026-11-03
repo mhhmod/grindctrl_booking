@@ -14,6 +14,7 @@ vi.mock('next/navigation', () => ({
     throw new Error(`redirect:${href}`);
   }),
 }));
+vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: vi.fn(async () => ({ primaryEmailAddress: { emailAddress: 'hana@maisonnoor.com' }, emailAddresses: [] })) }));
 vi.mock('@/lib/auth/dashboard', () => ({ requireDashboardUser: vi.fn(async () => 'user_owner') }));
 vi.mock('@/lib/auth/locale', () => ({ getRequestLocale: vi.fn(async () => 'en') }));
@@ -32,7 +33,6 @@ const SITE = {
 
 vi.mock('@/lib/messenger/provisioning', () => ({
   ensureMessengerSite: vi.fn(),
-  getProfileId: vi.fn(async () => 'profile_1'),
   listMessengerSites: vi.fn(async () => [SITE]),
   listTeamSites: vi.fn(async () => []),
   provisionableShopDomain: vi.fn(() => null),
@@ -41,9 +41,6 @@ vi.mock('@/lib/messenger/provisioning', () => ({
   wasDisconnectedBySelf: vi.fn(async () => false),
 }));
 vi.mock('@/lib/messenger/conversations', () => ({
-  resolveAssigneeNames: vi.fn(async () => ({})),
-  listWorkspaceMembers: vi.fn(async () => []),
-  summarizeConversations: vi.fn(async () => ({})),
   getOverviewStats: vi.fn(async () => ({ aiResolved7d: 120, handedOff7d: 20 })),
   getWidgetLastSeenAt: vi.fn(async () => null),
   listConversationsForSite: vi.fn(async () => []),
@@ -82,20 +79,30 @@ vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
     </div>
   ),
 }));
-// Today's tabs are covered by messenger-tabs.test.tsx; here only which tab opens.
+// The editors' tabs are covered by messenger-tabs.test.tsx; here only which tab opens, and on which.
 vi.mock('@/components/dashboard/messenger/messenger-tabs', () => ({
-  MessengerTabs: ({ initialTab }: { initialTab: string }) => <div data-testid="todays-store-chat">{initialTab}</div>,
+  MessengerTabs: ({ initialTab, sections, cannedReplies }: { initialTab: string; sections: string[]; cannedReplies: unknown[] }) => (
+    <div data-testid="more-settings" data-sections={sections.join(',')} data-replies={cannedReplies.length}>
+      {initialTab}
+    </div>
+  ),
 }));
 
 import MessengerPage from './page';
 import StoreChatSetupPage from './setup/page';
+import StoreChatMoreSettingsPage from './setup/more/page';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listConversationsForSite } from '@/lib/messenger/conversations';
-import { listMessengerSites, listTeamSites } from '@/lib/messenger/provisioning';
+import { listMessengerSites, listTeamSites, ensureMessengerSite, shouldEnsureMessengerSite } from '@/lib/messenger/provisioning';
+import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
+import { redirect } from 'next/navigation';
 
-const knows = (query: { tab?: string } = {}) => MessengerPage({ searchParams: Promise.resolve(query) });
-const setup = (query: { tab?: string } = {}) => StoreChatSetupPage({ searchParams: Promise.resolve(query) });
+type Query = { tab?: string; site?: string; orders?: string };
+const knows = (query: Query = {}) => MessengerPage({ searchParams: Promise.resolve(query) });
+const setup = (query: Query = {}) => StoreChatSetupPage({ searchParams: Promise.resolve(query) });
+const more = (query: { section?: string; site?: string; orders?: string } = {}) =>
+  StoreChatMoreSettingsPage({ searchParams: Promise.resolve(query) });
 const tabs = () => screen.queryByRole('navigation', { name: 'Store Chat' });
 
 beforeEach(() => {
@@ -104,7 +111,7 @@ beforeEach(() => {
   vi.mocked(listConversationsForSite).mockClear();
 });
 
-describe('the Store Chat routes under v16_dashboard', () => {
+describe('the Store Chat routes', () => {
   it('opens on What it knows, reading only the 7-day numbers and the knowledge', async () => {
     render(await knows());
     expect(within(tabs()!).getByRole('link', { name: 'What it knows' })).toHaveAttribute('aria-current', 'page');
@@ -112,7 +119,7 @@ describe('the Store Chat routes under v16_dashboard', () => {
     expect(screen.getByRole('heading', { name: 'What it learns from' })).toBeInTheDocument();
     expect(listKnowledge).toHaveBeenCalledWith(SITE.id);
     expect(listConversationsForSite).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('todays-store-chat')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
   });
 
   it('draws ChatStudio as Set up, on the draft and publish actions, without today’s reads', async () => {
@@ -124,7 +131,7 @@ describe('the Store Chat routes under v16_dashboard', () => {
       'data-actions',
       'discardDraft,disconnectSiteAction,publishConfig,revertConfigAction,saveDraftSections,setMessengerEnabled',
     );
-    expect(screen.queryByTestId('todays-store-chat')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
     expect(listConversationsForSite).not.toHaveBeenCalled();
   });
 
@@ -136,14 +143,26 @@ describe('the Store Chat routes under v16_dashboard', () => {
     expect(within(tabs()!).queryByRole('link', { name: 'Set up' })).not.toBeInTheDocument();
   });
 
-  it('opens a linked tab of today’s page under Set up, so old links keep working', async () => {
-    render(await setup({ tab: 'behaviour' }));
-    expect(screen.getByTestId('todays-store-chat')).toHaveTextContent('behaviour');
-    cleanup();
+  it('redirects a link with today’s ?tab= to the page that replaced it, on either route, keeping the store', async () => {
+    await expect(setup({ tab: 'behaviour' })).rejects.toThrow('redirect:/dashboard/store-chat/setup');
+    await expect(knows({ tab: 'appearance', site: SITE.id })).rejects.toThrow(`redirect:/dashboard/store-chat/setup?site=${SITE.id}`);
+    await expect(knows({ tab: 'conversations', site: SITE.id })).rejects.toThrow(`redirect:/dashboard/inbox?site=${SITE.id}`);
+    await expect(knows({ tab: 'overview' })).rejects.toThrow('redirect:/dashboard/store-chat');
+    await expect(knows({ tab: 'installation' })).rejects.toThrow('redirect:/dashboard/store-chat/setup');
+    await expect(setup({ tab: 'behaviour', orders: 'connected' })).rejects.toThrow(
+      'redirect:/dashboard/store-chat/setup/more?section=behaviour&orders=connected',
+    );
+    // Nothing is read for a link that only redirects.
+    expect(listKnowledge).not.toHaveBeenCalled();
+  });
 
-    render(await knows({ tab: 'conversations' }));
-    expect(within(tabs()!).getByRole('link', { name: 'Set up' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByTestId('todays-store-chat')).toHaveTextContent('conversations');
+  it('never draws the old tab screens, whatever the link says', async () => {
+    for (const query of [{}, { tab: 'nope' }]) {
+      render(await knows(query));
+      expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
+      expect(tabs()).toBeInTheDocument();
+      cleanup();
+    }
   });
 
   it('says so when the knowledge cannot be read', async () => {
@@ -153,16 +172,32 @@ describe('the Store Chat routes under v16_dashboard', () => {
     expect(screen.getByRole('status')).toHaveTextContent("What the assistant knows couldn't load just now.");
   });
 
-  it('draws today’s page with no tabs on either route when the flag is off', async () => {
-    vi.mocked(storeFlags).mockResolvedValue([]);
-    render(await knows());
-    expect(tabs()).not.toBeInTheDocument();
-    expect(screen.getByTestId('todays-store-chat')).toHaveTextContent('overview');
-    expect(screen.getByText('Live')).toBeInTheDocument();
+  it('draws More settings under Set up, with only the editors Set up lacks, opening on the one asked for', async () => {
+    render(await more({ section: 'appearance' }));
+    expect(within(tabs()!).getByRole('link', { name: 'Set up' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Back to Set up' })).toHaveAttribute('href', '/dashboard/store-chat/setup');
+    expect(screen.getByTestId('more-settings')).toHaveAttribute('data-sections', 'appearance,behaviour');
+    expect(screen.getByTestId('more-settings')).toHaveTextContent('appearance');
     cleanup();
 
-    render(await setup());
-    expect(tabs()).not.toBeInTheDocument();
-    expect(screen.getByTestId('todays-store-chat')).toBeInTheDocument();
+    render(await more({ section: 'conversations' }));
+    expect(screen.getByTestId('more-settings')).toHaveTextContent('behaviour');
+    expect(listConversationsForSite).not.toHaveBeenCalled();
+  });
+
+  it('keeps More settings for owners and admins', async () => {
+    vi.mocked(listMessengerSites).mockResolvedValueOnce([]);
+    vi.mocked(listTeamSites).mockResolvedValueOnce([{ ...SITE, role: 'member' }] as never);
+    await expect(more()).rejects.toThrow('redirect:/dashboard/store-chat');
+  });
+
+  it('says another account owns the store, with the way to move it, instead of failing', async () => {
+    vi.mocked(shouldEnsureMessengerSite).mockReturnValueOnce(true);
+    vi.mocked(ensureMessengerSite).mockRejectedValueOnce(new StoreOwnedByAnotherAccountError('maison.myshopify.com'));
+    vi.mocked(redirect).mockClear();
+    render(await knows());
+    expect(screen.getByRole('heading', { name: 'This store’s Store Chat is on another account' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Get a linking code' })).toHaveAttribute('href', '/dashboard/try-on');
+    expect(vi.mocked(redirect)).not.toHaveBeenCalled();
   });
 });

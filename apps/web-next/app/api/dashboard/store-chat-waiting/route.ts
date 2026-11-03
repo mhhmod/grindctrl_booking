@@ -8,7 +8,7 @@ import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
    Client-side refresh for the sidebar badge. app/dashboard/layout.tsx only
    computes this once per full page load — Next.js reuses that layout's
    server render across client-side navigation between routes that share it
-   (see lib/dashboard/use-route-meta.ts) — so a merchant who clears the queue
+   (see V16Shell, which asks this route on every navigation) — so a merchant who clears the queue
    or gets a new handoff mid-session would otherwise see a stale number for
    the rest of the visit. Same helpers, same fail-quiet contract: a badge
    must never take the dashboard down. */

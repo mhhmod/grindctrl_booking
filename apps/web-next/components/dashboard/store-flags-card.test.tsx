@@ -1,10 +1,11 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ setStoreFlag: vi.fn() }));
 vi.mock('@/app/dashboard/flags/actions', () => ({ setStoreFlag: mocks.setStoreFlag }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { StoreFlagsCard } from './store-flags-card';
 
 const ROWS = [

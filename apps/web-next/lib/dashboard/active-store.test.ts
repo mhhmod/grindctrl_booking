@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  flagStoreOf,
   formatStoreChoice,
   parseStoreChoice,
   resolveActiveStore,
@@ -134,5 +135,13 @@ describe('resolveActiveStore', () => {
       shopDomain: null,
       siteId: null,
     });
+  });
+});
+
+describe('flagStoreOf', () => {
+  it('keys a store on its Shopify shop first, then its Store Chat site, and an empty account on nothing', () => {
+    expect(flagStoreOf({ shopDomain: 'alpha.myshopify.com', siteId: SITE_ALPHA })).toEqual({ shopDomain: 'alpha.myshopify.com' });
+    expect(flagStoreOf({ shopDomain: null, siteId: SITE_WEB })).toEqual({ widgetSiteId: SITE_WEB });
+    expect(flagStoreOf({ shopDomain: null, siteId: null })).toBeNull();
   });
 });

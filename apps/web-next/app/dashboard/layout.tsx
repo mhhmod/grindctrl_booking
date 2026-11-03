@@ -1,8 +1,6 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { DashboardShell } from '@/components/dashboard/dashboard-shell';
 import { MantineUiProvider } from '@/components/mantine/provider';
-import { resolveDashboardNavItems } from '@/lib/dashboard/nav-config';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
@@ -10,10 +8,10 @@ import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 import { countAwaitingHandoff } from '@/lib/messenger/conversations';
 import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
-import { getActiveStore, getActiveStoreRole } from '@/lib/dashboard/active-store-server';
+import { getActiveStore, getActiveStoreRole, storeLookupFailed } from '@/lib/dashboard/active-store-server';
 import { getV16ShellData } from '@/lib/dashboard/shell-data';
-import { storeFlags } from '@/lib/flags/store-flags';
 import { V16Shell } from '@/components/dashboard/v16/v16-shell';
+import { V16StoreLookupFailed } from '@/components/dashboard/v16/states';
 import { acceptInvitesForSignedIn } from '@/lib/team/accept';
 import { listTeamMemberships } from '@/lib/rbac/store-role';
 
@@ -59,40 +57,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }
   }
 
-  /* The v16 shell for every store (v16_dashboard is always on); a person
-     with no store yet keeps today's shell until they connect one. */
-  const flagStore = activeStore.shopDomain
-    ? { shopDomain: activeStore.shopDomain }
-    : activeStore.siteId
-      ? { widgetSiteId: activeStore.siteId }
-      : null;
-  const features = flagStore ? await storeFlags(flagStore) : [];
-  if (features.includes('v16_dashboard')) {
-    const shell = await getV16ShellData({ activeStore, locale, role });
-    return (
-      <MantineUiProvider dir={getDir(locale)}>
-        <div dir={getDir(locale)} lang={locale}>
-          <V16Shell locale={locale} permissions={permissions} waitingCount={awaitingHandoff} {...shell}>
-            {children}
-          </V16Shell>
-        </div>
-      </MantineUiProvider>
-    );
-  }
-
-  const navItems = resolveDashboardNavItems({
-    pathname,
-    permissions,
-    locale,
-    badges: { '/dashboard/store-chat': awaitingHandoff },
-  });
-
+  /* One shell for everyone. A person with no store yet gets the same shell
+     and a page that says how to connect one; stores that could not be read
+     get a retry in place of the page, never the empty-account screens. */
+  const [shell, lookupFailed] = await Promise.all([
+    getV16ShellData({ activeStore, locale, role }),
+    storeLookupFailed(),
+  ]);
   return (
     <MantineUiProvider dir={getDir(locale)}>
       <div dir={getDir(locale)} lang={locale}>
-        <DashboardShell locale={locale} navItems={navItems}>
-          {children}
-        </DashboardShell>
+        <V16Shell
+          locale={locale}
+          permissions={permissions}
+          hasShopify={Boolean(activeStore.shopDomain)}
+          waitingCount={awaitingHandoff}
+          {...shell}
+        >
+          {lookupFailed ? <V16StoreLookupFailed locale={locale} /> : children}
+        </V16Shell>
       </div>
     </MantineUiProvider>
   );

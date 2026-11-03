@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/nextjs';
-import { Button } from '@/components/ui/button';
+import { Button } from '@mantine/core';
+import { V16Notice, V16NoticeNote } from '@/components/dashboard/v16/notice';
 import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 /* Segment error boundary for /claim — see app/dashboard/error.tsx, which this
@@ -65,26 +66,20 @@ export default function ClaimError({
   const t = COPY[locale];
 
   return (
-    <section
-      dir={locale === 'ar' ? 'rtl' : 'ltr'}
-      lang={locale}
-      className="grid min-w-0 place-items-center px-4 py-16"
-    >
-      <div className="grid max-w-md gap-3 text-center">
-        <h1 className="text-lg font-semibold">{t.title}</h1>
-        <p className="text-sm text-muted-foreground">{t.body}</p>
-        <div className="mt-1 flex justify-center">
-          <Button onClick={reset}>{t.retry}</Button>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">{t.fallback}</p>
+    <section dir={locale === 'ar' ? 'rtl' : 'ltr'} lang={locale} className="grid min-w-0 place-items-center px-4 py-16">
+      <V16Notice title={t.title} body={t.body}>
+        <Button radius="pill" h={44} onClick={reset}>
+          {t.retry}
+        </Button>
+        <V16NoticeNote>{t.fallback}</V16NoticeNote>
         {/* The digest is the only handle connecting what the merchant saw to
             the server log line, since production omits the real message. */}
         {error.digest && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t.reference}: <code className="font-mono">{error.digest}</code>
-          </p>
+          <V16NoticeNote>
+            {t.reference}: <code>{error.digest}</code>
+          </V16NoticeNote>
         )}
-      </div>
+      </V16Notice>
     </section>
   );
 }

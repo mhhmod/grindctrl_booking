@@ -51,7 +51,7 @@ describe('V16Team', () => {
   it('says who gets email alerts, with a way to change it in Store Chat', () => {
     renderTeam();
     expect(screen.getByText('Email alerts go to hana@maisonnoor.com when a shopper needs a person.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Change in Store Chat' })).toHaveAttribute('href', '/dashboard/store-chat/setup?tab=behaviour');
+    expect(screen.getByRole('link', { name: 'Change in Store Chat' })).toHaveAttribute('href', '/dashboard/store-chat/setup');
   });
 
   it('states the opening hours and what happens outside them', () => {
@@ -59,7 +59,7 @@ describe('V16Team', () => {
     const hours = screen.getByRole('region', { name: 'Opening hours' });
     expect(hours).toHaveTextContent('Friday 2 pm to 10 pm, Cairo time.');
     expect(hours).toHaveTextContent('Outside your opening hours nobody is alerted.');
-    expect(within(hours).getByRole('link', { name: 'Change' })).toHaveAttribute('href', '/dashboard/store-chat/setup?tab=behaviour');
+    expect(within(hours).getByRole('link', { name: 'Change' })).toHaveAttribute('href', '/dashboard/store-chat/setup/more?section=behaviour');
   });
 
   it('offers to open Store Chat when the store has none, with no hours', () => {

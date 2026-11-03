@@ -21,8 +21,8 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
    of failing loudly. Reporting reduced-motion as true here is deliberate,
    not just a safe default: it exercises the same "motion stops, content
    stays readable" path real users with the OS setting on hit, keeps tests
-   deterministic, and matches dashboard-shell.test.tsx's existing per-file
-   matchMedia mock, which still overrides this for its own tests. */
+   deterministic. A test file that needs another answer sets its own
+   matchMedia mock, which overrides this. */
 if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,

@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   active: vi.fn(),
   role: vi.fn(),
   timeZone: vi.fn(),
-  flags: vi.fn(),
+  shops: vi.fn(),
   locale: vi.fn(),
   facts: vi.fn(),
   currencyCookie: undefined as string | undefined,
@@ -28,8 +28,15 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStore: mocks.active,
   getActiveStoreRole: mocks.role,
   getActiveStoreTimeZone: mocks.timeZone,
+  listDashboardShops: mocks.shops,
 }));
-vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
+vi.mock('@/components/dashboard/v16/states', () => ({
+  V16NeedsShopify: ({ feature, shops }: { feature: string; shops: Array<{ domain: string }> }) => (
+    <div data-testid="needs-shopify">
+      {feature}:{shops.map((shop) => shop.domain).join(',')}
+    </div>
+  ),
+}));
 vi.mock('@/lib/dashboard/plan-data', () => ({ getPlanFacts: mocks.facts }));
 vi.mock('@/components/dashboard/v16/plan/v16-plan', () => ({
   V16Plan: ({ view, locale }: { view: { headline: { left: string } }; locale: string }) => (
@@ -52,7 +59,7 @@ beforeEach(() => {
   mocks.active.mockResolvedValue({ shopDomain: SHOP, siteId: 'site_1' });
   mocks.role.mockResolvedValue('owner');
   mocks.timeZone.mockResolvedValue('Africa/Cairo');
-  mocks.flags.mockResolvedValue(['v16_dashboard']);
+  mocks.shops.mockResolvedValue([]);
   mocks.locale.mockResolvedValue('en');
   mocks.facts.mockResolvedValue({
     now: NOW,
@@ -78,7 +85,6 @@ describe('DashboardPlanPage', () => {
   it('shows the owner the plan of the active store, in the store’s time zone', async () => {
     render(await DashboardPlanPage());
     expect(mocks.user).toHaveBeenCalledWith('/dashboard/plan');
-    expect(mocks.flags).toHaveBeenCalledWith({ shopDomain: SHOP });
     expect(mocks.facts).toHaveBeenCalledWith({ shop: SHOP, timeZone: 'Africa/Cairo', currency: 'USD' });
     expect(screen.getByTestId('v16-plan')).toHaveTextContent('en:150 left');
   });
@@ -92,12 +98,26 @@ describe('DashboardPlanPage', () => {
     expect(mocks.facts).toHaveBeenLastCalledWith(expect.objectContaining({ currency: 'USD' }));
   });
 
-  it('sends a store without the flag, or without a shop, to its plan on Try-On', async () => {
-    mocks.flags.mockResolvedValue([]);
-    await expect(DashboardPlanPage()).rejects.toThrow('redirect:/dashboard/try-on');
+  it('tells a Store Chat site on another website to connect a Shopify store, and offers the one it has', async () => {
     mocks.active.mockResolvedValue({ shopDomain: null, siteId: 'site_1' });
-    await expect(DashboardPlanPage()).rejects.toThrow('redirect:/dashboard/try-on');
+    mocks.shops.mockResolvedValue([{ domain: 'second.myshopify.com', status: 'installed', lastSeenAt: '2026-10-01T00:00:00Z' }]);
+    render(await DashboardPlanPage());
+    expect(screen.getByTestId('needs-shopify')).toHaveTextContent('plan:second.myshopify.com');
     expect(mocks.facts).not.toHaveBeenCalled();
+  });
+
+  it('tells a new account with no store the same, and survives a failed shop list', async () => {
+    mocks.active.mockResolvedValue({ shopDomain: null, siteId: null });
+    mocks.shops.mockRejectedValue(new Error('db down'));
+    render(await DashboardPlanPage());
+    expect(screen.getByTestId('needs-shopify')).toHaveTextContent('plan:');
+    expect(mocks.facts).not.toHaveBeenCalled();
+  });
+
+  it('still sends a member of a store with no shop to Today', async () => {
+    mocks.active.mockResolvedValue({ shopDomain: null, siteId: 'site_1' });
+    mocks.role.mockResolvedValue('member');
+    await expect(DashboardPlanPage()).rejects.toThrow('redirect:/dashboard');
   });
 
   it.each(['admin', 'member'] as const)('sends an %s to Today on the server, without reading the plan', async (role) => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /* The "Claim this store" button used to swallow every outcome silently
@@ -23,14 +23,15 @@ const ensureShopTokenMock = vi.fn();
 vi.mock('@/components/shopify/ensure-shop-token', () => ({
   ensureShopToken: (...args: unknown[]) => ensureShopTokenMock(...args),
 }));
-vi.mock('@/components/shopify/admin-settings', () => ({ ShopifyAdminSettings: () => null }));
-vi.mock('@/components/shopify/store-chat-embedded', () => ({ StoreChatEmbedded: () => null }));
+vi.mock('@/components/shopify/admin-settings', () => ({ ShopifyAdminSettings: () => <div data-testid="try-on-page" /> }));
+vi.mock('@/components/shopify/store-chat-embedded', () => ({ StoreChatEmbedded: () => <div data-testid="store-chat-page" /> }));
 vi.mock('@/components/shopify/plans', () => ({
   ShopifyPlans: ({ locale, appPricing }: { locale: string; appPricing: { distribution: string } | null }) => (
     <div data-testid="plans-page">{locale}:{appPricing?.distribution ?? 'unavailable'}</div>
   ),
 }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { ShopifyAppShell } from './app-shell';
 
 const claimExplanation = 'Opens grindctrl.cloud to sign in and manage full settings in your dashboard; Store Chat keeps working in Shopify admin either way.';
@@ -166,11 +167,43 @@ describe('ShopifyAppShell claim/token bootstrap ordering', () => {
     let resolveBootstrap: (value: unknown) => void = () => {};
     ensureShopTokenMock.mockReturnValue(new Promise((resolve) => { resolveBootstrap = resolve; }));
     render(<ShopifyAppShell locale={locale} />);
-    fireEvent.click(screen.getByRole('button', { name: label }));
+    fireEvent.click(screen.getByRole('tab', { name: label }));
     expect(screen.queryByTestId('plans-page')).not.toBeInTheDocument();
     await act(async () => {
       resolveBootstrap({ ok: true, appClientId: 'public-app', appPricing: { distribution: 'public', pricingPlansUrl: null, plans: [] } });
     });
     expect(await screen.findByTestId('plans-page')).toHaveTextContent(`${locale}:public`);
+  });
+});
+
+/* Every tab sits inside the one Mantine tree the page mounts, so each is a
+   Mantine tab with its own panel, not only Plans. */
+describe('ShopifyAppShell tabs', () => {
+  beforeEach(() => {
+    ensureShopTokenMock.mockResolvedValue({ ok: true, appClientId: 'public-app', appPricing: { distribution: 'public', pricingPlansUrl: null, plans: [] } });
+  });
+  afterEach(() => vi.clearAllMocks());
+
+  it.each([
+    ['en', ['Try-On', 'Store Chat', 'Plans']],
+    ['ar', ['التجربة الافتراضية', 'دردشة المتجر', 'الباقات']],
+  ] as const)('opens each section in its own panel in %s, starting on Try-On', async (locale, names) => {
+    render(<ShopifyAppShell locale={locale} />);
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(names);
+    expect(await screen.findByTestId('try-on-page')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: names[0] })).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.click(screen.getByRole('tab', { name: names[1] }));
+    expect(await screen.findByTestId('store-chat-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('try-on-page')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: names[2] }));
+    expect(await screen.findByTestId('plans-page')).toHaveTextContent(`${locale}:public`);
+    expect(screen.getByRole('tabpanel')).toContainElement(screen.getByTestId('plans-page'));
+  });
+
+  it('keeps the theme switch a labelled 44px control', () => {
+    render(<ShopifyAppShell locale="en" />);
+    expect(screen.getByRole('button', { name: 'Switch between light and dark' })).toBeInTheDocument();
   });
 });

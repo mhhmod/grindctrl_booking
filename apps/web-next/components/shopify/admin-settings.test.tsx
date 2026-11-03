@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TryOnWidgetSettings } from '@/components/try-on/settings-controls';
 
@@ -8,14 +8,21 @@ const mocks = vi.hoisted(() => ({ getShopifySessionToken: vi.fn() }));
 vi.mock('@/lib/shopify/app-bridge-client', () => ({
   getShopifySessionToken: mocks.getShopifySessionToken,
 }));
-vi.mock('@/components/try-on/settings-controls', () => ({
-  TryOnSettingsControls: () => <div data-testid="settings-controls" />,
+/* The editor has its own tests (v16-tryon-studio.test.tsx); here only what the
+   Shopify tab hands it and how it saves. */
+const studio = vi.hoisted(() => ({ props: null as null | { shop: string; saveSettings: (form: FormData) => Promise<unknown> } }));
+vi.mock('@/components/dashboard/v16/try-on/v16-tryon-studio', () => ({
+  V16TryOnStudio: (props: { shop: string; saveSettings: (form: FormData) => Promise<unknown> }) => {
+    studio.props = props;
+    return <div data-testid="tryon-studio">{props.shop}</div>;
+  },
 }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { ShopifyAdminSettings } from './admin-settings';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 
-const settings = {} as TryOnWidgetSettings;
+const settings = { buttonLabel: 'Try it on' } as TryOnWidgetSettings;
 const c = getSettingsFormCopy('en');
 
 function response(body: unknown, ok = true) {
@@ -130,5 +137,63 @@ describe('ShopifyAdminSettings shop linking', () => {
     expect(await screen.findByText(ar.shopLinkTitle)).toBeInTheDocument();
     expect(screen.getByLabelText(ar.shopLinkCodeLabel)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: ar.linkShop })).toBeInTheDocument();
+  });
+});
+
+describe('ShopifyAdminSettings editor', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    mocks.getShopifySessionToken.mockResolvedValue('verified-session-token');
+    vi.stubGlobal('fetch', vi.fn());
+    studio.props = null;
+  });
+
+  it('hands the shop and its settings to the Set up editor, under the two theme links', async () => {
+    mockSettingsLoad(true);
+    render(<ShopifyAdminSettings locale="en" />);
+
+    expect(await screen.findByTestId('tryon-studio')).toHaveTextContent('real-shop.myshopify.com');
+    expect(screen.getByRole('link', { name: 'Add to product page' })).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'Enable catalog try-on' })).toHaveAttribute('target', '_blank');
+  });
+
+  it('saves through the session-token API, in the API’s own shape', async () => {
+    mockSettingsLoad(true);
+    vi.mocked(fetch).mockResolvedValueOnce(response({ ok: true }));
+    render(<ShopifyAdminSettings locale="en" />);
+    await screen.findByTestId('tryon-studio');
+
+    const form = new FormData();
+    form.set('button_label', 'Try it');
+    form.set('show_download', 'on');
+    form.set('loading_steps', 'One\nTwo');
+    await expect(studio.props!.saveSettings(form)).resolves.toEqual({ ok: true });
+
+    const [url, init] = vi.mocked(fetch).mock.lastCall!;
+    expect(url).toBe('/api/shopify/admin/settings');
+    expect(init?.method).toBe('POST');
+    expect(init?.headers).toEqual({ Authorization: 'Bearer verified-session-token', 'Content-Type': 'application/json' });
+    expect(JSON.parse(String(init?.body))).toMatchObject({ buttonLabel: 'Try it', showDownload: true, showTryAgain: false, loadingSteps: ['One', 'Two'] });
+  });
+
+  it('reports a refused or rate-limited save to the editor instead of saying it saved', async () => {
+    mockSettingsLoad(true);
+    vi.mocked(fetch)
+      .mockResolvedValueOnce({ ok: false, status: 429, headers: new Headers({ 'Retry-After': '9' }) } as unknown as Response)
+      .mockRejectedValueOnce(new Error('offline'));
+    render(<ShopifyAdminSettings locale="en" />);
+    await screen.findByTestId('tryon-studio');
+
+    await expect(studio.props!.saveSettings(new FormData())).resolves.toMatchObject({ ok: false, code: 'rate_limited', retryAfterSeconds: 9 });
+    await expect(studio.props!.saveSettings(new FormData())).resolves.toMatchObject({ ok: false, code: 'unavailable' });
+  });
+
+  it.each([
+    ['en', 'Could not load settings. Open this page from your Shopify admin.'],
+    ['ar', 'تعذّر تحميل الإعدادات. افتح هذه الصفحة من لوحة تحكم Shopify.'],
+  ] as const)('says so, in %s, when the settings cannot be read', async (locale, message) => {
+    vi.mocked(fetch).mockResolvedValueOnce(response({}, false));
+    render(<ShopifyAdminSettings locale={locale} />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
   });
 });

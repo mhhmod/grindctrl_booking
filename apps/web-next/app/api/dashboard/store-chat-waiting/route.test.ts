@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /* GET /api/dashboard/store-chat-waiting is the client-side refresh for the
    sidebar badge — app/dashboard/layout.tsx only computes the count once per
-   full page load (see lib/dashboard/use-route-meta.ts for why a shared
-   layout's server render goes stale across navigation). Same fail-quiet
+   full page load (a shared layout's server render goes stale across
+   navigation, which V16Shell works around by asking this route). Same fail-quiet
    contract as the layout's own computation: a badge must never take the
    dashboard down. */
 

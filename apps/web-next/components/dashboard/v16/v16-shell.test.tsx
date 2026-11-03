@@ -79,6 +79,23 @@ describe('V16Shell', () => {
     expect(screen.queryByText('Looks this cycle') !== null).toBe(owner);
   });
 
+  /* Plan belongs to a Shopify store: a Store Chat site on another website,
+     or an account with no store yet, has none to open. Try-On stays, since
+     it is where a Shopify store gets connected, and nothing is hidden on
+     phones that desktop shows. */
+  it('leaves Plan out of the sidebar and the phone tabs when the active store is not a Shopify store', () => {
+    render(<V16Shell {...props({ hasShopify: false })} />);
+    const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
+    expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Settings']);
+    expect(within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Chat']);
+  });
+
+  it('shows the shell, with no stores to switch between, to an account with none', () => {
+    render(<V16Shell {...props({ stores: [], meter: null, hasShopify: false })} />);
+    expect(screen.getByTestId('v16-shell')).toHaveTextContent('Page body');
+    expect(screen.queryByRole('button', { name: /Switch store/ })).not.toBeInTheDocument();
+  });
+
   it('puts Settings in the phone menu for those who may see it', () => {
     render(<V16Shell {...props()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Menu' }));

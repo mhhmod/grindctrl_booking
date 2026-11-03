@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { setStoreFlag } from '@/app/dashboard/flags/actions';
 import { setLaunchStateAsOperator } from '@/app/dashboard/try-on/launch-actions';
 
@@ -60,48 +59,54 @@ export function StoreFlagsCard({
   }
 
   return (
-    <Card lang="en" dir="ltr" data-testid="store-flags-card">
-      <CardHeader>
-        <CardTitle>Store flags</CardTitle>
-        <CardDescription>
-          Operator only. A v16 feature reaches {storeLabel} only while its flag is on.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <ul className="divide-y rounded-lg border">
+    <Paper withBorder radius="card" p="lg" lang="en" dir="ltr" data-testid="store-flags-card">
+      <Stack gap="md">
+        <Stack gap={4}>
+          <Title order={2} size="h4">Store flags</Title>
+          <Text size="sm" c="dimmed">
+            Operator only. A v16 feature reaches {storeLabel} only while its flag is on.
+          </Text>
+        </Stack>
+        <Stack component="ul" gap="xs" m={0} p={0} style={{ listStyle: 'none' }}>
           {rows.map((row) => {
             const on = enabled.has(row.flag);
             return (
-              <li key={row.flag} className="flex flex-wrap items-center justify-between gap-3 p-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">
-                    {row.code}, {row.title}
-                  </p>
-                  <p className="font-mono text-xs text-muted-foreground">{row.flag}</p>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={on ? 'default' : 'outline'}
-                  aria-pressed={on}
-                  disabled={pending}
-                  onClick={() => toggle(row.flag)}
-                >
-                  {on ? 'On' : 'Off'}
-                </Button>
-              </li>
+              <Paper component="li" key={row.flag} withBorder radius="md" p="sm">
+                <Group justify="space-between" gap="sm" wrap="wrap">
+                  <div style={{ minWidth: 0 }}>
+                    <Text size="sm" fw={500}>
+                      {row.code}, {row.title}
+                    </Text>
+                    <Text size="xs" c="dimmed" ff="monospace">{row.flag}</Text>
+                  </div>
+                  <Button
+                    type="button"
+                    size="compact-md"
+                    h={44}
+                    radius="pill"
+                    variant={on ? 'filled' : 'default'}
+                    aria-pressed={on}
+                    disabled={pending}
+                    onClick={() => toggle(row.flag)}
+                  >
+                    {on ? 'On' : 'Off'}
+                  </Button>
+                </Group>
+              </Paper>
             );
           })}
-        </ul>
+        </Stack>
         {kind === 'shop' && launch !== undefined && (
-          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Launch state">
-            <span className="text-sm font-medium text-foreground">Launch state</span>
+          <Group gap="xs" role="group" aria-label="Launch state">
+            <Text size="sm" fw={500}>Launch state</Text>
             {LAUNCH_STATES.map((state) => (
               <Button
                 key={state}
                 type="button"
-                size="sm"
-                variant={launch === state ? 'default' : 'outline'}
+                size="compact-md"
+                h={44}
+                radius="pill"
+                variant={launch === state ? 'filled' : 'default'}
                 aria-pressed={launch === state}
                 disabled={pending}
                 onClick={() => setState(state)}
@@ -109,14 +114,14 @@ export function StoreFlagsCard({
                 {state}
               </Button>
             ))}
-          </div>
+          </Group>
         )}
         {error && (
-          <p className="text-sm text-destructive" role="alert">
+          <Text size="sm" c="danger" role="alert">
             {error}
-          </p>
+          </Text>
         )}
-      </CardContent>
-    </Card>
+      </Stack>
+    </Paper>
   );
 }

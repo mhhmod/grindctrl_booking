@@ -4,6 +4,7 @@ import {
   buildShellStores,
   looksMeterView,
   shellRole,
+  shopChoices,
   storeInitials,
   storeSwitchHref,
   todayHeading,
@@ -143,5 +144,15 @@ describe('shell copy', () => {
     const text = JSON.stringify(copy) + [copy.looksLeft(1, 2), copy.freeLooksLeft(1, 2), copy.switchStore('X'), copy.waiting(3)].join(' ');
     expect(text).not.toContain('—');
     expect(text).not.toMatch(/[٠-٩۰-۹]/);
+  });
+});
+
+describe('shopChoices', () => {
+  it('names each shop by its address, the way the switcher does for a shop without a Store Chat site', () => {
+    expect(shopChoices(shops)).toEqual([
+      { domain: 'maison-noor.myshopify.com', label: 'maison-noor' },
+      { domain: 'kids.myshopify.com', label: 'kids' },
+    ]);
+    expect(shopChoices([])).toEqual([]);
   });
 });

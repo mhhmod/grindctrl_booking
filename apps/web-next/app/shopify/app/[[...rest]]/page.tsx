@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { MantineUiProvider } from '@/components/mantine/provider';
 import { ShopifyAppShell } from '@/components/shopify/app-shell';
 import { resolveEmbeddedClientId } from '@/lib/shopify/embedded-entry';
 import { DEFAULT_TRYON_LOCALE, getDir, isTryOnLocale, type TryOnLocale } from '@/lib/try-on/i18n';
@@ -9,8 +10,14 @@ export const metadata: Metadata = {
 };
 
 /* Embedded Shopify admin (Next.js): App Bridge script + session-token
-   authenticated app shell, with Try-On and Store Chat as separate tabs
-   under one GRINDCTRL header. */
+   authenticated app shell, with Try-On, Store Chat and Plans as tabs under
+   one GRINDCTRL header. The Mantine provider wraps the whole page, so the
+   brand's colours, font and direction are there on every tab.
+
+   The App Bridge script stays a plain sync script at the top of the page:
+   Shopify wants it first in <head>, but next/script's beforeInteractive only
+   works in the root layout, and moving this one route under its own root
+   layout would mean restructuring every other route. */
 export default async function ShopifyAdminPage({
   searchParams, params: routeParams,
 }: {
@@ -34,9 +41,11 @@ export default async function ShopifyAdminPage({
           next/script beforeInteractive only works in the root layout. */}
       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
       <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js" />
-      <main dir={getDir(locale)} lang={locale} className="min-h-dvh bg-background text-foreground">
-        <ShopifyAppShell locale={locale} />
-      </main>
+      <MantineUiProvider dir={getDir(locale)}>
+        <main dir={getDir(locale)} lang={locale} className="min-h-dvh bg-background text-foreground">
+          <ShopifyAppShell locale={locale} />
+        </main>
+      </MantineUiProvider>
     </>
   );
 }

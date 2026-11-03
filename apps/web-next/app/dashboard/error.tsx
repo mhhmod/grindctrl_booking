@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/nextjs';
-import { Button } from '@/components/ui/button';
+import { Button } from '@mantine/core';
+import { V16Notice, V16NoticeNote } from '@/components/dashboard/v16/notice';
+import { getStatesCopy } from '@/lib/dashboard/states-copy';
 import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing/landing-i18n';
 
 /* Segment error boundary for the whole dashboard.
@@ -17,21 +19,6 @@ import { SITE_LOCALE_COOKIE, isSiteLocale, type SiteLocale } from '@/lib/landing
  * the retry — which matters because most failures here are transient (a lost
  * race, a slow query, a provider blip) and reset() re-renders the segment
  * server-side rather than reloading the app. */
-
-const COPY = {
-  en: {
-    title: 'This page did not load',
-    body: 'Something went wrong on our side. Trying again usually works. The problem is often momentary.',
-    retry: 'Try again',
-    reference: 'Reference',
-  },
-  ar: {
-    title: 'تعذّر تحميل هذه الصفحة',
-    body: 'حدث خطأ من جانبنا. إعادة المحاولة تنجح عادةً، فالمشكلة غالباً مؤقتة.',
-    retry: 'إعادة المحاولة',
-    reference: 'الرقم المرجعي',
-  },
-} as const;
 
 function readLocale(): SiteLocale {
   if (typeof document === 'undefined') return 'en';
@@ -60,28 +47,20 @@ export default function DashboardError({
     Sentry.captureException(error);
   }, [error]);
 
-  const t = COPY[locale];
+  const t = getStatesCopy(locale).error;
 
   return (
-    <section
-      dir={locale === 'ar' ? 'rtl' : 'ltr'}
-      lang={locale}
-      className="grid min-w-0 place-items-center px-4 py-16"
-    >
-      <div className="grid max-w-md gap-3 text-center">
-        <h1 className="text-lg font-semibold">{t.title}</h1>
-        <p className="text-sm text-muted-foreground">{t.body}</p>
-        <div className="mt-1 flex justify-center">
-          <Button onClick={reset}>{t.retry}</Button>
-        </div>
-        {/* The digest is the only handle connecting what the merchant saw to
-            the server log line, since production omits the real message. */}
-        {error.digest && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {t.reference}: <code className="font-mono">{error.digest}</code>
-          </p>
-        )}
-      </div>
-    </section>
+    <V16Notice title={t.title} body={t.body}>
+      <Button radius="pill" h={44} onClick={reset}>
+        {t.retry}
+      </Button>
+      {/* The digest is the only handle connecting what the merchant saw to
+          the server log line, since production omits the real message. */}
+      {error.digest && (
+        <V16NoticeNote>
+          {t.reference}: <code>{error.digest}</code>
+        </V16NoticeNote>
+      )}
+    </V16Notice>
   );
 }

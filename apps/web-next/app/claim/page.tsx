@@ -1,6 +1,6 @@
 import React from 'react';
-import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
+import { ClaimMessage } from '@/components/claim/claim-message';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { ensureMessengerSite } from '@/lib/messenger/provisioning';
@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 const COPY = {
   en: {
     successTitle: "You're connected",
-    successBody: 'Start with Behaviour to set how chat works, then AI & Knowledge to guide replies. Review customer chats in Conversations. Your changes stay invisible to shoppers until you press Publish to your store.',
+    successBody: 'Open Set up to choose how chat looks and works, and What it knows to teach it your store. Answer shoppers in Inbox. Your changes stay invisible to shoppers until you publish them.',
     goToDashboard: 'Go to dashboard',
     expiredTitle: 'This link has expired',
     expiredBody: 'Reopen GRINDCTRL from your Shopify admin and choose "Claim this store" again.',
@@ -51,7 +51,7 @@ const COPY = {
   },
   ar: {
     successTitle: 'متجرك متصل الآن',
-    successBody: 'ابدأ بتبويب السلوك لضبط الدردشة، ثم الذكاء والمعرفة لتوجيه الردود. راجع دردشات العملاء في المحادثات. لن تظهر تغييراتك للعملاء حتى تضغط على انشر على متجرك.',
+    successBody: 'افتح الإعداد لاختيار شكل الدردشة وطريقة عملها، وما يعرفه ليتعلم عن متجرك. أجب عن المتسوقين من الرسائل. لن تظهر تغييراتك للمتسوقين حتى تنشرها.',
     goToDashboard: 'الانتقال إلى لوحة التحكم',
     expiredTitle: 'انتهت صلاحية هذا الرابط',
     expiredBody: 'أعد فتح GRINDCTRL من لوحة تحكم Shopify واختر "المطالبة بهذا المتجر" مرة أخرى.',
@@ -67,47 +67,6 @@ const COPY = {
   },
 } as const;
 
-function MessagePage({
-  locale,
-  title,
-  body,
-  actions,
-}: {
-  locale: 'en' | 'ar';
-  title: string;
-  body: string;
-  /** Real, working next steps — never a fabricated contact link. */
-  actions?: Array<{ label: string; href: string }>;
-}) {
-  return (
-    <section dir={locale === 'ar' ? 'rtl' : 'ltr'} lang={locale} className="grid min-w-0 place-items-center px-4 py-16">
-      <div className="grid max-w-md gap-4 text-center">
-        <div className="grid gap-2">
-          <h1 className="text-lg font-semibold">{title}</h1>
-          <p className="text-sm text-muted-foreground">{body}</p>
-        </div>
-        {actions && actions.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {actions.map((action, i) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={
-                  i === 0
-                    ? 'rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90'
-                    : 'text-sm font-medium text-foreground underline underline-offset-4 hover:no-underline'
-                }
-              >
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 export default async function ClaimPage({
   searchParams,
 }: {
@@ -121,7 +80,7 @@ export default async function ClaimPage({
   // Claim redemption uses the independent GRINDCTRL key.
   const claim = verifyClaimToken(coreCapabilitySecret() ?? '', token);
   if (!claim) {
-    return <MessagePage locale={locale} title={copy.expiredTitle} body={copy.expiredBody} />;
+    return <ClaimMessage locale={locale} title={copy.expiredTitle} body={copy.expiredBody} />;
   }
 
   const userId = await requireDashboardUser(`/claim?token=${encodeURIComponent(token)}`);
@@ -137,7 +96,7 @@ export default async function ClaimPage({
        not necessarily a real mismatch, so it gets its own retry-first
        messaging instead of being folded into the "not you" case below. */
     return (
-      <MessagePage
+      <ClaimMessage
         locale={locale}
         title={copy.notReadyTitle}
         body={copy.notReadyBody}
@@ -147,7 +106,7 @@ export default async function ClaimPage({
   }
   if (!merchantEmail || ownerEmail.toLowerCase() !== merchantEmail.toLowerCase()) {
     return (
-      <MessagePage locale={locale} title={copy.ownerTitle} body={copy.ownerBody} actions={[manualConnectAction]} />
+      <ClaimMessage locale={locale} title={copy.ownerTitle} body={copy.ownerBody} actions={[manualConnectAction]} />
     );
   }
 
@@ -155,13 +114,13 @@ export default async function ClaimPage({
     await ensureMessengerSite(userId, claim.shop, claim.shop);
   } catch (error) {
     if (error instanceof StoreOwnedByAnotherAccountError) {
-      return <MessagePage locale={locale} title={copy.takenTitle} body={copy.takenBody} />;
+      return <ClaimMessage locale={locale} title={copy.takenTitle} body={copy.takenBody} />;
     }
     throw error;
   }
 
   return (
-    <MessagePage
+    <ClaimMessage
       locale={locale}
       title={copy.successTitle}
       body={copy.successBody}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, Stack, Text } from '@mantine/core';
 import { generateShopLinkCode } from '@/app/dashboard/connect-shop/actions';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 import type { ShopLinkCode } from '@/lib/shopify/shop-links';
@@ -52,8 +52,15 @@ export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLoc
 
   if (!linkCode) {
     return (
-      <div className="grid justify-items-start gap-2">
-        <Button type="button" size="sm" onClick={() => void generate()} disabled={status === 'generating'}>
+      <Stack gap="xs" align="flex-start">
+        <Button
+          type="button"
+          radius="pill"
+          h={44}
+          onClick={() => void generate()}
+          loading={status === 'generating'}
+          loaderProps={{ 'aria-hidden': true }}
+        >
           {status === 'generating'
             ? c.generatingShopLinkCode
             : hasShops
@@ -61,48 +68,56 @@ export function ConnectShopPanel({ locale, hasShops = false }: { locale: SiteLoc
               : c.connectStore}
         </Button>
         {status === 'error' && (
-          <p className="text-sm text-destructive" role="alert">
+          <Text size="sm" c="danger" role="alert">
             {c.shopLinkCodeFailed}
-          </p>
+          </Text>
         )}
-      </div>
+      </Stack>
     );
   }
 
   return (
-    <div className="grid min-w-0 justify-items-start gap-3">
-      <div className="grid gap-1">
-        <span className="text-xs font-medium text-muted-foreground">{c.shopLinkCodeLabel}</span>
-        <output
+    <Stack gap="sm" align="flex-start" style={{ minWidth: 0 }}>
+      <Stack gap={4}>
+        <Text size="xs" fw={600} c="dimmed">
+          {c.shopLinkCodeLabel}
+        </Text>
+        <Text
+          component="output"
           aria-label={c.shopLinkCodeLabel}
-          className="max-w-full font-mono text-2xl font-semibold tracking-[0.16em] text-foreground sm:text-3xl"
           dir="ltr"
+          ff="monospace"
+          fw={600}
+          fz={{ base: 24, sm: 30 }}
+          style={{ letterSpacing: '0.16em', maxWidth: '100%' }}
         >
           {formatCode(linkCode.code)}
-        </output>
-      </div>
-      <p className="max-w-prose text-sm text-muted-foreground">
+        </Text>
+      </Stack>
+      <Text size="sm" c="dimmed" maw="65ch">
         {c.connectStoreInstructions}
-      </p>
-      <p className="font-mono text-sm tabular-nums text-muted-foreground" role="status">
+      </Text>
+      <Text size="sm" c="dimmed" ff="monospace" role="status" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {c.shopLinkExpiresIn(formatCountdown(remaining))}
-      </p>
+      </Text>
       {remaining === 0 && (
         <Button
           type="button"
-          size="sm"
-          variant="outline"
+          variant="default"
+          radius="pill"
+          h={44}
           onClick={() => void generate()}
-          disabled={status === 'generating'}
+          loading={status === 'generating'}
+          loaderProps={{ 'aria-hidden': true }}
         >
           {status === 'generating' ? c.generatingShopLinkCode : c.generateNewShopLinkCode}
         </Button>
       )}
       {status === 'error' && (
-        <p className="text-sm text-destructive" role="alert">
+        <Text size="sm" c="danger" role="alert">
           {c.shopLinkCodeFailed}
-        </p>
+        </Text>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -31,6 +31,27 @@ export const listDashboardSites = cache(async () => {
   return userId ? listMessengerSitesReadOnly(userId) : [];
 });
 
+/** Whether the person's store lists could not be read on this request.
+ *  getActiveStore treats a failed read as "no stores" so a page can still
+ *  draw, which is also what a new account looks like; the dashboard layout
+ *  asks this instead, to show a retry rather than a wrong "no store yet".
+ *  Logged once per request, by source only: a read error can carry rows. */
+export const storeLookupFailed = cache(async (): Promise<boolean> => {
+  const sources = ['shops', 'sites'] as const;
+  const results = await Promise.allSettled([listDashboardShops(), listDashboardSites()]);
+  let failed = false;
+  results.forEach((result, index) => {
+    if (result.status !== 'rejected') return;
+    failed = true;
+    console.error('[dashboard] store lookup failed', {
+      code: 'dashboard_store_lookup_failed',
+      source: sources[index],
+      error: result.reason instanceof Error ? result.reason.name : typeof result.reason,
+    });
+  });
+  return failed;
+});
+
 /** The dashboard's active store for this request (phase zero item 33):
  *  the page's own query, then the link's choice the proxy passed on, then
  *  the store chosen last, then the most recently active installed shop. */
