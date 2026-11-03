@@ -3,10 +3,13 @@ import { createHmac } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { recordEvent, processPrivacy, verifyUninstall } = vi.hoisted(() => ({ recordEvent: vi.fn(), processPrivacy: vi.fn(), verifyUninstall: vi.fn() }));
+const { recordEvent, processPrivacy, verifyUninstall, reconcilePricing, markPricingEvent } = vi.hoisted(() => ({
+  recordEvent: vi.fn(), processPrivacy: vi.fn(), verifyUninstall: vi.fn(), reconcilePricing: vi.fn(), markPricingEvent: vi.fn(),
+}));
 vi.mock('@/lib/shopify/tokens', () => ({ verifyShopifyUninstall: verifyUninstall }));
-vi.mock('@/lib/shopify/installation-events', () => ({ recordInstallationEvent: recordEvent }));
+vi.mock('@/lib/shopify/installation-events', () => ({ recordInstallationEvent: recordEvent, markShopifyPricingEvent: markPricingEvent }));
 vi.mock('@/lib/shopify/privacy', () => ({ processShopifyPrivacyRequest: processPrivacy }));
+vi.mock('@/lib/shopify/app-pricing', () => ({ reconcileShopifyAppPricing: reconcilePricing }));
 
 import { POST } from './route';
 
@@ -30,6 +33,8 @@ beforeEach(() => {
   recordEvent.mockResolvedValue({ id: 'event', status: 'manual_required' });
   verifyUninstall.mockResolvedValue(undefined);
   processPrivacy.mockResolvedValue(undefined);
+  reconcilePricing.mockResolvedValue(undefined);
+  markPricingEvent.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -75,6 +80,100 @@ describe('Shopify lifecycle delivery', () => {
     req.headers.set('x-shopify-hmac-sha256', createHmac('sha256', 'other-secret').update(body).digest('base64'));
     expect((await POST(req)).status).toBe(200);
     expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({ appClientId: 'other-app' }));
+  });
+});
+
+describe('public Shopify App Pricing deliveries', () => {
+  function pricingRequest(options: { id?: string; triggeredAt?: string; status?: string; name?: string } = {}) {
+    const body = JSON.stringify({ app_subscription: {
+      name: options.name ?? 'Untrusted payload plan', status: options.status ?? 'ACTIVE',
+    } });
+    return new NextRequest('https://app.example/api/shopify/webhooks', {
+      method: 'POST', body,
+      headers: {
+        'x-shopify-topic': 'app_subscriptions/update',
+        'x-shopify-webhook-id': options.id ?? 'pricing-delivery',
+        'x-shopify-shop-domain': 'demo.myshopify.com',
+        'x-shopify-triggered-at': options.triggeredAt ?? '2026-11-02T12:00:00Z',
+        'x-shopify-hmac-sha256': createHmac('sha256', 'public-secret').update(body).digest('base64'),
+      },
+    });
+  }
+
+  beforeEach(() => {
+    vi.stubEnv('SHOPIFY_APPS', JSON.stringify([
+      { clientId: 'public-app', secret: 'public-secret', distribution: 'public' },
+      { clientId: 'custom-app', secret: 'custom-secret', distribution: 'custom' },
+    ]));
+  });
+
+  it('reconciles using only the authenticated app and shop, never body plan/status', async () => {
+    expect((await POST(pricingRequest())).status).toBe(200);
+    expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({
+      appClientId: 'public-app', shopDomain: 'demo.myshopify.com', topic: 'app_subscriptions/update',
+    }));
+    expect(reconcilePricing).toHaveBeenCalledExactlyOnceWith({
+      appClientId: 'public-app', shopDomain: 'demo.myshopify.com', source: 'webhook',
+    });
+    expect(markPricingEvent).toHaveBeenNthCalledWith(1, {
+      appClientId: 'public-app', shopDomain: 'demo.myshopify.com', eventId: 'event',
+    }, 'received');
+    expect(markPricingEvent).toHaveBeenNthCalledWith(2, {
+      appClientId: 'public-app', shopDomain: 'demo.myshopify.com', eventId: 'event',
+    }, 'completed');
+    expect(markPricingEvent.mock.invocationCallOrder[1]).toBeGreaterThan(reconcilePricing.mock.invocationCallOrder[0]);
+  });
+
+  it('reconciles replayed and out-of-order deliveries even when a receipt was completed', async () => {
+    recordEvent.mockResolvedValue({ id: 'event', status: 'completed', duplicate: true });
+    expect((await POST(pricingRequest())).status).toBe(200);
+    expect((await POST(pricingRequest())).status).toBe(200);
+    expect((await POST(pricingRequest({
+      id: 'older-delivery', triggeredAt: '2026-11-01T12:00:00Z', status: 'CANCELLED', name: 'Free',
+    }))).status).toBe(200);
+    expect(reconcilePricing).toHaveBeenCalledTimes(3);
+    for (const [input] of reconcilePricing.mock.calls) {
+      expect(input).toEqual({ appClientId: 'public-app', shopDomain: 'demo.myshopify.com', source: 'webhook' });
+    }
+  });
+
+  it.each(['installation_token_missing', 'authoritative_read_failed'])('requests retry for %s without applying body state', async message => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    reconcilePricing.mockRejectedValueOnce(new Error(message));
+    const response = await POST(pricingRequest());
+    expect(response.status).toBe(503);
+    expect(response.headers.get('retry-after')).toBe('60');
+    expect(await response.text()).not.toContain(message);
+    expect(markPricingEvent).not.toHaveBeenCalledWith(expect.anything(), 'completed');
+    expect((await POST(pricingRequest())).status).toBe(200);
+    expect(reconcilePricing).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ['custom-app', 'custom-secret'],
+    ['test-only-client-id', 'test-only-secret'],
+  ])('ignores pricing for non-public registration %s', async (clientId, secret) => {
+    const req = pricingRequest();
+    const body = await req.clone().text();
+    req.headers.set('x-shopify-hmac-sha256', createHmac('sha256', secret).update(body).digest('base64'));
+    expect((await POST(req)).status).toBe(200);
+    expect(recordEvent).toHaveBeenCalledWith(expect.objectContaining({ appClientId: clientId }));
+    expect(reconcilePricing).not.toHaveBeenCalled();
+    expect(markPricingEvent).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid signature before pricing reconciliation', async () => {
+    const req = pricingRequest();
+    req.headers.set('x-shopify-hmac-sha256', 'invalid');
+    expect((await POST(req)).status).toBe(401);
+    expect(reconcilePricing).not.toHaveBeenCalled();
+  });
+
+  it('does not reconcile when the durable event cannot be recorded', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    recordEvent.mockRejectedValue(new Error('storage unavailable'));
+    expect((await POST(pricingRequest())).status).toBe(503);
+    expect(reconcilePricing).not.toHaveBeenCalled();
   });
 });
 

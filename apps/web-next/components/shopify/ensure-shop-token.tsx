@@ -1,6 +1,13 @@
 'use client';
 
 import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
+import type { ShopifyAppPricingPresentation } from '@/lib/shopify/app-pricing';
+
+export type ShopifyBootstrap = {
+  ok: true;
+  appClientId: string;
+  appPricing: ShopifyAppPricingPresentation | null;
+};
 
 /** Ensures this shop has a stored Admin API token via Shopify's token-
  *  exchange grant, using the App Bridge session token already available in
@@ -10,9 +17,11 @@ import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
  *  failure here (App Bridge not ready yet, a transient network issue) is
  *  swallowed by the caller; the next embedded-admin page load retries
  *  automatically, same tolerance the sibling claim flow already has. */
-export async function ensureShopToken(): Promise<void> {
+export async function ensureShopToken(): Promise<ShopifyBootstrap> {
   const token = await getShopifySessionToken();
-  await fetch('/api/shopify/session-bootstrap', {
+  const response = await fetch('/api/shopify/session-bootstrap', {
     headers: { authorization: `Bearer ${token}` },
   });
+  if (!response.ok) throw new Error('Shopify bootstrap failed');
+  return response.json() as Promise<ShopifyBootstrap>;
 }

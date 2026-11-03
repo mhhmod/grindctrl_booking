@@ -27,6 +27,10 @@ api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
+  topics = [ "app_subscriptions/update" ]
+
+  [[webhooks.subscriptions]]
+  uri = "https://shopify-m1-dev.grindctrl.cloud/api/shopify/webhooks"
   compliance_topics = [ "customers/data_request" ]
 
   [[webhooks.subscriptions]]

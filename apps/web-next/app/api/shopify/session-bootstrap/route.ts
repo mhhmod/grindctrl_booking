@@ -6,6 +6,7 @@ import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { syncShopStorefrontDomains } from '@/lib/messenger/shop-domain-sync';
 import { syncShopifyAppOrigin } from '@/lib/shopify/admin';
+import { getShopifyAppPricingPresentation, reconcileShopifyAppPricing } from '@/lib/shopify/app-pricing';
 
 /* GET /api/shopify/session-bootstrap
    Ensures this shop has a stored, sufficiently-scoped Admin API access
@@ -67,7 +68,20 @@ export async function GET(request: NextRequest) {
     });
     void syncShopStorefrontDomains(session.shop, token.accessToken);
     void syncShopifyAppOrigin(session.shop, token.accessToken);
-    return NextResponse.json({ ok: true, provisioned: 'ready', appClientId: clientId }, { headers: { 'Cache-Control': 'no-store' } });
+    // Plan sync self-heals a missed webhook, but it must never block the app
+    // from loading: the merchant keeps their stored plan until the next sync.
+    if (session.app.distribution === 'public') {
+      await reconcileShopifyAppPricing({
+        shopDomain: session.shop, appClientId: clientId, source: 'bootstrap',
+      }).catch((error) => {
+        // Only our own error codes are logged; provider messages can carry shop data.
+        const code = error instanceof Error && /^[a-z_]{1,64}$/.test(error.message) ? error.message : 'unknown';
+        console.error('[shopify-pricing] bootstrap reconciliation deferred', code);
+      });
+    }
+    const appPricing = await getShopifyAppPricingPresentation({ shopDomain: session.shop, appClientId: clientId })
+      .catch(() => null);
+    return NextResponse.json({ ok: true, provisioned: 'ready', appClientId: clientId, appPricing }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const code = error instanceof ShopifyCredentialError ? error.code : 'storage_unavailable';
     return NextResponse.json({ error: code }, {
