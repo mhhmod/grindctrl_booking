@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getDashboardCopy } from './dashboard-i18n';
 import { getDashboardRouteMeta } from './route-meta';
-import { resolveDashboardNavItems } from './nav-config';
-import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
-
-const permissions = resolveDashboardPermissions({ role: 'owner' });
 
 describe('dashboard copy', () => {
   it('translates every route it claims to cover', () => {
@@ -39,39 +35,5 @@ describe('getDashboardRouteMeta', () => {
     // /dashboard/sites is an alias of /dashboard/install.
     const meta = getDashboardRouteMeta('/dashboard/sites', 'ar');
     expect(meta.title).toBe('الأداة والتضمين');
-  });
-});
-
-describe('resolveDashboardNavItems', () => {
-  it('labels tabs in Arabic', () => {
-    const items = resolveDashboardNavItems({
-      pathname: '/dashboard',
-      permissions,
-      locale: 'ar',
-    });
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.map((i) => i.label)).toContain('نظرة عامة');
-  });
-
-  it('gives a tab the same label as the page it opens', () => {
-    // A tab reading one thing and its page heading another is the classic
-    // half-translated dashboard bug.
-    const items = resolveDashboardNavItems({
-      pathname: '/dashboard',
-      permissions,
-      locale: 'ar',
-    });
-    for (const item of items) {
-      expect(item.label).toBe(getDashboardRouteMeta(item.href, 'ar').title);
-    }
-  });
-
-  it('still marks the active tab', () => {
-    const items = resolveDashboardNavItems({
-      pathname: '/dashboard/try-on',
-      permissions,
-      locale: 'ar',
-    });
-    expect(items.find((i) => i.href === '/dashboard/try-on')?.isActive).toBe(true);
   });
 });

@@ -28,6 +28,9 @@ vi.mock('./actions', () => ({
   changeRoleAction: vi.fn(),
   removeMemberAction: vi.fn(),
 }));
+vi.mock('@/components/dashboard/v16/states', () => ({
+  V16NoStore: ({ locale }: { locale: string }) => <div data-testid="no-store">{locale}</div>,
+}));
 vi.mock('@/components/dashboard/v16/settings/v16-team', () => ({
   V16Team: ({ view, locale, actions, roles }: { view: { people: Array<{ name: string }> }; locale: string; actions?: object; roles?: object }) => (
     <div data-testid="v16-team" data-actions={actions ? Object.keys(actions).join(',') : ''} data-roles={roles ? JSON.stringify(roles) : ''}>
@@ -81,13 +84,20 @@ describe('SettingsPage', () => {
     expect(screen.getByTestId('v16-team')).toBeInTheDocument();
   });
 
-  it('keeps today’s placeholder for a store without the flag, or without a store', async () => {
+  it('tells a new account with no store how to connect one, instead of the old placeholder', async () => {
+    mocks.active.mockResolvedValue({ shopDomain: null, siteId: null });
+    mocks.locale.mockResolvedValue('ar');
+    render(await SettingsPage());
+    expect(screen.getByTestId('no-store')).toHaveTextContent('ar');
+    expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
+    expect(mocks.facts).not.toHaveBeenCalled();
+    expect(mocks.flags).not.toHaveBeenCalled();
+  });
+
+  it('draws the team without any v16_dashboard flag, which no longer gates the page', async () => {
     mocks.flags.mockResolvedValue([]);
     render(await SettingsPage());
-    expect(screen.getByText('Coming soon')).toBeInTheDocument();
-    mocks.active.mockResolvedValue({ shopDomain: null, siteId: null });
-    render(await SettingsPage());
-    expect(mocks.facts).not.toHaveBeenCalled();
+    expect(screen.getByTestId('v16-team')).toBeInTheDocument();
   });
 
   it('sends a member to Today on the server, without reading the team', async () => {

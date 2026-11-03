@@ -1,19 +1,39 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  TryOnSettingsControls,
-  type TryOnWidgetSettings,
-} from '@/components/try-on/settings-controls';
+import { Button, Group, Loader, Paper, SimpleGrid, Stack, Text, TextInput, Title } from '@mantine/core';
+import { V16TryOnStudio, type SaveTryOnSettings } from '@/components/dashboard/v16/try-on/v16-tryon-studio';
+import type { TryOnWidgetSettings } from '@/components/try-on/settings-controls';
 import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
+import { failureFromResponse, settingsBodyFromForm } from '@/lib/shopify/embedded-settings';
 import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 import type { ConsumeShopLinkResult } from '@/lib/shopify/shop-links';
 import { appEmbedActivationUrl, productBlockAddUrl } from '@/lib/shopify/app-identity';
+
+/* The embedded admin's Try-On tab: linking the store to a dashboard account,
+   the two theme deep links, and the same Set up editor (TryOnStudio) the
+   dashboard uses. It saves through the session-token API, so the form the
+   editor builds is turned into that API's body (lib/shopify/embedded-settings.ts). */
+
+const COPY = {
+  en: {
+    loading: 'Loading settings',
+    loadFailed: 'Could not load settings. Open this page from your Shopify admin.',
+    productPagesBody: 'Adds the try-on button under your product details. Press Save in the theme editor.',
+    addToProductPage: 'Add to product page',
+    catalogPagesBody: 'Adds a Try on pill to every product card in your collection grids.',
+    enableCatalog: 'Enable catalog try-on',
+  },
+  ar: {
+    loading: 'جارٍ تحميل الإعدادات',
+    loadFailed: 'تعذّر تحميل الإعدادات. افتح هذه الصفحة من لوحة تحكم Shopify.',
+    productPagesBody: 'يضيف زر التجربة تحت تفاصيل المنتج. اضغط على حفظ في محرر القالب.',
+    addToProductPage: 'أضفه إلى صفحة المنتج',
+    catalogPagesBody: 'يضيف زر «جرّب» على كل بطاقة منتج في شبكات المجموعات.',
+    enableCatalog: 'فعّل التجربة في الكتالوج',
+  },
+} as const;
 
 function ShopLinkCard({
   initiallyLinked,
@@ -69,25 +89,26 @@ function ShopLinkCard({
   }, [linkCode, relinking]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">{c.shopLinkTitle}</CardTitle>
-        <CardDescription>{c.shopLinkDescription}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Paper withBorder radius="card" p="lg">
+      <Stack gap="md" align="flex-start">
+        <Stack gap={4}>
+          <Title order={2} size="h4">{c.shopLinkTitle}</Title>
+          <Text size="sm" c="dimmed">{c.shopLinkDescription}</Text>
+        </Stack>
         {linked && !relinking ? (
-          <div className="grid justify-items-start gap-3">
-            <p className="text-sm text-foreground" role="status">
+          <Stack gap="sm" align="flex-start">
+            <Text size="sm" role="status">
               {status === 'linked'
                 ? c.shopLinkSuccess
                 : linkedAccount
                   ? c.shopLinkedTo(linkedAccount)
                   : c.shopLinked}
-            </p>
+            </Text>
             <Button
               type="button"
-              size="sm"
-              variant="outline"
+              variant="default"
+              radius="pill"
+              mih={44}
               onClick={() => {
                 setRelinking(true);
                 setLinkCode('');
@@ -96,22 +117,23 @@ function ShopLinkCard({
             >
               {c.relinkShop}
             </Button>
-          </div>
+          </Stack>
         ) : (
           <form
-            className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+            style={{ width: '100%' }}
             onSubmit={(event) => {
               event.preventDefault();
               void linkShop();
             }}
           >
-            <div className="grid min-w-0 gap-2">
-              <Label htmlFor="shop-link-code">{c.shopLinkCodeLabel}</Label>
-              <Input
+            <Group gap="sm" align="flex-end" wrap="wrap">
+              <TextInput
+                style={{ flex: '1 1 14rem', minWidth: 0 }}
                 id="shop-link-code"
+                label={c.shopLinkCodeLabel}
                 value={linkCode}
                 onChange={(event) => {
-                  setLinkCode(event.target.value);
+                  setLinkCode(event.currentTarget.value);
                   if (status !== 'submitting') setStatus('idle');
                 }}
                 placeholder={c.shopLinkCodePlaceholder}
@@ -120,22 +142,20 @@ function ShopLinkCard({
                 spellCheck={false}
                 dir="ltr"
                 required
-                aria-invalid={hasError}
+                withAsterisk={false}
+                size="md"
+                error={hasError}
                 aria-describedby={hasError ? 'shop-link-status' : undefined}
               />
-            </div>
-            <Button type="submit" disabled={status === 'submitting'}>
-              {status === 'submitting' ? c.linkingShop : c.linkShop}
-            </Button>
+              <Button type="submit" radius="pill" h={44} loading={status === 'submitting'}>
+                {status === 'submitting' ? c.linkingShop : c.linkShop}
+              </Button>
+            </Group>
             {relinking && (
-              <p className="text-sm text-muted-foreground sm:col-span-2">{c.relinkHint}</p>
+              <Text size="sm" c="dimmed" mt="sm">{c.relinkHint}</Text>
             )}
             {hasError && (
-              <p
-                id="shop-link-status"
-                className="text-sm text-destructive sm:col-span-2"
-                role="alert"
-              >
+              <Text id="shop-link-status" size="sm" c="danger" mt="sm" role="alert">
                 {status === 'invalid'
                   ? c.shopLinkInvalid
                   : status === 'expired'
@@ -143,25 +163,23 @@ function ShopLinkCard({
                     : status === 'already_owned'
                       ? c.shopLinkAlreadyOwned
                       : c.shopLinkFailed}
-              </p>
+              </Text>
             )}
           </form>
         )}
-      </CardContent>
-    </Card>
+      </Stack>
+    </Paper>
   );
 }
 
 export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }) {
   const c = getSettingsFormCopy(locale);
+  const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const [shop, setShop] = useState('');
   const [s, setS] = useState<TryOnWidgetSettings | null>(null);
   const [linked, setLinked] = useState(false);
   const [linkedAccount, setLinkedAccount] = useState<string | null>(null);
-  const [loadingStepsText, setLoadingStepsText] = useState('');
-  const [status, setStatus] = useState<'loading' | 'ready' | 'saving' | 'saved' | 'error'>(
-    'loading',
-  );
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -182,7 +200,6 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
         setS(data.settings);
         setLinked(data.linked);
         setLinkedAccount(data.linkedAccount ?? null);
-        setLoadingStepsText(data.settings.loadingSteps?.join('\n') ?? '');
         setStatus('ready');
       } catch {
         if (!cancelled) setStatus('error');
@@ -193,44 +210,36 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
     };
   }, []);
 
-  const set = useCallback(
-    <K extends keyof TryOnWidgetSettings>(key: K, value: TryOnWidgetSettings[K]) => {
-      setS((prev) => (prev ? { ...prev, [key]: value } : prev));
-      setStatus((st) => (st === 'saved' ? 'ready' : st));
-    },
-    [],
-  );
-
-  const save = useCallback(async () => {
-    if (!s) return;
-    setStatus('saving');
+  const save = useCallback<SaveTryOnSettings>(async (form) => {
     try {
       const token = await getShopifySessionToken();
       const res = await fetch('/api/shopify/admin/settings', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...s,
-          loadingSteps: loadingStepsText.trim()
-            ? loadingStepsText.split('\n').map((l) => l.trim()).filter(Boolean)
-            : null,
-        }),
+        body: JSON.stringify(settingsBodyFromForm(form)),
       });
-      setStatus(res.ok ? 'saved' : 'error');
+      if (!res.ok) return failureFromResponse(res);
+      const body = (await res.json()) as { ok?: boolean };
+      return body.ok === false ? failureFromResponse({ status: 500, headers: res.headers }) : { ok: true };
     } catch {
-      setStatus('error');
+      return failureFromResponse({ status: 503, headers: new Headers() });
     }
-  }, [s, loadingStepsText]);
+  }, []);
 
   if (status === 'loading') {
-    return <p className="p-6 text-sm text-muted-foreground">Loading settings…</p>;
+    return (
+      <Stack role="status" align="center" gap="xs" p="xl">
+        <Loader size="sm" aria-hidden />
+        <Text size="sm" c="dimmed">{t.loading}</Text>
+      </Stack>
+    );
   }
 
   if (!s) {
     return (
-      <p className="p-6 text-sm text-destructive">
-        Could not load settings. Open this page from your Shopify admin.
-      </p>
+      <Text role="alert" size="sm" c="danger" p="xl">
+        {t.loadFailed}
+      </Text>
     );
   }
 
@@ -238,73 +247,35 @@ export function ShopifyAdminSettings({ locale = 'en' }: { locale?: TryOnLocale }
   const catalogLink = shop ? appEmbedActivationUrl(shop, 'tryon-catalog') : '#';
 
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-4 p-4 sm:p-6">
+    <Stack gap="md" style={{ minWidth: 0 }}>
       <ShopLinkCard initiallyLinked={linked} linkedAccount={linkedAccount} c={c} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{c.productPages}</CardTitle>
-            <CardDescription>
-              Adds the try-on button under your product details. Press Save in the theme editor.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild size="sm">
-              <a href={deepLink} target="_blank" rel="noopener noreferrer">
-                Add to product page
-              </a>
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+        <Paper withBorder radius="card" p="lg">
+          <Stack gap="md" align="flex-start" h="100%">
+            <Stack gap={4}>
+              <Title order={2} size="h4">{c.productPages}</Title>
+              <Text size="sm" c="dimmed">{t.productPagesBody}</Text>
+            </Stack>
+            <Button component="a" href={deepLink} target="_blank" rel="noopener noreferrer" radius="pill" h={44} mt="auto">
+              {t.addToProductPage}
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{c.catalogPages}</CardTitle>
-            <CardDescription>
-              Adds a Try on pill to every product card in your collection grids.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild size="sm" variant="outline">
-              <a href={catalogLink} target="_blank" rel="noopener noreferrer">
-                Enable catalog try-on
-              </a>
+          </Stack>
+        </Paper>
+        <Paper withBorder radius="card" p="lg">
+          <Stack gap="md" align="flex-start" h="100%">
+            <Stack gap={4}>
+              <Title order={2} size="h4">{c.catalogPages}</Title>
+              <Text size="sm" c="dimmed">{t.catalogPagesBody}</Text>
+            </Stack>
+            <Button component="a" href={catalogLink} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" h={44} mt="auto">
+              {t.enableCatalog}
             </Button>
-          </CardContent>
-        </Card>
-      </div>
+          </Stack>
+        </Paper>
+      </SimpleGrid>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{c.appearance}</CardTitle>
-          <CardDescription>
-            One set of settings drives the product page, the catalog pill, and both journeys.
-            Changes go live within a minute.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <TryOnSettingsControls
-            locale={locale}
-            value={s}
-            onChange={set}
-            loadingStepsText={loadingStepsText}
-            onLoadingStepsTextChange={setLoadingStepsText}
-          />
-
-          <div className="flex items-center gap-3">
-            <Button type="button" onClick={save} disabled={status === 'saving'}>
-              {status === 'saving' ? c.saving : c.save}
-            </Button>
-            {status === 'saved' && (
-              <span className="text-sm text-muted-foreground">{c.saved}</span>
-            )}
-            {status === 'error' && (
-              <span className="text-sm text-destructive">{c.saveFailed}</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <V16TryOnStudio locale={locale} shop={shop} settings={s} saveSettings={save} />
+    </Stack>
   );
 }

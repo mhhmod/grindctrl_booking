@@ -3,16 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Moon, Sun } from 'lucide-react';
+import { ActionIcon, Button, Group, Stack, Tabs, Text, useDirection } from '@mantine/core';
 import { BrandLogo } from '@/components/brand-logo';
-import { Button } from '@/components/ui/button';
 import { ShopifyAdminSettings } from '@/components/shopify/admin-settings';
 import { AutoClaim, startShopifyClaim } from '@/components/shopify/auto-claim';
 import { ensureShopToken } from '@/components/shopify/ensure-shop-token';
 import { StoreChatEmbedded } from '@/components/shopify/store-chat-embedded';
 import { ShopifyPlans } from '@/components/shopify/plans';
-import { MantineUiProvider } from '@/components/mantine/provider';
 import type { ShopifyAppPricingPresentation } from '@/lib/shopify/app-pricing';
-import type { TryOnLocale } from '@/lib/try-on/i18n';
+import { getDir, type TryOnLocale } from '@/lib/try-on/i18n';
 
 const COPY = {
   en: {
@@ -52,6 +51,8 @@ function publicAppHost() {
   }
 }
 
+/* The shell is rendered inside MantineUiProvider (app/shopify/app page), so
+   every tab, not only Plans, has the brand's colours, font and direction. */
 export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const [tab, setTab] = useState<ShellTab>('try-on');
   const [claimState, setClaimState] = useState<ClaimButtonState>('idle');
@@ -67,6 +68,14 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
   const [bootstrapAttempt, setBootstrapAttempt] = useState(0);
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
   const { resolvedTheme, setTheme } = useTheme();
+  const { setDirection } = useDirection();
+
+  /* The merchant's admin language, not the site's cookie, decides this page's
+     direction (page.tsx sets it on <main>). Mantine reads <html dir> for
+     keyboard navigation and popover placement, so keep that in step. */
+  useEffect(() => {
+    setDirection(getDir(locale));
+  }, [locale, setDirection]);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,94 +86,90 @@ export function ShopifyAppShell({ locale }: { locale: TryOnLocale }) {
     return () => { cancelled = true; };
   }, [bootstrapAttempt]);
 
+  const claim = () => {
+    setClaimState('loading');
+    void startShopifyClaim()
+      .then((outcome) => {
+        setClaimState(outcome === 'already-linked' ? 'already-connected' : 'idle');
+      })
+      .catch(() => setClaimState('error'));
+  };
+
   return (
-    <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-4 p-4 sm:p-6">
+    <Stack gap="md" maw={1152} mx="auto" w="100%" p={{ base: 'md', sm: 'lg' }} style={{ minWidth: 0 }}>
       {tokenBootstrapped && <AutoClaim locale={locale} />}
-      <header className="flex min-w-0 flex-wrap items-center justify-between gap-3 px-1 pt-1">
+      <Group component="header" justify="space-between" gap="sm" wrap="wrap" px={4} pt={4}>
         <BrandLogo size="sm" />
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex min-w-0 flex-wrap items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-auto px-2 py-1 text-xs text-muted-foreground"
-              disabled={claimState === 'loading'}
-              onClick={() => {
-                setClaimState('loading');
-                void startShopifyClaim()
-                  .then((outcome) => {
-                    setClaimState(outcome === 'already-linked' ? 'already-connected' : 'idle');
-                  })
-                  .catch(() => setClaimState('error'));
-              }}
-            >
-              {t.claimStore}
-            </Button>
-            {claimState === 'already-connected' && (
-              <span role="status" className="text-xs text-muted-foreground">
-                {t.claimAlreadyConnected}
-              </span>
-            )}
-            {claimState === 'error' && (
-              <span role="alert" className="text-xs text-destructive">
-                {t.claimError}
-              </span>
-            )}
-          </div>
+        <Group gap="xs" wrap="wrap" style={{ minWidth: 0 }}>
           <Button
             type="button"
-            variant="ghost"
-            size="icon"
+            variant="subtle"
+            radius="pill"
+            mih={44}
+            loading={claimState === 'loading'}
+            onClick={claim}
+          >
+            {t.claimStore}
+          </Button>
+          {claimState === 'already-connected' && (
+            <Text role="status" size="xs" c="dimmed">
+              {t.claimAlreadyConnected}
+            </Text>
+          )}
+          {claimState === 'error' && (
+            <Text role="alert" size="xs" c="danger">
+              {t.claimError}
+            </Text>
+          )}
+          <ActionIcon
+            type="button"
+            variant="subtle"
+            size={44}
+            radius="pill"
             onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
             aria-label={t.themeToggle}
             title={t.themeToggle}
           >
             <Sun className="hidden size-4 dark:block" />
             <Moon className="size-4 dark:hidden" />
-          </Button>
-        </div>
+          </ActionIcon>
+        </Group>
         {claimState === 'idle' && (
-          <span className="min-w-0 basis-full break-words text-xs leading-relaxed text-foreground">
+          <Text size="xs" w="100%" style={{ overflowWrap: 'anywhere' }}>
             {t.claimExplanation.replace('{host}', publicAppHost())}
-          </span>
+          </Text>
         )}
-      </header>
+      </Group>
 
-      <nav aria-label={t.sections} className="min-w-0">
-        <ul className="flex flex-wrap gap-1 border-b border-border pb-px">
+      <Tabs value={tab} onChange={(next) => next && setTab(next as ShellTab)} keepMounted={false} style={{ minWidth: 0 }}>
+        <Tabs.List aria-label={t.sections}>
           {SHELL_TABS.map((id) => (
-            <li key={id}>
-              <button
-                type="button"
-                onClick={() => setTab(id)}
-                aria-current={tab === id ? 'page' : undefined}
-                className={`inline-flex rounded-t-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                  tab === id
-                    ? 'border-b-2 border-primary font-semibold text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {id === 'try-on' ? t.tryOn : id === 'store-chat' ? t.storeChat : t.plans}
-              </button>
-            </li>
+            <Tabs.Tab key={id} value={id} mih={44}>
+              {id === 'try-on' ? t.tryOn : id === 'store-chat' ? t.storeChat : t.plans}
+            </Tabs.Tab>
           ))}
-        </ul>
-      </nav>
+        </Tabs.List>
 
-      {tokenBootstrapped && (tab === 'try-on' ? <ShopifyAdminSettings locale={locale} /> : tab === 'store-chat' ? <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} /> : (
-        <MantineUiProvider dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-          <ShopifyPlans
-            locale={locale === 'ar' ? 'ar' : 'en'}
-            appPricing={appPricing}
-            onRetry={() => {
-              setTokenBootstrapped(false);
-              setAppPricing(null);
-              setBootstrapAttempt((attempt) => attempt + 1);
-            }}
-          />
-        </MantineUiProvider>
-      ))}
-    </div>
+        <Tabs.Panel value="try-on" pt="md">
+          {tokenBootstrapped && <ShopifyAdminSettings locale={locale} />}
+        </Tabs.Panel>
+        <Tabs.Panel value="store-chat" pt="md">
+          {tokenBootstrapped && <StoreChatEmbedded locale={locale === 'ar' ? 'ar' : 'en'} />}
+        </Tabs.Panel>
+        <Tabs.Panel value="plans" pt="md">
+          {tokenBootstrapped && (
+            <ShopifyPlans
+              locale={locale === 'ar' ? 'ar' : 'en'}
+              appPricing={appPricing}
+              onRetry={() => {
+                setTokenBootstrapped(false);
+                setAppPricing(null);
+                setBootstrapAttempt((attempt) => attempt + 1);
+              }}
+            />
+          )}
+        </Tabs.Panel>
+      </Tabs>
+    </Stack>
   );
 }

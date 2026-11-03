@@ -71,6 +71,14 @@ export function buildShellStores(
   return [...fromShops, ...fromSites];
 }
 
+export type ShopChoice = { domain: string; label: string };
+
+/** The Shopify stores a person could switch to, named as the store switcher
+ *  names a shop without a Store Chat site: by its address. */
+export function shopChoices(shops: readonly StoreCandidateShop[]): ShopChoice[] {
+  return shops.map((shop) => ({ domain: shop.domain, label: shop.domain.replace(MYSHOPIFY, '') }));
+}
+
 /** The address that switches to a store on the page the person is on. The
  *  proxy remembers the choice (lib/dashboard/forward-request.ts). */
 export function storeSwitchHref(pathname: string, choice: StoreChoice): string {

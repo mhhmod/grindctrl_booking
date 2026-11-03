@@ -18,10 +18,9 @@ import type { DashboardPermissionKey, DashboardPermissionSet } from '@/lib/rbac/
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-shell.module.css';
 
-/* The v16 dashboard shell (04-dashboard.md), shown while the active store's
-   v16_dashboard flag is on. The page bodies are still today's until each
-   v16 page lands, and the nav lists only pages that exist: the search
-   field and the bell join as theirs do. */
+/* The v16 dashboard shell (04-dashboard.md), the only shell: every person
+   gets it, with or without a store. The nav lists only pages that exist:
+   the search field and the bell join as theirs do. */
 
 export type V16NavItem = {
   href: string;
@@ -31,6 +30,8 @@ export type V16NavItem = {
   permission: DashboardPermissionKey;
   /** In the phone tab bar too; Settings sits in the phone menu instead (Owner-Phone). */
   tab: boolean;
+  /** Needs a Shopify store: a Store Chat site on another website has no plan. */
+  needsShopify?: boolean;
 };
 
 export const V16_NAV: readonly V16NavItem[] = [
@@ -39,13 +40,14 @@ export const V16_NAV: readonly V16NavItem[] = [
   { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat', tab: true },
   { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn', tab: true },
   { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat', tab: true },
-  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true },
+  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true, needsShopify: true },
   { href: '/dashboard/settings', key: 'settings', icon: 'gear', permission: 'canViewSettings', tab: false },
 ];
 
-/** The nav items the person's role sees. */
-export function v16NavFor(permissions: DashboardPermissionSet): V16NavItem[] {
-  return V16_NAV.filter((item) => permissions[item.permission]);
+/** The nav items the person's role sees, for the store they are on. Try-On
+ *  stays for everyone: it is where a Shopify store gets connected. */
+export function v16NavFor(permissions: DashboardPermissionSet, hasShopify = true): V16NavItem[] {
+  return V16_NAV.filter((item) => permissions[item.permission] && (hasShopify || !item.needsShopify));
 }
 
 /* The shoppers waiting for a person show on Inbox, where they are answered. */
@@ -76,6 +78,8 @@ export type V16ShellProps = {
   today: { date: string; greeting: string };
   /** From the person's role on the active store (item 12). */
   permissions: DashboardPermissionSet;
+  /** Whether the active store is a Shopify store; Plan needs one. */
+  hasShopify?: boolean;
   waitingCount: number;
   children: React.ReactNode;
 };
@@ -103,8 +107,11 @@ function personInitials(name: string): string {
   return ((words[0]?.[0] ?? '') + (words[1]?.[0] ?? '')).toUpperCase() || '?';
 }
 
-/* The live pathname, not one resolved by the server layout, which Next
-   reuses across client navigation (see lib/dashboard/use-route-meta.ts). */
+/* The live pathname, not one resolved by the server layout from the request
+   headers. Next reuses that layout's server render across navigation between
+   routes that share it, so anything resolved there (the page title, the
+   active nav item) goes stale on the first click. usePathname() follows the
+   router's own state on every navigation. */
 export function V16Shell(props: V16ShellProps) {
   return <V16ShellView pathname={usePathname() ?? '/dashboard'} {...props} />;
 }
@@ -117,6 +124,7 @@ export function V16ShellView({
   person,
   today,
   permissions,
+  hasShopify = true,
   waitingCount,
   children,
 }: V16ShellProps & { pathname: string }) {
@@ -130,7 +138,7 @@ export function V16ShellView({
   const { title } = getDashboardRouteMeta(pathname, locale);
   const mounted = React.useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
 
-  const nav = v16NavFor(permissions);
+  const nav = v16NavFor(permissions, hasShopify);
   const current = stores.find((store) => store.current) ?? stores[0] ?? null;
   const isToday = pathname === '/dashboard';
   /* Before hydration, guess the provider's default (light), like the toggle. */

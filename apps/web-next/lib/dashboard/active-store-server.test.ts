@@ -8,7 +8,7 @@ vi.mock('@clerk/nextjs/server', () => ({ auth: async () => ({ userId: 'user_nour
 vi.mock('@/lib/shopify/shops', () => ({ listManagedTryOnShops: mocks.shops }));
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: mocks.sites }));
 
-import { getActiveStoreRole } from './active-store-server';
+import { getActiveStoreRole, storeLookupFailed } from './active-store-server';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
 
@@ -37,5 +37,30 @@ describe('getActiveStoreRole', () => {
   it('gives a store missing from their lists the least a role can do', async () => {
     mocks.shops.mockRejectedValue(new Error('db down'));
     expect(await getActiveStoreRole({ shopDomain: 'mine.myshopify.com', siteId: null })).toBe('member');
+  });
+});
+
+/* A failed read must not pass for a new account with no store. */
+describe('storeLookupFailed', () => {
+  it('is false when both lists read, even when they are empty', async () => {
+    mocks.shops.mockResolvedValue([]);
+    mocks.sites.mockResolvedValue([]);
+    expect(await storeLookupFailed()).toBe(false);
+  });
+
+  it.each([
+    ['shops', () => mocks.shops.mockRejectedValue(new Error('db down'))],
+    ['sites', () => mocks.sites.mockRejectedValue(new Error('db down'))],
+  ])('is true, logging a code and the source and nothing else, when the %s list fails', async (source, fail) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    fail();
+    expect(await storeLookupFailed()).toBe(true);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith('[dashboard] store lookup failed', {
+      code: 'dashboard_store_lookup_failed',
+      source,
+      error: 'Error',
+    });
+    log.mockRestore();
   });
 });

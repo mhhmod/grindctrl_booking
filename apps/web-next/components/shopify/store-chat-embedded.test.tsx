@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { setMessengerEnabledMock } = vi.hoisted(() => ({ setMessengerEnabledMock: vi.fn() }));
@@ -24,6 +24,7 @@ vi.mock('@/components/shopify/store-chat-actions', () => ({
   }),
 }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { StoreChatEmbedded } from './store-chat-embedded';
 
 const fetchMock = vi.fn();
@@ -67,7 +68,7 @@ describe('StoreChatEmbedded', () => {
     fetchMock.mockResolvedValue({ ok: true, json: () => Promise.resolve(STATE_RESPONSE) });
     render(<StoreChatEmbedded locale="en" />);
     await screen.findByText(/demo\.myshopify\.com/);
-    expect(screen.getByRole('button', { name: 'Conversations' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Conversations' })).toBeInTheDocument();
   });
 
   it('fetches /state with a Bearer token and renders the overview once loaded', async () => {
@@ -87,7 +88,16 @@ describe('StoreChatEmbedded', () => {
 
     render(<StoreChatEmbedded locale="en" />);
 
-    await waitFor(() => expect(screen.getByText(/could not load/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/could not load/i));
+  });
+
+  it.each([
+    ['en', 'Loading Store Chat…'],
+    ['ar', 'جارٍ تحميل دردشة المتجر…'],
+  ] as const)('says it is loading, in %s, until the state arrives', async (locale, message) => {
+    fetchMock.mockReturnValue(new Promise(() => {}));
+    render(<StoreChatEmbedded locale={locale} />);
+    expect(screen.getByRole('status')).toHaveTextContent(message);
   });
 
   it('re-pulls /state after a successful mutation, since there is no server revalidatePath here', async () => {
@@ -101,7 +111,7 @@ describe('StoreChatEmbedded', () => {
     await screen.findByText(/demo\.myshopify\.com/);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Installation' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Installation' }));
     expect(screen.getByText(/Store Chat is off/)).toBeVisible();
     fireEvent.click(await screen.findByRole('button', { name: 'Turn on Store Chat' }));
 

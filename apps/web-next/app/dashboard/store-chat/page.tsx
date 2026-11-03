@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 export default async function MessengerPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ site?: string; tab?: string }>;
+  searchParams?: Promise<{ site?: string; tab?: string; orders?: string }>;
 }) {
   return StoreChatPage({ params: (await searchParams) ?? {}, tab: 'knows' });
 }

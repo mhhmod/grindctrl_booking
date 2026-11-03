@@ -1,12 +1,9 @@
 import React from 'react';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { currentUser } from '@clerk/nextjs/server';
-import { Badge } from '@/components/ui/badge';
 import { requireDashboardUser } from '@/lib/auth/dashboard';
 import {
   ensureMessengerSite,
-  getProfileId,
   listMessengerSites,
   listTeamSites,
   provisionableShopDomain,
@@ -16,15 +13,7 @@ import {
 } from '@/lib/messenger/provisioning';
 import { StoreOwnedByAnotherAccountError } from '@/lib/messenger/shop-tenancy';
 import { diffMessengerConfig, mergeDraftOverPublished, resolveMessengerConfig } from '@/lib/messenger/config';
-import {
-  resolveAssigneeNames,
-  listWorkspaceMembers,
-  summarizeConversations,
-  type ConversationSummary,
-  getOverviewStats,
-  getWidgetLastSeenAt,
-  listConversationsForSite,
-} from '@/lib/messenger/conversations';
+import { getOverviewStats, getWidgetLastSeenAt } from '@/lib/messenger/conversations';
 import { listKnowledge } from '@/lib/messenger/knowledge';
 import { listCannedReplies } from '@/lib/messenger/canned-replies';
 import { listManagedTryOnShops } from '@/lib/shopify/shops';
@@ -32,7 +21,7 @@ import { getActiveStore } from '@/lib/dashboard/active-store-server';
 import { hasShopOrderAccess } from '@/lib/shopify/tokens';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { toPublicPayload } from '@/lib/messenger/public-api';
-import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
+import { MessengerTabs } from '@/components/dashboard/messenger/messenger-tabs';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import * as messengerActions from './actions';
 import { isTryOnPlatformOperator } from '@/lib/shopify/platform-operator';
@@ -46,61 +35,33 @@ import { V16ChatFrame, V16ChatKnows, V16ChatKnowsError } from '@/components/dash
 import { V16ChatStudio } from '@/components/dashboard/v16/store-chat/v16-chat-studio';
 import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { minutesSince } from '@/lib/dashboard/chat-studio-model';
-import { toConversationListItems } from '@/lib/dashboard/inbox-data';
+import { legacyStoreChatHref, MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
+import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states';
 
-const TAB_IDS = ['overview', 'appearance', 'ai', 'behaviour', 'conversations', 'installation'] as const;
+/* The editors on /dashboard/store-chat/setup/more, the ones Set up does not
+   cover yet (see v16-chat-studio.tsx, More settings). */
+const MORE_SECTIONS = ['appearance', 'behaviour'] as const;
+type MoreSection = (typeof MORE_SECTIONS)[number];
 
-const TAB_COPY = {
-  en: {
-    overview: 'Overview',
-    appearance: 'Appearance',
-    aiKnowledge: 'AI & Knowledge',
-    behaviour: 'Behaviour',
-    conversations: 'Conversations',
-    installation: 'Installation',
-    live: 'Live',
-    off: 'Off',
-    hasDraft: 'Unpublished changes',
-    storeTakenTitle: "This store's Store Chat is on another account",
-    // The store's Try-On link is on this account, so the merchant can move
-    // Store Chat themselves: a re-link from Shopify admin moves both.
-    storeTakenBody:
-      'To move it here: in Try-On, choose "Connect or re-link a store" to get a code. Then in your Shopify admin, open Apps, then GrindCTRL, choose "Link a different account" and enter the code.',
-    storeTakenAction: 'Get a linking code',
-  },
-  ar: {
-    overview: 'نظرة عامة',
-    appearance: 'المظهر',
-    aiKnowledge: 'الذكاء والمعرفة',
-    behaviour: 'السلوك',
-    conversations: 'المحادثات',
-    installation: 'التثبيت',
-    live: 'يعمل',
-    off: 'متوقف',
-    hasDraft: 'تغييرات غير منشورة',
-    storeTakenTitle: 'محادثة المتجر لهذا المتجر على حساب آخر',
-    storeTakenBody:
-      'لنقلها إلى هنا: من صفحة التجربة اختر "ربط متجر أو إعادة ربطه" للحصول على رمز. ثم في لوحة تحكم شوبيفاي افتح التطبيقات ثم جريند كنترول، واختر "ربط حساب آخر" وأدخل الرمز.',
-    storeTakenAction: 'احصل على رمز الربط',
-  },
-} as const;
-
-/* The Store Chat page, drawn by both of its routes. Under v16_dashboard,
-   /dashboard/store-chat is What it knows and /dashboard/store-chat/setup is
-   Set up, today's page under the v16 tabs until ChatStudio and the Inbox
-   land. A link with today's ?tab= (the handoff email, Today's Open inbox,
-   bookmarks) still opens that tab, under Set up. Without the flag both
-   routes draw today's page. */
+/* The Store Chat page (04-dashboard.md), drawn by three routes:
+   /dashboard/store-chat is What it knows, /dashboard/store-chat/setup is
+   Set up (ChatStudio), and /dashboard/store-chat/setup/more holds the
+   editors Set up does not cover yet. Today's six ?tab= screens are gone: a
+   link that still carries one is redirected to the page that replaced it
+   (lib/dashboard/store-chat-legacy-tab.ts). */
 export async function StoreChatPage({
   params,
   tab: route,
 }: {
-  params: { site?: string; tab?: string };
-  tab: 'knows' | 'setup';
+  params: { site?: string; tab?: string; section?: string; orders?: string };
+  tab: 'knows' | 'setup' | 'more';
 }) {
-  const userId = await requireDashboardUser(route === 'setup' ? '/dashboard/store-chat/setup' : '/dashboard/store-chat');
+  const userId = await requireDashboardUser(
+    route === 'setup' ? '/dashboard/store-chat/setup' : route === 'more' ? MORE_SETTINGS : '/dashboard/store-chat',
+  );
+  const legacy = route === 'more' ? null : legacyStoreChatHref(params);
+  if (legacy) redirect(legacy);
   const locale = await getRequestLocale();
-  const copy = TAB_COPY[locale === 'ar' ? 'ar' : 'en'];
 
   /* Clerk holds the address the merchant actually reads; the profiles row
      is only a mirror. Notifications are unsendable without this. */
@@ -149,25 +110,7 @@ export async function StoreChatPage({
       // transient failure error.tsx's generic "trying again usually works"
       // copy implies, and not something a retry could ever fix. Say so here
       // instead of letting it escape to that boundary and 500 forever.
-      if (error instanceof StoreOwnedByAnotherAccountError) {
-        return (
-          <section
-            dir={locale === 'ar' ? 'rtl' : 'ltr'}
-            className="grid min-w-0 place-items-center px-4 py-16"
-          >
-            <div className="grid max-w-md gap-2 text-center">
-              <h1 className="text-lg font-semibold">{copy.storeTakenTitle}</h1>
-              <p className="text-sm text-muted-foreground">{copy.storeTakenBody}</p>
-              <Link
-                href="/dashboard/try-on"
-                className="mx-auto mt-2 inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-              >
-                {copy.storeTakenAction}
-              </Link>
-            </div>
-          </section>
-        );
-      }
+      if (error instanceof StoreOwnedByAnotherAccountError) return <V16StoreTaken locale={locale} />;
       throw error;
     }
   }
@@ -217,17 +160,13 @@ export async function StoreChatPage({
     features,
   );
 
-  const linkedTab = (TAB_IDS as readonly string[]).includes(params.tab ?? '');
-  const tab: MessengerTabId = linkedTab ? (params.tab as MessengerTabId) : 'overview';
-
   /* What it knows reads only its own two parts: the 7-day numbers for the
      head, and the knowledge. The head is left without its line when the
      numbers cannot be read; the knowledge is required. */
-  const v16 = features.includes('v16_dashboard');
   const knowsCopy = getChatKnowsCopy(locale);
   // Setting Store Chat up is for owners and admins (item 12); the actions check it again.
   const canSetUp = roleCan(selectedRole, 'settings');
-  if (v16 && route === 'knows' && !linkedTab) {
+  if (route === 'knows') {
     const [statsRead, knowledgeRead] = await Promise.allSettled([getOverviewStats(selected.id), listKnowledge(selected.id)]);
     const head = buildChatHead(
       {
@@ -259,9 +198,8 @@ export async function StoreChatPage({
     );
   }
 
-  /* Set up under v16 is ChatStudio, on the same draft and publish. A link
-     with today's ?tab= still opens today's tabs below. */
-  if (v16 && route === 'setup' && !linkedTab) {
+  /* Set up is ChatStudio, on the same draft and publish. */
+  if (route === 'setup') {
     if (!canSetUp) redirect('/dashboard/store-chat');
     const [statsRead, detectedRead, ordersRead, flagRows] = await Promise.allSettled([
       getOverviewStats(selected.id),
@@ -328,141 +266,21 @@ export async function StoreChatPage({
     );
   }
 
-  /* One parallel pass for every panel. Tabs switch in the client now, so
-     fetching per-tab would only move the wait to each click; these are small
-     scoped reads and settle together in about the time the slowest takes. */
-  let stats: Awaited<ReturnType<typeof getOverviewStats>> | null = null;
-  let conversations: Awaited<ReturnType<typeof listConversationsForSite>> = [];
-  let knowledge: Awaited<ReturnType<typeof listKnowledge>> = [];
-  let cannedReplies: Awaited<ReturnType<typeof listCannedReplies>> = [];
-  let storeDetectedAt: string | null = null;
-
-  const [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes] =
-    await Promise.allSettled([
-      getOverviewStats(selected.id),
-      listConversationsForSite(selected.id),
-      listKnowledge(selected.id),
-      listCannedReplies(selected.id),
-      getWidgetLastSeenAt(selected.id),
-      selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
-    ]);
-
-  if (statsRes.status === 'fulfilled') stats = statsRes.value;
-  if (conversationsRes.status === 'fulfilled') conversations = conversationsRes.value;
-  // One query for the whole page rather than one per row.
-  const summaries = await summarizeConversations(conversations).catch(
-    (): Record<string, ConversationSummary> => ({}),
-  );
-  // Who each taken-over conversation is assigned to, resolved once for the
-  // whole list. Names are a hint, not the inbox itself — a failed lookup
-  // leaves them blank rather than breaking the page.
-  const assigneeIds = [
-    ...new Set(
-      conversations.map((c) => c.assigned_profile_id).filter((id): id is string => Boolean(id)),
-    ),
-  ];
-  const assigneeNames =
-    assigneeIds.length > 0
-      ? await resolveAssigneeNames(selected.workspace_id, assigneeIds).catch(
-          (): Record<string, string> => ({}),
-        )
-      : {};
-  const assignableMembers = await listWorkspaceMembers(selected.workspace_id).catch(
-    (): Array<{ profileId: string; name: string }> => [],
-  );
-  // The "assigned to me" filter needs the viewer's own profile. A lookup
-  // failure hides the filter instead of breaking the page.
-  const currentProfileId = await getProfileId(userId).catch((): string | null => null);
-  if (knowledgeRes.status === 'fulfilled') knowledge = knowledgeRes.value;
-  if (cannedRepliesRes.status === 'fulfilled') cannedReplies = cannedRepliesRes.value;
-  if (detectedRes.status === 'fulfilled') storeDetectedAt = detectedRes.value;
-  const ordersAuthorized = ordersRes.status === 'fulfilled' ? ordersRes.value : false;
-  // Only the platform operator sees, or may change, this store's v16 flags.
-  const flagRows = (await isTryOnPlatformOperator()) ? await storeFlagRows(flagStore) : null;
-  for (const failed of [statsRes, conversationsRes, knowledgeRes, cannedRepliesRes, detectedRes, ordersRes]) {
-    if (failed.status === 'rejected') {
-      // One slow or broken panel must not take the whole section down.
-      console.error('[messenger] dashboard data failed:', failed.reason);
-    }
+  /* More settings: today's Appearance and Behaviour editors, for what Set up
+     does not cover yet (saved replies, hours, the widget's language, a custom
+     icon, the launcher size), and where Shopify's order access grant returns.
+     Their own tabs switch in the client. */
+  if (!canSetUp) redirect('/dashboard/store-chat');
+  const section: MoreSection = MORE_SECTIONS.find((id) => id === params.section) ?? 'behaviour';
+  const [statsRead, cannedRead, ordersRead] = await Promise.allSettled([
+    getOverviewStats(selected.id),
+    listCannedReplies(selected.id),
+    selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
+  ]);
+  for (const failed of [statsRead, cannedRead, ordersRead]) {
+    if (failed.status === 'rejected') console.error('[store chat] more settings failed:', failed.reason);
   }
-
-  const body = (
-    <section className="grid min-w-0 gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Under v16 the frame's badge says whether it is live. */}
-          {!v16 && (
-            <Badge variant={selected.status === 'active' ? 'default' : 'secondary'}>
-              {selected.status === 'active' ? copy.live : copy.off}
-            </Badge>
-          )}
-          {hasDraft && <Badge variant="outline">{copy.hasDraft}</Badge>}
-        </div>
-        {sites.length > 1 && (
-          <nav aria-label={locale === 'ar' ? 'اختر المتجر' : 'Choose store'} className="flex flex-wrap gap-1">
-            {/* Plain links: choosing a store loads the page, so the dashboard
-                remembers it, and showing them prefetches nothing
-                (lib/dashboard/forward-request.ts remembers only page loads). */}
-            {sites.map((site) => (
-              <a
-                key={site.id}
-                href={`/dashboard/store-chat?site=${site.id}&tab=${tab}`}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                  site.id === selected.id
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border hover:bg-accent'
-                }`}
-              >
-                {site.name}
-              </a>
-            ))}
-          </nav>
-        )}
-      </div>
-
-      <MessengerTabs
-        locale={locale}
-        initialTab={tab}
-        siteId={selected.id}
-        siteName={selected.name}
-        domain={selected.domain}
-        embedKey={selected.embed_key}
-        active={selected.status === 'active'}
-        version={selected.settings_version}
-        detectedAt={storeDetectedAt}
-        ordersAuthorized={ordersAuthorized}
-        config={config}
-        payload={payload}
-        stats={stats}
-        conversations={toConversationListItems(conversations, {
-          assigneeNames,
-          summaries,
-          withTags: features.includes('n25_handoff_rules'),
-        })}
-        knowledge={knowledge}
-        cannedReplies={cannedReplies}
-        actions={messengerActions}
-        hasDraft={hasDraft}
-        canRevert={canRevert}
-        canDisconnect={canDisconnect}
-        configDiff={configDiff}
-        currentProfileId={currentProfileId}
-        assignableMembers={assignableMembers}
-        shopTimezone={shopTimezone}
-      />
-
-      {flagRows && (
-        <StoreFlagsCard
-          kind={'shopDomain' in flagStore ? 'shop' : 'site'}
-          storeKey={'shopDomain' in flagStore ? flagStore.shopDomain : flagStore.widgetSiteId}
-          storeLabel={selected.domain ?? selected.name}
-          rows={flagRows}
-        />
-      )}
-    </section>
-  );
-
-  if (!v16) return body;
+  const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
   return (
     <V16ChatFrame
       locale={locale}
@@ -477,7 +295,32 @@ export async function StoreChatPage({
         knowsCopy,
       )}
     >
-      {body}
+      <V16BackToSetUp locale={locale} />
+      <MessengerTabs
+        locale={locale}
+        initialTab={section}
+        sections={MORE_SECTIONS}
+        siteId={selected.id}
+        siteName={selected.name}
+        domain={selected.domain}
+        embedKey={selected.embed_key}
+        active={selected.status === 'active'}
+        version={selected.settings_version}
+        detectedAt={null}
+        ordersAuthorized={ordersRead.status === 'fulfilled' ? ordersRead.value : false}
+        config={config}
+        payload={payload}
+        stats={null}
+        conversations={[]}
+        knowledge={[]}
+        cannedReplies={cannedRead.status === 'fulfilled' ? cannedRead.value : []}
+        actions={messengerActions}
+        hasDraft={hasDraft}
+        canRevert={canRevert}
+        canDisconnect={canDisconnect}
+        configDiff={configDiff}
+        shopTimezone={shopTimezone}
+      />
     </V16ChatFrame>
   );
 }

@@ -1,25 +1,15 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { DashboardSquare01Icon, MagicWand01Icon } from '@hugeicons/core-free-icons';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DashboardSidebarNav } from '@/components/dashboard/nav-link';
 import { TryOnSettingsPanel } from '@/components/dashboard/tryon-settings-panel';
 import { ShopPlanControl } from '@/components/dashboard/shop-plan-control';
 import { MantineUiProvider } from '@/components/mantine/provider';
 import { MantineThemeCheck } from './mantine-check';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
 import { DEFAULT_SETTINGS } from '@/lib/try-on/settings';
-import type { DashboardResolvedNavItem } from '@/lib/dashboard/nav-config';
 import type {
   CreditPackCatalogItem,
   PlanCatalogItem,
@@ -37,25 +27,6 @@ const PLANS: PlanCatalogItem[] = [
 
 const PACKS: CreditPackCatalogItem[] = [
   { id: 'k1', packKey: 'pack-lite-v1', name: 'Boost 80', priceMinor: 500, currency: 'USD', renders: 80, modelKey: 'lite', validityDays: 365, active: true, sortOrder: 10 },
-];
-
-const NAV_ITEMS: DashboardResolvedNavItem[] = [
-  {
-    href: '#overview',
-    label: 'Overview',
-    icon: DashboardSquare01Icon,
-    permissionKey: 'canViewToday',
-    group: 'core',
-    isActive: true,
-  },
-  {
-    href: '#try-on',
-    label: 'Try-On',
-    icon: MagicWand01Icon,
-    permissionKey: 'canViewTryOn',
-    group: 'core',
-    isActive: false,
-  },
 ];
 
 const STATE: ShopEntitlement = {
@@ -89,18 +60,7 @@ export default async function UiCheckPage() {
 
   return (
     <MantineUiProvider dir={getDir(locale)}>
-    <SidebarProvider defaultOpen>
-      {/* Same side rule as DashboardShell: the sidebar is pinned physically. */}
-      <Sidebar side={locale === 'ar' ? 'right' : 'left'}>
-        <SidebarContent className="p-2">
-          <DashboardSidebarNav navItems={NAV_ITEMS} />
-        </SidebarContent>
-      </Sidebar>
-
-      <SidebarInset className="min-w-0 bg-muted/40">
-        <header className="flex h-14 items-center border-b px-4">
-          <SidebarTrigger aria-label="Toggle dashboard navigation" />
-        </header>
+      <div className="min-h-dvh min-w-0 bg-muted/40">
         <main className="min-w-0">
           <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-4 p-4">
             <section id="try-on" className="grid min-w-0 gap-6">
@@ -195,8 +155,7 @@ export default async function UiCheckPage() {
             </section>
           </div>
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
     </MantineUiProvider>
   );
 }

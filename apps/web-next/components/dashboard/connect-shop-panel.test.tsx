@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ generateShopLinkCode: vi.fn() }));
@@ -7,6 +7,7 @@ vi.mock('@/app/dashboard/connect-shop/actions', () => ({
   generateShopLinkCode: mocks.generateShopLinkCode,
 }));
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { ConnectShopPanel } from './connect-shop-panel';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 

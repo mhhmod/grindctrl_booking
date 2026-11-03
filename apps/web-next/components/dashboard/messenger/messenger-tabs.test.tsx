@@ -1,6 +1,7 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { MessengerTabs } from './messenger-tabs';
 
 const { behaviour, conversations, overview } = vi.hoisted(() => ({ behaviour: vi.fn(), conversations: vi.fn(), overview: vi.fn() }));
@@ -21,7 +22,7 @@ describe('MessengerTabs saved replies', () => {
     } as React.ComponentProps<typeof MessengerTabs>;
     render(<MessengerTabs {...props} />);
     expect(behaviour).toHaveBeenLastCalledWith(expect.objectContaining({ cannedReplies, actions: props.actions, siteId: 'site-1' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Conversations' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Conversations' }));
     expect(conversations).toHaveBeenLastCalledWith(expect.objectContaining({ cannedReplies, actions: props.actions, siteId: 'site-1' }));
   });
 });
@@ -43,4 +44,15 @@ it.each([true, undefined])('threads disconnect availability and actions to Overv
   } as unknown as React.ComponentProps<typeof MessengerTabs>;
   render(<MessengerTabs {...props} />);
   expect(overview).toHaveBeenLastCalledWith(expect.objectContaining({ siteId: 'site-1', canDisconnect: canDisconnect ?? false, actions: props.actions }));
+});
+
+it('shows only the tabs a host asks for', () => {
+  const props = {
+    locale: 'en', initialTab: 'behaviour', sections: ['appearance', 'behaviour'], siteId: 'site-1', domain: null,
+    config: {}, actions: {},
+  } as unknown as React.ComponentProps<typeof MessengerTabs>;
+  render(<MessengerTabs {...props} />);
+  expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Appearance', 'Behaviour']);
+  expect(screen.getByRole('tab', { name: 'Behaviour' })).toHaveAttribute('aria-selected', 'true');
+  expect(screen.getByRole('tabpanel')).toHaveTextContent('Behaviour panel');
 });

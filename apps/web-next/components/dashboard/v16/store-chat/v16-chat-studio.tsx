@@ -10,6 +10,7 @@ import { PreviewFrame } from '@/components/dashboard/messenger/preview-frame';
 import { appEmbedActivationUrl } from '@/lib/shopify/app-identity';
 import { buildCanonicalInstallSnippet } from '@/lib/adapters/install';
 import { getChatStudioCopy, type ChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
+import { MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import {
   INSTRUCTIONS_MAX,
   hidePatch,
@@ -788,7 +789,7 @@ export function V16ChatStudio({
                 <p className={classes.muted}>{hoursLine(b, locale)}</p>
                 {b.availabilityMode === 'hours' && <p className={classes.muted}>{copy.hoursAfter}</p>}
               </div>
-              <Button component={Link} href="/dashboard/store-chat/setup?tab=behaviour" variant="default" radius="pill">
+              <Button component={Link} href={`${MORE_SETTINGS}?section=behaviour`} variant="default" radius="pill">
                 {copy.change}
               </Button>
             </div>
@@ -868,7 +869,7 @@ export function V16ChatStudio({
                 </h2>
                 <p className={classes.muted}>{copy.moreSettings.body}</p>
               </div>
-              <Button component={Link} href="/dashboard/store-chat/setup?tab=appearance" variant="default" radius="pill">
+              <Button component={Link} href={`${MORE_SETTINGS}?section=appearance`} variant="default" radius="pill">
                 {copy.openMoreSettings}
               </Button>
             </div>

@@ -54,6 +54,13 @@ export type ActiveStore = {
   siteId: string | null;
 };
 
+/** The store whose flags apply to this active store: its shop when it has
+ *  one, else its Store Chat site, or null for an account with no store. */
+export function flagStoreOf(active: ActiveStore): { shopDomain: string } | { widgetSiteId: string } | null {
+  if (active.shopDomain) return { shopDomain: active.shopDomain };
+  return active.siteId ? { widgetSiteId: active.siteId } : null;
+}
+
 function siteForShop(sites: readonly StoreCandidateSite[], shopDomain: string): StoreCandidateSite | undefined {
   return sites.find((site) => site.domain?.trim().toLowerCase() === shopDomain);
 }

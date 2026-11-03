@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Loader, Stack, Text } from '@mantine/core';
 import { getShopifySessionToken } from '@/lib/shopify/app-bridge-client';
 import { useStoreChatActions } from './store-chat-actions';
 import { MessengerTabs, type MessengerTabId } from '@/components/dashboard/messenger/messenger-tabs';
@@ -193,8 +194,21 @@ export function StoreChatEmbedded({ locale }: { locale: 'en' | 'ar' }) {
     [rawActions, loadState],
   );
 
-  if (failed) return <p className="p-6 text-sm text-destructive">{t.error}</p>;
-  if (!state) return <p className="p-6 text-sm text-muted-foreground">{t.loading}</p>;
+  if (failed) {
+    return (
+      <Text role="alert" size="sm" c="danger" p="xl">
+        {t.error}
+      </Text>
+    );
+  }
+  if (!state) {
+    return (
+      <Stack role="status" align="center" gap="xs" p="xl">
+        <Loader size="sm" aria-hidden />
+        <Text size="sm" c="dimmed">{t.loading}</Text>
+      </Stack>
+    );
+  }
 
   const initialTab: MessengerTabId = 'overview';
 

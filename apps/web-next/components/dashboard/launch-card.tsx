@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Check } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, Group, Paper, Stack, Text } from '@mantine/core';
+import { GcIcon } from '@/components/icons';
 import { createPreviewLink, setLaunchState } from '@/app/dashboard/try-on/launch-actions';
 import type { LaunchState } from '@/lib/launch/audience';
 
@@ -95,57 +94,57 @@ export function LaunchCard({
   }
 
   return (
-    <Card data-testid="launch-card">
-      <CardContent className="grid gap-5 pt-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid min-w-0 gap-1">
-            <p className="text-sm font-semibold text-foreground">{t.tryTitle}</p>
-            <p className="text-sm text-muted-foreground">
-              {t.tryBody} <span className="font-medium text-foreground">{t.testFree}</span>
-            </p>
-          </div>
-          <Button type="button" variant="outline" disabled={pending} onClick={openStore}>
+    <Paper withBorder radius="card" p="lg" data-testid="launch-card">
+      <Stack gap="lg">
+        <Group justify="space-between" gap="sm" wrap="wrap">
+          <Stack gap={4} style={{ minWidth: 0, flex: '1 1 16rem' }}>
+            <Text fw={600} size="sm">{t.tryTitle}</Text>
+            <Text size="sm" c="dimmed">
+              {t.tryBody} <Text span fw={500} c="var(--foreground)">{t.testFree}</Text>
+            </Text>
+          </Stack>
+          <Button type="button" variant="default" radius="pill" h={44} disabled={pending} onClick={openStore}>
             {t.open}
           </Button>
-        </div>
+        </Group>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="grid min-w-0 gap-1">
-            <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              {live && <Check aria-hidden="true" className="size-4 text-emerald-600 dark:text-emerald-400" />}
-              {t.liveTitle}
-            </p>
+        <Group justify="space-between" gap="sm" wrap="wrap">
+          <Stack gap={4} style={{ minWidth: 0, flex: '1 1 16rem' }}>
+            <Group gap="xs" wrap="nowrap">
+              {live && <GcIcon name="check" size={16} />}
+              <Text fw={600} size="sm">{t.liveTitle}</Text>
+            </Group>
             {state === 'holdout' && launch.holdoutDay !== null && launch.holdoutDays !== null ? (
-              <p className="text-sm text-muted-foreground" role="status">
+              <Text size="sm" c="dimmed" role="status">
                 {t.holdoutDay(launch.holdoutDay, launch.holdoutDays)}
-              </p>
+              </Text>
             ) : !live ? (
-              <p className="text-sm text-muted-foreground">{holdoutAvailable ? t.liveBodyHalf : t.onlyYou}</p>
+              <Text size="sm" c="dimmed">{holdoutAvailable ? t.liveBodyHalf : t.onlyYou}</Text>
             ) : null}
             {!live && state !== 'holdout' && holdoutAvailable && (
-              <p className="text-sm text-muted-foreground">{t.onlyYou}</p>
+              <Text size="sm" c="dimmed">{t.onlyYou}</Text>
             )}
-          </div>
+          </Stack>
           {!live && (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" disabled={pending} onClick={() => choose('live')}>
+            <Group gap="xs" wrap="wrap">
+              <Button type="button" radius="pill" h={44} disabled={pending} onClick={() => choose('live')}>
                 {t.goLive}
               </Button>
               {holdoutAvailable && state !== 'holdout' && (
-                <Button type="button" variant="outline" disabled={pending} onClick={() => choose('holdout')}>
+                <Button type="button" variant="default" radius="pill" h={44} disabled={pending} onClick={() => choose('holdout')}>
                   {t.halfTest}
                 </Button>
               )}
-            </div>
+            </Group>
           )}
-        </div>
+        </Group>
 
         {error && (
-          <p className="text-sm text-destructive" role="alert">
+          <Text size="sm" c="danger" role="alert">
             {error}
-          </p>
+          </Text>
         )}
-      </CardContent>
-    </Card>
+      </Stack>
+    </Paper>
   );
 }

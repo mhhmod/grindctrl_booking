@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button, Modal, Radio, Stack, TextInput } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { getTeamCopy, type TeamCopy } from '@/lib/dashboard/team-copy';
+import { MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import type { TeamView } from '@/lib/dashboard/team-model';
 import type { InviteRole } from '@/lib/team/invites';
 import type { TeamActionResult } from '@/app/dashboard/settings/actions';
@@ -185,7 +186,9 @@ function EditDialog({
   );
 }
 
-const STORE_CHAT_ALERTS = '/dashboard/store-chat/setup?tab=behaviour';
+// Who gets alerted is a Set up card; the opening hours are an editor Set up does not cover yet.
+const STORE_CHAT_ALERTS = '/dashboard/store-chat/setup';
+const STORE_CHAT_HOURS = `${MORE_SETTINGS}?section=behaviour`;
 
 function V16SettingsFrame({ locale, children }: { locale: SiteLocale; children: React.ReactNode }) {
   const copy = getTeamCopy(locale);
@@ -346,7 +349,7 @@ export function V16Team({
                 <p className={classes.muted}>{view.hours}</p>
                 {view.outsideHours && <p className={classes.muted}>{copy.outsideHours}</p>}
               </div>
-              <ChangeLink href={STORE_CHAT_ALERTS}>{copy.change}</ChangeLink>
+              <ChangeLink href={STORE_CHAT_HOURS}>{copy.change}</ChangeLink>
             </div>
           </section>
         )}

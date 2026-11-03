@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Tabs } from '@mantine/core';
 import { MessengerOverview } from './overview';
 import { AppearanceEditor } from './appearance-editor';
 import { BehaviourEditor } from './behaviour-editor';
@@ -18,9 +19,10 @@ import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-con
 /* Tabs switch in the client. They used to be links to ?tab=…, so every
    click paid a full server render of a force-dynamic page — several
    database round trips before anything moved on screen, which read as the
-   UI being stuck. The page now loads all six panels' data in one parallel
-   pass and switching is instant. The URL still seeds the initial tab, so
-   deep links and the Overview shortcuts keep working. */
+   UI being stuck. The host loads every panel's data in one parallel pass and
+   switching is instant. A host may show only some of the tabs (the
+   dashboard keeps just the editors Set up does not cover yet). The tab bar
+   is Mantine's; the editors under it are still the shared shadcn ones. */
 
 const TABS = ['overview', 'appearance', 'ai', 'behaviour', 'conversations', 'installation'] as const;
 export type MessengerTabId = (typeof TABS)[number];
@@ -49,6 +51,7 @@ const COPY = {
 export function MessengerTabs({
   locale,
   initialTab,
+  sections = TABS,
   siteId,
   siteName,
   domain,
@@ -74,6 +77,8 @@ export function MessengerTabs({
 }: {
   locale: MessengerLocale;
   initialTab: MessengerTabId;
+  /** The tabs this host shows; all six by default. */
+  sections?: readonly MessengerTabId[];
   siteId: string;
   siteName: string;
   domain: string | null;
@@ -107,27 +112,20 @@ export function MessengerTabs({
   const t = COPY[locale === 'ar' ? 'ar' : 'en'];
 
   return (
-    <>
-      <nav aria-label={t.sections} className="min-w-0">
-        <ul className="flex flex-wrap gap-1 border-b border-border pb-px">
-          {TABS.map((id) => (
-            <li key={id}>
-              <button
-                type="button"
-                onClick={() => setTab(id)}
-                aria-current={tab === id ? 'page' : undefined}
-                className={`inline-flex rounded-t-lg px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 ${
-                  tab === id
-                    ? 'border-b-2 border-primary font-semibold text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t[id]}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <Tabs
+      value={tab}
+      onChange={(next) => next && setTab(next as MessengerTabId)}
+      keepMounted={false}
+      activateTabWithKeyboard
+      style={{ minWidth: 0 }}
+    >
+      <Tabs.List aria-label={t.sections}>
+        {sections.map((id) => (
+          <Tabs.Tab key={id} value={id} mih={44}>
+            {t[id]}
+          </Tabs.Tab>
+        ))}
+      </Tabs.List>
 
       {/* One block holding the panel and the publish bar, deliberately. The
           page section around us is a CSS grid, and a grid item's containing
@@ -136,6 +134,7 @@ export function MessengerTabs({
           this wrapper it can travel the full height of the panel, which is
           what makes it reachable from the middle of a long editor. */}
       <div className="relative min-w-0">
+      <Tabs.Panel value={tab}>
       {tab === 'overview' && (
         <MessengerOverview
           locale={locale}
@@ -200,9 +199,10 @@ export function MessengerTabs({
           actions={actions}
         />
       )}
+      </Tabs.Panel>
 
         <PublishBar locale={locale} siteId={siteId} hasDraft={hasDraft} configDiff={configDiff} actions={actions} />
       </div>
-    </>
+    </Tabs>
   );
 }

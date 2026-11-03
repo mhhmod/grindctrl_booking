@@ -1,10 +1,11 @@
 import React from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const actions = vi.hoisted(() => ({ createPreviewLink: vi.fn(), setLaunchState: vi.fn() }));
 vi.mock('@/app/dashboard/try-on/launch-actions', () => actions);
 
+import { renderWithMantine as render } from '@/components/mantine/test-utils';
 import { LaunchCard } from './launch-card';
 
 const PREVIEW = { state: 'preview' as const, holdoutDay: null, holdoutDays: null };

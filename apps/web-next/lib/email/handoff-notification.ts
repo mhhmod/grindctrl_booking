@@ -67,7 +67,7 @@ export function buildHandoffNotification(input: HandoffNotificationInput): {
 } {
   const t = COPY[input.locale === 'ar' ? 'ar' : 'en'];
   const dir = input.locale === 'ar' ? 'rtl' : 'ltr';
-  const link = `https://grindctrl.cloud/dashboard/store-chat?site=${encodeURIComponent(input.siteId)}&tab=conversations`;
+  const link = `https://grindctrl.cloud/dashboard/inbox?site=${encodeURIComponent(input.siteId)}`;
   const messages = input.recentMessages.slice(-3);
 
   const text = [

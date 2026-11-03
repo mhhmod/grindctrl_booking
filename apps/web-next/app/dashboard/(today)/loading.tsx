@@ -1,24 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { getRequestLocale } from '@/lib/auth/locale';
+import { V16PageSkeleton } from '@/components/dashboard/v16/skeletons';
 
-export default function DashboardOverviewLoading() {
-  return (
-    <div className="grid gap-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Skeleton className="h-28 w-full rounded-xl" />
-        <Skeleton className="h-28 w-full rounded-xl" />
-        <Skeleton className="h-28 w-full rounded-xl" />
-        <Skeleton className="h-28 w-full rounded-xl" />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Skeleton className="h-72 w-full rounded-xl" />
-        <Skeleton className="h-72 w-full rounded-xl" />
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-64 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
-      </section>
-    </div>
-  );
+export default async function DashboardOverviewLoading() {
+  return <V16PageSkeleton locale={await getRequestLocale()} variant="today" />;
 }

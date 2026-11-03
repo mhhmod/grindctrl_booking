@@ -1,22 +1,17 @@
 'use client';
 
-import { useActionState, useEffect, useId, useRef } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { useFormStatus } from 'react-dom';
+import { Alert, Button, NativeSelect, Stack, TextInput, Textarea } from '@mantine/core';
 import { submitOnboarding, type OnboardingFormState } from '@/app/onboarding/actions';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { AuthCopy } from '@/lib/auth/auth-i18n';
 import type { OnboardingProfile } from '@/lib/onboarding/profile';
-import { cn } from '@/lib/utils';
 
 const INITIAL_STATE: OnboardingFormState = { errors: {} };
 
-/* Inputs are h-11 rather than the default h-9: this form is filled on a phone
-   far more often than on a desktop, and 44px is the minimum comfortable
-   touch target. */
-const FIELD_CLASS = 'h-11 md:h-10';
+/* This form is filled on a phone far more often than on a desktop, so every
+   input keeps the 44px minimum comfortable touch target. */
+const FIELD = { radius: 'input', size: 'md', styles: { input: { minHeight: 44 } } } as const;
 
 export function OnboardingForm({
   profile,
@@ -39,88 +34,104 @@ export function OnboardingForm({
   }, [state]);
 
   const value = (key: keyof OnboardingProfile) =>
-    state.values?.[key as keyof typeof state.values] ?? profile?.[key] ?? '';
+    String(state.values?.[key as keyof typeof state.values] ?? profile?.[key] ?? '');
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-5">
-      {state.message ? (
-        <Alert variant="destructive" role="alert">
-          <AlertDescription>{state.message}</AlertDescription>
-        </Alert>
-      ) : null}
+    <form ref={formRef} action={formAction}>
+      <Stack gap="md">
+        {state.message ? (
+          <Alert color="danger" variant="light" role="alert">
+            {state.message}
+          </Alert>
+        ) : null}
 
-      <Field
-        name="fullName"
-        label={copy.fieldName}
-        required
-        error={state.errors.fullName}
-        inputProps={{ autoComplete: 'name', defaultValue: value('fullName') }}
-      />
+        <TextInput
+          {...FIELD}
+          name="fullName"
+          label={copy.fieldName}
+          required
+          error={state.errors.fullName}
+          autoComplete="name"
+          defaultValue={value('fullName')}
+        />
 
-      <Field
-        name="phone"
-        label={copy.fieldPhone}
-        required
-        hint={copy.fieldPhoneHint}
-        error={state.errors.phone}
-        inputProps={{
-          type: 'tel',
-          inputMode: 'tel',
-          autoComplete: 'tel',
-          placeholder: '+20 100 000 0000',
-          defaultValue: value('phone'),
-        }}
-      />
+        <TextInput
+          {...FIELD}
+          name="phone"
+          label={copy.fieldPhone}
+          description={copy.fieldPhoneHint}
+          required
+          error={state.errors.phone}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="+20 100 000 0000"
+          /* A phone number reads left to right in Arabic too. */
+          dir="ltr"
+          defaultValue={value('phone')}
+        />
 
-      <Field
-        name="companyName"
-        label={copy.fieldCompany}
-        required
-        error={state.errors.companyName}
-        inputProps={{ autoComplete: 'organization', defaultValue: value('companyName') }}
-      />
+        <TextInput
+          {...FIELD}
+          name="companyName"
+          label={copy.fieldCompany}
+          required
+          error={state.errors.companyName}
+          autoComplete="organization"
+          defaultValue={value('companyName')}
+        />
 
-      <Field
-        name="website"
-        label={copy.fieldWebsite}
-        required
-        hint={copy.fieldWebsiteHint}
-        error={state.errors.website}
-        inputProps={{
-          type: 'url',
-          inputMode: 'url',
-          autoComplete: 'url',
-          placeholder: 'yourstore.com',
-          defaultValue: value('website'),
-        }}
-      />
+        <TextInput
+          {...FIELD}
+          name="website"
+          label={copy.fieldWebsite}
+          description={copy.fieldWebsiteHint}
+          required
+          error={state.errors.website}
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          placeholder="yourstore.com"
+          dir="ltr"
+          defaultValue={value('website')}
+        />
 
-      <SelectField
-        name="storePlatform"
-        label={copy.fieldPlatform}
-        options={copy.platforms}
-        error={state.errors.storePlatform}
-        placeholder={copy.selectPlaceholder}
-        defaultValue={String(value('storePlatform'))}
-      />
+        {/* Native select on purpose: it gets the platform picker on mobile for
+            free, which beats any custom listbox we would have to make
+            accessible ourselves. */}
+        <NativeSelect
+          {...FIELD}
+          name="storePlatform"
+          label={copy.fieldPlatform}
+          required
+          error={state.errors.storePlatform}
+          data={[{ value: '', label: copy.selectPlaceholder, disabled: true }, ...copy.platforms]}
+          defaultValue={value('storePlatform')}
+        />
 
-      <SelectField
-        name="monthlyOrders"
-        label={copy.fieldOrders}
-        options={copy.orderRanges}
-        error={state.errors.monthlyOrders}
-        placeholder={copy.selectPlaceholder}
-        defaultValue={String(value('monthlyOrders'))}
-      />
+        <NativeSelect
+          {...FIELD}
+          name="monthlyOrders"
+          label={copy.fieldOrders}
+          required
+          error={state.errors.monthlyOrders}
+          data={[{ value: '', label: copy.selectPlaceholder, disabled: true }, ...copy.orderRanges]}
+          defaultValue={value('monthlyOrders')}
+        />
 
-      <TextAreaField
-        name="primaryGoal"
-        label={copy.fieldGoal}
-        hint={copy.fieldGoalHint}
-        defaultValue={String(value('primaryGoal'))}
-      />
+        <Textarea
+          radius="input"
+          size="md"
+          name="primaryGoal"
+          label={copy.fieldGoal}
+          description={copy.fieldGoalHint}
+          rows={3}
+          resize="vertical"
+          defaultValue={value('primaryGoal')}
+        />
 
-      <SubmitButton copy={copy} />
+        <SubmitButton copy={copy} />
+      </Stack>
     </form>
   );
 }
@@ -128,165 +139,8 @@ export function OnboardingForm({
 function SubmitButton({ copy }: { copy: AuthCopy }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="lg" className="mt-1 h-11 rounded-full" disabled={pending}>
+    <Button type="submit" radius="pill" h={44} mt={4} loading={pending}>
       {pending ? copy.submitting : copy.submit}
     </Button>
   );
-}
-
-type FieldProps = {
-  name: string;
-  label: string;
-  hint?: string;
-  error?: string;
-  required?: boolean;
-  inputProps?: React.ComponentProps<typeof Input>;
-};
-
-function Field({ name, label, hint, error, required, inputProps }: FieldProps) {
-  const id = useId();
-  const hintId = `${id}-hint`;
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor={id} label={label} required={required} />
-      <Input
-        id={id}
-        name={name}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={cn(hint && hintId, error && errorId) || undefined}
-        className={FIELD_CLASS}
-        {...inputProps}
-      />
-      <FieldFooter hint={hint} hintId={hintId} error={error} errorId={errorId} />
-    </div>
-  );
-}
-
-function SelectField({
-  name,
-  label,
-  options,
-  error,
-  defaultValue,
-  placeholder,
-}: {
-  name: string;
-  label: string;
-  options: readonly string[];
-  error?: string;
-  defaultValue: string;
-  placeholder: string;
-}) {
-  const id = useId();
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor={id} label={label} required />
-      {/* Native select on purpose: it gets the platform picker on mobile for
-          free, which beats any custom listbox we would have to make
-          accessible ourselves. */}
-      <select
-        id={id}
-        name={name}
-        required
-        defaultValue={defaultValue}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? errorId : undefined}
-        className="h-11 w-full min-w-0 rounded-4xl border border-input bg-input/30 px-3 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 md:h-10 md:text-sm"
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      <FieldFooter error={error} errorId={errorId} />
-    </div>
-  );
-}
-
-function TextAreaField({
-  name,
-  label,
-  hint,
-  defaultValue,
-}: {
-  name: string;
-  label: string;
-  hint?: string;
-  defaultValue: string;
-}) {
-  const id = useId();
-  const hintId = `${id}-hint`;
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor={id} label={label} />
-      <textarea
-        id={id}
-        name={name}
-        rows={3}
-        defaultValue={defaultValue}
-        aria-describedby={hint ? hintId : undefined}
-        className="w-full min-w-0 resize-y rounded-3xl border border-input bg-input/30 px-3 py-2 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
-      />
-      <FieldFooter hint={hint} hintId={hintId} />
-    </div>
-  );
-}
-
-function FieldLabel({
-  htmlFor,
-  label,
-  required,
-}: {
-  htmlFor: string;
-  label: string;
-  required?: boolean;
-}) {
-  return (
-    <Label htmlFor={htmlFor} className="text-sm font-medium">
-      {label}
-      {required ? (
-        <span className="ms-0.5 text-destructive" aria-hidden="true">
-          *
-        </span>
-      ) : null}
-    </Label>
-  );
-}
-
-function FieldFooter({
-  hint,
-  hintId,
-  error,
-  errorId,
-}: {
-  hint?: string;
-  hintId?: string;
-  error?: string;
-  errorId?: string;
-}) {
-  if (error) {
-    return (
-      <p id={errorId} role="alert" className="text-xs text-destructive">
-        {error}
-      </p>
-    );
-  }
-  if (hint) {
-    return (
-      <p id={hintId} className="text-xs text-muted-foreground">
-        {hint}
-      </p>
-    );
-  }
-  return null;
 }

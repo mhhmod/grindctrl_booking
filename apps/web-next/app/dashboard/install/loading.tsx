@@ -1,18 +1,6 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { getRequestLocale } from '@/lib/auth/locale';
+import { V16PageSkeleton } from '@/components/dashboard/v16/skeletons';
 
-export default function DashboardInstallLoading() {
-  return (
-    <div className="grid gap-6">
-      <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-        <Skeleton className="h-40 w-full rounded-xl" />
-        <Skeleton className="h-40 w-full rounded-xl" />
-      </section>
-      <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        <Skeleton className="h-80 w-full rounded-xl" />
-        <Skeleton className="h-80 w-full rounded-xl" />
-      </section>
-      <Skeleton className="h-56 w-full rounded-xl" />
-      <Skeleton className="h-48 w-full rounded-xl" />
-    </div>
-  );
+export default async function DashboardInstallLoading() {
+  return <V16PageSkeleton locale={await getRequestLocale()} variant="card" />;
 }
