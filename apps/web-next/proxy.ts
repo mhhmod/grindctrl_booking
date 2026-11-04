@@ -46,6 +46,7 @@ export const config = {
      Keep them out. `shopify` covers the app page tree
      (app/shopify/app/[[...rest]]); `api/shopify` covers its route handlers
      — two different prefixes, both needed. The exact, secret-free health
-     endpoint must remain available even when Clerk is unconfigured/down. */
-  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|api/health$|.*\\..*).*)', '/'],
+     endpoint must remain available even when Clerk is unconfigured/down.
+     `api/woo` uses pairing codes or per-site HMAC signatures, not cookies. */
+  matcher: ['/((?!_next|embed|shopify|api/try-on|api/shopify|api/woo|api/health$|.*\\..*).*)', '/'],
 };

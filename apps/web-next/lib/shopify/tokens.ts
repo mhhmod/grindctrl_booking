@@ -6,6 +6,7 @@ import { decryptToken, encryptToken } from './token-crypto';
 import { normalizeShopDomain } from './shop-authorization';
 import { findShopifyAppByClientId } from './app-registry';
 import { APP_SCOPES } from './oauth';
+import { isSiteTenantKey, normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 
 let client: SupabaseClient | undefined;
 function getServiceClient(): SupabaseClient {
@@ -308,6 +309,29 @@ export async function isActiveShopifyInstallation(shopDomain: string, appClientI
   if (!shop || !findShopifyAppByClientId(appClientId)) return false;
   try { return (await credentialRow(shop, appClientId))?.status === 'active'; }
   catch { return false; }
+}
+
+/** Platform-neutral installation status check. Shopify callers must still
+ * supply the verified app identity; site tenants are active only while their
+ * plugin connection row is active. Storage failures deny access. */
+export async function isActiveTenant(tenantKey: string, appClientId?: string): Promise<boolean> {
+  const key = normalizeTenantKey(tenantKey);
+  if (!key) return false;
+  if (!isSiteTenantKey(key)) {
+    return appClientId ? isActiveShopifyInstallation(key, appClientId) : false;
+  }
+
+  try {
+    const { data, error } = await getServiceClient()
+      .from('woo_site_connections')
+      .select('widget_site_id')
+      .eq('widget_site_id', key.slice('site:'.length))
+      .eq('status', 'active')
+      .limit(1);
+    return !error && Array.isArray(data) && data.length === 1;
+  } catch {
+    return false;
+  }
 }
 
 /** A 401 retires only the exact credential version used by the failed request.

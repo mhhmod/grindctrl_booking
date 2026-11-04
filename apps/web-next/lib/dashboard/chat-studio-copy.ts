@@ -101,8 +101,17 @@ export interface ChatStudioCopy {
     title: string;
     body: string;
     download: string;
-    keyLabel: string;
-    steps: { download: string; upload: string; key: string; domain: string };
+    getCode: string;
+    gettingCode: string;
+    codeLabel: string;
+    codeExpires: (at: string) => string;
+    codeError: string;
+    connected: string;
+    disconnected: string;
+    pluginVersion: (version: string) => string;
+    lastSeen: (at: string) => string;
+    neverSeen: string;
+    steps: { download: string; upload: string; code: string; connect: string; domain: string };
   };
   domains: {
     title: string;
@@ -261,11 +270,21 @@ const en: ChatStudioCopy = {
     title: 'WooCommerce',
     body: 'Add Store Chat to your WooCommerce store with the GRINDCTRL plugin for WordPress.',
     download: 'Download plugin',
-    keyLabel: 'Embed key',
+    getCode: 'Get a connection code',
+    gettingCode: 'Creating code…',
+    codeLabel: 'Connection code',
+    codeExpires: (at) => `Expires at ${at}.`,
+    codeError: 'Could not create a connection code. Try again.',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    pluginVersion: (version) => `Plugin version ${version}`,
+    lastSeen: (at) => `Last heartbeat ${at}`,
+    neverSeen: 'No heartbeat received yet.',
     steps: {
       download: 'Download the plugin and keep it zipped. WordPress installs the zip file as it is.',
       upload: 'In WordPress, go to Plugins, then Add New, then Upload Plugin. Choose the file, install it and activate it.',
-      key: 'Go to Settings, then GRINDCTRL Store Chat. Paste your embed key and save.',
+      code: 'Get a connection code here. It expires after 15 minutes.',
+      connect: 'In WordPress, go to Settings, then GRINDCTRL Store Chat. Paste the code and choose Connect.',
       domain:
         'Add your store’s domain below and publish the DNS record it shows, then check it. Store Chat answers only after the domain is verified.',
     },
@@ -422,11 +441,21 @@ const ar: ChatStudioCopy = {
     title: 'WooCommerce',
     body: 'أضف دردشة المتجر إلى متجرك على WooCommerce بإضافة GRINDCTRL لـ WordPress.',
     download: 'تنزيل الإضافة',
-    keyLabel: 'مفتاح التضمين',
+    getCode: 'احصل على رمز اتصال',
+    gettingCode: 'جارٍ إنشاء الرمز…',
+    codeLabel: 'رمز الاتصال',
+    codeExpires: (at) => `تنتهي صلاحيته الساعة ${at}.`,
+    codeError: 'تعذّر إنشاء رمز اتصال. حاول مرة أخرى.',
+    connected: 'متصل',
+    disconnected: 'تم قطع الاتصال',
+    pluginVersion: (version) => `إصدار الإضافة ${version}`,
+    lastSeen: (at) => `آخر نبضة اتصال ${at}`,
+    neverSeen: 'لم تصل نبضة اتصال بعد.',
     steps: {
       download: 'نزّل الإضافة وأبقها مضغوطة. يثبّت WordPress ملف ZIP كما هو.',
       upload: 'في WordPress افتح Plugins ثم Add New ثم Upload Plugin. اختر الملف وثبّته ثم فعّل الإضافة.',
-      key: 'افتح Settings ثم GRINDCTRL Store Chat، والصق مفتاح التضمين في حقل Embed key واحفظ.',
+      code: 'احصل على رمز اتصال هنا. تنتهي صلاحيته بعد 15 دقيقة.',
+      connect: 'في WordPress افتح Settings ثم GRINDCTRL Store Chat، والصق الرمز ثم اختر Connect.',
       domain:
         'أضف نطاق متجرك أدناه وانشر سجل DNS الظاهر، ثم تحقّق منه. لا ترد دردشة المتجر إلا بعد التحقق من النطاق.',
     },

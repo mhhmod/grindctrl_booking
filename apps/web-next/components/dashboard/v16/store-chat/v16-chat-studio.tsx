@@ -26,8 +26,9 @@ import type { ActionResult } from '@/lib/messenger/actions-core';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
 import { StorefrontDomains } from './storefront-domains';
-import { WoocommerceGuide } from './woocommerce-guide';
+import { WoocommerceGuide, type CreateWooPairingCode } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
 /* The v16 Store Chat Set up tab (04-dashboard.md, the ChatStudio board) on
@@ -42,7 +43,10 @@ import classes from './v16-chat-studio.module.css';
 export type ChatStudioActions = Pick<
   MessengerHostActions,
   'saveDraftSections' | 'publishConfig' | 'revertConfigAction' | 'setMessengerEnabled' | 'disconnectSiteAction'
-> & { discardDraft(siteId: string): Promise<ActionResult> } & Partial<DomainActions>;
+> & {
+  discardDraft(siteId: string): Promise<ActionResult>;
+  createWooPairingCodeAction: CreateWooPairingCode;
+} & Partial<DomainActions>;
 
 export type ChatStudioMeta = {
   domain: string | null;
@@ -56,6 +60,8 @@ export type ChatStudioMeta = {
   lastSeenMinutes: number | null;
   /** n25_handoff_rules: the extra handoff rules. */
   handoffRules: boolean;
+  /** WordPress/WooCommerce plugin pairing for this widget site. */
+  wooConnection: WooSiteConnectionSummary | null;
 };
 
 type Pair = { label: string; body: string };
@@ -843,7 +849,16 @@ export function V16ChatStudio({
                 </Button>
               </p>
             </div>
-            {!shopify && <WoocommerceGuide embedKey={meta.embedKey} copy={copy.woocommerce} copyLabels={copy.domains} />}
+            {!shopify && (
+              <WoocommerceGuide
+                locale={locale}
+                siteId={siteId}
+                connection={meta.wooConnection}
+                createPairingCode={actions.createWooPairingCodeAction}
+                copy={copy.woocommerce}
+                copyLabels={copy.domains}
+              />
+            )}
             {!shopify &&
               actions.listDomainsAction &&
               actions.addDomainAction &&

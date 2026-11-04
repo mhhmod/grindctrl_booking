@@ -31,6 +31,7 @@ const META: ChatStudioMeta = {
   ordersAuthorized: true,
   lastSeenMinutes: 2,
   handoffRules: false,
+  wooConnection: null,
 };
 
 function actions(): ChatStudioActions {
@@ -41,6 +42,11 @@ function actions(): ChatStudioActions {
     setMessengerEnabled: vi.fn(async () => ({ ok: true as const })),
     disconnectSiteAction: vi.fn(async () => ({ ok: true as const })),
     discardDraft: vi.fn(async () => ({ ok: true as const })),
+    createWooPairingCodeAction: vi.fn(async () => ({
+      ok: true as const,
+      code: 'K7QM4TXP',
+      expiresAt: '2026-11-04T10:15:00.000Z',
+    })),
   };
 }
 
@@ -169,10 +175,10 @@ describe('V16ChatStudio', () => {
     expect(screen.queryByRole('heading', { level: 3, name: en.woocommerce.title })).not.toBeInTheDocument();
   });
 
-  it('shows the WooCommerce setup path with the embed key for a store that is not on Shopify', () => {
+  it('shows the WooCommerce connection-code path for a store that is not on Shopify', () => {
     draw(undefined, 'en', { domain: 'shop.example.com' });
     expect(screen.getByRole('heading', { level: 3, name: en.woocommerce.title })).toBeInTheDocument();
-    expect(screen.getByText('emb_test')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: en.woocommerce.getCode })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: en.woocommerce.download })).toHaveAttribute('href', '/downloads/grindctrl-store-chat.zip');
   });
 

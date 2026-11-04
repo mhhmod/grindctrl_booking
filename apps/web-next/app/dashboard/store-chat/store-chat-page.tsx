@@ -37,6 +37,8 @@ import { getChatStudioCopy } from '@/lib/dashboard/chat-studio-copy';
 import { minutesSince } from '@/lib/dashboard/chat-studio-model';
 import { legacyStoreChatHref, MORE_SETTINGS } from '@/lib/dashboard/store-chat-legacy-tab';
 import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states';
+import { getWooSiteConnection } from '@/lib/woo/connection';
+import { createWooPairingCodeAction } from './woo-actions';
 
 /* The editors on /dashboard/store-chat/setup/more, the ones Set up does not
    cover yet (see v16-chat-studio.tsx, More settings). */
@@ -201,13 +203,16 @@ export async function StoreChatPage({
   /* Set up is ChatStudio, on the same draft and publish. */
   if (route === 'setup') {
     if (!canSetUp) redirect('/dashboard/store-chat');
-    const [statsRead, detectedRead, ordersRead, flagRows] = await Promise.allSettled([
+    const [statsRead, detectedRead, ordersRead, flagRows, wooConnectionRead] = await Promise.allSettled([
       getOverviewStats(selected.id),
       getWidgetLastSeenAt(selected.id),
       selected.domain ? hasShopOrderAccess(selected.domain) : Promise.resolve(false),
       isTryOnPlatformOperator().then((operator) => (operator ? storeFlagRows(flagStore) : null)),
+      selected.domain?.endsWith('.myshopify.com')
+        ? Promise.resolve(null)
+        : getWooSiteConnection(selected.id),
     ]);
-    for (const failed of [statsRead, detectedRead, ordersRead, flagRows]) {
+    for (const failed of [statsRead, detectedRead, ordersRead, flagRows, wooConnectionRead]) {
       if (failed.status === 'rejected') console.error('[store chat] set up failed:', failed.reason);
     }
     const stats = statsRead.status === 'fulfilled' ? statsRead.value : null;
@@ -244,6 +249,8 @@ export async function StoreChatPage({
             ordersAuthorized: ordersRead.status === 'fulfilled' ? ordersRead.value : false,
             lastSeenMinutes,
             handoffRules: features.includes('n25_handoff_rules'),
+            wooConnection:
+              wooConnectionRead.status === 'fulfilled' ? wooConnectionRead.value : null,
           }}
           actions={{
             saveDraftSections: messengerActions.saveDraftSections,
@@ -256,6 +263,7 @@ export async function StoreChatPage({
             addDomainAction: messengerActions.addDomainAction,
             checkDomainAction: messengerActions.checkDomainAction,
             removeDomainAction: messengerActions.removeDomainAction,
+            createWooPairingCodeAction,
           }}
         />
         {operatorFlags && (
