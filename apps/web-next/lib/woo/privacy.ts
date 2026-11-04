@@ -203,7 +203,19 @@ export async function drainWooPrivacyStorageQueue(limit = 100): Promise<{ remove
   return { removed, failed };
 }
 
-export type WooRedactionSummary = { sites: number; completed: number; pending: number; storageRemoved: number; failed: number };
+export type WooRedactionSummary = {
+  sites: number; completed: number; pending: number; storageRemoved: number; failed: number;
+  /** The privacy migration is not applied yet, so there is nothing to redact. */
+  notReady?: true;
+};
+
+/* A missing function or table means supabase/20261105_woo_privacy.sql has not
+   been applied. No site can be due before it is, so the shared retention job
+   reports a skip instead of failing every run for Shopify stores too. */
+function isPrivacySchemaMissing(error: { code?: string; message?: string }): boolean {
+  return error.code === 'PGRST202' || error.code === '42883' || error.code === '42P01'
+    || /could not find the function|does not exist/i.test(error.message ?? '');
+}
 
 /** Redact the shopper data of sites whose uninstall grace period has passed.
  * Idempotent: the SQL function re-checks the due condition under a row lock
@@ -213,6 +225,10 @@ export async function redactDueWooSites(): Promise<WooRedactionSummary> {
   const summary: WooRedactionSummary = { sites: 0, completed: 0, pending: 0, storageRemoved: 0, failed: 0 };
 
   const due = await client.rpc('woo_sites_due_for_redaction', { p_limit: REDACT_SITES_PER_RUN });
+  if (due.error && isPrivacySchemaMissing(due.error)) {
+    console.warn('[woo-site-redaction] skipped: privacy migration not applied');
+    return { ...summary, notReady: true };
+  }
   if (due.error || !Array.isArray(due.data)) {
     summary.failed += 1;
   } else {

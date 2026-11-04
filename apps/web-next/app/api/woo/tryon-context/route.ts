@@ -15,7 +15,8 @@ import { createTryOnNonce, signStorefrontContext } from '@/lib/try-on/storefront
 import { assertSafeGarmentUrl, UnsafeGarmentUrlError, verifiedSiteHosts } from '@/lib/woo/garment-url';
 import { verifyWooSignedRequest, wooSignedRequestErrorResponse } from '@/lib/woo/signed-request';
 import { buildSiteTryOnConfig, siteConfigLocale } from '@/lib/woo/tryon-config';
-import { ensureSiteFreePlan, FreePlanTakenError, readSiteLaunch } from '@/lib/woo/tryon-site';
+import { readSiteLaunch } from '@/lib/woo/tryon-site';
+import { ensureWooFreePlan } from '@/lib/woo/free-plan';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -150,12 +151,11 @@ export async function POST(request: NextRequest) {
     // The free plan is granted on the first look, once per apex domain.
     let { launch, unsubscribed } = await readSiteLaunch(siteId);
     if (unsubscribed) {
-      try {
-        await ensureSiteFreePlan(siteId, hosts);
-      } catch (error) {
-        if (error instanceof FreePlanTakenError) return json({ error: 'free_plan_taken' }, 409);
-        throw error;
-      }
+      // Same grant as the dashboard, so the one-plan-per-apex rule is counted once.
+      const grant = await ensureWooFreePlan(tenant);
+      if (grant === 'apex_taken') return json({ error: 'free_plan_taken' }, 409);
+      if (grant === 'no_verified_domain') return json({ error: 'no_verified_domain' }, 409);
+      if (grant !== 'granted') return json({ error: 'unavailable' }, 503);
       invalidateProxyConfig(tenant);
       launch = tryOnLaunchFromEntitlement(await getShopEntitlement(tenant));
     }

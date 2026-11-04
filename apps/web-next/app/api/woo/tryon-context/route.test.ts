@@ -46,15 +46,14 @@ vi.mock('@/lib/woo/garment-url', async (importOriginal) => {
 vi.mock('@/lib/woo/tryon-site', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/woo/tryon-site')>()),
   readSiteLaunch: mocks.launch,
-  ensureSiteFreePlan: mocks.grant,
 }));
+vi.mock('@/lib/woo/free-plan', () => ({ ensureWooFreePlan: mocks.grant }));
 vi.mock('@/lib/woo/tryon-config', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/woo/tryon-config')>()),
   buildSiteTryOnConfig: mocks.config,
 }));
 
 import { POST } from './route';
-import { FreePlanTakenError } from '@/lib/woo/tryon-site';
 import { verifyStorefrontContext } from '@/lib/try-on/storefront-context';
 
 const BODY = {
@@ -202,16 +201,23 @@ describe('POST /api/woo/tryon-context', () => {
   it('grants the free plan on the first look, then checks launch again', async () => {
     mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'plan_inactive' }, unsubscribed: true });
     mocks.entitlement.mockResolvedValue({ available: true, status: 'active', totalCreditsRemaining: 5 });
+    mocks.grant.mockResolvedValue('granted');
     const response = await post();
     expect(response.status).toBe(200);
-    expect(mocks.grant).toHaveBeenCalledWith(SITE, ['shop.example.com']);
+    expect(mocks.grant).toHaveBeenCalledWith(`site:${SITE}`);
   });
 
   it('refuses the free plan when another site already holds this apex', async () => {
     mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'plan_inactive' }, unsubscribed: true });
-    mocks.grant.mockRejectedValue(new FreePlanTakenError());
+    mocks.grant.mockResolvedValue('apex_taken');
     const response = await post();
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: 'free_plan_taken' });
+  });
+
+  it('answers 503 when the free plan cannot be granted right now', async () => {
+    mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'plan_inactive' }, unsubscribed: true });
+    mocks.grant.mockResolvedValue('unavailable');
+    expect((await post()).status).toBe(503);
   });
 });

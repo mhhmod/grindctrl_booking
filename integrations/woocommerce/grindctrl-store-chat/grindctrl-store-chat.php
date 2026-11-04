@@ -3,7 +3,7 @@
  * Plugin Name:       GRINDCTRL Store Chat
  * Plugin URI:        https://grindctrl.cloud
  * Description:       Adds GRINDCTRL Store Chat to your store. On WooCommerce product pages it shares the product the shopper is viewing with the chat.
- * Version:           0.2.0
+ * Version:           0.3.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Grind CTRL
@@ -16,7 +16,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GRINDCTRL_SC_VERSION', '0.2.0' );
+define( 'GRINDCTRL_SC_VERSION', '0.3.0' );
 // Overridable from wp-config.php to point a test site at a GRINDCTRL staging server.
 defined( 'GRINDCTRL_SC_SCRIPT' ) || define( 'GRINDCTRL_SC_SCRIPT', 'https://grindctrl.cloud/widget/v1/messenger.js' );
 defined( 'GRINDCTRL_SC_DASHBOARD' ) || define( 'GRINDCTRL_SC_DASHBOARD', 'https://grindctrl.cloud/dashboard/store-chat/setup' );

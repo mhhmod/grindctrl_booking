@@ -190,6 +190,8 @@ describe('V16ChatStudio', () => {
       lastSeenAt: '2026-11-04T09:00:00.000Z',
       pairedAt: '2026-11-03T09:00:00.000Z',
       homeUrl: 'https://shop.example.com/',
+      cloneSuspected: false,
+      pluginOutdated: false,
     });
 
     it('says it is ready from plugin 0.3.0, with no Shopify order grant wording', () => {

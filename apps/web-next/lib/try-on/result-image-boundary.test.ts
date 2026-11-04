@@ -14,7 +14,8 @@ const EXTENSION_ASSETS = path.resolve(APP_ROOT, '..', 'grindctrl-tryon', 'extens
 const LOOK_MARKERS = /resultImageUrl|result_storage_path|result_persisted_at|tryon-results/;
 const ALLOWED_PREFIXES = ['app/api/try-on/', 'components/try-on/', 'lib/try-on/'];
 // shop/redact erases a shop's result objects; it lists paths to delete and never reads a look.
-const ERASERS = ['lib/shopify/privacy.ts', 'lib/shopify/privacy-database-fixture.ts'];
+// Erasers name the result bucket only to delete from it, never to read a look.
+const ERASERS = ['lib/shopify/privacy.ts', 'lib/shopify/privacy-database-fixture.ts', 'lib/woo/privacy.ts'];
 
 function sourceFiles(dir: string): string[] {
   const found: string[] = [];

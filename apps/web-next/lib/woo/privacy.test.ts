@@ -56,6 +56,22 @@ describe('redactDueWooSites', () => {
     expect(redactCalls.every(([, args]) => [A, B].includes(args.p_site))).toBe(true);
   });
 
+  it('skips without failing while the privacy migration is not applied', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'Could not find the function' } });
+
+    const summary = await redactDueWooSites();
+
+    expect(summary).toMatchObject({ sites: 0, failed: 0, notReady: true });
+    expect(mocks.rpc.mock.calls.filter(([fn]) => fn === 'woo_site_redact')).toHaveLength(0);
+    warn.mockRestore();
+  });
+
+  it('still fails on any other listing error', async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: '57014', message: 'canceling statement' } });
+    expect((await redactDueWooSites()).failed).toBeGreaterThan(0);
+  });
+
   it('treats a site that is no longer due as finished, not failed', async () => {
     mocks.rpc.mockImplementation(async (fn: string) =>
       fn === 'woo_sites_due_for_redaction'
