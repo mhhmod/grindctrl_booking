@@ -27,6 +27,12 @@ describe('proxy matcher', () => {
     expect(matcher.test('/api/shopify/store-chat/draft')).toBe(false);
   });
 
+  it('excludes WooCommerce pairing and signed lifecycle routes from Clerk', () => {
+    expect(matcher.test('/api/woo/pair')).toBe(false);
+    expect(matcher.test('/api/woo/heartbeat')).toBe(false);
+    expect(matcher.test('/api/woo/disconnect')).toBe(false);
+  });
+
   it('excludes the storefront embed and try-on API from Clerk', () => {
     expect(matcher.test('/embed/messenger')).toBe(false);
     expect(matcher.test('/api/try-on/generate')).toBe(false);

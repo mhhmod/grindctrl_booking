@@ -54,6 +54,7 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
 vi.mock('@/lib/shopify/tokens', () => ({ hasShopOrderAccess: vi.fn(async () => false) }));
 vi.mock('@/lib/shopify/platform-operator', () => ({ isTryOnPlatformOperator: vi.fn(async () => false) }));
 vi.mock('@/lib/shopify/shop-timezone', () => ({ getShopTimezone: vi.fn(async () => 'Africa/Cairo') }));
+vi.mock('@/lib/woo/connection', () => ({ getWooSiteConnection: vi.fn(async () => null) }));
 vi.mock('@/lib/flags/store-flags', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/flags/store-flags')>()),
   storeFlags: vi.fn(async () => []),
@@ -75,11 +76,12 @@ vi.mock('./actions', () => ({
   checkDomainAction: vi.fn(),
   removeDomainAction: vi.fn(),
 }));
+vi.mock('./woo-actions', () => ({ createWooPairingCodeAction: vi.fn() }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
-  V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null }; actions: object }) => (
+  V16ChatStudio: ({ meta, actions }: { meta: { version: number; domain: string | null; wooConnection: { status: string } | null }; actions: object }) => (
     <div data-testid="chat-studio" data-actions={Object.keys(actions).sort().join(',')}>
-      {meta.domain}:{meta.version}
+      {meta.domain}:{meta.version}:{meta.wooConnection?.status ?? 'none'}
     </div>
   ),
 }));
@@ -130,10 +132,10 @@ describe('the Store Chat routes', () => {
     render(await setup());
     expect(within(tabs()!).getByRole('link', { name: 'Set up' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByText('Every change shows in the preview first. Shoppers see it when you publish.')).toBeInTheDocument();
-    expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3');
+    expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3:none');
     expect(screen.getByTestId('chat-studio')).toHaveAttribute(
       'data-actions',
-      'addDomainAction,checkDomainAction,discardDraft,disconnectSiteAction,listDomainsAction,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
+      'addDomainAction,checkDomainAction,createWooPairingCodeAction,discardDraft,disconnectSiteAction,listDomainsAction,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
     );
     expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
     expect(listConversationsForSite).not.toHaveBeenCalled();

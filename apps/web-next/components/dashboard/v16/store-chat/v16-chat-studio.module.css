@@ -419,6 +419,37 @@
 /* WooCommerce setup path (woocommerce-guide.tsx). The list keeps its native
    numbering, which Tailwind's reset removes, and the marker sits at the
    inline start in both directions. */
+.connectionState {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--gc-radius-card);
+  background: var(--muted);
+}
+
+.connectionStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--gc-danger);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.connectionState[data-state='active'] .connectionStatus {
+  color: var(--gc-success);
+}
+
+.connectionError {
+  margin: 0;
+  color: var(--gc-danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .steps {
   display: grid;
   gap: 16px;
@@ -449,6 +480,12 @@
   min-width: 0;
 }
 
+.codeBlock {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
 .keyRow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -467,4 +504,14 @@
 
 .keyRow .touch {
   justify-self: end;
+}
+
+@media (max-width: 30em) {
+  .keyRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .keyRow .touch {
+    justify-self: start;
+  }
 }
