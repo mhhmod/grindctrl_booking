@@ -144,7 +144,7 @@ const en: OperationsCopy = {
   },
   notLiveChannels: {
     label: 'Channels beyond your storefront',
-    note: 'The Shopify storefront widget is the only live channel today. WooCommerce and your own website are in testing, and Salla and Zid are planned; see Integrations for exact status.',
+    note: 'Store Chat on your Shopify or WooCommerce storefront is the only live channel today. Your own website is in testing, and Salla and Zid are planned; see Integrations for exact status.',
     status: 'Not live',
   },
 
@@ -248,7 +248,7 @@ const ar: OperationsCopy = {
   },
   notLiveChannels: {
     label: 'القنوات خارج واجهة المتجر',
-    note: 'أداة واجهة متجر Shopify هي القناة الوحيدة المفعّلة اليوم. WooCommerce وموقعك الخاص قيد الاختبار، وسلة وزد مخطط لهما؛ راجع صفحة التكاملات لمعرفة الحالة بدقة.',
+    note: 'دردشة المتجر على واجهة متجرك في Shopify أو WooCommerce هي القناة الوحيدة المفعّلة اليوم. موقعك الخاص قيد الاختبار، وسلة وزد مخطط لهما؛ راجع صفحة التكاملات لمعرفة الحالة بدقة.',
     status: 'غير مفعّلة',
   },
 

@@ -13,6 +13,7 @@ import * as React from 'react';
 import { SallaMark, WooCommerceMark } from '@/components/brand-marks';
 import { GlobeIcon } from '@/components/site/icons';
 import { findPublicIntegration, type PublicIntegrationState } from '@/lib/product-truth/public-integrations';
+import type { StoryText } from './story-strings';
 import type { StoryT } from './story-types';
 
 type StatusLabel = 'Live' | 'In testing' | 'Planned';
@@ -25,12 +26,13 @@ const STATUS_LABEL: Partial<Record<PublicIntegrationState, StatusLabel>> = {
 
 const MARK_SIZE = { width: '16px', height: '16px', flexShrink: 0 } as const;
 
-const PLATFORMS = [
-  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceMark monochrome decorative style={MARK_SIZE} /> },
+/** `note` is a scope qualifier under the name, for a live platform that is not live for everything. */
+const PLATFORMS: readonly { id: string; label: StoryText; mark: React.ReactNode; note?: StoryText }[] = [
+  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceMark monochrome decorative style={MARK_SIZE} />, note: 'Store Chat only' },
   { id: 'custom-website', label: 'Your website', mark: <GlobeIcon size={16} style={{ flexShrink: 0 }} /> },
   { id: 'salla', label: 'Salla', mark: <SallaMark monochrome decorative style={MARK_SIZE} /> },
   { id: 'zid', label: 'Zid', mark: null },
-] as const;
+];
 
 /** A status pill in the story's own chip shape, on a light surface. */
 export function StatusChip({ label, live, t }: { label: StatusLabel; live: boolean; t: StoryT }) {
@@ -72,7 +74,7 @@ export function StatusChip({ label, live, t }: { label: StatusLabel; live: boole
 export function PlatformRows({ t }: { t: StoryT }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-      {PLATFORMS.map(({ id, label, mark }) => {
+      {PLATFORMS.map(({ id, label, mark, note }) => {
         const status = STATUS_LABEL[findPublicIntegration(id)?.state ?? 'evidence-required'];
         if (!status) return null;
         const live = status === 'Live';
@@ -95,7 +97,14 @@ export function PlatformRows({ t }: { t: StoryT }) {
             <span aria-hidden="true" style={{ width: '16px', height: '16px', flexShrink: 0, display: 'inline-flex' }}>
               {mark}
             </span>
-            <span style={{ flex: '1', minWidth: '0', fontSize: '13px', fontWeight: '700' }}>{t(label)}</span>
+            <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', lineHeight: '1.15' }}>{t(label)}</span>
+              {note && (
+                <span style={{ fontSize: '10.5px', fontWeight: '600', lineHeight: '1.15', color: 'var(--muted-foreground)' }}>
+                  {t(note)}
+                </span>
+              )}
+            </span>
             <StatusChip label={status} live={live} t={t} />
           </div>
         );

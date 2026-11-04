@@ -20,7 +20,7 @@ const PLATFORMS = [
   { id: 'shopify', detail: 'Try-On, Store Chat and read-only order status.' },
   {
     id: 'woocommerce',
-    detail: 'Store Chat only, through a GRINDCTRL WordPress plugin. Not available to merchants yet.',
+    detail: 'Store Chat only, through the GRINDCTRL WordPress plugin on a domain verified with DNS.',
   },
   {
     id: 'custom-website',
@@ -58,7 +58,7 @@ export function buildLlmsTxt(origin: string): string {
   return [
     '# GRINDCTRL',
     '',
-    '> GRINDCTRL gives fashion stores AI virtual try-on and an AI Store Chat, in English and Arabic. Shoppers see your clothes on themselves from one photo and get answers from your store. It is live on Shopify today.',
+    '> GRINDCTRL gives fashion stores AI virtual try-on and an AI Store Chat, in English and Arabic. Shoppers see your clothes on themselves from one photo and get answers from your store. It is live on Shopify, and Store Chat is live on WooCommerce.',
     '',
     '## Platform status',
     '',

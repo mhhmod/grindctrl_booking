@@ -21,8 +21,9 @@ export type PublicIntegration = {
  * Public relationship depth for the brand marks shown on the landing page.
  * A listed technology is not automatically a native or live tenant connection.
  *
- * `in-testing` means built on a branch and tried on a staging store, but not
- * shipped on `main` and not available to merchants. Never word it as
+ * `implemented` is per scope: the note says what it covers (WooCommerce is
+ * Store Chat only). `in-testing` means the code is on `main` but not yet
+ * verified on a live store, and not offered to merchants. Never word it as
  * supported, available or works with. `docs/platform-readiness-matrix.md` is
  * the evidence behind the platform rows.
  */
@@ -37,9 +38,9 @@ export const PUBLIC_INTEGRATIONS = [
   {
     id: 'woocommerce',
     name: 'WooCommerce',
-    state: 'in-testing',
-    evidenceRef: 'docs/platform-readiness-matrix.md',
-    note: 'Store Chat only, through a GRINDCTRL WordPress plugin. Code is on main and being verified on a test store; not available to merchants yet. Try-On, order lookup and billing are Shopify-only.',
+    state: 'implemented',
+    evidenceRef: 'docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md',
+    note: 'Store Chat only, through the GRINDCTRL WordPress plugin on a DNS-verified domain. Verified on a live store against production on 2026-11-04. Try-On, order lookup and billing are Shopify-only.',
   },
   {
     id: 'custom-website',

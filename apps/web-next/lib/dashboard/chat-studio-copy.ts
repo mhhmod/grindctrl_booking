@@ -259,7 +259,7 @@ const en: ChatStudioCopy = {
   copyScript: 'Copy the script',
   woocommerce: {
     title: 'WooCommerce',
-    body: 'Store Chat on WooCommerce is in testing. You can set it up with the GRINDCTRL plugin for WordPress.',
+    body: 'Add Store Chat to your WooCommerce store with the GRINDCTRL plugin for WordPress.',
     download: 'Download plugin',
     keyLabel: 'Embed key',
     steps: {
@@ -420,7 +420,7 @@ const ar: ChatStudioCopy = {
   copyScript: 'انسخ الكود',
   woocommerce: {
     title: 'WooCommerce',
-    body: 'دردشة المتجر على WooCommerce قيد الاختبار. يمكنك إعدادها بإضافة GRINDCTRL لـ WordPress.',
+    body: 'أضف دردشة المتجر إلى متجرك على WooCommerce بإضافة GRINDCTRL لـ WordPress.',
     download: 'تنزيل الإضافة',
     keyLabel: 'مفتاح التضمين',
     steps: {

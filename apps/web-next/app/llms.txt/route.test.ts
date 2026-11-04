@@ -10,7 +10,8 @@ describe('GET /llms.txt', () => {
     const response = GET();
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     const body = await response.text();
-    expect(body).toContain('- WooCommerce: In testing.');
+    expect(body).toContain('- WooCommerce: Live.');
+    expect(body).toContain('- Your website: In testing.');
     expect(body).toContain('- Salla: Planned.');
     expect(body).toContain('](https://grindctrl.cloud/pricing):');
   });

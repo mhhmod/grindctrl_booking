@@ -1,31 +1,37 @@
 # Platform readiness matrix
 
-Updated 2026-11-03. Research date for third-party platforms: 2026-10-30.
+Updated 2026-11-04. Research date for third-party platforms: 2026-10-30.
 Public product claims come from `apps/web-next/lib/product-truth/public-integrations.ts`;
 this file explains the evidence behind each state. Nothing below "implemented"
 may be advertised as supported.
 
-States: **implemented** (verified on a real store and shipped on `main`),
+States: **implemented** (verified on a real store and shipped on `main`; the
+scope is part of the claim, so WooCommerce is implemented for Store Chat only),
 **in testing** (code on `main`, not yet verified on a live store, not
 offered to merchants), **setup-required** (shipped, merchant must
 install or verify, not yet proven live), **evidence-required** (researched,
 nothing built), **planned** (next in the build order, no code yet),
 **not pursued**.
 
-What `main` ships today: Shopify, plus the Store Chat code for WooCommerce and
-"your own website" (GRINDCTRL WordPress plugin, script tag with a DNS-verified
-domain), merged from `feat/woocommerce-store-chat` after a staging test and
-now being verified on a live test store. Try-On, order lookup and billing are Shopify-only. Salla and
-Zid have no code. Nothing on this page may be read as "available" for a
-platform that is not "implemented".
+What `main` ships today: Shopify, plus Store Chat for WooCommerce (GRINDCTRL
+WordPress plugin on a DNS-verified domain), verified on a live store against
+production on 2026-11-04
+(`docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`). "Your own
+website" (script tag with a DNS-verified domain) uses the same loader and
+verification but was not tested on its own, so it stays in testing. Try-On,
+order lookup and billing are Shopify-only. Salla and Zid have no code. The
+WooCommerce plugin is distributed from grindctrl.cloud; no WordPress.org or
+WooCommerce Marketplace listing exists or may be claimed. Nothing on this page
+may be read as "available" for a platform that is not "implemented", and
+"implemented" never extends past the scope stated for the platform.
 
 ## GRINDCTRL readiness by platform
 
 | Platform | Store Chat | Try-On | Product context | Cart add from chat | Install / uninstall | Public state | Evidence | Next step |
 |---|---|---|---|---|---|---|---|---|
 | Shopify | Verified on dev store (staging) | Buttons render; mock render only on staging | Theme app extension + Admin API | Storefront AJAX cart | OAuth, `app/uninstalled`, privacy webhooks (simulated) | implemented | `docs/superpowers/checkpoints/2026-10-31-shopify-m1-staging.md` | Real uninstall/reinstall, store B isolation, privacy fulfilment |
-| WooCommerce | Live on a test store (staging): plugin loads the loader, bubble and panel render, shopper hand-off reaches the inbox | Not built | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Built, unverified live (needs AI replies) | Plugin activate/uninstall; no GRINDCTRL webhooks | in testing (on `main`, live check pending) | Test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1, WooCommerce 11.2), 2026-10-31; torn down 2026-11-02, so the next live check needs a fresh store. Domain verification simulated (our only domain is blocked by design); DNS check unit-tested | AI reply and cart add on staging with a capped provider key; DNS verification on a real external domain |
-| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (on `main`, live check pending) | Same branch, unit tests only | Live test on a real external domain |
+| WooCommerce | Verified live against production: plugin loads the loader, panel renders, AI answers from store knowledge, shopper hand-off reaches the inbox | Not built | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Cart forwarding to the conversation verified (needs the `n25_handoff_rules` flag, as on Shopify) | Plugin activate/uninstall; no GRINDCTRL webhooks | implemented (Store Chat only) | `docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`: test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1.4, WooCommerce 11.2.1), real DNS TXT verification, 2026-11-04 | No WooCommerce catalog sync or order lookup; marketplace listing is a separate decision |
+| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (on `main`, live check pending) | Same loader and DNS verification as WooCommerce, which is verified live; not tested on its own without the plugin | Live test on a real external domain without the plugin |
 | Salla | Not built | Not built | Twilight SDK documented | `salla.cart.addItem()` documented | `app.installed/uninstalled` documented | planned | Research below | Free Partner demo store, App Snippets spike |
 | Zid | Not built | Not built | Themes Library JS documented | Themes Library cart JS documented | Lifecycle events unverified | planned | Research below | After Salla; script injection needs Zid approval |
 | BigCommerce, Ecwid | Not built | Not built | Documented | Documented, clean | Documented | not pursued yet | Research below | Third choice if global expansion comes before MENA depth |
@@ -34,7 +40,7 @@ platform that is not "implemented".
 
 ## Recommended order
 
-1. **WooCommerce live test.** Already built; proving it live is the cheapest real gain and it reaches the largest global install base.
+1. **WooCommerce live test.** Done on 2026-11-04 for Store Chat (see the checkpoint). Its reach is the largest global install base; the same live check for "your own website" is the cheapest next gain.
 2. **Salla.** App Snippets inject the loader on install with no theme work, Twilight gives product context and cart add, and a free Partner demo store exists. Best MENA fit.
 3. **Zid.** Same architecture as Salla, but script injection needs manual approval and an in-app support channel is mandatory, so it goes after Salla's patterns exist.
 

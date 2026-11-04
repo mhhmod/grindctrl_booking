@@ -42,14 +42,16 @@ describe('ConversationsPageContent', () => {
     }
   });
 
-  it.each<SiteLocale>(['en', 'ar'])('lists WooCommerce and your website as in testing and Salla and Zid as planned in %s', (locale) => {
+  it.each<SiteLocale>(['en', 'ar'])('keeps WooCommerce Store Chat out of the in-testing rows and lists your website as in testing and Salla and Zid as planned in %s', (locale) => {
     renderPage(locale);
     const t = getConversationsCopy(locale);
     const landing = getLandingDictionary(locale);
     const rowOf = (label: string) => screen.getByText(label).closest('li');
 
-    const [woo, salla] = t.notLiveItems.slice(-2);
-    expect(rowOf(woo.label)).toHaveTextContent(landing.integrationStateInTesting);
+    const [woo, website, salla] = t.notLiveItems.slice(-3);
+    expect(rowOf(woo.label)).toHaveTextContent(t.notBuiltStatus);
+    expect(rowOf(woo.label)).not.toHaveTextContent(landing.integrationStateInTesting);
+    expect(rowOf(website.label)).toHaveTextContent(landing.integrationStateInTesting);
     expect(rowOf(salla.label)).toHaveTextContent(landing.integrationStatePlanned);
   });
 
