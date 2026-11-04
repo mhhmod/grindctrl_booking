@@ -25,6 +25,7 @@ define( 'GRINDCTRL_SC_HEARTBEAT_HOOK', 'grindctrl_sc_daily_heartbeat' );
 require_once __DIR__ . '/includes/orders.php';
 require_once __DIR__ . '/includes/identity.php';
 require_once __DIR__ . '/includes/tryon.php';
+require_once __DIR__ . '/includes/privacy.php';
 
 /*
  * The embed key names the store's Store Chat. It is public: it ships in the
@@ -305,7 +306,7 @@ function grindctrl_sc_send_heartbeat() {
 	grindctrl_sc_clear_last_error();
 }
 
-function grindctrl_sc_disconnect_remote( $timeout = 3 ) {
+function grindctrl_sc_disconnect_remote( $timeout = 3, $reason = 'manual' ) {
 	if ( null === grindctrl_sc_connection_credentials() ) {
 		return true;
 	}
@@ -315,6 +316,7 @@ function grindctrl_sc_disconnect_remote( $timeout = 3 ) {
 			array(
 				'homeUrl'       => home_url( '/' ),
 				'pluginVersion' => GRINDCTRL_SC_VERSION,
+				'reason'        => $reason,
 			),
 			true,
 			$timeout
@@ -353,7 +355,7 @@ function grindctrl_sc_forget_connection() {
 }
 
 function grindctrl_sc_deactivate() {
-	$result = grindctrl_sc_disconnect_remote();
+	$result = grindctrl_sc_disconnect_remote( 3, 'deactivate' );
 	if ( is_wp_error( $result ) ) {
 		grindctrl_sc_set_last_error( $result );
 	} else {
