@@ -30,8 +30,8 @@ export type V16NavItem = {
   permission: DashboardPermissionKey;
   /** In the phone tab bar too; Settings sits in the phone menu instead (Owner-Phone). */
   tab: boolean;
-  /** Needs a Shopify store: a Store Chat site on another website has no plan. */
-  needsShopify?: boolean;
+  /** Needs a store with a Try-On tenant (a Shopify store or a paired WooCommerce store): a Store Chat site on another website has no plan. */
+  needsTenant?: boolean;
 };
 
 export const V16_NAV: readonly V16NavItem[] = [
@@ -40,14 +40,14 @@ export const V16_NAV: readonly V16NavItem[] = [
   { href: '/dashboard/inbox', key: 'inbox', icon: 'inbox', permission: 'canViewStoreChat', tab: true },
   { href: '/dashboard/try-on', key: 'tryOn', icon: 'shirt', permission: 'canViewTryOn', tab: true },
   { href: '/dashboard/store-chat', key: 'storeChat', icon: 'chat', permission: 'canViewStoreChat', tab: true },
-  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true, needsShopify: true },
+  { href: '/dashboard/plan', key: 'plan', icon: 'gauge', permission: 'canViewPlan', tab: true, needsTenant: true },
   { href: '/dashboard/settings', key: 'settings', icon: 'gear', permission: 'canViewSettings', tab: false },
 ];
 
 /** The nav items the person's role sees, for the store they are on. Try-On
- *  stays for everyone: it is where a Shopify store gets connected. */
-export function v16NavFor(permissions: DashboardPermissionSet, hasShopify = true): V16NavItem[] {
-  return V16_NAV.filter((item) => permissions[item.permission] && (hasShopify || !item.needsShopify));
+ *  stays for everyone: it is where a store gets connected. */
+export function v16NavFor(permissions: DashboardPermissionSet, hasTenant = true): V16NavItem[] {
+  return V16_NAV.filter((item) => permissions[item.permission] && (hasTenant || !item.needsTenant));
 }
 
 /* The shoppers waiting for a person show on Inbox, where they are answered. */
@@ -78,8 +78,8 @@ export type V16ShellProps = {
   today: { date: string; greeting: string };
   /** From the person's role on the active store (item 12). */
   permissions: DashboardPermissionSet;
-  /** Whether the active store is a Shopify store; Plan needs one. */
-  hasShopify?: boolean;
+  /** Whether the active store is a Shopify store or a paired WooCommerce store; Plan needs one. */
+  hasTenant?: boolean;
   waitingCount: number;
   children: React.ReactNode;
 };
@@ -124,7 +124,7 @@ export function V16ShellView({
   person,
   today,
   permissions,
-  hasShopify = true,
+  hasTenant = true,
   waitingCount,
   children,
 }: V16ShellProps & { pathname: string }) {
@@ -138,7 +138,7 @@ export function V16ShellView({
   const { title } = getDashboardRouteMeta(pathname, locale);
   const mounted = React.useSyncExternalStore(subscribeMounted, getMountedSnapshot, getServerMountedSnapshot);
 
-  const nav = v16NavFor(permissions, hasShopify);
+  const nav = v16NavFor(permissions, hasTenant);
   const current = stores.find((store) => store.current) ?? stores[0] ?? null;
   const isToday = pathname === '/dashboard';
   /* Before hydration, guess the provider's default (light), like the toggle. */

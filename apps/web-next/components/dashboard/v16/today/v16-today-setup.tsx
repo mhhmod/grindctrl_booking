@@ -154,7 +154,7 @@ export function V16TodaySetup({
                 {copy.checkAgain}
               </Button>
             </div>
-            <p className={classes.hint}>{copy.addButtonHint}</p>
+            <p className={classes.hint}>{view.addButtonHint}</p>
           </>
         );
       case 'tryIt':

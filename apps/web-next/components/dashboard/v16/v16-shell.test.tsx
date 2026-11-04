@@ -83,15 +83,15 @@ describe('V16Shell', () => {
      or an account with no store yet, has none to open. Try-On stays, since
      it is where a Shopify store gets connected, and nothing is hidden on
      phones that desktop shows. */
-  it('leaves Plan out of the sidebar and the phone tabs when the active store is not a Shopify store', () => {
-    render(<V16Shell {...props({ hasShopify: false })} />);
+  it('leaves Plan out of the sidebar and the phone tabs when the active store has no Shopify or WooCommerce tenant', () => {
+    render(<V16Shell {...props({ hasTenant: false })} />);
     const nav = screen.getByRole('navigation', { name: 'GrindCTRL' });
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Store Chat', 'Settings']);
     expect(within(screen.getByRole('navigation', { name: 'Main' })).getAllByRole('link').map((link) => link.textContent)).toEqual(['Today', 'Inbox', 'Try-On', 'Chat']);
   });
 
   it('shows the shell, with no stores to switch between, to an account with none', () => {
-    render(<V16Shell {...props({ stores: [], meter: null, hasShopify: false })} />);
+    render(<V16Shell {...props({ stores: [], meter: null, hasTenant: false })} />);
     expect(screen.getByTestId('v16-shell')).toHaveTextContent('Page body');
     expect(screen.queryByRole('button', { name: /Switch store/ })).not.toBeInTheDocument();
   });

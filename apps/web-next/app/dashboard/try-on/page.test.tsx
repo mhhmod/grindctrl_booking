@@ -62,6 +62,11 @@ vi.mock('@/lib/shopify/shops', () => ({
 }));
 
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSitesReadOnly: vi.fn(async () => []) }));
+const woo = vi.hoisted(() => ({ active: new Set<string>(), homeUrl: 'https://shop.example.com' }));
+vi.mock('@/lib/woo/connection', () => ({
+  listActiveWooSiteIds: vi.fn(async () => woo.active),
+  getActiveWooSiteContext: vi.fn(async () => ({ homeUrl: woo.homeUrl, timezone: 'Africa/Cairo' })),
+}));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
 
 /* The v16 Try-On: its facts are covered in
@@ -99,6 +104,7 @@ beforeEach(() => {
   acceptLanguage = undefined;
   storeCookie = undefined;
   storeHeader = undefined;
+  woo.active = new Set();
   session.auth.mockReset().mockResolvedValue({ userId: 'user_merchant' });
   vi.mocked(listManagedTryOnShops).mockResolvedValue([ownedShop('grindctrl.myshopify.com')]);
   vi.mocked(listMessengerSitesReadOnly).mockResolvedValue([]);
@@ -143,8 +149,8 @@ describe('DashboardTryOnPage, the store it opens on', () => {
   });
 
   it.each([
-    ['en', 'Try-On needs a Shopify store'],
-    ['ar', 'التجربة الافتراضية تحتاج إلى متجر Shopify'],
+    ['en', 'Try-On needs a connected store'],
+    ['ar', 'التجربة الافتراضية تحتاج إلى متجر مرتبط'],
   ] as const)('tells an account with no store to connect a Shopify store, in %s, and never reads shop data', async (locale, title) => {
     cookieLocale = locale;
     vi.mocked(listManagedTryOnShops).mockResolvedValue([]);
@@ -160,7 +166,7 @@ describe('DashboardTryOnPage, the store it opens on', () => {
     vi.mocked(listMessengerSitesReadOnly).mockResolvedValue([{ id: SITE_ID, name: 'Kids', domain: 'kids.example', role: 'owner' }] as never);
     storeCookie = `site:${SITE_ID}`;
     await renderPage();
-    expect(heading('Try-On needs a Shopify store')).toBeInTheDocument();
+    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Switch to second' })).toHaveAttribute('href', '/dashboard/try-on?shop=second.myshopify.com');
     expect(screen.getByRole('button', { name: getTryOnDashboardCopy('en').connectAnotherStore })).toBeInTheDocument();
     expect(getTryOnResultsFacts).not.toHaveBeenCalled();
@@ -170,14 +176,57 @@ describe('DashboardTryOnPage, the store it opens on', () => {
   it('draws the same state for Set up', async () => {
     vi.mocked(listManagedTryOnShops).mockResolvedValue([]);
     render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
-    expect(heading('Try-On needs a Shopify store')).toBeInTheDocument();
+    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
     expect(getTryOnSettingsForEdit).not.toHaveBeenCalled();
   });
 
   it('survives a failed shop list as no shops, since the layout shows the retry', async () => {
     vi.mocked(listManagedTryOnShops).mockRejectedValue(new Error('db down'));
     await renderPage();
-    expect(heading('Try-On needs a Shopify store')).toBeInTheDocument();
+    expect(heading('Try-On needs a connected store')).toBeInTheDocument();
+  });
+});
+
+describe('DashboardTryOnPage for a paired WooCommerce store', () => {
+  const NOW = Date.parse('2026-10-22T12:00:00Z');
+  const KEY = `site:${SITE_ID}`;
+
+  beforeEach(() => {
+    vi.mocked(listManagedTryOnShops).mockResolvedValue([]);
+    vi.mocked(listMessengerSitesReadOnly).mockResolvedValue([{ id: SITE_ID, name: 'Kids', domain: 'kids.example', role: 'owner' }] as never);
+    woo.active = new Set([SITE_ID]);
+    storeCookie = `site:${SITE_ID}`;
+    vi.mocked(storeFlags).mockResolvedValue([]);
+    vi.mocked(getTryOnResultsFacts).mockReset().mockResolvedValue({ now: NOW, period: 30, live: true, jobs: [], products: {} });
+  });
+
+  it('reads Results under the site tenant instead of asking to connect a store', async () => {
+    await renderPage();
+    expect(getTryOnResultsFacts).toHaveBeenLastCalledWith({ shop: KEY, period: 30 });
+    expect(screen.queryByRole('heading', { name: 'Try-On needs a connected store' })).not.toBeInTheDocument();
+  });
+
+  it('draws Set up with the WordPress editors, never the Shopify theme editor or app', async () => {
+    render(await DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) }));
+    const studio = getTryOnStudioCopy('en');
+    expect(getTryOnSettingsForEdit).toHaveBeenCalledWith(KEY);
+    expect(screen.getByRole('link', { name: studio.moveInSiteEditor })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/site-editor.php');
+    expect(screen.getByRole('link', { name: studio.moveInCustomizer })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/customize.php');
+    expect(screen.queryByRole('link', { name: studio.moveInThemeEditor })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: getTryOnDashboardCopy('en').openShopifyApp })).not.toBeInTheDocument();
+  });
+
+  it('keeps Set up for owners and admins: a member goes back to Results', async () => {
+    vi.mocked(listMessengerSitesReadOnly).mockResolvedValue([{ id: SITE_ID, name: 'Kids', domain: 'kids.example', role: 'member' }] as never);
+    await expect(DashboardTryOnSetupPage({ searchParams: Promise.resolve({}) })).rejects.toThrow('redirect:/dashboard/try-on');
+  });
+
+  it('asks to connect a store when the site has no active connection', async () => {
+    woo.active = new Set();
+    await renderPage();
+    expect(screen.getByRole('heading', { name: 'Try-On needs a connected store' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Connect a WooCommerce store' })).toHaveAttribute('href', '/dashboard/store-chat');
+    expect(getTryOnResultsFacts).not.toHaveBeenCalled();
   });
 });
 

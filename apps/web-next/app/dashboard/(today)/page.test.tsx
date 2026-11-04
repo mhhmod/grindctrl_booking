@@ -65,6 +65,15 @@ describe('DashboardOverviewPage, v16 Today', () => {
     expect(screen.getByRole('heading', { name: 'Needs you' })).toBeInTheDocument();
   });
 
+  it('draws it for a paired WooCommerce store, with the store passed on so its tenant is read', async () => {
+    const woo = { shopDomain: null, siteId: 'site_1', tenantKey: 'site:11111111-1111-4111-8111-111111111111', platform: 'woocommerce' as const };
+    vi.mocked(getActiveStore).mockResolvedValueOnce(woo);
+    renderWithMantine(await DashboardOverviewPage());
+    expect(storeFlags).toHaveBeenCalledWith({ widgetSiteId: 'site_1' });
+    expect(getTodayFacts).toHaveBeenCalledWith(expect.objectContaining({ activeStore: woo, timeZone: 'Africa/Cairo' }));
+    expect(screen.getByRole('heading', { name: 'Needs you' })).toBeInTheDocument();
+  });
+
   it.each([
     ['en', 'Connect your first store', 'Set up Store Chat on your website'],
     ['ar', 'اربط متجرك الأول', 'فعّل دردشة المتجر على موقعك'],

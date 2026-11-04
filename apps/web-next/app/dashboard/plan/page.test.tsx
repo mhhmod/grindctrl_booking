@@ -31,7 +31,7 @@ vi.mock('@/lib/dashboard/active-store-server', () => ({
   listDashboardShops: mocks.shops,
 }));
 vi.mock('@/components/dashboard/v16/states', () => ({
-  V16NeedsShopify: ({ feature, shops }: { feature: string; shops: Array<{ domain: string }> }) => (
+  V16NeedsStore: ({ feature, shops }: { feature: string; shops: Array<{ domain: string }> }) => (
     <div data-testid="needs-shopify">
       {feature}:{shops.map((shop) => shop.domain).join(',')}
     </div>
@@ -104,6 +104,17 @@ describe('DashboardPlanPage', () => {
     render(await DashboardPlanPage());
     expect(screen.getByTestId('needs-shopify')).toHaveTextContent('plan:second.myshopify.com');
     expect(mocks.facts).not.toHaveBeenCalled();
+  });
+
+  it('shows a paired WooCommerce store its plan under the site tenant, in its own time zone', async () => {
+    const key = 'site:11111111-1111-4111-8111-111111111111';
+    const store = { shopDomain: null, siteId: '11111111-1111-4111-8111-111111111111', tenantKey: key, platform: 'woocommerce' };
+    mocks.active.mockResolvedValue(store);
+    render(await DashboardPlanPage());
+    expect(screen.getByTestId('v16-plan')).toBeInTheDocument();
+    expect(screen.queryByTestId('needs-shopify')).not.toBeInTheDocument();
+    expect(mocks.facts).toHaveBeenLastCalledWith(expect.objectContaining({ shop: key, timeZone: 'Africa/Cairo' }));
+    expect(mocks.timeZone).toHaveBeenCalledWith(store);
   });
 
   it('tells a new account with no store the same, and survives a failed shop list', async () => {

@@ -27,13 +27,14 @@ vi.mock('@/lib/team/accept', () => ({ acceptInvitesForSignedIn: mocks.accept }))
 vi.mock('@/lib/dashboard/active-store-server', () => ({
   getActiveStore: mocks.active,
   getActiveStoreRole: vi.fn(async () => 'owner'),
+  ensureActiveStorePlan: vi.fn(async () => undefined),
   storeLookupFailed: mocks.lookupFailed,
 }));
 vi.mock('@/lib/messenger/provisioning', () => ({ listMessengerSiteIdsReadOnly: vi.fn(async () => []) }));
 vi.mock('@/lib/messenger/conversations', () => ({ countAwaitingHandoff: vi.fn(async () => 0) }));
 vi.mock('@/lib/dashboard/shell-data', () => ({ getV16ShellData: vi.fn(async () => ({ stores: [], meter: null, person: { name: 'Hana', role: 'owner' }, today: { date: '', greeting: '' } })) }));
 vi.mock('@/components/dashboard/v16/v16-shell', () => ({
-  V16Shell: (props: { hasShopify?: boolean; children: React.ReactNode }) => {
+  V16Shell: (props: { hasTenant?: boolean; children: React.ReactNode }) => {
     mocks.shell(props);
     return <div data-testid="v16-shell">{props.children}</div>;
   },
@@ -79,14 +80,15 @@ describe('DashboardLayout', () => {
 describe('DashboardLayout shell', () => {
   it.each([
     ['a Shopify store', { shopDomain: 'maison.myshopify.com', siteId: 'site_1' }, true],
+    ['a paired WooCommerce store', { shopDomain: null, siteId: 'site_3', tenantKey: 'site:11111111-1111-4111-8111-111111111111', platform: 'woocommerce' }, true],
     ['a Store Chat site on another website', { shopDomain: null, siteId: 'site_2' }, false],
     ['no store yet', { shopDomain: null, siteId: null }, false],
-  ])('draws the v16 shell and the page for %s', async (_name, store, hasShopify) => {
+  ])('draws the v16 shell and the page for %s', async (_name, store, hasTenant) => {
     mocks.active.mockResolvedValue(store);
     render(await DashboardLayout({ children: <p>Page</p> }));
     expect(screen.getByTestId('v16-shell')).toHaveTextContent('Page');
     expect(screen.queryByTestId('lookup-failed')).not.toBeInTheDocument();
-    expect(mocks.shell).toHaveBeenCalledWith(expect.objectContaining({ hasShopify, permissions: expect.any(Object) }));
+    expect(mocks.shell).toHaveBeenCalledWith(expect.objectContaining({ hasTenant, permissions: expect.any(Object) }));
   });
 
   it('shows a retry in the shell, not the page and not the empty-account screens, when the stores could not be read', async () => {

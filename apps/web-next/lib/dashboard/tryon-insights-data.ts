@@ -5,6 +5,7 @@ import { adminGraphql } from '@/lib/shopify/admin';
 import { getShopToken } from '@/lib/shopify/tokens';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import type { ResultsPeriod } from './tryon-insights-copy';
 import { RECENT_LOOKS, TOP_PRODUCTS, type ProductInfo, type ResultsJob, type TryOnResultsFacts } from './tryon-insights-model';
 
@@ -32,7 +33,7 @@ type TitlesResponse = {
   };
 };
 
-/* The facts behind the v16 Try-On Results tab, for the active store's shop
+/* The facts behind the v16 Try-On Results tab, for the active store's tenant
    only (resolved among the caller's own and team shops, so every read here
    is one this person may make). The looks are required: a failed read
    throws, and the page says so. A plan or a product title that cannot be
@@ -101,9 +102,14 @@ export async function getTryOnResultsFacts({
     storeLooks(shop, period, now),
     getShopEntitlement(shop).catch(() => null),
   ]);
-  const products = await productTitles(shop, handlesToName(jobs, period, now)).catch((error) => {
-    console.error('[try-on results] product titles failed:', error instanceof Error ? error.message : error);
-    return {};
-  });
+  /* A WooCommerce store has no Admin API to name products from, and its
+     jobs carry no title, so its products show as their handle, as when a
+     title cannot be read. Nothing is invented. */
+  const products = isSiteTenantKey(shop)
+    ? {}
+    : await productTitles(shop, handlesToName(jobs, period, now)).catch((error) => {
+        console.error('[try-on results] product titles failed:', error instanceof Error ? error.message : error);
+        return {};
+      });
   return { now, period, live: entitlement ? entitlement.available : null, jobs, products };
 }

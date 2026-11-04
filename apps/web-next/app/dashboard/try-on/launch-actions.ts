@@ -2,11 +2,12 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
-import { requireManagedTryOnShop } from '@/lib/shopify/shops';
+import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
-import { storeFlags } from '@/lib/flags/store-flags';
+import { flagStoreForTenant, storeFlags } from '@/lib/flags/store-flags';
 import { writeStoreLaunch } from '@/lib/launch/store-launch';
 import { signPreviewTokenForShop } from '@/lib/launch/preview-token';
+import { previewOriginFor, previewUrl } from '@/lib/launch/preview-url';
 import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
 import { LAUNCH_STATES, type LaunchState } from '@/lib/launch/audience';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -42,11 +43,11 @@ function ownershipFailure(error: unknown): MerchantActionFailure | null {
 /** The owner goes live, for everyone or as a 50/50 test, or back to preview. */
 export async function setLaunchState(input: { shop: string; state: 'preview' | 'live' | 'holdout' }): Promise<LaunchActionResult> {
   try {
-    const shop = await requireManagedTryOnShop(input.shop, { capability: 'settings' });
+    const shop = await requireManagedTenant(input.shop, { capability: 'settings' });
     if (input.state !== 'preview' && input.state !== 'live' && input.state !== 'holdout') {
       return { ok: false, code: 'invalid', message: 'Unknown launch state.' };
     }
-    const features = await storeFlags({ shopDomain: shop });
+    const features = await storeFlags(flagStoreForTenant(shop));
     if (!features.includes('n5_preview_mode')) return NOT_ENABLED;
     if (input.state === 'holdout' && !features.includes('n6_holdout')) return NOT_ENABLED;
     await requireMerchantRateLimit(`shop:${shop}`);
@@ -64,15 +65,18 @@ export async function setLaunchState(input: { shop: string; state: 'preview' | '
  *  free test looks, before it is live. */
 export async function createPreviewLink(input: { shop: string }): Promise<PreviewLinkResult> {
   try {
-    const shop = await requireManagedTryOnShop(input.shop, { capability: 'settings' });
-    const features = await storeFlags({ shopDomain: shop });
+    const shop = await requireManagedTenant(input.shop, { capability: 'settings' });
+    const features = await storeFlags(flagStoreForTenant(shop));
     if (!features.includes('n5_preview_mode')) return NOT_ENABLED;
     await requireMerchantRateLimit(`shop:${shop}`, 'read');
     const signed = signPreviewTokenForShop(shop);
     if (!signed) return merchantActionFailure(null);
     /* The myshopify domain redirects to the store's primary domain and keeps
-       the query, so the token lands in storage on the domain shoppers use. */
-    return { ok: true, url: `https://${shop}/?gc_preview=${encodeURIComponent(signed.token)}`, expiresAt: signed.expiresAt };
+       the query, so the token lands in storage on the domain shoppers use. A
+       WooCommerce store opens on its verified domain or paired address. */
+    const origin = await previewOriginFor(shop);
+    if (!origin) return { ok: false, code: 'not_enabled', message: 'Add and verify your store’s domain first.' };
+    return { ok: true, url: previewUrl(origin, signed.token), expiresAt: signed.expiresAt };
   } catch (error) {
     return ownershipFailure(error) ?? merchantActionFailure(error);
   }

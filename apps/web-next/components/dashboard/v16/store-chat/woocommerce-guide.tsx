@@ -87,6 +87,12 @@ export function WoocommerceGuide({
               </time>
             ) : copy.neverSeen}
           </p>
+          {connection.status === 'active' && connection.cloneSuspected && (
+            <p role="alert" className={classes.connectionError}>{copy.cloneWarning}</p>
+          )}
+          {connection.status === 'active' && connection.pluginOutdated && (
+            <p className={classes.connectionError}>{copy.updatePlugin}</p>
+          )}
         </div>
       )}
 

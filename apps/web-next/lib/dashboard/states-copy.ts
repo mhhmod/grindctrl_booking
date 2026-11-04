@@ -8,11 +8,13 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 export interface StatesCopy {
   noStore: { title: string; body: string; setUpChat: string };
   lookupFailed: { title: string; body: string; retry: string };
-  needsShopify: {
+  needsStore: {
     tryOn: { title: string; body: string };
     plan: { title: string; body: string };
     switchBody: string;
     switchTo: (store: string) => string;
+    wooAction: string;
+    wooHint: string;
   };
   storeTaken: { title: string; body: string; action: string };
   backToSetUp: string;
@@ -31,17 +33,19 @@ const en: StatesCopy = {
     body: 'Something went wrong on our side, and nothing you saved was lost. Try again in a moment.',
     retry: 'Try again',
   },
-  needsShopify: {
+  needsStore: {
     tryOn: {
-      title: 'Try-On needs a Shopify store',
-      body: 'Try-On runs on the product pages of a Shopify store. Connect one to turn it on.',
+      title: 'Try-On needs a connected store',
+      body: 'Try-On runs on the product pages of a Shopify or WooCommerce store. Connect one to turn it on.',
     },
     plan: {
-      title: 'Plans belong to a Shopify store',
-      body: 'Your plan and looks are tied to a Shopify store. Connect one to see them here.',
+      title: 'Plans belong to a connected store',
+      body: 'Your plan and looks are tied to a Shopify or WooCommerce store. Connect one to see them here.',
     },
     switchBody: 'You already have a Shopify store connected.',
     switchTo: (store) => `Switch to ${store}`,
+    wooAction: 'Connect a WooCommerce store',
+    wooHint: 'Install the GRINDCTRL plugin on WordPress and pair it with a code from Store Chat.',
   },
   // The store's Try-On link is on this account, so the merchant can move
   // Store Chat themselves: a re-link from Shopify admin moves both.
@@ -71,17 +75,19 @@ const ar: StatesCopy = {
     body: 'حدث خطأ من جانبنا ولم يضع أي شيء حفظته. حاول مرة أخرى بعد قليل.',
     retry: 'إعادة المحاولة',
   },
-  needsShopify: {
+  needsStore: {
     tryOn: {
-      title: 'التجربة الافتراضية تحتاج إلى متجر Shopify',
-      body: 'تعمل التجربة الافتراضية في صفحات منتجات متجر Shopify. اربط متجراً لتشغيلها.',
+      title: 'التجربة الافتراضية تحتاج إلى متجر مرتبط',
+      body: 'تعمل التجربة الافتراضية في صفحات منتجات متجر Shopify أو WooCommerce. اربط متجراً لتشغيلها.',
     },
     plan: {
-      title: 'الباقات مرتبطة بمتجر Shopify',
-      body: 'باقتك وإطلالاتك مرتبطة بمتجر Shopify. اربط متجراً لعرضها هنا.',
+      title: 'الباقات مرتبطة بمتجر مرتبط',
+      body: 'باقتك وإطلالاتك مرتبطة بمتجر Shopify أو WooCommerce. اربط متجراً لعرضها هنا.',
     },
     switchBody: 'لديك متجر Shopify مرتبط بالفعل.',
     switchTo: (store) => `التبديل إلى ${store}`,
+    wooAction: 'اربط متجر WooCommerce',
+    wooHint: 'ثبّت إضافة GRINDCTRL على ووردبريس واربطها برمز من دردشة المتجر.',
   },
   storeTaken: {
     title: 'محادثة المتجر لهذا المتجر على حساب آخر',
