@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import { GrindctrlMark } from '@/components/site/marks';
-import { D_HUBSPOT, D_N8N, D_SHOPIFY } from '../story-marks';
+import { D_N8N, D_SHOPIFY } from '../story-marks';
 import { StoryImg } from '../story-img';
 import { PlatformRows, StatusChip } from '../platform-rows';
 import type { V, ViewProps } from '../story-types';
@@ -22,7 +22,7 @@ export function PhoneStack({ v, t }: ViewProps) {
         </div>
       </div>
       <div data-reveal="">
-        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
+        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n connects through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
           <span style={{ display: "block", marginBottom: "8px", marginInlineStart: "4px", fontSize: "11.5px", fontWeight: "700", color: "var(--muted-foreground)" }}>{t("Your store")}</span>
           <div style={{ boxSizing: "border-box", padding: "16px", borderRadius: "20px", border: "1px solid var(--border)", background: "var(--card)", boxShadow: "0 24px 50px -36px color-mix(in srgb, var(--foreground) 50%, transparent)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--foreground)" }}>
@@ -197,14 +197,6 @@ export function PhoneStack({ v, t }: ViewProps) {
             <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "54px", boxSizing: "border-box", padding: "0 14px", borderRadius: "16px", border: "1px dashed var(--gc-line-strong)", background: "color-mix(in srgb, var(--card) 70%, transparent)", color: "var(--foreground)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_N8N} /></svg>
               <span style={{ flex: "1", fontSize: "14px", fontWeight: "700" }}>{t("n8n")}</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "22px", padding: "0 9px", borderRadius: "11px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--foreground)", border: "1px dashed color-mix(in srgb, var(--foreground) 25%, transparent)", background: "color-mix(in srgb, var(--card) 50%, transparent)" }}>
-                <span style={{ width: "6px", height: "6px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid var(--foreground)" }} />
-                {t("Custom setup")}
-              </span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "54px", boxSizing: "border-box", padding: "0 14px", borderRadius: "16px", border: "1px dashed var(--gc-line-strong)", background: "color-mix(in srgb, var(--card) 70%, transparent)", color: "var(--foreground)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_HUBSPOT} /></svg>
-              <span style={{ flex: "1", fontSize: "14px", fontWeight: "700" }}>{t("HubSpot")}</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "22px", padding: "0 9px", borderRadius: "11px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--foreground)", border: "1px dashed color-mix(in srgb, var(--foreground) 25%, transparent)", background: "color-mix(in srgb, var(--card) 50%, transparent)" }}>
                 <span style={{ width: "6px", height: "6px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid var(--foreground)" }} />
                 {t("Custom setup")}

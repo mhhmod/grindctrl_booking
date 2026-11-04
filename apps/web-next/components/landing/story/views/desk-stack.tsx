@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import { GrindctrlMark } from '@/components/site/marks';
-import { D_HUBSPOT, D_N8N, D_SHOPIFY } from '../story-marks';
+import { D_N8N, D_SHOPIFY } from '../story-marks';
 import { StoryImg } from '../story-img';
 import { PlatformRows, StatusChip } from '../platform-rows';
 import type { V, ViewProps } from '../story-types';
@@ -22,14 +22,13 @@ export function DeskStack({ v, t }: ViewProps) {
         </div>
       </div>
       <div data-reveal="">
-        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n and HubSpot connect through custom setup.")} style={{ position: "relative", marginTop: "48px", marginInline: "calc((100% - 1200px) / 2)", width: "1200px", height: "400px", transform: "scale(var(--gc-board-scale, 1))", transformOrigin: "50% 0", marginBottom: "calc((var(--gc-board-scale, 1) - 1) * 400px)" }}>
+        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n connects through custom setup.")} style={{ position: "relative", marginTop: "48px", marginInline: "calc((100% - 1200px) / 2)", width: "1200px", height: "400px", transform: "scale(var(--gc-board-scale, 1))", transformOrigin: "50% 0", marginBottom: "calc((var(--gc-board-scale, 1) - 1) * 400px)" }}>
           <svg aria-hidden="true" width="1200" height="380" viewBox="0 0 1200 380" style={{ position: "absolute", insetInlineStart: "0", top: "0", overflow: "visible" }} className="rtl:-scale-x-100">
             <path d="M284 128 H396" fill="none" stroke="color-mix(in srgb, var(--foreground) 28%, transparent)" strokeWidth="1.4" />
             <path d="M284 128 H396" pathLength="100" fill="none" stroke="var(--foreground)" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="6 94" style={{ animation: "gcs-flow 2.6s linear -0.0s infinite" }} />
             <path d="M804 128 H916" fill="none" stroke="color-mix(in srgb, var(--foreground) 28%, transparent)" strokeWidth="1.4" />
             <path d="M804 128 H916" pathLength="100" fill="none" stroke="var(--foreground)" strokeWidth="2.6" strokeLinecap="round" strokeDasharray="6 94" style={{ animation: "gcs-flow 2.6s linear -1.3s infinite" }} />
-            <path d="M540 262 V292 Q540 312 520 312 H505 Q490 312 490 330 V318" fill="none" stroke="color-mix(in srgb, var(--foreground) 35%, transparent)" strokeWidth="1.4" strokeDasharray="4 5" />
-            <path d="M660 262 V292 Q660 312 680 312 H695 Q710 312 710 330 V318" fill="none" stroke="color-mix(in srgb, var(--foreground) 35%, transparent)" strokeWidth="1.4" strokeDasharray="4 5" />
+            <path d="M600 262 V318" fill="none" stroke="color-mix(in srgb, var(--foreground) 35%, transparent)" strokeWidth="1.4" strokeDasharray="4 5" />
           </svg>
           <span style={{ position: "absolute", insetInlineStart: "4px", top: "16px", fontSize: "11.5px", fontWeight: "700", color: "var(--muted-foreground)" }}>{t("Your store")}</span>
           <div style={{ position: "absolute", insetInlineStart: "0px", top: "44px", width: "284px" }}>
@@ -195,20 +194,10 @@ export function DeskStack({ v, t }: ViewProps) {
               </div>
             </div>
           </div>
-          <div style={{ position: "absolute", insetInlineStart: "380px", top: "330px", width: "220px" }}>
+          <div style={{ position: "absolute", insetInlineStart: "490px", top: "330px", width: "220px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "54px", boxSizing: "border-box", padding: "0 14px", borderRadius: "16px", border: "1px dashed var(--gc-line-strong)", background: "color-mix(in srgb, var(--card) 70%, transparent)", color: "var(--foreground)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_N8N} /></svg>
               <span style={{ flex: "1", fontSize: "14px", fontWeight: "700" }}>{t("n8n")}</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "22px", padding: "0 9px", borderRadius: "11px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--foreground)", border: "1px dashed color-mix(in srgb, var(--foreground) 25%, transparent)", background: "color-mix(in srgb, var(--card) 50%, transparent)" }}>
-                <span style={{ width: "6px", height: "6px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid var(--foreground)" }} />
-                {t("Custom setup")}
-              </span>
-            </div>
-          </div>
-          <div style={{ position: "absolute", insetInlineStart: "610px", top: "330px", width: "230px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", height: "54px", boxSizing: "border-box", padding: "0 14px", borderRadius: "16px", border: "1px dashed var(--gc-line-strong)", background: "color-mix(in srgb, var(--card) 70%, transparent)", color: "var(--foreground)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_HUBSPOT} /></svg>
-              <span style={{ flex: "1", fontSize: "14px", fontWeight: "700" }}>{t("HubSpot")}</span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "22px", padding: "0 9px", borderRadius: "11px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--foreground)", border: "1px dashed color-mix(in srgb, var(--foreground) 25%, transparent)", background: "color-mix(in srgb, var(--card) 50%, transparent)" }}>
                 <span style={{ width: "6px", height: "6px", boxSizing: "border-box", borderRadius: "50%", border: "1.5px solid var(--foreground)" }} />
                 {t("Custom setup")}
