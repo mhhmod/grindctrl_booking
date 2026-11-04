@@ -14,6 +14,8 @@ import { getProduct } from './products';
 import { readProviderBody } from '@/lib/provider-http';
 import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { toShopperFailureMessage } from './shopper-errors';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
+import { fetchSiteGarment } from '@/lib/woo/garment-url';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
 
@@ -53,7 +55,14 @@ export function isAllowedGarmentUrl(url: string): boolean {
   }
 }
 
-async function loadGarmentDataUrl(productId: string, garmentUrl?: string): Promise<string> {
+async function loadGarmentDataUrl(productId: string, garmentUrl?: string, shop?: string | null): Promise<string> {
+  if (garmentUrl && shop && isSiteTenantKey(shop)) {
+    // WooCommerce and WordPress sites: resolve, pin, no redirects.
+    const { mime, bytes } = await fetchSiteGarment(shop.slice('site:'.length), garmentUrl);
+    const dataUrl = `data:${mime};base64,${bytes.toString('base64')}`;
+    if (!decodeRasterDataUrl(dataUrl, MAX_GARMENT_BYTES)) throw new Error('Invalid garment image.');
+    return dataUrl;
+  }
   if (garmentUrl) {
     if (!isAllowedGarmentUrl(garmentUrl)) {
       throw new Error('Garment image must come from the Shopify CDN.');
@@ -127,7 +136,7 @@ export async function runImageGeneration(
   const garmentName = productName || product?.name || 'the garment';
   let garmentDataUrl: string;
   try {
-    garmentDataUrl = await loadGarmentDataUrl(productId, garmentUrl);
+    garmentDataUrl = await loadGarmentDataUrl(productId, garmentUrl, shop);
   } catch {
     return fail('garment_unavailable');
   }

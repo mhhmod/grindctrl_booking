@@ -123,6 +123,22 @@ describe('try-on entitlement helpers', () => {
     });
   });
 
+  it('accepts a site tenant key and normalizes it, while Shopify input is unchanged', async () => {
+    rpcMock.mockResolvedValue({ data: 'subscription-2', error: null });
+    const site = '123E4567-E89B-42D3-A456-426614174000';
+
+    await ensureFreeSubscription(`  Site:${site}  `);
+    expect(rpcMock).toHaveBeenLastCalledWith('ensure_free_tryon_subscription', {
+      p_shop_domain: `site:${site.toLowerCase()}`,
+    });
+    await ensureFreeSubscription(' Store-One.MyShopify.com ');
+    expect(rpcMock).toHaveBeenLastCalledWith('ensure_free_tryon_subscription', {
+      p_shop_domain: 'store-one.myshopify.com',
+    });
+    await expect(ensureFreeSubscription('site:not-a-uuid')).rejects.toThrow('Unknown Shopify shop');
+    await expect(ensureFreeSubscription('evil.example.com')).rejects.toThrow('Unknown Shopify shop');
+  });
+
   it('maps unavailable reservations to the stable application error', async () => {
     rpcMock.mockResolvedValue({
       data: null,

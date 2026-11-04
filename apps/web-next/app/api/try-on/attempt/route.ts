@@ -1,5 +1,5 @@
-import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
-import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
+import { resolveAnyTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { isActiveTenant } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const resolved = resolveTryOnSessionKey((secret) =>
+    const resolved = await resolveAnyTryOnSessionKey(sessionId, (secret) =>
       verifyTryOnSession(secret, sessionId, {
         productId,
         variantId: rawVariantId === undefined ? undefined : variantId,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
     if (session.purpose === 'storefront' &&
-      (!session.shop || !(await isActiveShopifyInstallation(session.shop, resolved.app.clientId)))) {
+      (!session.shop || !(await isActiveTenant(session.shop, resolved.app.clientId)))) {
       return NextResponse.json({ ok: false, error: 'Store integration is unavailable.' }, { status: 401 });
     }
 

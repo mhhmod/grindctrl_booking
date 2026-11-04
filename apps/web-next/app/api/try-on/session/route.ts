@@ -20,8 +20,9 @@ import {
   legacyStorefrontCompatEnabled,
   warnLegacyStorefrontCompat,
 } from '@/lib/try-on/legacy-compat';
-import { getConfiguredShopifyApps, primaryShopifyApp, resolveShopifyApp } from '@/lib/shopify/app-registry';
-import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
+import { getConfiguredShopifyApps, primaryShopifyApp } from '@/lib/shopify/app-registry';
+import { resolveAnyStorefrontContextKey } from '@/lib/try-on/signing-keys';
+import { isActiveTenant } from '@/lib/shopify/tokens';
 import type { TryOnApiResponse, TryOnSession } from '@/lib/try-on/types';
 
 /**
@@ -155,14 +156,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(res, { status: 400 });
       }
 
-      const resolved = resolveShopifyApp((appSecret) =>
+      const resolved = await resolveAnyStorefrontContextKey(contextToken, (appSecret) =>
         verifyStorefrontContext(appSecret, contextToken, {
           productId,
           variantId: body.variantId === undefined ? undefined : variantId,
           nonce,
         }),
       );
-      if (!resolved || !(await isActiveShopifyInstallation(resolved.value.shop, resolved.app.clientId))) {
+      if (!resolved || !(await isActiveTenant(resolved.value.shop, resolved.app.clientId))) {
         const res: TryOnApiResponse = { ok: false, error: 'Invalid storefront context.' };
         return NextResponse.json(res, { status: 401 });
       }

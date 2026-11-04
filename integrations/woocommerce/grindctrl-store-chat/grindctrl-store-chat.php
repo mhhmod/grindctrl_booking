@@ -22,6 +22,7 @@ defined( 'GRINDCTRL_SC_SCRIPT' ) || define( 'GRINDCTRL_SC_SCRIPT', 'https://grin
 defined( 'GRINDCTRL_SC_DASHBOARD' ) || define( 'GRINDCTRL_SC_DASHBOARD', 'https://grindctrl.cloud/dashboard/store-chat/setup' );
 defined( 'GRINDCTRL_SC_API_BASE' ) || define( 'GRINDCTRL_SC_API_BASE', 'https://grindctrl.cloud' );
 define( 'GRINDCTRL_SC_HEARTBEAT_HOOK', 'grindctrl_sc_daily_heartbeat' );
+require_once __DIR__ . '/includes/tryon.php';
 
 /*
  * The embed key names the store's Store Chat. It is public: it ships in the

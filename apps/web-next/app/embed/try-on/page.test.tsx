@@ -36,6 +36,11 @@ vi.mock('@/components/try-on/sheet/try-on-sheet', () => ({
 }));
 vi.mock('@/components/try-on/try-on-demo', () => ({ TryOnDemo: () => <div data-testid="today" /> }));
 vi.mock('@/components/try-on/embed-frame-bridge', () => ({ EmbedFrameBridge: () => null }));
+const hosts = vi.hoisted(() => ({ list: ['shop.example.com'] as string[] }));
+vi.mock('@/lib/woo/garment-url', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/woo/garment-url')>()),
+  verifiedSiteHosts: async () => hosts.list,
+}));
 
 import EmbedTryOnPage from './page';
 
@@ -83,5 +88,31 @@ describe('the try-on embed', () => {
     expect(screen.getByTestId('today')).toBeInTheDocument();
     expect(flags.asked).toEqual([]);
     expect(flags.timing).toBe(0);
+  });
+});
+
+describe('the try-on embed for a WooCommerce site tenant', () => {
+  const SITE = '123e4567-e89b-42d3-a456-426614174000';
+  const WOO = {
+    product: 'woo-42',
+    shop: `site:${SITE}`,
+    title: 'Linen tee',
+    garment: 'https://shop.example.com/wp-content/uploads/tee.jpg',
+    locale: 'ar',
+    variant: '77',
+    sheet: '1',
+  };
+
+  it('keys the flags by widget site, not by shop domain', async () => {
+    flags.on = ['v16_tryon'];
+    await renderPage(WOO);
+    expect(screen.getByTestId('sheet')).toBeInTheDocument();
+    expect(flags.asked).toEqual([{ widgetSiteId: SITE }]);
+  });
+
+  it('is not given a Shopify-only shop when the key is not a site tenant', async () => {
+    flags.on = ['v16_tryon'];
+    await renderPage({ ...WOO, shop: 'site:not-a-uuid' });
+    expect(flags.asked).toEqual([]);
   });
 });
