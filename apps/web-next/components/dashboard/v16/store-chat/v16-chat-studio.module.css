@@ -415,3 +415,56 @@
   flex: 1 1 220px;
   min-width: 0;
 }
+
+/* WooCommerce setup path (woocommerce-guide.tsx). The list keeps its native
+   numbering, which Tailwind's reset removes, and the marker sits at the
+   inline start in both directions. */
+.steps {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding-block: 0;
+  padding-inline: 1.5rem 0;
+  list-style: decimal;
+}
+
+.steps > li {
+  min-width: 0;
+  padding-inline-start: 4px;
+  font-size: 0.9375rem;
+}
+
+.steps > li::marker {
+  color: var(--muted-foreground);
+  font-weight: 700;
+}
+
+.steps p {
+  margin: 0;
+}
+
+.stepBody {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.keyRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Touch target: Mantine's height is an inline variable, so the floor is set
+   on min-block-size, and the button keeps its own width in a grid cell. */
+.touch {
+  justify-self: start;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+}
+
+.keyRow .touch {
+  justify-self: end;
+}

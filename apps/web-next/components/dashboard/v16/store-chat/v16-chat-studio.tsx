@@ -27,6 +27,7 @@ import type { MessengerConfig } from '@/lib/messenger/types';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { StorefrontDomains } from './storefront-domains';
+import { WoocommerceGuide } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
 /* The v16 Store Chat Set up tab (04-dashboard.md, the ChatStudio board) on
@@ -842,6 +843,7 @@ export function V16ChatStudio({
                 </Button>
               </p>
             </div>
+            {!shopify && <WoocommerceGuide embedKey={meta.embedKey} copy={copy.woocommerce} copyLabels={copy.domains} />}
             {!shopify &&
               actions.listDomainsAction &&
               actions.addDomainAction &&

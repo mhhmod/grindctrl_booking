@@ -97,6 +97,13 @@ export interface ChatStudioCopy {
   testNow: string;
   notShopify: string;
   copyScript: string;
+  woocommerce: {
+    title: string;
+    body: string;
+    download: string;
+    keyLabel: string;
+    steps: { download: string; upload: string; key: string; domain: string };
+  };
   domains: {
     title: string;
     body: string;
@@ -250,6 +257,19 @@ const en: ChatStudioCopy = {
   testNow: 'Test it now',
   notShopify: 'Not on Shopify?',
   copyScript: 'Copy the script',
+  woocommerce: {
+    title: 'WooCommerce',
+    body: 'Store Chat on WooCommerce is in testing. You can set it up with the GRINDCTRL plugin for WordPress.',
+    download: 'Download plugin',
+    keyLabel: 'Embed key',
+    steps: {
+      download: 'Download the plugin and keep it zipped. WordPress installs the zip file as it is.',
+      upload: 'In WordPress, go to Plugins, then Add New, then Upload Plugin. Choose the file, install it and activate it.',
+      key: 'Go to Settings, then GRINDCTRL Store Chat. Paste your embed key and save.',
+      domain:
+        'Add your store’s domain below and publish the DNS record it shows, then check it. Store Chat answers only after the domain is verified.',
+    },
+  },
   domains: {
     title: 'Your website domain',
     body: 'Store Chat only answers on a domain you have proven is yours. Add the domain shoppers visit, then add the DNS record shown here.',
@@ -398,6 +418,19 @@ const ar: ChatStudioCopy = {
   testNow: 'اختبرها الآن',
   notShopify: 'متجرك ليس على Shopify؟',
   copyScript: 'انسخ الكود',
+  woocommerce: {
+    title: 'WooCommerce',
+    body: 'دردشة المتجر على WooCommerce قيد الاختبار. يمكنك إعدادها بإضافة GRINDCTRL لـ WordPress.',
+    download: 'تنزيل الإضافة',
+    keyLabel: 'مفتاح التضمين',
+    steps: {
+      download: 'نزّل الإضافة وأبقها مضغوطة. يثبّت WordPress ملف ZIP كما هو.',
+      upload: 'في WordPress افتح Plugins ثم Add New ثم Upload Plugin. اختر الملف وثبّته ثم فعّل الإضافة.',
+      key: 'افتح Settings ثم GRINDCTRL Store Chat، والصق مفتاح التضمين في حقل Embed key واحفظ.',
+      domain:
+        'أضف نطاق متجرك أدناه وانشر سجل DNS الظاهر، ثم تحقّق منه. لا ترد دردشة المتجر إلا بعد التحقق من النطاق.',
+    },
+  },
   domains: {
     title: 'نطاق موقعك',
     body: 'لا ترد دردشة المتجر إلا على نطاق أثبتّ أنه لك. أضف النطاق الذي يزوره عملاؤك، ثم أضف سجل DNS الظاهر هنا.',
