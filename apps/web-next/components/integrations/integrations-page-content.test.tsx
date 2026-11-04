@@ -42,11 +42,13 @@ describe('IntegrationsPageContent', () => {
     }
   });
 
-  it('names Shopify as the only implemented platform and never claims WhatsApp/Instagram are available', () => {
+  it('names Shopify and WooCommerce as the only implemented platforms and never claims WhatsApp/Instagram are available', () => {
     renderPage('en');
-    // Exactly one row is Implemented, and it is Shopify's.
-    const implemented = screen.getByText('Implemented');
-    expect(implemented.closest('li')).toHaveTextContent('Shopify');
+    // Exactly two rows are Implemented: Shopify's and WooCommerce's.
+    const implemented = screen.getAllByText('Implemented');
+    expect(implemented).toHaveLength(2);
+    expect(implemented[0].closest('li')).toHaveTextContent('Shopify');
+    expect(implemented[1].closest('li')).toHaveTextContent('WooCommerce');
     expect(screen.queryByText(/whatsapp.*(available|ready)/i)).not.toBeInTheDocument();
   });
 
@@ -59,7 +61,7 @@ describe('IntegrationsPageContent', () => {
       return row;
     };
     const website = locale === 'ar' ? 'موقعك' : 'Your website';
-    expect(rowOf('WooCommerce')).toHaveTextContent(t.integrationStateInTesting);
+    expect(rowOf('WooCommerce')).toHaveTextContent(t.integrationStateImplemented);
     expect(rowOf(website)).toHaveTextContent(t.integrationStateInTesting);
     expect(rowOf(locale === 'ar' ? 'سلة' : 'Salla')).toHaveTextContent(t.integrationStatePlanned);
     expect(rowOf(locale === 'ar' ? 'زد' : 'Zid')).toHaveTextContent(t.integrationStatePlanned);
@@ -76,14 +78,15 @@ describe('IntegrationsPageContent', () => {
     expect(screen.getByText('Zid').closest('li')?.querySelector('svg')).toBeNull();
   });
 
-  it('says Store Chat only for WooCommerce and your website, and that neither is available to merchants yet', () => {
+  it('says Store Chat only for WooCommerce and your website, and that only the website is not available to merchants yet', () => {
     renderPage('en');
     for (const label of ['WooCommerce', 'Your website']) {
       const row = screen.getByText(label).closest('li');
       expect(row, label).toHaveTextContent('Store Chat only');
-      expect(row, label).toHaveTextContent('Not available to merchants yet');
-      expect(row, label).not.toHaveTextContent(/\b(supported|works with)\b/i);
+      expect(row, label).not.toHaveTextContent(/\b(supported|works with|marketplace)\b/i);
     }
+    expect(screen.getByText('Your website').closest('li')).toHaveTextContent('Not available to merchants yet');
+    expect(screen.getByText('WooCommerce').closest('li')).not.toHaveTextContent('Not available to merchants');
     expect(screen.getByText('WooCommerce').closest('li')).toHaveTextContent(
       'Try-On, order lookup and billing stay Shopify-only',
     );

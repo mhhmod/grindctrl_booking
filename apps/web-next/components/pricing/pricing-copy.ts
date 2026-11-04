@@ -177,7 +177,7 @@ const en: PricingCopy = {
   creditNote: 'Upstream provider cost may still be incurred on a failed generation.',
   chatEyebrow: 'Store Chat',
   chatTitle: 'Store Chat is included on every plan.',
-  chatBody: 'Every plan, Free included, comes with the same Store Chat on your storefront. It runs on Shopify stores today. Chats do not use try-on credits.',
+  chatBody: 'Every plan, Free included, comes with the same Store Chat on your storefront. It runs on Shopify and WooCommerce stores today. Chats do not use try-on credits.',
   chatSpecs: [
     { icon: 'book', title: 'Answers from your store knowledge', detail: 'Up to 50 entries, written by you or imported from a web page.' },
     { icon: 'box', title: 'Read-only order status', detail: 'On Shopify. Shoppers check an order with its number and email. Up to 5 lookups per chat, no edits or refunds.' },
@@ -325,7 +325,7 @@ const ar: PricingCopy = {
   creditNote: 'قد تبقى تكلفة مزود الخدمة قائمة عند فشل عملية الإنشاء.',
   chatEyebrow: 'Store Chat',
   chatTitle: 'Store Chat مضمّنة في كل الخطط.',
-  chatBody: 'كل خطة، بما فيها المجانية، تأتي مع Store Chat نفسها على متجرك. تعمل على متاجر Shopify حاليًا. المحادثات لا تستخدم رصيد التجارب.',
+  chatBody: 'كل خطة، بما فيها المجانية، تأتي مع Store Chat نفسها على متجرك. تعمل على متاجر Shopify وWooCommerce حاليًا. المحادثات لا تستخدم رصيد التجارب.',
   chatSpecs: [
     { icon: 'book', title: 'إجابات من معلومات متجرك', detail: 'حتى 50 مدخلًا تكتبها بنفسك أو تستوردها من صفحة ويب.' },
     { icon: 'box', title: 'حالة الطلب للعرض فقط', detail: 'على Shopify. يتحقق المتسوق من طلبه برقم الطلب والبريد الإلكتروني. حتى 5 محاولات في كل محادثة، دون تعديل أو استرداد.' },

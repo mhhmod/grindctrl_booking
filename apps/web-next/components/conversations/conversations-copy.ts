@@ -64,7 +64,7 @@ const en: ConversationsCopy = {
   ],
   notLiveEyebrow: 'Where it stops today',
   notLiveTitle: "What's not live yet",
-  notLiveBody: "Store Chat runs on your Shopify storefront today. Here's what it doesn't do yet.",
+  notLiveBody: "Store Chat is live on Shopify and WooCommerce. Here's what it doesn't do yet.",
   notBuiltStatus: 'Not built',
   notLiveItems: [
     {
@@ -88,7 +88,12 @@ const en: ConversationsCopy = {
       statusKind: 'planned',
     },
     {
-      label: 'WooCommerce and your website',
+      label: 'Order lookup and Try-On on WooCommerce',
+      note: 'Store Chat is live on WooCommerce. Order lookup and Try-On stay Shopify-only.',
+      statusKind: 'notBuilt',
+    },
+    {
+      label: 'Your website',
       note: 'In testing for Store Chat only, and not available to merchants yet. Order lookup and Try-On stay Shopify-only.',
       statusKind: 'inTesting',
     },
@@ -142,7 +147,7 @@ const ar: ConversationsCopy = {
   ],
   notLiveEyebrow: 'أين يتوقف اليوم',
   notLiveTitle: 'ما لم يُطلَق بعد',
-  notLiveBody: 'يعمل Store Chat على واجهة متجرك على Shopify اليوم. إليك ما لا يفعله بعد.',
+  notLiveBody: 'يعمل Store Chat اليوم على Shopify وWooCommerce. إليك ما لا يفعله بعد.',
   notBuiltStatus: 'غير مطوَّر',
   notLiveItems: [
     {
@@ -166,7 +171,12 @@ const ar: ConversationsCopy = {
       statusKind: 'planned',
     },
     {
-      label: 'WooCommerce وموقعك الخاص',
+      label: 'الاستعلام عن الطلبات والتجربة الافتراضية على WooCommerce',
+      note: 'دردشة المتجر مباشرة على WooCommerce. الاستعلام عن الطلبات والتجربة الافتراضية يبقيان على Shopify فقط.',
+      statusKind: 'notBuilt',
+    },
+    {
+      label: 'موقعك الخاص',
       note: 'قيد الاختبار لدردشة المتجر فقط، وغير متاح للتجار بعد. الاستعلام عن الطلبات والتجربة الافتراضية يبقيان على Shopify فقط.',
       statusKind: 'inTesting',
     },

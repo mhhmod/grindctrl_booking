@@ -257,7 +257,7 @@ export const PUBLIC_TRUTH_REGISTER = [
   {
     id: 'integration.public-logo-strip',
     kind: 'integration',
-    statement: 'Shopify is live. WooCommerce and your own website are in testing, for Store Chat only. Salla and Zid are planned.',
+    statement: 'Shopify is live. WooCommerce is live for Store Chat only. Your own website is in testing, for Store Chat only. Salla and Zid are planned.',
     surfaces: ['landing.stack', 'integrations'],
     status: 'documented-evidence',
     handling: 'qualify',
@@ -276,10 +276,16 @@ export const PUBLIC_TRUTH_REGISTER = [
         id: 'platform-readiness-matrix',
         kind: 'checkpoint',
         ref: 'docs/platform-readiness-matrix.md',
-        note: 'Per-platform evidence: Shopify shipped, WooCommerce and your own website tried on a staging store from a branch only, Salla and Zid not built.',
+        note: 'Per-platform evidence: Shopify shipped, WooCommerce Store Chat verified on a live store, your own website not yet tested on its own, Salla and Zid not built.',
+      },
+      {
+        id: 'woocommerce-live-verification',
+        kind: 'checkpoint',
+        ref: 'docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md',
+        note: 'WooCommerce Store Chat verified end to end on a live store against production on 2026-11-04. Store Chat only; the plugin is not listed on WordPress.org or the WooCommerce Marketplace.',
       },
     ],
-    lastReviewedAt: '2026-11-03',
+    lastReviewedAt: '2026-11-04',
     note: 'A logo is shown only beside its status in words. Never present an in-testing or planned platform as supported, available or working with GrindCTRL, and keep Try-On, order lookup and billing Shopify-only. The n8n and HubSpot marks on the landing are labelled custom setup; the register lists no HubSpot connector.',
   },
   {

@@ -65,7 +65,7 @@ const en: IntegrationsCopy = {
   storefrontEyebrow: 'Storefront',
   storefrontTitle: 'Where GrindCTRL lives in your store',
   storefrontBody:
-    'Shopify is the one storefront integration shipping today. WooCommerce and your website are in testing, for Store Chat only. Salla and Zid are planned.',
+    'Shopify is live with Try-On, Store Chat, order lookup and billing. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned.',
   storefrontItems: [
     {
       id: 'shopify',
@@ -75,7 +75,7 @@ const en: IntegrationsCopy = {
     {
       id: 'woocommerce',
       description:
-        'Store Chat only, through a GRINDCTRL WordPress plugin. Not available to merchants yet. Try-On, order lookup and billing stay Shopify-only.',
+        'Live for Store Chat only, through the GRINDCTRL WordPress plugin on a domain you verify with DNS. Try-On, order lookup and billing stay Shopify-only.',
     },
     {
       id: 'custom-website',
@@ -155,7 +155,7 @@ const ar: IntegrationsCopy = {
   storefrontEyebrow: 'المتجر',
   storefrontTitle: 'أين يعمل GrindCTRL داخل متجرك',
   storefrontBody:
-    'Shopify هو تكامل المتجر الوحيد المُفعّل اليوم. WooCommerce وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
+    'Shopify مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات والفوترة. وWooCommerce مباشر لدردشة المتجر فقط. وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
   storefrontItems: [
     {
       id: 'shopify',
@@ -165,7 +165,7 @@ const ar: IntegrationsCopy = {
     {
       id: 'woocommerce',
       description:
-        'دردشة المتجر فقط، عبر إضافة ووردبريس من GRINDCTRL. غير متاح للتجار بعد. التجربة الافتراضية والاستعلام عن الطلبات والفوترة تبقى على Shopify فقط.',
+        'مباشر لدردشة المتجر فقط، عبر إضافة ووردبريس من GRINDCTRL على نطاق تتحقق منه عبر DNS. التجربة الافتراضية والاستعلام عن الطلبات والفوترة تبقى على Shopify فقط.',
     },
     {
       id: 'custom-website',

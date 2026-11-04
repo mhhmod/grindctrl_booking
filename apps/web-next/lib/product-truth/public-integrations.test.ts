@@ -37,23 +37,35 @@ describe('public integration truth', () => {
 
   it('lists the platforms with a state that matches what main ships', () => {
     expect(findPublicIntegration('shopify')?.state).toBe('implemented');
-    expect(findPublicIntegration('woocommerce')).toMatchObject({ name: 'WooCommerce', state: 'in-testing' });
+    expect(findPublicIntegration('woocommerce')).toMatchObject({
+      name: 'WooCommerce',
+      state: 'implemented',
+      evidenceRef: 'docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md',
+    });
     expect(findPublicIntegration('custom-website')).toMatchObject({ name: 'Your website', state: 'in-testing' });
     expect(findPublicIntegration('salla')).toMatchObject({ name: 'Salla', state: 'planned' });
     expect(findPublicIntegration('zid')).toMatchObject({ name: 'Zid', state: 'planned' });
-    // Only Shopify may be implemented among the platforms.
+    // Only Shopify and WooCommerce (Store Chat only) may be implemented.
     const implemented = PUBLIC_INTEGRATIONS.filter((item) => item.state === 'implemented').map((item) => item.id);
-    expect(implemented).toEqual(['shopify']);
+    expect(implemented).toEqual(['shopify', 'woocommerce']);
   });
 
-  it('says Store Chat only for the in-testing platforms and never words them as shipped', () => {
-    for (const id of ['woocommerce', 'custom-website']) {
-      const note = findPublicIntegration(id)!.note;
-      expect(note, id).toMatch(/Store Chat only/);
-      expect(note, id).toMatch(/not available to merchants/i);
-      expect(note, id).not.toMatch(/\b(supported|works with|available now|live)\b/i);
-    }
-    expect(findPublicIntegration('woocommerce')!.note).toMatch(/Try-On, order lookup and billing are Shopify-only/);
+  it('says Store Chat only for the in-testing website and never words it as shipped', () => {
+    const note = findPublicIntegration('custom-website')!.note;
+    expect(note).toMatch(/Store Chat only/);
+    expect(note).toMatch(/not available to merchants/i);
+    expect(note).not.toMatch(/\b(supported|works with|available now|live)\b/i);
+  });
+
+  it('keeps WooCommerce scoped to Store Chat and never claims a marketplace listing or wide support', () => {
+    const note = findPublicIntegration('woocommerce')!.note;
+    expect(note).toMatch(/Store Chat only/);
+    expect(note).toMatch(/Try-On, order lookup and billing are Shopify-only/);
+    expect(note).not.toMatch(/\b(supported|works with|compatible|all)\b/i);
+    expect(note).not.toMatch(/wordpress\.org|marketplace/i);
+  });
+
+  it('says no code connects Salla or Zid', () => {
     for (const id of ['salla', 'zid']) {
       expect(findPublicIntegration(id)!.note, id).toMatch(/No code connects/);
     }
@@ -70,7 +82,8 @@ describe('public integration truth', () => {
   it('keeps the readiness matrix consistent with the register for the platform rows', () => {
     const matrix = readFileSync(join(REPO_ROOT, 'docs/platform-readiness-matrix.md'), 'utf8');
     const rowFor = (name: string) => matrix.split('\n').find((line) => line.startsWith(`| ${name} |`)) ?? '';
-    expect(rowFor('WooCommerce')).toMatch(/\| in testing/);
+    expect(rowFor('WooCommerce')).toMatch(/\| implemented \(Store Chat only\) \|/);
+    expect(rowFor('WooCommerce')).toContain('docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md');
     expect(rowFor('Custom website')).toMatch(/\| in testing/);
     expect(rowFor('Salla')).toMatch(/\| planned \|/);
     expect(rowFor('Zid')).toMatch(/\| planned \|/);

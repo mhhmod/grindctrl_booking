@@ -16,6 +16,12 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Shopify/i);
   });
 
+  it('states WooCommerce as live for Store Chat only, keeps the website in testing and claims no marketplace listing', () => {
+    expect(SYSTEM_PROMPT).toMatch(/- WooCommerce: live for Store Chat only/);
+    expect(SYSTEM_PROMPT).toMatch(/- A merchant's own website: in testing, Store Chat only/);
+    expect(SYSTEM_PROMPT).toMatch(/never say it is/);
+  });
+
   it('forbids HTML and markdown link syntax, requiring bare addresses instead', () => {
     expect(SYSTEM_PROMPT).toMatch(/never HTML tags/i);
     expect(SYSTEM_PROMPT).toMatch(/never markdown/i);
