@@ -9,7 +9,10 @@ const mocks = vi.hoisted(() => ({
   conversation: vi.fn(),
   results: {} as Record<string, { data: unknown; error: { message: string } | null }>,
   calls: [] as Array<[string, ...unknown[]]>,
+  woo: vi.fn(),
 }));
+
+vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.woo }));
 
 vi.mock('@/lib/messenger/provisioning', () => ({ requireSiteAccess: mocks.access }));
 vi.mock('@/lib/messenger/conversations', () => ({ getConversationForSite: mocks.conversation }));
@@ -42,6 +45,7 @@ const CARD = { name: '#1042', stage: 'delivered', items: [], timeline: [], place
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.calls = [];
+  mocks.woo.mockResolvedValue(null);
   mocks.access.mockResolvedValue({ id: SITE, domain: 'maison-noor.myshopify.com' });
   mocks.conversation.mockResolvedValue({
     id: 'c1',
@@ -90,7 +94,9 @@ describe('getInboxCustomerFacts', () => {
       cart: { totalMinor: 1000, currency: 'EGP', items: [{ handle: 'a', variantId: '1', title: 'A', quantity: 1, priceMinor: 1000 }] },
       past: [{ id: 'c0', startedAt: '2026-10-21T12:00:00Z', status: 'closed', preview: 'Can I exchange the Riyadh abaya?' }],
       shopDomain: 'maison-noor.myshopify.com',
+      wooHomeUrl: null,
     });
+    expect(mocks.woo).not.toHaveBeenCalled();
   });
 
   it('has no shop for a site on another website, and no past without earlier conversations', async () => {
@@ -100,6 +106,16 @@ describe('getInboxCustomerFacts', () => {
     expect(facts.shopDomain).toBeNull();
     expect(facts.past).toEqual([]);
     expect(mocks.calls.some(([kind, table]) => kind === 'in' && table === 'widget_messages')).toBe(false);
+  });
+
+  it('carries the paired WooCommerce home URL for a site that has one', async () => {
+    mocks.access.mockResolvedValue({ id: SITE, domain: 'shop.example.com' });
+    mocks.woo.mockResolvedValue({ siteId: SITE, homeUrl: 'https://shop.example.com/', secretVersion: 1, pluginVersion: '0.3.0' });
+    const facts = await getInboxCustomerFacts({ userId: 'user_1', siteId: SITE, conversationId: 'c1' });
+    expect(facts.shopDomain).toBeNull();
+    expect(facts.wooHomeUrl).toBe('https://shop.example.com/');
+    mocks.woo.mockRejectedValue(new Error('db'));
+    expect((await getInboxCustomerFacts({ userId: 'user_1', siteId: SITE, conversationId: 'c1' })).wooHomeUrl).toBeNull();
   });
 
   it('refuses a conversation of another site, a person who may not answer, and a failed read', async () => {

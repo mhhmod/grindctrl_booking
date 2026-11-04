@@ -15,6 +15,7 @@ import { publicAlertFor } from '@/lib/messenger/handoff-alert';
 import { knownReplyAddress } from '@/lib/messenger/contact';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
+import { isWooIdentityToken, verifyWooIdentityToken } from '@/lib/woo/identity-token';
 import type { MessengerLocale } from '@/lib/messenger/types';
 
 /* POST /api/messenger/bootstrap
@@ -78,8 +79,15 @@ export async function POST(request: NextRequest) {
     // Verified shopper identity (optional): short-lived JWT previously issued
     // by the Shopify proxy route. Bound to this session and the loaded site,
     // never a shop supplied in the request body or an old metadata flag.
-    let identity: { customerId: string; email: string; name: string; appClientId: string } | null = null;
-    if (typeof body.shopperToken === 'string') {
+    let identity: { customerId: string; email: string; name: string; appClientId: string; platform: 'shopify' | 'woocommerce' } | null = null;
+    if (isWooIdentityToken(body.shopperToken)) {
+      // A logged-in WordPress user, proved by the plugin: bound to this site
+      // and this session, minted for at most ten minutes.
+      const claims = await verifyWooIdentityToken(body.shopperToken, { siteId: site.id, sid: anonymousId });
+      if (claims) {
+        identity = { customerId: claims.wpUserId, appClientId: '', email: '', name: '', platform: 'woocommerce' };
+      }
+    } else if (typeof body.shopperToken === 'string') {
       const claims = verifyShopperTokenAnyApp(body.shopperToken, anonymousId, site.domain);
       if (claims?.customerId && claims.appClientId && site.domain
         && await isActiveShopifyInstallation(site.domain, claims.appClientId)) {
@@ -88,6 +96,7 @@ export async function POST(request: NextRequest) {
           appClientId: claims.appClientId,
           email: claims.email ?? '',
           name: claims.name ?? '',
+          platform: 'shopify',
         };
       }
     }
@@ -122,7 +131,9 @@ export async function POST(request: NextRequest) {
       // ever looked at, which is what defeated the binding check.
       conversation.metadata.identity = {
         customer_id: identity.customerId,
-        app_client_id: identity.appClientId,
+        ...(identity.platform === 'woocommerce'
+          ? { woo_customer_id: identity.customerId }
+          : { app_client_id: identity.appClientId }),
         email: identity.email,
         name: identity.name,
         verified: true,

@@ -192,6 +192,10 @@ export interface ConversationRecord {
     identity?: {
       app_client_id?: string;
       customer_id?: string;
+      /** The WordPress user id a WooCommerce plugin token proved. Set instead
+       *  of app_client_id; customer_id carries the same value for the
+       *  session-binding check. */
+      woo_customer_id?: string;
       email?: string;
       name?: string;
       verified: boolean;

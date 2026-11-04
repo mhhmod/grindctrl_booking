@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   event: vi.fn(),
   audit: vi.fn(),
   meta: vi.fn(),
+  woo: vi.fn(),
+  plugin: vi.fn(),
+  wooLimit: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -22,6 +25,12 @@ vi.mock('@/lib/ratelimit', () => ({
 vi.mock('@/lib/messenger/order-limits', () => ({
   orderLookupLimiter: { limit: mocks.orderLimit },
   orderNumberLimiter: { limit: mocks.numberLimit },
+  wooSiteOrderLimiter: { limit: mocks.wooLimit },
+}));
+vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.woo }));
+vi.mock('@/lib/woo/plugin-client', () => ({
+  callWooPlugin: mocks.plugin,
+  WOO_PLUGIN_ORDER_LOOKUP_PATH: '/wp-json/grindctrl/v1/order-lookup',
 }));
 vi.mock('@/lib/messenger/public-session', () => ({ resolveShopperSession: mocks.session }));
 vi.mock('@/lib/flags/store-flags', async (original) => ({
@@ -76,6 +85,7 @@ describe('POST /api/messenger/order-lookup (Chat-More, N48)', () => {
     mocks.limit.mockResolvedValue(pass);
     mocks.orderLimit.mockResolvedValue(pass);
     mocks.numberLimit.mockResolvedValue(pass);
+    mocks.wooLimit.mockResolvedValue(pass);
     mocks.session.mockImplementation(async () => ({ ok: true, site: SITE, visitor: { id: 'v1' }, conversation }));
     mocks.flags.mockResolvedValue(['v16_chat']);
     mocks.lookup.mockResolvedValue({ ok: true, card: CARD });
@@ -100,6 +110,45 @@ describe('POST /api/messenger/order-lookup (Chat-More, N48)', () => {
     mocks.session.mockResolvedValue({ ok: true, site: { ...SITE, config: resolveMessengerConfig({}) }, visitor: { id: 'v1' }, conversation });
     expect((await post()).status).toBe(404);
     expect(mocks.lookup).not.toHaveBeenCalled();
+  });
+
+  describe('on a WooCommerce site', () => {
+    const WOO_SITE = { ...SITE, domain: 'shop.example.com' };
+    const connection = { siteId: 'site-1', homeUrl: 'https://shop.example.com/', secretVersion: 1, pluginVersion: '0.3.0' };
+    const wooOrder = {
+      id: 1027, number: '1027', status: 'processing', createdAt: '2026-10-14T09:00:00Z', paid: true, total: '100.00',
+      currency: 'EGP', paymentMethod: 'bacs', items: [{ name: 'Abaya', quantity: 1 }], shippingMethod: null, tracking: null, destination: null,
+    };
+
+    beforeEach(() => {
+      mocks.session.mockImplementation(async () => ({ ok: true, site: WOO_SITE, visitor: { id: 'v1' }, conversation }));
+      mocks.woo.mockResolvedValue(connection);
+    });
+
+    it('finds the order through the plugin and returns the same card shape', async () => {
+      mocks.plugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [wooOrder] } });
+      const data = await (await post()).json();
+      expect(mocks.lookup).not.toHaveBeenCalled();
+      expect(mocks.plugin).toHaveBeenCalledWith(connection, '/wp-json/grindctrl/v1/order-lookup', { mode: 'guest', email: 'Mona@gmail.com', orderNumber: '1027' });
+      expect(data.ok).toBe(true);
+      expect(data.order).toMatchObject({ name: '#1027', stage: 'preparing', ref: '1027' });
+    });
+
+    it('answers a wrong email and a missing order with the identical response', async () => {
+      mocks.plugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [] } });
+      const wrong = await (await post()).json();
+      const missing = await (await post({ ...BODY, orderNumber: '999999' })).json();
+      expect(wrong.error).toBe('not_found');
+      expect({ ...missing, messages: undefined }).toEqual({ ...wrong, messages: undefined });
+    });
+
+    it('is not enabled on a plugin older than 0.3.0, and without a pairing', async () => {
+      mocks.woo.mockResolvedValue({ ...connection, pluginVersion: '0.2.0' });
+      expect((await post()).status).toBe(404);
+      mocks.woo.mockResolvedValue(null);
+      expect((await post()).status).toBe(404);
+      expect(mocks.plugin).not.toHaveBeenCalled();
+    });
   });
 
   it('refuses a malformed number or email before anything else', async () => {

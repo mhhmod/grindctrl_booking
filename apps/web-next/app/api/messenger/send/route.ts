@@ -20,7 +20,9 @@ import {
   updateConversationMetadata,
 } from '@/lib/messenger/conversations';
 import { parseModelTurn } from '@/lib/messenger/actions';
-import { lookupOrder, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
+import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
+import { orderProviderFor, wooConnectionFor } from '@/lib/messenger/order-provider';
+import { isWooIdentityToken, verifyWooIdentityToken } from '@/lib/woo/identity-token';
 import { orderLookupLimiter } from '@/lib/messenger/order-limits';
 import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
@@ -230,13 +232,13 @@ export async function POST(request: NextRequest) {
       await patchConversationMetadata(conversation!.id, { tags: next }).catch(() => {});
     }
 
-    /* Order lookup needs a real Shopify store to address. A site with no
-       connected domain, or one pointing at something that is not a
-       myshopify domain, simply does not get the capability — and the model
-       is never told it exists, so it cannot offer what we would refuse. */
-    const orderShopDomain =
-      site.domain && /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(site.domain) ? site.domain : null;
-    const orderLookupAvailable = site.config.orderLookup.enabled && Boolean(orderShopDomain);
+    /* Order lookup needs a store to ask: a Shopify shop, or a paired
+       WooCommerce site on a plugin that has the order route. A site with
+       neither simply does not get the capability, and the model is never
+       told it exists, so it cannot offer what we would refuse. */
+    const wooConnection = await wooConnectionFor(site);
+    const orderProvider = site.config.orderLookup.enabled ? orderProviderFor(site, wooConnection) : null;
+    const orderLookupAvailable = Boolean(orderProvider);
 
     /* "Where should we reply?" is offered at most once per conversation, and
        only at a moment where a reply is genuinely owed later — a handoff, or
@@ -269,12 +271,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Identity refresh (token may have just been issued by the proxy).
+    // Identity refresh (token may have just been issued by the proxy, or by
+    // the WordPress plugin for a logged-in shopper).
     let identityName: string | null = conversation.metadata.identity?.name ?? null;
     let verifiedAppClientId = conversation.metadata.identity?.app_client_id;
-    let verifiedCustomer = Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
-      && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
-    if (shopperToken) {
+    const wooCustomerBound = conversation.metadata.identity?.woo_customer_id ?? null;
+    let verifiedCustomer = wooConnection
+      ? Boolean(conversation.metadata.identity?.verified && wooCustomerBound)
+      : Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
+        && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
+    if (shopperToken && isWooIdentityToken(shopperToken)) {
+      const claims = wooConnection
+        ? await verifyWooIdentityToken(shopperToken, { siteId: site.id, sid: anonymousId })
+        : null;
+      // Same rule as below: a token confirms the customer already bound to
+      // this conversation or binds an anonymous one, never switches it.
+      if (claims && (!wooCustomerBound || wooCustomerBound === claims.wpUserId)) verifiedCustomer = true;
+    } else if (shopperToken) {
       const claims = verifyShopperTokenAnyApp(shopperToken, anonymousId, site.domain);
       const bound = conversation.metadata.identity?.customer_id ?? null;
       /* A token only ever confirms the customer this conversation is already
@@ -537,7 +550,7 @@ export async function POST(request: NextRequest) {
       return ok({ userMessage: toWire(userMessage), reply: toWire(saved.message), status: conversation.status });
     }
 
-    if (turn.kind === 'action' && orderShopDomain) {
+    if (turn.kind === 'action' && orderProvider) {
       const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
       let lookupAllowed = false;
       try {
@@ -555,20 +568,27 @@ export async function POST(request: NextRequest) {
       await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
 
       const overBudget = attempts > ORDER_LOOKUP_LIFETIME_LIMIT || !lookupAllowed;
+      /* Server-derived. A model that invents a customer id cannot reach this
+         argument: there is no field for it in the schema. */
+      const verifiedCustomerId = verifiedCustomer
+        ? (orderProvider.platform === 'woocommerce'
+            ? conversation.metadata.identity?.woo_customer_id
+            : conversation.metadata.identity?.customer_id) ?? null
+        : null;
+      const appClientId = verifiedCustomer ? verifiedAppClientId : undefined;
       const outcome = overBudget
         ? ({ ok: false, reason: 'rate_limited' } as const)
-        : await lookupOrder({
-            shopDomain: orderShopDomain,
-            appClientId: verifiedCustomer ? verifiedAppClientId : undefined,
-            // Server-derived. A model that invents a customer id cannot
-            // reach this argument — there is no field for it in the schema.
-            verifiedCustomerId:
-              verifiedCustomer && conversation.metadata.identity?.customer_id
-                ? conversation.metadata.identity.customer_id
-                : null,
-            orderNumber: turn.action.orderNumber,
-            email: turn.action.email,
-          });
+        : verifiedCustomerId
+          ? await orderProvider.lookupForCustomer({
+              customerId: verifiedCustomerId,
+              orderNumber: turn.action.orderNumber,
+              appClientId,
+            })
+          : await orderProvider.lookupByEmailAndNumber({
+              orderNumber: turn.action.orderNumber,
+              email: turn.action.email,
+              appClientId,
+            });
 
       if (outcome.ok) {
         void recordAudit({

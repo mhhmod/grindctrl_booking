@@ -16,6 +16,8 @@ export type OrderTimelineStep = {
 export type OrderCard = {
   /** "#1027" */
   name: string;
+  /** The platform's own order id, for the team's admin link (WooCommerce). */
+  ref?: string;
   placedAt: string;
   stage: OrderStage;
   items: Array<{ title: string; quantity: number }>;

@@ -22,3 +22,9 @@ export const orderLookupLimiter = redis
 export const orderNumberLimiter = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '1 d'), prefix: 'gc-msgr-order-number', analytics: false })
   : null;
+
+/** 120 an hour per connected WooCommerce site: a ceiling on signed calls to
+ *  one merchant's WordPress, whoever in the store's chat asks. */
+export const wooSiteOrderLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(120, '1 h'), prefix: 'gc-msgr-order-woo-site', analytics: false })
+  : null;

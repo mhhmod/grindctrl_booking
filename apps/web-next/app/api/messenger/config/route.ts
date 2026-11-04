@@ -12,6 +12,7 @@ import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import { launchAudience, launchVisitorId } from '@/lib/launch/audience';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
+import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 
 /* GET /api/messenger/config?key=<embed_key>&origin=<page origin>
    Public, cacheable, fail-quiet: the loader keeps its last-known-good copy
@@ -68,7 +69,9 @@ export async function GET(request: NextRequest) {
     const flagStore = flagStoreForSite(site);
     const features = await storeFlags(flagStore);
     const now = new Date();
-    const payload = toPublicPayload(site, now, features);
+    const payload = features.includes('v16_chat')
+      ? toPublicPayload(site, now, features, { orderProviderAvailable: Boolean(await resolveOrderProvider(site)) })
+      : toPublicPayload(site, now, features);
     /* Who sees Store Chat on a Shopify store (phase zero item 9): only the
        owner's preview link while it is in setup or preview, and not the
        holdout's off arm. The query names the visitor, so a shared cache

@@ -182,6 +182,40 @@ describe('V16ChatStudio', () => {
     expect(screen.getByRole('link', { name: en.woocommerce.download })).toHaveAttribute('href', '/downloads/grindctrl-store-chat.zip');
   });
 
+  describe('order lookup on a connected WooCommerce store', () => {
+    const connection = (pluginVersion: string, status: 'active' | 'disconnected' = 'active') => ({
+      platform: 'woocommerce' as const,
+      status,
+      pluginVersion,
+      lastSeenAt: '2026-11-04T09:00:00.000Z',
+      pairedAt: '2026-11-03T09:00:00.000Z',
+      homeUrl: 'https://shop.example.com/',
+    });
+
+    it('says it is ready from plugin 0.3.0, with no Shopify order grant wording', () => {
+      draw(undefined, 'en', { domain: 'shop.example.com', ordersAuthorized: false, wooConnection: connection('0.3.0') });
+      expect(screen.getByRole('switch', { name: en.orderLookup.label })).toBeInTheDocument();
+      expect(screen.getByText(en.wooOrderReady)).toBeInTheDocument();
+      expect(screen.queryByText(en.noOrderAccess)).not.toBeInTheDocument();
+    });
+
+    it('asks for the plugin update on an older plugin', () => {
+      draw(undefined, 'en', { domain: 'shop.example.com', ordersAuthorized: false, wooConnection: connection('0.2.0') });
+      expect(screen.getByText(en.wooOrderUpdate('0.3.0'))).toBeInTheDocument();
+      expect(screen.queryByText(en.wooOrderReady)).not.toBeInTheDocument();
+    });
+
+    it('offers nothing before the store is connected', () => {
+      draw(undefined, 'en', { domain: 'shop.example.com', ordersAuthorized: false, wooConnection: null });
+      expect(screen.queryByRole('switch', { name: en.orderLookup.label })).not.toBeInTheDocument();
+    });
+
+    it('speaks Arabic', () => {
+      draw(undefined, 'ar', { domain: 'shop.example.com', wooConnection: connection('0.3.0') });
+      expect(screen.getByText(getChatStudioCopy('ar').wooOrderReady)).toBeInTheDocument();
+    });
+  });
+
   it('speaks Arabic in Arabic', () => {
     draw(undefined, 'ar');
     const ar = getChatStudioCopy('ar');

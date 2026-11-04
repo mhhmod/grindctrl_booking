@@ -79,6 +79,9 @@ export interface ChatStudioCopy {
   orderLookup: Pair;
   orderAccess: string;
   noOrderAccess: string;
+  /** WooCommerce: the plugin answers order lookups, from plugin 0.3.0. */
+  wooOrderReady: string;
+  wooOrderUpdate: (version: string) => string;
   alerted: Pair;
   emailAlerts: Pair;
   alertEmails: string;
@@ -241,6 +244,8 @@ const en: ChatStudioCopy = {
   orderLookup: { label: 'Look up order status and tracking', body: 'With the order number and the email on the order.' },
   orderAccess: 'Order access approved for this store',
   noOrderAccess: 'Order access isn’t approved for this store yet.',
+  wooOrderReady: 'Order lookup: ready. The plugin answers it from your store.',
+  wooOrderUpdate: (version) => `Update the plugin to ${version} or later to turn this on.`,
   alerted: { label: 'Who gets alerted', body: 'When a shopper needs a person.' },
   emailAlerts: { label: 'Email when a shopper needs a person', body: 'Up to 5 addresses, at most 10 emails an hour.' },
   alertEmails: 'Alert emails',
@@ -412,6 +417,8 @@ const ar: ChatStudioCopy = {
   orderLookup: { label: 'استعلم عن حالة الطلب وتتبّعه', body: 'برقم الطلب والبريد الإلكتروني المسجل في الطلب.' },
   orderAccess: 'تمت الموافقة على الوصول إلى الطلبات لهذا المتجر',
   noOrderAccess: 'لم تتم الموافقة على الوصول إلى الطلبات لهذا المتجر بعد.',
+  wooOrderReady: 'الاستعلام عن الطلبات: جاهز. تجيب عنه الإضافة من متجرك.',
+  wooOrderUpdate: (version) => `حدّث الإضافة إلى الإصدار ${version} أو أحدث لتفعيل هذا.`,
   alerted: { label: 'من يصله التنبيه', body: 'عندما يحتاج متسوق إلى شخص من الفريق.' },
   emailAlerts: { label: 'أرسل بريدًا إلكترونيًا عندما يحتاج متسوق إلى شخص من الفريق', body: 'حتى 5 عناوين، وبحد أقصى 10 رسائل في الساعة.' },
   alertEmails: 'عناوين بريد التنبيهات',

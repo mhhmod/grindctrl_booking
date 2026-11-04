@@ -61,6 +61,7 @@
     locale: detectLocale(),
     identified: false,
     identityPending: false,
+    wooToken: null,
     loggedOut: false
   };
 
@@ -878,7 +879,24 @@
     return null;
   }
 
+  /* A WordPress shopper's token comes from the plugin's own route and lasts
+     ten minutes (the plugin signs it with the site's pairing secret). It is
+     kept in memory only: a reload asks again, so it never outlives the login
+     it speaks for. */
+  var WOO_TOKEN_FRESH_MS = 8 * 60 * 1000;
+
+  function wooIdentityEndpoint() {
+    var w = woo();
+    if (!w || typeof w.restNonce !== 'string' || typeof w.identityUrl !== 'string') return null;
+    try {
+      var url = new URL(w.identityUrl, window.location.href);
+      // Same origin only: the nonce and the session cookie go nowhere else.
+      return url.origin === window.location.origin ? url : null;
+    } catch (e) { return null; }
+  }
+
   function currentToken() {
+    if (state.wooToken) return Date.now() - state.wooToken.at < WOO_TOKEN_FRESH_MS ? state.wooToken.t : null;
     var saved = storedToken();
     if (!saved || saved.c !== CUSTOMER_ID || saved.p !== PROXY_PATH || !(Date.now() - saved.at < TOKEN_FRESH_MS)) return null;
     return saved.t;
@@ -892,6 +910,12 @@
 
   function identify(token) {
     if (typeof token !== 'string' || token.length > 4096) return;
+    if (wooIdentityEndpoint()) {
+      state.wooToken = { t: token, at: Date.now() };
+      state.identified = true;
+      sendIdentity(token);
+      return;
+    }
     lsSet(LS.token, JSON.stringify({ t: token, c: CUSTOMER_ID, p: PROXY_PATH, at: Date.now() }));
     state.identified = true;
     // Storage cannot cross the origin boundary, so the panel gets it here,
@@ -899,7 +923,36 @@
     sendIdentity(token);
   }
 
+  function attachWooToken(endpoint) {
+    state.wooToken = null;
+    state.identityPending = true;
+    var done = function () {
+      state.identityPending = false;
+      if (!currentToken()) sendIdentity(null);
+    };
+    try {
+      endpoint.searchParams.set('sid', ensureAnonId());
+      fetch(endpoint.toString(), {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'X-WP-Nonce': window.grindctrlWoo.restNonce }
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (data && typeof data.token === 'string') identify(data.token);
+          done();
+        })
+        .catch(done);
+    } catch (e) { done(); }
+  }
+
   function attachShopperToken() {
+    var wooEndpoint = wooIdentityEndpoint();
+    if (wooEndpoint) {
+      if (currentToken()) { state.identified = true; return; }
+      attachWooToken(wooEndpoint);
+      return;
+    }
     if (currentToken()) { state.identified = true; return; }
     // Logged out, someone else, run out, or from an older loader: it must
     // not speak for whoever is here now.
@@ -932,6 +985,7 @@
     identify: identify,
     logout: function () {
       lsRemove(LS.anon); lsRemove(LS.conv); lsRemove(LS.token);
+      state.wooToken = null;
       state.loggedOut = true;
       if (state.iframe) { state.iframe.parentNode.removeChild(state.iframe); state.iframe = null; state.booted = false; }
       state.open = false;
