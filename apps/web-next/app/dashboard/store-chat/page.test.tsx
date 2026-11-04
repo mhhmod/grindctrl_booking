@@ -70,6 +70,10 @@ vi.mock('./actions', () => ({
   setMessengerEnabled: vi.fn(),
   disconnectSiteAction: vi.fn(),
   discardDraft: vi.fn(),
+  listDomainsAction: vi.fn(),
+  addDomainAction: vi.fn(),
+  checkDomainAction: vi.fn(),
+  removeDomainAction: vi.fn(),
 }));
 // ChatStudio has its own tests (v16-chat-studio.test.tsx); here only what it is handed.
 vi.mock('@/components/dashboard/v16/store-chat/v16-chat-studio', () => ({
@@ -129,7 +133,7 @@ describe('the Store Chat routes', () => {
     expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3');
     expect(screen.getByTestId('chat-studio')).toHaveAttribute(
       'data-actions',
-      'discardDraft,disconnectSiteAction,publishConfig,revertConfigAction,saveDraftSections,setMessengerEnabled',
+      'addDomainAction,checkDomainAction,discardDraft,disconnectSiteAction,listDomainsAction,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
     );
     expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
     expect(listConversationsForSite).not.toHaveBeenCalled();

@@ -97,6 +97,25 @@ export interface ChatStudioCopy {
   testNow: string;
   notShopify: string;
   copyScript: string;
+  domains: {
+    title: string;
+    body: string;
+    label: string;
+    add: string;
+    loading: string;
+    loadFailed: string;
+    recordHelp: string;
+    recordType: string;
+    recordName: string;
+    recordValue: string;
+    copy: string;
+    copied: string;
+    check: string;
+    remove: string;
+    wwwHint: string;
+    status: { pending: string; failed: string; verified: string };
+    errors: { invalid_domain: string; taken: string; limit_reached: string; not_found: string; generic: string };
+  };
   copied: string;
   publishedVersion: (n: number) => string;
   revert: string;
@@ -231,6 +250,31 @@ const en: ChatStudioCopy = {
   testNow: 'Test it now',
   notShopify: 'Not on Shopify?',
   copyScript: 'Copy the script',
+  domains: {
+    title: 'Your website domain',
+    body: 'Store Chat only answers on a domain you have proven is yours. Add the domain shoppers visit, then add the DNS record shown here.',
+    label: 'Domain',
+    add: 'Add domain',
+    loading: 'Loading your domains…',
+    loadFailed: 'Your domains could not be loaded. Refresh the page to try again.',
+    recordHelp: 'Add this record where you manage your domain’s DNS, then check it. A new record can take a few hours to appear.',
+    recordType: 'Type',
+    recordName: 'Name',
+    recordValue: 'Value',
+    copy: 'Copy',
+    copied: 'Copied',
+    check: 'Check now',
+    remove: 'Remove',
+    wwwHint: 'If shoppers also reach your store on www, add that as its own domain.',
+    status: { pending: 'Waiting for the record', failed: 'Record not found yet', verified: 'Verified' },
+    errors: {
+      invalid_domain: 'Enter a domain like shop.example.com.',
+      taken: 'This domain is already verified for another store.',
+      limit_reached: 'You can add up to 5 domains.',
+      not_found: 'This domain is no longer on this store. Refresh the page.',
+      generic: 'That did not work. Try again.',
+    },
+  },
   copied: 'Copied',
   publishedVersion: (n) => `Published version ${n}`,
   revert: 'Revert to previous version',
@@ -354,6 +398,31 @@ const ar: ChatStudioCopy = {
   testNow: 'اختبرها الآن',
   notShopify: 'متجرك ليس على Shopify؟',
   copyScript: 'انسخ الكود',
+  domains: {
+    title: 'نطاق موقعك',
+    body: 'لا ترد دردشة المتجر إلا على نطاق أثبتّ أنه لك. أضف النطاق الذي يزوره عملاؤك، ثم أضف سجل DNS الظاهر هنا.',
+    label: 'النطاق',
+    add: 'أضف النطاق',
+    loading: 'جارٍ تحميل نطاقاتك…',
+    loadFailed: 'تعذّر تحميل نطاقاتك. حدّث الصفحة وحاول مرة أخرى.',
+    recordHelp: 'أضف هذا السجل حيث تدير إعدادات DNS لنطاقك، ثم تحقّق منه. قد يستغرق ظهور السجل الجديد بضع ساعات.',
+    recordType: 'النوع',
+    recordName: 'الاسم',
+    recordValue: 'القيمة',
+    copy: 'نسخ',
+    copied: 'تم النسخ',
+    check: 'تحقّق الآن',
+    remove: 'إزالة',
+    wwwHint: 'إذا كان عملاؤك يدخلون متجرك أيضًا عبر www، فأضفه كنطاق مستقل.',
+    status: { pending: 'في انتظار السجل', failed: 'لم نجد السجل بعد', verified: 'تم التحقق' },
+    errors: {
+      invalid_domain: 'أدخل نطاقًا مثل shop.example.com.',
+      taken: 'هذا النطاق مُتحقَّق منه بالفعل لمتجر آخر.',
+      limit_reached: 'يمكنك إضافة 5 نطاقات كحد أقصى.',
+      not_found: 'لم يعد هذا النطاق على هذا المتجر. حدّث الصفحة.',
+      generic: 'لم تنجح العملية. حاول مرة أخرى.',
+    },
+  },
   copied: 'تم النسخ',
   publishedVersion: (n) => `النسخة المنشورة ${n}`,
   revert: 'استعد النسخة السابقة',

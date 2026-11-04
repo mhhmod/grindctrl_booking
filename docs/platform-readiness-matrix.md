@@ -6,16 +6,16 @@ this file explains the evidence behind each state. Nothing below "implemented"
 may be advertised as supported.
 
 States: **implemented** (verified on a real store and shipped on `main`),
-**in testing** (built on a branch and tried on a staging store, not on `main`,
-not available to merchants), **setup-required** (shipped, merchant must
+**in testing** (code on `main`, not yet verified on a live store, not
+offered to merchants), **setup-required** (shipped, merchant must
 install or verify, not yet proven live), **evidence-required** (researched,
 nothing built), **planned** (next in the build order, no code yet),
 **not pursued**.
 
-What `main` ships today: Shopify only. WooCommerce and "your own website" are
-Store Chat only, live on branch `feat/woocommerce-store-chat` (GRINDCTRL
-WordPress plugin, script tag with a DNS-verified domain) and tested on a
-staging store. Try-On, order lookup and billing are Shopify-only. Salla and
+What `main` ships today: Shopify, plus the Store Chat code for WooCommerce and
+"your own website" (GRINDCTRL WordPress plugin, script tag with a DNS-verified
+domain), merged from `feat/woocommerce-store-chat` after a staging test and
+now being verified on a live test store. Try-On, order lookup and billing are Shopify-only. Salla and
 Zid have no code. Nothing on this page may be read as "available" for a
 platform that is not "implemented".
 
@@ -24,8 +24,8 @@ platform that is not "implemented".
 | Platform | Store Chat | Try-On | Product context | Cart add from chat | Install / uninstall | Public state | Evidence | Next step |
 |---|---|---|---|---|---|---|---|---|
 | Shopify | Verified on dev store (staging) | Buttons render; mock render only on staging | Theme app extension + Admin API | Storefront AJAX cart | OAuth, `app/uninstalled`, privacy webhooks (simulated) | implemented | `docs/superpowers/checkpoints/2026-10-31-shopify-m1-staging.md` | Real uninstall/reinstall, store B isolation, privacy fulfilment |
-| WooCommerce | Live on a test store (staging): plugin loads the loader, bubble and panel render, shopper hand-off reaches the inbox | Not built | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Built, unverified live (needs AI replies) | Plugin activate/uninstall; no GRINDCTRL webhooks | in testing (branch only, not on `main`) | Test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1, WooCommerce 11.2), 2026-10-31; torn down 2026-11-02, so the next live check needs a fresh store. Domain verification simulated (our only domain is blocked by design); DNS check unit-tested | AI reply and cart add on staging with a capped provider key; DNS verification on a real external domain |
-| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (branch only, not on `main`) | Same branch, unit tests only | Live test on a real external domain |
+| WooCommerce | Live on a test store (staging): plugin loads the loader, bubble and panel render, shopper hand-off reaches the inbox | Not built | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Built, unverified live (needs AI replies) | Plugin activate/uninstall; no GRINDCTRL webhooks | in testing (on `main`, live check pending) | Test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1, WooCommerce 11.2), 2026-10-31; torn down 2026-11-02, so the next live check needs a fresh store. Domain verification simulated (our only domain is blocked by design); DNS check unit-tested | AI reply and cart add on staging with a capped provider key; DNS verification on a real external domain |
+| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (on `main`, live check pending) | Same branch, unit tests only | Live test on a real external domain |
 | Salla | Not built | Not built | Twilight SDK documented | `salla.cart.addItem()` documented | `app.installed/uninstalled` documented | planned | Research below | Free Partner demo store, App Snippets spike |
 | Zid | Not built | Not built | Themes Library JS documented | Themes Library cart JS documented | Lifecycle events unverified | planned | Research below | After Salla; script injection needs Zid approval |
 | BigCommerce, Ecwid | Not built | Not built | Documented | Documented, clean | Documented | not pursued yet | Research below | Third choice if global expansion comes before MENA depth |
