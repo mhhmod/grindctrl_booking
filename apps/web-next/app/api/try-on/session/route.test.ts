@@ -8,7 +8,7 @@ const { rateLimitMock, rateLimitState, resolveStorefrontProductMock, activeInsta
   resolveStorefrontProductMock: vi.fn(),
   activeInstallationMock: vi.fn(),
 }));
-vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock, isActiveTenant: activeInstallationMock }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: {

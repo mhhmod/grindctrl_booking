@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -189,7 +189,7 @@ function getServiceClient() {
 }
 
 function requireShop(shop: unknown): string {
-  const domain = normalizeShopDomain(shop);
+  const domain = normalizeTenantKey(shop);
   if (!domain) throw new Error('Unknown Shopify shop');
   return domain;
 }
@@ -665,7 +665,7 @@ export async function finalizeCreditJob(input: {
     p_message: input.message ?? null,
   });
   throwRpcError(error);
-  if (input.status === 'failed') invalidateProxyConfig(normalizeShopDomain(input.shop));
+  if (input.status === 'failed') invalidateProxyConfig(normalizeTenantKey(input.shop));
   if (data !== input.status) {
     throw new Error(`Try-on job was already finalized as ${String(data)}`);
   }
@@ -681,7 +681,7 @@ export async function reconcileShopSubscription(shop: string): Promise<void> {
   const { error } = await getServiceClient().rpc('reconcile_tryon_subscription', { p_shop_domain: shop });
   throwRpcError(error);
   // A renewal grants a new period's looks.
-  invalidateProxyConfig(normalizeShopDomain(shop));
+  invalidateProxyConfig(normalizeTenantKey(shop));
 }
 
 export async function runDailyReconciliation(): Promise<number> {
@@ -702,7 +702,7 @@ export async function runOwnerEntitlementMutation(
   const { data, error } = await getServiceClient().rpc(functionName, params);
   throwRpcError(error);
   // Plans, renewals and top-ups all change the looks left.
-  invalidateProxyConfig(normalizeShopDomain(params.p_shop_domain));
+  invalidateProxyConfig(normalizeTenantKey(params.p_shop_domain));
   const result = data as OwnerMutationResult | null;
   if (!result) throw new Error('Owner plan action returned no result');
   return result;

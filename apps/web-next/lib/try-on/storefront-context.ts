@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { validateProductId } from './validator';
 import { isAllowedGarmentUrl } from './image-runner';
 
@@ -37,6 +38,7 @@ const JTI_RE = /^[A-Za-z0-9_-]{16,64}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PRODUCT_GID_RE = /^gid:\/\/shopify\/Product\/[1-9]\d*$/;
 const VARIANT_GID_RE = /^gid:\/\/shopify\/ProductVariant\/[1-9]\d*$/;
+const WOO_ID_RE = /^woo:[1-9]\d{0,19}$/;
 const GARMENT_DIGEST_RE = /^[A-Za-z0-9_-]{43}$/;
 
 type CapabilityHeader = {
@@ -45,11 +47,41 @@ type CapabilityHeader = {
   kid: 'tryon-v1';
 };
 
+/** Storefront platforms other than Shopify. Absent means Shopify. */
+export type StorefrontPlatform = 'woocommerce';
+
+/** WooCommerce contexts carry `shop` = the `site:<uuid>` tenant key and
+ *  `woo:<id>` in the product/variant ID claims; their garment is a plain
+ *  https URL whose host safety is checked at mint and at fetch time. */
+function isWooGarmentShape(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length > 2048) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password && !url.port;
+  } catch {
+    return false;
+  }
+}
+
+function wooClaimsValid(p: Record<string, unknown>): boolean {
+  return (
+    isSiteTenantKey(p.shop) &&
+    typeof p.productGid === 'string' && WOO_ID_RE.test(p.productGid) &&
+    typeof p.variantGid === 'string' && WOO_ID_RE.test(p.variantGid) &&
+    isWooGarmentShape(p.canonicalGarmentUrl)
+  );
+}
+
 export type StorefrontContextClaims = {
   iss: typeof ISSUER;
   aud: typeof STOREFRONT_AUDIENCE;
   purpose: typeof STOREFRONT_PURPOSE;
   shop: string;
+  platform?: StorefrontPlatform;
+  /** Signed for audit and embed binding on WooCommerce contexts. */
+  title?: string;
+  pageUrl?: string;
+  origin?: string;
   productId: string;
   variantId: string | null;
   productGid: string;
@@ -73,6 +105,7 @@ export type VerifiedTryOnSession = {
   purpose: TryOnSessionPurpose;
   sessionId: string;
   shop: string | null;
+  platform?: StorefrontPlatform;
   productId: string;
   variantId: string | null;
   productGid: string | null;
@@ -97,6 +130,7 @@ type TryOnAttemptPayload = {
   attemptNonce: string;
   sessionId: string;
   shop: string | null;
+  platform?: StorefrontPlatform;
   productId: string;
   variantId: string | null;
   productGid: string | null;
@@ -244,6 +278,18 @@ export function createTryOnNonce(): string {
   return randomBytes(18).toString('base64url');
 }
 
+function wooAuditClaims(input: { title?: unknown; pageUrl?: unknown; origin?: unknown }) {
+  const title =
+    typeof input.title === 'string' && input.title.trim() ? input.title.trim().slice(0, 200) : undefined;
+  const pageUrl = isWooGarmentShape(input.pageUrl) ? input.pageUrl : undefined;
+  const origin = isWooGarmentShape(input.origin) ? input.origin : undefined;
+  return {
+    ...(title ? { title } : {}),
+    ...(pageUrl ? { pageUrl } : {}),
+    ...(origin ? { origin } : {}),
+  };
+}
+
 export function signStorefrontContext(
   secret: string,
   input: {
@@ -256,26 +302,46 @@ export function signStorefrontContext(
     nonce: unknown;
     /** The owner's preview link was verified for this shop. */
     test?: boolean;
+    /** Set for a WooCommerce site tenant; absent means Shopify. */
+    platform?: StorefrontPlatform;
+    title?: unknown;
+    pageUrl?: unknown;
+    origin?: unknown;
   },
   nowSeconds = Math.floor(Date.now() / 1000),
 ): { token: string; claims: StorefrontContextClaims } {
   requireSecret(secret);
-  const shop = normalizeShopDomain(input.shop);
+  const woo = input.platform === 'woocommerce';
+  if (input.platform !== undefined && !woo) throw new Error('Invalid storefront platform');
+  const shop = woo ? (isSiteTenantKey(input.shop) ? input.shop : null) : normalizeShopDomain(input.shop);
   if (!shop) throw new Error('Invalid storefront shop');
   if (!validProductId(input.productId)) throw new Error('Invalid storefront product');
   if (!isTryOnNonce(input.nonce)) throw new Error('Invalid storefront nonce');
-  if (typeof input.productGid !== 'string' || !PRODUCT_GID_RE.test(input.productGid)) {
-    throw new Error('Invalid Shopify product ID');
+  if (woo) {
+    if (typeof input.productGid !== 'string' || !WOO_ID_RE.test(input.productGid)) {
+      throw new Error('Invalid WooCommerce product ID');
+    }
+    if (typeof input.variantGid !== 'string' || !WOO_ID_RE.test(input.variantGid)) {
+      throw new Error('Invalid WooCommerce variant ID');
+    }
+    if (!isWooGarmentShape(input.canonicalGarmentUrl)) {
+      throw new Error('Invalid authoritative garment URL');
+    }
+  } else {
+    if (typeof input.productGid !== 'string' || !PRODUCT_GID_RE.test(input.productGid)) {
+      throw new Error('Invalid Shopify product ID');
+    }
+    if (typeof input.variantGid !== 'string' || !VARIANT_GID_RE.test(input.variantGid)) {
+      throw new Error('Invalid Shopify variant ID');
+    }
+    if (
+      typeof input.canonicalGarmentUrl !== 'string' ||
+      !isAllowedGarmentUrl(input.canonicalGarmentUrl)
+    ) {
+      throw new Error('Invalid authoritative garment URL');
+    }
   }
-  if (typeof input.variantGid !== 'string' || !VARIANT_GID_RE.test(input.variantGid)) {
-    throw new Error('Invalid Shopify variant ID');
-  }
-  if (
-    typeof input.canonicalGarmentUrl !== 'string' ||
-    !isAllowedGarmentUrl(input.canonicalGarmentUrl)
-  ) {
-    throw new Error('Invalid authoritative garment URL');
-  }
+  const wooAudit = woo ? wooAuditClaims(input) : {};
 
   const variantId = normalizeVariantId(input.variantId);
   if (input.variantId !== undefined && input.variantId !== null && input.variantId !== '' && !variantId) {
@@ -296,6 +362,7 @@ export function signStorefrontContext(
     aud: STOREFRONT_AUDIENCE,
     purpose: STOREFRONT_PURPOSE,
     shop,
+    ...(woo ? { platform: 'woocommerce' as const, ...wooAudit } : {}),
     productId: input.productId,
     variantId,
     productGid: input.productGid,
@@ -333,7 +400,9 @@ export function verifyStorefrontContext(
     return null;
   }
 
-  const shop = normalizeShopDomain(payload.shop);
+  const woo = payload.platform === 'woocommerce';
+  if (payload.platform !== undefined && !woo) return null;
+  const shop = woo ? (isSiteTenantKey(payload.shop) ? payload.shop : null) : normalizeShopDomain(payload.shop);
   if (!shop || shop !== payload.shop || !validProductId(payload.productId)) return null;
   const variantId = normalizeVariantId(payload.variantId);
   if (payload.variantId !== null && !variantId) return null;
@@ -341,12 +410,15 @@ export function verifyStorefrontContext(
     return null;
   }
   if (
-    typeof payload.productGid !== 'string' ||
-    !PRODUCT_GID_RE.test(payload.productGid) ||
-    typeof payload.variantGid !== 'string' ||
-    !VARIANT_GID_RE.test(payload.variantGid) ||
+    !(woo
+      ? wooClaimsValid(payload)
+      : typeof payload.productGid === 'string' &&
+        PRODUCT_GID_RE.test(payload.productGid) &&
+        typeof payload.variantGid === 'string' &&
+        VARIANT_GID_RE.test(payload.variantGid) &&
+        typeof payload.canonicalGarmentUrl === 'string' &&
+        isAllowedGarmentUrl(payload.canonicalGarmentUrl)) ||
     typeof payload.canonicalGarmentUrl !== 'string' ||
-    !isAllowedGarmentUrl(payload.canonicalGarmentUrl) ||
     typeof payload.garmentUrlDigest !== 'string' ||
     !GARMENT_DIGEST_RE.test(payload.garmentUrlDigest) ||
     digestGarmentUrl(payload.canonicalGarmentUrl) !== payload.garmentUrlDigest
@@ -362,10 +434,11 @@ export function verifyStorefrontContext(
     aud: STOREFRONT_AUDIENCE,
     purpose: STOREFRONT_PURPOSE,
     shop,
+    ...(woo ? { platform: 'woocommerce' as const, ...wooAuditClaims(payload as { title?: unknown }) } : {}),
     productId: payload.productId,
     variantId,
-    productGid: payload.productGid,
-    variantGid: payload.variantGid,
+    productGid: payload.productGid as string,
+    variantGid: payload.variantGid as string,
     canonicalGarmentUrl: payload.canonicalGarmentUrl,
     garmentUrlDigest: payload.garmentUrlDigest,
     nonce: payload.nonce,
@@ -408,6 +481,7 @@ export function signTryOnSession(
     // shopless. It carries an authoritative garment but can never select a
     // merchant entitlement or enter the billable storefront branch.
     shop: input.purpose === 'storefront' ? context?.shop ?? null : null,
+    ...(input.purpose === 'storefront' && context?.platform ? { platform: context.platform } : {}),
     productId,
     variantId: context?.variantId ?? null,
     productGid: context?.productGid ?? null,
@@ -465,17 +539,28 @@ export function verifyTryOnSession(
 
   const variantId = normalizeVariantId(payload.variantId);
   if (payload.variantId !== null && !variantId) return null;
-  const shop = payload.shop === null ? null : normalizeShopDomain(payload.shop);
+  const woo = payload.platform === 'woocommerce';
+  if (payload.platform !== undefined && !woo) return null;
+  // A WooCommerce session is only ever a billable storefront session.
+  if (woo && payload.purpose !== 'storefront') return null;
+  const shop = payload.shop === null
+    ? null
+    : woo
+      ? (isSiteTenantKey(payload.shop) ? payload.shop : null)
+      : normalizeShopDomain(payload.shop);
   if (payload.shop !== null && (!shop || shop !== payload.shop)) return null;
   if (payload.purpose === 'storefront' && !shop) return null;
   if (payload.purpose !== 'storefront' && shop !== null) return null;
   const storefrontProductValid =
-    typeof payload.productGid === 'string' &&
-    PRODUCT_GID_RE.test(payload.productGid) &&
-    typeof payload.variantGid === 'string' &&
-    VARIANT_GID_RE.test(payload.variantGid) &&
+    (woo
+      ? wooClaimsValid(payload)
+      : typeof payload.productGid === 'string' &&
+        PRODUCT_GID_RE.test(payload.productGid) &&
+        typeof payload.variantGid === 'string' &&
+        VARIANT_GID_RE.test(payload.variantGid) &&
+        typeof payload.canonicalGarmentUrl === 'string' &&
+        isAllowedGarmentUrl(payload.canonicalGarmentUrl)) &&
     typeof payload.canonicalGarmentUrl === 'string' &&
-    isAllowedGarmentUrl(payload.canonicalGarmentUrl) &&
     typeof payload.garmentUrlDigest === 'string' &&
     GARMENT_DIGEST_RE.test(payload.garmentUrlDigest) &&
     digestGarmentUrl(payload.canonicalGarmentUrl) === payload.garmentUrlDigest;
@@ -498,6 +583,7 @@ export function verifyTryOnSession(
     purpose: payload.purpose,
     sessionId: payload.sessionId,
     shop,
+    ...(woo ? { platform: 'woocommerce' as const } : {}),
     productId: payload.productId,
     variantId,
     productGid: payload.productGid as string | null,
@@ -536,6 +622,7 @@ export function signTryOnAttempt(
     attemptNonce: input.attemptNonce,
     sessionId: session.sessionId,
     shop: session.shop,
+    ...(session.platform ? { platform: session.platform } : {}),
     productId: session.productId,
     variantId: session.variantId,
     productGid: session.productGid,
@@ -575,6 +662,7 @@ export function verifyTryOnAttempt(
     !validTimes(payload, nowSeconds, TRYON_SESSION_TTL_SECONDS) ||
     payload.sessionId !== session.sessionId ||
     payload.shop !== session.shop ||
+    payload.platform !== session.platform ||
     payload.productId !== session.productId ||
     payload.variantId !== session.variantId ||
     payload.productGid !== session.productGid ||

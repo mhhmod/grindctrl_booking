@@ -26,6 +26,8 @@ function grindctrl_sc_delete_options() {
 		'grindctrl_sc_connection_status',
 		'grindctrl_sc_min_plugin_version',
 		'grindctrl_sc_last_error',
+		'grindctrl_sc_tryon_product',
+		'grindctrl_sc_tryon_catalog',
 	) as $name ) {
 		delete_option( $name );
 	}

@@ -24,6 +24,7 @@ defined( 'GRINDCTRL_SC_API_BASE' ) || define( 'GRINDCTRL_SC_API_BASE', 'https://
 define( 'GRINDCTRL_SC_HEARTBEAT_HOOK', 'grindctrl_sc_daily_heartbeat' );
 require_once __DIR__ . '/includes/orders.php';
 require_once __DIR__ . '/includes/identity.php';
+require_once __DIR__ . '/includes/tryon.php';
 
 /*
  * The embed key names the store's Store Chat. It is public: it ships in the

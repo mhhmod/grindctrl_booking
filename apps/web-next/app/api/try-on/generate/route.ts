@@ -1,6 +1,6 @@
 import { coreCapabilitySecret } from '@/lib/security/capability-key';
-import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
-import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
+import { resolveAnyTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { isActiveTenant } from '@/lib/shopify/tokens';
 ﻿import { randomUUID } from 'node:crypto';
 import { after, NextRequest, NextResponse } from 'next/server';
 import {
@@ -28,6 +28,7 @@ import {
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
 import { storeFlags } from '@/lib/flags/store-flags';
+import { flagStoreForTenant } from '@/lib/tenancy/tenant-key';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
     const storefrontNonce = typeof body.storefrontNonce === 'string'
       ? body.storefrontNonce
       : undefined;
-    const resolvedSession = resolveTryOnSessionKey((secret) =>
+    const resolvedSession = await resolveAnyTryOnSessionKey(sessionId, (secret) =>
       verifyTryOnSession(secret, sessionId, {
         productId,
         variantId: rawVariantId === undefined ? undefined : variantId,
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     // installation is disconnected, even if another app keeps the shop active.
     // Already-reserved jobs settle independently in the service/reconciler.
     if (sessionAuthorization.purpose === 'storefront' &&
-      (!sessionAuthorization.shop || !(await isActiveShopifyInstallation(sessionAuthorization.shop, resolvedSession.app.clientId)))) {
+      (!sessionAuthorization.shop || !(await isActiveTenant(sessionAuthorization.shop, resolvedSession.app.clientId)))) {
       const message = 'Store integration is unavailable.';
       return NextResponse.json({ ok: false, message, error: message }, { status: 401 });
     }
@@ -278,7 +279,9 @@ export async function POST(request: NextRequest) {
 
     // â”€â”€ Optional store-product garment (Shopify CDN only; SSRF guard) â”€â”€
     const garmentUrl = typeof body.garmentUrl === 'string' ? body.garmentUrl : undefined;
-    if (garmentUrl && !isAllowedGarmentUrl(garmentUrl)) {
+    // WooCommerce garments are checked in full (DNS, private ranges) when
+    // fetched; here only that the URL is the one the context signed.
+    if (garmentUrl && sessionAuthorization.platform !== 'woocommerce' && !isAllowedGarmentUrl(garmentUrl)) {
       const message = 'Garment image must come from the Shopify CDN.';
       return NextResponse.json(
         { ok: false, message, error: message } satisfies TryOnJobApiResponse,
@@ -311,7 +314,7 @@ export async function POST(request: NextRequest) {
     const asyncLooks =
       authorization.purpose === 'storefront' &&
       authorization.shop !== null &&
-      (await storeFlags({ shopDomain: authorization.shop })).includes('n38_async_jobs');
+      (await storeFlags(flagStoreForTenant(authorization.shop) ?? { shopDomain: authorization.shop })).includes('n38_async_jobs');
 
     const job = await generateTryOn(
       authorization,

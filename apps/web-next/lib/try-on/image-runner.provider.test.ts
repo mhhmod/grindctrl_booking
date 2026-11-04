@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+const siteGarment = vi.hoisted(() => ({ fetch: vi.fn() }));
+vi.mock('@/lib/woo/garment-url', () => ({ fetchSiteGarment: siteGarment.fetch }));
 import { IMAGE_PROVIDER_TIMEOUT_MS, isAllowedGarmentUrl, parsePhotoDataUrl, runImageGeneration } from './image-runner';
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
@@ -16,6 +18,39 @@ beforeEach(() => {
   fetchMock.mockResolvedValueOnce(new Response(Buffer.from(PNG, 'base64'), { headers: { 'content-type': 'image/png' } }));
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.restoreAllMocks(); });
+
+describe('WooCommerce garments', () => {
+  const SITE = 'site:123e4567-e89b-42d3-a456-426614174000';
+  const WOO_GARMENT = 'https://shop.example.com/wp-content/uploads/tee.png';
+
+  it('fetches a site tenant garment through the pinned site fetch, never the plain fetch', async () => {
+    siteGarment.fetch.mockResolvedValue({ mime: 'image/png', bytes: Buffer.from(PNG, 'base64') });
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost: 0.01 } }));
+    const job = await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
+    expect(job.status).toBe('completed');
+    expect(siteGarment.fetch).toHaveBeenCalledWith('123e4567-e89b-42d3-a456-426614174000', WOO_GARMENT);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toBe('https://openrouter.ai/api/v1/images');
+  });
+
+  it('fails safely, before any provider call, when the garment is unsafe', async () => {
+    siteGarment.fetch.mockRejectedValue(new Error('private_address'));
+    fetchMock.mockReset();
+    const job = await runImageGeneration('session', 'woo-42', PHOTO, SITE, 'meta/muse-image', WOO_GARMENT);
+    expect(job.status).toBe('failed');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('still applies the Shopify CDN allowlist to a Shopify shop', async () => {
+    siteGarment.fetch.mockClear();
+    fetchMock.mockReset();
+    const job = await runImageGeneration('session', 'p', PHOTO, 'test.myshopify.com', 'meta/muse-image', WOO_GARMENT);
+    expect(job.status).toBe('failed');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(siteGarment.fetch).not.toHaveBeenCalled();
+  });
+});
 
 describe('image provider safety boundary', () => {
   it('bounds both fetches and forbids garment redirects', async () => {

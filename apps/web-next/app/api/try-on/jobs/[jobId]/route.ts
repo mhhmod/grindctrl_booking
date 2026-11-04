@@ -1,4 +1,4 @@
-import { resolveTryOnSessionKey } from '@/lib/try-on/signing-keys';
+import { resolveAnyTryOnSessionKey } from '@/lib/try-on/signing-keys';
 import { NextRequest, NextResponse } from 'next/server';
 import { forgetJob, getJob } from '@/lib/try-on/service';
 import { clientIp, tryOnPollRatelimit } from '@/lib/ratelimit';
@@ -60,7 +60,7 @@ export async function GET(
   const authorizationHeader = request.headers.get('authorization') ?? '';
   const token = authorizationHeader.replace(/^bearer\s+/i, '');
   const session = token
-    ? resolveTryOnSessionKey((secret) => verifyTryOnSession(secret, token))?.value
+    ? (await resolveAnyTryOnSessionKey(token, (secret) => verifyTryOnSession(secret, token)))?.value
     : null;
   if (!session) {
     return NextResponse.json(
@@ -173,7 +173,7 @@ export async function DELETE(
   const authorizationHeader = request.headers.get('authorization') ?? '';
   const token = authorizationHeader.replace(/^bearer\s+/i, '');
   const session = token
-    ? resolveTryOnSessionKey((secret) => verifyTryOnSession(secret, token))?.value
+    ? (await resolveAnyTryOnSessionKey(token, (secret) => verifyTryOnSession(secret, token)))?.value
     : null;
   if (!session) {
     return NextResponse.json(
