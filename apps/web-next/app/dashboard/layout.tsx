@@ -8,7 +8,8 @@ import { hasCompletedOnboarding } from '@/lib/onboarding/profile';
 import { resolveDashboardPermissions } from '@/lib/rbac/dashboard-policy';
 import { countAwaitingHandoff } from '@/lib/messenger/conversations';
 import { listMessengerSiteIdsReadOnly } from '@/lib/messenger/provisioning';
-import { getActiveStore, getActiveStoreRole, storeLookupFailed } from '@/lib/dashboard/active-store-server';
+import { ensureActiveStorePlan, getActiveStore, getActiveStoreRole, storeLookupFailed } from '@/lib/dashboard/active-store-server';
+import { activeTenantKey } from '@/lib/dashboard/active-store';
 import { getV16ShellData } from '@/lib/dashboard/shell-data';
 import { V16Shell } from '@/components/dashboard/v16/v16-shell';
 import { V16StoreLookupFailed } from '@/components/dashboard/v16/states';
@@ -40,6 +41,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
      page and action checks the same role again on the server. */
   const activeStore = await getActiveStore();
   const role = await getActiveStoreRole(activeStore);
+  // A paired WooCommerce store with a verified domain gets its free plan on first open.
+  await ensureActiveStorePlan(activeStore);
   const permissions = resolveDashboardPermissions({ role });
 
   /* Cheap, read-only, indexed lookups; a failure must never take the shell
@@ -70,7 +73,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <V16Shell
           locale={locale}
           permissions={permissions}
-          hasShopify={Boolean(activeStore.shopDomain)}
+          hasTenant={Boolean(activeTenantKey(activeStore))}
           waitingCount={awaitingHandoff}
           {...shell}
         >

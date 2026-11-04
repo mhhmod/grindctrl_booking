@@ -10,7 +10,7 @@ import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 import { roleCan, type DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { startOfStoreDay } from '@/lib/time/store-day';
-import type { ActiveStore } from './active-store';
+import { activeTenantKey, type ActiveStore } from './active-store';
 import { listDashboardShops } from './active-store-server';
 import type { TodayFacts } from './today-model';
 
@@ -62,10 +62,13 @@ async function looksCounts(shop: string, now: number, timeZone: string) {
   return { last7, prev7, today };
 }
 
-async function tryOnFacts(shop: string, now: number, timeZone: string): Promise<TodayFacts['tryOn']> {
-  const shops = await listDashboardShops().catch(() => []);
-  // An uninstalled shop has no Try it on to report on.
-  if (shops.find((candidate) => candidate.domain === shop)?.status !== 'installed') return null;
+async function tryOnFacts(shop: string, now: number, timeZone: string, paired: boolean): Promise<TodayFacts['tryOn']> {
+  /* An uninstalled shop has no Try it on to report on. A WooCommerce store
+     is the active store only while its plugin connection is active. */
+  if (!paired) {
+    const shops = await listDashboardShops().catch(() => []);
+    if (shops.find((candidate) => candidate.domain === shop)?.status !== 'installed') return null;
+  }
   const [entitlement, counts] = await Promise.all([getShopEntitlement(shop), looksCounts(shop, now, timeZone)]);
   return {
     looksLeft: entitlement.totalCreditsRemaining,
@@ -161,8 +164,9 @@ export async function getTodayFacts({
   timeZone: string;
   now?: number;
 }): Promise<TodayFacts> {
+  const tenant = activeTenantKey(activeStore);
   const [tryOn, chat] = await Promise.all([
-    activeStore.shopDomain ? tried(() => tryOnFacts(activeStore.shopDomain!, now, timeZone), 'try-on') : null,
+    tenant ? tried(() => tryOnFacts(tenant, now, timeZone, activeStore.platform === 'woocommerce'), 'try-on') : null,
     activeStore.siteId ? tried(() => chatFacts(activeStore.siteId!, now, timeZone), 'store chat') : null,
   ]);
   return { now, timeZone, canBilling: roleCan(role, 'billing'), tryOn, chat };

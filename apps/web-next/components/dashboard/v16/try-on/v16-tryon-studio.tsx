@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { ActionIcon, Button, ColorInput, SegmentedControl, Switch, TextInput, Textarea } from '@mantine/core';
+import { ActionIcon, Button, ColorInput, Group, SegmentedControl, Switch, TextInput, Textarea } from '@mantine/core';
 import { GcIcon } from '@/components/icons';
 import { WidgetPreview, type PreviewTab } from '@/components/try-on/widget-preview';
 import type { TryOnWidgetSettings } from '@/components/try-on/settings-controls';
@@ -75,11 +75,15 @@ export function V16TryOnStudioError({ locale }: { locale: SiteLocale }) {
 export function V16TryOnStudio({
   locale,
   shop,
+  wpAdmin = null,
   settings,
   saveSettings,
 }: {
   locale: SiteLocale;
+  /** The store's tenant key: a shop domain, or `site:<id>` for WooCommerce. */
   shop: string;
+  /** A WooCommerce store's WordPress editors, in place of the Shopify theme editor. */
+  wpAdmin?: { siteEditor: string; customizer: string } | null;
   settings: TryOnWidgetSettings;
   saveSettings: SaveTryOnSettings;
 }) {
@@ -162,7 +166,7 @@ export function V16TryOnStudio({
         }
       : shown;
   const standardSteps = getSheetCopy(locale === 'ar' ? 'ar' : 'en').makingSteps;
-  const editor = themeEditorUrl(shop);
+  const editor = wpAdmin ? null : themeEditorUrl(shop);
   const ltr = locale === 'ar' ? 'ltr' : undefined;
   const rtl = 'rtl';
 
@@ -297,8 +301,30 @@ export function V16TryOnStudio({
             <div className={classes.row}>
               <div className={classes.rowText}>
                 <h3 className={classes.h3}>{copy.position}</h3>
-                <p className={classes.muted}>{copy.positionBody}</p>
+                <p className={classes.muted}>{wpAdmin ? copy.positionBodyWoo : copy.positionBody}</p>
               </div>
+              {wpAdmin && (
+                <Group gap="xs">
+                  {[
+                    { href: wpAdmin.siteEditor, label: copy.moveInSiteEditor },
+                    { href: wpAdmin.customizer, label: copy.moveInCustomizer },
+                  ].map((link) => (
+                    <Button
+                      key={link.href}
+                      component="a"
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="default"
+                      radius="pill"
+                      h={44}
+                      rightSection={<GcIcon name="ext" size={14} />}
+                    >
+                      {link.label}
+                    </Button>
+                  ))}
+                </Group>
+              )}
               {editor && (
                 <Button
                   component="a"

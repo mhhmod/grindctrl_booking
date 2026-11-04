@@ -11,8 +11,10 @@ const mocks = vi.hoisted(() => ({
   recordEvent: vi.fn(),
   storeFlags: vi.fn(),
   getStoreLaunch: vi.fn(),
+  isActiveTenant: vi.fn(),
 }));
 
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.isActiveTenant }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.getStoreLaunch }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -300,3 +302,42 @@ describe('GET /api/messenger/config launch state (N5)', () => {
   });
 });
 
+/* WooCommerce parity phase 5: a paired store follows the same launch rule. */
+describe('GET /api/messenger/config launch state for a WooCommerce store', () => {
+  const SITE_ID = '11111111-1111-4111-8111-111111111111';
+  const KEY = `site:${SITE_ID}`;
+  const URL_BASE = 'https://app.example.com/api/messenger/config?key=gc_test_key&vid=visitor_1_abcdefghijkl';
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
+    mocks.rateLimit.mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
+    mocks.originAllowed.mockReturnValue(true);
+    mocks.toPublicPayload.mockImplementation(() => ({ v: 1, active: true }));
+    mocks.recordEvent.mockResolvedValue(undefined);
+    mocks.loadPublicSite.mockResolvedValue({ id: SITE_ID, domain: 'shop.example.com' });
+    mocks.storeFlags.mockResolvedValue(['n5_preview_mode']);
+    mocks.isActiveTenant.mockResolvedValue(true);
+    mocks.getStoreLaunch.mockResolvedValue({ state: 'preview', holdoutShare: null, holdoutStartedAt: null, holdoutEndsAt: null, salt: '0123456789abcdef0123456789abcdef' });
+  });
+
+  it('hides Store Chat from shoppers while the store is in preview, reading the launch row by site tenant', async () => {
+    const body = await (await GET(req(URL_BASE))).json();
+    expect(body.launch).toEqual({ show: false, reason: 'preview', bucket: null, test: false });
+    expect(mocks.getStoreLaunch).toHaveBeenCalledWith(KEY);
+  });
+
+  it('shows it to the owner with a preview link signed for the site tenant, and not with one for another', async () => {
+    const secret = 'test-only-independent-core-signing-key-2026';
+    const own = signPreviewToken(secret, KEY).token;
+    expect((await (await GET(req(`${URL_BASE}&preview=${encodeURIComponent(own)}`))).json()).launch).toMatchObject({ show: true, test: true });
+    const other = signPreviewToken(secret, 'maison.myshopify.com').token;
+    expect((await (await GET(req(`${URL_BASE}&preview=${encodeURIComponent(other)}`))).json()).launch).toMatchObject({ show: false });
+  });
+
+  it('adds nothing for a site whose plugin connection is not active', async () => {
+    mocks.isActiveTenant.mockResolvedValue(false);
+    expect((await (await GET(req(URL_BASE))).json()).launch).toBeUndefined();
+    expect(mocks.getStoreLaunch).not.toHaveBeenCalled();
+  });
+});

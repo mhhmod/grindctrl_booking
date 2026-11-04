@@ -117,3 +117,29 @@ describe('V16TryOnStudio', () => {
     expect(screen.getByRole('status')).toHaveTextContent('تغيير واحد غير محفوظ');
   });
 });
+
+describe('V16TryOnStudio for a WooCommerce store', () => {
+  it('links the WordPress editors, in place of the Shopify theme editor', () => {
+    renderWithMantine(
+      <V16TryOnStudio
+        locale="en"
+        shop="site:11111111-1111-4111-8111-111111111111"
+        wpAdmin={{ siteEditor: 'https://shop.example.com/wp-admin/site-editor.php', customizer: 'https://shop.example.com/wp-admin/customize.php' }}
+        settings={SETTINGS}
+        saveSettings={vi.fn(async () => ({ ok: true as const }))}
+      />,
+    );
+    expect(screen.getByRole('link', { name: en.moveInSiteEditor })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/site-editor.php');
+    expect(screen.getByRole('link', { name: en.moveInCustomizer })).toHaveAttribute('href', 'https://shop.example.com/wp-admin/customize.php');
+    expect(screen.getByText(en.positionBodyWoo)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: en.moveInThemeEditor })).not.toBeInTheDocument();
+  });
+
+  it('offers no editor link when the paired address is unusable', () => {
+    renderWithMantine(
+      <V16TryOnStudio locale="en" shop="site:11111111-1111-4111-8111-111111111111" settings={SETTINGS} saveSettings={vi.fn(async () => ({ ok: true as const }))} />,
+    );
+    expect(screen.queryByRole('link', { name: en.moveInThemeEditor })).not.toBeInTheDocument();
+  });
+});
+

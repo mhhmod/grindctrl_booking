@@ -40,6 +40,9 @@ export interface TryOnStudioCopy {
   position: string;
   positionBody: string;
   moveInThemeEditor: string;
+  positionBodyWoo: string;
+  moveInSiteEditor: string;
+  moveInCustomizer: string;
   panel: string;
   panelBody: string;
   background: string;
@@ -97,6 +100,9 @@ const en: TryOnStudioCopy = {
   position: 'Position',
   positionBody: 'The button is the GrindCTRL Try-On block in your product page template. Its place is set in your theme editor.',
   moveInThemeEditor: 'Move it in the theme editor',
+  positionBodyWoo: 'Choose where the button sits on your product page in WordPress. Block themes use the Site Editor; other themes use the Customizer.',
+  moveInSiteEditor: 'Open the Site Editor',
+  moveInCustomizer: 'Open the Customizer',
   panel: 'Try-on panel',
   panelBody: 'The panel that opens when a shopper taps Try it on.',
   background: 'Background',
@@ -166,6 +172,9 @@ const ar: TryOnStudioCopy = {
   position: 'الموضع',
   positionBody: 'الزر هو قسم «GrindCTRL Try-On» في قالب صفحة المنتج. يُحدَّد موضعه في محرر القالب.',
   moveInThemeEditor: 'انقله في محرر القالب',
+  positionBodyWoo: 'اختر موضع الزر في صفحة المنتج داخل ووردبريس. القوالب القائمة على الكتل تستخدم محرر الموقع، وغيرها يستخدم أداة التخصيص.',
+  moveInSiteEditor: 'افتح محرر الموقع',
+  moveInCustomizer: 'افتح أداة التخصيص',
   panel: 'لوحة التجربة',
   panelBody: 'اللوحة التي تُفتح عندما يضغط المتسوق على زر التجربة.',
   background: 'الخلفية',

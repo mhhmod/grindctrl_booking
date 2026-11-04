@@ -17,6 +17,8 @@ import {
 } from './active-store';
 import type { DashboardWorkspaceRole } from '@/lib/rbac/dashboard-policy';
 import { getShopTimezone } from '@/lib/shopify/shop-timezone';
+import { getActiveWooSiteContext, listActiveWooSiteIds } from '@/lib/woo/connection';
+import { ensureWooFreePlan } from '@/lib/woo/free-plan';
 import { resolveTimeZone } from '@/lib/time/store-day';
 
 /* Read once per request and shared by the layout, the page and anything
@@ -28,7 +30,15 @@ export const listDashboardShops = cache(() => listManagedTryOnShops());
 
 export const listDashboardSites = cache(async () => {
   const { userId } = await auth();
-  return userId ? listMessengerSitesReadOnly(userId) : [];
+  const sites = userId ? await listMessengerSitesReadOnly(userId) : [];
+  /* A site paired with a WooCommerce store is a Try-On and plan tenant of
+     its own. A failed read leaves the sites as plain Store Chat sites,
+     which the pages answer with the connect state, never a wrong tenant. */
+  const woo = await listActiveWooSiteIds(sites.map((site) => site.id)).catch((error: unknown) => {
+    console.error('[dashboard] woo connection lookup failed', { error: error instanceof Error ? error.name : typeof error });
+    return new Set<string>();
+  });
+  return sites.map((site) => ({ ...site, woo: woo.has(site.id) }));
 });
 
 /** Whether the person's store lists could not be read on this request.
@@ -73,6 +83,12 @@ export async function getActiveStore(
   ]);
 }
 
+/** Gives a paired WooCommerce store its free plan once it has a verified
+ *  domain. Never throws, and is a no-op for every other store. */
+export async function ensureActiveStorePlan(active: ActiveStore): Promise<void> {
+  if (active.platform === 'woocommerce' && active.tenantKey) await ensureWooFreePlan(active.tenantKey);
+}
+
 /** The person's role on the active store (item 12). With no store at all
  *  they are the owner of their own, still empty, account. A store missing
  *  from their lists gets the least a role can do, though resolveActiveStore
@@ -90,7 +106,12 @@ export async function getActiveStoreRole(active: ActiveStore): Promise<Dashboard
 }
 
 /** The active store's time zone (phase zero item 32): its Shopify shop's,
- *  or UTC for a store without one or a zone that cannot be read. */
+ *  the one its WooCommerce plugin reports, or UTC for a store without one
+ *  or a zone that cannot be read. */
 export async function getActiveStoreTimeZone(active: ActiveStore): Promise<string> {
-  return resolveTimeZone(active.shopDomain ? await getShopTimezone(active.shopDomain) : null);
+  if (active.shopDomain) return resolveTimeZone(await getShopTimezone(active.shopDomain));
+  if (active.platform === 'woocommerce' && active.siteId) {
+    return resolveTimeZone((await getActiveWooSiteContext(active.siteId).catch(() => null))?.timezone ?? null);
+  }
+  return resolveTimeZone(null);
 }

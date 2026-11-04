@@ -58,6 +58,12 @@ export function flagStoreForSite(site: { id: string; domain: string | null }): F
   return SHOP_DOMAIN_RE.test(domain) ? { shopDomain: domain } : { widgetSiteId: site.id };
 }
 
+/** The flag store of a Try-On tenant: a Shopify shop, or the Store Chat
+ *  site behind a `site:<id>` key. */
+export function flagStoreForTenant(tenantKey: string): FlagStore {
+  return tenantKey.startsWith('site:') ? { widgetSiteId: tenantKey.slice('site:'.length) } : { shopDomain: tenantKey };
+}
+
 function validStore(store: FlagStore): FlagStore | null {
   if ('shopDomain' in store) {
     const shopDomain = store.shopDomain.trim().toLowerCase();

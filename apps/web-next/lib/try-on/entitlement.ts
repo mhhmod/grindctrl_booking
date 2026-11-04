@@ -2,6 +2,7 @@ import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -189,7 +190,7 @@ function getServiceClient() {
 }
 
 function requireShop(shop: unknown): string {
-  const domain = normalizeShopDomain(shop);
+  const domain = normalizeTenantKey(shop);
   if (!domain) throw new Error('Unknown Shopify shop');
   return domain;
 }

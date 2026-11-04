@@ -19,6 +19,15 @@ describe('the preview link (N5)', () => {
     expect(verifyPreviewToken('another_secret', token, 'maison.myshopify.com', NOW)).toBe(false);
   });
 
+  it('is valid for its own WooCommerce site tenant only, never for a shop or another site', () => {
+    const key = 'site:11111111-1111-4111-8111-111111111111';
+    const { token } = signPreviewToken(SECRET, key.toUpperCase(), NOW);
+    expect(verifyPreviewToken(SECRET, token, key, NOW + 60)).toBe(true);
+    expect(verifyPreviewToken(SECRET, token, 'site:22222222-2222-4222-8222-222222222222', NOW)).toBe(false);
+    expect(verifyPreviewToken(SECRET, token, 'maison.myshopify.com', NOW)).toBe(false);
+    expect(() => signPreviewToken(SECRET, 'site:not-a-uuid', NOW)).toThrow();
+  });
+
   it('refuses a changed or malformed token', () => {
     const { token } = signPreviewToken(SECRET, 'maison.myshopify.com', NOW);
     const [body, signature] = token.split('.');

@@ -8,9 +8,17 @@ const mocks = vi.hoisted(() => ({
   write: vi.fn(),
   revalidate: vi.fn(),
   operator: vi.fn(),
+  origin: vi.fn(),
 }));
-vi.mock('@/lib/shopify/shops', () => ({ requireManagedTryOnShop: mocks.owned }));
-vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
+vi.mock('@/lib/tenancy/managed-tenant', () => ({ requireManagedTenant: mocks.owned }));
+vi.mock('@/lib/flags/store-flags', async (original) => ({
+  ...(await original<typeof import('@/lib/flags/store-flags')>()),
+  storeFlags: mocks.flags,
+}));
+vi.mock('@/lib/launch/preview-url', async (original) => ({
+  ...(await original<typeof import('@/lib/launch/preview-url')>()),
+  previewOriginFor: mocks.origin,
+}));
 vi.mock('@/lib/launch/store-launch', () => ({ writeStoreLaunch: mocks.write }));
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
 vi.mock('@clerk/nextjs/server', () => ({ auth: async () => ({ userId: 'user_owner' }) }));
@@ -36,6 +44,7 @@ beforeEach(() => {
   process.env.SHOPIFY_API_SECRET = 'secret';
     process.env.GRINDCTRL_CAPABILITY_SECRET = 'test-only-independent-core-signing-key-2026';
   mocks.owned.mockResolvedValue(SHOP);
+  mocks.origin.mockImplementation(async (key: string) => (key.startsWith('site:') ? 'https://shop.example.com/' : `https://${key}/`));
   mocks.flags.mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
   mocks.write.mockImplementation(async (_shop: string, input: { state: string }) => ({ state: input.state }));
 });
@@ -84,6 +93,36 @@ describe('createPreviewLink (N5)', () => {
     expect(await createPreviewLink({ shop: SHOP })).toMatchObject({ ok: false, code: 'not_enabled' });
     mocks.owned.mockRejectedValue(new Error('Unauthorized'));
     expect(await createPreviewLink({ shop: SHOP })).toMatchObject({ ok: false, code: 'forbidden' });
+  });
+});
+
+describe('a WooCommerce store', () => {
+  const SITE = '11111111-1111-4111-8111-111111111111';
+  const KEY = `site:${SITE}`;
+
+  it('keys the launch state and the flags by the site tenant', async () => {
+    mocks.owned.mockResolvedValue(KEY);
+    expect(await setLaunchState({ shop: KEY, state: 'live' })).toEqual({ ok: true, state: 'live' });
+    expect(mocks.flags).toHaveBeenCalledWith({ widgetSiteId: SITE });
+    expect(mocks.write).toHaveBeenCalledWith(KEY, { state: 'live' }, 'user_owner');
+  });
+
+  it('opens the preview link on its verified domain, signed for the site tenant', async () => {
+    mocks.owned.mockResolvedValue(KEY);
+    const result = await createPreviewLink({ shop: KEY });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const url = new URL(result.url);
+    expect(url.origin).toBe('https://shop.example.com');
+    const token = url.searchParams.get('gc_preview');
+    expect(verifyPreviewToken('test-only-independent-core-signing-key-2026', token, KEY)).toBe(true);
+    expect(verifyPreviewToken('test-only-independent-core-signing-key-2026', token, SHOP)).toBe(false);
+  });
+
+  it('says to verify a domain when the store has no address to open', async () => {
+    mocks.owned.mockResolvedValue(KEY);
+    mocks.origin.mockResolvedValue(null);
+    expect(await createPreviewLink({ shop: KEY })).toMatchObject({ ok: false, code: 'not_enabled' });
   });
 });
 

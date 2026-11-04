@@ -22,6 +22,8 @@ export interface TodaySetupCopy {
   addButton: string;
   checkAgain: string;
   addButtonHint: string;
+  chatPlugin: string;
+  addButtonHintWoo: string;
   tryIt: string;
   tryItBody: string;
   testFree: string;
@@ -48,6 +50,8 @@ const en: TodaySetupCopy = {
   addButton: 'Add the button to product pages',
   checkAgain: 'Check again',
   addButtonHint: 'Opens your theme editor with the button added under your product details. Press Save and you’re done.',
+  chatPlugin: 'Store Chat (GRINDCTRL plugin for WordPress)',
+  addButtonHintWoo: 'Opens the WordPress Site Editor. Place the Try-On button on your product page and save. Classic themes use the Customizer instead.',
   tryIt: 'Try it yourself on your store',
   tryItBody: 'Try on a piece and ask a question, like a shopper would.',
   testFree: 'Test looks are free.',
@@ -79,6 +83,8 @@ const ar: TodaySetupCopy = {
   addButton: 'أضف الزر إلى صفحات المنتجات',
   checkAgain: 'تحقق مرة أخرى',
   addButtonHint: 'يفتح محرر القالب وقد أُضيف الزر أسفل تفاصيل المنتج. اضغط حفظ وانتهى الأمر.',
+  chatPlugin: 'دردشة المتجر (إضافة GRINDCTRL لووردبريس)',
+  addButtonHintWoo: 'يفتح محرر الموقع في ووردبريس. ضع زر التجربة في صفحة المنتج ثم احفظ. القوالب الكلاسيكية تستخدم أداة التخصيص بدلاً من ذلك.',
   tryIt: 'جرّب بنفسك في متجرك',
   tryItBody: 'جرّب قطعة واطرح سؤالاً، كما يفعل المتسوق.',
   testFree: 'إطلالات الاختبار مجانية.',

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { coreCapabilitySecret } from '@/lib/security/capability-key';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 
 /* The owner's preview link (N5, phase zero item 9). While a store is in
    setup or preview only its owner sees Try it on and Store Chat, by opening
@@ -31,7 +31,7 @@ export function signPreviewToken(
   shop: string,
   nowSeconds = Math.floor(Date.now() / 1000),
 ): { token: string; expiresAt: string } {
-  const domain = normalizeShopDomain(shop);
+  const domain = normalizeTenantKey(shop);
   if (!secret.trim() || !domain) throw new Error('A preview link needs a shop and a signing secret.');
   const payload: PreviewPayload = { p: PURPOSE, shop: domain, iat: nowSeconds, exp: nowSeconds + PREVIEW_TOKEN_TTL_SECONDS };
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -63,7 +63,7 @@ export function verifyPreviewToken(
   return (
     payload.p === PURPOSE &&
     typeof payload.shop === 'string' &&
-    payload.shop === normalizeShopDomain(shop) &&
+    payload.shop === normalizeTenantKey(shop) &&
     typeof payload.exp === 'number' &&
     typeof payload.iat === 'number' &&
     payload.exp > nowSeconds &&

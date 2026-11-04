@@ -2,10 +2,10 @@ import 'server-only';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { LAUNCH_STATES, type LaunchState, type StoreLaunch } from './audience';
 
-/* The launch state per Shopify store (supabase/store_launch.sql), read by
+/* The launch state per tenant, a Shopify store or a `site:<id>` WooCommerce store (supabase/store_launch.sql), read by
    both config routes and cached for 60 seconds like the flags. No row, a
    missing table or a failed read all mean live: a database hiccup must not
    hide GrindCTRL from a live store's shoppers. */
@@ -35,7 +35,7 @@ function fromRow(row: Record<string, unknown>): StoreLaunch | null {
 }
 
 export async function getStoreLaunch(shop: string, now: number = Date.now()): Promise<StoreLaunch | null> {
-  const domain = normalizeShopDomain(shop);
+  const domain = normalizeTenantKey(shop);
   if (!domain) return null;
   const cached = cache.get(domain);
   if (cached && cached.expiresAt > now) return cached.launch;
@@ -67,7 +67,7 @@ export async function writeStoreLaunch(
   updatedBy: string,
   now: Date = new Date(),
 ): Promise<StoreLaunch | null> {
-  const domain = normalizeShopDomain(shop);
+  const domain = normalizeTenantKey(shop);
   if (!domain || !LAUNCH_STATES.includes(input.state)) throw new Error('Unknown store or launch state.');
   const holdout = input.state === 'holdout';
   const share = holdout ? (input.holdoutShare ?? HOLDOUT_DEFAULT_SHARE) : null;

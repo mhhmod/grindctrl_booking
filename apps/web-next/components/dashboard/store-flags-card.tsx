@@ -24,13 +24,17 @@ export function StoreFlagsCard({
   storeLabel,
   rows,
   launchState,
+  launchKey,
 }: {
   kind: 'shop' | 'site';
   storeKey: string;
   storeLabel: string;
   rows: StoreFlagRow[];
-  /** A Shopify store's launch state (N5, N6), for testing it from here. */
+  /** A store's launch state (N5, N6), for testing it from here. */
   launchState?: string;
+  /** The tenant the launch state is kept under, when it is not `storeKey`: a
+   *  WooCommerce store's flags are keyed by its site, its launch by `site:<id>`. */
+  launchKey?: string;
 }) {
   const [launch, setLaunch] = useState(launchState);
   const [enabled, setEnabled] = useState<Set<string>>(
@@ -52,7 +56,7 @@ export function StoreFlagsCard({
   function setState(state: string) {
     setError(null);
     startTransition(async () => {
-      const result = await setLaunchStateAsOperator({ shop: storeKey, state });
+      const result = await setLaunchStateAsOperator({ shop: launchKey ?? storeKey, state });
       if (result.ok) setLaunch(result.state);
       else setError(result.message);
     });
@@ -96,7 +100,7 @@ export function StoreFlagsCard({
             );
           })}
         </Stack>
-        {kind === 'shop' && launch !== undefined && (
+        {(kind === 'shop' || launchKey !== undefined) && launch !== undefined && (
           <Group gap="xs" role="group" aria-label="Launch state">
             <Text size="sm" fw={500}>Launch state</Text>
             {LAUNCH_STATES.map((state) => (

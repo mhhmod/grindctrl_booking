@@ -8,10 +8,12 @@ const mocks = vi.hoisted(() => ({
   entitlement: vi.fn(),
   timezone: vi.fn(),
   user: vi.fn(),
+  woo: vi.fn(),
 }));
 vi.mock('./active-store-server', () => ({ listDashboardShops: mocks.shops, listDashboardSites: mocks.sites }));
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: mocks.entitlement }));
 vi.mock('@/lib/shopify/shop-timezone', () => ({ getShopTimezone: mocks.timezone }));
+vi.mock('@/lib/woo/connection', () => ({ getActiveWooSiteContext: mocks.woo }));
 vi.mock('@clerk/nextjs/server', () => ({ currentUser: mocks.user }));
 
 import { getV16ShellData } from './shell-data';
@@ -65,5 +67,19 @@ describe('getV16ShellData', () => {
     await getV16ShellData({ activeStore: { shopDomain: null, siteId: active.siteId }, locale: 'en', role: 'owner', now });
     expect(mocks.entitlement).not.toHaveBeenCalled();
     expect(mocks.timezone).not.toHaveBeenCalled();
+  });
+
+  it('reads the plan under the site tenant and the time zone the plugin reported for a WooCommerce store', async () => {
+    const siteId = '22222222-2222-4222-8222-222222222222';
+    mocks.shops.mockResolvedValue([]);
+    mocks.sites.mockResolvedValue([{ id: siteId, name: 'Shop', domain: 'shop.example', woo: true }]);
+    mocks.woo.mockResolvedValue({ homeUrl: 'https://shop.example', timezone: 'Africa/Cairo' });
+    const store = { shopDomain: null, siteId, tenantKey: `site:${siteId}`, platform: 'woocommerce' as const };
+    const shell = await getV16ShellData({ activeStore: store, locale: 'en', role: 'owner', now });
+    expect(mocks.entitlement).toHaveBeenCalledWith(`site:${siteId}`);
+    expect(mocks.woo).toHaveBeenCalledWith(siteId);
+    expect(mocks.timezone).not.toHaveBeenCalled();
+    expect(shell.meter?.value).toBe('150 left of 350');
+    expect(shell.today.greeting).toBe('Good afternoon, Hana');
   });
 });
