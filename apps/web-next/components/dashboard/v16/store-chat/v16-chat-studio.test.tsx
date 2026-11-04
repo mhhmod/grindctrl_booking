@@ -164,6 +164,18 @@ describe('V16ChatStudio', () => {
     expect(router.replace).toHaveBeenCalledWith('/dashboard/store-chat');
   });
 
+  it('offers the WooCommerce setup path off Shopify only', () => {
+    draw();
+    expect(screen.queryByRole('heading', { level: 3, name: en.woocommerce.title })).not.toBeInTheDocument();
+  });
+
+  it('shows the WooCommerce setup path with the embed key for a store that is not on Shopify', () => {
+    draw(undefined, 'en', { domain: 'shop.example.com' });
+    expect(screen.getByRole('heading', { level: 3, name: en.woocommerce.title })).toBeInTheDocument();
+    expect(screen.getByText('emb_test')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: en.woocommerce.download })).toHaveAttribute('href', '/downloads/grindctrl-store-chat.zip');
+  });
+
   it('speaks Arabic in Arabic', () => {
     draw(undefined, 'ar');
     const ar = getChatStudioCopy('ar');

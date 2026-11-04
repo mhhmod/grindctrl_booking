@@ -39,14 +39,14 @@ export const PUBLIC_INTEGRATIONS = [
     name: 'WooCommerce',
     state: 'in-testing',
     evidenceRef: 'docs/platform-readiness-matrix.md',
-    note: 'Store Chat only, through a GRINDCTRL WordPress plugin. Built on a branch and tried on a staging store; not shipped on main and not available to merchants. Try-On, order lookup and billing are Shopify-only.',
+    note: 'Store Chat only, through a GRINDCTRL WordPress plugin. Code is on main and being verified on a test store; not available to merchants yet. Try-On, order lookup and billing are Shopify-only.',
   },
   {
     id: 'custom-website',
     name: 'Your website',
     state: 'in-testing',
     evidenceRef: 'docs/platform-readiness-matrix.md',
-    note: 'Store Chat only, by script tag on a DNS-verified domain. Built on a branch and tried on a staging store; not shipped on main and not available to merchants. No Try-On, order lookup or native product sync.',
+    note: 'Store Chat only, by script tag on a DNS-verified domain. Code is on main and being verified; not available to merchants yet. No Try-On, order lookup or native product sync.',
   },
   {
     id: 'salla',

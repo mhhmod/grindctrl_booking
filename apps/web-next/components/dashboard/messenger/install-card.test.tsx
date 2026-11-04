@@ -34,13 +34,13 @@ describe('InstallCard overflow guards', () => {
     expect(note.parentElement).toContainElement(screen.getByRole('button', { name: button }));
   });
 
-  /* The server admits the loader only on the connected store's own domains
-     (lib/messenger/origins.ts), so the pasted snippet does not work on any
-     website and the card must not say it does. */
+  /* The server admits the loader only on the store's own domains and
+     domains verified for it (lib/messenger/origins.ts, domains.ts), so the
+     pasted snippet does not work on any website and the card must not say it does. */
   it.each([
-    ['en', /connected store/, /any website/i],
-    ['ar', /نطاقات متجرك المتصل/, /أي موقع/],
-  ])('says the manual snippet only loads on the connected store in %s', (locale, truth, overclaim) => {
+    ['en', /domain verified for this store/, /any website/i],
+    ['ar', /نطاق مُتحقَّق منه لهذا المتجر/, /أي موقع/],
+  ])('says the manual snippet only answers on a verified domain in %s', (locale, truth, overclaim) => {
     const { container } = renderInstallCard('grindctrl.myshopify.com', true, locale);
 
     expect(container).toHaveTextContent(truth);

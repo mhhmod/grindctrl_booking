@@ -21,11 +21,13 @@ import {
   withRecipient,
   type StudioSection,
 } from '@/lib/dashboard/chat-studio-model';
-import type { MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
+import type { DomainActions, MessengerHostActions } from '@/lib/messenger/dashboard-actions-contract';
 import type { ActionResult } from '@/lib/messenger/actions-core';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
+import { StorefrontDomains } from './storefront-domains';
+import { WoocommerceGuide } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
 
 /* The v16 Store Chat Set up tab (04-dashboard.md, the ChatStudio board) on
@@ -40,7 +42,7 @@ import classes from './v16-chat-studio.module.css';
 export type ChatStudioActions = Pick<
   MessengerHostActions,
   'saveDraftSections' | 'publishConfig' | 'revertConfigAction' | 'setMessengerEnabled' | 'disconnectSiteAction'
-> & { discardDraft(siteId: string): Promise<ActionResult> };
+> & { discardDraft(siteId: string): Promise<ActionResult> } & Partial<DomainActions>;
 
 export type ChatStudioMeta = {
   domain: string | null;
@@ -841,6 +843,23 @@ export function V16ChatStudio({
                 </Button>
               </p>
             </div>
+            {!shopify && <WoocommerceGuide embedKey={meta.embedKey} copy={copy.woocommerce} copyLabels={copy.domains} />}
+            {!shopify &&
+              actions.listDomainsAction &&
+              actions.addDomainAction &&
+              actions.checkDomainAction &&
+              actions.removeDomainAction && (
+                <StorefrontDomains
+                  siteId={siteId}
+                  copy={copy.domains}
+                  actions={{
+                    listDomainsAction: actions.listDomainsAction,
+                    addDomainAction: actions.addDomainAction,
+                    checkDomainAction: actions.checkDomainAction,
+                    removeDomainAction: actions.removeDomainAction,
+                  }}
+                />
+              )}
             <div className={classes.row}>
               <h3 className={classes.h3}>{copy.publishedVersion(version)}</h3>
               {meta.canRevert && (

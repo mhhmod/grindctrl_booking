@@ -15,7 +15,7 @@ describe('robots.txt', () => {
     const rule = [rules].flat()[0];
     const disallow = [rule.disallow].flat().filter((path): path is string => typeof path === 'string');
     expect(rule.allow).toBe('/');
-    for (const path of ['/api/', '/dashboard', '/onboarding', '/embed/', '/shopify/', '/dev/', '/assistant']) {
+    for (const path of ['/api/', '/dashboard', '/onboarding', '/embed/', '/shopify/', '/dev/', '/assistant', '/downloads/']) {
       expect(disallow).toContain(path);
     }
     // A rule blocks a path when it is a prefix of it.

@@ -39,6 +39,14 @@ import {
   signAttachmentUrls,
   type TriageResult,
 } from '@/lib/messenger/attachments';
+import {
+  addSiteDomain,
+  checkSiteDomain,
+  DomainError,
+  listSiteDomains,
+  removeSiteDomain,
+} from '@/lib/messenger/domains';
+import type { DomainActionResult } from '@/lib/messenger/dashboard-actions-contract';
 import type { MessengerSection } from '@/lib/messenger/config';
 import type { MessengerConfig } from '@/lib/messenger/types';
 import { saveDraftSectionForSite, saveDraftSectionsForSite, publishConfigForSite, revertConfigForSite, setMessengerEnabledForSite } from '@/lib/messenger/actions-core';
@@ -193,6 +201,63 @@ export async function setMessengerEnabled(siteId: string, enabled: boolean): Pro
     return result;
   } catch (error) {
     return fail(error);
+  }
+}
+
+/* ── Storefront domains (DNS-verified, for sites that are not Shopify) ── */
+
+
+/* Domain errors come back as their code (invalid_domain, taken,
+   limit_reached, not_found) so the card can say it in the merchant's
+   language; everything else goes through fail(). */
+function domainFail(error: unknown): DomainActionResult {
+  if (error instanceof DomainError) return { ok: false, error: error.code };
+  return fail(error) as DomainActionResult;
+}
+
+export async function listDomainsAction(siteId: string): Promise<DomainActionResult> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'settings', 'read');
+    return { ok: true, domains: await listSiteDomains(siteId) };
+  } catch (error) {
+    return domainFail(error);
+  }
+}
+
+export async function addDomainAction(siteId: string, domain: string): Promise<DomainActionResult> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'settings');
+    const added = await addSiteDomain(siteId, String(domain ?? ''));
+    revalidateStoreChat();
+    return { ok: true, domain: added };
+  } catch (error) {
+    return domainFail(error);
+  }
+}
+
+export async function checkDomainAction(siteId: string, domainId: string): Promise<DomainActionResult> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'settings');
+    const checked = await checkSiteDomain(siteId, domainId);
+    revalidateStoreChat();
+    return { ok: true, domain: checked };
+  } catch (error) {
+    return domainFail(error);
+  }
+}
+
+export async function removeDomainAction(siteId: string, domainId: string): Promise<DomainActionResult> {
+  try {
+    const userId = await currentUser();
+    await requireOwnedSite(userId, siteId, 'settings');
+    await removeSiteDomain(siteId, domainId);
+    revalidateStoreChat();
+    return { ok: true };
+  } catch (error) {
+    return domainFail(error);
   }
 }
 
