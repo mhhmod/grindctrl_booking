@@ -6,7 +6,7 @@
    string table. Edited by hand from here on. */
 
 import * as React from 'react';
-import { D_HUBSPOT, D_N8N, D_SHOPIFY } from '../story-marks';
+import { D_N8N, D_SHOPIFY } from '../story-marks';
 import type { V, ViewProps } from '../story-types';
 
 export function DeskOps({ v, t }: ViewProps) {
@@ -307,10 +307,6 @@ export function DeskOps({ v, t }: ViewProps) {
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "24px", padding: "0 9px", borderRadius: "12px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--gc-cream)", border: "1px solid color-mix(in srgb, var(--gc-cream) 28%, transparent)", background: "color-mix(in srgb, var(--gc-cream) 6%, transparent)" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_N8N} /></svg>
               {t("n8n")}
-            </span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "24px", padding: "0 9px", borderRadius: "12px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--gc-cream)", border: "1px solid color-mix(in srgb, var(--gc-cream) 28%, transparent)", background: "color-mix(in srgb, var(--gc-cream) 6%, transparent)" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: "0" }}><path d={D_HUBSPOT} /></svg>
-              {t("HubSpot")}
             </span>
             <span>{t("Custom steps, built during setup")}</span>
           </span>
