@@ -14,7 +14,7 @@ if ( ! function_exists( 'grindctrl_sc_disconnect_remote' ) ) {
 }
 
 function grindctrl_sc_delete_options() {
-	grindctrl_sc_disconnect_remote( 3 );
+	grindctrl_sc_disconnect_remote( 3, 'uninstall' );
 	wp_clear_scheduled_hook( GRINDCTRL_SC_HEARTBEAT_HOOK );
 
 	foreach ( array(
@@ -26,6 +26,8 @@ function grindctrl_sc_delete_options() {
 		'grindctrl_sc_connection_status',
 		'grindctrl_sc_min_plugin_version',
 		'grindctrl_sc_last_error',
+		'grindctrl_sc_tryon_product',
+		'grindctrl_sc_tryon_catalog',
 	) as $name ) {
 		delete_option( $name );
 	}

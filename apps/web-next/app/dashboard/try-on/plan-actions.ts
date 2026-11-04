@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireManagedTryOnShop } from '@/lib/shopify/shops';
+import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { requireTryOnPlatformOperator, PlatformOperatorRequiredError } from '@/lib/shopify/platform-operator';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -27,7 +27,7 @@ async function runManualPlanAction(
   try {
     await requireTryOnPlatformOperator();
     // Billing is the owner's alone, never an admin's or a member's (item 12).
-    const domain = await requireManagedTryOnShop(shop, { capability: 'billing' });
+    const domain = await requireManagedTenant(shop, { capability: 'billing' });
     await requireMerchantRateLimit(`shop:${domain}`);
     const result = await runOwnerEntitlementMutation(name, { ...params, p_shop_domain: domain });
     // Set up (/dashboard/try-on/setup) and the shell's looks meter read the plan, under the dashboard layout.
@@ -46,13 +46,13 @@ export async function listPlansCatalog(shop: unknown) {
   // Read-only, for the owner of the shop the plans are offered to: admins and
   // members never see billing (item 12). The global-defaults view needs only
   // a signed-in dashboard user, so it opts in deliberately, not by accident.
-  await requireManagedTryOnShop(shop, { allowGlobalDefault: true, capability: 'billing' });
+  await requireManagedTenant(shop, { allowGlobalDefault: true, capability: 'billing' });
   return listEntitlementCatalog();
 }
 
 /* The global-defaults view has no per-shop plan, so 'default' returns a
    neutral state instead of hitting getShopEntitlement, which requires a
-   real myshopify domain. */
+   real tenant key (a myshopify domain or a `site:<id>` WooCommerce store). */
 const NO_SHOP_PLAN_STATE: ShopEntitlement = {
   shop: 'default',
   subscriptionId: null,
@@ -81,7 +81,7 @@ export async function getShopPlanState(shop: unknown): Promise<ShopEntitlement> 
   // Read-only and the owner's alone (item 12): the global-defaults view
   // resolves to a neutral, empty plan state below and never reaches a
   // per-shop entitlement.
-  const domain = await requireManagedTryOnShop(shop, { allowGlobalDefault: true, capability: 'billing' });
+  const domain = await requireManagedTenant(shop, { allowGlobalDefault: true, capability: 'billing' });
   if (domain === 'default') return NO_SHOP_PLAN_STATE;
   await requireMerchantRateLimit(`shop:${domain}`, 'read');
   await reconcileShopSubscription(domain);

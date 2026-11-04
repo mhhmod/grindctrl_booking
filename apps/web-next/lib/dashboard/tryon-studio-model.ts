@@ -139,6 +139,20 @@ export function nextCorner(px: number, direction: 1 | -1): number {
   return [...CORNER_STEPS].reverse().find((step) => step < px) ?? CORNER_STEPS[0];
 }
 
+/** The WordPress editors for a paired store, from the address it was paired
+ *  at: the Site Editor for block themes, the Customizer for the rest. Null
+ *  for anything but an https address. */
+export function wpAdminUrls(homeUrl: string): { siteEditor: string; customizer: string } | null {
+  try {
+    const url = new URL(homeUrl);
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    const base = `${url.origin}${url.pathname.replace(/\/+$/, '')}/wp-admin`;
+    return { siteEditor: `${base}/site-editor.php`, customizer: `${base}/customize.php` };
+  } catch {
+    return null;
+  }
+}
+
 /** The theme editor on the product template, where the Try-On block is placed. */
 export function themeEditorUrl(shop: string): string | null {
   const match = /^([a-z0-9][a-z0-9-]*)\.myshopify\.com$/.exec(shop.trim().toLowerCase());

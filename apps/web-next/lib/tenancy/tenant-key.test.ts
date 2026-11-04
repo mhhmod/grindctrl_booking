@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  flagStoreForTenant,
   isSiteTenantKey,
   normalizeTenantKey,
   siteTenantKey,
@@ -57,5 +58,13 @@ describe('tenantPlatform', () => {
     expect(tenantPlatform('demo.myshopify.com')).toBe('shopify');
     expect(tenantPlatform(canonicalSiteKey)).toBe('site');
     expect(tenantPlatform('demo.example.com')).toBeNull();
+  });
+});
+
+describe('flagStoreForTenant', () => {
+  it('keys flags by shop domain for Shopify and by widget site for a site tenant', () => {
+    expect(flagStoreForTenant('demo.myshopify.com')).toEqual({ shopDomain: 'demo.myshopify.com' });
+    expect(flagStoreForTenant(canonicalSiteKey)).toEqual({ widgetSiteId: siteId.toLowerCase() });
+    expect(flagStoreForTenant(null)).toBeNull();
   });
 });

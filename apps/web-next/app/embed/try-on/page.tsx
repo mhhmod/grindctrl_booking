@@ -9,8 +9,10 @@ import { TryOnSheet } from '@/components/try-on/sheet/try-on-sheet';
 import { EmbedFrameBridge } from '@/components/try-on/embed-frame-bridge';
 import { getTryOnSettings } from '@/lib/try-on/settings';
 import { isAllowedGarmentUrl } from '@/lib/try-on/image-runner';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey, isSiteTenantKey } from '@/lib/tenancy/tenant-key';
+import { checkGarmentUrl, verifiedSiteHosts } from '@/lib/woo/garment-url';
 import { storeFlags } from '@/lib/flags/store-flags';
+import { flagStoreForTenant } from '@/lib/tenancy/tenant-key';
 import { getTypicalLookSeconds } from '@/lib/try-on/look-timing';
 import { DEFAULT_ADDRESS_FORM } from '@/lib/try-on/sheet-copy';
 import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
@@ -21,6 +23,18 @@ import {
   TRYON_LOCALE_COOKIE,
   type TryOnLocale,
 } from '@/lib/try-on/i18n';
+
+/* The garment image is shown from the query; generation uses the signed
+   canonical URL, so this only decides what may be drawn. A site tenant's
+   image must come from one of its verified domains or a listed image CDN. */
+async function garmentShownFor(shop: string | null, garment: string): Promise<boolean> {
+  if (!shop || !isSiteTenantKey(shop)) return isAllowedGarmentUrl(garment);
+  try {
+    return checkGarmentUrl(garment, await verifiedSiteHosts(shop.slice('site:'.length))) !== null;
+  } catch {
+    return false;
+  }
+}
 
 export const metadata: Metadata = {
   title: 'Try-On | GRINDCTRL',
@@ -48,11 +62,11 @@ export default async function EmbedTryOnPage({
 }) {
   const params = await searchParams;
   const productHandle = params.product?.trim() || '';
-  const shop = normalizeShopDomain(params.shop);
+  const shop = normalizeTenantKey(params.shop);
 
   /* Store-product mode: the block passes the product's own image + title
      so customers try on the actual product, not the seeded demo garment. */
-  const garmentOk = !!params.garment && isAllowedGarmentUrl(params.garment);
+  const garmentOk = !!params.garment && (await garmentShownFor(shop, params.garment));
   /* Every embed handle belongs to the storefront. Seeded catalog products
      are reserved for the standalone demo page. */
   const shopProduct = productHandle
@@ -69,7 +83,7 @@ export default async function EmbedTryOnPage({
   const [settings, sheetOn] = await Promise.all([
     getTryOnSettings(shop),
     params.sheet === '1' && shop && shopProduct
-      ? storeFlags({ shopDomain: shop }).then((flags) => flags.includes('v16_tryon'))
+      ? storeFlags(flagStoreForTenant(shop) ?? { shopDomain: shop }).then((flags) => flags.includes('v16_tryon'))
       : Promise.resolve(false),
   ]);
   const lookSeconds = sheetOn ? await getTypicalLookSeconds(shop) : null;

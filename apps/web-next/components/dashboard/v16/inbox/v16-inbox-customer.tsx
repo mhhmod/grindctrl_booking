@@ -90,7 +90,11 @@ export function V16InboxCustomer({
             {line}
           </p>
         ))}
-        {view.customerUrl && <ExternalLink href={view.customerUrl}>{copy.openCustomer}</ExternalLink>}
+        {view.customerUrl && (
+          <ExternalLink href={view.customerUrl}>
+            {view.platform === 'woocommerce' ? copy.openCustomerWooCommerce : copy.openCustomer}
+          </ExternalLink>
+        )}
       </section>
 
       {view.order && (
@@ -112,7 +116,11 @@ export function V16InboxCustomer({
             </ul>
           )}
           <div className={classes.links}>
-            {view.order.shopifyUrl && <ExternalLink href={view.order.shopifyUrl}>{copy.openInShopify}</ExternalLink>}
+            {view.order.adminUrl && (
+              <ExternalLink href={view.order.adminUrl}>
+                {view.platform === 'woocommerce' ? copy.openInWooCommerce : copy.openInShopify}
+              </ExternalLink>
+            )}
             {view.order.trackingUrl && <ExternalLink href={view.order.trackingUrl}>{copy.track}</ExternalLink>}
           </div>
         </section>

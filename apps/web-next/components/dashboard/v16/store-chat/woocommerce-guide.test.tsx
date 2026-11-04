@@ -102,6 +102,8 @@ describe('WoocommerceGuide', () => {
       lastSeenAt: '2026-11-04T10:30:00.000Z',
       pairedAt: '2026-11-04T10:00:00.000Z',
       homeUrl: 'https://shop.example.com',
+      cloneSuspected: false,
+      pluginOutdated: false,
     };
     const { copy } = draw('en', successfulAction(), connection);
     expect(screen.getByText(status === 'active' ? copy.woocommerce.connected : copy.woocommerce.disconnected)).toBeInTheDocument();
@@ -111,6 +113,31 @@ describe('WoocommerceGuide', () => {
       connection.lastSeenAt,
     );
     cleanup();
+  });
+
+  it('warns about a cloned site and an outdated plugin only while the connection is active', () => {
+    const base: WooSiteConnectionSummary = {
+      platform: 'woocommerce',
+      status: 'active',
+      pluginVersion: '0.1.0',
+      lastSeenAt: '2026-11-04T10:30:00.000Z',
+      pairedAt: '2026-11-04T10:00:00.000Z',
+      homeUrl: 'https://shop.example.com',
+      cloneSuspected: true,
+      pluginOutdated: true,
+    };
+    const { copy } = draw('en', successfulAction(), base);
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.woocommerce.cloneWarning);
+    expect(screen.getByText(copy.woocommerce.updatePlugin)).toBeInTheDocument();
+    cleanup();
+
+    draw('en', successfulAction(), { ...base, cloneSuspected: false, pluginOutdated: false });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByText(copy.woocommerce.updatePlugin)).not.toBeInTheDocument();
+    cleanup();
+
+    draw('en', successfulAction(), { ...base, status: 'disconnected' });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('presents a setup path, not a broader support claim, and keeps domain verification', () => {

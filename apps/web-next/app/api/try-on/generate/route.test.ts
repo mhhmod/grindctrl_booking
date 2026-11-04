@@ -12,7 +12,7 @@ const { rateLimitMock, rateLimitState, activeInstallationMock } = vi.hoisted(() 
   rateLimitState: { configured: true },
   activeInstallationMock: vi.fn(),
 }));
-vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock, isActiveTenant: activeInstallationMock }));
 
 /* This suite exercises generation logic, not the rate limiter — real limiter
    calls @upstash/redis over the network, which vitest can't do (it doesn't

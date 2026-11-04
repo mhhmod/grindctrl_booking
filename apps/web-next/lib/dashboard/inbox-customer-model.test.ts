@@ -58,7 +58,7 @@ describe('the customer column', () => {
       total: 'EGP 4,700, cash on delivery',
       items: ['Layla Embroidered Abaya', 'Silk Scarf × 2'],
       trackingUrl: 'https://bosta.co/track/123',
-      shopifyUrl: 'https://admin.shopify.com/store/maison-noor/orders?query=%231042',
+      adminUrl: 'https://admin.shopify.com/store/maison-noor/orders?query=%231042',
     });
   });
 
@@ -82,7 +82,7 @@ describe('the customer column', () => {
   it('says when the email is one the shopper typed, and links nothing outside Shopify stores', () => {
     const view = buildInboxCustomerView(facts({ email: null, contactEmail: 'salma@example.com', shopDomain: null }), en, 'en', TZ);
     expect(view.lines).toEqual(['Gave this email in the chat', 'From the Layla Embroidered Abaya page']);
-    expect(view.order?.shopifyUrl).toBeNull();
+    expect(view.order?.adminUrl).toBeNull();
     expect(view.customerUrl).toBeNull();
   });
 
@@ -125,5 +125,24 @@ describe('pageFrom', () => {
     expect(pageFrom('https://maison.example/ar')).toEqual({ kind: 'home' });
     expect(pageFrom('https://maison.example/pages/contact')).toEqual({ kind: 'path', path: '/pages/contact' });
     expect(pageFrom(null)).toBeNull();
+  });
+});
+
+describe('the customer column on WooCommerce', () => {
+  it('links to wp-admin from the paired home URL and says which store it is', () => {
+    const view = buildInboxCustomerView(
+      facts({
+        shopDomain: null,
+        wooHomeUrl: 'https://shop.example.com/',
+        identity: { name: 'Salma', email: null, customerId: '42', verified: true },
+        order: { ...facts().order!, ref: '1042' },
+      }),
+      en,
+      'en',
+      TZ,
+    );
+    expect(view.platform).toBe('woocommerce');
+    expect(view.customerUrl).toBe('https://shop.example.com/wp-admin/user-edit.php?user_id=42');
+    expect(view.order?.adminUrl).toBe('https://shop.example.com/wp-admin/post.php?post=1042&action=edit');
   });
 });

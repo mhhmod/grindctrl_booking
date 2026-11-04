@@ -11,6 +11,7 @@
    wiring is in active-store-server.ts. */
 
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 
 export const ACTIVE_STORE_COOKIE = 'gc-store';
 /** The proxy copies the link's choice here for the request it serves, so a
@@ -45,14 +46,30 @@ export function parseStoreChoice(value: string | null | undefined): StoreChoice 
 }
 
 export type StoreCandidateShop = { domain: string; status: 'installed' | 'uninstalled'; lastSeenAt: string };
-export type StoreCandidateSite = { id: string; domain: string | null };
+export type StoreCandidateSite = {
+  id: string;
+  domain: string | null;
+  /** The site is a paired, active WooCommerce store. */
+  woo?: boolean;
+};
 
 export type ActiveStore = {
-  /** The Shopify shop, when the active store is one. */
+  /** The Shopify shop, when the active store is one. Shopify-only things
+   *  (Admin API, theme editor, App Pricing) read this. */
   shopDomain: string | null;
   /** Its Store Chat site, when it has one. */
   siteId: string | null;
+  /** The key Try-On, plans and launch state are kept under: the shop domain,
+   *  or `site:<id>` for a paired WooCommerce store. Null when the store has
+   *  neither. Read it through activeTenantKey. */
+  tenantKey?: string | null;
+  platform?: 'shopify' | 'woocommerce' | null;
 };
+
+/** The Try-On, plan and launch tenant of the active store, or null. */
+export function activeTenantKey(active: ActiveStore): string | null {
+  return active.tenantKey ?? active.shopDomain;
+}
 
 /** The store whose flags apply to this active store: its shop when it has
  *  one, else its Store Chat site, or null for an account with no store. */
@@ -66,13 +83,15 @@ function siteForShop(sites: readonly StoreCandidateSite[], shopDomain: string): 
 }
 
 function fromShop(shopDomain: string, sites: readonly StoreCandidateSite[]): ActiveStore {
-  return { shopDomain, siteId: siteForShop(sites, shopDomain)?.id ?? null };
+  return { shopDomain, siteId: siteForShop(sites, shopDomain)?.id ?? null, tenantKey: shopDomain, platform: 'shopify' };
 }
 
 function fromSite(site: StoreCandidateSite, shops: readonly StoreCandidateShop[]): ActiveStore {
   const domain = normalizeShopDomain(site.domain);
   const shop = domain ? shops.find((candidate) => candidate.domain === domain) : undefined;
-  return { shopDomain: shop?.domain ?? null, siteId: site.id };
+  if (shop) return { shopDomain: shop.domain, siteId: site.id, tenantKey: shop.domain, platform: 'shopify' };
+  const wooKey = site.woo ? normalizeTenantKey(`site:${site.id}`) : null;
+  return { shopDomain: null, siteId: site.id, tenantKey: wooKey, platform: wooKey ? 'woocommerce' : null };
 }
 
 /** The first choice that names a store the caller owns wins. With none,
@@ -101,5 +120,5 @@ export function resolveActiveStore(
   if (shops[0]) return fromShop(shops[0].domain, sites);
 
   const site = sites.find((candidate) => candidate.domain) ?? sites[0];
-  return site ? fromSite(site, shops) : { shopDomain: null, siteId: null };
+  return site ? fromSite(site, shops) : { shopDomain: null, siteId: null, tenantKey: null, platform: null };
 }

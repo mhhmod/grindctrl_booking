@@ -8,6 +8,7 @@
    look they sent (N18). */
 
 import type { OrderCard } from '@/lib/messenger/order-card';
+import { adminCustomerUrl, adminLinkTarget, adminOrderUrl } from '@/lib/messenger/order-admin-links';
 import type { ShopperCart } from '@/lib/messenger/cart';
 import { formatStorePrice } from '@/lib/try-on/store-product';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
@@ -26,6 +27,8 @@ export type InboxCustomerFacts = {
   past: Array<{ id: string; startedAt: string; status: string; preview: string | null }>;
   /** The Shopify shop, for links into its admin; null on other websites. */
   shopDomain: string | null;
+  /** The paired WooCommerce site's home URL, for links into wp-admin. */
+  wooHomeUrl?: string | null;
 };
 
 export type InboxCustomerView = {
@@ -34,6 +37,8 @@ export type InboxCustomerView = {
   email: string | null;
   lines: string[];
   customerUrl: string | null;
+  /** Which store admin customerUrl and the order's adminUrl open. */
+  platform: 'shopify' | 'woocommerce' | null;
   order: {
     title: string;
     stage: string;
@@ -41,7 +46,7 @@ export type InboxCustomerView = {
     total: string | null;
     items: string[];
     trackingUrl: string | null;
-    shopifyUrl: string | null;
+    adminUrl: string | null;
   } | null;
   cart: { items: Array<{ title: string; price: string }>; total: string } | null;
   past: Array<{ id: string; date: string; status: string; preview: string | null }>;
@@ -55,11 +60,6 @@ const STAGE_TONE: Record<OrderCard['stage'], 'ok' | 'attention' | 'danger' | 'mu
   delivered: 'ok',
   cancelled: 'danger',
 };
-
-function adminBase(shopDomain: string | null): string | null {
-  const match = shopDomain?.match(/^([a-z0-9][a-z0-9-]*)\.myshopify\.com$/);
-  return match ? `https://admin.shopify.com/store/${match[1]}` : null;
-}
 
 /** "Layla Embroidered Abaya" from a product address, "home" for the store's
  *  front page, or the path itself for anything else. */
@@ -97,7 +97,7 @@ function money(minor: number, currency: string, locale: SiteLocale): string {
 export function buildInboxCustomerView(facts: InboxCustomerFacts, copy: InboxCustomerCopy, locale: SiteLocale, timeZone: string): InboxCustomerView {
   const name = facts.identity?.name?.trim() || facts.name?.trim() || null;
   const email = facts.identity?.email?.trim() || facts.email?.trim() || facts.contactEmail?.trim() || null;
-  const base = adminBase(facts.shopDomain);
+  const target = adminLinkTarget({ shopDomain: facts.shopDomain, wooHomeUrl: facts.wooHomeUrl });
 
   const lines: string[] = [];
   if (facts.identity?.verified) lines.push(copy.signedIn);
@@ -118,7 +118,7 @@ export function buildInboxCustomerView(facts: InboxCustomerFacts, copy: InboxCus
             : null,
         items: card.items.map((item) => (item.quantity > 1 ? `${item.title} × ${item.quantity}` : item.title)),
         trackingUrl: card.trackingUrl,
-        shopifyUrl: base ? `${base}/orders?query=${encodeURIComponent(card.name)}` : null,
+        adminUrl: adminOrderUrl(target, card),
       }
     : null;
 
@@ -146,7 +146,8 @@ export function buildInboxCustomerView(facts: InboxCustomerFacts, copy: InboxCus
     name,
     email,
     lines,
-    customerUrl: base && customerId && /^\d+$/.test(customerId) ? `${base}/customers/${customerId}` : null,
+    customerUrl: adminCustomerUrl(target, customerId),
+    platform: target?.kind ?? null,
     order,
     cart,
     past,

@@ -22,7 +22,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { getWooSiteConnection } from './connection';
+import { getWooSiteConnection, isVersionBelow } from './connection';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -39,6 +39,7 @@ describe('getWooSiteConnection', () => {
         last_seen_at: '2026-11-04T10:30:00.000Z',
         paired_at: '2026-11-04T10:00:00.000Z',
         home_url: 'https://shop.example.com',
+        last_home_url: 'https://staging.example.com',
       },
       error: null,
     });
@@ -50,6 +51,8 @@ describe('getWooSiteConnection', () => {
       lastSeenAt: '2026-11-04T10:30:00.000Z',
       pairedAt: '2026-11-04T10:00:00.000Z',
       homeUrl: 'https://shop.example.com',
+      cloneSuspected: true,
+      pluginOutdated: false,
     });
     expect(mocks.eq).toHaveBeenCalledWith('widget_site_id', 'site-1');
   });
@@ -63,5 +66,14 @@ describe('getWooSiteConnection', () => {
     await expect(getWooSiteConnection('site-1')).rejects.toThrow(
       'WooCommerce connection status is unavailable.',
     );
+  });
+});
+
+describe('isVersionBelow', () => {
+  it('compares numeric parts, not strings', () => {
+    expect(isVersionBelow('0.1.9', '0.2.0')).toBe(true);
+    expect(isVersionBelow('0.10.0', '0.2.0')).toBe(false);
+    expect(isVersionBelow('0.2.0', '0.2.0')).toBe(false);
+    expect(isVersionBelow('1.0', '0.2.0')).toBe(false);
   });
 });

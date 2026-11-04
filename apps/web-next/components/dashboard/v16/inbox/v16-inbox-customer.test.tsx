@@ -11,6 +11,7 @@ const VIEW: InboxCustomerView = {
   email: 'salma@example.com',
   lines: ['Signed in to the store', 'From the Layla page'],
   customerUrl: 'https://admin.shopify.com/store/maison/customers/7',
+  platform: 'shopify',
   order: {
     title: 'Order #1042',
     stage: 'Out for delivery with Bosta',
@@ -18,7 +19,7 @@ const VIEW: InboxCustomerView = {
     total: 'EGP 4,700, cash on delivery',
     items: ['Layla Embroidered Abaya'],
     trackingUrl: 'https://bosta.co/track/1',
-    shopifyUrl: 'https://admin.shopify.com/store/maison/orders?query=%231042',
+    adminUrl: 'https://admin.shopify.com/store/maison/orders?query=%231042',
   },
   cart: { items: [{ title: 'Zahra Occasion Abaya, M', price: 'EGP 3,900' }], total: 'Total EGP 3,900' },
   past: [{ id: 'c0', date: '21 October', status: 'Resolved', preview: 'Can I exchange the Riyadh abaya?' }],
@@ -38,7 +39,7 @@ describe('V16InboxCustomer', () => {
     const order = screen.getByRole('region', { name: 'Order #1042' });
     expect(order).toHaveTextContent('Out for delivery with Bosta');
     expect(order).toHaveTextContent('EGP 4,700, cash on delivery');
-    expect(within(order).getByRole('link', { name: /Open in Shopify/ })).toHaveAttribute('href', VIEW.order!.shopifyUrl);
+    expect(within(order).getByRole('link', { name: /Open in Shopify/ })).toHaveAttribute('href', VIEW.order!.adminUrl);
     expect(within(order).getByRole('link', { name: /Track the parcel/ })).toHaveAttribute('target', '_blank');
 
     expect(screen.getByRole('region', { name: 'In the cart' })).toHaveTextContent('Zahra Occasion Abaya, MEGP 3,900');

@@ -82,6 +82,17 @@ describe('getTryOnResultsFacts', () => {
     });
   });
 
+  it('reads a WooCommerce store’s looks under its site tenant and names no product it cannot', async () => {
+    const key = 'site:11111111-1111-4111-8111-111111111111';
+    const facts = await getTryOnResultsFacts({ shop: key, period: 30, now: NOW });
+    expect(mocks.calls).toEqual(expect.arrayContaining([['eq', 'shop', key]]));
+    expect(mocks.entitlement).toHaveBeenCalledWith(key);
+    expect(mocks.token).not.toHaveBeenCalled();
+    expect(mocks.graphql).not.toHaveBeenCalled();
+    expect(facts.products).toEqual({});
+    expect(facts.jobs).toHaveLength(3);
+  });
+
   it('reads again without the test-look filter before the column exists', async () => {
     mocks.error = { code: '42703', message: 'column tryon_jobs.is_test does not exist' };
     const facts = await getTryOnResultsFacts({ shop: SHOP, period: 7, now: NOW });

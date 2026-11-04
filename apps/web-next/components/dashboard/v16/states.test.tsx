@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock('@/app/dashboard/connect-shop/actions', () => ({ generateShopLinkCode: vi.fn() }));
 
-import { V16BackToSetUp, V16NeedsShopify, V16NoStore, V16StoreLookupFailed, V16StoreTaken } from './states';
+import { V16BackToSetUp, V16NeedsStore, V16NoStore, V16StoreLookupFailed, V16StoreTaken } from './states';
 import { getStatesCopy } from '@/lib/dashboard/states-copy';
 import { getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 
@@ -31,9 +31,9 @@ describe.each(['en', 'ar'] as const)('the dashboard states in %s', (locale) => {
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it.each(['tryOn', 'plan'] as const)('V16NeedsShopify for %s offers switching to a Shopify store the person has', (feature) => {
+  it.each(['tryOn', 'plan'] as const)('V16NeedsStore for %s offers switching to a Shopify store the person has', (feature) => {
     render(
-      <V16NeedsShopify
+      <V16NeedsStore
         locale={locale}
         feature={feature}
         shops={[
@@ -42,16 +42,17 @@ describe.each(['en', 'ar'] as const)('the dashboard states in %s', (locale) => {
         ]}
       />,
     );
-    expect(screen.getByRole('heading', { name: copy.needsShopify[feature].title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: copy.needsStore[feature].title })).toBeInTheDocument();
     const path = feature === 'tryOn' ? '/dashboard/try-on' : '/dashboard/plan';
-    expect(screen.getByRole('link', { name: copy.needsShopify.switchTo('kids') })).toHaveAttribute('href', `${path}?shop=kids.myshopify.com`);
+    expect(screen.getByRole('link', { name: copy.needsStore.switchTo('kids') })).toHaveAttribute('href', `${path}?shop=kids.myshopify.com`);
     expect(screen.getByRole('button', { name: connect.connectAnotherStore })).toBeInTheDocument();
   });
 
-  it('V16NeedsShopify with no Shopify store only offers to connect one', () => {
-    render(<V16NeedsShopify locale={locale} feature="tryOn" shops={[]} />);
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  it('V16NeedsStore with no Shopify store offers both ways to connect one, and no switch link', () => {
+    render(<V16NeedsStore locale={locale} feature="tryOn" shops={[]} />);
+    expect(screen.queryByRole('link', { name: /kids/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: connect.connectStore })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: copy.needsStore.wooAction })).toHaveAttribute('href', '/dashboard/store-chat');
   });
 
   it('V16StoreTaken points at the linking code in Try-On, and V16BackToSetUp at Set up', () => {
@@ -79,7 +80,7 @@ describe('states copy', () => {
     expect(ar.map(([key]) => key)).toEqual(en.map(([key]) => key));
     for (const [key, value] of ar) {
       expect(value.trim(), key).not.toBe('');
-      expect(value.replace(/X|Shopify|Store Chat/g, '').match(/[A-Za-z]{3,}/), `${key} still English`).toBeNull();
+      expect(value.replace(/X|Shopify|WooCommerce|GRINDCTRL|Store Chat/g, '').match(/[A-Za-z]{3,}/), `${key} still English`).toBeNull();
     }
   });
 });

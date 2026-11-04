@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireManagedTryOnShop } from '@/lib/shopify/shops';
+import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
 import { saveTryOnSettings } from '@/lib/try-on/settings';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
@@ -9,7 +9,7 @@ import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok: true } | MerchantActionFailure> {
   try {
   // Setting the shop up is for its owner and admins, not members (item 12).
-  const shop = await requireManagedTryOnShop(formData.get('shop') ?? 'default', { capability: 'settings' });
+  const shop = await requireManagedTenant(formData.get('shop') ?? 'default', { capability: 'settings' });
   await requireMerchantRateLimit(`shop:${shop}`);
   const loadingStepsRaw = String(formData.get('loading_steps') || '').trim();
   const loadingSteps = loadingStepsRaw

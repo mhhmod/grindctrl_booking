@@ -45,6 +45,10 @@ describe('grindctrl-store-chat.zip', () => {
       .sort();
     expect(sourceFiles).toEqual([
       'grindctrl-store-chat/grindctrl-store-chat.php',
+      'grindctrl-store-chat/includes/identity.php',
+      'grindctrl-store-chat/includes/orders.php',
+      'grindctrl-store-chat/includes/privacy.php',
+      'grindctrl-store-chat/includes/tryon.php',
       'grindctrl-store-chat/readme.txt',
       'grindctrl-store-chat/uninstall.php',
     ]);

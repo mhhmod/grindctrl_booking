@@ -11,6 +11,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MAX_BODY_BYTES = 4 * 1024;
+// A removed plugin gives the merchant two days to change their mind (and to
+// reinstall) before the site's shopper data is redacted.
+const REDACT_GRACE_MS = 48 * 60 * 60 * 1000;
+
+/** 0.2.0 plugins send no reason, and an unknown or unparsable body is also a
+ * plain disconnect: only an explicit 'uninstall' schedules redaction. */
+function disconnectReason(rawBody: string): 'uninstall' | 'deactivate' | 'manual' {
+  try {
+    const reason = (JSON.parse(rawBody) as { reason?: unknown } | null)?.reason;
+    return reason === 'uninstall' || reason === 'deactivate' ? reason : 'manual';
+  } catch {
+    return 'manual';
+  }
+}
 
 function json(body: Record<string, unknown>, status = 200) {
   return NextResponse.json(body, {
@@ -61,7 +75,17 @@ export async function POST(request: NextRequest) {
       .update({ status: 'uninstalled', uninstalled_at: nowIso, updated_at: nowIso })
       .eq('shop_domain', siteTenantKey(verified.siteId))
       .eq('status', 'installed');
-    if (connection.error || tenant.error) {
+    // Set once and never extended by a repeat. Not tied to status: a site
+    // deactivated earlier and uninstalled later is already disconnected.
+    const redaction = disconnectReason(rawBody) === 'uninstall'
+      ? await supabase
+        .from('woo_site_connections')
+        .update({ redact_after: new Date(Date.now() + REDACT_GRACE_MS).toISOString() })
+        .eq('widget_site_id', verified.siteId)
+        .eq('status', 'disconnected')
+        .is('redact_after', null)
+      : { error: null };
+    if (connection.error || tenant.error || redaction.error) {
       console.error('[woo] disconnect failed', { code: 'unavailable', siteId: verified.siteId });
       return json({ error: 'unavailable' }, 503);
     }

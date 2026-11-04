@@ -27,6 +27,7 @@ import type { MessengerConfig } from '@/lib/messenger/types';
 import type { PublicMessengerPayload } from '@/lib/messenger/public-api';
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import type { WooSiteConnectionSummary } from '@/lib/woo/connection';
+import { pluginSupportsOrderLookup, WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION } from '@/lib/woo/plugin-version';
 import { StorefrontDomains } from './storefront-domains';
 import { WoocommerceGuide, type CreateWooPairingCode } from './woocommerce-guide';
 import classes from './v16-chat-studio.module.css';
@@ -464,6 +465,8 @@ export function V16ChatStudio({
   const b = draft.behaviour;
   const ai = draft.ai;
   const shopify = Boolean(meta.domain && meta.domain.endsWith('.myshopify.com'));
+  const wooStore = !shopify && meta.wooConnection?.platform === 'woocommerce' && meta.wooConnection.status === 'active';
+  const wooOrdersReady = Boolean(wooStore && meta.wooConnection && pluginSupportsOrderLookup(meta.wooConnection.pluginVersion));
   const seen = meta.lastSeenMinutes;
   const rules = ai.handoffRules;
   const bigOrderAmount = new Intl.NumberFormat('en', {
@@ -737,7 +740,7 @@ export function V16ChatStudio({
               disabled={!draft.attachments.enabled}
               onChange={(triageEnabled) => update('attachments', { triageEnabled })}
             />
-            {shopify && (
+            {(shopify || wooStore) && (
               <SwitchRow
                 id={`${id}-orders`}
                 label={copy.orderLookup.label}
@@ -745,10 +748,17 @@ export function V16ChatStudio({
                 checked={draft.orderLookup.enabled}
                 onChange={(enabled) => update('orderLookup', { enabled })}
               >
-                <p className={meta.ordersAuthorized ? classes.ok : classes.muted}>
-                  {meta.ordersAuthorized && <GcIcon name="check" size={14} />}
-                  {meta.ordersAuthorized ? copy.orderAccess : copy.noOrderAccess}
-                </p>
+                {wooStore ? (
+                  <p className={wooOrdersReady ? classes.ok : classes.muted}>
+                    {wooOrdersReady && <GcIcon name="check" size={14} />}
+                    {wooOrdersReady ? copy.wooOrderReady : copy.wooOrderUpdate(WOO_ORDER_LOOKUP_MIN_PLUGIN_VERSION)}
+                  </p>
+                ) : (
+                  <p className={meta.ordersAuthorized ? classes.ok : classes.muted}>
+                    {meta.ordersAuthorized && <GcIcon name="check" size={14} />}
+                    {meta.ordersAuthorized ? copy.orderAccess : copy.noOrderAccess}
+                  </p>
+                )}
               </SwitchRow>
             )}
           </Section>

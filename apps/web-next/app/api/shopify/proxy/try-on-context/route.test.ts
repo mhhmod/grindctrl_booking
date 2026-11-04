@@ -25,6 +25,8 @@ vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: () => storeLaunchM
 vi.mock('@/lib/shopify/tokens', () => ({
   isActiveShopifyInstallation: vi.fn(async (shop: string, app: string) =>
     shop === 'demo.myshopify.com' && app === 'test-only-client-id'),
+  isActiveTenant: vi.fn(async (shop: string, app: string) =>
+    shop === 'demo.myshopify.com' && app === 'test-only-client-id'),
 }));
 
 vi.mock('@/lib/ratelimit', () => {

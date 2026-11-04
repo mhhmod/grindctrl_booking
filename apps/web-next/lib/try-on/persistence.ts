@@ -17,7 +17,7 @@ import {
   type CreditReservation,
   type ShopEntitlement,
 } from './entitlement';
-import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
+import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { TRYON_SESSION_TTL_SECONDS, type VerifiedTryOnSession } from './storefront-context';
 import {
@@ -147,7 +147,7 @@ function durableRowMatchesJob(
   return (
     row.session_id === job.sessionId &&
     row.product_id === job.productId &&
-    normalizeShopDomain(row.shop) === normalizedShop &&
+    normalizeTenantKey(row.shop) === normalizedShop &&
     row.request_key === job.requestKey
   );
 }
@@ -203,7 +203,7 @@ export async function persistGeneratedTryOnResult(
   if (job.status !== 'completed' || !job.resultImageUrl || !JOB_ID_RE.test(job.jobId)) {
     throw new TryOnResultPersistenceError(job.jobId);
   }
-  const normalizedShop = normalizeShopDomain(job.shop);
+  const normalizedShop = normalizeTenantKey(job.shop);
   if (!normalizedShop || !job.requestKey) {
     throw new TryOnResultPersistenceError(job.jobId);
   }
@@ -277,7 +277,7 @@ export async function loadAuthorizedDurableTryOnJob(
   const row = await selectDurableResultRow(jobId);
   if (!row) return null;
 
-  const rowShop = normalizeShopDomain(row.shop);
+  const rowShop = normalizeTenantKey(row.shop);
   if (
     row.session_id !== authorization.sessionId ||
     row.product_id !== authorization.productId ||
@@ -388,7 +388,7 @@ export async function releaseDurableTryOnResult(
     !row ||
     row.session_id !== authorization.sessionId ||
     row.product_id !== authorization.productId ||
-    normalizeShopDomain(row.shop) !== authorization.shop ||
+    normalizeTenantKey(row.shop) !== authorization.shop ||
     !row.result_storage_path ||
     row.result_deleted_at
   ) {
@@ -604,7 +604,7 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
     id: job.jobId,
     session_id: job.sessionId,
     product_id: job.productId,
-    shop: normalizeShopDomain(job.shop),
+    shop: normalizeTenantKey(job.shop),
     status: job.status,
     provider: job.meta.provider,
     cost_usd: job.meta.costEstimate,

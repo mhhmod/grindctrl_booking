@@ -44,6 +44,13 @@ describe('persistTryOnJob', () => {
     );
   });
 
+  it('records a site tenant key for a WooCommerce job', async () => {
+    const key = 'site:123e4567-e89b-42d3-a456-426614174000';
+    await persistTryOnJob(job(key.toUpperCase().replace('SITE:', 'site:')));
+
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({ shop: key }));
+  });
+
   it('records null for a public demo job', async () => {
     await persistTryOnJob(job(null));
 

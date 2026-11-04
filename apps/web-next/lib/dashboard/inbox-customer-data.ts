@@ -6,6 +6,7 @@ import { requireSiteAccess } from '@/lib/messenger/provisioning';
 import { parseCart } from '@/lib/messenger/cart';
 import type { OrderCard } from '@/lib/messenger/order-card';
 import type { InboxCustomerFacts } from './inbox-customer-model';
+import { loadActiveWooConnection } from '@/lib/woo/active-connection';
 
 const PAST_LIMIT = 5;
 const SHOP_DOMAIN_RE = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
@@ -71,6 +72,8 @@ export async function getInboxCustomerFacts({
   const identity = metadata.identity ?? null;
   const visitor = visitorRow.data as { user_email: string | null; user_name: string | null } | null;
   const domain = site.domain?.trim().toLowerCase() ?? '';
+  const shopDomain = SHOP_DOMAIN_RE.test(domain) ? domain : null;
+  const woo = shopDomain ? null : await loadActiveWooConnection(siteId).catch(() => null);
   const order = ((orderRows.data ?? [])[0] as { metadata?: { order_card?: OrderCard } } | undefined)?.metadata?.order_card ?? null;
 
   return {
@@ -84,6 +87,7 @@ export async function getInboxCustomerFacts({
     order,
     cart: parseCart(metadata.cart),
     past: past.map((row) => ({ id: row.id, startedAt: row.started_at, status: row.status, preview: firstLines.get(row.id) ?? null })),
-    shopDomain: SHOP_DOMAIN_RE.test(domain) ? domain : null,
+    shopDomain,
+    wooHomeUrl: woo?.homeUrl ?? null,
   };
 }

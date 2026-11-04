@@ -35,6 +35,9 @@ const mocks = vi.hoisted(() => ({
   patchConversationMetadata: vi.fn(async () => ({})),
   claimAiTurnWhileWaiting: vi.fn(async () => true),
   recordUnansweredQuestion: vi.fn(async () => 'stored'),
+  loadActiveWooConnection: vi.fn(),
+  callWooPlugin: vi.fn(),
+  verifyWooIdentityToken: vi.fn(),
 }));
 
 vi.hoisted(() => {
@@ -87,6 +90,15 @@ vi.mock('@/lib/messenger/conversations', async (importOriginal) => {
 vi.mock('@/lib/messenger/orders', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/messenger/orders')>();
   return { ...actual, lookupOrder: mocks.lookupOrder };
+});
+vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.loadActiveWooConnection }));
+vi.mock('@/lib/woo/plugin-client', () => ({
+  callWooPlugin: mocks.callWooPlugin,
+  WOO_PLUGIN_ORDER_LOOKUP_PATH: '/wp-json/grindctrl/v1/order-lookup',
+}));
+vi.mock('@/lib/woo/identity-token', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/woo/identity-token')>();
+  return { ...actual, verifyWooIdentityToken: mocks.verifyWooIdentityToken };
 });
 vi.mock('@/lib/messenger/escalate', () => ({ escalateAndNotify: mocks.escalateAndNotify }));
 vi.mock('@/lib/messenger/questions', () => ({ recordUnansweredQuestion: mocks.recordUnansweredQuestion }));
@@ -1031,5 +1043,78 @@ describe('item 11: the model reads the newest messages', () => {
     expect(history[history.length - 1].content).toBe('message 30');
     expect(history[0].content).toBe('message 15');
     expect(history.map((turn) => turn.content)).not.toContain('message 1');
+  });
+});
+
+/* WooCommerce: the same seam, answered by the plugin instead of Shopify. */
+describe('POST /api/messenger/send — WooCommerce order lookup', () => {
+  const WOO_SITE = { ...ORDER_SITE, domain: 'shop.example.com' };
+  const connection = { siteId: 'site-1', homeUrl: 'https://shop.example.com/', secretVersion: 1, pluginVersion: '0.3.0' };
+  const wooOrder = {
+    id: 1234, number: '1234', status: 'processing', createdAt: '2026-08-01T10:00:00Z', paid: true, total: '100.00',
+    currency: 'EGP', paymentMethod: 'bacs', items: [{ name: 'Abaya', quantity: 1 }], shippingMethod: null, tracking: null, destination: null,
+  };
+
+  beforeEach(() => {
+    mocks.loadPublicSite.mockResolvedValue(WOO_SITE);
+    // A fresh metadata object: the route spends lookup attempts on it in place.
+    mocks.getConversationForVisitor.mockResolvedValue({ ...CONVERSATION, metadata: {} });
+    mocks.loadActiveWooConnection.mockResolvedValue(connection);
+    mocks.phraseOrderAnswer.mockResolvedValue('Your order is being prepared.');
+  });
+
+  it('looks a guest order up through the plugin with the number and email, not through Shopify', async () => {
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [wooOrder] } });
+
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect(mocks.lookupOrder).not.toHaveBeenCalled();
+    expect(mocks.callWooPlugin).toHaveBeenCalledWith(connection, '/wp-json/grindctrl/v1/order-lookup', { mode: 'guest', email: 'a@b.com', orderNumber: '1234' });
+    expect(mocks.phraseOrderAnswer.mock.calls[0][0].facts).toMatchObject({ order_number: '1234', payment_state: 'paid' });
+  });
+
+  it('uses the verified WordPress customer from the conversation, never one the model wrote', async () => {
+    mocks.getConversationForVisitor.mockResolvedValue({
+      ...CONVERSATION,
+      metadata: { identity: { customer_id: '42', woo_customer_id: '42', verified: true } },
+    });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com', customer_id: '999', wp_user_id: 999 }));
+    mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [wooOrder] } });
+
+    await POST(makeRequest(validBody));
+    expect(mocks.callWooPlugin.mock.calls[0][2]).toEqual({ mode: 'customer', wpUserId: 42, limit: 1, orderNumber: '1234' });
+  });
+
+  it('treats an unverified identity flag as a guest', async () => {
+    mocks.getConversationForVisitor.mockResolvedValue({
+      ...CONVERSATION,
+      metadata: { identity: { customer_id: '42', verified: false } },
+    });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [] } });
+
+    await POST(makeRequest(validBody));
+    expect(mocks.callWooPlugin.mock.calls[0][2]).toMatchObject({ mode: 'guest' });
+  });
+
+  it('does not offer or run order lookup on a plugin older than 0.3.0', async () => {
+    mocks.loadActiveWooConnection.mockResolvedValue({ ...connection, pluginVersion: '0.2.0' });
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect(mocks.callWooPlugin).not.toHaveBeenCalled();
+    expect(mocks.generateAssistantReply.mock.calls[0][0].prompt).toBeDefined();
+  });
+
+  it('answers a plugin outage as unavailable without leaking a reason', async () => {
+    stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+    mocks.callWooPlugin.mockResolvedValue({ ok: false, reason: 'unavailable' });
+
+    const res = await POST(makeRequest(validBody));
+    const data = await res.json();
+    expect(JSON.stringify(data)).not.toContain('unavailable"');
+    expect(mocks.phraseOrderAnswer).not.toHaveBeenCalled();
   });
 });

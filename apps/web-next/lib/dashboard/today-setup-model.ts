@@ -23,8 +23,11 @@ export const MINUTES_PER_STEP = 2;
 export type TodaySetupFacts = {
   /** The store's name as the store switcher shows it. */
   store: string;
-  /** The Shopify shop. */
+  /** The store's tenant key: the Shopify shop, or `site:<id>` for WooCommerce. */
   shop: string;
+  /** A WooCommerce store's WordPress editors, in place of Shopify's links. */
+  platform?: 'woocommerce';
+  wpAdmin?: { siteEditor: string; customizer: string } | null;
   /** When Store Chat's loader last booted on the store, if ever. */
   chatSeenAt: string | null;
   /** A look has been started on the store (a test look counts). */
@@ -58,16 +61,20 @@ export type TodaySetupView = {
   steps: SetupStep[];
   pieces: ThemePiece[];
   addButtonHref: string;
+  addButtonHint: string;
   holdoutAvailable: boolean;
 };
 
 export function buildTodaySetupView(facts: TodaySetupFacts, copy: TodaySetupCopy): TodaySetupView {
+  const woo = facts.platform === 'woocommerce';
   const pieces: ThemePiece[] = [
-    { key: 'chat', name: copy.chatEmbed, ready: facts.chatSeenAt !== null, href: appEmbedActivationUrl(facts.shop, 'messenger') },
+    woo
+      ? { key: 'chat', name: copy.chatPlugin, ready: facts.chatSeenAt !== null, href: null }
+      : { key: 'chat', name: copy.chatEmbed, ready: facts.chatSeenAt !== null, href: appEmbedActivationUrl(facts.shop, 'messenger') },
     { key: 'tryOn', name: copy.tryOnBlock, ready: facts.storeLook, href: null },
   ];
   const steps: SetupStep[] = [
-    { key: 'connected', number: 1, title: copy.connected, done: true, line: facts.shop },
+    { key: 'connected', number: 1, title: copy.connected, done: true, line: woo ? facts.store : facts.shop },
     { key: 'theme', number: 2, title: copy.theme, done: pieces.every((piece) => piece.ready), line: null },
     { key: 'tryIt', number: 3, title: copy.tryIt, done: facts.testLook, line: null },
     { key: 'goLive', number: 4, title: copy.goLive, done: false, line: null },
@@ -80,7 +87,8 @@ export function buildTodaySetupView(facts: TodaySetupFacts, copy: TodaySetupCopy
     current: steps.find((step) => !step.done)?.key ?? 'goLive',
     steps,
     pieces,
-    addButtonHref: productBlockAddUrl(facts.shop, 'tryon'),
+    addButtonHref: woo ? (facts.wpAdmin?.siteEditor ?? '/dashboard/try-on/setup') : productBlockAddUrl(facts.shop, 'tryon'),
+    addButtonHint: woo ? copy.addButtonHintWoo : copy.addButtonHint,
     holdoutAvailable: facts.holdoutAvailable,
   };
 }

@@ -79,6 +79,9 @@ export interface ChatStudioCopy {
   orderLookup: Pair;
   orderAccess: string;
   noOrderAccess: string;
+  /** WooCommerce: the plugin answers order lookups, from plugin 0.3.0. */
+  wooOrderReady: string;
+  wooOrderUpdate: (version: string) => string;
   alerted: Pair;
   emailAlerts: Pair;
   alertEmails: string;
@@ -111,6 +114,8 @@ export interface ChatStudioCopy {
     pluginVersion: (version: string) => string;
     lastSeen: (at: string) => string;
     neverSeen: string;
+    cloneWarning: string;
+    updatePlugin: string;
     steps: { download: string; upload: string; code: string; connect: string; domain: string };
   };
   domains: {
@@ -241,6 +246,8 @@ const en: ChatStudioCopy = {
   orderLookup: { label: 'Look up order status and tracking', body: 'With the order number and the email on the order.' },
   orderAccess: 'Order access approved for this store',
   noOrderAccess: 'Order access isn’t approved for this store yet.',
+  wooOrderReady: 'Order lookup: ready. The plugin answers it from your store.',
+  wooOrderUpdate: (version) => `Update the plugin to ${version} or later to turn this on.`,
   alerted: { label: 'Who gets alerted', body: 'When a shopper needs a person.' },
   emailAlerts: { label: 'Email when a shopper needs a person', body: 'Up to 5 addresses, at most 10 emails an hour.' },
   alertEmails: 'Alert emails',
@@ -280,6 +287,9 @@ const en: ChatStudioCopy = {
     pluginVersion: (version) => `Plugin version ${version}`,
     lastSeen: (at) => `Last heartbeat ${at}`,
     neverSeen: 'No heartbeat received yet.',
+    cloneWarning:
+      'This connection is reporting a different website address than the one it was paired with. If this is a copy or a staging site, pair the original store again with a new connection code.',
+    updatePlugin: 'Update the plugin: this version is older than the one GRINDCTRL supports. Download the latest zip and upload it in WordPress.',
     steps: {
       download: 'Download the plugin and keep it zipped. WordPress installs the zip file as it is.',
       upload: 'In WordPress, go to Plugins, then Add New, then Upload Plugin. Choose the file, install it and activate it.',
@@ -412,6 +422,8 @@ const ar: ChatStudioCopy = {
   orderLookup: { label: 'استعلم عن حالة الطلب وتتبّعه', body: 'برقم الطلب والبريد الإلكتروني المسجل في الطلب.' },
   orderAccess: 'تمت الموافقة على الوصول إلى الطلبات لهذا المتجر',
   noOrderAccess: 'لم تتم الموافقة على الوصول إلى الطلبات لهذا المتجر بعد.',
+  wooOrderReady: 'الاستعلام عن الطلبات: جاهز. تجيب عنه الإضافة من متجرك.',
+  wooOrderUpdate: (version) => `حدّث الإضافة إلى الإصدار ${version} أو أحدث لتفعيل هذا.`,
   alerted: { label: 'من يصله التنبيه', body: 'عندما يحتاج متسوق إلى شخص من الفريق.' },
   emailAlerts: { label: 'أرسل بريدًا إلكترونيًا عندما يحتاج متسوق إلى شخص من الفريق', body: 'حتى 5 عناوين، وبحد أقصى 10 رسائل في الساعة.' },
   alertEmails: 'عناوين بريد التنبيهات',
@@ -451,6 +463,9 @@ const ar: ChatStudioCopy = {
     pluginVersion: (version) => `إصدار الإضافة ${version}`,
     lastSeen: (at) => `آخر نبضة اتصال ${at}`,
     neverSeen: 'لم تصل نبضة اتصال بعد.',
+    cloneWarning:
+      'يُبلّغ هذا الاتصال عن عنوان موقع مختلف عن العنوان الذي ارتبط به. إذا كان نسخة أو موقعاً تجريبياً، اربط المتجر الأصلي من جديد برمز اتصال جديد.',
+    updatePlugin: 'حدّث الإضافة: هذا الإصدار أقدم من الإصدار الذي تدعمه GRINDCTRL. نزّل أحدث ملف مضغوط وارفعه في WordPress.',
     steps: {
       download: 'نزّل الإضافة وأبقها مضغوطة. يثبّت WordPress ملف ZIP كما هو.',
       upload: 'في WordPress افتح Plugins ثم Add New ثم Upload Plugin. اختر الملف وثبّته ثم فعّل الإضافة.',

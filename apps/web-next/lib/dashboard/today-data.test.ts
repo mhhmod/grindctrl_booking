@@ -112,3 +112,16 @@ describe('getTodayFacts', () => {
     expect(mocks.entitlement).not.toHaveBeenCalled();
   });
 });
+
+describe('getTodayFacts for a paired WooCommerce store', () => {
+  it('reads the plan and looks under the site tenant, with no shop list lookup', async () => {
+    const key = `site:${STORE.siteId}`;
+    const woo = { shopDomain: null, siteId: STORE.siteId, tenantKey: key, platform: 'woocommerce' as const };
+    mocks.shops.mockResolvedValue([]);
+    const facts = await getTodayFacts({ activeStore: woo, role: 'owner', timeZone: 'Africa/Cairo', now: NOW });
+    expect(mocks.entitlement).toHaveBeenCalledWith(key);
+    expect(facts.tryOn).toMatchObject({ looksLast7: 2, looksToday: 1, looksLeft: 150 });
+    expect(facts.chat).not.toBeNull();
+    expect(mocks.shops).not.toHaveBeenCalled();
+  });
+});

@@ -22,7 +22,9 @@ export interface InboxCustomerCopy {
   paid: (total: string) => string;
   track: string;
   openInShopify: string;
+  openInWooCommerce: string;
   openCustomer: string;
+  openCustomerWooCommerce: string;
   inCart: string;
   cartTotal: (total: string) => string;
   pastConversations: string;
@@ -57,7 +59,9 @@ const en: InboxCustomerCopy = {
   paid: (total) => `${total}, paid`,
   track: 'Track the parcel',
   openInShopify: 'Open in Shopify',
+  openInWooCommerce: 'Open in WooCommerce',
   openCustomer: 'Open the customer in Shopify',
+  openCustomerWooCommerce: 'Open the customer in WordPress',
   inCart: 'In the cart',
   cartTotal: (total) => `Total ${total}`,
   pastConversations: 'Past conversations',
@@ -92,7 +96,9 @@ const ar: InboxCustomerCopy = {
   paid: (total) => `${total}، مدفوع`,
   track: 'تتبّع الشحنة',
   openInShopify: 'افتح في Shopify',
+  openInWooCommerce: 'افتح في WooCommerce',
   openCustomer: 'افتح العميل في Shopify',
+  openCustomerWooCommerce: 'افتح العميل في WordPress',
   inCart: 'في السلة',
   cartTotal: (total) => `الإجمالي ${total}`,
   pastConversations: 'المحادثات السابقة',

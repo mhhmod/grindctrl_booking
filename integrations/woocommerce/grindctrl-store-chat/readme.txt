@@ -1,14 +1,14 @@
 === GRINDCTRL Store Chat ===
 Contributors: grindctrl
-Tags: chat, woocommerce, customer support, live chat
+Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Adds GRINDCTRL Store Chat to your site, with the product a shopper is viewing on WooCommerce product pages.
+Adds GRINDCTRL Store Chat and AI Virtual Try-On to your WooCommerce store.
 
 == Description ==
 
@@ -24,7 +24,11 @@ Once connected, the plugin sends a short daily check-in so the dashboard can sho
 
 On WooCommerce product pages the chat can show the product and option the shopper picked, and, when your Store Chat rules ask for it, read the shopper's cart from your store's own Store API in their browser.
 
-AI Virtual Try-On is not part of this plugin.
+Order status and tracking in chat: shoppers can ask about an order. Logged-in shoppers are recognised without typing their email; guests confirm with their email and order number.
+
+AI Virtual Try-On: a Try it on button on product pages (and optionally on product listings), the shortcode `[grindctrl_tryon]` and the block "GRINDCTRL Try-On button". Shoppers upload a photo and see the product on themselves, then add it to the cart. Requires a connected site, a verified domain and Try-On turned on in the GRINDCTRL dashboard.
+
+Privacy requests: the plugin adds a personal data exporter and eraser, so Tools, then Export Personal Data or Erase Personal Data, include or remove a shopper's GRINDCTRL chats.
 
 == External services ==
 
@@ -35,12 +39,17 @@ This plugin loads a script from grindctrl.cloud, the GRINDCTRL service that runs
 * On every page where the chat is shown, the visitor's browser loads https://grindctrl.cloud/widget/v1/messenger.js and sends the page address and your embed key to GRINDCTRL to load your chat settings.
 * When a visitor opens the chat, the messages they write, the page they are on, an anonymous visitor id and, on WooCommerce pages, the product they are viewing and a summary of their cart are sent to GRINDCTRL to answer them.
 
+* When a shopper asks about an order, GRINDCTRL sends a signed request to this site's REST route /wp-json/grindctrl/v1/order-lookup. The plugin returns only the order number, status, date, totals, item names and quantities, shipping method, tracking and the city and country, never customer notes, phone, email or street addresses.
+* For a logged-in shopper, the browser asks this site's REST route /wp-json/grindctrl/v1/identity for a short-lived signed token holding the WordPress user id and a hash of the account email, and passes it to the chat.
+* On pages with a Try-On button the browser loads https://grindctrl.cloud/widget/v1/tryon-woo.js, and the plugin reads https://grindctrl.cloud/api/woo/tryon-config (public; embed key and language). When a shopper taps Try it on, the plugin sends a signed request to https://grindctrl.cloud/api/woo/tryon-context with the product title, product page URL, product image URL and a one-way salted hash of the visitor's IP address and browser, never the raw address. The Try-On panel is a frame from grindctrl.cloud, and the shopper's photo goes from their browser straight to GRINDCTRL.
+* When you run Export or Erase Personal Data, the plugin sends the email address you entered, signed with the site's secret, to https://grindctrl.cloud/api/woo/privacy/export or https://grindctrl.cloud/api/woo/privacy/erase.
+
 GRINDCTRL terms: https://grindctrl.cloud/terms
 GRINDCTRL privacy policy: https://grindctrl.cloud/privacy
 
 == Privacy ==
 
-The plugin stores its settings in your WordPress database: the embed key, where the chat is shown, and, once connected, the connection details (site id, a secret used to sign requests to GRINDCTRL, its version, the connection status and the last connection error). The secret is kept out of autoloaded options and is removed when you disconnect or delete the plugin. It stores no visitor data in WordPress, so it adds no personal data exporter or eraser. Chat conversations are kept by GRINDCTRL and managed from the GRINDCTRL dashboard. The plugin adds suggested text to your site's privacy policy guide.
+The plugin stores its settings in your WordPress database: the embed key, where the chat is shown, and, once connected, the connection details (site id, a secret used to sign requests to GRINDCTRL, its version, the connection status and the last connection error). The secret is kept out of autoloaded options and is removed when you disconnect or delete the plugin. It stores no visitor data in WordPress. Conversations are kept by GRINDCTRL. The plugin adds a personal data exporter and eraser, so Tools, then Export Personal Data or Erase Personal Data, include or remove a shopper's GRINDCTRL chats, matched on the email they gave in the chat. If you delete the plugin, GRINDCTRL deletes this site's chat records 48 hours later. The plugin adds suggested text to your site's privacy policy guide.
 
 == Frequently Asked Questions ==
 
@@ -65,6 +74,11 @@ Under Advanced on the settings page you can enter the embed key by hand. The cha
 The script loads asynchronously in the footer, and the chat window only loads when a shopper shows interest in it.
 
 == Changelog ==
+
+= 0.3.0 =
+* Order status and tracking in chat, with logged-in shoppers recognised automatically.
+* AI Virtual Try-On: product-page button, listing pills, shortcode and block, with add to cart from the result.
+* Personal data exporter and eraser for GRINDCTRL chats; deleting the plugin schedules this site's GRINDCTRL data for deletion after 48 hours.
 
 = 0.2.0 =
 * Connect the site with a one-time connection code from the GRINDCTRL dashboard.

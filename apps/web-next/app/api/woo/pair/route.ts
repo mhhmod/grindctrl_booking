@@ -235,6 +235,8 @@ export async function POST(request: NextRequest) {
       paired_at: nowIso,
       last_seen_at: nowIso,
       disconnected_at: null,
+      redact_after: null,
+      redacted_at: null,
       paired_by: pairing.created_by,
     }, { onConflict: 'widget_site_id' });
     if (connectionWrite.error) return fail('unavailable', 503, siteId);

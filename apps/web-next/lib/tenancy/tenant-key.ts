@@ -40,3 +40,14 @@ export function tenantPlatform(key: unknown): TenantPlatform | null {
   if (!normalized) return null;
   return isSiteTenantKey(normalized) ? 'site' : 'shopify';
 }
+
+/** The store-flags key for a tenant: a Shopify domain, or the widget site
+ * behind a `site:<uuid>` tenant. Structurally a `FlagStore`. */
+export function flagStoreForTenant(
+  tenant: string | null,
+): { shopDomain: string } | { widgetSiteId: string } | null {
+  if (!tenant) return null;
+  return isSiteTenantKey(tenant)
+    ? { widgetSiteId: tenant.slice(SITE_TENANT_PREFIX.length) }
+    : { shopDomain: tenant };
+}

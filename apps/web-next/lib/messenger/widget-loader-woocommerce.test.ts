@@ -169,4 +169,64 @@ describe('Store Chat on a WooCommerce store', () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(fetchMock.mock.calls.map((call) => String(call[0])).some((url) => url.includes('elsewhere.example'))).toBe(false);
   });
+
+  describe('a logged-in WordPress shopper', () => {
+    const identityUrl = () => `${window.location.origin}/wp-json/grindctrl/v1/identity`;
+
+    // Let the panel's open animation frame run before the page is torn down.
+    afterEach(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    });
+
+    function bootWithIdentity(respond: () => Response) {
+      (window as { grindctrlWoo?: Record<string, unknown> }).grindctrlWoo!.restNonce = 'abc123nonce';
+      (window as { grindctrlWoo?: Record<string, unknown> }).grindctrlWoo!.identityUrl = identityUrl();
+      fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/messenger/config')) return new Response(JSON.stringify(config), { status: 200 });
+        if (url.startsWith(identityUrl())) return respond();
+        return new Response('{}', { status: 200 });
+      });
+      vi.stubGlobal('fetch', fetchMock);
+      const script = document.createElement('script');
+      script.setAttribute('data-key', config.key);
+      script.setAttribute('data-app-origin', 'https://grindctrl.cloud');
+      Object.defineProperty(document, 'currentScript', { value: script, configurable: true });
+      window.eval(loader);
+    }
+
+    it("asks the plugin's route with the session id, the site's cookie and the REST nonce, then hands the panel the token", async () => {
+      bootWithIdentity(() => new Response(JSON.stringify({ token: 'gcw1.payload.signature' }), { status: 200 }));
+      await waitFor(() => expect(fetchMock.mock.calls.some((call) => String(call[0]).startsWith(identityUrl()))).toBe(true));
+      const call = fetchMock.mock.calls.find((c) => String(c[0]).startsWith(identityUrl()))!;
+      expect(String(call[0])).toMatch(/[?&]sid=[A-Za-z0-9_-]{8,64}/);
+      expect(call[1]).toMatchObject({ credentials: 'same-origin', headers: { 'X-WP-Nonce': 'abc123nonce' } });
+
+      const frame = await openPanel();
+      const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+      window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-messenger:identity-request' }, source: frame.contentWindow }));
+      await waitFor(() => expect(messagesOfType(posted, 'grindctrl-messenger:identify')).toHaveLength(1));
+      expect(messagesOfType(posted, 'grindctrl-messenger:identify')[0]).toMatchObject({ token: 'gcw1.payload.signature' });
+      // Memory only: nothing about the shopper is written to storage.
+      expect(Object.keys(window.localStorage).some((key) => key.includes('token'))).toBe(false);
+    });
+
+    it('tells the panel nobody is signed in when the plugin refuses', async () => {
+      bootWithIdentity(() => new Response('{}', { status: 401 }));
+      const frame = await openPanel();
+      const posted = vi.spyOn(frame.contentWindow!, 'postMessage');
+      window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-messenger:identity-request' }, source: frame.contentWindow }));
+      await waitFor(() => expect(messagesOfType(posted, 'grindctrl-messenger:identify')).toHaveLength(1));
+      expect(messagesOfType(posted, 'grindctrl-messenger:identify')[0]).toMatchObject({ token: null });
+    });
+
+    it('never sends the nonce or the cookie to another origin', async () => {
+      (window as { grindctrlWoo?: Record<string, unknown> }).grindctrlWoo!.restNonce = 'abc123nonce';
+      (window as { grindctrlWoo?: Record<string, unknown> }).grindctrlWoo!.identityUrl = 'https://elsewhere.example/wp-json/grindctrl/v1/identity';
+      boot();
+      await openPanel();
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(fetchMock.mock.calls.map((call) => String(call[0])).some((url) => url.includes('elsewhere.example'))).toBe(false);
+    });
+  });
 });

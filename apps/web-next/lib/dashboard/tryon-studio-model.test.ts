@@ -8,6 +8,7 @@ import {
   settingsFromDraft,
   studioFormData,
   themeEditorUrl,
+  wpAdminUrls,
 } from './tryon-studio-model';
 import { getTryOnStudioCopy } from './tryon-studio-copy';
 
@@ -118,5 +119,19 @@ describe('the corners and the theme editor', () => {
     const ar = getTryOnStudioCopy('ar');
     expect([1, 2, 3, 11].map(ar.unsaved)).toEqual(['تغيير واحد غير محفوظ', 'تغييران غير محفوظين', '3 تغييرات غير محفوظة', '11 تغييراً غير محفوظ']);
     expect(getTryOnStudioCopy('en').unsaved(2)).toBe('2 unsaved changes');
+  });
+});
+
+describe('wpAdminUrls', () => {
+  it('builds the Site Editor and Customizer links from the paired address, keeping a subfolder', () => {
+    expect(wpAdminUrls('https://shop.example.com')).toEqual({
+      siteEditor: 'https://shop.example.com/wp-admin/site-editor.php',
+      customizer: 'https://shop.example.com/wp-admin/customize.php',
+    });
+    expect(wpAdminUrls('https://example.com/store/')?.siteEditor).toBe('https://example.com/store/wp-admin/site-editor.php');
+  });
+
+  it.each(['http://shop.example.com', 'javascript:alert(1)', 'https://u:p@example.com', 'not a url', ''])('refuses %j', (value) => {
+    expect(wpAdminUrls(value)).toBeNull();
   });
 });

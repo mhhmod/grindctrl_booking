@@ -195,6 +195,8 @@ describe('POST /api/woo/pair', () => {
       plugin_version: '0.2.0',
       paired_by: 'user_clerk_1',
       disconnected_at: null,
+      redact_after: null,
+      redacted_at: null,
     });
     expect(find('tryon_shops', 'upsert')!.payload).toMatchObject({
       shop_domain: `site:${SITE_ID}`,

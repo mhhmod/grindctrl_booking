@@ -1,3 +1,4 @@
+import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { loadPublicSite, originAllowed, toPublicPayload } from '@/lib/messenger/public-api';
@@ -78,7 +79,10 @@ export default async function EmbedMessengerPage({
            here, where the shopper has opened the chat, rather than on the
            loader's config call that every page view makes. */
         const teamReplyMinutesNow = features.includes('v16_chat') ? await teamReplyMinutes(site.id) : null;
-        payload = toPublicPayload(site, new Date(), features, { teamReplyMinutes: teamReplyMinutesNow });
+        payload = toPublicPayload(site, new Date(), features, {
+          teamReplyMinutes: teamReplyMinutesNow,
+          orderProviderAvailable: features.includes('v16_chat') ? Boolean(await resolveOrderProvider(site)) : undefined,
+        });
         // Signed with the primary app's secret; verifyOriginTokenAnyApp
         // (lib/messenger/identity.ts) checks it against every configured
         // app, so this only needs to pick one to sign with.

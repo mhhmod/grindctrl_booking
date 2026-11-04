@@ -63,3 +63,25 @@ describe('buildTodaySetupView', () => {
     expect(buildTodaySetupView(FACTS, ar).title).toBe('جهّز Maison Noor للإطلاق');
   });
 });
+
+describe('buildTodaySetupView for a WooCommerce store', () => {
+  const WOO: TodaySetupFacts = {
+    ...FACTS,
+    shop: 'site:11111111-1111-4111-8111-111111111111',
+    platform: 'woocommerce',
+    wpAdmin: { siteEditor: 'https://shop.example.com/wp-admin/site-editor.php', customizer: 'https://shop.example.com/wp-admin/customize.php' },
+  };
+
+  it('points at WordPress, names the store, and links no Shopify page', () => {
+    const view = buildTodaySetupView(WOO, en);
+    expect(view.steps[0].line).toBe('Maison Noor');
+    expect(view.addButtonHref).toBe('https://shop.example.com/wp-admin/site-editor.php');
+    expect(view.addButtonHint).toBe(en.addButtonHintWoo);
+    expect(view.pieces[0]).toMatchObject({ name: en.chatPlugin, href: null });
+    expect(JSON.stringify(view)).not.toContain('admin.shopify.com');
+  });
+
+  it('falls back to Set up when the paired address cannot be turned into an editor link', () => {
+    expect(buildTodaySetupView({ ...WOO, wpAdmin: null }, en).addButtonHref).toBe('/dashboard/try-on/setup');
+  });
+});

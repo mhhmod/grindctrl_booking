@@ -3,7 +3,7 @@
  * Plugin Name:       GRINDCTRL Store Chat
  * Plugin URI:        https://grindctrl.cloud
  * Description:       Adds GRINDCTRL Store Chat to your store. On WooCommerce product pages it shares the product the shopper is viewing with the chat.
- * Version:           0.2.0
+ * Version:           0.3.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Grind CTRL
@@ -16,12 +16,16 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'GRINDCTRL_SC_VERSION', '0.2.0' );
+define( 'GRINDCTRL_SC_VERSION', '0.3.0' );
 // Overridable from wp-config.php to point a test site at a GRINDCTRL staging server.
 defined( 'GRINDCTRL_SC_SCRIPT' ) || define( 'GRINDCTRL_SC_SCRIPT', 'https://grindctrl.cloud/widget/v1/messenger.js' );
 defined( 'GRINDCTRL_SC_DASHBOARD' ) || define( 'GRINDCTRL_SC_DASHBOARD', 'https://grindctrl.cloud/dashboard/store-chat/setup' );
 defined( 'GRINDCTRL_SC_API_BASE' ) || define( 'GRINDCTRL_SC_API_BASE', 'https://grindctrl.cloud' );
 define( 'GRINDCTRL_SC_HEARTBEAT_HOOK', 'grindctrl_sc_daily_heartbeat' );
+require_once __DIR__ . '/includes/orders.php';
+require_once __DIR__ . '/includes/identity.php';
+require_once __DIR__ . '/includes/tryon.php';
+require_once __DIR__ . '/includes/privacy.php';
 
 /*
  * The embed key names the store's Store Chat. It is public: it ships in the
@@ -302,7 +306,7 @@ function grindctrl_sc_send_heartbeat() {
 	grindctrl_sc_clear_last_error();
 }
 
-function grindctrl_sc_disconnect_remote( $timeout = 3 ) {
+function grindctrl_sc_disconnect_remote( $timeout = 3, $reason = 'manual' ) {
 	if ( null === grindctrl_sc_connection_credentials() ) {
 		return true;
 	}
@@ -312,6 +316,7 @@ function grindctrl_sc_disconnect_remote( $timeout = 3 ) {
 			array(
 				'homeUrl'       => home_url( '/' ),
 				'pluginVersion' => GRINDCTRL_SC_VERSION,
+				'reason'        => $reason,
 			),
 			true,
 			$timeout
@@ -350,7 +355,7 @@ function grindctrl_sc_forget_connection() {
 }
 
 function grindctrl_sc_deactivate() {
-	$result = grindctrl_sc_disconnect_remote();
+	$result = grindctrl_sc_disconnect_remote( 3, 'deactivate' );
 	if ( is_wp_error( $result ) ) {
 		grindctrl_sc_set_last_error( $result );
 	} else {

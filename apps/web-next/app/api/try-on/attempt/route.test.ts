@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { activeInstallationMock } = vi.hoisted(() => ({ activeInstallationMock: vi.fn() }));
-vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock }));
+vi.mock('@/lib/shopify/tokens', () => ({ isActiveShopifyInstallation: activeInstallationMock, isActiveTenant: activeInstallationMock }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: vi.fn(async () => ({ success: true, reset: Date.now() + 10_000 })) },

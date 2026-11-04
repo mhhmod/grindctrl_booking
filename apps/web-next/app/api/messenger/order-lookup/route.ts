@@ -3,9 +3,10 @@ import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from 
 import { publicApiRatelimit, clientIp } from '@/lib/ratelimit';
 import { resolveShopperSession } from '@/lib/messenger/public-session';
 import { appendMessage, recordAudit, recordEvent, updateConversationMetadata } from '@/lib/messenger/conversations';
-import { lookupGuestOrderCard, ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
+import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
+import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 import { orderLookupLimiter, orderNumberLimiter } from '@/lib/messenger/order-limits';
-import { maskEmail, normalizeOrderNumber, ORDER_CONTACT_EMAIL_RE, orderShopDomain } from '@/lib/messenger/order-card';
+import { maskEmail, normalizeOrderNumber, ORDER_CONTACT_EMAIL_RE } from '@/lib/messenger/order-card';
 import { ORDER_DENIED, ORDER_UNAVAILABLE, orderFoundLine } from '@/lib/messenger/order-copy';
 import { pickLocalized } from '@/lib/messenger/ai';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
@@ -72,8 +73,8 @@ export async function POST(request: NextRequest) {
     if (!features.includes('v16_chat')) {
       return NextResponse.json({ ok: false, error: 'not_enabled' }, { status: 404 });
     }
-    const shopDomain = orderShopDomain(site.domain);
-    if (!site.config.orderLookup.enabled || !shopDomain) {
+    const provider = site.config.orderLookup.enabled ? await resolveOrderProvider(site) : null;
+    if (!provider) {
       return NextResponse.json({ ok: false, error: 'not_enabled' }, { status: 404 });
     }
 
@@ -97,8 +98,7 @@ export async function POST(request: NextRequest) {
 
     const outcome =
       gate === 'open'
-        ? await lookupGuestOrderCard({
-            shopDomain,
+        ? await provider.lookupGuestCard({
             orderNumber,
             email: contact,
             withAmounts: features.includes('n47_order_cards'),

@@ -9,11 +9,13 @@ const mocks = vi.hoisted(() => ({
   lastSeen: vi.fn(),
   shops: vi.fn(),
   sites: vi.fn(),
+  woo: vi.fn(),
   /** Rows for a read of tryon_jobs, by whether it asked for test looks only. */
   looks: { any: [] as unknown[], test: [] as unknown[] },
   error: { any: null as null | { message: string }, test: null as null | { message: string } },
 }));
 
+vi.mock('@/lib/woo/connection', () => ({ getActiveWooSiteContext: mocks.woo }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.launch }));
 vi.mock('@/lib/messenger/conversations', () => ({ getWidgetLastSeenAt: mocks.lastSeen }));
 vi.mock('./active-store-server', () => ({ listDashboardShops: mocks.shops, listDashboardSites: mocks.sites }));
@@ -102,5 +104,21 @@ describe('getTodaySetupFacts', () => {
     const facts = await getTodaySetupFacts({ activeStore: { shopDomain: 'maison-noor.myshopify.com', siteId: null }, holdoutAvailable: false, now: NOW });
     expect(facts).toMatchObject({ store: 'maison-noor', chatSeenAt: null });
     expect(mocks.lastSeen).not.toHaveBeenCalled();
+  });
+
+  it('sets up a paired WooCommerce store under its site tenant, with its WordPress editors', async () => {
+    const key = `site:${SITE}`;
+    mocks.shops.mockResolvedValue([]);
+    mocks.sites.mockResolvedValue([{ id: SITE, name: 'Kids', domain: 'kids.example', woo: true }]);
+    mocks.woo.mockResolvedValue({ homeUrl: 'https://kids.example', timezone: null });
+    const store = { shopDomain: null, siteId: SITE, tenantKey: key, platform: 'woocommerce' as const };
+    const facts = await getTodaySetupFacts({ activeStore: store, holdoutAvailable: false, now: NOW });
+    expect(mocks.launch).toHaveBeenCalledWith(key, NOW);
+    expect(facts).toMatchObject({
+      store: 'Kids',
+      shop: key,
+      platform: 'woocommerce',
+      wpAdmin: { siteEditor: 'https://kids.example/wp-admin/site-editor.php', customizer: 'https://kids.example/wp-admin/customize.php' },
+    });
   });
 });

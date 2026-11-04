@@ -191,14 +191,19 @@ export function toPublicPayload(
     status: string;
     settings_version: number;
     config: MessengerConfig;
-    /** The site's store domain; order lookup needs a myshopify one. */
+    /** The site's store domain; Shopify order lookup needs a myshopify one. */
     domain?: string | null;
   },
   now: Date,
   features: readonly string[] = [],
   /** Read by the caller, which can wait on the database: the team's
    *  measured reply time (lib/messenger/team-reply-time.ts). */
-  extras: { teamReplyMinutes?: number | null } = {},
+  extras: {
+    teamReplyMinutes?: number | null;
+    /** Whether the site has an order provider (order-provider.ts). Absent
+     *  means the Shopify rule: a myshopify domain. */
+    orderProviderAvailable?: boolean;
+  } = {},
 ): PublicMessengerPayload {
   const active = site.status === 'active';
   const v16Chat = active && features.includes('v16_chat');
@@ -224,7 +229,9 @@ export function toPublicPayload(
             ...(v16Chat ? { replyMinutes: extras.teamReplyMinutes ?? null, opensAtIso } : {}),
           }))(teamHours(site.config.behaviour, now))
         : null,
-    orderLookup: v16Chat ? site.config.orderLookup.enabled && orderShopDomain(site.domain) !== null : undefined,
+    orderLookup: v16Chat
+      ? site.config.orderLookup.enabled && (extras.orderProviderAvailable ?? orderShopDomain(site.domain) !== null)
+      : undefined,
     contactCapture: v16Chat ? site.config.contactCapture.enabled : undefined,
     appearance: site.config.appearance,
     behaviour: {
