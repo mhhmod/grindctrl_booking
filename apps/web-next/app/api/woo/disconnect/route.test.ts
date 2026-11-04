@@ -28,6 +28,10 @@ vi.mock('@/lib/messenger/db', () => ({
           write.filters.push([field, value]);
           return builder;
         },
+        is: (field: string, value: unknown) => {
+          write.filters.push([`${field} is`, value]);
+          return builder;
+        },
         then: (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) => {
           mocks.writes.push(write);
           return Promise.resolve(mocks.result(table)).then(resolve, reject);
@@ -89,6 +93,52 @@ describe('POST /api/woo/disconnect', () => {
       uninstalled_at: expect.any(String),
     });
     expect(tenant.filters).toEqual([['shop_domain', `site:${SITE_ID}`], ['status', 'installed']]);
+  });
+
+  it.each([
+    ['no reason (plugin 0.2.0)', { homeUrl: 'https://shop.example.com/', pluginVersion: '0.2.0' }],
+    ['manual', { reason: 'manual' }],
+    ['deactivate', { reason: 'deactivate' }],
+    ['an unknown reason', { reason: 'delete-everything' }],
+    ['an unparsable body', 'not json'],
+  ])('does not schedule redaction for %s', async (_label, body) => {
+    const response = await post(body);
+
+    expect(response.status).toBe(200);
+    expect(mocks.writes.filter((write) => write.table === 'woo_site_connections')).toHaveLength(1);
+    expect(mocks.writes.some((write) => JSON.stringify(write.payload).includes('redact_after'))).toBe(false);
+  });
+
+  it('schedules redaction 48 hours out on uninstall, once, even for an already-disconnected site', async () => {
+    mocks.verify.mockResolvedValue(verified('disconnected'));
+    const before = Date.now();
+    const response = await post({ reason: 'uninstall' });
+    const after = Date.now();
+
+    expect(response.status).toBe(200);
+    const schedule = mocks.writes.find((write) =>
+      write.table === 'woo_site_connections' && 'redact_after' in (write.payload as object),
+    )!;
+    const due = Date.parse((schedule.payload as { redact_after: string }).redact_after);
+    expect(due).toBeGreaterThanOrEqual(before + 48 * 3600_000);
+    expect(due).toBeLessThanOrEqual(after + 48 * 3600_000);
+    // A repeat must not push the deadline out, and a live site is never marked.
+    expect(schedule.filters).toEqual([
+      ['widget_site_id', SITE_ID],
+      ['status', 'disconnected'],
+      ['redact_after is', null],
+    ]);
+  });
+
+  it('answers unavailable when scheduling the redaction fails', async () => {
+    mocks.result.mockImplementation(() => ({ error: null }));
+    mocks.result.mockImplementationOnce(() => ({ error: null }))
+      .mockImplementationOnce(() => ({ error: null }))
+      .mockImplementationOnce(() => ({ error: { message: 'db-detail' } }));
+    const response = await post({ reason: 'uninstall' });
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain('db-detail');
   });
 
   it('authenticates an already-disconnected site and repeats the guarded writes as a no-op', async () => {
