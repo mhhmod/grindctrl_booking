@@ -64,6 +64,45 @@ describe('useAssistantChat', () => {
     expect(result.current.budgets?.chat.remaining).toBe(8);
   });
 
+  it('handles a rejected bootstrap and recovers budgets after a successful retry', async () => {
+    const client = makeClient();
+    const session = await client.fetchSession();
+    vi.mocked(client.fetchSession)
+      .mockRejectedValueOnce(new Error('Service temporarily unavailable. Please try again shortly.'))
+      .mockResolvedValueOnce(session);
+    const { result } = renderHook(() => useAssistantChat(client));
+
+    await waitFor(() => expect(result.current.providerError).toBe('session_unavailable'));
+    expect(result.current.budgets).toBeNull();
+    expect(result.current.status).toBe('idle');
+
+    await act(async () => { await expect(result.current.refreshBudgets()).resolves.toBeUndefined(); });
+    expect(result.current.budgets).toEqual(session.budgets);
+    expect(result.current.providerError).toBeNull();
+  });
+
+  it('clears stale budgets when a later refresh rejects without exposing the rejection message', async () => {
+    const client = makeClient();
+    const { result } = renderHook(() => useAssistantChat(client));
+    await waitFor(() => expect(result.current.budgets).not.toBeNull());
+    vi.mocked(client.fetchSession).mockRejectedValueOnce(new Error('Internal service details'));
+
+    await act(async () => { await expect(result.current.refreshBudgets()).resolves.toBeUndefined(); });
+    expect(result.current.budgets).toBeNull();
+    expect(result.current.providerError).toBe('session_unavailable');
+    expect(result.current.rateLimited).toBeNull();
+  });
+
+  it('handles a session client throwing before it returns a promise', async () => {
+    const client = makeClient({ fetchSession: vi.fn(() => { throw new Error('Session setup failed'); }) });
+    const { result } = renderHook(() => useAssistantChat(client));
+
+    await waitFor(() => expect(result.current.providerError).toBe('session_unavailable'));
+    expect(result.current.budgets).toBeNull();
+    await act(async () => { await expect(result.current.refreshBudgets()).resolves.toBeUndefined(); });
+    expect(result.current.status).toBe('idle');
+  });
+
   it('appends the user message immediately and streams the assistant reply incrementally', async () => {
     const client = makeClient();
     const { result } = renderHook(() => useAssistantChat(client));

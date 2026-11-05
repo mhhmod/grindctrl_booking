@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import Script from 'next/script';
 // Self-hosted fonts (no build-time Google Fonts dependency).
 import '@fontsource-variable/manrope';
 import '@fontsource/ibm-plex-sans-arabic/400.css';
@@ -15,10 +16,12 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from '@/components/theme-provider';
 import { GcSpotlight } from '@/components/gc-spotlight';
 import { AssistantLauncher } from '@/components/assistant/launcher';
+import { ClientBoundary } from '@/components/client-boundary';
 import { showLauncherFor } from '@/lib/assistant/launcher-visibility';
 import { getRequestLocale } from '@/lib/auth/locale';
 import { getDir } from '@/lib/landing/landing-i18n';
 import { siteUrl } from '@/lib/site-metadata';
+import { BROWSER_RESILIENCE_SCRIPT } from '@/lib/landing/browser-resilience';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
@@ -45,7 +48,9 @@ export default async function RootLayout({children}: {children: React.ReactNode}
      the merchant-facing try-on widget in production. */
   const { userId } = clerkConfigured && pathname !== null ? await auth() : { userId: null };
   const launcher = showLauncherFor(pathname, Boolean(userId)) ? (
-    <AssistantLauncher initialLocale={locale} />
+    <ClientBoundary fallback={null}>
+      <AssistantLauncher initialLocale={locale} />
+    </ClientBoundary>
   ) : null;
 
   return (
@@ -63,6 +68,7 @@ export default async function RootLayout({children}: {children: React.ReactNode}
       suppressHydrationWarning
     >
       <head>
+        <Script id="gc-browser-resilience" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: BROWSER_RESILIENCE_SCRIPT }} />
         {/* Mantine (SaaS surfaces) reads its color scheme from this attribute.
             It follows next-themes' stored value, so it is correct before
             hydration. Only here: a script rendered deeper in the tree would
