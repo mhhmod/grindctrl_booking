@@ -61,7 +61,7 @@ const en: OperationsCopy = {
   orderEyebrow: 'Built into chat',
   orderTitle: 'Order status without leaving the conversation',
   orderBody:
-    'The AI can answer order-status questions using real Shopify order data, once a merchant grants order-read access.',
+    'The AI can answer order-status questions using real Shopify or WooCommerce order data, once a merchant grants order-read access.',
   orderPoints: [
     'Read-only: no refund, cancellation, or edit action exists in the product.',
     'Scoped to a verified customer, or an order number matched with the email on file.',
@@ -165,7 +165,7 @@ const ar: OperationsCopy = {
   orderEyebrow: 'مدمج في المحادثة',
   orderTitle: 'حالة الطلب من دون مغادرة المحادثة',
   orderBody:
-    'يمكن للذكاء الاصطناعي الإجابة عن أسئلة حالة الطلب باستخدام بيانات طلبات Shopify الفعلية، بعد أن يمنح المتجر صلاحية قراءة الطلبات.',
+    'يمكن للذكاء الاصطناعي الإجابة عن أسئلة حالة الطلب باستخدام بيانات طلبات Shopify أو WooCommerce الفعلية، بعد أن يمنح المتجر صلاحية قراءة الطلبات.',
   orderPoints: [
     'للقراءة فقط: لا يوجد في المنتج أي إجراء استرداد أو إلغاء أو تعديل.',
     'مقيّد بعميل موثّق، أو رقم طلب مطابق للبريد الإلكتروني المسجل.',

@@ -95,12 +95,17 @@ describe('public truth register', () => {
     const record = findPublicTruthRecord('integration.public-logo-strip');
     expect(record).toMatchObject({ handling: 'qualify', status: 'documented-evidence' });
     expect(record?.statement).toMatch(/Shopify is live/);
-    expect(record?.statement).toMatch(/WooCommerce is live for Store Chat only/);
+    expect(record?.statement).toMatch(/WooCommerce is live for Try-On, Store Chat and order status/);
     expect(record?.statement).toMatch(/Your own website is in testing, for Store Chat only/);
     expect(record?.statement).toMatch(/Salla and Zid are planned/);
     expect(record?.evidence.map((evidence) => evidence.ref)).toContain('docs/platform-readiness-matrix.md');
     expect(record?.evidence.map((evidence) => evidence.ref)).toContain(
       'docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md',
     );
+    expect(record?.evidence.map((evidence) => evidence.ref)).toContain(
+      'docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md',
+    );
+    expect(record?.statement).not.toMatch(/marketplace|supported everywhere|all stores/i);
+    expect(record?.note).not.toMatch(/Shopify-only/);
   });
 });

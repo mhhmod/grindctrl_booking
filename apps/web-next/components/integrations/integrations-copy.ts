@@ -65,17 +65,17 @@ const en: IntegrationsCopy = {
   storefrontEyebrow: 'Storefront',
   storefrontTitle: 'Where GrindCTRL lives in your store',
   storefrontBody:
-    'Shopify is live with Try-On, Store Chat, order lookup and billing. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned.',
+    'Shopify is live with Try-On, Store Chat, order lookup and billing. WooCommerce is live with Try-On, Store Chat and order lookup. Your website is in testing, for Store Chat only. Salla and Zid are planned.',
   storefrontItems: [
     {
       id: 'shopify',
       description:
-        'Embedded app, App Proxy, webhooks, and theme-extension blocks. Try-On, order lookup and billing are available on Shopify only.',
+        'Embedded app, App Proxy, webhooks, and theme-extension blocks. Paid plans are billed through Shopify.',
     },
     {
       id: 'woocommerce',
       description:
-        'Live for Store Chat only, through the GRINDCTRL WordPress plugin on a domain you verify with DNS. Try-On, order lookup and billing stay Shopify-only.',
+        'Live for Try-On, Store Chat and order status, through the GRINDCTRL WordPress plugin on a domain you verify with DNS. Paid plans are arranged with GRINDCTRL.',
     },
     {
       id: 'custom-website',
@@ -155,17 +155,17 @@ const ar: IntegrationsCopy = {
   storefrontEyebrow: 'المتجر',
   storefrontTitle: 'أين يعمل GrindCTRL داخل متجرك',
   storefrontBody:
-    'Shopify مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات والفوترة. وWooCommerce مباشر لدردشة المتجر فقط. وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
+    'Shopify مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات والفوترة. وWooCommerce مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات. وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
   storefrontItems: [
     {
       id: 'shopify',
       description:
-        'تطبيق مدمج، وApp Proxy، وWebhooks، وأدوات ثيم جاهزة. التجربة الافتراضية والاستعلام عن الطلبات والفوترة متاحة على Shopify فقط.',
+        'تطبيق مدمج، وApp Proxy، وWebhooks، وأدوات ثيم جاهزة. تُحاسَب الخطط المدفوعة عبر Shopify.',
     },
     {
       id: 'woocommerce',
       description:
-        'مباشر لدردشة المتجر فقط، عبر إضافة ووردبريس من GRINDCTRL على نطاق تتحقق منه عبر DNS. التجربة الافتراضية والاستعلام عن الطلبات والفوترة تبقى على Shopify فقط.',
+        'مباشر للتجربة الافتراضية ودردشة المتجر وحالة الطلب، عبر إضافة ووردبريس من GRINDCTRL على نطاق تتحقق منه عبر DNS. تُرتَّب الخطط المدفوعة مع GRINDCTRL.',
     },
     {
       id: 'custom-website',

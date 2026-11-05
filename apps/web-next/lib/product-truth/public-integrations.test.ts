@@ -40,12 +40,12 @@ describe('public integration truth', () => {
     expect(findPublicIntegration('woocommerce')).toMatchObject({
       name: 'WooCommerce',
       state: 'implemented',
-      evidenceRef: 'docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md',
+      evidenceRef: 'docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md',
     });
     expect(findPublicIntegration('custom-website')).toMatchObject({ name: 'Your website', state: 'in-testing' });
     expect(findPublicIntegration('salla')).toMatchObject({ name: 'Salla', state: 'planned' });
     expect(findPublicIntegration('zid')).toMatchObject({ name: 'Zid', state: 'planned' });
-    // Only Shopify and WooCommerce (Store Chat only) may be implemented.
+    // Only Shopify and WooCommerce may be implemented.
     const implemented = PUBLIC_INTEGRATIONS.filter((item) => item.state === 'implemented').map((item) => item.id);
     expect(implemented).toEqual(['shopify', 'woocommerce']);
   });
@@ -57,10 +57,12 @@ describe('public integration truth', () => {
     expect(note).not.toMatch(/\b(supported|works with|available now|live)\b/i);
   });
 
-  it('keeps WooCommerce scoped to Store Chat and never claims a marketplace listing or wide support', () => {
+  it('scopes WooCommerce to Try-On, Store Chat and order status, with plans arranged, and never claims a marketplace listing, privacy tooling or wide support', () => {
     const note = findPublicIntegration('woocommerce')!.note;
-    expect(note).toMatch(/Store Chat only/);
-    expect(note).toMatch(/Try-On, order lookup and billing are Shopify-only/);
+    expect(note).toMatch(/^Try-On, Store Chat and order status, through the GRINDCTRL WordPress plugin/);
+    expect(note).toMatch(/Paid plans are arranged with GRINDCTRL/);
+    expect(note).not.toMatch(/Shopify-only|Store Chat only/);
+    expect(note).not.toMatch(/privacy|export|erase/i);
     expect(note).not.toMatch(/\b(supported|works with|compatible|all)\b/i);
     expect(note).not.toMatch(/wordpress\.org|marketplace/i);
   });
@@ -82,8 +84,8 @@ describe('public integration truth', () => {
   it('keeps the readiness matrix consistent with the register for the platform rows', () => {
     const matrix = readFileSync(join(REPO_ROOT, 'docs/platform-readiness-matrix.md'), 'utf8');
     const rowFor = (name: string) => matrix.split('\n').find((line) => line.startsWith(`| ${name} |`)) ?? '';
-    expect(rowFor('WooCommerce')).toMatch(/\| implemented \(Store Chat only\) \|/);
-    expect(rowFor('WooCommerce')).toContain('docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md');
+    expect(rowFor('WooCommerce')).toMatch(/\| implemented \(Store Chat, Try-On, order status\) \|/);
+    expect(rowFor('WooCommerce')).toContain('docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md');
     expect(rowFor('Custom website')).toMatch(/\| in testing/);
     expect(rowFor('Salla')).toMatch(/\| planned \|/);
     expect(rowFor('Zid')).toMatch(/\| planned \|/);

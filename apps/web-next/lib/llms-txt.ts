@@ -20,7 +20,7 @@ const PLATFORMS = [
   { id: 'shopify', detail: 'Try-On, Store Chat and read-only order status.' },
   {
     id: 'woocommerce',
-    detail: 'Store Chat only, through the GRINDCTRL WordPress plugin on a domain verified with DNS.',
+    detail: 'Try-On, Store Chat and order status, through the GRINDCTRL WordPress plugin on a domain verified with DNS.',
   },
   {
     id: 'custom-website',
@@ -38,7 +38,7 @@ export const LLMS_PAGES = [
   {
     path: '/conversations',
     title: 'AI Conversations',
-    detail: 'Store Chat: answers from your store knowledge, read-only order lookup on Shopify, handoff to your team.',
+    detail: 'Store Chat: answers from your store knowledge, read-only order lookup on Shopify and WooCommerce, handoff to your team.',
   },
   { path: '/operations', title: 'Commerce Operations', detail: 'Team inbox, takeover, and what is not live yet.' },
   { path: '/integrations', title: 'Integrations', detail: 'The status of every platform and integration, checked against the code.' },
@@ -58,13 +58,13 @@ export function buildLlmsTxt(origin: string): string {
   return [
     '# GRINDCTRL',
     '',
-    '> GRINDCTRL gives fashion stores AI virtual try-on and an AI Store Chat, in English and Arabic. Shoppers see your clothes on themselves from one photo and get answers from your store. It is live on Shopify, and Store Chat is live on WooCommerce.',
+    '> GRINDCTRL gives fashion stores AI virtual try-on and an AI Store Chat, in English and Arabic. Shoppers see your clothes on themselves from one photo and get answers from your store. It is live on Shopify and WooCommerce.',
     '',
     '## Platform status',
     '',
     ...platforms,
     '',
-    'Try-On, order lookup and billing are Shopify-only today. The current status of every integration is on the integrations page.',
+    'Paid plans are billed through Shopify for Shopify stores and arranged with GRINDCTRL for WooCommerce stores. The current status of every integration is on the integrations page.',
     '',
     '## Pages',
     '',

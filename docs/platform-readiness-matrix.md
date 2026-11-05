@@ -1,25 +1,28 @@
 # Platform readiness matrix
 
-Updated 2026-11-04. Research date for third-party platforms: 2026-10-30.
+Updated 2026-11-05. Research date for third-party platforms: 2026-10-30.
 Public product claims come from `apps/web-next/lib/product-truth/public-integrations.ts`;
 this file explains the evidence behind each state. Nothing below "implemented"
 may be advertised as supported.
 
 States: **implemented** (verified on a real store and shipped on `main`; the
-scope is part of the claim, so WooCommerce is implemented for Store Chat only),
+scope is part of the claim, so each row says which features are verified),
 **in testing** (code on `main`, not yet verified on a live store, not
 offered to merchants), **setup-required** (shipped, merchant must
 install or verify, not yet proven live), **evidence-required** (researched,
 nothing built), **planned** (next in the build order, no code yet),
 **not pursued**.
 
-What `main` ships today: Shopify, plus Store Chat for WooCommerce (GRINDCTRL
-WordPress plugin on a DNS-verified domain), verified on a live store against
-production on 2026-11-04
-(`docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`). "Your own
+What `main` ships today: Shopify, plus WooCommerce Store Chat, Try-On and order
+status in chat (GRINDCTRL WordPress plugin on a DNS-verified domain), verified
+on a live store against production on 2026-11-04 and 2026-11-05
+(`docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`,
+`docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md`). "Your own
 website" (script tag with a DNS-verified domain) uses the same loader and
-verification but was not tested on its own, so it stays in testing. Try-On,
-order lookup and billing are Shopify-only. Salla and Zid have no code. The
+verification but was not tested on its own, so it stays in testing. Billing
+is through Shopify for Shopify stores; WooCommerce paid plans are arranged with
+GRINDCTRL. WooCommerce privacy export and erase are not live yet (migration
+pending). Salla and Zid have no code. The
 WooCommerce plugin is distributed from grindctrl.cloud; no WordPress.org or
 WooCommerce Marketplace listing exists or may be claimed. Nothing on this page
 may be read as "available" for a platform that is not "implemented", and
@@ -30,7 +33,7 @@ may be read as "available" for a platform that is not "implemented", and
 | Platform | Store Chat | Try-On | Product context | Cart add from chat | Install / uninstall | Public state | Evidence | Next step |
 |---|---|---|---|---|---|---|---|---|
 | Shopify | Verified on dev store (staging) | Buttons render; mock render only on staging | Theme app extension + Admin API | Storefront AJAX cart | OAuth, `app/uninstalled`, privacy webhooks (simulated) | implemented | `docs/superpowers/checkpoints/2026-10-31-shopify-m1-staging.md` | Real uninstall/reinstall, store B isolation, privacy fulfilment |
-| WooCommerce | Verified live against production: plugin loads the loader, panel renders, AI answers from store knowledge, shopper hand-off reaches the inbox | Not built | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Cart forwarding to the conversation verified (needs the `n25_handoff_rules` flag, as on Shopify) | Plugin activate/uninstall; no GRINDCTRL webhooks | implemented (Store Chat only) | `docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`: test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1.4, WooCommerce 11.2.1), real DNS TXT verification, 2026-11-04 | No WooCommerce catalog sync or order lookup; marketplace listing is a separate decision |
+| WooCommerce | Verified live against production: plugin loads the loader, panel renders, AI answers from store knowledge, shopper hand-off reaches the inbox | Verified live 2026-11-05: button, generation, add to cart via the Store API | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Cart forwarding to the conversation verified (needs the `n25_handoff_rules` flag, as on Shopify) | Plugin activate/uninstall; no GRINDCTRL webhooks | implemented (Store Chat, Try-On, order status) | `docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md` and `docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`: test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1.4, WooCommerce 11.2.1), real DNS TXT verification, 2026-11-04 and 2026-11-05. Order status lookup verified in chat (guest email + order number) | Privacy export/erase (migration pending), logged-in shopper lookup, dashboard check; no catalog sync; marketplace listing is a separate decision |
 | Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (on `main`, live check pending) | Same loader and DNS verification as WooCommerce, which is verified live; not tested on its own without the plugin | Live test on a real external domain without the plugin |
 | Salla | Not built | Not built | Twilight SDK documented | `salla.cart.addItem()` documented | `app.installed/uninstalled` documented | planned | Research below | Free Partner demo store, App Snippets spike |
 | Zid | Not built | Not built | Themes Library JS documented | Themes Library cart JS documented | Lifecycle events unverified | planned | Research below | After Salla; script injection needs Zid approval |
@@ -40,7 +43,7 @@ may be read as "available" for a platform that is not "implemented", and
 
 ## Recommended order
 
-1. **WooCommerce live test.** Done on 2026-11-04 for Store Chat (see the checkpoint). Its reach is the largest global install base; the same live check for "your own website" is the cheapest next gain.
+1. **WooCommerce live test.** Done on 2026-11-04 for Store Chat and 2026-11-05 for Try-On and order status (see the checkpoints). Its reach is the largest global install base; the same live check for "your own website" is the cheapest next gain.
 2. **Salla.** App Snippets inject the loader on install with no theme work, Twilight gives product context and cart add, and a free Partner demo store exists. Best MENA fit.
 3. **Zid.** Same architecture as Salla, but script injection needs manual approval and an in-app support channel is mandatory, so it goes after Salla's patterns exist.
 

@@ -6,7 +6,7 @@ import { socialMetadata } from '@/lib/site-metadata';
 
 const title = 'GRINDCTRL | AI try-on and Store Chat for fashion stores';
 const description =
-  'Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English. AI try-on and Store Chat, live on Shopify. Store Chat is also live on WooCommerce.';
+  'Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English. AI try-on and Store Chat, live on Shopify and WooCommerce.';
 
 export const metadata: Metadata = {
   title,
