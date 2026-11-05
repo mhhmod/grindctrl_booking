@@ -51,6 +51,37 @@ describe('callWooPlugin', () => {
     expect((transport.mock.calls[0] as unknown as [{ url: URL }])[0].url.pathname).toBe('/store/wp-json/grindctrl/v1/order-lookup');
   });
 
+  it('uses the stored plain-permalink REST root and still signs the fixed route path', async () => {
+    const transport = vi.fn(async () => ({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
+    const restore = setWooPluginTransportForTests(transport);
+    await callWooPlugin({ ...connection, restBaseUrl: 'https://shop.example.com/?rest_route=/' }, WOO_PLUGIN_ORDER_LOOKUP_PATH, {});
+    await callWooPlugin({ ...connection, homeUrl: 'https://example.com/store/', restBaseUrl: 'https://example.com/store/?rest_route=/' }, WOO_PLUGIN_ORDER_LOOKUP_PATH, {});
+    restore();
+    const [plain, nested] = transport.mock.calls.map((call) => (call as unknown as [{ url: URL; headers: Record<string, string>; body: string }])[0]);
+    expect(plain.url.origin + plain.url.pathname).toBe('https://shop.example.com/');
+    expect(plain.url.searchParams.get('rest_route')).toBe('/grindctrl/v1/order-lookup');
+    expect(nested.url.pathname).toBe('/store/');
+    const secret = deriveWooSiteSecret(SITE, 2)!;
+    for (const [call, signedPath] of [[plain, '/wp-json/grindctrl/v1/order-lookup'], [nested, '/store/wp-json/grindctrl/v1/order-lookup']] as const) {
+      const canonical = wooSignatureCanonicalString({ method: 'POST', path: signedPath, timestamp: call.headers['X-GC-Timestamp'], nonce: call.headers['X-GC-Nonce'], body: call.body });
+      expect(call.headers['X-GC-Signature']).toBe(createHmac('sha256', secret).update(canonical, 'utf8').digest('base64url'));
+    }
+  });
+
+  it.each([
+    'https://other.example.net/wp-json/',
+    'https://shop.example.com/wp-json',
+    'https://shop.example.com/?rest_route=/other',
+    'https://shop.example.com/?rest_route=/&a=b',
+    'http://shop.example.com/wp-json/',
+  ])('refuses a stored REST root that leaves the paired site: %s', async (restBaseUrl) => {
+    const transport = vi.fn();
+    const restore = setWooPluginTransportForTests(transport);
+    expect(await callWooPlugin({ ...connection, restBaseUrl }, WOO_PLUGIN_ORDER_LOOKUP_PATH, {})).toEqual({ ok: false, reason: 'unavailable' });
+    restore();
+    expect(transport).not.toHaveBeenCalled();
+  });
+
   it.each([
     ['network failure', null, 'unavailable'],
     ['plugin 401', { status: 401, contentType: 'application/json', body: '{}' }, 'rejected'],

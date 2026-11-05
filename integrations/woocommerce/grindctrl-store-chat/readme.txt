@@ -4,7 +4,7 @@ Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,12 @@ Under Advanced on the settings page you can enter the embed key by hand. The cha
 The script loads asynchronously in the footer, and the chat window only loads when a shopper shows interest in it.
 
 == Changelog ==
+
+= 0.3.1 =
+* Try-On size picker on WooCommerce: variations are offered in the Try-On sheet and the chosen one is added to the cart.
+* Order status works on sites with plain permalinks, and finds orders by the number a sequential-order-number plugin shows.
+* Try it on pills also appear on Product Collection block cards.
+* Stronger replay protection for signed order requests.
 
 = 0.3.0 =
 * Order status and tracking in chat, with logged-in shoppers recognised automatically.

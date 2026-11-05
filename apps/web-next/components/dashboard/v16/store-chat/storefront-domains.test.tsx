@@ -34,6 +34,15 @@ function renderDomains(locale: 'en' | 'ar', host: DomainActions) {
 }
 
 describe('StorefrontDomains', () => {
+  it.each(['en', 'ar'] as const)('shows the wildcard DNS prerequisite before the TXT record in %s', async (locale) => {
+    const copy = renderDomains(locale, actions({
+      listDomainsAction: vi.fn(async () => ({ ok: true as const, domains: [pending] })),
+    }));
+    const hint = await screen.findByText(copy.wildcardHint);
+    const record = screen.getByText(pending.txtName);
+    expect(hint.compareDocumentPosition(record) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('adds a domain and shows the TXT record to publish, then verifies it', async () => {
     const host = actions();
     const copy = renderDomains('en', host);

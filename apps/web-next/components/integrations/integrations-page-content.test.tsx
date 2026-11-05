@@ -42,13 +42,14 @@ describe('IntegrationsPageContent', () => {
     }
   });
 
-  it('names Shopify and WooCommerce as the only implemented platforms and never claims WhatsApp/Instagram are available', () => {
+  it('names Shopify, WooCommerce and your own website (Store Chat only) as the only implemented platforms and never claims WhatsApp/Instagram are available', () => {
     renderPage('en');
-    // Exactly two rows are Implemented: Shopify's and WooCommerce's.
+    // Exactly three rows are Implemented: Shopify's, WooCommerce's and the website's.
     const implemented = screen.getAllByText('Implemented');
-    expect(implemented).toHaveLength(2);
+    expect(implemented).toHaveLength(3);
     expect(implemented[0].closest('li')).toHaveTextContent('Shopify');
     expect(implemented[1].closest('li')).toHaveTextContent('WooCommerce');
+    expect(implemented[2].closest('li')).toHaveTextContent('Your website');
     expect(screen.queryByText(/whatsapp.*(available|ready)/i)).not.toBeInTheDocument();
   });
 
@@ -62,7 +63,7 @@ describe('IntegrationsPageContent', () => {
     };
     const website = locale === 'ar' ? 'موقعك' : 'Your website';
     expect(rowOf('WooCommerce')).toHaveTextContent(t.integrationStateImplemented);
-    expect(rowOf(website)).toHaveTextContent(t.integrationStateInTesting);
+    expect(rowOf(website)).toHaveTextContent(t.integrationStateImplemented);
     expect(rowOf(locale === 'ar' ? 'سلة' : 'Salla')).toHaveTextContent(t.integrationStatePlanned);
     expect(rowOf(locale === 'ar' ? 'زد' : 'Zid')).toHaveTextContent(t.integrationStatePlanned);
     expect(rowOf('Shopify')).toHaveTextContent(t.integrationStateImplemented);
@@ -78,7 +79,7 @@ describe('IntegrationsPageContent', () => {
     expect(screen.getByText('Zid').closest('li')?.querySelector('svg')).toBeNull();
   });
 
-  it('scopes WooCommerce to Try-On, Store Chat and order status and your website to Store Chat only, and that only the website is not available to merchants yet', () => {
+  it('scopes WooCommerce to Try-On, Store Chat and order status and your website to Store Chat only, and neither is described as unavailable', () => {
     renderPage('en');
     for (const label of ['WooCommerce', 'Your website']) {
       const row = screen.getByText(label).closest('li');
@@ -86,7 +87,8 @@ describe('IntegrationsPageContent', () => {
     }
     expect(screen.getByText('Your website').closest('li')).toHaveTextContent('Store Chat only');
     expect(screen.getByText('WooCommerce').closest('li')).not.toHaveTextContent('Store Chat only');
-    expect(screen.getByText('Your website').closest('li')).toHaveTextContent('Not available to merchants yet');
+    expect(screen.getByText('Your website').closest('li')).toHaveTextContent('No Try-On, order lookup or product sync');
+    expect(screen.getByText('Your website').closest('li')).not.toHaveTextContent('Not available to merchants');
     expect(screen.getByText('WooCommerce').closest('li')).not.toHaveTextContent('Not available to merchants');
     expect(screen.getByText('WooCommerce').closest('li')).toHaveTextContent(
       'Try-On, Store Chat and order status',

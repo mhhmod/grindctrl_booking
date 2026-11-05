@@ -95,6 +95,21 @@ describe('POST /api/woo/heartbeat', () => {
     expect(mocks.eq).toHaveBeenCalledWith('status', 'active');
   });
 
+  it('stores the reported REST root for plain permalinks, only when it is the paired site', async () => {
+    await post({ ...BODY, restUrl: 'https://shop.example.com/?rest_route=/' });
+    expect(mocks.update).toHaveBeenCalledWith({ rest_base_url: 'https://shop.example.com/?rest_route=/' });
+  });
+
+  it.each([
+    ['another host', { restUrl: 'https://evil.example.net/wp-json/' }],
+    ['a private address', { restUrl: 'https://169.254.169.254/' }],
+    ['a stray query', { restUrl: 'https://shop.example.com/?rest_route=/&x=1' }],
+    ['a copied database', { homeUrl: 'https://staging.example.net/', restUrl: 'https://staging.example.net/wp-json/' }],
+  ])('does not store a REST root from %s', async (_name, extra) => {
+    await post({ ...BODY, ...extra });
+    expect(mocks.update).not.toHaveBeenCalledWith(expect.objectContaining({ rest_base_url: expect.anything() }));
+  });
+
   it('flags a different home URL on every heartbeat and never overwrites the paired one', async () => {
     const copy = { ...BODY, homeUrl: 'https://staging.example.net/' };
     for (let attempt = 0; attempt < 2; attempt += 1) {

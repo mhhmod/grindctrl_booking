@@ -257,7 +257,7 @@ export const PUBLIC_TRUTH_REGISTER = [
   {
     id: 'integration.public-logo-strip',
     kind: 'integration',
-    statement: 'Shopify is live. WooCommerce is live for Try-On, Store Chat and order status. Your own website is in testing, for Store Chat only. Salla and Zid are planned.',
+    statement: 'Shopify is live. WooCommerce is live for Try-On, Store Chat and order status. Your own website is live for Store Chat only. Salla and Zid are planned.',
     surfaces: ['landing.stack', 'integrations'],
     status: 'documented-evidence',
     handling: 'qualify',
@@ -276,7 +276,7 @@ export const PUBLIC_TRUTH_REGISTER = [
         id: 'platform-readiness-matrix',
         kind: 'checkpoint',
         ref: 'docs/platform-readiness-matrix.md',
-        note: 'Per-platform evidence: Shopify shipped, WooCommerce Try-On, Store Chat and order status verified on a live store, your own website not yet tested on its own, Salla and Zid not built.',
+        note: 'Per-platform evidence: Shopify shipped, WooCommerce Try-On, Store Chat and order status verified on a live store, your own website verified live for Store Chat only (script tag, no plugin), Salla and Zid not built.',
       },
       {
         id: 'woocommerce-live-verification',
@@ -288,11 +288,11 @@ export const PUBLIC_TRUTH_REGISTER = [
         id: 'woocommerce-parity-live-verification',
         kind: 'checkpoint',
         ref: 'docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md',
-        note: 'WooCommerce Try-On (button, generation, add to cart) and order status in chat verified on a live store against production on 2026-11-05. Privacy export and erase are not live yet.',
+        note: 'WooCommerce Try-On (button, generation, add to cart) and order status in chat verified on a live store against production on 2026-11-05. Privacy export and erase are not live yet. Your own website (a plain page with the Store Chat script tag on a DNS-verified domain, no plugin) was verified on the same day, for Store Chat only.',
       },
     ],
     lastReviewedAt: '2026-11-05',
-    note: 'A logo is shown only beside its status in words. Never present an in-testing or planned platform as supported, available or working with GrindCTRL, and keep WooCommerce claims to Try-On, Store Chat and order status, with paid plans arranged with GRINDCTRL rather than checked out. The n8n and HubSpot marks on the landing are labelled custom setup; the register lists no HubSpot connector.',
+    note: 'A logo is shown only beside its status in words. Never present a planned platform as supported, available or working with GrindCTRL, and keep WooCommerce claims to Try-On, Store Chat and order status, with paid plans arranged with GRINDCTRL rather than checked out. The n8n and HubSpot marks on the landing are labelled custom setup; the register lists no HubSpot connector.',
   },
   {
     id: 'capability.storefront-messenger',

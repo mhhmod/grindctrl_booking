@@ -281,6 +281,30 @@ add_filter(
 	3
 );
 
+/*
+ * Catalog cards (Product Collection block). Its cards are inner blocks, not a
+ * loop item, so the pill follows each card's own button block. queryId is only
+ * set inside a collection, which keeps single-product blocks out.
+ */
+add_filter(
+	'render_block_woocommerce/product-button',
+	function ( $content, $block, $instance ) {
+		if (
+			'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' )
+			|| ! function_exists( 'wc_get_product' )
+			|| ! $instance instanceof WP_Block
+			|| empty( $instance->context['queryId'] )
+			|| empty( $instance->context['postId'] )
+			|| false !== strpos( $content, 'gc-tryon-btn' )
+		) {
+			return $content;
+		}
+		return $content . grindctrl_sc_tryon_button_html( wc_get_product( absint( $instance->context['postId'] ) ), 'card' );
+	},
+	10,
+	3
+);
+
 /* [grindctrl_tryon id="123" label="Try it on"] */
 add_shortcode(
 	'grindctrl_tryon',
@@ -509,6 +533,98 @@ function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
 	$result->header( 'Cache-Control', 'no-store, max-age=0' );
 	return $result;
 }
+
+/*
+ * The variations behind the sheet's size picker, in the shape the Shopify
+ * loader sends: options, variants (id, title, option values, availability,
+ * price in hundredths) and, per variant, the attributes the Store API needs.
+ * Only variations with every attribute fixed are listed; an "any" variation
+ * cannot say which size it is. Public product data, read-only.
+ */
+function grindctrl_sc_tryon_product_route( WP_REST_Request $request ) {
+	if ( ! function_exists( 'wc_get_product' ) || ! grindctrl_sc_is_connected() || ! grindctrl_sc_tryon_enabled() ) {
+		return grindctrl_sc_tryon_error( 'unavailable', 503 );
+	}
+	$parent = wc_get_product( absint( $request->get_param( 'product_id' ) ) );
+	if ( ! grindctrl_sc_tryon_eligible( $parent ) ) {
+		return grindctrl_sc_tryon_error( 'product_unavailable', 404 );
+	}
+
+	$options  = array();
+	$variants = array();
+	if ( $parent->is_type( 'variable' ) ) {
+		$names = array_slice( array_keys( $parent->get_variation_attributes() ), 0, 3 );
+		foreach ( $names as $name ) {
+			$options[] = wp_strip_all_tags( wc_attribute_label( $name, $parent ) );
+		}
+		foreach ( array_slice( $parent->get_children(), 0, 250 ) as $child_id ) {
+			$child = wc_get_product( $child_id );
+			if ( ! $child instanceof WC_Product_Variation || 'publish' !== $child->get_status() || ! $child->is_purchasable() ) {
+				continue;
+			}
+			$chosen     = $child->get_variation_attributes();
+			$values     = array();
+			$attributes = array();
+			foreach ( $names as $name ) {
+				$key  = sanitize_title( $name );
+				$slug = isset( $chosen[ 'attribute_' . $key ] ) ? (string) $chosen[ 'attribute_' . $key ] : '';
+				if ( '' === $slug ) {
+					continue 2;
+				}
+				$term         = taxonomy_exists( $name ) ? get_term_by( 'slug', $slug, $name ) : false;
+				$values[]     = wp_strip_all_tags( $term instanceof WP_Term ? $term->name : $slug );
+				$attributes[] = array(
+					'attribute' => $key,
+					'value'     => $slug,
+				);
+			}
+			$variants[] = array(
+				'id'         => (int) $child->get_id(),
+				'title'      => implode( ' / ', $values ),
+				'options'    => $values,
+				'available'  => $child->is_in_stock(),
+				'price'      => (int) round( (float) wc_get_price_to_display( $child ) * 100 ),
+				'attributes' => $attributes,
+			);
+		}
+	}
+
+	$result = new WP_REST_Response(
+		array(
+			'product' => array(
+				'options'  => $options,
+				'currency' => function_exists( 'get_woocommerce_currency' ) ? get_woocommerce_currency() : null,
+				'variants' => $variants,
+			),
+		),
+		200
+	);
+	$result->header( 'Cache-Control', 'no-store, max-age=0' );
+	return $result;
+}
+
+add_action(
+	'rest_api_init',
+	function () {
+		register_rest_route(
+			'grindctrl/v1',
+			'/tryon-product',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => 'grindctrl_sc_tryon_product_route',
+				'permission_callback' => '__return_true',
+				'args'                => array(
+					'product_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'minimum'           => 1,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+	}
+);
 
 add_action(
 	'rest_api_init',

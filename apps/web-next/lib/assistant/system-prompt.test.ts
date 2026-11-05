@@ -16,9 +16,10 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Shopify/i);
   });
 
-  it('states WooCommerce as live for Try-On, Store Chat and order status, keeps the website in testing and claims no marketplace listing', () => {
+  it('states WooCommerce as live for Try-On, Store Chat and order status, scopes the website to Store Chat only and claims no marketplace listing', () => {
     expect(SYSTEM_PROMPT).toMatch(/- WooCommerce: live for Try-On, Store Chat and order status/);
-    expect(SYSTEM_PROMPT).toMatch(/- A merchant's own website: in testing, Store Chat only/);
+    expect(SYSTEM_PROMPT).toMatch(/- A merchant's own website: live for Store Chat only, by script tag on a DNS-verified domain/);
+    expect(SYSTEM_PROMPT).toMatch(/No Try-On, order lookup or native product sync/);
     expect(SYSTEM_PROMPT).toMatch(/never say it is/);
     expect(SYSTEM_PROMPT).toMatch(/WooCommerce plans are arranged with GRINDCTRL/);
   });

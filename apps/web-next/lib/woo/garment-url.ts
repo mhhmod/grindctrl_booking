@@ -1,6 +1,8 @@
 import 'server-only';
 
-import { BlockList, isIP } from 'node:net';
+import { isIP } from 'node:net';
+import { isNonPublicAddress } from './public-address';
+export { isNonPublicAddress } from './public-address';
 import { promises as dns } from 'node:dns';
 import https from 'node:https';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
@@ -24,37 +26,6 @@ export class UnsafeGarmentUrlError extends Error {
     super(code);
     this.name = 'UnsafeGarmentUrlError';
   }
-}
-
-const blocked = new BlockList();
-for (const [net, prefix] of [
-  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
-  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
-  ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24],
-  ['224.0.0.0', 4], ['240.0.0.0', 4],
-] as const) blocked.addSubnet(net, prefix, 'ipv4');
-for (const [net, prefix] of [
-  ['::', 96], // unspecified, loopback and deprecated IPv4-compatible
-  ['64:ff9b::', 96], // NAT64
-  ['100::', 64], ['2001:db8::', 32], ['2002::', 16], // discard, docs, 6to4
-  ['fc00::', 7], ['fe80::', 10], ['ff00::', 8],
-] as const) blocked.addSubnet(net, prefix, 'ipv6');
-
-/** True for loopback, private, link-local, metadata, multicast and other
- *  non-public addresses. Anything that is not an IP literal is refused. */
-export function isNonPublicAddress(address: string): boolean {
-  const family = isIP(address);
-  if (family === 0) return true;
-  if (family === 6) {
-    // An IPv4-mapped answer is judged as the IPv4 address it wraps.
-    const mapped = /^\[::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})\]$/.exec(new URL(`http://[${address}]`).hostname);
-    if (mapped) {
-      const high = parseInt(mapped[1], 16);
-      const low = parseInt(mapped[2], 16);
-      return isNonPublicAddress(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`);
-    }
-  }
-  return blocked.check(address, family === 4 ? 'ipv4' : 'ipv6');
 }
 
 function hostAllowed(host: string, verifiedHosts: readonly string[]): boolean {

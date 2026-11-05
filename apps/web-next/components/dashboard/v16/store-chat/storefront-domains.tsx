@@ -146,6 +146,7 @@ export function StorefrontDomains({ siteId, copy, actions }: { siteId: string; c
                 {!verified && (
                   <>
                     <p className={classes.muted}>{copy.recordHelp}</p>
+                    <p className={classes.muted}>{copy.wildcardHint}</p>
                     <div className={classes.record}>
                       <RecordField label={copy.recordType} value="TXT" copy={copy} />
                       <RecordField label={copy.recordName} value={row.txtName} copy={copy} />

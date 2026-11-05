@@ -101,6 +101,51 @@ describe('tryon-woo.js', () => {
     expect(JSON.parse(String(calls[0].init.body))).toEqual({ product_id: 43, variation_id: 0 });
   });
 
+  it('answers the sheet product request and adds only a chosen variation of that product', async () => {
+    page('variable');
+    load();
+    (document.querySelector('[name="variation_id"]') as HTMLInputElement).value = '77';
+    click('form .gc-tryon-btn');
+    await tick();
+    const frame = document.querySelector('.gc-tryon-sheet iframe') as HTMLIFrameElement;
+    const posted = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => {});
+    const product = {
+      options: ['Size'], currency: 'EGP', variants: [
+        { id: 77, title: 'M', options: ['M'], available: true, price: 32500, attributes: [{ attribute: 'pa_size', value: 'm' }] },
+        { id: 78, title: 'L', options: ['L'], available: true, price: 32500, attributes: [{ attribute: 'pa_size', value: 'l' }] },
+      ],
+    };
+    handler = (url) => url.includes('tryon-product') ? json({ product }) : json({ items: [] });
+    const send = (data: unknown) => window.dispatchEvent(new MessageEvent('message', {
+      data, origin: 'https://grindctrl.cloud', source: frame.contentWindow,
+    }));
+    send({ type: 'grindctrl-tryon:product-request' });
+    await tick();
+    expect(posted).toHaveBeenCalledWith({ type: 'grindctrl-tryon:product', product, variant: 77 }, 'https://grindctrl.cloud');
+    send({ type: 'grindctrl-tryon:add-to-cart', variantId: '78' });
+    await tick();
+    expect(JSON.parse(String(calls.at(-1)!.init.body))).toEqual({ id: 78, quantity: 1, variation: [{ attribute: 'pa_size', value: 'l' }] });
+    const adds = calls.filter((call) => call.url.endsWith('cart/add-item')).length;
+    send({ type: 'grindctrl-tryon:add-to-cart', variantId: '999' });
+    await tick();
+    expect(calls.filter((call) => call.url.endsWith('cart/add-item'))).toHaveLength(adds);
+    expect(posted).toHaveBeenLastCalledWith(expect.objectContaining({ type: 'grindctrl-tryon:cart-result', ok: false }), 'https://grindctrl.cloud');
+  });
+
+  it('keeps plain REST query routes intact when loading product options', async () => {
+    page('simple');
+    load({ restUrl: 'https://shop.example.com/?rest_route=/grindctrl/v1/', storeApi: 'https://shop.example.com/?rest_route=/wc/store/v1/' });
+    click('form .gc-tryon-btn');
+    await tick();
+    const frame = document.querySelector('iframe') as HTMLIFrameElement;
+    handler = () => json({ product: { options: [], variants: [] } });
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-tryon:product-request' }, origin: 'https://grindctrl.cloud', source: frame.contentWindow }));
+    await tick();
+    const url = new URL(calls.at(-1)!.url);
+    expect(url.searchParams.get('rest_route')).toBe('/grindctrl/v1/tryon-product');
+    expect(url.searchParams.get('product_id')).toBe('42');
+  });
+
   it('removes the button when the store cannot start a look now', async () => {
     page('simple');
     load();

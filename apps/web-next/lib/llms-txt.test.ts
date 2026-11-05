@@ -25,7 +25,7 @@ describe('llms.txt', () => {
   it('states the honest status of every platform, read from the register', () => {
     expect(lineFor('Shopify')).toMatch(/^- Shopify: Live\. /);
     expect(lineFor('WooCommerce')).toMatch(/^- WooCommerce: Live\. Try-On, Store Chat and order status, through the GRINDCTRL WordPress plugin/);
-    expect(lineFor('Your website')).toMatch(/^- Your website: In testing\. Store Chat only/);
+    expect(lineFor('Your website')).toMatch(/^- Your website: Live\. Store Chat only, by script tag on a domain verified with DNS/);
     expect(lineFor('Salla')).toMatch(/^- Salla: Planned\. No code yet/);
     expect(lineFor('Zid')).toMatch(/^- Zid: Planned\. No code yet/);
     expect(text).toContain('Paid plans are billed through Shopify for Shopify stores and arranged with GRINDCTRL for WooCommerce stores.');
@@ -34,12 +34,13 @@ describe('llms.txt', () => {
     }
   });
 
-  it('never calls an in-testing or planned platform live, supported, available or working with GRINDCTRL', () => {
+  it('never calls a planned platform live, supported, available or working with GRINDCTRL, and keeps your website to Store Chat', () => {
     for (const name of ['Your website', 'Salla', 'Zid']) {
       expect(lineFor(name), name).not.toMatch(/\b(supported|works with|compatible)\b/i);
-      expect(lineFor(name), name).not.toMatch(/\bLive\b/);
     }
-    expect(lineFor('Your website')).toContain('Not available to merchants yet.');
+    for (const name of ['Salla', 'Zid']) expect(lineFor(name), name).not.toMatch(/\bLive\b/);
+    expect(lineFor('Your website')).toContain('No Try-On, order lookup or product sync.');
+    expect(lineFor('Your website')).not.toContain('Not available to merchants');
     expect(text).not.toMatch(/app store/i);
   });
 

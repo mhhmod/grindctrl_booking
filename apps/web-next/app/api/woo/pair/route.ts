@@ -10,6 +10,7 @@ import {
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { deriveWooSiteSecret } from '@/lib/woo/site-secret';
 import { WOO_MIN_PLUGIN_VERSION } from '@/lib/woo/signed-request';
+import { normalizeWooRestBase } from '@/lib/woo/rest-base';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,7 @@ type PairInput = {
   timezone: string | null;
   currency: string | null;
   platform: Platform;
+  restUrl: string | null;
 };
 
 type PairingCodeRow = {
@@ -127,7 +129,11 @@ function parseInput(raw: unknown): ParsedInput {
 
   return {
     ok: true,
-    input: { code, homeUrl, pluginVersion, wpVersion, wcVersion, timezone, currency, platform },
+    input: {
+      code, homeUrl, pluginVersion, wpVersion, wcVersion, timezone, currency, platform,
+      // Routing metadata only; anything that is not this site's REST root is dropped.
+      restUrl: normalizeWooRestBase(homeUrl, body.restUrl),
+    },
   };
 }
 
@@ -251,6 +257,13 @@ export async function POST(request: NextRequest) {
       updated_at: nowIso,
     }, { onConflict: 'shop_domain' });
     if (tenantWrite.error) return fail('unavailable', 503, siteId);
+
+    // Separate from the main write so a database without the column (the
+    // migration is applied by hand) still pairs; the client then uses /wp-json/.
+    const restBaseWrite = await supabase.from('woo_site_connections')
+      .update({ rest_base_url: input.restUrl })
+      .eq('widget_site_id', siteId);
+    if (restBaseWrite.error) console.warn('[woo] rest base not stored', { siteId });
 
     return json({
       siteId,

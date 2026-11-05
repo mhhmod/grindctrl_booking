@@ -4,6 +4,7 @@ import { deriveWooSiteSecret } from '@/lib/woo/site-secret';
 import { signWooRequest } from '@/lib/woo/signed-request';
 import { parsePairedHomeUrl, pinnedHttpsPost, type PinnedPostInput, type PinnedPostResult } from '@/lib/woo/ssrf';
 import type { ActiveWooConnection } from '@/lib/woo/active-connection';
+import { normalizeWooRestBase } from './rest-base';
 
 /* Server-to-plugin calls. The URL is always the paired home URL plus a fixed
    plugin route, so a caller can choose a body but never a destination. The
@@ -34,9 +35,18 @@ export function setWooPluginTransportForTests(transport: PluginTransport | null)
 }
 
 /** The pathname the plugin recomputes from its own home_url. */
-export function pluginUrl(homeUrl: string, path: string): URL | null {
+export function pluginUrl(homeUrl: string, path: string, restBaseUrl?: string | null): URL | null {
   const home = parsePairedHomeUrl(homeUrl);
   if (!home || !ALLOWED_PATHS.has(path)) return null;
+  if (restBaseUrl != null) {
+    const normalized = normalizeWooRestBase(homeUrl, restBaseUrl);
+    if (!normalized) return null;
+    const base = new URL(normalized);
+    const route = path.slice('/wp-json'.length);
+    if (base.searchParams.has('rest_route')) base.searchParams.set('rest_route', route);
+    else base.pathname += route.slice(1);
+    return base;
+  }
   return new URL(`${home.origin}${home.pathname.replace(/\/+$/, '')}${path}`);
 }
 
@@ -45,7 +55,7 @@ export async function callWooPlugin(
   path: string,
   payload: Record<string, unknown>,
 ): Promise<PluginCallResult> {
-  const url = pluginUrl(connection.homeUrl, path);
+  const url = pluginUrl(connection.homeUrl, path, connection.restBaseUrl);
   const secret = deriveWooSiteSecret(connection.siteId, connection.secretVersion);
   if (!url || !secret) return { ok: false, reason: 'unavailable' };
 
@@ -54,7 +64,9 @@ export async function callWooPlugin(
     secret,
     siteId: connection.siteId,
     method: 'POST',
-    path: url.pathname,
+    // The plugin signs its fixed route under the home path, whichever way
+    // REST is reached (pretty permalinks or ?rest_route=).
+    path: `${new URL(connection.homeUrl).pathname.replace(/\/+$/, '')}${path}`,
     body,
   });
 

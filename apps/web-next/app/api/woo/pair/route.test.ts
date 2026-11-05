@@ -157,6 +157,19 @@ afterEach(() => {
 });
 
 describe('POST /api/woo/pair', () => {
+  it('stores the REST root the plugin reports, and still pairs when it is unusable or cannot be saved', async () => {
+    await post({ ...BODY, restUrl: 'https://shop.example.com/?rest_route=/' });
+    expect(find('woo_site_connections', 'update')!.payload).toEqual({ rest_base_url: 'https://shop.example.com/?rest_route=/' });
+
+    mocks.calls.length = 0;
+    await post({ ...BODY, restUrl: 'https://evil.example.net/wp-json/' });
+    expect(find('woo_site_connections', 'update')!.payload).toEqual({ rest_base_url: null });
+
+    // Column not migrated yet: the write fails, the pairing still succeeds.
+    database({ fail: 'woo_site_connections:update' });
+    expect((await post({ ...BODY, restUrl: 'https://shop.example.com/wp-json/' })).status).toBe(200);
+  });
+
   it('pairs a store: consumes the code once, records the connection and tenant, returns the secret', async () => {
     const response = await post();
     const secret = deriveWooSiteSecret(SITE_ID, 1);

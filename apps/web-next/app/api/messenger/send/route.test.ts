@@ -1074,17 +1074,36 @@ describe('POST /api/messenger/send — WooCommerce order lookup', () => {
     expect(mocks.phraseOrderAnswer.mock.calls[0][0].facts).toMatchObject({ order_number: '1234', payment_state: 'paid' });
   });
 
-  it('uses the verified WordPress customer from the conversation, never one the model wrote', async () => {
+  it('uses a fresh token for the bound WordPress customer, never one the model wrote', async () => {
     mocks.getConversationForVisitor.mockResolvedValue({
       ...CONVERSATION,
       metadata: { identity: { customer_id: '42', woo_customer_id: '42', verified: true } },
     });
     stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com', customer_id: '999', wp_user_id: 999 }));
     mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [wooOrder] } });
+    mocks.verifyWooIdentityToken.mockResolvedValue({ wpUserId: '42', emailHash: null });
 
-    await POST(makeRequest(validBody));
+    await POST(makeRequest({ ...validBody, shopperToken: 'gcw1.fresh.signature' }));
     expect(mocks.callWooPlugin.mock.calls[0][2]).toEqual({ mode: 'customer', wpUserId: 42, limit: 1, orderNumber: '1234' });
   });
+
+  it.each([undefined, 'gcw1.expired.signature', 'gcw1.other-customer.signature'])(
+    'does not let stored identity authorize a customer lookup with token %s', async (shopperToken) => {
+      mocks.getConversationForVisitor.mockResolvedValue({
+        ...CONVERSATION,
+        metadata: { identity: { customer_id: '42', woo_customer_id: '42', verified: true } },
+      });
+      mocks.verifyWooIdentityToken.mockResolvedValue(
+        shopperToken === 'gcw1.other-customer.signature' ? { wpUserId: '99', emailHash: null } : null,
+      );
+      stubTurn(ACTION({ action: 'lookup_order', order_number: '1234', email: 'a@b.com' }));
+      mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [] } });
+
+      await POST(makeRequest({ ...validBody, shopperToken }));
+
+      expect(mocks.callWooPlugin.mock.calls[0][2]).toMatchObject({ mode: 'guest', email: 'a@b.com' });
+    },
+  );
 
   it('treats an unverified identity flag as a guest', async () => {
     mocks.getConversationForVisitor.mockResolvedValue({

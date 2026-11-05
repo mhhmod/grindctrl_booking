@@ -45,9 +45,9 @@ export const PUBLIC_INTEGRATIONS = [
   {
     id: 'custom-website',
     name: 'Your website',
-    state: 'in-testing',
-    evidenceRef: 'docs/platform-readiness-matrix.md',
-    note: 'Store Chat only, by script tag on a DNS-verified domain. Code is on main and being verified; not available to merchants yet. No Try-On, order lookup or native product sync.',
+    state: 'implemented',
+    evidenceRef: 'docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md',
+    note: 'Store Chat only, by script tag on a DNS-verified domain. Verified on a real site against production on 2026-11-05. No Try-On, order lookup or native product sync.',
   },
   {
     id: 'salla',
