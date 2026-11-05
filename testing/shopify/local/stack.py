@@ -89,6 +89,9 @@ def run(s, name, image, env=None, extra=None, command=None):
     if name=='gateway':
         docker('network','connect','--alias','gateway',s['prefix'],s['prefix']+'-gateway')
 
+# The postgres image runs its init scripts on a temporary server that only
+# listens on the Unix socket, then restarts. Readiness is checked over TCP
+# (pg_isready -h 127.0.0.1) so the temporary server never counts as ready.
 def wait_for(check):
     for _ in range(45):
         try:
@@ -110,7 +113,7 @@ def up():
     private_write(STATE/'state.json',json.dumps(s))
     docker('network','create','--internal','--label',LABEL,s['prefix'])
     run(s,'db',IMAGES['db'],{'POSTGRES_PASSWORD':s['password'],'POSTGRES_DB':'m1_local'})
-    wait_for(lambda:docker('exec',s['prefix']+'-db','pg_isready','-U','postgres','-d','m1_local').endswith('accepting connections'))
+    wait_for(lambda:docker('exec',s['prefix']+'-db','pg_isready','-h','127.0.0.1','-U','postgres','-d','m1_local').endswith('accepting connections'))
     sql(s,(HERE/'prerequisites.sql').read_text())
     sql(s,"alter role authenticator password '"+s['password']+"'; alter role supabase_storage_admin password '"+s['password']+"';")
     run(s,'rest',IMAGES['rest'],{
@@ -264,7 +267,7 @@ def rehearse():
         docker('stop','--time','10',s['prefix']+'-'+name)
     for name in ('db','rest','storage'):
         docker('start',s['prefix']+'-'+name)
-        if name=='db':wait_for(lambda:docker('exec',s['prefix']+'-db','pg_isready','-U','postgres','-d','m1_local').endswith('accepting connections'))
+        if name=='db':wait_for(lambda:docker('exec',s['prefix']+'-db','pg_isready','-h','127.0.0.1','-U','postgres','-d','m1_local').endswith('accepting connections'))
     time.sleep(2)
     print('Local logical restore verified; DB/REST/Storage restarted, budget retained.')
     tests('recovery')
