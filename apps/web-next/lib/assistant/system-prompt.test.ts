@@ -16,10 +16,11 @@ describe('SYSTEM_PROMPT', () => {
     expect(SYSTEM_PROMPT).toMatch(/Shopify/i);
   });
 
-  it('states WooCommerce as live for Store Chat only, keeps the website in testing and claims no marketplace listing', () => {
-    expect(SYSTEM_PROMPT).toMatch(/- WooCommerce: live for Store Chat only/);
+  it('states WooCommerce as live for Try-On, Store Chat and order status, keeps the website in testing and claims no marketplace listing', () => {
+    expect(SYSTEM_PROMPT).toMatch(/- WooCommerce: live for Try-On, Store Chat and order status/);
     expect(SYSTEM_PROMPT).toMatch(/- A merchant's own website: in testing, Store Chat only/);
     expect(SYSTEM_PROMPT).toMatch(/never say it is/);
+    expect(SYSTEM_PROMPT).toMatch(/WooCommerce plans are arranged with GRINDCTRL/);
   });
 
   it('forbids HTML and markdown link syntax, requiring bare addresses instead', () => {

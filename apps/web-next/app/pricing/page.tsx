@@ -11,7 +11,7 @@ import { listPublicPlanCatalog } from '@/lib/try-on/public-catalog';
 
 const title = 'GrindCTRL AI Try-On Pricing';
 const description =
-  'Compare GrindCTRL AI Try-On plans, monthly render credits, premium setup, and top-up packs. Try-On and billing run through Shopify today.';
+  'Compare GrindCTRL AI Try-On plans, monthly render credits, premium setup, and top-up packs. Try-On runs on Shopify and WooCommerce. Shopify plans are billed through Shopify; WooCommerce plans are arranged with GRINDCTRL.';
 
 export const metadata: Metadata = {
   title,

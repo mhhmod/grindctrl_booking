@@ -24,11 +24,11 @@ describe('llms.txt', () => {
 
   it('states the honest status of every platform, read from the register', () => {
     expect(lineFor('Shopify')).toMatch(/^- Shopify: Live\. /);
-    expect(lineFor('WooCommerce')).toMatch(/^- WooCommerce: Live\. Store Chat only, through the GRINDCTRL WordPress plugin/);
+    expect(lineFor('WooCommerce')).toMatch(/^- WooCommerce: Live\. Try-On, Store Chat and order status, through the GRINDCTRL WordPress plugin/);
     expect(lineFor('Your website')).toMatch(/^- Your website: In testing\. Store Chat only/);
     expect(lineFor('Salla')).toMatch(/^- Salla: Planned\. No code yet/);
     expect(lineFor('Zid')).toMatch(/^- Zid: Planned\. No code yet/);
-    expect(text).toContain('Try-On, order lookup and billing are Shopify-only today.');
+    expect(text).toContain('Paid plans are billed through Shopify for Shopify stores and arranged with GRINDCTRL for WooCommerce stores.');
     for (const id of ['shopify', 'woocommerce', 'custom-website', 'salla', 'zid']) {
       expect(findPublicIntegration(id), id).toBeDefined();
     }
@@ -43,12 +43,12 @@ describe('llms.txt', () => {
     expect(text).not.toMatch(/app store/i);
   });
 
-  it('scopes WooCommerce to Store Chat and claims no marketplace listing or wide support', () => {
+  it('scopes WooCommerce to Try-On, Store Chat and order status and claims no marketplace listing or wide support', () => {
     const line = lineFor('WooCommerce');
     expect(line).not.toMatch(/\b(supported|works with|compatible|all)\b/i);
     expect(line).not.toContain('Not available to merchants');
     expect(text).not.toMatch(/wordpress\.org|marketplace/i);
-    expect(text).toContain('Store Chat is live on WooCommerce.');
+    expect(text).toContain('It is live on Shopify and WooCommerce.');
   });
 
   it('links every public page by absolute URL, and each one is in the sitemap', () => {

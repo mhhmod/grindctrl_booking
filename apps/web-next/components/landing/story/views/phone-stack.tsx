@@ -22,7 +22,7 @@ export function PhoneStack({ v, t }: ViewProps) {
         </div>
       </div>
       <div data-reveal="">
-        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n connects through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
+        <div role="img" aria-label={t("How GrindCTRL connects: your Shopify store (native app and theme blocks) sends products and read-only order status to GrindCTRL, where try-on, Store Chat, the team inbox and the dashboard are live. WooCommerce is live for try-on, Store Chat and order status. Your website is in testing, for Store Chat only. Salla and Zid are planned. GrindCTRL hands conversations to your team with the reason and email alerts. n8n connects through custom setup.")} style={{ position: "relative", marginTop: "26px" }}>
           <span style={{ display: "block", marginBottom: "8px", marginInlineStart: "4px", fontSize: "11.5px", fontWeight: "700", color: "var(--muted-foreground)" }}>{t("Your store")}</span>
           <div style={{ boxSizing: "border-box", padding: "16px", borderRadius: "20px", border: "1px solid var(--border)", background: "var(--card)", boxShadow: "0 24px 50px -36px color-mix(in srgb, var(--foreground) 50%, transparent)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--foreground)" }}>

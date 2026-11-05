@@ -28,7 +28,7 @@ const MARK_SIZE = { width: '16px', height: '16px', flexShrink: 0 } as const;
 
 /** `note` is a scope qualifier under the name, for a live platform that is not live for everything. */
 const PLATFORMS: readonly { id: string; label: StoryText; mark: React.ReactNode; note?: StoryText }[] = [
-  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceMark monochrome decorative style={MARK_SIZE} />, note: 'Store Chat only' },
+  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceMark monochrome decorative style={MARK_SIZE} /> },
   { id: 'custom-website', label: 'Your website', mark: <GlobeIcon size={16} style={{ flexShrink: 0 }} /> },
   { id: 'salla', label: 'Salla', mark: <SallaMark monochrome decorative style={MARK_SIZE} /> },
   { id: 'zid', label: 'Zid', mark: null },

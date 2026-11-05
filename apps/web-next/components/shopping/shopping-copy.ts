@@ -77,7 +77,7 @@ const en: ShoppingCopy = {
   catalogEyebrow: 'Your catalog',
   catalogTitle: 'Add it to any product page',
   catalogBody:
-    "There's no curated category list to qualify for. The try-on block works on any product page in your Shopify store. Try-On is Shopify-only today.",
+    "There's no curated category list to qualify for. The try-on block works on any product page in your Shopify store, and the plugin button on any WooCommerce product with an image. Try-On runs on Shopify and WooCommerce today.",
 
   bilingualEyebrow: 'Bilingual',
   bilingualTitle: 'English and Arabic, including right-to-left layout',
@@ -132,7 +132,7 @@ const ar: ShoppingCopy = {
   catalogEyebrow: 'كتالوجك',
   catalogTitle: 'أضفها إلى أي صفحة منتج',
   catalogBody:
-    'لا توجد قائمة فئات محددة مسبقًا. تعمل أداة التجربة الافتراضية على أي صفحة منتج في متجرك على Shopify. التجربة الافتراضية تعمل على Shopify فقط حاليًا.',
+    'لا توجد قائمة فئات محددة مسبقًا. تعمل أداة التجربة الافتراضية على أي صفحة منتج في متجرك على Shopify، ويعمل زر الإضافة على أي منتج WooCommerce له صورة. التجربة الافتراضية تعمل على Shopify وWooCommerce حاليًا.',
 
   bilingualEyebrow: 'ثنائية اللغة',
   bilingualTitle: 'الإنجليزية والعربية، بما في ذلك التخطيط من اليمين لليسار',

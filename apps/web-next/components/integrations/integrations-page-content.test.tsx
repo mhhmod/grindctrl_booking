@@ -78,17 +78,21 @@ describe('IntegrationsPageContent', () => {
     expect(screen.getByText('Zid').closest('li')?.querySelector('svg')).toBeNull();
   });
 
-  it('says Store Chat only for WooCommerce and your website, and that only the website is not available to merchants yet', () => {
+  it('scopes WooCommerce to Try-On, Store Chat and order status and your website to Store Chat only, and that only the website is not available to merchants yet', () => {
     renderPage('en');
     for (const label of ['WooCommerce', 'Your website']) {
       const row = screen.getByText(label).closest('li');
-      expect(row, label).toHaveTextContent('Store Chat only');
       expect(row, label).not.toHaveTextContent(/\b(supported|works with|marketplace)\b/i);
     }
+    expect(screen.getByText('Your website').closest('li')).toHaveTextContent('Store Chat only');
+    expect(screen.getByText('WooCommerce').closest('li')).not.toHaveTextContent('Store Chat only');
     expect(screen.getByText('Your website').closest('li')).toHaveTextContent('Not available to merchants yet');
     expect(screen.getByText('WooCommerce').closest('li')).not.toHaveTextContent('Not available to merchants');
     expect(screen.getByText('WooCommerce').closest('li')).toHaveTextContent(
-      'Try-On, order lookup and billing stay Shopify-only',
+      'Try-On, Store Chat and order status',
+    );
+    expect(screen.getByText('WooCommerce').closest('li')).toHaveTextContent(
+      'Paid plans are arranged with GRINDCTRL',
     );
   });
 

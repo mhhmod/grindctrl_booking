@@ -22,7 +22,7 @@ describe('the platform rows of the stack scene', () => {
   it('writes each status beside its platform and gives it a mark only where an official one exists', () => {
     const { container } = render(<PlatformRows t={en} />);
     for (const [name, status] of [
-      ['WooCommerce', 'Store Chat onlyLive'],
+      ['WooCommerce', 'Live'],
       ['Your website', 'In testing'],
       ['Salla', 'Planned'],
       ['Zid', 'Planned'],
@@ -39,9 +39,9 @@ describe('the platform rows of the stack scene', () => {
     }
   });
 
-  it('words only WooCommerce as live, and only for Store Chat, never any platform as supported or available', () => {
+  it('words only WooCommerce as live, never any platform as supported or available', () => {
     const { container } = render(<PlatformRows t={en} />);
-    expect(rowOf(container, 'WooCommerce')).toHaveTextContent(/Store Chat only.*Live/);
+    expect(rowOf(container, 'WooCommerce')).toHaveTextContent(/WooCommerce.*Live/);
     for (const name of ['Your website', 'Salla', 'Zid']) {
       expect(rowOf(container, name).textContent, name).not.toMatch(/\b(live|supported|available|works with)\b/i);
     }
@@ -50,12 +50,11 @@ describe('the platform rows of the stack scene', () => {
 
   it('translates every name and status', () => {
     const { container } = render(<PlatformRows t={ar} />);
-    expect(rowOf(container, 'WooCommerce')).toHaveTextContent('دردشة المتجر فقط');
     expect(rowOf(container, 'WooCommerce')).toHaveTextContent('مباشر');
     expect(rowOf(container, 'موقعك')).toHaveTextContent('قيد الاختبار');
     expect(rowOf(container, 'سلة')).toHaveTextContent('مخطط له');
     expect(rowOf(container, 'زد')).toHaveTextContent('مخطط له');
-    expect(container.textContent).not.toMatch(/Your website|In testing|Planned|Store Chat only|Live/);
+    expect(container.textContent).not.toMatch(/Your website|In testing|Planned|Live/);
   });
 
   it.each([
@@ -66,12 +65,12 @@ describe('the platform rows of the stack scene', () => {
     expect(container.textContent).not.toContain('Your Shopify store');
     expect(container.textContent).toContain('Your store');
     expect(rowOf(container, 'Shopify')).toHaveTextContent('ShopifyLive');
-    expect(rowOf(container, 'WooCommerce')).toHaveTextContent('WooCommerceStore Chat onlyLive');
+    expect(rowOf(container, 'WooCommerce')).toHaveTextContent('WooCommerceLive');
     for (const name of ['Your website', 'Salla', 'Zid']) {
       expect(rowOf(container, name), name).toHaveTextContent(/In testing|Planned/);
     }
     const label = container.querySelector('[role="img"]')?.getAttribute('aria-label') ?? '';
-    expect(label).toContain('WooCommerce is live for Store Chat only. Your website is in testing, for Store Chat only.');
+    expect(label).toContain('WooCommerce is live for try-on, Store Chat and order status. Your website is in testing, for Store Chat only.');
     expect(label).toContain('Salla and Zid are planned.');
   });
 });

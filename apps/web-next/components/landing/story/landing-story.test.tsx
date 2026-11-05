@@ -55,7 +55,7 @@ describe('the landing story page', () => {
     const { container, unmount } = renderStory('en');
     expect(container.textContent).not.toContain('We set it up and keep it running.');
     expect(container.textContent).not.toContain('Setup, tuning and ongoing care are part of the service.');
-    expect(await screen.findByText("Demo data. Order status works on Shopify and needs read access to your store's orders.")).toBeInTheDocument();
+    expect(await screen.findByText("Demo data. Order status works on Shopify and WooCommerce and needs read access to your store's orders.")).toBeInTheDocument();
     unmount();
     const ar = renderStory('ar');
     expect(ar.container.textContent).not.toContain('نحن نجهّز كل شيء ونبقيه يعمل');

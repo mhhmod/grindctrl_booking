@@ -43,7 +43,7 @@ const en: ConversationsCopy = {
     },
     {
       title: 'Verified order lookup, read-only',
-      body: 'On Shopify, one real order per request, matched to a signed-in customer or an order number plus matching email. Only fulfillment, tracking, and line-item facts come back, never price, address, phone, or customer ID.',
+      body: 'On Shopify and WooCommerce, one real order per request, matched to a signed-in customer or an order number plus matching email. Only fulfillment, tracking, and line-item facts come back, never price, address, phone, or customer ID.',
     },
     {
       title: 'Team handoff, on request or after hours',
@@ -88,13 +88,8 @@ const en: ConversationsCopy = {
       statusKind: 'planned',
     },
     {
-      label: 'Order lookup and Try-On on WooCommerce',
-      note: 'Store Chat is live on WooCommerce. Order lookup and Try-On stay Shopify-only.',
-      statusKind: 'notBuilt',
-    },
-    {
       label: 'Your website',
-      note: 'In testing for Store Chat only, and not available to merchants yet. Order lookup and Try-On stay Shopify-only.',
+      note: 'In testing for Store Chat only, and not available to merchants yet. Try-On and order lookup are not part of it.',
       statusKind: 'inTesting',
     },
     {
@@ -126,7 +121,7 @@ const ar: ConversationsCopy = {
     },
     {
       title: 'بحث موثّق عن الطلبات، للقراءة فقط',
-      body: 'على Shopify، طلب حقيقي واحد لكل استعلام، يُطابَق مع عميل مسجّل دخوله أو رقم طلب مع بريد إلكتروني مطابق. تعود فقط حقائق الشحن والتتبع وبنود الطلب، ولا يظهر أبدًا السعر أو العنوان أو الهاتف أو هوية العميل.',
+      body: 'على Shopify وWooCommerce، طلب حقيقي واحد لكل استعلام، يُطابَق مع عميل مسجّل دخوله أو رقم طلب مع بريد إلكتروني مطابق. تعود فقط حقائق الشحن والتتبع وبنود الطلب، ولا يظهر أبدًا السعر أو العنوان أو الهاتف أو هوية العميل.',
     },
     {
       title: 'تحويل إلى فريقك، عند الطلب أو خارج ساعات العمل',
@@ -171,13 +166,8 @@ const ar: ConversationsCopy = {
       statusKind: 'planned',
     },
     {
-      label: 'الاستعلام عن الطلبات والتجربة الافتراضية على WooCommerce',
-      note: 'دردشة المتجر مباشرة على WooCommerce. الاستعلام عن الطلبات والتجربة الافتراضية يبقيان على Shopify فقط.',
-      statusKind: 'notBuilt',
-    },
-    {
       label: 'موقعك الخاص',
-      note: 'قيد الاختبار لدردشة المتجر فقط، وغير متاح للتجار بعد. الاستعلام عن الطلبات والتجربة الافتراضية يبقيان على Shopify فقط.',
+      note: 'قيد الاختبار لدردشة المتجر فقط، وغير متاح للتجار بعد. التجربة الافتراضية والاستعلام عن الطلبات ليسا جزءًا منه.',
       statusKind: 'inTesting',
     },
     {

@@ -301,7 +301,7 @@ export function DeskOps({ v, t }: ViewProps) {
         </div>
         <div style={{ margin: "14px 0 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px", fontSize: "12.5px", lineHeight: "1.5", color: "color-mix(in srgb, var(--gc-cream) 58%, transparent)" }}>
           <p style={{ margin: "0" }}>
-            {t(v.managedSetup ? "Demo data. Order status works on Shopify and needs read access to your store's orders. Setup, tuning and ongoing care are part of the service." : "Demo data. Order status works on Shopify and needs read access to your store's orders.")}
+            {t(v.managedSetup ? "Demo data. Order status works on Shopify and WooCommerce and needs read access to your store's orders. Setup, tuning and ongoing care are part of the service." : "Demo data. Order status works on Shopify and WooCommerce and needs read access to your store's orders.")}
           </p>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", height: "24px", padding: "0 9px", borderRadius: "12px", fontSize: "11.5px", fontWeight: "700", whiteSpace: "nowrap", color: "var(--gc-cream)", border: "1px solid color-mix(in srgb, var(--gc-cream) 28%, transparent)", background: "color-mix(in srgb, var(--gc-cream) 6%, transparent)" }}>
