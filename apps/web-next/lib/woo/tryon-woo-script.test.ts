@@ -83,13 +83,32 @@ describe('tryon-woo.js', () => {
     expect(document.querySelector('.gc-tryon-sheet__close')).toHaveAttribute('aria-label', 'Close');
   });
 
-  it('asks the shopper to choose options first and makes no request', async () => {
+  it('opens a variable product without a choice, using the product image', async () => {
     page('variable');
     load();
     click('form .gc-tryon-btn');
     await tick();
-    expect(calls).toHaveLength(0);
-    expect(document.querySelector('.gc-tryon-note')).toHaveTextContent('Choose your options first');
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ product_id: 42, variation_id: 0 });
+    expect(document.querySelector('.gc-tryon-note')).toBeNull();
+    expect(document.querySelector('.gc-tryon-sheet iframe')).not.toBeNull();
+  });
+
+  it('asks for a size in the sheet when nothing was chosen at add to cart', async () => {
+    page('variable');
+    load();
+    click('form .gc-tryon-btn');
+    await tick();
+    const frame = document.querySelector('.gc-tryon-sheet iframe') as HTMLIFrameElement;
+    const posted = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => {});
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { type: 'grindctrl-tryon:add-to-cart' }, origin: 'https://grindctrl.cloud', source: frame.contentWindow,
+    }));
+    await tick();
+    expect(calls.some((call) => call.url.endsWith('cart/add-item'))).toBe(false);
+    expect(posted).toHaveBeenCalledWith(
+      { type: 'grindctrl-tryon:cart-result', ok: false, message: 'Choose a size above, then add it to the cart.' },
+      'https://grindctrl.cloud',
+    );
   });
 
   it('does not read the product page form for a catalog card', async () => {
@@ -243,10 +262,6 @@ describe('tryon-woo.js', () => {
   it('uses Arabic copy and right-to-left direction for an Arabic store', async () => {
     page('variable');
     load({ locale: 'ar' });
-    click('form .gc-tryon-btn');
-    await tick();
-    expect(document.querySelector('.gc-tryon-note')).toHaveTextContent('اختر الخيارات');
-
     (document.querySelector('[name="variation_id"]') as HTMLInputElement).value = '77';
     click('form .gc-tryon-btn');
     await tick();

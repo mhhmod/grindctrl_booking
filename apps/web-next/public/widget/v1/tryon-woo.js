@@ -27,19 +27,17 @@
   var COPY = {
     en: {
       close: 'Close',
-      chooseOptions: 'Choose your options first, then try it on.',
       unavailable: 'Try-on could not be started. Please try again.',
       retry: 'Try again',
       addFailed: 'This item could not be added to the cart.',
-      chooseOnPage: 'Choose your options on the product page, then add it to the cart.'
+      chooseOnPage: 'Choose a size above, then add it to the cart.'
     },
     ar: {
       close: 'إغلاق',
-      chooseOptions: 'اختر الخيارات أولاً ثم جرّب المنتج.',
       unavailable: 'تعذّر بدء التجربة. حاول مرة أخرى.',
       retry: 'إعادة المحاولة',
       addFailed: 'تعذّرت إضافة هذا المنتج إلى السلة.',
-      chooseOnPage: 'اختر الخيارات من صفحة المنتج ثم أضفه إلى السلة.'
+      chooseOnPage: 'اختر المقاس أعلاه ثم أضفه إلى السلة.'
     }
   };
   var t = COPY[locale];
@@ -344,11 +342,9 @@
 
     var productId = Number(button.dataset.productId);
     if (!productId) return;
+    // A variable product opens without a choice, as on Shopify: the look uses
+    // the product image and the sheet's size picker chooses before add to cart.
     var picked = readVariation(button);
-    if (button.dataset.productType === 'variable' && variationsForm(button) && !picked.id) {
-      showNote(button, t.chooseOptions, false);
-      return;
-    }
 
     clearNote(button);
     button.disabled = true;
@@ -392,7 +388,7 @@
         }
         if (type === 'grindctrl-tryon:add-to-cart') {
           // The look was made for one product (or variation); that is what is added.
-          if (button.dataset.productType === 'variable' && !picked.id) {
+          if (button.dataset.productType === 'variable' && !picked.id && !String(event.data.variantId || '')) {
             reply({ type: 'grindctrl-tryon:cart-result', ok: false, message: t.chooseOnPage });
             return;
           }
