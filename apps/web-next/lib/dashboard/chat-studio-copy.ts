@@ -126,6 +126,7 @@ export interface ChatStudioCopy {
     loading: string;
     loadFailed: string;
     recordHelp: string;
+    wildcardHint: string;
     recordType: string;
     recordName: string;
     recordValue: string;
@@ -307,6 +308,7 @@ const en: ChatStudioCopy = {
     loading: 'Loading your domains…',
     loadFailed: 'Your domains could not be loaded. Refresh the page to try again.',
     recordHelp: 'Add this record where you manage your domain’s DNS, then check it. A new record can take a few hours to appear.',
+    wildcardHint: 'If your store’s address works only through a wildcard DNS record, add an A or CNAME record for the store host before adding the TXT record.',
     recordType: 'Type',
     recordName: 'Name',
     recordValue: 'Value',
@@ -483,6 +485,7 @@ const ar: ChatStudioCopy = {
     loading: 'جارٍ تحميل نطاقاتك…',
     loadFailed: 'تعذّر تحميل نطاقاتك. حدّث الصفحة وحاول مرة أخرى.',
     recordHelp: 'أضف هذا السجل حيث تدير إعدادات DNS لنطاقك، ثم تحقّق منه. قد يستغرق ظهور السجل الجديد بضع ساعات.',
+    wildcardHint: 'إذا كان عنوان متجرك يعمل فقط عبر سجل DNS شامل (*)، فأضف سجل A أو CNAME لاسم مضيف المتجر قبل إضافة سجل TXT.',
     recordType: 'النوع',
     recordName: 'الاسم',
     recordValue: 'القيمة',

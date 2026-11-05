@@ -6,6 +6,7 @@ import {
   wooSignedRequestErrorResponse,
   type WooSignedRequestFailure,
 } from '@/lib/woo/signed-request';
+import { normalizeWooRestBase } from '@/lib/woo/rest-base';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,7 @@ type HeartbeatInput = {
   wcVersion: string | null;
   timezone: string | null;
   currency: string | null;
+  restUrl: unknown;
 };
 
 function json(body: Record<string, unknown>, status = 200) {
@@ -85,7 +87,7 @@ function parseInput(raw: unknown): HeartbeatInput | null {
   ) {
     return null;
   }
-  return { homeUrl, pluginVersion, wpVersion, wcVersion, timezone, currency };
+  return { homeUrl, pluginVersion, wpVersion, wcVersion, timezone, currency, restUrl: body.restUrl };
 }
 
 function reject(failure: WooSignedRequestFailure) {
@@ -157,6 +159,21 @@ export async function POST(request: NextRequest) {
   } catch {
     console.error('[woo] heartbeat failed', { code: 'unavailable', siteId: verified.siteId });
     return json({ error: 'unavailable' }, 503);
+  }
+
+  // The REST root follows the paired address only: a copied database that
+  // reports another address must not re-aim the server's calls.
+  if (!homeUrlMismatch) {
+    const restBaseUrl = normalizeWooRestBase(pairedHomeUrl, input.restUrl);
+    if (restBaseUrl) {
+      // Best effort and separate: a database without the column keeps working.
+      const { error } = await getMessengerServiceClient()
+        .from('woo_site_connections')
+        .update({ rest_base_url: restBaseUrl })
+        .eq('widget_site_id', verified.siteId)
+        .eq('status', 'active');
+      if (error) console.warn('[woo] rest base not stored', { siteId: verified.siteId });
+    }
   }
 
   return json({ ok: true, homeUrlMismatch, minPluginVersion: WOO_MIN_PLUGIN_VERSION });

@@ -42,19 +42,28 @@ describe('public integration truth', () => {
       state: 'implemented',
       evidenceRef: 'docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md',
     });
-    expect(findPublicIntegration('custom-website')).toMatchObject({ name: 'Your website', state: 'in-testing' });
+    expect(findPublicIntegration('custom-website')).toMatchObject({ name: 'Your website', state: 'implemented' });
     expect(findPublicIntegration('salla')).toMatchObject({ name: 'Salla', state: 'planned' });
     expect(findPublicIntegration('zid')).toMatchObject({ name: 'Zid', state: 'planned' });
-    // Only Shopify and WooCommerce may be implemented.
+    // Only Shopify, WooCommerce and your own website (Store Chat only) may be implemented.
     const implemented = PUBLIC_INTEGRATIONS.filter((item) => item.state === 'implemented').map((item) => item.id);
-    expect(implemented).toEqual(['shopify', 'woocommerce']);
+    expect(implemented).toEqual(['shopify', 'woocommerce', 'custom-website']);
   });
 
-  it('says Store Chat only for the in-testing website and never words it as shipped', () => {
-    const note = findPublicIntegration('custom-website')!.note;
-    expect(note).toMatch(/Store Chat only/);
-    expect(note).toMatch(/not available to merchants/i);
-    expect(note).not.toMatch(/\b(supported|works with|available now|live)\b/i);
+  it('scopes your own website to Store Chat by script tag and never claims more', () => {
+    const integration = findPublicIntegration('custom-website')!;
+    expect(integration.evidenceRef).toBe('docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md');
+    expect(integration.note).toMatch(/^Store Chat only, by script tag on a DNS-verified domain\./);
+    expect(integration.note).toMatch(/No Try-On, order lookup or native product sync/);
+    expect(integration.note).not.toMatch(/\b(supported|works with|compatible|marketplace|all stores|everywhere|any site)\b/i);
+    expect(integration.note).not.toMatch(/not available to merchants/i);
+  });
+
+  it('keeps marketplace, all-stores and supported-everywhere wording out of every platform note', () => {
+    for (const id of ['shopify', 'woocommerce', 'custom-website', 'salla', 'zid']) {
+      const note = findPublicIntegration(id)!.note;
+      expect(note, id).not.toMatch(/\b(marketplace|all stores|supported everywhere|works with)\b/i);
+    }
   });
 
   it('scopes WooCommerce to Try-On, Store Chat and order status, with plans arranged, and never claims a marketplace listing, privacy tooling or wide support', () => {
@@ -86,7 +95,8 @@ describe('public integration truth', () => {
     const rowFor = (name: string) => matrix.split('\n').find((line) => line.startsWith(`| ${name} |`)) ?? '';
     expect(rowFor('WooCommerce')).toMatch(/\| implemented \(Store Chat, Try-On, order status\) \|/);
     expect(rowFor('WooCommerce')).toContain('docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md');
-    expect(rowFor('Custom website')).toMatch(/\| in testing/);
+    expect(rowFor('Custom website')).toMatch(/\| implemented \(Store Chat only\)/);
+    expect(rowFor('Custom website')).toContain('docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md');
     expect(rowFor('Salla')).toMatch(/\| planned \|/);
     expect(rowFor('Zid')).toMatch(/\| planned \|/);
   });

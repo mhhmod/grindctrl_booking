@@ -65,7 +65,7 @@ const en: IntegrationsCopy = {
   storefrontEyebrow: 'Storefront',
   storefrontTitle: 'Where GrindCTRL lives in your store',
   storefrontBody:
-    'Shopify is live with Try-On, Store Chat, order lookup and billing. WooCommerce is live with Try-On, Store Chat and order lookup. Your website is in testing, for Store Chat only. Salla and Zid are planned.',
+    'Shopify is live with Try-On, Store Chat, order lookup and billing. WooCommerce is live with Try-On, Store Chat and order lookup. Your website is live for Store Chat only. Salla and Zid are planned.',
   storefrontItems: [
     {
       id: 'shopify',
@@ -81,7 +81,7 @@ const en: IntegrationsCopy = {
       id: 'custom-website',
       label: 'Your website',
       description:
-        'Store Chat only, by script tag on a domain you verify with DNS. Not available to merchants yet. No Try-On, order lookup or product sync.',
+        'Store Chat only, by script tag on a domain you verify with DNS. No Try-On, order lookup or product sync.',
     },
     { id: 'salla', description: 'Next in the build order. No code connects a Salla store yet.' },
     { id: 'zid', description: 'After Salla in the build order. No code connects a Zid store yet.' },
@@ -155,7 +155,7 @@ const ar: IntegrationsCopy = {
   storefrontEyebrow: 'المتجر',
   storefrontTitle: 'أين يعمل GrindCTRL داخل متجرك',
   storefrontBody:
-    'Shopify مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات والفوترة. وWooCommerce مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات. وموقعك الخاص قيد الاختبار لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
+    'Shopify مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات والفوترة. وWooCommerce مباشر بالتجربة الافتراضية ودردشة المتجر والاستعلام عن الطلبات. وموقعك الخاص مباشر لدردشة المتجر فقط. وسلة وزد مخطط لهما.',
   storefrontItems: [
     {
       id: 'shopify',
@@ -171,7 +171,7 @@ const ar: IntegrationsCopy = {
       id: 'custom-website',
       label: 'موقعك',
       description:
-        'دردشة المتجر فقط، عبر وسم سكريبت على نطاق تتحقق منه عبر DNS. غير متاح للتجار بعد. بلا تجربة افتراضية أو استعلام عن الطلبات أو مزامنة للمنتجات.',
+        'دردشة المتجر فقط، عبر وسم سكريبت على نطاق تتحقق منه عبر DNS. بلا تجربة افتراضية أو استعلام عن الطلبات أو مزامنة للمنتجات.',
     },
     { id: 'salla', label: 'سلة', description: 'التالية في ترتيب البناء. لا يوجد كود يربط متجر سلة حتى الآن.' },
     { id: 'zid', label: 'زد', description: 'بعد سلة في ترتيب البناء. لا يوجد كود يربط متجر زد حتى الآن.' },

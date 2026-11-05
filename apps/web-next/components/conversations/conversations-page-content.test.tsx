@@ -42,15 +42,16 @@ describe('ConversationsPageContent', () => {
     }
   });
 
-  it.each<SiteLocale>(['en', 'ar'])('lists no WooCommerce row as not live, lists your website as in testing and Salla and Zid as planned in %s', (locale) => {
+  it.each<SiteLocale>(['en', 'ar'])('lists no WooCommerce or own-website row as not live, and Salla and Zid as planned in %s', (locale) => {
     renderPage(locale);
     const t = getConversationsCopy(locale);
     const landing = getLandingDictionary(locale);
     const rowOf = (label: string) => screen.getByText(label).closest('li');
 
-    const [website, salla] = t.notLiveItems.slice(-2);
+    const salla = t.notLiveItems.at(-1)!;
     expect(screen.queryByText(/on WooCommerce|على WooCommerce/)).toBeNull();
-    expect(rowOf(website.label)).toHaveTextContent(landing.integrationStateInTesting);
+    expect(t.notLiveItems.map((item) => item.label)).not.toContain(locale === 'ar' ? 'موقعك الخاص' : 'Your website');
+    expect(t.notLiveBody).toMatch(locale === 'ar' ? /موقعك الخاص/ : /your own website/);
     expect(rowOf(salla.label)).toHaveTextContent(landing.integrationStatePlanned);
   });
 

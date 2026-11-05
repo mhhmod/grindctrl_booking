@@ -161,6 +161,19 @@ describe('Store Chat on a WooCommerce store', () => {
     });
   });
 
+  it('forwards a stored launch preview token on the WooCommerce key-based config call', async () => {
+    const token = 'preview.payload.signature-for-this-site';
+    window.localStorage.setItem('gc_preview', JSON.stringify({ token, savedAt: Date.now() }));
+    boot();
+
+    await waitFor(() => expect(fetchMock.mock.calls.some((call) => String(call[0]).includes('/api/messenger/config'))).toBe(true));
+    const call = fetchMock.mock.calls.find((item) => String(item[0]).includes('/api/messenger/config'))!;
+    const url = new URL(String(call[0]));
+    expect(url.searchParams.get('key')).toBe(config.key);
+    expect(url.searchParams.has('shop')).toBe(false);
+    expect(url.searchParams.get('preview')).toBe(token);
+  });
+
   it('never reads a Store API root on another origin', async () => {
     (window as { grindctrlWoo?: { storeApi?: string } }).grindctrlWoo!.storeApi = 'https://elsewhere.example/wp-json/wc/store/v1/';
     boot();

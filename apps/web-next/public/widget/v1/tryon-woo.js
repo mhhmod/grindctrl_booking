@@ -322,6 +322,21 @@
     });
   }
 
+  /* The product's variations, for the sheet's size picker. Display data from
+     the plugin's public route; only a variation listed here can be added. */
+  function requestProduct(productId) {
+    var join = CFG.restUrl.indexOf('?') === -1 ? '?' : '&';
+    return fetch(CFG.restUrl + 'tryon-product' + join + 'product_id=' + productId, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' }
+    }).then(function (res) {
+      return res.ok ? res.json() : null;
+    }).then(function (data) {
+      return data && data.product && Array.isArray(data.product.variants) ? data.product : null;
+    }).catch(function () { return null; });
+  }
+
   function openTryOn(button) {
     var existing = sessions.get(button);
     // Reopening resumes whatever the sheet held, a look included.
@@ -350,6 +365,7 @@
       frame.src = target.href;
       var sheet = createSheet(button, frame);
       var addId = picked.id || productId;
+      var storeProduct = null;
 
       function reply(message) {
         if (frame.contentWindow) frame.contentWindow.postMessage(message, target.origin);
@@ -366,13 +382,39 @@
           button.click();
           return;
         }
+        if (type === 'grindctrl-tryon:product-request') {
+          requestProduct(productId).then(function (product) {
+            if (!product || !product.variants.length) return;
+            storeProduct = product;
+            reply({ type: 'grindctrl-tryon:product', product: product, variant: picked.id });
+          });
+          return;
+        }
         if (type === 'grindctrl-tryon:add-to-cart') {
           // The look was made for one product (or variation); that is what is added.
           if (button.dataset.productType === 'variable' && !picked.id) {
             reply({ type: 'grindctrl-tryon:cart-result', ok: false, message: t.chooseOnPage });
             return;
           }
-          addToCart(addId, picked.attributes).then(function (res) {
+          var cartId = addId;
+          var cartAttributes = picked.attributes;
+          // The sheet may name another size of this same product, never anything else.
+          var asked = String(event.data.variantId || '');
+          if (asked && asked !== String(addId)) {
+            var chosen = null;
+            if (storeProduct) {
+              for (var i = 0; i < storeProduct.variants.length; i++) {
+                if (String(storeProduct.variants[i].id) === asked) { chosen = storeProduct.variants[i]; break; }
+              }
+            }
+            if (!chosen || !Array.isArray(chosen.attributes)) {
+              reply({ type: 'grindctrl-tryon:cart-result', ok: false, message: t.addFailed });
+              return;
+            }
+            cartId = Number(chosen.id);
+            cartAttributes = chosen.attributes;
+          }
+          addToCart(cartId, cartAttributes).then(function (res) {
             if (res.ok) {
               reply({ type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: '' });
               refreshCartUi();

@@ -277,7 +277,9 @@ export async function POST(request: NextRequest) {
     let verifiedAppClientId = conversation.metadata.identity?.app_client_id;
     const wooCustomerBound = conversation.metadata.identity?.woo_customer_id ?? null;
     let verifiedCustomer = wooConnection
-      ? Boolean(conversation.metadata.identity?.verified && wooCustomerBound)
+      // A saved identity binds a conversation, but cannot extend the plugin's
+      // ten-minute proof. Every Woo customer lookup needs a fresh token.
+      ? false
       : Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
         && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
     if (shopperToken && isWooIdentityToken(shopperToken)) {

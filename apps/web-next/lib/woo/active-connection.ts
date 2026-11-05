@@ -11,6 +11,7 @@ export type ActiveWooConnection = {
   homeUrl: string;
   secretVersion: number;
   pluginVersion: string;
+  restBaseUrl?: string | null;
 };
 
 type Row = {
@@ -19,14 +20,19 @@ type Row = {
   home_url: string;
   secret_version: number;
   plugin_version: string;
+  rest_base_url: string | null;
 };
 
 export async function loadActiveWooConnection(siteId: string): Promise<ActiveWooConnection | null> {
-  const { data, error } = await getMessengerServiceClient()
+  const client = getMessengerServiceClient();
+  const read = (columns: string) => client
     .from('woo_site_connections')
-    .select('platform, status, home_url, secret_version, plugin_version')
+    .select(columns)
     .eq('widget_site_id', siteId)
     .maybeSingle();
+  let { data, error } = await read('platform, status, home_url, secret_version, plugin_version, rest_base_url');
+  // The column arrives with a hand-applied migration: until then use /wp-json/.
+  if (error) ({ data, error } = await read('platform, status, home_url, secret_version, plugin_version'));
   if (error) throw new Error('WooCommerce connection is unavailable.');
   const row = data as Row | null;
   if (!row || row.platform !== 'woocommerce' || row.status !== 'active') return null;
@@ -36,5 +42,6 @@ export async function loadActiveWooConnection(siteId: string): Promise<ActiveWoo
     homeUrl: row.home_url,
     secretVersion: row.secret_version,
     pluginVersion: row.plugin_version,
+    restBaseUrl: row.rest_base_url,
   };
 }

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: 'GRINDCTRL | AI try-on and Store Chat for fashion stores',
   description:
-    'GRINDCTRL gives fashion stores AI virtual try-on and Store Chat in English and Arabic. Live on Shopify and WooCommerce today. Your own website is in testing, and Salla and Zid are planned.',
+    'GRINDCTRL gives fashion stores AI virtual try-on and Store Chat in English and Arabic. Live on Shopify and WooCommerce today, and on your own website for Store Chat only. Salla and Zid are planned.',
 };
 
 export default async function RootLayout({children}: {children: React.ReactNode}) {

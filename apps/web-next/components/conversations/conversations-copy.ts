@@ -64,7 +64,7 @@ const en: ConversationsCopy = {
   ],
   notLiveEyebrow: 'Where it stops today',
   notLiveTitle: "What's not live yet",
-  notLiveBody: "Store Chat is live on Shopify and WooCommerce. Here's what it doesn't do yet.",
+  notLiveBody: "Store Chat is live on Shopify, WooCommerce and your own website. Here's what it doesn't do yet.",
   notBuiltStatus: 'Not built',
   notLiveItems: [
     {
@@ -86,11 +86,6 @@ const en: ConversationsCopy = {
       label: 'Telegram',
       note: 'On the roadmap, not built.',
       statusKind: 'planned',
-    },
-    {
-      label: 'Your website',
-      note: 'In testing for Store Chat only, and not available to merchants yet. Try-On and order lookup are not part of it.',
-      statusKind: 'inTesting',
     },
     {
       label: 'Salla and Zid',
@@ -142,7 +137,7 @@ const ar: ConversationsCopy = {
   ],
   notLiveEyebrow: 'أين يتوقف اليوم',
   notLiveTitle: 'ما لم يُطلَق بعد',
-  notLiveBody: 'يعمل Store Chat اليوم على Shopify وWooCommerce. إليك ما لا يفعله بعد.',
+  notLiveBody: 'يعمل Store Chat اليوم على Shopify وWooCommerce وموقعك الخاص. إليك ما لا يفعله بعد.',
   notBuiltStatus: 'غير مطوَّر',
   notLiveItems: [
     {
@@ -164,11 +159,6 @@ const ar: ConversationsCopy = {
       label: 'تيليغرام',
       note: 'على خارطة الطريق، ولم يُبنَ بعد.',
       statusKind: 'planned',
-    },
-    {
-      label: 'موقعك الخاص',
-      note: 'قيد الاختبار لدردشة المتجر فقط، وغير متاح للتجار بعد. التجربة الافتراضية والاستعلام عن الطلبات ليسا جزءًا منه.',
-      statusKind: 'inTesting',
     },
     {
       label: 'سلة وزد',

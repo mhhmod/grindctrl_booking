@@ -122,6 +122,13 @@ describe('WooOrderProvider', () => {
     expect(await provider.lookupByEmailAndNumber({ orderNumber: '1028', email: 'a@example.com' })).toEqual({ ok: false, reason: 'not_found' });
   });
 
+  it('accepts a formatted order number from a sequential-number plugin when its digits are what was asked', async () => {
+    mocks.callWooPlugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [{ ...wooOrder, id: 9001, number: 'WC-1027' }] } });
+    expect(await provider.lookupGuestCard({ orderNumber: '1027', email: 'a@example.com', withAmounts: false })).toMatchObject({ ok: true });
+    expect(await provider.lookupByEmailAndNumber({ orderNumber: '1027', email: 'a@example.com' })).toMatchObject({ ok: true });
+    expect(await provider.lookupGuestCard({ orderNumber: '102', email: 'a@example.com', withAmounts: false })).toEqual({ ok: false, reason: 'not_found' });
+  });
+
   it('needs both proofs for a guest', async () => {
     expect(await provider.lookupByEmailAndNumber({ orderNumber: '1027', email: null })).toEqual({ ok: false, reason: 'missing_proof' });
     expect(mocks.callWooPlugin).not.toHaveBeenCalled();

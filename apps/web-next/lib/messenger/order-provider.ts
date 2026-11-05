@@ -81,6 +81,12 @@ export class ShopifyOrderProvider implements OrderProvider {
   }
 }
 
+/** The number the shopper typed names the order the plugin returned: exactly,
+ *  or as the digits of a formatted number ("WC-1027" shows as 1027). */
+function sameOrderNumber(shown: string, asked: string): boolean {
+  return shown === asked || shown.replace(/\D/g, '') === asked;
+}
+
 type PluginReply =
   | { ok: true; orders: NonNullable<ReturnType<typeof parseWooOrderResponse>> }
   | { ok: false; reason: 'provider_error' };
@@ -118,7 +124,7 @@ export class WooOrderProvider implements OrderProvider {
     });
     if (!reply.ok) return reply;
     const order = reply.orders[0];
-    if (!order || (input.orderNumber && order.number !== input.orderNumber)) return { ok: false, reason: 'not_found' };
+    if (!order || (input.orderNumber && !sameOrderNumber(order.number, input.orderNumber))) return { ok: false, reason: 'not_found' };
     return { ok: true, facts: wooToOrderFacts(order) };
   }
 
@@ -128,7 +134,7 @@ export class WooOrderProvider implements OrderProvider {
     if (!reply.ok) return reply;
     // The plugin answers a wrong email exactly like a missing order.
     const order = reply.orders[0];
-    if (!order || order.number !== input.orderNumber) return { ok: false, reason: 'not_found' };
+    if (!order || !sameOrderNumber(order.number, input.orderNumber)) return { ok: false, reason: 'not_found' };
     return { ok: true, facts: wooToOrderFacts(order) };
   }
 
@@ -136,7 +142,7 @@ export class WooOrderProvider implements OrderProvider {
     const reply = await this.ask({ mode: 'guest', email: input.email.trim().slice(0, 254), orderNumber: input.orderNumber });
     if (!reply.ok) return reply;
     const order = reply.orders[0];
-    if (!order || order.number !== input.orderNumber) return { ok: false, reason: 'not_found' };
+    if (!order || !sameOrderNumber(order.number, input.orderNumber)) return { ok: false, reason: 'not_found' };
     return { ok: true, card: wooToOrderCard(order, { withAmounts: input.withAmounts }) };
   }
 

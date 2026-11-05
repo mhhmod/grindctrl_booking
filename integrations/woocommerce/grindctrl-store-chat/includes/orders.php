@@ -34,16 +34,40 @@ function grindctrl_sc_order_route_path() {
 	return (string) wp_parse_url( home_url( GRINDCTRL_SC_ORDER_ROUTE ), PHP_URL_PATH );
 }
 
-/* True once per nonce for ten minutes, twice the accepted clock skew. */
+/*
+ * True once per nonce, for ten minutes (twice the accepted clock skew).
+ * The claim must be one atomic step: a get-then-set lets two simultaneous
+ * copies of a signed request both pass. wp_cache_add is atomic in a
+ * persistent object cache; otherwise INSERT IGNORE on the unique option_name
+ * lets exactly one request insert the row. Rows are purged by the daily
+ * heartbeat.
+ */
 function grindctrl_sc_claim_nonce( $nonce ) {
-	$key = 'gc_sc_n_' . substr( hash( 'sha256', $nonce ), 0, 40 );
+	$name = 'gc_sc_n_' . substr( hash( 'sha256', $nonce ), 0, 40 );
 	if ( wp_using_ext_object_cache() ) {
-		return wp_cache_add( $key, 1, 'grindctrl_sc', 10 * MINUTE_IN_SECONDS );
+		return wp_cache_add( $name, 1, 'grindctrl_sc', 10 * MINUTE_IN_SECONDS );
 	}
-	if ( false !== get_transient( $key ) ) {
-		return false;
-	}
-	return set_transient( $key, 1, 10 * MINUTE_IN_SECONDS );
+	global $wpdb;
+	$inserted = $wpdb->query(
+		$wpdb->prepare(
+			"INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+			$name,
+			(string) time()
+		)
+	);
+	return 1 === $inserted;
+}
+
+/* Drops spent nonces that can no longer be replayed (older than ten minutes). */
+function grindctrl_sc_purge_nonces() {
+	global $wpdb;
+	$wpdb->query(
+		$wpdb->prepare(
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND CAST(option_value AS UNSIGNED) < %d",
+			$wpdb->esc_like( 'gc_sc_n_' ) . '%',
+			time() - 10 * MINUTE_IN_SECONDS
+		)
+	);
 }
 
 /* permission_callback for GRINDCTRL's server. Returns true only for a fresh,
@@ -182,7 +206,7 @@ function grindctrl_sc_lookup_customer_orders( $data ) {
 		if ( ! $order instanceof WC_Order || (int) $order->get_customer_id() !== $user_id ) {
 			continue;
 		}
-		if ( '' !== $number && (string) $order->get_order_number() !== $number ) {
+		if ( '' !== $number && ! grindctrl_sc_order_shows_number( $order, $number ) ) {
 			continue;
 		}
 		$orders[] = grindctrl_sc_order_payload( $order );
@@ -199,17 +223,55 @@ function grindctrl_sc_lookup_guest_orders( $data ) {
 	if ( '' === $number || ! is_email( $email ) ) {
 		return array();
 	}
-	$order   = wc_get_order( absint( $number ) );
-	$billing = '';
-	if ( $order instanceof WC_Order && 'shop_order' === $order->get_type() && (string) $order->get_order_number() === $number ) {
+	// Every order the number can name, each judged only by its billing email.
+	// A wrong email and a missing order both end in the same empty list.
+	foreach ( grindctrl_sc_orders_by_number( $number ) as $order ) {
 		$billing = strtolower( trim( (string) $order->get_billing_email() ) );
-	} else {
-		$order = null;
+		if ( '' !== $billing && hash_equals( $billing, $email ) ) {
+			return array( grindctrl_sc_order_payload( $order ) );
+		}
 	}
-	// One comparison whether or not the order exists, so a wrong email and a
-	// missing order take the same path and return the same empty list.
-	$matches = hash_equals( '' === $billing ? 'no-email-on-order' : $billing, $email ) && null !== $order && '' !== $billing;
-	return $matches ? array( grindctrl_sc_order_payload( $order ) ) : array();
+	return array();
+}
+
+/*
+ * The orders a shopper's order number can mean. Sequential-number plugins keep
+ * the number they show in meta (_order_number, _order_number_formatted) and it
+ * differs from the order id; those are tried first. The order id is the plain
+ * WooCommerce case, accepted only when it is also the number shown to the
+ * shopper, so an id can not be used to probe orders that show another number.
+ */
+function grindctrl_sc_order_shows_number( $order, $number ) {
+	$shown = (string) $order->get_order_number();
+	return $shown === $number || preg_replace( '/\D/', '', $shown ) === $number;
+}
+
+function grindctrl_sc_orders_by_number( $number ) {
+	$candidates = array();
+	foreach ( array( '_order_number', '_order_number_formatted' ) as $meta_key ) {
+		$found = wc_get_orders(
+			array(
+				'type'       => 'shop_order',
+				'limit'      => 5,
+				'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- bounded by limit, one lookup per request.
+					array(
+						'key'   => $meta_key,
+						'value' => $number,
+					),
+				),
+			)
+		);
+		foreach ( $found as $order ) {
+			if ( $order instanceof WC_Order ) {
+				$candidates[ $order->get_id() ] = $order;
+			}
+		}
+	}
+	$by_id = wc_get_order( absint( $number ) );
+	if ( $by_id instanceof WC_Order && 'shop_order' === $by_id->get_type() && grindctrl_sc_order_shows_number( $by_id, $number ) ) {
+		$candidates[ $by_id->get_id() ] = $by_id;
+	}
+	return array_values( $candidates );
 }
 
 function grindctrl_sc_rest_order_lookup( $request ) {

@@ -18,8 +18,8 @@ status in chat (GRINDCTRL WordPress plugin on a DNS-verified domain), verified
 on a live store against production on 2026-11-04 and 2026-11-05
 (`docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`,
 `docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md`). "Your own
-website" (script tag with a DNS-verified domain) uses the same loader and
-verification but was not tested on its own, so it stays in testing. Billing
+website" (script tag with a DNS-verified domain, no plugin) was verified live on
+2026-11-05 for Store Chat only; it has no Try-On, order lookup or product sync. Billing
 is through Shopify for Shopify stores; WooCommerce paid plans are arranged with
 GRINDCTRL. WooCommerce privacy export and erase are not live yet (migration
 pending). Salla and Zid have no code. The
@@ -34,7 +34,7 @@ may be read as "available" for a platform that is not "implemented", and
 |---|---|---|---|---|---|---|---|---|
 | Shopify | Verified on dev store (staging) | Buttons render; mock render only on staging | Theme app extension + Admin API | Storefront AJAX cart | OAuth, `app/uninstalled`, privacy webhooks (simulated) | implemented | `docs/superpowers/checkpoints/2026-10-31-shopify-m1-staging.md` | Real uninstall/reinstall, store B isolation, privacy fulfilment |
 | WooCommerce | Verified live against production: plugin loads the loader, panel renders, AI answers from store knowledge, shopper hand-off reaches the inbox | Verified live 2026-11-05: button, generation, add to cart via the Store API | Verified: panel shows the viewed product and price from `window.grindctrlWoo` | Cart forwarding to the conversation verified (needs the `n25_handoff_rules` flag, as on Shopify) | Plugin activate/uninstall; no GRINDCTRL webhooks | implemented (Store Chat, Try-On, order status) | `docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md` and `docs/superpowers/checkpoints/2026-11-04-woocommerce-live.md`: test store `woo-m1-dev.grindctrl.cloud` (WordPress 7.1.4, WooCommerce 11.2.1), real DNS TXT verification, 2026-11-04 and 2026-11-05. Order status lookup verified in chat (guest email + order number) | Privacy export/erase (migration pending), logged-in shopper lookup, dashboard check; no catalog sync; marketplace listing is a separate decision |
-| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | in testing (on `main`, live check pending) | Same loader and DNS verification as WooCommerce, which is verified live; not tested on its own without the plugin | Live test on a real external domain without the plugin |
+| Custom website | Built: script tag + DNS TXT verified domain | Not built | None | None | None | implemented (Store Chat only) | `docs/superpowers/checkpoints/2026-11-05-woocommerce-parity-live.md` (section "Your own website (2026-11-05)"): plain static page with the script tag on a DNS-verified domain, no plugin; config, event, bootstrap, sync and send 200, and "Talk to a person" created a `handoff_requested` conversation | No Try-On, order lookup or native product sync; no merchant-facing install guide beyond the script tag |
 | Salla | Not built | Not built | Twilight SDK documented | `salla.cart.addItem()` documented | `app.installed/uninstalled` documented | planned | Research below | Free Partner demo store, App Snippets spike |
 | Zid | Not built | Not built | Themes Library JS documented | Themes Library cart JS documented | Lifecycle events unverified | planned | Research below | After Salla; script injection needs Zid approval |
 | BigCommerce, Ecwid | Not built | Not built | Documented | Documented, clean | Documented | not pursued yet | Research below | Third choice if global expansion comes before MENA depth |
@@ -43,7 +43,7 @@ may be read as "available" for a platform that is not "implemented", and
 
 ## Recommended order
 
-1. **WooCommerce live test.** Done on 2026-11-04 for Store Chat and 2026-11-05 for Try-On and order status (see the checkpoints). Its reach is the largest global install base; the same live check for "your own website" is the cheapest next gain.
+1. **WooCommerce live test.** Done on 2026-11-04 for Store Chat and 2026-11-05 for Try-On and order status (see the checkpoints). Its reach is the largest global install base; the same live check for "your own website" was done on 2026-11-05 (Store Chat only).
 2. **Salla.** App Snippets inject the loader on install with no theme work, Twilight gives product context and cart add, and a free Partner demo store exists. Best MENA fit.
 3. **Zid.** Same architecture as Salla, but script injection needs manual approval and an in-app support channel is mandatory, so it goes after Salla's patterns exist.
 

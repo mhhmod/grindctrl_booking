@@ -31,6 +31,10 @@ function grindctrl_sc_delete_options() {
 	) as $name ) {
 		delete_option( $name );
 	}
+
+	// Spent request nonces (see grindctrl_sc_claim_nonce).
+	global $wpdb;
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( 'gc_sc_n_' ) . '%' ) );
 }
 
 if ( is_multisite() ) {

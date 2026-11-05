@@ -24,7 +24,7 @@ const PLATFORMS = [
   },
   {
     id: 'custom-website',
-    detail: 'Store Chat only, by script tag on a domain verified with DNS. Not available to merchants yet.',
+    detail: 'Store Chat only, by script tag on a domain verified with DNS. No Try-On, order lookup or product sync.',
   },
   { id: 'salla', detail: 'No code yet. Next in the build order.' },
   { id: 'zid', detail: 'No code yet. After Salla.' },

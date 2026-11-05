@@ -43,4 +43,20 @@ tell anyone on wildcard DNS to add an A or CNAME for the store host.
 - Logged-in shopper identity (customer-mode order lookup): unit-tested only.
 - The merchant dashboard screens for a WooCommerce tenant: unit-tested; a
   signed-in browser check needs the owner.
-- "Your own website" without the plugin: still in testing.
+
+## Your own website (2026-11-05)
+
+Verified live against production, with no WordPress plugin running: a plain
+static HTML page whose only GRINDCTRL code is
+`<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="...">`,
+served from a DNS-verified domain.
+
+| Check | Result |
+|---|---|
+| Loader | the chat launcher renders from the script tag alone |
+| Calls | `config`, `event`, `bootstrap`, `sync` and `send` all answered 200 |
+| Handoff | "Talk to a person" created a conversation in `handoff_requested` |
+| Scope | Store Chat only. No Try-On, no order lookup, no native product sync (those need the WooCommerce plugin or the Shopify app) |
+
+Product truth: `custom-website` is `implemented` for Store Chat only, by script
+tag on a DNS-verified domain. Salla and Zid stay planned.
