@@ -13,7 +13,9 @@
 
 import * as React from 'react';
 import dynamic from 'next/dynamic';
+import { ClientBoundary } from '@/components/client-boundary';
 import { useLandingLocale } from '@/components/landing/landing-locale';
+import { ProductHero } from '@/components/marketing/page-primitives';
 import { siteFooterCopy, siteHeaderCopy, storyNavigation, type StorySceneId } from '@/components/site/marketing-chrome';
 import { BackgroundWiring } from '@/components/site/background-wiring';
 import { SiteFooter, type SiteFooterLink } from '@/components/site/site-footer';
@@ -349,6 +351,7 @@ function StoryHeader({ controller }: { controller: StoryController }) {
   }, [controller]);
   const onScene = React.useCallback(
     (id: StorySceneId, event: React.MouseEvent<HTMLAnchorElement>) => {
+      if (!controller.mounted) return;
       event.preventDefault();
       controller.goScene(SCENE_OF[id]);
     },
@@ -357,10 +360,12 @@ function StoryHeader({ controller }: { controller: StoryController }) {
   const { nav, menu } = storyNavigation(lt, {
     onScene,
     onJourney: (event) => {
+      if (!controller.mounted) return;
       event.preventDefault();
       controller.goSection('journey');
     },
     onChat: (event) => {
+      if (!controller.mounted) return;
       event.preventDefault();
       controller.goSection('chat');
     },
@@ -375,6 +380,7 @@ function StoryHeader({ controller }: { controller: StoryController }) {
       activeId={activeId}
       onSwitchLocale={toggleLocale}
       onBrandClick={(event) => {
+        if (!controller.mounted) return;
         event.preventDefault();
         controller.goTop();
       }}
@@ -384,9 +390,9 @@ function StoryHeader({ controller }: { controller: StoryController }) {
   );
 }
 
-/* ---------------------------------------------------------------- the page */
-export function LandingStory() {
-  const { locale, t: lt, toggleLocale } = useLandingLocale();
+/* ---------------------------------------------------------------- animated content */
+function StoryContent({ controller, rootRef }: { controller: StoryController; rootRef: React.RefObject<HTMLDivElement | null> }) {
+  const { locale, t: lt } = useLandingLocale();
   const rtl = locale === 'ar';
   /* Which layout is on screen. Null until the client has checked; CSS has
      already shown the right one by then. */
@@ -395,10 +401,6 @@ export function LandingStory() {
      render cannot cause a hydration mismatch; it saves a second measuring pass. */
   const [stacked, setStacked] = React.useState(() => matches(STACK_QUERY));
   const [reduce, setReduce] = React.useState(() => matches(REDUCE_QUERY));
-  const rootRef = React.useRef<HTMLDivElement>(null);
-  const [controller] = React.useState(
-    () => new StoryController({ layout: 'desk', stacked: false, reduce: false, rtl }, locale),
-  );
   const t = React.useMemo(() => storyText(locale), [locale]);
 
   React.useEffect(() => {
@@ -422,6 +424,7 @@ export function LandingStory() {
   React.useEffect(() => {
     const root = rootRef.current;
     if (!root || layout === null) return;
+    root.dataset.layout = layout;
     const env = { layout, stacked, reduce, rtl };
     if (!controller.mounted) {
       controller.mount(root, env);
@@ -433,7 +436,7 @@ export function LandingStory() {
     }
     /* Ready once the director has measured the layout on screen. Tests wait on it. */
     root.toggleAttribute('data-ready', layout === (matches(PHONE_QUERY) ? 'phone' : 'desk'));
-  }, [controller, layout, stacked, reduce, rtl, locale]);
+  }, [controller, layout, stacked, reduce, rtl, locale, rootRef]);
 
   React.useEffect(() => () => controller.unmount(), [controller]);
 
@@ -480,38 +483,11 @@ export function LandingStory() {
     };
   }, [controller, lt, locale]);
 
-  const footerLinks: SiteFooterLink[] = [
-    {
-      id: 'product',
-      label: lt.footerProduct,
-      href: '#product',
-      onSelect: (event) => {
-        event.preventDefault();
-        controller.goScene('product');
-      },
-    },
-    {
-      id: 'store',
-      label: lt.footerLiveStore,
-      href: '#store',
-      onSelect: (event) => {
-        event.preventDefault();
-        controller.goScene('store');
-      },
-    },
-    { id: 'try-on', label: lt.footerTryOnPage, href: '/try-on' },
-    { id: 'pricing', label: lt.footerPricing, href: '/pricing' },
-    { id: 'roi', label: lt.footerRoi, href: '/roi' },
-    { id: 'security', label: lt.footerSecurity, href: '/security' },
-  ];
-
   const trace = (key: keyof typeof STORY_TRACES) => STORY_TRACES[key].map((line) => t(line));
   const props: SceneProps = { controller, envs, layout, common, t };
 
   return (
-    <div ref={rootRef} className="gc-story" data-layout={layout ?? undefined}>
-      <SkipLink />
-      <StoryHeader controller={controller} />
+    <>
       <StoryRail t={t} onGo={(i) => controller.goSceneIndex(i)} />
       <StorySprites />
       <div data-k="vhProbe" aria-hidden="true" className="pointer-events-none invisible absolute top-0 h-svh w-px" />
@@ -565,6 +541,73 @@ export function LandingStory() {
           </div>
         </div>
       </main>
+    </>
+  );
+}
+
+function StoryFallback() {
+  const { locale } = useLandingLocale();
+  const t = storyText(locale);
+  return (
+    <main id="main" tabIndex={-1} className="pt-24 outline-none">
+      <ProductHero
+        eyebrow={t('For fashion stores')}
+        title={t('The fitting room your online store was missing.')}
+        lead={t('Shoppers see your clothes on themselves from one photo and get answers from your store in Arabic or English.')}
+        cta={{
+          bookCallLabel: t('Book a call'),
+          section: 'landing_fallback',
+          secondary: [{ href: '/try-on', label: t('Try it on yourself'), cta: 'try_on' }],
+        }}
+      />
+    </main>
+  );
+}
+
+/* Header and footer live outside the animation boundary. A scene failure
+   stops the director and its timers, restores native scrolling, and leaves
+   navigation and the independently mounted site assistant usable. The
+   static fallback reuses ProductHero instead of adding a new visual pattern. */
+export function LandingStory() {
+  const { locale, t: lt, toggleLocale } = useLandingLocale();
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const [controller] = React.useState(
+    () => new StoryController({ layout: 'desk', stacked: false, reduce: false, rtl: locale === 'ar' }, locale),
+  );
+  const stopStory = React.useCallback(() => {
+    controller.unmount();
+    rootRef.current?.removeAttribute('data-ready');
+  }, [controller]);
+  const footerLinks: SiteFooterLink[] = [
+    {
+      id: 'product', label: lt.footerProduct, href: '#product',
+      onSelect: (event) => {
+        if (!controller.mounted) return;
+        event.preventDefault();
+        controller.goScene('product');
+      },
+    },
+    {
+      id: 'store', label: lt.footerLiveStore, href: '#store',
+      onSelect: (event) => {
+        if (!controller.mounted) return;
+        event.preventDefault();
+        controller.goScene('store');
+      },
+    },
+    { id: 'try-on', label: lt.footerTryOnPage, href: '/try-on' },
+    { id: 'pricing', label: lt.footerPricing, href: '/pricing' },
+    { id: 'roi', label: lt.footerRoi, href: '/roi' },
+    { id: 'security', label: lt.footerSecurity, href: '/security' },
+  ];
+
+  return (
+    <div ref={rootRef} className="gc-story">
+      <SkipLink />
+      <StoryHeader controller={controller} />
+      <ClientBoundary fallback={<StoryFallback />} onError={stopStory}>
+        <StoryContent controller={controller} rootRef={rootRef} />
+      </ClientBoundary>
       <SiteFooter locale={locale} links={footerLinks} onSwitchLocale={toggleLocale} copy={siteFooterCopy(lt)} />
     </div>
   );

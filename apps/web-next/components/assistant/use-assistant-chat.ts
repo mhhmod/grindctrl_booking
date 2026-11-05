@@ -27,6 +27,7 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
   const [budgets, setBudgets] = useState<{ chat: BudgetInfo; voice: BudgetInfo } | null>(null);
   const [rateLimited, setRateLimited] = useState<RateLimitedInfo | null>(null);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [sessionError, setSessionError] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const setMessageAudio = useCallback((messageId: string, audio: DisplayMessage['audio']) => {
     setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, audio } : m)));
@@ -39,7 +40,16 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
   }, [messages, onAssistantReply]);
 
   const refreshBudgets = useCallback(() => {
-    client.fetchSession().then((session) => setBudgets(session.budgets));
+    return Promise.resolve().then(() => client.fetchSession()).then((session) => {
+      setBudgets(session.budgets);
+      setSessionError(false);
+    }).catch(() => {
+      // Bootstrap and later refreshes are fire-and-forget. A denied or
+      // unavailable session leaves quotas unknown and uses the localized
+      // provider-error banner instead of an unhandled rejection.
+      setBudgets(null);
+      setSessionError(true);
+    });
   }, [client]);
 
   useEffect(() => {
@@ -93,7 +103,7 @@ export function useAssistantChat(client: AssistantClient, onAssistantReply?: (te
     status,
     budgets,
     rateLimited,
-    providerError,
+    providerError: providerError ?? (sessionError ? 'session_unavailable' : null),
     sendText,
     refreshBudgets,
     /** For the voice paths (STT/TTS), which hit their own rate limit

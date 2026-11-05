@@ -106,7 +106,7 @@ jobs:
         working-directory: apps/web-next
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3101
-        run: npx playwright test golden-standard- mobile-overflow.spec.ts
+        run: npx playwright test golden-standard- mobile-overflow.spec.ts landing-translate-resilience.spec.ts
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
