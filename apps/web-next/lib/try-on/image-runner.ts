@@ -1,10 +1,6 @@
 /* ─── Try-On Agent — OpenRouter image runner (live mode) ───
-   Provider-agnostic by design: the caller passes any OpenRouter image-model
-   slug (e.g. google/gemini-3.1-flash-image, openai/gpt-image-2) and it can
-   be swapped anytime without code changes here. The model is resolved by
-   the caller (service.ts, from the shop's active plan) rather than read
-   from an env var in this file, so a shop's plan actually controls which
-   model it gets billed against. */
+   The caller passes the provider id captured by credit reservation. The
+   allowlist is checked again here before any provider request. */
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,6 +12,7 @@ import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { toShopperFailureMessage } from './shopper-errors';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { fetchSiteGarment } from '@/lib/woo/garment-url';
+import { resolveTryOnModel } from './models';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
 
@@ -105,6 +102,7 @@ export async function runImageGeneration(
   garmentUrl?: string,
   productName?: string,
 ): Promise<TryOnJob> {
+  model = resolveTryOnModel(model);
   const apiKey = process.env.OPENROUTER_API_KEY;
   const jobId = `tryon_${randomUUID()}`;
   const createdAt = new Date().toISOString();

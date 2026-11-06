@@ -46,7 +46,8 @@ beforeEach(() => {
   vi.stubGlobal('fetch',createProviderHarness({run_id:'synthetic-run',expires_at:new Date(Date.now()+60000).toISOString(),drain_until:new Date(Date.now()+120000).toISOString(),
     max_calls:24,max_concurrent:2,hosts:new Set(['cdn.shopify.com'])},{stateFile,controlFile,fetchImpl:externalFetch}));
   rpc.mockImplementation(async(name:string,args:Record<string,unknown>)=>{
-    if(name==='reserve_tryon_credit') {
+    // The plan-pinned reservation (20261106_tryon_job_model.sql) is the live path.
+    if(name==='reserve_tryon_plan_credit') {
       const created=!row;
       if(!row) row={id:args.p_job_id,session_id:args.p_session_id,product_id:args.p_product_id,shop:args.p_shop_domain,
         request_key:args.p_request_key,created_at:new Date().toISOString(),result_storage_path:null,result_deleted_at:null};
@@ -76,7 +77,7 @@ describe('noncharging provider harness preserves the live credit/job code path',
     const result=await generateTryOn(auth,'upload',`data:image/png;base64,${SYNTHETIC_PNG}`,auth.canonicalGarmentUrl!);
     expect(result.status).toBe('completed');
     expect(upload).toHaveBeenCalledTimes(1);
-    expect(rpc).toHaveBeenNthCalledWith(1,'reserve_tryon_credit',expect.objectContaining({p_shop_domain:auth.shop,p_request_key:auth.requestKey}));
+    expect(rpc).toHaveBeenNthCalledWith(1,'reserve_tryon_plan_credit',expect.objectContaining({p_shop_domain:auth.shop,p_request_key:auth.requestKey}));
     expect(rpc).toHaveBeenNthCalledWith(2,'finalize_tryon_job',expect.objectContaining({p_job_id:result.jobId,p_status:'completed',p_cost_usd:0}));
     expect(externalFetch).toHaveBeenCalledTimes(1); // Synthetic garment only; no provider transport.
     expect(externalFetch.mock.calls[0][0]).toBe(auth.canonicalGarmentUrl);
@@ -89,7 +90,7 @@ describe('noncharging provider harness preserves the live credit/job code path',
     const auth=authorization();
     const result=await generateTryOn(auth,'upload',`data:image/png;base64,${SYNTHETIC_PNG}`,auth.canonicalGarmentUrl!);
     expect(result.status).toBe('failed'); expect(upload).not.toHaveBeenCalled();
-    expect(rpc).toHaveBeenNthCalledWith(1,'reserve_tryon_credit',expect.objectContaining({p_shop_domain:auth.shop}));
+    expect(rpc).toHaveBeenNthCalledWith(1,'reserve_tryon_plan_credit',expect.objectContaining({p_shop_domain:auth.shop}));
     expect(rpc).toHaveBeenNthCalledWith(2,'finalize_tryon_job',expect.objectContaining({p_job_id:result.jobId,p_status:'failed',p_cost_usd:null}));
     expect(externalFetch).toHaveBeenCalledTimes(1);
   });

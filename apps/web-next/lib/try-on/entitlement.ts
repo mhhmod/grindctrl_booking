@@ -3,6 +3,7 @@ import 'server-only';
 import { createClient } from '@supabase/supabase-js';
 import { normalizeTenantKey } from '@/lib/tenancy/tenant-key';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
+import { reportModelFallback, resolveTryOnModel } from './models';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -150,6 +151,7 @@ type ReservationRow = {
   job_cost_usd: number | null;
   job_duration_ms: number | null;
   job_created_at: string;
+  model_fallback_reason?: string | null;
 };
 
 export class TryOnUnavailableError extends Error {
@@ -543,10 +545,8 @@ export async function getShopEntitlement(shop: unknown): Promise<ShopEntitlement
   };
 }
 
-/* The plan's tier label for the generation path, which records it on the
-   reservation and needs nothing else. It used to load the whole
-   entitlement, a reconcile and the full ledger, on every generation;
-   reserve_tryon_credit reconciles and checks the looks itself. */
+/* Compatibility read until the atomic plan-model reservation migration is
+   applied. New reservations resolve the catalog under the subscription lock. */
 export async function getShopModelKey(shop: unknown): Promise<string | null> {
   const domain = requireShop(shop);
   const supabase = getServiceClient();
@@ -574,14 +574,26 @@ export async function reserveCredit(input: {
   const domain = requireShop(input.shop);
   if (!UUID_RE.test(input.requestKey)) throw new Error('Request key must be a UUID');
 
-  const { data, error } = await getServiceClient().rpc('reserve_tryon_credit', {
+  const supabase = getServiceClient();
+  const params = {
     p_shop_domain: domain,
     p_job_id: input.jobId,
     p_request_key: input.requestKey,
     p_session_id: input.sessionId ?? '',
     p_product_id: input.productId ?? '',
-    p_model_key: input.modelKey,
-  });
+    p_model_key: resolveTryOnModel(input.modelKey),
+  };
+  let { data, error } = await supabase.rpc('reserve_tryon_plan_credit', params);
+  if (error && isMissingFunctionError(error)) {
+    // Deployment compatibility only: the original reservation already stores
+    // model_key. The new SQL closes the race between this read and reservation.
+    reportModelFallback('plan_model_schema_missing');
+    const planModel = resolveTryOnModel(await getShopModelKey(domain));
+    ({ data, error } = await supabase.rpc('reserve_tryon_credit', {
+      ...params,
+      p_model_key: planModel,
+    }));
+  }
   throwRpcError(error);
   // This may have used the shop's last look: the storefront button must
   // hide on the next config read, not a minute later.
@@ -589,6 +601,7 @@ export async function reserveCredit(input: {
 
   const row = (Array.isArray(data) ? data[0] : data) as ReservationRow | undefined;
   if (!row) throw new Error('Credit reservation returned no job');
+  if (row.model_fallback_reason) reportModelFallback(row.model_fallback_reason);
   return {
     jobId: row.job_id,
     created: row.created,
@@ -596,7 +609,7 @@ export async function reserveCredit(input: {
     modelKey: row.recorded_model_key,
     message: row.job_message,
     provider: row.job_provider,
-    costUsd: row.job_cost_usd === null ? null : Number(row.job_cost_usd),
+    costUsd: row.job_cost_usd == null ? null : Number(row.job_cost_usd),
     durationMs: row.job_duration_ms,
     createdAt: row.job_created_at,
   };

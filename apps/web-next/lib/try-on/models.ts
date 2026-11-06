@@ -1,19 +1,54 @@
-/* Every try-on image is made by one model: Meta Muse Image through
-   OpenRouter. That holds for every plan, every top-up pack and the public
-   demo, so no plan renders with a different or better model, and no
-   environment variable can swap it. Plan and pack rows still carry a tier
-   label (lite, flash, muse) for the credit ledger; it no longer picks the
-   model. */
-export const TRYON_IMAGE_MODEL = 'meta/muse-image';
+/** Reviewed provider ids. Legacy catalog tier aliases never go upstream. */
+export const TRYON_PROVIDER_MODELS = [
+  'google/gemini-3.1-flash-lite-image',
+  'google/gemini-3.1-flash-image',
+  'meta/muse-image',
+] as const;
 
-/* Settings that used to pick a model per plan tier. They do nothing now. */
-const RETIRED_MODEL_SETTINGS = ['TRYON_MODEL', 'TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE'];
+export type TryOnProviderModel = (typeof TRYON_PROVIDER_MODELS)[number];
+export const TRYON_IMAGE_MODEL: TryOnProviderModel = 'meta/muse-image';
+export const TRYON_MODEL_ALIASES: Readonly<Record<string, TryOnProviderModel>> = {
+  lite: 'google/gemini-3.1-flash-lite-image',
+  flash: 'google/gemini-3.1-flash-image',
+  muse: 'meta/muse-image',
+};
 
-/** Called once at startup when TRYON_MODE=live: a leftover model setting is
- *  reported, so nobody believes it still chooses the model. */
+function knownModel(key: unknown): TryOnProviderModel | undefined {
+  if (typeof key !== 'string') return undefined;
+  const value = key.trim();
+  if ((TRYON_PROVIDER_MODELS as readonly string[]).includes(value)) return value as TryOnProviderModel;
+  return Object.hasOwn(TRYON_MODEL_ALIASES, value) ? TRYON_MODEL_ALIASES[value] : undefined;
+}
+
+/** Reading the fallback argument is not proof a reservation used it. */
+export function getTryOnFallbackModel(): TryOnProviderModel {
+  return knownModel(process.env.TRYON_MODEL) ?? TRYON_IMAGE_MODEL;
+}
+
+const reportedFallbacks = new Set<string>();
+export function reportModelFallback(reason: string): void {
+  if (reportedFallbacks.has(reason)) return;
+  reportedFallbacks.add(reason);
+  console.warn('[try-on] model_fallback', { reason, model: getTryOnFallbackModel() });
+}
+
+/** Validate again at the provider boundary, including historical job values.
+ * Warnings omit untrusted keys and occur once per reason per process. */
+export function resolveTryOnModel(key: unknown): TryOnProviderModel {
+  const model = knownModel(key);
+  if (model) return model;
+  reportModelFallback(typeof key === 'string' && key.trim() ? 'unknown_model_key' : 'missing_model_key');
+  return getTryOnFallbackModel();
+}
+
+export function resolveTryOnFallbackModel(): TryOnProviderModel {
+  reportModelFallback('non_billable');
+  return getTryOnFallbackModel();
+}
+
+/** Tier-specific environment overrides are superseded by catalog rows. */
 export function reportRetiredModelSettings(): void {
-  const settings = RETIRED_MODEL_SETTINGS.filter((name) => process.env[name]?.trim());
-  if (settings.length > 0) {
-    console.warn('[try-on] ignored_model_settings', { settings, model: TRYON_IMAGE_MODEL });
-  }
+  const settings = ['TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE']
+    .filter((name) => process.env[name]?.trim());
+  if (settings.length) console.warn('[try-on] ignored_model_settings', { settings });
 }
