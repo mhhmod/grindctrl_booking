@@ -69,14 +69,14 @@ describe('IntegrationsPageContent', () => {
     expect(rowOf('Shopify')).toHaveTextContent(t.integrationStateImplemented);
   });
 
-  it('marks each platform row with a decorative logo beside its name, and gives Zid the name alone', () => {
+  it('marks each platform row with a decorative logo beside its name, including Zid', () => {
     renderPage('en');
-    for (const label of ['Shopify', 'WooCommerce', 'Your website', 'Salla']) {
+    for (const label of ['Shopify', 'WooCommerce', 'Your website', 'Salla', 'Zid']) {
       const mark = screen.getByText(label).closest('li')?.querySelector('svg');
       expect(mark, label).not.toBeNull();
       expect(mark).toHaveAttribute('aria-hidden', 'true');
     }
-    expect(screen.getByText('Zid').closest('li')?.querySelector('svg')).toBeNull();
+    expect(screen.getByText('Shopify').closest('li')?.querySelector('svg')).toHaveAttribute('fill', '#95BF47');
   });
 
   it('scopes WooCommerce to Try-On, Store Chat and order status and your website to Store Chat only, and neither is described as unavailable', () => {

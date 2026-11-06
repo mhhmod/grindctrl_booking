@@ -19,7 +19,7 @@ function rowOf(container: HTMLElement, name: string): HTMLElement {
 }
 
 describe('the platform rows of the stack scene', () => {
-  it('writes each status beside its platform and gives it a mark only where an official one exists', () => {
+  it('writes each status beside its platform and gives each a decorative logo in its brand colours', () => {
     const { container } = render(<PlatformRows t={en} />);
     for (const [name, status] of [
       ['WooCommerce', 'Live'],
@@ -29,14 +29,16 @@ describe('the platform rows of the stack scene', () => {
     ] as const) {
       expect(rowOf(container, name), name).toHaveTextContent(name === 'Your website' ? `${name}Store Chat only${status}` : `${name}${status}`);
     }
-    // Zid has no official mark, so its row shows the name alone. The others
-    // carry a decorative mark; the name and status are the accessible text.
-    expect(rowOf(container, 'Zid').querySelector('svg')).toBeNull();
-    for (const name of ['WooCommerce', 'Your website', 'Salla']) {
+    // Every row carries a decorative mark; the name and status are the accessible text.
+    for (const name of ['WooCommerce', 'Your website', 'Salla', 'Zid']) {
       const mark = rowOf(container, name).querySelector('svg');
       expect(mark, name).not.toBeNull();
       expect(mark).toHaveAttribute('aria-hidden', 'true');
     }
+    const fills = (name: string) => Array.from(rowOf(container, name).querySelectorAll('svg, rect, path')).map((el) => el.getAttribute('fill'));
+    expect(fills('WooCommerce')).toContain('#873EFF');
+    expect(fills('Salla')).toEqual(expect.arrayContaining(['#004956', '#BAF3E6']));
+    expect(fills('Zid')).toEqual(expect.arrayContaining(['#AE72FF', '#1F0433']));
   });
 
   it('words WooCommerce and your website (Store Chat only) as live, never any platform as supported or available', () => {

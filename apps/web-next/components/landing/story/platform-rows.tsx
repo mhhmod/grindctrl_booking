@@ -6,11 +6,11 @@
 
    Status comes from the product-truth register, so this scene cannot show a
    platform as further along than lib/product-truth/public-integrations.ts
-   says. Marks are monochrome like every other mark in the story; Zid has no
-   official mark and is shown by name only. */
+   says. Platforms carry their official full-colour logo (brand-marks.tsx);
+   the neutral globe stands in for "your website", which is not a brand. */
 
 import * as React from 'react';
-import { SallaMark, WooCommerceMark } from '@/components/brand-marks';
+import { SallaLogo, WooCommerceLogo, ZidLogo } from '@/components/brand-marks';
 import { GlobeIcon } from '@/components/site/icons';
 import { findPublicIntegration, type PublicIntegrationState } from '@/lib/product-truth/public-integrations';
 import type { StoryText } from './story-strings';
@@ -24,14 +24,12 @@ const STATUS_LABEL: Partial<Record<PublicIntegrationState, StatusLabel>> = {
   planned: 'Planned',
 };
 
-const MARK_SIZE = { width: '16px', height: '16px', flexShrink: 0 } as const;
-
 /** `note` is a scope qualifier under the name, for a live platform that is not live for everything. */
 const PLATFORMS: readonly { id: string; label: StoryText; mark: React.ReactNode; note?: StoryText }[] = [
-  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceMark monochrome decorative style={MARK_SIZE} /> },
+  { id: 'woocommerce', label: 'WooCommerce', mark: <WooCommerceLogo size={14} /> },
   { id: 'custom-website', label: 'Your website', mark: <GlobeIcon size={16} style={{ flexShrink: 0 }} />, note: 'Store Chat only' },
-  { id: 'salla', label: 'Salla', mark: <SallaMark monochrome decorative style={MARK_SIZE} /> },
-  { id: 'zid', label: 'Zid', mark: null },
+  { id: 'salla', label: 'Salla', mark: <SallaLogo size={22} /> },
+  { id: 'zid', label: 'Zid', mark: <ZidLogo size={22} /> },
 ];
 
 /** A status pill in the story's own chip shape, on a light surface. */
@@ -94,7 +92,7 @@ export function PlatformRows({ t }: { t: StoryT }) {
               color: 'var(--foreground)',
             }}
           >
-            <span aria-hidden="true" style={{ width: '16px', height: '16px', flexShrink: 0, display: 'inline-flex' }}>
+            <span aria-hidden="true" style={{ minWidth: '22px', flexShrink: 0, display: 'inline-flex', alignItems: 'center' }}>
               {mark}
             </span>
             <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
