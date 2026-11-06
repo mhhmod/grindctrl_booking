@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   woo: vi.fn(),
   plugin: vi.fn(),
   wooLimit: vi.fn(),
+  verifyWoo: vi.fn(),
 }));
 
 vi.mock('@/lib/ratelimit', () => ({
@@ -26,6 +27,10 @@ vi.mock('@/lib/messenger/order-limits', () => ({
   orderLookupLimiter: { limit: mocks.orderLimit },
   orderNumberLimiter: { limit: mocks.numberLimit },
   wooSiteOrderLimiter: { limit: mocks.wooLimit },
+}));
+vi.mock('@/lib/woo/identity-token', async (original) => ({
+  ...(await original<typeof import('@/lib/woo/identity-token')>()),
+  verifyWooIdentityToken: mocks.verifyWoo,
 }));
 vi.mock('@/lib/woo/active-connection', () => ({ loadActiveWooConnection: mocks.woo }));
 vi.mock('@/lib/woo/plugin-client', () => ({
@@ -140,6 +145,44 @@ describe('POST /api/messenger/order-lookup (Chat-More, N48)', () => {
       const missing = await (await post({ ...BODY, orderNumber: '999999' })).json();
       expect(wrong.error).toBe('not_found');
       expect({ ...missing, messages: undefined }).toEqual({ ...wrong, messages: undefined });
+    });
+
+    describe('Track my order for a verified shopper (mode customer)', () => {
+      const CUSTOMER = { key: 'gc_test_key', anonymousId: 'anon12345678', conversationId: 'conv-1', mode: 'customer', text: 'Track my order', locale: 'en', shopperToken: 'gcw1.token' };
+      beforeEach(() => {
+        conversation.metadata = { identity: { woo_customer_id: '7', verified: true } };
+        mocks.plugin.mockResolvedValue({ ok: true, json: { ok: true, orders: [{ ...wooOrder, status: 'completed' }] } });
+      });
+
+      it('shows the newest order from a fresh token, asking for no email', async () => {
+        mocks.verifyWoo.mockResolvedValue({ wpUserId: '7' });
+        const data = await (await post(CUSTOMER)).json();
+        expect(mocks.plugin).toHaveBeenCalledWith(connection, '/wp-json/grindctrl/v1/order-lookup', { mode: 'customer', wpUserId: 7, limit: 1 });
+        expect(data.ok).toBe(true);
+        expect(data.order).toMatchObject({ name: '#1027', stage: 'delivered' });
+        expect(data.messages[0]).toMatchObject({ role: 'user', content: 'Track my order' });
+      });
+
+      it('never trusts the stored identity alone: no fresh token means no lookup and no spend', async () => {
+        mocks.verifyWoo.mockResolvedValue(null);
+        const data = await (await post({ ...CUSTOMER, shopperToken: undefined })).json();
+        expect(data).toEqual({ ok: false, error: 'not_verified' });
+        expect(mocks.plugin).not.toHaveBeenCalled();
+        expect(mocks.meta).not.toHaveBeenCalled();
+      });
+
+      it('refuses a token for a different customer than the conversation is bound to', async () => {
+        mocks.verifyWoo.mockResolvedValue({ wpUserId: '8' });
+        expect(await (await post(CUSTOMER)).json()).toEqual({ ok: false, error: 'not_verified' });
+        expect(mocks.plugin).not.toHaveBeenCalled();
+      });
+
+      it('keeps the lifetime budget: a spent one answers not_found without a lookup', async () => {
+        mocks.verifyWoo.mockResolvedValue({ wpUserId: '7' });
+        conversation.metadata = { identity: { woo_customer_id: '7', verified: true }, order_lookup_attempts: 5 };
+        expect(await (await post(CUSTOMER)).json()).toEqual({ ok: false, error: 'not_found' });
+        expect(mocks.plugin).not.toHaveBeenCalled();
+      });
     });
 
     it('is not enabled on a plugin older than 0.3.0, and without a pairing', async () => {

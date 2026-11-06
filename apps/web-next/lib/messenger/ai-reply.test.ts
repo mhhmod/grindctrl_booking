@@ -80,6 +80,14 @@ describe('phraseOrderAnswer', () => {
     const text = await phraseOrderAnswer({ ...INPUT, facts: {} as never });
     expect(text).toBe('Your order shipped yesterday.');
   });
+
+  it('gives the model the facts and the rule that completed is not in transit', async () => {
+    complete.mockResolvedValue('Your order is complete.');
+    await phraseOrderAnswer({ ...INPUT, facts: { fulfillment_status: 'completed', tracking: null } as never });
+    const system = complete.mock.calls.at(-1)![1].messages[0].content as string;
+    expect(system).toContain('"fulfillment_status":"completed"');
+    expect(system).toMatch(/on its way or shipped only when tracking is present/);
+  });
 });
 
 describe('the reply verdict (phase zero items 10 and 11)', () => {
@@ -107,7 +115,7 @@ describe('the reply verdict (phase zero items 10 and 11)', () => {
   it('gives a turn that asks for the verdict more room, since the model reasons first', async () => {
     complete.mockResolvedValue('Sure.');
     await generateAssistantReply(INPUT);
-    expect(complete.mock.calls[0][1].maxTokens).toBe(400);
+    expect(complete.mock.calls.at(-1)![1].maxTokens).toBe(400);
     await generateAssistantReply({ ...INPUT, verdict: true });
     expect(complete.mock.calls[1][1].maxTokens).toBe(1_200);
   });

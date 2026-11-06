@@ -698,6 +698,40 @@ export function MessengerPanel({
      model. Whatever the answer, the shopper's masked line and the reply
      join the thread; a found order closes the form, anything else leaves
      it open to correct a typo. */
+  /* Track my order for a shopper the storefront identified: the server
+     checks the fresh token and answers with their newest order. Anything but
+     a found order (no proof, no orders, a limit) opens the guest form. */
+  async function trackVerifiedOrder(text: string) {
+    if (!anonId || !conversationId) return false;
+    setOrderBusy(true);
+    try {
+      const res = await fetch('/api/messenger/order-lookup', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          key: config.key,
+          origin: effectiveOrigin,
+          originToken,
+          anonymousId: anonId,
+          conversationId,
+          mode: 'customer',
+          shopperToken: shopperTokenRef.current ?? undefined,
+          text,
+          locale,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; messages?: WireMessage[] } | null;
+      if (!data?.ok || !data.messages?.length) return false;
+      setMessages((prev) => mergeMessages(prev, data.messages!));
+      scrollToEnd();
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setOrderBusy(false);
+    }
+  }
+
   async function lookupOrderFromForm(orderNumber: string, contact: string) {
     if (!anonId || !conversationId) return;
     setOrderBusy(true);
@@ -1060,8 +1094,15 @@ export function MessengerPanel({
               setHomeView(false);
               // Track my order opens the lookup form where the store offers it.
               if (id === 'order' && config.orderLookup) {
-                setOrderForm(true);
-                scrollToEnd();
+                const openForm = () => {
+                  setOrderForm(true);
+                  scrollToEnd();
+                };
+                if (shopperTokenRef.current) {
+                  void trackVerifiedOrder(message).then((found) => found || openForm());
+                } else {
+                  openForm();
+                }
                 return;
               }
               void send(message);

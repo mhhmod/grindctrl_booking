@@ -139,7 +139,9 @@ function paymentState(order: WooPluginOrder): PaymentState {
 }
 
 function fulfillmentStatus(order: WooPluginOrder): string {
-  if (order.status === 'completed') return 'fulfilled';
+  /* Completed without tracking is done, not in transit: "fulfilled" made the
+     model say the parcel was on its way. */
+  if (order.status === 'completed') return order.tracking ? 'fulfilled' : 'completed';
   if (order.status === 'cancelled' || order.status === 'refunded') return order.status;
   return 'unfulfilled';
 }
