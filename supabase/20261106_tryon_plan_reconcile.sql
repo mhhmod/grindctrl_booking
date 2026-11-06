@@ -39,6 +39,8 @@ declare
   v_expired_grants integer := 0;
   v_stale_jobs integer := 0;
   v_inserted integer;
+  v_pending public.tryon_plans%rowtype;
+  v_switched boolean;
 begin
   -- Lock only due subscriptions. SKIP LOCKED lets concurrent runs divide the
   -- work and avoids waiting on reservation or operator renewal transactions.
@@ -67,6 +69,14 @@ begin
       where id = v_due.id;
       v_cancelled := v_cancelled + 1;
     elsif v_plan.is_free then
+      -- A scheduled move to another free plan takes effect at the boundary
+      -- (same rule as reconcile_tryon_subscription); never into a paid plan.
+      v_switched := false;
+      if v_due.pending_plan_id is not null and v_due.pending_plan_effective_at <= now() then
+        select p.* into v_pending from public.tryon_plans p
+        where p.id = v_due.pending_plan_id and p.is_free;
+        if found then v_plan := v_pending; v_switched := true; end if;
+      end if;
       -- Jump directly to the current anchored period. Calendar arithmetic is
       -- always UTC; Jan 31 clamps in February then returns to March 31. Never
       -- backfill missed grants, including while a tenant was uninstalled.
@@ -91,7 +101,10 @@ begin
         v_plan.period_unit, v_plan.period_count, v_index + 1);
 
       update public.tryon_subscriptions
-      set current_period_start = v_start, current_period_end = v_end,
+      set plan_id = v_plan.id,
+        pending_plan_id = case when v_switched then null else pending_plan_id end,
+        pending_plan_effective_at = case when v_switched then null else pending_plan_effective_at end,
+        current_period_start = v_start, current_period_end = v_end,
         grace_ends_at = v_end, status = 'active', expired_at = null, updated_at = now()
       where id = v_due.id;
 

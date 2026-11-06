@@ -62,6 +62,10 @@ beforeAll(async () => {
     create table tryon_jobs(id text primary key,session_id text,product_id text,shop text,status text not null,
       message text,provider text,cost_usd numeric,duration_ms integer,created_at timestamptz default now());`);
   await db.exec(await read('supabase-migration-plans.sql'));
+  await db.exec(await read('supabase/20261106_tryon_free_plan_switch.sql'));
+  await db.exec(`insert into tryon_plans (plan_key,name,price_minor,currency,renders_included,
+    model_key,period_unit,period_count,grace_days,is_free,active,sort_order)
+    values ('free-v2','Free',0,'USD',15,'lite','month',1,0,true,false,11)`);
   const sql = await read('supabase/20261106_tryon_plan_reconcile.sql');
   await db.exec(sql);
   await db.exec(sql); // Same real migration must be safely re-applicable.
@@ -100,6 +104,25 @@ describe('bounded plan reconciliation executes actual PostgreSQL migrations', ()
         pending_plan_id: before.pending_plan_id });
       expect((await db.query("select id from tryon_credit_ledger where source_grant_id=$1 and entry_type='expire'", [pack])).rows).toHaveLength(0);
       expect((await reconcile()).subscriptions).toBe(0);
+    });
+
+  it.each(['bounded', 'per-shop'])(
+    'applies a due scheduled free plan at the %s rollover, never a paid one', async (path) => {
+      const free = await subscription();
+      const paid = await subscription();
+      await db.query(`update tryon_subscriptions s set pending_plan_id=p.id,
+        pending_plan_effective_at=s.current_period_end from tryon_plans p
+        where p.plan_key=case when s.id=$1 then 'free-v2' else 'launch-v1' end and s.id in ($1,$2)`,
+      [free.id, paid.id]);
+      if (path === 'bounded') await reconcile();
+      else for (const { shop } of [free, paid]) await db.query('select reconcile_tryon_subscription($1)', [shop]);
+      const plans = (await db.query<{ id: string; plan_key: string; pending: boolean; renders: number }>(
+        `select s.id,p.plan_key,s.pending_plan_id is not null as pending,
+          (select sum(amount) from tryon_credit_ledger l where l.subscription_id=s.id and l.entry_type='grant')::int as renders
+        from tryon_subscriptions s join tryon_plans p on p.id=s.plan_id where s.id in ($1,$2)`,
+      [free.id, paid.id])).rows;
+      expect(plans.find((r) => r.id === free.id)).toMatchObject({ plan_key: 'free-v2', pending: false, renders: 15 });
+      expect(plans.find((r) => r.id === paid.id)).toMatchObject({ plan_key: 'free-v1', pending: true, renders: 20 });
     });
 
   it('expires grace exactly at its boundary and freezes unexpired packs without consuming them', async () => {
