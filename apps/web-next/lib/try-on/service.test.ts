@@ -159,7 +159,7 @@ describe('try-on service', () => {
       expect(job.meta.runtime).toBe('mock');
     });
 
-    describe('one image model on every plan', () => {
+    describe('reserved plan model', () => {
       const TIER_ENV_NAMES = ['TRYON_MODEL', 'TRYON_MODEL_LITE', 'TRYON_MODEL_FLASH', 'TRYON_MODEL_MUSE'];
 
       beforeEach(() => {
@@ -194,27 +194,54 @@ describe('try-on service', () => {
         TIER_ENV_NAMES.forEach((name) => delete process.env[name]);
       });
 
-      async function generateFor(tier: string | null) {
-        getShopModelKeyMock.mockResolvedValue(tier);
-        const auth = storefrontAuthorization();
-        await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
+      async function generateFor(model: string | null, shop = 'store-one.myshopify.com') {
+        beginTryOnJobMock.mockImplementation((input: { jobId: string }) => Promise.resolve({
+          jobId: input.jobId, created: true, status: 'processing', modelKey: model,
+          createdAt: '2026-08-31T00:00:00.000Z',
+        }));
+        const auth = storefrontAuthorization({ shop });
+        const job = await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
         return {
           auth,
+          job,
           providerModel: runImageGenerationMock.mock.calls[0][4],
-          reservedTier: beginTryOnJobMock.mock.calls[0][0].modelKey,
         };
       }
 
-      it.each(['lite', 'flash', 'muse', 'turbo', 'google/gemini-3-pro-image', null])(
-        'sends meta/muse-image for a %s plan, and records the plan tier on the reservation',
-        async (tier) => {
-          const { auth, providerModel, reservedTier } = await generateFor(tier);
-
-          expect(getShopModelKeyMock).toHaveBeenCalledWith(auth.shop);
-          expect(providerModel).toBe('meta/muse-image');
-          expect(reservedTier).toBe(tier ?? 'meta/muse-image');
+      describe.each(['store-one.myshopify.com', 'site:123e4567-e89b-42d3-a456-426614174000'])(
+        '%s', (shop) => {
+          it.each([
+            ['lite', 'google/gemini-3.1-flash-lite-image'],
+            ['flash', 'google/gemini-3.1-flash-image'],
+            ['muse', 'meta/muse-image'],
+            ['google/gemini-3.1-flash-image', 'google/gemini-3.1-flash-image'],
+          ])('uses the reserved %s model', async (key, expected) => {
+            const { providerModel, job } = await generateFor(key, shop);
+            expect(providerModel).toBe(expected);
+            expect(job.modelKey).toBe(expected);
+            expect(getShopModelKeyMock).not.toHaveBeenCalled();
+          });
         },
       );
+
+      it.each([null, '', 'turbo', 'untrusted/arbitrary-provider'])('falls back safely for %s', async (key) => {
+        process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
+        const { providerModel } = await generateFor(key);
+        expect(providerModel).toBe('google/gemini-3.1-flash-image');
+      });
+
+      it('pins the reserved model across a plan change and a transport retry', async () => {
+        const { job } = await generateFor('google/gemini-3.1-flash-lite-image');
+        process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
+        getShopModelKeyMock.mockResolvedValue('flash');
+        beginTryOnJobMock.mockResolvedValue({
+          jobId: job.jobId, created: false, status: 'completed', modelKey: job.modelKey,
+          createdAt: job.createdAt,
+        });
+        const replay = await generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AAAA');
+        expect(replay.modelKey).toBe('google/gemini-3.1-flash-lite-image');
+        expect(runImageGenerationMock).toHaveBeenCalledOnce();
+      });
 
       /* N5: the owner's look from the preview link is a test look. */
       it('reserves a test look, never a credit, for a test session', async () => {
@@ -245,17 +272,20 @@ describe('try-on service', () => {
         expect(beginTestTryOnJobMock).not.toHaveBeenCalled();
       });
 
-      it('ignores the retired model settings', async () => {
+      it('uses the reserved model ahead of global or retired tier settings', async () => {
         process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
         process.env.TRYON_MODEL_LITE = 'google/gemini-3.1-flash-lite-image';
 
         const { providerModel } = await generateFor('lite');
 
-        expect(providerModel).toBe('meta/muse-image');
+        expect(providerModel).toBe('google/gemini-3.1-flash-lite-image');
       });
 
-      it('names meta/muse-image when the provider fails', async () => {
-        getShopModelKeyMock.mockResolvedValue('lite');
+      it('names the reserved model when the provider fails', async () => {
+        beginTryOnJobMock.mockImplementation((input: { jobId: string }) => Promise.resolve({
+          jobId: input.jobId, created: true, status: 'processing',
+          modelKey: 'google/gemini-3.1-flash-lite-image', createdAt: '2026-08-31T00:00:00.000Z',
+        }));
         runImageGenerationMock.mockRejectedValue(new Error('provider_http_error'));
         const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -265,16 +295,16 @@ describe('try-on service', () => {
 
         expect(error).toHaveBeenCalledWith(
           '[try-on] generation_failed_detail',
-          expect.objectContaining({ provider: 'meta/muse-image' }),
+          expect.objectContaining({ provider: 'google/gemini-3.1-flash-lite-image' }),
         );
         expect(finalizeTryOnJobMock.mock.calls[0][0]).toMatchObject({
           status: 'failed',
-          modelKey: 'lite',
-          meta: { provider: 'meta/muse-image' },
+          modelKey: 'google/gemini-3.1-flash-lite-image',
+          meta: { provider: 'google/gemini-3.1-flash-lite-image', costEstimate: null },
         });
       });
 
-      it('uses the same model for the non-billable public demo path', async () => {
+      it('uses the validated global fallback for the non-billable public demo path', async () => {
         process.env.TRYON_MODEL = 'google/gemini-3.1-flash-image';
         runImageGenerationMock.mockResolvedValue({
           jobId: 'provider-demo',
@@ -291,7 +321,7 @@ describe('try-on service', () => {
 
         expect(getShopModelKeyMock).not.toHaveBeenCalled();
         expect(beginTryOnJobMock).not.toHaveBeenCalled();
-        expect(runImageGenerationMock.mock.calls[0][4]).toBe('meta/muse-image');
+        expect(runImageGenerationMock.mock.calls[0][4]).toBe('google/gemini-3.1-flash-image');
       });
     });
 

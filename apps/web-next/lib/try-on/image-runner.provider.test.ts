@@ -53,6 +53,12 @@ describe('WooCommerce garments', () => {
 });
 
 describe('image provider safety boundary', () => {
+  it('never sends an arbitrary model id to the provider', async () => {
+    vi.stubEnv('TRYON_MODEL', 'meta/muse-image');
+    fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost: 0.01 } }));
+    await runImageGeneration('session', 'product', PHOTO, 'test.myshopify.com', 'unknown/provider', GARMENT);
+    expect(JSON.parse(String(fetchMock.mock.calls[1][1].body)).model).toBe('meta/muse-image');
+  });
   it('bounds both fetches and forbids garment redirects', async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG, media_type: 'image/png' }], usage: { cost: 0.02 } }));
     const job = await generate();
@@ -135,6 +141,8 @@ describe('transient provider failure retry', () => {
       expect(job.status).toBe('completed');
       // 1 garment fetch + 2 OpenRouter attempts.
       expect(fetchMock).toHaveBeenCalledTimes(3);
+      const attempts = fetchMock.mock.calls.slice(1).map(([, options]) => JSON.parse(String(options.body)).model);
+      expect(attempts).toEqual(['meta/muse-image', 'meta/muse-image']);
     },
   );
 

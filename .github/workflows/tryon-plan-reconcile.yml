@@ -1,0 +1,47 @@
+name: Try-On Plan Reconciliation
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never interrupt a run that is applying idempotent subscription transitions.
+concurrency:
+  group: tryon-plan-reconcile
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Run bounded plan and Shopify pricing reconciliation
+        env:
+          TRYON_CLEANUP_URL: ${{ secrets.TRYON_CLEANUP_URL }}
+          TRYON_CLEANUP_SECRET: ${{ secrets.TRYON_CLEANUP_SECRET }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${TRYON_CLEANUP_URL:?Missing TRYON_CLEANUP_URL GitHub secret}"
+          : "${TRYON_CLEANUP_SECRET:?Missing TRYON_CLEANUP_SECRET GitHub secret}"
+          # Reuse the existing scheduler's reviewed origin and bearer.
+          base="${TRYON_CLEANUP_URL%/api/internal/try-on/cleanup}"
+          if [[ "${base}" == "${TRYON_CLEANUP_URL}" || "${base}" != https://* ]]; then
+            echo "TRYON_CLEANUP_URL must end in /api/internal/try-on/cleanup on HTTPS."
+            exit 1
+          fi
+          status="$(curl --silent --show-error \
+            --output reconcile-response.json \
+            --write-out '%{http_code}' \
+            --max-time 60 \
+            --request POST \
+            --header "Authorization: Bearer ${TRYON_CLEANUP_SECRET}" \
+            --header 'Content-Type: application/json' \
+            "${base}/api/internal/try-on/plan-reconcile")"
+          if [[ "${status}" -lt 200 || "${status}" -ge 300 ]]; then
+            echo "Plan reconciliation endpoint returned HTTP ${status}."
+            exit 1
+          fi

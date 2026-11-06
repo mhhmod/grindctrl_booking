@@ -11,14 +11,13 @@ import {
   persistTryOnJob,
 } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
-import { getShopModelKey } from './entitlement';
 import type { VerifiedTryOnSession } from './storefront-context';
 import {
   TryOnFinalizationPendingError,
   TryOnResultUnavailableError,
 } from './result-errors';
 import { toShopperFailureMessage } from './shopper-errors';
-import { TRYON_IMAGE_MODEL } from './models';
+import { getTryOnFallbackModel, resolveTryOnFallbackModel, resolveTryOnModel } from './models';
 import { TRYON_SESSION_TTL_SECONDS } from './storefront-context';
 
 export {
@@ -131,13 +130,6 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (billableLiveJob) {
-    /* tryon_plans.model_key holds a tier label (lite, flash, muse), not a
-       provider id. reserve_tryon_credit still records it on the job and
-       ledger, but it no longer picks the model: every plan renders with
-       the same one. Sending the label upstream got every paid storefront
-       try-on rejected, so OpenRouter only ever receives the model id. */
-    const modelKey = (await getShopModelKey(shop)) || TRYON_IMAGE_MODEL;
-    const providerModel = TRYON_IMAGE_MODEL;
     const reservedJobId = createJobId();
     /* The owner's look from the preview link is a test look (N5): the job
        is recorded but no look is spent, and a daily cap applies instead.
@@ -149,7 +141,7 @@ export async function generateTryOn(
             shop,
             jobId: reservedJobId,
             requestKey,
-            modelKey,
+            modelKey: getTryOnFallbackModel(),
             sessionId,
             productId,
           });
@@ -192,6 +184,13 @@ export async function generateTryOn(
       storeJob(job);
       return job;
     }
+
+    // The reservation is authoritative even if the plan changes while the
+    // provider works. Test looks remain platform-funded.
+    const providerModel = authorization.test === true
+      ? resolveTryOnFallbackModel()
+      : resolveTryOnModel(reservation.modelKey);
+    const modelKey = providerModel;
 
     /* The job as it stands while the provider works, pollable by its
        session from the moment the look is reserved. */
@@ -335,14 +334,13 @@ export async function generateTryOn(
     }
     job = await makeLook();
   } else if (mode === 'live' && photoSource === 'upload' && photoData) {
-    // Non-billable live path (demo/preview, not a storefront credit spend):
-    // the same model as every plan.
+    // Platform-funded live paths use the validated global fallback.
     job = await runImageGeneration(
       sessionId,
       productId,
       photoData,
       shop,
-      TRYON_IMAGE_MODEL,
+      resolveTryOnFallbackModel(),
       garmentUrl,
       productName,
     );
