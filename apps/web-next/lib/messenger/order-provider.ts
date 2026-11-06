@@ -2,6 +2,7 @@ import 'server-only';
 
 import { requireRateLimit } from '@/lib/request-rate-limit';
 import {
+  lookupCustomerOrderCard,
   lookupGuestOrderCard,
   lookupOrder,
   type GuestCardOutcome,
@@ -40,6 +41,12 @@ export interface OrderProvider {
   }): Promise<LookupOutcome>;
   /** Guest proof, answered as the card the shopper sees. */
   lookupGuestCard(input: { orderNumber: string; email: string; withAmounts: boolean }): Promise<GuestCardOutcome>;
+  /** A verified customer's newest order as the card, no email asked. */
+  lookupCustomerCard(input: {
+    customerId: string;
+    withAmounts: boolean;
+    appClientId?: string;
+  }): Promise<GuestCardOutcome>;
   adminOrderUrl(order: { name: string; ref?: string }): string | null;
   adminCustomerUrl(customerId: string | null): string | null;
 }
@@ -70,6 +77,15 @@ export class ShopifyOrderProvider implements OrderProvider {
 
   lookupGuestCard(input: { orderNumber: string; email: string; withAmounts: boolean }) {
     return lookupGuestOrderCard({ shopDomain: this.shopDomain, ...input });
+  }
+
+  lookupCustomerCard(input: { customerId: string; withAmounts: boolean; appClientId?: string }) {
+    return lookupCustomerOrderCard({
+      shopDomain: this.shopDomain,
+      appClientId: input.appClientId,
+      verifiedCustomerId: input.customerId,
+      withAmounts: input.withAmounts,
+    });
   }
 
   adminOrderUrl(order: { name: string; ref?: string }) {
@@ -144,6 +160,14 @@ export class WooOrderProvider implements OrderProvider {
     const order = reply.orders[0];
     if (!order || !sameOrderNumber(order.number, input.orderNumber)) return { ok: false, reason: 'not_found' };
     return { ok: true, card: wooToOrderCard(order, { withAmounts: input.withAmounts }) };
+  }
+
+  async lookupCustomerCard(input: { customerId: string; withAmounts: boolean }): Promise<GuestCardOutcome> {
+    if (!/^[1-9]\d{0,14}$/.test(input.customerId)) return { ok: false, reason: 'missing_proof' };
+    const reply = await this.ask({ mode: 'customer', wpUserId: Number(input.customerId), limit: 1 });
+    if (!reply.ok) return reply;
+    const order = reply.orders[0];
+    return order ? { ok: true, card: wooToOrderCard(order, { withAmounts: input.withAmounts }) } : { ok: false, reason: 'not_found' };
   }
 
   adminOrderUrl(order: { name: string; ref?: string }) {

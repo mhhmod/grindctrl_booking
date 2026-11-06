@@ -86,7 +86,9 @@ describe('status mapping', () => {
       tracking: null,
       destination: { city: 'Cairo', country: 'EG' },
     });
-    expect(wooToOrderFacts(order({ status: 'completed' })).fulfillment_status).toBe('fulfilled');
+    // Completed with no tracking is finished, never "fulfilled" (read as on its way).
+    expect(wooToOrderFacts(order({ status: 'completed' })).fulfillment_status).toBe('completed');
+    expect(wooToOrderFacts(order({ status: 'completed', tracking: { carrier: 'Bosta', number: '1', url: null, shippedAt: null } })).fulfillment_status).toBe('fulfilled');
     expect(wooToOrderFacts(order({ status: 'refunded' })).payment_state).toBe('refunded');
     expect(wooToOrderFacts(order({ paid: false, status: 'on-hold' })).payment_state).toBe('pending');
     expect(wooToOrderFacts(order({ status: 'cancelled', paid: false })).payment_state).toBe('unknown');

@@ -333,6 +333,8 @@ export async function phraseOrderAnswer(input: {
           '<<<',
           JSON.stringify(input.facts),
           '>>>',
+          'fulfillment_status "completed" means the order is finished and delivered; "fulfilled" means',
+          'it was handed over. Say an order is on its way or shipped only when tracking is present.',
           'Answer the question using these facts in 1-4 sentences of plain text.',
           'If the facts do not answer what they asked, say what you do know and follow the RULES above for the rest.',
         ].join('\n'),

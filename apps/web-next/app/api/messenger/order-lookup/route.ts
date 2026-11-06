@@ -8,6 +8,7 @@ import { resolveOrderProvider } from '@/lib/messenger/order-provider';
 import { orderLookupLimiter, orderNumberLimiter } from '@/lib/messenger/order-limits';
 import { maskEmail, normalizeOrderNumber, ORDER_CONTACT_EMAIL_RE } from '@/lib/messenger/order-card';
 import { ORDER_DENIED, ORDER_UNAVAILABLE, orderFoundLine } from '@/lib/messenger/order-copy';
+import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
 import { pickLocalized } from '@/lib/messenger/ai';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
 import type { MessageRecord } from '@/lib/messenger/types';
@@ -48,10 +49,13 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ ok: false, error: 'bad_json' }, { status: 400 });
   }
-  const orderNumber = normalizeOrderNumber(body.orderNumber);
+  /* mode "customer" is the Track my order chip for a verified shopper: no
+     number or email, the newest order of the customer the request proves. */
+  const customerMode = body.mode === 'customer';
+  const orderNumber = customerMode ? '' : normalizeOrderNumber(body.orderNumber);
   const contact = typeof body.contact === 'string' ? body.contact.trim() : '';
   // The form checks these first; only a well-formed pair is ever looked up.
-  if (!orderNumber || contact.length > 254 || !ORDER_CONTACT_EMAIL_RE.test(contact)) {
+  if (!customerMode && (!orderNumber || contact.length > 254 || !ORDER_CONTACT_EMAIL_RE.test(contact))) {
     return NextResponse.json({ ok: false, error: 'bad_input' }, { status: 400 });
   }
   const locale = body.locale === 'ar' ? 'ar' : 'en';
@@ -78,6 +82,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: 'not_enabled' }, { status: 404 });
     }
 
+    if (customerMode) {
+      const shopperToken = typeof body.shopperToken === 'string' ? body.shopperToken : null;
+      const proof = await resolveVerifiedCustomer({
+        site,
+        conversation,
+        wooPaired: provider.platform === 'woocommerce',
+        shopperToken,
+        anonymousId: String(body.anonymousId),
+      });
+      const customerId = proof.verified ? boundCustomerId(conversation, provider.platform) : null;
+      // No fresh proof: nothing is spent or shown, and the panel offers the guest form.
+      if (!customerId) return NextResponse.json({ ok: false, error: 'not_verified' });
+      const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
+      conversation.metadata.order_lookup_attempts = attempts;
+      await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});
+      let allowed = attempts <= ORDER_LOOKUP_LIFETIME_LIMIT;
+      if (allowed) {
+        try {
+          await requireRateLimit(orderLookupLimiter, `${site.id}:${ip}`);
+        } catch (error) {
+          if (!(error instanceof RequestRateLimitError)) throw error;
+          allowed = false;
+        }
+      }
+      const found = allowed
+        ? await provider.lookupCustomerCard({
+            customerId,
+            appClientId: proof.appClientId,
+            withAmounts: features.includes('n47_order_cards'),
+          })
+        : ({ ok: false, reason: 'rate_limited' } as const);
+      if (!found.ok) {
+        void recordEvent({
+          siteId: site.id,
+          conversationId: conversation.id,
+          eventName: 'order_lookup_denied',
+          payload: { reason: found.reason, via: 'customer' },
+        }).catch(() => {});
+        return NextResponse.json({ ok: false, error: 'not_found' });
+      }
+      const asked = await appendMessage({
+        conversationId: conversation.id,
+        role: 'user',
+        content: typeof body.text === 'string' && body.text.trim() ? body.text.trim().slice(0, 120) : orderFoundLine(found.card, locale),
+        metadata: { locale, order_lookup: true },
+      });
+      const reply = await appendMessage({
+        conversationId: conversation.id,
+        role: 'assistant',
+        content: orderFoundLine(found.card, locale),
+        metadata: { author: 'ai', locale, order_card: found.card },
+      });
+      void recordAudit({
+        siteId: site.id,
+        action: 'order_lookup_performed',
+        detail: { conversation_id: conversation.id, order_number: found.card.name, via: 'customer' },
+      }).catch(() => {});
+      void recordEvent({
+        siteId: site.id,
+        conversationId: conversation.id,
+        eventName: 'order_lookup_performed',
+        payload: { via: 'customer' },
+      }).catch(() => {});
+      return NextResponse.json({ ok: true, order: found.card, messages: [toWire(asked.message), toWire(reply.message)] });
+    }
+
+    if (!orderNumber) return NextResponse.json({ ok: false, error: 'bad_input' }, { status: 400 });
     const attempts = (conversation.metadata.order_lookup_attempts ?? 0) + 1;
     conversation.metadata.order_lookup_attempts = attempts;
     await updateConversationMetadata(conversation.id, conversation.metadata).catch(() => {});

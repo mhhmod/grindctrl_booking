@@ -301,6 +301,57 @@ describe('the order lookup in the v16 panel', () => {
     expect(sentBodies).toHaveLength(0);
   });
 
+  describe('for a shopper the storefront identified', () => {
+    beforeEach(() => {
+      window.history.pushState({}, '', '/embed/messenger?key=gc_test_key&shopperToken=gcw1.token');
+    });
+    afterEach(() => window.history.pushState({}, '', '/'));
+
+    it('shows their order from the chip without the guest form', async () => {
+      await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
+      // The chip answers with the newest order; the stub returns the not-found shape, so answer found.
+      const stub = vi.mocked(fetch);
+      const inner = stub.getMockImplementation()! as (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+      stub.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).includes('/api/messenger/order-lookup') && JSON.parse(String(init?.body)).mode === 'customer') {
+          lookups.push(JSON.parse(String(init?.body)));
+          return {
+            ok: true,
+            status: 200,
+            json: () =>
+              Promise.resolve({
+                ok: true,
+                messages: [
+                  { id: 'cq', role: 'user', content: 'Where is my order?', createdAt: '2026-10-20T12:00:00Z' },
+                  { id: 'ca', role: 'assistant', author: 'ai', content: 'Found it. It is on its way with Bosta.', createdAt: '2026-10-20T12:00:01Z', order: CARD },
+                ],
+              }),
+          } as unknown as Response;
+        }
+        return inner(input, init);
+      });
+      fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+      expect(await screen.findByText(/It is on its way with Bosta/)).toBeInTheDocument();
+      expect(lookups[0]).toMatchObject({ mode: 'customer', shopperToken: 'gcw1.token' });
+      expect(screen.queryByLabelText('Email you ordered with')).not.toBeInTheDocument();
+      expect(sentBodies).toHaveLength(0);
+    });
+
+    it('falls back to the guest form when the server cannot verify them', async () => {
+      await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
+      const stub = vi.mocked(fetch);
+      const inner = stub.getMockImplementation()! as (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+      stub.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input).includes('/api/messenger/order-lookup')) {
+          return { ok: true, status: 200, json: () => Promise.resolve({ ok: false, error: 'not_verified' }) } as unknown as Response;
+        }
+        return inner(input, init);
+      });
+      fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));
+      expect(await screen.findByLabelText('Email you ordered with')).toBeInTheDocument();
+    });
+  });
+
   it('checks the shape of what was typed before sending anything', async () => {
     await boot({ ...CONFIG, orderLookup: true } as PublicMessengerPayload);
     fireEvent.click(await screen.findByRole('button', { name: 'Track my order' }));

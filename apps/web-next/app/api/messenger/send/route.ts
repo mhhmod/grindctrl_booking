@@ -1,4 +1,3 @@
-import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { NextRequest, NextResponse } from 'next/server';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
@@ -22,7 +21,7 @@ import {
 import { parseModelTurn } from '@/lib/messenger/actions';
 import { ORDER_LOOKUP_LIFETIME_LIMIT } from '@/lib/messenger/orders';
 import { orderProviderFor, wooConnectionFor } from '@/lib/messenger/order-provider';
-import { isWooIdentityToken, verifyWooIdentityToken } from '@/lib/woo/identity-token';
+import { boundCustomerId, resolveVerifiedCustomer } from '@/lib/messenger/verified-customer';
 import { orderLookupLimiter } from '@/lib/messenger/order-limits';
 import { ORDER_DENIED, ORDER_UNAVAILABLE } from '@/lib/messenger/order-copy';
 import { shouldAskForContact } from '@/lib/messenger/contact';
@@ -31,7 +30,6 @@ import { handoffLine } from '@/lib/messenger/handoff-copy';
 import { publicAlertFor, toPublicHandoffAlert } from '@/lib/messenger/handoff-alert';
 import { teamHours } from '@/lib/messenger/hours';
 import { flagStoreForSite, storeFlags } from '@/lib/flags/store-flags';
-import { verifyShopperTokenAnyApp } from '@/lib/messenger/identity';
 import {
   buildSystemPrompt,
   detectExplicitHandoffRequest,
@@ -273,37 +271,16 @@ export async function POST(request: NextRequest) {
 
     // Identity refresh (token may have just been issued by the proxy, or by
     // the WordPress plugin for a logged-in shopper).
-    let identityName: string | null = conversation.metadata.identity?.name ?? null;
-    let verifiedAppClientId = conversation.metadata.identity?.app_client_id;
-    const wooCustomerBound = conversation.metadata.identity?.woo_customer_id ?? null;
-    let verifiedCustomer = wooConnection
-      // A saved identity binds a conversation, but cannot extend the plugin's
-      // ten-minute proof. Every Woo customer lookup needs a fresh token.
-      ? false
-      : Boolean(conversation.metadata.identity?.verified && verifiedAppClientId && site.domain
-        && await isActiveShopifyInstallation(site.domain, verifiedAppClientId));
-    if (shopperToken && isWooIdentityToken(shopperToken)) {
-      const claims = wooConnection
-        ? await verifyWooIdentityToken(shopperToken, { siteId: site.id, sid: anonymousId })
-        : null;
-      // Same rule as below: a token confirms the customer already bound to
-      // this conversation or binds an anonymous one, never switches it.
-      if (claims && (!wooCustomerBound || wooCustomerBound === claims.wpUserId)) verifiedCustomer = true;
-    } else if (shopperToken) {
-      const claims = verifyShopperTokenAnyApp(shopperToken, anonymousId, site.domain);
-      const bound = conversation.metadata.identity?.customer_id ?? null;
-      /* A token only ever confirms the customer this conversation is already
-         bound to (or binds a previously anonymous one). A token for someone
-         else means the browser changed hands — refuse the upgrade and let
-         the next bootstrap rotate the session rather than answering as the
-         previous customer. */
-      if (claims?.customerId && claims.appClientId && site.domain && (!bound || bound === claims.customerId)
-        && await isActiveShopifyInstallation(site.domain, claims.appClientId)) {
-        verifiedAppClientId = claims.appClientId;
-        verifiedCustomer = true;
-        identityName = claims.name ?? identityName;
-      }
-    }
+    const proof = await resolveVerifiedCustomer({
+      site,
+      conversation,
+      wooPaired: Boolean(wooConnection),
+      shopperToken,
+      anonymousId,
+    });
+    const identityName = proof.name;
+    const verifiedAppClientId = proof.appClientId;
+    const verifiedCustomer = proof.verified;
 
     // 1) Persist the shopper's turn first (idempotent).
     const { message: userMessage, replayed } = await appendMessage({
@@ -572,11 +549,7 @@ export async function POST(request: NextRequest) {
       const overBudget = attempts > ORDER_LOOKUP_LIFETIME_LIMIT || !lookupAllowed;
       /* Server-derived. A model that invents a customer id cannot reach this
          argument: there is no field for it in the schema. */
-      const verifiedCustomerId = verifiedCustomer
-        ? (orderProvider.platform === 'woocommerce'
-            ? conversation.metadata.identity?.woo_customer_id
-            : conversation.metadata.identity?.customer_id) ?? null
-        : null;
+      const verifiedCustomerId = verifiedCustomer ? boundCustomerId(conversation, orderProvider.platform) : null;
       const appClientId = verifiedCustomer ? verifiedAppClientId : undefined;
       const outcome = overBudget
         ? ({ ok: false, reason: 'rate_limited' } as const)

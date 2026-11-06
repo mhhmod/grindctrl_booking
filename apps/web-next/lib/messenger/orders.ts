@@ -253,3 +253,59 @@ export async function lookupGuestOrderCard(input: {
     return { ok: false, reason: 'provider_error' };
   }
 }
+
+/* A verified shopper's newest order as the card, for the Track my order chip.
+   Same fields as the guest card; the customer(id) scope is what keeps the
+   order theirs, so no email is asked. Needs read_customers like lookupOrder. */
+const CUSTOMER_CARD_QUERY = `query CustomerOrderCard($id: ID!) {
+  customer(id: $id) {
+    orders(first: 1, sortKey: PROCESSED_AT, reverse: true) {
+      nodes {
+        name
+        processedAt
+        createdAt
+        cancelledAt
+        displayFulfillmentStatus
+        paymentGatewayNames
+        totalOutstandingSet { presentmentMoney { amount currencyCode } }
+        currentTotalPriceSet { presentmentMoney { amount currencyCode } }
+        lineItems(first: 10) { nodes { title quantity } }
+        fulfillments(first: 5) {
+          createdAt
+          inTransitAt
+          deliveredAt
+          estimatedDeliveryAt
+          displayStatus
+          trackingInfo { company url }
+          events(first: 20) { nodes { status happenedAt } }
+        }
+      }
+    }
+  }
+}`;
+
+export async function lookupCustomerOrderCard(input: {
+  shopDomain: string;
+  appClientId?: string;
+  verifiedCustomerId: string;
+  withAmounts: boolean;
+}): Promise<GuestCardOutcome> {
+  const token = await (input.appClientId ? getShopToken(input.shopDomain, input.appClientId) : getShopToken(input.shopDomain));
+  if (!token) return { ok: false, reason: 'not_configured' };
+  const scopes = token.scopes.split(',').map((scope) => scope.trim());
+  if (!hasOrderScope(token.scopes) || !scopes.includes('read_customers')) return { ok: false, reason: 'no_scope' };
+  try {
+    const data = await adminGraphql<{ customer?: { orders?: { nodes?: RawCardOrder[] } } }>({
+      shopDomain: input.shopDomain,
+      accessToken: token.accessToken,
+      query: CUSTOMER_CARD_QUERY,
+      variables: { id: `gid://shopify/Customer/${input.verifiedCustomerId}` },
+    });
+    const order = data.customer?.orders?.nodes?.[0];
+    return order ? { ok: true, card: toOrderCard(order, { withAmounts: input.withAmounts }) } : { ok: false, reason: 'not_found' };
+  } catch (error) {
+    const status = error instanceof ShopifyAdminError ? error.status : 0;
+    console.error('[messenger] customer order card failed:', status, error instanceof Error ? error.message : error);
+    return { ok: false, reason: 'provider_error' };
+  }
+}
