@@ -28,7 +28,10 @@ it('enforces a shared one-request allowance under concurrent independent SDK cli
  expect([a,b].filter(x=>!x.success)).toHaveLength(1);
  expect([a,b].every(x=>Number.isFinite(x.reset))).toBe(true);
  await expect(requireRateLimit(make(),'concurrent')).rejects.toMatchObject({status:429});
- writeFileSync(checkpointFile,JSON.stringify({prefix,identity:'concurrent'}),{flag:'wx',mode:0o600});
+ // The sliding window is bucketed on the wall clock; record the exact spent bucket so recovery can prove persistence independent of it.
+ const keys=await redis().keys(prefix+':concurrent:*');
+ expect(keys).toHaveLength(1);
+ writeFileSync(checkpointFile,JSON.stringify({prefix,identity:'concurrent',keys,reset:a.success?b.reset:a.reset}),{flag:'wx',mode:0o600});
 });
 it('uses the original shared merchant limiter and strict production enforcement',async()=>{
  const {merchantWriteRatelimit}=await import('@/lib/ratelimit');
