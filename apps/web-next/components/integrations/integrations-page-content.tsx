@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Check } from 'lucide-react';
-import { ShopifyMark, SallaMark, WooCommerceMark } from '@/components/brand-marks';
+import { SallaLogo, ShopifyLogo, WooCommerceLogo, ZidLogo } from '@/components/brand-marks';
 import { useLandingLocale } from '@/components/landing/landing-locale';
 import {
   CtaRow,
@@ -17,14 +17,15 @@ import { findPublicIntegration, type PublicIntegrationState } from '@/lib/produc
 import type { LandingTranslator } from '@/lib/landing/landing-i18n';
 import { getIntegrationsCopy, type IntegrationCopyRow } from './integrations-copy';
 
-/* Marks for the platform rows. Monochrome, like the story: Salla's own colour
-   is nearly invisible on a light page. Zid has no official mark, so its row
-   carries the name alone. Each sits beside the label and the status badge. */
+/* Logos for the platform rows: official full-colour marks (brand-marks.tsx), with
+   the neutral globe for "your website". Each sits beside the label and the status
+   badge, which stay the accessible text. */
 const PLATFORM_MARKS: Record<string, React.ReactNode> = {
-  shopify: <ShopifyMark monochrome decorative className="size-4 shrink-0" />,
-  woocommerce: <WooCommerceMark monochrome decorative className="size-4 shrink-0" />,
+  shopify: <ShopifyLogo size={20} />,
+  woocommerce: <WooCommerceLogo size={16} />,
   'custom-website': <GlobeIcon size={16} className="shrink-0" />,
-  salla: <SallaMark monochrome decorative className="size-4 shrink-0" />,
+  salla: <SallaLogo size={22} />,
+  zid: <ZidLogo size={22} />,
 };
 
 /* State badge text always comes from the register (single source of truth),

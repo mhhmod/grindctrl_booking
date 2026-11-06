@@ -7,7 +7,8 @@
 
 import * as React from 'react';
 import { GrindctrlMark } from '@/components/site/marks';
-import { D_N8N, D_SHOPIFY } from '../story-marks';
+import { ShopifyLogo } from '@/components/brand-marks';
+import { D_N8N } from '../story-marks';
 import { StoryImg } from '../story-img';
 import { PlatformRows, StatusChip } from '../platform-rows';
 import type { V, ViewProps } from '../story-types';
@@ -34,7 +35,7 @@ export function DeskStack({ v, t }: ViewProps) {
           <div style={{ position: "absolute", insetInlineStart: "0px", top: "44px", width: "284px" }}>
             <div style={{ boxSizing: "border-box", padding: "16px", borderRadius: "20px", border: "1px solid var(--border)", background: "var(--card)", boxShadow: "0 24px 50px -36px color-mix(in srgb, var(--foreground) 50%, transparent)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--foreground)" }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d={D_SHOPIFY} /></svg>
+                <ShopifyLogo size={22} />
                 <span style={{ flex: "1", fontSize: "15px", fontWeight: "700" }}>{t("Shopify")}</span>
                 <StatusChip label="Live" live t={t} />
               </div>
