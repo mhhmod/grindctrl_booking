@@ -52,11 +52,15 @@ describe.each([
     sandbox.eval(asset);
     const selector = surface === 'product' ? '.gc-tryon-btn' : '.gc-cat-btn';
     await waitFor(() => expect(doc.querySelector(selector)).not.toBeNull());
+    const clickedAt = Date.now();
     fireEvent.click(doc.querySelector(selector)!);
     await waitFor(() => expect(doc.querySelector('iframe')).not.toBeNull());
     const frame = doc.querySelector('iframe')!;
     expect(new URL(frame.src).origin).toBe(expected);
     expect(new URL(frame.src).pathname).toBe('/embed/try-on');
+    const openedAt = Number(new URL(frame.src).searchParams.get('gc_opened_at'));
+    expect(openedAt).toBeGreaterThanOrEqual(clickedAt);
+    expect(openedAt).toBeLessThanOrEqual(Date.now());
     const postMessage = vi.spyOn(frame.contentWindow!, 'postMessage').mockImplementation(() => {});
     const callsBeforeMessage = fetch.mock.calls.length;
     const data = { type: 'grindctrl-tryon:add-to-cart' };

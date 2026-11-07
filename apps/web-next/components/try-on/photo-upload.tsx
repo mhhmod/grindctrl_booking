@@ -5,7 +5,7 @@ import { Upload, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
-import { photoFileError } from '@/lib/try-on/photo-file';
+import { photoFileError, readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
 
 interface PhotoUploadProps {
   onFileSelected: (file: File, dataUrl: string) => void;
@@ -26,7 +26,7 @@ export function PhotoUpload({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       setError(null);
 
       const invalid = photoFileError(file, t);
@@ -35,11 +35,11 @@ export function PhotoUpload({
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        onFileSelected(file, reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        onFileSelected(file, await readPhotoAsDataUrl(file));
+      } catch {
+        setError(t.genericError);
+      }
     },
     [onFileSelected, t],
   );

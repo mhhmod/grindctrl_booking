@@ -17,6 +17,24 @@ const GRINDCTRL_SC_TRYON_FAILURE_TTL  = 60;
 const GRINDCTRL_SC_TRYON_VISITOR_MAX  = 12;
 const GRINDCTRL_SC_TRYON_VISITOR_SPAN = 60;
 
+/** The dashboard preview first opens the home page, which may have no Try-On or chat loader. */
+function grindctrl_sc_tryon_remember_preview() {
+	if ( is_admin() || ! grindctrl_sc_is_connected() ) {
+		return;
+	}
+	// Generic script only: never print a request token into cacheable page HTML.
+	$script = <<<'JS'
+try {
+  var gcPreview = new URLSearchParams(window.location.search).get('gc_preview');
+  if (gcPreview && /^[A-Za-z0-9_.-]{20,512}$/.test(gcPreview)) {
+    window.localStorage.setItem('gc_preview', JSON.stringify({ token: gcPreview, savedAt: Date.now() }));
+  }
+} catch (_) {}
+JS;
+	wp_print_inline_script_tag( $script, array( 'id' => 'grindctrl-preview' ) );
+}
+add_action( 'wp_head', 'grindctrl_sc_tryon_remember_preview' );
+
 /* ── Configuration ────────────────────────────────────────────────────── */
 
 /**
@@ -70,12 +88,14 @@ function grindctrl_sc_tryon_config() {
 		$response = wp_remote_get( $url, array( 'timeout' => 3, 'redirection' => 0 ) );
 		if ( ! is_wp_error( $response ) && 200 === (int) wp_remote_retrieve_response_code( $response ) ) {
 			$data = json_decode( wp_remote_retrieve_body( $response ), true );
-			if ( is_array( $data ) && isset( $data['enabled'] ) && true === $data['enabled'] ) {
+			$preview_only = is_array( $data ) && isset( $data['reason'] ) && 'out_of_looks' === $data['reason'];
+			if ( is_array( $data ) && isset( $data['enabled'] ) && ( true === $data['enabled'] || $preview_only ) ) {
 				$label  = isset( $data['buttonLabel'] ) && is_string( $data['buttonLabel'] ) ? trim( wp_strip_all_tags( $data['buttonLabel'] ) ) : '';
 				$radius = isset( $data['radiusPx'] ) && is_numeric( $data['radiusPx'] ) ? max( 0, min( 999, (int) $data['radiusPx'] ) ) : 10;
 				$catalog = isset( $data['catalogLabel'] ) && is_string( $data['catalogLabel'] ) ? trim( wp_strip_all_tags( $data['catalogLabel'] ) ) : '';
 				$config = array(
-					'enabled'      => true,
+					'enabled'      => true === $data['enabled'],
+					'previewOnly'  => $preview_only,
 					'label'        => '' !== $label ? mb_substr( $label, 0, 60 ) : ( 'ar' === $locale ? 'جرّبها' : 'Try it on' ),
 					'catalogLabel' => '' !== $catalog ? mb_substr( $catalog, 0, 60 ) : '',
 					'bg'           => grindctrl_sc_tryon_color( isset( $data['accentBg'] ) ? $data['accentBg'] : '', '#1f1d1a' ),
@@ -168,10 +188,10 @@ function grindctrl_sc_tryon_eligible( $product ) {
  * @param string     $label   Optional label override.
  */
 function grindctrl_sc_tryon_button_html( $product, $variant = 'page', $label = '' ) {
-	if ( ! grindctrl_sc_tryon_enabled() || ! grindctrl_sc_tryon_eligible( $product ) ) {
+	$config = grindctrl_sc_tryon_config();
+	if ( ( empty( $config['enabled'] ) && empty( $config['previewOnly'] ) ) || ! grindctrl_sc_tryon_eligible( $product ) ) {
 		return '';
 	}
-	$config = grindctrl_sc_tryon_config();
 	grindctrl_sc_tryon_enqueue();
 
 	$is_card = 'card' === $variant;
@@ -179,10 +199,13 @@ function grindctrl_sc_tryon_button_html( $product, $variant = 'page', $label = '
 		$label = $is_card && ! empty( $config['catalogLabel'] ) ? $config['catalogLabel'] : $config['label'];
 	}
 	$style = sprintf( '--gc-bg:%s;--gc-fg:%s;--gc-radius:%dpx', $config['bg'], $config['fg'], $config['radius'] );
+	if ( ! empty( $config['previewOnly'] ) ) {
+		$style .= ';display:none'; // Hidden before the deferred loader runs too.
+	}
 
 	return sprintf(
 		'<button type="button" class="gc-tryon-btn%1$s" data-product-id="%2$d" data-product-type="%3$s"%4$s style="%5$s">%6$s</button>',
-		$is_card ? ' gc-tryon-btn--card' : '',
+		( $is_card ? ' gc-tryon-btn--card' : '' ) . ( ! empty( $config['previewOnly'] ) ? ' gc-tryon-btn--preview' : '' ),
 		(int) $product->get_id(),
 		esc_attr( $product->get_type() ),
 		$is_card ? '' : ' data-gc-page="1"',
@@ -422,12 +445,37 @@ function grindctrl_sc_tryon_error( $code, $status, $headers = array() ) {
 	return $response;
 }
 
-/** The product's own full-size image, or its parent's. Never a thumbnail. */
+/** The nearest existing, uncropped derivative at least 1024px on its long side. */
+function grindctrl_sc_tryon_attachment_image( $image_id ) {
+	$metadata   = wp_get_attachment_metadata( $image_id );
+	$registered = wp_get_registered_image_subsizes();
+	$best_size  = 'full';
+	$best_edge  = PHP_INT_MAX;
+	$sizes      = is_array( $metadata ) && isset( $metadata['sizes'] ) && is_array( $metadata['sizes'] ) ? $metadata['sizes'] : array();
+	foreach ( $sizes as $name => $size ) {
+		// Never substitute a cropped garment or an unregistered/stale thumbnail.
+		if ( ! isset( $registered[ $name ] ) || ! empty( $registered[ $name ]['crop'] ) || ! is_array( $size ) ) {
+			continue;
+		}
+		$edge = max( isset( $size['width'] ) ? (int) $size['width'] : 0, isset( $size['height'] ) ? (int) $size['height'] : 0 );
+		if ( $edge >= 1024 && $edge < $best_edge ) {
+			$best_size = $name;
+			$best_edge = $edge;
+		}
+	}
+	$src = wp_get_attachment_image_url( $image_id, $best_size );
+	if ( ! is_string( $src ) || 0 !== strpos( $src, 'https://' ) ) {
+		$src = wp_get_attachment_image_url( $image_id, 'full' );
+	}
+	return is_string( $src ) && 0 === strpos( $src, 'https://' ) ? $src : null;
+}
+
+/** The product's own image, or its parent's, using a bounded derivative when present. */
 function grindctrl_sc_tryon_image( $product, $parent ) {
 	foreach ( array( $product, $parent ) as $candidate ) {
 		if ( $candidate instanceof WC_Product && $candidate->get_image_id() ) {
-			$src = wp_get_attachment_image_url( $candidate->get_image_id(), 'full' );
-			if ( is_string( $src ) && 0 === strpos( $src, 'https://' ) ) {
+			$src = grindctrl_sc_tryon_attachment_image( $candidate->get_image_id() );
+			if ( null !== $src ) {
 				return $src;
 			}
 		}
@@ -436,7 +484,11 @@ function grindctrl_sc_tryon_image( $product, $parent ) {
 }
 
 function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
-	if ( ! function_exists( 'wc_get_product' ) || ! grindctrl_sc_is_connected() || ! grindctrl_sc_tryon_enabled() ) {
+	$preview = $request->get_param( 'preview' );
+	$preview = is_string( $preview ) && 1 === preg_match( '/^[A-Za-z0-9_.-]{20,512}$/', $preview ) ? $preview : '';
+	$config  = grindctrl_sc_tryon_config();
+	if ( ! function_exists( 'wc_get_product' ) || ! grindctrl_sc_is_connected()
+		|| ( empty( $config['enabled'] ) && ( empty( $config['previewOnly'] ) || '' === $preview ) ) ) {
 		return grindctrl_sc_tryon_error( 'unavailable', 503 );
 	}
 
@@ -471,6 +523,7 @@ function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
 	}
 
 	$path     = '/api/woo/tryon-context';
+	// An untrusted browser can forward a token, never choose the signed test flag.
 	$response = grindctrl_sc_post_json(
 		$path,
 		array(
@@ -481,6 +534,7 @@ function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
 			'pageUrl'     => get_permalink( $parent->get_id() ),
 			'locale'      => grindctrl_sc_tryon_locale(),
 			'visitorHash' => $visitor_hash,
+			'preview'     => $preview,
 		),
 		true,
 		15
@@ -494,7 +548,7 @@ function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
 	if ( 200 !== $status || ! is_array( $data ) ) {
 		$code = is_array( $data ) && isset( $data['error'] ) && is_string( $data['error'] ) ? $data['error'] : 'unavailable';
 		// Reasons this store cannot start a look right now hide the button; auth and outage errors do not.
-		$hidden = array( 'out_of_looks', 'plan_inactive', 'not_installed', 'free_plan_taken', 'no_verified_domain', 'page_not_verified', 'site_disconnected' );
+		$hidden = array( 'out_of_looks', 'plan_inactive', 'not_installed', 'free_plan_taken', 'no_verified_domain', 'page_not_verified', 'site_disconnected', 'preview', 'holdout' );
 		if ( in_array( $code, $hidden, true ) ) {
 			// A hidden state outlives a page load: refresh the cached config sooner.
 			delete_transient( 'grindctrl_sc_tryon_cfg_' . grindctrl_sc_tryon_locale() );
@@ -542,7 +596,12 @@ function grindctrl_sc_tryon_context_route( WP_REST_Request $request ) {
  * cannot say which size it is. Public product data, read-only.
  */
 function grindctrl_sc_tryon_product_route( WP_REST_Request $request ) {
-	if ( ! function_exists( 'wc_get_product' ) || ! grindctrl_sc_is_connected() || ! grindctrl_sc_tryon_enabled() ) {
+	$config  = grindctrl_sc_tryon_config();
+	$preview = $request->get_param( 'preview' );
+	$preview = is_string( $preview ) && 1 === preg_match( '/^[A-Za-z0-9_.-]{20,512}$/', $preview );
+	// Public product options may serve the preview entry too; this grants no look.
+	if ( ! function_exists( 'wc_get_product' ) || ! grindctrl_sc_is_connected()
+		|| ( empty( $config['enabled'] ) && ( empty( $config['previewOnly'] ) || ! $preview ) ) ) {
 		return grindctrl_sc_tryon_error( 'unavailable', 503 );
 	}
 	$parent = wc_get_product( absint( $request->get_param( 'product_id' ) ) );

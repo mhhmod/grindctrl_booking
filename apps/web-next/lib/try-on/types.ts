@@ -135,6 +135,6 @@ export interface TryOnValidationResult {
 export const TRYON_FILE_CONFIG = {
   maxSizeBytes: 8 * 1024 * 1024, // 8 MB
   maxSizeMB: 8,
-  allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
-  allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'],
+  allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp'],
 } as const;

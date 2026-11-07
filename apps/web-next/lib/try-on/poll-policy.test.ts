@@ -4,10 +4,24 @@ import {
   TRYON_POLL_RATE_LIMIT_REQUESTS,
   TRYON_POLL_RATE_LIMIT_WINDOW_MS,
   TRYON_POLL_TIMEOUT_MS,
+  TRYON_POLL_INITIAL_DELAY_MS,
+  TRYON_ASYNC_POLL_TIMEOUT_MS,
   tryOnPollDelayMs,
 } from './poll-policy';
 
 describe('try-on polling policy', () => {
+  it('stays within the per-window budget throughout the full async window', () => {
+    let now = TRYON_POLL_INITIAL_DELAY_MS;
+    const requests: number[] = [];
+    while (now < TRYON_ASYNC_POLL_TIMEOUT_MS) {
+      requests.push(now);
+      expect(requests.filter(at => at > now - TRYON_POLL_RATE_LIMIT_WINDOW_MS).length).toBeLessThan(40);
+      now += tryOnPollDelayMs(requests.length);
+    }
+    expect(requests.length).toBeLessThanOrEqual(70);
+    // Around twenty seconds, a completion is discovered within 1.5s.
+    expect(requests.filter(at => at >= 18_000 && at <= 22_000)).toEqual([18_000, 19_500, 21_000]);
+  });
   it('keeps a normal two-minute flow below the real configured poll budget', () => {
     let now = 0;
     let requests = 0;

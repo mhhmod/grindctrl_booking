@@ -56,6 +56,7 @@
       '.gc-tryon-btn:focus-visible{outline:3px solid currentColor;outline-offset:3px}',
       '.gc-tryon-btn[disabled]{opacity:.6;cursor:progress}',
       '.gc-tryon-btn--card{margin-block:.25rem;padding-block:.45rem;padding-inline:.9rem;font-size:.875rem}',
+      '.gc-tryon-btn--preview{display:none}',
       '.gc-tryon-note{margin-block:.25rem;font-size:.875rem;line-height:1.4}',
       '.gc-tryon-note button{margin-inline-start:.5rem;min-block-size:44px;padding-inline:.75rem;font:inherit;cursor:pointer}',
       '.gc-tryon-sheet{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-end;justify-content:center}',
@@ -299,12 +300,15 @@
   }
 
   function requestContext(productId, variationId) {
+    var payload = { product_id: productId, variation_id: variationId || 0 };
+    var preview = previewToken();
+    if (preview) payload.preview = preview;
     return fetch(CFG.restUrl + 'tryon-context', {
       method: 'POST',
       credentials: 'same-origin',
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ product_id: productId, variation_id: variationId || 0 })
+      body: JSON.stringify(payload)
     }).then(function (res) {
       // 409/403: this store cannot start a look now (no looks left, plan lapsed).
       if (res.status === 409 || res.status === 403) {
@@ -320,11 +324,30 @@
     });
   }
 
+  // Same store-local preview token as the Shopify loader and Store Chat.
+  // GRINDCTRL verifies its signature, tenant and expiry before signing test:true.
+  function previewToken() {
+    var token = '';
+    try { token = new URLSearchParams(window.location.search).get('gc_preview') || ''; } catch (_) {}
+    if (/^[A-Za-z0-9_.-]{20,512}$/.test(token)) {
+      try { window.localStorage.setItem('gc_preview', JSON.stringify({ token: token, savedAt: Date.now() })); } catch (_) {}
+      return token;
+    }
+    try {
+      var saved = JSON.parse(window.localStorage.getItem('gc_preview') || 'null');
+      if (saved && /^[A-Za-z0-9_.-]{20,512}$/.test(saved.token) && typeof saved.savedAt === 'number' &&
+          Date.now() >= saved.savedAt && Date.now() - saved.savedAt < 24 * 60 * 60 * 1000) return saved.token;
+    } catch (_) {}
+    return '';
+  }
+
   /* The product's variations, for the sheet's size picker. Display data from
      the plugin's public route; only a variation listed here can be added. */
   function requestProduct(productId) {
     var join = CFG.restUrl.indexOf('?') === -1 ? '?' : '&';
-    return fetch(CFG.restUrl + 'tryon-product' + join + 'product_id=' + productId, {
+    var preview = previewToken();
+    return fetch(CFG.restUrl + 'tryon-product' + join + 'product_id=' + productId +
+      (preview ? '&preview=' + encodeURIComponent(preview) : ''), {
       credentials: 'same-origin',
       cache: 'no-store',
       headers: { Accept: 'application/json' }
@@ -336,6 +359,7 @@
   }
 
   function openTryOn(button) {
+    var openedAt = Date.now();
     var existing = sessions.get(button);
     // Reopening resumes whatever the sheet held, a look included.
     if (existing) { existing.sheet.open(); return; }
@@ -353,6 +377,7 @@
     requestContext(productId, picked.id).then(function (data) {
       var target = embedOriginOf(data.embedUrl);
       if (!target) throw new Error('context_invalid');
+      target.searchParams.set('gc_opened_at', String(openedAt));
 
       var frame = document.createElement('iframe');
       frame.className = 'gc-tryon-frame';
@@ -454,4 +479,12 @@
   });
 
   injectStyles();
+  // An exhausted store stays hidden to shoppers. Only a preview token reveals
+  // its test entry; the context route is still the authority for test looks.
+  if (previewToken()) {
+    document.querySelectorAll('.gc-tryon-btn--preview').forEach(function (button) {
+      button.classList.remove('gc-tryon-btn--preview');
+      button.style.removeProperty('display');
+    });
+  }
 })();

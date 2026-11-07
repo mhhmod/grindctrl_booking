@@ -16,6 +16,7 @@ import { decodeRasterDataUrl, TRYON_RESULT_MAX_BYTES } from './image-data';
 import { toShopperFailureMessage } from './shopper-errors';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import { fetchSiteGarment } from '@/lib/woo/garment-url';
+import type { TryOnJobTimings } from './job-timings';
 
 const OPENROUTER_IMAGES_URL = 'https://openrouter.ai/api/v1/images';
 
@@ -55,20 +56,41 @@ export function isAllowedGarmentUrl(url: string): boolean {
   }
 }
 
-async function loadGarmentDataUrl(productId: string, garmentUrl?: string, shop?: string | null): Promise<string> {
+/** Only the shared Shopify CDN supports this transform. Signed site URLs and
+ * shop-domain URLs are left byte-for-byte intact. Do not request an upscale. */
+export function boundedShopifyGarmentUrl(raw: string): string {
+  const url = new URL(raw);
+  if (url.hostname !== 'cdn.shopify.com') return raw;
+  const width = Number(url.searchParams.get('width'));
+  if (!Number.isFinite(width) || width <= 0 || width > 1536) url.searchParams.set('width', '1536');
+  return url.toString();
+}
+
+export type PreparedGarment = { dataUrl: string; byteLength: number };
+
+export async function prepareGarmentImage(
+  productId: string,
+  garmentUrl?: string,
+  shop?: string | null,
+  signal?: AbortSignal,
+): Promise<PreparedGarment> {
+  signal?.throwIfAborted();
   if (garmentUrl && shop && isSiteTenantKey(shop)) {
     // WooCommerce and WordPress sites: resolve, pin, no redirects.
     const { mime, bytes } = await fetchSiteGarment(shop.slice('site:'.length), garmentUrl);
+    // The pinned Woo fetch retains every safety check. Its bounded response
+    // is discarded if authorization/reservation ended while it was fetching.
+    signal?.throwIfAborted();
     const dataUrl = `data:${mime};base64,${bytes.toString('base64')}`;
     if (!decodeRasterDataUrl(dataUrl, MAX_GARMENT_BYTES)) throw new Error('Invalid garment image.');
-    return dataUrl;
+    return { dataUrl, byteLength: bytes.byteLength };
   }
   if (garmentUrl) {
     if (!isAllowedGarmentUrl(garmentUrl)) {
       throw new Error('Garment image must come from the Shopify CDN.');
     }
-    const res = await fetch(garmentUrl, {
-      signal: AbortSignal.timeout(20_000),
+    const res = await fetch(boundedShopifyGarmentUrl(garmentUrl), {
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20_000)]) : AbortSignal.timeout(20_000),
       redirect: 'error',
       cache: 'no-store',
     });
@@ -80,17 +102,22 @@ async function loadGarmentDataUrl(productId: string, garmentUrl?: string, shop?:
     const bytes = await readProviderBody(res, MAX_GARMENT_BYTES);
     const dataUrl = `data:${mime};base64,${bytes.toString('base64')}`;
     if (!decodeRasterDataUrl(dataUrl, MAX_GARMENT_BYTES)) throw new Error('Invalid garment image.');
-    return dataUrl;
+    return { dataUrl, byteLength: bytes.byteLength };
   }
 
   const product = getProduct(productId);
   if (!product) throw new Error(`Unknown product: ${productId}`);
   const filePath = path.join(process.cwd(), 'public', product.imageUrl);
-  const bytes = await readFile(filePath);
+  const bytes = await readFile(filePath, { signal });
   const ext = path.extname(filePath).toLowerCase();
   const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
-  return `data:${mime};base64,${bytes.toString('base64')}`;
+  return { dataUrl: `data:${mime};base64,${bytes.toString('base64')}`, byteLength: bytes.byteLength };
 }
+
+export type ImageGenerationOptions = {
+  garment?: Promise<{ value: PreparedGarment } | { error: unknown }>;
+  timings?: TryOnJobTimings;
+};
 
 /**
  * Runs a real try-on generation through OpenRouter's Images API:
@@ -104,6 +131,7 @@ export async function runImageGeneration(
   model: string,
   garmentUrl?: string,
   productName?: string,
+  options: ImageGenerationOptions = {},
 ): Promise<TryOnJob> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const jobId = `tryon_${randomUUID()}`;
@@ -136,7 +164,17 @@ export async function runImageGeneration(
   const garmentName = productName || product?.name || 'the garment';
   let garmentDataUrl: string;
   try {
-    garmentDataUrl = await loadGarmentDataUrl(productId, garmentUrl, shop);
+    const started = performance.now();
+    try {
+      const prepared = options.garment
+        ? await options.garment
+        : { value: await prepareGarmentImage(productId, garmentUrl, shop) };
+      if ('error' in prepared) throw prepared.error;
+      garmentDataUrl = prepared.value.dataUrl;
+      if (options.timings) options.timings.input_bytes.garment = prepared.value.byteLength;
+    } finally {
+      if (options.timings && !options.garment) options.timings.garment_ms = performance.now() - started;
+    }
   } catch {
     return fail('garment_unavailable');
   }
@@ -160,6 +198,7 @@ export async function runImageGeneration(
       n: 1,
       provider: IMAGE_PROVIDER_PREFERENCES,
     });
+    if (options.timings) options.timings.input_bytes.provider_request = Buffer.byteLength(requestBody);
 
     /* One retry, and only for a response that proves no image was generated:
        429 (rate limited) or 5xx (the edge/upstream rejected the request
@@ -169,20 +208,33 @@ export async function runImageGeneration(
        risk a second real charge for one shopper action. Those still fail on
        the first attempt, same as before this retry existed. */
     let res: Response;
+    let providerBody: Buffer | undefined;
     let attempt = 0;
     for (;;) {
       attempt += 1;
-      res = await fetch(OPENROUTER_IMAGES_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
-        redirect: 'error',
-        cache: 'no-store',
-        body: requestBody,
-      });
+      const attemptStarted = performance.now();
+      let status: number | null = null;
+      try {
+        res = await fetch(OPENROUTER_IMAGES_URL, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(IMAGE_PROVIDER_TIMEOUT_MS),
+          redirect: 'error',
+          cache: 'no-store',
+          body: requestBody,
+        });
+        status = res.status;
+        // Include response streaming in the attempt; image bytes arrive after
+        // the response headers, and are part of the provider wait.
+        if (res.ok) providerBody = await readProviderBody(res, MAX_PROVIDER_JSON_BYTES);
+      } finally {
+        options.timings?.provider_attempts.push({
+          attempt, duration_ms: performance.now() - attemptStarted, status,
+        });
+      }
       const retryable = res.status === 429 || (res.status >= 500 && res.status < 600);
       if (res.ok || !retryable || attempt >= PROVIDER_MAX_ATTEMPTS) break;
       await res.body?.cancel();
@@ -194,7 +246,7 @@ export async function runImageGeneration(
       return fail('provider_http_error', res.status);
     }
 
-    const data = JSON.parse((await readProviderBody(res, MAX_PROVIDER_JSON_BYTES)).toString('utf8')) as {
+    const data = JSON.parse((providerBody as Buffer).toString('utf8')) as {
       data?: { b64_json?: unknown; media_type?: unknown }[];
       usage?: { cost?: unknown };
       error?: unknown;

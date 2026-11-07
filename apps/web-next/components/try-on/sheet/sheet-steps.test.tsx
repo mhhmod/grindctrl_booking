@@ -12,6 +12,12 @@ import { SheetCheckStep } from './sheet-check-step';
 
 const check = vi.hoisted(() => ({ result: null as PhotoCheck | null }));
 vi.mock('@/lib/try-on/photo-check', () => ({ checkPhoto: async () => check.result }));
+/* UI lifecycle fixtures are not encoded photos. The shared preparation
+   suite checks actual decoding policy and unreadable inputs separately. */
+vi.mock('@/lib/try-on/photo-file', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/try-on/photo-file')>(),
+  readPhotoAsDataUrl: vi.fn(async () => 'data:image/png;base64,cGhvdG8='),
+}));
 
 const GOOD: PhotoCheck = { light: true, sharp: true, issue: null } as PhotoCheck;
 const DARK: PhotoCheck = { light: false, sharp: true, issue: 'dark' } as PhotoCheck;

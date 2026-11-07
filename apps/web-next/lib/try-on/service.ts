@@ -1,13 +1,19 @@
 ﻿import { randomUUID } from 'node:crypto';
 import type { TryOnJob, TryOnJobStatus, TryOnMode, TryOnPhotoSource, TryOnStage } from './types';
+import { createHash } from 'node:crypto';
 import { runMockGeneration } from './mock-runner';
-import { runImageGeneration } from './image-runner';
+import { prepareGarmentImage, runImageGeneration } from './image-runner';
+import { createJobTimings, persistJobTimings } from './job-timings';
 import {
   beginTestTryOnJob,
+  beginPublicDemoTryOnJob,
   beginTryOnJob,
+  completePublicDemoTryOnJob,
   finalizeTryOnJob,
   loadAuthorizedDurableTryOnJob,
   persistGeneratedTryOnResult,
+  persistPublicDemoTryOnResult,
+  prepareTryOnResultPersistence,
   persistTryOnJob,
 } from './persistence';
 import { validateProductId, validateSessionId } from './validator';
@@ -89,7 +95,7 @@ export function getTryOnMode(): TryOnMode {
 
 /** How a billable look runs. With `background`, the call answers as soon
  *  as the look is reserved and the provider work finishes after the
- *  response (contract N38, behind the store's n38_async_jobs flag); the
+ *  response (the default HTTP route uses Next after()); the
  *  job then reports its stage until it settles. Without it, the call waits
  *  for the look, as it always has. */
 export type GenerateOptions = {
@@ -118,9 +124,27 @@ export async function generateTryOn(
   if (purpose === 'legacy-compat' && shop !== null) {
     throw new Error('Legacy compatibility sessions cannot authorize a billing shop.');
   }
+  if (purpose === 'public-demo' && shop !== null) {
+    throw new Error('Public demo sessions cannot authorize a billing shop.');
+  }
 
   const mode = getTryOnMode();
   const startedAt = Date.now();
+  const clockStarted = performance.now();
+  const timings = createJobTimings(photoData);
+  const finishTimings = async (finished: TryOnJob) => {
+    timings.total_ms = performance.now() - clockStarted;
+    await persistJobTimings(finished, timings);
+  };
+  const finalize = async (finished: TryOnJob) => {
+    const start = performance.now();
+    try {
+      await finalizeTryOnJob(finished, Date.now() - startedAt);
+    } finally {
+      timings.finalize_ms += performance.now() - start;
+      await finishTimings(finished);
+    }
+  };
   const billableLiveJob =
     mode === 'live' &&
     purpose === 'storefront' &&
@@ -131,30 +155,58 @@ export async function generateTryOn(
   let job: TryOnJob;
 
   if (billableLiveJob) {
-    /* tryon_plans.model_key holds a tier label (lite, flash, muse), not a
-       provider id. reserve_tryon_credit still records it on the job and
-       ledger, but it no longer picks the model: every plan renders with
-       the same one. Sending the label upstream got every paid storefront
-       try-on rejected, so OpenRouter only ever receives the model id. */
-    const modelKey = (await getShopModelKey(shop)) || TRYON_IMAGE_MODEL;
-    const providerModel = TRYON_IMAGE_MODEL;
-    const reservedJobId = createJobId();
-    /* The owner's look from the preview link is a test look (N5): the job
-       is recorded but no look is spent, and a daily cap applies instead.
-       The flag is signed into the session, so a shopper cannot set it. */
-    const reservation =
-      authorization.test === true
-        ? await beginTestTryOnJob({ shop, jobId: reservedJobId, requestKey, sessionId, productId })
-        : await beginTryOnJob({
-            shop,
-            jobId: reservedJobId,
-            requestKey,
-            modelKey,
-            sessionId,
-            productId,
-          });
+    // Fetch/encode only: this never spends provider credits. Start before
+    // plan lookup/reservation, and settle rejection immediately so a denied
+    // reservation cannot leave an unhandled speculative fetch rejection.
+    const garmentController = new AbortController();
+    const garmentStarted = performance.now();
+    const garment = prepareGarmentImage(productId, garmentUrl, shop, garmentController.signal)
+      .then(value => ({ value }), error => ({ error: error as unknown }))
+      .finally(() => { timings.garment_ms = performance.now() - garmentStarted; });
+    const reserve = async () => {
+      /* tryon_plans.model_key holds a tier label (lite, flash, muse), not a
+         provider id. reserve_tryon_credit still records it on the job and
+         ledger, but it no longer picks the model: every plan renders with
+         the same one. Sending the label upstream got every paid storefront
+         try-on rejected, so OpenRouter only ever receives the model id. */
+      const planStarted = performance.now();
+      const modelKey = (await getShopModelKey(shop)) || TRYON_IMAGE_MODEL;
+      timings.plan_ms = performance.now() - planStarted;
+      const providerModel = TRYON_IMAGE_MODEL;
+      const reservedJobId = createJobId();
+      /* The owner's look from the preview link is a test look (N5): the job
+         is recorded but no look is spent, and a daily cap applies instead.
+         The flag is signed into the session, so a shopper cannot set it. */
+      const reservationStarted = performance.now();
+      let reservation: Awaited<ReturnType<typeof beginTryOnJob>>;
+      try {
+        reservation =
+          authorization.test === true
+            ? await beginTestTryOnJob({ shop, jobId: reservedJobId, requestKey, sessionId, productId })
+            : await beginTryOnJob({
+                shop,
+                jobId: reservedJobId,
+                requestKey,
+                modelKey,
+                sessionId,
+                productId,
+              });
+      } finally {
+        timings.reservation_ms = performance.now() - reservationStarted;
+      }
+      return { reservation, modelKey, providerModel, reservedJobId };
+    };
+    let reserved: Awaited<ReturnType<typeof reserve>>;
+    try {
+      reserved = await reserve();
+    } catch (error) {
+      garmentController.abort();
+      throw error;
+    }
+    const { reservation, modelKey, providerModel, reservedJobId } = reserved;
 
     if (!reservation.created) {
+      garmentController.abort();
       const cached = getJob(reservation.jobId);
       if (
         cached &&
@@ -209,6 +261,9 @@ export async function generateTryOn(
     };
     const makeLook = async (): Promise<TryOnJob> => {
       setStage(pending, 'making');
+      const resultLookupStarted = performance.now();
+      const resultRow = prepareTryOnResultPersistence(reservedJobId)
+        .finally(() => { timings.result_lookup_ms = performance.now() - resultLookupStarted; });
       let generated: TryOnJob;
       try {
         generated = await runImageGeneration(
@@ -219,6 +274,7 @@ export async function generateTryOn(
           providerModel,
           garmentUrl,
           productName,
+          { garment, timings },
         );
       } catch (error) {
         /* The detail the shopper must not see is exactly the detail we need.
@@ -250,7 +306,7 @@ export async function generateTryOn(
         };
         // Stored before the refund, so a poll ends even if the refund throws.
         storeJob(failedJob);
-        await finalizeTryOnJob(failedJob, Date.now() - startedAt);
+        await finalize(failedJob);
         throw error;
       }
 
@@ -264,7 +320,7 @@ export async function generateTryOn(
       };
       if (job.status !== 'completed' || !job.resultImageUrl) {
         storeJob(job);
-        await finalizeTryOnJob(job, Date.now() - startedAt);
+        await finalize(job);
         return job;
       }
       setStage(pending, 'finishing');
@@ -281,9 +337,11 @@ export async function generateTryOn(
          safe to apply after this code ships: an unmigrated database throws
          TryOnResultSchemaNotReadyError right here, and the merchant is not
          charged for a result that never existed. */
+      const persistenceStarted = performance.now();
       try {
-        await persistGeneratedTryOnResult(job);
+        await persistGeneratedTryOnResult(job, Date.now(), resultRow);
       } catch (error) {
+        timings.persistence_ms = performance.now() - persistenceStarted;
         const unpersistedJob: TryOnJob = {
           ...job,
           status: 'failed',
@@ -294,7 +352,7 @@ export async function generateTryOn(
           meta: { ...job.meta },
         };
         try {
-          await finalizeTryOnJob(unpersistedJob, Date.now() - startedAt);
+          await finalize(unpersistedJob);
         } catch {
           // The release itself failed; reconciliation is now the only net left.
           alertReconciliationRequired('persist_refund_failed', job.jobId);
@@ -302,9 +360,10 @@ export async function generateTryOn(
         storeJob(unpersistedJob);
         throw error;
       }
+      timings.persistence_ms = performance.now() - persistenceStarted;
       storeJob(job);
       try {
-        await finalizeTryOnJob(job, Date.now() - startedAt);
+        await finalize(job);
       } catch {
         alertReconciliationRequired('finalization_failed', job.jobId);
         throw new TryOnFinalizationPendingError(job.jobId);
@@ -337,15 +396,72 @@ export async function generateTryOn(
   } else if (mode === 'live' && photoSource === 'upload' && photoData) {
     // Non-billable live path (demo/preview, not a storefront credit spend):
     // the same model as every plan.
-    job = await runImageGeneration(
-      sessionId,
-      productId,
-      photoData,
-      shop,
-      TRYON_IMAGE_MODEL,
-      garmentUrl,
-      productName,
-    );
+    for (const existing of jobStore.values()) {
+      if (existing.requestKey === requestKey && existing.sessionId === sessionId &&
+          existing.productId === productId && existing.shop === shop && !isExpired(existing, Date.now())) {
+        return existing;
+      }
+    }
+    const publicDemo = purpose === 'public-demo' && shop === null;
+    const demoJobId = publicDemo
+      ? `tryon_demo_${createHash('sha256').update(JSON.stringify([sessionId, productId, requestKey])).digest('hex')}`
+      : createJobId();
+    const pending: TryOnJob = {
+      jobId: demoJobId, sessionId, productId, shop, requestKey,
+      status: 'processing', stage: 'received', createdAt: new Date().toISOString(),
+      meta: { runtime: 'live', provider: TRYON_IMAGE_MODEL, costEstimate: null },
+    };
+    if (publicDemo) {
+      const claimStarted = performance.now();
+      const created = await beginPublicDemoTryOnJob(authorization, pending);
+      timings.reservation_ms = performance.now() - claimStarted;
+      if (!created) {
+        const replay = await loadAuthorizedDurableTryOnJob(authorization, demoJobId);
+        if (!replay) throw new TryOnResultUnavailableError(demoJobId);
+        storeJob(replay);
+        return replay;
+      }
+    }
+    storeJob(pending);
+    const makeDemo = async () => {
+      setStage(pending, 'making');
+      let completed: TryOnJob;
+      try {
+        completed = { ...await runImageGeneration(
+          sessionId, productId, photoData, shop, TRYON_IMAGE_MODEL, garmentUrl, productName, { timings },
+        ), jobId: pending.jobId, requestKey, sessionId, productId, shop, createdAt: pending.createdAt };
+      } catch (error) {
+        completed = { ...pending, status: 'failed', stage: undefined, message: toShopperFailureMessage(error) };
+      }
+      const persistenceStarted = performance.now();
+      if (publicDemo) {
+        if (completed.status === 'completed' && completed.resultImageUrl) {
+          try {
+            await persistPublicDemoTryOnResult(authorization, completed);
+          } catch (error) {
+            completed = {
+              ...completed, status: 'failed', resultImageUrl: undefined, completedAt: undefined,
+              message: toShopperFailureMessage(error),
+            };
+          }
+        }
+        storeJob(completed);
+        await completePublicDemoTryOnJob(authorization, completed, Date.now() - startedAt).catch(() => {
+          console.error('[try-on] public_job_finalization_failed', { jobId: completed.jobId });
+        });
+      } else {
+        storeJob(completed);
+        await persistTryOnJob(completed, Date.now() - startedAt).catch(() => {});
+      }
+      timings.persistence_ms = performance.now() - persistenceStarted;
+      await finishTimings(completed);
+      return completed;
+    };
+    if (options.background) {
+      options.background(async () => { await makeDemo(); });
+      return pending;
+    }
+    return makeDemo();
   } else if (mode === 'live') {
     job = {
       jobId: createJobId(),

@@ -142,11 +142,12 @@ function decodeResultDataUrl(resultImageUrl: string, jobId: string): {
 function durableRowMatchesJob(
   row: DurableTryOnResultRow,
   job: TryOnJob,
-  normalizedShop: string,
+  normalizedShop: string | null,
 ): boolean {
   return (
     row.session_id === job.sessionId &&
     row.product_id === job.productId &&
+    (normalizedShop !== null || row.shop === null) &&
     normalizeTenantKey(row.shop) === normalizedShop &&
     row.request_key === job.requestKey
   );
@@ -165,6 +166,16 @@ async function selectDurableResultRow(
     .maybeSingle();
   if (error) throw persistenceError(jobId, error);
   return (data as DurableTryOnResultRow | null) ?? null;
+}
+
+/** Read only after a new reservation exists, while the provider is running.
+ * Rejections are settled here and raised at persistence, avoiding unhandled
+ * promises on provider failure. Upload and binding still require full identity. */
+export function prepareTryOnResultPersistence(jobId: string) {
+  return selectDurableResultRow(jobId).then(
+    row => ({ row }),
+    error => ({ error: error as unknown }),
+  );
 }
 
 function activeDurableResult(
@@ -199,18 +210,42 @@ async function removeUploadedResult(jobId: string, storagePath: string): Promise
 export async function persistGeneratedTryOnResult(
   job: TryOnJob,
   now: number = Date.now(),
+  prepared?: ReturnType<typeof prepareTryOnResultPersistence>,
+): Promise<DurableTryOnResult> {
+  return persistGeneratedResult(job, now, prepared);
+}
+
+/** Public results share the private, short-retention lifecycle only with an
+ * explicit public-demo session. An invalid storefront tenant cannot become
+ * a platform-funded demo by normalizing to null. */
+export async function persistPublicDemoTryOnResult(
+  authorization: VerifiedTryOnSession,
+  job: TryOnJob,
+  now: number = Date.now(),
+): Promise<DurableTryOnResult> {
+  assertPublicDemoJob(authorization, job);
+  return persistGeneratedResult(job, now, undefined, true);
+}
+
+async function persistGeneratedResult(
+  job: TryOnJob,
+  now: number,
+  prepared?: ReturnType<typeof prepareTryOnResultPersistence>,
+  publicDemo = false,
 ): Promise<DurableTryOnResult> {
   if (job.status !== 'completed' || !job.resultImageUrl || !JOB_ID_RE.test(job.jobId)) {
     throw new TryOnResultPersistenceError(job.jobId);
   }
   const normalizedShop = normalizeTenantKey(job.shop);
-  if (!normalizedShop || !job.requestKey) {
+  if ((!normalizedShop && !(publicDemo && job.shop === null)) || !job.requestKey) {
     throw new TryOnResultPersistenceError(job.jobId);
   }
 
   const decoded = decodeResultDataUrl(job.resultImageUrl, job.jobId);
   const storagePath = `jobs/${job.jobId}/result.${decoded.extension}`;
-  const existing = await selectDurableResultRow(job.jobId);
+  const selected = prepared ? await prepared : { row: await selectDurableResultRow(job.jobId) };
+  if ('error' in selected) throw selected.error;
+  const existing = selected.row;
   if (existing && !durableRowMatchesJob(existing, job, normalizedShop)) {
     throw new TryOnResultPersistenceError(job.jobId);
   }
@@ -244,7 +279,7 @@ export async function persistGeneratedTryOnResult(
 
   const persistedAt = new Date(now).toISOString();
   const expiresAt = new Date(now + TRYON_RESULT_RETENTION_MS).toISOString();
-  const update = await client
+  let binding = client
     .from('tryon_jobs')
     .update({
       result_storage_path: storagePath,
@@ -254,8 +289,9 @@ export async function persistGeneratedTryOnResult(
     })
     .eq('id', job.jobId)
     .eq('session_id', job.sessionId)
-    .eq('product_id', job.productId)
-    .eq('shop', normalizedShop)
+    .eq('product_id', job.productId);
+  binding = normalizedShop === null ? binding.is('shop', null) : binding.eq('shop', normalizedShop);
+  const update = await binding
     .eq('request_key', job.requestKey)
     .is('result_deleted_at', null)
     .select('id')
@@ -279,6 +315,7 @@ export async function loadAuthorizedDurableTryOnJob(
 
   const rowShop = normalizeTenantKey(row.shop);
   if (
+    (row.shop !== null && rowShop === null) ||
     row.session_id !== authorization.sessionId ||
     row.product_id !== authorization.productId ||
     rowShop !== authorization.shop
@@ -615,6 +652,49 @@ export async function persistTryOnJob(job: TryOnJob, durationMs?: number): Promi
   if (error) {
     console.error('tryon_jobs insert failed:', error.message);
   }
+}
+
+function assertPublicDemoJob(authorization: VerifiedTryOnSession, job: TryOnJob): void {
+  if (
+    authorization.purpose !== 'public-demo' || authorization.shop !== null || job.shop !== null ||
+    authorization.sessionId !== job.sessionId || authorization.productId !== job.productId ||
+    authorization.requestKey !== job.requestKey || !JOB_ID_RE.test(job.jobId)
+  ) throw new TryOnResultPersistenceError(job.jobId);
+}
+
+/** Atomic insert claims the deterministic public attempt before provider
+ * spend. Another process must replay the existing primary key. */
+export async function beginPublicDemoTryOnJob(
+  authorization: VerifiedTryOnSession,
+  job: TryOnJob,
+): Promise<boolean> {
+  assertPublicDemoJob(authorization, job);
+  const client = requireServiceClient(job.jobId);
+  const { error } = await client.from('tryon_jobs').insert({
+    id: job.jobId, session_id: job.sessionId, product_id: job.productId, shop: null,
+    request_key: job.requestKey, status: 'processing', provider: job.meta.provider,
+    cost_usd: null, created_at: job.createdAt,
+  });
+  if (error?.code === '23505') return false;
+  if (error) throw persistenceError(job.jobId, error);
+  return true;
+}
+
+export async function completePublicDemoTryOnJob(
+  authorization: VerifiedTryOnSession,
+  job: TryOnJob,
+  durationMs: number,
+): Promise<void> {
+  assertPublicDemoJob(authorization, job);
+  const client = requireServiceClient(job.jobId);
+  const { data, error } = await client.from('tryon_jobs').update({
+    status: job.status === 'completed' ? 'completed' : 'failed',
+    provider: job.meta.provider, cost_usd: job.meta.costEstimate,
+    duration_ms: durationMs, message: job.message ?? null,
+  }).eq('id', job.jobId).eq('session_id', job.sessionId).eq('product_id', job.productId)
+    .eq('request_key', job.requestKey).is('shop', null).eq('status', 'processing')
+    .select('id').maybeSingle();
+  if (error || !data) throw persistenceError(job.jobId, error ?? new Error('public job unavailable'));
 }
 
 export async function beginTryOnJob(input: {

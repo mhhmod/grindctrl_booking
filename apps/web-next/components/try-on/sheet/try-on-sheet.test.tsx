@@ -59,6 +59,12 @@ vi.mock('../use-try-on-flow', async () => {
   };
 });
 vi.mock('@/lib/try-on/photo-check', () => ({ checkPhoto: async () => ({ light: true, sharp: true, issue: null }) }));
+/* Sheet lifecycle fixtures are not encoded photos. Shared preparation has
+   its own decoder/resize tests and a real-browser verification harness. */
+vi.mock('@/lib/try-on/photo-file', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/try-on/photo-file')>(),
+  readPhotoAsDataUrl: vi.fn(async () => 'data:image/png;base64,cGhvdG8='),
+}));
 const phone = vi.hoisted(() => ({ store: null as PhoneStore | null }));
 vi.mock('@/lib/try-on/phone-store', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/lib/try-on/phone-store')>();

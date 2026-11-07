@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const siteGarment = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock('@/lib/woo/garment-url', () => ({ fetchSiteGarment: siteGarment.fetch }));
-import { IMAGE_PROVIDER_TIMEOUT_MS, isAllowedGarmentUrl, parsePhotoDataUrl, runImageGeneration } from './image-runner';
+import { boundedShopifyGarmentUrl, IMAGE_PROVIDER_TIMEOUT_MS, isAllowedGarmentUrl, parsePhotoDataUrl, prepareGarmentImage, runImageGeneration } from './image-runner';
+import { createJobTimings } from './job-timings';
 
 const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 const PHOTO = `data:image/png;base64,${PNG}`;
@@ -49,6 +50,37 @@ describe('WooCommerce garments', () => {
     expect(job.status).toBe('failed');
     expect(fetchMock).not.toHaveBeenCalled();
     expect(siteGarment.fetch).not.toHaveBeenCalled();
+  });
+
+  it('discards a pinned Woo garment if the reservation was denied during its fetch', async () => {
+    let finish!: (result: { mime: string; bytes: Buffer }) => void;
+    siteGarment.fetch.mockReturnValue(new Promise(resolve => { finish = resolve; }));
+    const controller = new AbortController();
+    const prepared = prepareGarmentImage('woo-42', WOO_GARMENT, SITE, controller.signal);
+    const rejected = expect(prepared).rejects.toMatchObject({ name: 'AbortError' });
+    controller.abort();
+    finish({ mime: 'image/png', bytes: Buffer.from(PNG, 'base64') });
+    await rejected;
+  });
+});
+
+describe('bounded Shopify garment derivatives', () => {
+  it('bounds only shared CDN URLs and preserves version and other parameters', () => {
+    const url = new URL(boundedShopifyGarmentUrl(`${GARMENT}?v=123&width=4096`));
+    expect(url.searchParams.get('width')).toBe('1536');
+    expect(url.searchParams.get('v')).toBe('123');
+    expect(new URL(boundedShopifyGarmentUrl(GARMENT)).searchParams.get('width')).toBe('1536');
+    expect(new URL(boundedShopifyGarmentUrl(`${GARMENT}?width=1024`)).searchParams.get('width')).toBe('1024');
+    for (const other of [
+      'https://store.myshopify.com/cdn/image.png?v=1',
+      'https://shop.example.com/image.png?width=2048',
+    ]) expect(boundedShopifyGarmentUrl(other)).toBe(other);
+  });
+
+  it('fetches the derivative through the existing bounded allowlisted transport', async () => {
+    const prepared = await prepareGarmentImage('product', GARMENT, 'test.myshopify.com');
+    expect(fetchMock.mock.calls[0][0]).toBe(`${GARMENT}?width=1536`);
+    expect(prepared.byteLength).toBe(Buffer.from(PNG, 'base64').byteLength);
   });
 });
 
@@ -126,6 +158,31 @@ describe('image provider safety boundary', () => {
 });
 
 describe('transient provider failure retry', () => {
+  it('times every provider attempt including failed responses, while preserving byte-only diagnostics', async () => {
+    const timings = createJobTimings(PHOTO);
+    fetchMock.mockResolvedValueOnce(Response.json({ error: 'down' }, { status: 503 }));
+    fetchMock.mockResolvedValueOnce(Response.json({ data: [{ b64_json: PNG }], usage: { cost: 0.02 } }));
+    const job = await runImageGeneration('session', 'product', PHOTO, 'test.myshopify.com', 'meta/muse-image', GARMENT, undefined, { timings });
+    expect(job.status).toBe('completed');
+    expect(timings.provider_attempts.map(({ attempt, status }) => ({ attempt, status }))).toEqual([
+      { attempt: 1, status: 503 }, { attempt: 2, status: 200 },
+    ]);
+    expect(timings.provider_attempts.every(entry => entry.duration_ms >= 0)).toBe(true);
+    expect(timings.input_bytes.photo).toBe(Buffer.from(PNG, 'base64').byteLength);
+    expect(timings.input_bytes.garment).toBe(timings.input_bytes.photo);
+    expect(timings.input_bytes.provider_request).toBeGreaterThan(PHOTO.length * 2);
+    expect(JSON.stringify(timings)).not.toMatch(/base64|s\/files|Virtual try-on/);
+  });
+
+  it('records an ambiguous failed attempt without inventing zero cost', async () => {
+    const timings = createJobTimings(PHOTO);
+    fetchMock.mockRejectedValueOnce(new DOMException('sensitive timeout', 'TimeoutError'));
+    const job = await runImageGeneration('session', 'product', PHOTO, 'test.myshopify.com', 'meta/muse-image', GARMENT, undefined, { timings });
+    expect(job.meta.costEstimate).toBeNull();
+    expect(timings.provider_attempts).toEqual([{ attempt: 1, duration_ms: expect.any(Number), status: null }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it.each([429, 500, 503])(
     'retries once after a %i and succeeds on the second attempt',
     async (status) => {

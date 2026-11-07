@@ -27,8 +27,6 @@ import {
 } from '@/lib/try-on/legacy-compat';
 import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 import { getConfiguredShopifyApps } from '@/lib/shopify/app-registry';
-import { storeFlags } from '@/lib/flags/store-flags';
-import { flagStoreForTenant } from '@/lib/tenancy/tenant-key';
 import type {
   TryOnJob,
   TryOnJobApiResponse,
@@ -40,6 +38,30 @@ const VALID_PHOTO_SOURCES: TryOnPhotoSource[] = ['upload', 'mock'];
 /* Base64 inflates bytes by ~4/3; allow the 8MB file cap plus data-URL header. */
 const MAX_PHOTO_DATA_LENGTH = Math.ceil((TRYON_FILE_CONFIG.maxSizeBytes * 4) / 3) + 64;
 const PHOTO_DATA_PREFIX_RE = /^data:image\/(jpeg|png|webp);base64,/;
+
+/* Register before reserving a look. Adapters without request-scoped after/
+   waitUntil support use the synchronous service path; a scheduling failure
+   must never strand a reservation or start a second generation. */
+function backgroundGeneration() {
+  let task: (() => Promise<void>) | undefined;
+  let settle!: () => void;
+  const ready = new Promise<void>((resolve) => { settle = resolve; });
+  try {
+    // A disconnected browser can close the response during reservation.
+    // Keep after alive until generation has supplied its task (or failed).
+    after(async () => { await ready; await task?.(); });
+    return { background: (work: () => Promise<void>) => { task = work; }, settle };
+  } catch (error) {
+    if (!(error instanceof Error) || !(
+      error.message.includes('`after` was called outside a request scope') ||
+      error.message.includes('`waitUntil` is not available') ||
+      error.message.includes("after() can't work correctly")
+    )) throw error;
+    console.warn('[try-on] synchronous_fallback', { reason: 'after_unavailable' });
+    return {};
+  }
+}
+
 function toJobResponse(job: TryOnJob): TryOnJobApiResponse {
   return {
     ok: true,
@@ -309,27 +331,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    /* A store with n38_async_jobs gets its look made after this answer:
-       the shopper's phone polls the job, which reports its stage. */
-    const asyncLooks =
-      authorization.purpose === 'storefront' &&
-      authorization.shop !== null &&
-      (await storeFlags(flagStoreForTenant(authorization.shop) ?? { shopDomain: authorization.shop })).includes('n38_async_jobs');
+    // Storefront tenants and public-demo uploads use after()/202 by default.
+    // The temporary legacy bridge has no durable reservation/result contract;
+    // keep its original synchronous delivery as an explicit compatibility fallback.
+    // Mock generations finish immediately in the service.
+    const options = authorization.purpose === 'legacy-compat' ? {} : backgroundGeneration();
 
-    const job = await generateTryOn(
-      authorization,
-      resolvedPhotoSource,
-      photoData,
-      authorization.purpose === 'storefront' || authorization.purpose === 'legacy-compat'
-        ? authorization.canonicalGarmentUrl ?? undefined
-        : undefined,
-      productName,
-      asyncLooks ? { background: (task) => after(task) } : {},
-    );
+    let job: TryOnJob;
+    try {
+      job = await generateTryOn(
+        authorization,
+        resolvedPhotoSource,
+        photoData,
+        authorization.purpose === 'storefront' || authorization.purpose === 'legacy-compat'
+          ? authorization.canonicalGarmentUrl ?? undefined
+          : undefined,
+        productName,
+        options.background ? { background: options.background } : {},
+      );
+    } finally {
+      options.settle?.();
+    }
 
     const res = toJobResponse(job);
     const accepted = job.status === 'queued' || job.status === 'processing';
-    return NextResponse.json(res, { status: asyncLooks && accepted ? 202 : 200 });
+    return NextResponse.json(res, { status: options.background && accepted ? 202 : 200 });
   } catch (error) {
     if (error instanceof RequestRateLimitError) return rateLimitErrorResponse(error);
     if (

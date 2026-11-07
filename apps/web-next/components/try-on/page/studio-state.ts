@@ -4,6 +4,7 @@
    are tested without rendering. */
 
 import type { PublicTryOnFailure } from '@/lib/try-on/client';
+import { TRYON_FILE_CONFIG } from '@/lib/try-on/types';
 
 export type PieceKey = 'abaya' | 'linen' | 'denim' | 'polo';
 export type SampleModel = 'woman' | 'man';
@@ -56,9 +57,8 @@ export const SAMPLE_PHOTOS: Record<SampleModel, string> = {
 };
 
 export const MAX_LOOKS = 4;
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
-/** What the generate route accepts. types.ts also lists HEIC and HEIF, which the route rejects. */
-export const ACCEPTED_UPLOAD_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const MAX_UPLOAD_BYTES = TRYON_FILE_CONFIG.maxSizeBytes;
+export const ACCEPTED_UPLOAD_TYPES = TRYON_FILE_CONFIG.allowedTypes;
 
 export type Photo =
   | { kind: 'sample'; model: SampleModel }

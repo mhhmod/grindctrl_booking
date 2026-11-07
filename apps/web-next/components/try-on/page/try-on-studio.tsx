@@ -22,6 +22,8 @@ import { trackClick, trackMarketingEvent } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import { runPublicTryOn, type PublicTryOnFailure } from '@/lib/try-on/client';
 import { shopperFailureMessage } from '@/lib/try-on/shopper-errors';
+import { readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
+import { recordTryOnOpen } from '@/lib/try-on/performance';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
 import { CompareDialog, PiecePicker } from './studio-dialogs';
 import {
@@ -73,16 +75,8 @@ function failureText(failure: PublicTryOnFailure | null, locale: TryOnLocale): s
   return shopperFailureMessage(failure.kind, locale);
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('read')));
-    reader.onerror = () => reject(reader.error ?? new Error('read'));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function TryOnStudio() {
+  React.useEffect(() => { recordTryOnOpen(); }, []);
   const { t, locale, toggleLocale } = useTryOnLocale();
   const [state, dispatch] = React.useReducer(studioReducer, INITIAL_STATE);
   /* Progress steps belong to one request, so a new request starts at 0 without a reset. */
@@ -175,7 +169,7 @@ export function TryOnStudio() {
       return;
     }
     try {
-      dispatch({ type: 'setUpload', dataUrl: await readAsDataUrl(file) });
+      dispatch({ type: 'setUpload', dataUrl: await readPhotoAsDataUrl(file) });
     } catch {
       dispatch({ type: 'rejectFile', reason: 'type' });
     }

@@ -9,7 +9,8 @@ import type {
   TryOnSession,
   TryOnStage,
 } from '@/lib/try-on/types';
-import { TRYON_ASYNC_POLL_TIMEOUT_MS } from '@/lib/try-on/poll-policy';
+import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS } from '@/lib/try-on/poll-policy';
+import { recordTryOnOpen, recordTryOnPhase } from '@/lib/try-on/performance';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -76,6 +77,7 @@ export function useTryOnFlow({
   const [sessionState, setSessionState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionError, setSessionError] = useState<string | null>(null);
   const sessionInitStarted = useRef(false);
+  useEffect(() => { recordTryOnOpen(); }, []);
 
   useEffect(() => {
     if (step !== 'generating' || generationPhase !== 'generation-requested') return;
@@ -210,6 +212,7 @@ export function useTryOnFlow({
         garmentUrl: shopProduct ? session.garmentUrl ?? undefined : undefined,
         productName: shopProduct?.name,
       });
+      const uploadStartedAt = performance.now();
       const generationRequest = fetchWithOneRetry('/api/try-on/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -219,6 +222,10 @@ export function useTryOnFlow({
 
       const genRes = await generationRequest;
       let genData: TryOnJobApiResponse = await genRes.json();
+      // Submission-to-acknowledgment; sync fallback contains provider time
+      // and cannot provide an honest split through fetch alone.
+      if (genRes.status === 202) recordTryOnPhase('upload', performance.now() - uploadStartedAt);
+      const waitStartedAt = performance.now();
 
       if (genRes.status === 202 && genData.ok && genData.jobId) {
         /* The look is made after the answer (N38): follow its stages for
@@ -226,6 +233,7 @@ export function useTryOnFlow({
         setServerStage(genData.stage ?? 'received');
         genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, undefined, {
           timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
+          initialDelayMs: Math.max(TRYON_POLL_INITIAL_DELAY_MS, retryAfterDelayMs(genRes.headers.get('Retry-After')) ?? 0),
           onProgress: (progress) => {
             if (progress.stage) setServerStage(progress.stage);
           },
@@ -262,6 +270,7 @@ export function useTryOnFlow({
         session.sessionId,
         genData.resultImageUrl,
       );
+      if (genRes.status === 202) recordTryOnPhase('wait_to_result', performance.now() - waitStartedAt);
 
       setGenerationPhase('result-received');
       setGenerationSeconds(Math.max(1, Math.round((Date.now() - startedAt) / 1000)));

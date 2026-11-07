@@ -3,7 +3,8 @@
    (components/try-on/page). Contracts: apps/web-next/docs/handoff/site-v15/05-backend.md. */
 
 import { classifyTryOnFailure, type TryOnFailureKind } from './shopper-errors';
-import { retryAfterDelayMs, TRYON_POLL_TIMEOUT_MS, tryOnPollDelayMs } from './poll-policy';
+import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS, TRYON_POLL_TIMEOUT_MS, tryOnPollDelayMs } from './poll-policy';
+import { recordTryOnPhase } from './performance';
 import type { TryOnApiResponse, TryOnAttempt, TryOnJobApiResponse, TryOnSession } from './types';
 
 export function createAttemptNonce(): string {
@@ -55,12 +56,17 @@ export async function pollTryOnJob(
   signal?: AbortSignal,
   options: {
     timeoutMs?: number;
+    /** Delay the first async status request, honoring the generation response. */
+    initialDelayMs?: number;
     /** Each answer while the look is still queued or being made. */
     onProgress?: (data: TryOnJobApiResponse) => void;
   } = {},
 ): Promise<TryOnJobApiResponse> {
   const deadline = Date.now() + (options.timeoutMs ?? TRYON_POLL_TIMEOUT_MS);
   let requestCount = 0;
+  if (options.initialDelayMs) {
+    await wait(Math.min(Math.max(0, options.initialDelayMs), Math.max(0, deadline - Date.now())), signal);
+  }
 
   while (Date.now() < deadline) {
     const response = await fetch(`/api/try-on/jobs/${encodeURIComponent(jobId)}`, {
@@ -97,7 +103,8 @@ export async function pollTryOnJob(
     options.onProgress?.(data);
 
     const remaining = Math.max(0, deadline - Date.now());
-    await wait(Math.min(remaining, tryOnPollDelayMs(requestCount)), signal);
+    const serverDelay = retryAfterDelayMs(response.headers.get('Retry-After')) ?? 0;
+    await wait(Math.min(remaining, Math.max(tryOnPollDelayMs(requestCount), serverDelay)), signal);
   }
 
   throw new Error(fallbackError);
@@ -259,6 +266,7 @@ export async function runPublicTryOn({
       throw stopFor(attemptRes, attemptData?.error);
     }
 
+    const uploadStartedAt = performance.now();
     const generateRes = await fetchWithOneRetry('/api/try-on/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -273,24 +281,34 @@ export async function runPublicTryOn({
       signal,
     });
     let job = await readJson<TryOnJobApiResponse>(generateRes);
+    // Fetch exposes submission-to-acknowledgment, including server validation
+    // and reservation. A synchronous fallback also includes generation, so
+    // omit its split measurements rather than mislabel provider time as upload.
+    if (generateRes.status === 202) recordTryOnPhase('upload', performance.now() - uploadStartedAt);
+    const waitStartedAt = performance.now();
     if (!job) throw stopFor(generateRes);
     // A capped day of the owner's test looks (N5) reads the same: try-on is
     // not available right now.
     if (job.code === 'TRYON_UNAVAILABLE' || job.code === 'test_looks_cap') throw new TryOnStop({ kind: 'unavailable' });
-    if (!generateRes.ok) throw stopFor(generateRes, job.message || job.error);
+    if (!generateRes.ok && job.code !== 'TRYON_FINALIZATION_PENDING') throw stopFor(generateRes, job.message || job.error);
 
     if (
       job.jobId &&
       ((job.ok && (job.status === 'queued' || job.status === 'processing')) ||
         job.code === 'TRYON_FINALIZATION_PENDING')
     ) {
-      job = await pollTryOnJob(job.jobId, session.sessionId, 'failed', signal);
+      job = await pollTryOnJob(job.jobId, session.sessionId, 'failed', signal,
+        generateRes.status === 202 ? {
+          timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
+          initialDelayMs: Math.max(TRYON_POLL_INITIAL_DELAY_MS, retryAfterDelayMs(generateRes.headers.get('Retry-After')) ?? 0),
+        } : {});
     }
 
     if (!job.ok || job.status !== 'completed' || !job.resultImageUrl || !job.jobId) {
       throw new TryOnStop({ kind: classifyTryOnFailure(job.message || job.error || '') });
     }
     const resultImageUrl = await keepTryOnResultInPage(job.jobId, session.sessionId, job.resultImageUrl, signal);
+    if (generateRes.status === 202) recordTryOnPhase('wait_to_result', performance.now() - waitStartedAt);
     return { ok: true, jobId: job.jobId, resultImageUrl };
   } catch (error) {
     if (isAbort(error)) throw error;

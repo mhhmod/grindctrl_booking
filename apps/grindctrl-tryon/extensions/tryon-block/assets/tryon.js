@@ -449,6 +449,7 @@
     }
 
     btn.addEventListener('click', function () {
+      var openedAt = Date.now();
       // Reopening the sheet resumes whatever it held, a look included.
       if (sheet) {
         sheet.open();
@@ -506,6 +507,7 @@
         encodeURIComponent(root.dataset.shop || '') +
         '&locale=' +
         encodeURIComponent(locale) +
+        '&gc_opened_at=' + openedAt +
         '&variant=' +
         encodeURIComponent(variant) +
         (asSheet ? '&sheet=1' : '') +

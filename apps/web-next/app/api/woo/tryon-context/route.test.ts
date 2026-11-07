@@ -1,11 +1,12 @@
 // @vitest-environment node
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 
 const SITE = '123e4567-e89b-42d3-a456-426614174000';
 const KEY = 'test-woo-tryon-key-for-route-tests';
+const CORE_SECRET = 'test-only-independent-core-signing-key-2026';
 
 const mocks = vi.hoisted(() => ({
   verify: vi.fn(),
@@ -18,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   grant: vi.fn(),
   entitlement: vi.fn(),
   config: vi.fn(),
+  flags: vi.fn(),
+  storeLaunch: vi.fn(),
 }));
 
 vi.mock('@/lib/woo/signed-request', async (importOriginal) => ({
@@ -48,6 +51,8 @@ vi.mock('@/lib/woo/tryon-site', async (importOriginal) => ({
   readSiteLaunch: mocks.launch,
 }));
 vi.mock('@/lib/woo/free-plan', () => ({ ensureWooFreePlan: mocks.grant }));
+vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: mocks.flags }));
+vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.storeLaunch }));
 vi.mock('@/lib/woo/tryon-config', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/woo/tryon-config')>()),
   buildSiteTryOnConfig: mocks.config,
@@ -55,6 +60,7 @@ vi.mock('@/lib/woo/tryon-config', async (importOriginal) => ({
 
 import { POST } from './route';
 import { verifyStorefrontContext } from '@/lib/try-on/storefront-context';
+import { PREVIEW_TOKEN_TTL_SECONDS, signPreviewToken } from '@/lib/launch/preview-token';
 
 const BODY = {
   productId: 42,
@@ -75,6 +81,7 @@ function post(body: unknown = BODY) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', CORE_SECRET);
   mocks.verify.mockResolvedValue({ ok: true, siteId: SITE, secretVersion: 1, connectionStatus: 'active', homeUrl: 'https://shop.example.com' });
   mocks.visitorLimit.mockResolvedValue({ success: true, reset: Date.now() + 1000 });
   mocks.shopLimit.mockResolvedValue({ success: true, reset: Date.now() + 1000 });
@@ -83,9 +90,12 @@ beforeEach(() => {
   mocks.lookup.mockResolvedValue([{ address: '93.184.216.34', family: 4 }]);
   mocks.launch.mockResolvedValue({ launch: { tryOn: 'live', reason: null }, unsubscribed: false });
   mocks.config.mockResolvedValue({ enabled: true });
+  mocks.flags.mockResolvedValue([]);
+  mocks.storeLaunch.mockResolvedValue(null);
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
 });
+afterEach(() => vi.unstubAllEnvs());
 
 describe('POST /api/woo/tryon-context', () => {
   it('mints a context and an embed URL that carries it in the fragment', async () => {
@@ -125,6 +135,46 @@ describe('POST /api/woo/tryon-context', () => {
     expect(verifyStorefrontContext(KEY, body.context.token, { variantId: null })).toMatchObject({
       variantGid: 'woo:42',
     });
+  });
+
+  it('signs a merchant preview as a test look even when ordinary looks are exhausted', async () => {
+    mocks.flags.mockResolvedValue(['n5_preview_mode']);
+    mocks.storeLaunch.mockResolvedValue({ state: 'preview', salt: 'test-preview-salt' });
+    mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'out_of_looks' }, unsubscribed: false });
+    const { token } = signPreviewToken(CORE_SECRET, `site:${SITE}`);
+    const response = await post({ ...BODY, preview: token });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(verifyStorefrontContext(KEY, body.context.token)).toMatchObject({ shop: `site:${SITE}`, test: true });
+    expect(mocks.storeLaunch).toHaveBeenCalledWith(`site:${SITE}`);
+    expect(mocks.flags).toHaveBeenCalledWith({ widgetSiteId: SITE });
+  });
+
+  it.each([
+    ['forged', () => 'forged-preview-token-value'],
+    ['Shopify tenant', () => signPreviewToken(CORE_SECRET, 'other.myshopify.com').token],
+    ['another site', () => signPreviewToken(CORE_SECRET, 'site:22222222-2222-4222-8222-222222222222').token],
+    ['expired', () => signPreviewToken(CORE_SECRET, `site:${SITE}`, Math.floor(Date.now() / 1000) - PREVIEW_TOKEN_TTL_SECONDS - 1).token],
+  ])('does not grant test looks to a %s preview token', async (_name, preview) => {
+    mocks.flags.mockResolvedValue(['n5_preview_mode']);
+    mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'out_of_looks' }, unsubscribed: false });
+    expect((await post({ ...BODY, preview: preview() })).status).toBe(409);
+  });
+
+  it('does not trust a browser-selected test flag or a preview token when preview mode is disabled', async () => {
+    const { token } = signPreviewToken(CORE_SECRET, `site:${SITE}`);
+    const response = await post({ ...BODY, test: true, preview: token });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(verifyStorefrontContext(KEY, body.context.token)?.test).not.toBe(true);
+  });
+
+  it('keeps an ordinary visitor out of a store in preview', async () => {
+    mocks.flags.mockResolvedValue(['n5_preview_mode']);
+    mocks.storeLaunch.mockResolvedValue({ state: 'preview', salt: 'test-preview-salt' });
+    const response = await post();
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'preview' });
   });
 
   it('answers a failed signature without doing any work', async () => {
