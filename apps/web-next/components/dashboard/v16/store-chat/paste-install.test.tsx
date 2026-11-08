@@ -14,7 +14,7 @@ const domain = (over: Partial<PasteDomain> = {}): PasteDomain => ({
 
 function status(over: Partial<PasteInstallStatus> = {}): PasteInstallStatus {
   return {
-    siteId: 's1', tenantKey: 'site:s1', platform: 'website', connected: true, domains: [], chatLive: false,
+    siteId: 's1', tenantKey: 'site:s1', platform: 'website', shopDomain: null, connected: true, domains: [], chatLive: false,
     tryOnReady: false, tryOnReason: 'no_trusted_domain', plan: {} as PasteInstallStatus['plan'], mode: 'live',
     secretVersion: 1, rotationOverlapUntil: null, turnstileConfigured: true, ...over,
   };
@@ -77,7 +77,8 @@ describe('paste install journey', () => {
     fireEvent.change(screen.getByLabelText(copy.shopifyLabel), { target: { value: 'my-store' } });
     fireEvent.click(screen.getByRole('button', { name: copy.shopifyContinue }));
     await waitFor(() => expect(a.enable).toHaveBeenCalledWith('s1', 'shopify', 'my-store.myshopify.com'));
-    expect(a.addDomain).toHaveBeenCalledWith('s1', 'my-store.myshopify.com');
+    /* The signed shop is trusted through its connection, never as an address. */
+    expect(a.addDomain).not.toHaveBeenCalled();
   });
 
   it('keeps WooCommerce on its plugin guide and offers proof for a claimed address', async () => {

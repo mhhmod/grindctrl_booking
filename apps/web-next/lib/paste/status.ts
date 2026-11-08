@@ -14,6 +14,8 @@ export type PasteInstallStatus = {
   siteId: string;
   tenantKey: string;
   platform: PastePlatform | null;
+  /** The signed Shopify shop (implicitly trusted); null for websites. */
+  shopDomain: string | null;
   connected: boolean;
   domains: PasteDomain[];
   chatLive: boolean;
@@ -45,7 +47,7 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     : !pasteCapabilitySecret(site.id) ? 'unavailable' : mode === 'setup' || mode === 'preview' ? 'preview'
     : connection?.platform === 'website' && !turnstileConfigured ? 'turnstile_not_configured' : entitlement.reason;
   return {
-    siteId: site.id, tenantKey, platform: connection?.platform ?? null, connected, domains,
+    siteId: site.id, tenantKey, platform: connection?.platform ?? null, shopDomain: connection?.shop_domain ?? null, connected, domains,
     chatLive: site.status === 'active' && connected && liveSignal && (mode === 'live' || mode === 'holdout'),
     tryOnReady: site.status !== 'disabled' && !reason,
     tryOnReason: site.status === 'disabled' ? 'site_disabled' : reason,

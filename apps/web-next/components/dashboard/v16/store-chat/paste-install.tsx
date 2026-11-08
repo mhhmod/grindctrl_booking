@@ -87,7 +87,9 @@ export function PasteInstall({
   type Loaded = { status: PasteResult<PasteInstallStatus> | null; snippet: PasteResult<PasteSnippet> | null };
   const load = React.useCallback(async (): Promise<Loaded> => {
     const next = await actions.status(siteId).catch(() => null);
-    const ready = next?.ok && next.data.connected && next.data.domains.some((d) => d.state === 'trusted');
+    /* Shopify is trusted through its signed shop; websites need an address first. */
+    const ready = next?.ok && next.data.connected
+      && (next.data.platform === 'shopify' || next.data.domains.some((d) => d.state === 'trusted'));
     return { status: next, snippet: ready ? await actions.snippet(siteId).catch(() => null) : null };
   }, [actions, siteId]);
 
@@ -141,9 +143,7 @@ export function PasteInstall({
   async function connectShopify(event: React.FormEvent) {
     event.preventDefault();
     const value = shopDomain(shop);
-    if (!(await run('enable', () => actions.enable(siteId, 'shopify', value)))) return;
-    await run('domain', () => actions.addDomain(siteId, value));
-    await refresh();
+    if (await run('enable', () => actions.enable(siteId, 'shopify', value))) await refresh();
   }
 
   async function addDomain(event: React.FormEvent) {
@@ -164,8 +164,9 @@ export function PasteInstall({
   }
 
   const liveDomain = domains.find((d) => d.state === 'trusted' && d.lastSeenAt && now - Date.parse(d.lastSeenAt) <= LIVE_WINDOW_MS);
-  const storeUrl = `https://${liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? ''}`;
-  const shopifyDomain = connectedAs === 'shopify' ? domains.find((d) => d.domain.endsWith('.myshopify.com'))?.domain : undefined;
+  const shopifyDomain = connectedAs === 'shopify' ? status?.shopDomain ?? undefined : undefined;
+  const storeHost = liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
+  const storeUrl = `https://${storeHost ?? ''}`;
 
   return (
     <Stack gap="lg" className={classes.root}>
@@ -227,7 +228,7 @@ export function PasteInstall({
                 <form onSubmit={addDomain} className={classes.inline}>
                   <TextInput
                     label={copy.domainLabel}
-                    description={copy.domainHint}
+                    description={connectedAs === 'shopify' ? copy.shopifyDomainHint : copy.domainHint}
                     placeholder={copy.domainPlaceholder}
                     value={domain}
                     onChange={(event) => setDomain(event.currentTarget.value)}
@@ -358,11 +359,11 @@ export function PasteInstall({
 
           <li className={classes.step} aria-live="polite">
             <Text fw={600}>{copy.steps.live}</Text>
-            {status?.chatLive && liveDomain ? (
+            {status && (liveDomain || (status.chatLive && storeHost)) ? (
               <Stack gap={6}>
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name="check" size={18} />
-                  <Text size="sm">{copy.chatLive(liveDomain.domain)}</Text>
+                  <Text size="sm">{copy.chatLive(liveDomain?.domain ?? storeHost ?? '')}</Text>
                 </Group>
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name={status.tryOnReady ? 'check' : 'info'} size={18} />
@@ -385,7 +386,7 @@ export function PasteInstall({
             ) : (
               <Text size="sm" c="dimmed">{copy.codeLocked}</Text>
             )}
-            {snippet && domains.some((d) => d.state === 'trusted') ? (
+            {snippet && storeHost ? (
               <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" variant="default" radius="pill" size="xs" mt="xs" className={classes.copy} rightSection={<GcIcon name="ext" size={14} />}>
                 {copy.openStore}
               </Button>

@@ -15,6 +15,7 @@ export type PasteInstallCopy = {
   domainLabel: string;
   domainPlaceholder: string;
   domainHint: string;
+  shopifyDomainHint: string;
   addDomain: string;
   removeDomain: (domain: string) => string;
   domainState: { live: (ago: string) => string; waiting: string; proof: string };
@@ -64,6 +65,7 @@ const en: PasteInstallCopy = {
   domainLabel: 'Store address',
   domainPlaceholder: 'yourstore.com',
   domainHint: 'Your code only works on the addresses you add here. Add up to 5.',
+  shopifyDomainHint: 'Add the address shoppers visit, like yourstore.com. Skip this if your store only uses its .myshopify.com address.',
   addDomain: 'Add',
   removeDomain: (domain) => `Remove ${domain}`,
   domainState: { live: (ago) => `Live, seen ${ago}`, waiting: 'Waiting for your code', proof: 'Needs proof' },
@@ -89,7 +91,7 @@ const en: PasteInstallCopy = {
   openStore: 'Open my store',
   waiting: 'Waiting for your store',
   waitingHint: 'Open a page on your store. This updates by itself.',
-  chatLive: (domain) => `Store Chat is live on ${domain}.`,
+  chatLive: (domain) => `Your code is working on ${domain}.`,
   tryOnLive: 'Try-On shows on your product pages.',
   tryOnReason: (reason) => {
     switch (reason) {
@@ -141,6 +143,7 @@ const ar: PasteInstallCopy = {
   domainLabel: 'عنوان المتجر',
   domainPlaceholder: 'yourstore.com',
   domainHint: 'يعمل الكود فقط على العناوين التي تضيفها هنا، حتى 5 عناوين.',
+  shopifyDomainHint: 'أضف العنوان الذي يزوره المتسوقون، مثل yourstore.com. تخطَّ هذه الخطوة إذا كان متجرك يستخدم عنوان ‎.myshopify.com فقط.',
   addDomain: 'إضافة',
   removeDomain: (domain) => `إزالة ${domain}`,
   domainState: { live: (ago) => `يعمل، آخر ظهور ${ago}`, waiting: 'بانتظار الكود', proof: 'يحتاج إثباتاً' },
@@ -166,7 +169,7 @@ const ar: PasteInstallCopy = {
   openStore: 'افتح متجري',
   waiting: 'بانتظار متجرك',
   waitingHint: 'افتح أي صفحة في متجرك، وستتحدث هذه الحالة تلقائياً.',
-  chatLive: (domain) => `دردشة المتجر تعمل على ${domain}.`,
+  chatLive: (domain) => `الكود يعمل على ${domain}.`,
   tryOnLive: 'التجربة الافتراضية تظهر في صفحات منتجاتك.',
   tryOnReason: (reason) => {
     switch (reason) {
