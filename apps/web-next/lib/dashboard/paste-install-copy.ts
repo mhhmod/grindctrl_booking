@@ -1,4 +1,4 @@
-import type { PasteErrorCode, PasteStep } from '@/lib/paste/types';
+import type { PasteErrorCode, PasteShopCheckOutcome, PasteStep } from '@/lib/paste/types';
 
 export type InstallPlatform = 'shopify' | 'woocommerce' | 'website';
 
@@ -37,6 +37,13 @@ export type PasteInstallCopy = {
   tryOnLive: string;
   tryOnReason: (reason: string | null) => string;
   goTryOnSetup: string;
+  shopCheckTitle: string;
+  shopCheck: (outcome: PasteShopCheckOutcome | 'rate_limited' | null, retryAfter: number | null) => string;
+  checkStore: string;
+  passwordLabel: string;
+  passwordHint: string;
+  appHeld: string;
+  provenElsewhere: string;
   doneForYou: string;
   doneForYouAction: string;
   resetTitle: string;
@@ -103,6 +110,25 @@ const en: PasteInstallCopy = {
     }
   },
   goTryOnSetup: 'Try-On settings',
+  shopCheckTitle: 'Confirm it’s your store',
+  shopCheck: (outcome, retryAfter) => {
+    switch (outcome) {
+      case 'awaiting_visit': return 'We found your code. Open any page on your store to finish.';
+      case 'not_found': return 'We couldn’t find your code on your store yet. Check it’s saved in the theme, then try again.';
+      case 'outdated_code': return 'Your store has an older copy of your code. Copy it again and replace it.';
+      case 'wrong_site': return 'Your store shows code from another account. Replace it with your code, then check again.';
+      case 'password_required': return 'Your store has a password page. Enter the storefront password so we can check it.';
+      case 'password_rejected': return 'That password didn’t open your store. Find it in Shopify under Online Store, then Preferences.';
+      case 'unreachable': return 'We couldn’t reach your store. Try again in a minute.';
+      case 'rate_limited': return retryAfter ? `Too many checks. Try again in ${retryAfter} seconds.` : 'Too many checks. Try again shortly.';
+      default: return 'After you paste and save your code, check your store. We confirm the code is on it before Try-On turns on.';
+    }
+  },
+  checkStore: 'Check my store',
+  passwordLabel: 'Storefront password',
+  passwordHint: 'We use it once for this check and never keep it.',
+  appHeld: 'This store uses the GRINDCTRL Shopify app. Manage Store Chat and Try-On from the app instead.',
+  provenElsewhere: 'Another account confirmed this store first. If it’s yours, paste your code and check your store to move it here.',
   doneForYou: 'Rather we do it? We install it for you, free.',
   doneForYouAction: 'Ask us to install it',
   resetTitle: 'Reset your code',
@@ -181,6 +207,25 @@ const ar: PasteInstallCopy = {
     }
   },
   goTryOnSetup: 'إعدادات التجربة الافتراضية',
+  shopCheckTitle: 'أكّد أن المتجر لك',
+  shopCheck: (outcome, retryAfter) => {
+    switch (outcome) {
+      case 'awaiting_visit': return 'وجدنا الكود. افتح أي صفحة في متجرك لإكمال التأكيد.';
+      case 'not_found': return 'لم نجد الكود في متجرك بعد. تأكد من حفظه في القالب ثم حاول مجدداً.';
+      case 'outdated_code': return 'في متجرك نسخة قديمة من الكود. انسخه من جديد واستبدلها.';
+      case 'wrong_site': return 'يظهر في متجرك كود من حساب آخر. استبدله بالكود الخاص بك ثم تحقق مجدداً.';
+      case 'password_required': return 'لمتجرك صفحة كلمة مرور. أدخل كلمة مرور واجهة المتجر لنتحقق منه.';
+      case 'password_rejected': return 'لم تفتح كلمة المرور هذه متجرك. تجدها في Shopify من المتجر الإلكتروني ثم التفضيلات.';
+      case 'unreachable': return 'لم نتمكن من الوصول إلى متجرك. حاول بعد دقيقة.';
+      case 'rate_limited': return retryAfter ? `محاولات كثيرة. حاول بعد ${retryAfter} ثانية.` : 'محاولات كثيرة. حاول بعد قليل.';
+      default: return 'بعد لصق الكود وحفظه، تحقق من متجرك. نتأكد من وجود الكود قبل تشغيل التجربة الافتراضية.';
+    }
+  },
+  checkStore: 'تحقق من متجري',
+  passwordLabel: 'كلمة مرور واجهة المتجر',
+  passwordHint: 'نستخدمها مرة واحدة لهذا التحقق ولا نحتفظ بها.',
+  appHeld: 'هذا المتجر يستخدم تطبيق GRINDCTRL على Shopify. أدر دردشة المتجر والتجربة الافتراضية من التطبيق.',
+  provenElsewhere: 'حساب آخر أكّد هذا المتجر أولاً. إذا كان المتجر لك، الصق الكود الخاص بك وتحقق من متجرك لنقله إلى هنا.',
   doneForYou: 'تفضّل أن نتولى ذلك؟ نثبّته لك مجاناً.',
   doneForYouAction: 'اطلب منا التثبيت',
   resetTitle: 'إعادة تعيين الكود',

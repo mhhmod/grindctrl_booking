@@ -274,6 +274,7 @@ export async function StoreChatPage({
               rotate: pasteActions.rotatePasteSecretAction,
               snippet: pasteActions.getPasteSnippetAction,
               status: pasteActions.getPasteInstallStatusAction,
+              proveShop: pasteActions.provePasteShopAction,
             },
           }}
         />

@@ -37,6 +37,7 @@ function actions(initial: PasteInstallStatus | null): PasteInstallActions & { cu
     rotate: vi.fn(async () => ({ ok: true as const, data: { version: 2, overlapUntil: new Date().toISOString() } })),
     snippet: vi.fn(async () => ({ ok: true as const, data: { platform: 'website' as const, snippet: '<script data-key="k"></script>', steps: [{ kind: 'save' as const }], contextEndpoint: '/api/try-on/paste-context' as const } })),
     status: vi.fn(async () => current.value ? { ok: true as const, data: current.value } : { ok: false as const, code: 'not_found' as const }),
+    proveShop: vi.fn(async () => ({ ok: true as const, data: { shopProof: 'pending' as const, shopProvenAt: null, outcome: 'password_required' as const, checkedAt: null, retryAfterSeconds: null } })),
   };
 }
 
@@ -100,5 +101,28 @@ describe('paste install journey', () => {
     fireEvent.change(await screen.findByLabelText(copy.domainLabel), { target: { value: 'nope' } });
     fireEvent.click(screen.getByRole('button', { name: copy.addDomain }));
     expect(await screen.findByRole('alert')).toHaveTextContent(copy.errors.invalid_domain);
+  });
+  it('asks a pending Shopify store to check its storefront, with the password only when needed', async () => {
+    const a = actions(status({ platform: 'shopify', shopDomain: 'my-store.myshopify.com', shopProof: 'pending', trusted: false, connectionReason: 'shop_proof_pending' }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.shopCheckTitle)).toBeInTheDocument();
+    expect(screen.queryByLabelText(copy.passwordLabel)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: copy.checkStore }));
+    await waitFor(() => expect(a.proveShop).toHaveBeenCalledWith('s1', undefined));
+    expect(await screen.findByText(copy.shopCheck('password_required', null))).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(copy.passwordLabel), { target: { value: 'opensesame' } });
+    fireEvent.click(screen.getByRole('button', { name: copy.checkStore }));
+    await waitFor(() => expect(a.proveShop).toHaveBeenLastCalledWith('s1', 'opensesame'));
+    /* The password is cleared after use, never kept in the field. */
+    await waitFor(() => expect(screen.getByLabelText(copy.passwordLabel)).toHaveValue(''));
+  });
+
+  it('tells a store run by the Shopify app to use the app', async () => {
+    const a = actions(status({ platform: 'shopify', shopDomain: 'my-store.myshopify.com', trusted: false, connectionReason: 'shopify_app_installed' }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.appHeld)).toBeInTheDocument();
+    expect(screen.queryByText(copy.steps.code)).not.toBeInTheDocument();
   });
 });

@@ -2,12 +2,12 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Alert, Badge, Button, Code, CopyButton, Group, Radio, Stack, Text, TextInput } from '@mantine/core';
+import { Alert, Badge, Button, Code, CopyButton, Group, PasswordInput, Radio, Stack, Text, TextInput } from '@mantine/core';
 import { ShopifyLogo, WooCommerceLogo } from '@/components/brand-marks';
 import { GcIcon } from '@/components/icons';
 import type { InstallPlatform, PasteInstallCopy } from '@/lib/dashboard/paste-install-copy';
 import type { PasteInstallStatus } from '@/lib/paste/status';
-import type { PasteDomain, PasteErrorCode, PastePlatform, PasteResult, PasteSnippet } from '@/lib/paste/types';
+import type { PasteDomain, PasteErrorCode, PastePlatform, PasteResult, PasteShopCheckOutcome, PasteShopProof, PasteSnippet } from '@/lib/paste/types';
 import classes from './paste-install.module.css';
 
 export type PasteInstallActions = {
@@ -19,6 +19,7 @@ export type PasteInstallActions = {
   rotate(siteId: string): Promise<PasteResult<{ version: number; overlapUntil: string }>>;
   snippet(siteId: string): Promise<PasteResult<PasteSnippet>>;
   status(siteId: string): Promise<PasteResult<PasteInstallStatus>>;
+  proveShop(siteId: string, storefrontPassword?: string): Promise<PasteResult<PasteShopProof>>;
 };
 
 const POLL_MS = 5000;
@@ -65,6 +66,8 @@ export function PasteInstall({
   const [resetUntil, setResetUntil] = React.useState<string | null>(null);
   /* Read when status arrives, so render stays pure. */
   const [now, setNow] = React.useState(0);
+  const [password, setPassword] = React.useState('');
+  const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null } | null>(null);
 
   const run = React.useCallback(async <T,>(key: string, call: () => Promise<PasteResult<T>>): Promise<T | null> => {
     setBusy(key);
@@ -163,6 +166,15 @@ export function PasteInstall({
     await refresh();
   }
 
+  async function checkStore(event: React.FormEvent) {
+    event.preventDefault();
+    const typed = password.trim();
+    const result = await run('check', () => actions.proveShop(siteId, typed || undefined));
+    setPassword('');
+    if (result) setChecked({ outcome: result.outcome, retryAfter: result.retryAfterSeconds });
+    await refresh();
+  }
+
   const liveDomain = domains.find((d) => d.state === 'trusted' && d.lastSeenAt && now - Date.parse(d.lastSeenAt) <= LIVE_WINDOW_MS);
   const shopifyDomain = connectedAs === 'shopify' ? status?.shopDomain ?? undefined : undefined;
   const storeHost = status?.seenHost ?? liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
@@ -202,7 +214,9 @@ export function PasteInstall({
 
       {platform === 'woocommerce' ? woocommerce : null}
 
-      {platform === 'shopify' || platform === 'website' ? (
+      {status?.connectionReason === 'shopify_app_installed' && platform === 'shopify' ? (
+        <Alert variant="light" icon={<GcIcon name="info" size={18} />}>{copy.appHeld}</Alert>
+      ) : platform === 'shopify' || platform === 'website' ? (
         <ol className={classes.steps}>
           <li className={classes.step}>
             <Text fw={600}>{copy.steps.address}</Text>
@@ -359,6 +373,30 @@ export function PasteInstall({
 
           <li className={classes.step} aria-live="polite">
             <Text fw={600}>{copy.steps.live}</Text>
+            {/* A Shopify shop counts only once our server finds this code on it. */}
+            {connectedAs === 'shopify' && status?.shopProof !== 'proven' ? (
+              <form onSubmit={checkStore} className={classes.proofCheck}>
+                <Text size="sm" fw={600}>{copy.shopCheckTitle}</Text>
+                {status?.connectionReason === 'shop_proven_elsewhere' ? <Text size="sm">{copy.provenElsewhere}</Text> : null}
+                <Text size="sm">
+                  {copy.shopCheck(checked?.outcome ?? status?.shopCheck?.outcome ?? null, checked?.retryAfter ?? status?.shopCheck?.retryAfterSeconds ?? null)}
+                </Text>
+                {(checked?.outcome ?? status?.shopCheck?.outcome) === 'password_required' || (checked?.outcome ?? status?.shopCheck?.outcome) === 'password_rejected' ? (
+                  <PasswordInput
+                    label={copy.passwordLabel}
+                    description={copy.passwordHint}
+                    value={password}
+                    onChange={(event) => setPassword(event.currentTarget.value)}
+                    autoComplete="off"
+                    dir="ltr"
+                    maxLength={256}
+                  />
+                ) : null}
+                <Button type="submit" radius="pill" size="xs" className={classes.copy} loading={busy === 'check'} disabled={!snippet}>
+                  {copy.checkStore}
+                </Button>
+              </form>
+            ) : null}
             {/* Installed is independent of preview or live; Try-On says which. */}
             {status?.seen ? (
               <Stack gap={6}>
