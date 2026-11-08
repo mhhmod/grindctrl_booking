@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
-import { getPasteConnection, pasteTrustedHosts, recordPasteSignal } from '@/lib/paste/store';
+import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, provePasteShop, recordPasteSignal } from '@/lib/paste/store';
 import { pasteCapabilitySecret, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
 import { pasteTurnstileConfig } from '@/lib/paste/turnstile';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
@@ -68,17 +68,22 @@ async function mint(request: NextRequest): Promise<Response> {
     const site = await loadPublicSite(b.key);
     if (!site || site.status === 'disabled') return json({ error: 'not_found' }, 404);
     const connection = await getPasteConnection(site.id);
-    if (!connection || connection.status !== 'active') return json({ error: 'paste_not_connected' }, 403);
+    const trust = pasteTrust(connection);
+    if (!connection || trust === 'not_connected') return json({ error: 'paste_not_connected' }, 403);
+    if (trust === 'shopify_app_installed') return json({ error: 'shopify_app_installed' }, 409);
     const tenant = siteTenantKey(site.id);
     await requireRateLimit(proxyVisitorRatelimit, `paste:${site.id}:${ip}:${b.visitorId}`);
     await requireRateLimit(proxyShopMintRatelimit, `paste:${site.id}`);
-    if (!(await isActiveTenant(tenant))) return json({ error: 'site_disconnected' }, 403);
 
     const { origin, trusted } = provenOrigin(b.key, { headerOrigin: request.headers.get('origin'), originToken: b.originToken });
     const page = new URL(b.pageUrl);
-    const hosts = await pasteTrustedHosts(connection);
+    // A pending shop is not trusted anywhere yet. Its render may arrive from
+    // the shop host or a storefront domain row, and must prove itself below.
+    const pending = trust === 'shop_proof_pending';
+    const hosts = pending ? await pasteProofHosts(connection) : await pasteTrustedHosts(connection);
     if (!trusted || !origin || page.origin !== origin || page.protocol !== 'https:' || page.username || page.password || page.port
-      || !hosts.includes(page.hostname) || !originAllowed(site, origin, { trusted: true })) {
+      || !hosts.includes(page.hostname)
+      || !originAllowed(pending ? { ...site, pasteShopDomain: connection.shop_domain } : site, origin, { trusted: true })) {
       return json({ error: 'origin_not_allowed' }, 403);
     }
     if (connection.platform === 'shopify') {
@@ -92,7 +97,16 @@ async function mint(request: NextRequest): Promise<Response> {
       const verified = await verifyLiquidSignature({ connection, claims: claims as unknown as LiquidClaims,
         signature: claims.signature as string, visitor: `${ip}:${b.visitorId}` });
       if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      if (pending) {
+        // The first verified render proves theme control and activates this
+        // site as the shop's one holder, displacing any other claim on it.
+        const proof = await provePasteShop(connection);
+        if (proof === 'shopify_app_installed') return json({ error: 'shopify_app_installed' }, 409);
+        if (proof !== 'proven') return json({ error: 'paste_not_connected' }, 403);
+        console.info('[paste] shop proven by signed render', { code: 'paste_shop_proven', site: site.id });
+      }
     }
+    if (!(await isActiveTenant(tenant))) return json({ error: 'site_disconnected' }, 403);
     const features = await storeFlags({ widgetSiteId: site.id });
     const audience = launchAudience({
       launch: features.includes('n5_preview_mode') ? await getStoreLaunch(tenant) : null, features,
@@ -106,7 +120,7 @@ async function mint(request: NextRequest): Promise<Response> {
     let { launch } = state;
     // A signed render/trusted request is a real signal too, useful when the
     // loader's telemetry is blocked. Merely generating a snippet never is.
-    const signal = await recordPasteSignal(site.id, origin);
+    const signal = await recordPasteSignal(site.id, origin, { signed: connection.platform === 'shopify' });
     if (state.unsubscribed) {
       if (signal === 'apex_taken') return json({ error: 'free_plan_taken' }, 409);
       if (signal !== 'granted') return json({ error: 'unavailable' }, 503);

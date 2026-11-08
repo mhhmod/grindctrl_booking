@@ -1,27 +1,30 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const m = vi.hoisted(() => ({ rpc: vi.fn(), rows: [] as Array<Record<string, unknown>>, error: null as null | { code: string } }));
+const m = vi.hoisted(() => ({ rpc: vi.fn(), rows: [] as Array<Record<string, unknown>>, error: null as null | { code: string },
+  installError: null as null | { code: string } }));
 vi.mock('@/lib/messenger/db', () => ({ getMessengerServiceClient: () => ({
   rpc: m.rpc,
-  from: () => {
+  from: (table: string) => {
     const filters: Array<(row: Record<string, unknown>) => boolean> = [];
-    const result = () => ({ data: m.rows.filter((r) => filters.every((f) => f(r))), error: m.error });
+    const result = () => ({ data: m.rows.filter((r) => filters.every((f) => f(r))),
+      error: table === 'shopify_installations' ? m.installError : m.error });
     const b = { select: () => b, eq: (k: string, v: unknown) => { filters.push((r) => r[k] === v); return b; },
       neq: (k: string, v: unknown) => { filters.push((r) => r[k] !== v); return b; },
-      in: (k: string, v: unknown[]) => { filters.push((r) => v.includes(r[k])); return b; }, order: () => b,
+      in: (k: string, v: unknown[]) => { filters.push((r) => v.includes(r[k])); return b; }, order: () => b, limit: () => b,
       maybeSingle: async () => ({ ...result(), data: result().data[0] ?? null }),
       then: (resolve: (value: unknown) => void) => resolve(result()) };
     return b;
   },
 }) }));
 import { addPasteDomain, listPasteDomains, provePasteDomain, removePasteDomain, normalizePasteDomain, recordPasteSignal, getPasteConnection,
-  pasteShopHost, pasteTrustedHosts } from '@/lib/paste/store';
+  pasteProofHosts, pasteShopHost, pasteTrust, pasteTrustedHosts, provePasteShop } from '@/lib/paste/store';
+import type { PasteConnection } from '@/lib/paste/types';
 import { decideOrigin } from './origins';
 const SITE = '11111111-1111-4111-8111-111111111111';
 const row = { id: 'domain-a', widget_site_id: SITE, domain: 'merchant.example', verification_status: 'trusted', verification_method: 'paste_trusted',
   verification_token: 'abcdefghijklmnopqrstuvwx', first_seen_at: null, last_seen_at: null };
-beforeEach(() => { vi.resetAllMocks(); m.rows = []; m.error = null; m.rpc.mockResolvedValue({ data: { code: 'ok', domain: row }, error: null }); });
+beforeEach(() => { vi.resetAllMocks(); m.rows = []; m.error = null; m.installError = null; m.rpc.mockResolvedValue({ data: { code: 'ok', domain: row }, error: null }); });
 afterEach(() => vi.restoreAllMocks());
 
 describe('trusted domain lifecycle boundary', () => {
@@ -74,7 +77,7 @@ describe('observed-origin signal and apex grant', () => {
   it('only submits an https production host, normalized to its apex, after the origin gate', async () => {
     m.rpc.mockResolvedValue({ data: 'granted', error: null });
     expect(await recordPasteSignal(SITE, 'https://www.shop.example.co.uk')).toBe('granted');
-    expect(m.rpc).toHaveBeenCalledWith('record_paste_install_signal', { p_site: SITE, p_domain: 'shop.example.co.uk', p_apex: 'example.co.uk' });
+    expect(m.rpc).toHaveBeenCalledWith('record_paste_install_signal', { p_site: SITE, p_domain: 'shop.example.co.uk', p_apex: 'example.co.uk', p_signed: false });
     m.rpc.mockClear();
     expect(await recordPasteSignal(SITE, 'http://merchant.example')).toBe('ignored');
     expect(await recordPasteSignal(SITE, 'https://localhost')).toBe('ignored');
@@ -83,14 +86,17 @@ describe('observed-origin signal and apex grant', () => {
   it('submits a .myshopify.com shop host as its own apex, never myshopify.com', async () => {
     m.rpc.mockResolvedValue({ data: 'granted', error: null });
     expect(await recordPasteSignal(SITE, 'https://merchant.myshopify.com')).toBe('granted');
-    expect(m.rpc).toHaveBeenCalledWith('record_paste_install_signal', { p_site: SITE, p_domain: 'merchant.myshopify.com', p_apex: 'merchant.myshopify.com' });
+    expect(m.rpc).toHaveBeenCalledWith('record_paste_install_signal', { p_site: SITE, p_domain: 'merchant.myshopify.com', p_apex: 'merchant.myshopify.com', p_signed: false });
+    m.rpc.mockClear();
+    expect(await recordPasteSignal(SITE, 'https://merchant.myshopify.com', { signed: true })).toBe('granted');
+    expect(m.rpc).toHaveBeenCalledWith('record_paste_install_signal', expect.objectContaining({ p_signed: true }));
     m.rpc.mockClear();
     for (const origin of ['https://myshopify.com', 'http://merchant.myshopify.com', 'https://merchant.myshopify.com:8443', 'https://a.b.myshopify.com']) {
       expect(await recordPasteSignal(SITE, origin)).toBe('ignored');
     }
     expect(m.rpc).not.toHaveBeenCalled();
   });
-  it.each(['granted', 'apex_taken', 'ignored', 'unavailable'])('preserves the atomic grant result %s', async (result) => {
+  it.each(['granted', 'apex_taken', 'recorded', 'ignored', 'unavailable'])('preserves the atomic grant result %s', async (result) => {
     m.rpc.mockResolvedValue({ data: result, error: null });
     expect(await recordPasteSignal(SITE, 'https://merchant.example')).toBe(result);
   });
@@ -124,8 +130,9 @@ describe('origin authorization after trust and disputes', () => {
 });
 
 describe('trusted hosts include the signed shop', () => {
-  const shop = { widget_site_id: SITE, platform: 'shopify' as const, shop_domain: 'merchant.myshopify.com', status: 'active' as const,
-    secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null };
+  const shop: PasteConnection = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active',
+    secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
+    shop_proven_at: '2026-11-08T00:00:00.000Z', disconnected_reason: null, app_installed: false };
   it('returns the shop host for a store with no domain rows, plus trusted rows and their www alias', async () => {
     expect(pasteShopHost(shop)).toBe('merchant.myshopify.com');
     expect(await pasteTrustedHosts(shop)).toEqual(['merchant.myshopify.com']);
@@ -138,6 +145,60 @@ describe('trusted hosts include the signed shop', () => {
     expect(pasteShopHost({ ...shop, status: 'disconnected' })).toBeNull();
     expect(await pasteTrustedHosts({ ...shop, platform: 'website', shop_domain: null })).toEqual(['merchant.example', 'www.merchant.example']);
   });
+  it('trusts nothing for a pending shop or one the Shopify app holds; a pending shop may only prove from its own hosts', async () => {
+    m.rows = [row];
+    const pending: PasteConnection = { ...shop, status: 'pending', shop_proven_at: null };
+    expect(pasteTrust(pending)).toBe('shop_proof_pending');
+    expect(pasteShopHost(pending)).toBeNull();
+    expect(await pasteTrustedHosts(pending)).toEqual([]);
+    expect(await pasteProofHosts(pending)).toEqual(['merchant.myshopify.com', 'merchant.example', 'www.merchant.example']);
+    expect(await pasteProofHosts(shop)).toEqual([]);
+    for (const held of [{ ...shop, app_installed: true }, { ...pending, app_installed: true }]) {
+      expect(pasteTrust(held)).toBe('shopify_app_installed');
+      expect(pasteShopHost(held)).toBeNull();
+      expect(await pasteTrustedHosts(held)).toEqual([]);
+      expect(await pasteProofHosts(held)).toEqual([]);
+    }
+    expect(pasteTrust({ ...shop, status: 'disconnected', disconnected_reason: 'displaced' })).toBe('not_connected');
+    expect(pasteTrust({ ...shop, shop_proven_at: null })).toBe('shop_proof_pending');
+  });
+});
+
+describe('connection read', () => {
+  const stored = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'pending',
+    secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
+    shop_proven_at: null, disconnected_reason: null };
+  it('reads a pending shop and whether the Shopify app holds it, at read time', async () => {
+    m.rows = [stored];
+    expect(await getPasteConnection(SITE)).toMatchObject({ status: 'pending', app_installed: false });
+    m.rows = [stored, { shop_domain: 'merchant.myshopify.com', status: 'active' }];
+    expect(await getPasteConnection(SITE)).toMatchObject({ app_installed: true });
+    m.rows = [stored, { shop_domain: 'merchant.myshopify.com', status: 'uninstalled' }];
+    expect(await getPasteConnection(SITE)).toMatchObject({ app_installed: false });
+  });
+  it('fails closed when the install lookup fails', async () => {
+    m.rows = [stored]; m.installError = { code: '500' };
+    await expect(getPasteConnection(SITE)).rejects.toMatchObject({ code: 'unavailable' });
+    m.rows = [{ ...stored, platform: 'website', shop_domain: null, status: 'active' }];
+    expect(await getPasteConnection(SITE)).toMatchObject({ app_installed: false });
+  });
+});
+
+describe('shop proof', () => {
+  const pending: PasteConnection = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'pending',
+    secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
+    shop_proven_at: null, disconnected_reason: null, app_installed: false };
+  it.each(['proven', 'shopify_app_installed', 'not_pending'])('passes through %s', async (result) => {
+    m.rpc.mockResolvedValue({ data: result, error: null });
+    expect(await provePasteShop(pending)).toBe(result);
+    expect(m.rpc).toHaveBeenCalledWith('prove_paste_shop', { p_site: SITE, p_shop: 'merchant.myshopify.com' });
+  });
+  it('never proves a website and fails closed on an unknown answer', async () => {
+    expect(await provePasteShop({ ...pending, platform: 'website', shop_domain: null })).toBe('not_pending');
+    expect(m.rpc).not.toHaveBeenCalled();
+    m.rpc.mockResolvedValue({ data: 'yes', error: null });
+    await expect(provePasteShop(pending)).rejects.toMatchObject({ code: 'unavailable' });
+  });
 });
 
 describe('unapplied migration shop-host contract', () => {
@@ -146,7 +207,10 @@ describe('unapplied migration shop-host contract', () => {
     expect(sql).toContain('add column if not exists first_seen_at timestamptz');
     expect(sql).toMatch(/paste_site_connections_active_shop_unique\s+on public\.paste_site_connections \(shop_domain\) where status = 'active'/);
     const enable = sql.slice(sql.indexOf('create or replace function public.enable_paste_install'), sql.indexOf('create or replace function public.paste_host('));
-    expect(enable).toContain("select 1 from public.paste_site_connections where shop_domain = p_shop_domain");
+    // Another site's claim never blocks enabling: shops start pending.
+    expect(enable).not.toContain("select 1 from public.paste_site_connections where shop_domain = p_shop_domain");
+    expect(enable).toContain('public.paste_shop_app_installed(p_shop_domain)');
+    expect(enable).toContain("case when p_platform = 'shopify' then 'pending' else 'active' end");
     const signal = sql.slice(sql.indexOf('create or replace function public.record_paste_install_signal'), sql.indexOf('revoke all on function'));
     expect(signal).toContain("p_apex = 'myshopify.com'");
     expect(signal).toContain("if p_apex <> c.shop_domain then return 'ignored'");

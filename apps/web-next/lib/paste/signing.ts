@@ -57,7 +57,9 @@ export async function verifyLiquidSignature(input: {
   visitor: string;
 }, options: { nowSeconds?: number; claim?: ReplayClaim } = {}): Promise<SignatureResult> {
   const { connection: c, claims: p, signature } = input;
-  if (c.platform !== 'shopify' || c.status !== 'active' || p.siteId !== c.widget_site_id
+  // A pending connection is verified too: its first valid render is the
+  // proof of theme control that activates it (prove_paste_shop).
+  if (c.platform !== 'shopify' || c.status === 'disconnected' || c.app_installed || p.siteId !== c.widget_site_id
     || p.shopDomain !== c.shop_domain || !/^[1-9]\d{0,19}$/.test(p.productId)
     || !/^[1-9]\d{0,19}$/.test(p.variantId) || !/^\d{1,12}$/.test(p.issuedAt)
     || (p.customerId !== '' && !/^[1-9]\d{0,19}$/.test(p.customerId)) || !/^[a-f0-9]{64}$/.test(signature)) {

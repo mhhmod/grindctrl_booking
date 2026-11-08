@@ -26,6 +26,14 @@ describe('paid website look Turnstile gate', () => {
     expect(pasteTurnstileConfig()).toEqual({ siteKey: PASS_SITE, action: 'paste_tryon' });
     expect(JSON.stringify(pasteTurnstileConfig())).not.toContain(PASS_SECRET);
   });
+  it('reads the site key at runtime, falling back to the build-time public name', () => {
+    vi.stubEnv('TURNSTILE_SITE_KEY', '0x4RUNTIME0000000000000');
+    expect(pasteTurnstileConfig().siteKey).toBe('0x4RUNTIME0000000000000');
+    vi.stubEnv('TURNSTILE_SITE_KEY', '  ');
+    expect(pasteTurnstileConfig().siteKey).toBe(PASS_SITE);
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');
+    expect(pasteTurnstileConfig().siteKey).toBeNull();
+  });
   it('fails with the always-fail test key', async () => {
     vi.stubEnv('TURNSTILE_SECRET_KEY', FAIL_SECRET);
     expect(await verifyPasteTurnstile({ token, authorization }, fetcher)).toEqual({ ok: false, code: 'turnstile_failed' });

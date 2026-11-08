@@ -24,7 +24,8 @@ export type PasteConnection = {
   widget_site_id: string;
   platform: PastePlatform;
   shop_domain: string | null;
-  status: 'active' | 'disconnected';
+  /** Shopify starts `pending` until a signed render proves the shop. */
+  status: 'pending' | 'active' | 'disconnected';
   secret_version: number;
   previous_secret_version: number | null;
   previous_valid_until: string | null;
@@ -32,7 +33,16 @@ export type PasteConnection = {
    *  connection rather than a widget_domains row. Always null for websites. */
   first_seen_at: string | null;
   last_seen_at: string | null;
+  /** When a signed Liquid render from the shop's theme proved this site. */
+  shop_proven_at: string | null;
+  /** `displaced`: another site proved the same shop after this one. */
+  disconnected_reason: 'displaced' | null;
+  /** Read live from shopify_installations, never stored: the app wins the shop. */
+  app_installed: boolean;
 };
+
+/** Why a connection is (not) trusted for origins, signals and Try-On. */
+export type PasteTrust = 'trusted' | 'not_connected' | 'shop_proof_pending' | 'shopify_app_installed';
 
 /** Data, not localized UI instructions. Claude's UI chooses the labels. */
 export type PasteStep =

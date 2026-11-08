@@ -4,7 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ rate: vi.fn(), active: vi.fn(), generate: vi.fn(), site: vi.fn(), connection: vi.fn(), fetch: vi.fn<typeof fetch>() }));
 vi.mock('@/lib/ratelimit', () => ({ publicApiRatelimit: { limit: m.rate }, clientIp: () => '203.0.113.5' }));
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: m.active }));
-vi.mock('@/lib/paste/store', () => ({ getPasteConnection: m.connection }));
+vi.mock('@/lib/paste/store', async (original) => {
+  const actual = await original<typeof import('@/lib/paste/store')>();
+  return { getPasteConnection: m.connection, pasteTrust: actual.pasteTrust, isPasteTrusted: actual.isPasteTrusted };
+});
+const PROVEN = { shop_proven_at: '2026-11-08T00:00:00.000Z', app_installed: false };
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
 vi.mock('@/lib/messenger/db', () => ({ getMessengerServiceClient: () => ({ from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { embed_key: 'gc_public_key_42' }, error: null }) }) }) }) }) }));
 vi.mock('@/lib/try-on/service', async (original) => ({ ...await original<object>(), generateTryOn: m.generate, getTryOnMode: () => 'mock' }));
@@ -77,12 +81,20 @@ describe('paste generation boundary, before reservation/provider work', () => {
   it('exempts signed owner test looks, and Shopify paste generation, from Turnstile', async () => {
     vi.stubEnv('TURNSTILE_SECRET_KEY', '');
     expect((await generate('paste-website', true, { turnstileToken: undefined })).status).toBe(200);
-    m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active' });
+    m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active', ...PROVEN });
     expect((await generate('paste-shopify')).status).toBe(200);
     expect(m.fetch).not.toHaveBeenCalled(); expect(m.generate).toHaveBeenCalledTimes(2);
   });
+  it('refuses a Shopify paste look while the shop is unproven or held by the Shopify app', async () => {
+    for (const connection of [{ widget_site_id: SITE, platform: 'shopify', status: 'pending', shop_proven_at: null, app_installed: false },
+      { widget_site_id: SITE, platform: 'shopify', status: 'active', ...PROVEN, app_installed: true }]) {
+      m.connection.mockResolvedValue(connection);
+      expect((await generate('paste-shopify')).status).not.toBe(200);
+    }
+    expect(m.generate).not.toHaveBeenCalled();
+  });
   it('rechecks a .myshopify.com-only store against its connection shop, not a domain row', async () => {
-    m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active' });
+    m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active', ...PROVEN });
     m.site.mockResolvedValue({ id: SITE, status: 'active', domain: null, security: {}, patterns: [], pasteShopDomain: 'merchant.myshopify.com' });
     expect((await generate('paste-shopify', false, {}, SITE, 'https://merchant.myshopify.com')).status).toBe(200);
     m.site.mockResolvedValue({ id: SITE, status: 'active', domain: null, security: {}, patterns: [], pasteShopDomain: null });
@@ -109,6 +121,10 @@ describe('paste generation boundary, before reservation/provider work', () => {
     const response = await attemptPost(req({ sessionId: session.token, productId: 'tee-42', storefrontNonce: NONCE, attemptNonce: NONCE }, 'attempt'));
     expect(response.status).toBe(200);
     expect((await response.json()).data.turnstile).toEqual({ siteKey: '1x00000000000000000000AA', action: 'paste_tryon', cData: pasteTurnstileBinding(attempt.claims) });
+    // The runtime key wins over the build-time public one.
+    vi.stubEnv('TURNSTILE_SITE_KEY', '0x4RUNTIME0000000000000');
+    const runtime = await attemptPost(req({ sessionId: session.token, productId: 'tee-42', storefrontNonce: NONCE, attemptNonce: NONCE }, 'attempt'));
+    expect((await runtime.json()).data.turnstile.siteKey).toBe('0x4RUNTIME0000000000000');
     expect(m.fetch).not.toHaveBeenCalled();
   });
 });

@@ -3,6 +3,9 @@
 -- No secret plaintext, new storage bucket, policy or browser grant.
 -- SECURITY INVOKER RPCs are service-role-only; all writes are atomic.
 -- Existing rows retain their meaning; trusted/disputed are additive states.
+-- Shopify paste connections stay pending until a signed render proves the
+-- shop; an active Shopify app install on the shop always takes precedence.
+-- Executed against PGlite by apps/web-next/lib/paste/paste-install-sql.test.ts.
 begin;
 
 alter table public.widget_domains
@@ -16,7 +19,7 @@ create table if not exists public.paste_site_connections (
   widget_site_id uuid primary key references public.widget_sites(id) on delete cascade,
   platform text not null check (platform in ('website', 'shopify')),
   shop_domain text,
-  status text not null default 'active' check (status in ('active', 'disconnected')),
+  status text not null default 'active',
   secret_version integer not null default 1 check (secret_version > 0),
   previous_secret_version integer,
   previous_valid_until timestamptz,
@@ -26,10 +29,28 @@ create table if not exists public.paste_site_connections (
 );
 -- The signed shop host is trusted through this row, never a widget_domains
 -- row (paste_domain_operation refuses .myshopify.com), so its install
--- signals live here. Like a trusted domain, one active holder per shop.
+-- signals live here.
 alter table public.paste_site_connections
   add column if not exists first_seen_at timestamptz,
-  add column if not exists last_seen_at timestamptz;
+  add column if not exists last_seen_at timestamptz,
+  add column if not exists shop_proven_at timestamptz,
+  add column if not exists disconnected_at timestamptz,
+  add column if not exists disconnected_reason text;
+-- Typing a shop name proves nothing. A Shopify connection starts pending
+-- (any number of sites may be pending for one shop) and becomes active only
+-- through prove_paste_shop, after a signed Liquid render from that shop's
+-- theme. One active, proven holder per shop. Websites are active at once:
+-- their trust is per domain row.
+alter table public.paste_site_connections drop constraint if exists paste_site_connections_status_check;
+alter table public.paste_site_connections add constraint paste_site_connections_status_check
+  check (status in ('pending', 'active', 'disconnected'));
+alter table public.paste_site_connections drop constraint if exists paste_site_connections_proof_check;
+alter table public.paste_site_connections add constraint paste_site_connections_proof_check
+  check ((platform = 'website' and status <> 'pending')
+    or (platform = 'shopify' and (status <> 'active' or shop_proven_at is not null)));
+alter table public.paste_site_connections drop constraint if exists paste_site_connections_reason_check;
+alter table public.paste_site_connections add constraint paste_site_connections_reason_check
+  check (disconnected_reason is null or (status = 'disconnected' and disconnected_reason in ('displaced')));
 create unique index if not exists paste_site_connections_active_shop_unique
   on public.paste_site_connections (shop_domain) where status = 'active' and shop_domain is not null;
 alter table public.paste_site_connections enable row level security;
@@ -71,6 +92,13 @@ drop trigger if exists guard_paste_free_apex on public.tryon_free_plan_apexes;
 create trigger guard_paste_free_apex before insert or update on public.tryon_free_plan_apexes
   for each row execute function grindctrl_paste_private.guard_free_apex();
 
+-- The Shopify app always wins a shop. Read at every decision rather than
+-- mirrored by an uninstall/install webhook that could be missed.
+create or replace function public.paste_shop_app_installed(p_shop text) returns boolean
+language sql stable security invoker set search_path = public, pg_temp as $$
+  select exists(select 1 from public.shopify_installations where shop_domain = p_shop and status = 'active');
+$$;
+
 -- Serializes all paste domain operations, including cross-site disputes.
 -- Legacy rows are also checked; a paste install never silently adopts a
 -- Shopify app or Woo tenant, nor changes widget_sites.domain.
@@ -86,20 +114,21 @@ begin
     or (p_platform = 'shopify' and (p_shop_domain is null or p_shop_domain !~ '^[a-z0-9][a-z0-9-]*\.myshopify\.com$'))
   then return 'invalid_platform'; end if;
   select * into existing from public.paste_site_connections where widget_site_id = p_site;
+  -- Another site's claim on the same shop does not block this one: each
+  -- stays pending until a signed render from the shop's theme proves one.
   if exists (select 1 from public.woo_site_connections where widget_site_id = p_site)
     or connected_domain like '%.myshopify.com'
     or (existing.widget_site_id is null and exists (select 1 from public.tryon_shops where widget_site_id = p_site))
-    or (p_platform = 'shopify' and exists (
-      select 1 from public.shopify_installations where shop_domain = p_shop_domain and status = 'active'))
-    or (p_platform = 'shopify' and exists (
-      select 1 from public.paste_site_connections where shop_domain = p_shop_domain
-        and status = 'active' and widget_site_id <> p_site))
+    or (p_platform = 'shopify' and public.paste_shop_app_installed(p_shop_domain))
     or (existing.widget_site_id is not null and
       (existing.platform <> p_platform or existing.shop_domain is distinct from p_shop_domain))
   then return 'connection_conflict'; end if;
-  insert into public.paste_site_connections(widget_site_id, platform, shop_domain)
-    values (p_site, p_platform, p_shop_domain)
-    on conflict (widget_site_id) do update set status = 'active';
+  insert into public.paste_site_connections(widget_site_id, platform, shop_domain, status)
+    values (p_site, p_platform, p_shop_domain, case when p_platform = 'shopify' then 'pending' else 'active' end)
+    on conflict (widget_site_id) do update set
+      status = case when paste_site_connections.status = 'active' then 'active'
+        when paste_site_connections.platform = 'shopify' then 'pending' else 'active' end,
+      disconnected_at = null, disconnected_reason = null;
   -- Reuse the existing non-Shopify site tenant model; install kind is held
   -- in paste_site_connections, never masquerades as Shopify Admin access.
   insert into public.tryon_shops(shop_domain, platform, widget_site_id, status, last_seen_at, updated_at)
@@ -130,7 +159,11 @@ create or replace function public.paste_domain_operation(
 declare d public.widget_domains; host text; taken boolean; other_site uuid;
 begin
   perform pg_advisory_xact_lock(hashtextextended('paste-domain-lifecycle', 0));
-  if not exists(select 1 from public.paste_site_connections where widget_site_id = p_site and status = 'active')
+  -- A pending Shopify merchant may add the storefront's own domain while
+  -- waiting for the first signed render; a shop the app holds may not.
+  if not exists(select 1 from public.paste_site_connections where widget_site_id = p_site
+      and status in ('active', 'pending')
+      and (platform = 'website' or not public.paste_shop_app_installed(shop_domain)))
     then return jsonb_build_object('code', 'connection_conflict'); end if;
   if p_operation = 'add' then
     host := public.paste_host(p_domain);
@@ -257,19 +290,51 @@ declare c public.paste_site_connections;
 begin
   update public.paste_site_connections set previous_secret_version = secret_version,
     previous_valid_until = now() + interval '15 minutes', secret_version = secret_version + 1
-    where widget_site_id = p_site and status = 'active' returning * into c;
+    where widget_site_id = p_site and status in ('active', 'pending') returning * into c;
   if not found then return null; end if;
   return jsonb_build_object('version', c.secret_version, 'overlapUntil', c.previous_valid_until);
 end $$;
 
-create or replace function public.record_paste_install_signal(p_site uuid, p_domain text, p_apex text) returns text
+-- Called only after the server verified a Liquid render's HMAC with THIS
+-- site's own derived secret and the render named this exact shop: the
+-- shop's theme carries this site's code. The proven site becomes the
+-- shop's one active holder; every other pending/active paste connection
+-- for the shop is disconnected as displaced (its owner can re-enable, and
+-- its own next signed render would prove it again). Never grants a plan.
+-- Returns: proven | shopify_app_installed | not_pending
+create or replace function public.prove_paste_shop(p_site uuid, p_shop text) returns text
 language plpgsql security invoker set search_path = public, pg_temp as $$
 declare c public.paste_site_connections;
+begin
+  perform pg_advisory_xact_lock(hashtextextended('paste-domain-lifecycle', 0));
+  select * into c from public.paste_site_connections where widget_site_id = p_site for update;
+  if not found or c.platform <> 'shopify' or c.shop_domain is distinct from p_shop or c.status = 'disconnected'
+    then return 'not_pending'; end if;
+  if public.paste_shop_app_installed(c.shop_domain) then return 'shopify_app_installed'; end if;
+  if c.status = 'active' then return 'proven'; end if;
+  update public.paste_site_connections set status = 'disconnected', disconnected_at = now(), disconnected_reason = 'displaced'
+    where shop_domain = c.shop_domain and widget_site_id <> p_site and status in ('active', 'pending');
+  update public.paste_site_connections set status = 'active', shop_proven_at = now(),
+    disconnected_at = null, disconnected_reason = null where widget_site_id = p_site;
+  return 'proven';
+end $$;
+
+-- An earlier draft of this file had a three-argument signal function.
+drop function if exists public.record_paste_install_signal(uuid, text, text);
+-- p_signed: the caller verified a Liquid render for this connection. A
+-- Shopify paste store earns its free plan only from such a render (apex =
+-- the shop itself, plus the storefront domain it ran on); an Origin-only
+-- signal records install times and nothing more.
+-- Returns: granted | apex_taken | recorded | ignored | claim_site_free_plan's answer
+create or replace function public.record_paste_install_signal(p_site uuid, p_domain text, p_apex text, p_signed boolean default false)
+returns text language plpgsql security invoker set search_path = public, pg_temp as $$
+declare c public.paste_site_connections; apexes text[];
 begin
   perform pg_advisory_xact_lock(hashtextextended('paste-domain-lifecycle', 0));
   select * into c from public.paste_site_connections where widget_site_id = p_site and status = 'active';
   if not found or p_domain is null or p_domain <> public.paste_host(p_domain) or p_apex is null
     or p_apex = 'myshopify.com' or not (p_domain = p_apex or p_domain like '%.' || p_apex)
+    or (c.platform = 'shopify' and (c.shop_proven_at is null or public.paste_shop_app_installed(c.shop_domain)))
     then return 'ignored'; end if;
   if c.platform = 'shopify' and p_domain = c.shop_domain then
     -- The signed shop host, trusted through this connection. A shop is its
@@ -289,23 +354,34 @@ begin
   -- credit writer is introduced; paid activation keeps its operator gate.
   if exists(select 1 from public.tryon_subscriptions where shop_domain = 'site:' || p_site::text)
     then return 'granted'; end if;
-  if exists(select 1 from public.tryon_free_apex_history where apex = p_apex and first_widget_site_id <> p_site)
+  if c.platform = 'shopify' then
+    if not p_signed then return 'recorded'; end if;
+    -- A shop is its own registrable domain; a custom storefront domain it
+    -- ran on is claimed too, so neither can earn a second free plan.
+    apexes := array[c.shop_domain] || case when p_domain = c.shop_domain then '{}'::text[] else array[p_apex] end;
+  else
+    apexes := array[p_apex];
+  end if;
+  if exists(select 1 from public.tryon_free_apex_history where apex = any(apexes) and first_widget_site_id <> p_site)
     then return 'apex_taken'; end if;
-  return public.claim_site_free_plan(p_site, array[p_apex]);
+  return public.claim_site_free_plan(p_site, apexes);
 end $$;
 
 revoke all on function public.enable_paste_install(uuid,text,text) from public, anon, authenticated;
+revoke all on function public.paste_shop_app_installed(text) from public, anon, authenticated;
 revoke all on function public.paste_host(text) from public, anon, authenticated;
 revoke all on function public.paste_host_matches(text,text) from public, anon, authenticated;
 revoke all on function public.paste_domain_operation(uuid,text,text,uuid,text) from public, anon, authenticated;
 revoke all on function public.rotate_paste_secret(uuid) from public, anon, authenticated;
-revoke all on function public.record_paste_install_signal(uuid,text,text) from public, anon, authenticated;
+revoke all on function public.prove_paste_shop(uuid,text) from public, anon, authenticated;
+revoke all on function public.record_paste_install_signal(uuid,text,text,boolean) from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_domain() from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_site_domain() from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_free_apex() from public, anon, authenticated;
-grant execute on function public.enable_paste_install(uuid,text,text), public.paste_host(text),
-  public.paste_host_matches(text,text), public.paste_domain_operation(uuid,text,text,uuid,text),
-  public.rotate_paste_secret(uuid), public.record_paste_install_signal(uuid,text,text) to service_role;
+grant execute on function public.enable_paste_install(uuid,text,text), public.paste_shop_app_installed(text),
+  public.paste_host(text), public.paste_host_matches(text,text), public.paste_domain_operation(uuid,text,text,uuid,text),
+  public.rotate_paste_secret(uuid), public.prove_paste_shop(uuid,text),
+  public.record_paste_install_signal(uuid,text,text,boolean) to service_role;
 commit;
 
 -- Rollback: first disconnect paste connections and remove the new code.

@@ -26,7 +26,8 @@ export interface ResolvedPublicSite {
   config: MessengerConfig;
   security: { allow_localhost: boolean };
   patterns: DomainPatternRow[];
-  /** The signed shop of an active Shopify paste connection. That host is
+  /** The signed shop of a trusted Shopify paste connection: active, proven
+   *  by a signed render, and not held by the Shopify app. That host is
    *  trusted through the connection, so it is never one of `patterns`. */
   pasteShopDomain?: string | null;
 }

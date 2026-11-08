@@ -2,15 +2,31 @@ import 'server-only';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { normalizeStorefrontDomain, newVerificationToken, txtRecordFor, verifyDomainTxt } from '@/lib/messenger/domains';
 import { apexDomain, registrableDomain } from '@/lib/woo/free-plan';
-import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform } from './types';
+import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform, type PasteTrust } from './types';
 
 /** A connection's signed shop. Merchants cannot add it as a domain row;
  *  it is trusted through paste_site_connections.shop_domain instead. */
 export const SHOP_HOST_RE = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 
-/** The shop host an active Shopify paste connection trusts, if any. */
+/** The single rule every consumer applies: only an active connection is
+ *  trusted, and a Shopify one only once a signed render proved the shop and
+ *  while no Shopify app install holds that shop. */
+export function pasteTrust(connection: PasteConnection | null): PasteTrust {
+  if (!connection || connection.status === 'disconnected') return 'not_connected';
+  if (connection.platform === 'shopify') {
+    if (connection.app_installed) return 'shopify_app_installed';
+    if (connection.status !== 'active' || !connection.shop_proven_at) return 'shop_proof_pending';
+  }
+  return connection.status === 'active' ? 'trusted' : 'not_connected';
+}
+
+export function isPasteTrusted(connection: PasteConnection | null): connection is PasteConnection {
+  return pasteTrust(connection) === 'trusted';
+}
+
+/** The shop host a trusted Shopify paste connection admits, if any. */
 export function pasteShopHost(connection: PasteConnection | null): string | null {
-  return connection?.status === 'active' && connection.platform === 'shopify' && connection.shop_domain
+  return isPasteTrusted(connection) && connection.platform === 'shopify' && connection.shop_domain
     && SHOP_HOST_RE.test(connection.shop_domain) ? connection.shop_domain : null;
 }
 
@@ -29,19 +45,30 @@ function checked<T>(result: { data: T; error: { code?: string } | null }): T {
   return result.data;
 }
 
+/** Throws when the read fails, so callers fail closed. Shopify connections
+ *  also read shopify_installations on every call: an app installed after
+ *  the paste connection takes the shop over without relying on a webhook. */
 export async function getPasteConnection(siteId: string): Promise<PasteConnection | null> {
-  const result = await getMessengerServiceClient().from('paste_site_connections')
-    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at')
+  const db = getMessengerServiceClient();
+  const result = await db.from('paste_site_connections')
+    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at, shop_proven_at, disconnected_reason')
     .eq('widget_site_id', siteId).maybeSingle();
   if (result.error && schemaMissing(result.error)) return null;
-  const row = checked(result) as PasteConnection | null;
+  const row = checked(result) as Omit<PasteConnection, 'app_installed'> | null;
   if (!row) return null;
   if (row.widget_site_id !== siteId || !['website', 'shopify'].includes(row.platform)
-    || !['active', 'disconnected'].includes(row.status) || !Number.isSafeInteger(row.secret_version) || row.secret_version < 1
+    || !['pending', 'active', 'disconnected'].includes(row.status) || !Number.isSafeInteger(row.secret_version) || row.secret_version < 1
     || (row.platform === 'shopify' && (typeof row.shop_domain !== 'string' || !SHOP_HOST_RE.test(row.shop_domain)))) {
     throw new PasteError('unavailable');
   }
-  return row;
+  let appInstalled = false;
+  if (row.platform === 'shopify' && row.status !== 'disconnected') {
+    const install = await db.from('shopify_installations').select('shop_domain')
+      .eq('shop_domain', row.shop_domain as string).eq('status', 'active').limit(1);
+    if (install.error) throw new PasteError('unavailable');
+    appInstalled = Array.isArray(install.data) && install.data.length > 0;
+  }
+  return { ...row, disconnected_reason: row.disconnected_reason === 'displaced' ? 'displaced' : null, app_installed: appInstalled };
 }
 
 /** Call only after requireSiteAccess. The RPC also locks the site and refuses
@@ -136,14 +163,32 @@ export async function rotatePasteSecret(siteId: string): Promise<{ version: numb
   return { version: value.version, overlapUntil: value.overlapUntil };
 }
 
-export type PasteSignalResult = 'granted' | 'apex_taken' | 'ignored' | 'unavailable';
+export type ShopProofResult = 'proven' | 'shopify_app_installed' | 'not_pending';
+
+/** Call ONLY after verifyLiquidSignature accepted a render for this pending
+ *  connection: the HMAC was made with this site's own derived secret and
+ *  names this exact shop. The RPC makes this site the shop's one active
+ *  holder and disconnects any other pending/active claim on the shop. */
+export async function provePasteShop(connection: PasteConnection): Promise<ShopProofResult> {
+  if (connection.platform !== 'shopify' || !connection.shop_domain) return 'not_pending';
+  const data = checked(await getMessengerServiceClient().rpc('prove_paste_shop', {
+    p_site: connection.widget_site_id, p_shop: connection.shop_domain,
+  }));
+  if (data === 'proven' || data === 'shopify_app_installed' || data === 'not_pending') return data;
+  throw new PasteError('unavailable');
+}
+
+export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'ignored' | 'unavailable';
 
 /** Only browser Origin / signed-origin-token authorized config/heartbeat
  * callers invoke this. Query-string origins never earn a signal. Existing
  * chat sites and absent migrations remain a no-op, not a new dependency.
  * A `.myshopify.com` host is submitted as its own apex; the RPC records it
- * only when it is this site's active connection shop. */
-export async function recordPasteSignal(siteId: string, origin: string): Promise<PasteSignalResult> {
+ * only when it is this site's trusted connection shop. `signed` is set only
+ * by the context route after a verified Liquid render: a Shopify paste store
+ * earns its free plan from that alone, and an Origin-only signal is just
+ * `recorded`. */
+export async function recordPasteSignal(siteId: string, origin: string, options: { signed?: boolean } = {}): Promise<PasteSignalResult> {
   try {
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.port || url.username || url.password) return 'ignored';
@@ -153,21 +198,31 @@ export async function recordPasteSignal(siteId: string, origin: string): Promise
     const apex = isShop ? registrableDomain(host) : domain ? apexDomain(domain) : null;
     if (!domain || !apex) return 'ignored';
     const { data, error } = await getMessengerServiceClient().rpc('record_paste_install_signal', {
-      p_site: siteId, p_domain: domain, p_apex: apex,
+      p_site: siteId, p_domain: domain, p_apex: apex, p_signed: options.signed === true,
     });
     if (error) return schemaMissing(error) ? 'ignored' : 'unavailable';
-    return ['granted', 'apex_taken', 'ignored'].includes(data as string) ? data as PasteSignalResult : 'unavailable';
+    return ['granted', 'apex_taken', 'recorded', 'ignored'].includes(data as string) ? data as PasteSignalResult : 'unavailable';
   } catch { return 'unavailable'; }
 }
 
-/** Every host the connection's code may run on: trusted domain rows (with
- *  their www alias) and, for Shopify, the signed shop host itself. */
-export async function pasteTrustedHosts(connection: PasteConnection): Promise<string[]> {
-  if (connection.status !== 'active') return [];
+async function connectionHosts(connection: PasteConnection, shop: string | null): Promise<string[]> {
   const domains = (await listPasteDomains(connection.widget_site_id))
     .filter((row) => row.state === 'trusted').flatMap((row) => pasteDomainHosts(row.domain));
-  const shop = pasteShopHost(connection);
   return shop ? [shop, ...domains] : domains;
+}
+
+/** Every host a trusted connection's code may run on: trusted domain rows
+ *  (with their www alias) and, for Shopify, the signed shop host itself. */
+export async function pasteTrustedHosts(connection: PasteConnection): Promise<string[]> {
+  return isPasteTrusted(connection) ? connectionHosts(connection, pasteShopHost(connection)) : [];
+}
+
+/** Where a pending Shopify connection's proving render may arrive from: the
+ *  shop host or a storefront domain row. Admits nothing by itself; the
+ *  render must still pass the HMAC check before prove_paste_shop. */
+export async function pasteProofHosts(connection: PasteConnection): Promise<string[]> {
+  return pasteTrust(connection) === 'shop_proof_pending' && connection.shop_domain
+    ? connectionHosts(connection, connection.shop_domain) : [];
 }
 
 /** Missing migration leaves existing Store Chat-only sites as they were. */

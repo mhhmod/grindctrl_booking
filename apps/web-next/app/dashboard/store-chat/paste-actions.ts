@@ -7,7 +7,7 @@ import { requireMerchantRateLimit, RequestRateLimitError } from '@/lib/request-r
 import { normalizeShopDomain } from '@/lib/shopify/shop-authorization';
 import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
-import { addPasteDomain, removePasteDomain, provePasteDomain, provePasteDomainMeta, enablePasteInstall, getPasteConnection, rotatePasteSecret } from '@/lib/paste/store';
+import { addPasteDomain, removePasteDomain, provePasteDomain, provePasteDomainMeta, enablePasteInstall, getPasteConnection, pasteTrust, rotatePasteSecret } from '@/lib/paste/store';
 import { buildPasteSnippet } from '@/lib/paste/snippet';
 import { readPasteInstallStatus, type PasteInstallStatus } from '@/lib/paste/status';
 import { pasteCapabilitySecret } from '@/lib/paste/signing';
@@ -68,8 +68,11 @@ export async function rotatePasteSecretAction(siteId: string): Promise<PasteResu
  * Rotation returns metadata; status never includes a secret or a snippet. */
 export async function getPasteSnippetAction(siteId: string): Promise<PasteResult<PasteSnippet>> {
   return authorized(siteId, 'store', 'read', async (site) => {
+    // A pending Shopify shop needs its snippet: pasting it is how it proves.
     const connection = await getPasteConnection(site.id);
-    if (!connection || connection.status !== 'active') throw new PasteError('not_found');
+    const trust = pasteTrust(connection);
+    if (!connection || trust === 'not_connected') throw new PasteError('not_found');
+    if (trust === 'shopify_app_installed') throw new PasteError('connection_conflict');
     return buildPasteSnippet(connection, site.embed_key);
   });
 }

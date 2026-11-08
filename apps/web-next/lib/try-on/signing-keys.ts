@@ -5,7 +5,7 @@ import { resolveShopifyApp, type ShopifyAppCredentials } from '@/lib/shopify/app
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import type { StorefrontContextClaims, VerifiedTryOnSession } from './storefront-context';
-import { getPasteConnection } from '@/lib/paste/store';
+import { getPasteConnection, isPasteTrusted } from '@/lib/paste/store';
 import { pasteCapabilitySecret, PASTE_APP_CLIENT_ID } from '@/lib/paste/signing';
 
 /** Separate trust domains: a core demo token cannot become a billable shop
@@ -137,7 +137,7 @@ async function resolvePasteKey<T extends StorefrontContextClaims | VerifiedTryOn
     // database dependency on the new optional paste migration.
     if (!value || value.shop !== `site:${siteId}` || !value.platform?.startsWith('paste-')) return null;
     const connection = await getPasteConnection(siteId);
-    if (!connection || connection.status !== 'active' || value.platform !== `paste-${connection.platform}`) return null;
+    if (!isPasteTrusted(connection) || value.platform !== `paste-${connection.platform}`) return null;
     return { app: { clientId: PASTE_APP_CLIENT_ID, secret }, value };
   } catch { return null; }
 }

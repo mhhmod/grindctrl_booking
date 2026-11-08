@@ -5,7 +5,8 @@ const m = vi.hoisted(() => ({ auth: vi.fn(), access: vi.fn(), limit: vi.fn(), en
 vi.mock('@clerk/nextjs/server', () => ({ auth: m.auth }));
 vi.mock('@/lib/messenger/provisioning', async (original) => ({ ...await original<object>(), requireSiteAccess: m.access }));
 vi.mock('@/lib/request-rate-limit', async (original) => ({ ...await original<object>(), requireMerchantRateLimit: m.limit }));
-vi.mock('@/lib/paste/store', () => ({ enablePasteInstall: m.enable, addPasteDomain: m.add, removePasteDomain: m.remove,
+vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
+  enablePasteInstall: m.enable, addPasteDomain: m.add, removePasteDomain: m.remove,
   provePasteDomain: m.prove, provePasteDomainMeta: m.proveMeta, rotatePasteSecret: m.rotate, getPasteConnection: m.connection }));
 vi.mock('@/lib/paste/status', () => ({ readPasteInstallStatus: m.status }));
 vi.mock('@/lib/shopify/proxy-config-cache', () => ({ invalidateProxyConfig: m.invalidate }));
@@ -18,7 +19,8 @@ const site = { id: SITE, embed_key: 'gc_public_123456', status: 'active', role: 
 beforeEach(() => {
   vi.resetAllMocks(); vi.stubEnv('GRINDCTRL_CAPABILITY_SECRET', 'test-only-independent-core-secret-at-least-32-bytes');
   m.auth.mockResolvedValue({ userId: 'owner' }); m.access.mockResolvedValue(site); m.limit.mockResolvedValue(undefined);
-  m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1, status: 'active' });
+  m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1, status: 'active',
+    shop_proven_at: '2026-11-08T00:00:00Z', app_installed: false });
   m.rotate.mockResolvedValue({ version: 2, overlapUntil: '2026-11-08T15:15:00Z' });
 });
 afterEach(() => vi.unstubAllEnvs());
@@ -70,5 +72,15 @@ describe('owner-authorized paste plumbing actions', () => {
     expect(m.limit).toHaveBeenCalledWith(`paste:${SITE}:owner`, 'read');
     m.status.mockResolvedValue({ siteId: SITE, domains: [], connected: true });
     expect(await getPasteInstallStatusAction(SITE)).toEqual({ ok: true, data: { siteId: SITE, domains: [], connected: true } });
+  });
+  it('gives a pending Shopify shop its snippet (pasting it is the proof) but not a shop the app holds', async () => {
+    const pending = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1, status: 'pending',
+      shop_proven_at: null, app_installed: false };
+    m.connection.mockResolvedValue(pending);
+    expect((await getPasteSnippetAction(SITE)).ok).toBe(true);
+    m.connection.mockResolvedValue({ ...pending, app_installed: true });
+    expect(await getPasteSnippetAction(SITE)).toEqual({ ok: false, code: 'connection_conflict' });
+    m.connection.mockResolvedValue({ ...pending, status: 'disconnected', disconnected_reason: 'displaced' });
+    expect(await getPasteSnippetAction(SITE)).toEqual({ ok: false, code: 'not_found' });
   });
 });

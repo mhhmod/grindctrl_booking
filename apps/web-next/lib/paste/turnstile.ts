@@ -5,9 +5,15 @@ import type { VerifiedTryOnSession } from '@/lib/try-on/storefront-context';
 export const PASTE_TURNSTILE_ACTION = 'paste_tryon' as const;
 export type TurnstileResult = { ok: true } | { ok: false; code: 'turnstile_not_configured' | 'turnstile_required' | 'turnstile_failed' | 'turnstile_unavailable' };
 
+/** Read per request: a NEXT_PUBLIC_* value is inlined at build time, so the
+ *  runtime TURNSTILE_SITE_KEY wins and the public name is only a fallback. */
+export function pasteTurnstileSiteKey(): string | null {
+  return process.env.TURNSTILE_SITE_KEY?.trim() || process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || null;
+}
+
 /** Available to the embed's future UI; the secret is never returned. */
 export function pasteTurnstileConfig() {
-  return { siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null, action: PASTE_TURNSTILE_ACTION };
+  return { siteKey: pasteTurnstileSiteKey(), action: PASTE_TURNSTILE_ACTION };
 }
 
 /** Per-generation-attempt binding. Render Turnstile with this cData in our

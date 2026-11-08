@@ -21,7 +21,8 @@ vi.mock('@/lib/messenger/db', () => ({ getMessengerServiceClient: () => ({
 import { loadPublicSite, originAllowed } from './public-api';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
-const shop = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active', secret_version: 1 };
+const shop = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active', secret_version: 1,
+  shop_proven_at: '2026-11-08T00:00:00.000Z', disconnected_reason: null, app_installed: false };
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -37,10 +38,12 @@ describe('public site resolution for a Shopify paste store', () => {
     expect(originAllowed(site, 'https://other.myshopify.com', { trusted: true })).toBe(false);
   });
 
-  it('withholds only the shop host when the connection is disconnected, a website or unreadable', async () => {
+  it('withholds only the shop host when the connection is disconnected, a website, pending, app-held or unreadable', async () => {
     m.domains.mockReturnValue({ data: [{ pattern: 'merchant.example', verification_status: 'trusted',
       verification_method: 'paste_trusted', environment: 'production' }], error: null });
-    for (const connection of [{ ...shop, status: 'disconnected' }, { ...shop, platform: 'website', shop_domain: null }]) {
+    for (const connection of [{ ...shop, status: 'disconnected' }, { ...shop, platform: 'website', shop_domain: null },
+      // Typing a shop name is not proof, and the Shopify app wins the shop.
+      { ...shop, status: 'pending', shop_proven_at: null }, { ...shop, app_installed: true }]) {
       m.connection.mockResolvedValue(connection);
       const site = (await loadPublicSite('gc_public_key_42'))!;
       expect(site.pasteShopDomain).toBeNull();

@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const m = vi.hoisted(() => ({ connection: vi.fn(), domains: vi.fn(), plan: vi.fn(), launch: vi.fn(), flags: vi.fn() }));
-vi.mock('@/lib/paste/store', async (original) => ({
-  pasteShopHost: (await original<typeof import('@/lib/paste/store')>()).pasteShopHost,
-  getPasteConnection: m.connection, listPasteDomains: m.domains,
-}));
+vi.mock('@/lib/paste/store', async (original) => {
+  const actual = await original<typeof import('@/lib/paste/store')>();
+  return { pasteShopHost: actual.pasteShopHost, pasteTrust: actual.pasteTrust, getPasteConnection: m.connection, listPasteDomains: m.domains };
+});
+const PROVEN_AT = '2026-11-08T13:00:00.000Z';
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: m.plan }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: m.launch }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: m.flags }));
@@ -65,9 +66,10 @@ describe('paste read model and dashboard tenant', () => {
   });
   it('counts a Shopify store that only uses its .myshopify.com address as installed and Try-On ready', async () => {
     const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
-      first_seen_at: '2026-11-08T14:00:00.000Z', last_seen_at: '2026-11-08T14:55:00.000Z' };
+      first_seen_at: '2026-11-08T14:00:00.000Z', last_seen_at: '2026-11-08T14:55:00.000Z', shop_proven_at: PROVEN_AT, app_installed: false };
     m.connection.mockResolvedValue(shop); m.domains.mockResolvedValue([]);
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
+      shopProof: 'proven', shopProvenAt: PROVEN_AT, trusted: true, connectionReason: null,
       shopDomain: 'merchant.myshopify.com', shopFirstSeenAt: shop.first_seen_at, shopLastSeenAt: shop.last_seen_at,
       seen: true, seenHost: 'merchant.myshopify.com', chatLive: true, tryOnReady: true, tryOnReason: null,
     });
@@ -76,11 +78,40 @@ describe('paste read model and dashboard tenant', () => {
   });
   it('names the most recently seen host among the shop and trusted domains', async () => {
     m.connection.mockResolvedValue({ widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com',
-      secret_version: 1, first_seen_at: '2026-11-08T14:50:00.000Z', last_seen_at: '2026-11-08T14:50:00.000Z' });
+      secret_version: 1, first_seen_at: '2026-11-08T14:50:00.000Z', last_seen_at: '2026-11-08T14:50:00.000Z', shop_proven_at: PROVEN_AT, app_installed: false });
     m.domains.mockResolvedValue([{ id: 'a', domain: 'merchant.example', state: 'trusted', lastSeenAt: '2026-11-08T14:58:00.000Z' }]);
     expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).seenHost).toBe('merchant.example');
     m.domains.mockResolvedValue([{ id: 'a', domain: 'merchant.example', state: 'trusted', lastSeenAt: '2026-11-08T14:40:00.000Z' }]);
     expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).seenHost).toBe('merchant.myshopify.com');
+  });
+  it('says a Shopify shop is waiting for its code until a signed render proves it', async () => {
+    const pending = { widget_site_id: SITE, status: 'pending', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      first_seen_at: null, last_seen_at: null, shop_proven_at: null, app_installed: false };
+    m.connection.mockResolvedValue(pending);
+    m.domains.mockResolvedValue([{ id: 'a', domain: 'merchant.example', state: 'trusted', lastSeenAt: NOW.toISOString() }]);
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
+      connected: true, trusted: false, connectionReason: 'shop_proof_pending', shopProof: 'pending', shopProvenAt: null,
+      seen: false, seenHost: null, chatLive: false, tryOnReady: false, tryOnReason: 'shop_proof_pending',
+    });
+  });
+  it('hands the shop to the Shopify app at read time, and names a displaced claim', async () => {
+    const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      first_seen_at: NOW.toISOString(), last_seen_at: NOW.toISOString(), shop_proven_at: PROVEN_AT, app_installed: true };
+    m.connection.mockResolvedValue(shop); m.domains.mockResolvedValue([]);
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
+      trusted: false, connectionReason: 'shopify_app_installed', tryOnReason: 'shopify_app_installed', seen: false, chatLive: false,
+      shopLastSeenAt: null,
+    });
+    m.connection.mockResolvedValue({ ...shop, status: 'disconnected', app_installed: false, disconnected_reason: 'displaced' });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
+      connected: false, trusted: false, shopProof: null, connectionReason: 'shop_proven_elsewhere', tryOnReason: 'shop_proven_elsewhere',
+    });
+  });
+  it('treats Turnstile as configured from the runtime site key', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');
+    expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).turnstileConfigured).toBe(false);
+    vi.stubEnv('TURNSTILE_SITE_KEY', '0x4RUNTIME0000000000000');
+    expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).turnstileConfigured).toBe(true);
   });
   it('never exposes shop signal times for a website connection', async () => {
     m.connection.mockResolvedValue({ status: 'active', platform: 'website', shop_domain: null, secret_version: 1, first_seen_at: NOW.toISOString(), last_seen_at: NOW.toISOString() });

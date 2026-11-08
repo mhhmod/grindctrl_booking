@@ -34,7 +34,7 @@ function load(): Promise<Turnstile> {
 
 /** Only the server's website-paste attempt carries a binding. Never preload for
  * Shopify/Woo/demo or trust a query parameter to decide challenge exemptions.
- * siteKey is NEXT_PUBLIC_TURNSTILE_SITE_KEY, returned by the attempt route. */
+ * siteKey is read at runtime on the server (TURNSTILE_SITE_KEY) and returned by the attempt route. */
 export async function attemptTurnstileToken(binding: TryOnAttempt['turnstile']): Promise<string | undefined> {
   if (!binding) return undefined;
   if (!binding.siteKey || binding.action !== 'paste_tryon' || !binding.cData || window.location.pathname !== '/embed/try-on') {

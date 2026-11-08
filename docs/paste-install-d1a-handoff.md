@@ -44,10 +44,29 @@ is never a `widget_domains` row, because `.myshopify.com` cannot be added
 as an address. It is trusted through the connection instead: origin checks
 (`loadPublicSite` sets `pasteShopDomain`), `pasteTrustedHosts` (paste
 context, generation recheck, garment hosts) and signals all accept it like
-a trusted domain, with its first/last seen times on the connection row. One
-active connection may hold a shop. For the once-per-apex free plan a shop
-is its own apex (`registrableDomain` in `lib/woo/free-plan.ts`), never
-`myshopify.com`.
+a trusted domain, with its first/last seen times on the connection row. For
+the once-per-apex free plan a shop is its own apex (`registrableDomain` in
+`lib/woo/free-plan.ts`), never `myshopify.com`.
+
+Typing a shop name proves nothing. Enabling Shopify paste creates the
+connection as `pending`; any number of sites may be pending for one shop.
+The first render accepted by `/api/try-on/paste-context` whose Liquid HMAC
+verifies with that site's own derived secret calls `prove_paste_shop`: the
+site becomes the shop's one `active` holder (`shop_proven_at`), and every
+other pending/active claim on the shop is `disconnected` with
+`disconnected_reason = 'displaced'` (its owner can re-enable). The proving
+render may come from the shop host or one of the site's trusted domain rows.
+Only `pasteTrust(connection) === 'trusted'` (`lib/paste/store.ts`) admits the
+shop host, signals, Try-On capabilities, garment hosts and the tenant. A
+Shopify paste store earns its free plan only from a signed render
+(`record_paste_install_signal(..., p_signed => true)`), claiming the shop
+and the storefront apex it ran on; Origin-only signals return `recorded`.
+Domain rows keep their own per-row trust lifecycle.
+
+An active `shopify_installations` row for the shop always wins. It is read
+on every `getPasteConnection` and inside every paste RPC, so an app install
+after a paste connection takes effect without any webhook: enabling is
+refused and the connection reports `shopify_app_installed`.
 
 Typing a domain, enabling an install, generating a snippet or reading status
 never grants a subscription. The first authorized signal calls the existing
@@ -189,7 +208,12 @@ a trusted domain or the shop host within the existing 30-minute window, in
 any launch mode: use this for "installed"), `chatLive` (seen, and shoppers
 see chat: live or holdout mode), Try-On readiness/reason, complete plan
 state, effective preview/live/holdout mode, rotation metadata and whether
-Turnstile is configured. It contains no signing secret. Missing migrations
+Turnstile is configured. `connected` means paste is enabled (a pending shop
+included, so its snippet is served); `trusted` means our code is trusted;
+`connectionReason` is null or `paste_not_connected`, `shop_proof_pending`,
+`shop_proven_elsewhere` or `shopify_app_installed` (also used as
+`tryOnReason`); `shopProof` is `pending` ("Waiting for your code on your
+store"), `proven` or null, with `shopProvenAt`. It contains no signing secret. Missing migrations
 are typed `schema_not_ready` for new operations where identifiable; legacy
 connection lookups/signals degrade to no paste connection/no-op.
 
@@ -199,11 +223,14 @@ The complete migration text is `supabase/20261108_paste_install.sql`.
 It is additive/idempotent, with the existing status CHECK widened to admit
 trusted/disputed states, two new server-only RLS tables, signal columns,
 unique trust index, serialized invoker RPCs and private trigger guards.
-No SQL was executed. Database semantics and migration execution have only
-source-contract/mock coverage, not real PostgreSQL execution/concurrency proof.
+No SQL was run against a real database. `lib/paste/paste-install-sql.test.ts`
+executes the migration twice in PGlite over minimal legacy fixtures and the
+real `20261105_woo_dashboard_plans.sql`; concurrency under real load is not
+proven.
 
-New configuration names: `TURNSTILE_SECRET_KEY`,
-`NEXT_PUBLIC_TURNSTILE_SITE_KEY`. Existing required configuration:
+New configuration names: `TURNSTILE_SECRET_KEY` and `TURNSTILE_SITE_KEY`,
+both read at runtime (`NEXT_PUBLIC_TURNSTILE_SITE_KEY` is only a build-time
+fallback for the site key). Existing required configuration:
 `GRINDCTRL_CAPABILITY_SECRET`, `NEXT_PUBLIC_APP_URL`,
 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`,
 `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
