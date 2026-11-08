@@ -1,0 +1,4 @@
+# The WooCommerce plugin zip is byte-compared with its source in CI (Linux):
+# keep the source LF on every machine so a Windows build matches.
+integrations/woocommerce/** text eol=lf
+*.zip binary
