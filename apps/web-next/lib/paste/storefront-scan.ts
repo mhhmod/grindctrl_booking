@@ -1,0 +1,367 @@
+import 'server-only';
+import { promises as dns } from 'node:dns';
+import https from 'node:https';
+import { isIP } from 'node:net';
+import type { Readable } from 'node:stream';
+import { createBrotliDecompress, createGunzip, createInflate } from 'node:zlib';
+import { isNonPublicAddress } from '@/lib/woo/public-address';
+import { liquidMacMatches } from './signing';
+import { PasteError, type PasteConnection, type PasteShopCheckOutcome } from './types';
+
+/* Proof of theme control for a pending Shopify paste shop. Our server
+   fetches the shop's own storefront and looks for this site's snippet
+   output: the rendered <script data-gc-site="SITE" data-gc-shop="SHOP" ...>
+   tag, signed with this site's Liquid secret for this shop. Only the shop's
+   theme can put that tag on that storefront, so a site owner who merely
+   signs a render naming someone else's shop can never produce it.
+
+   The fetch is SSRF-hardened like the garment and meta-proof transports:
+   HTTPS on 443 only, no credentials, every resolved address public and the
+   socket pinned to the checked address, strict timeouts, a small body cap
+   and a few redirects, only between the shop's myshopify host and the
+   primary domain that host itself redirects to. */
+
+export const STOREFRONT_MAX_BODY_BYTES = 2 * 1024 * 1024;
+export const STOREFRONT_MAX_REDIRECTS = 4;
+export const STOREFRONT_REQUEST_TIMEOUT_MS = 5_000;
+export const STOREFRONT_TOTAL_TIMEOUT_MS = 12_000;
+const DNS_TIMEOUT_MS = 3_000;
+const MAX_TAGS = 32;
+const MAX_COOKIES_PER_HOST = 32;
+const MAX_COOKIE_BYTES = 4096;
+const MAX_FORM_FIELDS = 16;
+const USER_AGENT = 'GRINDCTRL-StoreCheck/1 (+https://grindctrl.cloud)';
+
+declare const evidenceBrand: unique symbol;
+/** Produced only here, from this site's signed snippet found on the shop's
+ *  own storefront by our server. provePasteShop requires it. */
+export type StorefrontEvidence = { readonly [evidenceBrand]: true; readonly siteId: string; readonly shopDomain: string };
+
+/** How long a storefront finding (`awaiting_visit`) stays usable. */
+export const STOREFRONT_FINDING_TTL_SECONDS = 15 * 60;
+
+/** Our server found this site's snippet on the storefront at most
+ *  STOREFRONT_FINDING_TTL_SECONDS ago (stored as `awaiting_visit`, possibly
+ *  behind the storefront password): a signed render arriving now completes
+ *  the proof without fetching again. */
+export function recordedStorefrontEvidence(connection: PasteConnection, nowMs: number): StorefrontEvidence | null {
+  const at = connection.shop_checked_at ? Date.parse(connection.shop_checked_at) : NaN;
+  if (connection.platform !== 'shopify' || !connection.shop_domain || connection.shop_check_outcome !== 'awaiting_visit'
+    || !Number.isFinite(at) || at > nowMs + 60_000 || nowMs - at > STOREFRONT_FINDING_TTL_SECONDS * 1000) return null;
+  return { siteId: connection.widget_site_id, shopDomain: connection.shop_domain } as StorefrontEvidence;
+}
+
+export type StorefrontScanOutcome =Exclude<PasteShopCheckOutcome, 'proven' | 'awaiting_visit'>;
+/** Why a check was `unreachable`, for logs only. */
+export type StorefrontFailure = 'dns' | 'private_address' | 'foreign_redirect' | 'bad_redirect' | 'too_many_redirects'
+  | 'status' | 'not_html' | 'too_large' | 'timeout' | 'network' | 'password_form';
+export type StorefrontScan =
+  | { outcome: 'found'; evidence: StorefrontEvidence; host: string }
+  | { outcome: StorefrontScanOutcome; failure?: StorefrontFailure };
+
+export type StorefrontRequest = {
+  url: URL; address: string; family: 4 | 6; method: 'GET' | 'POST';
+  headers: Record<string, string>; body?: string; signal: AbortSignal;
+};
+export type StorefrontResponse = { status: number; location: string | null; contentType: string; setCookie: string[]; body: Buffer };
+/** Resolves with the response, or rejects (timeout, network, oversize). */
+export type StorefrontTransport = (request: StorefrontRequest) => Promise<StorefrontResponse>;
+export type StorefrontLookup = (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+
+export class StorefrontTooLargeError extends Error {
+  constructor() { super('storefront_too_large'); this.name = 'StorefrontTooLargeError'; }
+}
+
+class ScanStop extends Error {
+  constructor(readonly failure: StorefrontFailure) { super(failure); this.name = 'ScanStop'; }
+}
+
+const defaultLookup: StorefrontLookup = (hostname) => dns.lookup(hostname, { all: true, verbatim: true });
+
+/** Reads at most `max` bytes, rejecting as soon as the stream exceeds it. */
+export async function readCapped(stream: Readable, max: number): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for await (const chunk of stream) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk as string);
+    total += buffer.length;
+    if (total > max) { stream.destroy(); throw new StorefrontTooLargeError(); }
+    chunks.push(buffer);
+  }
+  return Buffer.concat(chunks);
+}
+
+/** HTTPS to a pre-checked address. The TLS name stays the URL host, the
+ *  socket goes only to `address`, nothing is followed automatically and
+ *  the decoded body is capped. Errors never include the request body. */
+export const pinnedStorefrontTransport: StorefrontTransport = (input) => new Promise((resolve, reject) => {
+  const request = https.request({
+    protocol: 'https:', hostname: input.url.hostname, servername: input.url.hostname, port: 443,
+    path: `${input.url.pathname}${input.url.search}`, method: input.method, agent: false,
+    headers: { ...input.headers, 'accept-encoding': 'gzip, deflate, br' },
+    timeout: STOREFRONT_REQUEST_TIMEOUT_MS, signal: input.signal,
+    lookup: (_host, options, callback) => {
+      if ((options as { all?: boolean }).all) {
+        (callback as unknown as (error: null, addresses: unknown) => void)(null, [{ address: input.address, family: input.family }]);
+      } else {
+        callback(null, input.address, input.family);
+      }
+    },
+  }, (response) => {
+    const status = response.statusCode ?? 0;
+    const header = (name: string) => { const value = response.headers[name]; return Array.isArray(value) ? value[0] : value; };
+    const meta = {
+      status, location: header('location') ?? null,
+      contentType: String(header('content-type') ?? '').split(';')[0].trim().toLowerCase(),
+      setCookie: response.headers['set-cookie'] ?? [],
+    };
+    if (status >= 300 && status < 400) { response.resume(); resolve({ ...meta, body: Buffer.alloc(0) }); return; }
+    if (Number(header('content-length')) > STOREFRONT_MAX_BODY_BYTES) { request.destroy(); reject(new StorefrontTooLargeError()); return; }
+    const encoding = String(header('content-encoding') ?? 'identity').trim().toLowerCase();
+    const decoder = encoding === 'gzip' || encoding === 'x-gzip' ? createGunzip() : encoding === 'br' ? createBrotliDecompress()
+      : encoding === 'deflate' ? createInflate() : null;
+    if (!decoder && encoding !== 'identity' && encoding !== '') { request.destroy(); reject(new Error('storefront_encoding')); return; }
+    const source: Readable = decoder ? response.pipe(decoder) : response;
+    if (decoder) response.once('error', (error) => decoder.destroy(error));
+    readCapped(source, STOREFRONT_MAX_BODY_BYTES).then((body) => resolve({ ...meta, body }), (error) => {
+      request.destroy(); reject(error);
+    });
+  });
+  request.on('timeout', () => request.destroy(new Error('storefront_timeout')));
+  request.on('error', reject);
+  request.end(input.body);
+});
+
+/** Shape rules every hop must pass. */
+function safeUrl(url: URL): boolean {
+  const host = url.hostname;
+  return url.protocol === 'https:' && !url.port && !url.username && !url.password
+    && host.length <= 253 && host.includes('.') && !host.endsWith('.') && isIP(host.replace(/^\[|\]$/g, '')) === 0;
+}
+
+async function resolvePublic(host: string, lookup: StorefrontLookup): Promise<{ address: string; family: 4 | 6 }> {
+  let addresses: Array<{ address: string; family: number }>;
+  try {
+    addresses = await Promise.race([
+      lookup(host),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), DNS_TIMEOUT_MS).unref()),
+    ]);
+  } catch { throw new ScanStop('dns'); }
+  if (!addresses.length) throw new ScanStop('dns');
+  // One private answer taints the host: a mixed set is a rebinding setup.
+  if (addresses.some((entry) => isNonPublicAddress(entry.address))) throw new ScanStop('private_address');
+  return { address: addresses[0].address, family: addresses[0].family === 6 ? 6 : 4 };
+}
+
+/** Attributes of one start tag; null when a name repeats (parsers disagree
+ *  on which copy wins, so such a tag never counts). */
+function parseAttributes(source: string): Map<string, string> | null {
+  const attrs = new Map<string, string>();
+  for (const match of source.matchAll(/([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {
+    const name = match[1].toLowerCase();
+    if (attrs.has(name)) return null;
+    attrs.set(name, match[2] ?? match[3] ?? match[4] ?? '');
+  }
+  return attrs;
+}
+
+// Elements whose content is text, not markup: a tag spelled inside them
+// (a JSON blob, a review, a noscript fallback) is never a rendered tag.
+const RAW_TEXT = new Set(['script', 'style', 'textarea', 'title', 'xmp', 'noscript', 'iframe', 'noembed', 'noframes', 'template']);
+// Quoted values cannot contain < or >, which bounds every match attempt.
+const START_TAG = /<!--|<([a-zA-Z][a-zA-Z0-9-]*)((?:[^"'<>]|"[^"<>]*"|'[^'<>]*')*)>/g;
+
+type StartTag = { name: string; attrs: Map<string, string> };
+
+/** Start tags of real elements, skipping comments and raw-text content. */
+function startTags(html: string): StartTag[] {
+  const tags: StartTag[] = [];
+  const pattern = new RegExp(START_TAG.source, 'g');
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(html))) {
+    if (match[0] === '<!--') {
+      const end = html.indexOf('-->', match.index + 4);
+      if (end < 0) break;
+      pattern.lastIndex = end + 3;
+      continue;
+    }
+    const name = match[1].toLowerCase();
+    const attrs = parseAttributes(match[2]);
+    if (attrs) tags.push({ name, attrs });
+    if (RAW_TEXT.has(name)) {
+      const close = new RegExp(`</${name}\\s*>`, 'gi');
+      close.lastIndex = pattern.lastIndex;
+      const end = close.exec(html);
+      if (!end) break;
+      pattern.lastIndex = end.index + end[0].length;
+    }
+  }
+  return tags;
+}
+
+/** The rendered paste snippet tags on a page, at most MAX_TAGS of them. */
+export function findPasteTags(html: string): Array<Map<string, string>> {
+  return startTags(html)
+    .filter((tag) => tag.name === 'script' && tag.attrs.get('data-gc-install') === 'paste' && tag.attrs.get('data-gc-platform') === 'shopify')
+    .slice(0, MAX_TAGS).map((tag) => tag.attrs);
+}
+
+export type PasswordForm = { action: string; fields: Array<[string, string]>; passwordField: string };
+
+/** Shopify's storefront password page: a form posting form_type
+ *  storefront_password. Its hidden fields are replayed with the password. */
+export function findPasswordForm(html: string): PasswordForm | null {
+  // The bounded body keeps a page full of unclosed forms linear.
+  for (const form of html.matchAll(/<form\b((?:[^"'<>]|"[^"<>]*"|'[^'<>]*')*)>([\s\S]{0,65536}?)<\/form\s*>/gi)) {
+    const formAttrs = parseAttributes(form[1]);
+    if (!formAttrs) continue;
+    const fields: Array<[string, string]> = [];
+    let passwordField: string | null = null;
+    let storefrontPassword = false;
+    for (const input of form[2].matchAll(/<input\b((?:[^"'<>]|"[^"<>]*"|'[^'<>]*')*)>/gi)) {
+      const attrs = parseAttributes(input[1]);
+      const name = attrs?.get('name');
+      if (!attrs || !name || name.length > 128) continue;
+      const type = (attrs.get('type') ?? 'text').toLowerCase();
+      if (type === 'password') { passwordField ??= name; continue; }
+      if (type !== 'hidden') continue;
+      const value = attrs.get('value') ?? '';
+      if (name === 'form_type' && value === 'storefront_password') storefrontPassword = true;
+      if (fields.length < MAX_FORM_FIELDS && value.length <= 512) fields.push([name, value]);
+    }
+    if (storefrontPassword) return { action: formAttrs.get('action') || '/password', fields, passwordField: passwordField ?? 'password' };
+  }
+  return null;
+}
+
+type TagVerdict = 'found' | 'outdated_code' | 'wrong_site' | 'not_found';
+
+/** `found` only for a tag naming this site and this shop whose MAC verifies
+ *  with this site's current (or overlapping previous) Liquid secret. */
+export function classifyTags(connection: PasteConnection, tags: Array<Map<string, string>>, nowSeconds: number): TagVerdict {
+  const mine = tags.filter((tag) => tag.get('data-gc-site') === connection.widget_site_id);
+  for (const tag of mine) {
+    const claims = {
+      siteId: connection.widget_site_id, shopDomain: tag.get('data-gc-shop') ?? '',
+      // Empty outside a product page: Liquid renders a nil product as ''.
+      productId: tag.get('data-gc-product') ?? '', variantId: tag.get('data-gc-variant') ?? '',
+      issuedAt: tag.get('data-gc-issued-at') ?? '', customerId: tag.get('data-gc-customer') ?? '',
+    };
+    if (claims.shopDomain !== connection.shop_domain || !/^\d{1,12}$/.test(claims.issuedAt)
+      || ![claims.productId, claims.variantId, claims.customerId].every((id) => /^(?:[1-9]\d{0,19})?$/.test(id))) continue;
+    const matched = liquidMacMatches(connection, claims, tag.get('data-gc-signature') ?? '', nowSeconds);
+    if (matched === null) throw new PasteError('unavailable');
+    if (matched) return 'found';
+  }
+  if (mine.length) return 'outdated_code';
+  return tags.length ? 'wrong_site' : 'not_found';
+}
+
+class CookieJar {
+  private readonly hosts = new Map<string, Map<string, string>>();
+  store(host: string, headers: string[]): void {
+    const jar = this.hosts.get(host) ?? new Map<string, string>();
+    for (const header of headers) {
+      const pair = header.split(';', 1)[0];
+      const index = pair.indexOf('=');
+      if (index < 1 || pair.length > MAX_COOKIE_BYTES) continue;
+      const name = pair.slice(0, index).trim();
+      if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name)) continue;
+      if (!jar.has(name) && jar.size >= MAX_COOKIES_PER_HOST) continue;
+      jar.set(name, pair.slice(index + 1).trim());
+    }
+    this.hosts.set(host, jar);
+  }
+  header(host: string): string | null {
+    const jar = this.hosts.get(host);
+    return jar?.size ? [...jar].map(([name, value]) => `${name}=${value}`).join('; ') : null;
+  }
+}
+
+function twin(host: string): string { return host.startsWith('www.') ? host.slice(4) : `www.${host}`; }
+
+/** Fetches the pending shop's storefront and reports what it shows for
+ *  this site. Never throws for storefront behavior; throws PasteError only
+ *  when our own signing configuration is unavailable. The password, when
+ *  given, is sent once to the shop's own /password form and nowhere else,
+ *  and appears in no result, log or error. */
+export async function scanShopStorefront(connection: PasteConnection, options: {
+  password?: string; transport?: StorefrontTransport; lookup?: StorefrontLookup; nowSeconds?: number;
+} = {}): Promise<StorefrontScan> {
+  const shop = connection.shop_domain;
+  if (connection.platform !== 'shopify' || !shop) return { outcome: 'not_found' };
+  const transport = options.transport ?? pinnedStorefrontTransport;
+  const lookup = options.lookup ?? defaultLookup;
+  const nowSeconds = options.nowSeconds ?? Math.floor(Date.now() / 1000);
+  const signal = AbortSignal.timeout(STOREFRONT_TOTAL_TIMEOUT_MS);
+  const allowed = new Set([shop]);
+  let primary: string | null = null;
+  const jar = new CookieJar();
+  let url = new URL(`https://${shop}/`);
+  let method: 'GET' | 'POST' = 'GET';
+  let body: string | undefined;
+  let passwordSent = false;
+  let redirects = 0;
+  try {
+    // Every request (redirect hops and the one password post) is bounded.
+    for (let requests = 0; requests < STOREFRONT_MAX_REDIRECTS + 3; requests++) {
+      const target = await resolvePublic(url.hostname, lookup);
+      const headers: Record<string, string> = { 'user-agent': USER_AGENT, accept: 'text/html,application/xhtml+xml', 'accept-language': 'en' };
+      const cookie = jar.header(url.hostname);
+      if (cookie) headers.cookie = cookie;
+      if (method === 'POST') {
+        Object.assign(headers, { 'content-type': 'application/x-www-form-urlencoded', origin: url.origin, referer: `${url.origin}/password` });
+      }
+      let response: StorefrontResponse;
+      try {
+        response = await transport({ url, ...target, method, headers, body, signal });
+      } catch (error) {
+        throw new ScanStop(error instanceof StorefrontTooLargeError ? 'too_large' : signal.aborted
+          || (error instanceof Error && /timeout|abort/i.test(error.message + error.name)) ? 'timeout' : 'network');
+      }
+      jar.store(url.hostname, response.setCookie);
+      method = 'GET'; body = undefined;
+      if (response.status >= 300 && response.status < 400) {
+        if (++redirects > STOREFRONT_MAX_REDIRECTS) throw new ScanStop('too_many_redirects');
+        if (!response.location || response.location.length > 2048 || !URL.canParse(response.location, url)) throw new ScanStop('bad_redirect');
+        const next = new URL(response.location, url);
+        if (!safeUrl(next)) throw new ScanStop('bad_redirect');
+        if (!allowed.has(next.hostname)) {
+          // Only the myshopify host itself may name the primary domain, once,
+          // and never another shop's myshopify host.
+          if (primary || url.hostname !== shop || next.hostname.endsWith('.myshopify.com')) throw new ScanStop('foreign_redirect');
+          primary = next.hostname;
+          allowed.add(primary).add(twin(primary));
+        }
+        url = next;
+        continue;
+      }
+      if (response.body.length > STOREFRONT_MAX_BODY_BYTES) throw new ScanStop('too_large');
+      if (response.contentType !== 'text/html') throw new ScanStop('not_html');
+      const html = response.body.toString('utf8');
+      if (response.status === 200) {
+        const verdict = classifyTags(connection, findPasteTags(html), nowSeconds);
+        if (verdict === 'found') {
+          return { outcome: 'found', host: url.hostname, evidence: { siteId: connection.widget_site_id, shopDomain: shop } as StorefrontEvidence };
+        }
+        if (!findPasswordForm(html)) return { outcome: verdict };
+      }
+      const form = [200, 401, 403].includes(response.status) ? findPasswordForm(html) : null;
+      if (!form) throw new ScanStop('status');
+      if (passwordSent) return { outcome: 'password_rejected' };
+      if (!options.password) return { outcome: 'password_required' };
+      const action = URL.canParse(form.action, url) ? new URL(form.action, url) : null;
+      // The password goes only to this same storefront host's /password.
+      if (!action || action.hostname !== url.hostname || action.pathname !== '/password' || !safeUrl(action)) throw new ScanStop('password_form');
+      const fields = new URLSearchParams(form.fields.filter(([name]) => name !== form.passwordField));
+      fields.set(form.passwordField, options.password);
+      url = new URL('/password', url);
+      method = 'POST'; body = fields.toString(); passwordSent = true;
+    }
+    throw new ScanStop('too_many_redirects');
+  } catch (error) {
+    if (error instanceof ScanStop) return { outcome: 'unreachable', failure: error.failure };
+    if (error instanceof PasteError) throw error;
+    return { outcome: 'unreachable', failure: 'network' };
+  }
+}

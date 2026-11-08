@@ -24,6 +24,8 @@ const NO_LIMITERS = {
   proxyVisitor: null,
   proxyShopRead: null,
   proxyShopMint: null,
+  pasteShopCheckSite: null,
+  pasteShopCheckShop: null,
 } as const;
 
 function createRatelimiters(): {
@@ -34,6 +36,8 @@ function createRatelimiters(): {
   proxyVisitor: Ratelimit | null;
   proxyShopRead: Ratelimit | null;
   proxyShopMint: Ratelimit | null;
+  pasteShopCheckSite: Ratelimit | null;
+  pasteShopCheckShop: Ratelimit | null;
 } {
   /* Redis.fromEnv() only warns when vars are missing, producing a client
      that throws per-call. The strict guard rejects this unconfigured facade
@@ -102,6 +106,22 @@ function createRatelimiters(): {
         prefix: 'gc-ratelimit:proxy-shop-mint',
         analytics: false,
       }),
+      /* Our server fetching a pending Shopify paste shop's storefront
+         (lib/paste/shop-proof.ts). Per site, so one merchant's checks stay
+         cheap; per shop, so any number of sites claiming one shop cannot
+         turn us into a crawler of that storefront. */
+      pasteShopCheckSite: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '600 s'),
+        prefix: 'gc-ratelimit:paste-shop-check-site',
+        analytics: false,
+      }),
+      pasteShopCheckShop: new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(30, '600 s'),
+        prefix: 'gc-ratelimit:paste-shop-check-shop',
+        analytics: false,
+      }),
     };
   } catch {
     console.error(
@@ -130,6 +150,8 @@ export const merchantWriteRatelimit = limiterFacade(limiters.merchantWrite);
 export const proxyVisitorRatelimit = limiterFacade(limiters.proxyVisitor);
 export const proxyShopReadRatelimit = limiterFacade(limiters.proxyShopRead);
 export const proxyShopMintRatelimit = limiterFacade(limiters.proxyShopMint);
+export const pasteShopCheckSiteRatelimit = limiterFacade(limiters.pasteShopCheckSite);
+export const pasteShopCheckShopRatelimit = limiterFacade(limiters.pasteShopCheckShop);
 
 /* Identity of the requesting network for rate-limit keying. Prefers the
    RIGHTMOST x-forwarded-for entry: every proxy on the path appends to the

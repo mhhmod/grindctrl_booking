@@ -18,8 +18,10 @@ vi.mock('@/lib/messenger/db', () => ({ getMessengerServiceClient: () => ({
   },
 }) }));
 import { addPasteDomain, listPasteDomains, provePasteDomain, removePasteDomain, normalizePasteDomain, recordPasteSignal, getPasteConnection,
-  pasteProofHosts, pasteShopHost, pasteTrust, pasteTrustedHosts, provePasteShop } from '@/lib/paste/store';
+  pasteProofHosts, pasteShopHost, pasteTrust, pasteTrustedHosts, provePasteShop, recordPasteShopRender, beginPasteShopCheck,
+  finishPasteShopCheck } from '@/lib/paste/store';
 import type { PasteConnection } from '@/lib/paste/types';
+import type { StorefrontEvidence } from '@/lib/paste/storefront-scan';
 import { decideOrigin } from './origins';
 const SITE = '11111111-1111-4111-8111-111111111111';
 const row = { id: 'domain-a', widget_site_id: SITE, domain: 'merchant.example', verification_status: 'trusted', verification_method: 'paste_trusted',
@@ -132,7 +134,8 @@ describe('origin authorization after trust and disputes', () => {
 describe('trusted hosts include the signed shop', () => {
   const shop: PasteConnection = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active',
     secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
-    shop_proven_at: '2026-11-08T00:00:00.000Z', disconnected_reason: null, app_installed: false };
+    shop_proven_at: '2026-11-08T00:00:00.000Z', disconnected_reason: null, shop_render_at: null, shop_check_outcome: null,
+    shop_checked_at: null, app_installed: false };
   it('returns the shop host for a store with no domain rows, plus trusted rows and their www alias', async () => {
     expect(pasteShopHost(shop)).toBe('merchant.myshopify.com');
     expect(await pasteTrustedHosts(shop)).toEqual(['merchant.myshopify.com']);
@@ -187,17 +190,34 @@ describe('connection read', () => {
 describe('shop proof', () => {
   const pending: PasteConnection = { widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'pending',
     secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
-    shop_proven_at: null, disconnected_reason: null, app_installed: false };
-  it.each(['proven', 'shopify_app_installed', 'not_pending'])('passes through %s', async (result) => {
+    shop_proven_at: null, disconnected_reason: null, shop_render_at: null, shop_check_outcome: null, shop_checked_at: null,
+    app_installed: false };
+  const evidence = { siteId: SITE, shopDomain: 'merchant.myshopify.com' } as StorefrontEvidence;
+  it.each(['proven', 'render_required', 'shopify_app_installed', 'not_pending'])('passes through %s', async (result) => {
     m.rpc.mockResolvedValue({ data: result, error: null });
-    expect(await provePasteShop(pending)).toBe(result);
+    expect(await provePasteShop(pending, evidence)).toBe(result);
     expect(m.rpc).toHaveBeenCalledWith('prove_paste_shop', { p_site: SITE, p_shop: 'merchant.myshopify.com' });
   });
-  it('never proves a website and fails closed on an unknown answer', async () => {
-    expect(await provePasteShop({ ...pending, platform: 'website', shop_domain: null })).toBe('not_pending');
+  it('never proves a website or with evidence for another site or shop, and fails closed on an unknown answer', async () => {
+    expect(await provePasteShop({ ...pending, platform: 'website', shop_domain: null }, evidence)).toBe('not_pending');
+    for (const other of [{ siteId: '22222222-2222-4222-8222-222222222222', shopDomain: 'merchant.myshopify.com' },
+      { siteId: SITE, shopDomain: 'victim.myshopify.com' }]) {
+      await expect(provePasteShop(pending, other as StorefrontEvidence)).rejects.toMatchObject({ code: 'proof_failed' });
+    }
     expect(m.rpc).not.toHaveBeenCalled();
     m.rpc.mockResolvedValue({ data: 'yes', error: null });
-    await expect(provePasteShop(pending)).rejects.toMatchObject({ code: 'unavailable' });
+    await expect(provePasteShop(pending, evidence)).rejects.toMatchObject({ code: 'unavailable' });
+  });
+  it('records renders, leases checks and stores outcomes through their RPCs, failing closed on unknown answers', async () => {
+    m.rpc.mockResolvedValue({ data: 'recorded', error: null });
+    expect(await recordPasteShopRender(pending)).toBe('recorded');
+    expect(m.rpc).toHaveBeenLastCalledWith('record_paste_shop_render', { p_site: SITE, p_shop: 'merchant.myshopify.com' });
+    await finishPasteShopCheck(pending, 'password_required');
+    expect(m.rpc).toHaveBeenLastCalledWith('finish_paste_shop_check', { p_site: SITE, p_shop: 'merchant.myshopify.com', p_outcome: 'password_required' });
+    m.rpc.mockResolvedValue({ data: 'busy', error: null });
+    expect(await beginPasteShopCheck(pending)).toBe('busy');
+    expect(m.rpc).toHaveBeenLastCalledWith('begin_paste_shop_check', { p_site: SITE, p_shop: 'merchant.myshopify.com' });
+    await expect(recordPasteShopRender(pending)).rejects.toMatchObject({ code: 'unavailable' });
   });
 });
 

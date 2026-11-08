@@ -66,10 +66,12 @@ describe('paste read model and dashboard tenant', () => {
   });
   it('counts a Shopify store that only uses its .myshopify.com address as installed and Try-On ready', async () => {
     const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
-      first_seen_at: '2026-11-08T14:00:00.000Z', last_seen_at: '2026-11-08T14:55:00.000Z', shop_proven_at: PROVEN_AT, app_installed: false };
+      first_seen_at: '2026-11-08T14:00:00.000Z', last_seen_at: '2026-11-08T14:55:00.000Z', shop_proven_at: PROVEN_AT,
+      shop_check_outcome: 'proven', shop_checked_at: PROVEN_AT, app_installed: false };
     m.connection.mockResolvedValue(shop); m.domains.mockResolvedValue([]);
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
       shopProof: 'proven', shopProvenAt: PROVEN_AT, trusted: true, connectionReason: null,
+      shopCheck: { outcome: 'proven', checkedAt: PROVEN_AT, retryAfterSeconds: null },
       shopDomain: 'merchant.myshopify.com', shopFirstSeenAt: shop.first_seen_at, shopLastSeenAt: shop.last_seen_at,
       seen: true, seenHost: 'merchant.myshopify.com', chatLive: true, tryOnReady: true, tryOnReason: null,
     });
@@ -84,15 +86,22 @@ describe('paste read model and dashboard tenant', () => {
     m.domains.mockResolvedValue([{ id: 'a', domain: 'merchant.example', state: 'trusted', lastSeenAt: '2026-11-08T14:40:00.000Z' }]);
     expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).seenHost).toBe('merchant.myshopify.com');
   });
-  it('says a Shopify shop is waiting for its code until a signed render proves it', async () => {
+  it('says a Shopify shop is waiting for its code until the storefront proof completes', async () => {
     const pending = { widget_site_id: SITE, status: 'pending', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
-      first_seen_at: null, last_seen_at: null, shop_proven_at: null, app_installed: false };
+      first_seen_at: null, last_seen_at: null, shop_proven_at: null, shop_check_outcome: null, shop_checked_at: null, app_installed: false };
     m.connection.mockResolvedValue(pending);
     m.domains.mockResolvedValue([{ id: 'a', domain: 'merchant.example', state: 'trusted', lastSeenAt: NOW.toISOString() }]);
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
-      connected: true, trusted: false, connectionReason: 'shop_proof_pending', shopProof: 'pending', shopProvenAt: null,
+      connected: true, trusted: false, connectionReason: 'shop_proof_pending', shopProof: 'pending', shopProvenAt: null, shopCheck: null,
       seen: false, seenHost: null, chatLive: false, tryOnReady: false, tryOnReason: 'shop_proof_pending',
     });
+    const checkedAt = new Date(NOW.getTime() - 10_000).toISOString();
+    m.connection.mockResolvedValue({ ...pending, shop_check_outcome: 'password_required', shop_checked_at: checkedAt });
+    expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).shopCheck)
+      .toEqual({ outcome: 'password_required', checkedAt, retryAfterSeconds: 20 });
+    m.connection.mockResolvedValue({ ...pending, shop_check_outcome: 'awaiting_visit', shop_checked_at: checkedAt });
+    expect((await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).shopCheck)
+      .toEqual({ outcome: 'awaiting_visit', checkedAt, retryAfterSeconds: null });
   });
   it('hands the shop to the Shopify app at read time, and names a displaced claim', async () => {
     const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,

@@ -33,12 +33,47 @@ export type PasteConnection = {
    *  connection rather than a widget_domains row. Always null for websites. */
   first_seen_at: string | null;
   last_seen_at: string | null;
-  /** When a signed Liquid render from the shop's theme proved this site. */
+  /** When the storefront proof (our fetch found this site's signed snippet
+   *  on the shop, plus a signed render) made this site the shop's holder. */
   shop_proven_at: string | null;
+  /** Pending Shopify only: the last verified signed render (second factor). */
+  shop_render_at: string | null;
+  /** The last storefront check our server ran for this connection. */
+  shop_check_outcome: PasteShopCheckOutcome | null;
+  shop_checked_at: string | null;
   /** `displaced`: another site proved the same shop after this one. */
   disconnected_reason: 'displaced' | null;
   /** Read live from shopify_installations, never stored: the app wins the shop. */
   app_installed: boolean;
+};
+
+/** What our server's last storefront fetch for a pending Shopify shop found.
+ *  `proven`: this site's snippet is on the storefront and a signed render
+ *    arrived, so this site holds the shop.
+ *  `awaiting_visit`: this site's snippet is on the storefront, but no signed
+ *    render arrived from it in the last day: open any product page.
+ *  `not_found`: the storefront does not show our code yet.
+ *  `outdated_code`: it shows this site's code, but signed with a retired
+ *    secret (the snippet was rotated) or for another shop: paste it again.
+ *  `wrong_site`: it shows another GRINDCTRL site's code, not this one's.
+ *  `password_required`: the store is password protected (Shopify's password
+ *    page); check again with the storefront password.
+ *  `password_rejected`: the supplied storefront password did not open it.
+ *  `unreachable`: the storefront did not answer with a page we can check
+ *    (timeout, error status, bot challenge, foreign redirect, oversize). */
+export type PasteShopCheckOutcome = 'proven' | 'awaiting_visit' | 'not_found' | 'outdated_code' | 'wrong_site'
+  | 'password_required' | 'password_rejected' | 'unreachable';
+
+/** The result of a storefront check ("Check my store" or a render). */
+export type PasteShopProof = {
+  shopProof: 'pending' | 'proven';
+  shopProvenAt: string | null;
+  /** `rate_limited` is never stored: no check ran this time. */
+  outcome: PasteShopCheckOutcome | 'rate_limited';
+  /** When the reported outcome was observed; null when rate limited. */
+  checkedAt: string | null;
+  /** Seconds until another check can run; null when one can run now. */
+  retryAfterSeconds: number | null;
 };
 
 /** Why a connection is (not) trusted for origins, signals and Try-On. */
@@ -86,6 +121,8 @@ export type PasteContextResponse = {
 export type PasteContextFailure = {
   error: 'invalid_request' | 'not_found' | 'paste_not_connected' | 'site_disconnected' | 'origin_not_allowed'
     | 'bad_signature' | 'stale_signature' | 'replayed' | 'rate_limited' | 'unavailable' | 'free_plan_taken'
+    /** A pending shop's render verified, but the storefront proof is not complete. */
+    | 'shop_proof_pending' | 'shopify_app_installed'
     | 'preview' | 'holdout' | 'garment_unsafe' | 'out_of_looks' | 'paused' | 'not_installed' | 'plan_inactive';
 };
 export type PasteContextResult = PasteContextResponse | PasteContextFailure;

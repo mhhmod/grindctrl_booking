@@ -3,8 +3,9 @@
 -- No secret plaintext, new storage bucket, policy or browser grant.
 -- SECURITY INVOKER RPCs are service-role-only; all writes are atomic.
 -- Existing rows retain their meaning; trusted/disputed are additive states.
--- Shopify paste connections stay pending until a signed render proves the
--- shop; an active Shopify app install on the shop always takes precedence.
+-- Shopify paste connections stay pending until our server finds the site's
+-- signed snippet on the shop's storefront and a signed render arrives; an
+-- active Shopify app install on the shop always takes precedence.
 -- Executed against PGlite by apps/web-next/lib/paste/paste-install-sql.test.ts.
 begin;
 
@@ -35,12 +36,22 @@ alter table public.paste_site_connections
   add column if not exists last_seen_at timestamptz,
   add column if not exists shop_proven_at timestamptz,
   add column if not exists disconnected_at timestamptz,
-  add column if not exists disconnected_reason text;
+  add column if not exists disconnected_reason text,
+  -- Pending Shopify proof bookkeeping. shop_render_at: the last verified
+  -- signed render for this pending site (the second proof factor).
+  -- shop_check_*: the last storefront check our server ran, and its lease.
+  add column if not exists shop_render_at timestamptz,
+  add column if not exists shop_check_outcome text,
+  add column if not exists shop_checked_at timestamptz,
+  add column if not exists shop_check_started_at timestamptz;
 -- Typing a shop name proves nothing. A Shopify connection starts pending
 -- (any number of sites may be pending for one shop) and becomes active only
--- through prove_paste_shop, after a signed Liquid render from that shop's
--- theme. One active, proven holder per shop. Websites are active at once:
--- their trust is per domain row.
+-- through prove_paste_shop, after our server fetched the shop's storefront
+-- and found this site's signed snippet there, AND a signed Liquid render
+-- for this site arrived from the storefront. A signed render alone is not
+-- proof: any site owner can sign a render naming any shop. One active,
+-- proven holder per shop. Websites are active at once: their trust is per
+-- domain row.
 alter table public.paste_site_connections drop constraint if exists paste_site_connections_status_check;
 alter table public.paste_site_connections add constraint paste_site_connections_status_check
   check (status in ('pending', 'active', 'disconnected'));
@@ -51,6 +62,10 @@ alter table public.paste_site_connections add constraint paste_site_connections_
 alter table public.paste_site_connections drop constraint if exists paste_site_connections_reason_check;
 alter table public.paste_site_connections add constraint paste_site_connections_reason_check
   check (disconnected_reason is null or (status = 'disconnected' and disconnected_reason in ('displaced')));
+alter table public.paste_site_connections drop constraint if exists paste_site_connections_shop_check_check;
+alter table public.paste_site_connections add constraint paste_site_connections_shop_check_check
+  check (shop_check_outcome is null or (platform = 'shopify' and shop_check_outcome in ('proven', 'awaiting_visit',
+    'not_found', 'outdated_code', 'wrong_site', 'password_required', 'password_rejected', 'unreachable')));
 create unique index if not exists paste_site_connections_active_shop_unique
   on public.paste_site_connections (shop_domain) where status = 'active' and shop_domain is not null;
 alter table public.paste_site_connections enable row level security;
@@ -128,6 +143,11 @@ begin
     on conflict (widget_site_id) do update set
       status = case when paste_site_connections.status = 'active' then 'active'
         when paste_site_connections.platform = 'shopify' then 'pending' else 'active' end,
+      -- A displaced claim starts its proof over; a live one keeps its state.
+      shop_render_at = case when paste_site_connections.status = 'disconnected' then null else paste_site_connections.shop_render_at end,
+      shop_check_outcome = case when paste_site_connections.status = 'disconnected' then null else paste_site_connections.shop_check_outcome end,
+      shop_checked_at = case when paste_site_connections.status = 'disconnected' then null else paste_site_connections.shop_checked_at end,
+      shop_check_started_at = case when paste_site_connections.status = 'disconnected' then null else paste_site_connections.shop_check_started_at end,
       disconnected_at = null, disconnected_reason = null;
   -- Reuse the existing non-Shopify site tenant model; install kind is held
   -- in paste_site_connections, never masquerades as Shopify Admin access.
@@ -295,13 +315,58 @@ begin
   return jsonb_build_object('version', c.secret_version, 'overlapUntil', c.previous_valid_until);
 end $$;
 
--- Called only after the server verified a Liquid render's HMAC with THIS
--- site's own derived secret and the render named this exact shop: the
--- shop's theme carries this site's code. The proven site becomes the
+-- The context route calls this after it verified a Liquid render's HMAC
+-- with THIS site's own derived secret for this exact shop. It is only the
+-- second proof factor: it shows a browser on the storefront ran a render,
+-- not that the shop's theme carries this site's code.
+-- Returns: recorded | not_pending | shopify_app_installed
+create or replace function public.record_paste_shop_render(p_site uuid, p_shop text) returns text
+language plpgsql security invoker set search_path = public, pg_temp as $$
+begin
+  if public.paste_shop_app_installed(p_shop) then return 'shopify_app_installed'; end if;
+  update public.paste_site_connections set shop_render_at = now()
+    where widget_site_id = p_site and platform = 'shopify' and shop_domain = p_shop and status = 'pending';
+  return case when found then 'recorded' else 'not_pending' end;
+end $$;
+
+-- A 30 second lease, so concurrent renders and clicks run one storefront
+-- fetch per site. A crashed check simply lets its lease expire.
+-- Returns: started | busy | not_pending | shopify_app_installed
+create or replace function public.begin_paste_shop_check(p_site uuid, p_shop text) returns text
+language plpgsql security invoker set search_path = public, pg_temp as $$
+begin
+  if public.paste_shop_app_installed(p_shop) then return 'shopify_app_installed'; end if;
+  if not exists(select 1 from public.paste_site_connections where widget_site_id = p_site and platform = 'shopify'
+    and shop_domain = p_shop and status = 'pending') then return 'not_pending'; end if;
+  update public.paste_site_connections set shop_check_started_at = now()
+    where widget_site_id = p_site and platform = 'shopify' and shop_domain = p_shop and status = 'pending'
+      and (shop_check_started_at is null or shop_check_started_at < now() - interval '30 seconds');
+  return case when found then 'started' else 'busy' end;
+end $$;
+
+-- Stores a storefront check that did not prove the shop, and ends the lease.
+-- 'proven' is written only by prove_paste_shop.
+-- Returns: recorded | not_pending | invalid
+create or replace function public.finish_paste_shop_check(p_site uuid, p_shop text, p_outcome text) returns text
+language plpgsql security invoker set search_path = public, pg_temp as $$
+begin
+  if p_outcome is null or p_outcome not in ('awaiting_visit', 'not_found', 'outdated_code', 'wrong_site',
+    'password_required', 'password_rejected', 'unreachable') then return 'invalid'; end if;
+  update public.paste_site_connections set shop_check_outcome = p_outcome, shop_checked_at = now(), shop_check_started_at = null
+    where widget_site_id = p_site and platform = 'shopify' and shop_domain = p_shop and status = 'pending';
+  return case when found then 'recorded' else 'not_pending' end;
+end $$;
+
+-- Called ONLY after our server fetched the shop's own storefront (its
+-- myshopify host, or the primary domain that host redirects to) and found
+-- this site's snippet output there, signed with this site's secret for this
+-- shop: the shop's theme carries this site's code. A signed render for this
+-- site must also have arrived within the last day (shop_render_at), so the
+-- code demonstrably runs on the storefront. The proven site becomes the
 -- shop's one active holder; every other pending/active paste connection
--- for the shop is disconnected as displaced (its owner can re-enable, and
--- its own next signed render would prove it again). Never grants a plan.
--- Returns: proven | shopify_app_installed | not_pending
+-- for the shop is disconnected as displaced (its owner can re-enable and
+-- would have to prove the shop again). Never grants a plan.
+-- Returns: proven | render_required | shopify_app_installed | not_pending
 create or replace function public.prove_paste_shop(p_site uuid, p_shop text) returns text
 language plpgsql security invoker set search_path = public, pg_temp as $$
 declare c public.paste_site_connections;
@@ -312,9 +377,11 @@ begin
     then return 'not_pending'; end if;
   if public.paste_shop_app_installed(c.shop_domain) then return 'shopify_app_installed'; end if;
   if c.status = 'active' then return 'proven'; end if;
+  if c.shop_render_at is null or c.shop_render_at < now() - interval '1 day' then return 'render_required'; end if;
   update public.paste_site_connections set status = 'disconnected', disconnected_at = now(), disconnected_reason = 'displaced'
     where shop_domain = c.shop_domain and widget_site_id <> p_site and status in ('active', 'pending');
   update public.paste_site_connections set status = 'active', shop_proven_at = now(),
+    shop_check_outcome = 'proven', shop_checked_at = now(), shop_check_started_at = null,
     disconnected_at = null, disconnected_reason = null where widget_site_id = p_site;
   return 'proven';
 end $$;
@@ -374,13 +441,17 @@ revoke all on function public.paste_host_matches(text,text) from public, anon, a
 revoke all on function public.paste_domain_operation(uuid,text,text,uuid,text) from public, anon, authenticated;
 revoke all on function public.rotate_paste_secret(uuid) from public, anon, authenticated;
 revoke all on function public.prove_paste_shop(uuid,text) from public, anon, authenticated;
+revoke all on function public.record_paste_shop_render(uuid,text) from public, anon, authenticated;
+revoke all on function public.begin_paste_shop_check(uuid,text) from public, anon, authenticated;
+revoke all on function public.finish_paste_shop_check(uuid,text,text) from public, anon, authenticated;
 revoke all on function public.record_paste_install_signal(uuid,text,text,boolean) from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_domain() from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_site_domain() from public, anon, authenticated;
 revoke all on function grindctrl_paste_private.guard_free_apex() from public, anon, authenticated;
 grant execute on function public.enable_paste_install(uuid,text,text), public.paste_shop_app_installed(text),
   public.paste_host(text), public.paste_host_matches(text,text), public.paste_domain_operation(uuid,text,text,uuid,text),
-  public.rotate_paste_secret(uuid), public.prove_paste_shop(uuid,text),
+  public.rotate_paste_secret(uuid), public.prove_paste_shop(uuid,text), public.record_paste_shop_render(uuid,text),
+  public.begin_paste_shop_check(uuid,text), public.finish_paste_shop_check(uuid,text,text),
   public.record_paste_install_signal(uuid,text,text,boolean) to service_role;
 commit;
 

@@ -48,14 +48,39 @@ a trusted domain, with its first/last seen times on the connection row. For
 the once-per-apex free plan a shop is its own apex (`registrableDomain` in
 `lib/woo/free-plan.ts`), never `myshopify.com`.
 
-Typing a shop name proves nothing. Enabling Shopify paste creates the
-connection as `pending`; any number of sites may be pending for one shop.
-The first render accepted by `/api/try-on/paste-context` whose Liquid HMAC
-verifies with that site's own derived secret calls `prove_paste_shop`: the
-site becomes the shop's one `active` holder (`shop_proven_at`), and every
-other pending/active claim on the shop is `disconnected` with
-`disconnected_reason = 'displaced'` (its owner can re-enable). The proving
-render may come from the shop host or one of the site's trusted domain rows.
+Typing a shop name proves nothing, and neither does a signed render alone:
+any site owner can sign a render naming any shop with their own secret.
+Enabling Shopify paste creates the connection as `pending`; any number of
+sites may be pending for one shop. Proof takes two factors:
+
+1. Storefront (`lib/paste/storefront-scan.ts`): our server fetches
+   `https://<shop>.myshopify.com/` and must find this site's rendered
+   snippet tag (`data-gc-site` = this site, `data-gc-shop` = this shop, MAC
+   valid under this site's current or overlapping Liquid secret) outside
+   comments and raw-text elements. HTTPS on 443 only, no credentials, every
+   resolved address public and the socket pinned to it, 5 s per request,
+   12 s per check, 2 MiB decoded body, at most 4 redirects, only between
+   the myshopify host and the one primary domain that host redirects to
+   (plus its `www` twin).
+2. Render: a render verified by `/api/try-on/paste-context` for this
+   pending site within the last day (`record_paste_shop_render`).
+
+`prove_paste_shop` refuses without a recent render (`render_required`) and
+`provePasteShop` requires the scan's `StorefrontEvidence`. Then the site
+becomes the shop's one `active` holder (`shop_proven_at`), and every other
+pending/active claim on the shop is `disconnected` with
+`disconnected_reason = 'displaced'` (re-enabling starts its proof over).
+A verified render triggers the check (`lib/paste/shop-proof.ts`); so does
+the owner's `provePasteShopAction`. Checks are leased per site for 30 s
+(`begin_paste_shop_check`), limited to 10 per site and 30 per shop per 10
+minutes, and a failed result is reused for 120 s (render) or 30 s (owner;
+a storefront password skips the wait). A finding stored as
+`awaiting_visit` lets the next render finish the proof within 15 minutes
+without fetching again. Password-protected stores answer
+`password_required`; a password given to the action is posted once to the
+storefront's own `/password` form with its hidden fields and session
+cookies, and is never stored, logged or returned. The proving render may
+come from the shop host or one of the site's trusted domain rows.
 Only `pasteTrust(connection) === 'trusted'` (`lib/paste/store.ts`) admits the
 shop host, signals, Try-On capabilities, garment hosts and the tenant. A
 Shopify paste store earns its free plan only from a signed render
@@ -195,9 +220,19 @@ provePasteDomainMetaAction(siteId: string, domainId: string): R<PasteDomain>;
 rotatePasteSecretAction(siteId: string): R<{ version: number; overlapUntil: string }>;
 getPasteSnippetAction(siteId: string): R<PasteSnippet>;
 getPasteInstallStatusAction(siteId: string): R<PasteInstallStatus>;
+provePasteShopAction(siteId: string, storefrontPassword?: string): R<PasteShopProof>; // "Check my store"
 ```
 
-Enable, rotate, snippet and status require owner `store` capability; status
+`PasteShopProof` (`lib/paste/types.ts`) is `{ shopProof: 'pending' |
+'proven'; shopProvenAt; outcome; checkedAt; retryAfterSeconds }` where
+`outcome` is `proven`, `awaiting_visit` (code found, open a product page),
+`not_found`, `outdated_code` (this site's code with a retired secret),
+`wrong_site` (another site's code), `password_required`,
+`password_rejected`, `unreachable` or `rate_limited` (with
+`retryAfterSeconds`). While a shop is pending the context route answers
+`403 { error: 'shop_proof_pending' }`.
+
+Enable, rotate, snippet, shop proof and status require owner `store` capability; status
 contains billing state and is therefore owner-only. Domain changes/proofs
 require `settings` capability. Every action resolves Clerk identity and site
 access before service-role work and applies strict merchant rate limits.
@@ -213,7 +248,9 @@ included, so its snippet is served); `trusted` means our code is trusted;
 `connectionReason` is null or `paste_not_connected`, `shop_proof_pending`,
 `shop_proven_elsewhere` or `shopify_app_installed` (also used as
 `tryOnReason`); `shopProof` is `pending` ("Waiting for your code on your
-store"), `proven` or null, with `shopProvenAt`. It contains no signing secret. Missing migrations
+store"), `proven` or null, with `shopProvenAt`; `shopCheck` is the last
+storefront check `{ outcome, checkedAt, retryAfterSeconds }` or null. It
+contains no signing secret. Missing migrations
 are typed `schema_not_ready` for new operations where identifiable; legacy
 connection lookups/signals degrade to no paste connection/no-op.
 

@@ -9,8 +9,9 @@ vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRate
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
 vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
-  getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, provePasteShop: m.prove,
-  recordPasteSignal: m.signal }));
+  getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal }));
+// The storefront proof (fetch + render factor) is unit-tested in lib/paste.
+vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.prove }));
 vi.mock('@/lib/paste/signing', async (original) => ({ ...await original<object>(), verifyLiquidSignature: m.signature }));
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: m.active }));
 vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: m.flags }));
@@ -28,6 +29,7 @@ import { verifyStorefrontContext } from '@/lib/try-on/storefront-context';
 import { pasteCapabilitySecret } from '@/lib/paste/signing';
 import { signPreviewToken } from '@/lib/launch/preview-token';
 import { signOriginToken } from '@/lib/messenger/identity';
+import { PasteError } from '@/lib/paste/types';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
 const CORE = 'test-only-independent-core-signing-secret-for-paste';
@@ -134,13 +136,13 @@ describe('pending Shopify shop proof', () => {
     // Not trusted yet: loadPublicSite withholds the shop host.
     m.site.mockResolvedValue({ ...site, patterns: [], pasteShopDomain: null });
     m.proofHosts.mockResolvedValue(['merchant.myshopify.com']);
-    m.prove.mockResolvedValue('proven');
+    m.prove.mockResolvedValue({ shopProof: 'proven', outcome: 'proven' });
   });
-  it('proves the shop on the first verified render, then mints and earns the plan as a signed render', async () => {
+  it('runs the storefront proof from a verified render, then mints and earns the plan as a signed render', async () => {
     const response = await shopPost();
     expect(response.status).toBe(200);
     expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ connection: pending }));
-    expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending);
+    expect(m.prove).toHaveBeenCalledExactlyOnceWith(pending, { kind: 'render' });
     expect(m.prove.mock.invocationCallOrder[0]).toBeLessThan(m.active.mock.invocationCallOrder[0]);
     expect(m.hosts).not.toHaveBeenCalled();
     expect(m.signal).toHaveBeenCalledWith(SITE, 'https://merchant.myshopify.com', { signed: true });
@@ -155,11 +157,23 @@ describe('pending Shopify shop proof', () => {
       'https://merchant.myshopify.com')).status).toBe(401);
     expect(m.prove).not.toHaveBeenCalled(); expect(m.signal).not.toHaveBeenCalled();
   });
-  it('stops when the Shopify app holds the shop or the claim was displaced meanwhile', async () => {
-    m.prove.mockResolvedValue('shopify_app_installed');
-    expect((await shopPost()).status).toBe(409);
-    m.prove.mockResolvedValue('not_pending');
+  it.each(['not_found', 'wrong_site', 'outdated_code', 'password_required', 'awaiting_visit', 'unreachable', 'rate_limited'])(
+    'never mints, signals or grants from a verified render while the storefront proof is %s', async (outcome) => {
+      // A forged render naming someone else's shop verifies against the
+      // forger's own secret, but our fetch of that shop finds no such code.
+      m.prove.mockResolvedValue({ shopProof: 'pending', outcome });
+      const response = await shopPost();
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({ error: 'shop_proof_pending' });
+      expect(m.signal).not.toHaveBeenCalled(); expect(m.active).not.toHaveBeenCalled();
+    });
+  it('stops when the Shopify app holds the shop, the claim was displaced meanwhile or the check is unavailable', async () => {
+    m.prove.mockRejectedValue(new PasteError('connection_conflict'));
+    expect(await (await shopPost()).json()).toEqual({ error: 'shopify_app_installed' });
+    m.prove.mockRejectedValue(new PasteError('not_found'));
     expect((await shopPost()).status).toBe(403);
+    m.prove.mockRejectedValue(new PasteError('unavailable'));
+    expect((await shopPost()).status).toBe(503);
     expect(m.signal).not.toHaveBeenCalled(); expect(m.active).not.toHaveBeenCalled();
   });
   it('refuses a connection the Shopify app already holds before checking any signature', async () => {

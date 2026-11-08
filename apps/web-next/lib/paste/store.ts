@@ -2,7 +2,8 @@ import 'server-only';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { normalizeStorefrontDomain, newVerificationToken, txtRecordFor, verifyDomainTxt } from '@/lib/messenger/domains';
 import { apexDomain, registrableDomain } from '@/lib/woo/free-plan';
-import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform, type PasteTrust } from './types';
+import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome, type PasteTrust } from './types';
+import type { StorefrontEvidence } from './storefront-scan';
 
 /** A connection's signed shop. Merchants cannot add it as a domain row;
  *  it is trusted through paste_site_connections.shop_domain instead. */
@@ -45,13 +46,16 @@ function checked<T>(result: { data: T; error: { code?: string } | null }): T {
   return result.data;
 }
 
+const SHOP_CHECK_OUTCOMES: readonly PasteShopCheckOutcome[] = ['proven', 'awaiting_visit', 'not_found', 'outdated_code',
+  'wrong_site', 'password_required', 'password_rejected', 'unreachable'];
+
 /** Throws when the read fails, so callers fail closed. Shopify connections
  *  also read shopify_installations on every call: an app installed after
  *  the paste connection takes the shop over without relying on a webhook. */
 export async function getPasteConnection(siteId: string): Promise<PasteConnection | null> {
   const db = getMessengerServiceClient();
   const result = await db.from('paste_site_connections')
-    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at, shop_proven_at, disconnected_reason')
+    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at, shop_proven_at, disconnected_reason, shop_render_at, shop_check_outcome, shop_checked_at')
     .eq('widget_site_id', siteId).maybeSingle();
   if (result.error && schemaMissing(result.error)) return null;
   const row = checked(result) as Omit<PasteConnection, 'app_installed'> | null;
@@ -68,7 +72,12 @@ export async function getPasteConnection(siteId: string): Promise<PasteConnectio
     if (install.error) throw new PasteError('unavailable');
     appInstalled = Array.isArray(install.data) && install.data.length > 0;
   }
-  return { ...row, disconnected_reason: row.disconnected_reason === 'displaced' ? 'displaced' : null, app_installed: appInstalled };
+  return {
+    ...row, disconnected_reason: row.disconnected_reason === 'displaced' ? 'displaced' : null,
+    shop_render_at: row.shop_render_at ?? null, shop_checked_at: row.shop_checked_at ?? null,
+    shop_check_outcome: SHOP_CHECK_OUTCOMES.find((outcome) => outcome === row.shop_check_outcome) ?? null,
+    app_installed: appInstalled,
+  };
 }
 
 /** Call only after requireSiteAccess. The RPC also locks the site and refuses
@@ -163,19 +172,50 @@ export async function rotatePasteSecret(siteId: string): Promise<{ version: numb
   return { version: value.version, overlapUntil: value.overlapUntil };
 }
 
-export type ShopProofResult = 'proven' | 'shopify_app_installed' | 'not_pending';
+export type ShopProofResult = 'proven' | 'render_required' | 'shopify_app_installed' | 'not_pending';
 
-/** Call ONLY after verifyLiquidSignature accepted a render for this pending
- *  connection: the HMAC was made with this site's own derived secret and
- *  names this exact shop. The RPC makes this site the shop's one active
- *  holder and disconnects any other pending/active claim on the shop. */
-export async function provePasteShop(connection: PasteConnection): Promise<ShopProofResult> {
+/** Proves the shop for this site. It takes the evidence only the storefront
+ *  scan produces (this site's signed snippet found on the shop's own
+ *  storefront), so a signed render alone can never reach it. The RPC also
+ *  requires a recent signed render (the second factor), then makes this
+ *  site the shop's one active holder and displaces every other claim. */
+export async function provePasteShop(connection: PasteConnection, evidence: StorefrontEvidence): Promise<ShopProofResult> {
   if (connection.platform !== 'shopify' || !connection.shop_domain) return 'not_pending';
+  if (evidence.siteId !== connection.widget_site_id || evidence.shopDomain !== connection.shop_domain) throw new PasteError('proof_failed');
   const data = checked(await getMessengerServiceClient().rpc('prove_paste_shop', {
     p_site: connection.widget_site_id, p_shop: connection.shop_domain,
   }));
-  if (data === 'proven' || data === 'shopify_app_installed' || data === 'not_pending') return data;
+  if (data === 'proven' || data === 'render_required' || data === 'shopify_app_installed' || data === 'not_pending') return data;
   throw new PasteError('unavailable');
+}
+
+type ShopRpcResult<T extends string> = T | 'not_pending' | 'shopify_app_installed';
+
+async function shopRpc<T extends string>(name: string, connection: PasteConnection, expected: readonly T[],
+  extra: Record<string, string> = {}): Promise<ShopRpcResult<T>> {
+  if (connection.platform !== 'shopify' || !connection.shop_domain) return 'not_pending';
+  const data = checked(await getMessengerServiceClient().rpc(name, {
+    p_site: connection.widget_site_id, p_shop: connection.shop_domain, ...extra,
+  }));
+  const known = [...expected, 'not_pending', 'shopify_app_installed'] as const;
+  const value = known.find((code) => code === data);
+  if (!value) throw new PasteError('unavailable');
+  return value as ShopRpcResult<T>;
+}
+
+/** The second proof factor: a render for this pending site verified. */
+export function recordPasteShopRender(connection: PasteConnection) {
+  return shopRpc('record_paste_shop_render', connection, ['recorded'] as const);
+}
+
+/** A 30 second per-site lease: `busy` while another check is running. */
+export function beginPasteShopCheck(connection: PasteConnection) {
+  return shopRpc('begin_paste_shop_check', connection, ['started', 'busy'] as const);
+}
+
+/** Stores a check that did not prove the shop and ends the lease. */
+export async function finishPasteShopCheck(connection: PasteConnection, outcome: Exclude<PasteShopCheckOutcome, 'proven'>): Promise<void> {
+  await shopRpc('finish_paste_shop_check', connection, ['recorded'] as const, { p_outcome: outcome });
 }
 
 export type PasteSignalResult = 'granted' | 'apex_taken' | 'recorded' | 'ignored' | 'unavailable';

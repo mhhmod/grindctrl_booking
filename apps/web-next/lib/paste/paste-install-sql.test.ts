@@ -24,11 +24,19 @@ const enable = (id: string, platform: string, shop: string | null = null) =>
 const op = (id: string, operation: string, domain: string | null, domainId: string | null = null, tok: string | null = token()) =>
   one<{ code: string; domain?: { id: string; verification_status: string; verification_token: string; verification_method: string } }>(
     'select paste_domain_operation($1,$2,$3,$4,$5) as value', [id, operation, domain, domainId, tok]);
-const prove = (id: string, shop: string) => one<string>('select prove_paste_shop($1,$2) as value', [id, shop]);
+const render = (id: string, shop: string) => one<string>('select record_paste_shop_render($1,$2) as value', [id, shop]);
+const begin = (id: string, shop: string) => one<string>('select begin_paste_shop_check($1,$2) as value', [id, shop]);
+const finish = (id: string, shop: string, outcome: string | null) =>
+  one<string>('select finish_paste_shop_check($1,$2,$3) as value', [id, shop, outcome]);
+const proveOnly = (id: string, shop: string) => one<string>('select prove_paste_shop($1,$2) as value', [id, shop]);
+/** The server calls prove only after its storefront fetch found the site's
+ *  snippet; a signed render (the second factor) must have arrived too. */
+const prove = async (id: string, shop: string) => { await render(id, shop); return proveOnly(id, shop); };
 const signal = (id: string, domain: string, apex: string, signed = false) =>
   one<string>('select record_paste_install_signal($1,$2,$3,$4) as value', [id, domain, apex, signed]);
 const connection = (id: string) => db.query<{ status: string; shop_proven_at: string | null; disconnected_reason: string | null;
-  last_seen_at: string | null }>('select * from paste_site_connections where widget_site_id=$1', [id]).then((r) => r.rows[0]);
+  last_seen_at: string | null; shop_render_at: string | null; shop_check_outcome: string | null; shop_checked_at: string | null;
+  shop_check_started_at: string | null }>('select * from paste_site_connections where widget_site_id=$1', [id]).then((r) => r.rows[0]);
 const subscribed = (id: string) => one<boolean>('select exists(select 1 from tryon_subscriptions where shop_domain=$1) as value', [`site:${id}`]);
 const apexes = (id: string) => db.query<{ apex: string }>('select apex from tryon_free_plan_apexes where widget_site_id=$1 order by apex', [id])
   .then((r) => r.rows.map((row) => row.apex));
@@ -162,6 +170,64 @@ describe('Shopify shop proof', () => {
     expect((await connection(merchant)).status).toBe('active');
   });
 
+  it('needs a recent signed render as the second factor, and a forged render alone proves nothing', async () => {
+    const merchant = await site(); const squatter = await site();
+    await enable(merchant, 'shopify', 'factor.myshopify.com');
+    await enable(squatter, 'shopify', 'factor.myshopify.com');
+    // The squatter's forged render is recorded, but only a storefront
+    // finding leads the server to call prove; the merchant's does.
+    expect(await render(squatter, 'factor.myshopify.com')).toBe('recorded');
+    expect(await proveOnly(merchant, 'factor.myshopify.com')).toBe('render_required');
+    expect((await connection(merchant)).status).toBe('pending');
+    expect((await connection(squatter)).status).toBe('pending');
+    await db.query("update paste_site_connections set shop_render_at = now() - interval '25 hours' where widget_site_id=$1", [merchant]);
+    expect(await proveOnly(merchant, 'factor.myshopify.com')).toBe('render_required');
+    expect(await render(merchant, 'factor.myshopify.com')).toBe('recorded');
+    expect(await render(merchant, 'other.myshopify.com')).toBe('not_pending');
+    expect(await proveOnly(merchant, 'factor.myshopify.com')).toBe('proven');
+    expect(await connection(merchant)).toMatchObject({ status: 'active', shop_check_outcome: 'proven', shop_check_started_at: null });
+    expect(await connection(squatter)).toMatchObject({ status: 'disconnected', disconnected_reason: 'displaced' });
+    // A proven or displaced connection takes no more renders or checks.
+    expect(await render(merchant, 'factor.myshopify.com')).toBe('not_pending');
+    expect(await render(squatter, 'factor.myshopify.com')).toBe('not_pending');
+    expect(await begin(squatter, 'factor.myshopify.com')).toBe('not_pending');
+  });
+
+  it('leases one storefront check at a time and stores only failed outcomes', async () => {
+    const s = await site();
+    await enable(s, 'shopify', 'lease.myshopify.com');
+    expect(await begin(s, 'lease.myshopify.com')).toBe('started');
+    expect(await begin(s, 'lease.myshopify.com')).toBe('busy');
+    expect(await begin(s, 'other.myshopify.com')).toBe('not_pending');
+    for (const bad of ['proven', 'bogus', null]) expect(await finish(s, 'lease.myshopify.com', bad)).toBe('invalid');
+    expect(await finish(s, 'lease.myshopify.com', 'password_required')).toBe('recorded');
+    expect(await connection(s)).toMatchObject({ shop_check_outcome: 'password_required', shop_check_started_at: null });
+    expect((await connection(s)).shop_checked_at).not.toBeNull();
+    expect(await begin(s, 'lease.myshopify.com')).toBe('started');
+    // An abandoned lease lapses after 30 seconds.
+    await db.query("update paste_site_connections set shop_check_started_at = now() - interval '31 seconds' where widget_site_id=$1", [s]);
+    expect(await begin(s, 'lease.myshopify.com')).toBe('started');
+    expect(await fails("update paste_site_connections set shop_check_outcome='bogus' where widget_site_id=$1", [s])).toBe('23514');
+    const w = await site();
+    await enable(w, 'website');
+    expect(await fails("update paste_site_connections set shop_check_outcome='not_found' where widget_site_id=$1", [w])).toBe('23514');
+  });
+
+  it('starts a displaced claim over when it is enabled again, and keeps a live one', async () => {
+    const first = await site(); const second = await site();
+    await enable(first, 'shopify', 'restart.myshopify.com');
+    await enable(second, 'shopify', 'restart.myshopify.com');
+    await render(first, 'restart.myshopify.com');
+    await finish(first, 'restart.myshopify.com', 'awaiting_visit');
+    expect(await enable(first, 'shopify', 'restart.myshopify.com')).toBe('enabled');
+    expect(await connection(first)).toMatchObject({ status: 'pending', shop_check_outcome: 'awaiting_visit' });
+    expect((await connection(first)).shop_render_at).not.toBeNull();
+    expect(await prove(second, 'restart.myshopify.com')).toBe('proven');
+    expect(await enable(first, 'shopify', 'restart.myshopify.com')).toBe('enabled');
+    expect(await connection(first)).toMatchObject({ status: 'pending', shop_render_at: null, shop_check_outcome: null,
+      shop_checked_at: null, shop_check_started_at: null });
+  });
+
   it('enforces the state invariants in the table itself', async () => {
     const a = await site(); const b = await site(); const w = await site();
     await enable(a, 'shopify', 'invariant.myshopify.com');
@@ -269,6 +335,9 @@ describe('trigger guards and grants', () => {
     for (const call of [
       ['select enable_paste_install($1,$2,null)', [s, 'website']],
       ['select prove_paste_shop($1,$2)', [s, 'x.myshopify.com']],
+      ['select record_paste_shop_render($1,$2)', [s, 'x.myshopify.com']],
+      ['select begin_paste_shop_check($1,$2)', [s, 'x.myshopify.com']],
+      ['select finish_paste_shop_check($1,$2,$3)', [s, 'x.myshopify.com', 'not_found']],
       ['select record_paste_install_signal($1,$2,$3,true)', [s, 'a.example', 'a.example']],
       ['select paste_domain_operation($1,$2,$3,null,null)', [s, 'add', 'a.example']],
     ] as const) {
@@ -296,7 +365,9 @@ describe('Shopify app installed on the shop', () => {
     await db.query("insert into shopify_installations(shop_domain, app_client_id, status) values ('arrives.myshopify.com','app','active')");
     expect(await signal(merchant, 'arrives.myshopify.com', 'arrives.myshopify.com', true)).toBe('ignored');
     expect(await subscribed(merchant)).toBe(false);
-    expect(await prove(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
+    expect(await proveOnly(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
+    expect(await render(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
+    expect(await begin(pending, 'arrives.myshopify.com')).toBe('shopify_app_installed');
     expect((await connection(pending)).status).toBe('pending');
     expect((await op(merchant, 'add', 'arrives-store.example')).code).toBe('connection_conflict');
     expect(await enable(await site(), 'shopify', 'arrives.myshopify.com')).toBe('connection_conflict');

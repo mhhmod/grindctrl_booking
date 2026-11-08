@@ -9,14 +9,15 @@ import { storeFlags } from '@/lib/flags/store-flags';
 import { pasteCapabilitySecret } from './signing';
 import { getPasteConnection, listPasteDomains, pasteShopHost, pasteTrust } from './store';
 import { pasteTurnstileSiteKey } from './turnstile';
-import type { PasteDomain, PastePlatform } from './types';
+import { cachedShopCheck, SHOP_CHECK_RETRY_SECONDS } from './shop-proof';
+import type { PasteDomain, PastePlatform, PasteShopCheckOutcome } from './types';
 
 /** Why the connection is not trusted yet; null once it is. */
 export type PasteConnectionReason =
   | 'paste_not_connected'
-  /** Shopify: enabled, waiting for the first signed render from the shop. */
+  /** Shopify: enabled, waiting for the storefront proof (see `shopCheck`). */
   | 'shop_proof_pending'
-  /** Another site's signed render proved this shop; re-enable to claim it back. */
+  /** Another site proved this shop from its storefront; re-enable to claim it back. */
   | 'shop_proven_elsewhere'
   /** The GrindCtrl Shopify app is installed on this shop and takes precedence. */
   | 'shopify_app_installed';
@@ -27,10 +28,15 @@ export type PasteInstallStatus = {
   platform: PastePlatform | null;
   /** The signed Shopify shop (implicitly trusted once proven); null for websites. */
   shopDomain: string | null;
-  /** Shopify only: `pending` until a signed render from the shop's theme
-   *  arrives ("Waiting for your code on your store"), then `proven`. */
+  /** Shopify only: `pending` ("Waiting for your code on your store") until
+   *  our server found this site's snippet on the shop's storefront and a
+   *  signed render arrived from it, then `proven`. */
   shopProof: 'pending' | 'proven' | null;
   shopProvenAt: string | null;
+  /** Shopify only: the last storefront check (provePasteShopAction or a
+   *  render), null before the first one. `retryAfterSeconds` is how long
+   *  "Check my store" reuses a failed result (a password skips the wait). */
+  shopCheck: { outcome: PasteShopCheckOutcome; checkedAt: string; retryAfterSeconds: number | null } | null;
   /** Signals on the shop host itself, which is not one of `domains`. */
   shopFirstSeenAt: string | null;
   shopLastSeenAt: string | null;
@@ -92,6 +98,10 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     siteId: site.id, tenantKey, platform: connection?.platform ?? null, shopDomain: connection?.shop_domain ?? null,
     shopProof: shop ? (shop.status === 'active' && shop.shop_proven_at ? 'proven' : 'pending') : null,
     shopProvenAt: shop?.shop_proven_at ?? null,
+    shopCheck: shop?.shop_check_outcome && shop.shop_checked_at ? {
+      outcome: shop.shop_check_outcome, checkedAt: shop.shop_checked_at,
+      retryAfterSeconds: cachedShopCheck(shop, SHOP_CHECK_RETRY_SECONDS.owner, now.getTime())?.retryAfterSeconds ?? null,
+    } : null,
     shopFirstSeenAt: shopHost ? connection?.first_seen_at ?? null : null,
     shopLastSeenAt: shopHost ? connection?.last_seen_at ?? null : null,
     connected, trusted, connectionReason, domains, seen, seenHost: seen ? signals[0].host : null,

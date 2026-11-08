@@ -37,7 +37,28 @@ export function liquidSignedMessage(input: LiquidClaims): string {
   return ['gc-paste-v1', input.siteId, input.shopDomain, input.productId, input.variantId, input.issuedAt, input.customerId].join('|');
 }
 
-export type SignatureResult = { ok: true } | { ok: false; code: 'bad_signature' | 'stale_signature' | 'replayed' | 'unavailable' };
+/** True when `signature` (64 lowercase hex) is the Liquid MAC of `claims`
+ *  under the connection's current secret, or its previous one during the
+ *  rotation overlap. Null when no secret can be derived. Checks the MAC
+ *  only: callers validate the claims themselves. */
+export function liquidMacMatches(connection: PasteConnection, claims: LiquidClaims, signature: string, nowSeconds: number): boolean | null {
+  if (!/^[a-f0-9]{64}$/.test(signature)) return false;
+  const versions = [connection.secret_version];
+  if (connection.previous_secret_version && connection.previous_valid_until
+    && Date.parse(connection.previous_valid_until) > nowSeconds * 1000) {
+    versions.push(connection.previous_secret_version);
+  }
+  let matched = false;
+  for (const version of versions) {
+    const secret = pasteLiquidSecret(claims.siteId, version);
+    if (!secret) return null;
+    const expected = createHmac('sha256', secret).update(liquidSignedMessage(claims), 'utf8').digest();
+    matched = timingSafeEqual(expected, Buffer.from(signature, 'hex')) || matched;
+  }
+  return matched;
+}
+
+export type SignatureResult ={ ok: true } | { ok: false; code: 'bad_signature' | 'stale_signature' | 'replayed' | 'unavailable' };
 export type ReplayClaim = (key: string, ttlSeconds: number) => Promise<boolean>;
 
 async function claimReplay(key: string, ttlSeconds: number): Promise<boolean> {
@@ -57,8 +78,9 @@ export async function verifyLiquidSignature(input: {
   visitor: string;
 }, options: { nowSeconds?: number; claim?: ReplayClaim } = {}): Promise<SignatureResult> {
   const { connection: c, claims: p, signature } = input;
-  // A pending connection is verified too: its first valid render is the
-  // proof of theme control that activates it (prove_paste_shop).
+  // A pending connection is verified too: a valid render is the second
+  // proof factor (record_paste_shop_render). It is never proof of theme
+  // control by itself; the storefront fetch in shop-proof.ts is.
   if (c.platform !== 'shopify' || c.status === 'disconnected' || c.app_installed || p.siteId !== c.widget_site_id
     || p.shopDomain !== c.shop_domain || !/^[1-9]\d{0,19}$/.test(p.productId)
     || !/^[1-9]\d{0,19}$/.test(p.variantId) || !/^\d{1,12}$/.test(p.issuedAt)
@@ -70,17 +92,8 @@ export async function verifyLiquidSignature(input: {
   if (issuedAt > now + PASTE_CLOCK_SKEW_SECONDS || now - issuedAt > PASTE_SIGNATURE_WINDOW_SECONDS) {
     return { ok: false, code: 'stale_signature' };
   }
-  const versions = [c.secret_version];
-  if (c.previous_secret_version && c.previous_valid_until && Date.parse(c.previous_valid_until) > now * 1000) {
-    versions.push(c.previous_secret_version);
-  }
-  let matched = false;
-  for (const version of versions) {
-    const secret = pasteLiquidSecret(p.siteId, version);
-    if (!secret) return { ok: false, code: 'unavailable' };
-    const expected = createHmac('sha256', secret).update(liquidSignedMessage(p), 'utf8').digest();
-    matched = timingSafeEqual(expected, Buffer.from(signature, 'hex')) || matched;
-  }
+  const matched = liquidMacMatches(c, p, signature, now);
+  if (matched === null) return { ok: false, code: 'unavailable' };
   if (!matched) return { ok: false, code: 'bad_signature' };
   // Do not include secret version: the same render must not earn another
   // mint during the overlap. Signature is omitted for the same reason.

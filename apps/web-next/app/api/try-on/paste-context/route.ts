@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
-import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, provePasteShop, recordPasteSignal } from '@/lib/paste/store';
+import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, recordPasteSignal } from '@/lib/paste/store';
+import { checkPasteShop } from '@/lib/paste/shop-proof';
+import { PasteError, type PasteContextResponse } from '@/lib/paste/types';
 import { pasteCapabilitySecret, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
 import { pasteTurnstileConfig } from '@/lib/paste/turnstile';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
@@ -18,7 +20,6 @@ import { launchAudience, launchVisitorId } from '@/lib/launch/audience';
 import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
 import { tryOnLaunchFromEntitlement } from '@/lib/try-on/launch';
-import type { PasteContextResponse } from '@/lib/paste/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -78,7 +79,7 @@ async function mint(request: NextRequest): Promise<Response> {
     const { origin, trusted } = provenOrigin(b.key, { headerOrigin: request.headers.get('origin'), originToken: b.originToken });
     const page = new URL(b.pageUrl);
     // A pending shop is not trusted anywhere yet. Its render may arrive from
-    // the shop host or a storefront domain row, and must prove itself below.
+    // the shop host or a storefront domain row; see the storefront proof below.
     const pending = trust === 'shop_proof_pending';
     const hosts = pending ? await pasteProofHosts(connection) : await pasteTrustedHosts(connection);
     if (!trusted || !origin || page.origin !== origin || page.protocol !== 'https:' || page.username || page.password || page.port
@@ -98,12 +99,19 @@ async function mint(request: NextRequest): Promise<Response> {
         signature: claims.signature as string, visitor: `${ip}:${b.visitorId}` });
       if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
       if (pending) {
-        // The first verified render proves theme control and activates this
-        // site as the shop's one holder, displacing any other claim on it.
-        const proof = await provePasteShop(connection);
-        if (proof === 'shopify_app_installed') return json({ error: 'shopify_app_installed' }, 409);
-        if (proof !== 'proven') return json({ error: 'paste_not_connected' }, 403);
-        console.info('[paste] shop proven by signed render', { code: 'paste_shop_proven', site: site.id });
+        // A verified render is only the second factor: anyone can sign a
+        // render naming any shop. It triggers our storefront fetch, which
+        // must find this site's signed snippet on the shop itself before
+        // this site becomes the shop's holder and displaces other claims.
+        let proof;
+        try {
+          proof = await checkPasteShop(connection, { kind: 'render' });
+        } catch (error) {
+          if (error instanceof PasteError && error.code === 'connection_conflict') return json({ error: 'shopify_app_installed' }, 409);
+          if (error instanceof PasteError && error.code === 'not_found') return json({ error: 'paste_not_connected' }, 403);
+          throw error;
+        }
+        if (proof.shopProof !== 'proven') return json({ error: 'shop_proof_pending' }, 403);
       }
     }
     if (!(await isActiveTenant(tenant))) return json({ error: 'site_disconnected' }, 403);

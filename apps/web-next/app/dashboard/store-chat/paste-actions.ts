@@ -11,8 +11,7 @@ import { addPasteDomain, removePasteDomain, provePasteDomain, provePasteDomainMe
 import { buildPasteSnippet } from '@/lib/paste/snippet';
 import { readPasteInstallStatus, type PasteInstallStatus } from '@/lib/paste/status';
 import { pasteCapabilitySecret } from '@/lib/paste/signing';
-import { PasteError, type PasteDomain, type PastePlatform, type PasteResult, type PasteSnippet } from '@/lib/paste/types';
-
+import { PasteError, type PasteDomain, type PastePlatform, type PasteResult, type PasteShopProof, type PasteSnippet } from '@/lib/paste/types';
 async function authorized<T>(siteId: string, capability: DashboardCapability, mode: 'read' | 'write',
   work: (site: Awaited<ReturnType<typeof requireSiteAccess>>) => Promise<T>): Promise<PasteResult<T>> {
   try {
@@ -74,6 +73,20 @@ export async function getPasteSnippetAction(siteId: string): Promise<PasteResult
     if (!connection || trust === 'not_connected') throw new PasteError('not_found');
     if (trust === 'shopify_app_installed') throw new PasteError('connection_conflict');
     return buildPasteSnippet(connection, site.embed_key);
+  });
+}
+
+/** "Check my store": our server fetches the pending shop's storefront and
+ * looks for this site's signed snippet. Once found, and a signed render has
+ * come from the store (opening any product page), this site holds the shop.
+ * `storefrontPassword` opens a password-protected store for this one check;
+ * it is never stored, logged or returned. Owner only, like enabling. */
+export async function provePasteShopAction(siteId: string, storefrontPassword?: string): Promise<PasteResult<PasteShopProof>> {
+  return authorized(siteId, 'store', 'write', async (site) => {
+    const password = typeof storefrontPassword === 'string' && storefrontPassword !== '' ? storefrontPassword : undefined;
+    const connection = await getPasteConnection(site.id);
+    const { checkPasteShop } = await import('@/lib/paste/shop-proof');
+    return checkPasteShop(connection, { kind: 'owner', password });
   });
 }
 
