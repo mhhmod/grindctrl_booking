@@ -3,11 +3,15 @@
 import 'server-only';
 
 import { createClient } from '@supabase/supabase-js';
+import { invalidateProxyConfig } from '@/lib/shopify/proxy-config-cache';
 
 export type SettingsRow = Row;
 
 export type TryOnSettings = {
   shop: string;
+  /** The storefront Try-On button, on every platform. false hides it from
+      shoppers (launch reason `paused`); a missing value means on. */
+  showButton: boolean;
   buttonLabel: string;
   /* Arabic variants of the strings the merchant writes. null or blank means
      "not translated": the widget falls back to the default-language value
@@ -44,6 +48,7 @@ export type TryOnSettings = {
 
 export const DEFAULT_SETTINGS: TryOnSettings = {
   shop: 'default',
+  showButton: true,
   buttonLabel: 'Try it on with AI',
   buttonLabelAr: 'جرّبها بالذكاء الاصطناعي',
   accentBg: '#2a2826',
@@ -77,6 +82,8 @@ function getServiceClient() {
 
 type Row = {
   shop: string;
+  /* Absent until supabase/20261108_tryon_show_button.sql runs. */
+  show_button?: boolean | null;
   button_label: string | null;
   button_label_ar: string | null;
   accent_bg: string | null;
@@ -105,6 +112,7 @@ export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettin
   if (!row) return base;
   return {
     shop: row.shop,
+    showButton: row.show_button ?? base.showButton,
     buttonLabel: row.button_label ?? base.buttonLabel,
     buttonLabelAr: row.button_label_ar ?? base.buttonLabelAr,
     accentBg: row.accent_bg ?? base.accentBg,
@@ -166,22 +174,66 @@ async function loadSettings(shop?: string | null, { strict = false }: { strict?:
   }
 
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
-  const { data, error } = await supabase
-    .from('tryon_settings')
-    .select('shop, button_label, button_label_ar, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_label_ar, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text, disclaimer_text_ar')
-    .in('shop', shops);
+  const select = (columns: string) => supabase.from('tryon_settings').select(columns).in('shop', shops);
+  let { data, error } = await select(`${SETTINGS_COLUMNS}, show_button`);
+  // Before the show_button migration: read the rest, and the button is on.
+  if (error && isMissingShowButtonColumn(error)) ({ data, error } = await select(SETTINGS_COLUMNS));
 
   if (error || !data) {
     if (strict) throw new Error(error?.message ?? 'try-on settings read returned nothing');
     return DEFAULT_SETTINGS;
   }
 
-  const defaults = mergeSettings(DEFAULT_SETTINGS, data.find((r) => r.shop === 'default') ?? null);
-  const shopRow = shop ? (data.find((r) => r.shop === shop) ?? null) : null;
+  const rows = data as unknown as Row[];
+  const defaults = mergeSettings(DEFAULT_SETTINGS, rows.find((r) => r.shop === 'default') ?? null);
+  const shopRow = shop ? (rows.find((r) => r.shop === shop) ?? null) : null;
   return mergeSettings(defaults, shopRow);
 }
 
+const SETTINGS_COLUMNS =
+  'shop, button_label, button_label_ar, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_label_ar, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text, disclaimer_text_ar';
+
+/** PostgREST's answer while 20261108_tryon_show_button.sql has not run:
+ *  42703 for a read, PGRST204 for a write that names the column. */
+function isMissingShowButtonColumn(error: { code?: string | null; message?: string | null }): boolean {
+  return (error.code === '42703' || error.code === 'PGRST204') && /show_button/.test(error.message ?? '');
+}
+
+/** Turning the button off needs the show_button column, which the database
+ *  does not have yet. Nothing was saved. */
+export class TryOnShowButtonUnavailableError extends Error {
+  readonly code = 'show_button_unavailable' as const;
+  constructor() {
+    super('The Try-On button switch is not available yet. Nothing was saved.');
+    this.name = 'TryOnShowButtonUnavailableError';
+  }
+}
+
+/** Whether the shop's storefront Try-On button is switched on, merged the
+ *  way getTryOnSettings merges it (the shop's row over the global row; a
+ *  missing value is on). Every storefront launch answer calls this, so it
+ *  reads one column rather than the whole row.
+ *
+ *  On without storage and before the migration. Throws on a failed read, so
+ *  the launch answer reports `unavailable` rather than guessing. */
+export async function readTryOnShowButton(shop: string): Promise<boolean> {
+  const supabase = getServiceClient();
+  if (!supabase) return true;
+  const { data, error } = await supabase
+    .from('tryon_settings')
+    .select('shop, show_button')
+    .in('shop', shop === 'default' ? ['default'] : ['default', shop]);
+  if (error) {
+    if (isMissingShowButtonColumn(error)) return true;
+    throw new Error(`try-on button switch read failed: ${error.message}`);
+  }
+  const rows = (data ?? []) as Array<{ shop: string; show_button: boolean | null }>;
+  const value = (key: string) => rows.find((row) => row.shop === key)?.show_button;
+  return value(shop) ?? value('default') ?? true;
+}
+
 const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
+  showButton: 'show_button',
   buttonLabel: 'button_label',
   buttonLabelAr: 'button_label_ar',
   accentBg: 'accent_bg',
@@ -231,12 +283,22 @@ export async function saveTryOnSettings(
     }
   }
 
-  const { error } = await supabase.from('tryon_settings').upsert(payload);
+  let { error } = await supabase.from('tryon_settings').upsert(payload);
+  if (error && isMissingShowButtonColumn(error) && Object.hasOwn(payload, 'show_button')) {
+    /* Before the migration every button is on, so a save that says "on" (an
+       editor sending every field) keeps the rest; "off" cannot be stored and
+       must not look saved. */
+    if (payload.show_button === false) throw new TryOnShowButtonUnavailableError();
+    delete payload.show_button;
+    ({ error } = await supabase.from('tryon_settings').upsert(payload));
+  }
 
   if (error) {
     console.error('tryon_settings upsert failed:', error.message);
     return false;
   }
+  // The storefront config answer is cached for a minute: show a saved switch or style now.
+  invalidateProxyConfig(shop);
   return true;
 }
 

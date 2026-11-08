@@ -4,6 +4,7 @@ import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { adminGraphql } from '@/lib/shopify/admin';
 import { getShopToken } from '@/lib/shopify/tokens';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
+import { readTryOnShowButton } from '@/lib/try-on/settings';
 import { withoutTestLooks } from '@/lib/try-on/test-looks';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
 import type { ResultsPeriod } from './tryon-insights-copy';
@@ -98,9 +99,11 @@ export async function getTryOnResultsFacts({
   period: ResultsPeriod;
   now?: number;
 }): Promise<TryOnResultsFacts> {
-  const [jobs, entitlement] = await Promise.all([
+  const [jobs, entitlement, showButton] = await Promise.all([
     storeLooks(shop, period, now),
     getShopEntitlement(shop).catch(() => null),
+    // The header must not say live while the merchant has the button switched off.
+    readTryOnShowButton(shop).catch(() => true),
   ]);
   /* A WooCommerce store has no Admin API to name products from, and its
      jobs carry no title, so its products show as their handle, as when a
@@ -111,5 +114,5 @@ export async function getTryOnResultsFacts({
         console.error('[try-on results] product titles failed:', error instanceof Error ? error.message : error);
         return {};
       });
-  return { now, period, live: entitlement ? entitlement.available : null, jobs, products };
+  return { now, period, live: entitlement ? entitlement.available && showButton : null, jobs, products };
 }

@@ -243,10 +243,10 @@ describe('tryon-woo.js', () => {
     expect(url.searchParams.get('product_id')).toBe('42');
   });
 
-  it('removes the button when the store cannot start a look now', async () => {
+  it.each(['out_of_looks', 'paused'])('removes the button when the store cannot start a look now (%s)', async (code) => {
     page('simple');
     load();
-    handler = () => json({ error: 'out_of_looks' }, 409);
+    handler = () => json({ error: code }, 409);
     click('form .gc-tryon-btn');
     await tick();
     expect(document.querySelector('form .gc-tryon-btn')).toBeNull();

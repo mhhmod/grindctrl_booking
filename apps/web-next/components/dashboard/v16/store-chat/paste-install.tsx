@@ -196,7 +196,9 @@ export function PasteInstall({
               <Text fw={700}>{copy.installedTitle(status.seenHost ?? storeHost ?? '')}</Text>
               <Text size="sm">{status.chatLive ? copy.chatShown : copy.chatPreview}</Text>
               <Text size="sm">
-                {status.tryOnReady ? copy.tryOnOn(Math.max(0, status.plan?.totalCreditsRemaining ?? 0)) : copy.tryOnReason(status.tryOnReason)}
+                {status.showButton === false
+                  ? copy.tryOnOff
+                  : status.tryOnReady ? copy.tryOnOn(Math.max(0, status.plan?.totalCreditsRemaining ?? 0)) : copy.tryOnReason(status.tryOnReason)}
               </Text>
             </Stack>
           </Group>

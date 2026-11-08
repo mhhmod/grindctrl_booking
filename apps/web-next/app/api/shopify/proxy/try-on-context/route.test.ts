@@ -142,7 +142,7 @@ describe('GET /api/shopify/proxy/try-on-context', () => {
   });
 
   /* N34: a page cached before the looks ran out must not start a look. */
-  it.each(['out_of_looks', 'plan_inactive', 'not_installed'] as const)(
+  it.each(['out_of_looks', 'plan_inactive', 'not_installed', 'paused'] as const)(
     'refuses with 409 %s before asking for a photo',
     async (reason) => {
       launchMock.mockResolvedValue({ tryOn: 'hidden', reason });
@@ -440,6 +440,15 @@ describe('GET /api/shopify/proxy/try-on-context launch state (N5, N6)', () => {
     launchMock.mockResolvedValue({ tryOn: 'hidden', reason: 'out_of_looks' });
     expect((await GET(signedRequest({ preview: previewToken() }))).status).toBe(200);
     expect((await GET(signedRequest())).status).toBe(409);
+  });
+
+  it('mints nothing for the owner\'s preview link while the button is switched off', async () => {
+    storeLaunchMock.mockResolvedValue(null);
+    launchMock.mockResolvedValue({ tryOn: 'hidden', reason: 'paused' });
+    const response = await GET(signedRequest({ preview: previewToken() }));
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'paused' });
+    expect(resolveStorefrontProductMock).not.toHaveBeenCalled();
   });
 
   it('refuses the holdout\'s off arm with 409 holdout', async () => {

@@ -23,7 +23,10 @@ import { V16TryOnFrame, V16TryOnResults, V16TryOnResultsError } from '@/componen
 import { V16TryOnStudio, V16TryOnStudioError } from '@/components/dashboard/v16/try-on/v16-tryon-studio';
 import { V16TryOnApp } from '@/components/dashboard/v16/try-on/v16-tryon-app';
 import { V16NeedsStore } from '@/components/dashboard/v16/states';
-import { saveTryOnSettingsAction } from './actions';
+import { tryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
+import { isActiveTenant } from '@/lib/shopify/tokens';
+import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
+import { saveTryOnSettingsAction, setTryOnButtonAction } from './actions';
 
 /* The Try-On page (04-dashboard.md), drawn by both of its routes:
    /dashboard/try-on is Results and /dashboard/try-on/setup is Set up
@@ -56,7 +59,7 @@ export async function TryOnPage({
   if (tab === 'setup') {
     // The save action checks the role again.
     if (!canSetUp) redirect('/dashboard/try-on');
-    const [settings, storeLaunch, flagRows, entitlement, activeFlags] = await Promise.all([
+    const [settings, storeLaunch, flagRows, entitlement, activeFlags, installed] = await Promise.all([
       getTryOnSettingsForEdit(shop).catch((error: unknown) => {
         console.error('[try-on set up] settings failed:', error instanceof Error ? error.message : error);
         return null;
@@ -65,20 +68,34 @@ export async function TryOnPage({
       canManagePlan ? storeFlagRows(flagStoreForTenant(shop)) : null,
       getShopEntitlement(shop).catch(() => null),
       storeFlags(flagStoreForTenant(shop)),
+      // A paired WooCommerce or trusted pasted-code site, or an installed Shopify app.
+      isSiteTenantKey(shop)
+        ? isActiveTenant(shop)
+        : shops.some((candidate) => candidate.domain === shop && candidate.status === 'installed'),
     ]);
     const wpAdmin = isWoo && activeStore.siteId
       ? wpAdminUrls((await getActiveWooSiteContext(activeStore.siteId).catch(() => null))?.homeUrl ?? '')
       : null;
     const launch = launchView(storeLaunch, new Date());
     const copy = getTryOnResultsCopy(locale);
+    // The storefront button switch and the header status it feeds; null when the settings could not be read.
+    const buttonStatus = settings
+      ? tryOnButtonStatus({
+          installed,
+          showButton: settings.showButton,
+          entitlement,
+          launchState: activeFlags.includes('n5_preview_mode') ? launch.state : 'live',
+        })
+      : null;
+    const live = Boolean(entitlement?.available) && (settings?.showButton ?? true);
     return (
       <V16TryOnFrame
         locale={locale}
         tab="setup"
-        status={entitlement ? { live: entitlement.available, label: entitlement.available ? copy.liveOnStore : copy.hiddenOnStore } : null}
+        status={entitlement ? { live, label: live ? copy.liveOnStore : copy.hiddenOnStore } : null}
       >
         {settings ? (
-          <V16TryOnStudio locale={locale} shop={shop} wpAdmin={wpAdmin} settings={settings} saveSettings={saveTryOnSettingsAction} />
+          <V16TryOnStudio locale={locale} shop={shop} wpAdmin={wpAdmin} settings={settings} saveSettings={saveTryOnSettingsAction} buttonStatus={buttonStatus} setButton={setTryOnButtonAction} />
         ) : (
           <V16TryOnStudioError locale={locale} />
         )}

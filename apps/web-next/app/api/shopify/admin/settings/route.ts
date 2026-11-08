@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
-import { getTryOnSettings, saveTryOnSettings } from '@/lib/try-on/settings';
+import { getTryOnSettings, saveTryOnSettings, TryOnShowButtonUnavailableError } from '@/lib/try-on/settings';
 import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
 import { getShopLinkedAccountHint, isShopLinked } from '@/lib/shopify/shop-links';
 
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
 
   await recordTryOnShopSeen(session.shop);
   const body = (await request.json()) as {
+    showButton?: boolean;
     buttonLabel?: string;
     buttonLabelAr?: string | null;
     accentBg?: string;
@@ -82,7 +83,9 @@ export async function POST(request: NextRequest) {
     return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : fallback;
   };
   const radius = Number(body.radiusPx);
-  const ok = await saveTryOnSettings(session.shop, {
+  const values: Parameters<typeof saveTryOnSettings>[1] = {
+    // Only a boolean moves the switch: an older admin bundle never sends it.
+    ...(typeof body.showButton === 'boolean' ? { showButton: body.showButton } : {}),
     buttonLabel: body.buttonLabel?.trim() || undefined,
     /* null rather than undefined: undefined leaves the stored value alone,
        but clearing the Arabic field has to actually clear it. */
@@ -118,7 +121,17 @@ export async function POST(request: NextRequest) {
       Array.isArray(body.loadingSteps) && body.loadingSteps.length
         ? body.loadingSteps.map((s) => String(s).trim()).filter(Boolean)
         : null,
-  });
+  };
+
+  let ok: boolean;
+  try {
+    ok = await saveTryOnSettings(session.shop, values);
+  } catch (error) {
+    if (error instanceof TryOnShowButtonUnavailableError) {
+      return NextResponse.json({ ok: false, code: error.code, message: error.message }, { status: 409 });
+    }
+    throw error;
+  }
 
   return NextResponse.json({ ok });
 }

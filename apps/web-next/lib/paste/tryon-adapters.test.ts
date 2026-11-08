@@ -173,7 +173,7 @@ describe('Shopify paste', () => {
     expect((error as { hidden?: boolean }).hidden).toBeFalsy();
     expect(fetch).toHaveBeenCalledTimes(3);
   });
-  it.each([['out_of_looks', 409, true], ['origin_not_allowed', 403, true], ['shop_proof_pending', 403, true], ['shopify_app_installed', 409, true], ['rate_limited', 429, false], ['unavailable', 503, false]] as const)(
+  it.each([['out_of_looks', 409, true], ['paused', 409, true], ['origin_not_allowed', 403, true], ['shop_proof_pending', 403, true], ['shopify_app_installed', 409, true], ['rate_limited', 429, false], ['unavailable', 503, false]] as const)(
     'classifies %s as hidden=%s', async (code, status, hidden) => {
       shopifyPage();
       vi.mocked(fetch).mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json({ error: code }, status));
@@ -300,9 +300,9 @@ describe('shared hosted engine with a paste adapter', () => {
     expect(sheet.hidden).toBe(true);
     expect(fetch).toHaveBeenCalledTimes(1);
   });
-  it('removes the button when the store cannot start a look', async () => {
+  it.each(['out_of_looks', 'paused'])('removes the button when the store cannot start a look (%s)', async (code) => {
     shopifyPage();
-    vi.mocked(fetch).mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json({ error: 'out_of_looks' }, 409));
+    vi.mocked(fetch).mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json({ error: code }, 409));
     const a = adapter('shopify');
     await a.prepare();
     mount(a);

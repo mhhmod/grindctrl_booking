@@ -8,6 +8,15 @@ import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import { arCount } from './today-copy';
 
 export interface TryOnStudioCopy {
+  storefrontSwitch: {
+    on: string;
+    off: string;
+    state: Record<'on' | 'off' | 'not_installed', string>;
+    reason: Record<'preview' | 'holdout' | 'out_of_looks' | 'plan_inactive' | 'unavailable', string>;
+    install: string;
+    unavailable: string;
+    failed: string;
+  };
   subtitle: string;
   unsavedLabel: string;
   unsaved: (n: number) => string;
@@ -70,6 +79,25 @@ export interface TryOnStudioCopy {
 }
 
 const en: TryOnStudioCopy = {
+  storefrontSwitch: {
+    on: 'Try-On is on',
+    off: 'Try-On is off',
+    state: {
+      on: 'Shoppers see the Try it on button on your product pages.',
+      off: 'Shoppers don’t see the Try it on button. Turn it on whenever you’re ready.',
+      not_installed: 'Not on your store yet. Install it, then turn it on here.',
+    },
+    reason: {
+      preview: 'In preview: only you see the button.',
+      holdout: 'Shown to part of your shoppers while we measure the difference.',
+      out_of_looks: 'Paused: this month’s looks are used up.',
+      plan_inactive: 'Paused: your plan isn’t active.',
+      unavailable: 'We couldn’t check Try-On right now. Try again in a minute.',
+    },
+    install: 'Install on your store',
+    unavailable: 'This switch is almost ready. Try again soon.',
+    failed: 'That didn’t save. Try again.',
+  },
   subtitle: 'Every change shows in the preview first. When you save, shoppers see it within a minute.',
   unsavedLabel: 'Unsaved changes',
   unsaved: (n) => (n === 1 ? '1 unsaved change' : `${n} unsaved changes`),
@@ -136,6 +164,25 @@ const en: TryOnStudioCopy = {
 };
 
 const ar: TryOnStudioCopy = {
+  storefrontSwitch: {
+    on: 'التجربة الافتراضية مفعّلة',
+    off: 'التجربة الافتراضية متوقفة',
+    state: {
+      on: 'يرى المتسوقون زر التجربة في صفحات منتجاتك.',
+      off: 'لا يرى المتسوقون زر التجربة. فعّلها متى كنت جاهزاً.',
+      not_installed: 'غير مثبّتة في متجرك بعد. ثبّتها ثم فعّلها من هنا.',
+    },
+    reason: {
+      preview: 'في وضع المعاينة: يظهر الزر لك وحدك.',
+      holdout: 'تظهر لجزء من المتسوقين بينما نقيس الفرق.',
+      out_of_looks: 'متوقفة: نفدت إطلالات هذا الشهر.',
+      plan_inactive: 'متوقفة: خطتك غير مفعّلة.',
+      unavailable: 'تعذّر التحقق من التجربة الافتراضية الآن. حاول بعد دقيقة.',
+    },
+    install: 'ثبّت على متجرك',
+    unavailable: 'هذا المفتاح أوشك على الجاهزية. حاول قريباً.',
+    failed: 'لم يُحفظ ذلك. حاول مجدداً.',
+  },
   subtitle: 'يظهر كل تغيير في المعاينة أولاً. وعند الحفظ، يراه المتسوقون خلال دقيقة.',
   unsavedLabel: 'تغييرات غير محفوظة',
   unsaved: (n) =>

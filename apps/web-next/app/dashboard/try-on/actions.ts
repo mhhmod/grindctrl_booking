@@ -2,11 +2,35 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
-import { saveTryOnSettings } from '@/lib/try-on/settings';
+import { saveTryOnSettings, TryOnShowButtonUnavailableError } from '@/lib/try-on/settings';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 
-export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok: true } | MerchantActionFailure> {
+export type TryOnSettingsActionFailure = MerchantActionFailure & {
+  /** `show_button_unavailable`: turning the button off needs a database
+   *  update that has not run yet. Nothing was saved, so retrying won't help. */
+  reason?: 'show_button_unavailable';
+};
+export type TryOnSettingsActionResult = { ok: true } | TryOnSettingsActionFailure;
+
+function settingsActionFailure(error: unknown): TryOnSettingsActionFailure {
+  if (error instanceof RoleNotAllowedError ||
+    (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
+    return { ok: false, code: 'forbidden', message: 'You do not have permission to change this shop.' };
+  }
+  if (error instanceof TryOnShowButtonUnavailableError) {
+    return { ok: false, code: 'unavailable', reason: error.code, message: error.message };
+  }
+  return merchantActionFailure(error);
+}
+
+/** `show_button` is 'on' or 'off'; any other value, or none, leaves the
+ *  switch as it is, so a form without the switch never turns it back on. */
+function showButtonField(value: FormDataEntryValue | null): { showButton?: boolean } {
+  return value === 'on' ? { showButton: true } : value === 'off' ? { showButton: false } : {};
+}
+
+export async function saveTryOnSettingsAction(formData: FormData): Promise<TryOnSettingsActionResult> {
   try {
   // Setting the shop up is for its owner and admins, not members (item 12).
   const shop = await requireManagedTenant(formData.get('shop') ?? 'default', { capability: 'settings' });
@@ -23,6 +47,7 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok:
   const radius = Number(formData.get('radius_px'));
 
   const saved = await saveTryOnSettings(shop, {
+    ...showButtonField(formData.get('show_button')),
     buttonLabel: String(formData.get('button_label') || '').trim() || undefined,
     /* null rather than undefined: undefined means "leave as is", but a
        merchant clearing the Arabic field must actually clear it. */
@@ -57,10 +82,23 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<{ ok:
   revalidatePath('/dashboard', 'layout');
   return { ok: true };
   } catch (error) {
-    if (error instanceof RoleNotAllowedError ||
-      (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
-      return { ok: false, code: 'forbidden', message: 'You do not have permission to change this shop.' };
-    }
-    return merchantActionFailure(error);
+    return settingsActionFailure(error);
+  }
+}
+
+/** The storefront Try-On button switch on its own, for a control that
+ *  saves the moment it is flipped. Same role and storage as the settings
+ *  save; only show_button is written. */
+export async function setTryOnButtonAction(input: { shop: string; showButton: boolean }): Promise<TryOnSettingsActionResult> {
+  try {
+    const shop = await requireManagedTenant(input?.shop ?? 'default', { capability: 'settings' });
+    // A server action is a public endpoint: never coerce a malformed value into "off".
+    if (typeof input.showButton !== 'boolean') return merchantActionFailure(null);
+    await requireMerchantRateLimit(`shop:${shop}`);
+    if (!(await saveTryOnSettings(shop, { showButton: input.showButton }))) return merchantActionFailure(null);
+    revalidatePath('/dashboard', 'layout');
+    return { ok: true };
+  } catch (error) {
+    return settingsActionFailure(error);
   }
 }

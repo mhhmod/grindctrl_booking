@@ -236,11 +236,21 @@ describe('POST /api/woo/tryon-context', () => {
     expect((await post()).status).toBe(403);
   });
 
-  it.each([['out_of_looks'], ['plan_inactive'], ['not_installed']])('refuses when launch is hidden: %s', async (reason) => {
+  it.each([['out_of_looks'], ['plan_inactive'], ['not_installed'], ['paused']])('refuses when launch is hidden: %s', async (reason) => {
     mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason }, unsubscribed: false });
     const response = await post();
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: reason });
+  });
+
+  it('keeps a switched-off button closed to the owner\'s preview link, and grants no plan for it', async () => {
+    mocks.flags.mockResolvedValue(['n5_preview_mode']);
+    mocks.storeLaunch.mockResolvedValue({ state: 'preview', salt: 'test-preview-salt' });
+    mocks.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'paused' }, unsubscribed: false });
+    const response = await post({ ...BODY, preview: signPreviewToken(CORE_SECRET, `site:${SITE}`).token });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'paused' });
+    expect(mocks.grant).not.toHaveBeenCalled();
   });
 
   it('answers 503 when launch state cannot be read', async () => {

@@ -305,3 +305,48 @@
   gap: 12px;
   min-width: 0;
 }
+
+.switchRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm) var(--mantine-spacing-lg);
+  padding: var(--mantine-spacing-md) var(--mantine-spacing-lg);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--mantine-color-body);
+}
+
+.switchText {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+  flex: 1 1 18rem;
+}
+
+.switchState {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.switchDot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 999px;
+  background: var(--mantine-color-dimmed);
+  transform: translateY(-1px);
+}
+
+.switchState[data-on] .switchDot {
+  background: var(--mantine-color-green-6);
+}
+
+.switchError {
+  color: var(--mantine-color-red-7);
+  font-size: var(--mantine-font-size-xs);
+}
