@@ -173,7 +173,7 @@ describe('Shopify paste', () => {
     expect((error as { hidden?: boolean }).hidden).toBeFalsy();
     expect(fetch).toHaveBeenCalledTimes(3);
   });
-  it.each([['out_of_looks', 409, true], ['origin_not_allowed', 403, true], ['rate_limited', 429, false], ['unavailable', 503, false]] as const)(
+  it.each([['out_of_looks', 409, true], ['origin_not_allowed', 403, true], ['shop_proof_pending', 403, true], ['shopify_app_installed', 409, true], ['rate_limited', 429, false], ['unavailable', 503, false]] as const)(
     'classifies %s as hidden=%s', async (code, status, hidden) => {
       shopifyPage();
       vi.mocked(fetch).mockResolvedValueOnce(json(shopifyProduct)).mockResolvedValueOnce(json({ error: code }, status));

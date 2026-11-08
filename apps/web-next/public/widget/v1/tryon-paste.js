@@ -22,7 +22,9 @@
   // The server answers these when the store cannot start a look right now:
   // the button goes away instead of showing an error the shopper cannot act on.
   var HIDDEN = ['paste_not_connected', 'site_disconnected', 'origin_not_allowed', 'bad_signature', 'free_plan_taken',
-    'preview', 'holdout', 'garment_unsafe', 'out_of_looks', 'paused', 'not_installed', 'plan_inactive', 'not_found'];
+    'preview', 'holdout', 'garment_unsafe', 'out_of_looks', 'paused', 'not_installed', 'plan_inactive', 'not_found',
+    // Until the merchant's store is confirmed, or while the Shopify app owns it.
+    'shop_proof_pending', 'shopify_app_installed'];
 
   function image(value) {
     if (Array.isArray(value)) value = value[0];

@@ -189,6 +189,25 @@ describe('password-protected stores', () => {
     expect((await scan({ [`GET https://${SHOP}/`]: html(passwordPage, { status: 401 }) }).result).outcome).toBe('password_required');
   });
 
+  it('recognises the current Dawn password page, which has no form_type field', async () => {
+    // Real markup from a 2026 development store: only a token and a password box.
+    const dawn = '<!doctype html><html><head><title>store</title></head><body>'
+      + '<form action="/password" accept-charset="UTF-8" data-remote="true" method="post">'
+      + '<input type="hidden" name="authenticity_token" value="tok456" />'
+      + '<input type="password" class="form-input " id="password" name="password" autocomplete="nope">'
+      + '</form></body></html>';
+    const { fake, result } = scan({ [`GET https://${SHOP}/`]: redirect('/password'), [`GET https://${SHOP}/password`]: html(dawn) });
+    expect(await result).toEqual({ outcome: 'password_required' });
+    expect(fake.calls.map((call) => call.method)).toEqual(['GET', 'GET']);
+  });
+
+  it('does not mistake an ordinary login form for the storefront password page', async () => {
+    const login = '<!doctype html><html><body><form action="/account/login" method="post">'
+      + '<input type="hidden" name="form_type" value="customer_login" /><input type="password" name="customer[password]">'
+      + '</form></body></html>';
+    expect((await scan({ [`GET https://${SHOP}/`]: html(login) }).result).outcome).toBe('not_found');
+  });
+
   it("posts the password once to the store's own form, then proves from the unlocked storefront", async () => {
     let unlocked = false;
     const { fake, result } = scan({
