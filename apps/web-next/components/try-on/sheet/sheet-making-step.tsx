@@ -4,13 +4,9 @@ import { Check } from 'lucide-react';
 import type { MakingProgress } from '@/lib/try-on/making-progress';
 import type { SheetCopy } from '@/lib/try-on/sheet-copy';
 
-/* TryOn-Waiting (02-try-on.md): the shopper's photo with the piece beside
-   it, a thin bar, "Making your look", the seconds left on the store's own
-   estimate, then the store's loading steps. Done steps get a tick, the
-   current one a spinner, the rest stay dim. The steps are announced by
-   the sheet's own live region, so nothing here is a live region. Keep
-   browsing and Cancel wait for asynchronous looks (item 16, N38): today
-   leaving or cancelling would still use the look. */
+/* The shopper's photo stays visible while real status drives the steps.
+   The sheet owns the polite live region; the continuous scan and the
+   eased bar only convey that work continues, never that it has finished. */
 export function SheetMakingStep({
   copy,
   photoDataUrl,
@@ -33,9 +29,15 @@ export function SheetMakingStep({
     <div className="flex flex-col gap-5" aria-busy="true">
       <div className={`flex items-end justify-center gap-3 ${loadingStyle === 'pulse' ? 'motion-safe:animate-pulse' : ''}`}>
         {photoDataUrl && (
-          // A data URL the shopper chose; next/image cannot optimise it.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoDataUrl} alt={copy.yourPhotoAlt} className="aspect-[3/4] w-36 rounded-2xl border object-cover sm:w-44" />
+          <div className="relative w-36 max-w-[50%] overflow-hidden rounded-2xl border sm:w-44">
+            {/* A data URL the shopper chose; next/image cannot optimise it. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoDataUrl} alt={copy.yourPhotoAlt} className="aspect-[3/4] w-full object-cover" />
+            <div
+              aria-hidden="true"
+              className="gc-anim-scan absolute start-0 end-0 top-0 h-[36%] bg-gradient-to-b from-transparent to-primary/25 motion-reduce:hidden"
+            />
+          </div>
         )}
         {piece.imageUrl && (
           // The store's own product image, already on Shopify's CDN.
@@ -46,14 +48,16 @@ export function SheetMakingStep({
 
       <div className={`${loadingStyle === 'bar' ? 'h-1.5' : 'h-1'} w-full overflow-hidden rounded-full bg-muted`} aria-hidden="true">
         <div
-          className="h-full rounded-full bg-primary transition-[width] duration-500 ease-linear motion-reduce:transition-none"
+          className={`h-full rounded-full bg-primary transition-[width] duration-500 ease-out motion-reduce:transition-none ${progress.overEstimate ? 'motion-safe:animate-pulse' : ''}`}
           style={{ width: `${Math.round(progress.fraction * 1000) / 10}%` }}
         />
       </div>
 
       <div className="space-y-1">
         <h2 className="text-xl font-semibold tracking-tight text-foreground">{copy.makingTitle}</h2>
-        {progress.secondsLeft !== null && (
+        {progress.overEstimate ? (
+          <p className="text-sm text-muted-foreground">{copy.makingAlmostThere}</p>
+        ) : progress.secondsLeft !== null && (
           <p className="text-sm tabular-nums text-muted-foreground">{copy.secondsLeft(progress.secondsLeft)}</p>
         )}
       </div>

@@ -67,9 +67,10 @@ export function storyNavigation(
     onSelect: onJourney,
   };
   const pricing: SiteNavItem = { id: 'pricing', label: t.navPricing, href: '/pricing', icon: <TagIcon size={16} /> };
+  const tryOn: SiteNavItem = { id: 'try', label: t.navTryOn, href: '/try-on', icon: icons.try };
   return {
     nav: [
-      scene('try', t.navTryOn, icons.try),
+      tryOn,
       scene('store', t.navLiveStore, icons.store),
       scene('ops', t.navAiOps, icons.ops),
       scene('product', t.navProduct, icons.product),
@@ -78,7 +79,7 @@ export function storyNavigation(
       { ...pricing, wideOnly: true },
     ],
     menu: [
-      scene('try', t.navTryOn, icons.try),
+      tryOn,
       scene('store', t.navLiveStore, icons.store),
       scene('ops', t.navAiOps, icons.ops),
       scene('product', t.menuTheProduct, icons.product),

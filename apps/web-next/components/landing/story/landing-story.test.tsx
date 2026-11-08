@@ -40,7 +40,7 @@ describe('the landing story page', () => {
   it('points the header scene items at the story scenes and keeps Sign in outside the menu', () => {
     renderStory();
     const nav = within(screen.getByRole('navigation', { name: 'Main' }));
-    expect(nav.getByRole('link', { name: 'Try it on' })).toHaveAttribute('href', '/#try');
+    expect(nav.getByRole('link', { name: 'Try it on' })).toHaveAttribute('href', '/try-on');
     expect(nav.getByRole('link', { name: 'Live store' })).toHaveAttribute('href', '/#store');
     expect(nav.getByRole('link', { name: 'AI operations' })).toHaveAttribute('href', '/#ops');
     expect(nav.getByRole('link', { name: 'Product' })).toHaveAttribute('href', '/#product');

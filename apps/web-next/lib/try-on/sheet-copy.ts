@@ -59,12 +59,14 @@ export type SheetCopy = {
   consentRetention: string;
   keepOnPhone: string;
   keepOnPhoneHint: string;
+  forgetOnPhone: string;
   agreeAndTry: string;
   tryItOn: string;
   agreeNote: string;
   privacyNoticeLink: string;
   checking: string;
   makingTitle: string;
+  makingAlmostThere: string;
   /** Only while the estimate lasts; never zero or less. */
   secondsLeft: (seconds: number) => string;
   /** The default steps, used when the store wrote none of its own. */
@@ -117,7 +119,7 @@ const EN: SheetCopy = {
   privacyTitle: 'How photos are handled',
   privacyBody: [
     'Your photo goes to our secure AI service only to make this preview, and it is not stored permanently or shared publicly.',
-    'If you keep your photo on this phone, it stays here for 24 hours so you can try other pieces, then it is removed. Turn it off and nothing is saved on this phone.',
+    'If you keep your photo on this phone, your photo and finished looks stay here for 24 hours, then they are removed. Turn it off to delete them from this phone.',
     'The store sees a look only if you send it to them.',
   ],
   yourPhoto: 'Your photo',
@@ -138,15 +140,17 @@ const EN: SheetCopy = {
   consentService: 'Your photo goes to our secure AI service only to make this preview.',
   consentRetention: 'It is not stored permanently or shared publicly. We only ask this once.',
   keepOnPhone: 'Keep my photo on this phone',
-  keepOnPhoneHint: 'Try other pieces in one tap. Kept on this phone for 24 hours.',
+  keepOnPhoneHint: 'Your photo and looks stay on this phone for 24 hours.',
+  forgetOnPhone: 'Forget photos and looks',
   agreeAndTry: 'Agree and try it on',
   tryItOn: 'Try it on',
   agreeNote: 'By continuing you agree to the',
   privacyNoticeLink: 'try-on privacy notice',
   checking: 'Checking your photo',
   makingTitle: 'Making your look',
+  makingAlmostThere: 'Still working on your look. Thanks for waiting.',
   secondsLeft: (seconds) => `About ${seconds} ${seconds === 1 ? 'second' : 'seconds'} left`,
-  makingSteps: ['Reading your photo', 'Fitting the garment', 'Rendering your look'],
+  makingSteps: ['Preparing your photo', 'Making your look', 'Finishing your look'],
   lookReady: 'Your look is ready',
   compare: 'Compare',
   viewLook: 'Look',
@@ -192,6 +196,8 @@ const AR_COMMON = {
   nothingSent: 'لم يُرسل أي شيء بعد.',
   consentRetention: 'لا تُحفظ بشكل دائم ولا تُنشر للعامة.',
   checking: 'جارٍ فحص الصورة',
+  forgetOnPhone: 'حذف الصور والإطلالات من الهاتف',
+  makingAlmostThere: 'ما زلنا نجهّز الإطلالة. شكراً للانتظار.',
   // 1 and 2 have their own words, 3 to 10 the plural, 11 and up the singular.
   secondsLeft: (seconds: number) =>
     seconds === 1
@@ -228,7 +234,7 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     lockLine: 'تُستخدم صورتكِ فقط لتجهيز هذه المعاينة. لا تُحفظ بشكل دائم ولا تُنشر للعامة.',
     privacyBody: [
       'تُرسل صورتكِ إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة، ولا تُحفظ بشكل دائم ولا تُنشر للعامة.',
-      'إذا احتفظتِ بصورتكِ على هذا الهاتف، تبقى عليه 24 ساعة لتجربي قطعاً أخرى، ثم تُحذف. وإذا أوقفتِ ذلك فلن يُحفظ شيء على الهاتف.',
+      'عند الاحتفاظ بصورتكِ على هذا الهاتف، تبقى صورتكِ وإطلالاتكِ الجاهزة عليه 24 ساعة، ثم تُحذف. أوقفي هذا الخيار لحذفها من الهاتف.',
       'لا يرى المتجر الإطلالة إلا إذا أرسلتِها إليه.',
     ],
     yourPhoto: 'صورتكِ',
@@ -243,13 +249,13 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     consentService: 'تُرسل صورتكِ إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة.',
     consentRetention: 'لا تُحفظ بشكل دائم ولا تُنشر للعامة. نسألكِ هذا مرة واحدة فقط.',
     keepOnPhone: 'الاحتفاظ بصورتي على هذا الهاتف',
-    keepOnPhoneHint: 'جربي قطعاً أخرى بلمسة واحدة. تبقى على هذا الهاتف 24 ساعة.',
+    keepOnPhoneHint: 'تبقى صورتكِ وإطلالاتكِ على هذا الهاتف 24 ساعة.',
     agreeAndTry: 'وافقي وجربيها عليكِ',
     tryItOn: 'جربيها عليكِ',
     agreeNote: 'بالمتابعة توافقين على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
     makingTitle: 'نجهّز إطلالتكِ',
-    makingSteps: ['نحلّل صورتكِ', 'نضبط القطعة عليكِ', 'نضع اللمسات الأخيرة على إطلالتكِ'],
+    makingSteps: ['نجهّز صورتكِ', 'نجهّز إطلالتكِ', 'نضع اللمسات الأخيرة على إطلالتكِ'],
     lookReady: 'إطلالتكِ جاهزة',
     originalPhotoAlt: 'صورتكِ الأصلية',
     lookAlt: (product) => `أنتِ ترتدين ${product}`,
@@ -277,7 +283,7 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     lockLine: 'تُستخدم صورتك فقط لتجهيز هذه المعاينة. لا تُحفظ بشكل دائم ولا تُنشر للعامة.',
     privacyBody: [
       'تُرسل صورتك إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة، ولا تُحفظ بشكل دائم ولا تُنشر للعامة.',
-      'إذا احتفظت بصورتك على هذا الهاتف، تبقى عليه 24 ساعة لتجرب قطعاً أخرى، ثم تُحذف. وإذا أوقفت ذلك فلن يُحفظ شيء على الهاتف.',
+      'عند الاحتفاظ بصورتك على هذا الهاتف، تبقى صورتك وإطلالاتك الجاهزة عليه 24 ساعة، ثم تُحذف. أوقف هذا الخيار لحذفها من الهاتف.',
       'لا يرى المتجر الإطلالة إلا إذا أرسلتها إليه.',
     ],
     yourPhoto: 'صورتك',
@@ -292,13 +298,13 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     consentService: 'تُرسل صورتك إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة.',
     consentRetention: 'لا تُحفظ بشكل دائم ولا تُنشر للعامة. نسألك هذا مرة واحدة فقط.',
     keepOnPhone: 'الاحتفاظ بصورتي على هذا الهاتف',
-    keepOnPhoneHint: 'جرب قطعاً أخرى بلمسة واحدة. تبقى على هذا الهاتف 24 ساعة.',
+    keepOnPhoneHint: 'تبقى صورتك وإطلالاتك على هذا الهاتف 24 ساعة.',
     agreeAndTry: 'وافق وجربها عليك',
     tryItOn: 'جربها عليك',
     agreeNote: 'بالمتابعة توافق على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
     makingTitle: 'نجهّز إطلالتك',
-    makingSteps: ['نحلّل صورتك', 'نضبط القطعة عليك', 'نضع اللمسات الأخيرة على إطلالتك'],
+    makingSteps: ['نجهّز صورتك', 'نجهّز إطلالتك', 'نضع اللمسات الأخيرة على إطلالتك'],
     lookReady: 'إطلالتك جاهزة',
     originalPhotoAlt: 'صورتك الأصلية',
     lookAlt: (product) => `أنت ترتدي ${product}`,
@@ -326,7 +332,7 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     lockLine: 'تُستخدم الصورة فقط لتجهيز هذه المعاينة. لا تُحفظ بشكل دائم ولا تُنشر للعامة.',
     privacyBody: [
       'تُرسل الصورة إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة، ولا تُحفظ بشكل دائم ولا تُنشر للعامة.',
-      'عند الاحتفاظ بالصورة على هذا الهاتف، تبقى عليه 24 ساعة لتجربة قطع أخرى، ثم تُحذف. وعند إيقاف ذلك لا يُحفظ شيء على الهاتف.',
+      'عند الاحتفاظ بالصورة على هذا الهاتف، تبقى الصورة والإطلالات الجاهزة عليه 24 ساعة، ثم تُحذف. إيقاف هذا الخيار يحذفها من الهاتف.',
       'لا يرى المتجر الإطلالة إلا عند إرسالها إليه.',
     ],
     yourPhoto: 'صورتك',
@@ -341,13 +347,13 @@ const AR: Record<ArabicAddressForm, SheetCopy> = {
     consentService: 'تُرسل الصورة إلى خدمة الذكاء الاصطناعي الآمنة لدينا فقط لتجهيز هذه المعاينة.',
     consentRetention: 'لا تُحفظ بشكل دائم ولا تُنشر للعامة. هذا السؤال مرة واحدة فقط.',
     keepOnPhone: 'الاحتفاظ بالصورة على هذا الهاتف',
-    keepOnPhoneHint: 'تجربة قطع أخرى بلمسة واحدة. تبقى على هذا الهاتف 24 ساعة.',
+    keepOnPhoneHint: 'تبقى الصورة والإطلالات على هذا الهاتف 24 ساعة.',
     agreeAndTry: 'موافقة وتجربة القطعة',
     tryItOn: 'تجربة القطعة',
     agreeNote: 'المتابعة تعني الموافقة على',
     privacyNoticeLink: 'إشعار الخصوصية الخاص بالتجربة الافتراضية',
     makingTitle: 'نجهّز الإطلالة',
-    makingSteps: ['نحلّل الصورة', 'نضبط القطعة', 'نضع اللمسات الأخيرة على الإطلالة'],
+    makingSteps: ['نجهّز الصورة', 'نجهّز الإطلالة', 'نضع اللمسات الأخيرة على الإطلالة'],
     lookReady: 'الإطلالة جاهزة',
     originalPhotoAlt: 'الصورة الأصلية',
     lookAlt: (product) => `إطلالة، ${product}`,

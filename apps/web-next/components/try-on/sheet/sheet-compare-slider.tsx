@@ -17,6 +17,7 @@ export function SheetCompareSlider({
   photoAlt,
   aiPreview,
   rtl,
+  onLookError,
 }: {
   photoSrc: string;
   lookSrc: string;
@@ -28,6 +29,7 @@ export function SheetCompareSlider({
   photoAlt: string;
   aiPreview: string;
   rtl: boolean;
+  onLookError?: () => void;
 }) {
   // How much of the frame, from the start side, shows the photo.
   const [share, setShare] = useState(50);
@@ -78,7 +80,7 @@ export function SheetCompareSlider({
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- the look lives in this page as a data URL */}
-      <img src={lookSrc} alt={lookAlt} className="absolute inset-0 size-full object-cover" draggable={false} />
+      <img src={lookSrc} alt={lookAlt} onError={onLookError} className="absolute inset-0 size-full object-cover" draggable={false} />
       <div className="absolute inset-0" style={{ clipPath: photoClip }}>
         {/* eslint-disable-next-line @next/next/no-img-element -- the shopper's own photo, never uploaded for this */}
         <img src={photoSrc} alt={photoAlt} className="size-full object-cover" draggable={false} />

@@ -158,6 +158,26 @@ describe('pollTryOnJob for a look made after the answer', () => {
 
 describe('public studio async generation', () => {
   afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+  it('forwards the accepted and polled real stages to the studio until the look exists', async () => {
+    vi.useFakeTimers();
+    let polls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: string, init?: RequestInit) => {
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
+      if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'signed-attempt' } });
+      if (input.endsWith('/generate')) return json({ ok: true, jobId: 'tryon_real', status: 'processing', stage: 'received' }, 202);
+      polls += 1;
+      return polls < 3 ? json({ ok: true, status: 'processing', stage: polls === 1 ? 'making' : 'finishing' })
+        : json({ ok: true, jobId: 'tryon_real', status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' });
+    }));
+    const onProgress = vi.fn();
+    const result = runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=', onProgress });
+    await vi.runAllTimersAsync();
+    await expect(result).resolves.toMatchObject({ ok: true });
+    expect(onProgress.mock.calls.map(([data]) => data.stage)).toEqual(['received', 'making', 'finishing']);
+    expect(onProgress.mock.calls.every(([data]) => !data.resultImageUrl)).toBe(true);
+  });
   it('recovers the same job when synchronous fallback reports finalization pending', async () => {
     const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
       const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });

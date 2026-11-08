@@ -113,7 +113,7 @@ export function TryOnSheet({
   });
   // One polite region for the whole sheet, so each step and the ready
   // moment are announced once.
-  const announcement = making ? steps[progress.stepIndex] : flow.step === 'result' ? copy.lookReady : '';
+  const announcement = making ? (progress.overEstimate ? copy.makingAlmostThere : steps[progress.stepIndex]) : flow.step === 'result' ? copy.lookReady : '';
 
   const variantLine = variantTitle && variantTitle !== 'Default Title' ? variantTitle.split(' / ').join(' · ') : '';
 
@@ -159,7 +159,7 @@ export function TryOnSheet({
         </header>
       )}
 
-      {flow.sessionState === 'error' && (
+      {flow.sessionState === 'error' && flow.step !== 'result' && (
         <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="font-medium text-foreground">{t.storefrontProofErrorTitle}</p>
           <p className="mt-1 text-sm text-muted-foreground">{flow.sessionError}</p>
@@ -222,6 +222,8 @@ export function TryOnSheet({
             controls={result}
             madeInSeconds={flow.generationSeconds}
             onChangePhoto={flow.reset}
+            onForget={() => void flow.forget()}
+            onImageError={() => void flow.discardBrokenLook()}
           />
         )}
 

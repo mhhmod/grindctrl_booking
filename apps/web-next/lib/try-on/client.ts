@@ -237,10 +237,12 @@ export async function runPublicTryOn({
   productId,
   photoDataUrl,
   signal,
+  onProgress,
 }: {
   productId: string;
   photoDataUrl: string;
   signal?: AbortSignal;
+  onProgress?: (data: TryOnJobApiResponse) => void;
 }): Promise<PublicTryOnResult> {
   try {
     const sessionRes = await fetchWithOneRetry('/api/try-on/session', {
@@ -297,11 +299,13 @@ export async function runPublicTryOn({
       ((job.ok && (job.status === 'queued' || job.status === 'processing')) ||
         job.code === 'TRYON_FINALIZATION_PENDING')
     ) {
+      onProgress?.(job);
       job = await pollTryOnJob(job.jobId, session.sessionId, 'failed', signal,
         generateRes.status === 202 ? {
           timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
           initialDelayMs: Math.max(TRYON_POLL_INITIAL_DELAY_MS, retryAfterDelayMs(generateRes.headers.get('Retry-After')) ?? 0),
-        } : {});
+          onProgress,
+        } : { onProgress });
     }
 
     if (!job.ok || job.status !== 'completed' || !job.resultImageUrl || !job.jobId) {

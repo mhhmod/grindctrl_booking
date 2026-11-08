@@ -107,6 +107,9 @@ interface TryOnDict {
   pageSubtitle: string;
   pageForStores: string;
   pageNeedPhoto: string;
+  pageProgressStages: string[];
+  pageProgressAlmost: string;
+  pageProgressRemaining: (seconds: number) => string;
   pageCreateLook: string;
   pageTryAnother: string;
   pageCompareLooks: string;
@@ -245,6 +248,9 @@ const en: TryOnDict = {
   pageSubtitle: 'Pick a piece, add a photo, get your look.',
   pageForStores: 'For stores: book a call',
   pageNeedPhoto: 'Add a photo to create your look.',
+  pageProgressStages: ['Photo received', 'Creating your look', 'Adding the final details'],
+  pageProgressAlmost: 'Almost there, adding the final details.',
+  pageProgressRemaining: (seconds) => `About ${seconds} seconds left`,
   pageCreateLook: 'Create my look',
   pageTryAnother: 'Try another piece',
   pageCompareLooks: 'Compare looks',
@@ -389,6 +395,9 @@ const ar: TryOnDict = {
   pageSubtitle: 'اختر قطعة، وأضف صورة، واحصل على إطلالتك.',
   pageForStores: 'للمتاجر: احجز مكالمة',
   pageNeedPhoto: 'أضف صورة لإنشاء إطلالتك.',
+  pageProgressStages: ['تم استلام الصورة', 'جارٍ إنشاء إطلالتك', 'جارٍ إضافة اللمسات الأخيرة'],
+  pageProgressAlmost: 'اقتربت إطلالتك من الاكتمال، نضيف اللمسات الأخيرة.',
+  pageProgressRemaining: (seconds) => `حوالي ${seconds} ثانية متبقية`,
   pageCreateLook: 'اصنع إطلالتي',
   pageTryAnother: 'جرّب قطعة أخرى',
   pageCompareLooks: 'قارن الإطلالات',

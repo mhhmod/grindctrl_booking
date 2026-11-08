@@ -24,6 +24,13 @@
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
+.gc-tryon-btn { flex-wrap: wrap; gap: 0.35rem; }
+.gc-tryon-ready { font-size: 0.75em; padding: 0.2em 0.5em; border: 1px solid currentColor; border-radius: 999px; }
+.gc-tryon-ready[hidden], .gc-tryon-loading[hidden] { display: none; }
+.gc-tryon-live { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.gc-tryon-loading { position: absolute; inset-block: 44px 0; inset-inline: 0; z-index: 1; display: grid; place-content: center; gap: 1rem; background: inherit; color: inherit; font: inherit; }
+.gc-tryon-loading::before { content: ''; display: block; inline-size: min(15rem, 65vw); block-size: 12rem; border-radius: 1rem; background: currentColor; opacity: 0.08; }
+
 .gc-tryon-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);

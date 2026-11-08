@@ -86,7 +86,7 @@ export default async function EmbedTryOnPage({
       ? storeFlags(flagStoreForTenant(shop) ?? { shopDomain: shop }).then((flags) => flags.includes('v16_tryon'))
       : Promise.resolve(false),
   ]);
-  const lookSeconds = sheetOn ? await getTypicalLookSeconds(shop) : null;
+  const lookSeconds = await getTypicalLookSeconds(shop);
 
   /* Same fallback chain as app/try-on/page.tsx (the standalone demo): an
      explicit signal wins over a guess, and a shopper who set Arabic
@@ -148,6 +148,7 @@ export default async function EmbedTryOnPage({
           </div>
         ) : shopProduct ? (
           <TryOnDemo
+            lookSeconds={lookSeconds}
             productId={productHandle}
             shop={shop ?? undefined}
             variantId={params.variant}

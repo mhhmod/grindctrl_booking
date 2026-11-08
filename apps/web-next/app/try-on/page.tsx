@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { TryOnLocaleProvider } from '@/components/try-on/locale-provider';
 import { TryOnStudio } from '@/components/try-on/page/try-on-studio';
+import { getTypicalPublicLookSeconds } from '@/lib/try-on/look-timing';
 import { localeFromAcceptLanguage } from '@/lib/landing/accept-language';
 import {
   DEFAULT_TRYON_LOCALE,
@@ -36,7 +37,7 @@ export default async function TryOnPage() {
       initialLocale={initialLocale}
       className="gc-animated min-h-dvh overflow-x-clip bg-background text-foreground"
     >
-      <TryOnStudio />
+      <TryOnStudio typicalSeconds={await getTypicalPublicLookSeconds()} />
     </TryOnLocaleProvider>
   );
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import {
   Sparkles,
   CheckCircle,
-  ScanLine,
   ShieldCheck,
   AlertCircle,
 } from 'lucide-react';
@@ -16,31 +15,13 @@ import { useTryOnLocale } from './locale-provider';
 import { getDefaultProduct, getProduct } from '@/lib/try-on/products';
 import { localizeProduct } from '@/lib/try-on/i18n';
 import { pollTryOnJob } from '@/lib/try-on/client';
-import { useTryOnFlow, type GenerationPhase } from './use-try-on-flow';
+import { useTryOnFlow } from './use-try-on-flow';
+import { SheetMakingStep } from './sheet/sheet-making-step';
+import { makingProgress } from '@/lib/try-on/making-progress';
+import { getSheetCopy } from '@/lib/try-on/sheet-copy';
 
 // Kept exported from here for the embed's existing tests.
 export { pollTryOnJob };
-
-/* Single ordered source of truth — progress percentage and loading-step
-   index both derive from one phase's position here, instead of two
-   hand-maintained per-phase tables that had to be kept in sync by hand. */
-const GENERATION_PHASES: readonly GenerationPhase[] = [
-  'session-requested',
-  'session-created',
-  'generation-requested',
-  'result-received',
-];
-
-function generationProgress(phase: GenerationPhase): number {
-  return ((GENERATION_PHASES.indexOf(phase) + 1) / GENERATION_PHASES.length) * 100;
-}
-
-/* 'result-received' clamps to the LAST configured loading step (merchants
-   can configure a custom step list of any length) rather than a literal
-   ordinal position, so it stays Infinity rather than joining the array. */
-function generationStepIndex(phase: GenerationPhase): number {
-  return phase === 'result-received' ? Number.POSITIVE_INFINITY : GENERATION_PHASES.indexOf(phase);
-}
 
 export type TryOnDemoOverrides = {
   generateLabel?: string;
@@ -63,6 +44,7 @@ export function TryOnDemo({
   variantId,
   shopProduct,
   overrides,
+  lookSeconds = null,
 }: {
   productId?: string;
   /** Display/settings context only. Billing authority comes from the signed capability. */
@@ -70,6 +52,7 @@ export function TryOnDemo({
   variantId?: string;
   shopProduct?: ShopProductOverride;
   overrides?: TryOnDemoOverrides;
+  lookSeconds?: number | null;
 } = {}) {
   const { t, locale } = useTryOnLocale();
   const baseProduct = (productId && getProduct(productId)) || getDefaultProduct();
@@ -82,15 +65,16 @@ export function TryOnDemo({
         details: [],
       }
     : localizeProduct(baseProduct, locale);
-  const loadingSteps = overrides?.loadingSteps?.length ? overrides.loadingSteps : t.loadingSteps;
+  const sheetCopy = getSheetCopy(locale);
+  const loadingSteps = overrides?.loadingSteps?.length ? overrides.loadingSteps : sheetCopy.makingSteps;
   const loadingStyle = overrides?.loadingStyle ?? 'steps';
   const generateLabel = overrides?.generateLabel || t.generateBtn;
 
   const {
     step,
     photoDataUrl,
-    generationPhase,
-    isSlowGeneration,
+    generationStartedAt,
+    serverStage,
     job,
     error,
     unavailable,
@@ -101,18 +85,24 @@ export function TryOnDemo({
     generate,
     retrySession,
     reset,
+    forget,
+    discardBrokenLook,
   } = useTryOnFlow({ product, shopProduct, displayShop, variantId, t });
   const handleFileSelected = useCallback((_file: File, dataUrl: string) => selectPhoto(dataUrl), [selectPhoto]);
 
-  const loadingStepIdx = Math.min(
-    generationStepIndex(generationPhase),
-    loadingSteps.length - 1,
-  );
-  const currentLoadingLabel = loadingSteps[loadingStepIdx] ?? t.generatingTitle;
-  // Keep the long-wait copy merchant-controlled and localized without widening
-  // this component's settings contract. The final configured step becomes the
-  // calm fallback message while progress itself stays on the last real signal.
-  const slowLoadingLabel = loadingSteps.at(-1) ?? currentLoadingLabel;
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (step !== 'generating') return;
+    const timer = window.setInterval(() => setNow(Date.now()), 500);
+    return () => window.clearInterval(timer);
+  }, [step]);
+  const progress = makingProgress({
+    elapsedMs: generationStartedAt === null ? 0 : now - generationStartedAt,
+    estimateSeconds: lookSeconds,
+    stepCount: loadingSteps.length,
+    stage: serverStage,
+  });
+  const announcement = progress.overEstimate ? sheetCopy.makingAlmostThere : loadingSteps[progress.stepIndex];
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-10">
@@ -154,12 +144,12 @@ export function TryOnDemo({
           keyboard open during upload) forced scroll for no reason — this
           just needs to be tall enough that switching steps doesn't jump. */}
       <div className="gc-fade-in-up min-h-[280px] rounded-2xl border p-6 sm:min-h-[420px] sm:p-8 gc-landing-card" style={{ animationDelay: '0.1s' }}>
-        {sessionState === 'loading' && (
+        {sessionState === 'loading' && step !== 'result' && (
           <p className="mb-5 text-sm text-muted-foreground" role="status" aria-live="polite">
             {t.preparingSession}
           </p>
         )}
-        {sessionState === 'error' && (
+        {sessionState === 'error' && step !== 'result' && (
           <div className="mb-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4" role="alert">
             <p className="font-medium text-foreground">{t.storefrontProofErrorTitle}</p>
             <p className="mt-1 text-sm text-muted-foreground">{sessionError}</p>
@@ -255,128 +245,18 @@ export function TryOnDemo({
 
         {/* Step: Generating (style is merchant-configurable) */}
         {step === 'generating' && (
-          <div
-            className="flex flex-col items-center gap-6 py-8"
-            role="status"
-            aria-live="polite"
-            aria-busy="true"
-          >
-            {loadingStyle === 'pulse' && product.imageUrl ? (
-              <div className="relative isolate">
-                <span
-                  aria-hidden="true"
-                  className="absolute -inset-3 rounded-2xl border border-primary/25 motion-safe:animate-[gc-tryon-processing-ring_3.6s_ease-out_infinite] motion-reduce:opacity-30"
-                />
-                <div className="relative overflow-hidden rounded-xl border bg-muted/20 shadow-[0_18px_50px_-28px_color-mix(in_oklch,var(--primary)_55%,transparent)] motion-safe:animate-[gc-tryon-processing-breathe_3.8s_cubic-bezier(0.45,0,0.2,1)_infinite]">
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    width={160}
-                    height={213}
-                    className="aspect-[3/4] w-32 object-cover"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 bg-[linear-gradient(180deg,transparent_36%,color-mix(in_oklch,var(--primary)_44%,transparent)_49%,transparent_62%)] motion-safe:animate-[gc-tryon-processing-scan_2.8s_cubic-bezier(0.4,0,0.2,1)_infinite] motion-reduce:hidden"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 bg-gradient-to-t from-background/55 via-transparent to-transparent"
-                  />
-                </div>
-              </div>
-            ) : loadingStyle !== 'bar' ? (
-              <div className="relative grid size-20 place-items-center">
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 rounded-full border border-primary/25 motion-safe:animate-[gc-tryon-processing-ring_3.6s_ease-out_infinite] motion-reduce:opacity-30"
-                />
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-3 rounded-full bg-primary/15 blur-xl motion-safe:animate-[gc-tryon-processing-breathe_3.8s_cubic-bezier(0.45,0,0.2,1)_infinite]"
-                />
-                <div className="relative grid size-14 place-items-center overflow-hidden rounded-2xl border border-primary/20 bg-primary/10 shadow-[0_14px_40px_-24px_color-mix(in_oklch,var(--primary)_65%,transparent)]">
-                  <ScanLine className="size-6 text-primary" aria-hidden="true" />
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 bg-[linear-gradient(180deg,transparent_36%,color-mix(in_oklch,var(--primary)_48%,transparent)_49%,transparent_62%)] motion-safe:animate-[gc-tryon-processing-scan_2.8s_cubic-bezier(0.4,0,0.2,1)_infinite] motion-reduce:hidden"
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            <div className="w-full space-y-4 text-center">
-              <h3 className="text-lg font-semibold text-foreground">
-                {t.generatingTitle}
-              </h3>
-
-              {loadingStyle === 'steps' ? (
-                <div className="mx-auto max-w-sm space-y-1.5 text-start">
-                  {loadingSteps.map((label, idx) => (
-                    <div
-                      key={`${idx}-${label}`}
-                      aria-current={idx === loadingStepIdx ? 'step' : undefined}
-                      className={`flex min-h-9 items-center gap-3 rounded-lg px-3 py-2 text-sm transition-[color,background-color] duration-200 ${
-                        idx < loadingStepIdx
-                          ? 'text-primary/80'
-                          : idx === loadingStepIdx
-                            ? 'bg-primary/5 font-medium text-foreground'
-                            : 'text-muted-foreground/35'
-                      }`}
-                    >
-                      {idx < loadingStepIdx ? (
-                        <CheckCircle className="size-4 shrink-0" aria-hidden="true" />
-                      ) : idx === loadingStepIdx ? (
-                        <span className="relative grid size-4 shrink-0 place-items-center" aria-hidden="true">
-                          <span className="absolute inset-0 rounded-full border border-primary/45 motion-safe:animate-[gc-tryon-processing-ring_2.8s_ease-out_infinite] motion-reduce:opacity-40" />
-                          <span className="size-1.5 rounded-full bg-primary" />
-                        </span>
-                      ) : (
-                        <span className="grid size-4 shrink-0 place-items-center" aria-hidden="true">
-                          <span className="size-1 rounded-full bg-muted-foreground/25" />
-                        </span>
-                      )}
-                      <span>{label}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="mx-auto max-w-sm space-y-3">
-                  {loadingStyle === 'bar' && (
-                    <div
-                      className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={generationProgress(generationPhase)}
-                      aria-valuetext={isSlowGeneration ? slowLoadingLabel : currentLoadingLabel}
-                    >
-                      <div
-                        className="h-full rounded-full bg-primary shadow-[0_0_18px_color-mix(in_oklch,var(--primary)_55%,transparent)] transition-[width] duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
-                        style={{
-                          width: `${generationProgress(generationPhase)}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    {isSlowGeneration ? slowLoadingLabel : currentLoadingLabel}
-                  </p>
-                </div>
-              )}
-
-              {loadingStyle === 'steps' && isSlowGeneration && (
-                <p className="mx-auto flex max-w-sm items-center justify-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                  <span className="relative size-2 shrink-0" aria-hidden="true">
-                    <span className="absolute inset-0 rounded-full bg-primary motion-safe:animate-[gc-tryon-processing-ring_2.8s_ease-out_infinite] motion-reduce:opacity-50" />
-                  </span>
-                  <span>{slowLoadingLabel}</span>
-                </p>
-              )}
-            </div>
-          </div>
+          <>
+            <p role="status" className="sr-only">{announcement}</p>
+            <SheetMakingStep
+              copy={sheetCopy}
+              photoDataUrl={photoDataUrl}
+              piece={product}
+              steps={loadingSteps}
+              progress={progress}
+              loadingStyle={loadingStyle}
+            />
+          </>
         )}
-
         {/* Step: Result */}
         {step === 'result' && job && (
           <TryOnResult
@@ -385,6 +265,8 @@ export function TryOnDemo({
             shopMode={!!shopProduct}
             controls={overrides?.result}
             onReset={reset}
+            onForget={() => void forget()}
+            onImageError={() => void discardBrokenLook()}
           />
         )}
 

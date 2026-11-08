@@ -1,21 +1,13 @@
-/* Where the making-the-look screen stands (02-try-on.md, TryOn-Waiting).
-   Without real stages the steps run in order over the store's own
-   estimate, and the last one holds until the look arrives. A store whose
-   looks are made after the answer (contract N38) reports real stages, and
-   the steps follow them: the first step until the provider starts, then
-   the others paced by the estimate while it fits and renders the piece,
-   and the last at once when the look is being saved. Polls come every few
-   seconds, so the short saving stage alone could not be relied on to show
-   the last step. The seconds count down from that estimate and are dropped,
-   never shown as zero or less, once it runs out. */
+/* The server advances the stages; elapsed time only eases the bar. A
+   store's recent median is an estimate, never evidence that a stage or
+   look has finished. After that estimate the countdown disappears while
+   the scanning treatment and reassuring copy keep the wait visibly live. */
 
 import type { TryOnStage } from './types';
 
-/** Step pace when the store has too few looks for an estimate. */
-export const DEFAULT_STEP_MS = 8_000;
 /** The bar never fills before the look is actually there. */
 export const MAX_FRACTION = 0.95;
-/** The bar's pace without an estimate: about 63 percent at 20 seconds. */
+/** The bar's pace without an estimate: about 60 percent at 20 seconds. */
 const UNKNOWN_PACE_MS = 20_000;
 
 export type MakingProgress = {
@@ -25,6 +17,8 @@ export type MakingProgress = {
   secondsLeft: number | null;
   /** How full the bar is, 0 to MAX_FRACTION. */
   fraction: number;
+  /** The known estimate has passed; replace the countdown with reassurance. */
+  overEstimate: boolean;
 };
 
 export function makingProgress({
@@ -39,21 +33,19 @@ export function makingProgress({
   /** The server's own stage, when the store's looks report one. */
   stage?: TryOnStage | null;
 }): MakingProgress {
-  const elapsed = Math.max(0, elapsedMs);
+  const elapsed = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
   const last = Math.max(0, stepCount - 1);
-  const estimateMs = estimateSeconds && estimateSeconds > 0 ? estimateSeconds * 1000 : null;
-
-  const paced =
-    estimateMs === null
-      ? Math.min(last, Math.floor(elapsed / DEFAULT_STEP_MS))
-      : Math.min(last, Math.floor((elapsed / estimateMs) * Math.max(1, stepCount)));
-  const stepIndex = stage ? stagedStep(stage, paced, last) : paced;
+  const estimateMs = estimateSeconds !== null && Number.isFinite(estimateSeconds) && estimateSeconds > 0
+    ? estimateSeconds * 1000
+    : null;
+  const stepIndex = stage === 'finishing' ? last : stage === 'making' ? Math.min(1, last) : 0;
 
   if (estimateMs === null) {
     return {
       stepIndex,
       secondsLeft: null,
-      fraction: Math.min(MAX_FRACTION, 1 - Math.exp(-elapsed / UNKNOWN_PACE_MS)),
+      fraction: MAX_FRACTION * (1 - Math.exp(-elapsed / UNKNOWN_PACE_MS)),
+      overEstimate: false,
     };
   }
 
@@ -61,14 +53,8 @@ export function makingProgress({
   return {
     stepIndex,
     secondsLeft: left >= 1 ? left : null,
-    fraction: Math.min(MAX_FRACTION, elapsed / estimateMs),
+    // About 93% at the median, then an increasingly gentle approach to 95%.
+    fraction: MAX_FRACTION * (1 - Math.exp((-4 * elapsed) / estimateMs)),
+    overEstimate: elapsed >= estimateMs,
   };
-}
-
-/** The step a real stage allows: received holds the first, making moves
- *  on from the second with time, and finishing shows the last. */
-function stagedStep(stage: TryOnStage, paced: number, last: number): number {
-  if (stage === 'received') return 0;
-  if (stage === 'finishing') return last;
-  return Math.max(paced, Math.min(1, last));
 }

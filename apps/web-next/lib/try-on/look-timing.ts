@@ -34,7 +34,17 @@ export function typicalSeconds(durationsMs: readonly unknown[]): number | null {
  *  null when there are too few or they cannot be read. Never throws. */
 export async function getTypicalLookSeconds(shop: string | null | undefined, now: number = Date.now()): Promise<number | null> {
   if (!shop) return null;
-  const cached = cache.get(shop);
+  return readTypicalLookSeconds(shop, now);
+}
+
+/** Public demo jobs have no merchant tenant. Keep their timing separate. */
+export async function getTypicalPublicLookSeconds(now: number = Date.now()): Promise<number | null> {
+  return readTypicalLookSeconds(null, now);
+}
+
+async function readTypicalLookSeconds(shop: string | null, now: number): Promise<number | null> {
+  const cacheKey = shop ?? 'public-demo';
+  const cached = cache.get(cacheKey);
   if (cached && cached.expiresAt > now) return cached.seconds;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -47,16 +57,16 @@ export async function getTypicalLookSeconds(shop: string | null | undefined, now
       const query = supabase
         .from('tryon_jobs')
         .select('duration_ms')
-        .eq('shop', shop)
         .eq('status', 'completed')
         .gte('created_at', new Date(now - RECENT_DAYS * 24 * 60 * 60 * 1000).toISOString());
-      return (excludeTestLooks ? query.eq('is_test', false) : query)
+      const tenantQuery = shop === null ? query.is('shop', null) : query.eq('shop', shop);
+      return (excludeTestLooks ? tenantQuery.eq('is_test', false) : tenantQuery)
         .order('created_at', { ascending: false })
         .limit(RECENT_LOOKS);
     });
     if (error) return null;
     const seconds = typicalSeconds(((data ?? []) as Array<{ duration_ms: unknown }>).map((row) => row.duration_ms));
-    cache.set(shop, { seconds, expiresAt: now + TTL_MS });
+    cache.set(cacheKey, { seconds, expiresAt: now + TTL_MS });
     return seconds;
   } catch {
     return null;

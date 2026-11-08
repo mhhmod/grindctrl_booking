@@ -11,7 +11,7 @@ import { TryOnSheet } from './try-on-sheet';
 /* The sheet's photo, check and consent steps (02-try-on.md) over the same
    flow today's embed uses. The flow itself is covered by try-on-demo's
    tests; here it records what the sheet asks of it. */
-const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false }));
+const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false, serverStage: 'received' as 'received' | 'making' | 'finishing' }));
 vi.mock('../use-try-on-flow', async () => {
   const { useCallback, useState } = await import('react');
   return {
@@ -31,6 +31,7 @@ vi.mock('../use-try-on-flow', async () => {
         photoDataUrl,
         generationStartedAt,
         generationSeconds,
+        serverStage: flow.serverStage,
         sessionState: 'ready',
         sessionError: null,
         job,
@@ -117,6 +118,7 @@ beforeEach(async () => {
   flow.generated = 0;
   flow.selected = [];
   flow.finish = false;
+  flow.serverStage = 'received';
 });
 
 afterEach(() => {
@@ -177,7 +179,7 @@ describe('the v16 try-on sheet', () => {
     await screen.findByRole('heading', { name: 'See it on you' });
     fireEvent.click(screen.getByRole('button', { name: 'How photos are handled' }));
     expect(screen.getByRole('heading', { name: 'How photos are handled' })).toBeInTheDocument();
-    expect(screen.getByText(/stays here for 24 hours/)).toBeInTheDocument();
+    expect(screen.getByText(/stay here for 24 hours/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back to photo options' }));
     expect(screen.getByRole('heading', { name: 'See it on you' })).toBeInTheDocument();
   });
@@ -188,7 +190,7 @@ describe('the v16 try-on sheet', () => {
     expect(screen.getByText(/يستغرق الأمر حوالي 20 ثانية\./)).toBeInTheDocument();
   });
 
-  it("makes the look on the store's own estimate, step by step, and says each step once", async () => {
+  it('follows server stages and reassures after the median without inventing progress', async () => {
     renderSheet({ lookSeconds: 12 });
     await pickPhoto();
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
@@ -198,20 +200,30 @@ describe('the v16 try-on sheet', () => {
     expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
     expect(screen.getByText('About 12 seconds left')).toBeInTheDocument();
     const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
-    expect(live).toHaveTextContent('Reading your photo');
+    expect(live).toHaveTextContent('Preparing your photo');
     const steps = within(screen.getByRole('list'));
-    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Preparing your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
     act(() => vi.advanceTimersByTime(5_000));
     expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
-    expect(steps.getByText('Fitting the garment').closest('li')).toHaveAttribute('aria-current', 'step');
-    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
-    expect(live).toHaveTextContent('Fitting the garment');
+    expect(steps.getByText('Preparing your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
-    // Past the estimate: the last step holds and the seconds go, never zero.
+    flow.serverStage = 'making';
+    act(() => vi.advanceTimersByTime(500));
+    expect(steps.getByText('Making your look').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Preparing your photo').closest('li')).not.toHaveAttribute('aria-current');
+    expect(live).toHaveTextContent('Making your look');
+
+    // Passing the estimate never advances the server's real stage.
     act(() => vi.advanceTimersByTime(30_000));
     expect(screen.queryByText(/seconds? left/)).toBeNull();
-    expect(steps.getByText('Rendering your look').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Making your look').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(live).toHaveTextContent('Still working on your look. Thanks for waiting.');
+    expect(screen.queryByText('Your look is ready')).toBeNull();
+
+    flow.serverStage = 'finishing';
+    act(() => vi.advanceTimersByTime(500));
+    expect(steps.getByText('Finishing your look').closest('li')).toHaveAttribute('aria-current', 'step');
   });
 
   it("uses the store's own steps and loading style, and promises no time without an estimate", async () => {
