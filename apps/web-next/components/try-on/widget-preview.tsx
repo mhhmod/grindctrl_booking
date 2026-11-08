@@ -1,8 +1,15 @@
 'use client';
 
 import * as React from 'react';
+import { toAppearanceTokens } from '@/lib/try-on/appearance';
 import { useId, useState } from 'react';
 import type { SettingsFormCopy } from '@/lib/try-on/settings-copy';
+
+/* Buttons and pills follow the same rule as the storefront and the embed
+   (lib/try-on/appearance.ts): the merchant's exact corners, 999 = fully round. */
+function controlRadius(s: Pick<WidgetPreviewSettings, 'accentBg' | 'accentFg' | 'radiusPx'>): string {
+  return toAppearanceTokens(s)['--gc-control-radius'];
+}
 
 /* Interactive preview of every shopper-facing surface the settings form
    configures: the product-page button, the journey it expands into, the
@@ -147,7 +154,7 @@ function JourneyMock({
         style={{
           background: s.accentBg,
           color: s.accentFg,
-          borderRadius: `${Math.min(s.radiusPx, 20)}px`,
+          borderRadius: controlRadius(s),
         }}
       >
         {copy.previewGenerateCta}
@@ -232,7 +239,7 @@ function ResultsMock({ s, t, copy }: { s: WidgetPreviewSettings; t: (typeof TOKE
     { key: 'whatsapp', show: s.showWhatsapp, label: copy.requestWhatsapp },
     { key: 'again', show: s.showTryAgain, label: copy.tryAnotherPhoto },
   ];
-  const radius = `${Math.min(s.radiusPx, 20)}px`;
+  const radius = controlRadius(s);
 
   return (
     <div
@@ -399,7 +406,7 @@ export function WidgetPreview({
               style={{
                 background: s.accentBg,
                 color: s.accentFg,
-                borderRadius: `${s.radiusPx}px`,
+                borderRadius: controlRadius(s),
               }}
             >
               <span style={{ marginInlineEnd: 10, display: 'inline-flex' }}>
@@ -434,7 +441,7 @@ export function WidgetPreview({
                       lineHeight: 1,
                       background: s.accentBg,
                       color: s.accentFg,
-                      borderRadius: 999,
+                      borderRadius: controlRadius(s),
                     }}
                   >
                     <span
