@@ -143,3 +143,40 @@ describe('V16TryOnStudio for a WooCommerce store', () => {
   });
 });
 
+describe('the storefront Try-On switch', () => {
+  const sw = getTryOnStudioCopy('en').storefrontSwitch;
+  const draw = (status: Parameters<typeof V16TryOnStudio>[0]['buttonStatus'], setButton?: Parameters<typeof V16TryOnStudio>[0]['setButton']) =>
+    renderWithMantine(
+      <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()} buttonStatus={status} setButton={setButton} />,
+    );
+
+  it('turns the button off for every platform and says what shoppers see', async () => {
+    const setButton = vi.fn(async () => ({ ok: true as const }));
+    draw({ showButton: true, tryOnState: 'on', reason: null }, setButton);
+    expect(screen.getByText(sw.state.on)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('switch', { name: sw.on }));
+    await waitFor(() => expect(setButton).toHaveBeenCalledWith({ shop: 'site:s1', showButton: false }));
+    expect(await screen.findByText(sw.state.off)).toBeInTheDocument();
+  });
+
+  it('puts the switch back and explains when saving fails', async () => {
+    const setButton = vi.fn(async () => ({ ok: false as const, error: 'failed', reason: 'show_button_unavailable' }));
+    draw({ showButton: true, tryOnState: 'on', reason: null }, setButton as never);
+    fireEvent.click(screen.getByRole('switch', { name: sw.on }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(sw.unavailable);
+    expect(screen.getByRole('switch', { name: sw.on })).toBeChecked();
+  });
+
+  it('cannot be switched before the store is installed, and points to installing', () => {
+    draw({ showButton: true, tryOnState: 'not_installed', reason: null }, vi.fn());
+    expect(screen.getByText(sw.state.not_installed)).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: sw.on })).toBeDisabled();
+    expect(screen.getByRole('link', { name: sw.install })).toHaveAttribute('href', '/dashboard/store-chat/setup#install');
+  });
+
+  it('names why an installed, switched-on button is not showing', () => {
+    draw({ showButton: true, tryOnState: 'not_ready', reason: 'out_of_looks' }, vi.fn());
+    expect(screen.getByText(sw.reason.out_of_looks)).toBeInTheDocument();
+  });
+});
+

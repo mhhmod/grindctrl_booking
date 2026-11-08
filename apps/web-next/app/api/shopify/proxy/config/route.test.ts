@@ -3,9 +3,10 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { entitlementMock, settingsMock, rateLimitMock, flagsMock, launchMock, activeInstallationMock } = vi.hoisted(() => ({
+const { entitlementMock, settingsMock, showButtonMock, rateLimitMock, flagsMock, launchMock, activeInstallationMock } = vi.hoisted(() => ({
   entitlementMock: vi.fn(),
   settingsMock: vi.fn(),
+  showButtonMock: vi.fn(),
   rateLimitMock: vi.fn(),
   flagsMock: vi.fn(),
   launchMock: vi.fn(),
@@ -28,6 +29,7 @@ vi.mock('@/lib/try-on/entitlement', () => ({
 }));
 vi.mock('@/lib/try-on/settings', () => ({
   getTryOnSettings: (...args: unknown[]) => settingsMock(...args),
+  readTryOnShowButton: (...args: unknown[]) => showButtonMock(...args),
 }));
 vi.mock('@/lib/flags/store-flags', () => ({
   storeFlags: (...args: unknown[]) => flagsMock(...args),
@@ -75,10 +77,35 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     clearProxyConfigCache();
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
+    showButtonMock.mockReset().mockResolvedValue(true);
     entitlementMock.mockReset().mockResolvedValue(entitlement());
     flagsMock.mockReset().mockResolvedValue([]);
     launchMock.mockReset().mockResolvedValue(null);
     activeInstallationMock.mockReset().mockResolvedValue(true);
+  });
+
+  /* One switch for every platform: off hides the block and the pills. */
+  it('answers hidden with paused while the merchant has the button switched off', async () => {
+    showButtonMock.mockResolvedValue(false);
+    const body = await (await GET(request())).json();
+    expect(body).toMatchObject({ tryOn: 'hidden', reason: 'paused', available: false });
+    expect(showButtonMock).toHaveBeenCalledWith(SHOP);
+  });
+
+  it('is paused even when the plan cannot be read, and live again once switched on', async () => {
+    showButtonMock.mockResolvedValue(false);
+    entitlementMock.mockRejectedValueOnce(new Error('db down'));
+    expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'hidden', reason: 'paused' });
+
+    showButtonMock.mockResolvedValue(true);
+    invalidateProxyConfig(SHOP);
+    expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'live', reason: null, available: true });
+  });
+
+  it('reports unavailable, uncached, when the switch cannot be read', async () => {
+    showButtonMock.mockRejectedValueOnce(new Error('db down'));
+    expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'hidden', reason: 'unavailable' });
+    expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'live' });
   });
 
   /* v16 per-store flags: the storefront scripts read them from here. */
@@ -216,9 +243,19 @@ describe('GET /api/shopify/proxy/config launch state (N5, N6)', () => {
     rateLimitMock.mockReset().mockResolvedValue({ success: true, reset: Date.now() + 10_000 });
     clearProxyConfigCache();
     settingsMock.mockReset().mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12 });
+    showButtonMock.mockReset().mockResolvedValue(true);
     entitlementMock.mockReset().mockResolvedValue(entitlement());
     flagsMock.mockReset().mockResolvedValue(['n5_preview_mode', 'n6_holdout']);
     launchMock.mockReset().mockResolvedValue(preview('preview'));
+  });
+
+  /* A preview link lifts out_of_looks only (test looks are free); the
+     merchant's own switch holds for it as plan_inactive does. */
+  it('keeps a switched-off button hidden from the owner\'s preview link too', async () => {
+    showButtonMock.mockResolvedValue(false);
+    const { token } = signPreviewToken(CORE_SECRET, SHOP);
+    const body = await (await GET(request('en', { vid: visitors[0], preview: token }))).json();
+    expect(body).toMatchObject({ tryOn: 'hidden', reason: 'paused', available: false, launch: { test: true } });
   });
 
   afterEach(() => {

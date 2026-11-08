@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { ActionIcon, Button, ColorInput, Group, SegmentedControl, Switch, TextInput, Textarea } from '@mantine/core';
+import Link from 'next/link';
 import { GcIcon } from '@/components/icons';
 import { WidgetPreview, type PreviewTab } from '@/components/try-on/widget-preview';
 import type { TryOnWidgetSettings } from '@/components/try-on/settings-controls';
@@ -24,6 +25,9 @@ import { getSettingsFormCopy } from '@/lib/try-on/settings-copy';
 import { getSheetCopy } from '@/lib/try-on/sheet-copy';
 import { actionFailureLabel, getTryOnDashboardCopy } from '@/lib/try-on/dashboard-copy';
 import type { MerchantActionFailure } from '@/lib/request-rate-limit';
+import type { TryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
+
+type SetTryOnButton = (input: { shop: string; showButton: boolean }) => Promise<{ ok: true } | (MerchantActionFailure & { reason?: string })>;
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-tryon-studio.module.css';
 
@@ -78,6 +82,8 @@ export function V16TryOnStudio({
   wpAdmin = null,
   settings,
   saveSettings,
+  buttonStatus = null,
+  setButton,
 }: {
   locale: SiteLocale;
   /** The store's tenant key: a shop domain, or `site:<id>` for WooCommerce. */
@@ -86,6 +92,9 @@ export function V16TryOnStudio({
   wpAdmin?: { siteEditor: string; customizer: string } | null;
   settings: TryOnWidgetSettings;
   saveSettings: SaveTryOnSettings;
+  /** The storefront button switch and its status, saved through setButton. */
+  buttonStatus?: TryOnButtonStatus | null;
+  setButton?: SetTryOnButton;
 }) {
   const copy = getTryOnStudioCopy(locale);
   const id = React.useId();
@@ -172,6 +181,7 @@ export function V16TryOnStudio({
 
   return (
     <div ref={studioRef} tabIndex={-1} className={classes.studio}>
+      {buttonStatus ? <ButtonSwitch copy={copy.storefrontSwitch} shop={shop} status={buttonStatus} setButton={setButton} /> : null}
       {(dirty || status !== 'idle') && (
         <div ref={barRef} tabIndex={-1} role="region" aria-label={copy.unsavedLabel} className={classes.bar} data-state={dirty ? 'dirty' : status}>
           <span className={classes.barMessage}>
@@ -467,5 +477,66 @@ export function V16TryOnStudio({
         </section>
       </div>
     </div>
+  );
+}
+
+/** The one storefront switch for the Try it on button, on every platform:
+ *  what shoppers see now, and the switch that changes it. */
+function ButtonSwitch({
+  copy,
+  shop,
+  status,
+  setButton,
+}: {
+  copy: TryOnStudioCopy['storefrontSwitch'];
+  shop: string;
+  status: TryOnButtonStatus;
+  setButton?: SetTryOnButton;
+}) {
+  const [on, setOn] = React.useState(status.showButton);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const installed = status.tryOnState !== 'not_installed';
+  const reason = status.tryOnState === 'not_ready' && status.reason && status.reason in copy.reason
+    ? copy.reason[status.reason as keyof typeof copy.reason]
+    : null;
+  const line = !installed ? copy.state.not_installed : !on ? copy.state.off : reason ?? copy.state.on;
+
+  async function change(next: boolean) {
+    if (!setButton) return;
+    setOn(next);
+    setBusy(true);
+    setError(null);
+    const result = await setButton({ shop, showButton: next }).catch(() => null);
+    setBusy(false);
+    if (!result || !result.ok) {
+      setOn(!next);
+      setError(result && !result.ok && result.reason === 'show_button_unavailable' ? copy.unavailable : copy.failed);
+    }
+  }
+
+  return (
+    <section className={classes.switchRow} aria-live="polite">
+      <div className={classes.switchText}>
+        <span className={classes.switchState} data-on={installed && on && !reason ? '' : undefined}>
+          <span className={classes.switchDot} aria-hidden="true" />
+          {line}
+        </span>
+        {!installed ? (
+          <Button component={Link} href="/dashboard/store-chat/setup#install" variant="subtle" size="compact-sm">
+            {copy.install}
+          </Button>
+        ) : null}
+        {error ? <span role="alert" className={classes.switchError}>{error}</span> : null}
+      </div>
+      <Switch
+        size="md"
+        labelPosition="left"
+        label={on ? copy.on : copy.off}
+        checked={installed && on}
+        disabled={!installed || busy || !setButton}
+        onChange={(event) => void change(event.currentTarget.checked)}
+      />
+    </section>
   );
 }

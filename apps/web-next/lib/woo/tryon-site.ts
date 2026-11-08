@@ -2,7 +2,8 @@ import 'server-only';
 
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { getShopEntitlement } from '@/lib/try-on/entitlement';
-import { tryOnLaunchFromEntitlement, type TryOnLaunch } from '@/lib/try-on/launch';
+import { PAUSED, tryOnLaunchFromEntitlement, type TryOnLaunch } from '@/lib/try-on/launch';
+import { readTryOnShowButton } from '@/lib/try-on/settings';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 
 /* Site-level Try-On state for WooCommerce and WordPress tenants: which
@@ -34,16 +35,21 @@ export async function siteByEmbedKey(key: unknown): Promise<SiteByEmbedKey | nul
   }
 }
 
+/** The launch answer for a WooCommerce or pasted-code site, and whether it
+ *  has no plan yet (its free plan is granted on the first look). A button
+ *  the merchant switched off is `paused` and never `unsubscribed`: no
+ *  shopper may start a look, so no plan is granted for one. */
 export async function readSiteLaunch(
   siteId: string,
 ): Promise<{ launch: TryOnLaunch; unsubscribed: boolean }> {
-  try {
-    const entitlement = await getShopEntitlement(siteTenantKey(siteId));
-    return {
-      launch: tryOnLaunchFromEntitlement(entitlement),
-      unsubscribed: entitlement.status === 'none',
-    };
-  } catch {
+  const tenant = siteTenantKey(siteId);
+  const [showButton, entitlement] = await Promise.allSettled([readTryOnShowButton(tenant), getShopEntitlement(tenant)]);
+  if (showButton.status === 'fulfilled' && !showButton.value) return { launch: PAUSED, unsubscribed: false };
+  if (showButton.status === 'rejected' || entitlement.status === 'rejected') {
     return { launch: { tryOn: 'hidden', reason: 'unavailable' }, unsubscribed: false };
   }
+  return {
+    launch: tryOnLaunchFromEntitlement(entitlement.value),
+    unsubscribed: entitlement.value.status === 'none',
+  };
 }

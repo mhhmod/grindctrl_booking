@@ -41,6 +41,7 @@ export type PasteInstallCopy = {
   chatShown: string;
   chatPreview: string;
   tryOnOn: (looks: number) => string;
+  tryOnOff: string;
   seeOnStore: string;
   showSteps: string;
   hideSteps: string;
@@ -126,6 +127,7 @@ const en: PasteInstallCopy = {
   chatShown: 'Shoppers see Store Chat on every page.',
   chatPreview: 'Store Chat is in preview, so only you see it.',
   tryOnOn: (looks) => `Try-On is on your product pages. ${looks} looks left this month.`,
+  tryOnOff: 'Try-On is switched off, so shoppers don’t see the button. Turn it on in Try-On settings.',
   seeOnStore: 'See it on your store',
   showSteps: 'Show the install steps',
   hideSteps: 'Hide the install steps',
@@ -235,6 +237,7 @@ const ar: PasteInstallCopy = {
   chatShown: 'يرى المتسوقون دردشة المتجر في كل الصفحات.',
   chatPreview: 'دردشة المتجر في وضع المعاينة، لذا تظهر لك وحدك.',
   tryOnOn: (looks) => `التجربة الافتراضية تعمل في صفحات منتجاتك. متبقٍ هذا الشهر: ${looks} ${looks >= 3 && looks <= 10 ? 'إطلالات' : 'إطلالة'}.`,
+  tryOnOff: 'التجربة الافتراضية متوقفة، لذا لا يرى المتسوقون الزر. فعّلها من إعدادات التجربة الافتراضية.',
   seeOnStore: 'شاهدها في متجرك',
   showSteps: 'إظهار خطوات التثبيت',
   hideSteps: 'إخفاء خطوات التثبيت',

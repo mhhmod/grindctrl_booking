@@ -16,7 +16,7 @@ function status(over: Partial<PasteInstallStatus> = {}): PasteInstallStatus {
   return {
     siteId: 's1', tenantKey: 'site:s1', platform: 'website', shopDomain: null, shopProof: null, shopProvenAt: null,
     shopCheck: null, shopFirstSeenAt: null, shopLastSeenAt: null, connected: true, trusted: true, connectionReason: null, domains: [], seen: false, seenHost: null, chatLive: false,
-    tryOnReady: false, tryOnReason: 'no_trusted_domain', plan: {} as PasteInstallStatus['plan'], mode: 'live',
+    tryOnReady: false, tryOnReason: 'no_trusted_domain', showButton: true, plan: {} as PasteInstallStatus['plan'], mode: 'live',
     secretVersion: 1, rotationOverlapUntil: null, turnstileConfigured: true, ...over,
   };
 }

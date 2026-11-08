@@ -90,6 +90,29 @@ describe('Try-On product block launch answer', () => {
     expect(document.querySelector('.gc-tryon-btn')).toBeNull();
   });
 
+  it('removes the block, with no error, when the merchant switched the button off', async () => {
+    stubFetch({ tryOn: 'hidden', reason: 'paused', available: false, messageKey: 'tryOnTemporarilyUnavailable' });
+    window.eval(productAsset);
+
+    await waitFor(() => expect(document.querySelector('.gc-tryon-root')).toBeNull());
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('takes the button away when it was switched off after the page loaded', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => String(input).includes('/config?')
+      ? new Response(JSON.stringify({ tryOn: 'live', reason: null }))
+      : new Response(JSON.stringify({ error: 'paused' }), { status: 409 })));
+    window.eval(productAsset);
+    const root = document.querySelector('.gc-tryon-root')!;
+    await waitFor(() => expect(root.classList.contains('gc-tryon-root--pending')).toBe(false));
+
+    fireEvent.click(document.querySelector('.gc-tryon-btn')!);
+
+    await waitFor(() => expect(document.querySelector('.gc-tryon-root')).toBeNull());
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+    expect(document.querySelector('iframe')).toBeNull();
+  });
+
   it('reads the older available field from a server without tryOn', async () => {
     stubFetch({ available: false });
     window.eval(productAsset);

@@ -3,6 +3,7 @@ import { ACTIVE_INSTALL_WINDOW_MS } from '@/lib/adapters/install';
 import { siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { getShopEntitlement, type ShopEntitlement } from '@/lib/try-on/entitlement';
 import { tryOnLaunchFromEntitlement } from '@/lib/try-on/launch';
+import { readTryOnShowButton } from '@/lib/try-on/settings';
 import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView, type LaunchState } from '@/lib/launch/audience';
 import { storeFlags } from '@/lib/flags/store-flags';
@@ -56,6 +57,10 @@ export type PasteInstallStatus = {
   chatLive: boolean;
   tryOnReady: boolean;
   tryOnReason: string | null;
+  /** The merchant's Try-On button switch (tryon_settings.show_button); null
+   *  when it could not be read. Off hides the button whatever `tryOnReady`
+   *  says: shoppers' context requests are refused as `paused`. */
+  showButton: boolean | null;
   plan: ShopEntitlement;
   mode: LaunchState;
   secretVersion: number | null;
@@ -67,9 +72,10 @@ export type PasteInstallStatus = {
  * free-plan grant or secret material occurs during a status read. */
 export async function readPasteInstallStatus(site: { id: string; status: string }, now = new Date()): Promise<PasteInstallStatus> {
   const tenantKey = siteTenantKey(site.id);
-  const [connection, domains, plan, launch, features] = await Promise.all([
+  const [connection, domains, plan, launch, features, showButton] = await Promise.all([
     getPasteConnection(site.id), listPasteDomains(site.id), getShopEntitlement(tenantKey),
     getStoreLaunch(tenantKey), storeFlags({ widgetSiteId: site.id }),
+    readTryOnShowButton(tenantKey).catch(() => null),
   ]);
   const trust = pasteTrust(connection);
   const connected = connection?.status === 'active' || connection?.status === 'pending';
@@ -108,6 +114,7 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     chatLive: site.status === 'active' && seen && (mode === 'live' || mode === 'holdout'),
     tryOnReady: site.status !== 'disabled' && !reason,
     tryOnReason: site.status === 'disabled' ? 'site_disabled' : reason,
+    showButton,
     plan, mode, secretVersion: connection?.secret_version ?? null,
     rotationOverlapUntil: connection?.previous_valid_until ?? null,
     turnstileConfigured,

@@ -204,6 +204,14 @@ describe('paste context limits and launch', () => {
     expect(verifyStorefrontContext(pasteCapabilitySecret(SITE)!, result.context.token)?.test).toBe(true);
     expect(result.turnstile).toBeNull();
   });
+  it('mints nothing while the button is switched off, the owner\'s preview link included', async () => {
+    m.launch.mockResolvedValue({ launch: { tryOn: 'hidden', reason: 'paused' }, unsubscribed: false });
+    const response = await post();
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: 'paused' });
+    m.flags.mockResolvedValue(['n5_preview_mode']); m.storeLaunch.mockResolvedValue({ state: 'preview', salt: 'salt' });
+    expect(await (await post({ preview: signPreviewToken(CORE, `site:${SITE}`).token })).json()).toEqual({ error: 'paused' });
+  });
   it('does not exempt an unsigned test=true request', async () => {
     const result = await (await post({ test: true })).json();
     expect(verifyStorefrontContext(pasteCapabilitySecret(SITE)!, result.context.token)?.test).toBeUndefined();
