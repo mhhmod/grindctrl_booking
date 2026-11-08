@@ -39,6 +39,7 @@ import { legacyStoreChatHref, MORE_SETTINGS } from '@/lib/dashboard/store-chat-l
 import { V16BackToSetUp, V16StoreTaken } from '@/components/dashboard/v16/states';
 import { getWooSiteConnection } from '@/lib/woo/connection';
 import { createWooPairingCodeAction } from './woo-actions';
+import * as pasteActions from './paste-actions';
 
 /* The editors on /dashboard/store-chat/setup/more, the ones Set up does not
    cover yet (see v16-chat-studio.tsx, More settings). */
@@ -264,6 +265,16 @@ export async function StoreChatPage({
             checkDomainAction: messengerActions.checkDomainAction,
             removeDomainAction: messengerActions.removeDomainAction,
             createWooPairingCodeAction,
+            paste: {
+              enable: pasteActions.enablePasteInstallAction,
+              addDomain: pasteActions.addPasteDomainAction,
+              removeDomain: pasteActions.removePasteDomainAction,
+              proveDns: pasteActions.provePasteDomainAction,
+              proveMeta: pasteActions.provePasteDomainMetaAction,
+              rotate: pasteActions.rotatePasteSecretAction,
+              snippet: pasteActions.getPasteSnippetAction,
+              status: pasteActions.getPasteInstallStatusAction,
+            },
           }}
         />
         {operatorFlags && (

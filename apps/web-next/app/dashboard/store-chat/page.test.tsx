@@ -135,7 +135,7 @@ describe('the Store Chat routes', () => {
     expect(screen.getByTestId('chat-studio')).toHaveTextContent('maison.myshopify.com:3:none');
     expect(screen.getByTestId('chat-studio')).toHaveAttribute(
       'data-actions',
-      'addDomainAction,checkDomainAction,createWooPairingCodeAction,discardDraft,disconnectSiteAction,listDomainsAction,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
+      'addDomainAction,checkDomainAction,createWooPairingCodeAction,discardDraft,disconnectSiteAction,listDomainsAction,paste,publishConfig,removeDomainAction,revertConfigAction,saveDraftSections,setMessengerEnabled',
     );
     expect(screen.queryByTestId('more-settings')).not.toBeInTheDocument();
     expect(listConversationsForSite).not.toHaveBeenCalled();
