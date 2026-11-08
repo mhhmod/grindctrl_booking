@@ -23,7 +23,7 @@ export function V16NoStore({ locale }: { locale: SiteLocale }) {
   return (
     <V16Notice title={copy.noStore.title} body={copy.noStore.body}>
       <ConnectShopPanel locale={locale} />
-      <Button component={Link} href="/dashboard/store-chat" variant="default" radius="pill" h={44}>
+      <Button component={Link} href="/dashboard/store-chat/setup#install" variant="default" radius="pill" h={44}>
         {copy.noStore.setUpChat}
       </Button>
     </V16Notice>
@@ -80,13 +80,20 @@ export function V16NeedsStore({
           ))}
         </V16NoticeGroup>
       )}
-      <V16NoticeGroup>
-        <ConnectShopPanel locale={locale} hasShops={shops.length > 0} />
+      {/* Pasting the code needs no app review, so it leads until the
+          Shopify app is listed; the plugin and the app follow. */}
+      <V16NoticeGroup hint={copy.needsStore.pasteHint}>
+        <Button component={Link} href="/dashboard/store-chat/setup#install" radius="pill" h={44}>
+          {copy.needsStore.pasteAction}
+        </Button>
       </V16NoticeGroup>
       <V16NoticeGroup hint={copy.needsStore.wooHint}>
-        <Button component={Link} href="/dashboard/store-chat" variant="default" radius="pill" h={44}>
+        <Button component={Link} href="/dashboard/store-chat/setup#install" variant="default" radius="pill" h={44}>
           {copy.needsStore.wooAction}
         </Button>
+      </V16NoticeGroup>
+      <V16NoticeGroup>
+        <ConnectShopPanel locale={locale} hasShops={shops.length > 0} />
       </V16NoticeGroup>
     </V16Notice>
   );

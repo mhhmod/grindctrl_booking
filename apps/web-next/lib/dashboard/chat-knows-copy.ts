@@ -14,6 +14,7 @@ export interface ChatKnowsCopy {
   liveOn: (domain: string) => string;
   live: string;
   hidden: string;
+  notInstalled: string;
   answeredShare: (pct: number, chats: number) => string;
   noChatsYet: string;
   openStore: string;
@@ -72,6 +73,7 @@ const en: ChatKnowsCopy = {
   setUp: 'Set up',
   liveOn: (domain) => `Live on ${domain}`,
   live: 'Live on your store',
+  notInstalled: 'Not installed yet',
   hidden: 'Hidden from shoppers',
   answeredShare: (pct, chats) =>
     `In the last 7 days the assistant answered ${pct}% of ${chats === 1 ? '1 chat' : `${chats} chats`} on its own.`,
@@ -125,6 +127,7 @@ const ar: ChatKnowsCopy = {
   liveOn: (domain) => `تعمل على ${domain}`,
   live: 'تعمل على متجرك',
   hidden: 'مخفية عن المتسوقين',
+  notInstalled: 'لم يُثبَّت بعد',
   answeredShare: (pct, chats) => `خلال آخر 7 أيام أجاب المساعد بنفسه عن ${pct}% من ${arChats(chats)}.`,
   noChatsYet: 'لا محادثات منتهية خلال آخر 7 أيام بعد.',
   openStore: 'افتح متجرك',

@@ -170,10 +170,11 @@ export async function StoreChatPage({
   // Setting Store Chat up is for owners and admins (item 12); the actions check it again.
   const canSetUp = roleCan(selectedRole, 'settings');
   if (route === 'knows') {
-    const [statsRead, knowledgeRead] = await Promise.allSettled([getOverviewStats(selected.id), listKnowledge(selected.id)]);
+    const [statsRead, knowledgeRead, seenRead] = await Promise.allSettled([getOverviewStats(selected.id), listKnowledge(selected.id), getWidgetLastSeenAt(selected.id)]);
     const head = buildChatHead(
       {
         active: selected.status === 'active',
+        installed: seenRead.status === 'fulfilled' ? Boolean(seenRead.value) : undefined,
         domain: selected.domain,
         solved7: statsRead.status === 'fulfilled' ? statsRead.value.aiResolved7d : null,
         handedOff7: statsRead.status === 'fulfilled' ? statsRead.value.handedOff7d : null,
@@ -227,6 +228,7 @@ export async function StoreChatPage({
         head={buildChatHead(
           {
             active: selected.status === 'active',
+            installed: detectedRead.status === 'fulfilled' ? Boolean(detectedRead.value) : undefined,
             domain: selected.domain,
             solved7: stats?.aiResolved7d ?? null,
             handedOff7: stats?.handedOff7d ?? null,

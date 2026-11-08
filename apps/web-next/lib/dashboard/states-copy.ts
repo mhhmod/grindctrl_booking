@@ -15,6 +15,8 @@ export interface StatesCopy {
     switchTo: (store: string) => string;
     wooAction: string;
     wooHint: string;
+    pasteAction: string;
+    pasteHint: string;
   };
   storeTaken: { title: string; body: string; action: string };
   backToSetUp: string;
@@ -25,8 +27,8 @@ export interface StatesCopy {
 const en: StatesCopy = {
   noStore: {
     title: 'Connect your first store',
-    body: 'Your results appear here once a store is connected. Connect a Shopify store, or set up Store Chat on your own website.',
-    setUpChat: 'Set up Store Chat on your website',
+    body: 'Your results appear here once a store is connected. Paste one code into your store, on Shopify, EasyOrders or any website, or connect the Shopify app.',
+    setUpChat: 'Install with a code',
   },
   lookupFailed: {
     title: 'We couldn’t load your stores',
@@ -35,8 +37,8 @@ const en: StatesCopy = {
   },
   needsStore: {
     tryOn: {
-      title: 'Try-On needs a connected store',
-      body: 'Try-On runs on the product pages of a Shopify or WooCommerce store. Connect one to turn it on.',
+      title: 'Connect your store to turn on Try-On',
+      body: 'Try-On runs on your product pages. Pick the way that fits your store.',
     },
     plan: {
       title: 'Plans belong to a connected store',
@@ -46,6 +48,8 @@ const en: StatesCopy = {
     switchTo: (store) => `Switch to ${store}`,
     wooAction: 'Connect a WooCommerce store',
     wooHint: 'Install the GRINDCTRL plugin on WordPress and pair it with a code from Store Chat.',
+    pasteAction: 'Install with a code',
+    pasteHint: 'Paste one code into your store. Works on Shopify, EasyOrders and any website, no app needed.',
   },
   // The store's Try-On link is on this account, so the merchant can move
   // Store Chat themselves: a re-link from Shopify admin moves both.
@@ -67,8 +71,8 @@ const en: StatesCopy = {
 const ar: StatesCopy = {
   noStore: {
     title: 'اربط متجرك الأول',
-    body: 'تظهر نتائجك هنا بعد ربط متجر. اربط متجر Shopify، أو فعّل دردشة المتجر على موقعك.',
-    setUpChat: 'فعّل دردشة المتجر على موقعك',
+    body: 'تظهر نتائجك هنا بعد ربط متجر. الصق كوداً واحداً في متجرك على Shopify أو EasyOrders أو أي موقع، أو اربط تطبيق Shopify.',
+    setUpChat: 'ثبّت بكود',
   },
   lookupFailed: {
     title: 'تعذّر تحميل متاجرك',
@@ -77,8 +81,8 @@ const ar: StatesCopy = {
   },
   needsStore: {
     tryOn: {
-      title: 'التجربة الافتراضية تحتاج إلى متجر مرتبط',
-      body: 'تعمل التجربة الافتراضية في صفحات منتجات متجر Shopify أو WooCommerce. اربط متجراً لتشغيلها.',
+      title: 'اربط متجرك لتشغيل التجربة الافتراضية',
+      body: 'تعمل التجربة الافتراضية في صفحات منتجاتك. اختر الطريقة التي تناسب متجرك.',
     },
     plan: {
       title: 'الباقات مرتبطة بمتجر مرتبط',
@@ -88,6 +92,8 @@ const ar: StatesCopy = {
     switchTo: (store) => `التبديل إلى ${store}`,
     wooAction: 'اربط متجر WooCommerce',
     wooHint: 'ثبّت إضافة GRINDCTRL على ووردبريس واربطها برمز من دردشة المتجر.',
+    pasteAction: 'ثبّت بكود',
+    pasteHint: 'الصق كوداً واحداً في متجرك. يعمل على Shopify وEasyOrders وأي موقع، بدون تطبيق.',
   },
   storeTaken: {
     title: 'محادثة المتجر لهذا المتجر على حساب آخر',
