@@ -208,8 +208,10 @@ export function findPasteTags(html: string): Array<Map<string, string>> {
 
 export type PasswordForm = { action: string; fields: Array<[string, string]>; passwordField: string };
 
-/** Shopify's storefront password page: a form posting form_type
- *  storefront_password. Its hidden fields are replayed with the password. */
+/** Shopify's storefront password page. Older themes mark it with a hidden
+ *  form_type=storefront_password; current ones (Dawn, 2026) only POST a
+ *  password box to /password, so either signal counts. Its hidden fields
+ *  are replayed with the password. */
 export function findPasswordForm(html: string): PasswordForm | null {
   // The bounded body keeps a page full of unclosed forms linear.
   for (const form of html.matchAll(/<form\b((?:[^"'<>]|"[^"<>]*"|'[^'<>]*')*)>([\s\S]{0,65536}?)<\/form\s*>/gi)) {
@@ -229,7 +231,10 @@ export function findPasswordForm(html: string): PasswordForm | null {
       if (name === 'form_type' && value === 'storefront_password') storefrontPassword = true;
       if (fields.length < MAX_FORM_FIELDS && value.length <= 512) fields.push([name, value]);
     }
-    if (storefrontPassword) return { action: formAttrs.get('action') || '/password', fields, passwordField: passwordField ?? 'password' };
+    const action = formAttrs.get('action') ?? '';
+    const postsToPassword = /^(?:https:\/\/[^/]+)?\/password\/?(?:[?#].*)?$/i.test(action)
+      && (formAttrs.get('method') ?? '').toLowerCase() === 'post' && passwordField !== null;
+    if (storefrontPassword || postsToPassword) return { action: action || '/password', fields, passwordField: passwordField ?? 'password' };
   }
   return null;
 }
