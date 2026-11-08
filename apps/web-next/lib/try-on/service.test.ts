@@ -3,24 +3,37 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 const {
   beginTryOnJobMock,
   beginTestTryOnJobMock,
+  beginPublicDemoTryOnJobMock,
+  completePublicDemoTryOnJobMock,
+  persistPublicDemoTryOnResultMock,
   finalizeTryOnJobMock,
   loadAuthorizedDurableTryOnJobMock,
   persistGeneratedTryOnResultMock,
   persistTryOnJobMock,
   runImageGenerationMock,
+  prepareGarmentImageMock,
+  persistJobTimingsMock,
   getShopModelKeyMock,
 } = vi.hoisted(() => ({
   beginTryOnJobMock: vi.fn(),
   beginTestTryOnJobMock: vi.fn(),
+  beginPublicDemoTryOnJobMock: vi.fn(),
+  completePublicDemoTryOnJobMock: vi.fn(),
+  persistPublicDemoTryOnResultMock: vi.fn(),
   finalizeTryOnJobMock: vi.fn(),
   loadAuthorizedDurableTryOnJobMock: vi.fn(),
   persistGeneratedTryOnResultMock: vi.fn(),
   persistTryOnJobMock: vi.fn(),
   runImageGenerationMock: vi.fn(),
+  prepareGarmentImageMock: vi.fn(),
+  persistJobTimingsMock: vi.fn(),
   getShopModelKeyMock: vi.fn(),
 }));
 
 vi.mock('./persistence', () => ({
+  beginPublicDemoTryOnJob: (...args: unknown[]) => beginPublicDemoTryOnJobMock(...args),
+  completePublicDemoTryOnJob: (...args: unknown[]) => completePublicDemoTryOnJobMock(...args),
+  persistPublicDemoTryOnResult: (...args: unknown[]) => persistPublicDemoTryOnResultMock(...args),
   beginTryOnJob: (...args: unknown[]) => beginTryOnJobMock(...args),
   beginTestTryOnJob: (...args: unknown[]) => beginTestTryOnJobMock(...args),
   finalizeTryOnJob: (...args: unknown[]) => finalizeTryOnJobMock(...args),
@@ -28,10 +41,16 @@ vi.mock('./persistence', () => ({
     loadAuthorizedDurableTryOnJobMock(...args),
   persistGeneratedTryOnResult: (...args: unknown[]) =>
     persistGeneratedTryOnResultMock(...args),
+  prepareTryOnResultPersistence: () => Promise.resolve({ row: null }),
   persistTryOnJob: (...args: unknown[]) => persistTryOnJobMock(...args),
 }));
 vi.mock('./image-runner', () => ({
   runImageGeneration: (...args: unknown[]) => runImageGenerationMock(...args),
+  prepareGarmentImage: (...args: unknown[]) => prepareGarmentImageMock(...args),
+}));
+vi.mock('./job-timings', async (importOriginal) => ({
+  ...await importOriginal<typeof import('./job-timings')>(),
+  persistJobTimings: (...args: unknown[]) => persistJobTimingsMock(...args),
 }));
 vi.mock('./entitlement', () => ({
   getShopModelKey: (...args: unknown[]) => getShopModelKeyMock(...args),
@@ -39,6 +58,7 @@ vi.mock('./entitlement', () => ({
 
 import {
   generateTryOn,
+  forgetJob,
   getJob,
   getTryOnMode,
   TryOnFinalizationPendingError,
@@ -103,6 +123,12 @@ describe('try-on service', () => {
     delete process.env.TRYON_MODE;
     beginTryOnJobMock.mockReset();
     beginTestTryOnJobMock.mockReset();
+    beginPublicDemoTryOnJobMock.mockReset().mockResolvedValue(true);
+    completePublicDemoTryOnJobMock.mockReset().mockResolvedValue(undefined);
+    persistPublicDemoTryOnResultMock.mockReset().mockResolvedValue({
+      storagePath: 'jobs/tryon_demo/result.png', persistedAt: '2026-08-31T00:00:00.000Z',
+      expiresAt: '2026-08-31T00:10:00.000Z',
+    });
     finalizeTryOnJobMock.mockReset();
     loadAuthorizedDurableTryOnJobMock.mockReset().mockResolvedValue(null);
     persistGeneratedTryOnResultMock.mockReset().mockResolvedValue({
@@ -112,6 +138,8 @@ describe('try-on service', () => {
     });
     persistTryOnJobMock.mockReset().mockResolvedValue(undefined);
     runImageGenerationMock.mockReset();
+    prepareGarmentImageMock.mockReset().mockResolvedValue({ dataUrl: 'data:image/png;base64,AAAA', byteLength: 3 });
+    persistJobTimingsMock.mockReset().mockResolvedValue(undefined);
     getShopModelKeyMock.mockReset().mockResolvedValue('meta/muse-image');
     /* The fixtures are dated 2026-08-31; jobs expire with their session
        (ten minutes), so the clock reads a minute after them. */
@@ -119,6 +147,7 @@ describe('try-on service', () => {
   });
 
   afterEach(() => {
+    for (const [finished] of persistJobTimingsMock.mock.calls) forgetJob(finished.jobId);
     delete process.env.TRYON_MODE;
     vi.restoreAllMocks();
   });
@@ -194,6 +223,174 @@ describe('try-on service', () => {
         TIER_ENV_NAMES.forEach((name) => delete process.env[name]);
       });
 
+      it('starts garment preparation during plan lookup, but cannot call the provider before reservation', async () => {
+        let finishPlan!: (model: string) => void;
+        let planStarted!: () => void;
+        const planEntered = new Promise<void>(resolve => { planStarted = resolve; });
+        getShopModelKeyMock.mockImplementation(() => {
+          planStarted();
+          return new Promise<string>(resolve => { finishPlan = resolve; });
+        });
+        let finishReservation!: (value: unknown) => void;
+        let reserveStarted!: () => void;
+        const reserveEntered = new Promise<void>(resolve => { reserveStarted = resolve; });
+        beginTryOnJobMock.mockImplementation((input: { jobId: string }) => {
+          reserveStarted();
+          return new Promise(resolve => {
+            finishReservation = () => resolve({
+              jobId: input.jobId, created: true, status: 'processing', modelKey: 'lite',
+              createdAt: '2026-08-31T00:00:00.000Z',
+            });
+          });
+        });
+        const running = generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AQID');
+        await planEntered;
+        expect(prepareGarmentImageMock).toHaveBeenCalledOnce();
+        expect(beginTryOnJobMock).not.toHaveBeenCalled();
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        finishPlan('lite');
+        await reserveEntered;
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        finishReservation(undefined);
+        await running;
+        expect(runImageGenerationMock).toHaveBeenCalledOnce();
+        expect(prepareGarmentImageMock.mock.invocationCallOrder[0]).toBeLessThan(getShopModelKeyMock.mock.invocationCallOrder[0]);
+        expect(beginTryOnJobMock.mock.invocationCallOrder[0]).toBeLessThan(runImageGenerationMock.mock.invocationCallOrder[0]);
+        const options = runImageGenerationMock.mock.calls[0][7];
+        await expect(options.garment).resolves.toMatchObject({ value: { byteLength: 3 } });
+      });
+
+      it.each(['store-one.myshopify.com', 'site:123e4567-e89b-42d3-a456-426614174000'])(
+        'aborts/discards speculative garment work when the test-look cap denies %s, without provider spend', async (shop) => {
+          let rejectGarment!: (error: Error) => void;
+          prepareGarmentImageMock.mockReturnValue(new Promise((_resolve, reject) => { rejectGarment = reject; }));
+          beginTestTryOnJobMock.mockRejectedValue(new Error('daily_test_look_cap'));
+          await expect(generateTryOn(storefrontAuthorization({ shop, test: true }), 'upload', 'data:image/png;base64,AQID'))
+            .rejects.toThrow('daily_test_look_cap');
+          const signal = prepareGarmentImageMock.mock.calls[0][3] as AbortSignal;
+          expect(signal.aborted).toBe(true);
+          rejectGarment(new Error('cancelled garment response'));
+          await Promise.resolve();
+          expect(runImageGenerationMock).not.toHaveBeenCalled();
+          expect(finalizeTryOnJobMock).not.toHaveBeenCalled();
+          expect(beginTryOnJobMock).not.toHaveBeenCalled();
+        },
+      );
+
+      it('records reservation, persistence, finalization and inclusive total after delivery without adding public metadata', async () => {
+        let clock = 0;
+        vi.spyOn(performance, 'now').mockImplementation(() => { clock += 5; return clock; });
+        const delivered = await generateTryOn(storefrontAuthorization(), 'upload', 'data:image/png;base64,AQID');
+        expect(persistJobTimingsMock).toHaveBeenCalledOnce();
+        const [recordedJob, timings] = persistJobTimingsMock.mock.calls[0];
+        expect(recordedJob.jobId).toBe(delivered.jobId);
+        for (const phase of ['reservation_ms', 'garment_ms', 'persistence_ms', 'finalize_ms', 'total_ms']) {
+          expect(timings[phase]).toBeGreaterThan(0);
+        }
+        expect(timings.total_ms).toBeGreaterThan(timings.finalize_ms);
+        expect(timings.input_bytes.photo).toBe(3);
+        expect(finalizeTryOnJobMock.mock.invocationCallOrder[0]).toBeLessThan(persistJobTimingsMock.mock.invocationCallOrder[0]);
+        expect(JSON.stringify(delivered)).not.toMatch(/phase_timings|provider_attempts|input_bytes/);
+      });
+
+      it('keeps public studio jobs pollable in the background and replays the same attempt without a second provider call', async () => {
+        const tasks: Array<() => Promise<void>> = [];
+        const auth = authorization({ requestKey: '91919191-9191-4191-8191-919191919191' });
+        const options = { background: (task: () => Promise<void>) => tasks.push(task) };
+        const pending = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(pending.status).toBe('processing');
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        const replayPending = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(replayPending.jobId).toBe(pending.jobId);
+        expect(tasks).toHaveLength(1);
+        await tasks[0]();
+        expect(getJob(pending.jobId)?.status).toBe('completed');
+        const replayCompleted = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(replayCompleted.jobId).toBe(pending.jobId);
+        expect(runImageGenerationMock).toHaveBeenCalledOnce();
+        expect(beginTryOnJobMock).not.toHaveBeenCalled();
+        expect(completePublicDemoTryOnJobMock).toHaveBeenCalledOnce();
+        expect(persistPublicDemoTryOnResultMock).toHaveBeenCalledOnce();
+      });
+
+      it('replays the public studio attempt through synchronous fallback without a second provider call', async () => {
+        const auth = authorization({ requestKey: '92929292-9292-4292-8292-929292929292' });
+        const first = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID');
+        const fallbackRetry = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID');
+        expect(fallbackRetry.jobId).toBe(first.jobId);
+        expect(fallbackRetry.resultImageUrl).toBe(first.resultImageUrl);
+        expect(runImageGenerationMock).toHaveBeenCalledOnce();
+        expect(completePublicDemoTryOnJobMock).toHaveBeenCalledOnce();
+      });
+
+      it('claims public jobs durably before returning 202 or allowing provider work', async () => {
+        const auth = authorization({ requestKey: '93939393-9393-4393-8393-939393939393' });
+        let claimEntered!: () => void;
+        const entered = new Promise<void>(resolve => { claimEntered = resolve; });
+        let denyClaim!: (reason: Error) => void;
+        beginPublicDemoTryOnJobMock.mockImplementation(() => {
+          claimEntered();
+          return new Promise((_resolve, reject) => { denyClaim = reject; });
+        });
+        const tasks: Array<() => Promise<void>> = [];
+        const pending = generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined,
+          { background: task => tasks.push(task) });
+        const rejected = expect(pending).rejects.toThrow('claim unavailable');
+        await entered;
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        expect(tasks).toHaveLength(0);
+        denyClaim(new Error('claim unavailable'));
+        await rejected;
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+      });
+
+      it('rejects a forged public-demo tenant before claim or provider work', async () => {
+        await expect(generateTryOn(authorization({ shop: 'invalid tenant' }), 'upload', 'data:image/png;base64,AQID'))
+          .rejects.toThrow('Public demo sessions cannot authorize a billing shop');
+        expect(beginPublicDemoTryOnJobMock).not.toHaveBeenCalled();
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+      });
+
+      it('replays public processing and completed jobs from another worker without a second provider call', async () => {
+        const auth = authorization({ requestKey: '94949494-9494-4494-8494-949494949494' });
+        beginPublicDemoTryOnJobMock.mockResolvedValueOnce(true).mockResolvedValue(false);
+        const tasks: Array<() => Promise<void>> = [];
+        const options = { background: (task: () => Promise<void>) => tasks.push(task) };
+        const pending = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(pending.jobId).toMatch(/^tryon_demo_[a-f0-9]{64}$/);
+        forgetJob(pending.jobId); // A different worker has no memory copy.
+        loadAuthorizedDurableTryOnJobMock.mockResolvedValueOnce(pending);
+        const processing = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(processing.jobId).toBe(pending.jobId);
+        expect(processing.status).toBe('processing');
+        expect(tasks).toHaveLength(1);
+        expect(runImageGenerationMock).not.toHaveBeenCalled();
+        await tasks[0]();
+        const completed = getJob(pending.jobId)!;
+        forgetJob(pending.jobId); // Simulated restart after persistence.
+        loadAuthorizedDurableTryOnJobMock.mockResolvedValueOnce({ ...completed, resultImageUrl: 'https://storage.example/signed-demo' });
+        const recovered = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID', undefined, undefined, options);
+        expect(recovered.jobId).toBe(pending.jobId);
+        expect(recovered.resultImageUrl).toBe('https://storage.example/signed-demo');
+        expect(beginPublicDemoTryOnJobMock.mock.calls.map(([, job]) => job.jobId)).toEqual([
+          pending.jobId, pending.jobId, pending.jobId,
+        ]);
+        expect(runImageGenerationMock).toHaveBeenCalledOnce();
+        expect(persistPublicDemoTryOnResultMock.mock.invocationCallOrder[0])
+          .toBeLessThan(completePublicDemoTryOnJobMock.mock.invocationCallOrder[0]);
+      });
+
+      it('records public storage failure without erasing actual provider cost', async () => {
+        persistPublicDemoTryOnResultMock.mockRejectedValue(new Error('storage unavailable'));
+        const auth = authorization({ requestKey: '95959595-9595-4595-8595-959595959595' });
+        const failed = await generateTryOn(auth, 'upload', 'data:image/png;base64,AQID');
+        expect(failed.status).toBe('failed');
+        expect(failed.resultImageUrl).toBeUndefined();
+        expect(failed.meta.costEstimate).toBe(0.01);
+        expect(completePublicDemoTryOnJobMock).toHaveBeenCalledWith(auth,
+          expect.objectContaining({ status: 'failed', meta: expect.objectContaining({ costEstimate: 0.01 }) }), expect.any(Number));
+      });
+
       async function generateFor(tier: string | null) {
         getShopModelKeyMock.mockResolvedValue(tier);
         const auth = storefrontAuthorization();
@@ -217,19 +414,20 @@ describe('try-on service', () => {
       );
 
       /* N5: the owner's look from the preview link is a test look. */
-      it('reserves a test look, never a credit, for a test session', async () => {
+      it.each(['store-one.myshopify.com', 'site:123e4567-e89b-42d3-a456-426614174000'])(
+        'reserves a test look, never a credit, for a test session on %s', async (shop) => {
         beginTestTryOnJobMock.mockImplementation((input: { jobId: string }) =>
           Promise.resolve({
             jobId: input.jobId, created: true, status: 'processing', modelKey: 'test', message: null,
             provider: null, costUsd: null, durationMs: null, createdAt: '2026-08-31T00:00:00.000Z',
           }),
         );
-        const auth = storefrontAuthorization({ test: true });
+        const auth = storefrontAuthorization({ test: true, shop });
         const job = await generateTryOn(auth, 'upload', 'data:image/png;base64,AAAA');
 
         expect(beginTryOnJobMock).not.toHaveBeenCalled();
         expect(beginTestTryOnJobMock).toHaveBeenCalledWith({
-          shop: 'store-one.myshopify.com',
+          shop,
           jobId: expect.any(String),
           requestKey: auth.requestKey,
           sessionId: auth.sessionId,

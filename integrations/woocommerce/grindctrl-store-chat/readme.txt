@@ -4,7 +4,7 @@ Tags: chat, woocommerce, virtual try-on, customer support, order tracking
 Requires at least: 6.4
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -74,6 +74,10 @@ Under Advanced on the settings page you can enter the embed key by hand. The cha
 The script loads asynchronously in the footer, and the chat window only loads when a shopper shows interest in it.
 
 == Changelog ==
+
+= 0.3.2 =
+* Try-On uses an existing image derivative near 1024 pixels when available, reducing garment downloads.
+* Merchant preview links carry their test-look token through the Try-On context request.
 
 = 0.3.1 =
 * Try-On size picker on WooCommerce: variations are offered in the Try-On sheet and the chosen one is added to the cart.

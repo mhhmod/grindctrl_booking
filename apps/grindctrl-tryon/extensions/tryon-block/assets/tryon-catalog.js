@@ -257,6 +257,7 @@
   }
 
   function openDialog(handle, title, garment) {
+    var openedAt = Date.now();
     currentHandle = handle;
     currentTitle = title;
     currentGarment = garment;
@@ -314,6 +315,7 @@
         '&garment=' + encodeURIComponent(garment || '') +
         '&shop=' + encodeURIComponent(SHOP) +
         '&locale=' + encodeURIComponent(LOCALE) +
+        '&gc_opened_at=' + openedAt +
         '#storefrontContext=' + encodeURIComponent(storefrontContext.token) +
         '&storefrontNonce=' + encodeURIComponent(nonce);
       frame.addEventListener('load', function () { loading.style.display = 'none'; });

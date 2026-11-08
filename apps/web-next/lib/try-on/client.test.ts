@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { keepTryOnResultInPage, pollTryOnJob, releaseTryOnResult } from './client';
+import { keepTryOnResultInPage, pollTryOnJob, releaseTryOnResult, runPublicTryOn } from './client';
 
 /* Phase zero item 2: once this page holds the look, the server deletes its
    copy; a look this page could not read keeps its server copy until expiry. */
@@ -105,6 +105,41 @@ describe('pollTryOnJob for a look made after the answer', () => {
     expect(stages).toEqual(['making', 'finishing']);
   });
 
+  it('delays the first async poll for six seconds, then checks every 1.5 seconds', async () => {
+    fetchMock.mockResolvedValueOnce(answer({ status: 'processing' }))
+      .mockResolvedValueOnce(answer({ status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' }));
+    const polled = pollTryOnJob('tryon_1', 'signed-session', 'failed', undefined, { initialDelayMs: 6_000 });
+    await vi.advanceTimersByTimeAsync(5_999);
+    expect(fetchMock).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(polled).resolves.toMatchObject({ status: 'completed' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([200, 429])('honors Retry-After on status %s', async (status) => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, status: 'processing' }), {
+      status, headers: { 'Retry-After': '9' },
+    })).mockResolvedValueOnce(answer({ status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' }));
+    const polled = pollTryOnJob('tryon_1', 'signed-session', 'failed');
+    await vi.advanceTimersByTimeAsync(8_999);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    await expect(polled).resolves.toMatchObject({ status: 'completed' });
+  });
+
+  it('aborts an initial async delay without issuing a status request', async () => {
+    const controller = new AbortController();
+    const polled = pollTryOnJob('tryon_1', 'signed-session', 'failed', controller.signal, { initialDelayMs: 6_000 });
+    const checked = expect(polled).rejects.toMatchObject({ name: 'AbortError' });
+    controller.abort();
+    await checked;
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('keeps polling past two minutes when given the longer window', async () => {
     fetchMock.mockImplementation(async () => answer({ status: 'processing', stage: 'making' }));
     let settled = false;
@@ -118,5 +153,76 @@ describe('pollTryOnJob for a look made after the answer', () => {
     expect(settled).toBe(false);
     await vi.advanceTimersByTimeAsync(3 * 60_000);
     await expect(polled).resolves.toBeInstanceOf(Error);
+  });
+});
+
+describe('public studio async generation', () => {
+  afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
+  it('forwards the accepted and polled real stages to the studio until the look exists', async () => {
+    vi.useFakeTimers();
+    let polls = 0;
+    vi.stubGlobal('fetch', vi.fn(async (input: string, init?: RequestInit) => {
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
+      if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'signed-attempt' } });
+      if (input.endsWith('/generate')) return json({ ok: true, jobId: 'tryon_real', status: 'processing', stage: 'received' }, 202);
+      polls += 1;
+      return polls < 3 ? json({ ok: true, status: 'processing', stage: polls === 1 ? 'making' : 'finishing' })
+        : json({ ok: true, jobId: 'tryon_real', status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' });
+    }));
+    const onProgress = vi.fn();
+    const result = runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=', onProgress });
+    await vi.runAllTimersAsync();
+    await expect(result).resolves.toMatchObject({ ok: true });
+    expect(onProgress.mock.calls.map(([data]) => data.stage)).toEqual(['received', 'making', 'finishing']);
+    expect(onProgress.mock.calls.every(([data]) => !data.resultImageUrl)).toBe(true);
+  });
+  it('recovers the same job when synchronous fallback reports finalization pending', async () => {
+    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+      const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
+      if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'same-signed-attempt' } });
+      if (input.endsWith('/generate')) return json({ ok: false, code: 'TRYON_FINALIZATION_PENDING', jobId: 'tryon_same' }, 503);
+      return json({ ok: true, jobId: 'tryon_same', status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=' }))
+      .resolves.toMatchObject({ ok: true, jobId: 'tryon_same' });
+    const submissions = fetchMock.mock.calls.filter(([input]) => input.endsWith('/generate'));
+    expect(submissions).toHaveLength(2);
+    expect(submissions[0][1]?.body).toBe(submissions[1][1]?.body);
+  });
+  it('retries the same attempt body, honors the accepted Retry-After and keeps the five-minute window', async () => {
+    vi.useFakeTimers();
+    const generateBodies: unknown[] = [];
+    let polls = 0;
+    const fetchMock = vi.fn(async (input: string, init?: RequestInit) => {
+      const json = (data: unknown, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers });
+      if (init?.method === 'DELETE') return new Response(null, { status: 204 });
+      if (input.endsWith('/session')) return json({ ok: true, data: { sessionId: 'signed-session' } });
+      if (input.endsWith('/attempt')) return json({ ok: true, data: { attemptId: 'same-signed-attempt' } });
+      if (input.endsWith('/generate')) {
+        generateBodies.push(init?.body);
+        return generateBodies.length === 1 ? json({}, 502)
+          : json({ ok: true, jobId: 'tryon_async', status: 'processing' }, 202, { 'Retry-After': '8' });
+      }
+      polls += 1;
+      return Date.now() < started + 130_000 ? json({ ok: true, status: 'processing' }) : json({
+        ok: true, jobId: 'tryon_async', status: 'completed', resultImageUrl: 'data:image/png;base64,TE9PSw==',
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const started = Date.now();
+    const result = runPublicTryOn({ productId: 'demo-shirt', photoDataUrl: 'data:image/jpeg;base64,cGhvdG8=' });
+    await vi.advanceTimersByTimeAsync(7_999);
+    expect(polls).toBe(0);
+    expect(generateBodies).toHaveLength(2);
+    expect(generateBodies[0]).toBe(generateBodies[1]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(polls).toBe(1);
+    await vi.advanceTimersByTimeAsync(130_000);
+    await expect(result).resolves.toMatchObject({ ok: true, jobId: 'tryon_async' });
   });
 });

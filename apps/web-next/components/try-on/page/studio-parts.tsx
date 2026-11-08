@@ -31,6 +31,8 @@ import {
 } from '@/components/site/icons';
 import { trackClick } from '@/lib/analytics';
 import type { TryOnTranslator } from '@/lib/try-on/i18n';
+import type { MakingProgress } from '@/lib/try-on/making-progress';
+import type { TryOnStage } from '@/lib/try-on/types';
 import { cn } from '@/lib/utils';
 import {
   downloadName,
@@ -218,9 +220,9 @@ export function PieceCard({
       {/* Phones: one row. */}
       <section
         aria-labelledby="tp-piece-m"
-        className="flex items-center gap-3.5 rounded-[22px] border border-border bg-card p-3 lg:hidden"
+        className="flex min-w-0 items-center gap-2 rounded-[22px] border border-border bg-card p-2 sm:gap-3.5 sm:p-3 lg:hidden"
       >
-        <span className="relative h-24 w-[76px] shrink-0 overflow-hidden rounded-[14px] bg-gc-studio">
+        <span className="relative h-16 w-12 shrink-0 overflow-hidden rounded-[14px] bg-gc-studio sm:h-24 sm:w-[76px]">
           <Image
             key={`m-${swapKey}`}
             src={PIECES[piece].garment}
@@ -238,8 +240,8 @@ export function PieceCard({
               {t.pageStepPiece}
             </h2>
           </span>
-          <span className="mt-1.5 block text-base font-bold">{copy.name}</span>
-          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">{copy.kind}</span>
+          <span className="mt-1 block text-sm font-bold sm:mt-1.5 sm:text-base">{copy.name}</span>
+          <span className="mt-0.5 hidden text-[12.5px] text-muted-foreground sm:block">{copy.kind}</span>
         </div>
         {change}
       </section>
@@ -302,6 +304,7 @@ export function PhotoCard({
 
   return (
     <section aria-labelledby="tp-photo" className={CARD}>
+      <div className={photo ? undefined : 'max-sm:sr-only'}>
       <CardHead
         step={2}
         status={status}
@@ -315,9 +318,10 @@ export function PhotoCard({
           ) : null
         }
       />
+      </div>
       {photo ? (
         <>
-          <div className="relative h-[300px] overflow-hidden rounded-[18px] bg-gc-studio lg:h-[360px]">
+          <div className="relative h-[120px] overflow-hidden rounded-[18px] bg-gc-studio sm:h-[300px] lg:h-[360px]">
             {/* An uploaded photo is a data URL; next/image adds nothing there. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -331,7 +335,7 @@ export function PhotoCard({
               {photo.kind === 'upload' ? t.photoLabel : t.pageSamplePhoto}
             </span>
           </div>
-          <p className="mx-1.5 mb-1 mt-3 flex items-start gap-2 text-[12.5px] leading-[1.45] text-muted-foreground">
+          <p className="mx-1.5 mb-1 mt-2 flex items-start gap-2 text-xs leading-[1.45] text-muted-foreground sm:mt-3 sm:text-[12.5px]">
             <ShieldIcon size={15} className="mt-px shrink-0" />
             <span>{t.privacyText}</span>
           </p>
@@ -343,7 +347,7 @@ export function PhotoCard({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             aria-describedby={state.fileError ? errorId : undefined}
-            className="sr-only"
+            className="peer sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) onFile(file);
@@ -360,15 +364,15 @@ export function PhotoCard({
             onDragLeave={() => setDragging(false)}
             onDrop={onDrop}
             className={cn(
-              'flex h-[176px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[18px] border-[1.5px] border-dashed bg-gc-studio px-[18px] text-center hover:border-foreground has-[+input:focus-visible]:border-foreground lg:h-[292px]',
+              'flex min-h-[76px] cursor-pointer flex-wrap items-center justify-center gap-2 rounded-[18px] border-[1.5px] border-dashed bg-gc-studio px-2 py-2 text-center hover:border-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 sm:h-[176px] sm:flex-col sm:px-[18px] lg:h-[292px]',
               dragging ? 'border-foreground' : 'border-gc-inactive',
             )}
           >
-            <span className="flex size-11 items-center justify-center rounded-full bg-card">
+            <span className="flex size-8 items-center justify-center rounded-full bg-card sm:size-11">
               <UploadIcon size={20} />
             </span>
             <span className="text-[15px] font-bold">{t.pageAddPhoto}</span>
-            <span className="text-[12.5px] leading-[1.45] text-muted-foreground">{t.pageUploadRules}</span>
+            <span className="w-full text-[11px] leading-[1.45] text-muted-foreground sm:text-[12.5px]">{t.pageUploadRules}</span>
           </label>
           <div aria-live="polite">
             {state.fileError ? (
@@ -377,7 +381,7 @@ export function PhotoCard({
               </p>
             ) : null}
           </div>
-          <div className="mx-1 my-3 flex items-center gap-2.5 text-xs text-muted-foreground">
+          <div className="mx-1 my-1.5 flex items-center gap-2.5 text-xs text-muted-foreground sm:my-3">
             <span className="h-px flex-1 bg-secondary" />
             {t.pageOr}
             <span className="h-px flex-1 bg-secondary" />
@@ -385,14 +389,14 @@ export function PhotoCard({
           <button
             type="button"
             onClick={onUseSample}
-            className="flex h-14 w-full items-center gap-3 rounded-2xl border border-border px-2 text-start text-foreground hover:bg-foreground/[0.03]"
+            className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-border px-2 text-start text-foreground hover:bg-foreground/[0.03] sm:h-14 sm:gap-3"
           >
             <span className="relative size-10 shrink-0 overflow-hidden rounded-xl">
               <Image src={sampleThumb} alt="" fill unoptimized sizes="40px" className="object-cover object-[50%_12%]" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-bold">{t.pageUseSample}</span>
-              <span className="block text-xs text-muted-foreground">{t.pageSampleModel}</span>
+              <span className="hidden text-xs text-muted-foreground sm:block">{t.pageSampleModel}</span>
             </span>
             <ArrowIcon size={16} strokeWidth={1.9} data-icon="inline-end" className="shrink-0 rtl:-scale-x-100" />
           </button>
@@ -407,7 +411,7 @@ export function PhotoCard({
 export function Joiner({ glyph, busy }: { glyph: 'plus' | 'equals'; busy: boolean }) {
   const Icon = glyph === 'plus' ? PlusIcon : EqualsIcon;
   return (
-    <div aria-hidden="true" className="relative flex h-[52px] items-center justify-center lg:h-auto">
+    <div aria-hidden="true" className="relative hidden h-[52px] items-center justify-center sm:flex lg:h-auto">
       <span
         className={cn(
           'relative flex size-10 items-center justify-center rounded-full shadow-[0_10px_24px_-14px_rgb(32_29_27/0.6)]',
@@ -448,7 +452,8 @@ export function LookCard({
   t,
   state,
   look,
-  step,
+  progress,
+  serverStage = null,
   status,
   failureMessage,
   retryLocked,
@@ -460,7 +465,8 @@ export function LookCard({
   t: TryOnTranslator;
   state: StudioState;
   look: Look | null;
-  step: number;
+  progress: MakingProgress;
+  serverStage?: TryOnStage | null;
   status: StepStatus;
   failureMessage: string | null;
   retryLocked: boolean;
@@ -472,7 +478,6 @@ export function LookCard({
   const done = state.stage === 'done' && look;
   const photoView = done && state.view === 'photo';
   const shownImage = done ? (photoView ? photoSrc(look.photo) : look.image) : null;
-  const progress = state.stage === 'creating' ? Math.round(((step + 1) / t.loadingSteps.length) * 100) : 4;
 
   return (
     <section
@@ -522,7 +527,7 @@ export function LookCard({
             <img
               src={photoSrc(state.photo)}
               alt=""
-              className="absolute inset-0 size-full scale-[1.04] object-cover object-[50%_18%] opacity-55 blur-[6px] saturate-[0.6]"
+              className="absolute inset-0 size-full object-cover object-[50%_18%] opacity-70"
             />
             <div
               aria-hidden="true"
@@ -532,13 +537,14 @@ export function LookCard({
               <div className="mb-2 flex items-center gap-2.5">
                 <span className="gc-anim-spin-fast size-[18px] rounded-full border-2 border-foreground border-e-transparent" />
                 <span role="status" className="text-sm font-bold">
-                  {t.generatingTitle}
+                  {progress.overEstimate ? t.pageProgressAlmost : t.generatingTitle}
                 </span>
               </div>
               <ol>
-                {t.loadingSteps.map((label, index) => {
-                  const stepDone = index < step;
-                  const now = index === step;
+                {t.pageProgressStages.map((stageLabel, index) => {
+                  const label = index === 0 && !serverStage ? t.preparingSession : stageLabel;
+                  const stepDone = index < progress.stepIndex;
+                  const now = index === progress.stepIndex;
                   return (
                     <li
                       key={label}
@@ -560,10 +566,11 @@ export function LookCard({
                   );
                 })}
               </ol>
-              <div className="mt-2.5 h-1 overflow-hidden rounded-sm bg-foreground/[0.12]">
+              {progress.secondsLeft !== null ? <p className="mt-2 text-xs text-muted-foreground">{t.pageProgressRemaining(progress.secondsLeft)}</p> : null}
+              <div role="progressbar" aria-label={t.generatingTitle} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.floor(progress.fraction * 100)} className="mt-2.5 h-1 overflow-hidden rounded-sm bg-foreground/[0.12]">
                 <div
-                  className="h-full rounded-sm bg-foreground"
-                  style={{ width: `${progress}%`, transition: 'width 0.8s linear' }}
+                  className={cn('h-full rounded-sm bg-foreground motion-safe:transition-[width] motion-safe:duration-200', progress.overEstimate && 'gc-anim-live')}
+                  style={{ width: `${progress.fraction * 100}%` }}
                 />
               </div>
             </div>
@@ -653,6 +660,7 @@ export function ActionBar({
   onCompare,
   tryAnotherRef,
   compareRef,
+  createLocked = false,
 }: {
   t: TryOnTranslator;
   state: StudioState;
@@ -663,26 +671,32 @@ export function ActionBar({
   onCompare: () => void;
   tryAnotherRef?: React.Ref<HTMLButtonElement>;
   compareRef?: React.Ref<HTMLButtonElement>;
+  createLocked?: boolean;
 }) {
   const secondary =
     'inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-card px-[18px] text-[14.5px] font-bold text-foreground hover:brightness-105 max-lg:w-full';
+  const hintId = React.useId();
   return (
-    <div className="flex min-h-16 items-center justify-center text-center">
-      {state.stage === 'idle' ? (
-        <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-          <PhotoIcon size={16} />
-          {t.pageNeedPhoto}
-        </p>
-      ) : null}
-      {state.stage === 'ready' ? (
+    <div className="flex min-h-16 flex-col items-center justify-center gap-2 text-center">
+      {/* This piece on this photo is already made: making it again only
+          spends a look. Create returns when the piece or photo changes. */}
+      {state.stage === 'done' && look ? null : (
         <button
           type="button"
           onClick={onCreate}
-          className="inline-flex h-14 items-center justify-center gap-2.5 rounded-full bg-foreground px-[30px] text-base font-bold text-background shadow-[0_18px_36px_-18px_rgb(32_29_27/0.8)] hover:brightness-110 max-lg:w-full"
+          disabled={!state.photo || state.stage === 'creating' || createLocked}
+          aria-describedby={!state.photo ? hintId : undefined}
+          className="inline-flex h-12 items-center justify-center gap-2.5 rounded-full bg-foreground px-[30px] text-base font-bold text-background shadow-[0_18px_36px_-18px_rgb(32_29_27/0.8)] hover:brightness-110 disabled:opacity-45 max-lg:w-full sm:h-14"
         >
           <SparkleIcon size={18} />
           {t.pageCreateLook}
         </button>
+      )}
+      {!state.photo ? (
+        <p id={hintId} className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <PhotoIcon size={14} />
+          {t.pageNeedPhoto}
+        </p>
       ) : null}
       {state.stage === 'done' && look ? (
         <div className="flex w-full flex-col items-stretch gap-2.5 lg:w-auto lg:flex-row lg:flex-wrap lg:items-center lg:justify-center">

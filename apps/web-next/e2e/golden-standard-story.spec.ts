@@ -104,9 +104,10 @@ test.describe('landing story, pinned scenes', () => {
       'location',
     );
 
-    /* Try it on lands on the first try-on beat after the hero. */
-    await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Try it on' }).click();
-    await settleAt(page, at('tryon:1'));
+    /* Try it on opens the studio itself, not the try-on scene (owner decision,
+       2026-11-06: every "Try it on" link lands on a tool ready to use). */
+    const tryOn = page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Try it on' });
+    await expect(tryOn).toHaveAttribute('href', '/try-on');
 
     await page.evaluate(() => {
       window.location.hash = 'results';
@@ -116,9 +117,11 @@ test.describe('landing story, pinned scenes', () => {
     await openStory(page, '/#store');
     await settleAt(page, at('store:0'));
 
-    /* The old anchors still land somewhere sensible. */
-    await openStory(page, '/#demo');
-    await settleAt(page, at('tryon:1'));
+    /* The old demo anchors open the studio too. */
+    for (const hash of ['#demo', '#try']) {
+      await page.goto(`/${hash}`);
+      await expect(page).toHaveURL(/\/try-on$/);
+    }
   });
 
   test('switching language mid-story keeps the beat and flips <html> straight away', async ({ page, context, baseURL }) => {

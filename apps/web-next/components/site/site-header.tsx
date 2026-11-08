@@ -167,9 +167,10 @@ function Brand({
           className={cn(
             'font-extrabold tracking-[0.1em]',
             compact ? 'text-[13.5px] max-[359px]:hidden' : 'text-[15px]',
-            /* The try-on page's Arabic label is long; below 420px the mark
-               alone carries the brand so the label stays on one line. */
-            compact && tag?.onPhone && 'max-[419px]:rtl:hidden',
+            /* Below 420px the page label and the wordmark do not both fit
+               (the label truncated to "Try-..."), so the mark alone carries
+               the brand and the label stays whole, in both directions. */
+            compact && tag?.onPhone && 'max-[419px]:hidden',
           )}
         >
           GRINDCTRL

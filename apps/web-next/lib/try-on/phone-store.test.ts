@@ -4,6 +4,7 @@ import {
   createPhoneStore,
   memoryBackend,
   PHONE_KEEP_MS,
+  MAX_KEPT_LOOKS,
   type PhoneBackend,
 } from './phone-store';
 
@@ -15,7 +16,7 @@ function look(jobId: string) {
     jobId,
     productId: 'zahra-dress',
     productName: 'Zahra dress',
-    imageDataUrl: `data:image/png;base64,${jobId}`,
+    imageDataUrl: `data:image/png;base64,${Buffer.from(jobId).toString('base64')}`,
   };
 }
 
@@ -116,5 +117,38 @@ describe('phone store', () => {
     await expect(store.deleteAll()).resolves.toBeUndefined();
     await expect(store.rememberConsent(NOW)).resolves.toBeUndefined();
     expect(await store.purgeExpired(NOW)).toBe(0);
+  });
+
+  it('restores only the latest look for this tenant and product after the server result is deleted', async () => {
+    const backend = memoryBackend();
+    const store = createPhoneStore(backend);
+    await store.keepLook({ ...look('first'), tenantKey: 'site:one' }, NOW);
+    await store.keepLook({ ...look('newest'), tenantKey: 'site:one' }, NOW + 1);
+    await store.keepLook({ ...look('other-store'), tenantKey: 'site:two' }, NOW + 2);
+    await store.keepLook({ ...look('other-product'), tenantKey: 'site:one', productId: 'another' }, NOW + 3);
+    // Re-opening IndexedDB requires only local image bytes, never the now-deleted signed URL.
+    const revisited = createPhoneStore(backend);
+    expect((await revisited.latestLook('site:one', 'zahra-dress', NOW + 10))?.jobId).toBe('newest');
+    expect(await revisited.latestLook('site:one', 'missing', NOW + 10)).toBeNull();
+    expect(await revisited.latestLook('site:one', 'zahra-dress', NOW + PHONE_KEEP_MS + 1)).toBeNull();
+    await revisited.deleteLook('newest');
+    expect((await revisited.latestLook('site:one', 'zahra-dress', NOW + 10))?.jobId).toBe('first');
+  });
+
+  it('caps the store at the five most recent looks', async () => {
+    const store = createPhoneStore(memoryBackend());
+    for (let i = 0; i < 8; i++) await store.keepLook({ ...look(`look${i}`), tenantKey: 'shop' }, NOW + i);
+    expect((await store.looks(NOW + 9)).map((item) => item.jobId)).toEqual(['look7', 'look6', 'look5', 'look4', 'look3']);
+    expect(MAX_KEPT_LOOKS).toBe(5);
+  });
+
+  it('treats bad JSON, malformed records and remote result URLs as empty', async () => {
+    const backend = memoryBackend();
+    const store = createPhoneStore(backend);
+    await backend.put('kept', 'look:json', '{bad json');
+    await backend.put('kept', 'look:invalid', { ...look('invalid'), savedAt: NOW, expiresAt: Infinity });
+    await backend.put('kept', 'look:remote', { ...look('remote'), imageDataUrl: 'https://expired.example/result.png', savedAt: NOW, expiresAt: NOW + PHONE_KEEP_MS });
+    expect(await store.latestLook('shop', 'zahra-dress', NOW)).toBeNull();
+    expect(await store.looks(NOW)).toEqual([]);
   });
 });

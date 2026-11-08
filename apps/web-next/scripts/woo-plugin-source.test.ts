@@ -14,7 +14,7 @@ const tryon = read('includes/tryon.php');
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.1');
+    expect(header).toBe('0.3.2');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);
@@ -42,5 +42,23 @@ describe('GRINDCTRL Store Chat plugin source', () => {
     expect(tryon).toContain("'/tryon-product'");
     expect(tryon).toContain('render_block_woocommerce/product-button');
     expect(tryon).toContain("strpos( $content, 'gc-tryon-btn' )");
+  });
+
+  it('chooses an existing registered uncropped garment derivative above thumbnail size with a full fallback', () => {
+    const image = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_attachment_image'), tryon.indexOf('function grindctrl_sc_tryon_image'));
+    expect(image).toContain('wp_get_attachment_metadata( $image_id )');
+    expect(image).toContain('wp_get_registered_image_subsizes()');
+    expect(image).toContain("! isset( $registered[ $name ] )");
+    expect(image).toContain("! empty( $registered[ $name ]['crop'] )");
+    expect(image).toContain('$edge >= 1024 && $edge < $best_edge');
+    expect(image).toContain("wp_get_attachment_image_url( $image_id, 'full' )");
+  });
+
+  it('keeps preview-only entries hidden until the loader sees a preview token and forwards the token to the server', () => {
+    expect(tryon).toContain("'out_of_looks' === $data['reason']");
+    expect(tryon).toContain("$style .= ';display:none'");
+    expect(tryon).toContain("' gc-tryon-btn--preview'");
+    expect(tryon).toContain("'preview'     => $preview");
+    expect(tryon).not.toContain("'test'        =>");
   });
 });

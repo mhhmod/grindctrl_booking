@@ -12,6 +12,10 @@ vi.mock('@supabase/supabase-js', () => ({
           rows.filters.push([column, value]);
           return builder;
         },
+        is: (column: string, value: unknown) => {
+          rows.filters.push([column, value]);
+          return builder;
+        },
         gte: (column: string, value: unknown) => {
           rows.filters.push([column, value]);
           return builder;
@@ -24,7 +28,7 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-import { clearLookTimingCache, getTypicalLookSeconds, MIN_LOOKS, typicalSeconds } from './look-timing';
+import { clearLookTimingCache, getTypicalLookSeconds, getTypicalPublicLookSeconds, MIN_LOOKS, typicalSeconds } from './look-timing';
 
 beforeEach(() => {
   clearLookTimingCache();
@@ -65,5 +69,17 @@ describe('the time a look takes', () => {
     rows.error = { message: 'down' };
     expect(await getTypicalLookSeconds('maison.myshopify.com')).toBeNull();
     expect(await getTypicalLookSeconds(null)).toBeNull();
+  });
+
+  it('estimates public looks separately from merchant looks and keeps the sample floor', async () => {
+    rows.data = Array(MIN_LOOKS - 1).fill({ duration_ms: 31_000 });
+    expect(await getTypicalPublicLookSeconds()).toBeNull();
+    expect(rows.filters).toContainEqual(['shop', null]);
+    clearLookTimingCache();
+    rows.data.push({ duration_ms: 31_000 });
+    expect(await getTypicalPublicLookSeconds()).toBe(30);
+    rows.filters = [];
+    expect(await getTypicalLookSeconds('maison.myshopify.com')).toBe(30);
+    expect(rows.filters).toContainEqual(['shop', 'maison.myshopify.com']);
   });
 });

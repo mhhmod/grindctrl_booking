@@ -11,7 +11,7 @@ import { TryOnSheet } from './try-on-sheet';
 /* The sheet's photo, check and consent steps (02-try-on.md) over the same
    flow today's embed uses. The flow itself is covered by try-on-demo's
    tests; here it records what the sheet asks of it. */
-const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false }));
+const flow = vi.hoisted(() => ({ generated: 0, selected: [] as string[], finish: false, serverStage: 'received' as 'received' | 'making' | 'finishing' }));
 vi.mock('../use-try-on-flow', async () => {
   const { useCallback, useState } = await import('react');
   return {
@@ -31,6 +31,7 @@ vi.mock('../use-try-on-flow', async () => {
         photoDataUrl,
         generationStartedAt,
         generationSeconds,
+        serverStage: flow.serverStage,
         sessionState: 'ready',
         sessionError: null,
         job,
@@ -59,6 +60,12 @@ vi.mock('../use-try-on-flow', async () => {
   };
 });
 vi.mock('@/lib/try-on/photo-check', () => ({ checkPhoto: async () => ({ light: true, sharp: true, issue: null }) }));
+/* Sheet lifecycle fixtures are not encoded photos. Shared preparation has
+   its own decoder/resize tests and a real-browser verification harness. */
+vi.mock('@/lib/try-on/photo-file', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/try-on/photo-file')>(),
+  readPhotoAsDataUrl: vi.fn(async () => 'data:image/png;base64,cGhvdG8='),
+}));
 const phone = vi.hoisted(() => ({ store: null as PhoneStore | null }));
 vi.mock('@/lib/try-on/phone-store', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/lib/try-on/phone-store')>();
@@ -111,6 +118,7 @@ beforeEach(async () => {
   flow.generated = 0;
   flow.selected = [];
   flow.finish = false;
+  flow.serverStage = 'received';
 });
 
 afterEach(() => {
@@ -171,7 +179,7 @@ describe('the v16 try-on sheet', () => {
     await screen.findByRole('heading', { name: 'See it on you' });
     fireEvent.click(screen.getByRole('button', { name: 'How photos are handled' }));
     expect(screen.getByRole('heading', { name: 'How photos are handled' })).toBeInTheDocument();
-    expect(screen.getByText(/stays here for 24 hours/)).toBeInTheDocument();
+    expect(screen.getByText(/stay here for 24 hours/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back to photo options' }));
     expect(screen.getByRole('heading', { name: 'See it on you' })).toBeInTheDocument();
   });
@@ -182,7 +190,7 @@ describe('the v16 try-on sheet', () => {
     expect(screen.getByText(/يستغرق الأمر حوالي 20 ثانية\./)).toBeInTheDocument();
   });
 
-  it("makes the look on the store's own estimate, step by step, and says each step once", async () => {
+  it('follows server stages and reassures after the median without inventing progress', async () => {
     renderSheet({ lookSeconds: 12 });
     await pickPhoto();
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
@@ -198,14 +206,24 @@ describe('the v16 try-on sheet', () => {
 
     act(() => vi.advanceTimersByTime(5_000));
     expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
-    expect(steps.getByText('Fitting the garment').closest('li')).toHaveAttribute('aria-current', 'step');
-    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
-    expect(live).toHaveTextContent('Fitting the garment');
+    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
-    // Past the estimate: the last step holds and the seconds go, never zero.
+    flow.serverStage = 'making';
+    act(() => vi.advanceTimersByTime(500));
+    expect(steps.getByText('Fitting the piece').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
+    expect(live).toHaveTextContent('Fitting the piece');
+
+    // Passing the estimate never advances the server's real stage.
     act(() => vi.advanceTimersByTime(30_000));
     expect(screen.queryByText(/seconds? left/)).toBeNull();
-    expect(steps.getByText('Rendering your look').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Fitting the piece').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(live).toHaveTextContent('Almost there. Adding the final details.');
+    expect(screen.queryByText('Your look is ready')).toBeNull();
+
+    flow.serverStage = 'finishing';
+    act(() => vi.advanceTimersByTime(500));
+    expect(steps.getByText('Adding the final details').closest('li')).toHaveAttribute('aria-current', 'step');
   });
 
   it("uses the store's own steps and loading style, and promises no time without an estimate", async () => {

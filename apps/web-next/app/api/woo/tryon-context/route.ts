@@ -17,6 +17,10 @@ import { verifyWooSignedRequest, wooSignedRequestErrorResponse } from '@/lib/woo
 import { buildSiteTryOnConfig, siteConfigLocale } from '@/lib/woo/tryon-config';
 import { readSiteLaunch } from '@/lib/woo/tryon-site';
 import { ensureWooFreePlan } from '@/lib/woo/free-plan';
+import { storeFlags } from '@/lib/flags/store-flags';
+import { getStoreLaunch } from '@/lib/launch/store-launch';
+import { launchAudience } from '@/lib/launch/audience';
+import { verifyPreviewTokenAnyApp } from '@/lib/launch/preview-token';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +34,7 @@ export const dynamic = 'force-dynamic';
    context and the embed URL that carries it in the fragment.
 
    Request:  { productId, variationId?, title, imageUrl, pageUrl, locale,
-               visitorHash }
+               visitorHash, preview? }
    Response: { context, embedUrl, settings }  (Cache-Control: no-store) */
 
 const MAX_BODY_BYTES = 8 * 1024;
@@ -45,6 +49,7 @@ type ContextInput = {
   pageUrl: string;
   locale: 'en' | 'ar';
   visitorHash: string;
+  preview: string | null;
 };
 
 function json(body: Record<string, unknown>, status = 200) {
@@ -71,6 +76,7 @@ function parseInput(raw: unknown): ContextInput | null {
     || typeof body.imageUrl !== 'string'
     || typeof body.pageUrl !== 'string'
     || !VISITOR_HASH_RE.test(visitorHash)
+    || (body.preview !== undefined && (typeof body.preview !== 'string' || body.preview.length > 512))
   ) {
     return null;
   }
@@ -82,6 +88,7 @@ function parseInput(raw: unknown): ContextInput | null {
     pageUrl: body.pageUrl,
     locale: siteConfigLocale(body.locale),
     visitorHash,
+    preview: typeof body.preview === 'string' ? body.preview : null,
   };
 }
 
@@ -149,7 +156,20 @@ export async function POST(request: NextRequest) {
     if (!pageHostVerified(input.pageUrl, hosts)) return json({ error: 'page_not_verified' }, 403);
 
     // The free plan is granted on the first look, once per apex domain.
-    let { launch, unsubscribed } = await readSiteLaunch(siteId);
+    const [siteLaunch, features] = await Promise.all([
+      readSiteLaunch(siteId),
+      storeFlags({ widgetSiteId: siteId }),
+    ]);
+    let { launch } = siteLaunch;
+    const { unsubscribed } = siteLaunch;
+    const audience = launchAudience({
+      launch: features.includes('n5_preview_mode') ? await getStoreLaunch(tenant) : null,
+      features,
+      preview: verifyPreviewTokenAnyApp(input.preview, tenant),
+      visitorId: input.visitorHash,
+      now: new Date(),
+    });
+    if (!audience.show) return json({ error: audience.reason }, 409);
     if (unsubscribed) {
       // Same grant as the dashboard, so the one-plan-per-apex rule is counted once.
       const grant = await ensureWooFreePlan(tenant);
@@ -159,7 +179,7 @@ export async function POST(request: NextRequest) {
       invalidateProxyConfig(tenant);
       launch = tryOnLaunchFromEntitlement(await getShopEntitlement(tenant));
     }
-    if (launch.tryOn === 'hidden') {
+    if (launch.tryOn === 'hidden' && !(audience.test && launch.reason === 'out_of_looks')) {
       return json({ error: launch.reason }, launch.reason === 'unavailable' ? 503 : 409);
     }
 
@@ -190,6 +210,7 @@ export async function POST(request: NextRequest) {
       pageUrl: input.pageUrl,
       origin: new URL(input.pageUrl).origin,
       nonce,
+      test: audience.test,
     });
 
     const appOrigin = (process.env.NEXT_PUBLIC_APP_URL || 'https://grindctrl.cloud').replace(/\/+$/, '');

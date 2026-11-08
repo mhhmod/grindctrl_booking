@@ -63,6 +63,11 @@ import {
 import { PausableTimers } from './story-timers';
 import type { StoryLayout } from './story-types';
 
+/** Old links to the demo now open the real studio. Scene controls still use goScene. */
+export function tryOnAliasDestination(hash: string): '/try-on' | null {
+  return hash === '#try' || hash === '#demo' ? '/try-on' : null;
+}
+
 export type ChatMsg = { id: number; kind: 'user' | 'ai' | 'team' | 'system' | 'handoff' | 'typing'; text?: string };
 export type CardState = { on: boolean; n: number; dir: '' | 'down' | 'up' };
 
@@ -1070,13 +1075,18 @@ export class StoryController {
     this.applyHash(window.location.hash, false);
   };
 
-  /** Deep links: /#store lands on the first beat of that scene, /#try after the hero. */
+  /** Store scenes stay in-page; legacy demo deep links open the studio. */
   applyHash(hash: string, instant: boolean): boolean {
+    const destination = tryOnAliasDestination(hash);
+    if (destination) {
+      window.location.assign(destination);
+      return true;
+    }
     const d = this.d;
     if (!d) return false;
     let id = decodeURIComponent((hash || '').replace(/^#/, ''));
     if (!id) return false;
-    const legacy: Record<string, string> = { how: 'journey', demo: 'try', benefits: 'product' };
+    const legacy: Record<string, string> = { how: 'journey', benefits: 'product' };
     id = legacy[id] ?? id;
     const scene = (Object.entries({ try: 'tryon', store: 'store', ops: 'ops', product: 'product', results: 'results' }) as Array<
       [string, SceneKey]

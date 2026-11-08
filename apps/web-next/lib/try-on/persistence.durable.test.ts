@@ -7,6 +7,7 @@ type QueryResult = { data: unknown; error: unknown };
 const {
   state,
   uploadMock,
+  insertMock,
   removeMock,
   existsMock,
   listMock,
@@ -20,6 +21,7 @@ const {
     updatePayloads: [] as Array<Record<string, unknown>>,
   },
   uploadMock: vi.fn(),
+  insertMock: vi.fn(),
   removeMock: vi.fn(),
   existsMock: vi.fn(),
   listMock: vi.fn(),
@@ -44,7 +46,7 @@ vi.mock('@supabase/supabase-js', () => {
       state.updatePayloads.push(payload);
       return this;
     }
-    async insert() { return { error: null }; }
+    async insert(...args: unknown[]) { return insertMock(...args); }
     async maybeSingle() {
       return state.maybeSingleResults.shift() ?? { data: null, error: null };
     }
@@ -79,8 +81,12 @@ vi.mock('@supabase/supabase-js', () => {
 
 import {
   cleanupExpiredTryOnResults,
+  beginPublicDemoTryOnJob,
+  completePublicDemoTryOnJob,
   loadAuthorizedDurableTryOnJob,
   persistGeneratedTryOnResult,
+  persistPublicDemoTryOnResult,
+  prepareTryOnResultPersistence,
   releaseDurableTryOnResult,
   sweepOrphanedTryOnResults,
   TRYON_ORPHAN_SAFETY_GRACE_MS,
@@ -173,6 +179,7 @@ describe('durable try-on result persistence', () => {
     state.activePathResult = { data: [], error: null };
     state.events = [];
     state.updatePayloads = [];
+    insertMock.mockReset().mockResolvedValue({ error: null });
     uploadMock.mockReset().mockResolvedValue({ data: { path: PATH }, error: null });
     removeMock.mockReset().mockResolvedValue({ data: [], error: null });
     existsMock.mockReset().mockResolvedValue({ data: true, error: null });
@@ -196,6 +203,77 @@ describe('durable try-on result persistence', () => {
     expect(result?.status).toBe('failed');
   });
 
+  describe('public demo durable jobs', () => {
+    const publicAuthorization = () => authorization({ purpose: 'public-demo', shop: null });
+    const publicJob = () => ({ ...job(), shop: null });
+
+    it('claims a public pending row atomically and identifies another worker claim', async () => {
+      const pending = { ...publicJob(), status: 'processing' as const, resultImageUrl: undefined };
+      await expect(beginPublicDemoTryOnJob(publicAuthorization(), pending)).resolves.toBe(true);
+      expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+        id: JOB_ID, shop: null, request_key: pending.requestKey, status: 'processing', cost_usd: null,
+      }));
+      expect(JSON.stringify(insertMock.mock.calls)).not.toMatch(/base64|resultImageUrl/);
+      insertMock.mockResolvedValueOnce({ error: { code: '23505', message: 'duplicate primary key' } });
+      await expect(beginPublicDemoTryOnJob(publicAuthorization(), pending)).resolves.toBe(false);
+      insertMock.mockResolvedValueOnce({ error: { code: '503', message: 'database unavailable' } });
+      await expect(beginPublicDemoTryOnJob(publicAuthorization(), pending)).rejects.toBeInstanceOf(TryOnResultPersistenceError);
+    });
+
+    it('persists a private public result and recovers it on a worker with no memory copy', async () => {
+      state.maybeSingleResults.push(
+        { data: row({ shop: null }), error: null },
+        { data: { id: JOB_ID }, error: null },
+      );
+      await persistPublicDemoTryOnResult(publicAuthorization(), publicJob(), NOW);
+      expect(uploadMock).toHaveBeenCalledOnce();
+      state.maybeSingleResults.push({ data: { id: JOB_ID }, error: null });
+      await completePublicDemoTryOnJob(publicAuthorization(), publicJob(), 20_000);
+      expect(state.updatePayloads[1]).toMatchObject({ status: 'completed', cost_usd: 0.01 });
+      state.maybeSingleResults.push({ data: row({
+        shop: null, status: 'completed', result_storage_path: PATH,
+        result_persisted_at: new Date(NOW).toISOString(), result_expires_at: new Date(NOW + 60_000).toISOString(),
+      }), error: null });
+      const replay = await loadAuthorizedDurableTryOnJob(publicAuthorization(), JOB_ID, NOW);
+      expect(replay).toMatchObject({ shop: null, status: 'completed', resultImageUrl: 'https://storage.example/signed-result' });
+      expect(createSignedUrlMock).toHaveBeenCalledWith(PATH, 60);
+    });
+
+    it.each([
+      { purpose: 'storefront' as const, shop: null },
+      { purpose: 'legacy-compat' as const, shop: null },
+      { purpose: 'public-demo' as const, shop: 'store-one.myshopify.com' },
+      { purpose: 'public-demo' as const, shop: 'invalid tenant' },
+      { purpose: 'public-demo' as const, shop: null, sessionId: 'another-session' },
+    ])('refuses public storage or claims without exact public authorization: %j', async (overrides) => {
+      const denied = authorization(overrides);
+      await expect(beginPublicDemoTryOnJob(denied, publicJob())).rejects.toBeInstanceOf(TryOnResultPersistenceError);
+      await expect(persistPublicDemoTryOnResult(denied, publicJob(), NOW)).rejects.toBeInstanceOf(TryOnResultPersistenceError);
+      expect(insertMock).not.toHaveBeenCalled();
+      expect(uploadMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects malformed non-null job/row tenants rather than treating them as public', async () => {
+      await expect(persistPublicDemoTryOnResult(publicAuthorization(), { ...publicJob(), shop: 'invalid tenant' }, NOW))
+        .rejects.toBeInstanceOf(TryOnResultPersistenceError);
+      state.maybeSingleResults.push({ data: row({ shop: 'invalid tenant' }), error: null });
+      await expect(persistPublicDemoTryOnResult(publicAuthorization(), publicJob(), NOW))
+        .rejects.toBeInstanceOf(TryOnResultPersistenceError);
+      state.maybeSingleResults.push({ data: row({ shop: 'invalid tenant' }), error: null });
+      expect(await loadAuthorizedDurableTryOnJob(publicAuthorization(), JOB_ID, NOW)).toBeNull();
+      expect(uploadMock).not.toHaveBeenCalled();
+      expect(createSignedUrlMock).not.toHaveBeenCalled();
+    });
+
+    it('records known public failure with unknown provider cost and no result upload', async () => {
+      state.maybeSingleResults.push({ data: { id: JOB_ID }, error: null });
+      const failed = { ...publicJob(), status: 'failed' as const, meta: { ...job().meta, costEstimate: null } };
+      await completePublicDemoTryOnJob(publicAuthorization(), failed, 20_000);
+      expect(state.updatePayloads).toEqual([expect.objectContaining({ status: 'failed', cost_usd: null })]);
+      expect(uploadMock).not.toHaveBeenCalled();
+    });
+  });
+
   it('validates and uploads the provider result before binding its lifecycle row', async () => {
     state.maybeSingleResults.push(
       { data: row(), error: null },
@@ -217,6 +295,21 @@ describe('durable try-on result persistence', () => {
       result_deleted_at: null,
     });
     expect(result.storagePath).toBe(PATH);
+  });
+
+  it('prefetches the reservation row independently and reuses it without a second SELECT', async () => {
+    state.maybeSingleResults.push(
+      { data: row(), error: null },
+      { data: { id: JOB_ID }, error: null },
+    );
+    const prepared = prepareTryOnResultPersistence(JOB_ID);
+    await prepared;
+    expect(state.maybeSingleResults).toHaveLength(1);
+    expect(uploadMock).not.toHaveBeenCalled();
+    const result = await persistGeneratedTryOnResult(job(), NOW, prepared);
+    expect(result.storagePath).toBe(PATH);
+    expect(state.maybeSingleResults).toHaveLength(0);
+    expect(uploadMock).toHaveBeenCalledOnce();
   });
 
   it('removes the uploaded object when the lifecycle row update fails', async () => {

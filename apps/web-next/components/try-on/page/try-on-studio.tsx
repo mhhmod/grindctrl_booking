@@ -22,7 +22,11 @@ import { trackClick, trackMarketingEvent } from '@/lib/analytics';
 import { BOOKING_URL } from '@/lib/booking';
 import { runPublicTryOn, type PublicTryOnFailure } from '@/lib/try-on/client';
 import { shopperFailureMessage } from '@/lib/try-on/shopper-errors';
+import { readPhotoAsDataUrl } from '@/lib/try-on/photo-file';
+import { recordTryOnOpen } from '@/lib/try-on/performance';
 import type { TryOnLocale } from '@/lib/try-on/i18n';
+import { makingProgress } from '@/lib/try-on/making-progress';
+import type { TryOnStage } from '@/lib/try-on/types';
 import { CompareDialog, PiecePicker } from './studio-dialogs';
 import {
   ActionBar,
@@ -46,8 +50,6 @@ import {
   type PieceKey,
 } from './studio-state';
 import { StoreStrip } from './store-strip';
-
-const STEP_RHYTHM_MS = 820;
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
@@ -73,20 +75,11 @@ function failureText(failure: PublicTryOnFailure | null, locale: TryOnLocale): s
   return shopperFailureMessage(failure.kind, locale);
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('read')));
-    reader.onerror = () => reject(reader.error ?? new Error('read'));
-    reader.readAsDataURL(file);
-  });
-}
-
-export function TryOnStudio() {
+export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number | null }) {
+  React.useEffect(() => { recordTryOnOpen(); }, []);
   const { t, locale, toggleLocale } = useTryOnLocale();
   const [state, dispatch] = React.useReducer(studioReducer, INITIAL_STATE);
-  /* Progress steps belong to one request, so a new request starts at 0 without a reset. */
-  const [progress, setProgress] = React.useState({ request: -1, step: 0 });
+  const [progress, setProgress] = React.useState<{ request: number; stage: TryOnStage | null; elapsedMs: number }>({ request: -1, stage: null, elapsedMs: 0 });
   const [pickerOpen, setPickerOpen] = React.useState(false);
   const [compareOpen, setCompareOpen] = React.useState(false);
   /* Set when a 429 arrives; clears itself once its Retry-After has passed. */
@@ -98,19 +91,19 @@ export function TryOnStudio() {
   const look = currentLook(state);
   const journey = journeyStep(state);
 
-  /* The five steps advance as a rhythm and hold on the last one until the
-     result really arrives; they never claim to be finished early. */
+  /* Time moves the estimate; only the async job moves the stages. */
   React.useEffect(() => {
     if (state.stage !== 'creating') return;
     const request = state.request;
     const timer = window.setInterval(() => {
       setProgress((current) => ({
         request,
-        step: Math.min((current.request === request ? current.step : 0) + 1, t.loadingSteps.length - 1),
+        stage: current.request === request ? current.stage : null,
+        elapsedMs: Math.max(0, performance.now() - startedAt.current),
       }));
-    }, STEP_RHYTHM_MS);
+    }, 250);
     return () => window.clearInterval(timer);
-  }, [state.stage, state.request, t.loadingSteps.length]);
+  }, [state.stage, state.request]);
 
   /* The real pipeline for an uploaded photo. A new request number (piece
      or photo changed) aborts this one through the cleanup. */
@@ -122,6 +115,11 @@ export function TryOnStudio() {
       productId: PIECES[state.piece].productId,
       photoDataUrl: state.photo.dataUrl,
       signal: controller.signal,
+      onProgress: (job) => {
+        if (!controller.signal.aborted && job.stage) {
+          setProgress({ request, stage: job.stage, elapsedMs: Math.max(0, performance.now() - startedAt.current) });
+        }
+      },
     })
       .then((result) => {
         if (controller.signal.aborted) return;
@@ -175,7 +173,7 @@ export function TryOnStudio() {
       return;
     }
     try {
-      dispatch({ type: 'setUpload', dataUrl: await readAsDataUrl(file) });
+      dispatch({ type: 'setUpload', dataUrl: await readPhotoAsDataUrl(file) });
     } catch {
       dispatch({ type: 'rejectFile', reason: 'type' });
     }
@@ -194,10 +192,29 @@ export function TryOnStudio() {
   };
 
   const retryLocked = state.failure?.kind === 'rate_limited' && retryLock !== null;
-  const step = progress.request === state.request ? progress.step : 0;
+  const waiting = makingProgress({
+    elapsedMs: progress.request === state.request ? progress.elapsedMs : 0,
+    estimateSeconds: typicalSeconds,
+    stepCount: t.pageProgressStages.length,
+    stage: progress.request === state.request ? progress.stage : null,
+  });
   const pair = comparePair(state);
 
   const storeLinkTracked = () => trackClick('cta_clicked', { cta: 'open_store', section: 'try_on_header' });
+
+  const lookShown = state.stage === 'done' && look !== null;
+  const mobileActions = (
+    <ActionBar
+      t={t}
+      state={state}
+      look={look}
+      canCompare={state.looks.length >= 2}
+      createLocked={retryLocked}
+      onCreate={onCreate}
+      onTryAnother={() => setPickerOpen(true)}
+      onCompare={() => setCompareOpen(true)}
+    />
+  );
 
   return (
     <>
@@ -255,18 +272,18 @@ export function TryOnStudio() {
 
       <div className="relative">
         <BackgroundWiring trace={t.pageTrace} lane={false} />
-        <main id="main" tabIndex={-1} className="relative z-[1] pb-11 pt-24 outline-none lg:pb-[60px] lg:pt-[124px]">
+        <main id="main" tabIndex={-1} className="relative z-[1] pb-11 pt-[82px] outline-none sm:pt-24 lg:pb-[60px] lg:pt-[124px]">
           <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-[560px] lg:max-w-none">
               {/* Phones: the journey gets its own panel. */}
-              <div className="mx-0.5 mb-[26px] mt-1 rounded-[22px] border border-secondary bg-card/70 px-3 pb-3 pt-3.5 lg:hidden">
+              <div className="mx-0.5 mb-[26px] mt-1 hidden rounded-[22px] border border-secondary bg-card/70 px-3 pb-3 pt-3.5 sm:block lg:hidden">
                 <Journey t={t} current={journey} variant="panel" />
               </div>
 
               <div className="text-center lg:flex lg:items-end lg:justify-between lg:gap-[30px] lg:text-start">
                 <div>
-                  <h1 className="text-[30px] font-bold leading-[1.08] tracking-[-0.035em] lg:text-[44px]">{t.pageTitle}</h1>
-                  <p className="mt-2 text-[15px] leading-normal text-muted-foreground lg:mt-2.5 lg:text-[16.5px]">
+                  <h1 className="text-[24px] font-bold leading-[1.08] tracking-[-0.035em] sm:text-[30px] lg:text-[44px]">{t.pageTitle}</h1>
+                  <p className="mt-2 hidden text-[15px] leading-normal text-muted-foreground sm:block lg:mt-2.5 lg:text-[16.5px]">
                     {t.pageSubtitle}
                   </p>
                 </div>
@@ -287,7 +304,7 @@ export function TryOnStudio() {
                   side. The row starts at that height so a slow connection that
                   paints the row before the look card has arrived doesn't drop
                   the other cards when it lands. */}
-              <div className="mt-[26px] flex flex-col gap-1.5 lg:mt-[30px] lg:grid lg:min-h-[586px] lg:grid-cols-[260px_48px_260px_48px_minmax(0,1fr)] lg:items-center lg:gap-0 xl:grid-cols-[300px_56px_300px_56px_minmax(0,1fr)]">
+              <div className="mt-3 flex flex-col gap-2 sm:mt-[26px] lg:mt-[30px] lg:grid lg:min-h-[586px] lg:grid-cols-[260px_48px_260px_48px_minmax(0,1fr)] lg:items-center lg:gap-0 xl:grid-cols-[300px_56px_300px_56px_minmax(0,1fr)]">
                 <PieceCard t={t} piece={state.piece} swapKey={pieceSwaps} onChange={() => setPickerOpen(true)} />
                 <Joiner glyph="plus" busy={state.stage === 'creating'} />
                 <PhotoCard
@@ -298,12 +315,16 @@ export function TryOnStudio() {
                   onClear={() => dispatch({ type: 'clearPhoto' })}
                   status={stepStatus(2, journey)}
                 />
+                {/* Phones: Create sits with the inputs; once a look exists its
+                    actions move under it, where the eye already is. */}
+                {!lookShown ? <div className="lg:hidden">{mobileActions}</div> : null}
                 <Joiner glyph="equals" busy={state.stage === 'creating'} />
                 <LookCard
                   t={t}
                   state={state}
                   look={look}
-                  step={step}
+                  progress={waiting}
+                  serverStage={progress.request === state.request ? progress.stage : null}
                   status={stepStatus(4, journey)}
                   failureMessage={failureText(state.failure, locale)}
                   retryLocked={retryLocked}
@@ -312,14 +333,16 @@ export function TryOnStudio() {
                   onView={(view) => dispatch({ type: 'setView', view })}
                   cardRef={lookCardRef}
                 />
+                {lookShown ? <div className="mt-1 lg:hidden">{mobileActions}</div> : null}
               </div>
 
-              <div className="mt-5 lg:mt-[22px]">
+              <div className="mt-5 hidden lg:mt-[22px] lg:block">
                 <ActionBar
                   t={t}
                   state={state}
                   look={look}
                   canCompare={state.looks.length >= 2}
+                  createLocked={retryLocked}
                   onCreate={onCreate}
                   onTryAnother={() => setPickerOpen(true)}
                   onCompare={() => setCompareOpen(true)}

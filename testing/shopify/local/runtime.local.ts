@@ -92,7 +92,11 @@ beforeAll(async()=>{
   installedFetch=async(input,init)=>{
     const url = new URL(typeof input==='string'?input:input instanceof URL?input.href:input.url);
     if(url.origin===state.url) return transport(input,init); // Actual local REST/storage, not simulated.
-    if(url.href==='https://cdn.shopify.com/m1-local-synthetic.png')return new Response(Buffer.from(SYNTHETIC_PNG,'base64'),{headers:{'content-type':'image/png'}});
+    // The app asks the Shopify CDN for a bounded 1536 px derivative; anything else is a regression.
+    if(url.origin+url.pathname==='https://cdn.shopify.com/m1-local-synthetic.png'){
+      if(url.searchParams.get('width')!=='1536')return new Response('unexpected garment size',{status:404});
+      return new Response(Buffer.from(SYNTHETIC_PNG,'base64'),{headers:{'content-type':'image/png'}});
+    }
     if(url.origin===`https://${X}` && url.pathname==='/admin/oauth/access_token'){
       refreshCalls++;
       if(shopifyMode==='invalid-refresh')return new Response('{}',{status:401});

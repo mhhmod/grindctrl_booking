@@ -16,6 +16,8 @@
 
 export const PHONE_KEEP_MS = 24 * 60 * 60 * 1000;
 export const CONSENT_KEEP_MS = 365 * 24 * 60 * 60 * 1000;
+export const MAX_KEPT_LOOKS = 5;
+const MAX_IMAGE_CHARS = 16 * 1024 * 1024;
 
 const DB_NAME = 'grindctrl-tryon';
 const DB_VERSION = 1;
@@ -31,6 +33,8 @@ export type PhoneStoreName = typeof KEPT | typeof SETTINGS;
 type Expiring = { savedAt: number; expiresAt: number };
 
 export type KeptLook = Expiring & {
+  /** Explicit scope even where the browser does not partition iframe storage. */
+  tenantKey?: string;
   jobId: string;
   productId: string;
   productName: string;
@@ -52,7 +56,9 @@ export type PhoneBackend = {
 function isExpiring(value: unknown): value is Expiring {
   if (!value || typeof value !== 'object') return false;
   const { savedAt, expiresAt } = value as Partial<Expiring>;
-  return typeof savedAt === 'number' && typeof expiresAt === 'number';
+  return typeof savedAt === 'number' && Number.isFinite(savedAt) &&
+    typeof expiresAt === 'number' && Number.isFinite(expiresAt) &&
+    expiresAt > savedAt && expiresAt - savedAt <= CONSENT_KEEP_MS;
 }
 
 function isLive(value: unknown, now: number): boolean {
@@ -63,11 +69,14 @@ function isKeptLook(value: unknown): value is KeptLook {
   if (!isExpiring(value)) return false;
   const look = value as Partial<KeptLook>;
   return (
+    look.expiresAt! - look.savedAt! <= PHONE_KEEP_MS &&
     typeof look.jobId === 'string' &&
     typeof look.productId === 'string' &&
     typeof look.productName === 'string' &&
     typeof look.imageDataUrl === 'string' &&
-    look.imageDataUrl.startsWith('data:image/')
+    look.imageDataUrl.length <= MAX_IMAGE_CHARS &&
+    /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(look.imageDataUrl) &&
+    (look.tenantKey === undefined || (typeof look.tenantKey === 'string' && look.tenantKey.length > 0))
   );
 }
 
@@ -96,6 +105,15 @@ export function createPhoneStore(backend: PhoneBackend | null) {
   async function keepOnPhone(now: number = Date.now()): Promise<boolean> {
     // On unless the shopper turned it off.
     return (await readSetting(KEEP_ON_PHONE_KEY, now))?.value ?? true;
+  }
+
+  async function looks(now: number = Date.now()): Promise<KeptLook[]> {
+    if (!backend || !(await keepOnPhone(now))) return [];
+    const entries = await quietly(() => backend.entries(KEPT), []);
+    return entries
+      .filter(([key, value]) => key.startsWith(LOOK_PREFIX) && isKeptLook(value) && value.expiresAt > now && value.savedAt <= now)
+      .map(([, value]) => value as KeptLook)
+      .sort((a, b) => b.savedAt - a.savedAt);
   }
 
   return {
@@ -135,6 +153,7 @@ export function createPhoneStore(backend: PhoneBackend | null) {
 
     async photo(now: number = Date.now()): Promise<string | null> {
       if (!backend) return null;
+      if (!(await keepOnPhone(now))) return null;
       const value = await quietly(() => backend.get(KEPT, PHOTO_KEY), null);
       if (!isLive(value, now) || typeof (value as KeptPhoto).dataUrl !== 'string') return null;
       return (value as KeptPhoto).dataUrl;
@@ -147,19 +166,30 @@ export function createPhoneStore(backend: PhoneBackend | null) {
       const kept: KeptLook = { ...look, savedAt: now, expiresAt: now + PHONE_KEEP_MS };
       if (!backend || !isKeptLook(kept) || !(await keepOnPhone(now))) return false;
       return quietly(async () => {
+        // Bound both count and bytes, removing malformed and expired entries.
+        for (const [key, value] of await backend.entries(KEPT)) {
+          if (!key.startsWith(LOOK_PREFIX)) continue;
+          if (!isKeptLook(value) || !isLive(value, now)) {
+            await backend.delete(KEPT, key);
+          }
+        }
         await backend.put(KEPT, `${LOOK_PREFIX}${look.jobId}`, kept);
+        for (const old of (await looks(now)).slice(MAX_KEPT_LOOKS)) {
+          await backend.delete(KEPT, `${LOOK_PREFIX}${old.jobId}`);
+        }
         return true;
       }, false);
     },
 
     /** Looks still within their 24 hours, newest first. */
-    async looks(now: number = Date.now()): Promise<KeptLook[]> {
-      if (!backend) return [];
-      const entries = await quietly(() => backend.entries(KEPT), []);
-      return entries
-        .filter(([key, value]) => key.startsWith(LOOK_PREFIX) && isKeptLook(value) && value.expiresAt > now)
-        .map(([, value]) => value as KeptLook)
-        .sort((a, b) => b.savedAt - a.savedAt);
+    looks,
+
+    async latestLook(tenantKey: string, productId: string, now: number = Date.now()): Promise<KeptLook | null> {
+      return (await looks(now)).find((look) => look.tenantKey === tenantKey && look.productId === productId) ?? null;
+    },
+
+    async deleteLook(jobId: string): Promise<void> {
+      if (backend) await quietly(() => backend.delete(KEPT, `${LOOK_PREFIX}${jobId}`), undefined);
     },
 
     /** Delete all: the photo and every look, at once. Consent stays. */

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { StoryController } from './story-controller';
+import { StoryController, tryOnAliasDestination } from './story-controller';
 import { PausableTimers } from './story-timers';
 
 /* The story follows the browser's own scrolling. These tests pin that down:
@@ -8,6 +8,13 @@ import { PausableTimers } from './story-timers';
    a frame runs, and beats entered only once the scroll has stayed near them. */
 
 const ENV = { layout: 'desk', stacked: false, reduce: false, rtl: false } as const;
+
+it('sends old Try-On demo aliases to the studio without changing other scene links', () => {
+  expect(tryOnAliasDestination('#try')).toBe('/try-on');
+  expect(tryOnAliasDestination('#demo')).toBe('/try-on');
+  expect(tryOnAliasDestination('#store')).toBeNull();
+  expect(tryOnAliasDestination('#journey')).toBeNull();
+});
 /* Where each marker sits on the page. The fake layout reports it relative to the scroll. */
 const BEAT_Y: Record<string, number> = {
   'tryon:0': 0,

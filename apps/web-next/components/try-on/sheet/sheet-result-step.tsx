@@ -37,6 +37,8 @@ export function SheetResultStep({
   controls,
   madeInSeconds = null,
   onChangePhoto,
+  onForget,
+  onImageError,
 }: {
   copy: SheetCopy;
   t: TryOnTranslator;
@@ -53,6 +55,8 @@ export function SheetResultStep({
   /** From the tap to the look in this page, for the desktop title. */
   madeInSeconds?: number | null;
   onChangePhoto: () => void;
+  onForget?: () => void;
+  onImageError?: () => void;
 }) {
   const wide = useMediaQuery('(min-width: 768px)');
   const [view, setView] = useState<'look' | 'photo'>('look');
@@ -140,6 +144,7 @@ export function SheetResultStep({
           photoAlt={copy.originalPhotoAlt}
           aiPreview={copy.aiPreview}
           rtl={locale === 'ar'}
+          onLookError={onImageError}
         />
         {show.changePhoto && (
           <div className="flex justify-center">
@@ -155,7 +160,7 @@ export function SheetResultStep({
         {view === 'look' ? (
           // The look lives in this page as a data or blob URL.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} className="aspect-[3/4] w-full object-cover" />
+          <img src={job.resultImageUrl ?? ''} alt={copy.lookAlt(productName)} onError={onImageError} className="aspect-[3/4] w-full object-cover" />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photoDataUrl ?? ''} alt={copy.originalPhotoAlt} className="aspect-[3/4] w-full object-cover" />
@@ -291,6 +296,7 @@ export function SheetResultStep({
         </div>
       )}
 
+      {onForget && <button type="button" onClick={onForget} className="min-h-11 rounded-lg px-3 text-sm text-muted-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-ring">{copy.forgetOnPhone}</button>}
       <p className="text-center text-xs leading-relaxed text-muted-foreground">{controls?.disclaimerText || copy.disclaimer}</p>
     </>
   );

@@ -9,11 +9,19 @@
   var COPY = {
     en: {
       unavailable: 'Try-on could not be verified for this product.',
-      retry: 'Retry try-on'
+      retry: 'Retry try-on',
+      loading: 'Opening try-on',
+      ready: 'Your look is ready',
+      readyShort: 'Ready',
+      seeLook: 'See your look'
     },
     ar: {
       unavailable: 'تعذّر التحقق من تجربة هذا المنتج.',
-      retry: 'إعادة محاولة التجربة'
+      retry: 'إعادة محاولة التجربة',
+      loading: 'جارٍ فتح التجربة',
+      ready: 'إطلالتك جاهزة',
+      readyShort: 'جاهزة',
+      seeLook: 'شاهد إطلالتك'
     }
   };
 
@@ -27,6 +35,89 @@
 
   function v16Sheet(cfg) {
     return !!(cfg && Array.isArray(cfg.features) && cfg.features.indexOf('v16_tryon') !== -1);
+  }
+
+  // No image or personal data crosses to the store. Only the local look's state.
+  var LOOK_HINTS_KEY = 'gc_tryon_look_hints_v1';
+  function lookHints() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(LOOK_HINTS_KEY) || '[]');
+      if (!Array.isArray(saved)) return [];
+      return saved.filter(function (hint) {
+        return hint && typeof hint.key === 'string' && hint.key.length <= 512 &&
+          Number.isFinite(hint.expiresAt) && hint.expiresAt > Date.now() && hint.expiresAt <= Date.now() + 86400000;
+      }).slice(0, 5);
+    } catch (_) { return []; }
+  }
+  function lookIndicator(btn, copy, key) {
+    var label = btn.querySelector('.gc-tryon-label');
+    if (!label) {
+      label = document.createElement('span');
+      label.className = 'gc-tryon-label';
+      while (btn.firstChild) label.appendChild(btn.firstChild);
+      btn.appendChild(label);
+    }
+    var original = '';
+    var badge = document.createElement('span');
+    badge.className = 'gc-tryon-ready';
+    badge.hidden = true;
+    var live = document.createElement('span');
+    live.className = 'gc-tryon-live';
+    live.setAttribute('aria-live', 'polite');
+    live.setAttribute('aria-atomic', 'true');
+    btn.appendChild(badge);
+    btn.parentNode.appendChild(live);
+    return {
+      hydrate: function () {
+        if (!lookHints().some(function (hint) { return hint.key === key; })) return;
+        original = label.textContent;
+        label.textContent = copy.seeLook;
+      },
+      update: function (state, open, expiresAt, all) {
+        var hints = lookHints().filter(function (hint) { return hint.key !== key; });
+        if ((state === 'ready' || state === 'stored') && Number.isFinite(expiresAt) &&
+            expiresAt > Date.now() && expiresAt <= Date.now() + 86400000) {
+          hints.unshift({ key: key, expiresAt: expiresAt });
+        }
+        if (state === 'cleared' || state === 'ready' || state === 'stored') {
+          try {
+            if (state === 'cleared' && all === true) window.localStorage.removeItem(LOOK_HINTS_KEY);
+            else window.localStorage.setItem(LOOK_HINTS_KEY, JSON.stringify(hints.slice(0, 5)));
+          } catch (_) {}
+        }
+        if (state === 'cleared') {
+          if (original) label.textContent = original;
+          original = '';
+          badge.hidden = true;
+          live.textContent = '';
+          return;
+        }
+        if (state !== 'ready' && state !== 'stored') return;
+        if (!original) original = label.textContent;
+        label.textContent = copy.seeLook;
+        badge.hidden = state !== 'ready' || open;
+        badge.textContent = copy.readyShort;
+        live.textContent = badge.hidden ? '' : copy.ready;
+      },
+      seen: function () { badge.hidden = true; live.textContent = ''; }
+    };
+  }
+
+  var prewarmed = false;
+  function observeForPrewarm(element, prepare) {
+    var connection = navigator.connection;
+    if (prewarmed || !window.IntersectionObserver ||
+        (connection && (connection.saveData || /^(slow-)?2g$/.test(connection.effectiveType)))) return;
+    var observer = new IntersectionObserver(function (entries) {
+      if (!entries.some(function (entry) { return entry.isIntersecting; })) return;
+      observer.disconnect();
+      if (prewarmed) return;
+      var activeConnection = navigator.connection;
+      if (activeConnection && (activeConnection.saveData || /^(slow-)?2g$/.test(activeConnection.effectiveType))) return;
+      prewarmed = true;
+      prepare();
+    });
+    observer.observe(element);
   }
 
   /* The variant the shopper picked with the theme's own selectors (item
@@ -135,7 +226,17 @@
     bar.appendChild(handle);
     bar.appendChild(close);
     panel.appendChild(bar);
+    var loading = document.createElement('div');
+    loading.className = 'gc-tryon-loading';
+    loading.setAttribute('role', 'status');
+    loading.textContent = (COPY[locale] || COPY.en).loading;
+    panel.appendChild(loading);
     panel.appendChild(frame);
+    frame.addEventListener('load', function () {
+      if (!frame.getAttribute('src')) return;
+      loading.hidden = true;
+      if (frame.contentWindow) frame.contentWindow.postMessage({ type: 'grindctrl-tryon:visibility', open: isOpen }, new URL(frame.src).origin);
+    });
     sheet.appendChild(backdrop);
     sheet.appendChild(panel);
     document.body.appendChild(sheet);
@@ -171,6 +272,9 @@
       document.addEventListener('keydown', onKey);
       window.requestAnimationFrame(function () { sheet.classList.add('gc-tryon-sheet--open'); });
       frame.focus();
+      if (frame.isConnected && frame.getAttribute('src') && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: 'grindctrl-tryon:visibility', open: true }, new URL(frame.src).origin);
+      }
     }
 
     function hide(fromHistory) {
@@ -189,6 +293,9 @@
         }
       }
       btn.focus();
+      if (frame.isConnected && frame.getAttribute('src') && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: 'grindctrl-tryon:visibility', open: false }, new URL(frame.src).origin);
+      }
     }
 
     window.addEventListener('popstate', function () {
@@ -382,7 +489,7 @@
   function applyConfig(root, btn, locale) {
     var base = proxyPath(root);
     if (!base) { removeBlock(root); return; }
-    fetch(withVisitor(base + '/config?locale=' + encodeURIComponent(locale)), {
+    return fetch(withVisitor(base + '/config?locale=' + encodeURIComponent(locale)), {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' }
     })
@@ -438,9 +545,14 @@
     } catch (_) { /* use the production default */ }
 
     var locale = normalizeLocale(root.dataset.locale);
-    applyConfig(root, btn, locale);
+    var indicator = lookIndicator(btn, COPY[locale], 'shopify:' + root.dataset.shop + ':' + root.dataset.product);
+    var configReady = applyConfig(root, btn, locale);
 
     var sheet = null;
+    var currentFrame = null;
+    var opened = false;
+    var expiresAt = 0;
+    var warmVariant = '';
     // Read once per page, on the first tap that opens the sheet.
     var storeProduct = null;
     function loadStoreProduct() {
@@ -448,19 +560,26 @@
       return storeProduct;
     }
 
-    btn.addEventListener('click', function () {
-      // Reopening the sheet resumes whatever it held, a look included.
-      if (sheet) {
-        sheet.open();
-        return;
-      }
-      var existing = root.querySelector('iframe');
-      if (existing) {
-        existing.style.display = existing.style.display === 'none' ? '' : 'none';
-        return;
-      }
+    function prepare(warm) {
+      var openedAt = warm ? 0 : Date.now();
       var asSheet = root.dataset.sheet === '1';
       var variant = asSheet ? selectedVariant(root) : root.dataset.variant || '';
+      // A prewarmed context is short lived. Never replace a look already opened.
+      if (currentFrame && !opened && (Date.now() >= expiresAt || warmVariant !== variant)) {
+        if (sheet) sheet.destroy(); else currentFrame.remove();
+        sheet = null;
+        currentFrame = null;
+      }
+      // Reopening the sheet resumes whatever it held, a look included.
+      if (sheet) {
+        if (!warm) { opened = true; indicator.seen(); sheet.open(); }
+        return;
+      }
+      var existing = currentFrame;
+      if (existing) {
+        if (!warm) { opened = true; indicator.seen(); existing.style.display = existing.style.display === 'none' ? '' : 'none'; }
+        return;
+      }
 
       clearProofError(root);
 
@@ -469,14 +588,31 @@
         showProofError(root, btn, locale);
         return;
       }
-      btn.disabled = true;
-      btn.setAttribute('aria-busy', 'true');
+      if (!warm) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+      warmVariant = variant;
+      expiresAt = Date.now() + 90000;
+      var frame = document.createElement('iframe');
+      currentFrame = frame;
+      frame.title = 'GrindCTRL Try-On';
+      frame.className = asSheet ? 'gc-tryon-frame gc-tryon-frame--sheet' : 'gc-tryon-frame';
+      if (asSheet) {
+        frame.setAttribute('allow', 'camera; clipboard-write');
+        sheet = createSheet(root, btn, frame, locale);
+        if (!warm) { opened = true; indicator.seen(); sheet.open(); }
+      } else {
+        if (warm) frame.style.display = 'none';
+        else opened = true;
+        root.appendChild(frame);
+      }
 
       Promise.all([
         getStorefrontContext(root, nonce, variant),
         asSheet ? loadStoreProduct() : Promise.resolve(null)
       ]).then(function (ready) {
+      if (currentFrame !== frame) return;
       var storefrontContext = ready[0];
+      var expiry = Date.parse(storefrontContext.expiresAt);
+      if (Number.isFinite(expiry)) expiresAt = expiry - 5000;
       var picked = findVariant(ready[1], variant);
       var pickedTitle = (picked && picked.title) || '';
 
@@ -506,6 +642,7 @@
         encodeURIComponent(root.dataset.shop || '') +
         '&locale=' +
         encodeURIComponent(locale) +
+        (openedAt ? '&gc_opened_at=' + openedAt : '') +
         '&variant=' +
         encodeURIComponent(variant) +
         (asSheet ? '&sheet=1' : '') +
@@ -515,16 +652,20 @@
         '&storefrontNonce=' +
         encodeURIComponent(nonce);
 
-      var frame = document.createElement('iframe');
       frame.src = src;
-      frame.title = 'GrindCTRL Try-On';
-      frame.className = asSheet ? 'gc-tryon-frame gc-tryon-frame--sheet' : 'gc-tryon-frame';
       // Take a photo needs the camera inside the iframe, and the in-app
       // browser note copies the store's link for iOS.
       if (asSheet) frame.setAttribute('allow', 'camera; clipboard-write');
 
       window.addEventListener('message', function (event) {
         if (event.source !== frame.contentWindow || event.origin !== embedOrigin || !event.data) {
+          return;
+        }
+        if (currentFrame !== frame) return;
+        if (event.data.type === 'grindctrl-tryon:look') {
+          if (String(event.data.productId) === String(root.dataset.product)) {
+            indicator.update(event.data.state, sheet ? sheet.isOpen() : frame.style.display !== 'none', event.data.expiresAt, event.data.all);
+          }
           return;
         }
         if (asSheet && event.data.type === 'grindctrl-tryon:close') {
@@ -561,6 +702,8 @@
           } else {
             frame.remove();
           }
+          currentFrame = null;
+          opened = false;
           clearProofError(root);
           btn.click();
           return;
@@ -614,13 +757,13 @@
         }
       });
 
-      if (asSheet) {
-        sheet = createSheet(root, btn, frame, locale);
-        sheet.open();
-      } else {
-        root.appendChild(frame);
-      }
       }).catch(function (error) {
+        if (currentFrame !== frame) return;
+        var showError = !warm || opened;
+        if (sheet) sheet.destroy(); else frame.remove();
+        sheet = null;
+        currentFrame = null;
+        opened = false;
         // The looks ran out after this page loaded: take the button away
         // rather than show an error the shopper cannot act on.
         if (error && error.tryOnHidden) {
@@ -629,11 +772,18 @@
         }
         // Billing proof failed closed: do not open an iframe that could run
         // an unbound paid generation.
-        showProofError(root, btn, locale);
+        if (showError) showProofError(root, btn, locale);
       }).then(function () {
         btn.disabled = false;
         btn.removeAttribute('aria-busy');
       });
+    }
+    btn.addEventListener('click', function () { prepare(false); });
+    if (configReady) configReady.then(function () {
+      if (root.parentNode) {
+        indicator.hydrate();
+        observeForPrewarm(btn, function () { prepare(true); });
+      }
     });
   }
 

@@ -70,6 +70,7 @@ async function openSheet() {
   await waitFor(() => expect(document.querySelector('.gc-tryon-sheet')).not.toBeNull());
   const sheet = document.querySelector<HTMLElement>('.gc-tryon-sheet')!;
   const frame = sheet.querySelector('iframe')!;
+  await waitFor(() => expect(frame.src).toContain('/embed/try-on?'));
   return { root, button, sheet, frame };
 }
 

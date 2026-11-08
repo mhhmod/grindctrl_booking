@@ -35,6 +35,8 @@ export type AnalyticsEventPayloadMap = {
   'storefront.case_study_opened': { caseStudyId: string };
   'storefront.integration_page_viewed': { integrationKey: string };
   'tryon.widget_viewed': { productId?: string; variantId?: string };
+  /** Sessionless performance measurements shared by studio and storefront. */
+  'tryon.phase_completed': { phase: 'tap_to_open' | 'photo_prepare' | 'upload' | 'wait_to_result'; durationMs: number };
   'tryon.opened': { productId?: string; variantId?: string };
   'tryon.photo_selected': { productId?: string; variantId?: string };
   'tryon.photo_uploaded': { productId?: string; variantId?: string };
@@ -66,7 +68,7 @@ export type AnalyticsEventPayloadMap = {
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventPayloadMap;
-export type AnalyticsEventScope = 'marketing' | 'tenant';
+export type AnalyticsEventScope = 'marketing' | 'tenant' | 'performance';
 
 export type AnalyticsPropertyName = {
   [Name in AnalyticsEventName]: keyof AnalyticsEventPayloadMap[Name];
@@ -87,6 +89,7 @@ export const ANALYTICS_PROPERTY_RULES = {
   packKey: { type: 'string' },
   demo: { type: 'string', values: ['try_on', 'product_journey'] },
   durationMs: { type: 'number', min: 0 },
+  phase: { type: 'string', values: ['tap_to_open', 'photo_prepare', 'upload', 'wait_to_result'] },
   percent: { type: 'number', values: [25, 50, 75, 100] },
   tab: { type: 'string' },
   scenario: { type: 'string', values: ['conservative', 'expected', 'ambitious'] },
@@ -137,6 +140,7 @@ export const ANALYTICS_EVENTS = {
   'storefront.case_study_opened': { scope: 'marketing', allowedProperties: ['caseStudyId'], requiredProperties: ['caseStudyId'] },
   'storefront.integration_page_viewed': { scope: 'marketing', allowedProperties: ['integrationKey'], requiredProperties: ['integrationKey'] },
   'tryon.widget_viewed': { scope: 'tenant', allowedProperties: ['productId', 'variantId'], requiredProperties: [] },
+  'tryon.phase_completed': { scope: 'performance', allowedProperties: ['phase', 'durationMs'], requiredProperties: ['phase', 'durationMs'] },
   'tryon.opened': { scope: 'tenant', allowedProperties: ['productId', 'variantId'], requiredProperties: [] },
   'tryon.photo_selected': { scope: 'tenant', allowedProperties: ['productId', 'variantId'], requiredProperties: [] },
   'tryon.photo_uploaded': { scope: 'tenant', allowedProperties: ['productId', 'variantId'], requiredProperties: [] },

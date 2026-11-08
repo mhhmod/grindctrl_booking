@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 /* public/widget/v1/tryon-woo.js has no build step, so it is exercised the
    way a store runs it: evaluated against a product page. */
 const SOURCE = readFileSync(path.join(process.cwd(), 'public/widget/v1/tryon-woo.js'), 'utf8');
+const PLUGIN_SOURCE = readFileSync(path.resolve(process.cwd(), '../../integrations/woocommerce/grindctrl-store-chat/includes/tryon.php'), 'utf8');
+const PREVIEW_CAPTURE = /<<<'JS'\r?\n([\s\S]*?)\r?\nJS;/.exec(PLUGIN_SOURCE)?.[1] ?? '';
 const EMBED = 'https://grindctrl.cloud/embed/try-on?product=woo-42#storefrontContext=tok&storefrontNonce=nonce';
 
 type FetchCall = { url: string; init: RequestInit };
@@ -42,6 +44,8 @@ const click = (selector: string) => (document.querySelector(selector) as HTMLEle
 const listeners: Array<[EventTarget, string, EventListenerOrEventListenerObject]> = [];
 
 beforeEach(() => {
+  window.history.replaceState({}, '', '/');
+  window.localStorage.clear();
   // The script binds document and window listeners on load; drop them per test.
   for (const target of [document, window] as EventTarget[]) {
     const add = target.addEventListener.bind(target);
@@ -78,9 +82,81 @@ describe('tryon-woo.js', () => {
     expect(JSON.parse(String(calls[0].init.body))).toEqual({ product_id: 42, variation_id: 77 });
     expect(calls[0].init.credentials).toBe('same-origin');
     const frame = document.querySelector('.gc-tryon-sheet iframe') as HTMLIFrameElement;
-    expect(frame.src).toBe(EMBED);
+    const frameUrl = new URL(frame.src);
+    expect(Number(frameUrl.searchParams.get('gc_opened_at'))).toBeGreaterThan(0);
+    frameUrl.searchParams.delete('gc_opened_at');
+    expect(frameUrl.href).toBe(EMBED);
     expect(document.querySelector('.gc-tryon-sheet')).toHaveAttribute('role', 'dialog');
     expect(document.querySelector('.gc-tryon-sheet__close')).toHaveAttribute('aria-label', 'Close');
+  });
+
+  it('forwards the preview link token and keeps it for navigation to a product page', async () => {
+    const token = 'test-signed-preview-token.value';
+    window.history.replaceState({}, '', `/?gc_preview=${token}`);
+    page('simple');
+    load();
+    window.history.replaceState({}, '', '/product/tee');
+    click('form .gc-tryon-btn');
+    await tick();
+    expect(JSON.parse(String(calls[0].init.body))).toMatchObject({ preview: token });
+  });
+
+  it('reveals the exhausted store test entry only for a preview token', () => {
+    page('simple');
+    const button = document.querySelector('form .gc-tryon-btn') as HTMLButtonElement;
+    button.classList.add('gc-tryon-btn--preview');
+    button.style.display = 'none';
+    load();
+    expect(button).toHaveClass('gc-tryon-btn--preview');
+    expect(button.style.display).toBe('none');
+    expect(calls).toHaveLength(0);
+  });
+
+  it('remembers the home-page preview link even when no storefront loader is present there', async () => {
+    const token = 'test-signed-preview-token.value';
+    window.history.replaceState({}, '', `/?gc_preview=${token}`);
+    expect(PREVIEW_CAPTURE).not.toBe('');
+    (0, eval)(PREVIEW_CAPTURE);
+    window.history.replaceState({}, '', '/product/tee');
+    page('simple');
+    load();
+    click('form .gc-tryon-btn');
+    await tick();
+    expect(JSON.parse(String(calls[0].init.body))).toMatchObject({ preview: token });
+  });
+
+  it('reveals the exhausted store test entry from a saved preview token', () => {
+    page('simple');
+    const button = document.querySelector('form .gc-tryon-btn') as HTMLButtonElement;
+    button.classList.add('gc-tryon-btn--preview');
+    button.style.display = 'none';
+    window.localStorage.setItem('gc_preview', JSON.stringify({ token: 'test-signed-preview-token.value', savedAt: Date.now() }));
+    load();
+    expect(button).not.toHaveClass('gc-tryon-btn--preview');
+    expect(button.style.display).toBe('');
+  });
+
+  it('forwards the preview token when the test sheet asks for public size options', async () => {
+    page('simple');
+    const token = 'test-signed-preview-token.value';
+    window.localStorage.setItem('gc_preview', JSON.stringify({ token, savedAt: Date.now() }));
+    load();
+    click('form .gc-tryon-btn');
+    await tick();
+    const frame = document.querySelector('iframe') as HTMLIFrameElement;
+    handler = () => json({ product: { options: [], variants: [] } });
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-tryon:product-request' }, origin: 'https://grindctrl.cloud', source: frame.contentWindow }));
+    await tick();
+    expect(new URL(calls.at(-1)!.url).searchParams.get('preview')).toBe(token);
+  });
+
+  it('does not forward an expired saved preview token', async () => {
+    page('simple');
+    window.localStorage.setItem('gc_preview', JSON.stringify({ token: 'test-signed-preview-token.value', savedAt: Date.now() - 24 * 60 * 60 * 1000 }));
+    load();
+    click('form .gc-tryon-btn');
+    await tick();
+    expect(JSON.parse(String(calls[0].init.body))).not.toHaveProperty('preview');
   });
 
   it('opens a variable product without a choice, using the product image', async () => {

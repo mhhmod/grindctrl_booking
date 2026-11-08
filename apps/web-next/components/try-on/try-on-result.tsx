@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { trackClick } from '@/lib/analytics';
 import type { TryOnJob } from '@/lib/try-on/types';
 import { useTryOnLocale } from './locale-provider';
+import { getSheetCopy } from '@/lib/try-on/sheet-copy';
 
 export type ResultControls = {
   showDownload?: boolean;
@@ -24,6 +25,8 @@ interface TryOnResultProps {
   /** Inside a merchant storefront: primary CTA is add-to-cart, not trial. */
   shopMode?: boolean;
   controls?: ResultControls;
+  onForget?: () => void;
+  onImageError?: () => void;
 }
 
 /** Shopify's variant title ("Black / M") the way the boards write it ("Black, M").
@@ -33,8 +36,8 @@ export function variantLabel(title: string): string {
   return trimmed === 'Default Title' ? '' : trimmed.split(' / ').join(', ');
 }
 
-export function TryOnResult({ job, productName, onReset, shopMode, controls }: TryOnResultProps) {
-  const { t } = useTryOnLocale();
+export function TryOnResult({ job, productName, onReset, shopMode, controls, onForget, onImageError }: TryOnResultProps) {
+  const { t, locale } = useTryOnLocale();
   const [cartState, setCartState] = useState<'idle' | 'adding' | 'added' | 'failed'>('idle');
   const [cartError, setCartError] = useState('');
   const [addedVariant, setAddedVariant] = useState('');
@@ -53,7 +56,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
   useEffect(() => {
     // The host block acks the cart add; without an ack we surface a retry.
     const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'grindctrl-tryon:cart-result') {
+        if (event.source === window.parent && event.data?.type === 'grindctrl-tryon:cart-result') {
         if (ackTimer.current) clearTimeout(ackTimer.current);
         /* The v16 sheet keeps the shopper on the look and says what it
            added; the inline block leaves for the cart and never acks ok. */
@@ -98,6 +101,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
           <Image
             src={job.resultImageUrl}
             alt={t.resultPreviewAlt(productName)}
+            onError={onImageError}
             width={400}
             height={533}
             className="aspect-[3/4] w-full object-cover"
@@ -211,6 +215,7 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls }: T
           </div>
         )}
 
+        {shopMode && onForget && <Button variant="ghost" onClick={onForget} className="min-h-11 text-sm text-muted-foreground">{getSheetCopy(locale).forgetOnPhone}</Button>}
         <p className="text-center text-xs leading-relaxed text-muted-foreground/80">
           {disclaimer}
         </p>

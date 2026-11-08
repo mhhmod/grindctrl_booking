@@ -4,6 +4,7 @@ import { enforceAnalyticsConsent, POSTHOG_FAIL_CLOSED_CONFIG } from '@/lib/analy
 import { scrubUrl } from '@/lib/analytics/scrub-url';
 import { isForeignScriptEvent } from '@/lib/analytics/foreign-frames';
 import { bootstrapStorefrontProof } from '@/lib/try-on/storefront-bootstrap';
+import { minimizeTryOnPerformanceEvent } from '@/lib/analytics/tryon-performance-envelope';
 
 /* Next.js 15.3+ loads this file automatically on the client — no <Script>
    tag, no provider. Runs before the app renders. */
@@ -58,6 +59,7 @@ if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
      is normally query-free but isn't worth trusting blindly here. */
   const scrubPostHogUrls: BeforeSendFn = (data) => {
     if (!data) return data;
+    if (data.event === 'tryon.phase_completed') return minimizeTryOnPerformanceEvent(data);
     if (typeof data.properties?.$current_url === 'string') {
       data.properties.$current_url = scrubUrl(data.properties.$current_url);
     }

@@ -9,7 +9,8 @@ import type {
   TryOnSession,
   TryOnStage,
 } from '@/lib/try-on/types';
-import { TRYON_ASYNC_POLL_TIMEOUT_MS } from '@/lib/try-on/poll-policy';
+import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS } from '@/lib/try-on/poll-policy';
+import { recordTryOnOpen, recordTryOnPhase } from '@/lib/try-on/performance';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -21,13 +22,13 @@ import {
   keepTryOnResultInPage,
   pollTryOnJob,
 } from '@/lib/try-on/client';
-import { phoneStore } from '@/lib/try-on/phone-store';
+import { PHONE_KEEP_MS, phoneStore, type KeptLook } from '@/lib/try-on/phone-store';
 import type { TryOnTranslator } from '@/lib/try-on/i18n';
 
 /* The try-on's session and job, shared by today's embed (TryOnDemo) and
    the v16 sheet, so both make a look exactly the same way: one signed
    session per visit, one idempotent attempt per explicit tap, then the
-   generation, polled until it settles, kept only in this page. */
+   generation, polled until it settles, then kept on this device if allowed. */
 
 export type TryOnFlowStep = 'upload' | 'consent' | 'generating' | 'result' | 'error';
 
@@ -76,6 +77,58 @@ export function useTryOnFlow({
   const [sessionState, setSessionState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [sessionError, setSessionError] = useState<string | null>(null);
   const sessionInitStarted = useRef(false);
+  const restoredLook = useRef<KeptLook | null>(null);
+  useEffect(() => { recordTryOnOpen(); }, []);
+
+  const notifyLook = useCallback((state: 'ready' | 'stored' | 'cleared', expiresAt?: number, all?: boolean) => {
+    if (!shopProduct || window.parent === window) return;
+    let origin = '*';
+    try { if (document.referrer) origin = new URL(document.referrer).origin; } catch { /* No personal data is posted. */ }
+    window.parent.postMessage({ type: 'grindctrl-tryon:look', state, productId: product.id, expiresAt, all }, origin);
+  }, [product.id, shopProduct]);
+
+  // The iframe's IndexedDB is the existing photo store, not a second copy
+  // in the merchant page. Never persist a session token or signed result URL.
+  useEffect(() => {
+    let live = true;
+    // Query parameters describe the page; only the exchanged capability
+    // authorizes reading a tenant's device-local look in an unpartitioned browser.
+    if (!shopProduct || !displayShop || sessionState !== 'ready' ||
+        session?.shop !== displayShop || session.productId !== product.id) return;
+    const store = phoneStore();
+    void store.latestLook(displayShop, product.id).then((kept) => {
+      if (!live) return;
+      if (!kept) { notifyLook('cleared'); return; }
+      restoredLook.current = kept;
+      // The global saved photo may have been replaced since this look was
+      // made for a different piece. Do not compare it with the old result.
+      setPhotoDataUrl(null);
+      setJob({
+        jobId: kept.jobId, sessionId: '', productId: kept.productId, shop: displayShop,
+        status: 'completed', resultImageUrl: kept.imageDataUrl,
+        createdAt: new Date(kept.savedAt).toISOString(),
+        meta: { runtime: 'live', provider: '', costEstimate: null },
+      });
+      setStep('result');
+      notifyLook('stored', kept.expiresAt);
+    });
+    return () => { live = false; };
+  }, [displayShop, product.id, shopProduct, notifyLook, session, sessionState]);
+
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      if (event.source !== window.parent || event.data?.type !== 'grindctrl-tryon:visibility' || !event.data.open) return;
+      const kept = restoredLook.current;
+      if (kept && kept.expiresAt <= Date.now()) {
+        restoredLook.current = null;
+        setJob(null);
+        setStep('upload');
+        notifyLook('cleared');
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [notifyLook]);
 
   useEffect(() => {
     if (step !== 'generating' || generationPhase !== 'generation-requested') return;
@@ -149,8 +202,9 @@ export function useTryOnFlow({
   }, [initializeSession]);
 
   const selectPhoto = useCallback((dataUrl: string) => {
+    if (restoredLook.current) return;
     setPhotoDataUrl(dataUrl);
-    setStep('consent');
+    setStep((current) => current === 'result' || current === 'generating' ? current : 'consent');
     setError(null);
   }, []);
 
@@ -210,6 +264,7 @@ export function useTryOnFlow({
         garmentUrl: shopProduct ? session.garmentUrl ?? undefined : undefined,
         productName: shopProduct?.name,
       });
+      const uploadStartedAt = performance.now();
       const generationRequest = fetchWithOneRetry('/api/try-on/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -219,6 +274,10 @@ export function useTryOnFlow({
 
       const genRes = await generationRequest;
       let genData: TryOnJobApiResponse = await genRes.json();
+      // Submission-to-acknowledgment; sync fallback contains provider time
+      // and cannot provide an honest split through fetch alone.
+      if (genRes.status === 202) recordTryOnPhase('upload', performance.now() - uploadStartedAt);
+      const waitStartedAt = performance.now();
 
       if (genRes.status === 202 && genData.ok && genData.jobId) {
         /* The look is made after the answer (N38): follow its stages for
@@ -226,6 +285,7 @@ export function useTryOnFlow({
         setServerStage(genData.stage ?? 'received');
         genData = await pollTryOnJob(genData.jobId, session.sessionId, t.genericError, undefined, {
           timeoutMs: TRYON_ASYNC_POLL_TIMEOUT_MS,
+          initialDelayMs: Math.max(TRYON_POLL_INITIAL_DELAY_MS, retryAfterDelayMs(genRes.headers.get('Retry-After')) ?? 0),
           onProgress: (progress) => {
             if (progress.stage) setServerStage(progress.stage);
           },
@@ -262,7 +322,19 @@ export function useTryOnFlow({
         session.sessionId,
         genData.resultImageUrl,
       );
+      if (genRes.status === 202) recordTryOnPhase('wait_to_result', performance.now() - waitStartedAt);
 
+      restoredLook.current = null;
+      if (shopProduct && session.shop) {
+        const savedAt = Date.now();
+        const kept = {
+          jobId: genData.jobId, tenantKey: session.shop, productId: product.id,
+          productName: product.name, imageDataUrl: resultImageUrl,
+        };
+        if (await phoneStore().keepLook(kept, savedAt)) {
+          restoredLook.current = { ...kept, savedAt, expiresAt: savedAt + PHONE_KEEP_MS };
+        }
+      }
       setGenerationPhase('result-received');
       setGenerationSeconds(Math.max(1, Math.round((Date.now() - startedAt) / 1000)));
 
@@ -278,11 +350,12 @@ export function useTryOnFlow({
         meta: genData.meta,
       });
       setStep('result');
+      notifyLook('ready', restoredLook.current?.expiresAt);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.genericError);
       setStep('error');
     }
-  }, [photoDataUrl, product.id, session, shopProduct, t]);
+  }, [photoDataUrl, product.id, product.name, session, shopProduct, notifyLook, t]);
 
   const retrySession = useCallback(() => {
     if (!shopProduct) {
@@ -299,6 +372,7 @@ export function useTryOnFlow({
   }, [initializeSession, shopProduct]);
 
   const reset = useCallback(() => {
+    restoredLook.current = null;
     setPhotoDataUrl(null);
     setJob(null);
     setError(null);
@@ -310,6 +384,18 @@ export function useTryOnFlow({
     setServerStage(null);
     setStep('upload');
   }, []);
+
+  const forget = useCallback(async () => {
+    await phoneStore().deleteAll();
+    notifyLook('cleared', undefined, true);
+    reset();
+  }, [notifyLook, reset]);
+
+  const discardBrokenLook = useCallback(async () => {
+    if (job) await phoneStore().deleteLook(job.jobId);
+    notifyLook('cleared');
+    reset();
+  }, [job, notifyLook, reset]);
 
   return {
     step,
@@ -330,5 +416,7 @@ export function useTryOnFlow({
     generate,
     retrySession,
     reset,
+    forget,
+    discardBrokenLook,
   };
 }

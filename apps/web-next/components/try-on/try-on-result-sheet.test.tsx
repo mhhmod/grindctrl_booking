@@ -38,7 +38,7 @@ describe('the look after an add in the sheet', () => {
     const posted = vi.spyOn(window.parent, 'postMessage');
     renderResult(locale);
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: 'Black / M' } }));
+      window.dispatchEvent(new MessageEvent('message', { source: window.parent, data: { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: 'Black / M' } }));
     });
 
     expect(screen.getByRole('status')).toHaveTextContent(added);
@@ -49,7 +49,7 @@ describe('the look after an add in the sheet', () => {
   it('says it added to the cart for a product with no variants', () => {
     renderResult();
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { data: { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: 'Default Title' } }));
+      window.dispatchEvent(new MessageEvent('message', { source: window.parent, data: { type: 'grindctrl-tryon:cart-result', ok: true, variantTitle: 'Default Title' } }));
     });
     expect(screen.getByRole('status')).toHaveTextContent('Added to cart');
   });

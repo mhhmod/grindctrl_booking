@@ -1,6 +1,7 @@
 import posthog from 'posthog-js';
 import { readAnalyticsConsent } from '@/lib/analytics/consent';
 import { createAnalyticsTracker } from '@/lib/analytics/tracker';
+import { markTryOnOpen } from '@/lib/try-on/performance';
 
 export * from '@/lib/analytics/consent';
 export * from '@/lib/analytics/events';
@@ -40,6 +41,7 @@ export function trackClick(name: LegacyClickEvent, properties: Record<string, st
 
   const cta = name === 'plan_cta_clicked' ? 'choose_plan' : name === 'pack_cta_clicked' ? 'ask_about_pack' : properties.cta;
   if (!cta || !['try_on', 'book_call', 'start_trial', 'choose_plan', 'ask_about_pack', 'open_store'].includes(cta)) return;
+  if (cta === 'try_on') markTryOnOpen();
 
   trackAnalyticsEvent({
     name: 'storefront.cta_clicked',

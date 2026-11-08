@@ -34,7 +34,7 @@ vi.mock('@/components/try-on/sheet/try-on-sheet', () => ({
     <div data-testid="sheet" data-seconds={String(props.lookSeconds)} data-variant={props.variantTitle} data-form={props.addressForm} />
   ),
 }));
-vi.mock('@/components/try-on/try-on-demo', () => ({ TryOnDemo: () => <div data-testid="today" /> }));
+vi.mock('@/components/try-on/try-on-demo', () => ({ TryOnDemo: (props: { lookSeconds: number | null }) => <div data-testid="today" data-seconds={String(props.lookSeconds)} /> }));
 vi.mock('@/components/try-on/embed-frame-bridge', () => ({ EmbedFrameBridge: () => null }));
 const hosts = vi.hoisted(() => ({ list: ['shop.example.com'] as string[] }));
 vi.mock('@/lib/woo/garment-url', async (importOriginal) => ({
@@ -79,7 +79,8 @@ describe('the try-on embed', () => {
     await renderPage({ ...BASE, sheet: '1' });
     expect(screen.getByTestId('today')).toBeInTheDocument();
     expect(screen.queryByTestId('sheet')).toBeNull();
-    expect(flags.timing).toBe(0);
+    expect(flags.timing).toBe(1);
+    expect(screen.getByTestId('today')).toHaveAttribute('data-seconds', '25');
   });
 
   it("keeps today's try-on when the loader did not ask for the sheet", async () => {
@@ -87,7 +88,8 @@ describe('the try-on embed', () => {
     await renderPage(BASE);
     expect(screen.getByTestId('today')).toBeInTheDocument();
     expect(flags.asked).toEqual([]);
-    expect(flags.timing).toBe(0);
+    expect(flags.timing).toBe(1);
+    expect(screen.getByTestId('today')).toHaveAttribute('data-seconds', '25');
   });
 });
 

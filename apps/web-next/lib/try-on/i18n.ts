@@ -107,6 +107,9 @@ interface TryOnDict {
   pageSubtitle: string;
   pageForStores: string;
   pageNeedPhoto: string;
+  pageProgressStages: string[];
+  pageProgressAlmost: string;
+  pageProgressRemaining: (seconds: number) => string;
   pageCreateLook: string;
   pageTryAnother: string;
   pageCompareLooks: string;
@@ -191,8 +194,8 @@ const en: TryOnDict = {
   noteText: 'The preview is visual guidance, not an exact sizing guarantee.',
   generateBtn: 'Generate Try-On Preview',
 
-  generatingTitle: 'Creating your preview',
-  preparingSession: 'Preparing secure try-on…',
+  generatingTitle: 'Making your look',
+  preparingSession: 'Sending your photo…',
   storefrontProofErrorTitle: 'Try-on needs to be refreshed',
   storefrontProofError:
     'We could not verify this product session. Refresh try-on and try again.',
@@ -245,6 +248,9 @@ const en: TryOnDict = {
   pageSubtitle: 'Pick a piece, add a photo, get your look.',
   pageForStores: 'For stores: book a call',
   pageNeedPhoto: 'Add a photo to create your look.',
+  pageProgressStages: ['Reading your photo', 'Fitting the piece', 'Adding the final details'],
+  pageProgressAlmost: 'Almost there. Adding the final details.',
+  pageProgressRemaining: (seconds) => `About ${seconds} seconds left`,
   pageCreateLook: 'Create my look',
   pageTryAnother: 'Try another piece',
   pageCompareLooks: 'Compare looks',
@@ -335,8 +341,8 @@ const ar: TryOnDict = {
   noteText: 'المعاينة إرشاد بصري وليست ضمانًا دقيقًا للمقاس.',
   generateBtn: 'إنشاء معاينة التجربة',
 
-  generatingTitle: 'جارٍ إنشاء معاينتك',
-  preparingSession: 'جارٍ تجهيز تجربة آمنة…',
+  generatingTitle: 'نجهّز إطلالتك',
+  preparingSession: 'نرسل صورتك…',
   storefrontProofErrorTitle: 'تحتاج تجربة المنتج إلى تحديث',
   storefrontProofError:
     'تعذّر التحقق من جلسة هذا المنتج. حدّث تجربة المنتج ثم حاول مرة أخرى.',
@@ -389,6 +395,9 @@ const ar: TryOnDict = {
   pageSubtitle: 'اختر قطعة، وأضف صورة، واحصل على إطلالتك.',
   pageForStores: 'للمتاجر: احجز مكالمة',
   pageNeedPhoto: 'أضف صورة لإنشاء إطلالتك.',
+  pageProgressStages: ['نحلّل صورتك', 'نضبط القطعة عليك', 'نضع اللمسات الأخيرة'],
+  pageProgressAlmost: 'اقتربنا. نضع اللمسات الأخيرة.',
+  pageProgressRemaining: (seconds) => `باقي حوالي ${seconds} ${seconds <= 10 ? 'ثوانٍ' : 'ثانية'}`,
   pageCreateLook: 'اصنع إطلالتي',
   pageTryAnother: 'جرّب قطعة أخرى',
   pageCompareLooks: 'قارن الإطلالات',

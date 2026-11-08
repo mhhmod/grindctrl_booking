@@ -42,6 +42,7 @@ describe('SiteHeader (v15)', () => {
     expect(booking).toHaveAttribute('target', '_blank');
     expect(booking).toHaveAttribute('rel', 'noopener noreferrer');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(header.getByRole('link', { name: t.navTryOn })).toHaveAttribute('href', '/try-on');
   });
 
   it.each<SiteLocale>(['en', 'ar'])('opens a %s menu with Sign in first, then the scenes, Ask the store and Pricing', async (locale) => {
@@ -51,7 +52,7 @@ describe('SiteHeader (v15)', () => {
     const links = within(dialog).getAllByRole('link').filter((link) => link.getAttribute('href') !== BOOKING_URL);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/sign-in',
-      '/#try',
+      '/try-on',
       '/#store',
       '/#ops',
       '/#product',

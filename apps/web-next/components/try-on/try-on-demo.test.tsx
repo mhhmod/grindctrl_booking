@@ -1,12 +1,19 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TryOnLocaleProvider } from './locale-provider';
 import { pollTryOnJob, TryOnDemo } from './try-on-demo';
 import { resetStorefrontProofForTests } from '@/lib/try-on/storefront-bootstrap';
 
 (globalThis as typeof globalThis & { React: typeof React }).React = React;
+
+/* Lifecycle fixtures are deliberately not real image bytes. Actual browser
+   decoding/resizing and unreadable input are covered by photo-file.test.tsx. */
+vi.mock('@/lib/try-on/photo-file', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/lib/try-on/photo-file')>(),
+  readPhotoAsDataUrl: vi.fn(async () => 'data:image/png;base64,cGhvdG8='),
+}));
 
 const CONTEXT_TOKEN = 'header.payload.signature';
 const STOREFRONT_NONCE = 'abcdefghijklmnopqrstuvwx';
@@ -213,7 +220,7 @@ describe('TryOnDemo storefront session lifecycle', () => {
     await waitFor(() => expect(generateButton).toBeEnabled());
     fireEvent.click(generateButton);
 
-    // The real poll-policy backoff waits a genuine 1s before the second poll
+    // The real poll-policy interval waits 1.5s before the second poll
     // (tryOnPollDelayMs), which races testing-library's 1s default findBy*
     // timeout under real timers — widen it rather than shorten production's
     // deliberate backoff. A left-over timeout here previously orphaned this
@@ -285,9 +292,15 @@ describe('TryOnDemo storefront session lifecycle', () => {
     await selectPhoto('async.png');
     const generateButton = screen.getByRole('button', { name: 'Generate Try-On Preview' });
     await waitFor(() => expect(generateButton).toBeEnabled());
+    vi.useFakeTimers();
     fireEvent.click(generateButton);
 
-    expect(await screen.findByAltText('Try-on preview of Premium tee', {}, { timeout: 3_000 })).toBeVisible();
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_999); });
+    expect(polls).toHaveLength(0);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(polls).toHaveLength(1);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
+    expect(screen.getByAltText('Try-on preview of Premium tee')).toBeVisible();
     expect(polls).toHaveLength(2);
   });
 
