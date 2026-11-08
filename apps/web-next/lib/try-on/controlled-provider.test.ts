@@ -81,7 +81,9 @@ describe('noncharging provider harness preserves the live credit/job code path',
     expect(externalFetch).toHaveBeenCalledTimes(1); // Synthetic garment only; no provider transport.
     expect(externalFetch.mock.calls[0][0]).toBe(`${auth.canonicalGarmentUrl}?width=1536`); // Bounded Shopify CDN derivative.
     expect((await generateTryOn(auth,'upload',`data:image/png;base64,${SYNTHETIC_PNG}`,auth.canonicalGarmentUrl!)).jobId).toBe(result.jobId);
-    expect(externalFetch).toHaveBeenCalledTimes(1); expect(upload).toHaveBeenCalledTimes(1);
+    // The garment fetch overlaps reservation, so a replay starts one and then
+    // discards it; the provider, upload and finalizer still run exactly once.
+    expect(externalFetch).toHaveBeenCalledTimes(2); expect(upload).toHaveBeenCalledTimes(1);
     expect(rpc.mock.calls.filter(([name])=>name==='finalize_tryon_job')).toHaveLength(1);
   });
   it('failure still reserves and invokes the existing failed-job finalizer/refund contract',async()=>{
