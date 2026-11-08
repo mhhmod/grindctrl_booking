@@ -202,6 +202,20 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
 
   const storeLinkTracked = () => trackClick('cta_clicked', { cta: 'open_store', section: 'try_on_header' });
 
+  const lookShown = state.stage === 'done' && look !== null;
+  const mobileActions = (
+    <ActionBar
+      t={t}
+      state={state}
+      look={look}
+      canCompare={state.looks.length >= 2}
+      createLocked={retryLocked}
+      onCreate={onCreate}
+      onTryAnother={() => setPickerOpen(true)}
+      onCompare={() => setCompareOpen(true)}
+    />
+  );
+
   return (
     <>
       <SkipLink />
@@ -301,9 +315,9 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
                   onClear={() => dispatch({ type: 'clearPhoto' })}
                   status={stepStatus(2, journey)}
                 />
-                <div className="lg:hidden">
-                  <ActionBar t={t} state={state} look={look} canCompare={state.looks.length >= 2} createLocked={retryLocked} onCreate={onCreate} onTryAnother={() => setPickerOpen(true)} onCompare={() => setCompareOpen(true)} />
-                </div>
+                {/* Phones: Create sits with the inputs; once a look exists its
+                    actions move under it, where the eye already is. */}
+                {!lookShown ? <div className="lg:hidden">{mobileActions}</div> : null}
                 <Joiner glyph="equals" busy={state.stage === 'creating'} />
                 <LookCard
                   t={t}
@@ -319,6 +333,7 @@ export function TryOnStudio({ typicalSeconds = null }: { typicalSeconds?: number
                   onView={(view) => dispatch({ type: 'setView', view })}
                   cardRef={lookCardRef}
                 />
+                {lookShown ? <div className="mt-1 lg:hidden">{mobileActions}</div> : null}
               </div>
 
               <div className="mt-5 hidden lg:mt-[22px] lg:block">

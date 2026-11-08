@@ -200,30 +200,30 @@ describe('the v16 try-on sheet', () => {
     expect(await screen.findByRole('heading', { name: 'Making your look' })).toBeInTheDocument();
     expect(screen.getByText('About 12 seconds left')).toBeInTheDocument();
     const live = screen.getAllByRole('status').find((node) => node.classList.contains('sr-only'))!;
-    expect(live).toHaveTextContent('Preparing your photo');
+    expect(live).toHaveTextContent('Reading your photo');
     const steps = within(screen.getByRole('list'));
-    expect(steps.getByText('Preparing your photo').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
     act(() => vi.advanceTimersByTime(5_000));
     expect(screen.getByText('About 7 seconds left')).toBeInTheDocument();
-    expect(steps.getByText('Preparing your photo').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).toHaveAttribute('aria-current', 'step');
 
     flow.serverStage = 'making';
     act(() => vi.advanceTimersByTime(500));
-    expect(steps.getByText('Making your look').closest('li')).toHaveAttribute('aria-current', 'step');
-    expect(steps.getByText('Preparing your photo').closest('li')).not.toHaveAttribute('aria-current');
-    expect(live).toHaveTextContent('Making your look');
+    expect(steps.getByText('Fitting the piece').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Reading your photo').closest('li')).not.toHaveAttribute('aria-current');
+    expect(live).toHaveTextContent('Fitting the piece');
 
     // Passing the estimate never advances the server's real stage.
     act(() => vi.advanceTimersByTime(30_000));
     expect(screen.queryByText(/seconds? left/)).toBeNull();
-    expect(steps.getByText('Making your look').closest('li')).toHaveAttribute('aria-current', 'step');
-    expect(live).toHaveTextContent('Still working on your look. Thanks for waiting.');
+    expect(steps.getByText('Fitting the piece').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(live).toHaveTextContent('Almost there. Adding the final details.');
     expect(screen.queryByText('Your look is ready')).toBeNull();
 
     flow.serverStage = 'finishing';
     act(() => vi.advanceTimersByTime(500));
-    expect(steps.getByText('Finishing your look').closest('li')).toHaveAttribute('aria-current', 'step');
+    expect(steps.getByText('Adding the final details').closest('li')).toHaveAttribute('aria-current', 'step');
   });
 
   it("uses the store's own steps and loading style, and promises no time without an estimate", async () => {

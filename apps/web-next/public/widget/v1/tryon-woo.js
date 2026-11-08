@@ -33,6 +33,7 @@
       chooseOnPage: 'Choose a size above, then add it to the cart.',
       loading: 'Opening try-on',
       ready: 'Your look is ready',
+      readyShort: 'Ready',
       seeLook: 'See your look'
     },
     ar: {
@@ -43,6 +44,7 @@
       chooseOnPage: 'اختر المقاس أعلاه ثم أضفه إلى السلة.',
       loading: 'جارٍ فتح التجربة',
       ready: 'إطلالتك جاهزة',
+      readyShort: 'جاهزة',
       seeLook: 'شاهد إطلالتك'
     }
   };
@@ -107,7 +109,7 @@
         if (!original) original = label.textContent;
         label.textContent = copy.seeLook;
         badge.hidden = state !== 'ready' || open;
-        badge.textContent = copy.ready;
+        badge.textContent = copy.readyShort;
         live.textContent = badge.hidden ? '' : copy.ready;
       },
       seen: function () { badge.hidden = true; live.textContent = ''; }

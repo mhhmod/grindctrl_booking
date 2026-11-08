@@ -678,6 +678,9 @@ export function ActionBar({
   const hintId = React.useId();
   return (
     <div className="flex min-h-16 flex-col items-center justify-center gap-2 text-center">
+      {/* This piece on this photo is already made: making it again only
+          spends a look. Create returns when the piece or photo changes. */}
+      {state.stage === 'done' && look ? null : (
         <button
           type="button"
           onClick={onCreate}
@@ -688,6 +691,7 @@ export function ActionBar({
           <SparkleIcon size={18} />
           {t.pageCreateLook}
         </button>
+      )}
       {!state.photo ? (
         <p id={hintId} className="inline-flex items-center gap-2 text-xs text-muted-foreground">
           <PhotoIcon size={14} />
