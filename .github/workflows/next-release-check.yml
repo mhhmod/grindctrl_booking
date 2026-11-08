@@ -13,8 +13,12 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('next-release-check-{0}', github.event.pull_request.number) || format('next-release-check-{0}-{1}-{2}', github.workflow, github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  verify:
+  static:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
@@ -24,9 +28,31 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: apps/web-next/package-lock.json
+      # Cache lookup can find a prefix match; restore only an exact hit.
+      - name: Look up installed dependencies
+        id: dependency-lookup
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+          lookup-only: true
+      - name: Restore exact installed dependencies
+        id: dependencies
+        if: steps.dependency-lookup.outputs.cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
       - name: Install locked dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
         working-directory: apps/web-next
         run: npm ci
+      - name: Save exact installed dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
       - name: Dependency audit
         working-directory: apps/web-next
         run: npm audit --omit=dev --audit-level=moderate
@@ -34,6 +60,91 @@ jobs:
         run: node --test testing/shopify/*.test.mjs
       - name: Controlled Shopify topology contract (render only)
         run: node testing/shopify/check-compose.mjs
+      - name: Typecheck
+        working-directory: apps/web-next
+        run: npm run typecheck
+      - name: Lint
+        working-directory: apps/web-next
+        run: npm run lint
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+      # Cache lookup can find a prefix match; restore only an exact hit.
+      - name: Look up installed dependencies
+        id: dependency-lookup
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+          lookup-only: true
+      - name: Restore exact installed dependencies
+        id: dependencies
+        if: steps.dependency-lookup.outputs.cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+      - name: Install locked dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        working-directory: apps/web-next
+        run: npm ci
+      - name: Save exact installed dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+      - name: Unit and route contracts
+        working-directory: apps/web-next
+        run: npm test -- --maxWorkers=2 --shard=${{ matrix.shard }}/3
+
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+      # Cache lookup can find a prefix match; restore only an exact hit.
+      - name: Look up installed dependencies
+        id: dependency-lookup
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+          lookup-only: true
+      - name: Restore exact installed dependencies
+        id: dependencies
+        if: steps.dependency-lookup.outputs.cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+      - name: Install locked dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        working-directory: apps/web-next
+        run: npm ci
+      - name: Save exact installed dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
       - name: Real disposable PostgreSQL, REST and Storage integration (no external credentials)
         run: |
           python3 -m unittest discover -s testing/shopify/local -p 'test_*.py'
@@ -50,17 +161,55 @@ jobs:
           if test -f ../work/grindctrl-m1-local/state.json; then
             python3 testing/shopify/local/stack.py stop
           fi
-      - name: Unit and route contracts
+
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web-next/package-lock.json
+      # Cache lookup can find a prefix match; restore only an exact hit.
+      - name: Look up installed dependencies
+        id: dependency-lookup
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+          lookup-only: true
+      - name: Restore exact installed dependencies
+        id: dependencies
+        if: steps.dependency-lookup.outputs.cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+      - name: Install locked dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
         working-directory: apps/web-next
-        run: npm test -- --maxWorkers=2
-      - name: Typecheck
-        working-directory: apps/web-next
-        run: npm run typecheck
-      - name: Lint
-        working-directory: apps/web-next
-        run: npm run lint
+        run: npm ci
+      - name: Save exact installed dependencies
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/web-next/node_modules
+          key: ${{ runner.os }}-node-24-web-next-modules-${{ hashFiles('apps/web-next/package-lock.json') }}
+      - uses: docker/setup-buildx-action@v3
       - name: Build candidate without production credentials or publishing
-        run: docker build --build-arg SENTRY_RELEASE=${{ github.sha }} -t grindctrl-release-check:${{ github.sha }} -f apps/web-next/Dockerfile .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web-next/Dockerfile
+          load: true
+          push: false
+          tags: grindctrl-release-check:${{ github.sha }}
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
+          cache-from: type=gha,scope=release-candidate
+          cache-to: type=gha,scope=release-candidate,mode=max
       - name: Scan candidate OS and runtime libraries
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
@@ -117,3 +266,27 @@ jobs:
       - name: Remove only this job's disposable candidate
         if: always()
         run: docker rm --force gc-release-candidate || true
+
+  verify:
+    needs: [static, unit, integration, candidate]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Require every check to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: echo "$NEEDS" | jq -e 'all(.[]; .result == "success")'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: github.event_name == 'pull_request'
+      - name: Record verified tree
+        if: github.event_name == 'pull_request'
+        run: git rev-parse 'HEAD^{tree}' > verified-tree
+      - name: Upload verified tree
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-tree
+          path: verified-tree
+          if-no-files-found: error
+          retention-days: 30
