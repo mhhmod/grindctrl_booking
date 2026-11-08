@@ -66,6 +66,7 @@ export function PasteInstall({
   const [resetUntil, setResetUntil] = React.useState<string | null>(null);
   /* Read when status arrives, so render stays pure. */
   const [now, setNow] = React.useState(0);
+  const [stepsOpen, setStepsOpen] = React.useState(false);
   const [password, setPassword] = React.useState('');
   const [checked, setChecked] = React.useState<{ outcome: PasteShopCheckOutcome | 'rate_limited'; retryAfter: number | null } | null>(null);
 
@@ -120,8 +121,10 @@ export function PasteInstall({
     };
   }, [apply, load]);
 
-  /* Watch for the first signal while the merchant is pasting; stop once live. */
-  const waiting = Boolean(snippet) && !status?.chatLive;
+  /* Keep watching while the merchant pastes, and after the first signal
+     until Try-On settles (the free looks are granted a moment later). */
+  const settling = status?.tryOnReason === 'not_installed' || status?.tryOnReason === 'shop_proof_pending';
+  const waiting = Boolean(snippet) && (!status?.seen || (!status.tryOnReady && settling));
   React.useEffect(() => {
     if (!waiting) return;
     const timer = window.setInterval(() => {
@@ -179,14 +182,41 @@ export function PasteInstall({
   const shopifyDomain = connectedAs === 'shopify' ? status?.shopDomain ?? undefined : undefined;
   const storeHost = status?.seenHost ?? liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
   const storeUrl = `https://${storeHost ?? ''}`;
+  /* Our code has run on the store: the install part is done. */
+  const installed = Boolean(status?.seen) && status?.connectionReason !== 'shopify_app_installed';
 
   return (
     <Stack gap="lg" className={classes.root}>
-      <div>
-        <Text fw={700}>{copy.title}</Text>
-        <Text size="sm" c="dimmed">{copy.intro}</Text>
-      </div>
+      {installed && status ? (
+        /* The moment it works, say so plainly and point at what to do next. */
+        <section className={classes.success} aria-live="polite">
+          <Group gap="sm" wrap="nowrap" align="flex-start">
+            <span className={classes.successMark} aria-hidden="true"><GcIcon name="check" size={18} /></span>
+            <Stack gap={4} className={classes.grow}>
+              <Text fw={700}>{copy.installedTitle(status.seenHost ?? storeHost ?? '')}</Text>
+              <Text size="sm">{status.chatLive ? copy.chatShown : copy.chatPreview}</Text>
+              <Text size="sm">
+                {status.tryOnReady ? copy.tryOnOn(Math.max(0, status.plan?.totalCreditsRemaining ?? 0)) : copy.tryOnReason(status.tryOnReason)}
+              </Text>
+            </Stack>
+          </Group>
+          <Group gap="xs" mt="sm">
+            <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
+              {copy.seeOnStore}
+            </Button>
+            <Button component={Link} href="/dashboard/try-on" variant="default" radius="pill" size="sm">
+              {copy.goTryOnSetup}
+            </Button>
+          </Group>
+        </section>
+      ) : (
+        <div>
+          <Text fw={700}>{copy.title}</Text>
+          <Text size="sm" c="dimmed">{copy.intro}</Text>
+        </div>
+      )}
 
+      {!installed || stepsOpen ? (
       <Radio.Group value={platform} onChange={(value) => void choose(value as InstallPlatform)} label={copy.platformLegend}>
         <div className={classes.platforms}>
           {(['shopify', 'woocommerce', 'website'] as const).map((key) => (
@@ -205,6 +235,7 @@ export function PasteInstall({
           ))}
         </div>
       </Radio.Group>
+      ) : null}
 
       {error ? (
         <Alert color="red" variant="light" role="alert" icon={<GcIcon name="warn" size={18} />}>
@@ -216,6 +247,10 @@ export function PasteInstall({
 
       {status?.connectionReason === 'shopify_app_installed' && platform === 'shopify' ? (
         <Alert variant="light" icon={<GcIcon name="info" size={18} />}>{copy.appHeld}</Alert>
+      ) : installed && !stepsOpen ? (
+        <Button variant="subtle" size="compact-sm" className={classes.copy} onClick={() => setStepsOpen(true)}>
+          {copy.showSteps}
+        </Button>
       ) : platform === 'shopify' || platform === 'website' ? (
         <ol className={classes.steps}>
           <li className={classes.step}>
@@ -434,7 +469,7 @@ export function PasteInstall({
         </ol>
       ) : null}
 
-      {platform && platform !== 'woocommerce' ? (
+      {platform && platform !== 'woocommerce' && !installed ? (
         <Group justify="space-between" gap="sm" className={classes.help}>
           <Text size="sm">{copy.doneForYou}</Text>
           <Button

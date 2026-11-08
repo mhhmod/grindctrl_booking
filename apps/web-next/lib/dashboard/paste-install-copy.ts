@@ -37,6 +37,13 @@ export type PasteInstallCopy = {
   tryOnLive: string;
   tryOnReason: (reason: string | null) => string;
   goTryOnSetup: string;
+  installedTitle: (host: string) => string;
+  chatShown: string;
+  chatPreview: string;
+  tryOnOn: (looks: number) => string;
+  seeOnStore: string;
+  showSteps: string;
+  hideSteps: string;
   shopCheckTitle: string;
   shopCheck: (outcome: PasteShopCheckOutcome | 'rate_limited' | null, retryAfter: number | null) => string;
   checkStore: string;
@@ -106,10 +113,22 @@ const en: PasteInstallCopy = {
       case 'out_of_looks': return 'Try-On is paused: this month’s looks are used up.';
       case 'no_trusted_domain': return 'Add your store address to turn on Try-On.';
       case 'paste_not_connected': return 'Finish the steps above to turn on Try-On.';
+      case 'not_installed': return 'Turning on your free looks. This takes a moment.';
+      case 'plan_inactive': return 'Your plan isn’t active. Choose a plan to turn on Try-On.';
+      case 'unavailable': return 'Try-On is unavailable right now. We’re looking into it.';
+      case 'shop_proof_pending': return 'Confirm it’s your store to turn on Try-On.';
+      case 'shopify_app_installed': return 'This store uses the GRINDCTRL Shopify app, so Try-On runs from the app.';
       default: return 'Try-On is getting ready. We are on it.';
     }
   },
   goTryOnSetup: 'Try-On settings',
+  installedTitle: (host) => `You’re installed on ${host}`,
+  chatShown: 'Shoppers see Store Chat on every page.',
+  chatPreview: 'Store Chat is in preview, so only you see it.',
+  tryOnOn: (looks) => `Try-On is on your product pages. ${looks} looks left this month.`,
+  seeOnStore: 'See it on your store',
+  showSteps: 'Show the install steps',
+  hideSteps: 'Hide the install steps',
   shopCheckTitle: 'Confirm it’s your store',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {
@@ -203,10 +222,22 @@ const ar: PasteInstallCopy = {
       case 'out_of_looks': return 'التجربة الافتراضية متوقفة: نفدت إطلالات هذا الشهر.';
       case 'no_trusted_domain': return 'أضف عنوان متجرك لتشغيل التجربة الافتراضية.';
       case 'paste_not_connected': return 'أكمل الخطوات أعلاه لتشغيل التجربة الافتراضية.';
+      case 'not_installed': return 'نشغّل إطلالاتك المجانية. يستغرق ذلك لحظات.';
+      case 'plan_inactive': return 'خطتك غير مفعّلة. اختر خطة لتشغيل التجربة الافتراضية.';
+      case 'unavailable': return 'التجربة الافتراضية غير متاحة الآن. نعمل على ذلك.';
+      case 'shop_proof_pending': return 'أكّد أن المتجر لك لتشغيل التجربة الافتراضية.';
+      case 'shopify_app_installed': return 'هذا المتجر يستخدم تطبيق GRINDCTRL على Shopify، لذا تعمل التجربة الافتراضية من التطبيق.';
       default: return 'نجهّز التجربة الافتراضية، ونعمل على ذلك.';
     }
   },
   goTryOnSetup: 'إعدادات التجربة الافتراضية',
+  installedTitle: (host) => `تم التثبيت على ${host}`,
+  chatShown: 'يرى المتسوقون دردشة المتجر في كل الصفحات.',
+  chatPreview: 'دردشة المتجر في وضع المعاينة، لذا تظهر لك وحدك.',
+  tryOnOn: (looks) => `التجربة الافتراضية تعمل في صفحات منتجاتك. متبقٍ هذا الشهر: ${looks} ${looks >= 3 && looks <= 10 ? 'إطلالات' : 'إطلالة'}.`,
+  seeOnStore: 'شاهدها في متجرك',
+  showSteps: 'إظهار خطوات التثبيت',
+  hideSteps: 'إخفاء خطوات التثبيت',
   shopCheckTitle: 'أكّد أن المتجر لك',
   shopCheck: (outcome, retryAfter) => {
     switch (outcome) {

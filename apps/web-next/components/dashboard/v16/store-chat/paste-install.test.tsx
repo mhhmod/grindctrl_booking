@@ -62,14 +62,29 @@ describe('paste install journey', () => {
     expect(screen.getByText(copy.waiting)).toBeInTheDocument();
   });
 
-  it('shows the code working in preview, with the Try-On reason, once the store has been seen', async () => {
+  it('says plainly when it is installed, folds the steps, and points at the store', async () => {
     const seen = new Date().toISOString();
-    const a = actions(status({ domains: [domain({ lastSeenAt: seen })], seen: true, seenHost: 'shop.example', chatLive: false, tryOnReady: false, tryOnReason: 'preview' }));
+    const a = actions(status({ domains: [domain({ lastSeenAt: seen })], seen: true, seenHost: 'shop.example', chatLive: true,
+      tryOnReady: true, tryOnReason: null, plan: { totalCreditsRemaining: 15 } as PasteInstallStatus['plan'] }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
 
-    expect(await screen.findByText(copy.chatLive('shop.example'))).toBeInTheDocument();
-    expect(screen.getByText(copy.tryOnReason('preview'))).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: copy.goTryOnSetup })).toHaveAttribute('href', '/dashboard/try-on/setup');
+    expect(await screen.findByText(copy.installedTitle('shop.example'))).toBeInTheDocument();
+    expect(screen.getByText(copy.chatShown)).toBeInTheDocument();
+    expect(screen.getByText(copy.tryOnOn(15))).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: copy.seeOnStore })).toHaveAttribute('href', 'https://shop.example');
+    expect(screen.getByRole('link', { name: copy.goTryOnSetup })).toHaveAttribute('href', '/dashboard/try-on');
+    expect(screen.queryByText(copy.steps.code)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: copy.showSteps }));
+    expect(screen.getByText(copy.steps.code)).toBeInTheDocument();
+  });
+
+  it('names the moment the free looks are being turned on instead of a vague wait', async () => {
+    const a = actions(status({ domains: [domain({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
+      chatLive: false, tryOnReady: false, tryOnReason: 'not_installed' }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.tryOnReason('not_installed'))).toBeInTheDocument();
+    expect(screen.getByText(copy.chatPreview)).toBeInTheDocument();
   });
 
   it('asks a Shopify store for its myshopify address and trusts it', async () => {
