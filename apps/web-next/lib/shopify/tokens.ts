@@ -7,6 +7,8 @@ import { normalizeShopDomain } from './shop-authorization';
 import { findShopifyAppByClientId } from './app-registry';
 import { APP_SCOPES } from './oauth';
 import { isSiteTenantKey, normalizeTenantKey } from '@/lib/tenancy/tenant-key';
+import { getPasteConnection } from '@/lib/paste/store';
+import { PASTE_APP_CLIENT_ID } from '@/lib/paste/signing';
 
 let client: SupabaseClient | undefined;
 function getServiceClient(): SupabaseClient {
@@ -322,13 +324,17 @@ export async function isActiveTenant(tenantKey: string, appClientId?: string): P
   }
 
   try {
+    const siteId = key.slice('site:'.length);
+    if (appClientId === PASTE_APP_CLIENT_ID) return (await getPasteConnection(siteId))?.status === 'active';
     const { data, error } = await getServiceClient()
       .from('woo_site_connections')
       .select('widget_site_id')
       .eq('widget_site_id', key.slice('site:'.length))
       .eq('status', 'active')
       .limit(1);
-    return !error && Array.isArray(data) && data.length === 1;
+    if (!error && Array.isArray(data) && data.length === 1) return true;
+    if (appClientId) return false;
+    return (await getPasteConnection(siteId))?.status === 'active';
   } catch {
     return false;
   }

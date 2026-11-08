@@ -39,8 +39,9 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
 
   const domainsRes = await supabase
     .from('widget_domains')
-    .select('pattern, verification_status, environment')
+    .select('pattern, verification_status, environment, verification_method')
     .eq('widget_site_id', row.id as string);
+  if (domainsRes.error) return null;
 
   const settings = (row.settings_json ?? {}) as Record<string, unknown>;
   const securityRaw = (settings.security ?? {}) as Record<string, unknown>;
@@ -59,6 +60,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
       pattern: String(row.pattern ?? ''),
       verification_status: String(row.verification_status ?? ''),
       environment: String(row.environment ?? 'production'),
+      verification_method: String(row.verification_method ?? ''),
     })) satisfies DomainPatternRow[],
   };
 }

@@ -12,7 +12,9 @@ const mocks = vi.hoisted(() => ({
   storeFlags: vi.fn(),
   getStoreLaunch: vi.fn(),
   isActiveTenant: vi.fn(),
+  signal: vi.fn(),
 }));
+vi.mock('@/lib/paste/store', () => ({ recordPasteSignal: mocks.signal }));
 
 vi.mock('@/lib/shopify/tokens', () => ({ isActiveTenant: mocks.isActiveTenant }));
 vi.mock('@/lib/launch/store-launch', () => ({ getStoreLaunch: mocks.getStoreLaunch }));
@@ -258,6 +260,18 @@ describe('GET /api/messenger/config', () => {
 
     expect(response.status).toBe(404);
     expect(body).toEqual({ error: 'not_found' });
+  });
+
+  it('records a real install signal only after an active site admits a browser Origin', async () => {
+    mocks.loadPublicSite.mockResolvedValue({ ...SITE, status: 'active' });
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://merchant.example' } }));
+    expect(mocks.signal).toHaveBeenCalledExactlyOnceWith(SITE.id, 'https://merchant.example');
+    mocks.signal.mockClear();
+    await GET(req('https://app.example.com/api/messenger/config?key=gc_test_key&origin=https://merchant.example'));
+    expect(mocks.signal).not.toHaveBeenCalled();
+    mocks.originAllowed.mockReturnValue(false);
+    await GET(new NextRequest('https://app.example.com/api/messenger/config?key=gc_test_key', { headers: { origin: 'https://evil.example' } }));
+    expect(mocks.signal).not.toHaveBeenCalled();
   });
 });
 

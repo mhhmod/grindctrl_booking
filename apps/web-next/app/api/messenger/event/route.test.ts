@@ -6,7 +6,9 @@ const mocks = vi.hoisted(() => ({
   loadSiteByDomain: vi.fn(),
   originAllowed: vi.fn(),
   recordEvent: vi.fn(),
+  signal: vi.fn(),
 }));
+vi.mock('@/lib/paste/store', () => ({ recordPasteSignal: mocks.signal }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: async () => ({ success: true, reset: Date.now() + 10_000 }) },
@@ -70,6 +72,19 @@ describe('POST /api/messenger/event config failures', () => {
     expect(mocks.recordEvent.mock.calls[0][0].payload).toEqual({
       reason: 'http_error', host: 'maison-noor.myshopify.com', status: 503,
     });
+  });
+
+  it('records only an admitted active loader heartbeat as an install signal', async () => {
+    mocks.loadSiteByDomain.mockResolvedValue({ id: 'site-1', status: 'active' });
+    mocks.originAllowed.mockReturnValue(true);
+    await POST(post('loader_initialized', 'https://maisonnoor.com'));
+    expect(mocks.signal).toHaveBeenCalledExactlyOnceWith('site-1', 'https://maisonnoor.com');
+    mocks.signal.mockClear();
+    await POST(post('config_fetch_failed', 'https://maisonnoor.com'));
+    expect(mocks.signal).not.toHaveBeenCalled();
+    mocks.originAllowed.mockReturnValue(false);
+    await POST(post('loader_initialized', 'https://maisonnoor.com'));
+    expect(mocks.signal).not.toHaveBeenCalled();
   });
 });
 

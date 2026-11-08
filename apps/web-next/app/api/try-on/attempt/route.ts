@@ -11,6 +11,7 @@ import {
 } from '@/lib/try-on/storefront-context';
 import { validateProductId } from '@/lib/try-on/validator';
 import type { TryOnApiResponse, TryOnAttempt } from '@/lib/try-on/types';
+import { pasteTurnstileBinding, pasteTurnstileConfig } from '@/lib/paste/turnstile';
 
 /** Mints one server-authorized generation attempt from a valid base session.
  * The browser nonce distinguishes explicit user actions; retrying this exact
@@ -91,6 +92,9 @@ export async function POST(request: NextRequest) {
         data: {
           attemptId: attempt.token,
           expiresAt: new Date(attempt.claims.exp * 1000).toISOString(),
+          ...(attempt.claims.platform === 'paste-website' && !attempt.claims.test ? {
+            turnstile: { ...pasteTurnstileConfig(), cData: pasteTurnstileBinding(attempt.claims) },
+          } : {}),
         },
       } satisfies TryOnApiResponse<TryOnAttempt>,
       { status: 200, headers: { 'Cache-Control': 'no-store' } },

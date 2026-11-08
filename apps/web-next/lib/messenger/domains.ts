@@ -158,7 +158,7 @@ async function assertNotTaken(siteId: string, domain: string): Promise<void> {
       .from('widget_domains')
       .select('id, widget_site_id')
       .eq('pattern', domain)
-      .eq('verification_status', 'verified'),
+      .in('verification_status', ['verified', 'trusted']),
   ) as Array<{ id: string; widget_site_id: string }> | null;
   if ((claimed ?? []).some((row) => row.widget_site_id !== siteId)) throw new DomainError('taken');
 }

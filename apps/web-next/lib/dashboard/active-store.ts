@@ -51,6 +51,7 @@ export type StoreCandidateSite = {
   domain: string | null;
   /** The site is a paired, active WooCommerce store. */
   woo?: boolean;
+  paste?: boolean;
 };
 
 export type ActiveStore = {
@@ -63,7 +64,7 @@ export type ActiveStore = {
    *  or `site:<id>` for a paired WooCommerce store. Null when the store has
    *  neither. Read it through activeTenantKey. */
   tenantKey?: string | null;
-  platform?: 'shopify' | 'woocommerce' | null;
+  platform?: 'shopify' | 'woocommerce' | 'paste' | null;
 };
 
 /** The Try-On, plan and launch tenant of the active store, or null. */
@@ -87,6 +88,7 @@ function fromShop(shopDomain: string, sites: readonly StoreCandidateSite[]): Act
 }
 
 function fromSite(site: StoreCandidateSite, shops: readonly StoreCandidateShop[]): ActiveStore {
+  if (site.paste) return { shopDomain: null, siteId: site.id, tenantKey: normalizeTenantKey(`site:${site.id}`), platform: 'paste' };
   const domain = normalizeShopDomain(site.domain);
   const shop = domain ? shops.find((candidate) => candidate.domain === domain) : undefined;
   if (shop) return { shopDomain: shop.domain, siteId: site.id, tenantKey: shop.domain, platform: 'shopify' };

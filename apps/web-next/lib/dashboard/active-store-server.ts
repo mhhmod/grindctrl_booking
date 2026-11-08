@@ -20,6 +20,7 @@ import { getShopTimezone } from '@/lib/shopify/shop-timezone';
 import { getActiveWooSiteContext, listActiveWooSiteIds } from '@/lib/woo/connection';
 import { ensureWooFreePlan } from '@/lib/woo/free-plan';
 import { resolveTimeZone } from '@/lib/time/store-day';
+import { listActivePasteSiteIds } from '@/lib/paste/store';
 
 /* Read once per request and shared by the layout, the page and anything
    else that asks, so every part of a page agrees on the store. Each lists
@@ -38,7 +39,8 @@ export const listDashboardSites = cache(async () => {
     console.error('[dashboard] woo connection lookup failed', { error: error instanceof Error ? error.name : typeof error });
     return new Set<string>();
   });
-  return sites.map((site) => ({ ...site, woo: woo.has(site.id) }));
+  const paste = await listActivePasteSiteIds(sites.map((site) => site.id)).catch(() => new Set<string>());
+  return sites.map((site) => ({ ...site, woo: woo.has(site.id), paste: paste.has(site.id) }));
 });
 
 /** Whether the person's store lists could not be read on this request.
