@@ -39,6 +39,16 @@ telemetry do not record a signal. Context minting also records an authorized
 signal after signature/launch/garment checks. The database records
 `first_seen_at` and `last_seen_at` only on the matching trusted domain.
 
+A Shopify connection's signed shop (`paste_site_connections.shop_domain`)
+is never a `widget_domains` row, because `.myshopify.com` cannot be added
+as an address. It is trusted through the connection instead: origin checks
+(`loadPublicSite` sets `pasteShopDomain`), `pasteTrustedHosts` (paste
+context, generation recheck, garment hosts) and signals all accept it like
+a trusted domain, with its first/last seen times on the connection row. One
+active connection may hold a shop. For the once-per-apex free plan a shop
+is its own apex (`registrableDomain` in `lib/woo/free-plan.ts`), never
+`myshopify.com`.
+
 Typing a domain, enabling an install, generating a snippet or reading status
 never grants a subscription. The first authorized signal calls the existing
 atomic `claim_site_free_plan` / `ensure_free_tryon_subscription` ledger path.
@@ -173,8 +183,11 @@ contains billing state and is therefore owner-only. Domain changes/proofs
 require `settings` capability. Every action resolves Clerk identity and site
 access before service-role work and applies strict merchant rate limits.
 
-Status includes domain state and first/last signal times, chat live (the
-existing 30-minute activity window), Try-On readiness/reason, complete plan
+Status includes domain state and first/last signal times (the shop host's
+in `shopFirstSeenAt`/`shopLastSeenAt`), `seen`/`seenHost` (our code ran on
+a trusted domain or the shop host within the existing 30-minute window, in
+any launch mode: use this for "installed"), `chatLive` (seen, and shoppers
+see chat: live or holdout mode), Try-On readiness/reason, complete plan
 state, effective preview/live/holdout mode, rotation metadata and whether
 Turnstile is configured. It contains no signing secret. Missing migrations
 are typed `schema_not_ready` for new operations where identifiable; legacy

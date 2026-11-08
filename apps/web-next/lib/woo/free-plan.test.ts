@@ -21,7 +21,7 @@ vi.mock('@/lib/messenger/db', () => ({
   }),
 }));
 
-import { apexDomain, ensureWooFreePlan } from './free-plan';
+import { apexDomain, ensureWooFreePlan, registrableDomain } from './free-plan';
 
 const SITE = '11111111-1111-4111-8111-111111111111';
 const KEY = `site:${SITE}`;
@@ -47,6 +47,25 @@ describe('apexDomain', () => {
 
   it.each(['github.io', 'localhost', '203.0.113.9', '', 'x.myshopify.com'])('refuses %j', (host) => {
     expect(apexDomain(host)).toBeNull();
+  });
+});
+
+describe('registrableDomain (a paste connection shop, trusted elsewhere)', () => {
+  it.each([
+    ['merchant.myshopify.com', 'merchant.myshopify.com'],
+    ['other-shop.myshopify.com', 'other-shop.myshopify.com'],
+    ['shop.example.com', 'example.com'],
+    ['store.example.com.eg', 'example.com.eg'],
+  ])('%s counts against %s', (host, apex) => {
+    expect(registrableDomain(host)).toBe(apex);
+  });
+
+  it('gives two Shopify shops two apexes, so each can hold one free plan', () => {
+    expect(registrableDomain('a.myshopify.com')).not.toBe(registrableDomain('b.myshopify.com'));
+  });
+
+  it.each(['myshopify.com', 'github.io', 'com', '', 'a..myshopify.com'])('refuses %j', (host) => {
+    expect(registrableDomain(host)).toBeNull();
   });
 });
 

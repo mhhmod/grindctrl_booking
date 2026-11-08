@@ -28,6 +28,10 @@ export type PasteConnection = {
   secret_version: number;
   previous_secret_version: number | null;
   previous_valid_until: string | null;
+  /** Signals on the signed Shopify shop host, which is trusted through this
+   *  connection rather than a widget_domains row. Always null for websites. */
+  first_seen_at: string | null;
+  last_seen_at: string | null;
 };
 
 /** Data, not localized UI instructions. Claude's UI chooses the labels. */

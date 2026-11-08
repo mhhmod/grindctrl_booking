@@ -13,7 +13,7 @@ const OTHER = '22222222-2222-4222-8222-222222222222';
 const NOW = 2_000_000_000;
 const connection: PasteConnection = {
   widget_site_id: SITE, platform: 'shopify', shop_domain: 'merchant.myshopify.com', status: 'active',
-  secret_version: 1, previous_secret_version: null, previous_valid_until: null,
+  secret_version: 1, previous_secret_version: null, previous_valid_until: null, first_seen_at: null, last_seen_at: null,
 };
 const claims: LiquidClaims = { siteId: SITE, shopDomain: connection.shop_domain!, productId: '42', variantId: '77', issuedAt: String(NOW), customerId: '' };
 const mac = (p = claims, version = 1) => createHmac('sha256', pasteLiquidSecret(SITE, version)!).update(liquidSignedMessage(p)).digest('hex');

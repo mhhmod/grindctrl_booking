@@ -76,7 +76,7 @@ async function mint(request: NextRequest): Promise<Response> {
 
     const { origin, trusted } = provenOrigin(b.key, { headerOrigin: request.headers.get('origin'), originToken: b.originToken });
     const page = new URL(b.pageUrl);
-    const hosts = await pasteTrustedHosts(site.id);
+    const hosts = await pasteTrustedHosts(connection);
     if (!trusted || !origin || page.origin !== origin || page.protocol !== 'https:' || page.username || page.password || page.port
       || !hosts.includes(page.hostname) || !originAllowed(site, origin, { trusted: true })) {
       return json({ error: 'origin_not_allowed' }, 403);
@@ -100,7 +100,7 @@ async function mint(request: NextRequest): Promise<Response> {
     });
     if (!audience.show) return json({ error: audience.reason }, 409);
     const garment = await assertSafeGarmentUrl(b.imageUrl, [
-      ...hosts, ...(connection.platform === 'shopify' ? ['cdn.shopify.com', connection.shop_domain!] : []),
+      ...hosts, ...(connection.platform === 'shopify' ? ['cdn.shopify.com'] : []),
     ]);
     const state = await readSiteLaunch(site.id);
     let { launch } = state;

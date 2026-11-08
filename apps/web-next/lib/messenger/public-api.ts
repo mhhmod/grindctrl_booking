@@ -5,6 +5,7 @@ import { decideOrigin, type DomainPatternRow } from './origins';
 import { resolveMessengerConfig } from './config';
 import { canonicalShopDomain } from './shop-tenancy';
 import { verifyOriginTokenAnyApp } from './identity';
+import { getPasteConnection, pasteShopHost } from '@/lib/paste/store';
 import type { MessengerConfig } from './types';
 import type { MessengerBehaviour } from './types';
 
@@ -25,6 +26,9 @@ export interface ResolvedPublicSite {
   config: MessengerConfig;
   security: { allow_localhost: boolean };
   patterns: DomainPatternRow[];
+  /** The signed shop of an active Shopify paste connection. That host is
+   *  trusted through the connection, so it is never one of `patterns`. */
+  pasteShopDomain?: string | null;
 }
 
 export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSite | null> {
@@ -37,10 +41,15 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
   if (siteRes.error || !siteRes.data) return null;
   const row = siteRes.data as Record<string, unknown>;
 
-  const domainsRes = await supabase
-    .from('widget_domains')
-    .select('pattern, verification_status, environment, verification_method')
-    .eq('widget_site_id', row.id as string);
+  const [domainsRes, paste] = await Promise.all([
+    supabase
+      .from('widget_domains')
+      .select('pattern, verification_status, environment, verification_method')
+      .eq('widget_site_id', row.id as string),
+    // An unreadable connection only withholds the shop host (fails closed);
+    // the site's other domains keep working.
+    getPasteConnection(row.id as string).catch(() => null),
+  ]);
   if (domainsRes.error) return null;
 
   const settings = (row.settings_json ?? {}) as Record<string, unknown>;
@@ -62,6 +71,7 @@ export async function loadPublicSite(embedKey: string): Promise<ResolvedPublicSi
       environment: String(row.environment ?? 'production'),
       verification_method: String(row.verification_method ?? ''),
     })) satisfies DomainPatternRow[],
+    pasteShopDomain: pasteShopHost(paste),
   };
 }
 
@@ -93,6 +103,7 @@ export function originAllowed(
     /* Only an origin the browser vouched for can stand in for the store's own
        domain. A caller-supplied value still has to match a verified pattern. */
     siteDomain: options?.trusted ? site.domain : null,
+    pasteShopDomain: site.pasteShopDomain,
   }).allowed;
 }
 

@@ -14,7 +14,8 @@ const domain = (over: Partial<PasteDomain> = {}): PasteDomain => ({
 
 function status(over: Partial<PasteInstallStatus> = {}): PasteInstallStatus {
   return {
-    siteId: 's1', tenantKey: 'site:s1', platform: 'website', shopDomain: null, connected: true, domains: [], chatLive: false,
+    siteId: 's1', tenantKey: 'site:s1', platform: 'website', shopDomain: null, shopFirstSeenAt: null, shopLastSeenAt: null,
+    connected: true, domains: [], seen: false, seenHost: null, chatLive: false,
     tryOnReady: false, tryOnReason: 'no_trusted_domain', plan: {} as PasteInstallStatus['plan'], mode: 'live',
     secretVersion: 1, rotationOverlapUntil: null, turnstileConfigured: true, ...over,
   };
@@ -60,9 +61,9 @@ describe('paste install journey', () => {
     expect(screen.getByText(copy.waiting)).toBeInTheDocument();
   });
 
-  it('shows live chat and the Try-On reason once the store has been seen', async () => {
+  it('shows the code working in preview, with the Try-On reason, once the store has been seen', async () => {
     const seen = new Date().toISOString();
-    const a = actions(status({ domains: [domain({ lastSeenAt: seen })], chatLive: true, tryOnReady: false, tryOnReason: 'preview' }));
+    const a = actions(status({ domains: [domain({ lastSeenAt: seen })], seen: true, seenHost: 'shop.example', chatLive: false, tryOnReady: false, tryOnReason: 'preview' }));
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
 
     expect(await screen.findByText(copy.chatLive('shop.example'))).toBeInTheDocument();

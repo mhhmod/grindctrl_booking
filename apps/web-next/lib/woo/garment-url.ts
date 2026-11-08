@@ -88,9 +88,11 @@ export async function verifiedSiteHosts(siteId: string): Promise<string[]> {
   const paste = await getPasteConnection(siteId);
   if (paste) {
     if (paste.status !== 'active') throw new Error('paste_disconnected');
-    const hosts = await pasteTrustedHosts(siteId);
+    // Includes the signed shop host, so a store that only uses its
+    // .myshopify.com address still has a garment host.
+    const hosts = await pasteTrustedHosts(paste);
     if (!hosts.length) return [];
-    return [...hosts, ...(paste.platform === 'shopify' ? ['cdn.shopify.com', paste.shop_domain!] : [])];
+    return [...hosts, ...(paste.platform === 'shopify' ? ['cdn.shopify.com'] : [])];
   }
   const { data, error } = await getMessengerServiceClient()
     .from('widget_domains')

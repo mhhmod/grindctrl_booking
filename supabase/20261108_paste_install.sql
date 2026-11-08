@@ -24,6 +24,14 @@ create table if not exists public.paste_site_connections (
   check ((platform = 'website' and shop_domain is null) or
     (platform = 'shopify' and shop_domain ~ '^[a-z0-9][a-z0-9-]*\.myshopify\.com$'))
 );
+-- The signed shop host is trusted through this row, never a widget_domains
+-- row (paste_domain_operation refuses .myshopify.com), so its install
+-- signals live here. Like a trusted domain, one active holder per shop.
+alter table public.paste_site_connections
+  add column if not exists first_seen_at timestamptz,
+  add column if not exists last_seen_at timestamptz;
+create unique index if not exists paste_site_connections_active_shop_unique
+  on public.paste_site_connections (shop_domain) where status = 'active' and shop_domain is not null;
 alter table public.paste_site_connections enable row level security;
 revoke all on public.paste_site_connections from public, anon, authenticated;
 grant select, insert, update, delete on public.paste_site_connections to service_role;
@@ -83,6 +91,9 @@ begin
     or (existing.widget_site_id is null and exists (select 1 from public.tryon_shops where widget_site_id = p_site))
     or (p_platform = 'shopify' and exists (
       select 1 from public.shopify_installations where shop_domain = p_shop_domain and status = 'active'))
+    or (p_platform = 'shopify' and exists (
+      select 1 from public.paste_site_connections where shop_domain = p_shop_domain
+        and status = 'active' and widget_site_id <> p_site))
     or (existing.widget_site_id is not null and
       (existing.platform <> p_platform or existing.shop_domain is distinct from p_shop_domain))
   then return 'connection_conflict'; end if;
@@ -253,16 +264,26 @@ end $$;
 
 create or replace function public.record_paste_install_signal(p_site uuid, p_domain text, p_apex text) returns text
 language plpgsql security invoker set search_path = public, pg_temp as $$
+declare c public.paste_site_connections;
 begin
   perform pg_advisory_xact_lock(hashtextextended('paste-domain-lifecycle', 0));
-  if not exists(select 1 from public.paste_site_connections where widget_site_id = p_site and status = 'active')
-    or p_domain <> public.paste_host(p_domain) or p_apex is null
-    or not (p_domain = p_apex or p_domain like '%.' || p_apex)
+  select * into c from public.paste_site_connections where widget_site_id = p_site and status = 'active';
+  if not found or p_domain is null or p_domain <> public.paste_host(p_domain) or p_apex is null
+    or p_apex = 'myshopify.com' or not (p_domain = p_apex or p_domain like '%.' || p_apex)
     then return 'ignored'; end if;
-  update public.widget_domains set first_seen_at = coalesce(first_seen_at, now()), last_seen_at = now()
-    where widget_site_id = p_site and public.paste_host(domain) = p_domain
-      and verification_status = 'trusted' and verification_method = 'paste_trusted';
-  if not found then return 'ignored'; end if;
+  if c.platform = 'shopify' and p_domain = c.shop_domain then
+    -- The signed shop host, trusted through this connection. A shop is its
+    -- own registrable domain: myshopify.com itself never counts as an apex,
+    -- or a single paste store would exhaust the free plan for every shop.
+    if p_apex <> c.shop_domain then return 'ignored'; end if;
+    update public.paste_site_connections set first_seen_at = coalesce(first_seen_at, now()), last_seen_at = now()
+      where widget_site_id = p_site;
+  else
+    update public.widget_domains set first_seen_at = coalesce(first_seen_at, now()), last_seen_at = now()
+      where widget_site_id = p_site and public.paste_host(domain) = p_domain
+        and verification_status = 'trusted' and verification_method = 'paste_trusted';
+    if not found then return 'ignored'; end if;
+  end if;
   update public.tryon_shops set last_seen_at = now() where shop_domain = 'site:' || p_site::text;
   -- This is the existing atomic apex registry AND ledger grant. No second
   -- credit writer is introduced; paid activation keeps its operator gate.

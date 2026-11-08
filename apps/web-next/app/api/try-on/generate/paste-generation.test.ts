@@ -19,10 +19,10 @@ const NONCE = 'abcdefghijklmnopqrstuvwx';
 const garment = 'https://merchant.example/tee.png';
 const PASS_SECRET = '1x0000000000000000000000000000000AA';
 const FAIL_SECRET = '2x0000000000000000000000000000000AA';
-function capabilities(platform: StorefrontPlatform = 'paste-website', test = false, keySite = SITE) {
+function capabilities(platform: StorefrontPlatform = 'paste-website', test = false, keySite = SITE, origin = 'https://merchant.example') {
   const secret = pasteCapabilitySecret(keySite)!;
   const context = signStorefrontContext(secret, { shop: `site:${SITE}`, platform, productId: 'tee-42', variantId: '77', productGid: 'paste:tee-42', variantGid: 'paste:77',
-    canonicalGarmentUrl: garment, origin: 'https://merchant.example', nonce: NONCE, test });
+    canonicalGarmentUrl: garment, origin, nonce: NONCE, test });
   const session = signTryOnSession(secret, { purpose: 'storefront', context: context.claims });
   const attempt = signTryOnAttempt(secret, { session: session.claims, attemptNonce: NONCE });
   return { session, attempt };
@@ -30,8 +30,9 @@ function capabilities(platform: StorefrontPlatform = 'paste-website', test = fal
 function req(body: Record<string, unknown>, path = 'generate') {
   return new NextRequest(`https://grindctrl.cloud/api/try-on/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 }
-async function generate(platform: StorefrontPlatform = 'paste-website', test = false, overrides: Record<string, unknown> = {}, keySite = SITE) {
-  const { session, attempt } = capabilities(platform, test, keySite);
+async function generate(platform: StorefrontPlatform = 'paste-website', test = false, overrides: Record<string, unknown> = {}, keySite = SITE,
+  origin = 'https://merchant.example') {
+  const { session, attempt } = capabilities(platform, test, keySite, origin);
   m.fetch.mockImplementation(async (_url, init) => Response.json({ success: new URLSearchParams(init?.body as URLSearchParams).get('secret') === PASS_SECRET,
     hostname: 'grindctrl.cloud', action: 'paste_tryon', cdata: pasteTurnstileBinding(attempt.claims) }));
   return POST(req({ sessionId: session.token, attemptId: attempt.token, productId: 'tee-42', variantId: '77', storefrontNonce: NONCE,
@@ -79,6 +80,14 @@ describe('paste generation boundary, before reservation/provider work', () => {
     m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active' });
     expect((await generate('paste-shopify')).status).toBe(200);
     expect(m.fetch).not.toHaveBeenCalled(); expect(m.generate).toHaveBeenCalledTimes(2);
+  });
+  it('rechecks a .myshopify.com-only store against its connection shop, not a domain row', async () => {
+    m.connection.mockResolvedValue({ widget_site_id: SITE, platform: 'shopify', status: 'active' });
+    m.site.mockResolvedValue({ id: SITE, status: 'active', domain: null, security: {}, patterns: [], pasteShopDomain: 'merchant.myshopify.com' });
+    expect((await generate('paste-shopify', false, {}, SITE, 'https://merchant.myshopify.com')).status).toBe(200);
+    m.site.mockResolvedValue({ id: SITE, status: 'active', domain: null, security: {}, patterns: [], pasteShopDomain: null });
+    expect((await generate('paste-shopify', false, {}, SITE, 'https://merchant.myshopify.com')).status).toBe(403);
+    expect(m.generate).toHaveBeenCalledTimes(1);
   });
   it('revokes a domain during an otherwise valid ten-minute session', async () => {
     m.site.mockResolvedValue({ status: 'active', domain: 'merchant.example', security: {}, patterns: [

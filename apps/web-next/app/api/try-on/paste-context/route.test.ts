@@ -95,6 +95,22 @@ describe('paste context trust boundary', () => {
     expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ connection: expect.objectContaining({ widget_site_id: SITE }) }));
     expect((await post({ signed: { ...signed, productId: '99' } })).status).toBe(401);
   });
+  it('serves a Shopify store that only uses its .myshopify.com address, signalling that shop host', async () => {
+    const shopConnection = { ...connection, platform: 'shopify', shop_domain: 'merchant.myshopify.com' };
+    m.connection.mockResolvedValue(shopConnection);
+    m.site.mockResolvedValue({ ...site, patterns: [], pasteShopDomain: 'merchant.myshopify.com' });
+    m.hosts.mockResolvedValue(['merchant.myshopify.com']);
+    const signed = { siteId: SITE, shopDomain: 'merchant.myshopify.com', productId: '42', variantId: '77', issuedAt: '2000000000', customerId: '', signature: 'a'.repeat(64) };
+    const response = await post({ signed, pageUrl: 'https://merchant.myshopify.com/products/tee',
+      imageUrl: 'https://cdn.shopify.com/s/files/tee.jpg' }, 'https://merchant.myshopify.com');
+    expect(response.status).toBe(200);
+    expect(m.hosts).toHaveBeenCalledWith(shopConnection);
+    expect(m.signal).toHaveBeenCalledWith(SITE, 'https://merchant.myshopify.com');
+    expect(verifyStorefrontContext(pasteCapabilitySecret(SITE)!, (await response.json()).context.token)?.origin).toBe('https://merchant.myshopify.com');
+    m.signal.mockClear();
+    expect((await post({ signed, pageUrl: 'https://other.myshopify.com/products/tee' }, 'https://other.myshopify.com')).status).toBe(403);
+    expect(m.signal).not.toHaveBeenCalled();
+  });
   it.each([['bad_signature', 401], ['stale_signature', 401], ['replayed', 409], ['unavailable', 503]])('returns %s before signaling/granting', async (code, status) => {
     m.connection.mockResolvedValue({ ...connection, platform: 'shopify' });
     m.signature.mockResolvedValue({ ok: false, code });

@@ -1,8 +1,18 @@
 import 'server-only';
 import { getMessengerServiceClient } from '@/lib/messenger/db';
 import { normalizeStorefrontDomain, newVerificationToken, txtRecordFor, verifyDomainTxt } from '@/lib/messenger/domains';
-import { apexDomain } from '@/lib/woo/free-plan';
+import { apexDomain, registrableDomain } from '@/lib/woo/free-plan';
 import { PasteError, type PasteConnection, type PasteDomain, type PastePlatform } from './types';
+
+/** A connection's signed shop. Merchants cannot add it as a domain row;
+ *  it is trusted through paste_site_connections.shop_domain instead. */
+export const SHOP_HOST_RE = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
+
+/** The shop host an active Shopify paste connection trusts, if any. */
+export function pasteShopHost(connection: PasteConnection | null): string | null {
+  return connection?.status === 'active' && connection.platform === 'shopify' && connection.shop_domain
+    && SHOP_HOST_RE.test(connection.shop_domain) ? connection.shop_domain : null;
+}
 
 export function normalizePasteDomain(input: string): string | null {
   return normalizeStorefrontDomain(input)?.replace(/^www\./, '') ?? null;
@@ -21,14 +31,14 @@ function checked<T>(result: { data: T; error: { code?: string } | null }): T {
 
 export async function getPasteConnection(siteId: string): Promise<PasteConnection | null> {
   const result = await getMessengerServiceClient().from('paste_site_connections')
-    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until')
+    .select('widget_site_id, platform, shop_domain, status, secret_version, previous_secret_version, previous_valid_until, first_seen_at, last_seen_at')
     .eq('widget_site_id', siteId).maybeSingle();
   if (result.error && schemaMissing(result.error)) return null;
   const row = checked(result) as PasteConnection | null;
   if (!row) return null;
   if (row.widget_site_id !== siteId || !['website', 'shopify'].includes(row.platform)
     || !['active', 'disconnected'].includes(row.status) || !Number.isSafeInteger(row.secret_version) || row.secret_version < 1
-    || (row.platform === 'shopify' && (typeof row.shop_domain !== 'string' || !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(row.shop_domain)))) {
+    || (row.platform === 'shopify' && (typeof row.shop_domain !== 'string' || !SHOP_HOST_RE.test(row.shop_domain)))) {
     throw new PasteError('unavailable');
   }
   return row;
@@ -130,13 +140,17 @@ export type PasteSignalResult = 'granted' | 'apex_taken' | 'ignored' | 'unavaila
 
 /** Only browser Origin / signed-origin-token authorized config/heartbeat
  * callers invoke this. Query-string origins never earn a signal. Existing
- * chat sites and absent migrations remain a no-op, not a new dependency. */
+ * chat sites and absent migrations remain a no-op, not a new dependency.
+ * A `.myshopify.com` host is submitted as its own apex; the RPC records it
+ * only when it is this site's active connection shop. */
 export async function recordPasteSignal(siteId: string, origin: string): Promise<PasteSignalResult> {
   try {
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.port || url.username || url.password) return 'ignored';
-    const domain = normalizePasteDomain(url.hostname);
-    const apex = domain ? apexDomain(domain) : null;
+    const host = url.hostname.replace(/\.$/, '');
+    const isShop = SHOP_HOST_RE.test(host);
+    const domain = isShop ? host : normalizePasteDomain(host);
+    const apex = isShop ? registrableDomain(host) : domain ? apexDomain(domain) : null;
     if (!domain || !apex) return 'ignored';
     const { data, error } = await getMessengerServiceClient().rpc('record_paste_install_signal', {
       p_site: siteId, p_domain: domain, p_apex: apex,
@@ -146,8 +160,14 @@ export async function recordPasteSignal(siteId: string, origin: string): Promise
   } catch { return 'unavailable'; }
 }
 
-export async function pasteTrustedHosts(siteId: string): Promise<string[]> {
-  return (await listPasteDomains(siteId)).filter((row) => row.state === 'trusted').flatMap((row) => pasteDomainHosts(row.domain));
+/** Every host the connection's code may run on: trusted domain rows (with
+ *  their www alias) and, for Shopify, the signed shop host itself. */
+export async function pasteTrustedHosts(connection: PasteConnection): Promise<string[]> {
+  if (connection.status !== 'active') return [];
+  const domains = (await listPasteDomains(connection.widget_site_id))
+    .filter((row) => row.state === 'trusted').flatMap((row) => pasteDomainHosts(row.domain));
+  const shop = pasteShopHost(connection);
+  return shop ? [shop, ...domains] : domains;
 }
 
 /** Missing migration leaves existing Store Chat-only sites as they were. */

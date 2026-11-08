@@ -165,7 +165,7 @@ export function PasteInstall({
 
   const liveDomain = domains.find((d) => d.state === 'trusted' && d.lastSeenAt && now - Date.parse(d.lastSeenAt) <= LIVE_WINDOW_MS);
   const shopifyDomain = connectedAs === 'shopify' ? status?.shopDomain ?? undefined : undefined;
-  const storeHost = liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
+  const storeHost = status?.seenHost ?? liveDomain?.domain ?? domains.find((d) => d.state === 'trusted')?.domain ?? shopifyDomain;
   const storeUrl = `https://${storeHost ?? ''}`;
 
   return (
@@ -359,11 +359,12 @@ export function PasteInstall({
 
           <li className={classes.step} aria-live="polite">
             <Text fw={600}>{copy.steps.live}</Text>
-            {status && (liveDomain || (status.chatLive && storeHost)) ? (
+            {/* Installed is independent of preview or live; Try-On says which. */}
+            {status?.seen ? (
               <Stack gap={6}>
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name="check" size={18} />
-                  <Text size="sm">{copy.chatLive(liveDomain?.domain ?? storeHost ?? '')}</Text>
+                  <Text size="sm">{copy.chatLive(status.seenHost ?? storeHost ?? '')}</Text>
                 </Group>
                 <Group gap="xs" wrap="nowrap">
                   <GcIcon name={status.tryOnReady ? 'check' : 'info'} size={18} />
