@@ -23,6 +23,7 @@ import { getSheetCopy, type ArabicAddressForm } from '@/lib/try-on/sheet-copy';
 export function TryOnSheet({
   product,
   variantId,
+  displayVariantId,
   variantTitle,
   shop,
   lookSeconds,
@@ -33,6 +34,8 @@ export function TryOnSheet({
 }: {
   product: { handle: string; name: string; imageUrl: string };
   variantId?: string;
+  /** Presentation only; the flow keeps the signed variantId. */
+  displayVariantId?: string;
   /** "Black / M", from the store's own variant names. */
   variantTitle?: string;
   shop?: string;
@@ -217,7 +220,7 @@ export function TryOnSheet({
             photoDataUrl={flow.photoDataUrl}
             productName={product.name}
             storeProduct={storeProduct}
-            triedVariantId={variantId}
+            triedVariantId={displayVariantId || variantId}
             fallbackVariantTitle={variantTitle}
             controls={result}
             madeInSeconds={flow.generationSeconds}

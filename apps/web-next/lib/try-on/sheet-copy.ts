@@ -23,6 +23,7 @@ export function isArabicAddressForm(value: unknown): value is ArabicAddressForm 
 export type SheetCopy = {
   close: string;
   back: string;
+  backToProduct: string;
   /** "Black · M" under the product name. */
   variantLine: (variant: string) => string;
   photoTitle: string;
@@ -103,6 +104,7 @@ export type SheetCopy = {
 const EN: SheetCopy = {
   close: 'Close',
   back: 'Back to photo options',
+  backToProduct: 'Back to the product',
   variantLine: (variant) => variant,
   photoTitle: 'See it on you',
   photoIntro: 'Add one photo where you stand straight, head to feet.',
@@ -178,6 +180,7 @@ const EN: SheetCopy = {
 
 /* Shared by every Arabic form: no second-person verb or pronoun. */
 const AR_COMMON = {
+  backToProduct: 'العودة إلى المنتج',
   close: 'إغلاق',
   back: 'العودة إلى خيارات الصورة',
   variantLine: (variant: string) => variant,

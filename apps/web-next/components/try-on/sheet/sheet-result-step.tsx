@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Download, MessageCircle, RefreshCw, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Download, MessageCircle, RefreshCw, ShoppingBag } from 'lucide-react';
 import type { ResultControls } from '../try-on-result';
 import type { TryOnLocale, TryOnTranslator } from '@/lib/try-on/i18n';
 import type { SheetCopy } from '@/lib/try-on/sheet-copy';
@@ -105,6 +105,10 @@ export function SheetResultStep({
   }, [locale]);
 
   const addToCart = () => {
+    if (controls?.backToProduct) {
+      window.parent.postMessage({ type: 'grindctrl-tryon:back-to-product' }, '*');
+      return;
+    }
     setCart({ state: 'adding', added: '', message: '' });
     window.parent.postMessage({ type: 'grindctrl-tryon:add-to-cart', variantId: picked?.id ?? triedVariantId }, '*');
     ackTimer.current = setTimeout(() => setCart({ state: 'failed', added: '', message: '' }), 5000);
@@ -246,11 +250,13 @@ export function SheetResultStep({
           <button
             type="button"
             onClick={addToCart}
-            disabled={soldOut || cart.state === 'adding'}
+            disabled={!controls?.backToProduct && (soldOut || cart.state === 'adding')}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <ShoppingBag className="size-5" aria-hidden="true" />
-            {soldOut
+            {controls?.backToProduct
+              ? <ArrowLeft className="size-5 rtl:-scale-x-100" aria-hidden="true" />
+              : <ShoppingBag className="size-5" aria-hidden="true" />}
+            {controls?.backToProduct ? copy.backToProduct : soldOut
               ? copy.soldOut
               : cart.state === 'adding'
                 ? copy.adding

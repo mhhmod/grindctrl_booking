@@ -31,6 +31,15 @@ function renderResult(locale: 'en' | 'ar' = 'en') {
 afterEach(() => vi.restoreAllMocks());
 
 describe('the look after an add in the sheet', () => {
+  it.each([['en', 'Back to the product'], ['ar', 'العودة إلى المنتج']] as const)('returns to a website product in %s without a cart request', (locale, label) => {
+    const posted = vi.spyOn(window.parent, 'postMessage');
+    render(<TryOnLocaleProvider initialLocale={locale}>
+      <TryOnResult job={JOB} productName="Dress" onReset={() => {}} shopMode controls={{ backToProduct: true }} />
+    </TryOnLocaleProvider>);
+    fireEvent.click(screen.getByRole('button', { name: label }));
+    expect(posted).toHaveBeenCalledWith({ type: 'grindctrl-tryon:back-to-product' }, '*');
+    expect(posted).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'grindctrl-tryon:add-to-cart' }), '*');
+  });
   it.each([
     ['en', 'Added Black, M', 'Checkout'],
     ['ar', 'تمت الإضافة: Black, M', 'إتمام الشراء'],

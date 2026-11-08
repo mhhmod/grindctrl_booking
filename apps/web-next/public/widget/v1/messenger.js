@@ -33,6 +33,47 @@
   var GLOBAL = 'GRINDCTRL_MESSENGER';
   var ORIGIN = window.location.origin;
   var APP_ORIGIN = (SCRIPT && SCRIPT.getAttribute('data-app-origin')) || new URL(SCRIPT.src).origin;
+  /* Paste installs (data-gc-install="paste"): on product pages only, load the
+     paste adapter, and the hosted Try-On engine once the adapter has found a
+     product. Try-On boots independently: a failed adapter must never delay
+     Store Chat. The install signal is the config fetch below (its browser
+     Origin is recorded server-side), sent whether or not Try-On loads. */
+  function pasteLocale() {
+    if (LOCALE_HINT === 'ar' || LOCALE_HINT === 'en') return LOCALE_HINT;
+    var lang = String(document.documentElement.lang || '').toLowerCase().split(/[-_]/)[0];
+    return lang === 'ar' || lang === 'en' ? lang : detectLocale();
+  }
+  function bootPasteTryOn() {
+    if (!SCRIPT || SCRIPT.dataset.gcInstall !== 'paste' || window.__gcPasteTryOn) return;
+    var platform = SCRIPT.dataset.gcPlatform;
+    var productPage = platform === 'shopify'
+      ? /^\d+$/.test(SCRIPT.dataset.gcProduct || '') && /\/products\/[^/]+/.test(location.pathname) && !!document.querySelector('form[action*="/cart/add"]')
+      : platform === 'website' && (!!document.querySelector('[data-grindctrl-tryon][data-product-id],meta[property^="product:"],meta[property="og:type"][content="product"]') ||
+        Array.prototype.some.call(document.querySelectorAll('script[type="application/ld+json"]'), function (node) {
+          try { return /"(?:https?:\/\/schema.org\/)?Product"/.test(JSON.stringify(JSON.parse(node.textContent))); } catch (_) { return false; }
+        }));
+    if (!productPage) return;
+    window.__gcPasteTryOn = true;
+    function load(name, global) {
+      if (window[global]) return Promise.resolve();
+      return new Promise(function (resolve, reject) {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = APP_ORIGIN + '/widget/v1/' + name + '?v=1.1.0';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+    load('tryon-paste.js', 'GRINDCTRL_TRYON_PASTE').then(function () {
+      var adapter = window.GRINDCTRL_TRYON_PASTE.create({ script: SCRIPT, appOrigin: APP_ORIGIN,
+        locale: pasteLocale(), visitorId: launchVisitorId(), preview: previewToken() });
+      return adapter.prepare().then(function (found) {
+        if (!found || !adapter.placementTarget()) return;
+        return load('tryon-engine.js', 'GRINDCTRL_TRYON_ENGINE').then(function () { window.GRINDCTRL_TRYON_ENGINE.mount(adapter); });
+      });
+    }).catch(function () { /* Store Chat remains available. */ });
+  }
   /* Storage namespace has to be stable BEFORE the config response arrives,
      so it keys off whichever identifier the page gave us. */
   var NS = KEY || SHOP;
@@ -1014,6 +1055,7 @@
   /* ── Boot ── */
   function boot() {
     drainQueue(); // API available immediately; calls run when ready below.
+    try { bootPasteTryOn(); } catch (_) { /* isolated from chat */ }
     fetchConfig(function (config) {
       state.config = config;
       if (!config || !config.active || pageExcluded(config) || launchHidden(config)) return;

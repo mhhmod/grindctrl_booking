@@ -11,6 +11,7 @@ import type {
 } from '@/lib/try-on/types';
 import { retryAfterDelayMs, TRYON_ASYNC_POLL_TIMEOUT_MS, TRYON_POLL_INITIAL_DELAY_MS } from '@/lib/try-on/poll-policy';
 import { recordTryOnOpen, recordTryOnPhase } from '@/lib/try-on/performance';
+import { attemptTurnstileToken } from '@/lib/try-on/turnstile-client';
 import {
   bootstrapStorefrontProof,
   clearPendingStorefrontProof,
@@ -251,6 +252,12 @@ export function useTryOnFlow({
 
       setGenerationPhase('session-created');
 
+      // A binding is present only for website paste. A fresh token is obtained
+      // for this attempt; retries below reuse the exact same generation body.
+      let turnstileToken: string | undefined;
+      try { turnstileToken = await attemptTurnstileToken(attemptData.data.turnstile); }
+      catch { throw new Error(t.genericError); }
+
       // 2. Generate try-on
       const generationBody = JSON.stringify({
         sessionId: session.sessionId,
@@ -263,6 +270,7 @@ export function useTryOnFlow({
         photoData: photoDataUrl ?? undefined,
         garmentUrl: shopProduct ? session.garmentUrl ?? undefined : undefined,
         productName: shopProduct?.name,
+        turnstileToken,
       });
       const uploadStartedAt = performance.now();
       const generationRequest = fetchWithOneRetry('/api/try-on/generate', {

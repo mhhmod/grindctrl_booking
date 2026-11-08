@@ -33,6 +33,7 @@ function load(overrides: Record<string, unknown> = {}) {
     locale: 'en',
     ...overrides,
   };
+  (0, eval)(readFileSync(path.join(process.cwd(), 'public/widget/v1/tryon-engine.js'), 'utf8'));
   (0, eval)(SOURCE);
 }
 
@@ -57,6 +58,7 @@ beforeEach(() => {
   calls = [];
   handler = () => json({ embedUrl: EMBED });
   delete (window as unknown as Record<string, unknown>).__grindctrlTryOnWoo;
+  delete (window as unknown as Record<string, unknown>).GRINDCTRL_TRYON_ENGINE;
   document.getElementById('gc-tryon-woo-css')?.remove();
   vi.stubGlobal('fetch', (url: string, init: RequestInit = {}) => {
     calls.push({ url, init });
@@ -351,6 +353,48 @@ describe('tryon-woo.js', () => {
     delete (window as unknown as Record<string, unknown>).grindctrlTryOn;
     (0, eval)(SOURCE);
     click('.gc-tryon-btn');
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe('tryon-woo.js on the shared hosted engine', () => {
+  function loadWithoutEngine() {
+    (window as unknown as { grindctrlTryOn: unknown }).grindctrlTryOn = {
+      restUrl: 'https://shop.example.com/wp-json/grindctrl/v1/', storeApi: 'https://shop.example.com/wp-json/wc/store/v1/', locale: 'en',
+    };
+    const current = document.createElement('script');
+    current.src = 'https://grindctrl.cloud/widget/v1/tryon-woo.js';
+    vi.spyOn(document, 'currentScript', 'get').mockReturnValue(current);
+    (0, eval)(SOURCE);
+    return document.querySelector('script[src*="tryon-engine"]') as HTMLScriptElement;
+  }
+
+  it('loads the versioned engine beside itself and mounts the Woo adapter once it arrives', async () => {
+    page('simple');
+    const engine = loadWithoutEngine();
+    expect(engine.src).toBe('https://grindctrl.cloud/widget/v1/tryon-engine.js?v=1.1.0');
+    click('form .gc-tryon-btn');
+    expect(calls).toHaveLength(0);
+    (0, eval)(readFileSync(path.join(process.cwd(), 'public/widget/v1/tryon-engine.js'), 'utf8'));
+    engine.dispatchEvent(new Event('load'));
+    click('form .gc-tryon-btn');
+    await tick();
+    expect(calls[0].url).toBe('https://shop.example.com/wp-json/grindctrl/v1/tryon-context');
+    expect(document.querySelector('.gc-tryon-sheet iframe')).not.toBeNull();
+  });
+
+  it('takes its buttons away when the engine cannot load, instead of leaving them dead', () => {
+    page('simple');
+    loadWithoutEngine().dispatchEvent(new Event('error'));
+    document.querySelectorAll<HTMLElement>('.gc-tryon-btn').forEach((button) => expect(button.style.display).toBe('none'));
+  });
+
+  it('does not pick up a paste-injected button on the same page', async () => {
+    page('simple');
+    document.body.insertAdjacentHTML('beforeend', '<button type="button" class="gc-tryon-btn" data-product-id="9" data-gc-paste="1">Paste</button>');
+    load();
+    click('[data-gc-paste]');
+    await tick();
     expect(calls).toHaveLength(0);
   });
 });

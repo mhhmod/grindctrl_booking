@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Download, MessageCircle, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Download, MessageCircle, ArrowLeft, ArrowRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackClick } from '@/lib/analytics';
 import type { TryOnJob } from '@/lib/try-on/types';
@@ -16,6 +16,7 @@ export type ResultControls = {
   showAddToCart?: boolean;
   showTryAgain?: boolean;
   disclaimerText?: string | null;
+  backToProduct?: boolean;
 };
 
 interface TryOnResultProps {
@@ -77,6 +78,10 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls, onF
   }, []);
 
   const handleAddToCart = () => {
+    if (controls?.backToProduct) {
+      window.parent.postMessage({ type: 'grindctrl-tryon:back-to-product' }, '*');
+      return;
+    }
     setCartState('adding');
     setCartError('');
     window.parent.postMessage({ type: 'grindctrl-tryon:add-to-cart' }, '*');
@@ -134,8 +139,10 @@ export function TryOnResult({ job, productName, onReset, shopMode, controls, onF
               disabled={cartState === 'adding'}
               id="tryon-add-to-cart-btn"
             >
-              <ShoppingCart className="size-4" />
-              {cartState === 'adding'
+              {controls?.backToProduct
+                ? <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden="true" />
+                : <ShoppingCart className="size-4" />}
+              {controls?.backToProduct ? getSheetCopy(locale).backToProduct : cartState === 'adding'
                 ? t.addedToCart
                 : cartState === 'failed'
                   ? t.addToCartRetry
