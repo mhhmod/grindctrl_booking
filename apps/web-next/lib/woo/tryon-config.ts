@@ -6,6 +6,7 @@ import { flagStoreForTenant, siteTenantKey } from '@/lib/tenancy/tenant-key';
 import { DEFAULT_TRYON_LOCALE, isTryOnLocale, type TryOnLocale } from '@/lib/try-on/i18n';
 import { pickMerchantCopy } from '@/lib/try-on/merchant-copy';
 import { getTryOnSettings } from '@/lib/try-on/settings';
+import { cardPillsOn } from '@/lib/try-on/card-pill';
 import { verifiedSiteHosts } from './garment-url';
 import { readSiteLaunch } from './tryon-site';
 
@@ -62,6 +63,8 @@ export async function buildSiteTryOnConfig(
     catalogIconPx: settings.catalogIconPx,
     catalogFontPx: settings.catalogFontPx,
     catalogPadPx: settings.catalogPadPx,
+    // Product card pills (the WooCommerce plugin's catalog cards, pasted code).
+    showCardPill: cardPillsOn(settings),
     features,
   };
   // A failed read is not cached: the next request retries.

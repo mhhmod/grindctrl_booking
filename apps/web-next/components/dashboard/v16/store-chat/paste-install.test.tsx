@@ -16,7 +16,8 @@ function status(over: Partial<PasteInstallStatus> = {}): PasteInstallStatus {
   return {
     siteId: 's1', tenantKey: 'site:s1', platform: 'website', shopDomain: null, shopProof: null, shopProvenAt: null,
     shopCheck: null, shopFirstSeenAt: null, shopLastSeenAt: null, connected: true, trusted: true, connectionReason: null, domains: [], seen: false, seenHost: null, chatLive: false,
-    tryOnReady: false, tryOnReason: 'no_trusted_domain', showButton: true, plan: {} as PasteInstallStatus['plan'], mode: 'live',
+    tryOnReady: false, tryOnReason: 'no_trusted_domain', showButton: true,
+    codeVersion: null, codeVersionSeenAt: null, codeOutdated: false, plan: {} as PasteInstallStatus['plan'], mode: 'live',
     secretVersion: 1, rotationOverlapUntil: null, turnstileConfigured: true, ...over,
   };
 }
@@ -35,7 +36,7 @@ function actions(initial: PasteInstallStatus | null): PasteInstallActions & { cu
     proveDns: vi.fn(async () => ({ ok: true as const, data: domain() })),
     proveMeta: vi.fn(async () => ({ ok: true as const, data: domain() })),
     rotate: vi.fn(async () => ({ ok: true as const, data: { version: 2, overlapUntil: new Date().toISOString() } })),
-    snippet: vi.fn(async () => ({ ok: true as const, data: { platform: 'website' as const, snippet: '<script data-key="k"></script>', steps: [{ kind: 'save' as const }], contextEndpoint: '/api/try-on/paste-context' as const } })),
+    snippet: vi.fn(async () => ({ ok: true as const, data: { platform: 'website' as const, codeVersion: null, snippet: '<script data-key="k"></script>', steps: [{ kind: 'save' as const }], contextEndpoint: '/api/try-on/paste-context' as const } })),
     status: vi.fn(async () => current.value ? { ok: true as const, data: current.value } : { ok: false as const, code: 'not_found' as const }),
     proveShop: vi.fn(async () => ({ ok: true as const, data: { shopProof: 'pending' as const, shopProvenAt: null, outcome: 'password_required' as const, checkedAt: null, retryAfterSeconds: null } })),
   };
@@ -139,5 +140,13 @@ describe('paste install journey', () => {
     renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
     expect(await screen.findByText(copy.appHeld)).toBeInTheDocument();
     expect(screen.queryByText(copy.steps.code)).not.toBeInTheDocument();
+  });
+  it('asks a store on the old code to copy the updated one', async () => {
+    const a = actions(status({ domains: [domain({ lastSeenAt: new Date().toISOString() })], seen: true, seenHost: 'shop.example',
+      chatLive: true, tryOnReady: true, tryOnReason: null, codeOutdated: true, plan: { totalCreditsRemaining: 15 } as PasteInstallStatus['plan'] }));
+    renderWithMantine(<PasteInstall siteId="s1" locale="en" copy={copy} ago={ago} actions={a} woocommerce={null} />);
+    expect(await screen.findByText(copy.codeOutdated)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: copy.codeOutdatedAction }));
+    expect(screen.getByText(copy.steps.code)).toBeInTheDocument();
   });
 });

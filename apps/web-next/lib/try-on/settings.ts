@@ -12,6 +12,11 @@ export type TryOnSettings = {
   /** The storefront Try-On button, on every platform. false hides it from
       shoppers (launch reason `paused`); a missing value means on. */
   showButton: boolean;
+  /** The "Try on" pill on product cards (collections, search, the home
+      page), on every platform. false hides the pills only; the product-page
+      button follows `showButton`, and `showButton` off hides both. A missing
+      value means on. */
+  showCardPill: boolean;
   buttonLabel: string;
   /* Arabic variants of the strings the merchant writes. null or blank means
      "not translated": the widget falls back to the default-language value
@@ -49,6 +54,7 @@ export type TryOnSettings = {
 export const DEFAULT_SETTINGS: TryOnSettings = {
   shop: 'default',
   showButton: true,
+  showCardPill: true,
   buttonLabel: 'Try it on with AI',
   buttonLabelAr: 'جرّبها بالذكاء الاصطناعي',
   accentBg: '#2a2826',
@@ -84,6 +90,8 @@ type Row = {
   shop: string;
   /* Absent until supabase/20261108_tryon_show_button.sql runs. */
   show_button?: boolean | null;
+  /* Absent until supabase/20261108_tryon_show_card_pill.sql runs. */
+  show_card_pill?: boolean | null;
   button_label: string | null;
   button_label_ar: string | null;
   accent_bg: string | null;
@@ -113,6 +121,7 @@ export function mergeSettings(base: TryOnSettings, row: Row | null): TryOnSettin
   return {
     shop: row.shop,
     showButton: row.show_button ?? base.showButton,
+    showCardPill: row.show_card_pill ?? base.showCardPill,
     buttonLabel: row.button_label ?? base.buttonLabel,
     buttonLabelAr: row.button_label_ar ?? base.buttonLabelAr,
     accentBg: row.accent_bg ?? base.accentBg,
@@ -174,10 +183,17 @@ async function loadSettings(shop?: string | null, { strict = false }: { strict?:
   }
 
   const shops = shop && shop !== 'default' ? ['default', shop] : ['default'];
-  const select = (columns: string) => supabase.from('tryon_settings').select(columns).in('shop', shops);
-  let { data, error } = await select(`${SETTINGS_COLUMNS}, show_button`);
-  // Before the show_button migration: read the rest, and the button is on.
-  if (error && isMissingShowButtonColumn(error)) ({ data, error } = await select(SETTINGS_COLUMNS));
+  const select = (columns: readonly string[]) =>
+    supabase.from('tryon_settings').select([SETTINGS_COLUMNS, ...columns].join(', ')).in('shop', shops);
+  // Before a switch's migration: read the rest, and that switch is on.
+  let switches: readonly SwitchColumn[] = SWITCH_COLUMNS;
+  let { data, error } = await select(switches);
+  for (let missing = error && missingSwitchColumn(error); missing && switches.includes(missing);
+    missing = error && missingSwitchColumn(error)) {
+    const absent = missing;
+    switches = switches.filter((column) => column !== absent);
+    ({ data, error } = await select(switches));
+  }
 
   if (error || !data) {
     if (strict) throw new Error(error?.message ?? 'try-on settings read returned nothing');
@@ -193,19 +209,44 @@ async function loadSettings(shop?: string | null, { strict = false }: { strict?:
 const SETTINGS_COLUMNS =
   'shop, button_label, button_label_ar, accent_bg, accent_fg, radius_px, widget_theme, icon_bg_from, icon_bg_to, loading_style, loading_steps, catalog_label, catalog_label_ar, catalog_icon_px, catalog_font_px, catalog_pad_px, button_icon_px, show_download, show_whatsapp, show_add_to_cart, show_try_again, disclaimer_text, disclaimer_text_ar';
 
-/** PostgREST's answer while 20261108_tryon_show_button.sql has not run:
- *  42703 for a read, PGRST204 for a write that names the column. */
-function isMissingShowButtonColumn(error: { code?: string | null; message?: string | null }): boolean {
-  return (error.code === '42703' || error.code === 'PGRST204') && /show_button/.test(error.message ?? '');
+/* The storefront switches, each added by its own migration
+   (20261108_tryon_show_button.sql, 20261108_tryon_show_card_pill.sql).
+   Reads and saves tolerate either column being absent: a missing switch is on. */
+const SWITCH_COLUMNS = ['show_button', 'show_card_pill'] as const;
+type SwitchColumn = (typeof SWITCH_COLUMNS)[number];
+
+/** The switch column PostgREST reports missing (42703 for a read, PGRST204
+ *  for a write that names it); null for any other error. */
+function missingSwitchColumn(error: { code?: string | null; message?: string | null }): SwitchColumn | null {
+  if (error.code !== '42703' && error.code !== 'PGRST204') return null;
+  return SWITCH_COLUMNS.find((column) => new RegExp(`\\b${column}\\b`).test(error.message ?? '')) ?? null;
 }
 
-/** Turning the button off needs the show_button column, which the database
- *  does not have yet. Nothing was saved. */
-export class TryOnShowButtonUnavailableError extends Error {
-  readonly code = 'show_button_unavailable' as const;
+/** Turning a storefront switch off needs its column, which the database
+ *  does not have yet. Nothing was saved, so retrying won't help. */
+export class TryOnSwitchUnavailableError extends Error {
+  constructor(
+    readonly code: 'show_button_unavailable' | 'show_card_pill_unavailable',
+    message: string,
+  ) {
+    super(message);
+    this.name = 'TryOnSwitchUnavailableError';
+  }
+}
+
+/** Turning the button off needs the show_button column. */
+export class TryOnShowButtonUnavailableError extends TryOnSwitchUnavailableError {
   constructor() {
-    super('The Try-On button switch is not available yet. Nothing was saved.');
+    super('show_button_unavailable', 'The Try-On button switch is not available yet. Nothing was saved.');
     this.name = 'TryOnShowButtonUnavailableError';
+  }
+}
+
+/** Turning the card pills off needs the show_card_pill column. */
+export class TryOnShowCardPillUnavailableError extends TryOnSwitchUnavailableError {
+  constructor() {
+    super('show_card_pill_unavailable', 'The card pill switch is not available yet. Nothing was saved.');
+    this.name = 'TryOnShowCardPillUnavailableError';
   }
 }
 
@@ -224,7 +265,7 @@ export async function readTryOnShowButton(shop: string): Promise<boolean> {
     .select('shop, show_button')
     .in('shop', shop === 'default' ? ['default'] : ['default', shop]);
   if (error) {
-    if (isMissingShowButtonColumn(error)) return true;
+    if (missingSwitchColumn(error) === 'show_button') return true;
     throw new Error(`try-on button switch read failed: ${error.message}`);
   }
   const rows = (data ?? []) as Array<{ shop: string; show_button: boolean | null }>;
@@ -234,6 +275,7 @@ export async function readTryOnShowButton(shop: string): Promise<boolean> {
 
 const COLUMNS: Record<keyof Omit<TryOnSettings, 'shop'>, string> = {
   showButton: 'show_button',
+  showCardPill: 'show_card_pill',
   buttonLabel: 'button_label',
   buttonLabelAr: 'button_label_ar',
   accentBg: 'accent_bg',
@@ -284,12 +326,15 @@ export async function saveTryOnSettings(
   }
 
   let { error } = await supabase.from('tryon_settings').upsert(payload);
-  if (error && isMissingShowButtonColumn(error) && Object.hasOwn(payload, 'show_button')) {
-    /* Before the migration every button is on, so a save that says "on" (an
+  for (let missing = error && missingSwitchColumn(error); missing && Object.hasOwn(payload, missing);
+    missing = error && missingSwitchColumn(error)) {
+    /* Before its migration a switch is on, so a save that says "on" (an
        editor sending every field) keeps the rest; "off" cannot be stored and
        must not look saved. */
-    if (payload.show_button === false) throw new TryOnShowButtonUnavailableError();
-    delete payload.show_button;
+    if (payload[missing] === false) {
+      throw missing === 'show_button' ? new TryOnShowButtonUnavailableError() : new TryOnShowCardPillUnavailableError();
+    }
+    delete payload[missing];
     ({ error } = await supabase.from('tryon_settings').upsert(payload));
   }
 

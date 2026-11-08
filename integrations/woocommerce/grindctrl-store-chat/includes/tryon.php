@@ -98,6 +98,8 @@ function grindctrl_sc_tryon_config() {
 					'previewOnly'  => $preview_only,
 					'label'        => '' !== $label ? mb_substr( $label, 0, 60 ) : ( 'ar' === $locale ? 'جرّبها' : 'Try it on' ),
 					'catalogLabel' => '' !== $catalog ? mb_substr( $catalog, 0, 60 ) : '',
+					// The dashboard's card pill switch. A server that predates it sends nothing: keep the cards.
+					'cardPill'     => ! isset( $data['showCardPill'] ) || false !== $data['showCardPill'],
 					'bg'           => grindctrl_sc_tryon_color( isset( $data['accentBg'] ) ? $data['accentBg'] : '', '#1f1d1a' ),
 					'fg'           => grindctrl_sc_tryon_color( isset( $data['accentFg'] ) ? $data['accentFg'] : '', '#f6f1e7' ),
 					'radius'       => $radius,
@@ -113,6 +115,20 @@ function grindctrl_sc_tryon_config() {
 function grindctrl_sc_tryon_enabled() {
 	$config = grindctrl_sc_tryon_config();
 	return ! empty( $config['enabled'] );
+}
+
+/**
+ * Catalog cards need both switches: this site's own "Product listings" option
+ * and the card pill switch in the GRINDCTRL dashboard (off when Try-On itself
+ * is switched off there too).
+ */
+function grindctrl_sc_tryon_cards_on() {
+	if ( 'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' ) ) {
+		return false;
+	}
+	$config = grindctrl_sc_tryon_config();
+	// A config cached by the previous plugin version has no cardPill: keep the cards.
+	return ! isset( $config['cardPill'] ) || true === $config['cardPill'];
 }
 
 /* ── Storefront script ────────────────────────────────────────────────── */
@@ -275,7 +291,7 @@ add_action(
 add_action(
 	'woocommerce_after_shop_loop_item',
 	function () {
-		if ( 'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' ) ) {
+		if ( ! grindctrl_sc_tryon_cards_on() ) {
 			return;
 		}
 		$html = grindctrl_sc_tryon_button_html( grindctrl_sc_tryon_current_product(), 'card' );
@@ -290,7 +306,7 @@ add_action(
 add_filter(
 	'woocommerce_blocks_product_grid_item_html',
 	function ( $html, $data, $product ) {
-		if ( 'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' ) || ! $product instanceof WC_Product ) {
+		if ( ! $product instanceof WC_Product || ! grindctrl_sc_tryon_cards_on() ) {
 			return $html;
 		}
 		$button = grindctrl_sc_tryon_button_html( $product, 'card' );
@@ -313,7 +329,7 @@ add_filter(
 	'render_block_woocommerce/product-button',
 	function ( $content, $block, $instance ) {
 		if (
-			'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' )
+			! grindctrl_sc_tryon_cards_on()
 			|| ! function_exists( 'wc_get_product' )
 			|| ! $instance instanceof WP_Block
 			|| empty( $instance->context['queryId'] )

@@ -2,14 +2,15 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireManagedTenant } from '@/lib/tenancy/managed-tenant';
-import { saveTryOnSettings, TryOnShowButtonUnavailableError } from '@/lib/try-on/settings';
+import { saveTryOnSettings, TryOnSwitchUnavailableError } from '@/lib/try-on/settings';
 import { requireMerchantRateLimit, merchantActionFailure, type MerchantActionFailure } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
 
 export type TryOnSettingsActionFailure = MerchantActionFailure & {
-  /** `show_button_unavailable`: turning the button off needs a database
-   *  update that has not run yet. Nothing was saved, so retrying won't help. */
-  reason?: 'show_button_unavailable';
+  /** `show_button_unavailable` / `show_card_pill_unavailable`: turning that
+   *  switch off needs a database update that has not run yet. Nothing was
+   *  saved, so retrying won't help. */
+  reason?: 'show_button_unavailable' | 'show_card_pill_unavailable';
 };
 export type TryOnSettingsActionResult = { ok: true } | TryOnSettingsActionFailure;
 
@@ -18,16 +19,24 @@ function settingsActionFailure(error: unknown): TryOnSettingsActionFailure {
     (error instanceof Error && ['Unauthorized', 'Unknown Shopify shop'].includes(error.message))) {
     return { ok: false, code: 'forbidden', message: 'You do not have permission to change this shop.' };
   }
-  if (error instanceof TryOnShowButtonUnavailableError) {
+  if (error instanceof TryOnSwitchUnavailableError) {
     return { ok: false, code: 'unavailable', reason: error.code, message: error.message };
   }
   return merchantActionFailure(error);
 }
 
-/** `show_button` is 'on' or 'off'; any other value, or none, leaves the
- *  switch as it is, so a form without the switch never turns it back on. */
-function showButtonField(value: FormDataEntryValue | null): { showButton?: boolean } {
-  return value === 'on' ? { showButton: true } : value === 'off' ? { showButton: false } : {};
+/** A switch field is 'on' or 'off'; any other value, or none, leaves the
+ *  switch as it is, so a form without it never turns it back on. */
+function switchField(value: FormDataEntryValue | null): boolean | undefined {
+  return value === 'on' ? true : value === 'off' ? false : undefined;
+}
+function switchFields(formData: FormData): { showButton?: boolean; showCardPill?: boolean } {
+  const showButton = switchField(formData.get('show_button'));
+  const showCardPill = switchField(formData.get('show_card_pill'));
+  return {
+    ...(showButton === undefined ? {} : { showButton }),
+    ...(showCardPill === undefined ? {} : { showCardPill }),
+  };
 }
 
 export async function saveTryOnSettingsAction(formData: FormData): Promise<TryOnSettingsActionResult> {
@@ -47,7 +56,7 @@ export async function saveTryOnSettingsAction(formData: FormData): Promise<TryOn
   const radius = Number(formData.get('radius_px'));
 
   const saved = await saveTryOnSettings(shop, {
-    ...showButtonField(formData.get('show_button')),
+    ...switchFields(formData),
     buttonLabel: String(formData.get('button_label') || '').trim() || undefined,
     /* null rather than undefined: undefined means "leave as is", but a
        merchant clearing the Arabic field must actually clear it. */
@@ -96,6 +105,23 @@ export async function setTryOnButtonAction(input: { shop: string; showButton: bo
     if (typeof input.showButton !== 'boolean') return merchantActionFailure(null);
     await requireMerchantRateLimit(`shop:${shop}`);
     if (!(await saveTryOnSettings(shop, { showButton: input.showButton }))) return merchantActionFailure(null);
+    revalidatePath('/dashboard', 'layout');
+    return { ok: true };
+  } catch (error) {
+    return settingsActionFailure(error);
+  }
+}
+
+/** The product card pill switch on its own (tryon_settings.show_card_pill),
+ *  for a control that saves the moment it is flipped. Same role, storage
+ *  and failures as setTryOnButtonAction; only show_card_pill is written.
+ *  The main switch off hides the pills whatever this one says. */
+export async function setTryOnCardPillAction(input: { shop: string; showCardPill: boolean }): Promise<TryOnSettingsActionResult> {
+  try {
+    const shop = await requireManagedTenant(input?.shop ?? 'default', { capability: 'settings' });
+    if (typeof input.showCardPill !== 'boolean') return merchantActionFailure(null);
+    await requireMerchantRateLimit(`shop:${shop}`);
+    if (!(await saveTryOnSettings(shop, { showCardPill: input.showCardPill }))) return merchantActionFailure(null);
     revalidatePath('/dashboard', 'layout');
     return { ok: true };
   } catch (error) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateShopifyRequest } from '@/lib/shopify/session-token';
 import { merchantRateLimitResponse } from '@/lib/request-rate-limit';
 import { recordTryOnShopSeen } from '@/lib/shopify/shops';
-import { getTryOnSettings, saveTryOnSettings, TryOnShowButtonUnavailableError } from '@/lib/try-on/settings';
+import { getTryOnSettings, saveTryOnSettings, TryOnSwitchUnavailableError } from '@/lib/try-on/settings';
 import { ensureFreeSubscription, getShopEntitlement } from '@/lib/try-on/entitlement';
 import { getShopLinkedAccountHint, isShopLinked } from '@/lib/shopify/shop-links';
 
@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
   await recordTryOnShopSeen(session.shop);
   const body = (await request.json()) as {
     showButton?: boolean;
+    showCardPill?: boolean;
     buttonLabel?: string;
     buttonLabelAr?: string | null;
     accentBg?: string;
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
   const values: Parameters<typeof saveTryOnSettings>[1] = {
     // Only a boolean moves the switch: an older admin bundle never sends it.
     ...(typeof body.showButton === 'boolean' ? { showButton: body.showButton } : {}),
+    ...(typeof body.showCardPill === 'boolean' ? { showCardPill: body.showCardPill } : {}),
     buttonLabel: body.buttonLabel?.trim() || undefined,
     /* null rather than undefined: undefined leaves the stored value alone,
        but clearing the Arabic field has to actually clear it. */
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
   try {
     ok = await saveTryOnSettings(session.shop, values);
   } catch (error) {
-    if (error instanceof TryOnShowButtonUnavailableError) {
+    if (error instanceof TryOnSwitchUnavailableError) {
       return NextResponse.json({ ok: false, code: error.code, message: error.message }, { status: 409 });
     }
     throw error;

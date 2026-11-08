@@ -96,7 +96,8 @@ describe('paste capabilities and snippet', () => {
   });
   it('puts only the Liquid derivation in the merchant snippet and emits just a MAC to the browser', () => {
     const result = buildPasteSnippet(connection, 'gc_public_key_42');
-    expect(result.snippet).toContain(`| hmac_sha256: '${pasteLiquidSecret(SITE, 1)}'`);
+    expect(result.snippet).toContain(`{%- assign gc_key = '${pasteLiquidSecret(SITE, 1)}' -%}`);
+    expect(result.snippet).toContain('| hmac_sha256: gc_key');
     expect(result.snippet).not.toContain(pasteCapabilitySecret(SITE));
     expect(result.snippet).toContain('{{ gc_signature }}');
     expect(result.steps).toContainEqual({ kind: 'select', target: 'footer' });

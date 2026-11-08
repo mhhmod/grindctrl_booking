@@ -265,6 +265,50 @@ export async function pasteProofHosts(connection: PasteConnection): Promise<stri
     ? connectionHosts(connection, connection.shop_domain) : [];
 }
 
+export type PasteCodeVersion = { version: number; seenAt: string | null };
+
+/** The snippet version seen in the latest verified render; null before the
+ *  first one, and while 20261108_paste_code_version.sql has not run. */
+export async function readPasteCodeVersion(siteId: string): Promise<PasteCodeVersion | null> {
+  const result = await getMessengerServiceClient().from('paste_site_connections')
+    .select('code_version, code_version_seen_at').eq('widget_site_id', siteId).maybeSingle();
+  if (result.error) {
+    if (schemaMissing(result.error)) return null;
+    throw new PasteError('unavailable');
+  }
+  const row = result.data as { code_version: number | null; code_version_seen_at: string | null } | null;
+  return row && Number.isInteger(row.code_version) && (row.code_version as number) >= 1
+    ? { version: row.code_version as number, seenAt: row.code_version_seen_at ?? null } : null;
+}
+
+/* Versions this server instance already stored, so a busy storefront does
+   not write on every render. Another instance may store it once more. */
+const recordedCodeVersions = new Map<string, number>();
+
+/** Call only after a render's signature verified for this site. Writes only
+ *  when the stored version differs. Never throws: this is a dashboard hint,
+ *  and a missing column (before its migration) is a no-op. */
+export async function recordPasteCodeVersion(siteId: string, version: number): Promise<void> {
+  if (!Number.isInteger(version) || version < 1 || version > 99 || recordedCodeVersions.get(siteId) === version) return;
+  try {
+    const { error } = await getMessengerServiceClient().from('paste_site_connections')
+      .update({ code_version: version, code_version_seen_at: new Date().toISOString() })
+      .eq('widget_site_id', siteId).or(`code_version.is.null,code_version.neq.${version}`);
+    if (error && !schemaMissing(error)) {
+      console.error('[paste] code version not recorded', { code: 'paste_code_version', site: siteId });
+      return;
+    }
+    // Before the migration too: do not retry a write that cannot land on every render.
+    if (recordedCodeVersions.size > 5000) recordedCodeVersions.clear();
+    recordedCodeVersions.set(siteId, version);
+  } catch {
+    console.error('[paste] code version not recorded', { code: 'paste_code_version', site: siteId });
+  }
+}
+
+/** Test seam: forget which versions this instance stored. */
+export function resetRecordedPasteCodeVersions(): void { recordedCodeVersions.clear(); }
+
 /** Missing migration leaves existing Store Chat-only sites as they were. */
 export async function listActivePasteSiteIds(siteIds: readonly string[]): Promise<Set<string>> {
   if (!siteIds.length) return new Set();

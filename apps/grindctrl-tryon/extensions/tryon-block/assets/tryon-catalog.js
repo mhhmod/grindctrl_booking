@@ -94,6 +94,12 @@
     return c.tryOn === undefined && c.available === false;
   }
 
+  /* The merchant's card pill switch (showCardPill, false when the main
+     Try-On switch is off too). A config without the field keeps the pills. */
+  function pillsOff(c) {
+    return !!c && c.showCardPill === false;
+  }
+
   var stopped = false;
   var observer = null;
 
@@ -419,7 +425,7 @@
       '<span class="gc-cat-btn-ic">' + ICON_SVG + '</span><span class="gc-cat-btn-label">Try on</span>';
 
     cfgPromise.then(function (c) {
-      if (stopped || tryOnHidden(c)) return;
+      if (stopped || tryOnHidden(c) || pillsOff(c)) return;
       if (c) {
         if (typeof c.catalogIconPx === 'number') {
           btn.style.setProperty('--gc-cat-icon', c.catalogIconPx + 'px');
@@ -503,7 +509,7 @@
   function init() {
     // Nothing is added to the page until the config says try-on is live.
     cfgPromise.then(function (c) {
-      if (tryOnHidden(c)) {
+      if (tryOnHidden(c) || pillsOff(c)) {
         stopped = true;
         return;
       }

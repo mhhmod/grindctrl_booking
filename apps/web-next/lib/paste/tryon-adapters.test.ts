@@ -346,7 +346,7 @@ describe('messenger paste loading', () => {
     (0, eval)(source('messenger'));
     document.dispatchEvent(new Event('DOMContentLoaded'));
     const scripts = [...document.querySelectorAll<HTMLScriptElement>('script[src*="tryon-"]')].map((node) => node.src);
-    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.1.0`]);
+    expect(scripts).toEqual([`${APP}/widget/v1/tryon-paste.js?v=1.2.0`]);
     expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).startsWith(`${APP}/api/messenger/config?key=embed-key`))).toBe(true);
   });
   it('chat boots even when product adapter loading fails', async () => {

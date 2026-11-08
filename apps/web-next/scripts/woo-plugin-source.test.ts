@@ -14,7 +14,7 @@ const tryon = read('includes/tryon.php');
 describe('GRINDCTRL Store Chat plugin source', () => {
   it('declares one version in the header, the constant and the readme', () => {
     const header = /\* Version:\s+(\S+)/.exec(main)?.[1];
-    expect(header).toBe('0.3.2');
+    expect(header).toBe('0.3.3');
     expect(main).toContain(`define( 'GRINDCTRL_SC_VERSION', '${header}' );`);
     expect(read('readme.txt')).toMatch(new RegExp(`Stable tag: ${header}\\b`));
     expect(read('readme.txt')).toContain(`= ${header} =`);
@@ -26,6 +26,21 @@ describe('GRINDCTRL Store Chat plugin source', () => {
     expect(claim).toMatch(/INSERT IGNORE INTO \{\$wpdb->options\}/);
     expect(claim).toContain('1 === $inserted');
     expect(claim).not.toMatch(/get_transient|set_transient|get_option/);
+  });
+
+  it('shows catalog cards only while the dashboard card pill switch allows them, on every catalog hook', () => {
+    expect(tryon).toMatch(/'cardPill'\s+=> ! isset\( \$data\['showCardPill'\] \) \|\| false !== \$data\['showCardPill'\]/);
+    const gate = tryon.slice(tryon.indexOf('function grindctrl_sc_tryon_cards_on'), tryon.indexOf('/* ── Storefront script'));
+    expect(gate).toContain("'yes' !== get_option( 'grindctrl_sc_tryon_catalog', 'no' )");
+    expect(gate).toMatch(/! isset\( \$config\['cardPill'\] \) \|\| true === \$config\['cardPill'\]/);
+    // The classic loop, the product grid block and the Product Collection block.
+    for (const hook of ["'woocommerce_after_shop_loop_item'", "'woocommerce_blocks_product_grid_item_html'", "'render_block_woocommerce/product-button'"]) {
+      const start = tryon.indexOf(hook);
+      expect(start).toBeGreaterThan(-1);
+      expect(tryon.slice(start, tryon.indexOf("'card'", start))).toContain('grindctrl_sc_tryon_cards_on()');
+    }
+    // The option is read in one place only: the gate.
+    expect(tryon.match(/get_option\( 'grindctrl_sc_tryon_catalog'/g)).toHaveLength(1);
   });
 
   it('reports the REST root so plain permalinks work', () => {
