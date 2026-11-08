@@ -4,12 +4,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ network: vi.fn(), visitor: vi.fn(), siteLimit: vi.fn(), site: vi.fn(), connection: vi.fn(),
   hosts: vi.fn(), proofHosts: vi.fn(), prove: vi.fn(), signal: vi.fn(), signature: vi.fn(), active: vi.fn(), flags: vi.fn(),
-  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn() }));
+  launch: vi.fn(), storeLaunch: vi.fn(), lookup: vi.fn(), codeVersion: vi.fn() }));
 vi.mock('@/lib/ratelimit', () => ({ clientIp: () => '203.0.113.5', publicApiRatelimit: { limit: m.network },
   proxyVisitorRatelimit: { limit: m.visitor }, proxyShopMintRatelimit: { limit: m.siteLimit } }));
 vi.mock('@/lib/messenger/public-api', async (original) => ({ ...await original<object>(), loadPublicSite: m.site }));
 vi.mock('@/lib/paste/store', async (original) => ({ pasteTrust: (await original<typeof import('@/lib/paste/store')>()).pasteTrust,
-  getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal }));
+  getPasteConnection: m.connection, pasteTrustedHosts: m.hosts, pasteProofHosts: m.proofHosts, recordPasteSignal: m.signal,
+  recordPasteCodeVersion: m.codeVersion }));
 // The storefront proof (fetch + render factor) is unit-tested in lib/paste.
 vi.mock('@/lib/paste/shop-proof', () => ({ checkPasteShop: m.prove }));
 vi.mock('@/lib/paste/signing', async (original) => ({ ...await original<object>(), verifyLiquidSignature: m.signature }));
@@ -122,8 +123,37 @@ describe('paste context trust boundary', () => {
   it.each([['bad_signature', 401], ['stale_signature', 401], ['replayed', 409], ['unavailable', 503]])('returns %s before signaling/granting', async (code, status) => {
     m.connection.mockResolvedValue(shopify);
     m.signature.mockResolvedValue({ ok: false, code });
-    const response = await post({ signed });
+    const response = await post({ signed, codeVersion: 2 });
     expect(response.status).toBe(status); expect(m.signal).not.toHaveBeenCalled();
+    // An unverified render never records which code the store runs.
+    expect(m.codeVersion).not.toHaveBeenCalled();
+  });
+  it('records the snippet version only after a Shopify render verified', async () => {
+    m.connection.mockResolvedValue(shopify);
+    expect((await post({ signed, codeVersion: 1 })).status).toBe(200);
+    expect(m.codeVersion).toHaveBeenCalledExactlyOnceWith(SITE, 1);
+    expect(m.signature.mock.invocationCallOrder[0]).toBeLessThan(m.codeVersion.mock.invocationCallOrder[0]);
+    // A loader older than the version field sends nothing: nothing is recorded.
+    m.codeVersion.mockClear();
+    expect((await post({ signed })).status).toBe(200);
+    expect(m.codeVersion).not.toHaveBeenCalled();
+    // Website code has no version, and a malformed one is refused.
+    m.connection.mockResolvedValue(connection);
+    expect((await post({ codeVersion: 2 })).status).toBe(200);
+    expect(m.codeVersion).not.toHaveBeenCalled();
+    for (const codeVersion of [0, 100, 1.5, '2']) expect((await post({ signed, codeVersion })).status).toBe(400);
+  });
+  it('mints a product card context: the card\'s own signed product, on the listing page', async () => {
+    m.connection.mockResolvedValue(shopify);
+    const card = { ...signed, productId: '501', variantId: '601' };
+    const response = await post({ signed: card, productId: '501', variantId: '601', title: 'Linen abaya',
+      pageUrl: 'https://merchant.example/collections/abayas?page=2', imageUrl: 'https://cdn.shopify.com/s/files/abaya.jpg', codeVersion: 2 });
+    expect(response.status).toBe(200);
+    const claims = verifyStorefrontContext(pasteCapabilitySecret(SITE)!, (await response.json()).context.token)!;
+    expect(claims).toMatchObject({ productId: '501', variantId: '601', platform: 'paste-shopify' });
+    expect(m.signature).toHaveBeenCalledWith(expect.objectContaining({ claims: card }));
+    // A card's signature cannot start a look for another product.
+    expect((await post({ signed: card, productId: '42', variantId: '601' })).status).toBe(401);
   });
 });
 

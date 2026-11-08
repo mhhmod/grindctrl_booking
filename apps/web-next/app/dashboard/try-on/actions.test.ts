@@ -2,21 +2,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ owned: vi.fn(), limit: vi.fn(), save: vi.fn(), revalidate: vi.fn() }));
 vi.mock('@/lib/shopify/shops', () => ({ requireManagedTryOnShop: mocks.owned }));
-vi.mock('@/lib/try-on/settings', () => ({
-  saveTryOnSettings: mocks.save,
-  TryOnShowButtonUnavailableError: class extends Error {
-    readonly code = 'show_button_unavailable';
-    constructor() { super('The Try-On button switch is not available yet. Nothing was saved.'); }
-  },
-}));
+vi.mock('@/lib/try-on/settings', () => {
+  class TryOnSwitchUnavailableError extends Error {
+    constructor(readonly code: string, message: string) { super(message); }
+  }
+  return {
+    saveTryOnSettings: mocks.save,
+    TryOnSwitchUnavailableError,
+    TryOnShowButtonUnavailableError: class extends TryOnSwitchUnavailableError {
+      constructor() { super('show_button_unavailable', 'The Try-On button switch is not available yet. Nothing was saved.'); }
+    },
+    TryOnShowCardPillUnavailableError: class extends TryOnSwitchUnavailableError {
+      constructor() { super('show_card_pill_unavailable', 'The card pill switch is not available yet. Nothing was saved.'); }
+    },
+  };
+});
 vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
 vi.mock('@/lib/request-rate-limit', async (original) => ({
   ...await original<typeof import('@/lib/request-rate-limit')>(), requireMerchantRateLimit: mocks.limit,
 }));
 import { RequestRateLimitError } from '@/lib/request-rate-limit';
 import { RoleNotAllowedError } from '@/lib/rbac/dashboard-policy';
-import { TryOnShowButtonUnavailableError } from '@/lib/try-on/settings';
-import { saveTryOnSettingsAction, setTryOnButtonAction } from './actions';
+import { TryOnShowButtonUnavailableError, TryOnShowCardPillUnavailableError } from '@/lib/try-on/settings';
+import { saveTryOnSettingsAction, setTryOnButtonAction, setTryOnCardPillAction } from './actions';
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -63,6 +71,20 @@ describe('Try-On settings safe action result', () => {
     expect(await save()).not.toHaveProperty('showButton');
     expect(await save('maybe')).not.toHaveProperty('showButton');
   });
+  it('saves the card pill switch only when the form says on or off', async () => {
+    const save = async (value?: string) => {
+      const fd = new FormData();
+      if (value !== undefined) fd.set('show_card_pill', value);
+      await saveTryOnSettingsAction(fd);
+      return mocks.save.mock.calls.at(-1)![1] as Record<string, unknown>;
+    };
+    expect(await save('off')).toMatchObject({ showCardPill: false });
+    expect(await save('on')).toMatchObject({ showCardPill: true });
+    expect(await save()).not.toHaveProperty('showCardPill');
+    expect(await save('yes')).not.toHaveProperty('showCardPill');
+    // One switch never moves the other.
+    expect(await save('off')).not.toHaveProperty('showButton');
+  });
   it('says plainly when the switch cannot be saved before the database update', async () => {
     mocks.save.mockRejectedValueOnce(new TryOnShowButtonUnavailableError());
     const fd = new FormData();
@@ -104,6 +126,28 @@ describe('setTryOnButtonAction, the switch on its own', () => {
     expect(await setTryOnButtonAction({ shop: 'owned.myshopify.com', showButton: true })).toMatchObject({ ok: false, code: 'unavailable' });
     mocks.save.mockRejectedValueOnce(new TryOnShowButtonUnavailableError());
     expect(await setTryOnButtonAction({ shop: 'owned.myshopify.com', showButton: false })).toMatchObject({ reason: 'show_button_unavailable' });
+    expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+});
+
+describe('setTryOnCardPillAction, the card pill switch on its own', () => {
+  it('writes only show_card_pill for the managed shop, then refreshes the dashboard', async () => {
+    expect(await setTryOnCardPillAction({ shop: 'owned.myshopify.com', showCardPill: false })).toEqual({ ok: true });
+    expect(mocks.owned).toHaveBeenCalledWith('owned.myshopify.com', { capability: 'settings' });
+    expect(mocks.limit).toHaveBeenCalledWith('shop:owned.myshopify.com');
+    expect(mocks.save).toHaveBeenCalledWith('owned.myshopify.com', { showCardPill: false });
+    expect(mocks.revalidate).toHaveBeenCalledWith('/dashboard', 'layout');
+  });
+  it('refuses a member, and anything but a boolean, before storage', async () => {
+    mocks.owned.mockRejectedValueOnce(new RoleNotAllowedError('settings'));
+    expect(await setTryOnCardPillAction({ shop: 'owned.myshopify.com', showCardPill: true })).toMatchObject({ ok: false, code: 'forbidden' });
+    expect(await setTryOnCardPillAction({ shop: 'owned.myshopify.com', showCardPill: 0 as unknown as boolean })).toMatchObject({ ok: false });
+    expect(mocks.save).not.toHaveBeenCalled();
+  });
+  it('says plainly when the switch cannot be saved before the database update', async () => {
+    mocks.save.mockRejectedValueOnce(new TryOnShowCardPillUnavailableError());
+    expect(await setTryOnCardPillAction({ shop: 'owned.myshopify.com', showCardPill: false }))
+      .toMatchObject({ ok: false, code: 'unavailable', reason: 'show_card_pill_unavailable', message: expect.stringContaining('Nothing was saved') });
     expect(mocks.revalidate).not.toHaveBeenCalled();
   });
 });

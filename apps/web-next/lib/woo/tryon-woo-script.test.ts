@@ -372,7 +372,7 @@ describe('tryon-woo.js on the shared hosted engine', () => {
   it('loads the versioned engine beside itself and mounts the Woo adapter once it arrives', async () => {
     page('simple');
     const engine = loadWithoutEngine();
-    expect(engine.src).toBe('https://grindctrl.cloud/widget/v1/tryon-engine.js?v=1.1.0');
+    expect(engine.src).toBe('https://grindctrl.cloud/widget/v1/tryon-engine.js?v=1.2.0');
     click('form .gc-tryon-btn');
     expect(calls).toHaveLength(0);
     (0, eval)(readFileSync(path.join(process.cwd(), 'public/widget/v1/tryon-engine.js'), 'utf8'));

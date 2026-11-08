@@ -27,4 +27,16 @@ describe('Try-On catalogue pills with the button switched off', () => {
     expect(document.getElementById('gc-cat-styles')).toBeNull();
     expect(document.querySelector('[role="alert"]')).toBeNull();
   });
+
+  it('adds no pills while Try-On is live but the card pill switch is off', async () => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = `
+      <ul><li class="grid__item"><a href="/products/linen-abaya"><img src="https://cdn.shopify.com/a.jpg" alt="Linen abaya"></a></li></ul>`;
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ tryOn: 'live', reason: null, available: true, showCardPill: false }))));
+    window.eval(catalogAsset);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(document.querySelectorAll('.gc-cat-btn')).toHaveLength(0);
+    expect(document.getElementById('gc-cat-styles')).toBeNull();
+  });
 });

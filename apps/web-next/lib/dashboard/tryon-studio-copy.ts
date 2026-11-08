@@ -16,6 +16,10 @@ export interface TryOnStudioCopy {
     install: string;
     unavailable: string;
     failed: string;
+    pill: string;
+    pillBody: string;
+    pillNeedsButton: string;
+    pillUnavailable: string;
   };
   subtitle: string;
   unsavedLabel: string;
@@ -97,6 +101,10 @@ const en: TryOnStudioCopy = {
     install: 'Install on your store',
     unavailable: 'This switch is almost ready. Try again soon.',
     failed: 'That didn’t save. Try again.',
+    pill: 'Try on pill on collection cards',
+    pillBody: 'A small Try on pill on each product card in your collections, search and home page.',
+    pillNeedsButton: 'Turn Try-On on to show the pills.',
+    pillUnavailable: 'The pill switch is almost ready. Try again soon.',
   },
   subtitle: 'Every change shows in the preview first. When you save, shoppers see it within a minute.',
   unsavedLabel: 'Unsaved changes',
@@ -182,6 +190,10 @@ const ar: TryOnStudioCopy = {
     install: 'ثبّت على متجرك',
     unavailable: 'هذا المفتاح أوشك على الجاهزية. حاول قريباً.',
     failed: 'لم يُحفظ ذلك. حاول مجدداً.',
+    pill: 'زر التجربة على بطاقات المنتجات',
+    pillBody: 'زر صغير للتجربة على كل بطاقة منتج في المجموعات والبحث والصفحة الرئيسية.',
+    pillNeedsButton: 'فعّل التجربة الافتراضية لإظهار الأزرار.',
+    pillUnavailable: 'مفتاح البطاقات أوشك على الجاهزية. حاول قريباً.',
   },
   subtitle: 'يظهر كل تغيير في المعاينة أولاً. وعند الحفظ، يراه المتسوقون خلال دقيقة.',
   unsavedLabel: 'تغييرات غير محفوظة',

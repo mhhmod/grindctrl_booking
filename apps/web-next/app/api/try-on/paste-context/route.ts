@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { clientIp, publicApiRatelimit, proxyVisitorRatelimit, proxyShopMintRatelimit } from '@/lib/ratelimit';
 import { requireRateLimit, RequestRateLimitError, rateLimitErrorResponse } from '@/lib/request-rate-limit';
 import { loadPublicSite, originAllowed, provenOrigin } from '@/lib/messenger/public-api';
-import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, recordPasteSignal } from '@/lib/paste/store';
+import { getPasteConnection, pasteProofHosts, pasteTrust, pasteTrustedHosts, recordPasteCodeVersion, recordPasteSignal } from '@/lib/paste/store';
 import { checkPasteShop } from '@/lib/paste/shop-proof';
 import { PasteError, type PasteContextResponse } from '@/lib/paste/types';
 import { pasteCapabilitySecret, verifyLiquidSignature, type LiquidClaims } from '@/lib/paste/signing';
@@ -61,7 +61,8 @@ async function mint(request: NextRequest): Promise<Response> {
       || !URL.canParse(b.pageUrl)
       || typeof b.imageUrl !== 'string' || b.imageUrl.length > 2048
       || !launchVisitorId(b.visitorId) || (b.title !== undefined && typeof b.title !== 'string')
-      || (b.preview !== undefined && (typeof b.preview !== 'string' || b.preview.length > 512))) {
+      || (b.preview !== undefined && (typeof b.preview !== 'string' || b.preview.length > 512))
+      || (b.codeVersion !== undefined && !(Number.isInteger(b.codeVersion) && (b.codeVersion as number) >= 1 && (b.codeVersion as number) <= 99))) {
       return json({ error: 'invalid_request' }, 400);
     }
     const variantId = normalizeVariantId(b.variantId);
@@ -98,6 +99,9 @@ async function mint(request: NextRequest): Promise<Response> {
       const verified = await verifyLiquidSignature({ connection, claims: claims as unknown as LiquidClaims,
         signature: claims.signature as string, visitor: `${ip}:${b.visitorId}` });
       if (!verified.ok) return json({ error: verified.code }, verified.code === 'unavailable' ? 503 : verified.code === 'replayed' ? 409 : 401);
+      // Which snippet the store runs, for the dashboard's "copy the new code".
+      // Unsigned, so only a hint, and only after this render verified.
+      if (typeof b.codeVersion === 'number') await recordPasteCodeVersion(site.id, b.codeVersion);
       if (pending) {
         // A verified render is only the second factor: anyone can sign a
         // render naming any shop. It triggers our storefront fetch, which

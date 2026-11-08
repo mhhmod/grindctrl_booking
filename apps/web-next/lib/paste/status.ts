@@ -8,10 +8,10 @@ import { getStoreLaunch } from '@/lib/launch/store-launch';
 import { launchView, type LaunchState } from '@/lib/launch/audience';
 import { storeFlags } from '@/lib/flags/store-flags';
 import { pasteCapabilitySecret } from './signing';
-import { getPasteConnection, listPasteDomains, pasteShopHost, pasteTrust } from './store';
+import { getPasteConnection, listPasteDomains, pasteShopHost, pasteTrust, readPasteCodeVersion } from './store';
 import { pasteTurnstileSiteKey } from './turnstile';
 import { cachedShopCheck, SHOP_CHECK_RETRY_SECONDS } from './shop-proof';
-import type { PasteDomain, PastePlatform, PasteShopCheckOutcome } from './types';
+import { PASTE_SHOPIFY_CODE_VERSION, type PasteDomain, type PastePlatform, type PasteShopCheckOutcome } from './types';
 
 /** Why the connection is not trusted yet; null once it is. */
 export type PasteConnectionReason =
@@ -61,6 +61,15 @@ export type PasteInstallStatus = {
    *  when it could not be read. Off hides the button whatever `tryOnReady`
    *  says: shoppers' context requests are refused as `paused`. */
   showButton: boolean | null;
+  /** Shopify: the snippet version (`data-gc-v`, 1 when the tag has none)
+   *  seen in the latest verified signed render; null before one arrived,
+   *  for website code, or before 20261108_paste_code_version.sql runs. */
+  codeVersion: number | null;
+  codeVersionSeenAt: string | null;
+  /** The store runs older pasted code than the snippet we hand out now
+   *  (PASTE_SHOPIFY_CODE_VERSION): ask the merchant to copy the new code.
+   *  Version 2 adds the "Try on" pill on product cards. False while unknown. */
+  codeOutdated: boolean;
   plan: ShopEntitlement;
   mode: LaunchState;
   secretVersion: number | null;
@@ -72,10 +81,12 @@ export type PasteInstallStatus = {
  * free-plan grant or secret material occurs during a status read. */
 export async function readPasteInstallStatus(site: { id: string; status: string }, now = new Date()): Promise<PasteInstallStatus> {
   const tenantKey = siteTenantKey(site.id);
-  const [connection, domains, plan, launch, features, showButton] = await Promise.all([
+  const [connection, domains, plan, launch, features, showButton, seenCode] = await Promise.all([
     getPasteConnection(site.id), listPasteDomains(site.id), getShopEntitlement(tenantKey),
     getStoreLaunch(tenantKey), storeFlags({ widgetSiteId: site.id }),
     readTryOnShowButton(tenantKey).catch(() => null),
+    // A dashboard hint: an unreadable version must not fail the status.
+    readPasteCodeVersion(site.id).catch(() => null),
   ]);
   const trust = pasteTrust(connection);
   const connected = connection?.status === 'active' || connection?.status === 'pending';
@@ -96,6 +107,7 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
   const seen = signals.length > 0;
   const entitlement = tryOnLaunchFromEntitlement(plan);
   const mode = features.includes('n5_preview_mode') ? launchView(launch, now).state : 'live';
+  const code = connected && connection?.platform === 'shopify' ? seenCode : null;
   const turnstileConfigured = Boolean(process.env.TURNSTILE_SECRET_KEY?.trim() && pasteTurnstileSiteKey());
   const reason = connectionReason ?? (!trustedDomains.length && !shopHost ? 'no_trusted_domain'
     : !pasteCapabilitySecret(site.id) ? 'unavailable' : mode === 'setup' || mode === 'preview' ? 'preview'
@@ -115,6 +127,9 @@ export async function readPasteInstallStatus(site: { id: string; status: string 
     tryOnReady: site.status !== 'disabled' && !reason,
     tryOnReason: site.status === 'disabled' ? 'site_disabled' : reason,
     showButton,
+    codeVersion: code?.version ?? null,
+    codeVersionSeenAt: code?.seenAt ?? null,
+    codeOutdated: code !== null && code.version < PASTE_SHOPIFY_CODE_VERSION,
     plan, mode, secretVersion: connection?.secret_version ?? null,
     rotationOverlapUntil: connection?.previous_valid_until ?? null,
     turnstileConfigured,

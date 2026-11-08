@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-const m = vi.hoisted(() => ({ connection: vi.fn(), domains: vi.fn(), plan: vi.fn(), launch: vi.fn(), flags: vi.fn() }));
+const m = vi.hoisted(() => ({ connection: vi.fn(), domains: vi.fn(), plan: vi.fn(), launch: vi.fn(), flags: vi.fn(), code: vi.fn() }));
 vi.mock('@/lib/paste/store', async (original) => {
   const actual = await original<typeof import('@/lib/paste/store')>();
-  return { pasteShopHost: actual.pasteShopHost, pasteTrust: actual.pasteTrust, getPasteConnection: m.connection, listPasteDomains: m.domains };
+  return { pasteShopHost: actual.pasteShopHost, pasteTrust: actual.pasteTrust, getPasteConnection: m.connection, listPasteDomains: m.domains,
+    readPasteCodeVersion: m.code };
 });
 const PROVEN_AT = '2026-11-08T13:00:00.000Z';
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: m.plan }));
@@ -20,7 +21,7 @@ beforeEach(() => {
   m.connection.mockResolvedValue({ status: 'active', platform: 'website', secret_version: 2 });
   m.domains.mockResolvedValue([{ id: 'domain-a', domain: 'merchant.example', state: 'trusted', firstSeenAt: null, lastSeenAt: null }]);
   m.plan.mockResolvedValue({ status: 'active', available: true, totalCreditsRemaining: 5 });
-  m.launch.mockResolvedValue(null); m.flags.mockResolvedValue([]);
+  m.launch.mockResolvedValue(null); m.flags.mockResolvedValue([]); m.code.mockResolvedValue(null);
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('paste read model and dashboard tenant', () => {
@@ -115,6 +116,30 @@ describe('paste read model and dashboard tenant', () => {
     expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({
       connected: false, trusted: false, shopProof: null, connectionReason: 'shop_proven_elsewhere', tryOnReason: 'shop_proven_elsewhere',
     });
+  });
+  it('asks a Shopify store on the old pasted code to copy the new one', async () => {
+    const shop = { widget_site_id: SITE, status: 'active', platform: 'shopify', shop_domain: 'merchant.myshopify.com', secret_version: 1,
+      first_seen_at: null, last_seen_at: null, shop_proven_at: PROVEN_AT, app_installed: false };
+    m.connection.mockResolvedValue(shop); m.domains.mockResolvedValue([]);
+    const seenAt = '2026-11-08T14:00:00.000Z';
+    m.code.mockResolvedValue({ version: 1, seenAt });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW))
+      .toMatchObject({ codeVersion: 1, codeVersionSeenAt: seenAt, codeOutdated: true });
+    m.code.mockResolvedValue({ version: 2, seenAt });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ codeVersion: 2, codeOutdated: false });
+    // Not seen yet, or the version column is not there yet: unknown, never "outdated".
+    m.code.mockResolvedValue(null);
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW))
+      .toMatchObject({ codeVersion: null, codeVersionSeenAt: null, codeOutdated: false });
+    m.code.mockRejectedValue(new Error('unavailable'));
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ codeVersion: null, codeOutdated: false });
+  });
+  it('never calls website code outdated, nor a disconnected shop', async () => {
+    m.code.mockResolvedValue({ version: 1, seenAt: NOW.toISOString() });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ codeVersion: null, codeOutdated: false });
+    m.connection.mockResolvedValue({ widget_site_id: SITE, status: 'disconnected', platform: 'shopify', shop_domain: 'merchant.myshopify.com',
+      secret_version: 1, shop_proven_at: PROVEN_AT, app_installed: false });
+    expect(await readPasteInstallStatus({ id: SITE, status: 'active' }, NOW)).toMatchObject({ codeVersion: null, codeOutdated: false });
   });
   it('treats Turnstile as configured from the runtime site key', async () => {
     vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', '');

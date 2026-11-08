@@ -27,6 +27,7 @@ import { actionFailureLabel, getTryOnDashboardCopy } from '@/lib/try-on/dashboar
 import type { MerchantActionFailure } from '@/lib/request-rate-limit';
 import type { TryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
 
+type SetTryOnCardPill = (input: { shop: string; showCardPill: boolean }) => Promise<{ ok: true } | (MerchantActionFailure & { reason?: string })>;
 type SetTryOnButton = (input: { shop: string; showButton: boolean }) => Promise<{ ok: true } | (MerchantActionFailure & { reason?: string })>;
 import type { SiteLocale } from '@/lib/landing/landing-i18n';
 import classes from './v16-tryon-studio.module.css';
@@ -84,6 +85,8 @@ export function V16TryOnStudio({
   saveSettings,
   buttonStatus = null,
   setButton,
+  cardPill = null,
+  setCardPill,
 }: {
   locale: SiteLocale;
   /** The store's tenant key: a shop domain, or `site:<id>` for WooCommerce. */
@@ -95,6 +98,9 @@ export function V16TryOnStudio({
   /** The storefront button switch and its status, saved through setButton. */
   buttonStatus?: TryOnButtonStatus | null;
   setButton?: SetTryOnButton;
+  /** The collection card pill switch (null = on), saved through setCardPill. */
+  cardPill?: boolean | null;
+  setCardPill?: SetTryOnCardPill;
 }) {
   const copy = getTryOnStudioCopy(locale);
   const id = React.useId();
@@ -181,7 +187,7 @@ export function V16TryOnStudio({
 
   return (
     <div ref={studioRef} tabIndex={-1} className={classes.studio}>
-      {buttonStatus ? <ButtonSwitch copy={copy.storefrontSwitch} shop={shop} status={buttonStatus} setButton={setButton} /> : null}
+      {buttonStatus ? <ButtonSwitch copy={copy.storefrontSwitch} shop={shop} status={buttonStatus} setButton={setButton} cardPill={cardPill ?? true} setCardPill={setCardPill} /> : null}
       {(dirty || status !== 'idle') && (
         <div ref={barRef} tabIndex={-1} role="region" aria-label={copy.unsavedLabel} className={classes.bar} data-state={dirty ? 'dirty' : status}>
           <span className={classes.barMessage}>
@@ -487,13 +493,18 @@ function ButtonSwitch({
   shop,
   status,
   setButton,
+  cardPill,
+  setCardPill,
 }: {
   copy: TryOnStudioCopy['storefrontSwitch'];
   shop: string;
   status: TryOnButtonStatus;
   setButton?: SetTryOnButton;
+  cardPill: boolean;
+  setCardPill?: SetTryOnCardPill;
 }) {
   const [on, setOn] = React.useState(status.showButton);
+  const [pill, setPill] = React.useState(cardPill);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const installed = status.tryOnState !== 'not_installed';
@@ -501,6 +512,19 @@ function ButtonSwitch({
     ? copy.reason[status.reason as keyof typeof copy.reason]
     : null;
   const line = !installed ? copy.state.not_installed : !on ? copy.state.off : reason ?? copy.state.on;
+
+  async function changePill(next: boolean) {
+    if (!setCardPill) return;
+    setPill(next);
+    setBusy(true);
+    setError(null);
+    const result = await setCardPill({ shop, showCardPill: next }).catch(() => null);
+    setBusy(false);
+    if (!result || !result.ok) {
+      setPill(!next);
+      setError(result && !result.ok && result.reason === 'show_card_pill_unavailable' ? copy.pillUnavailable : copy.failed);
+    }
+  }
 
   async function change(next: boolean) {
     if (!setButton) return;
@@ -537,6 +561,21 @@ function ButtonSwitch({
         disabled={!installed || busy || !setButton}
         onChange={(event) => void change(event.currentTarget.checked)}
       />
+      {installed ? (
+        <div className={classes.pillRow}>
+          <div className={classes.switchText}>
+            <span className={classes.pillLabel}>{copy.pill}</span>
+            <span className={classes.pillBody}>{on ? copy.pillBody : copy.pillNeedsButton}</span>
+          </div>
+          <Switch
+            size="sm"
+            aria-label={copy.pill}
+            checked={on && pill}
+            disabled={!on || busy || !setCardPill}
+            onChange={(event) => void changePill(event.currentTarget.checked)}
+          />
+        </div>
+      ) : null}
     </section>
   );
 }

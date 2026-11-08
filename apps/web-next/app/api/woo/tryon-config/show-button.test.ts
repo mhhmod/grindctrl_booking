@@ -9,7 +9,7 @@ vi.mock('server-only', () => ({}));
    button unless `enabled` is true. Only storage is mocked. */
 const SITE = '123e4567-e89b-42d3-a456-426614174000';
 const TENANT = `site:${SITE}`;
-const mocks = vi.hoisted(() => ({ showButton: vi.fn(), entitlement: vi.fn() }));
+const mocks = vi.hoisted(() => ({ showButton: vi.fn(), entitlement: vi.fn(), settings: vi.fn() }));
 
 vi.mock('@/lib/ratelimit', () => ({
   publicApiRatelimit: { limit: async () => ({ success: true, reset: Date.now() + 1000 }) },
@@ -26,7 +26,7 @@ vi.mock('@/lib/flags/store-flags', () => ({ storeFlags: async () => [] }));
 vi.mock('@/lib/try-on/entitlement', () => ({ getShopEntitlement: mocks.entitlement }));
 vi.mock('@/lib/try-on/settings', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/try-on/settings')>();
-  return { ...actual, getTryOnSettings: async () => actual.DEFAULT_SETTINGS, readTryOnShowButton: mocks.showButton };
+  return { ...actual, getTryOnSettings: async () => ({ ...actual.DEFAULT_SETTINGS, ...mocks.settings() }), readTryOnShowButton: mocks.showButton };
 });
 
 import { GET } from './route';
@@ -37,6 +37,7 @@ const get = async () => (await GET(new NextRequest('http://localhost/api/woo/try
 beforeEach(() => {
   clearProxyConfigCache();
   mocks.showButton.mockReset().mockResolvedValue(true);
+  mocks.settings.mockReset().mockReturnValue({});
   mocks.entitlement.mockReset().mockResolvedValue({ available: true, status: 'active', totalCreditsRemaining: 9 });
 });
 
@@ -58,6 +59,18 @@ describe('GET /api/woo/tryon-config with the Try-On button switch', () => {
     mocks.showButton.mockResolvedValue(false);
     invalidateProxyConfig(TENANT);
     expect(await get()).toMatchObject({ enabled: false, reason: 'paused' });
+  });
+
+  it('tells the plugin and pasted code whether to show card pills: their own switch, and the main switch', async () => {
+    expect(await get()).toMatchObject({ enabled: true, showCardPill: true });
+    mocks.settings.mockReturnValue({ showCardPill: false });
+    invalidateProxyConfig(TENANT);
+    expect(await get()).toMatchObject({ enabled: true, showCardPill: false });
+    // The main switch off hides the pills with the button.
+    mocks.settings.mockReturnValue({ showButton: false });
+    mocks.showButton.mockResolvedValue(false);
+    invalidateProxyConfig(TENANT);
+    expect(await get()).toMatchObject({ enabled: false, reason: 'paused', showCardPill: false });
   });
 
   it('reports a failed switch read as unavailable, not as live', async () => {

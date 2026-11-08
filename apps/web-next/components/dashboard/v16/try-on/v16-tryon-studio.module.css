@@ -350,3 +350,23 @@
   color: var(--mantine-color-red-7);
   font-size: var(--mantine-font-size-xs);
 }
+
+.pillRow {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  padding-block-start: var(--mantine-spacing-sm);
+  border-block-start: 1px solid var(--mantine-color-default-border);
+}
+
+.pillLabel {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+}
+
+.pillBody {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-xs);
+}

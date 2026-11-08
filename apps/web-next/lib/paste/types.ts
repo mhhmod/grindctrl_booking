@@ -1,5 +1,12 @@
 export type PastePlatform = 'website' | 'shopify';
 
+/** The current pasted Shopify snippet (`data-gc-v`). 1 is the code without
+ *  the attribute (product page only); 2 adds signed product cards for the
+ *  collection pill. Website code has no version: it never changed. */
+export const PASTE_SHOPIFY_CODE_VERSION = 2;
+/** Most product cards one Liquid render signs. */
+export const PASTE_CARD_LIMIT = 50;
+
 export type PasteErrorCode =
   | 'forbidden' | 'unavailable' | 'schema_not_ready' | 'rate_limited'
   | 'invalid_domain' | 'limit_reached' | 'not_found' | 'proof_required'
@@ -89,6 +96,8 @@ export type PasteStep =
 
 export type PasteSnippet = {
   platform: PastePlatform;
+  /** The version this snippet carries (`data-gc-v`); null for website code. */
+  codeVersion: number | null;
   snippet: string;
   steps: PasteStep[];
   contextEndpoint: '/api/try-on/paste-context';
@@ -105,6 +114,9 @@ export type PasteContextRequest = {
   visitorId: string;
   originToken?: string;
   preview?: string;
+  /** Shopify: the snippet's `data-gc-v` (1 when absent). Unsigned; recorded
+   *  after the render verifies, as a dashboard hint only. */
+  codeVersion?: number;
   signed?: {
     siteId: string; shopDomain: string; productId: string; variantId: string;
     issuedAt: string; customerId: string; signature: string;

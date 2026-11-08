@@ -5,6 +5,7 @@ import { verifyShopifyProxySignature } from '@/lib/messenger/identity';
 import { resolveShopifyApp } from '@/lib/shopify/app-registry';
 import { isActiveShopifyInstallation } from '@/lib/shopify/tokens';
 import { getTryOnSettings } from '@/lib/try-on/settings';
+import { cardPillsOn } from '@/lib/try-on/card-pill';
 import { getTryOnLaunch } from '@/lib/try-on/launch';
 import {
   cachedProxyConfig,
@@ -129,6 +130,8 @@ export async function GET(request: NextRequest) {
     catalogIconPx: settings.catalogIconPx,
     catalogFontPx: settings.catalogFontPx,
     catalogPadPx: settings.catalogPadPx,
+    // The catalogue embed adds no pills when false (the main switch off included).
+    showCardPill: cardPillsOn(settings),
     buttonIconPx: settings.buttonIconPx,
     showDownload: settings.showDownload,
     showWhatsapp: settings.showWhatsapp,

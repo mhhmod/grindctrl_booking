@@ -180,3 +180,22 @@ describe('the storefront Try-On switch', () => {
   });
 });
 
+describe('the collection card pill switch', () => {
+  const sw = getTryOnStudioCopy('en').storefrontSwitch;
+  it('turns the pills off on their own, and needs Try-On on', async () => {
+    const setCardPill = vi.fn(async () => ({ ok: true as const }));
+    const { unmount } = renderWithMantine(
+      <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()}
+        buttonStatus={{ showButton: true, tryOnState: 'on', reason: null }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
+    );
+    fireEvent.click(screen.getByRole('switch', { name: sw.pill }));
+    await waitFor(() => expect(setCardPill).toHaveBeenCalledWith({ shop: 'site:s1', showCardPill: false }));
+    unmount();
+    renderWithMantine(
+      <V16TryOnStudio locale="en" shop="site:s1" settings={SETTINGS} saveSettings={vi.fn()}
+        buttonStatus={{ showButton: false, tryOnState: 'off', reason: 'paused' }} setButton={vi.fn()} cardPill setCardPill={setCardPill} />,
+    );
+    expect(screen.getByRole('switch', { name: sw.pill })).toBeDisabled();
+    expect(screen.getByText(sw.pillNeedsButton)).toBeInTheDocument();
+  });
+});

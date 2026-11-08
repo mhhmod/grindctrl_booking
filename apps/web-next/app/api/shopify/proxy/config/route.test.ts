@@ -102,6 +102,17 @@ describe('GET /api/shopify/proxy/config launch answer', () => {
     expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'live', reason: null, available: true });
   });
 
+  it('tells the catalogue embed whether to show card pills: their own switch, and the main switch', async () => {
+    const answer = async (settings: Record<string, unknown>) => {
+      clearProxyConfigCache();
+      settingsMock.mockResolvedValue({ accentBg: '#111', accentFg: '#fff', radiusPx: 12, ...settings });
+      return (await GET(request())).json();
+    };
+    expect(await answer({ showButton: true, showCardPill: true })).toMatchObject({ tryOn: 'live', showCardPill: true });
+    expect(await answer({ showButton: true, showCardPill: false })).toMatchObject({ tryOn: 'live', showCardPill: false });
+    expect(await answer({ showButton: false, showCardPill: true })).toMatchObject({ showCardPill: false });
+  });
+
   it('reports unavailable, uncached, when the switch cannot be read', async () => {
     showButtonMock.mockRejectedValueOnce(new Error('db down'));
     expect(await (await GET(request())).json()).toMatchObject({ tryOn: 'hidden', reason: 'unavailable' });

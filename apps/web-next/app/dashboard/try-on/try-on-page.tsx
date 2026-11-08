@@ -26,7 +26,7 @@ import { V16NeedsStore } from '@/components/dashboard/v16/states';
 import { tryOnButtonStatus } from '@/lib/dashboard/tryon-button-status';
 import { isActiveTenant } from '@/lib/shopify/tokens';
 import { isSiteTenantKey } from '@/lib/tenancy/tenant-key';
-import { saveTryOnSettingsAction, setTryOnButtonAction } from './actions';
+import { saveTryOnSettingsAction, setTryOnButtonAction, setTryOnCardPillAction } from './actions';
 
 /* The Try-On page (04-dashboard.md), drawn by both of its routes:
    /dashboard/try-on is Results and /dashboard/try-on/setup is Set up
@@ -95,7 +95,7 @@ export async function TryOnPage({
         status={entitlement ? { live, label: live ? copy.liveOnStore : copy.hiddenOnStore } : null}
       >
         {settings ? (
-          <V16TryOnStudio locale={locale} shop={shop} wpAdmin={wpAdmin} settings={settings} saveSettings={saveTryOnSettingsAction} buttonStatus={buttonStatus} setButton={setTryOnButtonAction} />
+          <V16TryOnStudio locale={locale} shop={shop} wpAdmin={wpAdmin} settings={settings} saveSettings={saveTryOnSettingsAction} buttonStatus={buttonStatus} setButton={setTryOnButtonAction} cardPill={settings.showCardPill} setCardPill={setTryOnCardPillAction} />
         ) : (
           <V16TryOnStudioError locale={locale} />
         )}

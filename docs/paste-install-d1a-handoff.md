@@ -190,15 +190,63 @@ Generic:
 <script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="EMBED_KEY" data-gc-install="paste" data-gc-platform="website"></script>
 ```
 
-Shopify Footer > Custom Liquid:
+Shopify Footer > Custom Liquid (code version 2, `data-gc-v="2"`; version 1
+is the same tag without the attribute and without the cards block):
 
 ```liquid
+{%- assign gc_key = 'DERIVED_SECRET' -%}
 {%- assign gc_issued_at = 'now' | date: '%s' -%}
 {%- assign gc_variant = product.selected_or_first_available_variant.id -%}
 {%- capture gc_message -%}gc-paste-v1|SITE_UUID|{{ shop.permanent_domain }}|{{ product.id }}|{{ gc_variant }}|{{ gc_issued_at }}|{{ customer.id }}{%- endcapture -%}
-{%- assign gc_signature = gc_message | hmac_sha256: 'DERIVED_SECRET' -%}
-<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="EMBED_KEY" data-gc-install="paste" data-gc-platform="shopify" data-gc-site="SITE_UUID" data-gc-shop="{{ shop.permanent_domain | escape }}" data-gc-product="{{ product.id }}" data-gc-variant="{{ gc_variant }}" data-gc-issued-at="{{ gc_issued_at }}" data-gc-customer="{{ customer.id }}" data-gc-signature="{{ gc_signature }}"></script>
+{%- assign gc_signature = gc_message | hmac_sha256: gc_key -%}
+{%- liquid
+  assign gc_cards = nil
+  case request.page_type
+    when 'collection'
+      assign gc_cards = collection.products
+    when 'search'
+      assign gc_cards = search.results
+    when 'index'
+      assign gc_cards = collections.all.products
+  endcase
+-%}
+{%- if gc_cards != blank -%}
+<script type="application/json" data-gc-cards="SITE_UUID">{"site":"SITE_UUID","shop":{{ shop.permanent_domain | json }},"issuedAt":"{{ gc_issued_at }}","customer":"{{ customer.id }}","products":[
+{%- assign gc_count = 0 -%}
+{%- for gc_item in gc_cards limit: 50 -%}
+{%- if gc_item.object_type != blank and gc_item.object_type != 'product' -%}{%- continue -%}{%- endif -%}
+{%- assign gc_card_variant = gc_item.selected_or_first_available_variant.id -%}
+{%- if gc_card_variant == blank or gc_item.featured_image == blank -%}{%- continue -%}{%- endif -%}
+{%- capture gc_card_message -%}gc-paste-v1|SITE_UUID|{{ shop.permanent_domain }}|{{ gc_item.id }}|{{ gc_card_variant }}|{{ gc_issued_at }}|{{ customer.id }}{%- endcapture -%}
+{%- if gc_count > 0 -%},{%- endif -%}
+{"id":"{{ gc_item.id }}","variant":"{{ gc_card_variant }}","handle":{{ gc_item.handle | escape | json }},"title":{{ gc_item.title | escape | json }},"image":{{ gc_item.featured_image | image_url: width: 1200 | escape | json }},"signature":"{{ gc_card_message | hmac_sha256: gc_key }}"}
+{%- assign gc_count = gc_count | plus: 1 -%}
+{%- endfor -%}
+]}</script>
+{%- endif -%}
+<script async src="https://grindctrl.cloud/widget/v1/messenger.js" data-key="EMBED_KEY" data-gc-install="paste" data-gc-platform="shopify" data-gc-v="2" data-gc-site="SITE_UUID" data-gc-shop="{{ shop.permanent_domain | escape }}" data-gc-product="{{ product.id }}" data-gc-variant="{{ gc_variant }}" data-gc-issued-at="{{ gc_issued_at }}" data-gc-customer="{{ customer.id }}" data-gc-signature="{{ gc_signature }}"></script>
 ```
+
+Each card is signed with the one canonical message above, with that
+product's id and its selected-or-first-available variant (sold-out products
+included, as in the Shopify app). Free text is `escape`d then `json`-encoded,
+so no value can close the script element; the loader decodes the entities.
+The secret occurs once, in the `gc_key` assign, and only feeds
+`hmac_sha256`. Liquid reaches collection pages (`collection.products`, the
+first 50 in the current sort and filter), search results (products only) and
+the home page (`collections.all.products`); it cannot see a section's own
+collection setting, recommendation sections or product pages' related
+products. When the theme filters or sorts in place (the address changes)
+and cards appear that the first render did not sign, the loader reads the
+listing at its new address, at most three times and once per address; the
+address the page loaded with is never fetched again. `lib/paste/snippet.test.ts` renders this template with a small
+Liquid interpreter and verifies every card MAC with `liquidMacMatches`.
+
+Card pills are shown by the loader only after
+`GET /api/try-on/paste-config?key=&locale=&vid=&preview=` answers
+`tryOn: 'live'` and `showCardPill: true` (trusted connection, active tenant,
+the site config's launch answer, then the visitor's preview/holdout
+audience). It returns only the pill's label and styling.
 
 The result includes structured `PasteStep[]`: open the editor, select
 Footer/Custom Liquid, paste, save and visit a product page; or open website
@@ -249,7 +297,13 @@ included, so its snippet is served); `trusted` means our code is trusted;
 `shop_proven_elsewhere` or `shopify_app_installed` (also used as
 `tryOnReason`); `shopProof` is `pending` ("Waiting for your code on your
 store"), `proven` or null, with `shopProvenAt`; `shopCheck` is the last
-storefront check `{ outcome, checkedAt, retryAfterSeconds }` or null. It
+storefront check `{ outcome, checkedAt, retryAfterSeconds }` or null;
+`codeVersion`/`codeVersionSeenAt` are the Shopify snippet version seen in the
+latest verified render (sent unsigned by the loader as `codeVersion`, stored
+in `paste_site_connections.code_version` by
+`supabase/20261108_paste_code_version.sql`; a hint, not an authority), and
+`codeOutdated` asks the merchant to copy the new code (false while unknown or
+for website code). `PasteSnippet.codeVersion` is the version handed out. It
 contains no signing secret. Missing migrations
 are typed `schema_not_ready` for new operations where identifiable; legacy
 connection lookups/signals degrade to no paste connection/no-op.

@@ -202,6 +202,16 @@ export function PasteInstall({
               </Text>
             </Stack>
           </Group>
+          {status.codeOutdated ? (
+            <Alert variant="light" mt="sm" icon={<GcIcon name="spark" size={18} />}>
+              <Stack gap={6} align="flex-start">
+                <Text size="sm">{copy.codeOutdated}</Text>
+                <Button size="xs" radius="pill" variant="default" onClick={() => setStepsOpen(true)}>
+                  {copy.codeOutdatedAction}
+                </Button>
+              </Stack>
+            </Alert>
+          ) : null}
           <Group gap="xs" mt="sm">
             <Button component="a" href={storeUrl} target="_blank" rel="noopener noreferrer" radius="pill" size="sm" rightSection={<GcIcon name="ext" size={14} />}>
               {copy.seeOnStore}
